@@ -6,7 +6,7 @@
 
 | 系统 | 安装方法 |
 | --- | --- |
-| macOS 12+，Apple Silicon | 打开 `.dmg`，将 **Sesame.app** 拖到 Applications，再从 Applications 打开。首次需要的空闲空间建议至少 3 GB。 |
+| macOS 13+，Apple Silicon | 打开 `.dmg`，将 **Sesame.app** 拖到 Applications，再从 Applications 打开。首次需要的空闲空间建议至少 3 GB。 |
 | Windows 10/11 x64 | 运行 `.exe`，选择安装目录。默认仅为当前用户安装。建议至少 3 GB 空闲空间。 |
 | Linux x86_64 | Debian / Ubuntu 推荐 `sudo apt install ./Sesame-版本-linux-x64.deb`。其他发行版为 AppImage 添加执行权限后运行。需要图形桌面。 |
 

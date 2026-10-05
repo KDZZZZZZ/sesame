@@ -12,7 +12,7 @@ Open Sesame. 用自然语言研究市场、安排并行研究任务，并把结�
 
 | 设备 | 安装包 |
 | --- | --- |
-| macOS 12 或更新，Apple Silicon（M 系列） | `Sesame-…-mac-arm64.dmg` |
+| macOS 13 或更新，Apple Silicon（M 系列） | `Sesame-…-mac-arm64.dmg` |
 | Windows 10/11，Intel / AMD 64 位 | `Sesame-…-win-x64.exe` |
 | Linux x86_64 | `Sesame-…-linux-x64.AppImage`，或 Debian / Ubuntu 的 `.deb` |
 
