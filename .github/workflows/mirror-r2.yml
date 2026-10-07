@@ -1,0 +1,49 @@
+name: Mirror release to R2
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to mirror (e.g. v0.1.0)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - name: Download release assets
+        run: gh release download "$TAG" --repo ${{ github.repository }} --dir dist --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload assets to R2 (s3://sesame-releases/$TAG/)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ENDPOINT: https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
+        run: |
+          set -euo pipefail
+          content_type() {
+            case "$1" in
+              *.exe) echo application/vnd.microsoft.portable-executable ;;
+              *.dmg) echo application/x-apple-diskimage ;;
+              *.deb) echo application/vnd.debian.binary-package ;;
+              *.txt) echo "text/plain; charset=utf-8" ;;
+              *) echo application/octet-stream ;;
+            esac
+          }
+          for f in dist/*; do
+            b=$(basename "$f")
+            echo ">>> $b"
+            aws s3 cp "$f" "s3://sesame-releases/$TAG/$b"               --endpoint-url "$R2_ENDPOINT"               --content-type "$(content_type "$b")"               --no-progress
+          done
+          echo "Mirrored $TAG to https://dl.sesame.bot/$TAG/"
