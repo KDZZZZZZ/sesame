@@ -45,5 +45,13 @@ jobs:
             b=$(basename "$f")
             echo ">>> $b"
             aws s3 cp "$f" "s3://sesame-releases/$TAG/$b"               --endpoint-url "$R2_ENDPOINT"               --content-type "$(content_type "$b")"               --no-progress
+            expected=$(sha256sum "$f" | cut -d ' ' -f 1)
+            actual=$(aws s3 cp "s3://sesame-releases/$TAG/$b" - \
+              --endpoint-url "$R2_ENDPOINT" --no-progress | sha256sum | cut -d ' ' -f 1)
+            if [ "$actual" != "$expected" ]; then
+              echo "R2 SHA256 mismatch: $b" >&2
+              exit 1
+            fi
+            echo "SHA256 verified: $actual  $b"
           done
           echo "Mirrored $TAG to https://dl.sesame.bot/$TAG/"
