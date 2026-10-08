@@ -1,0 +1,41 @@
+name: Publish verified installer artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing draft release tag
+        required: true
+      source_revision:
+        description: Verified private source revision
+        required: true
+      linux_url:
+        description: Temporary download URL for the verified Linux artifact
+        required: true
+      linux_sha256:
+        description: GitHub SHA256 of the Linux artifact archive
+        required: true
+      windows_url:
+        description: Temporary download URL for the verified Windows artifact
+        required: true
+      windows_sha256:
+        description: GitHub SHA256 of the Windows artifact archive
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-installers-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Verify artifacts and upload installers to draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/publish-installers.py
