@@ -34,7 +34,10 @@ tag, revision = inputs["tag"], inputs["source_revision"]
 check(re.fullmatch(r"v\d+\.\d+\.\d+", tag), "Invalid release tag")
 check(re.fullmatch(r"[0-9a-f]{40}", revision), "Invalid source revision")
 repo = os.environ["GITHUB_REPOSITORY"]
-release = api(f"repos/{repo}/releases/tags/{tag}")
+release_id = inputs["release_id"]
+check(re.fullmatch(r"\d+", release_id), "Invalid release ID")
+release = api(f"repos/{repo}/releases/{release_id}")
+check(release["tag_name"] == tag, "Release tag mismatch")
 check(release["draft"], "This workflow only uploads to a draft release")
 version = tag[1:]
 inventory = []
@@ -77,6 +80,16 @@ with tempfile.TemporaryDirectory(prefix="sesame-publish-") as temporary:
         if name in existing:
             check(existing[name]["digest"] == "sha256:" + item["sha256"] and existing[name]["size"] == item["bytes"], "Existing release asset differs")
         else:
-            subprocess.run(["gh", "release", "upload", tag, str(root / name), "--repo", repo], check=True)
+            # A draft's tag does not exist yet; address its numeric release ID.
+            url = f"https://uploads.github.com/repos/{repo}/releases/{release_id}/assets?" + urllib.parse.urlencode({"name": name})
+            with (root / name).open("rb") as stream:
+                request = urllib.request.Request(url, data=stream, method="POST", headers={
+                    "Authorization": "Bearer " + os.environ["GH_TOKEN"],
+                    "Content-Type": "application/octet-stream", "Content-Length": str(item["bytes"]),
+                    "User-Agent": "Sesame-Release",
+                })
+                with urllib.request.urlopen(request, timeout=300) as response:
+                    uploaded = json.load(response)
+            check(uploaded["digest"] == "sha256:" + item["sha256"] and uploaded["size"] == item["bytes"], "Uploaded installer differs")
 
 print("All verified installers uploaded to draft; publication remains a separate step.")

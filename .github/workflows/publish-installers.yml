@@ -6,6 +6,9 @@ on:
       tag:
         description: Existing draft release tag
         required: true
+      release_id:
+        description: Numeric draft release ID
+        required: true
       source_revision:
         description: Verified private source revision
         required: true
