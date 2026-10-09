@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile, rename, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 
 export const VERSIONS = Object.freeze({ vnpy: '4.5.0', vnpy_ctastrategy: '1.4.1' });
 const WHEELS = Object.freeze({ vnpy: '69d95de6a78812c5617fea1475ac5ce29fdee279c6c44dc4689738aff9bd0fcd', 'vnpy-ctastrategy': 'd625ebbff1fcf1a61794bf7c75c13f4bcfea333b3d80d0ada36292a09100288f' });
@@ -80,29 +81,65 @@ export async function environment(host, { action = 'inspect', python_path } = {}
     if (!base) throw error('ENVIRONMENT_UNAVAILABLE', 'A compatible native Python path is required to create a new private environment.');
     await inspect(host, base, signal);
     const root = join(host.storage.directory, 'python-vnpy-4.5.0-cta-1.4.1');
-    try { await mkdir(root); }
-    catch (cause) { if (cause.code === 'EEXIST') throw error('ENVIRONMENT_EXISTS', 'The private environment path already exists but was not validated. Inspect it; preparation does not overwrite an unknown environment.'); throw cause; }
-    const stage = join(host.workspace.root(), `.vnpy-prepare-${randomUUID()}`);
+    const marker = join(host.storage.directory, 'preparation.json');
+    let preparation;
+    try { await mkdir(root); preparation = { schemaVersion: 1, root, base, venvReady: false, startedAt: Date.now() }; await writeFile(marker, JSON.stringify(preparation), { mode: 0o600 }); }
+    catch (cause) {
+      if (cause.code !== 'EEXIST') throw cause;
+      try { preparation = JSON.parse(await readFile(marker, 'utf8')); } catch { throw error('ENVIRONMENT_EXISTS', 'An unknown environment already exists; preparation will not overwrite it.'); }
+      if (preparation.root !== root || preparation.base !== base || preparation.schemaVersion !== 1) throw error('ENVIRONMENT_EXISTS', 'The retained private environment belongs to a different preparation. Use the recorded base Python or inspect an existing environment.');
+    }
+    const stage = join(host.storage.directory, 'prepare-vnpy-4.5.0-cta-1.4.1');
+    const wheelhouse = join(stage, 'wheels'), progressReport = join(stage, 'download-progress.json');
+    const python = join(root, host.environment.capabilities.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
+    const pending = (phase, progress, failure) => {
+      const retryable = (preparation.failedAttempts ?? 0) < 3 && failure?.code !== 'SOURCE_MISMATCH' && !/resume Range|hash mismatch|Invalid cached/i.test(failure?.message ?? '');
+      return { ready: false, configured: false, execution: 'host', phase, privateDirectory: root, cacheDirectory: wheelhouse, progress, error: failure, retryable, findings,
+        next: retryable ? 'Do not start a backtest yet. Call prepare again with the same base python_path to resume retained private download/install, or supply an already compatible existing environment. Do not delete the cache or change sources to retry.' : 'Stop automatic retries. Inspect the reported source/network failure or use a compatible existing Python environment; retained private bytes must not be discarded.' };
+    };
     try {
-      await mkdir(stage);
-      await run(host, [base, '-I', '-B', '-m', 'venv', root], stage, signal);
-      const python = join(root, host.environment.capabilities.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
+      await mkdir(stage, { recursive: true });
+      if (!preparation.venvReady) {
+        await run(host, [base, '-I', '-B', '-m', 'venv', root], stage, signal, 90);
+        preparation.venvReady = true; await writeFile(marker, JSON.stringify(preparation), { mode: 0o600 });
+      }
+      await run(host, [python, '-I', '-B', fileURLToPath(new URL('./download-wheels.py', import.meta.url)), '--directory', wheelhouse, '--report', progressReport], stage, signal, 480);
+      const progress = JSON.parse(await readFile(progressReport, 'utf8'));
+      if (!progress.complete && progress.bytesThisCall === 0 && !progress.error) progress.error = 'Download made no progress; retained bytes are unchanged.';
+      if (progress.error) preparation.failedAttempts = progress.bytesThisCall > 0 ? 0 : (preparation.failedAttempts ?? 0) + 1; else if (progress.bytesThisCall > 0) preparation.failedAttempts = 0;
+      await writeFile(marker, JSON.stringify(preparation), { mode: 0o600 });
+      if (!progress.complete || progress.bytesThisCall > 0) return pending(progress.complete ? 'downloaded' : 'downloading', progress, progress.error ? { code: 'DOWNLOAD_INCOMPLETE', message: progress.error } : null);
       const report = join(stage, 'pip-report.json');
-      await run(host, [python, '-I', '-B', '-m', 'pip', '--isolated', 'install', '--index-url', 'https://pypi.org/simple', '--only-binary=:all:', '--no-cache-dir', '--disable-pip-version-check', '--report', report, 'vnpy==4.5.0', 'vnpy_ctastrategy==1.4.1'], stage, signal);
+      await run(host, [python, '-I', '-B', '-m', 'pip', '--isolated', 'install', '--index-url', 'https://pypi.org/simple', '--find-links', wheelhouse, '--cache-dir', join(stage, 'pip-cache'), '--only-binary=:all:', '--disable-pip-version-check', '--report', report, 'vnpy==4.5.0', 'vnpy_ctastrategy==1.4.1'], stage, signal, 540);
       const install = JSON.parse(await readFile(report, 'utf8'));
-      const downloads = install.install.map(item => ({ name: item.metadata.name, version: item.metadata.version, url: item.download_info.url, sha256: item.download_info.archive_info.hashes.sha256 }));
-      if (downloads.some(item => new URL(item.url).hostname !== 'files.pythonhosted.org' || !/^[a-f0-9]{64}$/.test(item.sha256))) throw error('SOURCE_MISMATCH', 'The install report contains an unexpected source or missing archive hash.');
+      const downloads = install.install.map(item => {
+        const supplied = item.download_info, hash = supplied.archive_info.hashes.sha256;
+        if (new URL(supplied.url).protocol === 'file:') {
+          const wheel = progress.wheels.find(w => fileURLToPath(supplied.url) === join(wheelhouse, w.filename) && w.sha256 === hash);
+          if (!wheel || name(wheel.name) !== name(item.metadata.name) || wheel.version !== item.metadata.version) throw error('SOURCE_MISMATCH', 'Local wheel is not the retained verified official archive.');
+          return { name: item.metadata.name, version: item.metadata.version, url: wheel.url, sha256: hash, cachePath: fileURLToPath(supplied.url) };
+        }
+        return { name: item.metadata.name, version: item.metadata.version, url: supplied.url, sha256: hash };
+      });
+      // Resuming a partially installed private venv can omit already installed
+      // roots from pip's report; their immutable official archives remain audited.
+      for (const wheel of progress.wheels) if (!downloads.some(d => name(d.name) === name(wheel.name))) downloads.push({ name: wheel.name, version: wheel.version, url: wheel.url, sha256: wheel.sha256, cachePath: join(wheelhouse, wheel.filename) });
+      if (downloads.some(item => new URL(item.url).hostname !== 'files.pythonhosted.org' || new URL(item.url).protocol !== 'https:' || !/^[a-f0-9]{64}$/.test(item.sha256))) throw error('SOURCE_MISMATCH', 'The install report contains an unexpected source or missing archive hash.');
       for (const [key, hash] of Object.entries(WHEELS)) if (!downloads.some(item => name(item.name) === key && item.sha256 === hash)) throw error('SOURCE_MISMATCH', `The ${key} wheel differs from the pinned source hash.`);
-      await run(host, [python, '-I', '-B', '-m', 'pip', 'check'], stage, signal);
+      await run(host, [python, '-I', '-B', '-m', 'pip', 'check'], stage, signal, 60);
       const info = await inspect(host, python, signal);
       if (!compatible(info)) throw error('ENVIRONMENT_UNAVAILABLE', 'The installed engine versions differ from the plugin contract.');
       const value = { schemaVersion: 1, execution: 'host', python, platform: info.platform, arch: info.arch, pythonVersion: info.version, packages: info.packages, downloads, origin: 'private-install', observedAt: Date.now() };
       await save(host, value);
       return { ready: true, reused: false, configured: true, environment: value, findings };
     } catch (cause) {
-      // This is a newly created, plugin-owned path, never an existing installation.
-      await rm(root, { recursive: true, force: true }); throw cause;
-    } finally { await rm(stage, { recursive: true, force: true }); }
+      preparation.failedAttempts = (preparation.failedAttempts ?? 0) + 1;
+      preparation.lastFailure = { message: safeError(cause), at: Date.now() };
+      await writeFile(marker, JSON.stringify(preparation), { mode: 0o600 });
+      signal?.throwIfAborted();
+      let progress; try { progress = JSON.parse(await readFile(progressReport, 'utf8')); } catch {}
+      return pending('incomplete', progress, { code: cause.code ?? 'PREPARATION_FAILED', message: safeError(cause), details: cause.details });
+    }
   };
   const prior = locks.get(host.storage.directory) ?? Promise.resolve(), pending = prior.catch(() => {}).then(task);
   locks.set(host.storage.directory, pending);
