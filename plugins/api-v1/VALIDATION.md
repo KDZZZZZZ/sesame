@@ -124,11 +124,32 @@ preparing record as failed; records with startup, chart, output, staged expert,
 command or native evidence remain unknown. The old request key returns its old
 record and cannot silently recreate or resume a mount.
 
-The author passed 20 targeted checks. Read-only inspection of existing stored
+Pre-merge review found that a transient observation append failure could leave
+an existing strategy.run record at starting after its deployment had failed.
+Deployment saves now atomically retain an observation-pending token. Activation
+and the observer refresh retry that record synchronization without invoking any
+native action. A completed observation clears only its own token, preserves a
+newer pending update, and removes stale observer diagnostics. The observer reads
+the host's current record revision before retrying an append that may already
+have committed.
+
+The author passed 22 targeted checks. Read-only inspection of existing stored
 records confirmed the string-versus-typed parameter representation and the
 pre-native orphan; it did not modify the live database. This candidate has not
 started a real terminal, mounted an EA or placed a trade. Published-package
 native acceptance remains separate from these controlled regressions.
+
+Independent review reran all 22 public checks and passed 32 additional checks
+(10 top-level checks and 22 subchecks). These used a real temporary Store,
+ContractArtifacts and the SVL path to verify typed parameter publication/reopen,
+16 invalid scalar/range/unit/currency cases, six observer-failure stages and
+same-key non-replay. The pre-append, post-commit and reopened-pending versions of
+the observation mismatch were reproduced and fixed. Successful synchronization
+cleared pending/error state; 20 further refreshes added no record versions. One
+failed pending item did not block another, a SQLite pending-write failure rolled
+back atomically, and a failed stop-file write retained an unknown state with a
+redacted error. Native mounting and market ports were controlled substitutes;
+this was not complete Runtime.init or actual native preparation/mount/trading.
 
 # Development bundle 10 validation
 
