@@ -6,7 +6,7 @@
   "sourceRoot": "plugins/optional-api-v1",
   "archive": {
     "name": "sesame-optional-plugins-api-v1-dev.1.tar.gz",
-    "sha256": "5dba92899e8a20e4387ef40056111fca12b4bf67789709b8e77342b83075851d"
+    "sha256": "1c9e2861b6f01a101118c966f9f59f685ba03a14e5bf1b176f62a274d4c6fda9"
   },
   "lockSha256": "23034f3aa127cf1e3b92e27fe759040331e3d9b12610150e295c957bf388c936",
   "pullRequest": 5
