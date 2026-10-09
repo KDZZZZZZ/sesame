@@ -28,14 +28,12 @@ jobs:
         with:
           node-version: 24
       - name: Test release identity and approval boundaries
-        run: node --test .github/scripts/release-plugins.test.mjs .github/scripts/semantic-review.test.mjs plugins/api-v1/tests/lock.test.mjs
+        run: node --test .github/scripts/release-plugins.test.mjs .github/scripts/semantic-review.test.mjs plugins/api-v1/tests/lock.test.mjs .github/scripts/api1-required-catalog.test.mjs
       - name: Verify merged source bytes and optional catalog
         run: |
           node plugins/api-v1/scripts/plugin-lock.mjs --check
-          if test -f plugins/optional-api-v1/official-plugins.lock.json; then
-            node plugins/api-v1/scripts/plugin-lock.mjs --check --source plugins/optional-api-v1
-            node .github/scripts/validate-api1-catalog.mjs . --published
-          fi
+          node plugins/api-v1/scripts/plugin-lock.mjs --check --source plugins/optional-api-v1
+          node .github/scripts/validate-api1-catalog.mjs . --published
           node .github/scripts/release-plugins.mjs --check .
       - name: Publish immutable assets after pre-merge semantic review and PR checks
         env:

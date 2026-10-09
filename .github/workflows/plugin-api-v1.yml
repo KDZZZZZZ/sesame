@@ -35,14 +35,12 @@ jobs:
         run: node trusted/plugins/api-v1/scripts/plugin-lock.mjs --check --source candidate/plugins/api-v1
       - name: Validate optional package data with the trusted base validator
         run: |
-          if test -f candidate/plugins/optional-api-v1/official-plugins.lock.json; then
-            node trusted/plugins/api-v1/scripts/plugin-lock.mjs --check --source candidate/plugins/optional-api-v1
-            node trusted/.github/scripts/validate-api1-catalog.mjs candidate --published
-          fi
+          node trusted/plugins/api-v1/scripts/plugin-lock.mjs --check --source candidate/plugins/optional-api-v1
+          node trusted/.github/scripts/validate-api1-catalog.mjs candidate --published
       - name: Validate fixed release plans without publishing
         run: node trusted/.github/scripts/release-plugins.mjs --check candidate
       - name: Test trusted lock and archive code
-        run: node --test trusted/plugins/api-v1/tests/lock.test.mjs trusted/.github/scripts/release-plugins.test.mjs trusted/.github/scripts/semantic-review.test.mjs
+        run: node --test trusted/plugins/api-v1/tests/lock.test.mjs trusted/.github/scripts/release-plugins.test.mjs trusted/.github/scripts/semantic-review.test.mjs trusted/.github/scripts/api1-required-catalog.test.mjs
       - name: Record scope
         run: |
           echo '### API 1 package identity checks' >> "$GITHUB_STEP_SUMMARY"
