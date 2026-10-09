@@ -1,8 +1,9 @@
 {
   "id": "sesame/akshare",
   "title": "AKShare A股研究数据",
-  "description": "可选只读AKShare：A股品种搜索、历史日线与成交量；按需隔离Python环境，无实时订阅或交易。",
+  "description": "可选只读AKShare：A股品种搜索、历史日线与成交量；按需复用或准备独立依赖环境，在本机执行，无实时订阅或交易。",
   "version": "1.0.0",
+  "license": "MIT",
   "default_state": "discoverable",
   "entry": "index.js",
   "apiVersion": "1",

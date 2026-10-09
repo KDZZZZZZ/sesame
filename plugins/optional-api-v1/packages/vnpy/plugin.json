@@ -1,0 +1,16 @@
+{
+  "id": "sesame/vnpy",
+  "title": "VeighNa CTA 回测",
+  "description": "按需复用或安装本机 VeighNa 环境，以固定数据和 Agent 编写的 Python 策略运行真实 CTA 回测引擎并保存结果。",
+  "version": "1.0.0",
+  "apiVersion": "1",
+  "license": "MIT",
+  "default_state": "discoverable",
+  "entry": "index.js",
+  "provides": { "sesame.strategy": "1" },
+  "tool_names": ["vnpy_environment", "vnpy_backtest", "vnpy_result"],
+  "tool_definitions": "tools.json",
+  "prompts": ["prompt.md"],
+  "skills": ["skills"],
+  "resources": ["README.md", "requirements.txt", "runner.py", "examples/strategy.py", "examples/bars.json", "PROVENANCE.md"]
+}

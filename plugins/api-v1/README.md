@@ -26,7 +26,7 @@ their process boundary and `bot.sesame` manifest namespace.
 
 ## Native execution and dependency preparation
 
-Development bundle 3 replaces `sesame/sandbox` with `sesame/workspace`. Its
+Development bundle 3 replaced `sesame/sandbox` with `sesame/workspace`. Its
 read/write/edit/bash tools use a real task cwd and managed native processes,
 with Bash on macOS/Linux and PowerShell on Windows. Execution has the current
 user's permissions; this is not OS isolation. The host-files plugin adds explicit
@@ -37,6 +37,12 @@ Wine distribution or mandatory runtime image is embedded in the 19-package archi
 Plugin skills guide dependency discovery, explicit preparation when missing, and
 actual verification. Optional integrations live separately in
 `../optional-api-v1/packages/` and do not enter this lock.
+
+Development bundle 4 completes real-path delivery for research/web inputs and
+MT5 checkouts. Workspace commands expose incomplete snapshot diagnostics. The
+plugin-manager owns verified optional-catalog installation and same-session loading;
+its native static checks remain distinct from actual activation and environment
+verification. See `../optional-api-v1/` for the separately pinned development catalog.
 
 ## Validate and build
 

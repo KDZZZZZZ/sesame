@@ -11,7 +11,7 @@
 
 这是固定快照，无 TTL，也不自动同步上游。应用升级可更换快照；更新时应同步来源、日期、哈希、分类数量和 plugin.json 中的断言，再执行 `node --test tests/builtin-research-plugins.test.js` 与 `node scripts/sync-plugin-tools.mjs --check`。不应只修改日期来表示刷新。
 
-应用启动只注册静态 schema，获准调用后才运行隔离 MCP。启动时内置包优先于旧同名外部安装，保留用户策略、按会话加载状态和旧安装审计；维护者通过应用代码版本发布更新。
+应用启动只注册静态 schema，获准调用后才启动本机 stdio MCP，以当前系统用户权限运行，不是 OS 沙箱。启动时内置包优先于旧同名外部安装，保留用户策略、按会话加载状态和旧安装审计；维护者通过应用代码版本发布更新。
 
 
 ## Plugin API v1 package 2.0.0
@@ -20,3 +20,7 @@ The implementation and test samples are retained. Version 2.0.0 moves the packag
 to the `bot.sesame` namespace with a `sesame/` publisher-qualified identity. It is
 a separate release from the public 0.1.4 catalog snapshot. No old plugin identity
 is aliased. Existing author, license and source/sample attributions remain.
+
+## Plugin API v1 package 2.0.1
+
+Operational guidance now follows native task-managed stdio execution and actual workspace paths. Reuse an installed compatible Python before explicitly preparing missing dependencies. The parser tool parameter restrictions remain unchanged and are not described as OS isolation. Existing source, sample, license and author attributions are preserved.

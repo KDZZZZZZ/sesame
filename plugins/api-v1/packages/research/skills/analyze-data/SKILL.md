@@ -1,9 +1,9 @@
 ---
 name: analyze-data
-description: 使用真实后端输入，在 bwrap 中编写与执行可追溯分析，并登记报告数据。
+description: 使用真实后端输入，在本机任务工作区中编写与执行可追溯分析，并登记报告数据。
 ---
 
-工具回复是有界预览；原始 MT5 响应可能把数万根 K 线放在一个 result.content[0].text JSON 字符串内。data_read 会把完整行数据写入返回的只读 path。在 bwrap 中解析并只输出范围、字段、计数、少量样本和所需统计；不要用 read/cat 或 print 将完整行情回灌模型。_tool_output_truncated 表示预览截断，不表示原始文件缺失。
+工具回复是有界预览；原始 MT5 响应可能把数万根 K 线放在一个 result.content[0].text JSON 字符串内。data_read 会把完整行数据写入返回的真实 path。在实际执行 cwd 中解析并只输出范围、字段、计数、少量样本和所需统计；不要用 read/cat 或 print 将完整行情回灌模型。_tool_output_truncated 表示预览截断，不表示原始文件缺失。
 
 先用 data_read 查询或加载实际 dataset ID，记录列名、类型、行数、缺失值与数据范围。CSV 数值通常是字符串，转换失败和缺失不能静默当作零。
 
@@ -14,3 +14,5 @@ description: 使用真实后端输入，在 bwrap 中编写与执行可追溯分
 调用 research_register，传入本次 execution_id、输出文件、title、description 和实际 input_ids。登记失败时查明输入绑定或格式问题，不伪造执行 ID。
 
 将返回的 dataset ID 交给报告插件。报告需要解释方法和局限；没有 MT5 Tester 数据时明确这是研究分析，不是已验证交易策略。
+
+工作区代码使用当前系统用户权限，不是 OS 沙箱。使用 data_read 返回的真实路径与相同的 bash.cwd；不要假设 /work 是系统挂载。先复用现有环境，缺失依赖才按需准备。research_register 只接受成功执行的冻结输入、输出和脚本快照；改变 inputs 后必须重新执行，不得用当前可变文件伪造旧执行。

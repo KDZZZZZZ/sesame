@@ -83,12 +83,12 @@ export class MT5 {
   }
   async checkout(box, key, signal, conversationId) {
     const project = this.project(key), checkoutId = id('checkout');
-    const path = `/work/projects/${key}/${checkoutId}`;
-    const sdkPath = `/work/inputs/mt5-sdk/${SDK_VERSION}`;
-    const files = Object.fromEntries(Object.entries(project.files).map(([name, content]) => [path.slice(6) + '/' + name, content]));
-    for (const [name, content] of Object.entries({ ...this.sdk, 'Build.mqh': buildHeader('unbuilt') })) files[`${sdkPath.slice(6)}/Include/Product/${name}`] = content;
-    // One transactional workspace write imports the editable project and read-only SDK together.
-    await box.file('write_tree', '/work', files, signal, true);
+    const relativePath = `projects/${key}/${checkoutId}`, relativeSdk = `inputs/mt5-sdk/${SDK_VERSION}`;
+    const path = box.path(relativePath), sdkPath = box.path(relativeSdk);
+    const files = Object.fromEntries(Object.entries(project.files).map(([name, content]) => [`${relativePath}/${name}`, content]));
+    for (const [name, content] of Object.entries({ ...this.sdk, 'Build.mqh': buildHeader('unbuilt') })) files[`${relativeSdk}/Include/Product/${name}`] = content;
+    // These are ordinary host files. Save checks the SDK against its package source.
+    await box.file('write_tree', box.path('.'), files, signal);
     requireValue(typeof conversationId === 'string' && conversationId, 'Checkout 需要会话身份');
     const checkout = { ...this.host.workspace.owner(conversationId), id: checkoutId, project_id: key, conversation_id: conversationId, revision: project.revision, path, sdk_path: sdkPath };
     this.storage.put('mt5_checkout', checkout);
@@ -97,6 +97,9 @@ export class MT5 {
   async save(box, checkoutId, signal, conversationId) {
     const checkout = this.storage.get('mt5_checkout', checkoutId);
     requireValue(conversationId && checkout.conversation_id === conversationId, '只能保存当前会话的 checkout', 403);
+    const expectedSdk = Object.fromEntries(Object.entries({ ...this.sdk, 'Build.mqh': buildHeader('unbuilt') }).map(([name, content]) => [`Include/Product/${name}`, content]));
+    const actualSdk = texts(await box.snapshot(checkout.sdk_path));
+    requireValue(stableJSON(actualSdk) === stableJSON(expectedSdk), '工作区 SDK 已修改；请重新 checkout 恢复 SDK，再保存策略源码', 409, 'sdk_changed');
     const validated = projectFiles(texts(await box.snapshot(checkout.path)));
     signal?.throwIfAborted();
     return this.storage.transaction(() => {

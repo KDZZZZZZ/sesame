@@ -17,7 +17,7 @@ description: "解析 RSS 2.0 / Atom 订阅源为结构化条目。配合 sources
 
 当前工具负责解析文本；MCP 进程可访问公网与内网。获取订阅内容可使用 sources_fetch。
 
-stdio MCP 与对话 bash 工作区隔离，MCP 不能凭 file_path 访问 /work/inputs：
+stdio MCP 使用本机当前用户权限运行。本服务器的 file_path 参数单独限制为包内文件，不能用该参数读任意工作区路径；这不是 OS 隔离：
 
 先用 `plugin_load` 加载 `sesame/web-sources` 和 `sesame/rss-collect`。下文使用 MCP 原始工具名；实际调用使用当前工具列表中的完整 MCP 工具名。
 

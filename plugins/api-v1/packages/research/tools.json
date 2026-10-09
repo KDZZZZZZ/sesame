@@ -2,7 +2,7 @@
   {
     "name": "data_read",
     "label": "data_read",
-    "description": "列出真实输入与已登记结果（包括 MT5 响应快照）。提供 dataset_id 后把完整数据复制为执行目录的 inputs/<id>.json，返回有界样本与来源。大数据用沙箱代码提取字段或统计，勿整文件读回模型；查询新行情使用 MT5 官方工具。",
+    "description": "列出真实输入与已登记结果。提供 dataset_id 后把完整数据复制为执行目录的 inputs/<id>.json，返回真实路径、有界样本与来源。大数据用本机工作区代码提取字段或统计，勿整文件读回模型；查询新行情使用已连接的数据插件。",
     "parameters": {
       "type": "object",
       "properties": {
@@ -14,7 +14,7 @@
         },
         "directory": {
           "type": "string",
-          "description": "执行目录，默认 /work；与 bash.cwd 一致时可分析大型持久工作区中的单个项目",
+          "description": "执行目录，默认当前真实工作区 root；与 bash.cwd 一致时可分析单个项目",
           "minLength": 1,
           "maxLength": 20000
         }

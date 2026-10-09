@@ -1,6 +1,6 @@
 import sys,json,os,re
 
-VERSION = "2.0.0"
+VERSION = "2.0.1"
 PLUGIN_ROOT = os.path.dirname(os.path.abspath(__file__))
 CATALOG_PATH = os.path.join(PLUGIN_ROOT, "catalog.json")
 

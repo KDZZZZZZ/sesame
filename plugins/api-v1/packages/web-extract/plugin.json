@@ -3,7 +3,7 @@
     "name": "Sesame"
   },
   "name": "web-extract",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "基于 trafilatura 思路新写的轻量网页正文与链接提取 skill（新写适配层，非上游现成 skill）。输入已抓取的 HTML 内容或包内文件路径，输出标题、正文、预览、链接和元数据；解析失败时 isError=true。",
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "extensions": {
@@ -25,7 +25,7 @@
             "meta_description": "",
             "word_count": 605,
             "link_count": 0,
-            "version": "2.0.0",
+            "version": "2.0.1",
             "source": "sample.html"
           }
         },
@@ -47,7 +47,7 @@
             "meta_description": "A test",
             "word_count": 8,
             "link_count": 2,
-            "version": "2.0.0",
+            "version": "2.0.1",
             "source": "inline"
           }
         }
