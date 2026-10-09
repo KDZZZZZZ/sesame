@@ -27,13 +27,13 @@
   {
     "name": "akshare_prepare",
     "label": "akshare_prepare",
-    "description": "First verify/reuse compatible existing AKShare. If missing, explicitly create an isolated plugin-data Python venv and download pinned AKShare 1.19.1 packages from official PyPI. No global/system package install.",
+    "description": "First verify/reuse compatible existing AKShare. If missing, explicitly create a private plugin-data Python venv and download pinned AKShare 1.19.1 packages from official PyPI. No global/system package install.",
     "parameters": {
       "type": "object",
       "properties": {
         "python_path": {
           "type": "string",
-          "description": "Optional native 64-bit Python >=3.11 executable; Linux guest Python is not a macOS host executable"
+          "description": "Optional native 64-bit Python >=3.11 executable compatible with this host OS"
         }
       },
       "additionalProperties": false
@@ -76,6 +76,18 @@
             {
               "type": "string",
               "const": "stock_zh_a_daily"
+            },
+            {
+              "type": "string",
+              "const": "stock_bid_ask_em"
+            },
+            {
+              "type": "string",
+              "const": "stock_zh_a_spot_tx"
+            },
+            {
+              "type": "string",
+              "const": "stock_zh_a_hist_tx"
             }
           ]
         },
@@ -94,6 +106,36 @@
           "default": 100
         }
       },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "akshare_quote",
+    "label": "akshare_quote",
+    "description": "Read actual explicitly selected Eastmoney or Tencent single-stock quote snapshot; polling observation, not an exchange tick stream.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "pattern": "^[0-9]{6}$"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "eastmoney"
+            },
+            {
+              "type": "string",
+              "const": "tencent"
+            }
+          ]
+        }
+      },
+      "required": [
+        "symbol"
+      ],
       "additionalProperties": false
     }
   }

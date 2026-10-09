@@ -1,9 +1,13 @@
-# Optional AKShare plugin
+# AKShare optional market provider
 
-API-v1 native package, default discoverable. No activation-time dependency downloads; no account or trade interface. Sources: [AKShare installation](https://akshare.akfamily.xyz/installation.html) and [stock API documentation](https://akshare.akfamily.xyz/data/stock/stock.html).
+Load `sesame/akshare`. It never downloads on activation. Discover/reuse a compatible native Python first; explicitly prepare private dependencies only when missing.
 
-First use `akshare_discover` with any configured existing Python. Compatible AKShare 1.19.1 is verified through actual import/version and reused readonly; no shared environment is upgraded. `akshare_prepare` also checks existing environments first. Only when missing, tools prepare a venv **under plugin persistent data**, pinned `akshare==1.19.1`, using only `https://pypi.org/simple` packages (prefer wheels; official source distributions may be built in the isolated environment). The install receipt records each resolved version, official wheel URL and SHA256. Requires a native 64-bit Python 3.11+ with venv/pip. Unsupported architecture or guest-only Python fail explicitly. AKShare uses many dependencies; preparation may take minutes. Pure Python source dependencies such as jsonpath may require an isolated build; no global package installation occurs.
+Select and persist one exact connection: `akshare:eastmoney`, `akshare:sina`, or `akshare:tencent`, revision `1.19.1`. Sources are never silently mixed or switched. Tencent currently provides actual A-share catalog/last-price observations via `stock_zh_a_spot_tx` and daily history via `stock_zh_a_hist_tx`; Eastmoney provides bid/ask snapshots; Sina provides daily history.
 
-`sesame.market@1` provides instrument search/describe and daily bar history, **not streaming**. Eastmoney and Sina have separate source identities; no silent fallback. Decimal strings reflect upstream float precision. Time is Asia/Shanghai wall time, daily aggregate session 09:30–15:00; current incomplete days marked forming. Unknown calendar/coverage is never claimed complete.
+`quotes.subscribe` polls the chosen Eastmoney/Tencent snapshot every 60 seconds, without overlapping reads. Quote time is the actual HTTP observation time; exchange event time is unavailable, freshness unknown, and bid/ask are unknown when absent. This is not an exchange tick feed. Tencent reads one all-market snapshot per poll (at most five selected instruments).
 
-Offline tests (matching host SDK loader): `node --import "$SESAME_PLUGIN_SDK_LOADER" --test tests/provider.test.js`. Opt-in real integration: `node tests/live.mjs` (creates a temporary data directory, downloads official dependencies, makes actual public data calls and removes the directory in finally). This is not broker execution.
+`bars.subscribe` polls actual daily history every 60 seconds and returns the selected daily tail. Today’s upstream row is forming until 15:00 Asia/Shanghai. No minute bars are created from quote snapshots, no calendar completeness is claimed. A gap terminates the stream with the actual error and requires a new snapshot.
+
+History is paged, Decimal text and explicitly source-labelled. Eastmoney volume is lot, Sina/Tencent normalized history volume is share. AKShare 1.19.1 excludes sz000 stocks from its conversion; for these A-share stock inputs the bridge preserves native_volume and explicitly applies lot×100.
+
+`akshare_quote` and the research whitelist are read-only. No accounts or trading API is provided. Network errors remain errors. Upstream floats cannot recover lost precision.
