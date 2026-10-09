@@ -2,10 +2,10 @@ name: Plugin API 1 sources
 on:
   push:
     branches: [main, feat/plugin-api-v1]
-    paths: ['plugins/api-v1/**', 'plugins/optional-api-v1/**', '.github/scripts/*api1*', '.github/scripts/release-plugins*', '.github/plugin-releases/**', '.github/workflows/plugin-api*.yml']
+    paths: ['plugins/api-v1/**', 'plugins/optional-api-v1/**', '.github/scripts/*api1*', '.github/scripts/release-plugins*', '.github/scripts/semantic-review*', '.github/plugin-releases/**', '.github/workflows/plugin-api*.yml', '.github/workflows/plugin-semantic-review.yml']
   pull_request_target:
     types: [opened, synchronize, reopened]
-    paths: ['plugins/api-v1/**', 'plugins/optional-api-v1/**', '.github/scripts/*api1*', '.github/scripts/release-plugins*', '.github/plugin-releases/**', '.github/workflows/plugin-api*.yml']
+    paths: ['plugins/api-v1/**', 'plugins/optional-api-v1/**', '.github/scripts/*api1*', '.github/scripts/release-plugins*', '.github/scripts/semantic-review*', '.github/plugin-releases/**', '.github/workflows/plugin-api*.yml', '.github/workflows/plugin-semantic-review.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -42,7 +42,7 @@ jobs:
       - name: Validate fixed release plans without publishing
         run: node trusted/.github/scripts/release-plugins.mjs --check candidate
       - name: Test trusted lock and archive code
-        run: node --test trusted/plugins/api-v1/tests/lock.test.mjs trusted/.github/scripts/release-plugins.test.mjs
+        run: node --test trusted/plugins/api-v1/tests/lock.test.mjs trusted/.github/scripts/release-plugins.test.mjs trusted/.github/scripts/semantic-review.test.mjs
       - name: Record scope
         run: |
           echo '### API 1 package identity checks' >> "$GITHUB_STEP_SUMMARY"
