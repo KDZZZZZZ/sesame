@@ -411,9 +411,9 @@
     },
     {
       "id": "sesame/mt5",
-      "version": "1.1.5",
+      "version": "1.1.6",
       "directory": "mt5",
-      "treeDigest": "sha256:45ed8d67135ff6f8af7c61c285e400694e1c71aeb9a6d62dcb9cebe21101f673",
+      "treeDigest": "sha256:4dc84061b72ffb8165c88e55d91aff0e8a98191035168b12377a3c548aff5008",
       "files": [
         {
           "path": "LICENSE",
@@ -587,8 +587,8 @@
         },
         {
           "path": "backend/run-observer.js",
-          "sha256": "ac1e0ba8db002c85e55f61eff24d3aab25c8b4622dc79b7968e8e5d188247310",
-          "bytes": 14479
+          "sha256": "64fa400e41933c0cb69b04c456c7b21d707184b7bd5843be57046ae636036a44",
+          "bytes": 17726
         },
         {
           "path": "backend/sdk/Expert.mqh",
@@ -757,12 +757,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "7a2bbbfee364fe1dcf1127495ba24a837f125e179fca9e520899d5f93aebf07d",
+          "sha256": "0b382dd53528bbac3103c6ca20483d14f770183f47fe17ae48e09b7c6b858d44",
           "bytes": 97
         },
         {
           "path": "plugin.json",
-          "sha256": "67a8c838f18016bd6bfd7eeb2c577af1ecaf92d56de36cc2ceee8f4f259aa034",
+          "sha256": "07ea8b096274bbb3d2c670cd72497fa5dd9b52eeec58fb9403fc155617df4c41",
           "bytes": 2298
         },
         {

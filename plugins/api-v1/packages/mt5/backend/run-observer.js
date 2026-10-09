@@ -1,7 +1,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { digest } from '@sesame/plugin-sdk/protocol';
+import { digest, canonical } from '@sesame/plugin-sdk/protocol';
 import { translationBinding } from './parameters.js';
 import { accountIdentity } from './contract-mapping.js';
 import { requireValue } from './support.js';
@@ -28,6 +28,49 @@ export class NativeRunObserver {
     const blobs = Object.entries(files).map(([path, text]) => ({ path, mediaType: path.endsWith('.ex5') ? 'application/octet-stream' : 'application/json', ...this.host.artifacts.blob(Buffer.isBuffer(text) || typeof text === 'string' ? text : JSON.stringify(text)) }));
     return this.host.artifacts.publish({ operationId, manifest: { kind, schemaVersion: '1.0.0', content, dependencies, blobs } });
   }
+  frozenBuild(build, manifest, translation, bytes) {
+    // Archive location/cleanup flags describe storage lifecycle, not compiled content.
+    const stable = value => { const { archived_artifact, archived_manifest, intermediate_files_removed, ...content } = value; return content; };
+    const identity = digest([stable(build), manifest, translation, digest(bytes)]);
+    const verify = ref => {
+      const artifact = this.host.artifacts.read(ref), content = artifact.manifest.content;
+      requireValue(artifact.producer.id === this.host.plugin.id && ref.kind === 'resource' && content.format === 'sesame.mt5.build/1' && content.build?.id === build.id, '冻结构建引用身份不匹配');
+      requireValue(digest([stable(content.build), content.manifest, translation, digest(bytes)]) === identity && canonical(artifact.manifest.dependencies) === canonical([translation]), '冻结构建内容已改变，不能覆盖或复用原引用');
+      const blob = artifact.manifest.blobs.find(blob => blob.path === 'Strategy.ex5');
+      requireValue(blob && digest(this.host.artifacts.readBlob(blob)) === digest(bytes), '冻结构建 EX5 与原成果不一致');
+      return ref;
+    };
+    const saved = this.mt5.storage.get('native_build_inputs', build.id, true);
+    if (saved) { requireValue(saved.identity === identity, '冻结构建内容已改变，不能复用原引用'); return verify(saved.ref); }
+    // Migrate already-published pre-index builds without re-publishing mutable metadata
+    // under their existing host idempotency key. Read exact artifacts, not request internals.
+    const migrationId = 'legacy-build-resources-v1';
+    if (!this.mt5.storage.get('native_build_migrations', migrationId, true)) {
+      const candidates = new Map();
+      for (let offset = 0; ; offset += 2000) {
+        const page = this.host.artifacts.list({ kind: 'resource', limit: 2000, offset });
+        for (const item of page.items) {
+          if (item.producer && item.producer.id !== this.host.plugin.id) continue;
+          const artifact = this.host.artifacts.read(item.ref), content = artifact.manifest.content;
+          if (artifact.producer.id === this.host.plugin.id && content.format === 'sesame.mt5.build/1' && content.build?.id) {
+            const refs = candidates.get(content.build.id) ?? [];
+            refs.push(item.ref); candidates.set(content.build.id, refs);
+          }
+        }
+        if (!page.hasMore) break;
+      }
+      // Completion is written last: interrupted scans retry rather than hiding legacy refs.
+      for (const [id, refs] of candidates) this.mt5.storage.put('native_build_legacy_refs', { id, refs });
+      this.mt5.storage.put('native_build_migrations', { id: migrationId, completed: true });
+    }
+    let ref;
+    for (const item of this.mt5.storage.get('native_build_legacy_refs', build.id, true)?.refs ?? []) {
+      const candidate = verify(item);
+      requireValue(!ref || canonical(ref) === canonical(candidate), '同一构建存在不同冻结引用，需人工核查'); ref = candidate;
+    }
+    ref ??= this.artifact(`native-build-${build.id}`, 'resource', { format: 'sesame.mt5.build/1', build: stable(build), manifest }, [translation], { 'Strategy.ex5': bytes });
+    this.mt5.storage.put('native_build_inputs', { id: build.id, identity, ref }); return ref;
+  }
   definition(kind, native) {
     const recordId = `mt5-${kind}-${native.id}`, saved = this.mt5.storage.get('native_run_inputs', recordId, true);
     if (saved) return saved.body;
@@ -45,7 +88,7 @@ export class NativeRunObserver {
       manifestBytes = this.host.artifacts.readBlob(archived.manifest.blobs.find(item => item.path === `builds/${build.id}-manifest.json`));
     }
     const manifest = JSON.parse(manifestBytes.toString('utf8'));
-    const frozen = this.artifact(`native-build-${build.id}`, 'resource', { format: 'sesame.mt5.build/1', build, manifest }, [binding.translation], { 'Strategy.ex5': bytes });
+    const frozen = this.frozenBuild(build, manifest, binding.translation, bytes);
     const parameters = this.artifact(`${recordId}-parameters`, 'parameters', { source: binding.source, values: binding.parameters, nativeInputs: binding.native, defaultsExpanded: true }, [binding.source]);
     const input = this.artifact(`${recordId}-inputs`, 'resource', { format: 'sesame.mt5.binding/1', source: binding.source, instrument: binding.instrument, sourceInputs: binding.inputs, nativeConfig: config, timeBasis: 'broker_server_unspecified', limitations: ['One native symbol/timeframe; broker history and calendar are not a frozen semantic replay fixture.'] }, [binding.source]);
     const connection = { id: 'mt5-terminal', revision: String(native.connection_version ?? this.mt5.official.config.version) };

@@ -104,6 +104,58 @@ The gate ran trusted main revision `6937305ba021bb20a0f0b022fdc18bede3eca383`, c
 
 This release contains AKShare 1.0.2, QMT 1.0.0 and vn.py 1.0.1. A fresh test fixture downloaded the three immutable public catalog packages, verified their files, installed/loaded them and called their environment/status tools in the same Pi session (one integration test, 20.2 seconds). It used an existing compatible vn.py environment; it did not install dependencies or exercise a new model decision, full fresh Qt installation, authorized Windows QMT terminal or brokerage trade. The catalog source remains `373bb390c8903688105a88f51b33960f8665187a`.
 
+# Development bundle 9 validation
+
+Only MT5 changes, from 1.1.5 to 1.1.6; the other 18 package versions and file
+trees remain those of bundle 8. Reusing a compiled build after archival could
+republish changed storage metadata under the same native-build operation, causing
+a real host idempotency conflict before a run was created. The input fingerprint
+does not include producer identity; a plugin upgrade is a reuse scenario, not a
+separate cause of this conflict. The plugin now persists a fixed build-reference index
+and strictly validates existing build evidence before reusing its original ref
+and producer. Archive location and cleanup flags are excluded from compiled
+content identity. New definitions still use the fixed build operation; the fix
+does not randomize operations or weaken the host's idempotency rules.
+
+A pre-merge review also found that each previously unseen build rescanned all
+resource history. Legacy build candidates are now indexed in one persistent
+migration; the completion marker is written only after the scan and index writes
+finish. Later new builds use their direct indexes, including after a restart.
+The first migration still enumerates existing resource metadata. Foreign
+producer metadata is filtered before reading resource contents. Every legacy candidate is still strictly verified when reused; conflicting references
+remain an error.
+
+Fourteen public frozen-build/run-reference checks passed. Independent review also
+passed 14 checks using a real temporary Store and ContractArtifacts, including
+protect/cleanup removing the transient manifest, closing and reopening the Store,
+and two new main-session run definitions/RunRecords across producer
+version fixtures 1.1.3, 1.1.6 and 1.1.7. These are compatibility fixtures, not a
+claim that a 1.1.7 package has been released. The original fixed ref and producer
+remain intact. Changed immutable build/manifest/translation/EX5 data, missing or
+damaged blobs, foreign references/dependencies and ambiguous same-build refs are
+rejected rather than adopted or republished.
+
+After the migration-cost correction, independent review reran the 14 public
+checks and the 14 Store/ContractArtifacts checks and passed eight additional
+migration checks (36 total). A temporary real Store with 2,100 foreign resources
+required two metadata pages and zero foreign-content reads. After migration,
+20 new builds and 20 more after a Store reopen performed zero history list/read
+operations; a legacy hit read only its own reference. Interrupted page reads and
+partial index writes left no completion marker and retried after reopening.
+Duplicate candidates, immutable changes and foreign references remained rejected;
+a publication followed by an index-write failure still reused the same host
+operation and artifact after restart.
+
+A read-only inspection of the previous application's stored evidence reproduced
+the mismatch caused by the two archive-state fields. In a separate temporary
+Store, three repeated frozen-build lookups retained the original 1.1.3-produced ref with
+zero new publications, and immutable changes were rejected. The independent
+review inspected that evidence without rerunning the original database script.
+This verifies evidence freezing and persistent lifecycle, not new compilation,
+native Tester execution or brokerage trading. No running application cache was
+rewritten. The final source, lock and archive still require the exact-head review
+and premerge publication gate described in [PUBLISHING.md](PUBLISHING.md).
+
 # Development bundle 8 validation
 
 Only MT5 changes from 1.1.4 to 1.1.5; the other 18 packages, including
