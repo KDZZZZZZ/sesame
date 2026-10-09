@@ -1,3 +1,32 @@
+# Development bundle 6 validation
+
+Only MT5 1.1.4, strategy-authoring 1.0.1 and workspace 1.0.2 differ from bundle 5.
+The final combined targeted run passed all 11 checks for the self-contained SVL
+reference/examples, surfaced workspace failures, and owned short Tester paths.
+The package contributors also passed 12 SDK/reference/workspace checks and 14
+MT5 offline checks; these are overlapping targeted runs, not additive totals.
+
+Actual HostWorkspace/Pi execution verified timeout, output-limit and cancellation
+failures as errors with the recorded execution ID, captured output tail and
+snapshot diagnostics, leaving no owned process. The public SDK validated and
+replayed both declared SVL examples, and an actual PluginRegistry allowed the
+declared language reference only after loading the plugin. Documentation describes
+the implemented SVL subset without claiming unavailable language features or
+native-target equivalence.
+
+The native Tester regression reproduced an unchanged EX5 failing at a 270-character
+path and succeeding at a 137-character path. MT5 now uses an owned short temporary
+runner, checks the path budget and EX5 hashes, and copies only the selected
+symbol's existing history/ticks. A real macOS native Tester run passed in 58
+seconds and produced summary/equity/deals/trace data with one simulated trade;
+owned processes were cleaned up. This is Tester evidence, not live brokerage
+execution or Windows/Linux acceptance. Unconfirmed cleanup preserves the owned
+runner for diagnosis.
+
+Publication uses the pre-merge semantic gate described in [PUBLISHING.md](PUBLISHING.md).
+Automated review records and behavior tests remain distinct from human approval.
+The stable catalog, optional packages, and all previous release assets are unchanged.
+
 # Development bundle 5 validation
 
 The source suite passed 128 checks: 115 passed, 13 explicit gates and zero
