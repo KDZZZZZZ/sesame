@@ -1,8 +1,10 @@
+import { marketTools } from './market.js';
 export function createTools(host) {
   const { define, Type, string, optional } = host.tools;
   const conversationId = host.scope.conversationId;
   const box = host.workspace;
   return [
+    ...marketTools(host),
     define('data_sources', '列出统一数据服务已接入的数据源。缓存、权限和证据由宿主管理。', {}, () => host.datasets.sources()),
     define('data_query', '按插件数据源声明获取有界预览与短期 query_id。arguments 传该来源自身的查询字段。需要分析或引用时立即 data_snapshot，再 data_read；has_more=true 表示范围未完整返回。', {
       source: Type.String({ description: 'data_sources 返回的数据来源 ID' }), dataset_id: optional('已有数据 ID'), arguments: Type.Optional(Type.Record(Type.String(), Type.Unknown(), { description: '插件来源自己的查询字段；不得覆盖 source、limit、offset 等宿主分页参数' })),

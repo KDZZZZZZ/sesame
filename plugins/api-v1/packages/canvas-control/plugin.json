@@ -2,11 +2,12 @@
   "id": "sesame/canvas-control",
   "title": "工作台与图表编排",
   "description": "主 Agent 编排水平工作台窗口，以及图表区内部的行情图、实时指标和研究曲线。",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "default_state": "mounted",
   "agent_scope": "main",
   "tool_names": [
     "canvas_inspect",
+    "canvas_binding",
     "canvas_apply",
     "canvas_focus",
     "chart_script",
@@ -17,9 +18,12 @@
   "prompts": [
     "prompt.md"
   ],
-  "skills": [],
+  "skills": [
+    "skills"
+  ],
   "mcp_export": [
     "canvas_inspect",
+    "canvas_binding",
     "canvas_apply",
     "canvas_focus",
     "chart_script",
@@ -29,5 +33,9 @@
   "provides": {
     "sesame.indicator": "1"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "resources": [
+    "resources/close-line.json",
+    "resources/close-line.js"
+  ]
 }

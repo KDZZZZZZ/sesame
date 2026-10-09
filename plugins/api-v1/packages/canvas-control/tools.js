@@ -1,4 +1,5 @@
 import { indicatorTool } from './indicator.js';
+import { bindingTool, marketProviders } from './market-binding.js';
 export function createTools(host) {
   const { define, Type } = host.tools;
   const choice = values => Type.Union(values.map(Type.Literal));
@@ -21,7 +22,8 @@ export function createTools(host) {
     sync_group: Type.Optional(Type.String({ description: '默认独立；仅用户明确要求联动拖动/缩放时设置相同非空分组；空字符串取消联动', maxLength: 32 })),
   }, { additionalProperties: false });
   return [
-    define('canvas_inspect', '查看水平工作台的版本、三个窗口宽度、图表 ID、布局、脚本与前端渲染回执。修改前先读取；没有近期客户端回执表示尚未确认渲染。', {}, () => host.layout.inspect()),
+    define('canvas_inspect', '查看工作台版本、图表、布局、指标实例、前端渲染回执及已加载 market_providers 身份/能力。新行情图先 market_instruments 搜索，再 canvas_binding 生成完整绑定；没有近期客户端回执表示尚未确认渲染。', {}, () => ({ ...host.layout.inspect(), market_providers: marketProviders(host) })),
+    bindingTool(host),
     define('canvas_apply', '原子批量修改工作台。workspace 调整三个水平窗口宽度或定位；其余图表操作仅在最左侧图表区内。用户锁定或正在拖动的图表会返回冲突，须重读后处理。不触发交易。', {
       ...common,
       operations: Type.Array(Type.Object({ op: choice(['add', 'update', 'remove', 'panels', 'focus', 'arrange', 'workspace', 'reorder', 'dock', 'tile']), id: optional('目标图表 ID；add 可省略'), target_id: optional('reorder 的交换目标或 dock 的插入参照图表'), side: Type.Optional(choice(['left', 'right', 'top', 'bottom'])), tiles: Type.Optional(tiles), groups: Type.Optional(Type.Array(Type.Array(string('图表 ID'), { minItems: 1, maxItems: 32 }), { minItems: 1, maxItems: 32 })), chart: Type.Optional(chart),

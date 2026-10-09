@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "1.0.0",
+  "title": "Observed close",
+  "description": "Minimal Product indicator example; observed closes, including the forming bar, without trading signals.",
+  "parameters": [],
+  "inputs": [{ "id": "price", "kind": "bars", "binding": "chart", "lookback": 500, "forming": "include" }],
+  "panes": [{ "id": "price", "placement": "main" }],
+  "series": [{ "id": "close", "title": "Observed close", "paneId": "price", "type": "line", "unit": "price", "scale": { "mode": "price", "scaleId": "price" }, "style": { "color": "#c28b45", "width": 2 } }],
+  "implementation": { "kind": "code", "entry": "close-line.js", "language": "javascript", "runtime": "sesame-indicator/1", "dependencies": [] }
+}
