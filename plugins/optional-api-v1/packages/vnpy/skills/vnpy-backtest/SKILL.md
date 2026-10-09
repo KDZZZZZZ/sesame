@@ -1,0 +1,16 @@
+---
+name: vnpy-backtest
+description: Run an authored VeighNa CTA strategy against frozen bar data, inspect the actual engine result, and publish a reproducible report.
+---
+
+Inspect installed Python and saved environment configuration. Call vnpy_environment inspect with an existing path when necessary. Reuse compatible versions; use prepare only for the requested environment setup if dependencies are missing. Preparation installs into private plugin data, records official PyPI sources and hashes, and verifies import. It does not replace an existing environment or install Python. Native 64-bit Python 3.10–3.13 is required; explain a missing platform wheel or network failure instead of claiming readiness.
+
+Read the fixed data and its provenance before writing strategy code. Freeze time, OHLC and volume into a DataRef, preserving exact strings and original time authority. Declare any column mapping. Offset-free timestamps need the provider's wall_time_authority; never invent a UTC offset. Filter/adjust data explicitly before freezing it and record such derivations. Use actual data for research; examples/bars.json is a four-bar fictional execution test.
+
+Read examples/strategy.py for the CtaTemplate interface. Write a single source file using real workspace paths or relative paths. Strategies run as native task-managed Python with current-user permissions, not OS isolation. Do not import a live gateway or create side effects beyond the task. No trading action is implied by permission to backtest.
+
+Set vt_symbol, interval, capital, size, pricetick, commission rate and slippage explicitly. Include preceding frozen bars when on_init calls load_bar, and set the backtest start after warmup coverage. Call vnpy_backtest with a unique operation_id and explicit parameters; keep that ID for retries of exactly the same input. A changed source or parameter set needs another ID. Upstream engine behavior governs bar matching and open positions; do not describe its assumptions as broker guarantees.
+
+Inspect status and diagnostics. The plugin detects early termination, refuses missing/duplicate/unsorted bars, and never substitutes a database or downloaded history. Reopen the returned fixed strategy.result with vnpy_result, then inspect its source, environment, raw receipt and data references. Exact source strings remain fixed even after temporary job cleanup. Native engine output uses binary floating point; decimal text does not prove SVL or decimal34 equivalence.
+
+Build a report from the returned daily, trades and orders DataRefs. Label demo data visibly; distinguish mark-to-market statistics, costs and realized trades, explain limitations, and run report_check. Correct failures by publishing a new report revision. Do not change frozen inputs merely to make a chart look successful.
