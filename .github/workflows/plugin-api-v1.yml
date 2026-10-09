@@ -42,7 +42,7 @@ jobs:
       - name: Validate fixed release plans without publishing
         run: node trusted/.github/scripts/release-plugins.mjs --check candidate
       - name: Test trusted lock and archive code
-        run: node --test trusted/plugins/api-v1/tests/lock.test.mjs trusted/.github/scripts/release-plugins.test.mjs trusted/.github/scripts/semantic-review.test.mjs
+        run: node --test trusted/plugins/api-v1/tests/lock.test.mjs trusted/.github/scripts/release-plugins.test.mjs trusted/.github/scripts/semantic-review.test.mjs trusted/.github/scripts/api1-catalog.test.mjs
       - name: Record scope
         run: |
           echo '### API 1 package identity checks' >> "$GITHUB_STEP_SUMMARY"
