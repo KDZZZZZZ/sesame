@@ -16,6 +16,12 @@ Archives use deterministic tar entries and a fixed gzip container with stored
 DEFLATE blocks. This deliberately avoids zlib-version-dependent compressed bytes;
 the package locks and extraction format are unchanged.
 
+The release tag identifies the main-branch publishing revision, which contains
+the reviewed release plan and publisher. The archive and application pin retain
+the plan's exact package `sourceCommit`; `review.json` records both identities.
+This uses GitHub's normal contents-write token without requesting workflow-write
+credentials for a historical commit whose workflow files differ from main.
+
 Merging the PR into main triggers `Plugin API 1 release`. It verifies the merged
 PR, successful GitHub Actions checks on its exact head, immutable source bytes,
 and absence of unresolved changes-requested reviews. It creates a draft release,
