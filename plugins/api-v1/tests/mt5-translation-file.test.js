@@ -145,6 +145,24 @@ test('partial publication and unknown artifact response reuse fixed operation re
   assert.equal([...f.records.values()].filter(record => record.ref.kind === 'strategy.translation').length, 1);
 });
 
+test('final transaction respects a receipt committed by another connection after the initial lookup', async t => {
+  const f = await fixture(t), publish = f.host.artifacts.publish.bind(f.host.artifacts), operation = digest(f.args.operation_id).slice(7); let winner;
+  f.host.artifacts.publish = input => {
+    const ref = publish(input);
+    if (input.manifest.kind === 'strategy.validation') {
+      const start = f.store.requests.get(`translation-start-${operation}`).value;
+      winner = { project_id: start.projectId, revision: 1, source: f.manifest.source, translation: input.manifest.content.translation, validation: ref, implementation: 'translated_unverified', limitations: input.manifest.content.limitations };
+      // Controlled stand-in for a second connection completing then editing its
+      // project while this call was between the initial lookup and final commit.
+      f.store.put('mt5_project', { id: start.projectId, revision: 9, title: 'Newer committed edit' });
+      f.store.put('mt5_translation_receipt', { id: operation, fingerprint: digest({ operation_id: f.args.operation_id, ...f.manifest }), result: winner });
+    }
+    return ref;
+  };
+  const result = await f.run(); assert.deepEqual(withoutManifest(result), winner);
+  assert.equal(f.store.get('mt5_project', winner.project_id).revision, 9); assert.equal(f.store.get('mt5_project', winner.project_id).title, 'Newer committed edit');
+});
+
 test('shared strict schema rejects unknown, missing and incorrectly typed fields in both entry points', async t => {
   const f = await fixture(t);
   const invalid = [

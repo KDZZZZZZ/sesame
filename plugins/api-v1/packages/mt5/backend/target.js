@@ -101,11 +101,16 @@ export async function registerTranslation(host, mt5, args) {
       cases: [{ id: 'source-identity-and-map-bounds', outcome: 'passed', evidence: [translation], diagnostics: [] }, { id: 'native-semantic-equivalence', outcome: 'not_run', evidence: [], diagnostics: [] }], coverage: { nodes: mapping.map(entry => entry.nodeId), events: [], scenarios: ['artifact identity and source map structure'] }, tolerancePolicy: null, limitations }, [args.source, translation, environment]);
     const key = start.projectId, created = start.created;
     const result = { project_id: key, revision: 1, source: args.source, translation, validation, implementation: 'translated_unverified', limitations };
-    host.storage.transaction(() => {
+    return host.storage.transaction(() => {
+      const committed = host.storage.get('mt5_translation_receipt', operation, true);
+      if (committed) {
+        requireValue(committed.fingerprint === fingerprint, '翻译操作 ID 已用于不同内容', 409, 'idempotency_conflict');
+        return committed.result;
+      }
       host.storage.put('mt5_revision', { id: `${key}:1`, project_id: key, revision: 1, ...source, svl_source: args.source, source_semantic_digest: checked.sourceDigest, translation, translation_validation: validation, created_at: created });
       host.storage.put('mt5_project', { id: key, version: 1, title: args.title.trim(), revision: 1, source_digest: source.source_digest, sdk_version: SDK_VERSION, translation, translation_mode: args.mode, test_risk_limits: { ...DEFAULT_RISK_LIMITS }, created_at: created, updated_at: created });
       host.storage.put('mt5_translation_receipt', { id: operation, fingerprint, result });
+      return result;
     });
-    return result;
   });
 }

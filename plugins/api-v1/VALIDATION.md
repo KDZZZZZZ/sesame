@@ -126,11 +126,13 @@ atomically, allowing recovery after a lost result without republishing or resett
 a later project revision. Compiler availability used in the translation environment
 is also fixed for partial-publication retries.
 
-The author passed 17 public checks: 13 file-entry tests and four existing run/tool
+The author passed 18 public checks: 14 file-entry tests and four existing run/tool
 schema regressions. They cover exact 800-line bytes, concurrent same and conflicting
 requests, deleted/edited files, partial and post-commit failure recovery, strict
 schema/semantic rejection, unsafe paths, a symlink replacement during open, size
-limits and cancellation. Static tool definitions match the actual factories.
+limits and cancellation. A controlled second-connection commit between the initial
+lookup and final transaction retained its newer project revision. Static tool
+definitions match the actual factories.
 
 A separate temporary integration used the real Store, HostContext, HostWorkspace,
 ContractArtifacts and generated tool execution. Six checks verified valid fixed
