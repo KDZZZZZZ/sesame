@@ -1,0 +1,21 @@
+{
+  "id": "sesame/orchestration",
+  "title": "会话与委派",
+  "description": "主子 Agent 的协作规则、任务委派与结果检查。",
+  "version": "2.0.0",
+  "default_state": "mounted",
+  "tool_names": [
+    "agent_delegate",
+    "agent_inspect",
+    "agent_finish"
+  ],
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [],
+  "entry": "index.js",
+  "tool_definitions": "tools.json",
+  "apiVersion": "1",
+  "provides": {},
+  "license": "MIT"
+}

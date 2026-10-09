@@ -1,0 +1,28 @@
+{
+  "id": "sesame/memory",
+  "title": "长期记忆",
+  "description": "按用户、项目、经验和参考资料检索长期记忆；主 Agent 合并候选、修订和遗忘。闲置记忆归档按需召回。",
+  "version": "2.0.0",
+  "default_state": "mounted",
+  "tool_names": [
+    "memory_search",
+    "memory_read",
+    "memory_propose",
+    "memory_mark_used",
+    "memory_manage"
+  ],
+  "main_tool_names": [
+    "memory_manage"
+  ],
+  "entry": "index.js",
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "tool_definitions": "tools.json",
+  "apiVersion": "1",
+  "provides": {},
+  "license": "MIT"
+}

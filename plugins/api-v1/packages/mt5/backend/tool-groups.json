@@ -1,0 +1,120 @@
+[
+  {
+    "id": "official",
+    "tool": "mt5_call",
+    "rule": {
+      "priority": 0,
+      "servers": [
+        "terminal",
+        "metaeditor",
+        "marketdata"
+      ],
+      "categories": [
+        "workspace",
+        "charts",
+        "programs",
+        "account",
+        "quotes",
+        "journals",
+        "calendar",
+        "marketdata"
+      ],
+      "permissions": [
+        "standard"
+      ],
+      "exclude_methods": [
+        "chart_add_indicator",
+        "chart_remove_indicator",
+        "add_marketwatch_symbol",
+        "remove_marketwatch_symbol"
+      ]
+    }
+  },
+  {
+    "id": "charts",
+    "tool": "mt5_chart",
+    "rule": {
+      "priority": 80,
+      "methods": [
+        "chart_add_indicator",
+        "chart_remove_indicator",
+        "add_marketwatch_symbol",
+        "remove_marketwatch_symbol"
+      ]
+    }
+  },
+  {
+    "id": "editor",
+    "tool": "mt5_edit",
+    "rule": {
+      "priority": 70,
+      "servers": [
+        "launcher"
+      ],
+      "methods": [
+        "start_editor"
+      ]
+    }
+  },
+  {
+    "id": "editor",
+    "tool": "mt5_edit",
+    "rule": {
+      "priority": 50,
+      "categories": [
+        "editor",
+        "files"
+      ]
+    }
+  },
+  {
+    "id": "python",
+    "tool": "mt5_python",
+    "rule": {
+      "priority": 60,
+      "servers": [
+        "python"
+      ]
+    }
+  },
+  {
+    "id": "system",
+    "tool": "mt5_system",
+    "rule": {
+      "priority": 60,
+      "servers": [
+        "launcher"
+      ]
+    }
+  },
+  {
+    "id": "system",
+    "tool": "mt5_system",
+    "rule": {
+      "priority": 100,
+      "permissions": [
+        "host"
+      ]
+    }
+  },
+  {
+    "id": "tester",
+    "tool": "mt5_test",
+    "rule": {
+      "priority": 50,
+      "categories": [
+        "tester"
+      ]
+    }
+  },
+  {
+    "id": "trading",
+    "tool": "mt5_trade",
+    "rule": {
+      "priority": 100,
+      "permissions": [
+        "trading"
+      ]
+    }
+  }
+]

@@ -1,0 +1,135 @@
+[
+  {
+    "name": "host_files_list",
+    "label": "host_files_list",
+    "description": "只读列出宿主目录中的普通文件和目录，过滤私有数据；结果有界且可分页。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "description": "宿主绝对路径；支持 ~/"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "host_files_search",
+    "label": "host_files_search",
+    "description": "在宿主目录中按文件名片段递归搜索；不执行内容，不递归跟随符号链接。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "path",
+        "query"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "description": "宿主绝对路径；支持 ~/"
+        },
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "host_files_read",
+    "label": "host_files_read",
+    "description": "只读读取宿主普通文件，每次最多 256 KiB；支持按字节分页，二进制返回 base64。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "description": "宿主绝对路径；支持 ~/"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 262144
+        },
+        "encoding": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "utf8"
+            },
+            {
+              "type": "string",
+              "const": "base64"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "host_files_import",
+    "label": "host_files_import",
+    "description": "将不超过 8 MiB 的宿主普通文件复制到当前 /work/inputs，保留原文件并登记来源和哈希。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "description": "宿主绝对路径；支持 ~/"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]

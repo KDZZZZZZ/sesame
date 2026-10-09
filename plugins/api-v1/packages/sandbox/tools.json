@@ -1,0 +1,129 @@
+[
+  {
+    "name": "read",
+    "label": "read",
+    "description": "读取工作区文件或已挂载插件的授权资源；文本默认最多 2000 行/50 KB，可用 offset/limit 继续读取。PNG/JPEG/GIF/WebP 作为图片返回。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "工作区文件路径或宿主返回的插件资源路径",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "write",
+    "label": "write",
+    "description": "写入 UTF-8 工作区文件并创建所需父目录。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "path",
+        "content"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "工作区路径",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "content": {
+          "type": "string",
+          "maxLength": 1048576
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "edit",
+    "label": "edit",
+    "description": "精确替换原文件中唯一且互不重叠的文本；全部匹配通过后一次写入。保留 BOM 和原换行风格。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "path",
+        "edits"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "工作区路径",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "edits": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "oldText",
+              "newText"
+            ],
+            "properties": {
+              "oldText": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1048576
+              },
+              "newText": {
+                "type": "string",
+                "maxLength": 1048576
+              }
+            },
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 128
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "bash",
+    "label": "bash",
+    "description": "在会话隔离环境中执行 shell；返回真实执行 ID、退出码和输出，非零退出作为工具错误。cwd 可限制为 /work 的子目录。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "command"
+      ],
+      "properties": {
+        "command": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100000
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 600
+        },
+        "cwd": {
+          "type": "string",
+          "maxLength": 1000
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]

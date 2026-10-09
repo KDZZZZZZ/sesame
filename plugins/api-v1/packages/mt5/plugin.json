@@ -1,0 +1,125 @@
+{
+  "id": "sesame/mt5",
+  "title": "MetaTrader 5",
+  "description": "MT5 行情、账户、原生 MQL5 工程、编译、Tester、交易与持久运行观察。",
+  "version": "1.0.0",
+  "default_state": "mounted",
+  "tool_names": [
+    "mt5_catalog",
+    "mt5_call",
+    "mt5_cache",
+    "mt5_command",
+    "mt5_chart",
+    "mt5_edit",
+    "mt5_python",
+    "mt5_system",
+    "mt5_test",
+    "mt5_backtest",
+    "mt5_trade",
+    "mt5_deployment",
+    "mt5_project",
+    "mt5_inspect",
+    "mt5_compile",
+    "mt5_settings",
+    "mt5_update_configuration",
+    "mt5_import_configuration",
+    "mt5_connect",
+    "mt5_report_data",
+    "mt5_trade_detail",
+    "mt5_target",
+    "mt5_translation"
+  ],
+  "entry": "index.js",
+  "prompts": [
+    "prompt.md",
+    "tools/official/prompt.md",
+    "tools/charts/prompt.md",
+    "tools/editor/prompt.md",
+    "tools/python/prompt.md",
+    "tools/system/prompt.md",
+    "tools/tester/prompt.md",
+    "tools/trading/prompt.md",
+    "tools/deployment/prompt.md",
+    "tools/authoring/prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "resources": [
+    "skills/visual-state-machines/references/language.md",
+    "target/README.md",
+    "backend/sdk/Expert.mqh",
+    "backend/sdk/Results.mqh",
+    "backend/sdk/Risk.mqh",
+    "backend/sdk/Telemetry.mqh",
+    "backend/sdk/Trade.mqh",
+    "backend/sdk/Visual.mqh"
+  ],
+  "tool_definitions": "tools.json",
+  "main_tool_names": [
+    "mt5_deployment",
+    "mt5_settings",
+    "mt5_update_configuration",
+    "mt5_import_configuration",
+    "mt5_connect"
+  ],
+  "apiVersion": "1",
+  "provides": {
+    "sesame.market": "1",
+    "sesame.account": "1",
+    "sesame.strategy": "1"
+  },
+  "migration": {
+    "collections": [
+      "mt5_project",
+      "mt5_revision",
+      "mt5_build",
+      "mt5_checkout",
+      "mt5_backtest",
+      "mt5_pass",
+      "mt5_command",
+      "mt5_deployment",
+      "mt5_preparation",
+      "mt5_connection_status",
+      "configuration_change"
+    ],
+    "directories": [
+      "mt5"
+    ]
+  },
+  "workers": [
+    "backend/compiler-worker.js"
+  ],
+  "runtime": {
+    "entries": {
+      "win32": [
+        "windows_launcher",
+        "qemu",
+        "compiler_kernel",
+        "compiler_initrd",
+        "compiler_root_image"
+      ],
+      "darwin": [
+        "qemu",
+        "qemu_bios",
+        "compiler_kernel",
+        "compiler_initramfs",
+        "compiler_root_image"
+      ],
+      "linux": [
+        "linux_bwrap",
+        "linux_rootfs",
+        "linux_unsquashfs",
+        "linux_host_loader"
+      ]
+    },
+    "entryAliases": {
+      "win32": {
+        "compiler_kernel": "kernel",
+        "compiler_initrd": "initrd",
+        "compiler_root_image": "root_image"
+      }
+    }
+  },
+  "license": "MIT"
+}
