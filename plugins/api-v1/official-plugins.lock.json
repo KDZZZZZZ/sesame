@@ -128,7 +128,7 @@
       "id": "sesame/data-access",
       "version": "2.2.0",
       "directory": "data-access",
-      "treeDigest": "sha256:a6b55e8bde9bf8cbe123ae18c8b0c5f2a230bced3c76cf08752b6fae17f33fbd",
+      "treeDigest": "sha256:248d7bd4fe0188c8aebb53f27e243af291c2d8618dfd0ded667312993f68be40",
       "files": [
         {
           "path": "LICENSE",
@@ -142,8 +142,8 @@
         },
         {
           "path": "market-read.js",
-          "sha256": "5323a0fa35309333aa9c09737f7c554e4bf1f916d5419e3d547d0bc024f3cc21",
-          "bytes": 18020
+          "sha256": "8dc6a41b317e61586912c68f76a2316fd0fac8bb61734a44d2edadbb249fbc64",
+          "bytes": 18227
         },
         {
           "path": "market.js",

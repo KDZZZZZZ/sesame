@@ -7,12 +7,16 @@ source responses, exact numeric strings, unit metadata and resulting DataRef.
 A caller-supplied identity resumes the same committed result after restart;
 it does not silently fetch new market data or reinterpret an existing record.
 
-Nineteen targeted contract checks passed, including pagination, byte-identical
+Twenty-one targeted contract checks passed, including pagination, byte-identical
 duplicate handling, failure cleanup, units and persistent resume. Independent
 review found that ambiguous wall-clock folds could be string-sorted incorrectly.
 This revision explicitly rejects requested or returned wall-clock fold values
 with UNSUPPORTED_CAPABILITY, before accepting a history; it does not guess the
-DST chronology. Both forward and reverse fold cases have regressions.
+DST chronology. Both forward and reverse fold cases have regressions. A subsequent platform review
+found incompatible wall-clock authorities could skip range checks. Wall-clock
+requests now require matching bar basis, authority and zone; incompatible replies
+are rejected before freezing, while the intended UTC-query to provider-wall
+response path remains covered by an explicit regression.
 
 An actual temporary HostContext queried AKShare 1.19.1's explicitly selected
 Tencent source for 668 daily bars, in two provider pages from one upstream fetch.
