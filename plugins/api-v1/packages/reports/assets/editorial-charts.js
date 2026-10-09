@@ -1,4 +1,4 @@
-/* Sesame editorial charts 1.0.0 — MIT, Sesame contributors.
+/* Sesame editorial charts 1.0.1 — MIT, Sesame contributors.
  * Original implementation. No third-party chart runtime or network dependency. */
 (function (global) {
   'use strict';
@@ -28,10 +28,32 @@
     if (spec.rows.length>2500) fail('more than 2,500 marks; aggregate or filter the fixed data first');
     if (!['line','bar','scatter','matrix','units'].includes(spec.kind)) fail('unknown chart kind');
     observers.get(target)?.disconnect();
+    const state={observer:null,pendingFrame:null,svg:null,measured:0};
+    state.disconnect=()=>{state.observer?.disconnect();if(state.pendingFrame!==null){global.cancelAnimationFrame(state.pendingFrame);state.pendingFrame=null;}};
+    state.handle={get svg(){return state.svg;},destroy:()=>{if(observers.get(target)!==state)return;state.disconnect();observers.delete(target);target.replaceChildren();}};
+    observers.set(target,state);
+    try{return drawChart(target,spec,state);}catch(error){state.disconnect();observers.delete(target);throw error;}
+  }
+  function drawChart(target,spec,state){
     const measured=target.clientWidth,rows=spec.rows,width=Math.max(280,measured || 760),height=spec.height || Math.min(320,Math.max(240,width*.4)),pad={left:65,right:24,top:25,bottom:52};
     const svg=node('svg',{viewBox:`0 0 ${width} ${height}`,role:'img','aria-label':spec.title || spec.kind}),frame=html('div','sc-frame'),tooltip=html('div','sc-tooltip');
     tooltip.setAttribute('role','status');tooltip.hidden=true;frame.append(svg,tooltip);target.replaceChildren(frame);
-    const complete=()=>{const observer=new ResizeObserver(()=>{if(Math.abs(target.clientWidth-measured)>2)chart(target,spec);});observer.observe(target);observers.set(target,observer);return {svg,destroy:()=>{observer.disconnect();observers.delete(target);target.replaceChildren();}};};
+    const complete=()=>{
+      state.svg=svg;state.measured=measured;
+      if(state.observer)return state.handle;
+      state.observer=new ResizeObserver(()=>{
+        // ResizeObserver delivery must not synchronously change layout. Height
+        // changes and hidden views do not require a new chart; a later positive
+        // width notification will render a view that was created while hidden.
+        if(observers.get(target)!==state||state.pendingFrame!==null||target.clientWidth<=0||Math.abs(target.clientWidth-state.measured)<=2)return;
+        state.pendingFrame=global.requestAnimationFrame(()=>{
+          state.pendingFrame=null;
+          if(observers.get(target)===state&&target.clientWidth>0&&Math.abs(target.clientWidth-state.measured)>2)drawChart(target,spec,state);
+        });
+      });
+      state.observer.observe(target);
+      return state.handle;
+    };
     if (!rows.length){svg.append(node('text',{x:width/2,y:height/2,'text-anchor':'middle',class:'sc-label'},spec.emptyLabel || 'No observations'));return complete();}
     const missing=rows.filter(r=>numeric(r[spec.value || spec.y])===null||(spec.kind==='scatter'&&numeric(r[spec.x])===null)).length;
     const label = row => `${row[spec.x] ?? row[spec.label] ?? ''}${spec.kind==='matrix'?` / ${row[spec.y]}`:''}: ${row[spec.value || spec.y] ?? 'missing'}${spec.unit ? ` ${spec.unit}` : ''}`;
@@ -94,5 +116,5 @@
     do{const result=await global.report.readData(dataId,{...(cursor?{cursor}:{}),limit});if(!Array.isArray(result.rows))fail('invalid data page');rows.push(...result.rows);if(rows.length>maxRows)fail('data exceeds the declared row budget; filter or aggregate before publishing');cursor=result.page?.nextCursor;if(cursor){if(seen.has(cursor))fail('repeated page cursor');seen.add(cursor);}}while(cursor);
     return rows;
   }
-  Object.defineProperty(global,'SesameCharts',{value:Object.freeze({version:'1.0.0',chart,table,readRows,format,numeric}),configurable:false});
+  Object.defineProperty(global,'SesameCharts',{value:Object.freeze({version:'1.0.1',chart,table,readRows,format,numeric}),configurable:false});
 })(window);
