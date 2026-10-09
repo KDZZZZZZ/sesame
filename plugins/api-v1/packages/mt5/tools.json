@@ -95,7 +95,7 @@
         },
         "save_as": {
           "type": "string",
-          "description": "完整结果的 /work JSON 文件路径",
+          "description": "完整结果的工作区 JSON 文件路径",
           "minLength": 1,
           "maxLength": 20000
         }
@@ -253,7 +253,7 @@
         },
         "save_as": {
           "type": "string",
-          "description": "完整结果的 /work JSON 文件路径",
+          "description": "完整结果的工作区 JSON 文件路径",
           "minLength": 1,
           "maxLength": 20000
         }
@@ -316,7 +316,7 @@
         },
         "save_as": {
           "type": "string",
-          "description": "完整结果的 /work JSON 文件路径",
+          "description": "完整结果的工作区 JSON 文件路径",
           "minLength": 1,
           "maxLength": 20000
         }
@@ -379,7 +379,7 @@
         },
         "save_as": {
           "type": "string",
-          "description": "完整结果的 /work JSON 文件路径",
+          "description": "完整结果的工作区 JSON 文件路径",
           "minLength": 1,
           "maxLength": 20000
         }
@@ -442,7 +442,7 @@
         },
         "save_as": {
           "type": "string",
-          "description": "完整结果的 /work JSON 文件路径",
+          "description": "完整结果的工作区 JSON 文件路径",
           "minLength": 1,
           "maxLength": 20000
         }
@@ -505,7 +505,7 @@
         },
         "save_as": {
           "type": "string",
-          "description": "完整结果的 /work JSON 文件路径",
+          "description": "完整结果的工作区 JSON 文件路径",
           "minLength": 1,
           "maxLength": 20000
         }
@@ -745,7 +745,7 @@
         },
         "save_as": {
           "type": "string",
-          "description": "完整结果的 /work JSON 文件路径",
+          "description": "完整结果的工作区 JSON 文件路径",
           "minLength": 1,
           "maxLength": 20000
         }
