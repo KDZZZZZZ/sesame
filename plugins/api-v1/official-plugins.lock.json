@@ -413,7 +413,7 @@
       "id": "sesame/mt5",
       "version": "1.1.6",
       "directory": "mt5",
-      "treeDigest": "sha256:9727a54e81b71048c714b36eca2990140ed5003c193852a85595315321826135",
+      "treeDigest": "sha256:4dc84061b72ffb8165c88e55d91aff0e8a98191035168b12377a3c548aff5008",
       "files": [
         {
           "path": "LICENSE",
@@ -587,8 +587,8 @@
         },
         {
           "path": "backend/run-observer.js",
-          "sha256": "5a733dc00fe9c7a6a6abc1f00ad1bb645508399e24feec8977dd982ae191868a",
-          "bytes": 16935
+          "sha256": "64fa400e41933c0cb69b04c456c7b21d707184b7bd5843be57046ae636036a44",
+          "bytes": 17726
         },
         {
           "path": "backend/sdk/Expert.mqh",

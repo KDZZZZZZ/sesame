@@ -117,7 +117,15 @@ and producer. Archive location and cleanup flags are excluded from compiled
 content identity. New definitions still use the fixed build operation; the fix
 does not randomize operations or weaken the host's idempotency rules.
 
-Eleven public frozen-build/run-reference checks passed. Independent review also
+A pre-merge review also found that each previously unseen build rescanned all
+resource history. Legacy build candidates are now indexed in one persistent
+migration; the completion marker is written only after the scan and index writes
+finish. Later new builds use their direct indexes, including after a restart.
+The first migration still enumerates existing resource metadata. Foreign
+producer metadata is filtered before reading resource contents. Every legacy candidate is still strictly verified when reused; conflicting references
+remain an error.
+
+Fourteen public frozen-build/run-reference checks passed. Independent review also
 passed 14 checks using a real temporary Store and ContractArtifacts, including
 protect/cleanup removing the transient manifest, closing and reopening the Store,
 and two new main-session run definitions/RunRecords across producer
@@ -126,6 +134,17 @@ claim that a 1.1.7 package has been released. The original fixed ref and produce
 remain intact. Changed immutable build/manifest/translation/EX5 data, missing or
 damaged blobs, foreign references/dependencies and ambiguous same-build refs are
 rejected rather than adopted or republished.
+
+After the migration-cost correction, independent review reran the 14 public
+checks and the 14 Store/ContractArtifacts checks and passed eight additional
+migration checks (36 total). A temporary real Store with 2,100 foreign resources
+required two metadata pages and zero foreign-content reads. After migration,
+20 new builds and 20 more after a Store reopen performed zero history list/read
+operations; a legacy hit read only its own reference. Interrupted page reads and
+partial index writes left no completion marker and retried after reopening.
+Duplicate candidates, immutable changes and foreign references remained rejected;
+a publication followed by an index-write failure still reused the same host
+operation and artifact after restart.
 
 A read-only inspection of the previous application's stored evidence reproduced
 the mismatch caused by the two archive-state fields. In a separate temporary
