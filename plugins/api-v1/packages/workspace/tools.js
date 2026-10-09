@@ -2,11 +2,11 @@ import { dirname } from 'node:path';
 import { check, digest } from '@sesame/plugin-sdk/protocol';
 
 const queues = new Map(), MAX_BYTES = 50000, MAX_LINES = 2000;
-function outputTail(value) {
+function outputTail(value, upstreamTruncated = false) {
   const bytes = Buffer.from(value ?? ''); let start = Math.max(0, bytes.length - MAX_BYTES);
   // Keep the byte bound without replacing a cut UTF-8 prefix with extra bytes.
   while (start < bytes.length && (bytes[start] & 0xc0) === 0x80) start++;
-  return { output: bytes.subarray(start).toString('utf8'), truncated: bytes.length > MAX_BYTES };
+  return { output: bytes.subarray(start).toString('utf8'), truncated: upstreamTruncated === true || bytes.length > MAX_BYTES };
 }
 function failureMessage(message, details) {
   // Pi preserves thrown error.message as an isError tool result; it does not
@@ -76,7 +76,7 @@ export function createTools(host) {
         if (executionId && host.executions?.read) {
           try { recorded = await host.executions.read(executionId); } catch { /* Preserve the command failure if its record is unavailable. */ }
         }
-        const details = { ...original, cwd: original.cwd ?? recorded?.workspace_path ?? args.cwd ?? box.root?.(), shell, execution_id: executionId ?? null, exit_code: original.exitCode ?? original.exit_code ?? recorded?.exit_code ?? null, ...outputTail(original.output ?? recorded?.output), snapshot_errors: original.snapshot_errors ?? recorded?.snapshot_errors ?? [] };
+        const details = { ...original, cwd: original.cwd ?? recorded?.workspace_path ?? args.cwd ?? box.root?.(), shell, execution_id: executionId ?? null, exit_code: original.exitCode ?? original.exit_code ?? recorded?.exit_code ?? null, ...outputTail(original.output ?? recorded?.output, original.truncated === true || recorded?.truncated === true), snapshot_errors: original.snapshot_errors ?? recorded?.snapshot_errors ?? [] };
         const failure = new Error(failureMessage(error?.message ?? String(error), details), { cause: error });
         failure.name = error?.name ?? 'Error';
         if (error?.code !== undefined) failure.code = error.code;
@@ -84,7 +84,7 @@ export function createTools(host) {
         failure.details = details;
         throw failure;
       }
-      const details = { cwd: result.cwd ?? args.cwd ?? box.root?.(), shell, execution_id: result.executionId, exit_code: result.exitCode, ...outputTail(result.output), snapshot_errors: result.snapshot_errors ?? [] };
+      const details = { cwd: result.cwd ?? args.cwd ?? box.root?.(), shell, execution_id: result.executionId, exit_code: result.exitCode, ...outputTail(result.output, result.truncated), snapshot_errors: result.snapshot_errors ?? [] };
       if (result.exitCode !== 0) throw Object.assign(new Error(failureMessage(`Command exited with code ${result.exitCode}`, details)), { code: 'PROCESS_EXIT', details });
       return details;
     }),

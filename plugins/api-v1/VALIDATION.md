@@ -1,14 +1,16 @@
 # Development bundle 6 validation
 
 Only MT5 1.1.4, strategy-authoring 1.0.1 and workspace 1.0.2 differ from bundle 5.
-The final combined targeted run passed all 12 checks for the self-contained SVL
+The final combined targeted run passed all 14 checks for the self-contained SVL
 reference/examples, surfaced workspace failures, and owned short Tester paths.
 The package contributors also passed 12 SDK/reference/workspace checks and 15
 MT5 offline checks; these are overlapping targeted runs, not additive totals.
 
 Actual HostWorkspace/Pi execution verified timeout, output-limit and cancellation
 failures as errors with the recorded execution ID, captured output tail and
-snapshot diagnostics, leaving no owned process. The public SDK validated and
+snapshot diagnostics, leaving no owned process. Short retained output also preserves
+the host or stored execution truncation flag across success and failure paths,
+with explicit regression coverage; a locally short tail cannot imply complete output. The public SDK validated and
 replayed both declared SVL examples, and an actual PluginRegistry allowed the
 declared language reference only after loading the plugin. Documentation describes
 the implemented SVL subset without claiming unavailable language features or

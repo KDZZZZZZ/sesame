@@ -55,6 +55,29 @@ test('output tails are UTF-8 and byte bounded on failure and success; unavailabl
   assert.equal(result.truncated, true); assert.ok(Buffer.byteLength(result.output) <= 50000); assert.ok(output.endsWith(result.output));
 });
 
+test('short upstream-truncated failure and recorded tails remain visibly incomplete', async () => {
+  for (const fromRecord of [false, true]) {
+    const original = Object.assign(new Error('Captured output was capped'), { code: 'host_command_output_limit', details: { executionId: 'exec_capped', ...(fromRecord ? {} : { output: 'retained tail', truncated: true }) } });
+    const tool = fixture(async () => { throw original; }, () => ({ output: 'recorded tail', truncated: true }));
+    await assert.rejects(tool.execute('call', { command: 'native operation' }), error => {
+      assert.equal(error.cause, original); assert.equal(error.details.truncated, true);
+      assert.equal(error.details.output, fromRecord ? 'recorded tail' : 'retained tail');
+      assert.match(error.message, /"truncated":true/); return true;
+    });
+  }
+});
+
+test('successful and nonzero commands preserve the host truncation flag for short output', async () => {
+  for (const exitCode of [0, 7]) {
+    const tool = fixture(async () => ({ executionId: 'exec_capped', exitCode, output: 'host tail', truncated: true }));
+    if (exitCode === 0) assert.equal((await tool.execute('call', { command: 'native operation' })).truncated, true);
+    else await assert.rejects(tool.execute('call', { command: 'native operation' }), error => {
+      assert.equal(error.code, 'PROCESS_EXIT'); assert.equal(error.details.truncated, true);
+      assert.match(error.message, /"truncated":true/); return true;
+    });
+  }
+});
+
 test('workspace tool schemas match the shipped descriptions after failure diagnostics change', () => {
   const expected = JSON.parse(readFileSync(new URL('../packages/workspace/tools.json', import.meta.url)));
   const actual = createTools({ tools: toolsPort, workspace: {} }).map(({ execute, ...definition }) => definition);

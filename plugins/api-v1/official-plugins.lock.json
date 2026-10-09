@@ -1571,7 +1571,7 @@
       "id": "sesame/workspace",
       "version": "1.0.2",
       "directory": "workspace",
-      "treeDigest": "sha256:b65e5523758fa006e9858651b0ee2fcc9d897e60b93fb8562a649dbf5e09a5e2",
+      "treeDigest": "sha256:b988d38874e9b907afd29d43af68c1c16036601666ddb61bdc674134bad6eac9",
       "files": [
         {
           "path": "LICENSE",
@@ -1600,8 +1600,8 @@
         },
         {
           "path": "tools.js",
-          "sha256": "6600d4168794fe73bf5270ba77cac2125e77cc85910c259b6a72b1352252a0d4",
-          "bytes": 8957
+          "sha256": "efaff74324227d39ef4218689a39711910a8303d15d2dcc8589c1234af0b125a",
+          "bytes": 9093
         },
         {
           "path": "tools.json",
