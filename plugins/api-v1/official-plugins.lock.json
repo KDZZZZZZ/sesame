@@ -411,9 +411,9 @@
     },
     {
       "id": "sesame/mt5",
-      "version": "1.1.6",
+      "version": "1.1.7",
       "directory": "mt5",
-      "treeDigest": "sha256:4dc84061b72ffb8165c88e55d91aff0e8a98191035168b12377a3c548aff5008",
+      "treeDigest": "sha256:113ee455b20001a00f4c038d0ae3fb94ffa238c3914436640578d8550cef3d3d",
       "files": [
         {
           "path": "LICENSE",
@@ -427,8 +427,8 @@
         },
         {
           "path": "backend/auto-connect.js",
-          "sha256": "2f566d0d55341a92dfb9dbc3de831447e1201fa52ed2a25f02243a6b3e2aac55",
-          "bytes": 3705
+          "sha256": "e0a3cc9664af74d3707946b844e59020fc3820a8b3ebd535db8f382524712a63",
+          "bytes": 3779
         },
         {
           "path": "backend/compiler-worker.js",
@@ -447,8 +447,8 @@
         },
         {
           "path": "backend/connect.js",
-          "sha256": "d70b6a093c1de052b10918cad8d9828cd536b606fb1d25c191490c7a9f8fd1a2",
-          "bytes": 12901
+          "sha256": "8661d4b0f1128e40a1279c73ecdf6734b6baf9490927c8bfa2fec4af9f42cbf3",
+          "bytes": 14001
         },
         {
           "path": "backend/connection.js",
@@ -702,8 +702,8 @@
         },
         {
           "path": "backend/terminal.js",
-          "sha256": "7a7837a8ee29066b13c23cbb349d7c36225ade5c471ba50749516365de1fa659",
-          "bytes": 8272
+          "sha256": "11c162bdc9e77aa534e4bb875a5e7a5f564a989fcf5d4e195c71d36201b7c9fa",
+          "bytes": 10336
         },
         {
           "path": "backend/tester-process.js",
@@ -757,12 +757,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "0b382dd53528bbac3103c6ca20483d14f770183f47fe17ae48e09b7c6b858d44",
+          "sha256": "231369921c532b97060ee70531c59f6b898e33e88fa8b8efa125c7cd29b271c8",
           "bytes": 97
         },
         {
           "path": "plugin.json",
-          "sha256": "07ea8b096274bbb3d2c670cd72497fa5dd9b52eeec58fb9403fc155617df4c41",
+          "sha256": "819aeb18f7b080bec0a6580dddb7f49464b1d8e06215f28519e05bc3fc5685ff",
           "bytes": 2298
         },
         {
@@ -882,8 +882,8 @@
         },
         {
           "path": "tools/deployment/index.js",
-          "sha256": "3863e643d6d1134b958eff68992c8c132ced277e6118a5be99529ac4e4821a8f",
-          "bytes": 1610
+          "sha256": "3f86cab530547d33521a39ed08caacf45b21be4d812b1e0c36b987d57d2aad50",
+          "bytes": 1766
         },
         {
           "path": "tools/deployment/prompt.md",
@@ -962,8 +962,8 @@
         },
         {
           "path": "tools.json",
-          "sha256": "b79ec692cd23ce9bf3d5b27c98e90e23e6d622fa63ad004c358f9e6d27141b0d",
-          "bytes": 49005
+          "sha256": "23c71f60022d12d4d765ac04e7550e7a3a1d4a8aef49d197fb53c87bd40ed522",
+          "bytes": 49161
         }
       ]
     },

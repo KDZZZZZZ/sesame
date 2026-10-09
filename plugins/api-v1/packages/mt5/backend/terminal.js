@@ -3,7 +3,7 @@ import { join, resolve, win32 } from 'node:path';
 import { winePrefix } from './platform.js';
 import { requireValue } from './support.js';
 import { testerProxyLines, waitForTradingConnection } from './connection.js';
-import { controlTerminal, launch } from './process.js';
+import { controlTerminal, launch, winePath } from './process.js';
 import { nativeData } from './market.js';
 import { setTimeout as sleep } from 'node:timers/promises';
 
@@ -12,6 +12,27 @@ export function terminalConfig(config, enabled) {
   requireValue(/^\d+$/.test(String(login)) && server && [server, password ?? ''].every(v => !/[\r\n\0]/.test(v)), '账户配置无效');
   return ['[Common]', `Login=${login}`, `Server=${server}`, ...(password ? [`Password=${password}`] : []), 'KeepPrivate=1', ...testerProxyLines(config.startup_ini),
     '[Experts]', `Enabled=${enabled ? 1 : 0}`, `AllowLiveTrading=${enabled ? 1 : 0}`, 'AllowDllImport=0', 'Account=1', 'Profile=1', ''].join('\r\n');
+}
+
+export function terminalStartupDiagnostic(log, file) {
+  const expected = winePath(file).toLowerCase();
+  return {
+    managedConfigInitialized: log.split(/\r?\n/).some(line => /successfully initialized from start config/i.test(line) && line.toLowerCase().includes(expected)),
+    competingStartupObserved: /terminal process already started/i.test(log) || log.split(/\r?\n/).some(line => /cannot load config/i.test(line) && !line.toLowerCase().includes(expected)),
+  };
+}
+async function startupLog(directory, offsets) {
+  let text = '';
+  for (const name of (await fs.readdir(directory)).filter(name => /^\d{8}\.log$/.test(name)).sort().slice(-2)) {
+    const file = join(directory, name), handle = await fs.open(file, 'r');
+    try {
+      const size = (await handle.stat()).size, from = Math.max(offsets.get(name) ?? 0, size - 65536);
+      const bytes = Buffer.alloc(Math.max(0, size - from));
+      await handle.read(bytes, 0, bytes.length, from);
+      text += bytes.toString('utf16le') + '\n' + bytes.toString('utf8');
+    } finally { await handle.close(); }
+  }
+  return text;
 }
 
 async function localPath(path, native) {
@@ -27,7 +48,7 @@ async function localPath(path, native) {
 }
 
 /** Configure only an idle, precisely identified terminal; never force-kill or place a trade. */
-export async function prepareTerminal(mt5, progress = () => {}, { restart = false, deployment = null, inputs = null } = {}) {
+export async function prepareTerminal(mt5, progress = () => {}, { restart = false, deployment = null, inputs = null } = {}, { control = controlTerminal, start = launch, wait = waitForTradingConnection, resolveNativePath = localPath } = {}) {
   const official = mt5.official, config = structuredClone(official.config);
   const { info, scope } = await mt5.market.connected();
   requireValue(info.terminal.mcp_trade_allowed === true, '原生 MCP 交易授权尚未就绪，自动准备未完成', 409, 'mcp_trading_not_authorized');
@@ -47,15 +68,15 @@ export async function prepareTerminal(mt5, progress = () => {}, { restart = fals
   // Inspect native chart files as well: older MCP responses may omit attached EA metadata.
   for (const chart of charts.charts) {
     requireValue(!chart.expert && !chart.expert_advisor && !chart.experts?.length && chart.path, '已有 EA 在运行，自动配置暂不重启终端', 409);
-    const bytes = await fs.readFile(await localPath(chart.path, mt5.native));
+    const bytes = await fs.readFile(await resolveNativePath(chart.path, mt5.native));
     requireValue(bytes.length <= 1024 * 1024, '图表配置超出读取限制');
     const text = bytes.toString(bytes[0] === 255 && bytes[1] === 254 ? 'utf16le' : 'utf8');
     requireValue(!/<expert\b|\[expert\]/i.test(text), '已有 EA 在图表中，自动配置暂不启用全局交易', 409);
   }
   const workspace = nativeData(client.workspace).workspace;
-  const dataDirectory = await localPath(win32.dirname(workspace.mql5_folder), mt5.native);
+  const dataDirectory = await resolveNativePath(win32.dirname(workspace.mql5_folder), mt5.native);
   const portable = resolve(dataDirectory).toLowerCase() === resolve(mt5.native.directory).toLowerCase();
-  await controlTerminal(mt5.native, 'inspect');
+  await control(mt5.native, 'inspect');
   const file = join(mt5.storage.directory, 'mt5', 'managed-terminal.ini');
   let preset = null, startup = '';
   if (deployment) {
@@ -71,16 +92,25 @@ export async function prepareTerminal(mt5, progress = () => {}, { restart = fals
   }
   await fs.writeFile(file, terminalConfig(config, true) + startup, { mode: 0o600 }); await fs.chmod(file, 0o600);
   const resetClient = () => { official.clients.get('terminal')?.close(); official.clients.delete('terminal'); return official.client('terminal'); };
+  requireValue(!mt5.terminalPreparing, '已有终端准备正在执行', 409, 'terminal_preparing');
+  mt5.terminalPreparationEpoch = (mt5.terminalPreparationEpoch ?? 0) + 1;
   mt5.terminalPreparing = true;
   let closed = false;
+  const logDirectory = join(dataDirectory, 'logs'), logOffsets = new Map();
+  try { for (const name of await fs.readdir(logDirectory)) if (/^\d{8}\.log$/.test(name)) logOffsets.set(name, (await fs.stat(join(logDirectory, name))).size); } catch {}
   try {
     progress('restarting');
-    await controlTerminal(mt5.native, 'close'); closed = true;
+    await control(mt5.native, 'close'); closed = true;
     resetClient();
-    await launch({ ...mt5.native, commonFolder: workspace.common_folder }, 'start_terminal', { portable, use_startup_config: true }, file, {});
+    await start({ ...mt5.native, commonFolder: workspace.common_folder }, 'start_terminal', { portable, use_startup_config: true }, file, {});
     progress('reconnecting');
-    const ready = await waitForTradingConnection(official.client('terminal'), scope, { timeout: 90000 });
-    requireValue(ready.terminal.experts_trade_allowed === true && ready.terminal.mcp_trade_allowed === true, '终端已重连，但算法交易配置未生效', 409);
+    const ready = await wait(official.client('terminal'), scope, { timeout: 90000 });
+    if (ready.terminal.experts_trade_allowed !== true || ready.terminal.mcp_trade_allowed !== true) {
+      let evidence = null;
+      try { evidence = terminalStartupDiagnostic(await startupLog(logDirectory, logOffsets), file); } catch {}
+      const reason = evidence?.competingStartupObserved ? '；原生日志发现竞争启动或另一配置启动，请关闭其它 Sesame 自动连接实例后重新授权准备' : '；请核对原生启动配置和账户/综合配置切换保护';
+      requireValue(false, '终端已重连，但算法交易配置未生效' + reason, 409, 'native_config_not_applied');
+    }
     if (deployment) {
       let chartId;
       for (let attempt = 0; attempt < 40; attempt++) {
@@ -99,19 +129,20 @@ export async function prepareTerminal(mt5, progress = () => {}, { restart = fals
     if (closed && !deployment) {
       progress('restoring');
       try {
-        try { await controlTerminal(mt5.native, 'close'); } catch (closeError) {
+        try { await control(mt5.native, 'close'); } catch (closeError) {
           // Do not start a second instance if an existing process refused to close.
           if (!closeError.message.includes('found 0')) throw closeError;
         }
         await fs.writeFile(file, terminalConfig(config, false), { mode: 0o600 });
-        resetClient(); await launch(mt5.native, 'start_terminal', { portable, use_startup_config: true }, file, {});
-        await waitForTradingConnection(official.client('terminal'), scope, { timeout: 90000 });
+        resetClient(); await start(mt5.native, 'start_terminal', { portable, use_startup_config: true }, file, {});
+        await wait(official.client('terminal'), scope, { timeout: 90000 });
       } catch (restoreError) { error.message += `；恢复连接尚未完成：${official.redact(restoreError.message)}`; }
     }
     throw error;
   } finally {
-    mt5.terminalPreparing = false;
-    await fs.rm(file, { force: true });
-    if (preset) await fs.rm(preset, { force: true });
+    try {
+      await fs.rm(file, { force: true });
+      if (preset) await fs.rm(preset, { force: true });
+    } finally { mt5.terminalPreparing = false; }
   }
 }

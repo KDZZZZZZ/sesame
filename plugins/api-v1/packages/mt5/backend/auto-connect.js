@@ -27,6 +27,7 @@ export class MT5AutoConnection {
   }
   async check() {
     const { host, mt5 } = this, official = mt5.official;
+    if (mt5.terminalPreparing) return this.retryMs;
     if (this.lifetime.signal.aborted || mt5.closing) return this.maxRetryMs;
     // Empty saved credentials may be an explicit user clear. Only initial
     // native import or an explicit Agent connection request may fill them.
@@ -46,7 +47,7 @@ export class MT5AutoConnection {
     }
     this.healthy = false;
     const result = await ensureMT5Connection(mt5, {}, this.lifetime.signal, { exclusive: action => host.configuration.exclusive(action) });
-    if (['agent_busy', 'mt5_busy', 'version_conflict'].includes(result.code)) return this.retryMs;
+    if (['agent_busy', 'mt5_busy', 'version_conflict', 'terminal_preparing'].includes(result.code)) return this.retryMs;
     this.version = result.settings_version ?? requestVersion;
     this.healthy = result.status === 'connected';
     this.failures = this.healthy ? 0 : this.failures + 1;
