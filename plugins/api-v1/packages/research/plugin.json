@@ -2,7 +2,7 @@
   "id": "sesame/research",
   "title": "研究数据",
   "description": "读取后端输入并登记可追溯的代码计算结果。",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "default_state": "mounted",
   "tool_names": [
     "data_read",
