@@ -146,3 +146,24 @@ test('equivalent fractional wall bounds are compared without changing their orig
   assert.equal(result.row_count, 3); assert.deepEqual(f.rows(result.ref)[0].datetime, bar(1).openTime);
   assert.deepEqual(result.coverage.requested.from, input.range.from);
 });
+
+test('an explicit DST fold in requested bounds is rejected before binding instead of guessing chronology', async () => {
+  const f = fixture(), input = args(); input.range.from = { ...input.range.from, fold: 0 };
+  await assert.rejects(f.run(input), { code: 'UNSUPPORTED_CAPABILITY' });
+  assert.equal(f.bindCount, 0); assert.equal(f.stored.size, 0); assert.equal(f.artifacts.size, 0);
+});
+
+test('forward and reverse DST folds in source bars are unsupported, never string-sorted into accepted history', async () => {
+  const wall = (value, fold) => ({ basis: 'wall', authority: 'America/New_York', zone: 'America/New_York', value, ...(fold === undefined ? {} : { fold }) });
+  for (const [openTime, endTime] of [
+    [wall('2026-11-01T01:30:00', 0), wall('2026-11-01T01:15:00', 1)], // 05:30 -> 06:15 UTC, valid source bar
+    [wall('2026-11-01T01:15:00', 1), wall('2026-11-01T01:30:00', 0)], // 06:15 -> 05:30 UTC, invalid reverse bar
+  ]) {
+    const f = fixture(), input = args();
+    input.range = { from: wall('2026-11-01T00:00:00'), to: wall('2026-11-01T03:00:00') };
+    f.pages = [[{ ...bar(1), openTime, endTime }]];
+    await assert.rejects(f.run(input), { code: 'UNSUPPORTED_CAPABILITY' });
+    assert.equal(f.unbindCount, 1); assert.equal(f.bindings.size, 0); assert.equal(f.stored.size, 0); assert.equal(f.artifacts.size, 0);
+    assert.deepEqual(f.pages[0][0].openTime, openTime, 'No fold field is removed to force source data through');
+  }
+});

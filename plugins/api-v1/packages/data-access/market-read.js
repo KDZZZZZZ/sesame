@@ -7,10 +7,14 @@ const comparable = (a, b) => a.basis === b.basis && (a.basis === 'utc' || a.auth
 const timeValue = value => value.basis === 'utc' ? value.unixMs : value.value.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
 const compareTime = (a, b) => timeValue(a) < timeValue(b) ? -1 : timeValue(a) > timeValue(b) ? 1 : 0;
 const bounded = value => { const bytes = JSON.stringify(value); check(Buffer.byteLength(bytes) <= MAX_BYTES, 'Market snapshot exceeds 16 MiB; request a smaller range', 'RESOURCE_EXHAUSTED'); return bytes; };
+const orderedTime = (value, path) => {
+  sourceTime(value, path);
+  check(value.basis !== 'wall' || value.fold === undefined, 'market_read does not resolve wall-time DST folds. Select provider-supported UTC source times or an unambiguous range; do not remove fold or guess an offset.', 'UNSUPPORTED_CAPABILITY');
+};
 
 function projectBar(bar, volumeKind, range, includeForming) {
   text(bar.id, 'bar.id'); check(typeof bar.revision === 'string' && /^(0|[1-9][0-9]*)$/.test(bar.revision), 'Bar revision must be an unsigned integer string', 'INVALID_PROVIDER_DATA');
-  sourceTime(bar.openTime); sourceTime(bar.endTime);
+  orderedTime(bar.openTime, 'bar.openTime'); orderedTime(bar.endTime, 'bar.endTime');
   check(comparable(bar.openTime, bar.endTime) && compareTime(bar.openTime, bar.endTime) < 0, 'Bar time bounds are invalid', 'INVALID_PROVIDER_DATA');
   check(typeof bar.isClosed === 'boolean' && (includeForming || bar.isClosed), 'Provider returned an invalid or excluded forming bar', 'INVALID_PROVIDER_DATA');
   check(bar.closure === undefined || ['source', 'calendar', 'unknown'].includes(bar.closure), 'Provider returned an invalid closure basis', 'INVALID_PROVIDER_DATA');
@@ -110,7 +114,7 @@ export function marketReadTools(host) {
     Type.Object({ basis: Type.Literal('wall'), authority: string('来源时钟身份，不能猜测UTC'), value: Type.String({ pattern: '^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d+)?$' }), zone: Type.Optional(Type.String()), fold: Type.Optional(Type.Union([Type.Literal(0), Type.Literal(1)])) }, { additionalProperties: false }),
   ]);
   const ref = Type.Object({ id: Type.String(), revision: Type.String(), digest: Type.String({ pattern: '^sha256:[a-f0-9]{64}$' }), kind: Type.String(), schemaVersion: Type.Literal('1.0.0') }, { additionalProperties: false });
-  return [define('market_read', '通过公开行情提供方查询并冻结历史K线，返回固定DataRef、dataset_id、有界样本与真实来源证据。保留SourceTime、Decimal和显式成交量单位；未知/不请求的量为null，不填0。同一operation_id重试返回成功快照，不重抓；过预算或中途失败不发布部分结果。coverage.complete=false仍是实际返回数据，不证明历史无缺口。', {
+  return [define('market_read', '通过公开行情提供方查询并冻结历史K线，返回固定DataRef、dataset_id、有界样本与真实来源证据。保留SourceTime、Decimal和显式成交量单位；未知/不请求的量为null，不填0。同一operation_id重试返回成功快照，不重抓；过预算或中途失败不发布部分结果。coverage.complete=false仍是实际返回数据，不证明历史无缺口。当前不解析wall时间的DST fold；范围或K线带fold时明确报UNSUPPORTED_CAPABILITY，不删除fold或猜测时区。', {
     operation_id: Type.String({ minLength: 1, maxLength: 128, description: '本会话此精确查询的幂等ID；重新采集使用新ID' }), title: string('固定数据名称'),
     provider: Type.Object({ pluginId: string('data_providers返回的插件ID'), providerId: string('提供方ID') }, { additionalProperties: false }),
     connection: Type.Optional(Type.Object({ id: string('已发现连接ID'), revision: string('精确连接修订') }, { additionalProperties: false })),
@@ -126,7 +130,7 @@ export function marketReadTools(host) {
     const args = { ...input, max_rows: input.max_rows ?? 10000 };
     check(Number.isInteger(args.max_rows) && args.max_rows > 0 && args.max_rows <= 100000, 'max_rows must be 1..100000');
     check(['real', 'tick', 'none'].includes(args.volume_kind) && typeof args.include_forming === 'boolean', 'Explicit volume_kind and include_forming are required');
-    sourceTime(args.range.from); sourceTime(args.range.to);
+    orderedTime(args.range.from, 'range start'); orderedTime(args.range.to, 'range end');
     check(comparable(args.range.from, args.range.to) && compareTime(args.range.from, args.range.to) < 0, 'Range requires ascending bounds in one explicit source time basis');
     const key = digest(['market_read', host.scope.conversationId ?? null, args.operation_id]), fingerprint = digest(args);
     return host.storage.idempotentAsync(key, fingerprint, async () => {

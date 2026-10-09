@@ -2,7 +2,7 @@
   {
     "name": "market_read",
     "label": "market_read",
-    "description": "通过公开行情提供方查询并冻结历史K线，返回固定DataRef、dataset_id、有界样本与真实来源证据。保留SourceTime、Decimal和显式成交量单位；未知/不请求的量为null，不填0。同一operation_id重试返回成功快照，不重抓；过预算或中途失败不发布部分结果。coverage.complete=false仍是实际返回数据，不证明历史无缺口。",
+    "description": "通过公开行情提供方查询并冻结历史K线，返回固定DataRef、dataset_id、有界样本与真实来源证据。保留SourceTime、Decimal和显式成交量单位；未知/不请求的量为null，不填0。同一operation_id重试返回成功快照，不重抓；过预算或中途失败不发布部分结果。coverage.complete=false仍是实际返回数据，不证明历史无缺口。当前不解析wall时间的DST fold；范围或K线带fold时明确报UNSUPPORTED_CAPABILITY，不删除fold或猜测时区。",
     "parameters": {
       "type": "object",
       "required": [
