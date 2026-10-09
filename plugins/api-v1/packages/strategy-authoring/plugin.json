@@ -1,7 +1,7 @@
 {
   "id": "sesame/strategy-authoring",
   "apiVersion": "1",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "title": "SVL 策略创作",
   "description": "编写、验证与发布平台无关 SVL 策略源，从同一源码生成图，并对固定事件做可复现求值。原生翻译、回测与运行由目标插件提供。",
   "author": {"name": "Sesame"},
@@ -13,6 +13,6 @@
   "tool_names": ["strategy_validate", "strategy_publish", "strategy_graph", "strategy_replay"],
   "prompts": ["prompt.md"],
   "skills": ["skills"],
-  "resources": ["examples/crossover.svl.json", "examples/crossover.replay.json"],
+  "resources": ["skills/strategy-authoring/references/language.md", "examples/close-threshold.svl.json", "examples/close-threshold.replay.json", "examples/crossover.svl.json", "examples/crossover.replay.json"],
   "provides": {"sesame.strategy": "1"}
 }
