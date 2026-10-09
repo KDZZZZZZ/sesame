@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { buildLock, createArchive, sha256 } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
+import { readSemanticReview } from './semantic-review.mjs';
 
 const REPOSITORY = 'KDZZZZZZ/sesame';
 const CHECKS = [{ name: 'package-static-review', path: '.github/workflows/plugin-api-v1.yml' }, { name: 'catalog-static-review', path: '.github/workflows/plugin-catalog.yml' }];
@@ -54,12 +55,12 @@ export function reviewEvidence(plan, pr, reviews, checks) {
   const successful = CHECKS.map(({ name, path }) => {
     const check = checks.filter(item => item.name === name && item.head_sha === pr.head.sha && item.workflow?.path === path && item.workflow.event === 'pull_request_target').sort((a, b) => b.id - a.id)[0];
     assert(check?.status === 'completed' && check.conclusion === 'success', `Missing successful check on the exact reviewed head: ${name}`);
-    return { name, url: check.html_url, conclusion: check.conclusion, headSha: check.head_sha, workflow: check.workflow };
+    return { name, url: check.html_url, conclusion: check.conclusion, headSha: check.head_sha, completedAt: check.completed_at, workflow: check.workflow };
   });
   const latest = new Map();
   for (const review of reviews) if (review.state !== 'COMMENTED' && review.state !== 'PENDING') latest.set(review.user.login, review);
   assert(![...latest.values()].some(review => review.state === 'CHANGES_REQUESTED'), 'An unresolved changes-requested review prevents publication');
-  const approvals = [...latest.values()].filter(review => review.state === 'APPROVED' && review.commit_id === pr.head.sha && review.user.type !== 'Bot' && review.user.id !== pr.user.id);
+  const approvals = [...latest.values()].filter(review => review.state === 'APPROVED' && review.commit_id === pr.head.sha && review.user.type !== 'Bot' && review.user.id !== pr.user.id && Number.isFinite(Date.parse(review.submitted_at)) && Date.parse(review.submitted_at) <= Date.parse(pr.merged_at));
   return { schemaVersion: 1, tag: plan.tag, sourceCommit: plan.sourceCommit, pullRequest: { number: plan.pullRequest, url: pr.html_url, headSha: pr.head.sha, mergeCommit: pr.merge_commit_sha, mergedAt: pr.merged_at, mergedBy: pr.merged_by?.login }, automated: successful, human: { status: approvals.length ? 'approved' : 'not-recorded', approvals: approvals.map(review => ({ author: review.user.login, commit: review.commit_id, url: review.html_url })) }, reviews: reviews.map(review => ({ author: review.user.login, authorType: review.user.type, state: review.state, commit: review.commit_id, url: review.html_url })), scope: 'Static identity, immutable source and file checks. Candidate plugin factories and tools were not executed by CI. Automated checks and repository merge permission do not constitute human approval or a safety certification.' };
 }
 
@@ -79,12 +80,19 @@ async function allReviews(number) {
   throw new Error('Review pagination exceeded publication budget');
 }
 
+async function graphql(body) {
+  const response = await fetch('https://api.github.com/graphql', { method: 'POST', headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  assert(response.ok, `Cannot read GitHub review discussions (${response.status})`);
+  return response.json();
+}
+
 async function trustedChecks(pr) {
   const checks = [];
   for (const required of CHECKS) {
     const workflow = await api(`/actions/workflows/${basename(required.path)}`);
     const { workflow_runs: runs } = await api(`/actions/workflows/${workflow.id}/runs?event=pull_request_target&head_sha=${pr.head.sha}&per_page=100`);
-    const run = runs.filter(item => item.workflow_id === workflow.id && item.path === required.path && item.event === 'pull_request_target' && item.head_sha === pr.head.sha).sort((a, b) => b.id - a.id)[0];
+    const cutoff = pr.merged ? Date.parse(pr.merged_at) : Date.now();
+    const run = runs.filter(item => item.workflow_id === workflow.id && item.path === required.path && item.event === 'pull_request_target' && item.head_sha === pr.head.sha && Date.parse(item.updated_at) <= cutoff).sort((a, b) => b.id - a.id)[0];
     assert(run?.status === 'completed' && run.conclusion === 'success', `Trusted workflow did not succeed for the exact PR head: ${required.path}`);
     const { jobs } = await api(`/actions/runs/${run.id}/jobs?filter=latest&per_page=100`);
     const job = jobs.find(item => item.name === required.name);
@@ -170,9 +178,18 @@ async function publish(repository, relative, prepared) {
     assert(release.prerelease, 'Existing release is not a prerelease'); validateAssets(release, files);
     console.log(`Already published with the reviewed digests: ${release.html_url}`); return;
   }
+  // Historical releases retain their original record. Every new publication
+  // now needs a semantic review completed before merge, not a late comment.
+  assert(evidence.automated.every(check => Number.isFinite(Date.parse(check.completedAt)) && Date.parse(check.completedAt) <= Date.parse(pr.merged_at)), 'Required static checks must finish before merge');
+  evidence.semantic = await readSemanticReview(pr, reviews, api, graphql);
+  evidence.publication.trigger = 'main branch workflow after merged PR, completed pre-merge exact-head semantic review and static checks';
+  if (release?.assets.some(asset => asset.name === 'review.json')) {
+    const recorded = JSON.parse(files.get('review.json'));
+    assert(JSON.stringify(recorded.semantic) === JSON.stringify(evidence.semantic), 'Draft semantic evidence changed; refusing to replace its review record');
+  } else files.set('review.json', Buffer.from(JSON.stringify(evidence, null, 2) + '\n'));
   if (!release) {
     if (!tag) assert((await api('/git/ref/heads/main')).object.sha === head, 'Main advanced during publication; rerun at its current revision');
-    release = await api('/releases', { method: 'POST', body: JSON.stringify({ tag_name: plan.tag, target_commitish: releaseCommit, name: plan.title, draft: true, prerelease: true, make_latest: 'false', body: `Development plugin packages for the matching API 1 host.\n\nAutomatically published after [PR #${plan.pullRequest}](${pr.html_url}) was merged and its exact-head static checks passed. Fixed package source: ${plan.sourceCommit}. Publishing revision/tag: ${releaseCommit}.\n\nSee review.json for actual check URLs and review states; human review: ${evidence.human.status}. Static checks do not certify runtime behavior or safety. Existing stable 0.1.4 catalog metadata is unchanged.\n\nVerify SHA256SUMS and official-plugins.lock.json before installation. application-official-plugins.lock.json pins the archive and every package tree.` }) });
+    release = await api('/releases', { method: 'POST', body: JSON.stringify({ tag_name: plan.tag, target_commitish: releaseCommit, name: plan.title, draft: true, prerelease: true, make_latest: 'false', body: `Development plugin packages for the matching API 1 host.\n\nAutomatically published after [PR #${plan.pullRequest}](${pr.html_url}) completed its exact-head semantic review and static checks before merge. [Semantic review record](${evidence.semantic.url}); decision: ${evidence.semantic.decision}, kind: ${evidence.semantic.kind}. Fixed package source: ${plan.sourceCommit}. Publishing revision/tag: ${releaseCommit}.\n\nSee review.json for actual check URLs, review identities and timestamps; human review: ${evidence.human.status}. Automated review does not certify runtime behavior or safety. Existing stable 0.1.4 catalog metadata is unchanged.\n\nVerify SHA256SUMS and official-plugins.lock.json before installation. application-official-plugins.lock.json pins the archive and every package tree.` }) });
   }
   for (const [name, bytes] of files) {
     const existing = release.assets.find(asset => asset.name === name);
@@ -188,7 +205,14 @@ async function publish(repository, relative, prepared) {
 
 async function main() {
   const mode = process.argv[2], repository = resolve(process.argv[3] ?? '.');
-  assert(['--check', '--build', '--publish'].includes(mode), 'Use --check, --build or --publish [repository]');
+  if (mode === '--review-check') {
+    const number = Number(process.argv[4]); assert(Number.isSafeInteger(number) && number > 0 && process.env.GITHUB_TOKEN, 'Use --review-check repository pull-request-number with a read token');
+    const pr = await api(`/pulls/${number}`);
+    assert(pr.base.ref === 'main' && pr.head.repo.full_name === REPOSITORY, 'Review check requires a repository PR targeting main');
+    await trustedChecks(pr);
+    console.log(JSON.stringify(await readSemanticReview(pr, await allReviews(number), api, graphql), null, 2)); return;
+  }
+  assert(['--check', '--build', '--publish'].includes(mode), 'Use --check, --build, --publish or --review-check [repository]');
   const directory = join(repository, '.github/plugin-releases');
   if (!existsSync(directory)) { console.log('No API 1 release plans'); return; }
   for (const name of readdirSync(directory).sort()) {

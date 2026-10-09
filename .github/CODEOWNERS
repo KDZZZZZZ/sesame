@@ -6,3 +6,5 @@
 /.github/scripts/release-plugins* @KDZZZZZZ
 /.github/plugin-releases/ @KDZZZZZZ
 /.github/workflows/plugin-api*.yml @KDZZZZZZ
+/.github/scripts/semantic-review* @KDZZZZZZ
+/.github/workflows/plugin-semantic-review.yml @KDZZZZZZ
