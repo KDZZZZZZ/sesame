@@ -1229,7 +1229,7 @@
   {
     "name": "mt5_translation",
     "label": "mt5_translation",
-    "description": "将 Agent 按冻结 SVL 源编写的 MQL5 文件、逐节点 source_map 与适配说明登记为翻译成果和独立 MT5 工程。只检查身份与映射结构；结果 partial，不证明原生语义等价。逻辑变化先修 SVL，再创建新翻译。",
+    "description": "将 Agent 按冻结 SVL 源编写的 MQL5 文件、逐节点 source_map 与适配说明登记为翻译成果和独立 MT5 工程。较长源码请在工作区写 JSON 清单后用 mt5_translation_file，避免全文重发。只检查身份与映射结构；结果 partial，不证明原生语义等价。逻辑变化先修 SVL，再创建新翻译。",
     "parameters": {
       "type": "object",
       "required": [
@@ -1246,13 +1246,15 @@
       "properties": {
         "operation_id": {
           "type": "string",
-          "pattern": "^[A-Za-z0-9_-]{16,128}$"
+          "pattern": "^[A-Za-z0-9_-]{16,128}$",
+          "minLength": 16,
+          "maxLength": 128
         },
         "title": {
           "type": "string",
           "description": "工程名称",
           "minLength": 1,
-          "maxLength": 20000
+          "maxLength": 120
         },
         "source": {
           "type": "object",
@@ -1401,6 +1403,7 @@
               "maxLength": 1048576
             }
           },
+          "minProperties": 1,
           "maxProperties": 128
         },
         "source_map": {
@@ -1575,6 +1578,33 @@
             "additionalProperties": false
           },
           "maxItems": 1000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_translation_file",
+    "label": "mt5_translation_file",
+    "description": "以短参数登记当前工作区内的 UTF-8 JSON 清单（≤8 MiB）：结构与 mt5_translation 相同，但不含 operation_id；files 内嵌源码文本，不扫描目录。同样严格校验源、目标、参数和映射。首次读取后固定输入；相同操作 ID/路径重试直接复用快照，不重读文件，即使文件已删除。修改内容需新操作 ID。返回成果引用/摘要，不回全文；不编译、不启动终端、不交易。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "operation_id",
+        "manifest_path"
+      ],
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{16,128}$",
+          "minLength": 16,
+          "maxLength": 128
+        },
+        "manifest_path": {
+          "type": "string",
+          "description": "当前工作区内的 JSON 清单路径；重试使用相同操作 ID 和路径，读取已固定快照",
+          "minLength": 1,
+          "maxLength": 4096
         }
       },
       "additionalProperties": false
