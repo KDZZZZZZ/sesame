@@ -2,7 +2,7 @@
   "id": "sesame/workspace",
   "title": "工作区与执行",
   "description": "工作区文件读写、精确编辑与受任务生命周期管理的本机代码执行。",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "default_state": "mounted",
   "tool_names": [
     "read",
