@@ -1,0 +1,326 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sesame Plugin API 1 development catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "apiVersion",
+    "channel",
+    "releases",
+    "plugins"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "apiVersion": {
+      "const": "1"
+    },
+    "channel": {
+      "const": "development"
+    },
+    "releases": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tag",
+          "releaseCommit",
+          "sourceCommit",
+          "sourceRoot",
+          "archive",
+          "lock",
+          "review"
+        ],
+        "properties": {
+          "tag": {
+            "type": "string",
+            "pattern": "^plugins-(optional-)?api-v1-dev\\.[1-9][0-9]*$"
+          },
+          "releaseCommit": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{40}$"
+          },
+          "sourceCommit": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{40}$"
+          },
+          "sourceRoot": {
+            "enum": [
+              "plugins/api-v1",
+              "plugins/optional-api-v1"
+            ]
+          },
+          "archive": {
+            "type": "object",
+            "required": [
+              "url",
+              "sha256"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          },
+          "lock": {
+            "type": "object",
+            "required": [
+              "url",
+              "sha256"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          },
+          "review": {
+            "type": "object",
+            "required": [
+              "url",
+              "sha256"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "plugins": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "version",
+          "apiVersion",
+          "format",
+          "title",
+          "description",
+          "license",
+          "author",
+          "status",
+          "release",
+          "source",
+          "package",
+          "tools",
+          "review",
+          "requirements",
+          "documentationUrl",
+          "feedbackUrl"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^sesame/[a-z][a-z0-9-]*$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+          },
+          "apiVersion": {
+            "const": "1"
+          },
+          "format": {
+            "enum": [
+              "sesame-native",
+              "agent-plugins"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "license": {
+            "type": "string"
+          },
+          "author": {
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "withdrawn"
+            ]
+          },
+          "release": {
+            "type": "string"
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "repository",
+              "commit",
+              "path"
+            ],
+            "properties": {
+              "repository": {
+                "const": "https://github.com/KDZZZZZZ/sesame"
+              },
+              "commit": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{40}$"
+              },
+              "path": {
+                "type": "string"
+              }
+            }
+          },
+          "package": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "treeDigest",
+              "files"
+            ],
+            "properties": {
+              "treeDigest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "files": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1024,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "path",
+                    "sha256",
+                    "bytes"
+                  ],
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "sha256": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "bytes": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 2097152
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "tools": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "server",
+                    "name"
+                  ],
+                  "properties": {
+                    "server": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "review": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "automated",
+              "human",
+              "record",
+              "notes"
+            ],
+            "properties": {
+              "automated": {
+                "const": "package-static-review"
+              },
+              "human": {
+                "const": "not-recorded"
+              },
+              "record": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "sha256"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              },
+              "notes": {
+                "type": "string"
+              }
+            }
+          },
+          "requirements": {
+            "type": "string"
+          },
+          "documentationUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "feedbackUrl": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      }
+    }
+  }
+}

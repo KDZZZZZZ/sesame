@@ -39,7 +39,7 @@
   {
     "name": "plugin_catalog",
     "label": "plugin_catalog",
-    "description": "查询独立的 Plugin API 1 development 官方可选目录，返回精确ID、版本、来源和catalog_digest。此目录不适用于稳定0.1.4；只读目录不会安装或下载依赖。",
+    "description": "查询统一 Plugin API 1 development 目录中的官方包与可选包，返回精确ID、格式、版本、固定release/source/摘要及catalog_digest。此目录不适用于稳定0.1.4；查询不会安装或准备依赖。",
     "parameters": {
       "type": "object",
       "properties": {
@@ -62,7 +62,7 @@
   {
     "name": "plugin_install_catalog",
     "label": "plugin_install_catalog",
-    "description": "按已读取的catalog_digest安装精确官方可选插件：固定source commit，每文件和tree摘要校验，plugin_test→install实际activate→当前会话plugin_load。检查runtime_status；原生静态检查不等于行为测试，依赖准备另行显式执行。",
+    "description": "按固定catalog_digest获取官方或可选包并核验每文件/整包摘要。默认install只装缺失包；已有不同版本必须显式action:update和plugin_inspect返回的expected_digest，执行plugin_test→plugin_update，宿主保留版本/权限校验。同版本同摘要返回already-installed，禁用状态不改变。成功后刷新当前工具，依赖准备另行执行。",
     "parameters": {
       "type": "object",
       "required": [
@@ -85,6 +85,22 @@
           "maxLength": 20000
         },
         "catalog_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "install"
+            },
+            {
+              "type": "string",
+              "const": "update"
+            }
+          ]
+        },
+        "expected_digest": {
           "type": "string",
           "pattern": "^sha256:[a-f0-9]{64}$"
         }
@@ -122,7 +138,7 @@
   {
     "name": "plugin_inspect",
     "label": "plugin_inspect",
-    "description": "主 Agent 查看已安装外部插件的版本、摘要、诊断和可回滚版本；不会激活插件。",
+    "description": "主 Agent 查看已安装插件的版本、摘要、状态和诊断；更新官方随附包也先读取其当前digest。不会激活插件。",
     "parameters": {
       "type": "object",
       "required": [
@@ -131,7 +147,7 @@
       "properties": {
         "plugin_id": {
           "type": "string",
-          "description": "已安装的外部插件 ID",
+          "description": "已安装插件 ID，包括可显式更新的官方随附包",
           "minLength": 1,
           "maxLength": 20000
         }
@@ -280,7 +296,7 @@
       "properties": {
         "plugin_id": {
           "type": "string",
-          "description": "已安装的外部插件 ID",
+          "description": "已安装插件 ID，包括可显式更新的官方随附包",
           "minLength": 1,
           "maxLength": 20000
         },
@@ -318,7 +334,7 @@
   {
     "name": "plugin_update",
     "label": "plugin_update",
-    "description": "从已测试草稿升级外部插件；要求更高版本和匹配的当前摘要。保留旧包及持久数据。",
+    "description": "从已测试草稿显式升级已安装插件，包括支持此能力的宿主提供的官方随附包；要求更高版本与匹配的expected_digest。保留旧包、状态及持久数据，不授予额外迁移权限。",
     "parameters": {
       "type": "object",
       "required": [
@@ -368,7 +384,7 @@
       "properties": {
         "plugin_id": {
           "type": "string",
-          "description": "已安装的外部插件 ID",
+          "description": "已安装插件 ID，包括可显式更新的官方随附包",
           "minLength": 1,
           "maxLength": 20000
         },
@@ -405,7 +421,7 @@
       "properties": {
         "plugin_id": {
           "type": "string",
-          "description": "已安装的外部插件 ID",
+          "description": "已安装插件 ID，包括可显式更新的官方随附包",
           "minLength": 1,
           "maxLength": 20000
         },
@@ -438,7 +454,7 @@
       "properties": {
         "plugin_id": {
           "type": "string",
-          "description": "已安装的外部插件 ID",
+          "description": "已安装插件 ID，包括可显式更新的官方随附包",
           "minLength": 1,
           "maxLength": 20000
         },

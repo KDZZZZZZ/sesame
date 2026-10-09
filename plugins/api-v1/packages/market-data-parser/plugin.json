@@ -3,7 +3,7 @@
     "name": "Sesame"
   },
   "name": "market-data-parser",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "基于公开金融数据接口思路新写的结构化市场数据解析 skill（新写适配层，非上游现成 skill）。解析 exchangerate-api 风格 JSON 与 TCMB 风格 XML 汇率数据；解析失败时 isError=true。",
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "extensions": {
@@ -36,7 +36,7 @@
               "CNY": 6.71
             },
             "source": "sample_fx.json",
-            "version": "2.0.1"
+            "version": "2.0.2"
           }
         },
         {
@@ -72,7 +72,7 @@
               }
             ],
             "source": "sample_fx.xml",
-            "version": "2.0.1"
+            "version": "2.0.2"
           }
         }
       ],

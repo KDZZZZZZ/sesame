@@ -34,7 +34,7 @@ jobs:
           node plugins/api-v1/scripts/plugin-lock.mjs --check
           if test -f plugins/optional-api-v1/official-plugins.lock.json; then
             node plugins/api-v1/scripts/plugin-lock.mjs --check --source plugins/optional-api-v1
-            node .github/scripts/validate-api1-catalog.mjs .
+            node .github/scripts/validate-api1-catalog.mjs . --published
           fi
           node .github/scripts/release-plugins.mjs --check .
       - name: Publish immutable assets after pre-merge semantic review and PR checks

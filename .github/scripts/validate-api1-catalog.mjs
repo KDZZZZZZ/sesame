@@ -1,8 +1,9 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { buildLock, sha256 } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
+import { validateCatalog, checkPublished } from '../../plugins/api-v1/scripts/catalog.mjs';
 
 export function validateOptionalCatalog(repository) {
   const root = join(repository, 'plugins/optional-api-v1');
@@ -33,4 +34,9 @@ export function validateOptionalCatalog(repository) {
   return { packages: ids.size, sourceCommit: catalog.sourceCommit };
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) console.log(JSON.stringify(validateOptionalCatalog(resolve(process.argv[2] ?? '.'))));
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  const root = resolve(process.argv[2] ?? '.'), optional = validateOptionalCatalog(root);
+  const unified = existsSync(join(root, 'plugins/api-v1/catalog.json')) ? validateCatalog(root) : null;
+  if (unified && process.argv.includes('--published')) await checkPublished(unified);
+  console.log(JSON.stringify({ optional, unified: unified && { packages: unified.plugins.length, releases: unified.releases.map(item => item.tag), publishedChecked: process.argv.includes('--published') } }));
+}

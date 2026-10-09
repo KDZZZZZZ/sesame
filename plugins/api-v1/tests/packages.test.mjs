@@ -12,7 +12,7 @@ test('standard MCP servers return their declared schemas and ten exact sample re
   let samples = 0;
   for (const name of ['web-extract', 'rss-collect', 'market-data-parser', 'quantskills-catalog']) {
     const directory = join(root, name), manifest = JSON.parse(readFileSync(join(directory, 'plugin.json'))), extension = manifest.extensions['bot.sesame'];
-    assert.equal(extension.id, `sesame/${name}`); assert.equal(extension.apiVersion, '1'); assert.equal(manifest.version, '2.0.1');
+    assert.equal(extension.id, `sesame/${name}`); assert.equal(extension.apiVersion, '1'); assert.equal(manifest.version, JSON.parse(readFileSync(join(directory, 'package.json'))).version);
     const operations = [{ method: 'initialize', params: {} }, { method: 'tools/list' }, ...extension.tests.map(sample => ({ method: 'tools/call', params: { name: sample.tool, arguments: sample.arguments } }))];
     if (name !== 'quantskills-catalog') operations.push({ method: 'tools/call', params: { name: extension.tests[0].tool, arguments: { file_path: '../../package.json' } } });
     const run = spawnSync('python3', ['-I', join(directory, 'server.py')], { cwd: directory, encoding: 'utf8', env: { PATH: process.env.PATH, LANG: 'en_US.UTF-8' }, timeout: 10000, maxBuffer: 1024 * 1024, input: operations.map((operation, index) => JSON.stringify({ jsonrpc: '2.0', id: index + 1, ...operation })).join('\n') + '\n' });
