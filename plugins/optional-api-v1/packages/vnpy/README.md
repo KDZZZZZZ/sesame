@@ -23,3 +23,9 @@ Only bar replay is supported (`1m`, `1h`, `d`, `w`). Tick input, automatic datab
 The pinned engine uses Python/NumPy binary floating point. Output decimal strings preserve its actual values; they do not imply decimal34 precision or equivalence to SVL. Matching, costs, short positions, mark-to-market and open positions at test end follow this engine's behavior. Read the pinned source and result assumptions before comparing engines. The bundled four-bar example is deliberately fictional, tests two simulated fills, and is not investment evidence.
 
 AKShare supplies research market data; this plugin supplies native CTA backtesting; a separately configured and authorized broker plugin is needed for broker connectivity. Those responsibilities are not interchangeable.
+
+## Bounded dependency preparation (1.0.1)
+
+Existing compatible configured Python is reused read-only first. A new private venv and preparation receipt survive interrupted/failed installs. Official PyPI wheel metadata selects native platform wheels; large pinned Qt and engine wheels use durable Range partials, limited to 64 MiB or 420 seconds per call. Full SHA256 validation occurs before a wheel is renamed as complete. A server that refuses the resume range produces an explicit error and preserves bytes; it does not silently redownload. Completed archives and pip HTTP cache are private and persistent.
+
+`vnpy_environment prepare` can return `ready:false`, a phase, downloaded byte/source/hash receipts, `retryable`, and the precise next action. Repeat with the same original base path to finish downloads and installation. After three unchanged failures or source/hash/resume integrity errors, stop automatic retries and diagnose/use existing dependencies. This is not a global install or a download on load. The complete pinned engine import and pip consistency checks still determine readiness.
