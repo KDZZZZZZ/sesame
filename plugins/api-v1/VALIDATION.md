@@ -17,7 +17,7 @@ All five assets for each release below were downloaded from its published GitHub
 | [catalog-static-review](https://github.com/KDZZZZZZ/sesame/actions/runs/37966127271/job/113940803809) | 2026-10-09T17:25:19Z | success on the reviewed head |
 | [Premerge semantic gate](https://github.com/KDZZZZZZ/sesame/actions/runs/37966373973) | 2026-10-09T17:27:28Z | success before merge |
 
-The gate ran trusted main revision `5164418bf4919967fba92db673382e80ab339645`, checked the open head at `2026-10-09T17:27:24Z`, and retained artifact `11633282396` with SHA-256 `9f4331b24258b0ed30237a2abc7f950376f0e19ff34a05836ceffcf6be3db070`. Its authenticated reviewer, formal-review state and resolved-discussion set are preserved in the release's [review.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.6/review.json).
+The gate ran trusted main revision `5164418bf4919967fba92db673382e80ab339645`, checked the open head at `2026-10-09T17:27:24Z`, and retained artifact `11633282396` with SHA-256 `9f4331b24258b0ed30237a2abc7f950376f0e19ff34a05836ceffcf6be3db070`. The authenticated maintainer recorder, the Agent reviewer named in that maintainer's attestation, formal-review state and resolved-discussion set are preserved in the release's [review.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.6/review.json).
 
 | Published asset | Bytes | SHA-256 |
 | --- | ---: | --- |
@@ -42,7 +42,7 @@ The prepublication cleanup-error finding was fixed by an independent preservatio
 | [catalog-static-review](https://github.com/KDZZZZZZ/sesame/actions/runs/37968227272/job/113947897731) | 2026-10-09T17:43:12Z | success on the reviewed head |
 | [Premerge semantic gate](https://github.com/KDZZZZZZ/sesame/actions/runs/37968558275) | 2026-10-09T17:46:01Z | success before merge |
 
-The gate ran trusted main revision `6937305ba021bb20a0f0b022fdc18bede3eca383`, checked the open head at `2026-10-09T17:45:58Z`, and retained artifact `11634955163` with SHA-256 `54385145900deb9e8cc90db15035eb66f7ca5f15a95f0456929b93e57e42a129`. Its authenticated reviewer, formal-review state and resolved-discussion set are preserved in the release's [review.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.7/review.json).
+The gate ran trusted main revision `6937305ba021bb20a0f0b022fdc18bede3eca383`, checked the open head at `2026-10-09T17:45:58Z`, and retained artifact `11634955163` with SHA-256 `54385145900deb9e8cc90db15035eb66f7ca5f15a95f0456929b93e57e42a129`. The authenticated maintainer recorder, the Agent reviewer named in that maintainer's attestation, formal-review state and resolved-discussion set are preserved in the release's [review.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.7/review.json).
 
 | Published asset | Bytes | SHA-256 |
 | --- | ---: | --- |
@@ -67,7 +67,7 @@ The final head includes both time-basis corrections: ambiguous wall-clock folds 
 | [catalog-static-review](https://github.com/KDZZZZZZ/sesame/actions/runs/37971785983/job/113959964670) | 2026-10-09T18:13:41Z | success on the reviewed head |
 | [Premerge semantic gate](https://github.com/KDZZZZZZ/sesame/actions/runs/37972288237) | 2026-10-09T18:18:12Z | success before merge |
 
-The gate ran trusted main revision `3a4bef2cc8222075791e1c10df8578d6049a2dee`, checked the open head at `2026-10-09T18:18:07Z`, and retained artifact `11636696712` with SHA-256 `b0d48812c5a9f6e99b45993d2b1e6efd7834423f4c051cd4bf1b14dfd9f068c4`. Its authenticated reviewer, formal-review state and resolved-discussion set are preserved in the release's [review.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.8/review.json).
+The gate ran trusted main revision `3a4bef2cc8222075791e1c10df8578d6049a2dee`, checked the open head at `2026-10-09T18:18:07Z`, and retained artifact `11636696712` with SHA-256 `b0d48812c5a9f6e99b45993d2b1e6efd7834423f4c051cd4bf1b14dfd9f068c4`. The authenticated maintainer recorder, the Agent reviewer named in that maintainer's attestation, formal-review state and resolved-discussion set are preserved in the release's [review.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.8/review.json).
 
 | Published asset | Bytes | SHA-256 |
 | --- | ---: | --- |
@@ -92,7 +92,7 @@ The [negative premerge run](https://github.com/KDZZZZZZ/sesame/actions/runs/3797
 | [catalog-static-review](https://github.com/KDZZZZZZ/sesame/actions/runs/37967923695/job/113946867431) | 2026-10-09T17:40:31Z | success on the reviewed head |
 | [Premerge semantic gate](https://github.com/KDZZZZZZ/sesame/actions/runs/37968798320) | 2026-10-09T17:48:11Z | success before merge |
 
-The gate ran trusted main revision `6937305ba021bb20a0f0b022fdc18bede3eca383`, checked the open head at `2026-10-09T17:48:07Z`, and retained artifact `11634094201` with SHA-256 `99f2c9ca163f7e7a88921b444c664474cef296c2110fbfe757ad81adbf5f493a`. Its authenticated reviewer, formal-review state and resolved-discussion set are preserved in the release's [review.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.4/review.json).
+The gate ran trusted main revision `6937305ba021bb20a0f0b022fdc18bede3eca383`, checked the open head at `2026-10-09T17:48:07Z`, and retained artifact `11634094201` with SHA-256 `99f2c9ca163f7e7a88921b444c664474cef296c2110fbfe757ad81adbf5f493a`. The authenticated maintainer recorder, the Agent reviewer named in that maintainer's attestation, formal-review state and resolved-discussion set are preserved in the release's [review.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.4/review.json).
 
 | Published asset | Bytes | SHA-256 |
 | --- | ---: | --- |
