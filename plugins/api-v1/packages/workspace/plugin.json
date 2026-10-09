@@ -1,8 +1,8 @@
 {
-  "id": "sesame/sandbox",
-  "title": "代码沙箱",
-  "description": "工作区文件读写、精确编辑与隔离代码执行。",
-  "version": "2.0.0",
+  "id": "sesame/workspace",
+  "title": "工作区与执行",
+  "description": "工作区文件读写、精确编辑与受任务生命周期管理的本机代码执行。",
+  "version": "1.0.0",
   "default_state": "mounted",
   "tool_names": [
     "read",

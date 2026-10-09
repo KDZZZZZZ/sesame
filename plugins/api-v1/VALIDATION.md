@@ -1,3 +1,22 @@
+# Development bundle 3 validation
+
+The current source was checked with Node 24 and the matching public SDK on macOS arm64:
+
+- 107 combined JavaScript checks: 95 passed, 12 platform/opt-in gates, zero failed. Eleven gates require Windows; the remaining native MetaEditor gate was also run separately by the native integration suite.
+- Six Python dependency installer boundary checks passed.
+- The actual HostContext and official plugin factories passed two new integration tests: all nine host-file methods perform real file operations and native argv execution; workspace read/write/edit/Bash uses the real cwd and retains completed/failed execution records.
+- Three actual report-renderer/Pi repair tests passed again on the native-execution host, including repeated chart hide/show/resize and fixed DataRef permissions. No JavaScript errors were ignored.
+- Six authored-plugin integration checks passed, including all ten standard MCP sample calls and immutable reports/SVL evidence.
+- The MT5 contributor ran actual macOS MetaEditor success and syntax-error compilations in 23.8 seconds; the private process Job ended with zero active processes. The dependency installer downloaded, verified and prepared 850 files in a temporary private directory and reused that installation. Windows/Linux compilation and the macOS application installer were not natively verified.
+
+The frozen 19-package archive uses `sesame/workspace` instead of `sesame/sandbox`; host-files is 2.1.0, MT5 is 1.1.0, and user-guide/orchestration are 2.0.1. MT5 VM resources, transports and retired probes are not included. They remain explicitly historical under development/mt5-runtime-probes/retired-api-v1. New optional integrations are outside this archive and have separate validation.
+
+Dependency discovery does not start programs or download large runtimes automatically. Native execution is current-user host execution with task process cleanup, not an OS sandbox. Report/indicator frontend isolation remains a separate boundary. No current result implies broker authorization, live order execution or SVL/native-engine equivalence.
+
+## Earlier integration evidence (bundles 1 and 2)
+
+The following records describe the earlier integration revisions, including their then-present VM execution paths. Those historical paths are not part of bundle 3.
+
 # Development validation record
 
 Observed on 2026-10-09 during API 1 integration. This is a record of checks, not a

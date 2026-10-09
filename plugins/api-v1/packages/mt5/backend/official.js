@@ -184,8 +184,8 @@ export class MT5Official {
     return JSON.parse(text);
   }
   async tools(server, signal, { startIfNeeded = false } = {}) {
-    if (server === 'python') { requireValue(this.python.available(), 'MT5 的 Python 运行组件不可用', 503); return PYTHON_TOOLS; }
-    if (server === 'launcher') { requireValue(this.native, '未找到 MT5 安装目录', 503); return LAUNCH_TOOLS; }
+    if (server === 'python') { if (!this.python.available()) throw dependencyError('python-ipc', this.storage.directory, ['MT5', 'Windows Python + MetaTrader5 SDK']); return PYTHON_TOOLS; }
+    if (server === 'launcher') { if (!this.native) throw dependencyError('launcher', this.storage.directory, ['MT5 terminal']); return LAUNCH_TOOLS; }
     return server === 'metaeditor' && startIfNeeded ? editorTools(this, signal) : this.client(server).list(signal);
   }
   async catalog(server, query = '', signal, owner) {
@@ -196,8 +196,8 @@ export class MT5Official {
       const config = this.config.servers[name];
       if (config && !config.enabled) return empty('disabled', name === 'marketdata' ? '此独立数据服务未启用，不影响券商行情。' : '此连接未启用，需要时可在高级设置开启。');
       if (config && !config.token) return empty('unconfigured', '需要时在高级设置填写此服务的 API Key。');
-      if (name === 'python' && !this.python.available()) return empty('not_installed', '尚未找到 MT5 或应用的 Python 运行组件。');
-      if (name === 'launcher' && !this.native) return empty('not_installed', '尚未找到本机 MT5 安装。');
+      if (name === 'python' && !this.python.available()) return { ...empty('not_installed', '尚未找到 MT5 或已配置的 Windows Python。'), prerequisite: dependencyRequirement('python-ipc', this.storage.directory, ['MT5', 'Windows Python + MetaTrader5 SDK']) };
+      if (name === 'launcher' && !this.native) return { ...empty('not_installed', '尚未找到本机 MT5 安装。'), prerequisite: dependencyRequirement('launcher', this.storage.directory, ['MT5 terminal']) };
       try {
         const tools = await this.tools(name, signal, { startIfNeeded: server === 'metaeditor' }), client = this.clients.get(name);
         return { server: name, status: client ? 'connected' : 'installed', reason: client ? null : '已找到运行环境；实际连接与执行结果以调用为准。', server_info: client?.info ?? null, workspace: client?.workspace?.structuredContent ?? null,
@@ -305,3 +305,4 @@ export class MT5Official {
     await this.python.close(); await Promise.allSettled([...this.jobs.values()].map(job => job.promise).concat(this.editorStarting ?? []));
   }
 }
+import { dependencyError, dependencyRequirement } from './prerequisites.js';

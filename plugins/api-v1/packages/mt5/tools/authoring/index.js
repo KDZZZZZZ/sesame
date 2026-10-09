@@ -37,7 +37,7 @@ export function createTools(host, mt5) {
       }
       return mt5.status();
     }),
-    define('mt5_compile', '冻结已保存 revision、平台 SDK 和本机标准库，在隔离 Wine 环境调用 MetaEditor。成功返回 EX5 摘要；失败作为可恢复工具错误返回构建 ID、诊断与修复指引，修改 checkout 并 save 新 revision 后重试。不执行 EA。', {
+    define('mt5_compile', '冻结已保存 revision、平台 SDK 和本机标准库，按已配置引擎调用本机 MetaEditor；默认无需虚拟机，原生进程按本次任务管理与清理。成功返回 EX5 摘要；失败作为可恢复工具错误返回构建 ID、诊断与修复指引，修改 checkout 并 save 新 revision 后重试。不执行 EA。', {
       project_id: string('工程 ID'), revision: Type.Integer({ minimum: 1, description: '明确指定已保存的源码版本' }),
     }, async (args, signal) => {
       const build = mt5.queueBuild(args.project_id, args.revision, conversationId);

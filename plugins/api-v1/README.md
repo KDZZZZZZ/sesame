@@ -24,6 +24,20 @@ the public HostContext or allowlisted `@sesame/plugin-sdk/...` modules. They can
 import an application's private source tree. The four standard MCP packages keep
 their process boundary and `bot.sesame` manifest namespace.
 
+## Native execution and dependency preparation
+
+Development bundle 3 replaces `sesame/sandbox` with `sesame/workspace`. Its
+read/write/edit/bash tools use a real task cwd and managed native processes,
+with Bash on macOS/Linux and PowerShell on Windows. Execution has the current
+user's permissions; this is not OS isolation. The host-files plugin adds explicit
+write/mkdir/move/remove/run ports. Report and indicator renderer isolation remains.
+
+MT5 1.1.0 checks and reuses existing native tools. No MT5 program, compiler VM,
+Wine distribution or mandatory runtime image is embedded in the 19-package archive.
+Plugin skills guide dependency discovery, explicit preparation when missing, and
+actual verification. Optional integrations live separately in
+`../optional-api-v1/packages/` and do not enter this lock.
+
 ## Validate and build
 
 Use Node 24 or newer. The source tools have no npm dependencies. Python 3 is needed
@@ -45,9 +59,9 @@ application. It fails explicitly if that loader is missing; it does not replace
 the SDK with a copied or guessed implementation. No private host path is fixed in
 this repository. The application also runs report, strategy and cleanup integration
 tests against its verified assembled bundle.
-`test:python` runs the compiler transport, snapshot and entry boundary suites in
-isolated Python without writing bytecode into the plugin packages. These use
-explicit fixtures; they do not claim that Wine, a native compiler or a VM ran.
+`test:python` runs the dependency installer boundary suite without writing bytecode
+into the plugin packages. These fixture checks do not claim a native compiler ran.
+The separate opt-in native compiler test requires the actual installed toolchain.
 
 The archive root contains only `official-plugins.lock.json` and locked package
 directories. Files use mode 0644, uid/gid zero and a zero modification time. No

@@ -4,6 +4,7 @@ import { winePrefix, wineCommand, wineEnvironment } from './platform.js';
 import { runTesterProcess } from './tester-process.js';
 import { translationBinding } from './parameters.js';
 import { pythonPath } from './process.js';
+import { dependencyError } from './prerequisites.js';
 import { ApiError, digest, id, now, requireValue } from './support.js';
 import { testerConfig, stableJSON, SDK_VERSION, projectFiles, riskLimits } from './contracts.js';
 import { testerProxyLines, waitForTradingConnection } from './connection.js';
@@ -104,7 +105,8 @@ export class Tester {
   list(projectId) { return this.storage.list('mt5_backtest').filter(j => !projectId || j.project_id === projectId); }
   update(key, changes) { const value = this.storage.update('mt5_backtest', key, changes); this.mt5.runObserver?.backtest(this.get(key)); return value; }
   queue(buildId, config, parameterSpace = {}, owner = null, frozenRiskLimits = null) {
-    this.authorize(owner); requireValue(!this.closing && this.available(), '本机 Tester 执行环境不可用', 503, 'tester_unavailable');
+    this.authorize(owner); requireValue(!this.closing, 'Tester 正在关闭', 503, 'tester_unavailable');
+    if (!this.available()) throw dependencyError('tester', this.storage.directory, ['MT5 Tester', 'Windows Python native process controller', ...(process.platform === 'win32' ? [] : ['Wine'])]);
     requireValue(!this.storage.list('mt5_pass').some(p => p.status === 'unknown' && (p.process_id || p.cleanup_failed)), '先前 Tester 的原生清理状态未确认；请先核对该回测实例，再创建新任务', 409, 'tester_recovery_required');
     const build = this.storage.get('mt5_build', buildId);
     requireValue(build.status === 'succeeded' && build.ex5_sha256 && build.sdk_version === SDK_VERSION, '需要使用当前 SDK 编译成功的冻结构建');
@@ -201,7 +203,7 @@ export class Tester {
     await fs.writeFile(join(profiles, `${pass.id}.set`), Buffer.from('\uFEFF' + files.set, 'utf16le'));
     await fs.writeFile(join(archive, 'parameters.set'), files.set);
     await fs.writeFile(join(archive, 'manifest.json'), JSON.stringify({ ...pass, inputs: files.inputs, compiler_defaults: 'EX5-bound', terminal_sha256: digest(await fs.readFile(join(runner, 'terminal64.exe'))) }, null, 2));
-    const prefix = winePrefix(this.mt5.native.directory);
+    const prefix = winePrefix(this.mt5.native);
     const workspace = client.workspace;
     const info = workspace.structuredContent ?? JSON.parse(workspace.content.find(p => p.type === 'text').text);
     const commonWindows = win32.normalize(info.workspace.common_folder);

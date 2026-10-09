@@ -5,6 +5,10 @@ import { join, resolve } from 'node:path';
 export const macPrefix = (home = homedir()) => join(home, 'Library/Application Support/net.metaquotes.wine.metatrader5');
 
 export function winePrefix(directory = process.env.MT5AGENT_MT5_DIR) {
+  if (directory && typeof directory === 'object') {
+    if (directory.winePrefix) return directory.winePrefix;
+    directory = directory.directory;
+  }
   if (process.env.MT5AGENT_WINEPREFIX || process.env.WINEPREFIX) return process.env.MT5AGENT_WINEPREFIX || process.env.WINEPREFIX;
   // Custom terminal installations must use the same prefix for Python and Tester.
   if (directory) {
@@ -15,7 +19,8 @@ export function winePrefix(directory = process.env.MT5AGENT_MT5_DIR) {
   return join(homedir(), '.mt5');
 }
 
-export function wineCommand() {
+export function wineCommand(native) {
+  if (native?.wine) return native.wine;
   if (process.env.MT5AGENT_WINE) return process.env.MT5AGENT_WINE;
   if (process.platform === 'darwin') {
     for (const root of [process.env.MT5AGENT_MT5_APP, '/Applications/MetaTrader 5.app', join(homedir(), 'Applications/MetaTrader 5.app')].filter(Boolean)) {
@@ -34,13 +39,14 @@ export function wineEnvironment(directory, commonFolder) {
   // share the connected terminal's profile or its FILE_COMMON output goes missing.
   const user = commonFolder?.match(/^[cC]:[\\/]users[\\/]([^\\/]+)[\\/]AppData[\\/]Roaming[\\/]MetaQuotes[\\/]Terminal[\\/]Common[\\/]?$/i)?.[1];
   return { ...process.env, WINEPREFIX: winePrefix(directory), WINEDEBUG: '-all',
+    ...(directory?.compiler ? { WINEDLLOVERRIDES: 'mscoree,mshtml=', MVK_CONFIG_LOG_LEVEL: '0' } : {}),
     ...(user && !['.', '..'].includes(user) && !/[\x00-\x1f]/.test(user) ? { USER: user, LOGNAME: user } : {}),
     ...(process.env.MT5AGENT_DISPLAY ? { DISPLAY: process.env.MT5AGENT_DISPLAY } : {}) };
 }
 
-export function terminalInvocation(executable, flags = [], env = wineEnvironment()) {
+export function terminalInvocation(executable, flags = [], env = wineEnvironment(), native) {
   if (process.platform === 'win32') return { program: executable, args: flags };
-  const wine = wineCommand();
+  const wine = wineCommand(native);
   return process.platform === 'linux' && !env.DISPLAY
     ? { program: 'xvfb-run', args: ['-a', wine, executable, ...flags] }
     : { program: wine, args: [executable, ...flags] };

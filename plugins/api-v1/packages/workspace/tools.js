@@ -1,4 +1,4 @@
-import { posix } from 'node:path';
+import { dirname } from 'node:path';
 import { check, digest } from '@sesame/plugin-sdk/protocol';
 
 const queues = new Map(), MAX_BYTES = 50000, MAX_LINES = 2000;
@@ -46,16 +46,19 @@ export function createTools(host) {
   return [read,
     define('write', '写入 UTF-8 工作区文件并创建所需父目录。', { path: string('工作区路径'), content: Type.String({ maxLength: 1048576 }) }, (args, signal) => {
       const full = path(args.path);
-      return serial(key(full), async () => { signal?.throwIfAborted(); await operations.mkdir(posix.dirname(full)); signal?.throwIfAborted(); await operations.writeFile(full, args.content); return { path: full, bytes: Buffer.byteLength(args.content), digest: digest(args.content) }; });
+      return serial(key(full), async () => { signal?.throwIfAborted(); await operations.mkdir(dirname(full)); signal?.throwIfAborted(); await operations.writeFile(full, args.content); return { path: full, bytes: Buffer.byteLength(args.content), digest: digest(args.content) }; });
     }),
     define('edit', '精确替换原文件中唯一且互不重叠的文本；全部匹配通过后一次写入。保留 BOM 和原换行风格。', { path: string('工作区路径'), edits: Type.Array(Type.Object({ oldText: Type.String({ minLength: 1, maxLength: 1048576 }), newText: Type.String({ maxLength: 1048576 }) }, { additionalProperties: false }), { minItems: 1, maxItems: 128 }) }, (args, signal) => {
       const full = path(args.path);
       return serial(key(full), async () => { signal?.throwIfAborted(); const bytes = await operations.readFile(full), content = replacements(new TextDecoder('utf-8', { fatal: true }).decode(bytes), args.edits); signal?.throwIfAborted(); check((await operations.readFile(full)).equals(bytes), 'File changed during edit; read it again'); await operations.writeFile(full, content); return { path: full, replacements: args.edits.length, digest: digest(content) }; });
     }),
-    define('bash', '在会话隔离环境中执行 shell；返回真实执行 ID、退出码和输出，非零退出作为工具错误。cwd 可限制为 /work 的子目录。', { command: Type.String({ minLength: 1, maxLength: 100000 }), timeout: Type.Optional(Type.Integer({ minimum: 1, maximum: 600 })), cwd: Type.Optional(Type.String({ maxLength: 1000 })) }, async (args, signal) => {
-      const result = await box.run(['/bin/bash', '-c', args.command], { signal, timeout: args.timeout ?? 60, cwd: args.cwd });
+    define('bash', '在本机工作区运行 shell：Windows 使用 PowerShell，其他平台使用 Bash；以当前系统用户权限运行，不是 OS 沙箱。返回真实执行 ID、cwd、退出码和输出，非零退出作为工具错误。', { command: Type.String({ minLength: 1, maxLength: 100000 }), timeout: Type.Optional(Type.Integer({ minimum: 1, maximum: 600 })), cwd: Type.Optional(Type.String({ maxLength: 1000 })) }, async (args, signal) => {
+      const windows = (host.environment?.capabilities?.platform ?? process.platform) === 'win32';
+      const shell = host.environment?.capabilities?.shell ?? (windows ? 'powershell.exe' : '/bin/bash');
+      const argv = windows ? [shell, '-NoLogo', '-NoProfile', '-NonInteractive', '-Command', args.command] : [shell, '-c', args.command];
+      const result = await box.run(argv, { signal, timeout: args.timeout ?? 60, cwd: args.cwd });
       const output = result.output ?? '';
-      const details = { execution_id: result.executionId, exit_code: result.exitCode, output: Buffer.byteLength(output) > MAX_BYTES ? Buffer.from(output).subarray(-MAX_BYTES).toString('utf8') : output, truncated: Buffer.byteLength(output) > MAX_BYTES };
+      const details = { cwd: result.cwd ?? args.cwd ?? box.root?.(), shell, execution_id: result.executionId, exit_code: result.exitCode, output: Buffer.byteLength(output) > MAX_BYTES ? Buffer.from(output).subarray(-MAX_BYTES).toString('utf8') : output, truncated: Buffer.byteLength(output) > MAX_BYTES };
       if (result.exitCode !== 0) throw Object.assign(new Error(`Command exited with code ${result.exitCode}; execution_id=${result.executionId}\n${details.output}`), { code: 'PROCESS_EXIT', details });
       return details;
     }),

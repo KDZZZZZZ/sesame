@@ -2,7 +2,7 @@
   "id": "sesame/user-guide",
   "title": "Sesame 使用指南",
   "description": "按用户目标讲解 Sesame 工作台、设置、聊天命令、并行研究与策略流程，包含官网 docs 和可交互演示。",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "default_state": "mounted",
   "agent_scope": "main",
   "tool_names": [],

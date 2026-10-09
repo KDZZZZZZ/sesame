@@ -56,9 +56,20 @@ def emit(value):
 
 def run():
     request = json.loads(sys.stdin.readline(65537))
-    terminal, ini, runner = request['terminal'], request['ini'], request['directory']
-    if not os.path.isabs(runner) or os.path.normcase(os.path.dirname(terminal)) != os.path.normcase(runner) or os.path.normcase(os.path.dirname(ini)) != os.path.normcase(runner) or os.path.basename(terminal).lower() != 'terminal64.exe':
-        raise ValueError('Tester inputs must belong to the private runner')
+    kind = request.get('kind', 'tester')
+    runner = request['directory']
+    if kind == 'compiler':
+        terminal = request['editor']
+        if not os.path.isabs(runner) or os.path.normcase(terminal) != os.path.normcase(os.path.join(runner, '.compiler', 'MetaEditor64.exe')):
+            raise ValueError('Compiler must belong to the frozen private build')
+        arguments = [terminal, '/portable', '/compile:' + os.path.join(runner, 'Experts', 'Strategy.mq5'), '/include:' + runner, '/log']
+    elif kind == 'tester':
+        terminal, ini = request['terminal'], request['ini']
+        if not os.path.isabs(runner) or os.path.normcase(os.path.dirname(terminal)) != os.path.normcase(runner) or os.path.normcase(os.path.dirname(ini)) != os.path.normcase(runner) or os.path.basename(terminal).lower() != 'terminal64.exe':
+            raise ValueError('Tester inputs must belong to the private runner')
+        arguments = [terminal, '/portable', '/config:' + ini]
+    else:
+        raise ValueError('Unknown native process kind')
     canceled = threading.Event()
     def commands():
         for line in sys.stdin:
@@ -79,13 +90,13 @@ def run():
         require(k.SetInformationJobObject(job, 9, c.byref(limits), c.sizeof(limits)), 'SetInformationJobObject')
         startup = STARTUPINFO()
         startup.cb = c.sizeof(startup)
-        command = c.create_unicode_buffer(subprocess.list2cmdline([terminal, '/portable', '/config:' + ini]))
+        command = c.create_unicode_buffer(subprocess.list2cmdline(arguments))
         require(k.CreateProcessW(terminal, command, None, None, False, 0x4, None, runner, c.byref(startup), c.byref(process)), 'CreateProcessW suspended')
         require(k.AssignProcessToJobObject(job, process.hProcess), 'AssignProcessToJobObject')
         assigned = True
         require(k.ResumeThread(process.hThread) != 0xffffffff, 'ResumeThread')
         emit({'type': 'started', 'pid': process.dwProcessId, 'jobOwned': True})
-        deadline = time.monotonic() + 900
+        deadline = time.monotonic() + (300 if kind == 'compiler' else 900)
         while k.WaitForSingleObject(process.hProcess, 100) != 0:
             if canceled.is_set() or time.monotonic() >= deadline:
                 error = 'Tester canceled' if canceled.is_set() else 'Tester exceeded 15 minutes'

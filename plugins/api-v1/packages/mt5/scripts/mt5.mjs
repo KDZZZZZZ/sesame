@@ -10,7 +10,7 @@ if (command === 'doctor') {
   if (process.platform !== 'win32') {
     try { wine = execFileSync(wineCommand(), ['--version'], { encoding: 'utf8', stdio: 'pipe' }).trim(); } catch {}
   }
-  const compiler = compilerDependencies();
+  const compiler = compilerDependencies({ native });
   console.log(JSON.stringify({ installed: Boolean(native), compiler, wine, directory: native?.directory ?? null, terminal: native?.terminal ?? null, editor: native?.editor ?? null }, null, 2));
   if (!native || !compiler || (process.platform !== 'win32' && !wine)) process.exitCode = 1;
 } else {

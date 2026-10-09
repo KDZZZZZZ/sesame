@@ -17,7 +17,7 @@ export function terminalConfig(config, enabled) {
 async function localPath(path, native) {
   if (process.platform === 'win32') return path;
   requireValue(/^[cC]:\\/.test(path) && !path.split(/[\\/]/).includes('..'), '自动配置需要本机 Wine C 盘终端');
-  let current = join(winePrefix(native?.directory), 'drive_c');
+  let current = join(winePrefix(native), 'drive_c');
   // Native chart paths are often uppercased; Linux filesystems are case-sensitive.
   for (const part of path.slice(3).split(/[\\/]/).filter(Boolean)) {
     const name = (await fs.readdir(current)).find(name => name.toLowerCase() === part.toLowerCase());

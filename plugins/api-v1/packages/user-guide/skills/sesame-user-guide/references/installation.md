@@ -1,51 +1,32 @@
 # Sesame 快速上手
 
-新版安装包的流程只有四步：**安装 Sesame → 配置模型 → 连接已有 MT5 → 开始使用**。研究代码、绘图、本地 MCP 和隔离编译所需运行环境随应用提供，无需另装 Python、Node.js、WSL、Lima、Docker 或 Homebrew。
+本文对应 Plugin API 1 开发版。已发布 0.1.4 的目录与安装包是另一版本；先核对用户实际安装版本，再解释当前能力。
 
-## 1. 安装 Sesame
+## 安装与模型
 
-从 [Sesame Releases](https://github.com/KDZZZZZZ/sesame/releases) 下载对应系统的安装包。报告检查复用 Electron 自带的浏览器内核，无需另外下载浏览器。
+从 [Sesame Releases](https://github.com/KDZZZZZZ/sesame/releases) 选择系统对应的应用安装包。插件 development bundle 是供匹配应用装配的插件资源，不是可双击启动的应用。报告检查使用应用浏览器内核；报告与指标的前端只读渲染隔离继续保留。
 
-| 系统 | 安装方法 |
-| --- | --- |
-| Windows 10/11 x64 | 运行 `.exe`，按提示安装，默认仅为当前用户安装。 |
-| macOS 13+，Apple Silicon | 打开 `.dmg`，将 **Sesame.app** 拖入 Applications 后打开。 |
-| Linux x86_64 | Ubuntu / Debian 桌面优先使用 `.deb`：`sudo apt install ./Sesame-版本-linux-x64.deb`。其他兼容桌面可用 AppImage。 |
+打开模型设置，选择提供商并配置连接，发一条消息验证。模型账号、额度与网络由用户提供；不要在回复、报告或调试日志中公开认证信息。
 
-AppImage 添加执行权限后双击，或运行：
+## 先复用环境，再补依赖
 
-```sh
-chmod +x Sesame-版本-linux-x64.AppImage
-./Sesame-版本-linux-x64.AppImage
-```
+Agent 先检查用户已有的程序、终端、Python/Node、虚拟环境和配置，再决定当前任务实际缺什么。应用不预装 MT5、券商账户或所有插件依赖。插件提供工具和使用说明；加载插件或查看状态不会触发下载、启动服务或覆盖配置。
 
-Linux 需要正常的 systemd 用户会话、cgroup v2 和可用的 user namespaces。`.deb` 安装时自动配置 Sesame 的应用隔离规则；受 AppArmor 限制的 AppImage 首次使用会请求一次系统授权，仅安装 Sesame 专用隔离组件和规则，不关闭系统安全设置。若缺少 FUSE，可用 `--appimage-extract` 解包后运行 `squashfs-root/AppRun`。
+确认缺少依赖后，按任务需要显式调用插件安装工具或宿主命令，优先在插件数据目录或指定持久环境安装固定版本，并核验真实版本、导入、连接和调用。不要把安装成功当作数据可用、终端已登录或交易权限已开通。没有兼容环境时给出实际缺失项，不虚构验收结果。
 
-Preview 安装包尚未完成 Apple 公证和 Windows 代码签名；首次打开可能出现系统提示。请核对发布来源及 `SHA256SUMS.txt`，仅放行该应用。Intel Mac 和 Windows ARM 不在本版支持范围。
+## 连接已有 MT5
 
-## 2. 配置模型
+1. 检查已安装的 MT5、MetaEditor 和已有连接配置，优先复用。
+2. 需要读取终端时，确认它已启动、登录目标账户且行情正常；支持 MCP 的终端需在 **工具 → 选项 → MCP** 启用对应服务与授权。
+3. 使用终端正式导出的配置连接；地址、端口、Key 和账户身份以当前实例为准，不覆盖未知配置。
+4. 让 Agent 检查实际连接、权限与所需能力。缺少终端或编译依赖时，先说明所需平台，再按任务需要配置或安装。
 
-打开 **设置 → 模型**，选择提供商，填写 API Key，或使用支持的浏览器登录。自定义兼容接口还需填写 Base URL 和模型名称。选择可用模型后，发一句消息确认连接。
+Sesame 不附带 MT5 程序或券商账户。编译、回测、实盘是不同步骤，各自需要实际结果与当前授权；任何安装或编译成功都不等于已完成原生 Tester 回测或部署。
 
-模型账号、额度和网络由你提供；密钥只填入设置表单。
+## 工作区与执行
 
-## 3. 连接已有 MT5
+read/write/edit 管理任务文件；bash 使用真实本机 shell（Windows 为 PowerShell，其他平台为 Bash），保留执行记录、cwd、取消和任务进程清理。宿主文件工具可处理工作区外明确的文件与环境任务。二者均使用当前系统用户权限，不提供 OS 沙箱；脚本使用真实 cwd 或相对路径，不假设系统挂载 /work。
 
-1. 打开你已安装的 MT5，登录账户并确认行情正常。
-2. 在支持 MCP 的 MT5 中打开 **工具 → 选项 → MCP**，启用本机服务。
-3. 在 Sesame 的 **MT5 连接**设置中填入账户标识、地址和 MCP Key，以终端显示的配置为准。交易终端常用端口为 `22346`，MetaEditor 常用端口为 `22345`。
-4. 让 Agent“检查 MT5 连接”，或开始查看行情。
+主 Agent 工作区持久保留，subagent 每次 Run 使用临时目录；结束前发布报告、策略、固定数据与必要依赖，再清理临时过程。已发布报告及固定 DataRef 可在清理后重开。
 
-Sesame 不包含 MT5 和券商账户。使用隔离编译时，应用读取已有 MetaEditor 和标准库的副本，不要求另行配置编译环境。MT5 / Wine 的原有安装由你继续使用。
-
-## 4. 直接开始
-
-可以让 Agent“分析这份 CSV 并画图”“研究当前品种”或“创建并编译一个 MQL5 策略”。研究代码和 MCP 直接联网，无需选择网络模式；文件、进程隔离和资源限制仍然保留。原生策略部署由目标插件根据固定源码、翻译、验证记录与当前账户状态处理；先让 Agent 核验实际支持。安装应用、研究或编译不会触发挂载。
-
-更新时退出应用并安装新版，运行环境随应用更新，无需重跑环境安装脚本。聊天、设置和工作区保留在用户数据目录：Windows 为 `%APPDATA%\Sesame\workspace`，macOS 为 `~/Library/Application Support/Sesame/workspace`，Linux 为 `~/.config/Sesame/workspace`（遵循 `XDG_CONFIG_HOME`）；已有安装沿用原位置。
-
-遇到问题可先问 Agent“检查模型、MT5 连接和运行环境”。更多操作可问“教我使用 Sesame”。
-
-## 从源码开发
-
-源码开发与旧环境维护使用仓库内的开发命令；旧版 `setup-windows.ps1`、`setup-macos.sh` 等脚本仅供相应开发环境使用，不属于新版安装包的上手步骤。开发说明见仓库 README。
+可以直接说“分析这份 CSV 并画图”“检查我已有的 Python 和 MT5 配置”或“创建并验证一个策略”。缺少工具时先发现并加载相应插件；获取来源、取数、执行、绘图与交易的实际状态分别核验。
