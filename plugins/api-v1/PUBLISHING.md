@@ -64,8 +64,13 @@ the review; it cannot independently prove the quality of an agent's reasoning.
 
 Before merging, run `Plugin semantic review gate` (automatically on PR comment
 events or with its PR-number workflow input). The trusted main-branch workflow
-stores an artifact identifying the open PR head, actual review and resolved
-discussion IDs. The publisher verifies the registered workflow identity, main
+stores an artifact identifying the open PR head, actual review, resolved
+discussion IDs, formal review IDs/states/commits/submission times, and GitHub's
+observable dismissal events (review ID, previous state, actor and time). The
+publisher matches this entire set against publication-time GitHub data; a later
+request for changes cannot be erased by dismissing it after merge. Malformed
+maintainer records are ignored without masking a later valid record. The
+publisher verifies the registered workflow identity, main
 revision, successful completion and artifact times **before merge**, then matches
 the current review and discussion set to that snapshot. It does not infer when a
 thread was resolved from its current `isResolved` flag; GitHub does not expose a
