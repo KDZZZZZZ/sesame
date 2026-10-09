@@ -16,6 +16,14 @@ export class NativeRunObserver {
     this.host = host; this.mt5 = mt5; this.sessionId = randomUUID();
     this.current = new Map(host.records.list().filter(row => row.producer.id === host.plugin.id).map(row => [row.id, row]));
   }
+  reference(kind, nativeId) {
+    const recordId = 'mt5-' + kind + '-' + nativeId;
+    if (!this.current.has(recordId)) return null;
+    // Return a real stored version for report.related.record. Legacy native
+    // runs have no SVL record and must never receive a fabricated reference.
+    const record = this.host.records.read(recordId);
+    return { id: record.id, version: record.version };
+  }
   artifact(operationId, kind, content, dependencies = [], files = {}) {
     const blobs = Object.entries(files).map(([path, text]) => ({ path, mediaType: path.endsWith('.ex5') ? 'application/octet-stream' : 'application/json', ...this.host.artifacts.blob(Buffer.isBuffer(text) || typeof text === 'string' ? text : JSON.stringify(text)) }));
     return this.host.artifacts.publish({ operationId, manifest: { kind, schemaVersion: '1.0.0', content, dependencies, blobs } });
