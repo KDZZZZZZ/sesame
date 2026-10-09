@@ -1138,9 +1138,9 @@
     },
     {
       "id": "sesame/reports",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "directory": "reports",
-      "treeDigest": "sha256:b69438c991db1df15f9ed6e0422cbaa5743ae69b2fbc95deec4e24bf28ab7e4d",
+      "treeDigest": "sha256:9b16447da02fc8e69227104078a40f7d4a8b33145a657a1963b6e9b8e3b1120f",
       "files": [
         {
           "path": "LICENSE",
@@ -1149,13 +1149,13 @@
         },
         {
           "path": "PROVENANCE.md",
-          "sha256": "080067543037abaca2524f852c3e61ff46ab033d6789a2b73e2bf3a1d119794e",
+          "sha256": "adecae6023f162328f1f55512b58f26cb28e1848838a7adfa2f03fea2a97c6f8",
           "bytes": 1981
         },
         {
           "path": "assets/editorial-charts.js",
-          "sha256": "eff61bdb00a1bf5aa9d70d7594d73375a7298a219b20d5060b3e835bdd47cd79",
-          "bytes": 12158
+          "sha256": "e2f30c3f4d5b1da510beaffa6b9e72e32a4aec362b62a32b2ae91f97490254d0",
+          "bytes": 13352
         },
         {
           "path": "assets/editorial.css",
@@ -1169,8 +1169,8 @@
         },
         {
           "path": "examples/editorial-demo.html",
-          "sha256": "28c5e581974f7243fa2c9e2fede3a2361e1281e749419afc38e0943d936c8bc5",
-          "bytes": 23173
+          "sha256": "c0935774fda2998cb1d3f3ded242a5ed04d113e38f8406298995555c69a38652",
+          "bytes": 24367
         },
         {
           "path": "index.js",
@@ -1179,12 +1179,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "34867f896e115fb07f0a8833b553c07845c560f98a45a2ac0994c2bc64cadbbc",
+          "sha256": "fa1a15630976bbd22c33f885364650177fdbd6ae00d8b621fb745ddb81723ece",
           "bytes": 120
         },
         {
           "path": "plugin.json",
-          "sha256": "689bbcfe348e40aeaf7510a227bdb6239a8e9ca395beee688b0a542071603738",
+          "sha256": "4d3c3147e377e88157eeef7333ffcbad4e300634aa9ac7071ae5448f767e4b51",
           "bytes": 925
         },
         {

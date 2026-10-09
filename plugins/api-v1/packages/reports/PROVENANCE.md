@@ -1,6 +1,6 @@
 # Sesame editorial report components
 
-Sesame Charts 1.0.0, the report scaffolds and the integration tools in this
+Sesame Charts 1.0.1, the report scaffolds and the integration tools in this
 directory are original Sesame code, distributed under the local MIT license.
 They require no CDN, external font or third-party chart runtime. The immutable
 report artifact retains the authored HTML, local assets and fixed DataRef inputs.

@@ -56,6 +56,15 @@ linked table rows, theme changes and 390-pixel layout were inspected. The exact
 string `9007199254740993.0000000000001` survived the bridge and table unchanged.
 Reading an unbound data ID was rejected.
 
+Development bundle 2 updates only the reports package to 2.0.1. A full host test
+run exposed a ResizeObserver delivery loop during chart layout. Chart redraws
+now run in animation frames only after positive width changes; replacing or
+destroying a chart disconnects its observer and cancels pending work. The three
+actual report-renderer integration tests passed with the new fixed bundle,
+including repeated hiding, reopening and 280/310-pixel resizing at both desktop
+and mobile widths, initial rendering in a hidden view, destroying a resized chart,
+and reopening the same fixed report. JavaScript-error checks remained strict.
+
 The standalone fictional chart gallery was opened with browser networking offline;
 chart switching and row filtering still worked. Line gaps, zero-based signed bars,
 missing matrix cells and exact unit counts were inspected. Decimal unit counting
