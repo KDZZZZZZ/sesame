@@ -105,6 +105,7 @@ export async function environment(host, { action = 'inspect', python_path } = {}
       }
       await run(host, [python, '-I', '-B', fileURLToPath(new URL('./download-wheels.py', import.meta.url)), '--directory', wheelhouse, '--report', progressReport], stage, signal, 480);
       const progress = JSON.parse(await readFile(progressReport, 'utf8'));
+      if (!progress.complete && progress.bytesThisCall === 0 && !progress.error) progress.error = 'Download made no progress; retained bytes are unchanged.';
       if (progress.error) preparation.failedAttempts = progress.bytesThisCall > 0 ? 0 : (preparation.failedAttempts ?? 0) + 1; else if (progress.bytesThisCall > 0) preparation.failedAttempts = 0;
       await writeFile(marker, JSON.stringify(preparation), { mode: 0o600 });
       if (!progress.complete || progress.bytesThisCall > 0) return pending(progress.complete ? 'downloaded' : 'downloading', progress, progress.error ? { code: 'DOWNLOAD_INCOMPLETE', message: progress.error } : null);

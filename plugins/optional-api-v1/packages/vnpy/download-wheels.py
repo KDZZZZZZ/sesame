@@ -30,16 +30,28 @@ def download(item,directory,deadline,budget,opener=urllib.request.urlopen):
     request=urllib.request.Request(official(item['url']),headers={'Range':f'bytes={offset}-'} if offset else {})
     with opener(request,timeout=20) as response:
         official(response.geturl())
-        if offset and (response.status!=206 or not response.headers.get('Content-Range','').startswith(f'bytes {offset}-')):
-            raise ValueError('Source did not honor resume Range; partial preserved, no silent full redownload')
+        response_end=item['size']-1
+        if offset or response.status==206:
+            match=re.fullmatch(r'bytes (\d+)-(\d+)/(\d+)',response.headers.get('Content-Range',''))
+            if response.status!=206 or not match or tuple(map(int,match.groups()))!=(offset,response_end,item['size']):
+                raise ValueError('Source did not honor resume Range boundaries; partial preserved, no silent full redownload')
+        elif response.status!=200:
+            raise ValueError('Unexpected wheel response status')
+        length=response.headers.get('Content-Length')
+        if length is not None and (not length.isdigit() or int(length)!=item['size']-offset):
+            raise ValueError('Wheel response Content-Length does not match declared size')
         used=0
         with partial.open('ab' if offset else 'wb') as f:
             while time.monotonic()<deadline and used<budget:
                 chunk=response.read(min(128*1024,budget-used))
-                if not chunk:break
+                if not chunk:raise ValueError('Wheel response ended before declared size; partial preserved')
+                if offset+used+len(chunk)>item['size']:raise ValueError('Wheel response exceeds declared size')
                 f.write(chunk);f.flush();used+=len(chunk)
-                if f.tell()>item['size']:raise ValueError('Wheel response exceeds declared size')
+                if f.tell()==item['size']:break
         if partial.stat().st_size==item['size']:
+            if response.read(1):
+                with partial.open('r+b') as f:f.truncate(offset)
+                raise ValueError('Wheel response exceeds declared body boundary; previous partial preserved')
             if checksum(partial)!=expected:partial.unlink();raise ValueError('Wheel hash mismatch; removed corrupt partial')
             os.replace(partial,target);return True,used
         return False,used
@@ -63,7 +75,12 @@ def main():
         for item in items:
             if not re.fullmatch(r'[A-Za-z0-9_.+\-]+\.whl',item['filename']) or not re.fullmatch('[a-f0-9]{64}',item['sha256']) or not isinstance(item['size'],int) or item['size']<=0:raise ValueError('Invalid cached wheel receipt')
             if time.monotonic()>=deadline or used>=budget:break
-            done,count=download(item,directory,deadline,budget-used);used+=count
+            target=directory/item['filename'];partial=directory/(item['filename']+'.part')
+            before=target.stat().st_size if target.exists() else partial.stat().st_size if partial.exists() else 0
+            try:done,count=download(item,directory,deadline,budget-used)
+            finally:
+                after=target.stat().st_size if target.exists() else partial.stat().st_size if partial.exists() else 0
+                used+=max(0,after-before)
             if not done:break
     except Exception as cause:failure=f'{type(cause).__name__}: {cause}'
     progress=[{**i,'downloadedBytes':min(i['size'],(directory/i['filename']).stat().st_size if (directory/i['filename']).exists() else (directory/(i['filename']+'.part')).stat().st_size if (directory/(i['filename']+'.part')).exists() else 0),'complete':(directory/i['filename']).exists()} for i in items]
