@@ -52,13 +52,13 @@ export function createTools(host) {
       const full = path(args.path);
       return serial(key(full), async () => { signal?.throwIfAborted(); const bytes = await operations.readFile(full), content = replacements(new TextDecoder('utf-8', { fatal: true }).decode(bytes), args.edits); signal?.throwIfAborted(); check((await operations.readFile(full)).equals(bytes), 'File changed during edit; read it again'); await operations.writeFile(full, content); return { path: full, replacements: args.edits.length, digest: digest(content) }; });
     }),
-    define('bash', '在本机工作区运行 shell：Windows 使用 PowerShell，其他平台使用 Bash；以当前系统用户权限运行，不是 OS 沙箱。返回真实执行 ID、cwd、退出码和输出，非零退出作为工具错误。', { command: Type.String({ minLength: 1, maxLength: 100000 }), timeout: Type.Optional(Type.Integer({ minimum: 1, maximum: 600 })), cwd: Type.Optional(Type.String({ maxLength: 1000 })) }, async (args, signal) => {
+    define('bash', '在本机工作区运行 shell：Windows 使用 PowerShell，其他平台使用 Bash；以当前系统用户权限运行，不是 OS 沙箱。返回真实执行 ID、cwd、退出码和输出，非零退出作为工具错误。snapshot_errors非空表示冻结证据不完整，不能宣称可复现。', { command: Type.String({ minLength: 1, maxLength: 100000 }), timeout: Type.Optional(Type.Integer({ minimum: 1, maximum: 600 })), cwd: Type.Optional(Type.String({ maxLength: 1000 })) }, async (args, signal) => {
       const windows = (host.environment?.capabilities?.platform ?? process.platform) === 'win32';
       const shell = host.environment?.capabilities?.shell ?? (windows ? 'powershell.exe' : '/bin/bash');
       const argv = windows ? [shell, '-NoLogo', '-NoProfile', '-NonInteractive', '-Command', args.command] : [shell, '-c', args.command];
       const result = await box.run(argv, { signal, timeout: args.timeout ?? 60, cwd: args.cwd });
       const output = result.output ?? '';
-      const details = { cwd: result.cwd ?? args.cwd ?? box.root?.(), shell, execution_id: result.executionId, exit_code: result.exitCode, output: Buffer.byteLength(output) > MAX_BYTES ? Buffer.from(output).subarray(-MAX_BYTES).toString('utf8') : output, truncated: Buffer.byteLength(output) > MAX_BYTES };
+      const details = { cwd: result.cwd ?? args.cwd ?? box.root?.(), shell, execution_id: result.executionId, exit_code: result.exitCode, output: Buffer.byteLength(output) > MAX_BYTES ? Buffer.from(output).subarray(-MAX_BYTES).toString('utf8') : output, truncated: Buffer.byteLength(output) > MAX_BYTES, snapshot_errors: result.snapshot_errors ?? [] };
       if (result.exitCode !== 0) throw Object.assign(new Error(`Command exited with code ${result.exitCode}; execution_id=${result.executionId}\n${details.output}`), { code: 'PROCESS_EXIT', details });
       return details;
     }),

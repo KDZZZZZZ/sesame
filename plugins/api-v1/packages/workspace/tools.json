@@ -101,7 +101,7 @@
   {
     "name": "bash",
     "label": "bash",
-    "description": "在本机工作区运行 shell：Windows 使用 PowerShell，其他平台使用 Bash；以当前系统用户权限运行，不是 OS 沙箱。返回真实执行 ID、cwd、退出码和输出，非零退出作为工具错误。",
+    "description": "在本机工作区运行 shell：Windows 使用 PowerShell，其他平台使用 Bash；以当前系统用户权限运行，不是 OS 沙箱。返回真实执行 ID、cwd、退出码和输出，非零退出作为工具错误。snapshot_errors非空表示冻结证据不完整，不能宣称可复现。",
     "parameters": {
       "type": "object",
       "required": [

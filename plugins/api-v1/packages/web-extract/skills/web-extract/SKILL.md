@@ -17,12 +17,12 @@ description: "从已抓取的 HTML 中提取正文、标题、链接和元数据
 
 当前工具负责解析文本；MCP 进程可访问公网与内网。获取网页内容可使用 sources_fetch。
 
-stdio MCP 与对话 bash 工作区隔离，MCP 不能凭 file_path 访问 /work/inputs：
+stdio MCP 使用本机当前用户权限运行。本服务器的 file_path 参数单独限制为包内文件，不能用该参数读任意工作区路径；这不是 OS 隔离：
 
 先用 `plugin_load` 加载 `sesame/web-sources` 和 `sesame/web-extract`。下文使用 MCP 原始工具名；实际调用使用当前工具列表中的完整 MCP 工具名。
 
 1. 用 `sources_fetch` 抓取公开网页，得到 HTML 文本快照（dataset 自动保存）
-2. 读取快照中的 `text` 字段（大文件用 bash 从 /work/inputs/<id>.json 提取）
+2. 读取快照中的 `text` 字段（大文件用 bash 从 sources_fetch 或 data_read 返回的真实 path 提取）
 3. 调用 `extract_webpage`，把 HTML 文本作为 `html_content` 传入。输入须适配当前模型上下文与工具参数上限；超限时明确说明限制，不把截断文本当作完整网页
 4. `file_path` 参数仅用于插件包内捆绑的样本文件（如 sample.html），不用于宿主任意路径
 

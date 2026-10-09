@@ -1,0 +1,251 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "1",
+  "channel": "development",
+  "packages": [
+    {
+      "id": "sesame/akshare",
+      "version": "1.0.0",
+      "directory": "akshare",
+      "treeDigest": "sha256:291d672ed114d391affbded40c602ff19ca487e4627669f7d943dc1424c05efc",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+          "bytes": 1076
+        },
+        {
+          "path": "README.md",
+          "sha256": "ec09a2b3311d7078cfce7bf6b48f1088395379eda91fe981329a472b8e99f6ae",
+          "bytes": 1890
+        },
+        {
+          "path": "VALIDATION.md",
+          "sha256": "691af3d2c5530b8ff7cc02a57b062f6b8f11a0a9f553472c2d6fcdf7e3641ff1",
+          "bytes": 2626
+        },
+        {
+          "path": "bridge.py",
+          "sha256": "07c069cda3ae4297fdb27ebce2179a679ebe38d8dce7b2e312a6680ac1f73a94",
+          "bytes": 2635
+        },
+        {
+          "path": "index.js",
+          "sha256": "646949d56240d731baa4d070cd44633f570cae0c886f9b79e59a51e88b9bd0c1",
+          "bytes": 3336
+        },
+        {
+          "path": "package.json",
+          "sha256": "a86669543effa35c97a2c2fde8e85d991b3ee019020ccc234f4fe33aa853feac",
+          "bytes": 120
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "6ba62b6ba1425de5ba5e821079dac14a0b1bb032a107f1b417d538804fb64240",
+          "bytes": 741
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "355ca7a09d74967a23763c07f424215c1b92a6e54bf2515770aa35241738a662",
+          "bytes": 644
+        },
+        {
+          "path": "provider.js",
+          "sha256": "d727b95cf9b3764d54e0383db470363c1230661616c739c741673611f1e7dcb7",
+          "bytes": 10207
+        },
+        {
+          "path": "skills/akshare-research/SKILL.md",
+          "sha256": "11e5605f23f5acb4a9b106a0198c6eb1a9ab56484a543388ce10e081eb205212",
+          "bytes": 2446
+        },
+        {
+          "path": "tests/environment.test.js",
+          "sha256": "07ed09cdbf3c15a44dc13b6dbc0f1709c0523e2b4def8bb994350d62892f0472",
+          "bytes": 3802
+        },
+        {
+          "path": "tests/live.mjs",
+          "sha256": "8c25bfbeb2daac0307c25a32bac42ce259ed8745e816f99857ebefcd640c0dc8",
+          "bytes": 1553
+        },
+        {
+          "path": "tests/provider.test.js",
+          "sha256": "408d59d2ae1717f7b8dcc810235e4c987df47fb95a1d5e8dfe170dcfda17ee83",
+          "bytes": 4666
+        },
+        {
+          "path": "tools.json",
+          "sha256": "8797b534ee3340bbc88c7f33142806eeff36a2a17d5dd7b4d3b94a30b03e89cf",
+          "bytes": 2910
+        },
+        {
+          "path": "worker.js",
+          "sha256": "c21ae7621f7ca63808f44ae5d7eb6d051dad572f478a27b0bbd3d258bfd36db7",
+          "bytes": 9203
+        }
+      ]
+    },
+    {
+      "id": "sesame/qmt",
+      "version": "1.0.0",
+      "directory": "qmt",
+      "treeDigest": "sha256:209b1a6ed09c3deae79f533a5b12ff1e02001db02585f9b8efbfc04dace7f0be",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "2681aaf69ad3f8a595707e154e1e065a0077db9f1d25f8f5df73c02c5657477a",
+          "bytes": 1063
+        },
+        {
+          "path": "README.md",
+          "sha256": "974ee14b45f7253b0c67a6b4a62af920cf81996d28c312b433646eedd051ef7c",
+          "bytes": 3366
+        },
+        {
+          "path": "bridge.py",
+          "sha256": "25a46b933e586df53a2ff4526ed6c48c4d54439786e5f6638f55a3d1b5e43fcd",
+          "bytes": 10736
+        },
+        {
+          "path": "configuration.js",
+          "sha256": "997bc56403f0ec5a05488191e743955b3be5edf0541f7a016b8c99d13b288c1e",
+          "bytes": 5230
+        },
+        {
+          "path": "index.js",
+          "sha256": "3b19aa1c168eb4d62dc1173e0eb1d1d410070b4300d1810e4fa6e1855ac7d737",
+          "bytes": 3562
+        },
+        {
+          "path": "mapping.js",
+          "sha256": "73888268e3d00d233ebc152ae621b94b244afabe9a222c17a7877fd082db4960",
+          "bytes": 5406
+        },
+        {
+          "path": "package.json",
+          "sha256": "145a91f3b1ee7bca2bd509120cdfce9db007af43248d5634a344acee81b27060",
+          "bytes": 129
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "fc5f3e973d844d0c282842a397c564b24e206ff90cafd3dfe32d159d8eacaf56",
+          "bytes": 742
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "3f5a360fa3f5a98ba4844dbf40b8275e96abe8f6521dadcec69053e533908404",
+          "bytes": 915
+        },
+        {
+          "path": "requirements.txt",
+          "sha256": "d6832c62d81f1241975bc20e0bf328c0a5e5fb16beb27497271b2ccc0fced986",
+          "bytes": 1708
+        },
+        {
+          "path": "service.js",
+          "sha256": "53d4bb854a7feeb6300650a6ee4f537810a8024d62388e17ddf42ac7cedd41b6",
+          "bytes": 12398
+        },
+        {
+          "path": "skills/qmt-readonly/SKILL.md",
+          "sha256": "8e4e9ea49c68fdb4da25974306fd38d7201bf82409f674996e62950fe0c05ddf",
+          "bytes": 3251
+        },
+        {
+          "path": "tools.json",
+          "sha256": "8fd2f1f1cfede4cec306b6d0e8be71b5dd4ae2aaa487bcc4677de855994bfd91",
+          "bytes": 6141
+        },
+        {
+          "path": "worker.js",
+          "sha256": "02c79759c9a82739b42e388b0819d1656ae1ea3544bbb86b2ae75643a569c559",
+          "bytes": 3261
+        }
+      ]
+    },
+    {
+      "id": "sesame/vnpy",
+      "version": "1.0.0",
+      "directory": "vnpy",
+      "treeDigest": "sha256:c1506453b33f808b4e70346ba37a331286f386773c2b83d46a6aae0c1fcb1fd0",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+          "bytes": 1076
+        },
+        {
+          "path": "PROVENANCE.md",
+          "sha256": "10b9d55ee8e2500fe0c366698c66e2f175cc51258a999b07d9f0a083f12aa2eb",
+          "bytes": 1920
+        },
+        {
+          "path": "README.md",
+          "sha256": "d3b38e2ae2bb5db57392e0317705eb7b7bba484c0caded12175d665d219dd70f",
+          "bytes": 4423
+        },
+        {
+          "path": "VALIDATION.md",
+          "sha256": "3a9d67822f4b2f12900622b9278ce63ab96747fd0afce44f8e00a75bf135fd9e",
+          "bytes": 2619
+        },
+        {
+          "path": "environment.js",
+          "sha256": "c5d2fd55e880a11254fbfebc638a3b3986d0472e75f2268b1a112bdecf3890af",
+          "bytes": 9560
+        },
+        {
+          "path": "examples/bars.json",
+          "sha256": "99fed4e89ed4ee5bf084d5186ed71b3ca2e04d5e880daa2fcadcca11ac183c0f",
+          "bytes": 773
+        },
+        {
+          "path": "examples/strategy.py",
+          "sha256": "1853915ad5f0bae0c9a5da17028c35f05344e0c1ac24a8df1e14767e9b13f65c",
+          "bytes": 512
+        },
+        {
+          "path": "index.js",
+          "sha256": "6b674418528fc8c15c94fd05f38baecb3ba76af2ba36f525575a4b22881c4919",
+          "bytes": 11072
+        },
+        {
+          "path": "package.json",
+          "sha256": "bba8e5d0560ef0a654654ff2384ee104bc967f93bba8aa1c117bc2316df2e6e0",
+          "bytes": 98
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "a439b754d23e11e170277f4e9037cff077f514d99430454703e7bbc71d3d7feb",
+          "bytes": 667
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "51ca8e5140142ed990c9e3ce1cee780b0c0412fa04674161d26377ce4e6c422c",
+          "bytes": 1358
+        },
+        {
+          "path": "requirements.txt",
+          "sha256": "102a07a46979c8192cd82eb1980f1137226b68a1a72b23df8401c822146474f6",
+          "bytes": 36
+        },
+        {
+          "path": "runner.py",
+          "sha256": "71b0b4431271e227b994c28f0212affefbf1bdb56ed4fe01317fce73a1415ee3",
+          "bytes": 9227
+        },
+        {
+          "path": "skills/vnpy-backtest/SKILL.md",
+          "sha256": "4885a18e5b02d0e62e942ea7aa2c7f94862ebc249d815ecd1396c395dbfaf655",
+          "bytes": 2815
+        },
+        {
+          "path": "tools.json",
+          "sha256": "e6b7a90be6a33ce7befe85c1a05417585f9859e149a3c5d700302a66060ef50e",
+          "bytes": 7222
+        }
+      ]
+    }
+  ]
+}

@@ -1,3 +1,15 @@
+# Development bundle 4 validation
+
+The final native-execution source suite passed 115 JavaScript checks: 103 passed, 12 explicit platform/opt-in gates, zero failed. It includes the new fixed-catalog byte/identity/activation-failure checks, actual readable web-source delivery paths, preserved research input/output bindings, writable MT5 SDK validation and snapshot-error propagation. All ten MCP sample assertions passed at package version 2.0.1. The six Python dependency boundary checks remain passed.
+
+This revision updates MT5 to 1.1.1, workspace to 1.0.1, and research, web-sources, plugin-manager and the four standard MCP adapters to 2.0.1. Real workspace paths replace old mount assumptions. Native execution snapshot failures are returned to the Agent as incomplete evidence. No report assets changed after bundle 2's verified ResizeObserver fix.
+
+The plugin-manager now owns the optional API 1 catalog lookup and installation flow. It binds the exact catalog digest, source commit, byte counts, per-file hashes and package tree hash, then delegates static native checks and actual installation to the public HostContext. The actual application catalog integration used frozen source bytes through a controlled download port, installed the actual AKShare package, retained the same Pi session object and immediately called the newly loaded tool. Loading refreshes the same Pi session. Static native validation does not execute factories or certify behavior. Runtime activation diagnostics are preserved, and dependency preparation remains a separate explicit operation. The independent optional catalog does not alter stable 0.1.4 metadata or the 19-package archive.
+
+Native research and MT5 lifecycle integration passed six checks against the rebuilt source, including successful native execution followed by output mutation: research_register retained the original frozen result, not the later file. Sixteen final application integration checks passed across catalog/current-session loading, optional package activation, native file/workspace tools, the four MCP adapters, fixed reports and SVL. Optional-package actual manager integration separately passed for AKShare, QMT and vn.py; platform and network limitations are recorded in their package documentation.
+
+## Earlier bundle 3 evidence
+
 # Development bundle 3 validation
 
 The current source was checked with Node 24 and the matching public SDK on macOS arm64:

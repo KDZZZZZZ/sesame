@@ -22,16 +22,16 @@ test('file and process operations use only the provided workspace ports', async 
   await tools.get('edit').execute('', { path: 'input', edits: [{ oldText: 'two', newText: 'changed' }] }); assert.equal(files.get('/work/input').toString(), 'one\nchanged\nthree');
   const result = await tools.get('bash').execute('', { command: 'printf value', cwd: '/work/project', timeout: 3 });
   assert.equal(result.execution_id, 'execution_fixture'); assert.equal(calls[0].options.cwd, '/work/project'); assert.deepEqual(calls[0].argv, ['/bin/bash', '-c', 'printf value']);
-  host.workspace.run = async () => ({ executionId: 'execution_failed', exitCode: 7, output: 'failure details' });
+  host.workspace.run = async () => ({ executionId: 'execution_failed', exitCode: 7, output: 'failure details', snapshot_errors: [{ stage: 'input', message: 'Uncaptured external dependency' }] });
   await assert.rejects(tools.get('bash').execute('', { command: 'exit 7' }), error => {
     assert.equal(error.code, 'PROCESS_EXIT');
     assert.match(error.message, /code 7; execution_id=execution_failed\nfailure details/);
-    assert.deepEqual(error.details, { cwd: undefined, shell: '/bin/bash', execution_id: 'execution_failed', exit_code: 7, output: 'failure details', truncated: false });
+    assert.deepEqual(error.details, { cwd: undefined, shell: '/bin/bash', execution_id: 'execution_failed', exit_code: 7, output: 'failure details', truncated: false, snapshot_errors: [{ stage: 'input', message: 'Uncaptured external dependency' }] });
     return true;
   });
 });
 
-test('read preserves host authorization for plugin resources; edits remain in the workspace', async () => {
+test('read preserves resource authorization supplied by the host ports', async () => {
   const resource = '/installed/plugins/guide/skills/guide/SKILL.md'; let active = true;
   const host = { tools: { Type, string: description => Type.String({ description }), define: (name, description, properties, run) => ({ name, description, parameters: Type.Object(properties), execute: (_id, args, signal) => run(args, signal) }) }, environment: { capabilities: { platform: 'linux', shell: '/bin/bash' } }, storage: { directory: 'fixture' }, scope: { conversationId: 'one' }, workspace: {
     path: name => { assert.ok(name.startsWith('/work/'), 'workspace access only'); return name; },

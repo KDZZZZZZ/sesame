@@ -2,10 +2,10 @@ name: Plugin API 1 sources
 on:
   push:
     branches: [main, feat/plugin-api-v1]
-    paths: ['plugins/api-v1/**', '.github/workflows/plugin-api-v1.yml']
+    paths: ['plugins/api-v1/**', 'plugins/optional-api-v1/**', '.github/workflows/plugin-api-v1.yml']
   pull_request_target:
     types: [opened, synchronize, reopened]
-    paths: ['plugins/api-v1/**', '.github/workflows/plugin-api-v1.yml']
+    paths: ['plugins/api-v1/**', 'plugins/optional-api-v1/**', '.github/workflows/plugin-api-v1.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -32,6 +32,10 @@ jobs:
           persist-credentials: false
       - name: Validate package boundaries, metadata and every locked byte
         run: node trusted/plugins/api-v1/scripts/plugin-lock.mjs --check --source candidate/plugins/api-v1
+      - name: Validate optional packages and development catalog as data
+        run: |
+          node trusted/plugins/api-v1/scripts/plugin-lock.mjs --check --source candidate/plugins/optional-api-v1
+          node trusted/plugins/optional-api-v1/scripts/catalog.mjs --check --source candidate/plugins/optional-api-v1
       - name: Test trusted lock and archive code
         run: node --test trusted/plugins/api-v1/tests/lock.test.mjs
       - name: Record scope

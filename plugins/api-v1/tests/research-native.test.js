@@ -37,3 +37,15 @@ test('research registration retains frozen output and refuses paths or inputs ou
   assert.throws(() => f.call('research_register', { ...args, recipe_paths: ['not-frozen.py'] }), /冻结输入/);
   f.input.rows[0].value = '100'; assert.throws(() => f.call('research_register', args), /原始快照/);
 });
+
+test('web source delivery returns an actual readable native path, not a mount alias', async t => {
+  const { createServer } = await import('node:http');
+  const { createTools: sourceTools } = await import('../packages/web-sources/tools.js');
+  const root = await mkdtemp(join(tmpdir(), 'sesame-source-native-')); t.after(() => rm(root, { recursive: true, force: true }));
+  const server = createServer((_request, response) => response.end('native source fixture'));
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve)); t.after(() => new Promise(resolve => server.close(resolve)));
+  const string = description => Type.String({ description }); let saved;
+  const tool = sourceTools({ tools: { Type, string, define: (_name, _description, _shape, execute) => ({ execute }) }, scope: {}, datasets: { register: value => { saved = value; } }, workspace: { path: path => join(root, path), file: async (_method, path, content) => { await mkdir(dirname(path), { recursive: true }); await writeFile(path, content); } } })[0];
+  const result = await tool.execute({ url: `http://127.0.0.1:${server.address().port}/example` });
+  assert.equal(result.path, join(root, 'inputs', `${saved.id}.json`)); assert.equal(JSON.parse(await readFile(result.path))[0].text, 'native source fixture');
+});

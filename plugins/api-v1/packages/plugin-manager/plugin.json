@@ -2,11 +2,13 @@
   "id": "sesame/plugin-manager",
   "title": "插件管理",
   "description": "发现和加载插件；主 Agent 创建、验证、测试、安装、升级、回滚及导出外部插件。",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "default_state": "mounted",
   "tool_names": [
     "plugin_discover",
     "plugin_load",
+    "plugin_catalog",
+    "plugin_install_catalog",
     "plugin_read",
     "plugin_inspect",
     "plugin_create",
@@ -35,7 +37,8 @@
     "plugin_update",
     "plugin_rollback",
     "plugin_uninstall",
-    "plugin_export"
+    "plugin_export",
+    "plugin_install_catalog"
   ],
   "apiVersion": "1",
   "provides": {},

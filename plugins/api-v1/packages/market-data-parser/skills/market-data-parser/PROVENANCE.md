@@ -15,7 +15,7 @@ Sesame 内部主 Agent 创建的适配层，现由 Sesame 官方维护，内置�
 
 ## 维护规则
 
-源码、技能说明、样本、完整 MCP schema 和正向断言一起纳入仓库审查。修改 server.py 后运行 `node scripts/sync-plugin-tools.mjs`，再运行 `node --test tests/builtin-research-plugins.test.js` 与 schema `--check`。运行时仅在获准调用后启动隔离 MCP，可访问公网与内网，无宿主目录挂载，需现有 Linux / WSL / Lima 分析环境。URL 采集可由 web-sources 插件负责。
+源码、技能说明、样本、完整 MCP schema 和正向断言一起纳入仓库审查。修改 server.py 后运行 `node scripts/sync-plugin-tools.mjs`，再运行 `node --test tests/builtin-research-plugins.test.js` 与 schema `--check`。运行时仅在获准调用后使用已有本机 Python 启动 stdio MCP，以当前系统用户身份执行，可访问公网与内网；没有 Linux/WSL/Lima 或 OS 沙箱前提。工具自己的 file_path 参数只允许包内文件，这是服务器参数校验，不代表进程没有宿主权限。URL 采集可由 web-sources 插件负责。
 
 应用启动时优先加载此内置包；旧同名外部安装保留审计记录但不执行。沿用用户的启用策略，无 TTL、无单独密钥。来源内容或格式变更会影响抓取或解析质量；维护者需要显式更新并发布应用。
 
@@ -26,3 +26,7 @@ The implementation and test samples are retained. Version 2.0.0 moves the packag
 to the `bot.sesame` namespace with a `sesame/` publisher-qualified identity. It is
 a separate release from the public 0.1.4 catalog snapshot. No old plugin identity
 is aliased. Existing author, license and source/sample attributions remain.
+
+## Plugin API v1 package 2.0.1
+
+Operational guidance now follows native task-managed stdio execution and actual workspace paths. Reuse an installed compatible Python before explicitly preparing missing dependencies. The parser tool parameter restrictions remain unchanged and are not described as OS isolation. Existing source, sample, license and author attributions are preserved.
