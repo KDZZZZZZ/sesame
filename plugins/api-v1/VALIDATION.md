@@ -1,3 +1,29 @@
+# Development bundle 8 validation
+
+Only MT5 changes from 1.1.4 to 1.1.5; the other 18 packages, including
+data-access 2.2.0, remain byte-identical to bundle 7. Native latest-N history
+truncation could omit the actually observed current bar from a small live tail.
+The provider now reads the complete bounded time window, checks for source
+truncation, and selects the requested tail locally. It does not turn a truncated
+source response into evidence of live completeness.
+
+The two focused source regressions passed, covering forming/closed-only tails
+and rejection at the source limit. Separate independent review passed 12 targeted
+checks and 63 timeframe/tail-size boundary combinations. The largest computed
+native request limit was 11,522; the actual native tool schema was inspected.
+Real read-only Host ProviderRegistry subscriptions for M1, M2, M15, H1 and MN1
+with a tail of two retained the observed forming bar; closed-only requests
+returned two closed bars. The largest observed M1 response was 7,261 rows and
+802,904 bytes, so small output tails can still require a larger bounded native
+history read. Coverage remained explicitly incomplete. The M15 polling check
+observed ready/close lifecycle cleanup with no retained binding or subscription.
+
+This verification did not start a terminal, place a trade or change the running
+application cache. Native polling is not an exchange tick feed. The matching
+fixed bundle still requires the exact-head independent review, trusted premerge
+gate and automatic publication process in [PUBLISHING.md](PUBLISHING.md).
+Earlier release assets, optional plugins and the stable catalog are unchanged.
+
 # Development bundle 7 validation
 
 Only data-access changes, from 2.1.0 to 2.2.0; the other 18 official package
