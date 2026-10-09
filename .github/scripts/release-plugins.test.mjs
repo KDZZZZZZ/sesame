@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validatePlan, reviewEvidence, validateAssets } from './release-plugins.mjs';
+import { validatePlan, reviewEvidence, validateAssets, releaseCommitFor } from './release-plugins.mjs';
 import { sha256 } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
 
 const sha = 'a'.repeat(40);
@@ -11,6 +11,13 @@ const checks = () => ['package-static-review', 'catalog-static-review'].map((nam
 test('release plans pin only allowed development roots, exact bytes and PRs', () => {
   assert.equal(validatePlan(plan()).tag, 'plugins-api-v1-dev.4');
   for (const change of [{ sourceCommit: 'main' }, { sourceRoot: '../../private' }, { tag: 'v1.0.0' }, { archive: { name: '../asset', sha256: 'b'.repeat(64) } }, { pullRequest: 0 }]) assert.throws(() => validatePlan({ ...plan(), ...change }));
+});
+test('new tags identify the publishing revision while existing tags cannot be moved', () => {
+  assert.equal(releaseCommitFor(sha, null, null), sha);
+  const previous = 'b'.repeat(40);
+  assert.equal(releaseCommitFor(sha, { type: 'commit', sha: previous }, { target_commitish: previous }), previous);
+  assert.throws(() => releaseCommitFor(sha, { type: 'commit', sha: previous }, { target_commitish: sha }), /different/);
+  assert.throws(() => releaseCommitFor('main', null, null), /fixed/);
 });
 test('publication requires exact-head checks and a merged PR; automated comments are not approval', () => {
   const automatic = { user: { login: 'bot', type: 'Bot', id: 2 }, state: 'COMMENTED', commit_id: sha };
