@@ -39,3 +39,13 @@ upstream daily payload; the adapter surfaces that error and does not fabricate
 history or switch providers. QMT 1.0.0 and vn.py 1.0.0 are unchanged. New release
 publication requires the [pre-merge semantic review gate](../api-v1/PUBLISHING.md),
 with exact-head identity and actual reviewer/timestamp evidence.
+
+The optional bundle 4 updates only vn.py to 1.0.1. Explicit preparation retains
+its private environment, audited wheel partials and pip cache across bounded
+requests. Range/body boundaries and full archive hashes are verified, partial
+growth survives failed reads, and three unchanged failures stop automatic retry
+advice. Seven JavaScript and eight Python targeted checks passed. Actual official
+network tests observed retained ranges and complete small engine wheels, plus
+private-environment progress and reuse of the existing real CTA engine; this did
+not repeat a complete 300+MB Qt installation or Windows/Linux native setup. See
+[the preparation evidence](packages/vnpy/PREPARATION-VALIDATION.md) for its limits.

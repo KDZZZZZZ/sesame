@@ -166,14 +166,19 @@
     },
     {
       "id": "sesame/vnpy",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "directory": "vnpy",
-      "treeDigest": "sha256:c1506453b33f808b4e70346ba37a331286f386773c2b83d46a6aae0c1fcb1fd0",
+      "treeDigest": "sha256:0a7a028c9cccaaff2790e911809ae96fb6c8b001b5219a6eb1407bec07d4983e",
       "files": [
         {
           "path": "LICENSE",
           "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
           "bytes": 1076
+        },
+        {
+          "path": "PREPARATION-VALIDATION.md",
+          "sha256": "6751a5a9a482b8e3deb40f13544209bb87d2eade972ac834a1bb9ac200a2a6c1",
+          "bytes": 3195
         },
         {
           "path": "PROVENANCE.md",
@@ -182,8 +187,8 @@
         },
         {
           "path": "README.md",
-          "sha256": "d3b38e2ae2bb5db57392e0317705eb7b7bba484c0caded12175d665d219dd70f",
-          "bytes": 4423
+          "sha256": "b2be5f42c6fbdf62b5183e0f97471ff55c3f8e5a817e43bdd8a6d53462b04c3a",
+          "bytes": 5528
         },
         {
           "path": "VALIDATION.md",
@@ -191,9 +196,14 @@
           "bytes": 2619
         },
         {
+          "path": "download-wheels.py",
+          "sha256": "aaa8d350d561b1955cb1dd3ad4ae5f9fb4c82e6635e4d67ca28f4d1b8278128b",
+          "bytes": 6812
+        },
+        {
           "path": "environment.js",
-          "sha256": "c5d2fd55e880a11254fbfebc638a3b3986d0472e75f2268b1a112bdecf3890af",
-          "bytes": 9560
+          "sha256": "88b9539aba630385c50e9f294acade7e380084ea4934946249aef75ea1f632fc",
+          "bytes": 13611
         },
         {
           "path": "examples/bars.json",
@@ -212,12 +222,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "bba8e5d0560ef0a654654ff2384ee104bc967f93bba8aa1c117bc2316df2e6e0",
+          "sha256": "d6c6578007778f3144a449fe9e0f16d7d692ea8144fb73ea28d77ff8faf220d6",
           "bytes": 98
         },
         {
           "path": "plugin.json",
-          "sha256": "a439b754d23e11e170277f4e9037cff077f514d99430454703e7bbc71d3d7feb",
+          "sha256": "15e379f5de7114fc52325c6a51299f93c34e5e9650886bee25c2d0c00a945424",
           "bytes": 667
         },
         {
@@ -237,8 +247,8 @@
         },
         {
           "path": "skills/vnpy-backtest/SKILL.md",
-          "sha256": "4885a18e5b02d0e62e942ea7aa2c7f94862ebc249d815ecd1396c395dbfaf655",
-          "bytes": 2815
+          "sha256": "81d1da2f991f337ff93ed3049fd3733f09a1849d8bc99564c2b82f324ca93033",
+          "bytes": 3388
         },
         {
           "path": "tools.json",
