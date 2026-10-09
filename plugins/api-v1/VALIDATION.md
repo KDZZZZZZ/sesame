@@ -104,6 +104,33 @@ The gate ran trusted main revision `6937305ba021bb20a0f0b022fdc18bede3eca383`, c
 
 This release contains AKShare 1.0.2, QMT 1.0.0 and vn.py 1.0.1. A fresh test fixture downloaded the three immutable public catalog packages, verified their files, installed/loaded them and called their environment/status tools in the same Pi session (one integration test, 20.2 seconds). It used an existing compatible vn.py environment; it did not install dependencies or exercise a new model decision, full fresh Qt installation, authorized Windows QMT terminal or brokerage trade. The catalog source remains `373bb390c8903688105a88f51b33960f8665187a`.
 
+# Development bundle 10 validation
+
+Only MT5 changes, from 1.1.6 to 1.1.7; the other 18 package versions and file
+trees remain those of bundle 9. A failed managed preparation reconnected to a
+terminal whose algorithm-trading configuration had not taken effect. Read-only
+native logs identified another installed Sesame process requesting a competing
+connection startup with algorithm trading disabled. That separate application
+was exited during diagnosis. This plugin change coordinates operations inside
+one MT5 service instance; it does not provide a cross-process lock or stop
+another application's connection monitor.
+
+Managed terminal preparation now owns a lifecycle epoch. Automatic connection
+checks defer while preparation is active, and a probe from an older epoch cannot
+start a terminal or replace the current client. A refused connection is probed
+again under the configuration lock before a startup is requested; cancellation
+and configuration changes are checked again. If the requested algorithm-trading
+configuration is not observed after reconnecting, bounded new native-log bytes
+provide a diagnostic classification without exposing the log text or credentials.
+The explicit managed-mount instruction now explains preparable checks and the
+subsequent native verification; it does not authorize background mounting.
+
+The author passed 16 targeted checks covering preparation ownership, stale and
+successful probes, cancellation/configuration changes, native-log diagnosis and
+preparation cleanup. This candidate was not used to restart a real terminal,
+prepare algorithm trading, mount an EA or place an order. End-to-end native
+acceptance remains separate and must use the reviewed published package.
+
 # Development bundle 9 validation
 
 Only MT5 changes, from 1.1.5 to 1.1.6; the other 18 package versions and file
