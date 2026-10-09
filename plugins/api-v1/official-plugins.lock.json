@@ -969,7 +969,7 @@
       "id": "sesame/plugin-manager",
       "version": "2.0.1",
       "directory": "plugin-manager",
-      "treeDigest": "sha256:ab0b40d56083581a9f08b6c061a256f080791a5f077b7b43699e42331f160c1f",
+      "treeDigest": "sha256:f72960175c6ce029cbeec7fb067517da0c5cf48f0a3e02237110700fe2098ae6",
       "files": [
         {
           "path": "LICENSE",
@@ -978,8 +978,8 @@
         },
         {
           "path": "catalog.js",
-          "sha256": "74f7a6c5fbd3417288f905d09b9f4f84a31066ac77f8d6d9c4286e605a1bdd15",
-          "bytes": 7696
+          "sha256": "e2df4ed6dc5e6bde45d67d9c3a5feaad833f6562c767bacbe9a612557f1d1f74",
+          "bytes": 7729
         },
         {
           "path": "index.js",

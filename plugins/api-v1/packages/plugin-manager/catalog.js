@@ -47,7 +47,7 @@ export async function catalogQuery(args, signal, fetcher) {
 }
 export async function installCatalog(host, args, signal, fetcher = globalThis.fetch) {
   check(host.scope.kind === 'main', 'Catalog installation requires the main Agent', 'FORBIDDEN');
-  const result = await host.storage.idempotentAsync(`catalog:${args.command_id}`, hash(JSON.stringify(args)), async () => {
+  const result = await host.storage.idempotentAsync(`catalog:${args.command_id}`, hash(JSON.stringify([args.plugin_id, args.catalog_digest])), async () => {
     const { catalog, digest } = await readCatalog(signal, fetcher);
     check(digest === args.catalog_digest, 'Catalog changed; inspect the current entry again', 'CATALOG_CHANGED');
     const entry = catalog.plugins.find(entry => entry.id === args.plugin_id);

@@ -44,7 +44,7 @@ test('catalog query returns a fixed digest, precise active identity and honest r
 test('catalog install verifies bytes then tests, installs and refreshes tools; retries do not install twice', async t => {
   const f = directory(), net = download(f), fixture = await hostFixture(t, f), args = { command_id: 'install-fixture-123', plugin_id: f.entry.id, catalog_digest: hash(JSON.stringify(f.catalog)) };
   const result = await installCatalog(fixture.host, args, undefined, net.fetcher); assert.equal(result.loaded, true);
-  await installCatalog(fixture.host, args, undefined, net.fetcher);
+  await installCatalog(fixture.host, { catalog_digest: args.catalog_digest, plugin_id: args.plugin_id, command_id: args.command_id }, undefined, net.fetcher);
   assert.deepEqual(fixture.calls.map(call => call.action), ['test', 'install', 'load', 'load']);
 });
 
