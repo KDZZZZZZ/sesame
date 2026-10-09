@@ -44,17 +44,29 @@ export class NativeRunObserver {
     if (saved) { requireValue(saved.identity === identity, '冻结构建内容已改变，不能复用原引用'); return verify(saved.ref); }
     // Migrate already-published pre-index builds without re-publishing mutable metadata
     // under their existing host idempotency key. Read exact artifacts, not request internals.
-    let ref;
-    for (let offset = 0; ; offset += 2000) {
-      const page = this.host.artifacts.list({ kind: 'resource', limit: 2000, offset });
-      for (const item of page.items) {
-        const artifact = this.host.artifacts.read(item.ref);
-        if (artifact.producer.id === this.host.plugin.id && artifact.manifest.content.format === 'sesame.mt5.build/1' && artifact.manifest.content.build?.id === build.id) {
-          const candidate = verify(item.ref);
-          requireValue(!ref || canonical(ref) === canonical(candidate), '同一构建存在不同冻结引用，需人工核查'); ref = candidate;
+    const migrationId = 'legacy-build-resources-v1';
+    if (!this.mt5.storage.get('native_build_migrations', migrationId, true)) {
+      const candidates = new Map();
+      for (let offset = 0; ; offset += 2000) {
+        const page = this.host.artifacts.list({ kind: 'resource', limit: 2000, offset });
+        for (const item of page.items) {
+          if (item.producer && item.producer.id !== this.host.plugin.id) continue;
+          const artifact = this.host.artifacts.read(item.ref), content = artifact.manifest.content;
+          if (artifact.producer.id === this.host.plugin.id && content.format === 'sesame.mt5.build/1' && content.build?.id) {
+            const refs = candidates.get(content.build.id) ?? [];
+            refs.push(item.ref); candidates.set(content.build.id, refs);
+          }
         }
+        if (!page.hasMore) break;
       }
-      if (!page.hasMore) break;
+      // Completion is written last: interrupted scans retry rather than hiding legacy refs.
+      for (const [id, refs] of candidates) this.mt5.storage.put('native_build_legacy_refs', { id, refs });
+      this.mt5.storage.put('native_build_migrations', { id: migrationId, completed: true });
+    }
+    let ref;
+    for (const item of this.mt5.storage.get('native_build_legacy_refs', build.id, true)?.refs ?? []) {
+      const candidate = verify(item);
+      requireValue(!ref || canonical(ref) === canonical(candidate), '同一构建存在不同冻结引用，需人工核查'); ref = candidate;
     }
     ref ??= this.artifact(`native-build-${build.id}`, 'resource', { format: 'sesame.mt5.build/1', build: stable(build), manifest }, [translation], { 'Strategy.ex5': bytes });
     this.mt5.storage.put('native_build_inputs', { id: build.id, identity, ref }); return ref;
