@@ -24,6 +24,13 @@ test('missing, stale, untrusted, self-described human approval and unfinished de
 test('post-merge review or edits cannot be used to retroactively satisfy the release gate', () => {
   for (const change of [{ created_at: '2026-10-09T16:01:00Z', updated_at: '2026-10-09T16:01:00Z' }, { updated_at: '2026-10-09T16:01:00Z' }, { updated_at: 'invalid' }]) assert.throws(() => check([{ ...comment(), ...change }]), /Missing completed semantic/);
 });
+test('malformed historical finding entries do not hide a later valid review record', () => {
+  for (const finding of [null, false, 3, 'fixed', [], {}]) {
+    const malformed = { ...comment(), body: body({ ...record(), findings: [finding] }) };
+    assert.equal(check([malformed, comment()]).decision, 'no-blocking-findings');
+    assert.throws(() => check([malformed]), /Missing completed semantic/);
+  }
+});
 test('actual unresolved discussions and changes requested block an otherwise complete agent record', () => {
   assert.throws(() => check([comment()], [], [{ isResolved: false }]), /Unresolved code-review/);
   assert.throws(() => check([comment()], [{ user: { login: 'reviewer' }, state: 'CHANGES_REQUESTED' }]), /changes-requested/);
@@ -36,8 +43,14 @@ test('only an allowlisted platform bot approval on the exact head before merge i
 });
 test('review collection verifies thread pages and authenticated recorder role, without running PR code', async () => {
   const paths = [], cursors = [];
-  const result = await readSemanticReview(pr(), [], async path => { paths.push(path); return path.includes('/comments') ? [comment()] : { permission: 'write', role_name: 'maintain' }; }, async ({ variables }) => { cursors.push(variables.cursor); return { data: { repository: { pullRequest: { reviewThreads: { nodes: [{ isResolved: true }], pageInfo: { hasNextPage: variables.cursor === null, endCursor: 'next' } } } } } }; });
+  const reviews = [{ id: 31, user: { login: 'reviewer', type: 'User' }, state: 'DISMISSED', commit_id: sha, submitted_at: '2026-10-09T15:10:00Z' }];
+  const result = await readSemanticReview(pr(), reviews, async path => { paths.push(path); return path.includes('/comments') ? [comment()] : { permission: 'write', role_name: 'maintain' }; }, async ({ query, variables }) => {
+    if (query.includes('timelineItems')) return { data: { repository: { pullRequest: { timelineItems: { nodes: [{ id: 'dismissal-1', createdAt: '2026-10-09T15:20:00Z', actor: { login: 'maintainer' }, previousReviewState: 'CHANGES_REQUESTED', review: { databaseId: 31, commit: { oid: sha } }, url: 'https://github.com/example/dismissal' }], pageInfo: { hasNextPage: false } } } } } };
+    cursors.push(variables.cursor); return { data: { repository: { pullRequest: { reviewThreads: { nodes: [{ id: variables.cursor ?? 'first', isResolved: true }], pageInfo: { hasNextPage: variables.cursor === null, endCursor: 'next' } } } } } };
+  });
   assert.equal(result.recordedBy.role, 'maintain'); assert.deepEqual(cursors, [null, 'next']); assert(paths.includes('/collaborators/maintainer/permission'));
+  assert.deepEqual(result.reviewStates, [{ id: 31, author: 'reviewer', authorType: 'User', state: 'DISMISSED', commit: sha, submittedAt: '2026-10-09T15:10:00Z' }]);
+  assert.equal(result.reviewDismissals[0].dismissedAt, '2026-10-09T15:20:00Z'); assert.equal(result.reviewDismissals[0].reviewId, 31);
   await assert.rejects(() => readSemanticReview(pr(), [], async () => [], async () => ({ errors: [{ message: 'denied' }] })), /Cannot verify/);
 });
 
@@ -54,4 +67,10 @@ test('publication requires trusted pre-merge workflow evidence of the resolved d
   // a newly introduced discussion cannot borrow an older passing snapshot.
   assert.throws(() => validateGateSnapshot(pr(), { ...semantic, resolvedThreadIds: ['thread-1', 'late-thread'] }, snapshot, run, artifact, 20), /differs from the pre-merge/);
   assert.throws(() => validateGateSnapshot(pr(), semantic, { ...snapshot, checkedAt: '2026-10-09T16:01:00Z' }, { ...run, updated_at: '2026-10-09T16:02:00Z' }, { ...artifact, created_at: '2026-10-09T16:01:30Z' }, 20), /before merge/);
+  // A request for changes introduced after the gate and dismissed after merge
+  // must not disappear when publication reads only its latest DISMISSED state.
+  const reviewed = { ...semantic, reviewStates: [], reviewDismissals: [] };
+  const afterDismissal = { ...reviewed, reviewStates: [{ id: 9, author: 'reviewer', state: 'DISMISSED', commit: sha, submittedAt: '2026-10-09T15:59:00Z' }], reviewDismissals: [{ id: 'dismissal-9', reviewId: 9, dismissedAt: '2026-10-09T16:01:00Z' }] };
+  assert.throws(() => validateGateSnapshot(pr(), afterDismissal, { ...snapshot, semantic: reviewed }, run, artifact, 20), /differs from the pre-merge/);
+  for (const field of ['reviewStates', 'reviewDismissals']) assert.throws(() => validateGateSnapshot(pr(), { ...reviewed, [field]: afterDismissal[field] }, { ...snapshot, semantic: reviewed }, run, artifact, 20), /differs from the pre-merge/);
 });
