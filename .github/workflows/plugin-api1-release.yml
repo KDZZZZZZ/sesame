@@ -1,0 +1,42 @@
+name: Plugin API 1 release
+on:
+  push:
+    branches: [main]
+    paths: ['.github/plugin-releases/*.json']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: plugin-api1-release
+  cancel-in-progress: false
+jobs:
+  publish-reviewed-packages:
+    if: github.repository == 'KDZZZZZZ/sesame' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      checks: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - name: Test release identity and approval boundaries
+        run: node --test .github/scripts/release-plugins.test.mjs plugins/api-v1/tests/lock.test.mjs
+      - name: Verify merged source bytes and optional catalog
+        run: |
+          node plugins/api-v1/scripts/plugin-lock.mjs --check
+          if test -f plugins/optional-api-v1/official-plugins.lock.json; then
+            node plugins/api-v1/scripts/plugin-lock.mjs --check --source plugins/optional-api-v1
+            node .github/scripts/validate-api1-catalog.mjs .
+          fi
+          node .github/scripts/release-plugins.mjs --check .
+      - name: Publish immutable development assets after PR checks
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node .github/scripts/release-plugins.mjs --publish .
