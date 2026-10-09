@@ -1,0 +1,218 @@
+[
+  {
+    "name": "qmt_environment",
+    "label": "qmt_environment",
+    "description": "Inspect existing QMT configuration and Python paths without launching or downloading. verify imports the SDK explicitly; prepare first reuses an importable existing SDK and only then installs pinned wheels in a private Windows CPython 3.12 environment. Requires broker-authorized MiniQMT for later reads.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "inspect"
+            },
+            {
+              "type": "string",
+              "const": "verify"
+            },
+            {
+              "type": "string",
+              "const": "prepare"
+            }
+          ]
+        },
+        "python_path": {
+          "type": "string",
+          "description": "Existing absolute Windows Python executable; prepare requires x64 CPython 3.12 if SDK is missing",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "operation_id": {
+          "type": "string",
+          "description": "Required for explicit preparation; retry the same request with the same key",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "qmt_configure",
+    "label": "qmt_configure",
+    "description": "Save exact existing QMT connection paths and the authorized mainland STOCK account. Uses revision and operation ID; does not launch, log in to or change the broker terminal. Obtain the actual localhost market port from the existing MiniQMT settings.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "operation_id",
+        "expected_version",
+        "changes"
+      ],
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "description": "Idempotency key",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "changes": {
+          "type": "object",
+          "properties": {
+            "python_path": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "userdata_directory": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "account_id": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "broker": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "market_port": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 65535
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "sector": {
+              "type": "string",
+              "description": "Existing native stock catalog sector; default 沪深京A股",
+              "minLength": 1,
+              "maxLength": 20000
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "qmt_read",
+    "label": "qmt_read",
+    "description": "Perform fixed read-only XtQuant calls on the configured Windows MiniQMT. search/describe/quotes map mainland stocks; asset/positions query the configured STOCK account. orders/fills preserve native fields and cover only the current trading day. None is ambiguous and raises an error. No order, cancel, transfer, script execution or terminal launch exists.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "search"
+            },
+            {
+              "type": "string",
+              "const": "describe"
+            },
+            {
+              "type": "string",
+              "const": "quotes"
+            },
+            {
+              "type": "string",
+              "const": "asset"
+            },
+            {
+              "type": "string",
+              "const": "positions"
+            },
+            {
+              "type": "string",
+              "const": "orders"
+            },
+            {
+              "type": "string",
+              "const": "fills"
+            }
+          ]
+        },
+        "query": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "symbols": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^\\d{6}\\.(SH|SZ|BJ)$"
+          },
+          "minItems": 1,
+          "maxItems": 50,
+          "uniqueItems": true
+        },
+        "page": {
+          "type": "object",
+          "required": [
+            "limit"
+          ],
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            },
+            "cursor": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          },
+          "additionalProperties": false,
+          "description": "search/positions/orders/fills use a frozen 60-second snapshot; default 200 rows, repeat unchanged filters with nextCursor"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]
