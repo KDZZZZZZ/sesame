@@ -4,7 +4,7 @@ import { mkdtempSync, writeFileSync, mkdirSync, rmSync, symlinkSync } from 'node
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
-import { buildLock, createArchive, packageFiles, sha256, treeDigest } from '../scripts/plugin-lock.mjs';
+import { buildLock, createArchive, packageFiles, portableGzip, sha256, treeDigest } from '../scripts/plugin-lock.mjs';
 
 function source(t) {
   const directory = mkdtempSync(join(tmpdir(), 'sesame-plugin-lock-')), root = join(directory, 'packages/example'); mkdirSync(root, { recursive: true });
@@ -14,6 +14,11 @@ function source(t) {
   writeFileSync(join(root, 'LICENSE'), 'Fixture license'); writeFileSync(join(root, 'tools.json'), '[]');
   return { directory, root };
 }
+
+test('portable gzip has a fixed wire representation and supports empty and multi-block payloads', () => {
+  assert.equal(portableGzip(Buffer.from('hello')).toString('hex'), '1f8b08000000000000ff010500faff68656c6c6f86a6103605000000');
+  for (const bytes of [Buffer.alloc(0), Buffer.alloc(65535, 7), Buffer.alloc(131071, 123)]) assert.deepEqual(gunzipSync(portableGzip(bytes)), bytes);
+});
 
 test('tree identity includes sorted relative paths and prefixed inner hashes', () => {
   const files = [{ path: 'b.txt', sha256: sha256('b'), bytes: 1 }, { path: 'a.txt', sha256: sha256('a'), bytes: 1 }];
