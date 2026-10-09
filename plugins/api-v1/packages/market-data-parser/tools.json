@@ -1,0 +1,52 @@
+{
+  "analysis": [
+    {
+      "name": "parse_fx_json",
+      "description": "Parse exchangerate-api style JSON (base, date, rates) with optional currency filter",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "json_content": {
+            "type": "string",
+            "description": "Raw JSON string"
+          },
+          "file_path": {
+            "type": "string",
+            "description": "Relative path to a bundled JSON file; cannot access conversation or host files"
+          },
+          "codes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional currency code filter, e.g. [\"EUR\",\"JPY\"]"
+          }
+        }
+      }
+    },
+    {
+      "name": "parse_fx_xml",
+      "description": "Parse TCMB style daily FX XML (date, bulletin, currencies) with optional code filter",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "xml_content": {
+            "type": "string",
+            "description": "Raw XML string"
+          },
+          "file_path": {
+            "type": "string",
+            "description": "Relative path to a bundled XML file; cannot access conversation or host files"
+          },
+          "codes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional currency code filter, e.g. [\"USD\",\"EUR\"]"
+          }
+        }
+      }
+    }
+  ]
+}

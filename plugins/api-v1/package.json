@@ -1,0 +1,14 @@
+{
+  "name": "sesame-official-plugins-api-v1",
+  "version": "0.1.0-dev.1",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "check": "node scripts/plugin-lock.mjs --check",
+    "lock": "node scripts/plugin-lock.mjs --write",
+    "test": "node scripts/test.mjs",
+    "test:sdk": "node scripts/test.mjs --sdk",
+    "test:python": "node scripts/test.mjs --python"
+  }
+}

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>Evidence in view · Sesame report demo</title><style>/* Original Sesame report styles. MIT. System fonts and local SVG only. */
+:root{color-scheme:light dark;--paper:#f8f7f4;--ink:#202425;--muted:#697170;--line:#d9dedb;--accent:#346957;--negative:#a84e3d;--tint:#e8efe9;--serif:Georgia,'Noto Serif SC','Songti SC',serif;--sans:system-ui,-apple-system,sans-serif;--mono:ui-monospace,SFMono-Regular,monospace}
+@media(prefers-color-scheme:dark){:root{--paper:#111817;--ink:#e8ede9;--muted:#a2b2ab;--line:#34433c;--accent:#9fcab5;--negative:#e59d84;--tint:#22342a}}
+:root[data-theme=light]{color-scheme:light;--paper:#f8f7f4;--ink:#202425;--muted:#697170;--line:#d9dedb;--accent:#346957;--negative:#a84e3d;--tint:#e8efe9}
+:root[data-theme=dark]{color-scheme:dark;--paper:#111817;--ink:#e8ede9;--muted:#a2b2ab;--line:#34433c;--accent:#9fcab5;--negative:#e59d84;--tint:#22342a}
+*{box-sizing:border-box}body{margin:0;padding:42px 24px;background:var(--paper);color:var(--ink);font:15px/1.65 var(--sans)}main{max-width:1120px;margin:auto}h1,h2,h3,p{margin:0}h1,h2{font-family:var(--serif);font-weight:400;letter-spacing:-.025em}h1{font-size:clamp(34px,5vw,62px);line-height:1.1;max-width:850px;margin:16px 0 24px}h2{font-size:28px;line-height:1.2;margin-bottom:12px}h3{font-size:14px;line-height:1.4}a{color:var(--accent)}button,select,input{font:inherit;color:var(--ink)}button,select{border:1px solid var(--line);background:var(--paper);border-radius:5px;padding:7px 12px}button{cursor:pointer}button:hover{background:var(--tint)}:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.eyebrow{font:11px/1.5 var(--mono);text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}.lede{font:19px/1.6 var(--serif);max-width:760px}.report-header{padding-bottom:34px;border-bottom:1px solid var(--line)}.report-toolbar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:24px 0}.report-toolbar label{display:flex;align-items:center;gap:8px;font-size:13px}.report-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px}.report-panel{border-top:1px solid var(--line);padding:22px 0 10px;min-width:0}.report-panel.wide{grid-column:1/-1}.takeaway{color:var(--muted);margin-bottom:18px;max-width:780px}.report-note{border-left:3px solid var(--accent);padding:12px 18px;margin:24px 0;background:var(--tint)}.report-note strong{display:block}.report-source{font:11px/1.7 var(--mono);color:var(--muted);overflow-wrap:anywhere}.report-footer{border-top:1px solid var(--line);margin-top:30px;padding-top:18px;color:var(--muted);font-size:12px}.demo-banner{background:var(--ink);color:var(--paper);padding:10px 16px;font:12px/1.5 var(--mono);margin-bottom:24px}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin:28px 0}.metric{border-left:1px solid var(--line);padding-left:16px}.metric strong{display:block;font:32px/1.2 var(--serif)}.metric span{font-size:12px;color:var(--muted)}.status-error{padding:20px;border:1px solid var(--negative);color:var(--negative)}.sc-frame{position:relative}.sc-frame svg{display:block;width:100%;height:auto;overflow:visible}.sc-frame svg text{font-family:var(--sans);fill:var(--muted)}.sc-axis{font-size:11px}.sc-label{font-size:15px}.sc-grid{stroke:var(--line);stroke-width:1}.sc-zero{stroke:var(--ink);stroke-width:1.2}.sc-line{stroke:var(--accent);stroke-width:2.4;stroke-linejoin:round;stroke-linecap:round}.sc-point,.sc-bar{fill:var(--accent)}.sc-negative{fill:var(--negative)}.sc-unit-alt{fill:var(--muted)}.sc-missing{fill:none;stroke:var(--line);stroke-dasharray:3 2}.sc-cell-value{font-size:11px;fill:var(--ink)!important;pointer-events:none}.sc-frame [role=button]{cursor:pointer;transition:opacity .15s}.sc-frame [role=button]:hover,.sc-frame [role=button]:focus-visible,.sc-selected{stroke:var(--ink);stroke-width:2.5}.sc-tooltip{position:absolute;right:8px;top:0;max-width:85%;background:var(--ink);color:var(--paper);border-radius:4px;padding:8px 12px;font:12px/1.5 var(--mono);pointer-events:none}.sc-tooltip[hidden]{display:none}.sc-missing-note{font:11px/1.6 var(--mono);color:var(--muted);margin-top:8px}.sc-table-wrap{overflow:auto;max-height:420px}.sc-table{width:100%;border-collapse:collapse;font:12px/1.5 var(--mono);white-space:nowrap}.sc-table th,.sc-table td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)}.sc-table th{position:sticky;top:0;background:var(--paper);font-weight:500;color:var(--muted)}.sc-row-selected{background:var(--tint)}details{border-top:1px solid var(--line);margin-top:24px;padding-top:16px}summary{cursor:pointer}details p{color:var(--muted);margin-top:12px}
+@media(max-width:720px){body{padding:25px 16px}.report-grid{grid-template-columns:1fr;gap:14px}h2{font-size:24px}.metrics{gap:10px}.metric{padding-left:10px}.metric strong{font-size:25px}.lede{font-size:17px}.sc-axis{font-size:13px}.sc-cell-value{font-size:13px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media print{body{padding:0;background:white;color:black}.report-toolbar,button{display:none}.report-panel{break-inside:avoid}.sc-table-wrap{overflow:visible;max-height:none}}
+
+.sc-cell-inverse{fill:var(--paper)!important}
+</style></head>
+<body><main>
+<div class="demo-banner">FICTIONAL DEMO · No market, account or backtest results</div>
+<header class="report-header"><p class="eyebrow">Sesame / research notebook / report 1</p><h1>Evidence in view.</h1><p class="lede">A small, inspectable dataset. Five chart forms. Every mark leads back to the original value.</p></header>
+<div class="metrics"><div class="metric"><strong>8</strong><span>fictional monthly observations</span></div><div class="metric"><strong>1</strong><span>missing change value, left empty</span></div><div class="metric"><strong>0</strong><span>external runtime dependencies</span></div></div>
+<div class="report-toolbar"><label>View <select id="view"><option value="line">Change over time</option><option value="bar">Compare changes</option></select></label><label>Filter <input id="filter" type="search" placeholder="Month or exact value"></label><button id="theme" type="button">Dark theme</button><span id="count" class="report-source" role="status"></span></div>
+<div class="report-grid">
+<section class="report-panel wide"><h2>Variation, with the gap intact.</h2><p class="takeaway">March has no observation. The line breaks; it does not invent zero. Select a point or use the keyboard to locate its exact row below.</p><div id="timeline"></div></section>
+<section class="report-panel"><h2>Two measures, one observation.</h2><p class="takeaway">Fictional risk (%) against change (%). This display makes no causal or predictive claim.</p><div id="scatter"></div></section>
+<section class="report-panel"><h2>Read across the cells.</h2><p class="takeaway">Fictional score by group and period. A dashed cell means missing; negative values use a separate color.</p><div id="matrix"></div></section>
+<section class="report-panel wide"><h2>Count the evidence.</h2><p class="takeaway">Each dot is exactly 2 fictional observations. The chart rejects fractional dots instead of rounding away records.</p><div id="units"></div></section>
+<section class="report-panel wide"><h2>The values remain visible.</h2><p class="takeaway">Table cells preserve the source strings, including trailing decimal places. Filtering affects the timeline, scatter, counts and table together.</p><div id="table"></div></section>
+</div>
+<details><summary>Source and method</summary><p>All values were manually authored for this demonstration. They do not describe securities, clients, trades or measured performance. March change and risk are deliberately null. No imputation, currency conversion or investment calculation is performed.</p><p>SVG coordinates use JavaScript numbers; exact source text is retained in tables and tooltips. The matrix is an independent six-row example. All scripts, styles and data are included in this HTML, so this page can be reopened without a network.</p></details>
+<footer class="report-footer"><p>Original Sesame components · MIT · report runtime 1.0.0</p><p class="report-source">Source: examples/demo-data.json · fictional sample · 2026-10-09</p></footer>
+</main><script>/* Sesame editorial charts 1.0.0 — MIT, Sesame contributors.
+ * Original implementation. No third-party chart runtime or network dependency. */
+(function (global) {
+  'use strict';
+  const NS = 'http://www.w3.org/2000/svg';
+  const fail = message => { throw new Error(`SesameCharts: ${message}`); };
+  const node = (name, attrs = {}, text) => {
+    const n = document.createElementNS(NS, name);
+    for (const [key, value] of Object.entries(attrs)) n.setAttribute(key, String(value));
+    if (text !== undefined) n.textContent = String(text);
+    return n;
+  };
+  const html = (name, className, text) => { const n = document.createElement(name); if (className) n.className = className; if (text !== undefined) n.textContent = String(text); return n; };
+  const numeric = value => value === null || value === undefined || value === '' ? null : (typeof value === 'number' || typeof value === 'string' && /^-?(?:0|[1-9]\d*)(?:\.\d+)?$/.test(value)) && Number.isFinite(Number(value)) ? Number(value) : fail(`invalid numeric value ${String(value).slice(0,60)}`);
+  const scale = (domain, range) => { const [a,b] = domain, [x,y] = range; return value => x + (value-a)/(b-a || 1)*(y-x); };
+  const extent = values => { if (!values.length) return [0,1]; const min=Math.min(...values),max=Math.max(...values); return min===max?[min===0?0:min-Math.abs(min)*.05,max===0?1:max+Math.abs(max)*.05]:[min,max]; };
+  const format = (value, unit = '') => value === null || value === undefined ? '—' : `${new Intl.NumberFormat(document.documentElement.lang || 'en',{maximumFractionDigits:3}).format(value)}${unit ? ` ${unit}` : ''}`;
+  const exactUnits=(value,unit)=>{
+    const parts=value=>{const match=String(value).match(/^(-?)(\d+)(?:\.(\d*))?(?:e([+-]?\d+))?$/i);if(!match)fail('invalid unit count');return {coefficient:BigInt((match[1]||'')+match[2]+(match[3]||'')),scale:(match[3]||'').length-Number(match[4]||0)};};
+    const a=parts(value),b=parts(unit),scale=Math.max(a.scale,b.scale),numerator=a.coefficient*10n**BigInt(scale-a.scale),denominator=b.coefficient*10n**BigInt(scale-b.scale);
+    if(numerator<0n||denominator<=0n||numerator%denominator!==0n)fail('unit charts require nonnegative whole multiples of unitValue');
+    const count=numerator/denominator;if(count>1000n)fail('unit chart exceeds 1,000 units; choose and label a larger exact unitValue');return Number(count);
+  };
+  const observers = new WeakMap();
+  function chart(target, spec) {
+    if (typeof target === 'string') target=document.querySelector(target);
+    if (!target || !Array.isArray(spec.rows)) fail('target and rows are required');
+    if (spec.rows.length>2500) fail('more than 2,500 marks; aggregate or filter the fixed data first');
+    if (!['line','bar','scatter','matrix','units'].includes(spec.kind)) fail('unknown chart kind');
+    observers.get(target)?.disconnect();
+    const measured=target.clientWidth,rows=spec.rows,width=Math.max(280,measured || 760),height=spec.height || Math.min(320,Math.max(240,width*.4)),pad={left:65,right:24,top:25,bottom:52};
+    const svg=node('svg',{viewBox:`0 0 ${width} ${height}`,role:'img','aria-label':spec.title || spec.kind}),frame=html('div','sc-frame'),tooltip=html('div','sc-tooltip');
+    tooltip.setAttribute('role','status');tooltip.hidden=true;frame.append(svg,tooltip);target.replaceChildren(frame);
+    const complete=()=>{const observer=new ResizeObserver(()=>{if(Math.abs(target.clientWidth-measured)>2)chart(target,spec);});observer.observe(target);observers.set(target,observer);return {svg,destroy:()=>{observer.disconnect();observers.delete(target);target.replaceChildren();}};};
+    if (!rows.length){svg.append(node('text',{x:width/2,y:height/2,'text-anchor':'middle',class:'sc-label'},spec.emptyLabel || 'No observations'));return complete();}
+    const missing=rows.filter(r=>numeric(r[spec.value || spec.y])===null||(spec.kind==='scatter'&&numeric(r[spec.x])===null)).length;
+    const label = row => `${row[spec.x] ?? row[spec.label] ?? ''}${spec.kind==='matrix'?` / ${row[spec.y]}`:''}: ${row[spec.value || spec.y] ?? 'missing'}${spec.unit ? ` ${spec.unit}` : ''}`;
+    const mark=(n,row,index)=>{
+      const title=node('title',{},label(row));n.append(title);n.setAttribute('tabindex','0');n.setAttribute('role','button');n.setAttribute('aria-label',label(row));n.setAttribute('data-row-index',index);
+      const show=()=>{tooltip.textContent=label(row);tooltip.hidden=false;};
+      const select=()=>{svg.querySelectorAll('.sc-selected').forEach(el=>el.classList.remove('sc-selected'));n.classList.add('sc-selected');show();target.dispatchEvent(new CustomEvent('chartselect',{bubbles:true,detail:{row,index}}));spec.onSelect?.(row,index);};
+      n.addEventListener('pointerenter',show);n.addEventListener('focus',show);n.addEventListener('pointerleave',()=>{if(document.activeElement!==n)tooltip.hidden=true;});n.addEventListener('blur',()=>tooltip.hidden=true);n.addEventListener('click',select);n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select();}});svg.append(n);return n;
+    };
+    function yAxis(domain) {
+      const sy=scale(domain,[height-pad.bottom,pad.top]);
+      for(let i=0;i<=4;i++){const value=domain[0]+(domain[1]-domain[0])*i/4,y=sy(value);svg.append(node('line',{x1:pad.left,x2:width-pad.right,y1:y,y2:y,class:'sc-grid'}),node('text',{x:pad.left-10,y:y+4,'text-anchor':'end',class:'sc-axis'},format(value)));}
+      if(spec.unit)svg.append(node('text',{x:pad.left,y:12,class:'sc-axis'},spec.unit));
+      return sy;
+    }
+    function categories(values) {
+      const sx=scale([0,Math.max(values.length-1,1)],[pad.left,width-pad.right]);
+      const stride=Math.max(1,Math.ceil(values.length/Math.max(2,Math.floor((width-pad.left-pad.right)/70))));values.forEach((value,i)=>{if((i%stride===0&&(i===0||sx(values.length-1)-sx(i)>=65))||i===values.length-1)svg.append(node('text',{x:sx(i),y:height-16,'text-anchor':i===0?'start':i===values.length-1?'end':'middle',class:'sc-axis'},String(value).slice(0,24)));});return sx;
+    }
+    if(spec.kind==='line'){
+      const ys=rows.map(r=>numeric(r[spec.y])),domain=extent(ys.filter(v=>v!==null)),sy=yAxis(domain),sx=categories(rows.map(r=>r[spec.x]));
+      let path='',drawing=false;ys.forEach((y,i)=>{if(y===null){drawing=false;return;}path+=`${drawing?'L':'M'}${sx(i)},${sy(y)} `;drawing=true;});svg.append(node('path',{d:path,fill:'none',class:'sc-line'}));
+      ys.forEach((y,i)=>{if(y!==null)mark(node('circle',{cx:sx(i),cy:sy(y),r:3.5,class:'sc-point'}),rows[i],i);});
+    } else if(spec.kind==='bar'){
+      const ys=rows.map(r=>numeric(r[spec.y])),domain=extent([0,...ys.filter(v=>v!==null)]),sy=yAxis(domain),band=(width-pad.left-pad.right)/rows.length;
+      rows.forEach((row,i)=>{const y=ys[i];if(y===null)return;mark(node('rect',{x:pad.left+i*band+band*.18,y:Math.min(sy(y),sy(0)),width:band*.64,height:Math.max(.6,Math.abs(sy(y)-sy(0))),rx:2,class:y<0?'sc-negative':'sc-bar'}),row,i);if(rows.length<=12)svg.append(node('text',{x:pad.left+(i+.5)*band,y:height-16,'text-anchor':'middle',class:'sc-axis'},String(row[spec.x]).slice(0,16)));});
+      svg.append(node('line',{x1:pad.left,x2:width-pad.right,y1:sy(0),y2:sy(0),class:'sc-zero'}));
+    } else if(spec.kind==='scatter'){
+      const points=rows.map((r,i)=>({r,i,x:numeric(r[spec.x]),y:numeric(r[spec.y])})).filter(p=>p.x!==null&&p.y!==null),xd=extent(points.map(p=>p.x)),yd=extent(points.map(p=>p.y)),sx=scale(xd,[pad.left,width-pad.right]),sy=yAxis(yd);
+      for(let i=0;i<=4;i++){const v=xd[0]+(xd[1]-xd[0])*i/4;svg.append(node('text',{x:sx(v),y:height-16,'text-anchor':'middle',class:'sc-axis'},format(v)));}
+      points.forEach(p=>mark(node('circle',{cx:sx(p.x),cy:sy(p.y),r:5,class:'sc-point'}),p.r,p.i));
+    } else if(spec.kind==='matrix'){
+      const xs=[...new Set(rows.map(r=>String(r[spec.x])))],ys=[...new Set(rows.map(r=>String(r[spec.y])))];
+      if(xs.length>20||ys.length>20)fail('matrix is limited to 20 × 20 categories');
+      if(rows.length!==xs.length*ys.length)fail('matrix requires an explicit row for every cell; use null for missing observations');
+      const values=rows.map(r=>numeric(r[spec.value])),max=Math.max(1,...values.filter(v=>v!==null).map(Math.abs)),w=(width-pad.left-pad.right)/xs.length,h=(height-pad.top-pad.bottom)/ys.length,seen=new Set();
+      rows.forEach((row,i)=>{const x=xs.indexOf(String(row[spec.x])),y=ys.indexOf(String(row[spec.y])),key=JSON.stringify([x,y]);if(seen.has(key))fail('duplicate matrix cell; aggregate explicitly');seen.add(key);const v=values[i];const r=node('rect',{x:pad.left+x*w+2,y:pad.top+y*h+2,width:Math.max(1,w-4),height:Math.max(1,h-4),rx:2,class:v===null?'sc-missing':v<0?'sc-negative':'sc-bar',opacity:v===null?1:.2+.8*Math.abs(v)/max});mark(r,row,i);if(w>45&&h>25)svg.append(node('text',{x:pad.left+(x+.5)*w,y:pad.top+(y+.5)*h+4,'text-anchor':'middle',class:`sc-cell-value${v!==null&&.2+.8*Math.abs(v)/max>.65?' sc-cell-inverse':''}`},v===null?'—':format(v)));});
+      xs.forEach((x,i)=>svg.append(node('text',{x:pad.left+(i+.5)*w,y:height-16,'text-anchor':'middle',class:'sc-axis'},x.slice(0,14))));ys.forEach((y,i)=>svg.append(node('text',{x:pad.left-8,y:pad.top+(i+.5)*h+4,'text-anchor':'end',class:'sc-axis'},y.slice(0,10))));
+    } else if(spec.kind==='units'){
+      const unit=spec.unitValue ?? 1; if(!Number.isFinite(unit)||unit<=0)fail('unitValue must be positive');
+      const counts=rows.map(row=>numeric(row[spec.y])===null?0:exactUnits(row[spec.y],unit));
+      if(counts.reduce((a,b)=>a+b,0)>1000)fail('unit chart exceeds 1,000 units; choose and label a larger exact unitValue');
+      const across=Math.max(1,Math.floor((width-pad.left-pad.right)/16));
+      let offset=0;rows.forEach((row,i)=>{for(let n=0;n<counts[i];n++){const k=offset++,x=pad.left+(k%across)*16,y=pad.top+Math.floor(k/across)*16;mark(node('circle',{cx:x,cy:y,r:4,class:i%2?'sc-unit-alt':'sc-point'}),row,i);}});
+      svg.setAttribute('viewBox',`0 0 ${width} ${Math.max(85,pad.top+Math.ceil(offset/across)*16+55)}`);svg.append(node('text',{x:pad.left,y:Math.max(65,pad.top+Math.ceil(offset/across)*16+28),class:'sc-axis'},`1 dot = ${unit} ${spec.unit || 'observations'}`));
+    }
+    if(missing){const note=html('p','sc-missing-note',`${missing} ${spec.missingLabel || 'missing values; never replaced with zero'}`);frame.append(note);}
+    return complete();
+  }
+  function table(target,rows,columns,{limit=100}={}){
+    if(typeof target==='string')target=document.querySelector(target);const wrap=html('div','sc-table-wrap'),t=html('table','sc-table'),head=html('thead'),tr=html('tr');
+    for(const c of columns)tr.append(html('th',null,typeof c==='string'?c:c.title));head.append(tr);t.append(head);const body=html('tbody');
+    rows.slice(0,limit).forEach((row,i)=>{const tr=html('tr');tr.dataset.rowIndex=i;for(const c of columns){const key=typeof c==='string'?c:c.key;tr.append(html('td',null,row[key]===null||row[key]===undefined?'—':row[key]));}body.append(tr);});t.append(body);wrap.append(t);target.replaceChildren(wrap);
+    if(rows.length>limit)target.append(html('p','sc-missing-note',`${limit} / ${rows.length} rows shown. Filter to inspect more.`));
+    return {select:index=>{body.querySelectorAll('tr').forEach((row,i)=>row.classList.toggle('sc-row-selected',i===index));},destroy:()=>target.replaceChildren()};
+  }
+  async function readRows(dataId,{maxRows=50000,limit=1000}={}){
+    if(!global.report || typeof global.report.readData!=='function')fail('the report/1 read-only data bridge is unavailable');
+    let cursor,rows=[];const seen=new Set();
+    do{const result=await global.report.readData(dataId,{...(cursor?{cursor}:{}),limit});if(!Array.isArray(result.rows))fail('invalid data page');rows.push(...result.rows);if(rows.length>maxRows)fail('data exceeds the declared row budget; filter or aggregate before publishing');cursor=result.page?.nextCursor;if(cursor){if(seen.has(cursor))fail('repeated page cursor');seen.add(cursor);}}while(cursor);
+    return rows;
+  }
+  Object.defineProperty(global,'SesameCharts',{value:Object.freeze({version:'1.0.0',chart,table,readRows,format,numeric}),configurable:false});
+})(window);
+</script><script>
+const data={"provenance":{"kind":"demo","description":"Manually authored fictional observations for chart and interaction testing. Not historical market data, forecasts, backtests or account results."},"monthly":[{"month":"Jan","change":"1.25","risk":"2.4","observations":"12"},{"month":"Feb","change":"-0.85","risk":"3.1","observations":"8"},{"month":"Mar","change":null,"risk":null,"observations":"0"},{"month":"Apr","change":"2.40","risk":"2.8","observations":"16"},{"month":"May","change":"1.10","risk":"1.9","observations":"10"},{"month":"Jun","change":"-1.60","risk":"4.2","observations":"14"},{"month":"Jul","change":"0.90","risk":"2.1","observations":"6"},{"month":"Aug","change":"1.75","risk":"2.7","observations":"14"}],"matrix":[{"period":"A","group":"North","score":"2.4"},{"period":"B","group":"North","score":"-1.2"},{"period":"C","group":"North","score":null},{"period":"A","group":"South","score":"0.8"},{"period":"B","group":"South","score":"2.1"},{"period":"C","group":"South","score":"1.6"}]};
+function render(){
+ const q=document.getElementById('filter').value.trim().toLowerCase();
+ const rows=data.monthly.filter(row=>!q||Object.values(row).some(value=>String(value??'').toLowerCase().includes(q)));
+ document.getElementById('count').textContent=rows.length+' / '+data.monthly.length+' rows';
+ const table=SesameCharts.table('#table',rows,[{key:'month',title:'Month'},{key:'change',title:'Change (%)'},{key:'risk',title:'Risk (%)'},{key:'observations',title:'Observations'}]);
+ const select=(_,index)=>table.select(index);
+ SesameCharts.chart('#timeline',{kind:document.getElementById('view').value,rows,x:'month',y:'change',unit:'%',title:'Fictional monthly change',onSelect:select});
+ SesameCharts.chart('#scatter',{kind:'scatter',rows,x:'risk',y:'change',unit:'%',title:'Fictional risk and change',onSelect:select});
+ SesameCharts.chart('#units',{kind:'units',rows,x:'month',y:'observations',unit:'observations',unitValue:2,title:'Fictional observation count',onSelect:select});
+}
+SesameCharts.chart('#matrix',{kind:'matrix',rows:data.matrix,x:'period',y:'group',value:'score',unit:'score',title:'Fictional grouped scores'});
+document.getElementById('filter').addEventListener('input',render);document.getElementById('view').addEventListener('change',render);
+document.getElementById('theme').addEventListener('click',()=>{const dark=document.documentElement.dataset.theme!=='dark';document.documentElement.dataset.theme=dark?'dark':'light';document.getElementById('theme').textContent=dark?'Light theme':'Dark theme';});
+render();
+</script></body></html>

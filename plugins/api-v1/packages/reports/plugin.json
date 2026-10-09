@@ -1,0 +1,43 @@
+{
+  "id": "sesame/reports",
+  "title": "交互报告",
+  "description": "编写、冻结与发布 report/1 HTML 报告，使用固定数据引用、离线 SVG 图表与只读渲染桥。",
+  "version": "2.0.0",
+  "default_state": "mounted",
+  "tool_names": [
+    "report_data",
+    "report_template",
+    "report_read",
+    "report_check",
+    "report_publish"
+  ],
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "entry": "index.js",
+  "tool_definitions": "tools.json",
+  "resources": [
+    "repair.md",
+    "PROVENANCE.md",
+    "assets/editorial-charts.js",
+    "assets/editorial.css",
+    "templates/research-brief.html",
+    "examples/demo-data.json",
+    "examples/editorial-demo.html"
+  ],
+  "templates": {
+    "report_repair": "repair.md"
+  },
+  "apiVersion": "1",
+  "author": {
+    "name": "Sesame"
+  },
+  "license": "MIT",
+  "provides": {
+    "sesame.report": "1"
+  },
+  "agent_scope": "all"
+}

@@ -1,0 +1,1 @@
+策略先写 SVL/1 JSON，使用 strategy_validate 核对真实类型/引用/预算，然后 strategy_publish 冻结源。逻辑图只能从该源生成。strategy_replay 是固定输入的 SVL 求值，不是报价采集、撮合器、原生回测或实盘验证。需要原生执行时读取目标插件的 TargetProfile，Agent 按它的真实工具 schema 翻译、编译和验证；把源、目标、翻译与验证固定到各自 ArtifactRef。不得把编译通过或演示事件求值成功当成目标数值语义等价。编写前读取 strategy-authoring skill。
