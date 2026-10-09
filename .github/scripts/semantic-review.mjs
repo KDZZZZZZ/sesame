@@ -31,7 +31,7 @@ export function semanticReviewEvidence(pr, reviews, comments, threads, permissio
     if (![created, updated, reviewed].every(Number.isFinite) || reviewed > created || created > updated || updated > cutoff) continue;
     if (record.schemaVersion !== 1 || record.kind !== 'agent' || record.headSha !== pr.head.sha || record.decision !== 'no-blocking-findings' || record.independent !== true) continue;
     if (typeof record.reviewer !== 'string' || record.reviewer.length < 3 || record.reviewer.length > 200 || typeof record.scope !== 'string' || record.scope.length < 40 || record.scope.length > 16000) continue;
-    if (!Array.isArray(record.findings) || record.findings.length > 100 || record.findings.some(finding => !['fixed', 'not-applicable'].includes(finding.status) || typeof finding.explanation !== 'string' || finding.explanation.length < 20)) continue;
+    if (!Array.isArray(record.findings) || record.findings.length > 100 || record.findings.some(finding => !finding || typeof finding !== 'object' || Array.isArray(finding) || !['fixed', 'not-applicable'].includes(finding.status) || typeof finding.explanation !== 'string' || finding.explanation.length < 20)) continue;
     candidates.push({ kind: 'maintainer-recorded-agent', decision: record.decision, headSha: record.headSha, reviewer: record.reviewer, reviewedAt: record.reviewedAt, recordedAt: comment.created_at, updatedAt: comment.updated_at, recordedBy: { login: comment.user.login, role }, url: comment.html_url, commentId: comment.id, bodySha256: createHash('sha256').update(comment.body).digest('hex'), scope: record.scope, findings: record.findings, humanApproval: false, provenance: 'The authenticated repository maintainer attests to a separate agent review; this is not an independent human approval.' });
   }
   candidates.sort((a, b) => time(b.recordedAt) - time(a.recordedAt));
@@ -54,6 +54,15 @@ export async function readSemanticReview(pr, reviews, api, graphql) {
     threads.push(...connection.nodes); if (!connection.pageInfo.hasNextPage) break;
     assert(page < 9 && connection.pageInfo.endCursor, 'Code-review thread pagination exceeded budget'); cursor = connection.pageInfo.endCursor;
   }
+  const dismissals = []; cursor = null;
+  for (let page = 0; page < 10; page++) {
+    const result = await graphql({ query: 'query($number:Int!,$cursor:String){repository(owner:"KDZZZZZZ",name:"sesame"){pullRequest(number:$number){timelineItems(itemTypes:[REVIEW_DISMISSED_EVENT],first:100,after:$cursor){nodes{... on ReviewDismissedEvent{id createdAt actor{login} previousReviewState review{databaseId commit{oid}} url}} pageInfo{hasNextPage endCursor}}}}}', variables: { number: pr.number, cursor } });
+    const connection = result.data?.repository?.pullRequest?.timelineItems;
+    assert(!result.errors && connection && Array.isArray(connection.nodes), 'Cannot verify review dismissal history');
+    dismissals.push(...connection.nodes.map(event => ({ id: event.id, dismissedAt: event.createdAt, actor: event.actor?.login ?? null, previousState: event.previousReviewState, reviewId: event.review?.databaseId ?? null, commit: event.review?.commit?.oid ?? null, url: event.url })));
+    if (!connection.pageInfo.hasNextPage) break;
+    assert(page < 9 && connection.pageInfo.endCursor, 'Review dismissal pagination exceeded budget'); cursor = connection.pageInfo.endCursor;
+  }
   const authors = [...new Set(comments.filter(comment => comment.body?.startsWith(REVIEW_MARKER)).map(comment => comment.user.login))];
   assert(authors.length <= 30, 'Too many semantic review recorders');
   const permissions = new Map(await Promise.all(authors.map(async author => {
@@ -61,7 +70,8 @@ export async function readSemanticReview(pr, reviews, api, graphql) {
     return [author, ['admin', 'maintain'].find(role => result?.permission === role || result?.role_name === role) ?? result?.permission];
   })));
   const evidence = semanticReviewEvidence(pr, reviews, comments, threads, permissions);
-  return { ...evidence, resolvedThreadIds: threads.map(thread => thread.id).sort() };
+  const reviewStates = reviews.filter(review => !['COMMENTED', 'PENDING'].includes(review.state)).map(review => ({ id: review.id, author: review.user.login, authorType: review.user.type, state: review.state, commit: review.commit_id, submittedAt: review.submitted_at })).sort((a, b) => a.id - b.id);
+  return { ...evidence, resolvedThreadIds: threads.map(thread => thread.id).sort(), reviewStates, reviewDismissals: dismissals.sort((a, b) => a.id.localeCompare(b.id)) };
 }
 
 export function validateGateSnapshot(pr, semantic, snapshot, run, artifact, workflowId) {
