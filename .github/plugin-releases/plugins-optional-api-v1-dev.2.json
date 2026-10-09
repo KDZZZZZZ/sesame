@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "tag": "plugins-optional-api-v1-dev.2",
   "title": "Sesame optional API 1 development plugins 2",
-  "sourceCommit": "f8e702d7b4bca4a621db950d5ff40826b227d051",
+  "sourceCommit": "3f3c422fe3dd3bfe7ff780f4d593f6cf2d7ef9c8",
   "sourceRoot": "plugins/optional-api-v1",
   "archive": {
     "name": "sesame-optional-plugins-api-v1-dev.2.tar.gz",
