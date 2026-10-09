@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "tag": "plugins-api-v1-dev.9",
   "title": "Sesame official API 1 development plugins 9",
-  "sourceCommit": "a03f1bf7ab598cb8008ab8afda3635515b8781a4",
+  "sourceCommit": "9b395d9a8e0122b8d527ead45dd7b7937e05869b",
   "sourceRoot": "plugins/api-v1",
   "archive": {
     "name": "sesame-official-plugins-api-v1-dev.9.tar.gz",
