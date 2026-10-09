@@ -107,10 +107,11 @@ This release contains AKShare 1.0.2, QMT 1.0.0 and vn.py 1.0.1. A fresh test fix
 # Development bundle 9 validation
 
 Only MT5 changes, from 1.1.5 to 1.1.6; the other 18 package versions and file
-trees remain those of bundle 8. Reusing a compiled build after archival or a
-plugin upgrade could republish changed storage metadata and producer information
-under the same native-build operation, causing a real host idempotency conflict
-before a run was created. The plugin now persists a fixed build-reference index
+trees remain those of bundle 8. Reusing a compiled build after archival could
+republish changed storage metadata under the same native-build operation, causing
+a real host idempotency conflict before a run was created. The input fingerprint
+does not include producer identity; a plugin upgrade is a reuse scenario, not a
+separate cause of this conflict. The plugin now persists a fixed build-reference index
 and strictly validates existing build evidence before reusing its original ref
 and producer. Archive location and cleanup flags are excluded from compiled
 content identity. New definitions still use the fixed build operation; the fix
@@ -119,7 +120,7 @@ does not randomize operations or weaken the host's idempotency rules.
 Eleven public frozen-build/run-reference checks passed. Independent review also
 passed 14 checks using a real temporary Store and ContractArtifacts, including
 protect/cleanup removing the transient manifest, closing and reopening the Store,
-and definition/RunRecord creation across two main conversations and producer
+and two new main-session run definitions/RunRecords across producer
 version fixtures 1.1.3, 1.1.6 and 1.1.7. These are compatibility fixtures, not a
 claim that a 1.1.7 package has been released. The original fixed ref and producer
 remain intact. Changed immutable build/manifest/translation/EX5 data, missing or
@@ -128,7 +129,7 @@ rejected rather than adopted or republished.
 
 A read-only inspection of the previous application's stored evidence reproduced
 the mismatch caused by the two archive-state fields. In a separate temporary
-Store, three repeated definitions retained the original 1.1.3-produced ref with
+Store, three repeated frozen-build lookups retained the original 1.1.3-produced ref with
 zero new publications, and immutable changes were rejected. The independent
 review inspected that evidence without rerunning the original database script.
 This verifies evidence freezing and persistent lifecycle, not new compilation,
