@@ -1,18 +1,25 @@
 # Development bundle 5 validation
 
-The final source suite passed 128 checks: 115 passed, 13 explicit gates and zero
+The source suite passed 128 checks: 115 passed, 13 explicit gates and zero
 failures. Eleven gates require Windows; the native MetaEditor compiler and SDK
 example gates were also exercised separately on macOS with real successful
 compilations and owned-process cleanup. The new discovery/binding tools passed
 seven public contract checks and 20 actual host canvas/data/plugin checks.
 
-Only canvas-control 2.1.0, data-access 2.1.0 and MT5 1.1.2 differ from bundle 4.
+Only canvas-control 2.1.0, data-access 2.1.0 and MT5 1.1.3 differ from bundle 4.
 Provider/connection/instrument discovery and complete typed bindings are now
 plugin tools and skills. An actual MT5 read-only HostContext search found EURUSD,
 bound 1h/15m series, and mounted an indicator artifact in a temporary CanvasService;
 cleanup left zero bindings. This is service evidence, not a browser-render claim.
 MT5 results now expose exact RunRecordRef versions for report links, and a complete
 non-trading Product SDK example compiled with zero errors/warnings.
+
+The subsequent MT5 1.1.3 account-field correction passed 14 mapping/provider
+checks and the actual current MCP account list, snapshot and subscription
+snapshot path. The upstream `type: demo` now maps to demo; account monetary fields
+match the actual source, missing leverage/margin fields remain missing, and the
+source's EA-permission restriction remains false. These were read-only checks;
+cleanup left zero bindings/subscriptions and no trade was issued.
 
 Both new deterministic archives were read by the actual host extractor and
 package verifier: 19 official packages and three optional packages. Optional
