@@ -11,7 +11,7 @@ description: Discover and reuse authorized Windows MiniQMT configuration, prepar
 4. 仅确认 SDK 缺失后，显式 `prepare` 并给稳定 `operation_id` 与现有 Windows CPython 3.12 x64 路径。它再次尝试复用，然后只在插件数据目录创建 venv，以固定 PyPI HTTPS wheel、版本和 SHA-256 安装。不会改全局 Python、启动终端或自动登录。失败/取消可能留下未完成的专有目录；inspect 给出私有根，在确认无执行进程后只移除那次未完成目录即可。
 5. `qmt_configure` 使用 inspect 返回的 `expected_version`。记录实际 `python_path`、`userdata_directory`（现有 `userdata_mini`）、`account_id`、券商名、实际 `market_port`。行情限定 localhost 固定端口，不自动跳到另一终端。`sector` 是已有 MiniQMT 本地板块名，默认沪深京A股；只有终端真实存在的股票目录可用。需要更新板块数据时明确使用现有终端的补充功能，不在普通读取中暗中下载。
 6. `qmt_read search/describe/quotes` 验证行情；`asset/positions` 验证该 STOCK 账户只读访问。失败时报告连接/授权/SDK原始错误，不能输出空数组冒充成功。只支持大陆股票持仓；遇到债券、基金、港股或其他品种，provider 明确不支持，勿按股数/CNY强制转换。
-7. `qmt_read orders/fills` 保留原生当日记录。整数单号和浮点数用文本保存，时间单位与回报 `price_type` 不猜测；不要当成多日历史、完整事件账本或可解释 SVL 运行。标准 orders/fills 同样只覆盖当日，历史range会明确拒绝；不支持完整账本或账户事件流。
+7. `qmt_read orders/fills` 保留原生当日记录。整数单号和浮点数用文本保存，时间单位与回报 `price_type` 不猜测；不要当成多日历史、完整事件账本或可解释 SVL 运行。标准 orders/fills 因原生时间单位未核实而不声明/明确不支持；原生查询只覆盖当日，历史range不支持；不支持完整账本或账户事件流。
 
 工具准备环境与查询是固定的可信 SDK 适配器，执行于当前用户本机，具有进程树取消。它不接受任意 Python 代码，也不充当策略沙箱。会话结束只停止这次 API/Python 进程，保留 MiniQMT 应用与用户交易。
 

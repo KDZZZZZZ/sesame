@@ -8,7 +8,7 @@ import { Type } from '@sesame/plugin-sdk/schema';
 import { Value } from '@sesame/plugin-sdk/schema/value';
 import { configure, inspect, environment } from '../packages/qmt/configuration.js';
 import { createService, descriptors } from '../packages/qmt/service.js';
-import { accountRef, instrumentRef, quote, accountSnapshot } from '../packages/qmt/mapping.js';
+import { accountRef, instrumentRef, quote, accountSnapshot, orderStatus, dailyBar } from '../packages/qmt/mapping.js';
 import { createTools } from '../packages/qmt/index.js';
 import { execute } from '../packages/qmt/worker.js';
 
@@ -164,13 +164,12 @@ test('daily polling produces real forming corrections and unbind closes only tha
   assert.equal(stream.snapshot.bars.length,2);let event;await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('No bar correction')),1000);stream.ready(e=>{event=e;clearTimeout(timer);resolve()})});
   assert.equal(event.type,'bars.upsert');assert.equal(event.payload.bars.at(-1).close,'10.5');await service.market.unbind({bindingId:'market'});const before=calls;await new Promise(r=>setTimeout(r,20));assert.equal(calls,before);
 });
-test('standard orders/fills are current-day only, preserve unknown source units and integer identity',async t=>{
-  const {host,config}=await fixture(t);
-  const service=createService(host,{platform:'win32',request:async p=>receipt({items:p.action==='orders'?[{account_id:config.account_id,stock_code:'600000.SH',order_id:'9007199254740993',order_volume:'100',traded_volume:'40',order_status:'55',order_type:'23',price_type:'999',price:'10',order_time:'93001'}]:[{account_id:config.account_id,stock_code:'600000.SH',traded_id:'fill1',order_id:'9007199254740993',traded_volume:'40',traded_price:'10',order_type:'23',traded_time:'93001'}]})});t.after(()=>service.dispose());await bind(service,'account');
-  const input={account:accountRef(config),page:{limit:200}};
-  const orders=await service.account.queryOrders(input,{bindingId:'account'});assert.equal(orders.data.items[0].status,'partially_filled');assert.equal(orders.data.items[0].remainingQuantity.value.value,'60');assert.equal(orders.data.items[0].limitPrice.status,'unknown');assert.equal(orders.coverage.scope,'current_trading_day');validateFinancialData(orders.data);
-  const fills=await service.account.queryFills(input,{bindingId:'account'});assert.equal(fills.data.items[0].nativeOrderId.value,'9007199254740993');assert.equal(fills.data.items[0].time.status,'unknown');validateFinancialData(fills.data);
-  await assert.rejects(service.account.queryFills({...input,range:{from:0,to:1}},{bindingId:'account'}),{code:'UNSUPPORTED_CAPABILITY'});
+test('unverified native order/fill time rejects normalized contracts; raw day-only reads remain available',async t=>{
+ const {host,config}=await fixture(t);let calls=0;const service=createService(host,{platform:'win32',request:async()=>{calls++;return receipt({items:[{order_id:'9007199254740993',order_time:'93001'}],coverage:{scope:'current_trading_day',complete_history:false}})}});t.after(()=>service.dispose());
+ assert.equal(descriptors[1].capabilities.includes('orders.query'),false);assert.equal(descriptors[1].capabilities.includes('fills.query'),false);
+ for(const method of ['queryOrders','queryFills'])await assert.rejects(service.account[method]({account:accountRef(config),page:{limit:1}}),{code:'UNSUPPORTED_CAPABILITY'});
+ assert.equal(calls,0);const raw=await service.native('orders',{});assert.equal(raw.items[0].order_time,'93001');assert.equal(raw.coverage.complete_history,false);
+ for(const status of ['51','52'])assert.equal(orderStatus(status),'cancel_pending');
 });
 test('explicit trading intents persist before transport, reuse exact results and never replay unknown outcomes',async t=>{
   const {host,config}=await fixture(t);host.scope={kind:'main'};let calls=0,fail=false;
@@ -187,4 +186,13 @@ test('explicit trading intents persist before transport, reuse exact results and
 
 test('activation service context cannot authorize trading; current tool scope is checked explicitly',async t=>{
  const {host,config}=await fixture(t);host.scope={kind:'service'};let calls=0;const service=createService(host,{platform:'win32',request:async()=>{calls++;return receipt({status:'submitted',order_id:'1'})}});t.after(()=>service.dispose());const args={operation_id:'scope',user_authorized:true,account_id:config.account_id,connection_revision:'2',symbol:'600000.SH',side:'buy',shares:'100',price:'10'};await assert.rejects(service.command('order',args),{code:'FORBIDDEN'});assert.equal((await service.command('order',args,undefined,{kind:'main'})).status,'submitted');assert.equal(calls,1);await assert.rejects(service.command('order',{...args,operation_id:'child'},undefined,{kind:'child'}),{code:'FORBIDDEN'});
+});
+
+test('backward pages select newest data but stay ascending, published wall authority works and stale source never proves closure',async t=>{
+ const {host,config}=await fixture(t);const data={items:[dailyRow('2026-10-01'),dailyRow('2026-10-08')],tick:{...tick,time:String(at('2026-10-09T14:00:00')),open:'9',high:'11',low:'8',lastPrice:'10',volume:'100'}};
+ const service=createService(host,{platform:'win32',request:async()=>receipt(data,at('2026-10-09T15:05:00'))});t.after(()=>service.dispose());await bind(service,'market');
+ const wall=value=>({basis:'wall',authority:'Asia/Shanghai',zone:'Asia/Shanghai',value});const args={instrument:instrumentRef(config,'600000.SH'),spec:dailySpec,range:{from:wall('2026-10-01T00:00:00'),to:wall('2026-10-10T00:00:00')},includeForming:true,direction:'backward',page:{limit:2}};
+ const first=await service.market.queryBars(args,{bindingId:'market'});assert.deepEqual(first.data.page.items.map(b=>b.openTime.value.slice(0,10)),['2026-10-08','2026-10-09']);assert.equal(first.data.page.items[1].isClosed,false);assert.equal(first.data.page.items[1].closure,'unknown');assert.equal(first.data.page.items[1].volume.default,'none');assert.equal(first.data.page.items[1].turnover.status,'unknown');assert.deepEqual(first.data.instrument,args.instrument);assert.deepEqual(first.data.spec,args.spec);assert.equal(first.data.coverage.complete,false);assert.deepEqual(first.data.coverage.requested,args.range);
+ const second=await service.market.queryBars({...args,page:{limit:1,cursor:first.data.page.nextCursor}},{bindingId:'market'});assert.equal(second.data.page.items[0].openTime.value,'2026-10-01T09:30:00');
+ assert.equal(dailyBar(dailyRow('2026-10-08'),'sample',at('2026-10-10T00:00:00')).isClosed,false);
 });

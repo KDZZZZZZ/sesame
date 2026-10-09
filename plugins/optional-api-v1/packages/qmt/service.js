@@ -1,12 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { check, canonical, digest } from '@sesame/plugin-sdk/protocol';
 import { configuration, prerequisite } from './configuration.js';
-import { accountRef, accountSummary, accountSnapshot, instrumentRef, summary, instrument, quote, position, order, fill, dailyBar, metadata } from './mapping.js';
+import { accountRef, accountSummary, accountSnapshot, instrumentRef, summary, instrument, quote, position, dailyBar, metadata } from './mapping.js';
 
 const warning = (code, message) => ({ code, message });
 export const descriptors = [
   { id: 'market', contract: 'sesame.market', versions: ['1.0.0'], capabilities: ['instruments.search','instruments.describe','quotes.subscribe','bars.history','bars.subscribe'], limits: { transportMode: 'poll', minPollIntervalMs: 1000, maxPageSize: 200, maxInstrumentsPerSubscription: 50, resumable: false, catalogScope: 'configured native mainland stock sector', timeframes: ['1d'], priceBases: ['last'], adjustments: ['none'] } },
-  { id: 'account', contract: 'sesame.account', versions: ['1.0.0'], capabilities: ['accounts.list','account.snapshot','positions.query','orders.query','fills.query'], limits: { maxPageSize: 200, accountTypes: ['STOCK'], currencies: ['CNY'], accountScope: 'one explicitly configured account', eventHistory: false } },
+  { id: 'account', contract: 'sesame.account', versions: ['1.0.0'], capabilities: ['accounts.list','account.snapshot','positions.query'], limits: { maxPageSize: 200, accountTypes: ['STOCK'], currencies: ['CNY'], accountScope: 'one explicitly configured account', eventHistory: false } },
 ];
 
 /** Test injection supplies only the fixed query boundary, never a runtime/store object. */
@@ -35,15 +35,18 @@ export function createService(host, { platform = process.platform, now = Date.no
     return result;
   }
   function revised(item) {
-    const hash = digest(item), key = item.id, prior = revisions.get(key);
+    const key=item.id, prior=revisions.get(key);
+    if(prior?.closed && item.isClosed===false)item={...item,isClosed:true,closure:prior.closure};
+    const hash = digest(item);
     const revision = prior ? (prior.hash === hash ? prior.revision : String(BigInt(prior.revision) + 1n)) : '0';
     while(revisions.size >= 20000 && !revisions.has(key)) revisions.delete(revisions.keys().next().value);
-    revisions.set(key, { hash, revision }); return { ...item, revision };
+    revisions.set(key, { hash, revision, ...(item.isClosed===true?{closed:true,closure:item.closure}:{}) }); return { ...item, revision };
   }
   async function paged(c, method, input, load) {
     const limit = input.page?.limit;
     check(Number.isInteger(limit) && limit >= 1 && limit <= 200, 'page.limit must be 1–200', 'INVALID_ARGUMENT');
     const filter = { ...input }; delete filter.page;
+    check(input.direction===undefined||['forward','backward'].includes(input.direction),'Invalid page direction','INVALID_ARGUMENT');
     const signature = digest({ method, connection: connection(c), filter });
     for (const [key, value] of pages) if (now() - value.at > 60000) pages.delete(key);
     let snapshot, offset = 0;
@@ -63,7 +66,7 @@ export function createService(host, { platform = process.platform, now = Date.no
       nextCursor = randomUUID(); pages.set(nextCursor, { bindingId:input.bindingId, at: now(), signature, snapshot, offset: offset + limit });
     }
     if(input.bindingId) fixed({bindingId:input.bindingId});
-    return structuredClone({ data: { items: snapshot.rows.slice(offset, offset + limit), nextCursor, snapshotId: snapshot.id, consistency: 'snapshot' }, meta: snapshot.meta, ...(snapshot.extra ?? {}) });
+    return structuredClone({ data: { items: input.direction==='backward' ? snapshot.rows.slice(Math.max(0,snapshot.rows.length-offset-limit),snapshot.rows.length-offset) : snapshot.rows.slice(offset, offset + limit), nextCursor, snapshotId: snapshot.id, consistency: 'snapshot' }, meta: snapshot.meta, ...(snapshot.extra ?? {}) });
   }
   function rangeDate(time) {
     if(time?.basis === 'utc') { check(Number.isSafeInteger(time.unixMs), 'Invalid UTC bound', 'INVALID_ARGUMENT'); return new Date(time.unixMs+8*3600000).toISOString().slice(0,19); }
@@ -79,7 +82,7 @@ export function createService(host, { platform = process.platform, now = Date.no
     const symbol = instrumentSymbol(c,input.instrument), from = rangeDate(input.range.from), to = rangeDate(input.range.to);
     check(from <= to && Date.parse(to)-Date.parse(from) <= 10*366*86400000, 'Daily range exceeds ten years', 'INVALID_ARGUMENT');
     const seriesId = digest({connection:connection(c),instrument:input.instrument,spec:input.spec});
-    const r = await read(c,'bars',{symbols:[symbol],start:from.slice(0,10).replaceAll('-',''),end:to.slice(0,10).replaceAll('-',''),forming:!!input.includeForming},context.signal);
+    const r = await read(c,'bars',{symbols:[symbol],start:from.slice(0,10).replaceAll('-',''),end:to.slice(0,10).replaceAll('-',''),forming:true},context.signal);
     const native = [...r.result.items];
     if(input.includeForming && r.result.tick) {
       const tick = r.result.tick, sourceTime = quote(c,{symbol,tick}).time;
@@ -91,15 +94,17 @@ export function createService(host, { platform = process.platform, now = Date.no
         if(at>=0)native[at]=replacement;else native.push(replacement);
       }
     }
-    const rows=native.map(row=>revised(dailyBar(row,seriesId,r.sample.to))).filter(bar=>bar.openTime.value>=from && bar.openTime.value<to && (input.includeForming || bar.isClosed)).sort((a,b)=>a.openTime.value.localeCompare(b.openTime.value));
+    native.sort((a,b)=>Number(a.time)-Number(b.time));
+    const tickTime=r.result.tick?.time;
+    const rows=native.map((row,index)=>revised(dailyBar(row,seriesId,r.sample.to,{nextSourceTime:native[index+1]?.time ?? (/^\d{13}$/.test(tickTime??'')?tickTime:undefined)}))).filter(bar=>bar.openTime.value>=from && bar.openTime.value<to && (input.includeForming || bar.isClosed)).sort((a,b)=>a.openTime.value.localeCompare(b.openTime.value));
     check(new Set(rows.map(x=>x.id)).size===rows.length,'Duplicate native daily rows','SOURCE_DATA_INVALID');
-    return {rows,meta:metadata(r,[warning('LOCAL_HISTORY','Only existing cached daily data is read. Empty data does not prove complete coverage; explicitly download missing ranges.'),warning('DAILY_POLL','Daily OHLC uses native source timestamps. No minute bars or native volume units are inferred.')]),extra:{seriesId,coverage:r.result.coverage}};
+    return {rows,meta:metadata(r,[warning('LOCAL_HISTORY','Only existing cached daily data is read. Empty data does not prove complete coverage; explicitly download missing ranges.'),warning('DAILY_POLL','Daily OHLC uses native source timestamps. No minute bars or native volume units are inferred.')]),extra:{seriesId,coverage:{requested:input.range,observedRange:rows.length?{from:rows[0].openTime,to:rows.at(-1).openTime}:null,complete:false,gaps:[{range:input.range,reason:'not_loaded'}]}}};
   }
   async function pollBars(input,context) {
     check(!input.resumeToken,'Resume requires a new snapshot','UNSUPPORTED_CAPABILITY');
     check(Number.isInteger(input.tailLimit)&&input.tailLimit>0&&input.tailLimit<=2000,'tailLimit must be 1–2000','INVALID_ARGUMENT');
     const controller=new AbortController(),signal=AbortSignal.any([controller.signal,lifetime.signal,...(context.signal?[context.signal]:[])]);
-    const fetch=async()=> {const utc=now();const result=await barSnapshot({...input,includeForming:input.includeForming!==false,range:{from:{basis:'utc',unixMs:utc-Math.min(3660,Math.max(31,input.tailLimit*3))*86400000},to:{basis:'utc',unixMs:utc}}},{...context,signal});return {seriesId:result.extra.seriesId,bars:result.rows.slice(-input.tailLimit),meta:result.meta};};
+    const fetch=async()=> {const utc=now();const result=await barSnapshot({...input,includeForming:input.includeForming!==false,range:{from:{basis:'utc',unixMs:utc-Math.min(3660,Math.max(31,input.tailLimit*3))*86400000},to:{basis:'utc',unixMs:utc}}},{...context,signal});return {seriesId:result.extra.seriesId,instrument:input.instrument,spec:input.spec,bars:result.rows.slice(-input.tailLimit),coverage:result.extra.coverage,meta:result.meta};};
     const initial=await fetch(),position={streamId:randomUUID(),epoch:randomUUID(),seq:'0'};let task,timer,wake,ready=false,seq=0n;
     const handle={bindingId:context.bindingId,snapshot:initial,position,consistency:'bounded',recovery:'snapshot',ready(emit){if(ready||signal.aborted)return;ready=true;task=(async()=>{let prior=new Map(initial.bars.map(b=>[b.id,b.revision]));try{while(!signal.aborted){await new Promise(resolve=>{wake=resolve;timer=setTimeout(resolve,pollMs)});if(signal.aborted)break;const next=await fetch();if(signal.aborted)break;const bars=next.bars.filter(b=>prior.get(b.id)!==b.revision);if(bars.length)emit({...position,seq:String(++seq),eventId:randomUUID(),schemaVersion:'1.0.0',type:'bars.upsert',payload:{seriesId:next.seriesId,bars},observedAt:now()});prior=new Map(next.bars.map(b=>[b.id,b.revision]));}}catch(error){if(!signal.aborted)emit({...position,seq:String(++seq),eventId:randomUUID(),schemaVersion:'1.0.0',type:'stream.gap',payload:{reason:{code:error.code??'SOURCE_UNAVAILABLE',message:error.message},recovery:'snapshot'},observedAt:now()})}})()},async close(){controller.abort();clearTimeout(timer);wake?.();await task;signal.removeEventListener('abort',abort);streams.delete(handle)}};
     const abort=()=>{clearTimeout(timer);wake?.()};signal.addEventListener('abort',abort,{once:true});streams.add(handle);return handle;
@@ -113,7 +118,7 @@ export function createService(host, { platform = process.platform, now = Date.no
     unbind: async ({ bindingId }) => { bindings.delete(bindingId);for(const [key,page]of pages)if(page.bindingId===bindingId)pages.delete(key);await Promise.allSettled([...streams].filter(x=>x.bindingId===bindingId).map(x=>x.close())); },
   };
   const market = { ...common,
-    queryBars: async(input,context)=>{const c=fixed(context); const result=await paged(c,'bars',{...input,bindingId:context.bindingId},()=>barSnapshot(input,context));fixed(context);return {data:{seriesId:result.seriesId,page:result.data,coverage:{from:input.range.from,to:input.range.to,hasMore:{before:'unknown',after:'unknown'}}},meta:result.meta};},
+    queryBars: async(input,context)=>{const c=fixed(context); const result=await paged(c,'bars',{...input,bindingId:context.bindingId},()=>barSnapshot(input,context));fixed(context);return {data:{seriesId:result.seriesId,instrument:input.instrument,spec:input.spec,page:result.data,coverage:result.coverage},meta:result.meta};},
     subscribeBars:pollBars,
     searchInstruments: async (input, context) => {
       const c = fixed(context);
@@ -170,14 +175,8 @@ export function createService(host, { platform = process.platform, now = Date.no
       return paged(c, 'positions', {...input,bindingId:context.bindingId}, async () => { const r = await read(c, 'positions', {}, context.signal); return { rows: r.result.items.filter(row => !symbols || symbols.includes(row.stock_code)).map(row => revised(position(c, row))).sort((a,b) => a.id.localeCompare(b.id)), meta: metadata(r) }; });
     },
   };
-  for(const [method,action,map] of [['queryOrders','orders',order],['queryFills','fills',fill]]) accounts[method]=async(input,context)=>{
-    const c=fixed(context);account(c,input.account);
-    check(Object.keys(input).every(k=>['account','instruments','page'].includes(k)),'Unsupported account query filter; only current-day data is available','UNSUPPORTED_CAPABILITY');
-    check(!input.range,'Native QMT supports current-trading-day orders/fills only, not requested historical ranges','UNSUPPORTED_CAPABILITY');
-    const symbols=input.instruments?.map(ref=>instrumentSymbol(c,ref));
-    check(!input.statuses && !input.orderIds,'These filters are not supported by this QMT query','UNSUPPORTED_CAPABILITY');
-    return paged(c,action,{...input,bindingId:context.bindingId},async()=>{const r=await read(c,action,{},context.signal);return{rows:r.result.items.filter(row=>!symbols||symbols.includes(row.stock_code)).map(row=>revised(map(c,row))).sort((a,b)=>a.id.localeCompare(b.id)),meta:metadata(r,[warning('CURRENT_TRADING_DAY_ONLY','Only the native current trading day is queried; historical completeness and native order time units are unknown.')]),extra:{coverage:{scope:'current_trading_day',completeHistory:false,hasMore:{before:'unknown',after:'unknown'}}}}});
-  };
+  accounts.queryOrders=async()=>check(false,'Native order_time unit is unverified; only raw current-day qmt_read orders is supported','UNSUPPORTED_CAPABILITY');
+  accounts.queryFills=async()=>check(false,'Native traded_time unit is unverified; only raw current-day qmt_read fills is supported','UNSUPPORTED_CAPABILITY');
   return { market, account: accounts,
     async download(args,signal){const c=current();instrumentSymbol(c,instrumentRef(c,args.symbol));check(/^\d{8}$/.test(args.start)&&/^\d{8}$/.test(args.end)&&args.start<=args.end,'Use ordered YYYYMMDD bounds','INVALID_ARGUMENT');const dates=[args.start,args.end].map(x=>x.slice(0,4)+'-'+x.slice(4,6)+'-'+x.slice(6,8));for(const date of dates)check(new Date(date+'T00:00:00Z').toISOString().slice(0,10)===date,'Invalid download date','INVALID_ARGUMENT');check(Date.parse(dates[1])-Date.parse(dates[0])<=3660*86400000,'Download range exceeds ten years','INVALID_ARGUMENT');return read(c,'download_history',{symbols:[args.symbol],start:args.start,end:args.end},signal);},
     async command(action,args,signal,scope=host.scope){
