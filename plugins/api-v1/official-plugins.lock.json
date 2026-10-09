@@ -408,7 +408,7 @@
       "id": "sesame/mt5",
       "version": "1.1.4",
       "directory": "mt5",
-      "treeDigest": "sha256:28fc39e24d66c9c10866de719f5ada7a909a889134e91091f760c3edece1c397",
+      "treeDigest": "sha256:144e53e5f9ddce418ca478adc7185c7ffebc89d05f934ca5a4b6c4d32586ee2e",
       "files": [
         {
           "path": "LICENSE",
@@ -712,8 +712,8 @@
         },
         {
           "path": "backend/tester.js",
-          "sha256": "c97bbd17bd6558af71d68f8141ed81cbc4275a1caa546af81de9ea434637199a",
-          "bytes": 28198
+          "sha256": "c31257d48652f88e3e7a9faa3e73dbfb2b72acf3c4e7b707963df141636909b3",
+          "bytes": 28818
         },
         {
           "path": "backend/tool-groups.json",
@@ -842,8 +842,8 @@
         },
         {
           "path": "target/tester-validation.md",
-          "sha256": "249ffd561335cb6784e264f22536a947bed567e66e5f2e6d6b618d7629af00b3",
-          "bytes": 2820
+          "sha256": "da5d3feb345057907a5ecf2bd5b5f9fc5bfa179076ad7ad624dd67704decd30d",
+          "bytes": 3221
         },
         {
           "path": "tools/authoring/index.js",

@@ -1,9 +1,9 @@
 # Development bundle 6 validation
 
 Only MT5 1.1.4, strategy-authoring 1.0.1 and workspace 1.0.2 differ from bundle 5.
-The final combined targeted run passed all 11 checks for the self-contained SVL
+The final combined targeted run passed all 12 checks for the self-contained SVL
 reference/examples, surfaced workspace failures, and owned short Tester paths.
-The package contributors also passed 12 SDK/reference/workspace checks and 14
+The package contributors also passed 12 SDK/reference/workspace checks and 15
 MT5 offline checks; these are overlapping targeted runs, not additive totals.
 
 Actual HostWorkspace/Pi execution verified timeout, output-limit and cancellation
@@ -21,7 +21,10 @@ symbol's existing history/ticks. A real macOS native Tester run passed in 58
 seconds and produced summary/equity/deals/trace data with one simulated trade;
 owned processes were cleaned up. This is Tester evidence, not live brokerage
 execution or Windows/Linux acceptance. Unconfirmed cleanup preserves the owned
-runner for diagnosis.
+runner for diagnosis. A complete staging/failure regression injects unconfirmed
+native process cleanup followed by a diagnostic ENOSPC error. The original cleanup
+error and unknown job state survive, and the EX5 runner remains present; diagnostic
+writes cannot downgrade that independent preservation decision.
 
 Publication uses the pre-merge semantic gate described in [PUBLISHING.md](PUBLISHING.md).
 Automated review records and behavior tests remain distinct from human approval.
