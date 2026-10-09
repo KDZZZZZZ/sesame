@@ -1,18 +1,46 @@
 {
   "id": "sesame/qmt",
-  "title": "QMT 只读行情与账户",
-  "description": "可选 Windows MiniQMT 适配：A股品种/报价、现金账户/股票持仓，以及原生当日委托成交查询。复用现有券商授权与 Python，缺失依赖显式准备。",
+  "title": "QMT 行情与股票账户",
+  "description": "可选 Windows MiniQMT：A股日线、报价、股票账户、当日委托成交，以及显式授权的限价下单和撤单。既有配置优先；缺失依赖按需准备。",
   "apiVersion": "1",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "MIT",
   "default_state": "discoverable",
   "entry": "index.js",
-  "tool_names": ["qmt_environment", "qmt_configure", "qmt_read"],
-  "main_tool_names": ["qmt_environment", "qmt_configure"],
+  "tool_names": [
+    "qmt_environment",
+    "qmt_configure",
+    "qmt_read",
+    "qmt_download_history",
+    "qmt_order",
+    "qmt_cancel"
+  ],
+  "main_tool_names": [
+    "qmt_environment",
+    "qmt_configure",
+    "qmt_download_history",
+    "qmt_order",
+    "qmt_cancel"
+  ],
   "tool_definitions": "tools.json",
-  "prompts": ["prompt.md"],
-  "skills": ["skills"],
-  "resources": ["README.md", "requirements.txt"],
-  "workers": ["worker.js"],
-  "provides": {"sesame.market": "1", "sesame.account": "1"}
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "resources": [
+    "README.md",
+    "requirements.txt"
+  ],
+  "workers": [
+    "worker.js"
+  ],
+  "provides": {
+    "sesame.market": "1",
+    "sesame.account": "1"
+  },
+  "engines": {
+    "sesame": ">=0.2.0-0"
+  }
 }

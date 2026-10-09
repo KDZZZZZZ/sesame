@@ -1,4 +1,4 @@
-"""Fixed read-only XtQuant adapter. Never accepts code, method names or orders."""
+"""Fixed XtQuant adapter. Reads plus explicit limit stock order/owned cancellation; no arbitrary code or methods."""
 import contextlib
 import datetime as dt
 import decimal
@@ -89,7 +89,7 @@ def stock(data, symbol):
 
 def query(request, data, trader_type, account_type):
     action, config = request["action"], request["config"]
-    if action in ("search", "describe", "quotes"):
+    if action in ("search", "describe", "quotes", "bars", "download_history"):
         try:
             source = connect_market(data, config)
             if action == "search":
@@ -110,6 +110,29 @@ def query(request, data, trader_type, account_type):
             details = [stock(data, symbol) for symbol in symbols]
             if action == "describe":
                 return {"items": details, "source": source}
+            if action in ("bars", "download_history"):
+                need(len(symbols) == 1, "Daily bars require exactly one stock", "INVALID_ARGUMENT")
+                start, end = request.get("start", ""), request.get("end", "")
+                need(all(isinstance(x, str) and len(x) == 8 and x.isdigit() for x in (start, end)) and start <= end, "Provide ordered YYYYMMDD bounds", "INVALID_ARGUMENT")
+                try:
+                    first, last = [dt.datetime.strptime(x, "%Y%m%d").date() for x in (start, end)]
+                except ValueError:
+                    raise Failure("INVALID_ARGUMENT", "Invalid calendar date")
+                need(0 <= (last-first).days <= 3660, "Daily range exceeds ten years", "INVALID_ARGUMENT")
+                for name in (["get_market_data_ex"] + (["download_history_data"] if action == "download_history" else [])):
+                    need(callable(getattr(data, name, None)), "Installed XtQuant is missing " + name, "PREREQUISITE_REQUIRED")
+                if action == "download_history":
+                    data.download_history_data(symbols[0], period="1d", start_time=start, end_time=end)
+                frames = data.get_market_data_ex(["time", "open", "high", "low", "close", "volume"], symbols, period="1d", start_time=start, end_time=end, count=-1, dividend_type="none", fill_data=False)
+                need(isinstance(frames, dict) and symbols[0] in frames, "Native daily history is unavailable; explicitly download the required range first")
+                frame = frames[symbols[0]]
+                need(hasattr(frame, "to_dict"), "Native daily history has no supported table")
+                rows = frame.to_dict("records")
+                need(len(rows) <= 20000, "Daily history exceeds budget", "RESOURCE_EXHAUSTED")
+                # Latest native full-tick carries current-day OHLC; do not synthesize minute bars.
+                ticks = data.get_full_tick(symbols) if request.get("forming") else {}
+                tick = ticks.get(symbols[0]) if isinstance(ticks, dict) else None
+                return {"items": scalar(rows), "tick": scalar(tick), "source": source, "coverage": {"scope": "local_cached_daily_history", "complete_history": False, "download_requested": action == "download_history"}}
             ticks = data.get_full_tick(symbols)
             need(isinstance(ticks, dict), "Native quote query failed")
             missing = [s for s in symbols if not isinstance(ticks.get(s), dict) or not ticks[s]]
@@ -117,7 +140,7 @@ def query(request, data, trader_type, account_type):
             return {"items": [{"symbol": s, "tick": scalar(ticks[s])} for s in symbols], "source": source}
         finally:
             data.disconnect()
-    need(action in ("asset", "positions", "orders", "fills"), "Read-only action is not supported", "UNSUPPORTED_CAPABILITY")
+    need(action in ("asset", "positions", "orders", "fills", "order", "cancel"), "Action is not supported", "UNSUPPORTED_CAPABILITY")
     need(config.get("account_id") and Path(config.get("userdata_directory", "")).is_dir(), "Configure the actual account and existing userdata_mini directory", "PREREQUISITE_REQUIRED")
     trader = trader_type(config["userdata_directory"], secrets.randbelow(2**30 - 1) + 1)
     try:
@@ -125,6 +148,36 @@ def query(request, data, trader_type, account_type):
         need(trader.connect() == 0, "MiniQMT trading connection failed; use the authorized running terminal")
         account = account_type(config["account_id"], "STOCK")
         need(trader.subscribe(account) == 0, "MiniQMT did not authorize subscription to the configured STOCK account", "PREREQUISITE_REQUIRED")
+        if action in ("order", "cancel"):
+            need(request.get("account_id") == config["account_id"], "Explicit account does not match configured account", "INVALID_ARGUMENT")
+            from xtquant import xtconstant
+            if action == "order":
+                symbol, side = request.get("symbol"), request.get("side")
+                shares, price = request.get("shares"), request.get("price")
+                need(isinstance(shares, str) and shares.isdigit() and 0 < int(shares) <= 2147483647 and str(int(shares)) == shares, "Shares must be a positive canonical integer <= 2147483647", "INVALID_ARGUMENT")
+                need(side in ("buy", "sell"), "Side must be buy or sell", "INVALID_ARGUMENT")
+                try:
+                    number = decimal.Decimal(price)
+                    need(number.is_finite() and number > 0 and math.isfinite(float(number)) and float(number) > 0, "Invalid limit price", "INVALID_ARGUMENT")
+                except (decimal.InvalidOperation, TypeError):
+                    raise Failure("INVALID_ARGUMENT", "Invalid limit price")
+                try:
+                    connect_market(data, config)
+                    stock(data, symbol)
+                finally:
+                    data.disconnect()
+                order_id = trader.order_stock(account, symbol, xtconstant.STOCK_BUY if side == "buy" else xtconstant.STOCK_SELL, int(shares), xtconstant.FIX_PRICE, float(number), "Sesame", request["remark"])
+                need(type(order_id) is int and order_id > 0, "Broker rejected the submission; no accepted order ID was returned", "BROKER_REJECTED")
+                return {"order_id": str(order_id), "status": "submitted", "execution_confirmed": False}
+            order_id = request.get("order_id")
+            need(isinstance(order_id, str) and order_id.isdigit() and 0 < int(order_id) <= 9223372036854775807, "Invalid native order ID", "INVALID_ARGUMENT")
+            rows = trader.query_stock_orders(account)
+            need(rows is not None, "Cannot verify order ownership", "AMBIGUOUS_SOURCE_RESULT")
+            matched = [r for r in rows if str(getattr(r, "order_id", "")) == order_id]
+            need(len(matched) == 1 and str(getattr(matched[0], "account_id", "")) == config["account_id"] and getattr(matched[0], "order_remark", None) == request.get("remark"), "Order ownership does not match the original Sesame submission", "INVALID_ARGUMENT")
+            result = trader.cancel_order_stock(account, int(order_id))
+            need(result == 0, "Broker rejected cancel submission", "BROKER_REJECTED")
+            return {"order_id": order_id, "status": "cancel_requested", "cancellation_confirmed": False}
         if action == "asset":
             value = trader.query_stock_asset(account)
             need(value is not None, "Asset query failed")
@@ -135,7 +188,7 @@ def query(request, data, trader_type, account_type):
         need(isinstance(values, (list, tuple)) and len(values) <= 20000, "Native list failed or exceeded 20000 records")
         result = [fields(v, action, config["account_id"]) for v in values]
         # Positions use share units only after the actual instrument type was checked.
-        if action == "positions" and result:
+        if action in ("positions", "orders", "fills") and result:
             try:
                 connect_market(data, config)
                 for symbol in sorted(set(v["stock_code"] for v in result)):
