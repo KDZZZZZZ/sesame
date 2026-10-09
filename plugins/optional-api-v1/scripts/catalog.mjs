@@ -11,7 +11,7 @@ const commit = take('--source-commit') ?? current?.sourceCommit;
 if (!/^[a-f0-9]{40}$/.test(commit)) throw new Error('A fixed 40-character public source commit is required');
 const lock = buildLock(root);
 const requirements = {
-  akshare: 'Existing compatible native Python/AKShare is reused; explicit preparation can install a private dependency environment. Market endpoints may fail due to network or upstream restrictions. No streaming or trading.',
+  akshare: 'Existing compatible native Python/AKShare is reused; explicit preparation can install a private dependency environment. Read-only quotes and daily bars are polled no faster than 60 seconds, not an exchange tick feed. Observed quotes may have unknown freshness; upstream failures remain explicit. No trading.',
   qmt: 'Native Windows x64, compatible Python/XtQuant and an existing broker-authorized MiniQMT are required. No terminal download/start or trade action occurs on load. macOS/Linux are not QMT execution hosts.',
   vnpy: 'Native 64-bit Python 3.10–3.13 with vnpy 4.5.0 and vnpy_ctastrategy 1.4.1; inspect/reuse before explicit preparation. Fixed bars and authored Python run as the current user. Backtesting only; no gateway/account trading.',
 };
