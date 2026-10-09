@@ -59,7 +59,7 @@ def download(item,directory,deadline,budget,opener=urllib.request.urlopen):
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--directory',required=True);parser.add_argument('--report',required=True);parser.add_argument('--seconds',type=int,default=420);parser.add_argument('--bytes',type=int,default=64*1024*1024);args=parser.parse_args()
     directory=Path(args.directory);directory.mkdir(parents=True,exist_ok=True);manifest=directory/'sources.json';items=json.loads(manifest.read_text()) if manifest.exists() else []
-    deadline=time.monotonic()+min(420,max(1,args.seconds));budget=min(64*1024*1024,max(1,args.bytes));used=0;failure=None
+    deadline=time.monotonic()+min(420,max(1,args.seconds));budget=min(64*1024*1024,max(1,args.bytes));used=0;failure=None;verified=set()
     try:
         if not items:
             tags=set(sys_tags())
@@ -81,9 +81,10 @@ def main():
             finally:
                 after=target.stat().st_size if target.exists() else partial.stat().st_size if partial.exists() else 0
                 used+=max(0,after-before)
-            if not done:break
+            if done:verified.add(item['filename'])
+            else:break
     except Exception as cause:failure=f'{type(cause).__name__}: {cause}'
-    progress=[{**i,'downloadedBytes':min(i['size'],(directory/i['filename']).stat().st_size if (directory/i['filename']).exists() else (directory/(i['filename']+'.part')).stat().st_size if (directory/(i['filename']+'.part')).exists() else 0),'complete':(directory/i['filename']).exists()} for i in items]
+    progress=[{**i,'downloadedBytes':min(i['size'],(directory/i['filename']).stat().st_size if (directory/i['filename']).exists() else (directory/(i['filename']+'.part')).stat().st_size if (directory/(i['filename']+'.part')).exists() else 0),'complete':i['filename'] in verified} for i in items]
     result={'complete':bool(items) and all(i['complete'] for i in progress) and not failure,'bytesThisCall':used,'wheels':progress,'error':failure,'observedAt':int(time.time()*1000)}
     save(Path(args.report),result);print(json.dumps(result))
 if __name__=='__main__':main()

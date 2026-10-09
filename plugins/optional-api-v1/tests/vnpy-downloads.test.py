@@ -45,6 +45,15 @@ class Resume(unittest.TestCase):
             with patch.object(module,'download',lambda *a:original(*a,opener=lambda *_a,**_k:Broken(b'12345678',0))),patch.object(sys,'argv',['download','--directory',d,'--report',str(report)]),patch.object(module.urllib.request,'urlopen',lambda *_a,**_k:Broken(b'12345678',0)),patch('builtins.print'):
                 module.main()
             result=json.loads(report.read_text());self.assertEqual(result['bytesThisCall'],3);self.assertIn('connection dropped',result['error']);self.assertFalse(result['complete'])
+    def test_expired_budget_never_marks_unverified_cached_wheels_complete(self):
+        for stop in [0,1]:
+            with self.subTest(verified=stop),tempfile.TemporaryDirectory() as d:
+                p=pathlib.Path(d);items=[{'name':n,'version':v,'filename':n+'.whl','url':'https://files.pythonhosted.org/test.whl','sha256':hashlib.sha256(b'expected').hexdigest(),'size':8} for n,v in module.PACKAGES.items()];(p/'sources.json').write_text(json.dumps(items));report=p/'report.json'
+                for i in items:(p/i['filename']).write_bytes(b'corrupt!')
+                clock=iter([0]+[0]*stop+[1000]*10)
+                with patch.object(sys,'argv',['download','--directory',d,'--report',str(report)]),patch.object(module.time,'monotonic',lambda:next(clock)),patch.object(module,'download',lambda *a:(True,0)),patch('builtins.print'):
+                    module.main()
+                r=json.loads(report.read_text());self.assertFalse(r['complete']);self.assertEqual(sum(w['complete'] for w in r['wheels']),stop)
     def test_corrupt_complete_archive_is_not_accepted(self):
         with tempfile.TemporaryDirectory() as d:
             p=pathlib.Path(d);(p/'test.whl').write_bytes(b'123');item={'filename':'test.whl','url':'https://files.pythonhosted.org/test.whl','sha256':'a'*64,'size':3}
