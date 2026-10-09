@@ -104,6 +104,32 @@ The gate ran trusted main revision `6937305ba021bb20a0f0b022fdc18bede3eca383`, c
 
 This release contains AKShare 1.0.2, QMT 1.0.0 and vn.py 1.0.1. A fresh test fixture downloaded the three immutable public catalog packages, verified their files, installed/loaded them and called their environment/status tools in the same Pi session (one integration test, 20.2 seconds). It used an existing compatible vn.py environment; it did not install dependencies or exercise a new model decision, full fresh Qt installation, authorized Windows QMT terminal or brokerage trade. The catalog source remains `373bb390c8903688105a88f51b33960f8665187a`.
 
+# Development bundle 11 validation
+
+Only MT5 changes, from 1.1.7 to 1.1.8; all other 18 package versions and file
+trees remain those of bundle 10. The completed Tester configuration held typed
+SVL parameters while its native input representation held strings. Reusing the
+native representation during mount observation could reject an integer before
+native startup. Integer strings are now converted only when they represent safe
+integers, and booleans accept explicit true/false or 1/0 values without general
+truthiness conversion. Quantity and money wrappers must match their declared
+unit or currency. Existing SVL type/constraint validation still applies.
+
+A deployment save writes the record before notifying the observer. If observer
+publication then fails, mount recovery now reads the latest persisted state and
+saves a failed or unknown outcome before optional stop-file I/O. It retains any
+durable native-start intent or chart reference even if the caller had not yet
+received the saved object. A restart marks only an unambiguously pre-native
+preparing record as failed; records with startup, chart, output, staged expert,
+command or native evidence remain unknown. The old request key returns its old
+record and cannot silently recreate or resume a mount.
+
+The author passed 20 targeted checks. Read-only inspection of existing stored
+records confirmed the string-versus-typed parameter representation and the
+pre-native orphan; it did not modify the live database. This candidate has not
+started a real terminal, mounted an EA or placed a trade. Published-package
+native acceptance remains separate from these controlled regressions.
+
 # Development bundle 10 validation
 
 Only MT5 changes, from 1.1.6 to 1.1.7; the other 18 package versions and file
