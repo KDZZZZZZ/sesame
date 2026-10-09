@@ -13,10 +13,10 @@ It does not supply application secrets or install third-party runtime libraries.
 SDK-dependent plugin suites use `npm run test:sdk` with the matching application's
 public loader supplied explicitly as `SESAME_PLUGIN_SDK_LOADER`; they are not
 counted as passing merely because the portable source checks pass.
-The combined SDK run currently has 79 checks: 68 pass and 11 Windows-specific
+The combined SDK run has 108 checks: 97 pass and 11 Windows-specific
 checks retain their existing platform skips on macOS. Coverage includes MT5
 decimal values, identity, native process receipts, transport, connection import
-and controlled workspace resources. `npm run test:python` passes 26 compiler
+and controlled workspace resources. `npm run test:python` passes 30 compiler
 channel, snapshot and entry checks with explicit process fixtures.
 
 The deterministic archive was extracted by the matching application's actual
@@ -74,11 +74,19 @@ disabled policy, readonly package files, persistent plugin data and host-secret
 isolation passed. HTTP credentials stayed bound to the exact connection URL;
 schema failures and disconnected calls did not trigger automatic call replay.
 
-Native MT5 compilation, broker execution and target equivalence require
-their own target evidence; none is inferred from parser samples or SVL replay.
+A separate macOS integration ran three real isolated MetaEditor compilation
+cases, including rejection of a host include path. This is compiler evidence;
+broker execution, native backtesting and translation equivalence still require
+their own target evidence and are not inferred from parser samples or SVL replay.
+That run used the verified integration execution bundle. The final guest-resource
+extraction and deadline fix passed the Python boundary checks above; a rebuilt
+native runtime with those final resources still needs a separate native run.
 
-Browser navigation containment is a host responsibility. A report iframe CSP
-alone does not prevent an authored script from navigating its own frame. The host
-must block report-frame navigation before a request is sent; revoking its bridge
-after a load event is insufficient. This boundary was reported to the host
-implementation and must be included in final desktop integration validation.
+The actual Electron frame-policy test confirmed that an authored subframe
+navigation made zero requests to its target, while the permitted fixed local
+document loaded once. The host blocks navigation before sending a request; iframe
+CSP and revoking a bridge after navigation are not sufficient by themselves.
+Twelve additional Electron renderer checks passed, covering network, file and
+WebRTC isolation, desktop/mobile rendering, trusted clicks, concurrent inspection,
+loop and memory limits, cancellation and utility-process IPC. These checks apply
+to the matching development host, not to an arbitrary HTML viewer.
