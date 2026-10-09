@@ -60,5 +60,16 @@ export async function readSemanticReview(pr, reviews, api, graphql) {
     const result = await api(`/collaborators/${encodeURIComponent(author)}/permission`, { allowMissing: true });
     return [author, ['admin', 'maintain'].find(role => result?.permission === role || result?.role_name === role) ?? result?.permission];
   })));
-  return semanticReviewEvidence(pr, reviews, comments, threads, permissions);
+  const evidence = semanticReviewEvidence(pr, reviews, comments, threads, permissions);
+  return { ...evidence, resolvedThreadIds: threads.map(thread => thread.id).sort() };
+}
+
+export function validateGateSnapshot(pr, semantic, snapshot, run, artifact, workflowId) {
+  const merged = time(pr.merged_at), checked = time(snapshot.checkedAt), started = time(run.run_started_at), completed = time(run.updated_at), created = time(artifact.created_at);
+  assert(pr.merged === true && Number.isFinite(merged), 'Published review gate needs an actual merge time');
+  assert(run.workflow_id === workflowId && run.path === '.github/workflows/plugin-semantic-review.yml' && ['issue_comment', 'workflow_dispatch'].includes(run.event) && run.head_branch === 'main' && run.status === 'completed' && run.conclusion === 'success', 'Semantic gate must come from the successful trusted main workflow');
+  assert([checked, started, completed, created].every(Number.isFinite) && started <= checked && checked <= created && created <= completed && completed <= merged, 'Semantic gate must complete before merge; post-merge resolution cannot repair it');
+  assert(snapshot.schemaVersion === 1 && snapshot.repository === 'KDZZZZZZ/sesame' && snapshot.pullRequest === pr.number && snapshot.headSha === pr.head.sha && snapshot.merged === false, 'Semantic gate snapshot identifies a different or already merged PR');
+  assert(JSON.stringify(snapshot.semantic) === JSON.stringify(semantic), 'Semantic review or resolved discussion set differs from the pre-merge snapshot');
+  return { runId: run.id, url: run.html_url, workflowId, workflowRevision: run.head_sha, checkedAt: snapshot.checkedAt, completedAt: run.updated_at, artifactId: artifact.id };
 }

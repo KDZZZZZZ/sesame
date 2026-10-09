@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { REVIEW_MARKER, semanticReviewEvidence, readSemanticReview } from './semantic-review.mjs';
+import { REVIEW_MARKER, semanticReviewEvidence, readSemanticReview, validateGateSnapshot } from './semantic-review.mjs';
 
 const sha = 'a'.repeat(40), merge = '2026-10-09T16:00:00Z';
 const pr = () => ({ number: 10, merged: true, merged_at: merge, head: { sha } });
@@ -39,4 +39,19 @@ test('review collection verifies thread pages and authenticated recorder role, w
   const result = await readSemanticReview(pr(), [], async path => { paths.push(path); return path.includes('/comments') ? [comment()] : { permission: 'write', role_name: 'maintain' }; }, async ({ variables }) => { cursors.push(variables.cursor); return { data: { repository: { pullRequest: { reviewThreads: { nodes: [{ isResolved: true }], pageInfo: { hasNextPage: variables.cursor === null, endCursor: 'next' } } } } } }; });
   assert.equal(result.recordedBy.role, 'maintain'); assert.deepEqual(cursors, [null, 'next']); assert(paths.includes('/collaborators/maintainer/permission'));
   await assert.rejects(() => readSemanticReview(pr(), [], async () => [], async () => ({ errors: [{ message: 'denied' }] })), /Cannot verify/);
+});
+
+test('publication requires trusted pre-merge workflow evidence of the resolved discussion set', () => {
+  const semantic = { ...check(), resolvedThreadIds: ['thread-1'] };
+  const snapshot = { schemaVersion: 1, repository: 'KDZZZZZZ/sesame', pullRequest: 10, headSha: sha, merged: false, checkedAt: '2026-10-09T15:46:30Z', semantic };
+  const run = { id: 50, workflow_id: 20, path: '.github/workflows/plugin-semantic-review.yml', event: 'issue_comment', head_branch: 'main', head_sha: 'c'.repeat(40), status: 'completed', conclusion: 'success', run_started_at: '2026-10-09T15:46:00Z', updated_at: '2026-10-09T15:48:00Z', html_url: 'https://github.com/KDZZZZZZ/sesame/actions/runs/50' };
+  const artifact = { id: 60, created_at: '2026-10-09T15:47:00Z' };
+  assert.equal(validateGateSnapshot(pr(), semantic, snapshot, run, artifact, 20).runId, 50);
+  for (const change of [{ workflow_id: 21 }, { event: 'pull_request_review' }, { head_branch: 'untrusted' }, { conclusion: 'failure' }]) assert.throws(() => validateGateSnapshot(pr(), semantic, snapshot, { ...run, ...change }, artifact, 20), /trusted main workflow/);
+  for (const change of [{ updated_at: '2026-10-09T16:01:00Z' }, { run_started_at: '2026-10-09T15:47:00Z' }]) assert.throws(() => validateGateSnapshot(pr(), semantic, snapshot, { ...run, ...change }, artifact, 20), /before merge/);
+  for (const change of [{ merged: true }, { headSha: 'b'.repeat(40) }, { pullRequest: 11 }]) assert.throws(() => validateGateSnapshot(pr(), semantic, { ...snapshot, ...change }, run, artifact, 20), /different or already merged/);
+  // A thread first resolved after merge has no passing pre-merge snapshot;
+  // a newly introduced discussion cannot borrow an older passing snapshot.
+  assert.throws(() => validateGateSnapshot(pr(), { ...semantic, resolvedThreadIds: ['thread-1', 'late-thread'] }, snapshot, run, artifact, 20), /differs from the pre-merge/);
+  assert.throws(() => validateGateSnapshot(pr(), semantic, { ...snapshot, checkedAt: '2026-10-09T16:01:00Z' }, { ...run, updated_at: '2026-10-09T16:02:00Z' }, { ...artifact, created_at: '2026-10-09T16:01:30Z' }, 20), /before merge/);
 });

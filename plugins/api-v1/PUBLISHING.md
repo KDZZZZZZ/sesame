@@ -62,13 +62,24 @@ last edit must precede the merge. `review.json` preserves its URL, author,
 reviewer, times, scope, findings, and body SHA-256. This authenticates who recorded
 the review; it cannot independently prove the quality of an agent's reasoning.
 
-Before merging, run `Plugin semantic review gate` (automatically on review/comment
-events or with its PR-number workflow input), or run the same read-only checker:
-`node .github/scripts/release-plugins.mjs --review-check . PR_NUMBER` with a GitHub
-read token. Confirm the returned head is still the current PR head. The publishing
-workflow independently repeats the gate, so merging early cannot release new
-assets. A review written or edited after merge is rejected; use a new reviewed
-PR instead of retroactively filling in evidence.
+Before merging, run `Plugin semantic review gate` (automatically on PR comment
+events or with its PR-number workflow input). The trusted main-branch workflow
+stores an artifact identifying the open PR head, actual review and resolved
+discussion IDs. The publisher verifies the registered workflow identity, main
+revision, successful completion and artifact times **before merge**, then matches
+the current review and discussion set to that snapshot. It does not infer when a
+thread was resolved from its current `isResolved` flag; GitHub does not expose a
+resolution timestamp through this thread API. A post-merge gate run, post-merge
+resolution without a passing earlier snapshot, or new discussion absent from the
+snapshot cannot repair an early merge.
+
+For a local read-only preview, run `node .github/scripts/release-plugins.mjs
+--review-check . PR_NUMBER` with a GitHub read token; this cannot replace the
+trusted workflow artifact. Confirm the returned head is still current before
+merging. A review written or edited after merge is rejected; use a new reviewed
+PR instead of retroactively filling in evidence. After publication, the durable
+release review record preserves the gate identity and snapshot; historical
+retries do not depend on the workflow artifact's 90-day retention period.
 
 Merging the PR into main triggers `Plugin API 1 release`. It verifies the merged
 PR, successful GitHub Actions checks and completed semantic review on its exact

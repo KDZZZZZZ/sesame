@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { buildLock, createArchive, sha256 } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
-import { readSemanticReview } from './semantic-review.mjs';
+import { readSemanticReview, validateGateSnapshot } from './semantic-review.mjs';
 
 const REPOSITORY = 'KDZZZZZZ/sesame';
 const CHECKS = [{ name: 'package-static-review', path: '.github/workflows/plugin-api-v1.yml' }, { name: 'catalog-static-review', path: '.github/workflows/plugin-catalog.yml' }];
@@ -102,6 +102,34 @@ async function trustedChecks(pr) {
   return checks;
 }
 
+async function preMergeGate(repository, pr, semantic) {
+  const workflow = await api('/actions/workflows/plugin-semantic-review.yml');
+  const { workflow_runs: runs } = await api(`/actions/workflows/${workflow.id}/runs?branch=main&status=success&per_page=100`);
+  for (const run of runs.filter(item => item.workflow_id === workflow.id && item.path === '.github/workflows/plugin-semantic-review.yml' && ['issue_comment', 'workflow_dispatch'].includes(item.event) && Date.parse(item.updated_at) <= Date.parse(pr.merged_at)).sort((a, b) => b.id - a.id)) {
+    const { artifacts } = await api(`/actions/runs/${run.id}/artifacts?per_page=100`);
+    const matches = artifacts.filter(item => item.name === `plugin-semantic-review-${pr.number}`);
+    if (!matches.length) continue;
+    assert(matches.length === 1 && !matches[0].expired && matches[0].size_in_bytes <= 1024 * 1024, 'Invalid or expired semantic gate artifact');
+    const artifact = matches[0];
+    const response = await fetch(`https://api.github.com/repos/${REPOSITORY}/actions/artifacts/${artifact.id}/zip`, { headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}`, Accept: 'application/vnd.github+json' } });
+    assert(response.ok, 'Cannot read semantic gate artifact');
+    const bytes = Buffer.from(await response.arrayBuffer());
+    assert(bytes.length <= 1024 * 1024 && (!artifact.digest || artifact.digest === `sha256:${sha256(bytes)}`), 'Semantic gate artifact digest or size differs');
+    const temporary = mkdtempSync(join(tmpdir(), 'sesame-review-gate-'));
+    let snapshot;
+    try {
+      const archive = join(temporary, 'gate.zip'); writeFileSync(archive, bytes);
+      assert(execFileSync('unzip', ['-Z1', archive], { timeout: 10000, maxBuffer: 4096 }).toString().trim() === 'review-gate.json', 'Unexpected files in semantic gate artifact');
+      snapshot = JSON.parse(execFileSync('unzip', ['-p', archive, 'review-gate.json'], { timeout: 10000, maxBuffer: 1024 * 1024 }));
+    } finally { rmSync(temporary, { recursive: true, force: true }); }
+    if (snapshot.headSha !== pr.head.sha) continue;
+    const evidence = validateGateSnapshot(pr, semantic, snapshot, run, artifact, workflow.id);
+    git(repository, ['merge-base', '--is-ancestor', run.head_sha, pr.merge_commit_sha]);
+    return { ...evidence, artifactSha256: sha256(bytes) };
+  }
+  throw new Error('Missing successful exact-head semantic gate snapshot completed before merge');
+}
+
 async function findRelease(tag) {
   const published = await api(`/releases/tags/${tag}`, { allowMissing: true });
   if (published) return published;
@@ -182,10 +210,11 @@ async function publish(repository, relative, prepared) {
   // now needs a semantic review completed before merge, not a late comment.
   assert(evidence.automated.every(check => Number.isFinite(Date.parse(check.completedAt)) && Date.parse(check.completedAt) <= Date.parse(pr.merged_at)), 'Required static checks must finish before merge');
   evidence.semantic = await readSemanticReview(pr, reviews, api, graphql);
+  evidence.semanticGate = await preMergeGate(repository, pr, evidence.semantic);
   evidence.publication.trigger = 'main branch workflow after merged PR, completed pre-merge exact-head semantic review and static checks';
   if (release?.assets.some(asset => asset.name === 'review.json')) {
     const recorded = JSON.parse(files.get('review.json'));
-    assert(JSON.stringify(recorded.semantic) === JSON.stringify(evidence.semantic), 'Draft semantic evidence changed; refusing to replace its review record');
+    assert(JSON.stringify(recorded.semantic) === JSON.stringify(evidence.semantic) && JSON.stringify(recorded.semanticGate) === JSON.stringify(evidence.semanticGate), 'Draft semantic evidence changed; refusing to replace its review record');
   } else files.set('review.json', Buffer.from(JSON.stringify(evidence, null, 2) + '\n'));
   if (!release) {
     if (!tag) assert((await api('/git/ref/heads/main')).object.sha === head, 'Main advanced during publication; rerun at its current revision');
@@ -210,7 +239,11 @@ async function main() {
     const pr = await api(`/pulls/${number}`);
     assert(pr.base.ref === 'main' && pr.head.repo.full_name === REPOSITORY, 'Review check requires a repository PR targeting main');
     await trustedChecks(pr);
-    console.log(JSON.stringify(await readSemanticReview(pr, await allReviews(number), api, graphql), null, 2)); return;
+    assert(pr.merged === false && pr.state === 'open', 'Semantic gate snapshot must be captured while the PR is open before merge');
+    const semantic = await readSemanticReview(pr, await allReviews(number), api, graphql);
+    const current = await api(`/pulls/${number}`);
+    assert(current.merged === false && current.state === 'open' && current.head.sha === pr.head.sha, 'PR changed or merged during semantic review check');
+    console.log(JSON.stringify({ schemaVersion: 1, repository: REPOSITORY, pullRequest: number, headSha: pr.head.sha, merged: false, checkedAt: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'), semantic }, null, 2)); return;
   }
   assert(['--check', '--build', '--publish'].includes(mode), 'Use --check, --build, --publish or --review-check [repository]');
   const directory = join(repository, '.github/plugin-releases');
