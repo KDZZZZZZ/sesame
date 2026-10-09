@@ -129,13 +129,23 @@ export function mapBar(row, { seriesId, server, spec, nextOpenTime, realVolumeSu
     turnover: moneyValue(row.turnover, row.currency), isClosed, closure: isClosed ? 'source' : 'unknown' });
 }
 
+function accountMode(row) {
+  // Official MCP reports account.type; the native Python API uses trade_mode.
+  // Conflicting or unrecognized supplied values remain unknown. Broker/server
+  // labels cannot establish whether an account is safe for demo execution.
+  const modes = [row.type, row.trade_mode, row.mode].filter(present).map(input => {
+    const mode = String(input).trim().toLowerCase().replace(/^account_trade_mode_/, '');
+    return ['real', 'live', '2'].includes(mode) ? 'live' : ['demo', '0', 'contest', '1'].includes(mode) ? 'demo' : 'unknown';
+  });
+  return modes.length && modes.every(mode => mode === modes[0]) ? modes[0] : 'unknown';
+}
+
 export function mapAccountSummary(row, { connectionId, server = row.server }) {
   const login = nativeId(row.login);
-  const nativeMode = String(row.trade_mode ?? row.mode ?? '').toLowerCase().replace('account_trade_mode_', '');
-  const marginMode = String(row.margin_mode ?? '').toLowerCase().replace('account_margin_mode_', '');
+  const marginMode = String(row.margin_mode ?? '').trim().toLowerCase().replace(/^account_margin_mode_/, '');
   return {
     ref: { connectionId, accountId: accountIdentity(server, login) }, name: String(first(row.name, login)), broker: String(first(row.company, row.broker, server)), server: textValue(server), nativeLogin: value(login),
-    mode: ['real', 'live', '2'].includes(nativeMode) ? 'live' : ['demo', '0', 'contest', '1'].includes(nativeMode) ? 'demo' : 'unknown',
+    mode: accountMode(row),
     baseCurrency: textValue(row.currency), positionMode: ['retail_hedging', '2', 'hedging'].includes(marginMode) ? 'hedging' : ['retail_netting', 'exchange', '0', '1', 'netting'].includes(marginMode) ? 'netting' : 'unknown',
   };
 }
@@ -151,7 +161,11 @@ export function mapAccountSnapshot(row, context) {
     balance: moneyValue(row.balance, currency), equity: moneyValue(row.equity, currency), available: moneyValue(first(row.margin_free, row.free_margin), currency),
     buyingPower: unsupported('MT5 does not expose a standardized buying-power amount'), unrealizedPnl: moneyValue(row.profit, currency), realizedPnl: unknown('No realized-PnL period was reported by the account snapshot'),
     margin: { used: moneyValue(row.margin, currency), free: moneyValue(first(row.margin_free, row.free_margin), currency), levelRatio: present(row.margin_level) ? value(percentRatio(row.margin_level)) : unknown('The native source did not report margin level'), maintenance: moneyValue(row.margin_maintenance, currency) },
-    restrictions: ['trade_allowed', 'trade_expert'].flatMap(key => row[key] === false ? [{ code: `MT5_${key.toUpperCase()}`, description: `The native account reports ${key}=false`, observedAt: context.observedAt }] : []),
+    restrictions: [
+      ...(row.read_only === true ? [{ code: 'MT5_READ_ONLY', description: 'The native account reports read_only=true', observedAt: context.observedAt }] : []),
+      ...['trade_allowed', 'trade_expert'].flatMap(key => row[key] === false ? [{ code: `MT5_${key.toUpperCase()}`, description: `The native account reports ${key}=false`, observedAt: context.observedAt }] : []),
+      ...['experts_trade_allowed', 'mcp_trade_allowed'].flatMap(key => context.terminal?.[key] === false ? [{ code: `MT5_TERMINAL_${key.toUpperCase()}`, description: `The connected native terminal reports ${key}=false`, observedAt: context.observedAt }] : []),
+    ],
   };
 }
 
