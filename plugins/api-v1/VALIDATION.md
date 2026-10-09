@@ -131,6 +131,17 @@ preparation cleanup. This candidate was not used to restart a real terminal,
 prepare algorithm trading, mount an EA or place an order. End-to-end native
 acceptance remains separate and must use the reviewed published package.
 
+Independent review reran all 16 public checks and passed 16 additional checks
+(11 top-level checks and five subchecks). They used a real temporary Store, the
+public HostContext and actual Runtime configuration methods to check lock
+ownership, persisted connection auditing and reopening without replay. Controlled
+native substitutes covered full preparation success/failure/cleanup; delayed
+probes crossing the preparation epoch could not start, configure or reset the
+terminal. Fresh authentication, connection-reset and timeout responses did not
+trigger a second startup. Log offsets, bounded new tails and removal of secrets
+from diagnostic output were also checked. This is not a full Runtime.init or
+real-terminal acceptance test, and it makes no cross-process locking claim.
+
 # Development bundle 9 validation
 
 Only MT5 changes, from 1.1.5 to 1.1.6; the other 18 package versions and file
