@@ -1,0 +1,65 @@
+[
+  {
+    "name": "mt5_chart",
+    "label": "mt5_chart",
+    "description": "调用 mt5-charts 所属的官方能力。先从 mt5_catalog 获取精确 tool / inputSchema；其他插件的方法不能从此入口调用。command_id 沿用同一动作的稳定 ID；结果 unknown 时先核对真实状态。save_as 可保存大 JSON。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "server",
+        "tool",
+        "arguments",
+        "command_id"
+      ],
+      "properties": {
+        "server": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "terminal"
+            },
+            {
+              "type": "string",
+              "const": "metaeditor"
+            },
+            {
+              "type": "string",
+              "const": "marketdata"
+            },
+            {
+              "type": "string",
+              "const": "python"
+            },
+            {
+              "type": "string",
+              "const": "launcher"
+            }
+          ]
+        },
+        "tool": {
+          "type": "string",
+          "description": "目录返回的精确方法名",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        },
+        "command_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{16,128}$",
+          "description": "唯一稳定 ID，推荐 UUID；同一动作重试必须沿用"
+        },
+        "save_as": {
+          "type": "string",
+          "description": "完整结果的 /work JSON 文件路径",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]

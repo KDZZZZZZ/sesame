@@ -1,0 +1,31 @@
+{
+  "id": "mt5-charts",
+  "title": "MT5 图表配置",
+  "description": "添加或移除 Market Watch 品种、图表指标。EA、模板与图表开关归交易插件。",
+  "version": "1.0.0",
+  "default_state": "discoverable",
+  "tool_names": [
+    "mt5_chart"
+  ],
+  "entry": "tools.js",
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [],
+  "tool_definitions": "tools.json",
+  "mt5_agent_tool": "mt5_chart",
+  "mt5_routes": [
+    {
+      "priority": 80,
+      "methods": [
+        "chart_add_indicator",
+        "chart_remove_indicator",
+        "add_marketwatch_symbol",
+        "remove_marketwatch_symbol"
+      ]
+    }
+  ],
+  "mcp_export": [
+    "mt5_chart"
+  ]
+}

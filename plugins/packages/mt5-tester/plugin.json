@@ -1,0 +1,30 @@
+{
+  "id": "mt5-tester",
+  "title": "MT5 回测优化",
+  "description": "使用原生 Tester 配置、SET 参数、回测、优化、状态、停止与报告接口。实际需要可用账户与历史数据。",
+  "version": "1.0.0",
+  "default_state": "discoverable",
+  "tool_names": [
+    "mt5_test",
+    "mt5_backtest"
+  ],
+  "entry": "tools.js",
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [],
+  "tool_definitions": "tools.json",
+  "mt5_agent_tool": "mt5_test",
+  "mt5_routes": [
+    {
+      "priority": 50,
+      "categories": [
+        "tester"
+      ]
+    }
+  ],
+  "mcp_export": [
+    "mt5_test",
+    "mt5_backtest"
+  ]
+}

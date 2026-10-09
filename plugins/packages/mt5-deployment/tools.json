@@ -1,0 +1,71 @@
+[
+  {
+    "name": "mt5_deployment",
+    "label": "mt5_deployment",
+    "description": "与面板共用的受管理挂载。先 list/check，用户要求挂载时才用 mount；必须传入检查返回的账户、构建校验值与稳定 request_id。仅支持已回测冻结 EX5。unknown 不换 ID 重试；stop 停止 EA，不平仓。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "list"
+            },
+            {
+              "type": "string",
+              "const": "check"
+            },
+            {
+              "type": "string",
+              "const": "mount"
+            },
+            {
+              "type": "string",
+              "const": "stop"
+            }
+          ]
+        },
+        "pass_id": {
+          "type": "string",
+          "description": "已成功回测的 pass_id",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "deployment_id": {
+          "type": "string",
+          "description": "挂载 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "request_id": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128
+        },
+        "login": {
+          "type": "string",
+          "description": "检查返回的账户",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "server": {
+          "type": "string",
+          "description": "检查返回的服务器",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "artifact_digest": {
+          "type": "string",
+          "description": "检查返回的冻结 EX5 摘要",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]

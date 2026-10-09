@@ -1,0 +1,43 @@
+{
+  "id": "plugin-manager",
+  "title": "插件管理",
+  "description": "发现和加载插件；主 Agent 创建、验证、测试、安装、升级、回滚及导出外部插件。",
+  "version": "1.0.0",
+  "default_state": "mounted",
+  "tool_names": [
+    "plugin_catalog",
+    "plugin_install_catalog",
+    "plugin_discover",
+    "plugin_load",
+    "plugin_read",
+    "plugin_inspect",
+    "plugin_create",
+    "plugin_validate",
+    "plugin_test",
+    "plugin_install",
+    "plugin_set_state",
+    "plugin_update",
+    "plugin_rollback",
+    "plugin_uninstall",
+    "plugin_export"
+  ],
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [],
+  "entry": "tools.js",
+  "tool_definitions": "tools.json",
+  "main_tool_names": [
+    "plugin_install_catalog",
+    "plugin_inspect",
+    "plugin_create",
+    "plugin_validate",
+    "plugin_test",
+    "plugin_install",
+    "plugin_set_state",
+    "plugin_update",
+    "plugin_rollback",
+    "plugin_uninstall",
+    "plugin_export"
+  ]
+}
