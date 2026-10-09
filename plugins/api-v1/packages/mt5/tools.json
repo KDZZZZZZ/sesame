@@ -170,7 +170,7 @@
         },
         "save_as": {
           "type": "string",
-          "description": "完整 JSON 的沙箱路径",
+          "description": "完整 JSON 的工作区路径",
           "minLength": 1,
           "maxLength": 20000
         }
@@ -943,7 +943,7 @@
   {
     "name": "mt5_compile",
     "label": "mt5_compile",
-    "description": "冻结已保存 revision、平台 SDK 和本机标准库，在隔离 Wine 环境调用 MetaEditor。成功返回 EX5 摘要；失败作为可恢复工具错误返回构建 ID、诊断与修复指引，修改 checkout 并 save 新 revision 后重试。不执行 EA。",
+    "description": "冻结已保存 revision、平台 SDK 和本机标准库，按已配置引擎调用本机 MetaEditor；默认无需虚拟机，原生进程按本次任务管理与清理。成功返回 EX5 摘要；失败作为可恢复工具错误返回构建 ID、诊断与修复指引，修改 checkout 并 save 新 revision 后重试。不执行 EA。",
     "parameters": {
       "type": "object",
       "required": [
@@ -1575,6 +1575,117 @@
             "additionalProperties": false
           },
           "maxItems": 1000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_dependencies",
+    "label": "mt5_dependencies",
+    "description": "先检查已安装的 MT5、Windows Python、Wine 与编译引擎；缺项返回插件私有目录和安装 skill。configure 只保存明确路径，不下载、不启动或替换终端。本机编译无需虚拟机；probe 核对本机依赖。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "inspect"
+            },
+            {
+              "type": "string",
+              "const": "configure"
+            }
+          ]
+        },
+        "probe": {
+          "type": "boolean"
+        },
+        "command_id": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "changes": {
+          "type": "object",
+          "properties": {
+            "terminal_directory": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096,
+                  "pattern": "^[^\\r\\n\\u0000]*$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "data_directory": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096,
+                  "pattern": "^[^\\r\\n\\u0000]*$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "python": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096,
+                  "pattern": "^[^\\r\\n\\u0000]*$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "wine": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096,
+                  "pattern": "^[^\\r\\n\\u0000]*$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "wine_prefix": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096,
+                  "pattern": "^[^\\r\\n\\u0000]*$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "minProperties": 1
         }
       },
       "additionalProperties": false

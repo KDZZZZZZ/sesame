@@ -12,7 +12,7 @@ export function runTesterProcess(native, request, { signal, onStarted = () => {}
   signal?.throwIfAborted();
   return new Promise((resolve, reject) => {
     const python = pythonPath(native), args = ['-I', '-B', '-u', winePath(worker)];
-    const child = spawnProcess(process.platform === 'win32' ? python : wineCommand(), process.platform === 'win32' ? args : [python, ...args], { env: wineEnvironment(native.directory), stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32', windowsHide: true });
+    const child = spawnProcess(process.platform === 'win32' ? python : wineCommand(native), process.platform === 'win32' ? args : [python, ...args], { env: wineEnvironment(native), stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32', windowsHide: true });
     let buffer = '', diagnostics = '', result, nativePid, protocolError, cancelTimer, watchdog, timeout, settled = false;
     const force = () => { try { process.platform === 'win32' ? child.kill() : process.kill(-child.pid, 'SIGKILL'); } catch {} };
     const cancel = () => {
@@ -42,11 +42,11 @@ export function runTesterProcess(native, request, { signal, onStarted = () => {}
       if (settled) return; settled = true;
       clearTimeout(cancelTimer); clearTimeout(watchdog); clearTimeout(timeout); signal?.removeEventListener('abort', cancel);
       if (error && nativePid === undefined) return reject(new ApiError(503, 'tester_unavailable', error.message));
-      if (protocolError || !result || buffer.trim() || result.cleanup?.confirmed !== true || result.cleanup.activeProcesses !== 0 || typeof result.ok !== 'boolean' || result.code || result.ok && nativePid === undefined) return reject(protocolError ?? cleanupError('原生 Tester Job 尚未确认清空；任务文件保留，不自动重试'));
+      if (protocolError || !result || buffer.trim() || result.cleanup?.confirmed !== true || result.cleanup.activeProcesses !== 0 || typeof result.ok !== 'boolean' || result.code || result.ok && nativePid === undefined) return reject(protocolError ?? cleanupError(`原生进程 Job 尚未确认清空；任务文件保留，不自动重试。${result?.error ?? diagnostics.slice(-500)}`));
       if (signal?.aborted || !result.ok) return reject(new Error(result.error || '回测已取消'));
       resolve({ nativePid, diagnostics, cleanup: result.cleanup });
     };
     child.once('error', finish); child.once('close', () => finish());
-    child.stdin.write(JSON.stringify(Object.fromEntries(Object.entries(request).map(([key, value]) => [key, winePath(value)]))) + '\n');
+    child.stdin.write(JSON.stringify(Object.fromEntries(Object.entries(request).map(([key, value]) => [key, key === 'kind' ? value : winePath(value)]))) + '\n');
   });
 }

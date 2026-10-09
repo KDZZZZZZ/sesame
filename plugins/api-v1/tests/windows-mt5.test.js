@@ -268,17 +268,17 @@ test('Windows compilation rejects a manifest changed after the build was frozen'
   const directory = await mkdtemp(join(tmpdir(), 'mt5agent-frozen-manifest-'));
   try {
     await writeFile(join(directory, 'manifest.json'), JSON.stringify({ files: {}, compiler_sha256: 'changed' }));
-    await assert.rejects(compileNative({ editor: join(directory, '.compiler', 'MetaEditor64.exe') }, directory, undefined, `sha256:${'0'.repeat(64)}`, undefined, { executeWorker: (entry, payload, options) => executeCompiler(payload, { directory, signal: options.signal }) }), /清单摘要/);
+    await assert.rejects(compileNative(installation(), directory, undefined, `sha256:${'0'.repeat(64)}`, undefined, { executeWorker: (entry, payload, options) => executeCompiler(payload, { directory, signal: options.signal }) }), /清单摘要/);
   } finally { await rm(directory, { recursive: true, force: true }); }
 });
 
-test('Windows compiler uses the installed isolated WSL execution environment', {
+test('Windows compiler reuses the installed native MetaEditor and process controller', {
   skip: process.platform !== 'win32' || process.env.MT5AGENT_NATIVE_TESTS !== '1',
 }, () => {
-  assert.equal(compilerDependencies(), true, 'The Windows backend must discover the WSL compiler');
+  assert.equal(compilerDependencies({native: installation()}), true, 'The Windows backend must discover the local compiler');
 });
 
-test('MT5 doctor recognizes the native Windows terminal and WSL compiler', {
+test('MT5 doctor recognizes the native Windows terminal and compiler', {
   skip: process.platform !== 'win32' || process.env.MT5AGENT_NATIVE_TESTS !== '1',
 }, () => {
   const result = spawnSync(process.execPath, [...process.execArgv, fileURLToPath(new URL('../packages/mt5/scripts/mt5.mjs', import.meta.url)), 'doctor'], { encoding: 'utf8', windowsHide: true });

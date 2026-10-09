@@ -16,11 +16,11 @@ export function compileFailure(build) {
   });
   const errors = diagnostics.filter(item => item.severity === 'error');
   const selected = errors.length ? errors : diagnostics;
-  const environment = !errors.length && /Native runtime|Runtime (boot|request) timeout|runtime_cleanup_failed|compiler bootstrap|运行环境|隔离环境/i.test(build.diagnostics);
+  const environment = !errors.length && /PREREQUISITE_REQUIRED|runtime_cleanup_failed|编译依赖|进程 Job|Wine|Python|运行环境/i.test(build.diagnostics);
   const result = {
     code: 'compile_failed', recoverable: true,
     failure_kind: errors.length ? 'source' : environment ? 'environment' : 'unknown',
-    message: environment ? '隔离编译环境未完成运行或清理，这不是策略源码错误。保留当前版本并检查环境诊断，不要反复修改策略或创建相同构建；环境恢复后再编译。未确认的 EX5 不能用于回测或挂载。'
+    message: environment ? '本机编译依赖或进程清理未就绪，这不是策略源码错误。保留当前版本并检查环境诊断，不要反复修改策略或创建相同构建；环境恢复后再编译。未确认的 EX5 不能用于回测或挂载。'
       : errors.length ? 'MetaEditor 编译未通过。根据诊断修改当前 checkout，save 新 revision 后重新调用 mt5_compile；不要对未修改的同一版本盲目重试。'
         : '编译未完成，暂无可定位的源码错误。先读取完整诊断确认原因，不要盲目修改策略或重试；未确认产物不能用于回测或挂载。',
     project_id: build.project_id, build_id: build.id, revision: build.revision,

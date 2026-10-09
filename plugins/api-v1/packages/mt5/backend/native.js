@@ -1,17 +1,15 @@
-import { compileLinux, fileManifest, linuxCompilerDependencies } from './frozen-compiler.js';
-export { compileFrozenDirectory, compileInLima, compileInWSL, fileManifest, stageFrozenBuild } from './frozen-compiler.js';
+import { fileManifest } from './frozen-compiler.js';
+export { fileManifest, stageFrozenBuild } from './frozen-compiler.js';
 import { promises as fs, existsSync, readdirSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join, resolve, posix, win32 } from 'node:path';
-import { ApiError, digest, id, requireValue } from './support.js';
-import { compilerRuntimeAvailable } from './runtime-resources.js';
+import { join, resolve } from 'node:path';
+import { ApiError, digest, requireValue } from './support.js';
 import { macPrefix, winePrefix } from './platform.js';
 import { taskRunId } from './support.js';
-import { probeLima } from './runners/lima.js';
-import { probeWSL } from './runners/wsl.js';
+import { nativeCompilerAvailable, compileLocal } from './local-compiler.js';
 
-export function installation(directory = process.env.MT5AGENT_MT5_DIR) {
-  if (directory) return resolveInstallation(directory);
+export function installation(directory = process.env.MT5AGENT_MT5_DIR, dataDirectory = null) {
+  if (directory) return resolveInstallation(directory, dataDirectory);
   if (process.platform === 'win32') {
     const windows = validInstallations([...windowsOriginCandidates(), ...windowsDefaultCandidates()]);
     return windows.length === 1 ? windows[0] : null;
@@ -67,7 +65,7 @@ function resolveInstallation(directory, discoveredDataDirectory = null) {
   directory = resolve(directory);
   const editor = ['MetaEditor64.exe', 'metaeditor64.exe'].map(name => join(directory, name)).find(existsSync);
   const terminal = join(directory, 'terminal64.exe');
-  let dataDirectory = process.env.MT5AGENT_MT5_DATA_DIR ? resolve(process.env.MT5AGENT_MT5_DATA_DIR) : discoveredDataDirectory ? resolve(discoveredDataDirectory) : directory;
+  let dataDirectory = discoveredDataDirectory ? resolve(discoveredDataDirectory) : process.env.MT5AGENT_MT5_DATA_DIR ? resolve(process.env.MT5AGENT_MT5_DATA_DIR) : directory;
   if (process.platform === 'win32' && !discoveredDataDirectory) {
     if (process.env.MT5AGENT_MT5_DATA_DIR) dataDirectory = resolve(process.env.MT5AGENT_MT5_DATA_DIR);
     else if (!existsSync(join(directory, 'MQL5/Include')) && process.env.APPDATA) {
@@ -83,40 +81,36 @@ function resolveInstallation(directory, discoveredDataDirectory = null) {
 }
 
 export function compilerDependencies(environment = {}) {
-  if (environment.runtime) return compilerRuntimeAvailable(environment.runtime) && typeof environment.executeWorker === 'function';
-  if (process.platform === 'darwin') return probeLima().compiler === true;
-  if (process.platform === 'win32') return probeWSL().compiler === true;
-  return linuxCompilerDependencies();
+  return nativeCompilerAvailable(environment.native ?? installation());
 }
 
 export async function compileNative(native, directory, signal, manifestDigest, runId, environment = {}) {
   if (runId) taskRunId(runId);
-  if (environment.runtime || ['win32', 'darwin'].includes(process.platform)) {
-    if (!native) throw new ApiError(503, 'compiler_unavailable', '需要已安装的 MT5 及可用编译环境');
-    signal?.throwIfAborted();
-    const editor = join(resolve(directory), '.compiler', 'MetaEditor64.exe');
-    if (!manifestDigest) {
-      // Direct compiler callers get the same frozen input boundary as service builds.
-      await fs.mkdir(join(directory, '.compiler'), { recursive: true });
-      if (resolve(native.editor).toLowerCase() !== editor.toLowerCase()) await fs.copyFile(native.editor, editor);
-      const files = await fileManifest(directory);
-      delete files['manifest.json'];
-      const manifestText = JSON.stringify({ compiler_sha256: files['.compiler/MetaEditor64.exe'].sha256, files }, null, 2);
-      await fs.writeFile(join(directory, 'manifest.json'), manifestText);
-      manifestDigest = digest(manifestText);
-    }
-    requireValue(typeof environment.executeWorker === 'function', '宿主没有可用的隔离执行器', 503, 'compiler_unavailable');
-    const result = await environment.executeWorker('backend/compiler-worker.js', { operation: 'compile', directory: resolve(directory), manifestDigest, runId: runId ?? null, runtime: environment.runtime ?? null }, { signal, runId, timeoutMs: 600000 });
-    requireValue(typeof result.success === 'boolean' && typeof result.diagnostics === 'string', 'Runner 编译响应无效');
-    if (result.success) {
-      requireValue(typeof result.ex5 === 'string' && result.ex5.length <= 48 * 1024 * 1024, 'Runner 编译产物无效或过大');
-      const bytes = Buffer.from(result.ex5, 'base64');
-      requireValue(bytes.length > 0 && digest(bytes) === result.ex5_sha256, 'Runner 返回的 EX5 摘要不匹配');
-      signal?.throwIfAborted();
-      await fs.writeFile(join(directory, 'Experts/Strategy.ex5'), bytes);
-    }
-    await fs.writeFile(join(directory, 'Experts/Strategy.log'), Buffer.from('\uFEFF' + (result.diagnostics ?? ''), 'utf16le'));
-    return { success: result.success, diagnostics: result.diagnostics, ex5_sha256: result.ex5_sha256 };
+  if (!native) throw new ApiError(503, 'compiler_unavailable', '需要已安装的 MT5 及可用编译环境');
+  signal?.throwIfAborted();
+  const editor = join(resolve(directory), '.compiler', 'MetaEditor64.exe');
+  if (!manifestDigest) {
+    // Direct compiler callers get the same frozen input boundary as service builds.
+    await fs.mkdir(join(directory, '.compiler'), { recursive: true });
+    if (resolve(native.editor).toLowerCase() !== editor.toLowerCase()) await fs.copyFile(native.editor, editor);
+    const files = await fileManifest(directory);
+    delete files['manifest.json'];
+    const manifestText = JSON.stringify({ compiler_sha256: files['.compiler/MetaEditor64.exe'].sha256, files }, null, 2);
+    await fs.writeFile(join(directory, 'manifest.json'), manifestText);
+    manifestDigest = digest(manifestText);
   }
-  return compileLinux(native, directory, signal, undefined, runId);
+  const backend = 'native';
+  const result = typeof environment.executeWorker === 'function'
+    ? await environment.executeWorker('backend/compiler-worker.js', { operation: 'compile', directory: resolve(directory), manifestDigest, runId: runId ?? null, native }, { signal, runId, timeoutMs: 600000 })
+    : await compileLocal(native, resolve(directory), manifestDigest, signal);
+  requireValue(typeof result.success === 'boolean' && typeof result.diagnostics === 'string', 'Runner 编译响应无效');
+  if (result.success) {
+    requireValue(typeof result.ex5 === 'string' && result.ex5.length <= 48 * 1024 * 1024, 'Runner 编译产物无效或过大');
+    const bytes = Buffer.from(result.ex5, 'base64');
+    requireValue(bytes.length > 0 && digest(bytes) === result.ex5_sha256, 'Runner 返回的 EX5 摘要不匹配');
+    signal?.throwIfAborted();
+    await fs.writeFile(join(directory, 'Experts/Strategy.ex5'), bytes);
+  }
+  await fs.writeFile(join(directory, 'Experts/Strategy.log'), Buffer.from('\uFEFF' + (result.diagnostics ?? ''), 'utf16le'));
+  return { success: result.success, diagnostics: result.diagnostics, ex5_sha256: result.ex5_sha256, execution: result.execution ?? { backend } };
 }

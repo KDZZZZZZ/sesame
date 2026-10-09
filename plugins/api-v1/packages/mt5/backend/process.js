@@ -11,13 +11,13 @@ const worker = fileURLToPath(new URL('./python-worker.py', import.meta.url));
 const terminalControl = fileURLToPath(new URL('./terminal-control.py', import.meta.url));
 const exec = promisify(execFile);
 export const winePath = path => process.platform === 'win32' ? path : `Z:${path.replaceAll('/', '\\')}`;
-export const pythonPath = native => process.env.MT5AGENT_PYTHON ?? native?.python ?? join(winePrefix(native?.directory), 'drive_c/mt5agent-python/python.exe');
+export const pythonPath = native => native?.python ?? process.env.MT5AGENT_PYTHON ?? join(winePrefix(native), 'drive_c/mt5agent-python/python.exe');
 
 export async function controlTerminal(native, action, signal) {
   requireValue(native && existsSync(pythonPath(native)) && ['inspect', 'close'].includes(action), '自动配置需要本机 Windows Python 与 MT5', 503);
   const executable = pythonPath(native), flags = ['-I', '-B', winePath(terminalControl), action, winePath(native.terminal)];
-  return new Promise((resolve, reject) => execFile(process.platform === 'win32' ? executable : wine(), process.platform === 'win32' ? flags : [executable, ...flags],
-    { env: environment(native.directory), timeout: 35000, maxBuffer: 65536, signal, windowsHide: true }, (error, stdout, stderr) => {
+  return new Promise((resolve, reject) => execFile(process.platform === 'win32' ? executable : wine(native), process.platform === 'win32' ? flags : [executable, ...flags],
+    { env: environment(native), timeout: 35000, maxBuffer: 65536, signal, windowsHide: true }, (error, stdout, stderr) => {
       if (error) return reject(new ApiError(503, 'terminal_control_unavailable', `终端配置暂未完成：${stderr.trim().split('\n').at(-1) || error.message}`));
       try { resolve(JSON.parse(stdout)); } catch { reject(new ApiError(502, 'terminal_control_invalid', '终端控制没有返回有效结果')); }
     }));
@@ -29,9 +29,9 @@ export class MT5Python {
   start() {
     requireValue(!this.closed, 'Python IPC 已关闭', 503);
     if (this.child) return;
-    requireValue(this.available(), 'MT5 的 Python 运行组件不可用，请检查应用安装与 MT5 路径。', 503, 'mt5_python_unavailable');
+    requireValue(this.available(), JSON.stringify({ code: 'PREREQUISITE_REQUIRED', capability: 'python-ipc', missing: ['Windows x64 Python + MetaTrader5 wheel'], next: 'mt5_dependencies inspect；先复用已有 Python，否则读取 dependencies skill 安装到返回的 private_directory，再 configure python' }), 503, 'PREREQUISITE_REQUIRED');
     const executable = pythonPath(this.native), args = ['-B', '-u', winePath(worker)];
-    const child = spawn(process.platform === 'win32' ? executable : wine(), process.platform === 'win32' ? args : [executable, ...args], { env: environment(this.native.directory), stdio: ['pipe', 'pipe', 'ignore'], detached: process.platform !== 'win32', windowsHide: true });
+    const child = spawn(process.platform === 'win32' ? executable : wine(this.native), process.platform === 'win32' ? args : [executable, ...args], { env: environment(this.native), stdio: ['pipe', 'pipe', 'ignore'], detached: process.platform !== 'win32', windowsHide: true });
     this.child = child; let buffer = '';
     child.stdout.setEncoding('utf8');
     child.stdout.on('data', chunk => {
@@ -89,15 +89,15 @@ export async function launch(native, tool, args, configFile, testerAgent, signal
     requireValue(action === 'help' || testerAgent?.address && testerAgent?.port, '请先在前端设置测试代理地址与端口');
     requireValue(action !== 'install' || testerAgent.password, '安装代理服务需要用户配置密码');
     const flags = [`/${action}`, ...(action === 'help' ? [] : [`/address:${testerAgent.address}:${testerAgent.port}`]), ...(action === 'install' ? [`/password:${testerAgent.password}`] : [])];
-    return new Promise(resolve => execFile(process.platform === 'win32' ? executable : wine(), process.platform === 'win32' ? flags : [executable, ...flags], { env: environment(native.directory), timeout: 15000, maxBuffer: 1024 * 1024, signal, windowsHide: true }, (error, stdout, stderr) => {
+    return new Promise(resolve => execFile(process.platform === 'win32' ? executable : wine(native), process.platform === 'win32' ? flags : [executable, ...flags], { env: environment(native), timeout: 15000, maxBuffer: 1024 * 1024, signal, windowsHide: true }, (error, stdout, stderr) => {
       const output = `${stdout}\n${stderr}`.replaceAll(testerAgent?.password || '\0', '[redacted]');
       resolve({ isError: Boolean(error), outcome_unknown: Boolean(error?.killed || error?.name === 'AbortError'), exit_code: typeof error?.code === 'number' ? error.code : error ? null : 0, output, message: error ? 'MetaTester 命令失败或超时；请核对 Windows 服务状态，不自动重放。' : 'MetaTester 命令已返回；服务状态仍需核对原生日志。' });
     }));
   }
   const executable = tool === 'start_editor' ? native.editor : native.terminal;
   const flags = [...(args.portable ? ['/portable'] : []), ...(args.profile ? [`/profile:${args.profile}`] : []), ...(args.use_account_login ? [`/login:${args.configured_login}`] : []), ...(args.use_startup_config ? [`/config:${winePath(configFile)}`] : [])];
-  const env = environment(native.directory, native.commonFolder);
-  const { program, args: argv } = terminalInvocation(executable, flags, env);
+  const env = environment(native, native.commonFolder);
+  const { program, args: argv } = terminalInvocation(executable, flags, env, native);
   if (process.platform === 'linux' && process.env.INVOCATION_ID) {
     // detached only separates process groups. A systemd service still kills its
     // entire cgroup on restart, so the trading terminal needs its own user unit.

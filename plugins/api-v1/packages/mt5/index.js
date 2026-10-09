@@ -19,10 +19,11 @@ import { createTools as authoring } from './tools/authoring/index.js';
 import { createTools as configuration } from './tools/configuration.js';
 import { createTools as evidence } from './tools/evidence.js';
 import { createTools as strategy } from './tools/strategy.js';
+import { createTools as dependencies } from './tools/dependencies.js';
 
 export function createTools(host) {
   const { mt5, imports } = instance(host);
-  return [official, charts, editor, python, system, tester, trading, deployment, authoring, configuration, evidence, strategy].flatMap(factory => factory(host, mt5, imports));
+  return [official, charts, editor, python, system, tester, trading, deployment, authoring, configuration, evidence, strategy, dependencies].flatMap(factory => factory(host, mt5, imports));
 }
 
 export async function activate(host, options = {}) {

@@ -4,7 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { readTree } from './support.js';
 import { id, now, digest, requireValue } from './support.js';
 import { DEFAULT_RISK_LIMITS, SDK_VERSION, projectFiles, riskLimits, stableJSON, strategyImplementation } from './contracts.js';
-import { installation, compilerDependencies, fileManifest, compileNative } from './native.js';
+import { compilerDependencies, fileManifest, compileNative } from './native.js';
+import { discoverDependencies, prerequisite } from './dependencies.js';
 import { MT5Official } from './official.js';
 import { Tester } from './tester.js';
 import { visualTemplate } from './visual/index.js';
@@ -23,9 +24,11 @@ export class MT5 {
     this.legacyTemplate = projectFiles(texts(await readTree(join(here, 'template'))));
     this.template = projectFiles(visualTemplate());
     this.sdk = texts(await readTree(join(here, 'sdk')));
-    this.native = this.options.disabled ? null : installation(this.options.directory);
-    if (this.native && this.host.environment.pythonPath) this.native.python = this.host.environment.pythonPath;
-    this.compilerReady = Boolean(this.native && compilerDependencies(this.host.environment));
+    const dependencies = discoverDependencies(this.host, this.options);
+    this.native = dependencies.native; this.compilerEnvironment = dependencies.environment;
+    // Activation is discovery only. A compilation/probe request may inspect an
+    // native compiler request verifies the actual execution; activation only discovers.
+    this.compilerReady = Boolean(this.native && compilerDependencies(this.compilerEnvironment));
     this.official = await new MT5Official(this.host, this.native).init();
     this.market = new Market(this);
     this.live = new LiveMarket(this);
@@ -39,7 +42,8 @@ export class MT5 {
   status() {
     const compile = Boolean(this.compilerReady);
     return { installed: Boolean(this.native), compile, tester: Boolean(this.tester?.available()), deploy: Boolean(this.native), sdk_version: SDK_VERSION,
-      reason: compile ? '工程、编译、Tester、本地行情与受管理挂载已接入；挂载需要已回测构建、账户匹配及终端交易授权。' : '可编辑独立工程；编译需要已安装的 MT5 及可用运行环境。连接状态请查看“MT5 连接”。' };
+      reason: compile ? '已发现编译入口；Tester、账户连接和交易权限须分别核验。' : '可编辑独立工程；运行 mt5_dependencies inspect 先复用已有安装，再按缺项安装与配置。',
+      dependencies: { tool: 'mt5_dependencies', action: 'inspect', probe: true } };
   }
   list() { return this.storage.list('mt5_project'); }
   project(key) {
@@ -83,7 +87,7 @@ export class MT5 {
     const sdkPath = `/work/inputs/mt5-sdk/${SDK_VERSION}`;
     const files = Object.fromEntries(Object.entries(project.files).map(([name, content]) => [path.slice(6) + '/' + name, content]));
     for (const [name, content] of Object.entries({ ...this.sdk, 'Build.mqh': buildHeader('unbuilt') })) files[`${sdkPath.slice(6)}/Include/Product/${name}`] = content;
-    // One transactional sandbox write imports the editable project and read-only SDK together.
+    // One transactional workspace write imports the editable project and read-only SDK together.
     await box.file('write_tree', '/work', files, signal, true);
     requireValue(typeof conversationId === 'string' && conversationId, 'Checkout 需要会话身份');
     const checkout = { ...this.host.workspace.owner(conversationId), id: checkoutId, project_id: key, conversation_id: conversationId, revision: project.revision, path, sdk_path: sdkPath };
@@ -109,7 +113,10 @@ export class MT5 {
   }
   queueBuild(key, revision, conversationId = null) {
     requireValue(!this.closing, 'MT5 模块正在关闭', 503);
-    requireValue(this.status().compile, this.status().reason, 503, 'compiler_unavailable');
+    const dependencies = discoverDependencies(this.host, this.options);
+    this.native = dependencies.native; this.compilerEnvironment = dependencies.environment;
+    this.compilerReady = Boolean(this.native && compilerDependencies(this.compilerEnvironment));
+    if (!this.compilerReady) throw prerequisite(this, 'local-compiler');
     const project = this.storage.get('mt5_project', key);
     requireValue(Number.isInteger(revision) && revision > 0, '需要明确的源码 revision');
     const source = this.storage.get('mt5_revision', `${key}:${revision}`);
@@ -167,8 +174,8 @@ export class MT5 {
       build.manifest_digest = digest(stableJSON(manifest));
       const manifestText = JSON.stringify(manifest, null, 2);
       await fs.writeFile(join(directory, 'manifest.json'), manifestText);
-      const result = await compileNative({ ...this.native, editor: compiler }, directory, signal, digest(manifestText), build.owner_run_id, this.host.environment);
-      build = { ...build, status: result.success ? 'succeeded' : 'failed', diagnostics: result.diagnostics, ex5_sha256: result.ex5_sha256 };
+      const result = await compileNative({ ...this.native, editor: compiler }, directory, signal, digest(manifestText), build.owner_run_id, this.compilerEnvironment);
+      build = { ...build, status: result.success ? 'succeeded' : 'failed', diagnostics: result.diagnostics, ex5_sha256: result.ex5_sha256, execution: result.execution };
     } catch (error) {
       build = { ...build, status: error.code === 'runtime_cleanup_failed' ? 'unknown' : signal.aborted ? 'canceled' : 'failed', diagnostics: error.message, ex5_sha256: null, ...(error.code === 'runtime_cleanup_failed' ? { cleanup_failed: true } : {}) };
       if (error.code === 'runtime_cleanup_failed') { this.storage.put('mt5_build', { ...build, completed_at: now() }); throw error; }
