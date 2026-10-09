@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "tag": "plugins-api-v1-dev.8",
   "title": "Sesame official API 1 development plugins 8",
-  "sourceCommit": "8a7b1839f2b7ecd60a9963e32a5a1732b01036ed",
+  "sourceCommit": "3fe35eb22e47b5ece40f7dfc094c834c8da90d21",
   "sourceRoot": "plugins/api-v1",
   "archive": {
     "name": "sesame-official-plugins-api-v1-dev.8.tar.gz",
-    "sha256": "06420922f9f4fa7cf5111062bb0312dce5ba4314a4a067fb9bcede64b8ed876e"
+    "sha256": "a1d12ffd5adfa921a22c6f05dc0bc446f5d83195ae946b996201da9b4b0fd797"
   },
-  "lockSha256": "69d4b15a0d225d3b7ee3ace8d09e6014a64605fe7af39a8da22b0abd8ca60bbe",
+  "lockSha256": "91748a44978ed4bf40df3ba8d77ae20c19217391937721df5170babea9eed90e",
   "pullRequest": 16
 }
