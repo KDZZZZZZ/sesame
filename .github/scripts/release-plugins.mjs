@@ -6,6 +6,7 @@ import { pathToFileURL } from 'node:url';
 import { buildLock, createArchive, sha256 } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
 
 const REPOSITORY = 'KDZZZZZZ/sesame';
+const CHECKS = [{ name: 'package-static-review', path: '.github/workflows/plugin-api-v1.yml' }, { name: 'catalog-static-review', path: '.github/workflows/plugin-catalog.yml' }];
 const assert = (value, message) => { if (!value) throw new Error(message); };
 const git = (root, args) => execFileSync('git', args, { cwd: root, maxBuffer: 20 * 1024 * 1024 });
 export function validatePlan(plan) {
@@ -50,11 +51,10 @@ export function prepareRelease(repository, input) {
 
 export function reviewEvidence(plan, pr, reviews, checks) {
   assert(pr.merged === true && pr.base.ref === 'main' && pr.head.repo.full_name === REPOSITORY, 'Release PR must be merged from this repository into main');
-  const required = ['package-static-review', 'catalog-static-review'];
-  const successful = required.map(name => {
-    const check = checks.filter(item => item.name === name && item.head_sha === pr.head.sha && item.app?.slug === 'github-actions').sort((a, b) => b.id - a.id)[0];
+  const successful = CHECKS.map(({ name, path }) => {
+    const check = checks.filter(item => item.name === name && item.head_sha === pr.head.sha && item.workflow?.path === path && item.workflow.event === 'pull_request_target').sort((a, b) => b.id - a.id)[0];
     assert(check?.status === 'completed' && check.conclusion === 'success', `Missing successful check on the exact reviewed head: ${name}`);
-    return { name, url: check.html_url, conclusion: check.conclusion, headSha: check.head_sha };
+    return { name, url: check.html_url, conclusion: check.conclusion, headSha: check.head_sha, workflow: check.workflow };
   });
   const latest = new Map();
   for (const review of reviews) if (review.state !== 'COMMENTED' && review.state !== 'PENDING') latest.set(review.user.login, review);
@@ -79,13 +79,69 @@ async function allReviews(number) {
   throw new Error('Review pagination exceeded publication budget');
 }
 
+async function trustedChecks(pr) {
+  const checks = [];
+  for (const required of CHECKS) {
+    const workflow = await api(`/actions/workflows/${basename(required.path)}`);
+    const { workflow_runs: runs } = await api(`/actions/workflows/${workflow.id}/runs?event=pull_request_target&head_sha=${pr.head.sha}&per_page=100`);
+    const run = runs.filter(item => item.workflow_id === workflow.id && item.path === required.path && item.event === 'pull_request_target' && item.head_sha === pr.head.sha).sort((a, b) => b.id - a.id)[0];
+    assert(run?.status === 'completed' && run.conclusion === 'success', `Trusted workflow did not succeed for the exact PR head: ${required.path}`);
+    const { jobs } = await api(`/actions/runs/${run.id}/jobs?filter=latest&per_page=100`);
+    const job = jobs.find(item => item.name === required.name);
+    assert(job, `Trusted workflow omitted ${required.name}`);
+    checks.push({ ...job, head_sha: run.head_sha, workflow: { path: run.path, event: run.event, id: workflow.id, runId: run.id, runUrl: run.html_url } });
+  }
+  return checks;
+}
+
+async function findRelease(tag) {
+  const published = await api(`/releases/tags/${tag}`, { allowMissing: true });
+  if (published) return published;
+  // The tag endpoint does not return drafts. Authenticated listing lets retries
+  // continue the same partially uploaded draft without duplicate creation.
+  for (let page = 1; page <= 10; page++) {
+    const batch = await api(`/releases?per_page=100&page=${page}`), matching = batch.filter(item => item.tag_name === tag);
+    assert(matching.length <= 1, 'More than one release uses the requested tag');
+    if (matching.length) return matching[0];
+    if (batch.length < 100) return null;
+  }
+  throw new Error('Release pagination exceeded publication budget');
+}
+
+export function validateAssets(release, files) {
+  assert(release.assets.length === files.size, 'Release asset set is incomplete or contains unexpected assets');
+  for (const [name, bytes] of files) {
+    const matches = release.assets.filter(asset => asset.name === name);
+    assert(matches.length === 1 && matches[0].digest === `sha256:${sha256(bytes)}` && matches[0].size === bytes.length, `Published asset differs or is missing: ${name}`);
+  }
+}
+
+async function preserveRecordedReview(release, plan, pr, files) {
+  const asset = release.assets.find(item => item.name === 'review.json');
+  if (!asset) return;
+  const response = await fetch(`https://api.github.com/repos/${REPOSITORY}/releases/assets/${asset.id}`, { headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}`, Accept: 'application/octet-stream', 'X-GitHub-Api-Version': '2022-11-28' } });
+  assert(response.ok, 'Cannot read existing review record');
+  const bytes = Buffer.from(await response.arrayBuffer()); assert(bytes.length <= 1024 * 1024 && asset.digest === `sha256:${sha256(bytes)}`, 'Existing review record digest differs');
+  const record = JSON.parse(bytes);
+  assert(record.tag === plan.tag && record.sourceCommit === plan.sourceCommit && record.pullRequest?.number === plan.pullRequest && record.pullRequest.headSha === pr.head.sha && record.pullRequest.mergeCommit === pr.merge_commit_sha, 'Existing review record identifies different source');
+  assert(record.automated?.length === CHECKS.length && ['approved', 'not-recorded'].includes(record.human?.status), 'Incomplete existing review record');
+  for (const required of CHECKS) {
+    const check = record.automated.find(item => item.name === required.name);
+    assert(Number.isSafeInteger(check?.workflow?.runId), 'Existing review record has no workflow identity');
+    const [run, workflow] = await Promise.all([api(`/actions/runs/${check.workflow.runId}`), api(`/actions/workflows/${basename(required.path)}`)]);
+    assert(run.workflow_id === workflow.id && run.path === required.path && run.event === 'pull_request_target' && run.head_sha === pr.head.sha && run.conclusion === 'success', 'Existing review record is not backed by a successful trusted workflow');
+  }
+  // Keep the historical publication record immutable when later comments or
+  // additional successful reruns arrive on the same PR.
+  files.set('review.json', bytes);
+}
+
 async function publish(repository, relative, prepared) {
   assert(process.env.GITHUB_REPOSITORY === REPOSITORY && process.env.GITHUB_REF === 'refs/heads/main' && process.env.GITHUB_TOKEN, 'Publication requires the main-branch GitHub workflow');
   const { plan, files } = prepared;
   const [pr, reviews] = await Promise.all([api(`/pulls/${plan.pullRequest}`), allReviews(plan.pullRequest)]);
   // Required PR checks belong to its exact head, not to the later merge commit.
-  const headChecks = await api(`/commits/${pr.head.sha}/check-runs?per_page=100`);
-  const evidence = reviewEvidence(plan, pr, reviews, headChecks.check_runs);
+  const evidence = reviewEvidence(plan, pr, reviews, await trustedChecks(pr));
   git(repository, ['merge-base', '--is-ancestor', plan.sourceCommit, pr.head.sha]);
   git(repository, ['merge-base', '--is-ancestor', pr.merge_commit_sha, 'HEAD']);
   assert(git(repository, ['show', `${pr.head.sha}:${relative}`]).equals(readFileSync(join(repository, relative))), 'Release plan changed after its reviewed PR');
@@ -96,11 +152,13 @@ async function publish(repository, relative, prepared) {
     const object = tag.object.type === 'tag' ? (await api(`/git/tags/${tag.object.sha}`)).object : tag.object;
     assert(object.type === 'commit' && object.sha === plan.sourceCommit, 'Existing tag points at different source; refusing to move it');
   }
-  let release = await api(`/releases/tags/${plan.tag}`, { allowMissing: true });
+  let release = await findRelease(plan.tag);
+  if (release) {
+    assert(release.target_commitish === plan.sourceCommit, 'Existing release target differs');
+    await preserveRecordedReview(release, plan, pr, files);
+  }
   if (release && !release.draft) {
-    const archive = release.assets.find(asset => asset.name === plan.archive.name);
-    const lock = release.assets.find(asset => asset.name === 'official-plugins.lock.json');
-    assert(release.prerelease && archive?.digest === `sha256:${plan.archive.sha256}` && lock?.digest === `sha256:${plan.lockSha256}`, 'Existing release identity differs; never overwrite a release');
+    assert(release.prerelease, 'Existing release is not a prerelease'); validateAssets(release, files);
     console.log(`Already published with the reviewed digests: ${release.html_url}`); return;
   }
   if (!release) release = await api('/releases', { method: 'POST', body: JSON.stringify({ tag_name: plan.tag, target_commitish: plan.sourceCommit, name: plan.title, draft: true, prerelease: true, make_latest: 'false', body: `Development plugin packages for the matching API 1 host.\n\nAutomatically published after [PR #${plan.pullRequest}](${pr.html_url}) was merged and its exact-head static checks passed. Source: ${plan.sourceCommit}.\n\nSee review.json for actual check URLs and review states; human review: ${evidence.human.status}. Static checks do not certify runtime behavior or safety. Existing stable 0.1.4 catalog metadata is unchanged.\n\nVerify SHA256SUMS and official-plugins.lock.json before installation. application-official-plugins.lock.json pins the archive and every package tree.` }) });
