@@ -54,7 +54,7 @@ export class Deployments {
   save(value, observe = true) {
     const saved = this.storage.transaction(() => {
       const saved = this.storage.put('mt5_deployment', { ...value, updated_at: now() });
-      this.storage.put('mt5_deployment_observation_pending', { id: value.id });
+      this.storage.put('mt5_deployment_observation_pending', { id: value.id, token: id('observation') });
       return saved;
     });
     if (observe) this.syncObservation(saved);
@@ -62,9 +62,11 @@ export class Deployments {
   }
   syncObservation(value) {
     if (!this.mt5.runObserver) return;
+    const pending = this.storage.get('mt5_deployment_observation_pending', value.id, true);
     try {
       this.mt5.runObserver.deployment(value);
       this.storage.transaction(() => {
+        if (this.storage.get('mt5_deployment_observation_pending', value.id, true)?.token !== pending?.token) return;
         this.storage.delete('mt5_deployment_observation_pending', value.id);
         const { observer_error, ...current } = this.storage.get('mt5_deployment', value.id);
         if (observer_error) this.storage.put('mt5_deployment', current);
