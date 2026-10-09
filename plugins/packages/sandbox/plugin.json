@@ -1,0 +1,19 @@
+{
+  "id": "sandbox",
+  "title": "代码沙箱",
+  "description": "pi 的 read、write、edit、bash，通过 bwrap 执行。",
+  "version": "1.0.0",
+  "default_state": "mounted",
+  "tool_names": [
+    "read",
+    "write",
+    "edit",
+    "bash"
+  ],
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [],
+  "entry": "tools.js",
+  "tool_definitions": "tools.json"
+}

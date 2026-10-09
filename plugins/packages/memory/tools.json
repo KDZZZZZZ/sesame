@@ -1,0 +1,597 @@
+[
+  {
+    "name": "memory_search",
+    "label": "memory_search",
+    "description": "检索当前会话有权读取的长期记忆摘要。默认包含归档记忆，可按需召回；过期事实默认不返回。检索与读取不会刷新采用时间，不把记忆当作权限来源。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "中文或其他语言关键词",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "category": {
+          "type": "string",
+          "description": "分类路径前缀",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "scope": {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "global"
+                },
+                {
+                  "type": "string",
+                  "const": "project"
+                },
+                {
+                  "type": "string",
+                  "const": "strategy"
+                }
+              ]
+            },
+            "project_id": {
+              "type": "string",
+              "description": "项目 ID",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "strategy_id": {
+              "type": "string",
+              "description": "策略 ID",
+              "minLength": 1,
+              "maxLength": 20000
+            }
+          },
+          "additionalProperties": false
+        },
+        "include_archived": {
+          "type": "boolean"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "memory_read",
+    "label": "memory_read",
+    "description": "读取记忆正文、来源、版本和生命周期。归档可按需读取；expired/conflict 不能作为已确认事实采用。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "记忆 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "memory_propose",
+    "label": "memory_propose",
+    "description": "提交待主 Agent 核验的记忆候选，必须引用真实用户消息或已发布成果。候选不会自动成为长期事实；任务结束后未合并候选销毁。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "category",
+        "title",
+        "summary",
+        "content",
+        "scope",
+        "sources"
+      ],
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": "分类路径，阅读 manage-memory skill 获取完整分类树",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "title": {
+          "type": "string",
+          "description": "稳定的事实或偏好名称",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "summary": {
+          "type": "string",
+          "description": "用于检索的简短摘要",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "content": {
+          "type": "string",
+          "description": "完整结论、依据与适用条件，不保存原始日志",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "scope": {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "global"
+                },
+                {
+                  "type": "string",
+                  "const": "project"
+                },
+                {
+                  "type": "string",
+                  "const": "strategy"
+                }
+              ]
+            },
+            "project_id": {
+              "type": "string",
+              "description": "项目 ID",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "strategy_id": {
+              "type": "string",
+              "description": "策略 ID",
+              "minLength": 1,
+              "maxLength": 20000
+            }
+          },
+          "additionalProperties": false
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "type",
+              "id"
+            ],
+            "properties": {
+              "type": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "const": "user_message"
+                  },
+                  {
+                    "type": "string",
+                    "const": "artifact"
+                  }
+                ]
+              },
+              "id": {
+                "type": "string",
+                "description": "真实用户消息或最终成果 ID",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "kind": {
+                "type": "string",
+                "description": "成果种类，如 report 或 strategy",
+                "minLength": 1,
+                "maxLength": 20000
+              }
+            },
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 20
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "maxItems": 20
+        },
+        "evidence": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "explicit"
+            },
+            {
+              "type": "string",
+              "const": "verified"
+            },
+            {
+              "type": "string",
+              "const": "inferred"
+            },
+            {
+              "type": "string",
+              "const": "conflicted"
+            }
+          ]
+        },
+        "pinned": {
+          "type": "boolean"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "low"
+            },
+            {
+              "type": "string",
+              "const": "normal"
+            },
+            {
+              "type": "string",
+              "const": "high"
+            }
+          ]
+        },
+        "expires_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "review_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "conflicts_with": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "memory_mark_used",
+    "label": "memory_mark_used",
+    "description": "仅在记忆实际用于一个已发布成果或明确用户决策后记录采用，附具体原因和持久来源。相同来源重复调用不刷新闲置时间；搜索曝光和读取不算采用。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "id",
+        "reason",
+        "source"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "已实际采用的记忆 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "reason": {
+          "type": "string",
+          "description": "说明它如何影响该成果或决策",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "source": {
+          "type": "object",
+          "required": [
+            "type",
+            "id"
+          ],
+          "properties": {
+            "type": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "user_message"
+                },
+                {
+                  "type": "string",
+                  "const": "artifact"
+                }
+              ]
+            },
+            "id": {
+              "type": "string",
+              "description": "真实用户消息或最终成果 ID",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "kind": {
+              "type": "string",
+              "description": "成果种类，如 report 或 strategy",
+              "minLength": 1,
+              "maxLength": 20000
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "memory_manage",
+    "label": "memory_manage",
+    "description": "主 Agent 管理正式记忆：save 创建或修订；candidates 查看候选；accept/reject 合并或丢弃；archive/restore 手动归档或恢复；forget 清除正文、历史和派生索引。更新和删除先读取 expected_version。保存的内容不能修改应用权限。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "save"
+            },
+            {
+              "type": "string",
+              "const": "candidates"
+            },
+            {
+              "type": "string",
+              "const": "accept"
+            },
+            {
+              "type": "string",
+              "const": "reject"
+            },
+            {
+              "type": "string",
+              "const": "archive"
+            },
+            {
+              "type": "string",
+              "const": "restore"
+            },
+            {
+              "type": "string",
+              "const": "forget"
+            },
+            {
+              "type": "string",
+              "const": "stats"
+            }
+          ]
+        },
+        "id": {
+          "type": "string",
+          "description": "记忆或候选 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "entry": {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string",
+              "description": "分类路径，阅读 manage-memory skill 获取完整分类树",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "title": {
+              "type": "string",
+              "description": "稳定的事实或偏好名称",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "summary": {
+              "type": "string",
+              "description": "用于检索的简短摘要",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "content": {
+              "type": "string",
+              "description": "完整结论、依据与适用条件，不保存原始日志",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "scope": {
+              "type": "object",
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "global"
+                    },
+                    {
+                      "type": "string",
+                      "const": "project"
+                    },
+                    {
+                      "type": "string",
+                      "const": "strategy"
+                    }
+                  ]
+                },
+                "project_id": {
+                  "type": "string",
+                  "description": "项目 ID",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "strategy_id": {
+                  "type": "string",
+                  "description": "策略 ID",
+                  "minLength": 1,
+                  "maxLength": 20000
+                }
+              },
+              "additionalProperties": false
+            },
+            "sources": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "properties": {
+                  "type": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "const": "user_message"
+                      },
+                      {
+                        "type": "string",
+                        "const": "artifact"
+                      }
+                    ]
+                  },
+                  "id": {
+                    "type": "string",
+                    "description": "真实用户消息或最终成果 ID",
+                    "minLength": 1,
+                    "maxLength": 20000
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "kind": {
+                    "type": "string",
+                    "description": "成果种类，如 report 或 strategy",
+                    "minLength": 1,
+                    "maxLength": 20000
+                  }
+                },
+                "additionalProperties": false
+              },
+              "minItems": 1,
+              "maxItems": 20
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "maxItems": 20
+            },
+            "evidence": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "explicit"
+                },
+                {
+                  "type": "string",
+                  "const": "verified"
+                },
+                {
+                  "type": "string",
+                  "const": "inferred"
+                },
+                {
+                  "type": "string",
+                  "const": "conflicted"
+                }
+              ]
+            },
+            "pinned": {
+              "type": "boolean"
+            },
+            "value": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "low"
+                },
+                {
+                  "type": "string",
+                  "const": "normal"
+                },
+                {
+                  "type": "string",
+                  "const": "high"
+                }
+              ]
+            },
+            "expires_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "review_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "conflicts_with": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 20
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]

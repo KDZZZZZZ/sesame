@@ -1,0 +1,162 @@
+[
+  {
+    "name": "agent_delegate",
+    "label": "agent_delegate",
+    "description": "委派研究或策略任务，返回会话和独立 Run；子任务异步执行，最终成果封存后销毁临时区。继续已结束会话时创建新的 Run。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "kind",
+        "title",
+        "task"
+      ],
+      "properties": {
+        "kind": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "research"
+            },
+            {
+              "type": "string",
+              "const": "strategy"
+            }
+          ]
+        },
+        "title": {
+          "type": "string",
+          "description": "任务标题",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "task": {
+          "type": "string",
+          "description": "具体要求与数据/报告引用",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "conversation_id": {
+          "type": "string",
+          "description": "继续已有直属子会话",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "memory_scopes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "kind",
+              "project_id"
+            ],
+            "properties": {
+              "kind": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "const": "project"
+                  },
+                  {
+                    "type": "string",
+                    "const": "strategy"
+                  }
+                ]
+              },
+              "project_id": {
+                "type": "string",
+                "description": "项目 ID",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "strategy_id": {
+                "type": "string",
+                "description": "策略范围时必填",
+                "minLength": 1,
+                "maxLength": 20000
+              }
+            },
+            "additionalProperties": false
+          },
+          "maxItems": 32,
+          "description": "明确授予任务需要的项目/策略记忆范围；下级不能扩大上级已有范围"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "agent_inspect",
+    "label": "agent_inspect",
+    "description": "读取子任务进度、最终摘要与成果引用；不复制子任务过程对话。wait=true 最多等待 20 秒。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "conversation_id"
+      ],
+      "properties": {
+        "conversation_id": {
+          "type": "string",
+          "description": "会话 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "wait": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "agent_finish",
+    "label": "agent_finish",
+    "description": "提交子任务最终摘要并结束当前 Run。必须是最后一个工具调用；宿主在本轮回复结束、所有下级任务停止后封存成果并销毁全部过程。等待输入时不要调用。主 Agent 可结束已空闲的直属子任务。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "summary"
+      ],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "description": "最终结果、关键结论与局限；不会保留过程对话",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "status": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "succeeded"
+            },
+            {
+              "type": "string",
+              "const": "failed"
+            },
+            {
+              "type": "string",
+              "const": "canceled"
+            }
+          ]
+        },
+        "artifact_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "需要保留的策略工程 ID",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "maxItems": 64
+        },
+        "conversation_id": {
+          "type": "string",
+          "description": "默认当前子任务；主 Agent 可指定直属子任务",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]

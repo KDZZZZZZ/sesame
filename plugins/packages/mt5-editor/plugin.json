@@ -1,0 +1,34 @@
+{
+  "id": "mt5-editor",
+  "title": "MT5 原生编辑",
+  "description": "原生工作区文件读写、搜索、格式化、语法检查与 MetaEditor 编译。独立受管理工程优先使用 mql5-authoring。",
+  "version": "1.0.0",
+  "default_state": "discoverable",
+  "tool_names": [
+    "mt5_edit"
+  ],
+  "entry": "tools.js",
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [],
+  "tool_definitions": "tools.json",
+  "mt5_agent_tool": "mt5_edit",
+  "mt5_routes": [
+    {
+      "priority": 70,
+      "servers": ["launcher"],
+      "methods": ["start_editor"]
+    },
+    {
+      "priority": 50,
+      "categories": [
+        "editor",
+        "files"
+      ]
+    }
+  ],
+  "mcp_export": [
+    "mt5_edit"
+  ]
+}

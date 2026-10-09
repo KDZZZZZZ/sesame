@@ -1,0 +1,360 @@
+[
+  {
+    "name": "configuration_import_mt5",
+    "label": "configuration_import_mt5",
+    "description": "导入用户在主会话直接粘贴的 MT5 MCP 导出（Claude JSON / Codex TOML）。使用 Sesame 提供的 source_message_id 引用与 configuration_read 的版本，密钥在后端私密传递。仅保存 Terminal / MetaEditor 连接；不修改交易、宿主权限或账户。保存后调用 mt5_connect 核验终端，mt5_catalog 单独核验 MetaEditor。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "command_id",
+        "source_message_id",
+        "expected_version"
+      ],
+      "properties": {
+        "command_id": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "本次修改的唯一 ID；相同 ID 重试不重复执行"
+        },
+        "source_message_id": {
+          "type": "string",
+          "pattern": "^msg_[A-Za-z0-9_-]{1,100}$",
+          "description": "用户粘贴配置时 Sesame 返回的消息引用；不传原文或密钥"
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_connect",
+    "label": "mt5_connect",
+    "description": "自动检查并恢复本机 MT5 交易终端连接：验证 MCP 密钥、券商在线状态和绑定账户，重建失效会话；必要时以算法交易关闭的固定配置启动已配置终端。仅主 Agent 可用，不切换账户或开启权限。connected 仅证明 server=terminal 核验成功，不检查 MetaEditor、市场数据或 Python IPC。用户已提供导出时先 configuration_import_mt5，缺少凭据才打开设置，不读取或返回秘密。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "command_id"
+      ],
+      "properties": {
+        "command_id": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "本次连接的唯一 ID；重试同一请求保留 ID，新检查使用新 ID"
+        },
+        "start_if_needed": {
+          "type": "boolean",
+          "description": "是否允许启动已配置且 MCP 已启用的终端，默认 true"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "configuration_read",
+    "label": "configuration_read",
+    "description": "读取本应用当前模型、认证是否存在、MT5 脱敏设置与插件状态。不会读取秘密原文，也不登录、启动程序或交易。provider 可筛选供应商并查看其模型目录。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "section": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "all"
+            },
+            {
+              "type": "string",
+              "const": "mt5"
+            },
+            {
+              "type": "string",
+              "const": "model"
+            },
+            {
+              "type": "string",
+              "const": "preferences"
+            }
+          ]
+        },
+        "provider": {
+          "type": "string",
+          "description": "供应商 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "configuration_update",
+    "label": "configuration_update",
+    "description": "按用户要求修改 MT5 连接设置及交易/宿主权限、导入本机配置、回复语言或已认证模型。MT5 先读 expected_version；其他目标不传版本。模型切换 queued 后等待当前回复及其他会话结束，之后读取结果确认。不修改插件策略，不接受秘密或启动 INI；用唯一 command_id 防止重复执行。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "command_id",
+        "target",
+        "changes"
+      ],
+      "properties": {
+        "command_id": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "本次修改的唯一 ID；相同 ID 重试不重复执行"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "mt5"
+            },
+            {
+              "type": "string",
+              "const": "preferences"
+            },
+            {
+              "type": "string",
+              "const": "model"
+            }
+          ]
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "changes": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "required": [
+                    "import_native"
+                  ],
+                  "properties": {
+                    "import_native": {
+                      "type": "boolean",
+                      "const": true
+                    }
+                  },
+                  "additionalProperties": false,
+                  "minProperties": 1
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "allow_trading": {
+                      "type": "boolean"
+                    },
+                    "allow_host_operations": {
+                      "type": "boolean"
+                    },
+                    "servers": {
+                      "type": "object",
+                      "properties": {
+                        "terminal": {
+                          "type": "object",
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "maxLength": 2048,
+                              "pattern": "^[^\\r\\n\\u0000]*$"
+                            },
+                            "enabled": {
+                              "type": "boolean"
+                            }
+                          },
+                          "additionalProperties": false,
+                          "minProperties": 1
+                        },
+                        "metaeditor": {
+                          "type": "object",
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "maxLength": 2048,
+                              "pattern": "^[^\\r\\n\\u0000]*$"
+                            },
+                            "enabled": {
+                              "type": "boolean"
+                            }
+                          },
+                          "additionalProperties": false,
+                          "minProperties": 1
+                        },
+                        "marketdata": {
+                          "type": "object",
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "maxLength": 2048,
+                              "pattern": "^[^\\r\\n\\u0000]*$"
+                            },
+                            "enabled": {
+                              "type": "boolean"
+                            }
+                          },
+                          "additionalProperties": false,
+                          "minProperties": 1
+                        }
+                      },
+                      "additionalProperties": false,
+                      "minProperties": 1
+                    },
+                    "account": {
+                      "type": "object",
+                      "properties": {
+                        "login": {
+                          "type": "string",
+                          "pattern": "^(|[1-9][0-9]{0,19})$"
+                        },
+                        "server": {
+                          "type": "string",
+                          "maxLength": 200,
+                          "pattern": "^[^\\r\\n\\u0000]*$"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "minProperties": 1
+                    },
+                    "tester_agent": {
+                      "type": "object",
+                      "properties": {
+                        "address": {
+                          "type": "string",
+                          "maxLength": 15,
+                          "pattern": "^[^\\r\\n\\u0000]*$"
+                        },
+                        "port": {
+                          "type": "integer",
+                          "minimum": 1024,
+                          "maximum": 65535
+                        }
+                      },
+                      "additionalProperties": false,
+                      "minProperties": 1
+                    }
+                  },
+                  "additionalProperties": false,
+                  "minProperties": 1
+                }
+              ]
+            },
+            {
+              "type": "object",
+              "required": [
+                "locale"
+              ],
+              "properties": {
+                "locale": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "zh-CN"
+                    },
+                    {
+                      "type": "string",
+                      "const": "en"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false,
+              "minProperties": 1
+            },
+            {
+              "type": "object",
+              "required": [
+                "provider",
+                "model"
+              ],
+              "properties": {
+                "provider": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                "model": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "thinking": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "off"
+                    },
+                    {
+                      "type": "string",
+                      "const": "minimal"
+                    },
+                    {
+                      "type": "string",
+                      "const": "low"
+                    },
+                    {
+                      "type": "string",
+                      "const": "medium"
+                    },
+                    {
+                      "type": "string",
+                      "const": "high"
+                    },
+                    {
+                      "type": "string",
+                      "const": "xhigh"
+                    },
+                    {
+                      "type": "string",
+                      "const": "max"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false,
+              "minProperties": 1
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "configuration_open",
+    "label": "configuration_open",
+    "description": "为用户打开现有配置窗口，用于安全填写密钥/密码或完成浏览器授权。settings 是模型设置，mt5 是 MT5 连接设置。工具不会代替用户提交凭据或修改权限。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "dialog"
+      ],
+      "properties": {
+        "dialog": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "settings"
+            },
+            {
+              "type": "string",
+              "const": "mt5"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]

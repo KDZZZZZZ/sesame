@@ -1,0 +1,12 @@
+{
+  "id": "host-files",
+  "title": "宿主文件读取",
+  "description": "读取和搜索工作区外的普通文件，将选定输入复制到自己的工作区。保护凭据与任务私有数据。",
+  "version": "1.0.0",
+  "default_state": "mounted",
+  "tool_names": ["host_files_list", "host_files_search", "host_files_read", "host_files_import"],
+  "prompts": ["prompt.md"],
+  "skills": [],
+  "entry": "tools.js",
+  "tool_definitions": "tools.json"
+}

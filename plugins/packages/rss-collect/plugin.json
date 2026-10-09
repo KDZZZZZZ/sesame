@@ -1,0 +1,93 @@
+{
+  "author": {
+    "name": "Sesame"
+  },
+  "name": "rss-collect",
+  "version": "1.0.0",
+  "description": "基于 feedparser 思路新写的 RSS/Atom 订阅源解析 skill（新写适配层，非上游现成 skill）。输入已获取的 XML 内容或包内文件路径；解析失败时 isError=true。",
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "extensions": {
+    "io.github.kdzzzzzz.mt5agent": {
+      "dependencies": [],
+      "tests": [
+        {
+          "server": "analysis",
+          "tool": "parse_feed",
+          "arguments": {
+            "file_path": "sample.atom",
+            "max_entries": 3
+          },
+          "expected": {
+            "format": "atom",
+            "feed_title": "Release notes from trafilatura",
+            "feed_updated": "2026-10-02T16:53:21Z",
+            "entry_count": 10,
+            "entries": [
+              {
+                "title": "trafilatura-2.3.0",
+                "link": "https://github.com/adbar/trafilatura/releases/tag/v2.3.0",
+                "published": "2026-10-02T16:53:41Z",
+                "id": "tag:github.com,2008:Repository/180136168/v2.3.0",
+                "content_snippet": "Major changes: Downloads and decompression overhaul by @adbar ( #921 ) Simplified document handling code and better correctness by @adbar ( #938 ) Simpler and faster deduplication, scoped caches accepted by @adbar ( #919 ) Fixes: Better text extraction: forms, link farms, inline code, infinite scrol"
+              },
+              {
+                "title": "trafilatura-2.2.0",
+                "link": "https://github.com/adbar/trafilatura/releases/tag/v2.2.0",
+                "published": "2026-07-31T16:07:10Z",
+                "id": "tag:github.com,2008:Repository/180136168/v2.2.0",
+                "content_snippet": "Major changes: Revamped text recovery and extraction sequence: better recall overall and better extraction on forums by @adbar ( #881 ) More targeted boilerplate pruning to reduce over-extraction by @adbar ( #887 ) More robust tests and better processing for nested elements by @adbar ( #866 ) Better"
+              },
+              {
+                "title": "trafilatura-2.1.0",
+                "link": "https://github.com/adbar/trafilatura/releases/tag/v2.1.0",
+                "published": "2026-06-07T17:44:28Z",
+                "id": "tag:github.com,2008:Repository/180136168/v2.1.0",
+                "content_snippet": "Major changes: Dependencies updated, lxml in particular (with minimal changes in the code) Faster XPath performance using XSLT extensions by @Honesty-of-the-Cavernous-Tissue ( #793 ) More deprecation warnings More robust code Fixes: Fix node pruning raising an AttributeError in certain cases by @PLP"
+              }
+            ],
+            "source": "sample.atom",
+            "version": "1.0.0"
+          }
+        },
+        {
+          "server": "analysis",
+          "tool": "parse_feed",
+          "arguments": {
+            "xml_content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<rss version=\"2.0\"><channel>\n<title>Example News</title><link>https://example.com</link><description>demo</description>\n<item><title>Item One</title><link>https://example.com/1</link><pubDate>Thu, 03 Oct 2026 10:00:00 GMT</pubDate><guid>g1</guid><description>First &lt;b&gt;item&lt;/b&gt; summary.</description></item>\n<item><title>Item Two</title><link>https://example.com/2</link><pubDate>Thu, 03 Oct 2026 11:00:00 GMT</pubDate><guid>g2</guid><description>Second item summary.</description></item>\n</channel></rss>",
+            "max_entries": 5
+          },
+          "expected": {
+            "format": "rss",
+            "feed_title": "Example News",
+            "feed_updated": "",
+            "entry_count": 2,
+            "entries": [
+              {
+                "title": "Item One",
+                "link": "https://example.com/1",
+                "published": "Thu, 03 Oct 2026 10:00:00 GMT",
+                "id": "g1",
+                "content_snippet": "First item summary."
+              },
+              {
+                "title": "Item Two",
+                "link": "https://example.com/2",
+                "published": "Thu, 03 Oct 2026 11:00:00 GMT",
+                "id": "g2",
+                "content_snippet": "Second item summary."
+              }
+            ],
+            "source": "inline",
+            "version": "1.0.0"
+          }
+        }
+      ],
+      "builtin": {
+        "title": "RSS / Atom 解析",
+        "default_state": "discoverable",
+        "tool_definitions": "tools.json"
+      }
+    }
+  },
+  "license": "MIT"
+}

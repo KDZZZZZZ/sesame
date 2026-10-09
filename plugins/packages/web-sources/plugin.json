@@ -1,0 +1,16 @@
+{
+  "id": "web-sources",
+  "title": "公开来源",
+  "description": "抓取 HTTP/HTTPS 资料，支持公网与内网，保存来源和输入快照。",
+  "version": "1.0.0",
+  "default_state": "discoverable",
+  "tool_names": [
+    "sources_fetch"
+  ],
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [],
+  "entry": "tools.js",
+  "tool_definitions": "tools.json"
+}

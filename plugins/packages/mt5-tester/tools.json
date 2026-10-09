@@ -1,0 +1,235 @@
+[
+  {
+    "name": "mt5_test",
+    "label": "mt5_test",
+    "description": "调用 mt5-tester 所属的官方能力。先从 mt5_catalog 获取精确 tool / inputSchema；其他插件的方法不能从此入口调用。command_id 沿用同一动作的稳定 ID；结果 unknown 时先核对真实状态。save_as 可保存大 JSON。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "server",
+        "tool",
+        "arguments",
+        "command_id"
+      ],
+      "properties": {
+        "server": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "terminal"
+            },
+            {
+              "type": "string",
+              "const": "metaeditor"
+            },
+            {
+              "type": "string",
+              "const": "marketdata"
+            },
+            {
+              "type": "string",
+              "const": "python"
+            },
+            {
+              "type": "string",
+              "const": "launcher"
+            }
+          ]
+        },
+        "tool": {
+          "type": "string",
+          "description": "目录返回的精确方法名",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        },
+        "command_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{16,128}$",
+          "description": "唯一稳定 ID，推荐 UUID；同一动作重试必须沿用"
+        },
+        "save_as": {
+          "type": "string",
+          "description": "完整结果的 /work JSON 文件路径",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_backtest",
+    "label": "mt5_backtest",
+    "description": "受管理的真实 MT5 Tester。start 用冻结 build_id 和明确 config 创建任务；可用 parameter_space 穷举最多 64 组。get/list 查看，wait 最多等待 20 秒，stop 显式停止。结果自动登记后端数据；完成不等于策略有效。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "start"
+            },
+            {
+              "type": "string",
+              "const": "get"
+            },
+            {
+              "type": "string",
+              "const": "list"
+            },
+            {
+              "type": "string",
+              "const": "wait"
+            },
+            {
+              "type": "string",
+              "const": "stop"
+            }
+          ]
+        },
+        "build_id": {
+          "type": "string",
+          "description": "编译成功的构建 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "backtest_id": {
+          "type": "string",
+          "description": "回测任务 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "project_id": {
+          "type": "string",
+          "description": "list 可按工程过滤",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "config": {
+          "type": "object",
+          "required": [
+            "symbol",
+            "period",
+            "from_date",
+            "to_date",
+            "deposit",
+            "currency",
+            "leverage",
+            "model",
+            "parameters"
+          ],
+          "properties": {
+            "symbol": {
+              "type": "string",
+              "description": "券商精确品种名",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "period": {
+              "type": "string",
+              "description": "M1/H1 等原生周期",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "from_date": {
+              "type": "string",
+              "description": "YYYY-MM-DD，券商服务器日期",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "to_date": {
+              "type": "string",
+              "description": "YYYY-MM-DD，排除终止日",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "deposit": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "currency": {
+              "type": "string",
+              "description": "USD 等货币",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "leverage": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            },
+            "model": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "const": 0
+                },
+                {
+                  "type": "number",
+                  "const": 1
+                },
+                {
+                  "type": "number",
+                  "const": 2
+                },
+                {
+                  "type": "number",
+                  "const": 4
+                }
+              ]
+            },
+            "parameters": {
+              "type": "object",
+              "properties": {},
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "parameter_space": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            },
+            "minItems": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]
