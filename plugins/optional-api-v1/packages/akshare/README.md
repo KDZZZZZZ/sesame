@@ -1,0 +1,9 @@
+# Optional AKShare plugin
+
+API-v1 native package, default discoverable. No activation-time dependency downloads; no account or trade interface. Sources: [AKShare installation](https://akshare.akfamily.xyz/installation.html) and [stock API documentation](https://akshare.akfamily.xyz/data/stock/stock.html).
+
+First use `akshare_discover` with any configured existing Python. Compatible AKShare 1.19.1 is verified through actual import/version and reused readonly; no shared environment is upgraded. `akshare_prepare` also checks existing environments first. Only when missing, tools prepare a venv **under plugin persistent data**, pinned `akshare==1.19.1`, using only `https://pypi.org/simple` packages (prefer wheels; official source distributions may be built in the isolated environment). The install receipt records each resolved version, official wheel URL and SHA256. Requires a native 64-bit Python 3.11+ with venv/pip. Unsupported architecture or guest-only Python fail explicitly. AKShare uses many dependencies; preparation may take minutes. Pure Python source dependencies such as jsonpath may require an isolated build; no global package installation occurs.
+
+`sesame.market@1` provides instrument search/describe and daily bar history, **not streaming**. Eastmoney and Sina have separate source identities; no silent fallback. Decimal strings reflect upstream float precision. Time is Asia/Shanghai wall time, daily aggregate session 09:30–15:00; current incomplete days marked forming. Unknown calendar/coverage is never claimed complete.
+
+Offline tests (matching host SDK loader): `node --import "$SESAME_PLUGIN_SDK_LOADER" --test tests/provider.test.js`. Opt-in real integration: `node tests/live.mjs` (creates a temporary data directory, downloads official dependencies, makes actual public data calls and removes the directory in finally). This is not broker execution.
