@@ -104,6 +104,38 @@ The gate ran trusted main revision `6937305ba021bb20a0f0b022fdc18bede3eca383`, c
 
 This release contains AKShare 1.0.2, QMT 1.0.0 and vn.py 1.0.1. A fresh test fixture downloaded the three immutable public catalog packages, verified their files, installed/loaded them and called their environment/status tools in the same Pi session (one integration test, 20.2 seconds). It used an existing compatible vn.py environment; it did not install dependencies or exercise a new model decision, full fresh Qt installation, authorized Windows QMT terminal or brokerage trade. The catalog source remains `373bb390c8903688105a88f51b33960f8665187a`.
 
+# Development bundle 9 validation
+
+Only MT5 changes, from 1.1.5 to 1.1.6; the other 18 package versions and file
+trees remain those of bundle 8. Reusing a compiled build after archival or a
+plugin upgrade could republish changed storage metadata and producer information
+under the same native-build operation, causing a real host idempotency conflict
+before a run was created. The plugin now persists a fixed build-reference index
+and strictly validates existing build evidence before reusing its original ref
+and producer. Archive location and cleanup flags are excluded from compiled
+content identity. New definitions still use the fixed build operation; the fix
+does not randomize operations or weaken the host's idempotency rules.
+
+Eleven public frozen-build/run-reference checks passed. Independent review also
+passed 14 checks using a real temporary Store and ContractArtifacts, including
+protect/cleanup removing the transient manifest, closing and reopening the Store,
+and definition/RunRecord creation across two main conversations and producer
+version fixtures 1.1.3, 1.1.6 and 1.1.7. These are compatibility fixtures, not a
+claim that a 1.1.7 package has been released. The original fixed ref and producer
+remain intact. Changed immutable build/manifest/translation/EX5 data, missing or
+damaged blobs, foreign references/dependencies and ambiguous same-build refs are
+rejected rather than adopted or republished.
+
+A read-only inspection of the previous application's stored evidence reproduced
+the mismatch caused by the two archive-state fields. In a separate temporary
+Store, three repeated definitions retained the original 1.1.3-produced ref with
+zero new publications, and immutable changes were rejected. The independent
+review inspected that evidence without rerunning the original database script.
+This verifies evidence freezing and persistent lifecycle, not new compilation,
+native Tester execution or brokerage trading. No running application cache was
+rewritten. The final source, lock and archive still require the exact-head review
+and premerge publication gate described in [PUBLISHING.md](PUBLISHING.md).
+
 # Development bundle 8 validation
 
 Only MT5 changes from 1.1.4 to 1.1.5; the other 18 packages, including
