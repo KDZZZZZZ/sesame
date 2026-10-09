@@ -31,3 +31,11 @@ ran the real engine and reopened frozen successful and failed results. Bundle 1'
 three exact names were independently installed from the live public catalog and
 immediately called in the same Pi session. Publication evidence is recorded in the
 [official bundle validation](../api-v1/VALIDATION.md).
+
+AKShare 1.0.2 corrects the Tencent history venue for Beijing's 920-series codes
+and adds request-level coverage for Shanghai, Shenzhen, and both Beijing code
+ranges (11 AKShare checks). The actual `bj920002` probe returned no usable
+upstream daily payload; the adapter surfaces that error and does not fabricate
+history or switch providers. QMT 1.0.0 and vn.py 1.0.0 are unchanged. New release
+publication requires the [pre-merge semantic review gate](../api-v1/PUBLISHING.md),
+with exact-head identity and actual reviewer/timestamp evidence.

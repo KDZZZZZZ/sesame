@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "apiVersion": "1",
   "channel": "development",
-  "sourceCommit": "d9994cb4282010353d00e1db6336bd90fa7c26ef",
+  "sourceCommit": "7d0cafd2079f79671c3746b894c01616db34b833",
   "plugins": [
     {
       "id": "sesame/akshare",
       "name": "akshare",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "apiVersion": "1",
       "format": "sesame-native",
       "title": "AKShare A股研究数据",
@@ -20,11 +20,11 @@
       "status": "active",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d9994cb4282010353d00e1db6336bd90fa7c26ef",
+        "commit": "7d0cafd2079f79671c3746b894c01616db34b833",
         "path": "plugins/optional-api-v1/packages/akshare"
       },
       "package": {
-        "treeDigest": "sha256:30331534b955cf7b6f43e51c21dd8f6f081a8a3c8e209bc20a65830024fa4675",
+        "treeDigest": "sha256:296539a63112b222d4f7572199dfb1992370f838c0daa52ee65fc8c0170c323d",
         "files": [
           {
             "path": "LICENSE",
@@ -33,13 +33,13 @@
           },
           {
             "path": "README.md",
-            "sha256": "9d821cd75145308b23edcfce4486d2370a2151e7ee7db50ad402ce43b2fe4b29",
-            "bytes": 1741
+            "sha256": "323e4e8cd39fd016f640c95f1844ec1ce4cf8070b96d5bc942b015c026b3b979",
+            "bytes": 2153
           },
           {
             "path": "VALIDATION.md",
-            "sha256": "c9bcf57cb8aba6bb17f75d3701ebf14c39280c91312161e14f4dbb7f2a21882c",
-            "bytes": 3026
+            "sha256": "1d648fa02c93afa83988181f32c9baa3aca5afd4ff022f6e001eab7ff5e13e1b",
+            "bytes": 3653
           },
           {
             "path": "bridge.py",
@@ -53,12 +53,12 @@
           },
           {
             "path": "package.json",
-            "sha256": "96266c60092aabf9fd2a152ad58a5e8a4ed1a7a9984034d74000b83d8d38b6e0",
+            "sha256": "006f1bdf4cab463550f574b466d3f56e9b5f75496abe616e1a656ba0d8cb9e07",
             "bytes": 120
           },
           {
             "path": "plugin.json",
-            "sha256": "7ecbd865693d0a00a954c7b995212c0d969d16b6528f1bed7c067cfe703666b5",
+            "sha256": "73b16c2c7121e37d36e71f5914c8767300b78394e159ef3add6a3cae329308ff",
             "bytes": 762
           },
           {
@@ -68,8 +68,8 @@
           },
           {
             "path": "provider.js",
-            "sha256": "f8964afd13dbe9f0a52abe025be4aa254bd8b413d62e473105750794c0140c65",
-            "bytes": 15705
+            "sha256": "911dbd5f14c351da732c0e25f6e8e4c4bff651ef9d56930810e15130e76b90fb",
+            "bytes": 15711
           },
           {
             "path": "skills/akshare-research/SKILL.md",
@@ -88,8 +88,8 @@
           },
           {
             "path": "tests/provider.test.js",
-            "sha256": "f79c0500b5b51ec6f7ea4a78d550c07f13f6f5b72ce9841845962b7810c33083",
-            "bytes": 6497
+            "sha256": "1a859777e9c76a44f63935f2a189436bb66f20aa3f51f94d443e6c7b417e73b1",
+            "bytes": 7297
           },
           {
             "path": "tools.json",
@@ -117,7 +117,7 @@
         "akshare_quote"
       ],
       "requirements": "Existing compatible native Python/AKShare is reused; explicit preparation can install a private dependency environment. Read-only quotes and daily bars are polled no faster than 60 seconds, not an exchange tick feed. Observed quotes may have unknown freshness; upstream failures remain explicit. No trading.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/d9994cb4282010353d00e1db6336bd90fa7c26ef/plugins/optional-api-v1/packages/akshare/README.md",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/7d0cafd2079f79671c3746b894c01616db34b833/plugins/optional-api-v1/packages/akshare/README.md",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -136,7 +136,7 @@
       "status": "active",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d9994cb4282010353d00e1db6336bd90fa7c26ef",
+        "commit": "7d0cafd2079f79671c3746b894c01616db34b833",
         "path": "plugins/optional-api-v1/packages/qmt"
       },
       "package": {
@@ -225,7 +225,7 @@
         "qmt_read"
       ],
       "requirements": "Native Windows x64, compatible Python/XtQuant and an existing broker-authorized MiniQMT are required. No terminal download/start or trade action occurs on load. macOS/Linux are not QMT execution hosts.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/d9994cb4282010353d00e1db6336bd90fa7c26ef/plugins/optional-api-v1/packages/qmt/README.md",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/7d0cafd2079f79671c3746b894c01616db34b833/plugins/optional-api-v1/packages/qmt/README.md",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -244,7 +244,7 @@
       "status": "active",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d9994cb4282010353d00e1db6336bd90fa7c26ef",
+        "commit": "7d0cafd2079f79671c3746b894c01616db34b833",
         "path": "plugins/optional-api-v1/packages/vnpy"
       },
       "package": {
@@ -338,7 +338,7 @@
         "vnpy_result"
       ],
       "requirements": "Native 64-bit Python 3.10–3.13 with vnpy 4.5.0 and vnpy_ctastrategy 1.4.1; inspect/reuse before explicit preparation. Fixed bars and authored Python run as the current user. Backtesting only; no gateway/account trading.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/d9994cb4282010353d00e1db6336bd90fa7c26ef/plugins/optional-api-v1/packages/vnpy/README.md",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/7d0cafd2079f79671c3746b894c01616db34b833/plugins/optional-api-v1/packages/vnpy/README.md",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     }
   ]

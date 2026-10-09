@@ -11,3 +11,5 @@ Select and persist one exact connection: `akshare:eastmoney`, `akshare:sina`, or
 History is paged, Decimal text and explicitly source-labelled. Eastmoney volume is lot, Sina/Tencent normalized history volume is share. AKShare 1.19.1 excludes sz000 stocks from its conversion; for these A-share stock inputs the bridge preserves native_volume and explicitly applies lot×100.
 
 `akshare_quote` and the research whitelist are read-only. No accounts or trading API is provided. Network errors remain errors. Upstream floats cannot recover lost precision.
+
+Market-prefixed history requests map 920xxx and legacy 4/8 codes to Beijing (`bj`), 6/other 9 codes to Shanghai, and remaining A-share codes to Shenzhen. The [BSE code announcement](https://www.bse.cn/important_news/200021617.html) establishes the 920 segment. Sina remains limited to its supported Shanghai/Shenzhen codes. Explicit research arguments already require a market prefix and are never re-inferred.
