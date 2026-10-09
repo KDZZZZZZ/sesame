@@ -2,10 +2,10 @@ name: Plugin API 1 sources
 on:
   push:
     branches: [main, feat/plugin-api-v1]
-    paths: ['plugins/api-v1/**', 'plugins/optional-api-v1/**', '.github/workflows/plugin-api-v1.yml']
+    paths: ['plugins/api-v1/**', 'plugins/optional-api-v1/**', '.github/scripts/*api1*', '.github/scripts/release-plugins*', '.github/plugin-releases/**', '.github/workflows/plugin-api*.yml']
   pull_request_target:
     types: [opened, synchronize, reopened]
-    paths: ['plugins/api-v1/**', 'plugins/optional-api-v1/**', '.github/workflows/plugin-api-v1.yml']
+    paths: ['plugins/api-v1/**', 'plugins/optional-api-v1/**', '.github/scripts/*api1*', '.github/scripts/release-plugins*', '.github/plugin-releases/**', '.github/workflows/plugin-api*.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -29,15 +29,20 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           path: candidate
+          fetch-depth: 0
           persist-credentials: false
       - name: Validate package boundaries, metadata and every locked byte
         run: node trusted/plugins/api-v1/scripts/plugin-lock.mjs --check --source candidate/plugins/api-v1
-      - name: Validate optional packages and development catalog as data
+      - name: Validate optional package data with the trusted base validator
         run: |
-          node trusted/plugins/api-v1/scripts/plugin-lock.mjs --check --source candidate/plugins/optional-api-v1
-          node trusted/plugins/optional-api-v1/scripts/catalog.mjs --check --source candidate/plugins/optional-api-v1
+          if test -f candidate/plugins/optional-api-v1/official-plugins.lock.json; then
+            node trusted/plugins/api-v1/scripts/plugin-lock.mjs --check --source candidate/plugins/optional-api-v1
+            node trusted/.github/scripts/validate-api1-catalog.mjs candidate
+          fi
+      - name: Validate fixed release plans without publishing
+        run: node trusted/.github/scripts/release-plugins.mjs --check candidate
       - name: Test trusted lock and archive code
-        run: node --test trusted/plugins/api-v1/tests/lock.test.mjs
+        run: node --test trusted/plugins/api-v1/tests/lock.test.mjs trusted/.github/scripts/release-plugins.test.mjs
       - name: Record scope
         run: |
           echo '### API 1 package identity checks' >> "$GITHUB_STEP_SUMMARY"
