@@ -91,7 +91,7 @@ export function parseTesterResult(pass, resultBytes, equityBytes, traceBytes) {
 }
 
 export class Tester {
-  constructor(mt5) { this.mt5 = mt5; this.storage = mt5.storage; this.pending = new Map(); this.tail = Promise.resolve(); }
+  constructor(mt5, { runProcess = runTesterProcess } = {}) { this.runProcess = runProcess; this.mt5 = mt5; this.storage = mt5.storage; this.pending = new Map(); this.tail = Promise.resolve(); }
   init() {
     for (const pass of this.storage.list('mt5_pass')) if (TEST_ACTIVE.includes(pass.status)) this.storage.put('mt5_pass', { ...pass, status: 'unknown', error: '应用重启，先核对原生进程与归档文件；未自动重放。', completed_at: now() });
     for (const job of this.storage.list('mt5_backtest')) if (TEST_ACTIVE.includes(job.status)) this.update(job.id, { status: 'unknown', error: '应用重启，未自动重放回测。', completed_at: now() });
@@ -167,20 +167,21 @@ export class Tester {
     // characters. A task workspace can exceed that limit; use a private short
     // native runner instead. Its process ownership is unchanged.
     const runner = await fs.mkdtemp(join(tmpdir(), 'sesame-mt5-'));
+    const safety = { preserve: false };
     let preserve = false;
     try {
       requireValue(windowsPath(join(runner, 'MQL5/Experts/MT5Agent', `${pass.build_id}.ex5`)).length < 240, 'Tester temporary path is too long for MT5; configure a shorter native temporary directory', 503, 'tester_path_too_long');
       this.storage.put('mt5_pass', { ...this.storage.get('mt5_pass', pass.id), temporary_paths: { ...(pass.temporary_paths ?? {}), tester_runner: runner } });
-      return await this.executeInDirectory({ ...pass, temporary_paths: { ...(pass.temporary_paths ?? {}), tester_runner: runner } }, signal, runner);
+      return await this.executeInDirectory({ ...pass, temporary_paths: { ...(pass.temporary_paths ?? {}), tester_runner: runner } }, signal, runner, safety);
     } catch (error) { preserve = error.code === 'runtime_cleanup_failed'; throw error; }
     finally {
-      if (!preserve) {
+      if (!preserve && !safety.preserve) {
         try { await fs.rm(runner, { recursive: true, force: true }); }
         catch (error) { throw new ApiError(503, 'runtime_cleanup_failed', `Owned Tester directory cleanup failed: ${error.message}`); }
       }
     }
   }
-  async executeInDirectory(pass, signal, runner) {
+  async executeInDirectory(pass, signal, runner, safety = { preserve: false }) {
     signal.throwIfAborted();
     requireValue(pass.connection_version === this.mt5.official.config.version, '回测连接配置已改变，请创建新任务');
     this.storage.put('mt5_pass', { ...pass, status: 'preparing' });
@@ -240,7 +241,7 @@ export class Tester {
     }
     requireValue(!existsSync(output), 'Tester 输出目录已存在；拒绝复用或重放');
     const offsets = await this.logOffsets(runner);
-    const started = Date.now(); let logs = '', cleanupConfirmed = false, poll, logRead, cancelWrite;
+    const started = Date.now(); let logs = '', cleanupConfirmed = false, cleanupFailure, poll, logRead, cancelWrite;
     const cancel = () => {
       cancelWrite = fs.mkdir(output, { recursive: true }).then(() => fs.writeFile(join(output, 'cancel'), '')).catch(() => {});
     };
@@ -251,7 +252,7 @@ export class Tester {
         this.storage.put('mt5_pass', { ...this.storage.get('mt5_pass', pass.id), diagnostics: text.slice(-16000) });
       }).catch(() => {}); }, 2000);
       try {
-        const receipt = await runTesterProcess(this.mt5.native, { terminal: join(runner, 'terminal64.exe'), ini, directory: runner }, { signal, onStarted: (pid, controllerPid) => {
+        const receipt = await this.runProcess(this.mt5.native, { terminal: join(runner, 'terminal64.exe'), ini, directory: runner }, { signal, onStarted: (pid, controllerPid) => {
           this.storage.put('mt5_pass', { ...this.storage.get('mt5_pass', pass.id), status: 'running', process_id: pid, controller_pid: controllerPid });
           this.mt5.runObserver?.backtest(this.get(pass.backtest_id));
         } });
@@ -259,6 +260,7 @@ export class Tester {
         this.storage.put('mt5_pass', { ...this.storage.get('mt5_pass', pass.id), process_cleanup: receipt.cleanup });
       } catch (error) {
         cleanupConfirmed = error.code !== 'runtime_cleanup_failed';
+        if (!cleanupConfirmed) { safety.preserve = true; cleanupFailure = error; }
         throw error;
       }
       this.storage.put('mt5_pass', { ...this.storage.get('mt5_pass', pass.id), status: 'collecting' });
@@ -279,12 +281,20 @@ export class Tester {
       clearInterval(poll); signal.removeEventListener('abort', cancel); await logRead; await cancelWrite;
       // Wine graphics diagnostics must not push the actual Tester failure/inputs
       // out of the bounded progress record.
-      nativePaths.after = await fs.readFile(expert).then(bytes => ({ exists: true, bytes: bytes.length, digest: digest(bytes) }), error => ({ exists: false, error: error.code }));
-      this.storage.put('mt5_pass', { ...this.storage.get('mt5_pass', pass.id), native_paths: nativePaths });
-      await fs.writeFile(join(archive, 'native-paths.json'), JSON.stringify(nativePaths, null, 2));
-      const diagnostics = `${this.mt5.official.redact(logs).slice(-4000)}\n${await this.logs(runner, started, account, false, offsets)}\nNative paths: ${JSON.stringify(nativePaths)}`.trim();
-      this.storage.put('mt5_pass', { ...this.storage.get('mt5_pass', pass.id), diagnostics: diagnostics.slice(-24000) });
-      await fs.writeFile(join(archive, 'tester.log'), diagnostics);
+      try {
+        nativePaths.after = await fs.readFile(expert).then(bytes => ({ exists: true, bytes: bytes.length, digest: digest(bytes) }), error => ({ exists: false, error: error.code }));
+        this.storage.put('mt5_pass', { ...this.storage.get('mt5_pass', pass.id), native_paths: nativePaths });
+        await fs.writeFile(join(archive, 'native-paths.json'), JSON.stringify(nativePaths, null, 2));
+        const diagnostics = `${this.mt5.official.redact(logs).slice(-4000)}\n${await this.logs(runner, started, account, false, offsets)}\nNative paths: ${JSON.stringify(nativePaths)}`.trim();
+        this.storage.put('mt5_pass', { ...this.storage.get('mt5_pass', pass.id), diagnostics: diagnostics.slice(-24000) });
+        await fs.writeFile(join(archive, 'tester.log'), diagnostics);
+      } catch (diagnosticError) {
+        if (cleanupFailure) {
+          cleanupFailure.details = { ...cleanupFailure.details, diagnosticFailure: { code: diagnosticError.code ?? null, message: this.mt5.official.redact(diagnosticError.message) } };
+          throw cleanupFailure;
+        }
+        throw diagnosticError;
+      }
       if (cleanupConfirmed) {
         await fs.rm(ini, { force: true });
         await fs.rm(output, { recursive: true, force: true });
