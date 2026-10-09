@@ -40,7 +40,7 @@ export class SnapshotPages {
 }
 
 class NativeProvider {
-  constructor(mt5) { this.mt5 = mt5; this.bindings = new Map(); this.pages = new SnapshotPages(); this.revisions = new Revisions(); this.reads = new Map(); this.closed = false; }
+  constructor(mt5) { this.mt5 = mt5; this.bindings = new Map(); this.pages = new SnapshotPages(); this.revisions = new Revisions(); this.reads = new Map(); this.readSequence = 0; this.closed = false; }
   bind(input, context) {
     const config = this.mt5.official.config, server = config.account?.server, login = config.account?.login;
     check(server && login, 'CONNECTION_UNAVAILABLE', 'Configure the MT5 terminal account before binding data');
@@ -61,17 +61,28 @@ class NativeProvider {
   }
   async read(tool, args, context, ageMs = 0) {
     const binding = this.binding(context), key = fingerprint([context.bindingId, tool, args]);
-    const prior = this.reads.get(key);
-    if (prior && (prior.pending || Date.now() - prior.at < ageMs)) return clone(await prior.promise);
-    const entry = { pending: true, at: Date.now() };
-    entry.promise = (async () => {
-      const result = await this.mt5.market.read(tool, args, context.signal);
-      this.binding(context); entry.pending = false; entry.at = Date.now(); return result;
-    })();
-    this.reads.set(key, entry);
-    try { return clone(await entry.promise); }
-    catch (cause) { this.reads.delete(key); throw cause; }
-    finally { if (this.reads.size > 128) for (const [id, value] of this.reads) if (!value.pending && Date.now() - value.at > 2000) this.reads.delete(id); }
+    // Large moving history windows belong only to the current read, never a cache.
+    // Pending requests are consumer-owned: one stream's abort cannot cancel another.
+    const cacheable = tool !== 'get_chart_history' && ageMs > 0;
+    const prior = cacheable && this.reads.get(key);
+    if (prior && prior.binding === binding && Date.now() - prior.at < ageMs) return clone(prior.value);
+    if (prior) { clearTimeout(prior.timer); this.reads.delete(key); }
+    const sequence = ++this.readSequence, controller = new AbortController();
+    binding.readControllers ??= new Set(); binding.readControllers.add(controller);
+    const signal = AbortSignal.any([controller.signal, ...(context.signal ? [context.signal] : [])]);
+    try {
+      const result = await this.mt5.market.read(tool, args, signal);
+      signal.throwIfAborted(); this.binding(context);
+      check(this.bindings.get(context.bindingId) === binding, 'CONNECTION_CHANGED', 'The binding changed while reading');
+      if (cacheable && (this.reads.get(key)?.sequence ?? 0) < sequence && Buffer.byteLength(JSON.stringify(result)) <= 64 * 1024) {
+        const old = this.reads.get(key); if (old) clearTimeout(old.timer);
+        while (this.reads.size >= 16) { const [id, entry] = this.reads.entries().next().value; clearTimeout(entry.timer); this.reads.delete(id); }
+        const entry = { binding, bindingId: context.bindingId, sequence, at: Date.now(), value: clone(result) };
+        entry.timer = setTimeout(() => { if (this.reads.get(key) === entry) this.reads.delete(key); }, Math.min(ageMs, 1000)); entry.timer.unref?.();
+        this.reads.set(key, entry);
+      }
+      return clone(result);
+    } finally { binding.readControllers.delete(controller); }
   }
   async accountInfo(context) {
     const binding = this.binding(context), data = await this.read('get_trading_account_info', {}, context, 1000);
@@ -89,8 +100,12 @@ class NativeProvider {
     const sorted = rows.map(time).sort((a, b) => timeKey(a) - timeKey(b));
     return { requested: range, observedRange: sorted.length ? { from: sorted[0], to: sorted.at(-1) } : null, complete: false, gaps: [{ range, reason: 'not_available' }] };
   }
-  unbind({ bindingId }) { this.bindings.delete(bindingId); }
-  dispose() { this.closed = true; this.bindings.clear(); this.pages.snapshots.clear(); this.reads.clear(); }
+  unbind({ bindingId }) {
+    const binding = this.bindings.get(bindingId); this.bindings.delete(bindingId);
+    for (const controller of binding?.readControllers ?? []) controller.abort(Object.assign(new Error('Binding was closed'), { code: 'CONNECTION_CHANGED' }));
+    for (const [key, entry] of this.reads) if (entry.bindingId === bindingId) { clearTimeout(entry.timer); this.reads.delete(key); }
+  }
+  dispose() { this.closed = true; for (const bindingId of [...this.bindings.keys()]) this.unbind({ bindingId }); this.pages.snapshots.clear(); }
 }
 
 function pollSubscription({ snapshot, read, events, intervalMs, context }) {
@@ -156,8 +171,11 @@ export class MT5MarketProvider extends NativeProvider {
     await this.accountInfo(context);
     for (let start = range.from; start < range.to; start += tail ? range.to - range.from : PERIODS[period] * 2000) {
       const end = tail ? range.to : Math.min(range.to, start + PERIODS[period] * 2000);
-      const data = await this.read('get_chart_history', { symbol: input.instrument.instrumentId, period, datetime_from: brokerISO(start), datetime_to: brokerISO(end), limit: tail ? Math.min(2001, input.tailLimit + 1) : 5000 }, context, tail ? 1000 : 0);
-      check(data.ok !== false && Array.isArray(data.history) && (tail || data.history.length < 5000), 'SOURCE_UNAVAILABLE', 'MT5 history is missing or truncated');
+      // Native latest-N truncation omits the current bar. Read the whole bounded
+      // window, then select the requested tail; a truncated response is not live evidence.
+      const nativeLimit = tail ? Math.ceil((end - start) / PERIODS[period]) + 2 : 5000;
+      const data = await this.read('get_chart_history', { symbol: input.instrument.instrumentId, period, datetime_from: brokerISO(start), datetime_to: brokerISO(end), limit: nativeLimit }, context, tail ? 1000 : 0);
+      check(data.ok !== false && Array.isArray(data.history) && data.history.length < nativeLimit, 'SOURCE_UNAVAILABLE', 'MT5 history is missing or truncated');
       rows.push(...data.history);
     }
     this.binding(context);
