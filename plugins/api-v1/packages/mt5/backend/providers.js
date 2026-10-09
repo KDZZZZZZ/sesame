@@ -156,8 +156,11 @@ export class MT5MarketProvider extends NativeProvider {
     await this.accountInfo(context);
     for (let start = range.from; start < range.to; start += tail ? range.to - range.from : PERIODS[period] * 2000) {
       const end = tail ? range.to : Math.min(range.to, start + PERIODS[period] * 2000);
-      const data = await this.read('get_chart_history', { symbol: input.instrument.instrumentId, period, datetime_from: brokerISO(start), datetime_to: brokerISO(end), limit: tail ? Math.min(2001, input.tailLimit + 1) : 5000 }, context, tail ? 1000 : 0);
-      check(data.ok !== false && Array.isArray(data.history) && (tail || data.history.length < 5000), 'SOURCE_UNAVAILABLE', 'MT5 history is missing or truncated');
+      // Native latest-N truncation omits the current bar. Read the whole bounded
+      // window, then select the requested tail; a truncated response is not live evidence.
+      const nativeLimit = tail ? Math.ceil((end - start) / PERIODS[period]) + 2 : 5000;
+      const data = await this.read('get_chart_history', { symbol: input.instrument.instrumentId, period, datetime_from: brokerISO(start), datetime_to: brokerISO(end), limit: nativeLimit }, context, tail ? 1000 : 0);
+      check(data.ok !== false && Array.isArray(data.history) && data.history.length < nativeLimit, 'SOURCE_UNAVAILABLE', 'MT5 history is missing or truncated');
       rows.push(...data.history);
     }
     this.binding(context);
