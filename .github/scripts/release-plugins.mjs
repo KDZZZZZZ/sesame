@@ -116,7 +116,15 @@ export function validateAssets(release, files) {
   }
 }
 
-async function preserveRecordedReview(release, plan, pr, files) {
+export function releaseCommitFor(head, object, release) {
+  const commit = object?.sha ?? release?.target_commitish ?? head;
+  assert(/^[a-f0-9]{40}$/.test(commit), 'Publication tag requires a fixed main-branch commit');
+  assert(!object || object.type === 'commit', 'Publication tag must resolve to a commit');
+  assert(!release || release.target_commitish === commit, 'Existing release and tag identify different publishing revisions');
+  return commit;
+}
+
+async function preserveRecordedReview(release, plan, pr, files, releaseCommit) {
   const asset = release.assets.find(item => item.name === 'review.json');
   if (!asset) return;
   const response = await fetch(`https://api.github.com/repos/${REPOSITORY}/releases/assets/${asset.id}`, { headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}`, Accept: 'application/octet-stream', 'X-GitHub-Api-Version': '2022-11-28' } });
@@ -124,6 +132,7 @@ async function preserveRecordedReview(release, plan, pr, files) {
   const bytes = Buffer.from(await response.arrayBuffer()); assert(bytes.length <= 1024 * 1024 && asset.digest === `sha256:${sha256(bytes)}`, 'Existing review record digest differs');
   const record = JSON.parse(bytes);
   assert(record.tag === plan.tag && record.sourceCommit === plan.sourceCommit && record.pullRequest?.number === plan.pullRequest && record.pullRequest.headSha === pr.head.sha && record.pullRequest.mergeCommit === pr.merge_commit_sha, 'Existing review record identifies different source');
+  assert(record.publication?.commit === releaseCommit, 'Existing review record identifies a different publishing revision');
   assert(record.automated?.length === CHECKS.length && ['approved', 'not-recorded'].includes(record.human?.status), 'Incomplete existing review record');
   for (const required of CHECKS) {
     const check = record.automated.find(item => item.name === required.name);
@@ -145,23 +154,26 @@ async function publish(repository, relative, prepared) {
   git(repository, ['merge-base', '--is-ancestor', plan.sourceCommit, pr.head.sha]);
   git(repository, ['merge-base', '--is-ancestor', pr.merge_commit_sha, 'HEAD']);
   assert(git(repository, ['show', `${pr.head.sha}:${relative}`]).equals(readFileSync(join(repository, relative))), 'Release plan changed after its reviewed PR');
-  evidence.publication = { workflow: `https://github.com/${REPOSITORY}/blob/${pr.merge_commit_sha}/.github/workflows/plugin-api1-release.yml`, trigger: 'main branch workflow after merged PR and successful exact-head checks' };
-  files.set('review.json', Buffer.from(JSON.stringify(evidence, null, 2) + '\n'));
   const tag = await api(`/git/ref/tags/${plan.tag}`, { allowMissing: true });
-  if (tag) {
-    const object = tag.object.type === 'tag' ? (await api(`/git/tags/${tag.object.sha}`)).object : tag.object;
-    assert(object.type === 'commit' && object.sha === plan.sourceCommit, 'Existing tag points at different source; refusing to move it');
-  }
+  const object = tag ? (tag.object.type === 'tag' ? (await api(`/git/tags/${tag.object.sha}`)).object : tag.object) : null;
   let release = await findRelease(plan.tag);
+  const head = git(repository, ['rev-parse', 'HEAD']).toString().trim(), releaseCommit = releaseCommitFor(head, object, release);
+  git(repository, ['merge-base', '--is-ancestor', pr.merge_commit_sha, releaseCommit]);
+  git(repository, ['merge-base', '--is-ancestor', releaseCommit, head]);
+  assert(git(repository, ['show', `${releaseCommit}:${relative}`]).equals(readFileSync(join(repository, relative))), 'Publishing revision contains a different release plan');
+  evidence.publication = { commit: releaseCommit, workflow: `https://github.com/${REPOSITORY}/blob/${releaseCommit}/.github/workflows/plugin-api1-release.yml`, trigger: 'main branch workflow after merged PR and successful exact-head checks' };
+  files.set('review.json', Buffer.from(JSON.stringify(evidence, null, 2) + '\n'));
   if (release) {
-    assert(release.target_commitish === plan.sourceCommit, 'Existing release target differs');
-    await preserveRecordedReview(release, plan, pr, files);
+    await preserveRecordedReview(release, plan, pr, files, releaseCommit);
   }
   if (release && !release.draft) {
     assert(release.prerelease, 'Existing release is not a prerelease'); validateAssets(release, files);
     console.log(`Already published with the reviewed digests: ${release.html_url}`); return;
   }
-  if (!release) release = await api('/releases', { method: 'POST', body: JSON.stringify({ tag_name: plan.tag, target_commitish: plan.sourceCommit, name: plan.title, draft: true, prerelease: true, make_latest: 'false', body: `Development plugin packages for the matching API 1 host.\n\nAutomatically published after [PR #${plan.pullRequest}](${pr.html_url}) was merged and its exact-head static checks passed. Source: ${plan.sourceCommit}.\n\nSee review.json for actual check URLs and review states; human review: ${evidence.human.status}. Static checks do not certify runtime behavior or safety. Existing stable 0.1.4 catalog metadata is unchanged.\n\nVerify SHA256SUMS and official-plugins.lock.json before installation. application-official-plugins.lock.json pins the archive and every package tree.` }) });
+  if (!release) {
+    if (!tag) assert((await api('/git/ref/heads/main')).object.sha === head, 'Main advanced during publication; rerun at its current revision');
+    release = await api('/releases', { method: 'POST', body: JSON.stringify({ tag_name: plan.tag, target_commitish: releaseCommit, name: plan.title, draft: true, prerelease: true, make_latest: 'false', body: `Development plugin packages for the matching API 1 host.\n\nAutomatically published after [PR #${plan.pullRequest}](${pr.html_url}) was merged and its exact-head static checks passed. Fixed package source: ${plan.sourceCommit}. Publishing revision/tag: ${releaseCommit}.\n\nSee review.json for actual check URLs and review states; human review: ${evidence.human.status}. Static checks do not certify runtime behavior or safety. Existing stable 0.1.4 catalog metadata is unchanged.\n\nVerify SHA256SUMS and official-plugins.lock.json before installation. application-official-plugins.lock.json pins the archive and every package tree.` }) });
+  }
   for (const [name, bytes] of files) {
     const existing = release.assets.find(asset => asset.name === name);
     if (existing) { assert(existing.digest === `sha256:${sha256(bytes)}`, `Draft asset differs: ${name}; refusing overwrite`); continue; }

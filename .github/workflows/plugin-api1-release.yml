@@ -2,7 +2,7 @@ name: Plugin API 1 release
 on:
   push:
     branches: [main]
-    paths: ['.github/plugin-releases/*.json']
+    paths: ['.github/plugin-releases/*.json', '.github/scripts/release-plugins.mjs', '.github/workflows/plugin-api1-release.yml']
   workflow_dispatch:
 permissions:
   contents: read
