@@ -48,7 +48,7 @@ export function validateCatalog(catalog, readPackage) {
     let total = 0; const names = new Set();
     for (const f of files) {
       assert(safePath(f.path) && !names.has(f.path), `${label}: unsafe or duplicate file path`); names.add(f.path);
-      assert(sha(f.sha256) && Number.isInteger(f.bytes) && f.bytes >= 0 && f.bytes <= 5*1024*1024, `${label}: invalid hash/size`); total += f.bytes;
+      assert(sha(f.sha256) && Number.isInteger(f.bytes) && f.bytes >= 0 && f.bytes <= 2*1024*1024, `${label}: invalid hash/size`); total += f.bytes;
     }
     assert(total <= 16*1024*1024, `${label}: package too large`);
     assert(sha(p.package.treeDigest) && treeDigest(files) === p.package.treeDigest, `${label}: invalid tree digest`);
@@ -58,6 +58,7 @@ export function validateCatalog(catalog, readPackage) {
     for (const f of files) {
       const bytes = data.get(f.path);
       assert(bytes && bytes.length === f.bytes && hash(bytes) === f.sha256, `${label}: source hash mismatch for ${f.path}`);
+      assert(Buffer.from(bytes.toString('utf8'),'utf8').equals(bytes) && !bytes.includes(0), `${label}: only UTF-8 text files are supported`);
       assert(!secret.test(bytes.toString('utf8')), `${label}: possible secret or personal path in ${f.path}`);
     }
     const manifest = JSON.parse(data.get('plugin.json'));
@@ -108,6 +109,15 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   try {
     const root = resolve(process.argv[2] || '.');
     const {catalog,summary} = validateRepository(root);
+    if (process.env.CATALOG_BASE_SHA && /^[a-f0-9]{40}$/.test(process.env.CATALOG_BASE_SHA)) {
+      let before;
+      try { before = JSON.parse(git(root,['show',`${process.env.CATALOG_BASE_SHA}:plugins/catalog.json`],'utf8')); } catch { /* Initial catalog bootstrap. */ }
+      for (const old of before?.plugins || []) {
+        const next = catalog.plugins.find(p=>p.id===old.id);
+        assert(next, `${old.id}: keep a withdrawn tombstone instead of deleting the entry`);
+        assert(next.version !== old.version || next.package.treeDigest === old.package.treeDigest, `${old.id}: changed source requires a new version`);
+      }
+    }
     // Public review records are independently checked; contributors cannot self-attest.
     for (const p of catalog.plugins.filter(p=>p.review.human==='approved')) {
       const id = p.review.reference.match(/pullrequestreview-(\d+)$/)[1];
@@ -116,6 +126,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
       assert(response.ok, `${p.id}: cannot verify human review`);
       const review = await response.json();
       assert(review.state === 'APPROVED' && review.user?.login === p.review.reviewer && review.user?.login === 'KDZZZZZZ' && review.commit_id === p.review.reviewedCommit, `${p.id}: unverified human review`);
+      git(root,['merge-base','--is-ancestor',p.source.commit,p.review.reviewedCommit]);
     }
     console.log(JSON.stringify({result:'static validation passed',...summary,note:'No plugin code was executed. This is not a safety certification.'},null,2));
   } catch (error) { console.error(error.message); process.exitCode = 1; }

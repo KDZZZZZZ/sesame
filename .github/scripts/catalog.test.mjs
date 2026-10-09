@@ -7,7 +7,7 @@ import { hash, treeDigest, safePath, validateCatalog } from './validate-catalog.
 const root = resolve(process.env.CATALOG_ROOT || '.');
 const original = JSON.parse(readFileSync(resolve(root,'plugins/catalog.json')));
 const readPackage = p => new Map(p.package.files.map(f=>[f.path,readFileSync(resolve(root,p.source.path,f.path))]));
-test('published packages match source files',()=>{ assert.equal(validateCatalog(original,readPackage).plugins,26); });
+test('published packages match source files',()=>{ assert.equal(validateCatalog(original,readPackage).plugins,original.plugins.length); });
 test('tree digest uses the app protocol including prefixed inner digests',()=>{
   const files=[{path:'b',sha256:hash('two')},{path:'a',sha256:hash('one')}];
   assert.equal(treeDigest(files),hash(JSON.stringify([['a',`sha256:${hash('one')}`],['b',`sha256:${hash('two')}`]])));

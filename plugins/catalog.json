@@ -1,0 +1,2231 @@
+{
+  "$schema": "https://raw.githubusercontent.com/KDZZZZZZ/sesame/main/plugins/catalog.schema.json",
+  "schemaVersion": 1,
+  "updatedAt": "2026-10-09T00:00:00Z",
+  "plugins": [
+    {
+      "id": "sesame/canvas-control",
+      "name": "canvas-control",
+      "version": "1.4.1",
+      "kind": "bundled",
+      "title": {
+        "en": "Canvas & charts",
+        "zh": "工作台与图表编排"
+      },
+      "summary": {
+        "en": "Arrange your workspace, market charts, live indicators and research curves.",
+        "zh": "编排工作台窗口、行情图、实时指标与研究曲线。"
+      },
+      "category": "workspace",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "canvas-control",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/canvas-control"
+      },
+      "package": {
+        "treeDigest": "9dd5a1b96dea7faea9ee400b094a97fc44bf96223e5f6349658884ca4e808cb8",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "08266425deda9228284b50077be50877785d5dda5c4c1ed876c42e193028060d",
+            "bytes": 965
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "e3ad54cebc4f4e5ea20e2d111a38b8cdec60ed0fbeb7443098b2d6adb51a43ec",
+            "bytes": 591
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "4298d6891bcc72a25b54de628ebe083e84f7dc6cc07cb563088264e998fc7258",
+            "bytes": 6147
+          },
+          {
+            "path": "tools.js",
+            "sha256": "78ffdab606be3834076cf60290217e5289f547ce2b9a9cb584f346d051ca9c8e",
+            "bytes": 6296
+          },
+          {
+            "path": "tools.json",
+            "sha256": "48ead409403fce9e3a66019c2c13b37f942a571a231bd78fa9326eaa8f862b14",
+            "bytes": 21528
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "canvas_inspect",
+        "canvas_apply",
+        "canvas_focus",
+        "chart_script"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=canvas-control%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/canvas-control/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/configuration",
+      "name": "configuration",
+      "version": "1.3.0",
+      "kind": "bundled",
+      "title": {
+        "en": "Configuration",
+        "zh": "配置助手"
+      },
+      "summary": {
+        "en": "Connect MT5, adjust application permissions and review your settings.",
+        "zh": "连接 MT5、调整应用权限，并查看和修改设置。"
+      },
+      "category": "workspace",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "configuration",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/configuration"
+      },
+      "package": {
+        "treeDigest": "40c02aba7dd463b9039c80dc602fb62707b0283dea413a148aded369b95f884e",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "1a2fad8b14bd1c4bf24d7c05d847e10bfdc57b0ef8a322374df0f4406b257ead",
+            "bytes": 964
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "a97a5c792decf549f55b90824b47913710427e7d7cfc5824ae12a94e4f048ce5",
+            "bytes": 560
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "c0bf92875c01ad2128aaeb163444233dc8fbca422b4e5691213b990ad060d095",
+            "bytes": 2388
+          },
+          {
+            "path": "skills/configure-application/SKILL.md",
+            "sha256": "5331589d9177006f3e63277d9589591bfda3626b178350fbd3ba616f14d97f10",
+            "bytes": 10730
+          },
+          {
+            "path": "tools.js",
+            "sha256": "d76e78e58005347c0806a67e7bdd33b2e6550f78a3ff96f3534fa11e364276b8",
+            "bytes": 3262
+          },
+          {
+            "path": "tools.json",
+            "sha256": "a4ea3969784119af32ed2be130d9bac382bca73880671e157e48743e93e98af1",
+            "bytes": 12065
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "configuration_import_mt5",
+        "mt5_connect",
+        "configuration_read",
+        "configuration_update",
+        "configuration_open"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=configuration%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/configuration/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/data-access",
+      "name": "data-access",
+      "version": "1.0.0",
+      "kind": "bundled",
+      "title": {
+        "en": "Data access",
+        "zh": "自动数据服务"
+      },
+      "summary": {
+        "en": "Query market data, web sources and registered inputs with traceable snapshots.",
+        "zh": "查询行情、网页与已登记输入，保留可追溯的数据快照。"
+      },
+      "category": "data",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "data-access",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/data-access"
+      },
+      "package": {
+        "treeDigest": "630ccf81c152bfa4e1917f622422655822d5944427a7d72ed37c7b59d03f4f23",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "a326db9911b5ecc2f5e91a30bdc5cc24559316bfab797d36e5a9802d14410ad7",
+            "bytes": 962
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "6b96fd5fc745aea75d1539d1423da176f23a81322260d2e72a45028cb493268d",
+            "bytes": 458
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "64ce3eb045c1e123196ae9c68c4f7881a536230d6b20646015c02222a46619da",
+            "bytes": 1164
+          },
+          {
+            "path": "tools.js",
+            "sha256": "cb0332d6013bc859fc423170202ae2b9c8049fc2991e681617fa859b8f7dcff9",
+            "bytes": 1753
+          },
+          {
+            "path": "tools.json",
+            "sha256": "fdf24a2fba399ccd0e3b09b0224ad7e671b95558f781e1b4f825e25719343af3",
+            "bytes": 3435
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "data_sources",
+        "data_query",
+        "data_snapshot"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=data-access%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/data-access/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/host-files",
+      "name": "host-files",
+      "version": "1.0.0",
+      "kind": "bundled",
+      "title": {
+        "en": "Local files",
+        "zh": "宿主文件读取"
+      },
+      "summary": {
+        "en": "Find and read selected local files, then import them into your workspace.",
+        "zh": "查找和读取选定的本地文件，并将研究输入复制到工作区。"
+      },
+      "category": "workspace",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "host-files",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/host-files"
+      },
+      "package": {
+        "treeDigest": "200c5a95014352a69f18a95e1631cdba58bcf50ecc30b567f930f82acedddb64",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "cf787f3be8339e82e0f8935cb63fe63c0fba8944078ac6bb4d578e82419cb781",
+            "bytes": 961
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "c9b40679acfc690d650c42f6b3c45480ca6200e31fc887c23eab26b03c27b2cc",
+            "bytes": 458
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "31799193b1420d00a5d9db7b4acc8a38660da53c4762cd1a3ef87677f88adb08",
+            "bytes": 1117
+          },
+          {
+            "path": "tools.js",
+            "sha256": "6a8da1411f94f8886321531d42ef4fbf9ae737416bb591b8f717584342a07375",
+            "bytes": 1745
+          },
+          {
+            "path": "tools.json",
+            "sha256": "840aba195729a1f81b4740d5769840f19fa0df25aa6fdf6dafd8bb3e3fa09ae5",
+            "bytes": 3284
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "host_files_list",
+        "host_files_search",
+        "host_files_read",
+        "host_files_import"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer. Reads only files permitted by your local access settings.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。 仅可读取本地访问设置允许的文件。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=host-files%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/host-files/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/judgment-evolution",
+      "name": "judgment-evolution",
+      "version": "1.1.0",
+      "kind": "bundled",
+      "title": {
+        "en": "Judgment review",
+        "zh": "判断复盘与准则演进"
+      },
+      "summary": {
+        "en": "Record a market judgment, check its outcome and refine your decision rules.",
+        "zh": "记录事前判断、核验结果与归因，持续修订决策准则。"
+      },
+      "category": "research",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "judgment-evolution",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/judgment-evolution"
+      },
+      "package": {
+        "treeDigest": "f28ca68525e0eded7cc8125d32a86c5d2df852f7d3bd7c545ee81caa31821fbc",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "69b8c891d77e4eafeef59b6a3f111949aff2fab48737078f64253c7dc15535d7",
+            "bytes": 969
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "0ffc5d61d2a1d78ff5be3838a38fb8a4b5127c9a30ca503aa18d2b3662180223",
+            "bytes": 828
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "34423ce187b8b2113c54628d91cfa0129cc758136f18d29197c927619649f12e",
+            "bytes": 632
+          },
+          {
+            "path": "references.md",
+            "sha256": "6b19231032dc55357dc951053dcfca32ec8b3b58aac83314817803de64cf9f2e",
+            "bytes": 3986
+          },
+          {
+            "path": "skills/judgment-review/SKILL.md",
+            "sha256": "312f580158e1e7e6b277d991411aadd0ac5eeecd06ed0a92573558574a32ce3c",
+            "bytes": 4025
+          },
+          {
+            "path": "tools.js",
+            "sha256": "1d5b6ce8b0218bd579c97ac4949ac157ac6f4000b875bf5f95c81b7a4b17bc68",
+            "bytes": 8437
+          },
+          {
+            "path": "tools.json",
+            "sha256": "248b14c1eb24ac40c4bc8d10d116a08bc30fc29daf6fce570c0287bef6ed0180",
+            "bytes": 18161
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "judgment_review_queue",
+        "judgment_review_due",
+        "judgment_record",
+        "judgment_list",
+        "judgment_read",
+        "judgment_resolve",
+        "judgment_defer",
+        "judgment_reflect",
+        "judgment_rule",
+        "judgment_rules",
+        "judgment_retire_rule",
+        "judgment_audit_source",
+        "judgment_coverage"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=judgment-evolution%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/judgment-evolution/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/market-data-parser",
+      "name": "market-data-parser",
+      "version": "1.0.0",
+      "kind": "installable",
+      "title": {
+        "en": "Exchange-rate parser",
+        "zh": "公开汇率解析"
+      },
+      "summary": {
+        "en": "Turn supported public JSON and XML exchange-rate formats into structured data.",
+        "zh": "将支持的公开 JSON 与 XML 汇率格式解析为结构化数据。"
+      },
+      "category": "data",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "market-data-parser",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/market-data-parser"
+      },
+      "package": {
+        "treeDigest": "f8f24149ab69d5365fb6bb48ee0d40628af52302033c213a0376a80f33eef294",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "37d4371b17ed6fe130c052db7815916eb2418f2bafa5f0cfd8817f9c5f041bb7",
+            "bytes": 1324
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "2b8bad43d7ae611395d2a6160ddf2a4c01a9ab10b69034e2464c1e863e7845db",
+            "bytes": 920
+          },
+          {
+            "path": "mcp.json",
+            "sha256": "829a726001eccedf4a13586158a2a4d062e606350fc83b1542d430d2a809411b",
+            "bytes": 279
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "b5f456372944fd471d56479ade5403c4b4d4d7df37c9fa58dfba37e2fd144ed1",
+            "bytes": 2491
+          },
+          {
+            "path": "sample_fx.json",
+            "sha256": "dacbf7fa69c1ce1b7c9d3ac2f22ddeb2050d55fdead4af78af3c880831f004c7",
+            "bytes": 2223
+          },
+          {
+            "path": "sample_fx.xml",
+            "sha256": "bfaa6d1b41cdb0ed7bbf0dfda3a5c940dd3c65be0a81a8e13bae6dedd889abf6",
+            "bytes": 9096
+          },
+          {
+            "path": "server.py",
+            "sha256": "ffcb397cb2a69d3b07463ed6790a81b75edefc7f5327347bfcab59a7d6a35a5d",
+            "bytes": 6393
+          },
+          {
+            "path": "skills/market-data-parser/PROVENANCE.md",
+            "sha256": "4c72185bc15002b022ceffec7a7c0a8d9d0ebaa1d441fcd5317b1bcea47a5fff",
+            "bytes": 1700
+          },
+          {
+            "path": "skills/market-data-parser/SKILL.md",
+            "sha256": "f42da22c2cf079d9b5895a9528fe4d5e096a211c62868d3134d28eeab3c37561",
+            "bytes": 2555
+          },
+          {
+            "path": "tools.json",
+            "sha256": "8d74e50211800db329d1e07934ad9c89fbfcd13e6d0939ddac38701a92349d2d",
+            "bytes": 1518
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "parse_fx_json",
+        "parse_fx_xml"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer. Uses the app’s isolated MCP runtime; no separate API key.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。 使用应用自带的隔离 MCP 环境，无需单独 API Key。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=market-data-parser%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/market-data-parser/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/memory",
+      "name": "memory",
+      "version": "1.0.0",
+      "kind": "bundled",
+      "title": {
+        "en": "Long-term memory",
+        "zh": "长期记忆"
+      },
+      "summary": {
+        "en": "Recall useful context across projects and keep your experience organized.",
+        "zh": "检索跨项目的背景与经验，整理和修订长期记忆。"
+      },
+      "category": "workspace",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "memory",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/memory"
+      },
+      "package": {
+        "treeDigest": "eea4693691c97d49bee56b603e498e3bf62df98f508eca285b080826b2dc1953",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "f0bdd4725b288cf3d58abc67d5f7c3f7a4906f8865c06c3cbcf0fb4304578379",
+            "bytes": 957
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "0f11d7513041126fcdfd158ed2ed2e3418fc42e205f3ea6e6347aca61ca7c60a",
+            "bytes": 516
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "3565fb067f0530005ee662fb9fc3cf09dab157c123764a6e6e32ba09e84f170b",
+            "bytes": 1694
+          },
+          {
+            "path": "skills/manage-memory/SKILL.md",
+            "sha256": "74e75082808fc94b23f72c848dc794d63bc4d6ff8dfc46b2e1c43e0e79a792bf",
+            "bytes": 2961
+          },
+          {
+            "path": "tools.js",
+            "sha256": "52d1d517101e391f752ca77e5bdd29efe626021a501496aa6442b3d448eed1cb",
+            "bytes": 4380
+          },
+          {
+            "path": "tools.json",
+            "sha256": "d089d3bf306346da32035e57d6486b9a02b21f642ea520671e613c13d63b61b6",
+            "bytes": 16140
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "memory_search",
+        "memory_read",
+        "memory_propose",
+        "memory_mark_used",
+        "memory_manage"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=memory%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/memory/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/mql5-authoring",
+      "name": "mql5-authoring",
+      "version": "1.3.0",
+      "kind": "bundled",
+      "title": {
+        "en": "MQL5 strategies",
+        "zh": "MQL5 原生策略"
+      },
+      "summary": {
+        "en": "Write native MQL5 strategies, save versions and compile with useful diagnostics.",
+        "zh": "编写原生 MQL5 策略、保存版本，并根据编译诊断修复源码。"
+      },
+      "category": "strategy",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "mql5-authoring",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/mql5-authoring"
+      },
+      "package": {
+        "treeDigest": "5ceee527c773993e72e57a9a98ad5eca2a6704da7e5fc7414aa1afc164163702",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "c9e19eff6f2801616e4a991044535fdec7ef1d111f417f06279357d6c23a6c54",
+            "bytes": 965
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "dd844b0cbac98afa0fe0dcb8a6a9568ea23f54b1fa53bc20ab51d9d52eff1325",
+            "bytes": 646
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "830de9a248f43f226c9f496cfe313dda2f32e6070a51c2dcaeb927d508fa4558",
+            "bytes": 1485
+          },
+          {
+            "path": "skills/native-ea/SKILL.md",
+            "sha256": "045c9fd4be0933e09ce4147a6b0dda532b40104fa197dbff453a9953590b8b86",
+            "bytes": 5203
+          },
+          {
+            "path": "skills/visual-state-machines/SKILL.md",
+            "sha256": "9baf1c933d8afae61254e7133358a22e9fb089b7d718c7477c74a16aba811f1f",
+            "bytes": 3415
+          },
+          {
+            "path": "skills/visual-state-machines/references/language.md",
+            "sha256": "d04aee3775f4f05fee5f074f7885a452c61d35e3eb169efa5f4cba2df1067bef",
+            "bytes": 8618
+          },
+          {
+            "path": "tools.js",
+            "sha256": "20617a6d4210a3e0f75fabb31164d1eedc988495761b0fb9347b1cbaaf4210df",
+            "bytes": 4121
+          },
+          {
+            "path": "tools.json",
+            "sha256": "2c7fdb778cfe2f0e7175a2845fe82a1fd1567207a7adf9f72d4e15187cc78ec8",
+            "bytes": 3330
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "mt5_project",
+        "mt5_inspect",
+        "mt5_compile"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer. Requires a connected MT5 terminal and the permissions for the requested action.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。 需要已连接的 MT5 终端，以及相应操作的权限。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=mql5-authoring%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/mql5-authoring/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/mt5-charts",
+      "name": "mt5-charts",
+      "version": "1.0.0",
+      "kind": "bundled",
+      "title": {
+        "en": "MT5 chart setup",
+        "zh": "MT5 图表配置"
+      },
+      "summary": {
+        "en": "Manage Market Watch symbols and indicators on your MT5 charts.",
+        "zh": "管理 Market Watch 品种，以及 MT5 图表上的指标。"
+      },
+      "category": "mt5",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "mt5-charts",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/mt5-charts"
+      },
+      "package": {
+        "treeDigest": "abb3c48393725d78c8f9fac3626c76984dfafeb59a2f05f8ee78c6b85a6c0af8",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "f950efe526f867db2451da88384237477a8107142446315f25f09a36ed5fda99",
+            "bytes": 961
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "8ad2d56ebf678ef49f3c54c3c1c9c82cec096cdf2993769b851eb7ebba780a87",
+            "bytes": 672
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "c587977667da11b83ff5a1b3962450d5c88f42f4935862132499af010f11e99e",
+            "bytes": 440
+          },
+          {
+            "path": "tools.js",
+            "sha256": "61f3ed1da3711b6fe7fa5f508fff06fc9b62e8527ba30d83f5043d89feceea10",
+            "bytes": 148
+          },
+          {
+            "path": "tools.json",
+            "sha256": "a022eb7667d508d1750f6ce56f1c178c58d2f49ae6e571b5dcf82e0b0577cf0b",
+            "bytes": 1788
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "mt5_chart"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer. Requires a connected MT5 terminal and the permissions for the requested action.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。 需要已连接的 MT5 终端，以及相应操作的权限。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=mt5-charts%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/mt5-charts/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/mt5-deployment",
+      "name": "mt5-deployment",
+      "version": "1.0.0",
+      "kind": "bundled",
+      "title": {
+        "en": "Strategy deployment",
+        "zh": "策略挂载"
+      },
+      "summary": {
+        "en": "Prepare, verify and attach a backtested strategy when you ask.",
+        "zh": "按你的明确要求，准备、核验并挂载已回测的策略。"
+      },
+      "category": "strategy",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "mt5-deployment",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/mt5-deployment"
+      },
+      "package": {
+        "treeDigest": "692804c1ee1d6f1613315220c4b3bdf0eee253122af77664da89e72f279c3dfe",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "267db63aaed47f815694b2777a53ed634eb268d4677e380c9d5041e8b0a163fe",
+            "bytes": 965
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "1b62308b7cb6ed5d3231efcbf8046b5fea997105c29e2957d3c76c6bd3dfe756",
+            "bytes": 452
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "c417cd753a23acd6b9d1d8ae64ef02982164a34ba8381f1114769ea619cc706b",
+            "bytes": 793
+          },
+          {
+            "path": "tools.js",
+            "sha256": "02a39142fe88d1b70ab21ed9ba277c8c49e96b2e4104463230daf3fe88f254fb",
+            "bytes": 1201
+          },
+          {
+            "path": "tools.json",
+            "sha256": "eb5a866ff22ac0ff0da0ac27ae0a0dd556297c2ade8f88812be402d9bc8ed6ca",
+            "bytes": 1897
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "mt5_deployment"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer. Requires a connected MT5 terminal and the permissions for the requested action.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。 需要已连接的 MT5 终端，以及相应操作的权限。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=mt5-deployment%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/mt5-deployment/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/mt5-editor",
+      "name": "mt5-editor",
+      "version": "1.0.0",
+      "kind": "bundled",
+      "title": {
+        "en": "MT5 editor",
+        "zh": "MT5 原生编辑"
+      },
+      "summary": {
+        "en": "Read, edit, format and compile files in the native MT5 workspace.",
+        "zh": "读取、编辑、格式化和编译 MT5 原生工作区中的文件。"
+      },
+      "category": "strategy",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "mt5-editor",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/mt5-editor"
+      },
+      "package": {
+        "treeDigest": "b66ce04e8f744fa8b9c2b1bc05331e9b38d36d71862f303801a312e711c3f418",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "54f0f78ca11a35329ab567a29f004d832c5c086b258dcb35e39f149273aa710e",
+            "bytes": 961
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "b8320c9f628b7ffb5b5c16cb15381c056ed3522ca42a0bc72231a575ed565abc",
+            "bytes": 712
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "0960128fb981ef0c3b5e7b6a055dd6f332ecdba4cd08f7d95b88a9260e0f83ae",
+            "bytes": 844
+          },
+          {
+            "path": "tools.js",
+            "sha256": "825d365f392c9dab947787f3a350b410fae4fd7b645c733c2c2973dfaec2d405",
+            "bytes": 148
+          },
+          {
+            "path": "tools.json",
+            "sha256": "76f5db0a7c4caf4265994a43607639947c97cf6f2cca70ad2583b0359719e9ca",
+            "bytes": 1786
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "mt5_edit"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer. Requires a connected MT5 terminal and the permissions for the requested action.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。 需要已连接的 MT5 终端，以及相应操作的权限。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=mt5-editor%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/mt5-editor/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/mt5-official",
+      "name": "mt5-official",
+      "version": "1.0.0",
+      "kind": "bundled",
+      "title": {
+        "en": "MT5 insights",
+        "zh": "MT5 官方查询"
+      },
+      "summary": {
+        "en": "Inspect the terminal, market data, account, charts and economic calendar.",
+        "zh": "查看终端环境、行情、账户、图表与经济日历。"
+      },
+      "category": "mt5",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "mt5-official",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/mt5-official"
+      },
+      "package": {
+        "treeDigest": "e414c102fcbd4d4dce804d562ff76da34d09517cf90f694b2aa29ac74e131726",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "ceb832413462e6f90c77fd30ebd63f6e51ccf3d28979d01b9e389e77fb395acd",
+            "bytes": 963
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "2483a7165353d73e11cded54089bf139a8205d57a6f40524a3689595d8b638af",
+            "bytes": 1206
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "71ce9f5d37779a033ba283f6f5dc59228b9b1dedb4f556660d76a119f8f543c3",
+            "bytes": 2696
+          },
+          {
+            "path": "skills/mt5-official/SKILL.md",
+            "sha256": "610c99c13f71acf5e30eea7efd6310f7e4a541f7bfeda8625aeaf4dd62b2b41b",
+            "bytes": 5195
+          },
+          {
+            "path": "tools.js",
+            "sha256": "b5c646e9e3e3b0c7a6216826731f549cd68cf6135ad7c7db43e2693491db5fbe",
+            "bytes": 2232
+          },
+          {
+            "path": "tools.json",
+            "sha256": "81f6c487d311e6bd87445b1e48ef7a3248317f8c8f5643c8dc2989a64627204e",
+            "bytes": 5409
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "mt5_catalog",
+        "mt5_call",
+        "mt5_cache",
+        "mt5_command"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer. Requires a connected MT5 terminal and the permissions for the requested action.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。 需要已连接的 MT5 终端，以及相应操作的权限。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=mt5-official%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/mt5-official/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/mt5-python",
+      "name": "mt5-python",
+      "version": "1.1.0",
+      "kind": "bundled",
+      "title": {
+        "en": "MT5 Python",
+        "zh": "MT5 官方 Python"
+      },
+      "summary": {
+        "en": "Query account, price and order-book data through the official Python API.",
+        "zh": "通过官方 Python API 查询账户、行情、盘口与交易计算结果。"
+      },
+      "category": "data",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "mt5-python",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/mt5-python"
+      },
+      "package": {
+        "treeDigest": "dbc8e594697e710788823e42a69e22bc932d2273b9aac51b15e857822b1c11c0",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "848745452ddb9728d54f4f32c2fca05137795694ca473c3a6ae2e8976cf6ccf4",
+            "bytes": 961
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "497779b9f7b61a57831341144bbb849028cabbe7ae8477dfccc75709b6bef9ca",
+            "bytes": 586
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "e00226713ffaddd3cdf0b0d594221dc815058e5a45a97dc02bcc63eb1ae1f01a",
+            "bytes": 600
+          },
+          {
+            "path": "tools.js",
+            "sha256": "97c5e9f1c05a52c5e022f5dcb578e8b07a7739dddeac960721a6c209ec463e7c",
+            "bytes": 148
+          },
+          {
+            "path": "tools.json",
+            "sha256": "54f8697ea72fb56ce1609e8e3c9f72423c6dbabd080dc4ee3ef6026a4a00212e",
+            "bytes": 1790
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "mt5_python"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer. Requires a connected MT5 terminal and the permissions for the requested action.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。 需要已连接的 MT5 终端，以及相应操作的权限。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=mt5-python%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/mt5-python/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/mt5-system",
+      "name": "mt5-system",
+      "version": "1.1.0",
+      "kind": "bundled",
+      "title": {
+        "en": "MT5 system tools",
+        "zh": "MT5 启动与宿主访问"
+      },
+      "summary": {
+        "en": "Manage MetaTester services and use MT5 host shell and HTTP tools.",
+        "zh": "管理 MetaTester 服务，并按需使用 MT5 宿主 shell 与 HTTP 工具。"
+      },
+      "category": "mt5",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "mt5-system",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/mt5-system"
+      },
+      "package": {
+        "treeDigest": "8df011317ee5acacce566c911644142501672e41de63550e97efdfaa92409df0",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "2637cdada25c9d536ea7188e396f8210d0bf2be68fb5e5539498bda57a5379f6",
+            "bytes": 961
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "e37b663d919ae7abeb742a134201142cf7f1afef07facaf998ef001162d947c7",
+            "bytes": 680
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "b5ca58c1ba547ec15dc904e1e096ddb0a3a35f63648f5b1668a555decf472bd6",
+            "bytes": 651
+          },
+          {
+            "path": "tools.js",
+            "sha256": "353ddcd6dad090fd5efdad12e00542d4a9d188504dd6f8a188d7e27ac1ab6874",
+            "bytes": 148
+          },
+          {
+            "path": "tools.json",
+            "sha256": "40c0069d38dd5417e8e9ad7cd480f9d54c22f987538ebda02e5e37736aaaaa63",
+            "bytes": 1790
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "mt5_system"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer. Requires a connected MT5 terminal and the permissions for the requested action.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。 需要已连接的 MT5 终端，以及相应操作的权限。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=mt5-system%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/mt5-system/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/mt5-tester",
+      "name": "mt5-tester",
+      "version": "1.0.0",
+      "kind": "bundled",
+      "title": {
+        "en": "Backtest & optimize",
+        "zh": "MT5 回测优化"
+      },
+      "summary": {
+        "en": "Run MT5 backtests and optimizations, inspect progress and read results.",
+        "zh": "运行 MT5 回测与优化，检查进度并读取结果。"
+      },
+      "category": "strategy",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "mt5-tester",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/mt5-tester"
+      },
+      "package": {
+        "treeDigest": "6997a52a2473c6d1c89a2ccf12d84f040955f25f598775786f44f250d02b3c04",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "e44960ffd84d147e86454bbdb64afdc118e835c29ff9623fdee8f5e8b75f7224",
+            "bytes": 961
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "73280f7c112ed4187eb04d0c0d78ba28b9844291dcfee556adcf3b4733a910ad",
+            "bytes": 632
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "b5bda0e76bfeb68299a562400b06d7476a7dc1b6fcc66ebd77f29f6c92edb5b4",
+            "bytes": 2402
+          },
+          {
+            "path": "tools.js",
+            "sha256": "cf7b5a0bae89ef35991ea6437bc789861defc3d5f5a8d8dc56745345d2a15178",
+            "bytes": 2725
+          },
+          {
+            "path": "tools.json",
+            "sha256": "3b514d4c5e8e23eb668ae8691896e4898e070956179bbe5541baccc203e12e77",
+            "bytes": 6322
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "mt5_test",
+        "mt5_backtest"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer. Requires a connected MT5 terminal and the permissions for the requested action.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。 需要已连接的 MT5 终端，以及相应操作的权限。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=mt5-tester%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/mt5-tester/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/mt5-trading",
+      "name": "mt5-trading",
+      "version": "1.1.0",
+      "kind": "bundled",
+      "title": {
+        "en": "MT5 trading",
+        "zh": "MT5 交易与程序运行"
+      },
+      "summary": {
+        "en": "Manage orders, programs, chart templates and terminal sessions when requested.",
+        "zh": "按你的要求管理订单、EA 与脚本、图表模板和终端会话。"
+      },
+      "category": "mt5",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "mt5-trading",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/mt5-trading"
+      },
+      "package": {
+        "treeDigest": "3809704508b34bd0f11dda146b30d00011118abe0556aa13e3a5c88de882d55b",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "cc17adf89d19e57fecdd25ebeb236f8ee41571029e83b650fa0d03270a4bb11f",
+            "bytes": 962
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "95db9581ad917b98757dc0dfa15631858e66a74dbfdd6be23287cff076919765",
+            "bytes": 577
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "0cf82ffcfb1ee71bc6fa08579f176112c8c87b4e1fe5b636654643961a7253b4",
+            "bytes": 677
+          },
+          {
+            "path": "tools.js",
+            "sha256": "addb1425607b46e66986f0dd2b078d533438ccce3bbb51654695432933e35f72",
+            "bytes": 149
+          },
+          {
+            "path": "tools.json",
+            "sha256": "34cc56d42555c3445d9a6c44fff73c4fb18b8ab40b2e582a3da7d358f0b79812",
+            "bytes": 1789
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "mt5_trade"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer. Requires a connected MT5 terminal and the permissions for the requested action.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。 需要已连接的 MT5 终端，以及相应操作的权限。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=mt5-trading%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/mt5-trading/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/orchestration",
+      "name": "orchestration",
+      "version": "1.0.0",
+      "kind": "bundled",
+      "title": {
+        "en": "Parallel agents",
+        "zh": "会话与委派"
+      },
+      "summary": {
+        "en": "Delegate research tasks and inspect the results from collaborating agents.",
+        "zh": "委派研究任务，并检查协作智能体的进度与结果。"
+      },
+      "category": "workspace",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "orchestration",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/orchestration"
+      },
+      "package": {
+        "treeDigest": "b6fe3278fd30db22ea63ddf61b14e9e483347e0567afdd33c3b7c7d098c5cc35",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "404a502aac63cba6ed91ce37208b0db5b291bd92b6d742d812c06b289ebafb66",
+            "bytes": 964
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "b7ff623e92390b0cb74e02d60eb4918068dc5dd3ad511df8bd184789faca21be",
+            "bytes": 388
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "b2cdbda00bb8262860478d573c2f40e35055a2b29ab224e67eedd3d6882e1fc2",
+            "bytes": 3082
+          },
+          {
+            "path": "tools.js",
+            "sha256": "06af51304a5e4763ae4ac7f4cc334b834ca7b0514bfc3d73cbb04a89193e544b",
+            "bytes": 3217
+          },
+          {
+            "path": "tools.json",
+            "sha256": "6976f4fd54da3d14a4f7fc7ffd2e0268e5b320891c4ba2afc8fd1666919c9ca7",
+            "bytes": 4524
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "agent_delegate",
+        "agent_inspect",
+        "agent_finish"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=orchestration%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/orchestration/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/plugin-manager",
+      "name": "plugin-manager",
+      "version": "1.0.0",
+      "kind": "bundled",
+      "title": {
+        "en": "Plugin manager",
+        "zh": "插件管理"
+      },
+      "summary": {
+        "en": "Find plugins by exact name, integrate them and load their tools into this chat.",
+        "zh": "按精确名称发现和接入插件，在当前对话中加载工具。"
+      },
+      "category": "workspace",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "plugin-manager",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/plugin-manager"
+      },
+      "package": {
+        "treeDigest": "712a637021b1a07ae2c7d3228d1ae56f28acce99af974f7a9b2c9d918fe761fa",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "932a2bdcb189d99eb7e95f35e28ae8ba36ff6ea7db19472ebb74003f69733c5a",
+            "bytes": 965
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "58433155271c49f781a5a73a0293509de1788c6385b1bc2055bfe58c2c6208da",
+            "bytes": 981
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "31d8e138c618a5c89e9a4f8774b4ed2fc8ff788ce124e887b7ca8f7d7881e51e",
+            "bytes": 3316
+          },
+          {
+            "path": "tools.js",
+            "sha256": "4344054aac43981d287c6c5b20758a5e755d84eb19eb9fc9f792dc7e3adbd3b9",
+            "bytes": 5077
+          },
+          {
+            "path": "tools.json",
+            "sha256": "17b1af1ca854509d2b0d12bfca9affa39647f3169cb8e988db77c57009ce942c",
+            "bytes": 13112
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "plugin_catalog",
+        "plugin_install_catalog",
+        "plugin_discover",
+        "plugin_load",
+        "plugin_read",
+        "plugin_inspect",
+        "plugin_create",
+        "plugin_validate",
+        "plugin_test",
+        "plugin_install",
+        "plugin_set_state",
+        "plugin_update",
+        "plugin_rollback",
+        "plugin_uninstall",
+        "plugin_export"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=plugin-manager%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/plugin-manager/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/quantskills-catalog",
+      "name": "quantskills-catalog",
+      "version": "1.0.0",
+      "kind": "installable",
+      "title": {
+        "en": "QuantSkills directory",
+        "zh": "QuantSkills 目录"
+      },
+      "summary": {
+        "en": "Explore a sourced snapshot of 214 quant skill projects by category and workflow.",
+        "zh": "按分类和工作流探索含 214 项量化技能项目的来源目录快照。"
+      },
+      "category": "research",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "quantskills-catalog",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/quantskills-catalog"
+      },
+      "package": {
+        "treeDigest": "190f952982b558575741d15a327ca61125926735a177332ac666e38dc36a3273",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "feb5e80b1d4ce3a5a4c3459610b3affc60db92d5c154e15e8060f8265558d76b",
+            "bytes": 1247
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "04a9786a710d87ad8cdbb26843b66cec10cd80db9c4bec2ee7f46e5b3064bb3e",
+            "bytes": 921
+          },
+          {
+            "path": "catalog.json",
+            "sha256": "760935a4d850669bc0a3d783039eb837e01b512d2fa60601e07dd3835c0fd4db",
+            "bytes": 206790
+          },
+          {
+            "path": "mcp.json",
+            "sha256": "829a726001eccedf4a13586158a2a4d062e606350fc83b1542d430d2a809411b",
+            "bytes": 279
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "a99845097ce4d0fbf4d1020d1744f0069224bcab47c8d63a6d85b2b85453cc18",
+            "bytes": 7058
+          },
+          {
+            "path": "server.py",
+            "sha256": "a80a64860866deddd8008d89bb262e6a7bf7283269a490472c295d20de0e8f0d",
+            "bytes": 6600
+          },
+          {
+            "path": "skills/quantskills-catalog/PROVENANCE.md",
+            "sha256": "513146482077b349794edcccbf36a5cda62f5ac47ff515f1e42ecd13513c5bd5",
+            "bytes": 1539
+          },
+          {
+            "path": "skills/quantskills-catalog/SKILL.md",
+            "sha256": "83f23542762f8f251d65dc7ded336d41d74db25e48ccb002293109e0c8a713d7",
+            "bytes": 2259
+          },
+          {
+            "path": "tools.json",
+            "sha256": "de248f0174cc5a32c589280583c69dc8760518930e17f51ea06c31e22c3640f9",
+            "bytes": 2041
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "catalog_search",
+        "catalog_filter",
+        "catalog_list_categories",
+        "catalog_get_item"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer. Uses the app’s isolated MCP runtime; no separate API key.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。 使用应用自带的隔离 MCP 环境，无需单独 API Key。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=quantskills-catalog%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/quantskills-catalog/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/reports",
+      "name": "reports",
+      "version": "1.0.0",
+      "kind": "bundled",
+      "title": {
+        "en": "Interactive reports",
+        "zh": "交互报告"
+      },
+      "summary": {
+        "en": "Create and publish explorable HTML research reports connected to your data.",
+        "zh": "创建和发布连接研究数据、可深入探索的 HTML 交互报告。"
+      },
+      "category": "research",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "reports",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/reports"
+      },
+      "package": {
+        "treeDigest": "7a107c451e4205d10bf415c8d738a68e0c303952ce87569b36462790bb8fc0d1",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "eb5e2a9dadfb906eba43a5aa08f30c1984ebf0b81918ca67b63bd7ab813e9908",
+            "bytes": 958
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "b051793e690343fd43920335bef9727dfb9ed7c48c6ca689191f11f012d6c7ac",
+            "bytes": 506
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "f3d0cb4e1be35cb919902ac53ed69b7ba17cff440fef0c71f6f67d26882a1901",
+            "bytes": 1544
+          },
+          {
+            "path": "repair.md",
+            "sha256": "ff8327dc2dc6dc66f670503b0c79d757aeb706a631163e06d63137bbcbbde9c4",
+            "bytes": 362
+          },
+          {
+            "path": "skills/interactive-report/SKILL.md",
+            "sha256": "c7da8df85e8bb894f458d48c9858f2fb9a3930a43d77e25aa2fe09b3983ed369",
+            "bytes": 2606
+          },
+          {
+            "path": "skills/report-design/SKILL.md",
+            "sha256": "94c2c88ba904fd38e3ace69d5b0d6405ad7705e9929e9630439130179f295266",
+            "bytes": 6795
+          },
+          {
+            "path": "skills/report-writing/SKILL.md",
+            "sha256": "091edd493d14b934d8a7599671464c70117af2ac51dfc37d6f9676d0eec48ed4",
+            "bytes": 4358
+          },
+          {
+            "path": "tools.js",
+            "sha256": "d8ed9e894f614ae4031dd6e732a93c6e0acbe654920ae4318fd4100fcfceaa0b",
+            "bytes": 2742
+          },
+          {
+            "path": "tools.json",
+            "sha256": "b4d6807ad34e17a20d4060b2be03072ad6e8de4b9da7e6320c8de3b43e803c8b",
+            "bytes": 2368
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "report_read",
+        "report_publish"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=reports%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/reports/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/research",
+      "name": "research",
+      "version": "1.0.0",
+      "kind": "bundled",
+      "title": {
+        "en": "Research data",
+        "zh": "研究数据"
+      },
+      "summary": {
+        "en": "Read research inputs and register reproducible computation results.",
+        "zh": "读取研究输入，并登记可追溯、可复现的代码计算结果。"
+      },
+      "category": "research",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "research",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/research"
+      },
+      "package": {
+        "treeDigest": "8f9a2aa70aee4aa2d53c2cdfb462a28807487ba4496908a4c43ac85e6afbc329",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "36ac4fd2b6f4bdeb3fb662d4258c7c9a2549408aaf6b3316a5a4cbbff9155b53",
+            "bytes": 959
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "274b0b5433cf2deebf772fa06853b02fce5d6968b44e0585f8186459ba7f639c",
+            "bytes": 413
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "3dc0947fbe2068a9d2deabb233230b1b83d67b65b199768292e651e200bc25e1",
+            "bytes": 521
+          },
+          {
+            "path": "skills/analyze-data/SKILL.md",
+            "sha256": "0b0fae114daa23f9a325b11cb8081564cd3633e0f295cc4d4bb1f278d09421e0",
+            "bytes": 1481
+          },
+          {
+            "path": "tools.js",
+            "sha256": "770d0d58cb937c08cb1d779d016c5c4a5529572d12cd6e4bfa4e74bbb4adc978",
+            "bytes": 3738
+          },
+          {
+            "path": "tools.json",
+            "sha256": "71e2b2d4c48c29f3a0b23f95156cc134914ad35be708c79f6c9dfca4631219a8",
+            "bytes": 2733
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "data_read",
+        "research_register"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=research%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/research/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/rss-collect",
+      "name": "rss-collect",
+      "version": "1.0.0",
+      "kind": "installable",
+      "title": {
+        "en": "RSS & Atom",
+        "zh": "RSS / Atom 解析"
+      },
+      "summary": {
+        "en": "Parse feed XML into clean articles, dates, links and source metadata.",
+        "zh": "将订阅源 XML 解析为文章、日期、链接与来源元数据。"
+      },
+      "category": "data",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "rss-collect",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/rss-collect"
+      },
+      "package": {
+        "treeDigest": "9d89d645dae9f78923beb1de1b4ba2c779e69c882712c94d5b4b62184bbf50b1",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "cfd46e60071f3b18ea8e6428838c89df49e39e550763196074c022aa4c039a88",
+            "bytes": 1265
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "5c3fafd6386018e9284b022318900125df9567633e56bc012400de5b991592c4",
+            "bytes": 913
+          },
+          {
+            "path": "mcp.json",
+            "sha256": "829a726001eccedf4a13586158a2a4d062e606350fc83b1542d430d2a809411b",
+            "bytes": 279
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "cc8138f15ff69536f39a705df0911752258ee1f977a49f60183ec54ed385c837",
+            "bytes": 4608
+          },
+          {
+            "path": "sample.atom",
+            "sha256": "651679918e79bb95a5bcd83e006913796581c35fddb1f54272b566836dc40992",
+            "bytes": 130444
+          },
+          {
+            "path": "server.py",
+            "sha256": "3d25bce2b270a2ea38e228aa1e896a4ef0dc7effdaa1da7cb21180981206f25b",
+            "bytes": 5940
+          },
+          {
+            "path": "skills/rss-collect/PROVENANCE.md",
+            "sha256": "c36b03dd6a03fbff85dec79d86cc589f23ed0247da46696bb9059c9df5e1ffab",
+            "bytes": 1459
+          },
+          {
+            "path": "skills/rss-collect/SKILL.md",
+            "sha256": "c110cb34c709efaa2c3b9f5eac498f7222e14d0b37506782de4e1c9a5844a381",
+            "bytes": 2827
+          },
+          {
+            "path": "tools.json",
+            "sha256": "5220feea5bc47af36e49002946f8a91fd44d4d7ed6383f252a37bfb302262541",
+            "bytes": 709
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "parse_feed"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer. Uses the app’s isolated MCP runtime; no separate API key.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。 使用应用自带的隔离 MCP 环境，无需单独 API Key。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=rss-collect%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/rss-collect/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/sandbox",
+      "name": "sandbox",
+      "version": "1.0.0",
+      "kind": "bundled",
+      "title": {
+        "en": "Code workspace",
+        "zh": "代码沙箱"
+      },
+      "summary": {
+        "en": "Read, write and run research code in the application’s isolated environment.",
+        "zh": "在应用隔离环境中读取、编写和运行研究代码。"
+      },
+      "category": "workspace",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "sandbox",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/sandbox"
+      },
+      "package": {
+        "treeDigest": "ce2a0ea96214a321e8c0e4c4b7a04b9553f939aab107e5fed15a7f9124106109",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "338530ad3d0dd2e1f35bcdbd9a2e25241d678ad0d737106dc41a8d37acc4f86e",
+            "bytes": 958
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "bf3eed6c5ae0ebbbf1a278e0df173ded15df27ab76c7803ba4a4a824585a95c1",
+            "bytes": 362
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "3ee62b2827596475236aba13cc493c8169b03c8bdf00e33d2ca7475a4c8abd36",
+            "bytes": 1191
+          },
+          {
+            "path": "tools.js",
+            "sha256": "a216d1052842f65089889420efc7363e7df570f80cecc30592b0e8f760da7d2d",
+            "bytes": 1363
+          },
+          {
+            "path": "tools.json",
+            "sha256": "43d0cbda7d36305db282408b01a2c9d963c6717eaec2af198587d6f085224a35",
+            "bytes": 6231
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "read",
+        "write",
+        "edit",
+        "bash"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer. Runs inside the app’s research environment.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。 在应用研究环境中运行。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=sandbox%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/sandbox/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/user-guide",
+      "name": "user-guide",
+      "version": "1.1.0",
+      "kind": "bundled",
+      "title": {
+        "en": "Sesame guide",
+        "zh": "Sesame 使用指南"
+      },
+      "summary": {
+        "en": "Get help with setup, charts, chat commands, research and strategy workflows.",
+        "zh": "了解设置、图表、聊天命令、研究与策略工作流。"
+      },
+      "category": "workspace",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "user-guide",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/user-guide"
+      },
+      "package": {
+        "treeDigest": "c2ae5b964c9971bce0e913cc27baa9fb386afbfccf4f6d2c9ab94029f9f31111",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "2d36d20ddc991c840d4eb336566d8ab74bfb30c63ddca132d8fbe9b2610cc70b",
+            "bytes": 961
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "6c4cdc6b39b3162ee5027e334f085974232ae7d67d6415a9c704980834563eab",
+            "bytes": 847
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "8eaf30a627a2bed1d52c1859f77c593a8597ea37585af311e2eccc0839861340",
+            "bytes": 1718
+          },
+          {
+            "path": "skills/sesame-user-guide/SKILL.md",
+            "sha256": "c38fdf6963401f3188990e9e1d8fe0dd32681485a138911b236f2c3c1bf45f63",
+            "bytes": 4965
+          },
+          {
+            "path": "skills/sesame-user-guide/references/chat-and-commands.md",
+            "sha256": "fce63190d40a1190a17743206bd19b6c30fdda6b731191ebbefcc0a22222ed4c",
+            "bytes": 5319
+          },
+          {
+            "path": "skills/sesame-user-guide/references/dashboard.md",
+            "sha256": "c0ae7a5605935596e169fe0e51779ba6d057f5ddb88cee485117b8fcfe58f233",
+            "bytes": 6418
+          },
+          {
+            "path": "skills/sesame-user-guide/references/installation.md",
+            "sha256": "5bb510da4393ce6bf778ad01e4167142c9626629cbb16713e4f641d04fb02f54",
+            "bytes": 3760
+          },
+          {
+            "path": "skills/sesame-user-guide/references/settings.md",
+            "sha256": "191ab2de410ba563a1234bef15d8169d31c263633fc79f2f82796831558e2f45",
+            "bytes": 7942
+          },
+          {
+            "path": "skills/sesame-user-guide/references/troubleshooting.md",
+            "sha256": "1116f881ca6253dd91d7fd0da329bfadf0d10f0c81021d3c0d8b22c94e38ee9e",
+            "bytes": 3451
+          },
+          {
+            "path": "skills/sesame-user-guide/references/website-docs.md",
+            "sha256": "b551facad0afbfc21346aa93bde6fe2b7bb200c5308b615a707d4e850d75c403",
+            "bytes": 12961
+          },
+          {
+            "path": "skills/sesame-user-guide/references/workflows.md",
+            "sha256": "08e48baa75500086815993b37b74786591eaa655e4eccdef402d6fd79d205759",
+            "bytes": 5621
+          },
+          {
+            "path": "tools.json",
+            "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+            "bytes": 3
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=user-guide%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/user-guide/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/web-extract",
+      "name": "web-extract",
+      "version": "1.0.0",
+      "kind": "installable",
+      "title": {
+        "en": "Web extraction",
+        "zh": "网页正文提取"
+      },
+      "summary": {
+        "en": "Extract readable text, titles, links and metadata from supplied HTML.",
+        "zh": "从提供的 HTML 中提取正文、标题、链接与元数据。"
+      },
+      "category": "data",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "web-extract",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/web-extract"
+      },
+      "package": {
+        "treeDigest": "799610346c7e22da0e7c76cd161bcc565ddfcecfa3bc521291dc9ea702cc23c5",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "2f612650ad746f9f2b62845b124ab93e79a155e8b33c207e812a2b1878ce36db",
+            "bytes": 1261
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "16acb765180eab29c0aded1905dea089993190aa985f5c6c1b0bea1f91e74e6d",
+            "bytes": 913
+          },
+          {
+            "path": "mcp.json",
+            "sha256": "829a726001eccedf4a13586158a2a4d062e606350fc83b1542d430d2a809411b",
+            "bytes": 279
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "58373282a609aa44e52fd3d93e8f8737cb0debca920b6cf47393793a88ee373b",
+            "bytes": 6061
+          },
+          {
+            "path": "sample.html",
+            "sha256": "3f324f9914742e62cf082861ba03b207282dba781c3349bee9d7c1b5ef8e0bfe",
+            "bytes": 3741
+          },
+          {
+            "path": "server.py",
+            "sha256": "e458c8cf4b360699edb42fcef6a1002fbc6cd1553edb61927f9df43edace4b02",
+            "bytes": 5001
+          },
+          {
+            "path": "skills/web-extract/PROVENANCE.md",
+            "sha256": "04767aa1a419c4bb49cd3beea9d34830b50ae19143da94c1fb75aaf2de79ca3e",
+            "bytes": 1407
+          },
+          {
+            "path": "skills/web-extract/SKILL.md",
+            "sha256": "547aff7ff45eb6c5b3eba6df0f8343439359b61af6c3efdb2dda26989209a74e",
+            "bytes": 2777
+          },
+          {
+            "path": "tools.json",
+            "sha256": "0c6bffe1f044f30d486664261e71e3dbe82aeda7c9cb13757ac6d15683480295",
+            "bytes": 563
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "extract_webpage"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer. Uses the app’s isolated MCP runtime; no separate API key.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。 使用应用自带的隔离 MCP 环境，无需单独 API Key。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=web-extract%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/web-extract/PROVENANCE.md"
+    },
+    {
+      "id": "sesame/web-sources",
+      "name": "web-sources",
+      "version": "1.0.0",
+      "kind": "bundled",
+      "title": {
+        "en": "Web sources",
+        "zh": "公开来源"
+      },
+      "summary": {
+        "en": "Fetch HTTP and HTTPS sources and keep a traceable input snapshot.",
+        "zh": "抓取 HTTP 与 HTTPS 资料，并保留可追溯的来源与输入快照。"
+      },
+      "category": "data",
+      "author": {
+        "name": "Sesame",
+        "url": "https://github.com/KDZZZZZZ"
+      },
+      "license": "MIT",
+      "minAppVersion": "0.1.4",
+      "bundledPluginId": "web-sources",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "551a8a40856c852e7fc5fabc0ae627fbc4518627",
+        "path": "plugins/packages/web-sources"
+      },
+      "package": {
+        "treeDigest": "7b1ce6391935e1b01fc53f2241c1ce247285b37b1b3b761ab58329a903ba66f8",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "850176842e7b98516fa070ee978e64a5baf34ba10b04c1bf7ca37ca9ef8c31fa",
+            "bytes": 962
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "527d16b76a83d1b64d820389895cca4e465b92a7346a2d4cb67bf2fd4b0d3bd5",
+            "bytes": 366
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "7677605fc9c6351a1888713c09f12e4eb5f1c41b588dfe861b08ecb8fe7fe87c",
+            "bytes": 533
+          },
+          {
+            "path": "tools.js",
+            "sha256": "78d2fbc25b30ff66b03a9a915de83c171af15d7ce1bab94a6400f557e31b3dda",
+            "bytes": 1033
+          },
+          {
+            "path": "tools.json",
+            "sha256": "d9e1b81287897af1686ec7592dd217ac3943e18a4b218c9695ca5e8c817fab42",
+            "bytes": 593
+          }
+        ]
+      },
+      "status": "active",
+      "review": {
+        "automated": "catalog-ci",
+        "human": "not-recorded",
+        "notes": "Official publication. Static validation is reported separately by GitHub Actions; no separate human code-review record or safety certification is claimed."
+      },
+      "tools": [
+        "sources_fetch"
+      ],
+      "requirements": {
+        "en": "Included in Sesame 0.1.4 or newer. Network access is required to fetch sources.",
+        "zh": "需要 Sesame 0.1.4 或更新版本。 抓取资料时需要网络连接。"
+      },
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues/new?title=web-sources%3A%20",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/551a8a40856c852e7fc5fabc0ae627fbc4518627/plugins/packages/web-sources/PROVENANCE.md"
+    }
+  ]
+}
