@@ -41,7 +41,7 @@ export function prepareRelease(repository, input) {
     const lock = buildLock(temp), lockBytes = Buffer.from(JSON.stringify(lock, null, 2) + '\n');
     assert(readFileSync(join(temp, 'official-plugins.lock.json')).equals(lockBytes), 'Source lock differs from package files');
     const archive = createArchive(temp, lock);
-    assert(sha256(archive) === plan.archive.sha256 && sha256(lockBytes) === plan.lockSha256, 'Release bytes differ from reviewed digests');
+    assert(sha256(archive) === plan.archive.sha256 && sha256(lockBytes) === plan.lockSha256, `Release bytes differ from reviewed digests: archive=${sha256(archive)}, lock=${sha256(lockBytes)}`);
     const url = `https://github.com/${REPOSITORY}/releases/download/${plan.tag}/${plan.archive.name}`;
     const pin = { schemaVersion: 1, apiVersion: '1', sourceCommit: plan.sourceCommit, archive: { url, sha256: plan.archive.sha256 }, lockSha256: plan.lockSha256, packages: lock.packages.map(({ id, version, treeDigest }) => ({ id, version, treeDigest })) };
     return { plan, pin, files: new Map([[plan.archive.name, archive], ['official-plugins.lock.json', lockBytes], ['application-official-plugins.lock.json', Buffer.from(JSON.stringify(pin, null, 2) + '\n')], ['SHA256SUMS', Buffer.from(`${plan.archive.sha256}  ${plan.archive.name}\n${plan.lockSha256}  official-plugins.lock.json\n`)]]) };

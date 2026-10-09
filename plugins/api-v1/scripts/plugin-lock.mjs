@@ -2,7 +2,6 @@ import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, lstatSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { gzipSync } from 'node:zlib';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const fail = (condition, message) => { if (!condition) throw new Error(message); };
@@ -10,6 +9,23 @@ export const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 export const treeDigest = files => `sha256:${sha256(JSON.stringify([...files].sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0).map(file => [file.path, `sha256:${file.sha256}`])))}`;
 const safePath = path => typeof path === 'string' && path.length > 0 && path.length <= 512 && !/[\x00-\x1f\\:]/.test(path) && !path.startsWith('/') && path.split('/').every(part => part && part !== '.' && part !== '..' && !/[. ]$/.test(part) && !/^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part));
 const semver = value => typeof value === 'string' && /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(value);
+
+// A fixed gzip header and RFC 1951 stored blocks make archive bytes independent
+// of Node's bundled zlib version, compression tuning and the runner platform.
+// These source bundles are small; portability is more valuable than compression.
+export function portableGzip(bytes) {
+  const parts = [Buffer.from([0x1f, 0x8b, 8, 0, 0, 0, 0, 0, 0, 255])];
+  for (let offset = 0; offset < bytes.length || offset === 0; offset += 65535) {
+    const chunk = bytes.subarray(offset, offset + 65535), header = Buffer.alloc(5);
+    header[0] = offset + chunk.length >= bytes.length ? 1 : 0;
+    header.writeUInt16LE(chunk.length, 1); header.writeUInt16LE(chunk.length ^ 0xffff, 3);
+    parts.push(header, chunk);
+  }
+  let crc = 0xffffffff;
+  for (const byte of bytes) { crc ^= byte; for (let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ ((crc & 1) ? 0xedb88320 : 0); }
+  const trailer = Buffer.alloc(8); trailer.writeUInt32LE((crc ^ 0xffffffff) >>> 0, 0); trailer.writeUInt32LE(bytes.length >>> 0, 4);
+  return Buffer.concat([...parts, trailer]);
+}
 
 export function packageFiles(directory, base = '') {
   const files = [];
@@ -93,7 +109,7 @@ export function createArchive(source, lock) {
   const entries = [{ path: 'official-plugins.lock.json', bytes: lockBytes }];
   for (const pkg of lock.packages) for (const file of pkg.files) entries.push({ path: `${pkg.directory}/${file.path}`, bytes: readFileSync(join(source, 'packages', pkg.directory, file.path)) });
   entries.sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
-  return gzipSync(Buffer.concat([...entries.map(entry => tarFile(entry.path, entry.bytes)), Buffer.alloc(1024)]), { level: 9 });
+  return portableGzip(Buffer.concat([...entries.map(entry => tarFile(entry.path, entry.bytes)), Buffer.alloc(1024)]));
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

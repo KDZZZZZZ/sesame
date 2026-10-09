@@ -12,6 +12,10 @@ builder must reproduce both digests. Source commits and the release plan are par
 of the reviewed PR. Include behavior/platform evidence in package documentation;
 the static workflow does not replace those checks.
 
+Archives use deterministic tar entries and a fixed gzip container with stored
+DEFLATE blocks. This deliberately avoids zlib-version-dependent compressed bytes;
+the package locks and extraction format are unchanged.
+
 Merging the PR into main triggers `Plugin API 1 release`. It verifies the merged
 PR, successful GitHub Actions checks on its exact head, immutable source bytes,
 and absence of unresolved changes-requested reviews. It creates a draft release,
