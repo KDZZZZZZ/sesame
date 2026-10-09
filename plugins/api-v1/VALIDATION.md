@@ -104,6 +104,46 @@ The gate ran trusted main revision `6937305ba021bb20a0f0b022fdc18bede3eca383`, c
 
 This release contains AKShare 1.0.2, QMT 1.0.0 and vn.py 1.0.1. A fresh test fixture downloaded the three immutable public catalog packages, verified their files, installed/loaded them and called their environment/status tools in the same Pi session (one integration test, 20.2 seconds). It used an existing compatible vn.py environment; it did not install dependencies or exercise a new model decision, full fresh Qt installation, authorized Windows QMT terminal or brokerage trade. The catalog source remains `373bb390c8903688105a88f51b33960f8665187a`.
 
+# Development bundle 12 candidate validation
+
+Only MT5 changes, from 1.1.8 to 1.1.9; the other 18 package versions and file
+entries remain those of bundle 11. An Agent that already wrote a long native
+translation no longer has to repeat its source and mappings in a tool request.
+`mt5_translation_file(operation_id, manifest_path)` reads one explicitly named
+workspace JSON file containing the inline translation fields except operation_id.
+It shares the same strict schema and registration pipeline, including fixed
+source/target identity, parameter mapping, node/line bounds and SDK/project-file
+checks. The JSON and normalized input are each bounded at 8 MiB; existing native
+file/project limits still apply. There is no directory scan or source execution.
+
+The file intake rejects outside/traversing paths, symlinks, non-regular files,
+invalid UTF-8/JSON and changes detected across opening/reading. It fixes validated
+input in plugin storage before publication. Same operation/path retries explicitly
+return the saved digest with manifest.reused=true without rereading the file;
+new content needs a new operation ID. Different initial concurrent content or a
+different path under that ID conflicts. A project and recovery receipt commit
+atomically, allowing recovery after a lost result without republishing or resetting
+a later project revision. Compiler availability used in the translation environment
+is also fixed for partial-publication retries.
+
+The author passed 18 public checks: 14 file-entry tests and four existing run/tool
+schema regressions. They cover exact 800-line bytes, concurrent same and conflicting
+requests, deleted/edited files, partial and post-commit failure recovery, strict
+schema/semantic rejection, unsafe paths, a symlink replacement during open, size
+limits and cancellation. A controlled second-connection commit between the initial
+lookup and final transaction retained its newer project revision. Static tool
+definitions match the actual factories.
+
+A separate temporary integration used the real Store, HostContext, HostWorkspace,
+ContractArtifacts and generated tool execution. Six checks verified valid fixed
+source/target/translation/validation artifacts, five concurrent calls producing one
+project, an unknown result after project commit, SQLite close/reopen with the whole
+workspace deleted, recovery of both the earlier and interrupted operation, retention
+of a later project revision, and path-conflict rejection. This exercised public
+ports against real host persistence; it was not complete Runtime.init. No real
+terminal, compiler, Tester, deployment or trade was started, and no live database
+or application cache was changed. Independent review and publication are pending.
+
 # Development bundle 11 validation
 
 Only MT5 changes, from 1.1.7 to 1.1.8; all other 18 package versions and file

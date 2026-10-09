@@ -1,6 +1,6 @@
 # MQL5 target profile
 
-Start with a frozen `strategy.source` SVL artifact. The host derives the graph from that source. Read the target profile and implement the actual native MQL5 program; `mt5_translation` records the exact source revision, every generated file and every source node mapping. Translation registration checks structure, not behavioral equivalence.
+Start with a frozen `strategy.source` SVL artifact. The host derives the graph from that source. Read the target profile and implement the actual native MQL5 program; `mt5_translation_file` registers a [single workspace JSON manifest](translation-file.md) using short arguments, while `mt5_translation` accepts the same content inline. Both record the exact source revision, every generated file and every source node mapping. Translation registration checks structure, not behavioral equivalence.
 
 The initial profile provides Agent-authored translation, not an automatic operator compiler. `svl.operators` is empty for that reason. MQL5 has native callbacks for ticks, timers and trade transactions. Detect forming/closed bars explicitly from the observed broker series; do not synthesize a closed event merely because a local timer elapsed. External-input events are unsupported by this profile. FIX is optional and is not required by this target.
 
