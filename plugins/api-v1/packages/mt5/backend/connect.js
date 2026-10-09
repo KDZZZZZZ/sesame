@@ -31,8 +31,11 @@ export function connectionStartup(config, nativeAccount) {
 
 /** Probe first, persist only working credentials, and pin the original account throughout. */
 export async function ensureMT5Connection(mt5, { start_if_needed = true } = {}, signal, {
-  startTerminal = launch, timeoutMs = 30000, probeTimeoutMs = 5000, pollIntervalMs = 1000, exclusive = action => action(),
+  startTerminal = launch, timeoutMs = 30000, probeTimeoutMs = 5000, pollIntervalMs = 1000, exclusive = action => action(), probeAccount, readNativeSettings = nativeConnectionSettings,
 } = {}) {
+  if (mt5.terminalPreparing) return unavailable('terminal_preparing', '终端正由受管理准备操作恢复连接，不另行启动', []);
+  const preparationEpoch = mt5.terminalPreparationEpoch ?? 0;
+  const assertLifecycle = () => requireValue(!mt5.terminalPreparing && (mt5.terminalPreparationEpoch ?? 0) === preparationEpoch, '终端准备生命周期已改变，本次连接探测不再启动或修改终端', 409, 'terminal_preparing');
   const official = mt5.official, original = structuredClone(official.config), steps = [];
   signal?.throwIfAborted();
   if (official.jobs.size) return unavailable('mt5_busy', 'MT5 调用正在执行，请完成后再恢复连接', steps);
@@ -41,7 +44,7 @@ export async function ensureMT5Connection(mt5, { start_if_needed = true } = {}, 
   const blocked = official.access('terminal', 'get_trading_account_info', null).blocked_reason;
   if (blocked) return unavailable('mt5_permission_denied', blocked, steps);
   let nativeSettings;
-  try { nativeSettings = await nativeConnectionSettings(mt5.native); }
+  try { nativeSettings = await readNativeSettings(mt5.native); }
   catch { steps.push({ step: 'discover', status: 'failed', reason: '本机配置无法安全读取；保留已保存的连接设置' }); }
   const nativeServer = nativeSettings?.servers?.terminal;
   steps.push({ step: 'discover', status: mt5.native ? 'ready' : 'not_found' });
@@ -64,6 +67,7 @@ export async function ensureMT5Connection(mt5, { start_if_needed = true } = {}, 
   const combined = AbortSignal.any([deadline, ...(signal ? [signal] : [])]);
   let lastError, proof, chosen, started = false, startupFile;
   const probe = async candidate => {
+    if (probeAccount) return probeAccount(candidate, combined);
     const client = new MT5MCP({ ...candidate, server: 'terminal' });
     try {
       const info = unpack(await client.call('get_trading_account_info', {}, AbortSignal.any([combined, AbortSignal.timeout(probeTimeoutMs)])));
@@ -84,16 +88,24 @@ export async function ensureMT5Connection(mt5, { start_if_needed = true } = {}, 
     if (!proof && refused && start_if_needed && mt5.native && nativeServer?.enabled && sameEndpoint) {
       combined.throwIfAborted();
       await exclusive(async () => {
+        assertLifecycle();
+        // A failed earlier probe is not proof the terminal is still absent.
+        for (const candidate of candidates) {
+          try { proof = await probe(candidate); chosen = candidate; break; } catch (error) { lastError = error; }
+        }
+        assertLifecycle(); combined.throwIfAborted();
+        if (proof) return;
+        requireValue(connectionRefused(lastError), '终端已响应或状态不明，不重复启动', 409, 'mt5_busy');
         requireValue(official.config.version === original.version, '连接设置已改变，请重新连接', 409, 'version_conflict');
         requireValue(!mt5.tester.pending.size && !official.jobs.size && !mt5.deployments.list().some(item => busy.includes(item.status)), '有终端任务正在运行，连接恢复暂不启动终端', 409, 'mt5_busy');
         startupFile = join(official.directory, `${id('connect')}.ini`);
         await fs.writeFile(startupFile, connectionStartup(original, nativeSettings.account), { mode: 0o600 });
         await fs.chmod(startupFile, 0o600); securePath(startupFile);
-        signal?.throwIfAborted();
+        combined.throwIfAborted(); assertLifecycle();
         await startTerminal(mt5.native, 'start_terminal', { portable: resolve(mt5.native.dataDirectory) === resolve(mt5.native.directory), use_startup_config: true }, startupFile, {}, combined);
         started = true;
       });
-      steps.push({ step: 'start_terminal', status: 'requested', reason: '复用终端保存的账户，以算法交易关闭的配置启动；启动请求不代表已连接' });
+      if (started) steps.push({ step: 'start_terminal', status: 'requested', reason: '复用终端保存的账户，以算法交易关闭的配置启动；启动请求不代表已连接' });
       while (!combined.aborted && !proof) {
         await sleep(pollIntervalMs, undefined, { signal: combined });
         for (const candidate of candidates) {
@@ -122,7 +134,8 @@ export async function ensureMT5Connection(mt5, { start_if_needed = true } = {}, 
       return unavailable('mt5_account_mismatch', 'MT5 当前账户与 Sesame 绑定账户不同；请在 MT5 登录绑定账户，或由用户修改账户绑定', steps, { started, mcp_connected: true, account: actual });
     }
     return await exclusive(async () => {
-      signal?.throwIfAborted();
+      combined.throwIfAborted();
+      assertLifecycle();
       requireValue(official.config.version === original.version, '连接设置已改变，请重新连接', 409, 'version_conflict');
       requireValue(!official.jobs.size, 'MT5 调用正在执行，请完成后再恢复连接', 409, 'mt5_busy');
       const changes = {};
