@@ -42,12 +42,24 @@ export class Deployments {
   constructor(mt5) {
     this.mt5 = mt5; this.storage = mt5.storage; this.jobs = new Set(); this.busy = false;
     this.mountRequests = new Map(); this.preparationJobs = new Map();
-    for (const d of this.list()) if (['preparing', 'attaching'].includes(d.status)) this.save({ ...d, status: 'unknown', reason: '应用重启，请核对终端挂载状态；未自动重放。' });
+    for (const d of this.list()) if (['preparing', 'attaching'].includes(d.status)) {
+      const neverStarted = d.status === 'preparing' && !d.native_start_requested && !d.chart_id && !d.expert_path && !d.output_path && !d.native_evidence
+        && !this.storage.list('mt5_command').some(command => command.id?.startsWith(d.id + '_'));
+      this.save({ ...d, status: neverStarted ? 'failed' : 'unknown', reason: neverStarted ? '应用重启：挂载在原生启动前中断，未启动 EA；旧请求不重放。' : '应用重启，请核对终端挂载状态；未自动重放。' }, false);
+    }
     for (const p of this.preparations()) if (['queued', 'running'].includes(p.status)) this.storage.put('mt5_preparation', { ...p, status: 'interrupted', reason: '应用重启，准备任务已暂停；可重新发起准备，不会自动挂载。', updated_at: now() });
   }
   preparations() { return this.storage.list('mt5_preparation'); }
   list() { return this.storage.list('mt5_deployment'); }
-  save(value) { const saved = this.storage.put('mt5_deployment', { ...value, updated_at: now() }); this.mt5.runObserver?.deployment(saved); return saved; }
+  save(value, observe = true) {
+    const saved = this.storage.put('mt5_deployment', { ...value, updated_at: now() });
+    if (observe) {
+      try { this.mt5.runObserver?.deployment(saved); } catch (error) {
+        this.storage.put('mt5_deployment', { ...saved, observer_error: this.mt5.official.redact(error.message) }); throw error;
+      }
+    }
+    return saved;
+  }
   candidates() {
     return this.storage.list('mt5_pass').filter(p => p.status === 'succeeded').map(pass => {
       const build = this.storage.get('mt5_build', pass.build_id), project = this.storage.get('mt5_project', build.project_id);
@@ -197,9 +209,10 @@ export class Deployments {
         requireValue(expected.login === check.login && expected.server === check.server && expected.artifact_digest === check.artifact_digest, '账户或构建已变化，请重新检查挂载', 409);
         const pass = this.storage.get('mt5_pass', passId), build = this.storage.get('mt5_build', pass.build_id), client = this.mt5.official.client('terminal');
         const workspace = nativeData(client.workspace).workspace;
-        d = this.save({ id: id('deploy'), request_key: requestKey, status: 'preparing', pass_id: pass.id,
+        d = { id: id('deploy'), request_key: requestKey, status: 'preparing', pass_id: pass.id,
           source_pass_id: expected.source_pass_id ?? pass.id, source_artifact_digest: expected.source_artifact_digest ?? check.artifact_digest,
-          build_id: build.id, project_id: build.project_id, revision: build.revision, server: check.server, login: check.login, symbol: check.symbol, period: check.period, artifact_digest: check.artifact_digest, parameters: pass.parameters, risk_limits: pass.risk_limits, conversation_id: expected.conversation_id ?? null, chart_id: null, created_at: now(), reason: null });
+          build_id: build.id, project_id: build.project_id, revision: build.revision, server: check.server, login: check.login, symbol: check.symbol, period: check.period, artifact_digest: check.artifact_digest, parameters: pass.parameters, risk_limits: pass.risk_limits, conversation_id: expected.conversation_id ?? null, chart_id: null, created_at: now(), reason: null };
+        d = this.save(d);
         const expert = await this.stage(build);
         requireValue(!(await this.recognitionReason(build)), '终端尚未识别冻结构建，请先运行自动准备', 409, 'deployment_not_ready');
         d = this.save({ ...d, expert_path: expert, output_path: join(hostPath(workspace.common_folder, this.mt5.native), 'Files/MT5Agent', d.id) });
@@ -224,14 +237,19 @@ export class Deployments {
         return this.save({ ...d, status: 'running', native_evidence: { verified: true, sequence: events.at(-1)?.seq ?? 0, observedAt: Date.now(), trace: events.slice(-32) } });
       } catch (error) {
         if (!d) throw error;
+        d = this.storage.get('mt5_deployment', d.id, true) ?? d;
+        // Persist the outcome before optional stop-file I/O; an observer or
+        // filesystem failure must not erase a durable native-start intent.
+        d = this.save({ ...d, status: d.native_start_requested || d.chart_id || this.storage.get('mt5_command', `${d.id}_open`, true) ? 'unknown' : 'failed', reason: this.mt5.official.redact(error.message) }, false);
         if (d.output_path && d.native_start_requested) {
-          // An uncertain startup may have attached the EA. Stop new managed
-          // requests without replaying startup or closing any existing position.
-          await fs.mkdir(d.output_path, { recursive: true });
-          await fs.writeFile(join(d.output_path, 'stop'), 'stop', { mode: 0o600 });
+          try {
+            await fs.mkdir(d.output_path, { recursive: true });
+            await fs.writeFile(join(d.output_path, 'stop'), 'stop', { mode: 0o600 });
+          } catch (stopError) {
+            d = this.save({ ...d, reason: d.reason + '；停止信号尚未写入：' + this.mt5.official.redact(stopError.message) }, false);
+          }
         }
-        // Once chart creation/attachment may have happened, never retry it automatically.
-        return this.save({ ...d, status: d.native_start_requested || d.chart_id || this.storage.get('mt5_command', `${d.id}_open`, true) ? 'unknown' : 'failed', reason: this.mt5.official.redact(error.message) });
+        return d;
       } finally { this.busy = false; }
     });
   }
