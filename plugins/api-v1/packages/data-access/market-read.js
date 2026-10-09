@@ -18,6 +18,7 @@ function projectBar(bar, volumeKind, range, includeForming) {
   check(comparable(bar.openTime, bar.endTime) && compareTime(bar.openTime, bar.endTime) < 0, 'Bar time bounds are invalid', 'INVALID_PROVIDER_DATA');
   check(typeof bar.isClosed === 'boolean' && (includeForming || bar.isClosed), 'Provider returned an invalid or excluded forming bar', 'INVALID_PROVIDER_DATA');
   check(bar.closure === undefined || ['source', 'calendar', 'unknown'].includes(bar.closure), 'Provider returned an invalid closure basis', 'INVALID_PROVIDER_DATA');
+  check(range.from.basis !== 'wall' || comparable(bar.openTime, range.from), 'Provider returned a different time basis, wall-clock authority or zone from the requested wall range', 'INVALID_PROVIDER_DATA');
   if (comparable(bar.openTime, range.from)) check(compareTime(bar.openTime, range.from) >= 0 && compareTime(bar.openTime, range.to) < 0, 'Provider returned a bar outside the requested range', 'INVALID_PROVIDER_DATA');
   for (const key of ['open', 'high', 'low', 'close']) decimal(bar[key], `bar.${key}`);
   check(['open', 'close'].every(key => Decimal.compare(bar.low, bar[key]) <= 0 && Decimal.compare(bar[key], bar.high) <= 0), 'Provider returned invalid OHLC bounds', 'INVALID_PROVIDER_DATA');

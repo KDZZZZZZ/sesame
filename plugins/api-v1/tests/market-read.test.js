@@ -167,3 +167,20 @@ test('forward and reverse DST folds in source bars are unsupported, never string
     assert.deepEqual(f.pages[0][0].openTime, openTime, 'No fold field is removed to force source data through');
   }
 });
+
+test('wall-range reads reject a changed source clock or zone before freezing data', async () => {
+  for (const changes of [{ authority: 'Other/Broker' }, { zone: 'America/New_York' }, { basis: 'utc', unixMs: 1767259800000 }]) {
+    const f = fixture();
+    for (const key of ['openTime', 'endTime']) f.pages[0][0][key] = { ...f.pages[0][0][key], ...changes, ...(key === 'endTime' && changes.basis === 'utc' ? { unixMs: changes.unixMs + 3600000 } : {}) };
+    await assert.rejects(f.run(), { code: 'INVALID_PROVIDER_DATA' });
+    assert.equal(f.unbindCount, 1); assert.equal(f.bindings.size, 0); assert.equal(f.stored.size, 0); assert.equal(f.artifacts.size, 0);
+  }
+});
+
+test('a provider-supported UTC query can preserve returned wall SourceTime without a guessed conversion', async () => {
+  const f = fixture(), input = args();
+  input.range = { from: { basis: 'utc', unixMs: 1767225600000 }, to: { basis: 'utc', unixMs: 1769904000000 } };
+  const result = await f.run(input);
+  assert.equal(result.row_count, 3); assert.deepEqual(f.rows(result.ref)[0].datetime, bar(1).openTime);
+  assert.deepEqual(result.coverage.requested, input.range);
+});
