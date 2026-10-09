@@ -112,7 +112,10 @@ export class NativeRunObserver {
     const body = this.definition(kind, native);
     if (!body) { remember(); return null; }
     let record = this.current.get(recordId);
-    if (record && completed.has(record.body.status)) return record;
+    // An append can commit before an event listener throws. Always recover the
+    // host's exact current revision before appending or deciding completion.
+    if (record) { record = this.host.records.read(recordId); this.current.set(recordId, record); }
+    if (record && completed.has(record.body.status)) { remember(); return record; }
     let evidence = this.mt5.storage.get('native_observation', fingerprint, true)?.artifact;
     if (!evidence) {
       evidence = this.artifact(`native-observation-${fingerprint}`, 'resource', { format: 'sesame.mt5.observation/1', nativeId: native.id, kind, observedAt: Date.now(), recovery }, [...body.dependencies, ...(native.result_artifact ? [native.result_artifact] : [])], { 'observation.json': native });
@@ -172,6 +175,7 @@ export class NativeRunObserver {
     }, 10000); this.timer.unref(); return this;
   }
   async refresh() {
+    this.mt5.deployments.flushObservations();
     for (const native of this.mt5.deployments.list().filter(item => ['running', 'unknown'].includes(item.status) && item.chart_id && item.output_path)) {
       let verified = false, events = [], sequence = native.native_evidence?.sequence ?? null;
       try {
