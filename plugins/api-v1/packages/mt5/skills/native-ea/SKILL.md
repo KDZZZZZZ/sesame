@@ -3,7 +3,7 @@ name: native-ea
 description: 使用有明确修改范围的空模板编写独立 MQL5 EA，声明各模块与状态机，实现原生逻辑并验证真实回测。
 ---
 
-编写前调用 mt5_inspect；create / checkout 后先读取工程 README.md、strategy.json 和六个 Include/Strategy 模块。平台 SDK 在返回的 sdk_path 下只读。新工程是不可执行的空骨架，不能假设已经实现突破、固定风险或退出策略。不要修改终端标准库，也不要用 Python/Rust 策略循环冒充 MT5。
+新策略先读 svl-mql5 skill；本技能维护独立原生模板工程。编写前调用 mt5_inspect；create / checkout 后先读取工程 README.md、strategy.json 和六个 Include/Strategy 模块。平台 SDK 在返回的 sdk_path 下，save 会核对其字节未变；这些是普通本机文件，不由操作系统设为只读。新工程是不可执行的空骨架，不能假设已经实现突破、固定风险或退出策略。不要修改终端标准库，也不要用 Python/Rust 策略循环冒充 MT5。
 
 **先按版本分流。** 新工程模板 3.x 使用 `visual-mql-v1`：必须读取 visual-state-machines skill 及其 `references/language.md`，由解析后的受限源码生成原生类、图和埋点；不写 class/include、辅助文件或 rules.json。本节后续关于手写原生类、规则声明、disabled 和观测归属的细节仅适用于保留的 2.x 工程。不能删除 language 或降低模板版本绕过校验。
 
@@ -22,7 +22,7 @@ CExpertSignal 方向、强度、权重与阈值不是简单 AND。Advance 推进
 
 有状态模块在 README 说明状态/初始值、记忆、事件、守卫、动作、失效/重置和等待确认。同步 observability/rules.json 与实际 ProductEmit 节点/转移 ID，并在 strategy.json 标明所属模块；无状态策略不需要造状态机。每个自定义节点与状态机只能有一个所属模块。真实发送不等于成交，须通过事务/持仓/历史事实确认。平台已有成交关联有边界，不能声称仅下单时的 trace 是完整跨 K 线机会历史。
 
-保留 CProductExpert 继承和平台注入的交易对象，不直接 OrderSend，也不另建交易对象；只读 SDK 不是任意源码不可绕过的安全证明。当前 SDK 仅支持 Tester，实盘部署、跨 EA 风险预留与未知结果恢复未启用。不要改写 Product_RunId、取消/权益/结果钩子或用手写 JSON 代替原生结果。
+保留 CProductExpert 继承和平台注入的交易对象，不直接 OrderSend，也不另建交易对象。SDK 提供 Tester 结果和受管理部署授权钩子，不是任意源码的安全沙箱；跨 EA 风险预留和完整未知结果自动恢复没有保证。原生部署仍需成功回测、实际账户和冻结构建检查，unknown 不能自动重放。不要改写 Product_RunId、取消/权益/结果钩子或用手写 JSON 代替原生结果。
 
 新增 input 同步 SET、规则参数说明与 README。CExpertSignal.StopLevel/TakeLevel 使用标准库调整点，五位外汇通常为 10 个报价 point。采用 CMoneyFixedRisk 等原生算法须验算其 balance 基数、最小手数取整和止损预算；平台 equity 限额不会因为选择某个 Money 类而自动一致。
 
@@ -30,7 +30,7 @@ CExpertSignal 方向、强度、权重与阈值不是简单 AND。Advance 推进
 
 通过工作区 read/write/edit/bash 修改 checkout，mt5_project save 保存不可变 revision；revision_conflict 时重新 checkout 并合并。使用明确 revision 调用 mt5_compile，按真实诊断修复工具返回的可恢复问题。可用后使用同包的 mt5_backtest，运行真实 Tester，核对实际参数、原生指标、成交和 trace；编译成功不能写成已经验证的策略。
 
-成功 backtest_ids 交给 report_publish 自动绑定后端数据和交互组件。生成报告默认委派 subagent，主 Agent 保留全部工具权限。已有无 strategy.json 的工程按旧协议维护，不自动重写历史研究或冻结结果。
+实际回测结果通过 mt5_report_data 和 report_data 冻结为 DataRef，按 reports skill 编写 HTML 与数据绑定，report_publish 后调用 report_check。报告不会自动插入 MT5 组件；旧原生工程不能附会为 SVL RunRecord。已有无 strategy.json 的工程按其原语言维护，不自动重写历史研究或冻结结果。
 
 原生参考：https://www.mql5.com/en/docs/standardlibrary/expertclasses/expertbaseclasses/cexpert
 处理顺序：https://www.mql5.com/en/docs/standardlibrary/expertclasses/expertbaseclasses/cexpert/cexpertprocessing

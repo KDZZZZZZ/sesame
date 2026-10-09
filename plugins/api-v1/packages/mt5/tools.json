@@ -516,7 +516,7 @@
   {
     "name": "mt5_backtest",
     "label": "mt5_backtest",
-    "description": "受管理的真实 MT5 Tester。start 用冻结 build_id 和明确 config 创建任务；可用 parameter_space 穷举最多 64 组。get/list 查看，wait 最多等待 20 秒，stop 显式停止。结果自动登记后端数据；完成不等于策略有效。",
+    "description": "受管理的真实 MT5 Tester。start 用冻结 build_id 和明确 config 创建任务；可用 parameter_space 穷举最多 64 组。get/list 查看，wait 最多等待 20 秒，stop 显式停止。SVL pass 返回固定版本 run_record，可绑定报告 related.run；旧原生工程为 null。结果自动登记后端数据；完成不等于策略有效。",
     "parameters": {
       "type": "object",
       "required": [
@@ -756,7 +756,7 @@
   {
     "name": "mt5_deployment",
     "label": "mt5_deployment",
-    "description": "与面板共用的受管理挂载。先 list/check，用户要求挂载时才用 mount；必须传入检查返回的账户、构建校验值与稳定 request_id。仅支持已回测冻结 EX5。unknown 不换 ID 重试；stop 停止 EA，不平仓。",
+    "description": "受管理的原生挂载。先 list/check，用户要求挂载时才用 mount；必须传入检查返回的账户、构建校验值与稳定 request_id。仅支持已回测冻结 EX5。SVL 运行返回固定版本 run_record，可绑定报告 related.run；旧原生工程为 null。unknown 不换 ID 重试；stop 停止 EA，不平仓。",
     "parameters": {
       "type": "object",
       "required": [

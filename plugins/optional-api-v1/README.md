@@ -4,7 +4,7 @@ These are independent development packages for a matching Plugin API 1 host. The
 
 | Exact name | Actual role | Prerequisites and tested scope |
 | --- | --- | --- |
-| `sesame/akshare` | Research instrument search and historical daily bars | Reuses compatible Python; explicit private setup. Real macOS install/import and one EastMoney daily-history request passed. Other endpoints encountered actual TLS/proxy errors. No real-time trading. |
+| `sesame/akshare` | Research search/history and polled quote/daily-bar subscriptions | Reuses compatible Python; explicit private setup. Real Tencent observations/history, host SSE and downstream vn.py backtest passed. Quotes have unknown freshness and at least 60-second polling; no exchange tick or trading claim. Other endpoints failed explicitly. |
 | `sesame/vnpy` | Actual CTA backtesting of authored Python against fixed DataRefs | Reuses native VeighNa 4.5.0 / CTA 1.4.1. Real macOS engine, simulated matching, errors, warmup and frozen artifacts verified. Not a broker bridge or SVL equivalence claim. |
 | `sesame/qmt` | Read-only MiniQMT market and account adapter | Requires existing broker-authorized Windows MiniQMT and compatible Python/XtQuant. Contract fixtures and actual unsupported-platform behavior verified. No native Windows broker validation or trading claim. |
 
@@ -22,4 +22,12 @@ Use Node 24 and set `SESAME_PLUGIN_SDK_LOADER` to the matching public SDK loader
 
 `npm run lock` / `npm run check` use the shared data-only package validator. `node scripts/catalog.mjs --check` validates metadata and byte indices; maintainers regenerate with an explicit source commit after reviewing package changes. The separate optional archive uses the same deterministic lock/files structure as the official archive, but is never automatically assembled into the 19-package application set. Each package retains its own MIT license and dependency/source notices; this does not relicense third-party runtimes or the private application.
 
-The current recorded checks are 24 JavaScript tests (23 passed, one explicitly gated Windows native case), 13 Python tests with the real vn.py interpreter (six native engine tests and seven QMT controlled fixtures), and four actual application catalog/session/install/activation/data tests. See individual package VALIDATION.md/README.md for network, precision and target limitations. Review metadata keeps automated identity checks and human review separate; no human security approval is fabricated.
+The recorded Python checks comprise six real vn.py engine tests and seven QMT controlled fixtures. Actual application checks cover catalog/current-session loading, installation/activation, read-only provider prerequisites and frozen backtest data. AKShare 1.0.1 adds real Tencent quote/history, HTTP/SSE and downstream CTA execution evidence. See individual package VALIDATION.md/README.md for exact test counts, network, precision and target limitations. Review metadata keeps automated identity checks and human review separate; no human security approval is fabricated.
+
+The optional bundle 2 source suite passed 25 JavaScript checks with one explicit
+Windows native QMT gate (26 total). All three current packages also passed actual
+host static-test/install/activation and environment/result calls; the vn.py case
+ran the real engine and reopened frozen successful and failed results. Bundle 1's
+three exact names were independently installed from the live public catalog and
+immediately called in the same Pi session. Publication evidence is recorded in the
+[official bundle validation](../api-v1/VALIDATION.md).

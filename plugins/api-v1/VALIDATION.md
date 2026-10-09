@@ -1,4 +1,51 @@
+# Development bundle 5 validation
+
+The source suite passed 128 checks: 115 passed, 13 explicit gates and zero
+failures. Eleven gates require Windows; the native MetaEditor compiler and SDK
+example gates were also exercised separately on macOS with real successful
+compilations and owned-process cleanup. The new discovery/binding tools passed
+seven public contract checks and 20 actual host canvas/data/plugin checks.
+
+Only canvas-control 2.1.0, data-access 2.1.0 and MT5 1.1.3 differ from bundle 4.
+Provider/connection/instrument discovery and complete typed bindings are now
+plugin tools and skills. An actual MT5 read-only HostContext search found EURUSD,
+bound 1h/15m series, and mounted an indicator artifact in a temporary CanvasService;
+cleanup left zero bindings. This is service evidence, not a browser-render claim.
+MT5 results now expose exact RunRecordRef versions for report links, and a complete
+non-trading Product SDK example compiled with zero errors/warnings.
+
+The subsequent MT5 1.1.3 account-field correction passed 14 mapping/provider
+checks and the actual current MCP account list, snapshot and subscription
+snapshot path. The upstream `type: demo` now maps to demo; account monetary fields
+match the actual source, missing leverage/margin fields remain missing, and the
+source's EA-permission restriction remains false. These were read-only checks;
+cleanup left zero bindings/subscriptions and no trade was issued.
+
+Both new deterministic archives were read by the actual host extractor and
+package verifier: 19 official packages and three optional packages. Optional
+bundle 2 changes only AKShare to 1.0.1; its independent source and actual host
+tests, observed quote/history and CTA execution scope are documented alongside
+that package. Existing published archives and the stable catalog remain fixed.
+
 # Development bundle 4 validation
+
+Publication completed through the actual PR-to-release workflow on 2026-10-09:
+[package PR #5](https://github.com/KDZZZZZZ/sesame/pull/5) passed the trusted
+exact-head checks and the [automatic publishing run](https://github.com/KDZZZZZZ/sesame/actions/runs/37950589014)
+published [bundle 4](https://github.com/KDZZZZZZ/sesame/releases/tag/plugins-api-v1-dev.4)
+and [optional bundle 1](https://github.com/KDZZZZZZ/sesame/releases/tag/plugins-optional-api-v1-dev.1).
+All five downloaded assets per release matched GitHub's digests; the actual host
+extractor and package verifier accepted all 19 and 3 packages. Source is fixed at
+`90dec0df01ab21aff82e375f5a58e2a78cd89103`; the publishing tag records the main
+revision separately. The release author is `github-actions[bot]`, and review
+records accurately say human approval was not recorded.
+
+An actual development Sesame host then downloaded AKShare, QMT and vn.py from the
+live catalog, verified every immutable source file, tested and installed each
+package, and immediately called its environment/status tool in the same Pi
+session. This completed in 23.3 seconds. One earlier network socket disconnect
+failed explicitly; the subsequent run passed. No terminal, dependency installation
+or trade was triggered by this installation acceptance check.
 
 The final native-execution source suite passed 115 JavaScript checks: 103 passed, 12 explicit platform/opt-in gates, zero failed. It includes the new fixed-catalog byte/identity/activation-failure checks, actual readable web-source delivery paths, preserved research input/output bindings, writable MT5 SDK validation and snapshot-error propagation. All ten MCP sample assertions passed at package version 2.0.1. The six Python dependency boundary checks remain passed.
 

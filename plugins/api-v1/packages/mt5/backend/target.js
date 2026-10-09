@@ -14,7 +14,7 @@ const limitations = [
   'Run ownership, pending intents, partial fills and restart reconciliation require native instrumentation. Manual or external trades have unknown strategy correlation.',
   'Native Tester evidence requires the packaged Product telemetry/result SDK. A compile receipt alone proves no backtest or live behavior.',
 ];
-const resources = ['tools.json', 'target/README.md', 'skills/svl-mql5/SKILL.md', 'backend/sdk/Expert.mqh', 'backend/sdk/Telemetry.mqh', 'backend/sdk/Trade.mqh', 'backend/sdk/Results.mqh', 'backend/sdk/Risk.mqh', 'backend/sdk/Visual.mqh'];
+const resources = ['tools.json', 'target/README.md', 'target/sdk-integration.md', 'target/examples/Strategy.mq5', 'skills/svl-mql5/SKILL.md', 'backend/sdk/Expert.mqh', 'backend/sdk/Telemetry.mqh', 'backend/sdk/Trade.mqh', 'backend/sdk/Results.mqh', 'backend/sdk/Risk.mqh', 'backend/sdk/Visual.mqh'];
 const root = fileURLToPath(new URL('../', import.meta.url));
 const unknown = reason => ({ status: 'unknown', reason });
 const value = value => ({ status: 'value', value });

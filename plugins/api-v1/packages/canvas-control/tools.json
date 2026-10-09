@@ -2,10 +2,147 @@
   {
     "name": "canvas_inspect",
     "label": "canvas_inspect",
-    "description": "查看水平工作台的版本、三个窗口宽度、图表 ID、布局、脚本与前端渲染回执。修改前先读取；没有近期客户端回执表示尚未确认渲染。",
+    "description": "查看工作台版本、图表、布局、指标实例、前端渲染回执及已加载 market_providers 身份/能力。新行情图先 market_instruments 搜索，再 canvas_binding 生成完整绑定；没有近期客户端回执表示尚未确认渲染。",
     "parameters": {
       "type": "object",
       "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "canvas_binding",
+    "label": "canvas_binding",
+    "description": "为行情图生成可直接放入 canvas_apply.chart.binding 的完整绑定。临时连接当前提供方、描述精确品种，固定真实 connection revision；仅自动选择唯一声明的价格/复权/时段口径，保留日历 unknown。不会修改图表、启动持续订阅或执行交易；实际渲染仍检查 canvas_inspect 回执。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "provider",
+        "instrument",
+        "timeframe"
+      ],
+      "properties": {
+        "provider": {
+          "type": "object",
+          "required": [
+            "pluginId",
+            "providerId"
+          ],
+          "properties": {
+            "pluginId": {
+              "type": "string",
+              "description": "data_providers/canvas_inspect 返回的插件 ID",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "providerId": {
+              "type": "string",
+              "description": "提供方 ID",
+              "minLength": 1,
+              "maxLength": 20000
+            }
+          },
+          "additionalProperties": false
+        },
+        "instrument": {
+          "type": "object",
+          "required": [
+            "sourceId",
+            "instrumentId"
+          ],
+          "properties": {
+            "sourceId": {
+              "type": "string",
+              "description": "market_instruments 搜索返回的来源 ID",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "instrumentId": {
+              "type": "string",
+              "description": "来源内品种 ID",
+              "minLength": 1,
+              "maxLength": 20000
+            }
+          },
+          "additionalProperties": false
+        },
+        "timeframe": {
+          "type": "string",
+          "description": "品种声明的标准周期，如 1h/15m；不要传 MT5 H1/M15",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "connection": {
+          "type": "object",
+          "required": [
+            "id",
+            "revision"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "前一次发现返回的连接 ID",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "revision": {
+              "type": "string",
+              "description": "前一次发现返回的精确连接修订",
+              "minLength": 1,
+              "maxLength": 20000
+            }
+          },
+          "additionalProperties": false
+        },
+        "configuration": {
+          "type": "object",
+          "patternProperties": {
+            "^.*$": {}
+          },
+          "description": "仅提供方公开的绑定选项；不含凭据。"
+        },
+        "price_basis": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "bid"
+            },
+            {
+              "type": "string",
+              "const": "ask"
+            },
+            {
+              "type": "string",
+              "const": "mid"
+            },
+            {
+              "type": "string",
+              "const": "last"
+            }
+          ]
+        },
+        "adjustment": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "none"
+            },
+            {
+              "type": "string",
+              "const": "forward"
+            },
+            {
+              "type": "string",
+              "const": "backward"
+            }
+          ]
+        },
+        "session": {
+          "type": "string",
+          "description": "提供方的交易时段 ID；有多个或未声明时需明确指定",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
       "additionalProperties": false
     }
   },

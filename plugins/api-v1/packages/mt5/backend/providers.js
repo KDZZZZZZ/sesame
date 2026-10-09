@@ -205,8 +205,8 @@ export class MT5AccountProvider extends NativeProvider {
     return { data: result.page, meta: { ...meta(from), observedAt: result.observedAt } };
   }
   async snapshot(input, context) {
-    const from = Date.now(), binding = this.binding(context, input.account), { account } = await this.accountInfo(context);
-    return { data: mapAccountSnapshot(account, { ...binding, connectionId: binding.connection.id, observedAt: Date.now(), snapshotId: randomUUID() }), meta: meta(from, nativeWarnings) };
+    const from = Date.now(), binding = this.binding(context, input.account), { account, terminal } = await this.accountInfo(context);
+    return { data: mapAccountSnapshot(account, { ...binding, terminal, connectionId: binding.connection.id, observedAt: Date.now(), snapshotId: randomUUID() }), meta: meta(from, nativeWarnings) };
   }
   async open(input, context) {
     const binding = this.binding(context, input.account), info = await this.accountInfo(context), data = await this.read('get_trading_open_positions', { include_orders: true }, context, 1000);
@@ -265,7 +265,7 @@ export class MT5AccountProvider extends NativeProvider {
     check(Array.isArray(input.topics) && input.topics.length > 0 && input.topics.every(topic => ['snapshot', 'positions', 'orders'].includes(topic)), 'UNSUPPORTED_CAPABILITY', 'Live account topics are snapshot, positions and orders; fills and history use bounded historical queries');
     const read = async () => {
       const { data, binding, info } = await this.open(input, context), state = { account: input.account, coverage: input.topics.map(topic => ({ topic, complete: false })) };
-      if (input.topics.includes('snapshot')) state.snapshot = mapAccountSnapshot(info.account, { ...binding, connectionId: binding.connection.id, observedAt: Date.now(), snapshotId: randomUUID() });
+      if (input.topics.includes('snapshot')) state.snapshot = mapAccountSnapshot(info.account, { ...binding, terminal: info.terminal, connectionId: binding.connection.id, observedAt: Date.now(), snapshotId: randomUUID() });
       if (input.topics.includes('positions')) state.positions = data.positions.map(row => mapPosition(row, binding));
       if (input.topics.includes('orders')) state.orders = data.orders.map(row => mapOrder(row, binding));
       return state;

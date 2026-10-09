@@ -1,5 +1,189 @@
 [
   {
+    "name": "data_providers",
+    "label": "data_providers",
+    "description": "列出当前已加载的行情/账户提供方、准确 provider 身份、能力和连接要求。不连接或安装来源；空列表时先发现并加载对应插件。行情品种用 market_instruments 查询。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "sesame.market"
+            },
+            {
+              "type": "string",
+              "const": "sesame.account"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "market_instruments",
+    "label": "market_instruments",
+    "description": "通过公开行情契约搜索或描述真实品种，同时返回当前 connection 修订、来源时间口径与可用周期。每次临时只读绑定并释放。search 最多返回 limit 项；has_more 时缩小 query，不把失效游标交给模型。describe 使用搜索返回的精确 InstrumentRef。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "action",
+        "provider"
+      ],
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "search"
+            },
+            {
+              "type": "string",
+              "const": "describe"
+            }
+          ]
+        },
+        "provider": {
+          "type": "object",
+          "required": [
+            "pluginId",
+            "providerId"
+          ],
+          "properties": {
+            "pluginId": {
+              "type": "string",
+              "description": "data_providers 返回的插件 ID",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "providerId": {
+              "type": "string",
+              "description": "提供方 ID",
+              "minLength": 1,
+              "maxLength": 20000
+            }
+          },
+          "additionalProperties": false
+        },
+        "connection": {
+          "type": "object",
+          "required": [
+            "id",
+            "revision"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "已有连接 ID",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "revision": {
+              "type": "string",
+              "description": "该连接的精确修订",
+              "minLength": 1,
+              "maxLength": 20000
+            }
+          },
+          "additionalProperties": false
+        },
+        "configuration": {
+          "type": "object",
+          "patternProperties": {
+            "^.*$": {}
+          },
+          "description": "仅提供方声明的公开绑定选项；不放登录口令或凭据。已有配置默认复用。"
+        },
+        "query": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "search 的名称/代码；空串读取默认第一页"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "description": "search 结果上限，默认 20；不会遍历整个来源目录"
+        },
+        "asset_classes": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "equity"
+              },
+              {
+                "type": "string",
+                "const": "future"
+              },
+              {
+                "type": "string",
+                "const": "option"
+              },
+              {
+                "type": "string",
+                "const": "fx"
+              },
+              {
+                "type": "string",
+                "const": "crypto"
+              },
+              {
+                "type": "string",
+                "const": "index"
+              },
+              {
+                "type": "string",
+                "const": "fund"
+              },
+              {
+                "type": "string",
+                "const": "other"
+              }
+            ]
+          },
+          "maxItems": 8
+        },
+        "venues": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "来源的交易场所标识",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "maxItems": 16
+        },
+        "instrument": {
+          "type": "object",
+          "required": [
+            "sourceId",
+            "instrumentId"
+          ],
+          "properties": {
+            "sourceId": {
+              "type": "string",
+              "description": "搜索返回的来源 ID",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "instrumentId": {
+              "type": "string",
+              "description": "搜索返回的来源内品种 ID",
+              "minLength": 1,
+              "maxLength": 20000
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
     "name": "data_sources",
     "label": "data_sources",
     "description": "列出统一数据服务已接入的数据源。缓存、权限和证据由宿主管理。",
