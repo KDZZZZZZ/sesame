@@ -1,3 +1,109 @@
+# Published release evidence — 2026-10-09
+
+These records describe completed publications, not proposed plans. Each exact PR head received a separate Agent review, recorded by the repository maintainer; **independent human approval was not recorded**. The trusted main-branch semantic gate completed before normal merge. The publisher then checked the same head, review and discussion snapshot and published immutable development assets as `github-actions[bot]`. The stable 0.1.4 catalog remains separate.
+
+All five assets for each release below were downloaded from its published GitHub release and matched GitHub asset sizes and SHA-256 values, the reviewed release plan and application pin. The actual host extractor and package verifier accepted all 19 official packages or three optional packages. The source commit and reviewed head were confirmed as ancestors of the ordinary main-branch merge; no squash/rebase compatibility is inferred. See [the publication protocol](PUBLISHING.md) for the gate boundaries and historical static-only releases.
+
+## [plugins-api-v1-dev.6](https://github.com/KDZZZZZZ/sesame/releases/tag/plugins-api-v1-dev.6)
+
+- PR: [#13](https://github.com/KDZZZZZZ/sesame/pull/13); reviewed head: `ed51d200c1a18489e5d0bf763c6cf573b921d164`.
+- Package source: `ccb59e990eed65911fa1a10b029a7aee7ce8115a`; ordinary merge: `6937305ba021bb20a0f0b022fdc18bede3eca383`.
+- Independent review: [Codex /root independent review](https://github.com/KDZZZZZZ/sesame/pull/13#issuecomment-6085890403), completed `2026-10-09T17:26:08Z`; maintainer record created `2026-10-09T17:27:11Z`. This is an Agent review record, not a human approval.
+- Merge: `2026-10-09T17:28:56Z`; publication: `2026-10-09T17:29:27Z`, [successful publishing workflow](https://github.com/KDZZZZZZ/sesame/actions/runs/37966577997).
+
+| Final check | Completion (UTC) | Result |
+| --- | --- | --- |
+| [package-static-review](https://github.com/KDZZZZZZ/sesame/actions/runs/37966127277/job/113940802991) | 2026-10-09T17:25:22Z | success on the reviewed head |
+| [catalog-static-review](https://github.com/KDZZZZZZ/sesame/actions/runs/37966127271/job/113940803809) | 2026-10-09T17:25:19Z | success on the reviewed head |
+| [Premerge semantic gate](https://github.com/KDZZZZZZ/sesame/actions/runs/37966373973) | 2026-10-09T17:27:28Z | success before merge |
+
+The gate ran trusted main revision `5164418bf4919967fba92db673382e80ab339645`, checked the open head at `2026-10-09T17:27:24Z`, and retained artifact `11633282396` with SHA-256 `9f4331b24258b0ed30237a2abc7f950376f0e19ff34a05836ceffcf6be3db070`. Its authenticated reviewer, formal-review state and resolved-discussion set are preserved in the release's [review.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.6/review.json).
+
+| Published asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| [application-official-plugins.lock.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.6/application-official-plugins.lock.json) | 3633 | `15df70684960d4bfcf29f2ddab8d01661de90fe7951a7c796e67b43ea102db86` |
+| [official-plugins.lock.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.6/official-plugins.lock.json) | 54757 | `aa853ebcddf87e9d8ae567ece3d4d70db5b8bec3b8fb1b31c13c83f171bd5c3b` |
+| [review.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.6/review.json) | 6197 | `80a4e6884dc00b1f5df05d060ae634912c4be84ed0327793b07f96e672b49607` |
+| [sesame-official-plugins-api-v1-dev.6.tar.gz](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.6/sesame-official-plugins-api-v1-dev.6.tar.gz) | 1853603 | `06a82fbc7ee55d9629475a6594f6491b1a5364055c010aaebe38f199f36b7511` |
+| [SHA256SUMS](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.6/SHA256SUMS) | 203 | `b31d4b1696779c8f2e5d72087a93b274ad3c7b759deb80fac3208da34624b7ab` |
+
+The prepublication cleanup-error finding was fixed by an independent preservation flag and a complete diagnostic-I/O failure regression; upstream truncated-output evidence was also preserved before this final head was reviewed. Earlier heads are not the released review identity.
+
+## [plugins-api-v1-dev.7](https://github.com/KDZZZZZZ/sesame/releases/tag/plugins-api-v1-dev.7)
+
+- PR: [#14](https://github.com/KDZZZZZZ/sesame/pull/14); reviewed head: `c322f5413cabc3840eb87507d5c0348a41fa624e`.
+- Package source: `3eee24417941893335936ec1b166f034a4d5077f`; ordinary merge: `836f450e690cabfbd59e99c836122d7b37076c32`.
+- Independent review: [Codex /root/release_dev independent review](https://github.com/KDZZZZZZ/sesame/pull/14#issuecomment-6086182944), completed `2026-10-09T17:44:15Z`; maintainer record created `2026-10-09T17:45:46Z`. This is an Agent review record, not a human approval.
+- Merge: `2026-10-09T17:48:09Z`; publication: `2026-10-09T17:48:50Z`, [successful publishing workflow](https://github.com/KDZZZZZZ/sesame/actions/runs/37968830471).
+
+| Final check | Completion (UTC) | Result |
+| --- | --- | --- |
+| [package-static-review](https://github.com/KDZZZZZZ/sesame/actions/runs/37968227321/job/113947897330) | 2026-10-09T17:43:17Z | success on the reviewed head |
+| [catalog-static-review](https://github.com/KDZZZZZZ/sesame/actions/runs/37968227272/job/113947897731) | 2026-10-09T17:43:12Z | success on the reviewed head |
+| [Premerge semantic gate](https://github.com/KDZZZZZZ/sesame/actions/runs/37968558275) | 2026-10-09T17:46:01Z | success before merge |
+
+The gate ran trusted main revision `6937305ba021bb20a0f0b022fdc18bede3eca383`, checked the open head at `2026-10-09T17:45:58Z`, and retained artifact `11634955163` with SHA-256 `54385145900deb9e8cc90db15035eb66f7ca5f15a95f0456929b93e57e42a129`. Its authenticated reviewer, formal-review state and resolved-discussion set are preserved in the release's [review.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.7/review.json).
+
+| Published asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| [application-official-plugins.lock.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.7/application-official-plugins.lock.json) | 3633 | `f62fd1ae70162f9185d0be3d7af564b4ac4999c5908e460a7b43e1a5918ec04b` |
+| [official-plugins.lock.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.7/official-plugins.lock.json) | 54928 | `09ca34b35ad4d7ababe198f3655a096078bcef77834c4f954538ba92c76e7b41` |
+| [review.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.7/review.json) | 6360 | `90a70ce0dc938c234a2d898cd7844b1f5abf181a4f313d0fa105f29a505707c1` |
+| [sesame-official-plugins-api-v1-dev.7.tar.gz](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.7/sesame-official-plugins-api-v1-dev.7.tar.gz) | 1890979 | `ea67af11ec9aa1f99eb2edc0bab3e298e4541c6c5130f4322c52888055d37076` |
+| [SHA256SUMS](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.7/SHA256SUMS) | 203 | `96fea888faa113f01486afb41874b78257b0df1610a00d3e2782560dea72af7a` |
+
+The final head includes both time-basis corrections: ambiguous wall-clock folds are explicitly unsupported, and wall requests reject mismatched authority/zone/basis before freezing data. The previously reviewed candidate was replaced, not published or retroactively relabelled.
+
+## [plugins-api-v1-dev.8](https://github.com/KDZZZZZZ/sesame/releases/tag/plugins-api-v1-dev.8)
+
+- PR: [#16](https://github.com/KDZZZZZZ/sesame/pull/16); reviewed head: `618495aba47cc36a59c745ce3599df59f9742149`.
+- Package source: `3fe35eb22e47b5ece40f7dfc094c834c8da90d21`; ordinary merge: `b4678e233b9a895e495b0fc7d86d517f9644e728`.
+- Independent review: [Codex /root/refactor_plugins independent review](https://github.com/KDZZZZZZ/sesame/pull/16#issuecomment-6086708155), completed `2026-10-09T18:16:39Z`; maintainer record created `2026-10-09T18:17:51Z`. This is an Agent review record, not a human approval.
+- Merge: `2026-10-09T18:19:34Z`; publication: `2026-10-09T18:20:15Z`, [successful publishing workflow](https://github.com/KDZZZZZZ/sesame/actions/runs/37972485938).
+
+| Final check | Completion (UTC) | Result |
+| --- | --- | --- |
+| [package-static-review](https://github.com/KDZZZZZZ/sesame/actions/runs/37971786228/job/113959966223) | 2026-10-09T18:13:49Z | success on the reviewed head |
+| [catalog-static-review](https://github.com/KDZZZZZZ/sesame/actions/runs/37971785983/job/113959964670) | 2026-10-09T18:13:41Z | success on the reviewed head |
+| [Premerge semantic gate](https://github.com/KDZZZZZZ/sesame/actions/runs/37972288237) | 2026-10-09T18:18:12Z | success before merge |
+
+The gate ran trusted main revision `3a4bef2cc8222075791e1c10df8578d6049a2dee`, checked the open head at `2026-10-09T18:18:07Z`, and retained artifact `11636696712` with SHA-256 `b0d48812c5a9f6e99b45993d2b1e6efd7834423f4c051cd4bf1b14dfd9f068c4`. Its authenticated reviewer, formal-review state and resolved-discussion set are preserved in the release's [review.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.8/review.json).
+
+| Published asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| [application-official-plugins.lock.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.8/application-official-plugins.lock.json) | 3633 | `1b72fdc4179f7b823ef6492026a3edfc55940585dae855cbb09baa62125983f0` |
+| [official-plugins.lock.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.8/official-plugins.lock.json) | 54928 | `91748a44978ed4bf40df3ba8d77ae20c19217391937721df5170babea9eed90e` |
+| [review.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.8/review.json) | 6249 | `a40f50848e07f8b34ae891f00528c090bcedaffada11ee284f85ee130f798cb9` |
+| [sesame-official-plugins-api-v1-dev.8.tar.gz](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.8/sesame-official-plugins-api-v1-dev.8.tar.gz) | 1892515 | `a1d12ffd5adfa921a22c6f05dc0bc446f5d83195ae946b996201da9b4b0fd797` |
+| [SHA256SUMS](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.8/SHA256SUMS) | 203 | `34a0583f65df19ea304057d2cef677a1d640e763275edfbb1314ce2034ebb95d` |
+
+The [negative premerge run](https://github.com/KDZZZZZZ/sesame/actions/runs/37970085217) rejected the unresolved [raw-history cache finding](https://github.com/KDZZZZZZ/sesame/pull/16#discussion_r4233080484). Publication stayed blocked while the author removed history retention and separated consumer cancellation; the independent reviewer then checked those fixes and the new final head. The old `bfe78614` no-blocking conclusion was withdrawn and is not used. The positive gate above includes the resolved discussion. Two interrupted local archive downloads were completed with a ranged public download, followed by full-size, full-digest and actual host extraction verification; no published asset was replaced.
+
+## [plugins-optional-api-v1-dev.4](https://github.com/KDZZZZZZ/sesame/releases/tag/plugins-optional-api-v1-dev.4)
+
+- PR: [#15](https://github.com/KDZZZZZZ/sesame/pull/15); reviewed head: `603e59cd85c43ac0102dd32c9e74185adf43da77`.
+- Package source: `1f380819fa4e7a50198ebdf2e596295bf223795b`; ordinary merge: `3a4bef2cc8222075791e1c10df8578d6049a2dee`.
+- Independent review: [Codex /root/refactor_plugins independent review](https://github.com/KDZZZZZZ/sesame/pull/15#issuecomment-6086220277), completed `2026-10-09T17:45:29Z`; maintainer record created `2026-10-09T17:47:52Z`. This is an Agent review record, not a human approval.
+- Merge: `2026-10-09T17:50:32Z`; publication: `2026-10-09T17:51:32Z`, [successful publishing workflow](https://github.com/KDZZZZZZ/sesame/actions/runs/37969111368).
+
+| Final check | Completion (UTC) | Result |
+| --- | --- | --- |
+| [package-static-review](https://github.com/KDZZZZZZ/sesame/actions/runs/37967923546/job/113946866803) | 2026-10-09T17:40:34Z | success on the reviewed head |
+| [catalog-static-review](https://github.com/KDZZZZZZ/sesame/actions/runs/37967923695/job/113946867431) | 2026-10-09T17:40:31Z | success on the reviewed head |
+| [Premerge semantic gate](https://github.com/KDZZZZZZ/sesame/actions/runs/37968798320) | 2026-10-09T17:48:11Z | success before merge |
+
+The gate ran trusted main revision `6937305ba021bb20a0f0b022fdc18bede3eca383`, checked the open head at `2026-10-09T17:48:07Z`, and retained artifact `11634094201` with SHA-256 `99f2c9ca163f7e7a88921b444c664474cef296c2110fbfe757ad81adbf5f493a`. Its authenticated reviewer, formal-review state and resolved-discussion set are preserved in the release's [review.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.4/review.json).
+
+| Published asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| [application-official-plugins.lock.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.4/application-official-plugins.lock.json) | 936 | `a2287d300b3d92de8bae94a0b768cc30cf8764743b822c6fff1ce4fbb0de1c8c` |
+| [official-plugins.lock.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.4/official-plugins.lock.json) | 8462 | `e9caeb9feadd95b45bc7b59ddf0fbedf9f7e28f3310315aca1baf9dcfeca6e19` |
+| [review.json](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.4/review.json) | 6135 | `6e000b1dcc4978ebe167db257babd44c17cb5eb5b3b574d800dfb1fd032e346b` |
+| [sesame-optional-plugins-api-v1-dev.4.tar.gz](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.4/sesame-optional-plugins-api-v1-dev.4.tar.gz) | 234534 | `068b9b6f8923ad8c5f9fe646d3a95a88d41d11594df688d558436b30c93549b3` |
+| [SHA256SUMS](https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.4/SHA256SUMS) | 203 | `929479ad6d76b65df5aa55b61904c84faa22739ec2889eeb3fd090fadae355d0` |
+
+This release contains AKShare 1.0.2, QMT 1.0.0 and vn.py 1.0.1. A fresh test fixture downloaded the three immutable public catalog packages, verified their files, installed/loaded them and called their environment/status tools in the same Pi session (one integration test, 20.2 seconds). It used an existing compatible vn.py environment; it did not install dependencies or exercise a new model decision, full fresh Qt installation, authorized Windows QMT terminal or brokerage trade. The catalog source remains `373bb390c8903688105a88f51b33960f8665187a`.
+
 # Development bundle 8 validation
 
 Only MT5 changes from 1.1.4 to 1.1.5; the other 18 packages, including
