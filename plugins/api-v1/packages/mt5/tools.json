@@ -1,0 +1,1583 @@
+[
+  {
+    "name": "mt5_catalog",
+    "label": "mt5_catalog",
+    "description": "读取 MT5 官方能力的当前目录、inputSchema、工作区权限及不可用原因。先发现后调用；query 可过滤方法名。Python 仅提供官方 API，不能执行任意代码。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "server": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "terminal"
+            },
+            {
+              "type": "string",
+              "const": "metaeditor"
+            },
+            {
+              "type": "string",
+              "const": "marketdata"
+            },
+            {
+              "type": "string",
+              "const": "python"
+            },
+            {
+              "type": "string",
+              "const": "launcher"
+            }
+          ]
+        },
+        "query": {
+          "type": "string",
+          "description": "过滤方法名或说明",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_call",
+    "label": "mt5_call",
+    "description": "调用 official 所属的官方能力。先从 mt5_catalog 获取精确 tool / inputSchema；其他插件的方法不能从此入口调用。command_id 沿用同一动作的稳定 ID；结果 unknown 时先核对真实状态。save_as 可保存大 JSON。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "server",
+        "tool",
+        "arguments",
+        "command_id"
+      ],
+      "properties": {
+        "server": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "terminal"
+            },
+            {
+              "type": "string",
+              "const": "metaeditor"
+            },
+            {
+              "type": "string",
+              "const": "marketdata"
+            },
+            {
+              "type": "string",
+              "const": "python"
+            },
+            {
+              "type": "string",
+              "const": "launcher"
+            }
+          ]
+        },
+        "tool": {
+          "type": "string",
+          "description": "目录返回的精确方法名",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        },
+        "command_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{16,128}$",
+          "description": "唯一稳定 ID，推荐 UUID；同一动作重试必须沿用"
+        },
+        "save_as": {
+          "type": "string",
+          "description": "完整结果的 /work JSON 文件路径",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_cache",
+    "label": "mt5_cache",
+    "description": "管理与交易面板共用的本地 MT5 行情库。bars/trades 只读本地；sync/sync_trades 从当前已验证账户下载并去重保存；时间是券商墙上时间的秒值，不代表 UTC。大结果使用 save_as。remove 只清理指定品种周期的行情。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "symbols"
+            },
+            {
+              "type": "string",
+              "const": "inventory"
+            },
+            {
+              "type": "string",
+              "const": "bars"
+            },
+            {
+              "type": "string",
+              "const": "sync"
+            },
+            {
+              "type": "string",
+              "const": "trades"
+            },
+            {
+              "type": "string",
+              "const": "sync_trades"
+            },
+            {
+              "type": "string",
+              "const": "remove"
+            }
+          ]
+        },
+        "symbol": {
+          "type": "string",
+          "description": "精确品种",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "period": {
+          "type": "string",
+          "description": "MT5 周期，如 H1",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "from": {
+          "type": "integer"
+        },
+        "to": {
+          "type": "integer"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20000
+        },
+        "save_as": {
+          "type": "string",
+          "description": "完整 JSON 的沙箱路径",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_command",
+    "label": "mt5_command",
+    "description": "读取本会话已有调用的结果；不会重发终端操作。returned 只表示收到官方响应，仍需检查 isError、retcode、Tester 状态。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "command_id"
+      ],
+      "properties": {
+        "command_id": {
+          "type": "string",
+          "description": "已有 command_id",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_chart",
+    "label": "mt5_chart",
+    "description": "调用 charts 所属的官方能力。先从 mt5_catalog 获取精确 tool / inputSchema；其他插件的方法不能从此入口调用。command_id 沿用同一动作的稳定 ID；结果 unknown 时先核对真实状态。save_as 可保存大 JSON。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "server",
+        "tool",
+        "arguments",
+        "command_id"
+      ],
+      "properties": {
+        "server": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "terminal"
+            },
+            {
+              "type": "string",
+              "const": "metaeditor"
+            },
+            {
+              "type": "string",
+              "const": "marketdata"
+            },
+            {
+              "type": "string",
+              "const": "python"
+            },
+            {
+              "type": "string",
+              "const": "launcher"
+            }
+          ]
+        },
+        "tool": {
+          "type": "string",
+          "description": "目录返回的精确方法名",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        },
+        "command_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{16,128}$",
+          "description": "唯一稳定 ID，推荐 UUID；同一动作重试必须沿用"
+        },
+        "save_as": {
+          "type": "string",
+          "description": "完整结果的 /work JSON 文件路径",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_edit",
+    "label": "mt5_edit",
+    "description": "调用 editor 所属的官方能力。先从 mt5_catalog 获取精确 tool / inputSchema；其他插件的方法不能从此入口调用。command_id 沿用同一动作的稳定 ID；结果 unknown 时先核对真实状态。save_as 可保存大 JSON。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "server",
+        "tool",
+        "arguments",
+        "command_id"
+      ],
+      "properties": {
+        "server": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "terminal"
+            },
+            {
+              "type": "string",
+              "const": "metaeditor"
+            },
+            {
+              "type": "string",
+              "const": "marketdata"
+            },
+            {
+              "type": "string",
+              "const": "python"
+            },
+            {
+              "type": "string",
+              "const": "launcher"
+            }
+          ]
+        },
+        "tool": {
+          "type": "string",
+          "description": "目录返回的精确方法名",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        },
+        "command_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{16,128}$",
+          "description": "唯一稳定 ID，推荐 UUID；同一动作重试必须沿用"
+        },
+        "save_as": {
+          "type": "string",
+          "description": "完整结果的 /work JSON 文件路径",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_python",
+    "label": "mt5_python",
+    "description": "调用 python 所属的官方能力。先从 mt5_catalog 获取精确 tool / inputSchema；其他插件的方法不能从此入口调用。command_id 沿用同一动作的稳定 ID；结果 unknown 时先核对真实状态。save_as 可保存大 JSON。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "server",
+        "tool",
+        "arguments",
+        "command_id"
+      ],
+      "properties": {
+        "server": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "terminal"
+            },
+            {
+              "type": "string",
+              "const": "metaeditor"
+            },
+            {
+              "type": "string",
+              "const": "marketdata"
+            },
+            {
+              "type": "string",
+              "const": "python"
+            },
+            {
+              "type": "string",
+              "const": "launcher"
+            }
+          ]
+        },
+        "tool": {
+          "type": "string",
+          "description": "目录返回的精确方法名",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        },
+        "command_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{16,128}$",
+          "description": "唯一稳定 ID，推荐 UUID；同一动作重试必须沿用"
+        },
+        "save_as": {
+          "type": "string",
+          "description": "完整结果的 /work JSON 文件路径",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_system",
+    "label": "mt5_system",
+    "description": "调用 system 所属的官方能力。先从 mt5_catalog 获取精确 tool / inputSchema；其他插件的方法不能从此入口调用。command_id 沿用同一动作的稳定 ID；结果 unknown 时先核对真实状态。save_as 可保存大 JSON。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "server",
+        "tool",
+        "arguments",
+        "command_id"
+      ],
+      "properties": {
+        "server": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "terminal"
+            },
+            {
+              "type": "string",
+              "const": "metaeditor"
+            },
+            {
+              "type": "string",
+              "const": "marketdata"
+            },
+            {
+              "type": "string",
+              "const": "python"
+            },
+            {
+              "type": "string",
+              "const": "launcher"
+            }
+          ]
+        },
+        "tool": {
+          "type": "string",
+          "description": "目录返回的精确方法名",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        },
+        "command_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{16,128}$",
+          "description": "唯一稳定 ID，推荐 UUID；同一动作重试必须沿用"
+        },
+        "save_as": {
+          "type": "string",
+          "description": "完整结果的 /work JSON 文件路径",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_test",
+    "label": "mt5_test",
+    "description": "调用 tester 所属的官方能力。先从 mt5_catalog 获取精确 tool / inputSchema；其他插件的方法不能从此入口调用。command_id 沿用同一动作的稳定 ID；结果 unknown 时先核对真实状态。save_as 可保存大 JSON。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "server",
+        "tool",
+        "arguments",
+        "command_id"
+      ],
+      "properties": {
+        "server": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "terminal"
+            },
+            {
+              "type": "string",
+              "const": "metaeditor"
+            },
+            {
+              "type": "string",
+              "const": "marketdata"
+            },
+            {
+              "type": "string",
+              "const": "python"
+            },
+            {
+              "type": "string",
+              "const": "launcher"
+            }
+          ]
+        },
+        "tool": {
+          "type": "string",
+          "description": "目录返回的精确方法名",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        },
+        "command_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{16,128}$",
+          "description": "唯一稳定 ID，推荐 UUID；同一动作重试必须沿用"
+        },
+        "save_as": {
+          "type": "string",
+          "description": "完整结果的 /work JSON 文件路径",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_backtest",
+    "label": "mt5_backtest",
+    "description": "受管理的真实 MT5 Tester。start 用冻结 build_id 和明确 config 创建任务；可用 parameter_space 穷举最多 64 组。get/list 查看，wait 最多等待 20 秒，stop 显式停止。结果自动登记后端数据；完成不等于策略有效。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "start"
+            },
+            {
+              "type": "string",
+              "const": "get"
+            },
+            {
+              "type": "string",
+              "const": "list"
+            },
+            {
+              "type": "string",
+              "const": "wait"
+            },
+            {
+              "type": "string",
+              "const": "stop"
+            }
+          ]
+        },
+        "build_id": {
+          "type": "string",
+          "description": "编译成功的构建 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "backtest_id": {
+          "type": "string",
+          "description": "回测任务 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "project_id": {
+          "type": "string",
+          "description": "list 可按工程过滤",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "command_id": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "start 必填的稳定任务请求 ID；重试同一请求不会重复启动 Tester"
+        },
+        "config": {
+          "type": "object",
+          "required": [
+            "symbol",
+            "period",
+            "from_date",
+            "to_date",
+            "deposit",
+            "currency",
+            "leverage",
+            "model",
+            "parameters"
+          ],
+          "properties": {
+            "symbol": {
+              "type": "string",
+              "description": "券商精确品种名",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "period": {
+              "type": "string",
+              "description": "M1/H1 等原生周期",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "from_date": {
+              "type": "string",
+              "description": "YYYY-MM-DD，券商服务器日期",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "to_date": {
+              "type": "string",
+              "description": "YYYY-MM-DD，排除终止日",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "deposit": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "currency": {
+              "type": "string",
+              "description": "USD 等货币",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "leverage": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            },
+            "model": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "const": 0
+                },
+                {
+                  "type": "number",
+                  "const": 1
+                },
+                {
+                  "type": "number",
+                  "const": 2
+                },
+                {
+                  "type": "number",
+                  "const": 4
+                }
+              ]
+            },
+            "parameters": {
+              "type": "object",
+              "properties": {},
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "parameter_space": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            },
+            "minItems": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_trade",
+    "label": "mt5_trade",
+    "description": "调用 trading 所属的官方能力。先从 mt5_catalog 获取精确 tool / inputSchema；其他插件的方法不能从此入口调用。command_id 沿用同一动作的稳定 ID；结果 unknown 时先核对真实状态。save_as 可保存大 JSON。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "server",
+        "tool",
+        "arguments",
+        "command_id"
+      ],
+      "properties": {
+        "server": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "terminal"
+            },
+            {
+              "type": "string",
+              "const": "metaeditor"
+            },
+            {
+              "type": "string",
+              "const": "marketdata"
+            },
+            {
+              "type": "string",
+              "const": "python"
+            },
+            {
+              "type": "string",
+              "const": "launcher"
+            }
+          ]
+        },
+        "tool": {
+          "type": "string",
+          "description": "目录返回的精确方法名",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        },
+        "command_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{16,128}$",
+          "description": "唯一稳定 ID，推荐 UUID；同一动作重试必须沿用"
+        },
+        "save_as": {
+          "type": "string",
+          "description": "完整结果的 /work JSON 文件路径",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_deployment",
+    "label": "mt5_deployment",
+    "description": "与面板共用的受管理挂载。先 list/check，用户要求挂载时才用 mount；必须传入检查返回的账户、构建校验值与稳定 request_id。仅支持已回测冻结 EX5。unknown 不换 ID 重试；stop 停止 EA，不平仓。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "list"
+            },
+            {
+              "type": "string",
+              "const": "check"
+            },
+            {
+              "type": "string",
+              "const": "mount"
+            },
+            {
+              "type": "string",
+              "const": "stop"
+            }
+          ]
+        },
+        "pass_id": {
+          "type": "string",
+          "description": "已成功回测的 pass_id",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "deployment_id": {
+          "type": "string",
+          "description": "挂载 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "request_id": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128
+        },
+        "login": {
+          "type": "string",
+          "description": "检查返回的账户",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "server": {
+          "type": "string",
+          "description": "检查返回的服务器",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "artifact_digest": {
+          "type": "string",
+          "description": "检查返回的冻结 EX5 摘要",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_project",
+    "label": "mt5_project",
+    "description": "管理独立 MQL5 工程。create 创建 visual-mql-v1 空骨架；先读 visual-state-machines skill 和语言参考。save 严格解析、检查类型/效果/预算，并从同一 IR 生成原生代码与图；源码诊断是可恢复工具错误。旧工程继续按原模板编辑。草稿不能回测。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "list"
+            },
+            {
+              "type": "string",
+              "const": "create"
+            },
+            {
+              "type": "string",
+              "const": "checkout"
+            },
+            {
+              "type": "string",
+              "const": "save"
+            },
+            {
+              "type": "string",
+              "const": "configure_risk"
+            }
+          ]
+        },
+        "title": {
+          "type": "string",
+          "description": "新工程名称",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "project_id": {
+          "type": "string",
+          "description": "工程 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "checkout_id": {
+          "type": "string",
+          "description": "当前会话 checkout ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "test_risk_limits": {
+          "type": "object",
+          "required": [
+            "max_risk_per_trade_pct",
+            "max_daily_loss_pct",
+            "max_open_positions",
+            "max_lots"
+          ],
+          "properties": {
+            "max_risk_per_trade_pct": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "max_daily_loss_pct": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "max_open_positions": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max_lots": {
+              "type": "string",
+              "maxLength": 24
+            }
+          },
+          "additionalProperties": false,
+          "description": "configure_risk 由主 Agent 按用户任务修改；仅影响随后创建的测试，既有构建和任务保留冻结参数"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_inspect",
+    "label": "mt5_inspect",
+    "description": "查看本机能力、工程源码及生成逻辑摘要、冻结构建诊断。engine_node_id 可按源节点下钻到输入、调用目标和源码。checked 表示严格源码已校验；declared 只是旧工程手写声明；均不代表 Tester 已通过。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "type": "string",
+          "description": "工程 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "build_id": {
+          "type": "string",
+          "description": "构建 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "engine_node_id": {
+          "type": "string",
+          "description": "严格工程中需要展开的节点 ID；必须同时给出 project_id 或 build_id",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_compile",
+    "label": "mt5_compile",
+    "description": "冻结已保存 revision、平台 SDK 和本机标准库，在隔离 Wine 环境调用 MetaEditor。成功返回 EX5 摘要；失败作为可恢复工具错误返回构建 ID、诊断与修复指引，修改 checkout 并 save 新 revision 后重试。不执行 EA。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "revision"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string",
+          "description": "工程 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "明确指定已保存的源码版本"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_settings",
+    "label": "mt5_settings",
+    "description": "读取 MT5 脱敏连接、账户绑定、环境与待导入凭据引用。不会登录、启动终端或交易。",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_update_configuration",
+    "label": "mt5_update_configuration",
+    "description": "按用户任务修改 MT5 连接、原生设置或普通运行选项。先读取版本；密钥通过 mt5_import_configuration 的安全引用导入。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "command_id",
+        "expected_version",
+        "changes"
+      ],
+      "properties": {
+        "command_id": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "changes": {
+          "anyOf": [
+            {
+              "type": "object",
+              "required": [
+                "import_native"
+              ],
+              "properties": {
+                "import_native": {
+                  "type": "boolean",
+                  "const": true
+                }
+              },
+              "additionalProperties": false,
+              "minProperties": 1
+            },
+            {
+              "type": "object",
+              "properties": {
+                "allow_trading": {
+                  "type": "boolean"
+                },
+                "allow_host_operations": {
+                  "type": "boolean"
+                },
+                "servers": {
+                  "type": "object",
+                  "properties": {
+                    "terminal": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string",
+                          "maxLength": 2048,
+                          "pattern": "^[^\\r\\n\\u0000]*$"
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "minProperties": 1
+                    },
+                    "metaeditor": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string",
+                          "maxLength": 2048,
+                          "pattern": "^[^\\r\\n\\u0000]*$"
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "minProperties": 1
+                    },
+                    "marketdata": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string",
+                          "maxLength": 2048,
+                          "pattern": "^[^\\r\\n\\u0000]*$"
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "minProperties": 1
+                    }
+                  },
+                  "additionalProperties": false,
+                  "minProperties": 1
+                },
+                "account": {
+                  "type": "object",
+                  "properties": {
+                    "login": {
+                      "type": "string",
+                      "pattern": "^(|[1-9][0-9]{0,19})$"
+                    },
+                    "server": {
+                      "type": "string",
+                      "maxLength": 200,
+                      "pattern": "^[^\\r\\n\\u0000]*$"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "minProperties": 1
+                },
+                "tester_agent": {
+                  "type": "object",
+                  "properties": {
+                    "address": {
+                      "type": "string",
+                      "maxLength": 15,
+                      "pattern": "^[^\\r\\n\\u0000]*$"
+                    },
+                    "port": {
+                      "type": "integer",
+                      "minimum": 1024,
+                      "maximum": 65535
+                    }
+                  },
+                  "additionalProperties": false,
+                  "minProperties": 1
+                }
+              },
+              "additionalProperties": false,
+              "minProperties": 1
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_import_configuration",
+    "label": "mt5_import_configuration",
+    "description": "导入主会话用户直接提供的 MT5 MCP 配置引用，密钥只在插件后台传递。只保存 Terminal/MetaEditor 连接，随后 mt5_connect 核验账户；MetaEditor 用目录单独核验。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "command_id",
+        "source_message_id",
+        "expected_version"
+      ],
+      "properties": {
+        "command_id": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "source_message_id": {
+          "type": "string",
+          "pattern": "^msg_[A-Za-z0-9_-]{1,100}$"
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_connect",
+    "label": "mt5_connect",
+    "description": "验证并恢复已配置的 MT5 Terminal 连接。connected 只证明终端及绑定账户通过核验；不切换账户、不重放交易。不读取或返回秘密。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "command_id"
+      ],
+      "properties": {
+        "command_id": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "start_if_needed": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_report_data",
+    "label": "mt5_report_data",
+    "description": "从实际已结束的 MT5 Tester 任务发布可供通用报告引用的数据集。保留失败/取消状态、券商时间、费用和原生 trace 局限；不会启动回测。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "backtest_ids"
+      ],
+      "properties": {
+        "backtest_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "真实回测任务 ID",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "minItems": 1,
+          "maxItems": 32
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_trade_detail",
+    "label": "mt5_trade_detail",
+    "description": "读取原生历史回测的成交与真实票据关联 trace。旧 visual-mql-v1 图保留原身份；没有真实映射时明确返回 unavailable，不将其标为 SVL 验证。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "trade_id"
+      ],
+      "properties": {
+        "trade_id": {
+          "type": "string",
+          "description": "回测数据集中的成交 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_target",
+    "label": "mt5_target",
+    "description": "读取并冻结 MQL5 目标 profile、数值/事件/恢复限制及包内翻译说明。先保存 SVL 并由宿主从源生成图，再依目标翻译；本工具不编译、不回测、不交易。",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_translation",
+    "label": "mt5_translation",
+    "description": "将 Agent 按冻结 SVL 源编写的 MQL5 文件、逐节点 source_map 与适配说明登记为翻译成果和独立 MT5 工程。只检查身份与映射结构；结果 partial，不证明原生语义等价。逻辑变化先修 SVL，再创建新翻译。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "operation_id",
+        "title",
+        "source",
+        "target",
+        "mode",
+        "parameter_map",
+        "files",
+        "source_map",
+        "adaptations"
+      ],
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{16,128}$"
+        },
+        "title": {
+          "type": "string",
+          "description": "工程名称",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "source": {
+          "type": "object",
+          "required": [
+            "id",
+            "revision",
+            "digest",
+            "kind",
+            "schemaVersion"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "成果 ID",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "revision": {
+              "type": "string",
+              "description": "固定修订",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "digest": {
+              "type": "string",
+              "description": "sha256 摘要",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "kind": {
+              "type": "string",
+              "description": "成果类型",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0.0"
+            }
+          },
+          "additionalProperties": false
+        },
+        "target": {
+          "type": "object",
+          "required": [
+            "id",
+            "revision",
+            "digest",
+            "kind",
+            "schemaVersion"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "成果 ID",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "revision": {
+              "type": "string",
+              "description": "固定修订",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "digest": {
+              "type": "string",
+              "description": "sha256 摘要",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "kind": {
+              "type": "string",
+              "description": "成果类型",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0.0"
+            }
+          },
+          "additionalProperties": false
+        },
+        "mode": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "backtest"
+            },
+            {
+              "type": "string",
+              "const": "live"
+            }
+          ]
+        },
+        "parameter_map": {
+          "type": "object",
+          "patternProperties": {
+            "^.*$": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "required": [
+                    "nativeInput"
+                  ],
+                  "properties": {
+                    "nativeInput": {
+                      "type": "string",
+                      "description": "实际 MQL5 input 参数名",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "binding"
+                  ],
+                  "properties": {
+                    "binding": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "const": "instrument"
+                        },
+                        {
+                          "type": "string",
+                          "const": "account"
+                        }
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
+            }
+          }
+        },
+        "files": {
+          "type": "object",
+          "patternProperties": {
+            "^.*$": {
+              "type": "string",
+              "maxLength": 1048576
+            }
+          },
+          "maxProperties": 128
+        },
+        "source_map": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "nodeId",
+              "generated",
+              "instrumentation"
+            ],
+            "properties": {
+              "nodeId": {
+                "type": "string",
+                "description": "实际 SVL 节点 ID",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "generated": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "path",
+                    "startLine",
+                    "endLine"
+                  ],
+                  "properties": {
+                    "path": {
+                      "type": "string",
+                      "description": "实际相对路径",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "startLine": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "endLine": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "instrumentation": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "const": "direct"
+                  },
+                  {
+                    "type": "string",
+                    "const": "inlined"
+                  },
+                  {
+                    "type": "string",
+                    "const": "boundary"
+                  },
+                  {
+                    "type": "string",
+                    "const": "unobservable"
+                  }
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "description": "不可观测原因",
+                "minLength": 1,
+                "maxLength": 20000
+              }
+            },
+            "additionalProperties": false
+          },
+          "maxItems": 1000
+        },
+        "adaptations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "code",
+              "nodes",
+              "status",
+              "description",
+              "evidence"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "适配代码",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "nodes": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "description": "实际源节点 ID",
+                  "minLength": 1,
+                  "maxLength": 20000
+                }
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "const": "equivalent"
+                  },
+                  {
+                    "type": "string",
+                    "const": "limited"
+                  },
+                  {
+                    "type": "string",
+                    "const": "unsupported"
+                  }
+                ]
+              },
+              "description": {
+                "type": "string",
+                "description": "具体语义差异及限制",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "evidence": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "revision",
+                    "digest",
+                    "kind",
+                    "schemaVersion"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "成果 ID",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "revision": {
+                      "type": "string",
+                      "description": "固定修订",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "digest": {
+                      "type": "string",
+                      "description": "sha256 摘要",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "kind": {
+                      "type": "string",
+                      "description": "成果类型",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "schemaVersion": {
+                      "type": "string",
+                      "const": "1.0.0"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "maxItems": 1000
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]

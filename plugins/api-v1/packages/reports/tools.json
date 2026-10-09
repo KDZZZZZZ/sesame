@@ -1,0 +1,637 @@
+[
+  {
+    "name": "report_data",
+    "label": "report_data",
+    "description": "Freeze a registered dataset into an immutable data artifact for reports. Preserves exact decimal strings, registration provenance and actual row bytes. Demo data remains demo.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "operation_id",
+        "dataset_id"
+      ],
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "description": "Stable idempotency key for this exact snapshot",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "dataset_id": {
+          "type": "string",
+          "description": "Existing registered dataset ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "provenance_kind": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "observed"
+            },
+            {
+              "type": "string",
+              "const": "derived"
+            },
+            {
+              "type": "string",
+              "const": "user_input"
+            },
+            {
+              "type": "string",
+              "const": "demo"
+            }
+          ]
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              }
+            },
+            "additionalProperties": false
+          },
+          "maxItems": 64
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "report_template",
+    "label": "report_template",
+    "description": "Write an editable, self-contained report/1 HTML template with original offline SVG charts, row filtering and linked exact-value tables. Reads a named fixed data binding when the report opens.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "output_path",
+        "title",
+        "summary",
+        "data_id",
+        "chart_title",
+        "takeaway",
+        "source_note",
+        "kind",
+        "x",
+        "y",
+        "unit",
+        "columns"
+      ],
+      "properties": {
+        "output_path": {
+          "type": "string",
+          "description": "Workspace HTML path to create",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "title": {
+          "type": "string",
+          "description": "Descriptive report title",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "summary": {
+          "type": "string",
+          "description": "Main finding supported by the bound data",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "data_id": {
+          "type": "string",
+          "description": "Exact binding ID to include in report_publish.data",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "chart_title": {
+          "type": "string",
+          "description": "Chart title with scope and period",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "takeaway": {
+          "type": "string",
+          "description": "The supported point this chart makes",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "source_note": {
+          "type": "string",
+          "description": "Source, observation period, units and material limitations",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "line"
+            },
+            {
+              "type": "string",
+              "const": "bar"
+            },
+            {
+              "type": "string",
+              "const": "scatter"
+            },
+            {
+              "type": "string",
+              "const": "matrix"
+            },
+            {
+              "type": "string",
+              "const": "units"
+            }
+          ]
+        },
+        "x": {
+          "type": "string",
+          "description": "Category or x-coordinate column",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "y": {
+          "type": "string",
+          "description": "Value or matrix row column",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "value": {
+          "type": "string",
+          "description": "Matrix numeric value column",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "unit": {
+          "type": "string",
+          "description": "Displayed measurement unit",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "unit_value": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Exact column name in the data",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "locale": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "en"
+            },
+            {
+              "type": "string",
+              "const": "zh-CN"
+            }
+          ]
+        },
+        "demo": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "report_read",
+    "label": "report_read",
+    "description": "List fixed report artifact revisions or read an exact report reference, including its pinned data and related evidence.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "ref": {
+          "type": "object",
+          "required": [
+            "id",
+            "revision",
+            "digest",
+            "kind",
+            "schemaVersion"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "kind": {
+              "type": "string",
+              "const": "report"
+            },
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0.0"
+            }
+          },
+          "additionalProperties": false
+        },
+        "include_checks": {
+          "type": "boolean"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "report_check",
+    "label": "report_check",
+    "description": "Render an exact published report revision through the host inspector. Return the persisted actual rendering receipt, viewport checks and diagnostics. Repair failed HTML as a new revision and inspect it again.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "ref"
+      ],
+      "properties": {
+        "ref": {
+          "type": "object",
+          "required": [
+            "id",
+            "revision",
+            "digest",
+            "kind",
+            "schemaVersion"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "kind": {
+              "type": "string",
+              "const": "report"
+            },
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0.0"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "report_publish",
+    "label": "report_publish",
+    "description": "Publish Agent-authored HTML and packaged assets as an immutable report/1 artifact. All data and related artifacts are fixed references; report code gets only the read-only bridge. Publication does not claim successful rendering.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "operation_id",
+        "title",
+        "summary",
+        "html_path",
+        "provenance_kind",
+        "data"
+      ],
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "description": "Stable idempotency key for this exact report",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "title": {
+          "type": "string",
+          "description": "Report title",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "summary": {
+          "type": "string",
+          "description": "Supported takeaway",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "html_path": {
+          "type": "string",
+          "description": "Authored workspace HTML file",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "locale": {
+          "type": "string",
+          "description": "BCP 47 language, for example en or zh-CN",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "provenance_kind": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "observed"
+            },
+            {
+              "type": "string",
+              "const": "derived"
+            },
+            {
+              "type": "string",
+              "const": "user_input"
+            },
+            {
+              "type": "string",
+              "const": "demo"
+            }
+          ]
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "ref",
+              "usage"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Local data binding ID used by report.readData",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "ref": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "revision",
+                  "digest",
+                  "kind",
+                  "schemaVersion"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "revision": {
+                    "type": "string"
+                  },
+                  "digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[a-f0-9]{64}$"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "const": "data"
+                  },
+                  "schemaVersion": {
+                    "type": "string",
+                    "const": "1.0.0"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "usage": {
+                "type": "string",
+                "description": "What this fixed data supports",
+                "minLength": 1,
+                "maxLength": 20000
+              }
+            },
+            "additionalProperties": false
+          },
+          "maxItems": 32
+        },
+        "related": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "role"
+            ],
+            "properties": {
+              "role": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "const": "strategy"
+                  },
+                  {
+                    "type": "string",
+                    "const": "translation"
+                  },
+                  {
+                    "type": "string",
+                    "const": "run"
+                  },
+                  {
+                    "type": "string",
+                    "const": "result"
+                  },
+                  {
+                    "type": "string",
+                    "const": "source"
+                  }
+                ]
+              },
+              "artifact": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "revision",
+                  "digest",
+                  "kind",
+                  "schemaVersion"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "revision": {
+                    "type": "string"
+                  },
+                  "digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[a-f0-9]{64}$"
+                  },
+                  "kind": {
+                    "type": "string"
+                  },
+                  "schemaVersion": {
+                    "type": "string",
+                    "const": "1.0.0"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "record": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "version"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "maxItems": 32
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              }
+            },
+            "additionalProperties": false
+          },
+          "maxItems": 64
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "interactive"
+              },
+              {
+                "type": "string",
+                "const": "strategy_details"
+              },
+              {
+                "type": "string",
+                "const": "trade_details"
+              }
+            ]
+          },
+          "maxItems": 3
+        },
+        "assets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "path",
+              "source_path",
+              "media_type"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Safe relative path used by the HTML",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "source_path": {
+                "type": "string",
+                "description": "Workspace file containing this asset",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "media_type": {
+                "type": "string",
+                "description": "Exact MIME type",
+                "minLength": 1,
+                "maxLength": 20000
+              }
+            },
+            "additionalProperties": false
+          },
+          "maxItems": 64
+        },
+        "artifact_id": {
+          "type": "string",
+          "description": "Existing report artifact ID for a new revision",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "expected_revision": {
+          "type": "string",
+          "description": "Exact current revision when updating",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]

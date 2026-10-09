@@ -1,0 +1,416 @@
+[
+  {
+    "name": "plugin_discover",
+    "label": "plugin_discover",
+    "description": "列出允许发现的插件元数据。不会加载提示词、skill 正文或工具；不可使用的插件不出现。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "可选关键词",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "plugin_load",
+    "label": "plugin_load",
+    "description": "按需加载当前会话允许的可发现插件。配置助手仅供主 Agent 使用；加载不改变全局默认状态。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "plugin_id"
+      ],
+      "properties": {
+        "plugin_id": {
+          "type": "string",
+          "description": "插件 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "plugin_read",
+    "label": "plugin_read",
+    "description": "读取已挂载插件中声明的提示词、skill 或参考资源。传入插件 ID 和目录清单中的相对 path。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "plugin_id",
+        "path"
+      ],
+      "properties": {
+        "plugin_id": {
+          "type": "string",
+          "description": "插件 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "path": {
+          "type": "string",
+          "description": "资源相对路径，例如 skills/analyze-data/SKILL.md",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "plugin_inspect",
+    "label": "plugin_inspect",
+    "description": "主 Agent 查看已安装外部插件的版本、摘要、诊断和可回滚版本；不会激活插件。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "plugin_id"
+      ],
+      "properties": {
+        "plugin_id": {
+          "type": "string",
+          "description": "已安装的外部插件 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "plugin_create",
+    "label": "plugin_create",
+    "description": "主 Agent 创建标准插件草稿。mcp-python 模板自带波动率工具和测试；随后用 write/edit 修改。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "command_id",
+        "name",
+        "description"
+      ],
+      "properties": {
+        "command_id": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "稳定操作 ID；同一操作重试沿用此 ID"
+        },
+        "name": {
+          "type": "string",
+          "description": "小写插件名称",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "description": {
+          "type": "string",
+          "description": "用途与触发条件",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "version": {
+          "type": "string",
+          "description": "SemVer，默认 0.1.0",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "template": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "skill"
+            },
+            {
+              "type": "string",
+              "const": "mcp-python"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "plugin_validate",
+    "label": "plugin_validate",
+    "description": "静态验证标准/Claude/Codex/独立 skill 草稿；不执行代码。返回兼容诊断和内容摘要。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "沙箱中的插件目录，例如 /work/plugin-drafts/my-plugin",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "plugin_test",
+    "label": "plugin_test",
+    "description": "在隔离沙箱中检查 stdio 工具并执行包内测试；远程 MCP 只读取用户已授权连接的 schema。记录摘要和依赖锁。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "沙箱中的插件目录，例如 /work/plugin-drafts/my-plugin",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "plugin_install",
+    "label": "plugin_install",
+    "description": "安装已通过测试的精确摘要，默认可发现。不会覆盖内置插件、赋予宿主权限或重启正在运行的回复；安装后可用 plugin_load 在当前会话加载并当轮调用。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "path",
+        "command_id",
+        "digest"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "沙箱中的插件目录，例如 /work/plugin-drafts/my-plugin",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "command_id": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "稳定操作 ID；同一操作重试沿用此 ID"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "plugin_set_state",
+    "label": "plugin_set_state",
+    "description": "仅改变已安装外部插件的 mounted/discoverable/disabled 策略；不修改内置插件、网络授权或交易权限。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "plugin_id",
+        "command_id",
+        "state",
+        "expected_version"
+      ],
+      "properties": {
+        "plugin_id": {
+          "type": "string",
+          "description": "已安装的外部插件 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "command_id": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "稳定操作 ID；同一操作重试沿用此 ID"
+        },
+        "state": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "mounted"
+            },
+            {
+              "type": "string",
+              "const": "discoverable"
+            },
+            {
+              "type": "string",
+              "const": "disabled"
+            }
+          ]
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "plugin_update",
+    "label": "plugin_update",
+    "description": "从已测试草稿升级外部插件；要求更高版本和匹配的当前摘要。保留旧包及持久数据。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "path",
+        "command_id",
+        "digest",
+        "expected_digest"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "沙箱中的插件目录，例如 /work/plugin-drafts/my-plugin",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "command_id": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "稳定操作 ID；同一操作重试沿用此 ID"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "expected_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "plugin_rollback",
+    "label": "plugin_rollback",
+    "description": "切换到已安装且已测试的历史摘要；保留 PLUGIN_DATA，不自动回滚业务数据。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "plugin_id",
+        "command_id",
+        "expected_digest",
+        "digest"
+      ],
+      "properties": {
+        "plugin_id": {
+          "type": "string",
+          "description": "已安装的外部插件 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "command_id": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "稳定操作 ID；同一操作重试沿用此 ID"
+        },
+        "expected_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "plugin_uninstall",
+    "label": "plugin_uninstall",
+    "description": "卸载外部插件并撤销工具注册；保留版本审计与持久数据。依赖方存在时拒绝。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "plugin_id",
+        "command_id",
+        "expected_digest"
+      ],
+      "properties": {
+        "plugin_id": {
+          "type": "string",
+          "description": "已安装的外部插件 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "command_id": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "稳定操作 ID；同一操作重试沿用此 ID"
+        },
+        "expected_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "plugin_export",
+    "label": "plugin_export",
+    "description": "将已安装插件导出为标准、Claude 或 Codex 目录到 /work/plugin-exports；不安装到用户的其他客户端。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "plugin_id",
+        "command_id",
+        "target"
+      ],
+      "properties": {
+        "plugin_id": {
+          "type": "string",
+          "description": "已安装的外部插件 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "command_id": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "稳定操作 ID；同一操作重试沿用此 ID"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "agent-plugins"
+            },
+            {
+              "type": "string",
+              "const": "claude"
+            },
+            {
+              "type": "string",
+              "const": "codex"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]

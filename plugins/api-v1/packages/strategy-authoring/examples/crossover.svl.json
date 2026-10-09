@@ -1,0 +1,180 @@
+{
+  "language": "svl/1",
+  "schemaVersion": "1.0.0",
+  "strategyId": "example.ma-entry",
+  "semantics": {
+    "numeric": {
+      "precision": 34,
+      "rounding": "half_even"
+    },
+    "missing": "not_ready",
+    "onError": "pause",
+    "eventOrdering": "input_sequence",
+    "duplicateEvent": "ignore",
+    "stateCommit": "per_event"
+  },
+  "parameters": {
+    "instrument": {
+      "type": "instrument"
+    },
+    "fastPeriod": {
+      "type": "integer",
+      "default": 5,
+      "min": 1,
+      "max": 200
+    },
+    "slowPeriod": {
+      "type": "integer",
+      "default": 20,
+      "min": 2,
+      "max": 500
+    },
+    "quantity": {
+      "type": "quantity",
+      "unit": "share",
+      "default": "100",
+      "min": "1"
+    }
+  },
+  "inputs": {
+    "bars": {
+      "kind": "bars",
+      "instrument": {
+        "parameter": "instrument"
+      },
+      "timeframe": "1m",
+      "barPolicy": "closed",
+      "priceBasis": "last",
+      "adjustment": "none",
+      "session": "regular",
+      "lookback": 501
+    },
+    "account": {
+      "kind": "accountSnapshot",
+      "binding": "executionAccount"
+    }
+  },
+  "state": {},
+  "nodes": [
+    {
+      "id": "fast",
+      "op": "series.sma",
+      "inputs": {
+        "series": {
+          "input": "bars",
+          "field": "close"
+        },
+        "period": {
+          "parameter": "fastPeriod"
+        }
+      }
+    },
+    {
+      "id": "slow",
+      "op": "series.sma",
+      "inputs": {
+        "series": {
+          "input": "bars",
+          "field": "close"
+        },
+        "period": {
+          "parameter": "slowPeriod"
+        }
+      }
+    },
+    {
+      "id": "cross",
+      "op": "series.crossAbove",
+      "inputs": {
+        "left": {
+          "node": "fast"
+        },
+        "right": {
+          "node": "slow"
+        }
+      }
+    },
+    {
+      "id": "flat",
+      "op": "account.noPosition",
+      "inputs": {
+        "account": {
+          "input": "account"
+        },
+        "instrument": {
+          "parameter": "instrument"
+        },
+        "scope": "run"
+      }
+    },
+    {
+      "id": "idle",
+      "op": "account.noWorkingOrder",
+      "inputs": {
+        "account": {
+          "input": "account"
+        },
+        "instrument": {
+          "parameter": "instrument"
+        },
+        "scope": "run"
+      }
+    },
+    {
+      "id": "entry",
+      "op": "logic.all",
+      "inputs": {
+        "values": [
+          {
+            "node": "cross"
+          },
+          {
+            "node": "flat"
+          },
+          {
+            "node": "idle"
+          }
+        ]
+      }
+    },
+    {
+      "id": "buy",
+      "op": "order.submit",
+      "inputs": {
+        "account": {
+          "input": "account",
+          "field": "account"
+        },
+        "instrument": {
+          "parameter": "instrument"
+        },
+        "side": "buy",
+        "positionEffect": "open",
+        "orderType": "market",
+        "timeInForce": "ioc",
+        "quantity": {
+          "parameter": "quantity"
+        }
+      }
+    }
+  ],
+  "handlers": [
+    {
+      "id": "on-close",
+      "event": {
+        "type": "bar.closed",
+        "input": "bars"
+      },
+      "steps": [
+        {
+          "id": "entry-branch",
+          "when": "entry",
+          "actions": [
+            "buy"
+          ]
+        }
+      ]
+    }
+  ],
+  "extensions": []
+}

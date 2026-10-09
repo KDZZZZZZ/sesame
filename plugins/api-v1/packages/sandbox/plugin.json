@@ -1,0 +1,22 @@
+{
+  "id": "sesame/sandbox",
+  "title": "代码沙箱",
+  "description": "工作区文件读写、精确编辑与隔离代码执行。",
+  "version": "2.0.0",
+  "default_state": "mounted",
+  "tool_names": [
+    "read",
+    "write",
+    "edit",
+    "bash"
+  ],
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [],
+  "entry": "index.js",
+  "tool_definitions": "tools.json",
+  "apiVersion": "1",
+  "provides": {},
+  "license": "MIT"
+}

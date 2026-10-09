@@ -1,0 +1,166 @@
+[
+  {
+    "name": "configuration_read",
+    "label": "configuration_read",
+    "description": "读取模型、认证状态、偏好和已安装插件。不会返回秘密或启动程序。连接设置由对应提供方插件管理。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "section": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "all"
+            },
+            {
+              "type": "string",
+              "const": "model"
+            },
+            {
+              "type": "string",
+              "const": "preferences"
+            }
+          ]
+        },
+        "provider": {
+          "type": "string",
+          "description": "供应商 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "configuration_update",
+    "label": "configuration_update",
+    "description": "按用户要求修改回复语言或已认证模型。模型切换 queued 后等待本轮结束，再读取结果确认。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "command_id",
+        "target",
+        "changes"
+      ],
+      "properties": {
+        "command_id": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "model"
+            },
+            {
+              "type": "string",
+              "const": "preferences"
+            }
+          ]
+        },
+        "changes": {
+          "anyOf": [
+            {
+              "type": "object",
+              "required": [
+                "provider",
+                "model"
+              ],
+              "properties": {
+                "provider": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                "model": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "thinking": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "off"
+                    },
+                    {
+                      "type": "string",
+                      "const": "minimal"
+                    },
+                    {
+                      "type": "string",
+                      "const": "low"
+                    },
+                    {
+                      "type": "string",
+                      "const": "medium"
+                    },
+                    {
+                      "type": "string",
+                      "const": "high"
+                    },
+                    {
+                      "type": "string",
+                      "const": "xhigh"
+                    },
+                    {
+                      "type": "string",
+                      "const": "max"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false,
+              "minProperties": 1
+            },
+            {
+              "type": "object",
+              "required": [
+                "locale"
+              ],
+              "properties": {
+                "locale": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "zh-CN"
+                    },
+                    {
+                      "type": "string",
+                      "const": "en"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false,
+              "minProperties": 1
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "configuration_open",
+    "label": "configuration_open",
+    "description": "打开现有模型设置窗口，供用户安全填写凭据或完成授权。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "dialog"
+      ],
+      "properties": {
+        "dialog": {
+          "type": "string",
+          "const": "settings"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]

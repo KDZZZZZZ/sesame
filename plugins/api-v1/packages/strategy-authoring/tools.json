@@ -1,0 +1,215 @@
+[
+  {
+    "name": "strategy_validate",
+    "label": "strategy_validate",
+    "description": "Validate an authored SVL/1 JSON file and return its actual semantic digest, operators and graph. This does not run a native engine or place orders.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "source_path"
+      ],
+      "properties": {
+        "source_path": {
+          "type": "string",
+          "description": "Workspace path to the authored SVL JSON file",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "strategy_publish",
+    "label": "strategy_publish",
+    "description": "Publish a validated SVL source as an immutable strategy.source artifact. Preserve this exact reference for target translation and future trade evidence.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "operation_id",
+        "source_path",
+        "title",
+        "change_summary"
+      ],
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "description": "Unique idempotency key for this exact publication",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "source_path": {
+          "type": "string",
+          "description": "Workspace SVL JSON path",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "title": {
+          "type": "string",
+          "description": "Strategy title",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "change_summary": {
+          "type": "string",
+          "description": "What this source revision changes",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "parent": {
+          "type": "object",
+          "required": [
+            "id",
+            "revision",
+            "digest",
+            "kind",
+            "schemaVersion"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "kind": {
+              "type": "string",
+              "const": "strategy.source"
+            },
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0.0"
+            }
+          },
+          "additionalProperties": false
+        },
+        "artifact_id": {
+          "type": "string",
+          "description": "Existing artifact ID when publishing a new revision",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "expected_revision": {
+          "type": "string",
+          "description": "Exact current revision when updating an existing artifact",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "strategy_graph",
+    "label": "strategy_graph",
+    "description": "Read a fixed SVL source artifact and derive its graph from the same validated AST. No layout or explanation is treated as execution evidence.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "source"
+      ],
+      "properties": {
+        "source": {
+          "type": "object",
+          "required": [
+            "id",
+            "revision",
+            "digest",
+            "kind",
+            "schemaVersion"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "kind": {
+              "type": "string",
+              "const": "strategy.source"
+            },
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0.0"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "strategy_replay",
+    "label": "strategy_replay",
+    "description": "Evaluate fixed ordered input events against a saved SVL source. Produces state, intents and actual evaluator traces; it is not a broker simulator, native backtest or translation-equivalence receipt.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "source",
+        "fixture_path"
+      ],
+      "properties": {
+        "source": {
+          "type": "object",
+          "required": [
+            "id",
+            "revision",
+            "digest",
+            "kind",
+            "schemaVersion"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "kind": {
+              "type": "string",
+              "const": "strategy.source"
+            },
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0.0"
+            }
+          },
+          "additionalProperties": false
+        },
+        "fixture_path": {
+          "type": "string",
+          "description": "Workspace JSON with runId, parameters, initialState and ordered events",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "output_path": {
+          "type": "string",
+          "description": "Optional workspace path for the complete evaluation result",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "operation_id": {
+          "type": "string",
+          "description": "If provided, preserve this replay as a generic resource artifact",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]
