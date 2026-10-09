@@ -52,13 +52,32 @@ export class Deployments {
   preparations() { return this.storage.list('mt5_preparation'); }
   list() { return this.storage.list('mt5_deployment'); }
   save(value, observe = true) {
-    const saved = this.storage.put('mt5_deployment', { ...value, updated_at: now() });
-    if (observe) {
-      try { this.mt5.runObserver?.deployment(saved); } catch (error) {
-        this.storage.put('mt5_deployment', { ...saved, observer_error: this.mt5.official.redact(error.message) }); throw error;
-      }
-    }
+    const saved = this.storage.transaction(() => {
+      const saved = this.storage.put('mt5_deployment', { ...value, updated_at: now() });
+      this.storage.put('mt5_deployment_observation_pending', { id: value.id });
+      return saved;
+    });
+    if (observe) this.syncObservation(saved);
     return saved;
+  }
+  syncObservation(value) {
+    if (!this.mt5.runObserver) return;
+    try {
+      this.mt5.runObserver.deployment(value);
+      this.storage.transaction(() => {
+        this.storage.delete('mt5_deployment_observation_pending', value.id);
+        const { observer_error, ...current } = this.storage.get('mt5_deployment', value.id);
+        if (observer_error) this.storage.put('mt5_deployment', current);
+      });
+    } catch (error) {
+      const current = this.storage.get('mt5_deployment', value.id);
+      this.storage.put('mt5_deployment', { ...current, observer_error: this.mt5.official.redact(error.message) }); throw error;
+    }
+  }
+  flushObservations() {
+    for (const pending of this.storage.list('mt5_deployment_observation_pending')) {
+      try { this.syncObservation(this.storage.get('mt5_deployment', pending.id)); } catch { /* Durable pending entry is retried; never replay native execution. */ }
+    }
   }
   candidates() {
     return this.storage.list('mt5_pass').filter(p => p.status === 'succeeded').map(pass => {

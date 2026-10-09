@@ -33,6 +33,7 @@ export async function activate(host, options = {}) {
   const disposers = [];
   try {
     mt5.runObserver = new NativeRunObserver(host, mt5);
+    mt5.deployments.flushObservations();
     for (const value of mt5.deployments.list()) if (['preparing', 'attaching', 'running', 'unknown'].includes(value.status)) mt5.runObserver.deployment(value, true);
     for (const value of mt5.tester.list()) if (['queued', 'running', 'canceling', 'unknown'].includes(value.status)) mt5.runObserver.backtest(mt5.tester.get(value.id), true);
     setInstance(host, { mt5, imports });
