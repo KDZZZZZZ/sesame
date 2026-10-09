@@ -1,5 +1,412 @@
 [
   {
+    "name": "market_read",
+    "label": "market_read",
+    "description": "通过公开行情提供方查询并冻结历史K线，返回固定DataRef、dataset_id、有界样本与真实来源证据。保留SourceTime、Decimal和显式成交量单位；未知/不请求的量为null，不填0。同一operation_id重试返回成功快照，不重抓；过预算或中途失败不发布部分结果。coverage.complete=false仍是实际返回数据，不证明历史无缺口。当前不解析wall时间的DST fold；范围或K线带fold时明确报UNSUPPORTED_CAPABILITY，不删除fold或猜测时区。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "operation_id",
+        "title",
+        "provider",
+        "instrument",
+        "spec",
+        "range",
+        "include_forming",
+        "volume_kind"
+      ],
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "本会话此精确查询的幂等ID；重新采集使用新ID"
+        },
+        "title": {
+          "type": "string",
+          "description": "固定数据名称",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "provider": {
+          "type": "object",
+          "required": [
+            "pluginId",
+            "providerId"
+          ],
+          "properties": {
+            "pluginId": {
+              "type": "string",
+              "description": "data_providers返回的插件ID",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "providerId": {
+              "type": "string",
+              "description": "提供方ID",
+              "minLength": 1,
+              "maxLength": 20000
+            }
+          },
+          "additionalProperties": false
+        },
+        "connection": {
+          "type": "object",
+          "required": [
+            "id",
+            "revision"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "已发现连接ID",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "revision": {
+              "type": "string",
+              "description": "精确连接修订",
+              "minLength": 1,
+              "maxLength": 20000
+            }
+          },
+          "additionalProperties": false
+        },
+        "configuration": {
+          "type": "object",
+          "patternProperties": {
+            "^.*$": {}
+          },
+          "description": "仅提供方公开绑定选项；不会存入成果，不在此发送凭据。已有配置默认复用。"
+        },
+        "instrument": {
+          "type": "object",
+          "required": [
+            "sourceId",
+            "instrumentId"
+          ],
+          "properties": {
+            "sourceId": {
+              "type": "string",
+              "description": "market_instruments返回的来源ID",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "instrumentId": {
+              "type": "string",
+              "description": "准确品种ID",
+              "minLength": 1,
+              "maxLength": 20000
+            }
+          },
+          "additionalProperties": false
+        },
+        "spec": {
+          "type": "object",
+          "required": [
+            "timeframe",
+            "priceBasis",
+            "adjustment",
+            "session",
+            "calendarRevision"
+          ],
+          "properties": {
+            "timeframe": {
+              "type": "string",
+              "description": "提供方声明的周期，如1d/1h",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "priceBasis": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "bid"
+                },
+                {
+                  "type": "string",
+                  "const": "ask"
+                },
+                {
+                  "type": "string",
+                  "const": "mid"
+                },
+                {
+                  "type": "string",
+                  "const": "last"
+                }
+              ]
+            },
+            "adjustment": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "none"
+                },
+                {
+                  "type": "string",
+                  "const": "forward"
+                },
+                {
+                  "type": "string",
+                  "const": "backward"
+                }
+              ]
+            },
+            "session": {
+              "type": "string",
+              "description": "提供方声明的时段",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "calendarRevision": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "required": [
+                    "status",
+                    "value"
+                  ],
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "const": "value"
+                    },
+                    "value": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "revision",
+                        "digest",
+                        "kind",
+                        "schemaVersion"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "revision": {
+                          "type": "string"
+                        },
+                        "digest": {
+                          "type": "string",
+                          "pattern": "^sha256:[a-f0-9]{64}$"
+                        },
+                        "kind": {
+                          "type": "string"
+                        },
+                        "schemaVersion": {
+                          "type": "string",
+                          "const": "1.0.0"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "status"
+                  ],
+                  "properties": {
+                    "status": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "const": "unknown"
+                        },
+                        {
+                          "type": "string",
+                          "const": "unsupported"
+                        },
+                        {
+                          "type": "string",
+                          "const": "not_applicable"
+                        }
+                      ]
+                    },
+                    "reason": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "range": {
+          "type": "object",
+          "required": [
+            "from",
+            "to"
+          ],
+          "properties": {
+            "from": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "required": [
+                    "basis",
+                    "unixMs"
+                  ],
+                  "properties": {
+                    "basis": {
+                      "type": "string",
+                      "const": "utc"
+                    },
+                    "unixMs": {
+                      "type": "integer"
+                    },
+                    "raw": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "basis",
+                    "authority",
+                    "value"
+                  ],
+                  "properties": {
+                    "basis": {
+                      "type": "string",
+                      "const": "wall"
+                    },
+                    "authority": {
+                      "type": "string",
+                      "description": "来源时钟身份，不能猜测UTC",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "value": {
+                      "type": "string",
+                      "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d+)?$"
+                    },
+                    "zone": {
+                      "type": "string"
+                    },
+                    "fold": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "const": 0
+                        },
+                        {
+                          "type": "number",
+                          "const": 1
+                        }
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "to": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "required": [
+                    "basis",
+                    "unixMs"
+                  ],
+                  "properties": {
+                    "basis": {
+                      "type": "string",
+                      "const": "utc"
+                    },
+                    "unixMs": {
+                      "type": "integer"
+                    },
+                    "raw": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "basis",
+                    "authority",
+                    "value"
+                  ],
+                  "properties": {
+                    "basis": {
+                      "type": "string",
+                      "const": "wall"
+                    },
+                    "authority": {
+                      "type": "string",
+                      "description": "来源时钟身份，不能猜测UTC",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "value": {
+                      "type": "string",
+                      "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d+)?$"
+                    },
+                    "zone": {
+                      "type": "string"
+                    },
+                    "fold": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "const": 0
+                        },
+                        {
+                          "type": "number",
+                          "const": 1
+                        }
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "include_forming": {
+          "type": "boolean",
+          "description": "是否明确包含形成中K线；回测通常选false"
+        },
+        "volume_kind": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "real"
+            },
+            {
+              "type": "string",
+              "const": "tick"
+            },
+            {
+              "type": "string",
+              "const": "none"
+            }
+          ]
+        },
+        "max_rows": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000,
+          "description": "总行数预算，默认10000；不会截断后冒充完整数据"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
     "name": "data_providers",
     "label": "data_providers",
     "description": "列出当前已加载的行情/账户提供方、准确 provider 身份、能力和连接要求。不连接或安装来源；空列表时先发现并加载对应插件。行情品种用 market_instruments 查询。",

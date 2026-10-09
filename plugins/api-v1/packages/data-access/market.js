@@ -1,4 +1,5 @@
 import { check, canonical } from '@sesame/plugin-sdk/protocol';
+import { marketReadTools } from './market-read.js';
 
 const summary = descriptor => ({ ...descriptor, provider: { pluginId: descriptor.pluginId, providerId: descriptor.id } });
 const unknown = reason => ({ status: 'unknown', reason });
@@ -10,6 +11,7 @@ export function marketTools(host) {
   const connection = Type.Object({ id: string('已有连接 ID'), revision: string('该连接的精确修订') }, { additionalProperties: false });
   const instrument = Type.Object({ sourceId: string('搜索返回的来源 ID'), instrumentId: string('搜索返回的来源内品种 ID') }, { additionalProperties: false });
   return [
+    ...marketReadTools(host),
     define('data_providers', '列出当前已加载的行情/账户提供方、准确 provider 身份、能力和连接要求。不连接或安装来源；空列表时先发现并加载对应插件。行情品种用 market_instruments 查询。', {
       contract: Type.Optional(choice(['sesame.market', 'sesame.account'])),
     }, args => ({ providers: host.providers.list(args.contract).filter(item => ['sesame.market', 'sesame.account'].includes(item.contract)).map(summary) })),

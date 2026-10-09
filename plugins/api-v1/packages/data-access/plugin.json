@@ -2,9 +2,10 @@
   "id": "sesame/data-access",
   "title": "自动数据服务",
   "description": "按需查询行情、网页及已登记输入，复用共享缓存，固定可追溯证据。",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "default_state": "mounted",
   "tool_names": [
+    "market_read",
     "data_providers",
     "market_instruments",
     "data_sources",
@@ -20,6 +21,7 @@
   "entry": "index.js",
   "tool_definitions": "tools.json",
   "mcp_export": [
+    "market_read",
     "data_providers",
     "market_instruments",
     "data_sources",

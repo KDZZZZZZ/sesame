@@ -1,3 +1,35 @@
+# Development bundle 7 validation
+
+Only data-access changes, from 2.1.0 to 2.2.0; the other 18 official package
+versions and file trees remain those of bundle 6. The new `market_read` tool
+reads provider bar history through public host ports and freezes the request,
+source responses, exact numeric strings, unit metadata and resulting DataRef.
+A caller-supplied identity resumes the same committed result after restart;
+it does not silently fetch new market data or reinterpret an existing record.
+
+Twenty-one targeted contract checks passed, including pagination, byte-identical
+duplicate handling, failure cleanup, units and persistent resume. Independent
+review found that ambiguous wall-clock folds could be string-sorted incorrectly.
+This revision explicitly rejects requested or returned wall-clock fold values
+with UNSUPPORTED_CAPABILITY, before accepting a history; it does not guess the
+DST chronology. Both forward and reverse fold cases have regressions. A subsequent platform review
+found incompatible wall-clock authorities could skip range checks. Wall-clock
+requests now require matching bar basis, authority and zone; incompatible replies
+are rejected before freezing, while the intended UTC-query to provider-wall
+response path remains covered by an explicit regression.
+
+An actual temporary HostContext queried AKShare 1.19.1's explicitly selected
+Tencent source for 668 daily bars, in two provider pages from one upstream fetch.
+The frozen DataRef, dataset export and vn.py fixed-row adapter matched the source
+rows. A same-ID retry and an independent-process resume with no active provider
+reopened that same result without a new upstream fetch; temporary bindings and
+snapshot cache were released. This validates data delivery and persistence,
+not new market freshness, native broker execution or trading permission.
+
+The source and release plan require the exact-head independent semantic review
+and trusted pre-merge evidence documented in [PUBLISHING.md](PUBLISHING.md).
+The stable catalog, optional packages and earlier release assets stay unchanged.
+
 # Development bundle 6 validation
 
 Only MT5 1.1.4, strategy-authoring 1.0.1 and workspace 1.0.2 differ from bundle 5.
