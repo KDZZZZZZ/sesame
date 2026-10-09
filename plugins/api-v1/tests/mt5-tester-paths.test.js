@@ -1,0 +1,9 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { promises as fs } from 'node:fs';
+import { join } from 'node:path';
+import { Tester } from '../packages/mt5/backend/tester.js';
+const harness=()=>{let row={id:'pass_fixture',build_id:'build_fixture'};const storage={directory:'/unused/long/application/workspace',get:()=>structuredClone(row),put:(_kind,value)=>row=structuredClone(value)};return{tester:new Tester({storage}),row:()=>row}};
+test('Tester uses and cleans a private short native runner without touching the application workspace',async()=>{const{tester,row}=harness();let runner;tester.executeInDirectory=async(_pass,_signal,directory)=>{runner=directory;assert.notEqual(directory,tester.storage.directory);await fs.writeFile(join(directory,'owned-file'),'owned');return 'done'};assert.equal(await tester.execute(row(),new AbortController().signal),'done');assert.equal(row().temporary_paths.tester_runner,runner);await assert.rejects(fs.stat(runner),{code:'ENOENT'});});
+test('failed preparation cleans its own temporary native runner',async()=>{const{tester,row}=harness();let runner;tester.executeInDirectory=async(_pass,_signal,directory)=>{runner=directory;throw Error('preflight unavailable')};await assert.rejects(tester.execute(row(),new AbortController().signal),/preflight unavailable/);await assert.rejects(fs.stat(runner),{code:'ENOENT'});});
+test('unconfirmed process cleanup preserves the owned runner for diagnosis',async t=>{const{tester,row}=harness();let runner;tester.executeInDirectory=async(_pass,_signal,directory)=>{runner=directory;throw Object.assign(Error('job not settled'),{code:'runtime_cleanup_failed'})};await assert.rejects(tester.execute(row(),new AbortController().signal),/job not settled/);t.after(()=>fs.rm(runner,{recursive:true,force:true}));assert.ok((await fs.stat(runner)).isDirectory());});
