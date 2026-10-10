@@ -38,6 +38,17 @@ Never overwrite a released asset or rewrite an existing release plan to update
 this directory. To withdraw an entry, record its exact ID in the source file's
 `withdrawn` array and regenerate; the immutable source and review remain visible.
 
+The release-level `profile` / `engines` fields are an optional shorthand, emitted
+only when every package has exactly the profile's host range. A package may need
+a newer host; then the generator omits that release-level shorthand and preserves
+every entry's actual `engines` and `distribution`. Published readers otherwise
+interpret the summary as exact equality and reject the entire directory, blocking
+even compatible core updates. Source profile validation still runs before catalog
+generation; fixed source, archive, lock and review pins remain unchanged. The host
+checks the downloaded manifest at installation, so omitting the summary never
+makes an incompatible package installable. No schema or published reader change
+is required, and a uniform release matching its profile keeps the summary.
+
 ## Query, install and explicit update
 
 `plugin_catalog({plugin_id:"sesame/mt5"})` returns version 1.2.0, its fixed
