@@ -1,23 +1,16 @@
-# Plugin catalog for Sesame 0.2.0 / API 1
+# Plugin catalog / API 1
 
 The unified directory is
 `https://raw.githubusercontent.com/KDZZZZZZ/sesame/main/plugins/api-v1/catalog.json`.
-It lists nine default and twenty-two optional plugins by exact publisher-qualified name.
-All require `engines.sesame: ">=0.2.0-0"`: compatible development builds are allowed,
-with formal minimum 0.2.0. The published plugin-manager 2.1.1 reads this directory
-and supports formal install and explicit update. Use the [application release
-page](https://github.com/KDZZZZZZ/sesame/releases/tag/v0.2.0) for installer availability.
-Sesame 0.1.4 and its historical catalog are unchanged. After upgrading the app,
-install the required API 1 versions by name; the old plugins are not converted.
-
-The catalog retains `channel:"development"` as its existing publication-channel
-identity. Compatibility is determined by each package's `engines.sesame` range,
-which accepts the formal 0.2.0 application. Keeping the existing tags, catalog
-bytes and application pins avoids changing already verified package identities.
+It lists nine default and twenty-two optional plugins by exact publisher-qualified
+name. Host compatibility is checked against each package's `engines.sesame`
+range. The plugin-manager supports formal installation and explicit updates.
+The historical catalog remains separate; its packages are not automatically
+converted into API 1 packages.
 
 ## Fixed publication sources
 
-`catalog.sources.json` selects **core dev.14** and **optional dev.8** by their
+`catalog.sources.json` selects **core dev.15** and **optional dev.9** by their
 exact publication commits and review asset hashes. The generator reads each
 release plan at that commit, reconstructs its archive from the immutable source,
 and verifies the archive, lock, package files and tree digests. It never imports
@@ -26,9 +19,9 @@ release/archive/lock/review identities alongside each package's file index.
 
 These pins deliberately do not follow the latest release, current package source
 or a floating branch. Both releases were published by the main-branch workflow
-after PR27's and PR31's exact-head independent Agent reviews, static checks and pre-merge
-gate. Their actual downloaded assets were checked against GitHub digests and the
-host package verifier before this metadata update. Human approval is not recorded.
+after PR35's exact-head independent Agent review, static checks and pre-merge
+gate. Their downloaded assets were checked against GitHub digests and the
+reconstructed archive bytes before this metadata update. Human approval is not recorded.
 A later reviewed publication must explicitly advance the selected source release.
 
 ```sh
@@ -128,8 +121,7 @@ against fixed data. They do not add a default broker or trading authorization.
 Backtrader's package and engine retain GPL-3.0-or-later licensing.
 
 `inventory.json` is a descriptive snapshot marked `descriptive-inventory`. It
-records the minimum compatible application version, not application release
-status. It is not an installation catalog: it omits file/source hashes and cannot
+records compatible application versions. It is not an installation catalog:
+it omits file/source hashes and cannot
 select bytes to execute. Website copy buttons return exact names; the Agent
-resolves the installation catalog and verifies its fixed digests. The application
-release page remains the source of installer availability.
+resolves the installation catalog and verifies its fixed digests.
