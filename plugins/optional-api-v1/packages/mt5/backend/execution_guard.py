@@ -65,10 +65,12 @@ def guarded_send(mt5, request, guard, clock=lambda: int(time.time() * 1000), mon
     need(all(type(guard[k]) is int for k in ("observed_at", "expires_at", "max_quote_age_ms", "max_quote_to_send_ms")), "INVALID_ARGUMENT", "Guard times must be integer milliseconds")
     need(0 < guard["expires_at"] - guard["observed_at"] <= 60000 and 0 < guard["max_quote_age_ms"] <= 5000 and 0 < guard["max_quote_to_send_ms"] <= 1000, "INVALID_ARGUMENT", "Guard exceeds supported latency budgets")
     deadline()
-    account, terminal = mt5.account_info(), mt5.terminal_info()
-    need(account is not None and terminal is not None, "SOURCE_UNAVAILABLE", "Cannot verify account and terminal")
-    need(str(account.login) == guard["expected_account"] and account.server == guard["expected_server"], "ACCOUNT_MISMATCH", "Connected account changed")
-    need(getattr(account, "trade_allowed", None) is True and getattr(account, "trade_expert", None) is True and getattr(terminal, "connected", None) is True and getattr(terminal, "trade_allowed", None) is True and getattr(terminal, "tradeapi_disabled", True) is False, "FORBIDDEN", "Account or terminal does not permit this trading channel")
+    def verify_account():
+        account, terminal = mt5.account_info(), mt5.terminal_info()
+        need(account is not None and terminal is not None, "SOURCE_UNAVAILABLE", "Cannot verify account and terminal")
+        need(str(account.login) == guard["expected_account"] and account.server == guard["expected_server"], "ACCOUNT_MISMATCH", "Connected account changed")
+        need(getattr(account, "trade_allowed", None) is True and getattr(account, "trade_expert", None) is True and getattr(terminal, "connected", None) is True and getattr(terminal, "trade_allowed", None) is True and getattr(terminal, "tradeapi_disabled", True) is False, "FORBIDDEN", "Account or terminal does not permit this trading channel")
+    verify_account()
     symbol, side = request.get("symbol"), guard["side"]
     need(isinstance(symbol, str) and symbol and side in ("buy", "sell"), "INVALID_ARGUMENT", "Explicit symbol and side required")
     deal, pending = request.get("action") == mt5.TRADE_ACTION_DEAL, request.get("action") == mt5.TRADE_ACTION_PENDING
@@ -79,11 +81,13 @@ def guarded_send(mt5, request, guard, clock=lambda: int(time.time() * 1000), mon
     volume = number(request.get("volume"))
     step = number(spec.volume_step)
     need(number(spec.volume_min) <= volume <= number(spec.volume_max) and volume % step == 0, "INVALID_ARGUMENT", "Volume violates native minimum, maximum or step")
-    if request.get("position"):
-        positions = mt5.positions_get(ticket=request["position"])
-        need(positions is not None and len(positions) == 1, "POSITION_CHANGED", "Target position is no longer unique")
-        p = positions[0]
-        need(p.symbol == symbol and volume <= number(p.volume) and p.type == (mt5.POSITION_TYPE_SELL if side == "buy" else mt5.POSITION_TYPE_BUY), "POSITION_CHANGED", "Close request no longer matches position")
+    def verify_position():
+        if request.get("position"):
+            positions = mt5.positions_get(ticket=request["position"])
+            need(positions is not None and len(positions) == 1, "POSITION_CHANGED", "Target position is no longer unique")
+            p = positions[0]
+            need(str(p.ticket) == str(request["position"]) and p.symbol == symbol and volume <= number(p.volume) and p.type == (mt5.POSITION_TYPE_SELL if side == "buy" else mt5.POSITION_TYPE_BUY), "POSITION_CHANGED", "Close request no longer matches position")
+    verify_position()
     limit = number(guard["price_limit"])
     def fresh_quote():
         before = clock()
@@ -105,6 +109,10 @@ def guarded_send(mt5, request, guard, clock=lambda: int(time.time() * 1000), mon
     need(checked is not None and checked.retcode == 0, "ORDER_CHECK_REJECTED", "Native order_check rejected the request")
     # order_check may be slow; refresh after it without another model turn.
     tick, received, quote_ms, fresh_price = fresh_quote()
+    # A native check can outlive an account switch, permission change or position
+    # reduction. These last reads are inside the final quote-to-send budget.
+    verify_position()
+    verify_account()
     # Keep the checked request unchanged; a moved quote is safe only inside both
     # the absolute limit and the explicit broker deviation. The broker is final.
     send_at = deadline()

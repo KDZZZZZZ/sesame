@@ -41,7 +41,7 @@ class MT5:
     def account_info(self): self.calls.append("account"); return self.account
     def terminal_info(self): self.calls.append("terminal"); return self.terminal
     def symbol_info(self, symbol): self.calls.append("spec"); return self.spec
-    def positions_get(self, ticket): return (N(symbol="FIXTURE", volume=0.1, type=0),)
+    def positions_get(self, ticket): return (N(ticket=ticket, symbol="FIXTURE", volume=0.1, type=0),)
     def symbol_info_tick(self, symbol):
         self.calls.append("quote")
         return N(time_msc=self.clock()-self.quote_age, ask=self.ask, bid=self.bid)
@@ -63,7 +63,7 @@ class GuardTests(unittest.TestCase):
         self.mt.check_delay = 2500
         result, timing = self.send()
         self.assertEqual(result.order,123);self.assertEqual(len(self.mt.sent),1)
-        self.assertEqual(self.mt.calls,["account","terminal","spec","quote","check","quote","send"])
+        self.assertEqual(self.mt.calls,["account","terminal","spec","quote","check","quote","account","terminal","send"])
         self.assertEqual(timing["native_preflight_ms"],2500);self.assertEqual(timing["send_to_receipt_ms"],20)
         self.assertEqual(timing["source_time_ms"],1800000002500)
     def test_mt5_queue_delay_past_expiry_never_sends(self):
@@ -94,6 +94,31 @@ class GuardTests(unittest.TestCase):
         self.mt.sent=[];self.request['volume']=0.2
         with self.assertRaises(mt.GuardRejected) as caught:self.send()
         self.assertEqual(caught.exception.code,'POSITION_CHANGED');self.assertFalse(self.mt.sent)
+    def test_mt5_changes_during_order_check_reject_before_final_send(self):
+        changes = [(lambda:setattr(self.mt.account,'login',43),'ACCOUNT_MISMATCH'),(lambda:setattr(self.mt.account,'server','Other'),'ACCOUNT_MISMATCH'),(lambda:setattr(self.mt.account,'trade_allowed',False),'FORBIDDEN'),(lambda:setattr(self.mt.terminal,'tradeapi_disabled',True),'FORBIDDEN')]
+        for mutate,code in changes:
+            self.setUp()
+            def checked(request):mutate();return N(retcode=0)
+            self.mt.order_check=checked
+            with self.assertRaises(mt.GuardRejected) as caught:self.send()
+            self.assertEqual(caught.exception.code,code);self.assertFalse(self.mt.sent)
+    def test_mt5_close_revalidates_exact_position_after_native_check(self):
+        for changed in ([],[N(ticket=100,symbol='FIXTURE',volume=0.05,type=0)],[N(ticket=101,symbol='FIXTURE',volume=0.1,type=0)],[N(ticket=100,symbol='OTHER',volume=0.1,type=0)],[N(ticket=100,symbol='FIXTURE',volume=0.1,type=1)]):
+            self.setUp();self.request.update(position=100,type=1);self.guard.update(side='sell',price_limit='99')
+            def checked(request):self.mt.positions_get=lambda ticket:changed;return N(retcode=0)
+            self.mt.order_check=checked
+            with self.assertRaises(mt.GuardRejected) as caught:self.send()
+            self.assertEqual(caught.exception.code,'POSITION_CHANGED');self.assertFalse(self.mt.sent)
+    def test_mt5_final_verification_time_is_inside_quote_to_send_budget(self):
+        original=self.mt.account_info;calls=0
+        def slow_final_account():
+            nonlocal calls
+            calls+=1
+            if calls==2:self.clock.now+=1001
+            return original()
+        self.mt.account_info=slow_final_account
+        with self.assertRaises(mt.GuardRejected) as caught:self.send()
+        self.assertEqual(caught.exception.code,'LATENCY_BUDGET_EXCEEDED');self.assertFalse(self.mt.sent)
     def test_mt5_timeout_after_send_is_not_guard_rejection_or_retry(self):
         def send(request):self.mt.sent.append(request);raise TimeoutError('synthetic lost receipt')
         self.mt.order_send=send

@@ -888,7 +888,7 @@
       "id": "sesame/mt5",
       "version": "1.3.0",
       "directory": "mt5",
-      "treeDigest": "sha256:8768aa00c4c44d7fd75e628ea58d4f63d5cd1b7a209e8e6e8a0e928d3dcd1ab5",
+      "treeDigest": "sha256:89c83c7f844e434238606e23f21ec5d9ec04c9877621d7be59cf59eec10c5a60",
       "files": [
         {
           "path": "LICENSE",
@@ -897,8 +897,8 @@
         },
         {
           "path": "TRADING.md",
-          "sha256": "7e4bab7ccb457ed1e68779313bbc2809cd163cc0f02dd2cb5aae6bb5f7e1ef37",
-          "bytes": 6594
+          "sha256": "0c1a008ee8794a40173f90eeb10d1352c07aa9190d35c46275cd7fe500e1b4f9",
+          "bytes": 6724
         },
         {
           "path": "backend/README.md",
@@ -967,8 +967,8 @@
         },
         {
           "path": "backend/execution_guard.py",
-          "sha256": "5605a94e745fe439a38c5277809f92a94a419e8df968ae20ae10669c0ad90cb4",
-          "bytes": 8903
+          "sha256": "ab6ac4a4bc2f2f60c91691450939f8bf75d2d9ce3c6a175abe6f46ba03f77367",
+          "bytes": 9283
         },
         {
           "path": "backend/frozen-compiler.js",
