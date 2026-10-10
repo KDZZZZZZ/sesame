@@ -1,7 +1,7 @@
 [
   {
     "name": "backtrader_environment",
-    "description": "Inspect existing pinned Backtrader/Python first; explicit prepare installs private PyPI dependencies only if missing. No startup downloads.",
+    "description": "Inspect and select existing pinned Backtrader/Python first; explicit prepare installs private PyPI dependencies only if missing. No startup downloads.",
     "parameters": {
       "type": "object",
       "required": [

@@ -7,3 +7,5 @@ Preview requires Sesame >=0.2.0-0 (target stable 0.2.0). Discoverable, never def
 Adapter: MIT. CCXT library: MIT, obtained separately from official PyPI, not bundled. References: [CCXT manual](https://docs.ccxt.com/docs/manual), [CCXT source/license](https://github.com/ccxt/ccxt), [pinned distribution](https://pypi.org/project/ccxt/4.5.85/). Data licenses and exchange usage terms remain upstream-specific. Precision and coverage limitations are explicit.
 
 If direct exchange connectivity is unavailable, the user may explicitly select `configuration.publicProxy` as a credential-free HTTP(S) URL. The plugin never reads system proxy settings or account keys; the selected route contributes to the connection revision. No exchange fallback occurs automatically.
+
+`inspect` validates and selects a compatible existing environment by saving only a private selection receipt. It never installs or upgrades dependencies. Ready after inspect is immediately usable; prepare is needed only when no compatible dependency is found.

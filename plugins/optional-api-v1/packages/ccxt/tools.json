@@ -1,7 +1,7 @@
 [
   {
     "name": "ccxt_environment",
-    "description": "Inspect existing pinned CCXT Python first; explicit prepare creates private dependencies only if unavailable. No startup downloads or API keys.",
+    "description": "Inspect and select existing pinned CCXT Python first; explicit prepare creates private dependencies only if unavailable. No startup downloads or API keys.",
     "parameters": {
       "type": "object",
       "required": [

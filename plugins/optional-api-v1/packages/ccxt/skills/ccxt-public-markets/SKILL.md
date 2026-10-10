@@ -9,3 +9,5 @@ description: Use explicit CCXT exchange public spot instruments, UTC candles and
 4. History is one bounded native window of <=500 rows, paged immutably; larger range coverage stays partial/unknown. Backward starts with the latest requested bounded window; pages remain ascending. A later source candle proves prior closure; receipt clock does not. includeForming false is respected.
 5. Bind dashboard bars via generic host contracts; polling is 60s, not exchange ticks. Close subscriptions/unbind on completion. Stream gaps require resnapshot. No account/order/private API capability exists. Never add exchange credentials.
 6. Freeze research data through generic data-access. Read-only public candles do not prove trade permission or a broker session. Native float-derived Decimal strings cannot restore exchange precision lost by CCXT.
+
+`inspect` validates and selects a compatible existing environment by saving only a private selection receipt. It never installs or upgrades dependencies. Ready after inspect is immediately usable; prepare is needed only when no compatible dependency is found.

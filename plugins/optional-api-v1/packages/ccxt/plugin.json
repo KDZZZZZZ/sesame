@@ -26,5 +26,9 @@
   "license": "MIT",
   "workers": [
     "worker.js"
-  ]
+  ],
+  "author": {
+    "name": "Sesame contributors",
+    "url": "https://github.com/KDZZZZZZ/sesame"
+  }
 }

@@ -22,5 +22,9 @@
     "skills"
   ],
   "provides": {},
-  "license": "GPL-3.0-or-later"
+  "license": "GPL-3.0-or-later",
+  "author": {
+    "name": "Sesame contributors",
+    "url": "https://github.com/KDZZZZZZ/sesame"
+  }
 }
