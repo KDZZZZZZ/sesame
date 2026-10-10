@@ -1,6 +1,6 @@
 # 信号 → 目标组合 → 风险调整 → 执行
 
-这是 `sesame/strategy-authoring` 插件的工程规范和纯函数参考实现，协议版本为 `1.0.0`。它约束阶段之间传递的事实，不要求所有策略写成同一种模型，也不注册行情连接或交易接口。`lib/pipeline.js` 在给定的冻结输入上产生可检查的决策和计划；它不调用模型、不联网、不发送订单、不撮合。
+这是 `sesame/strategy-authoring` 插件的工程规范和纯函数实现，基础协议为 `1.0.0`，实际方法工作流为 `1.1.0`。它约束阶段之间传递的事实，不要求所有策略写成同一种模型，也不注册行情连接或交易接口。`lib/pipeline.js` 在给定的冻结输入上产生可检查的决策和计划；这个求值入口不调用模型、不联网、不发送订单、不撮合。异步模型判断通过单独的 strategy_decision 工具完成。
 
 设计借鉴 LEAN 的阶段分工：Alpha 表达判断，Portfolio Construction 决定目标持仓，Risk Management 调整目标，Execution 负责达到目标。LEAN 也保留经典和混合策略，尤其适合紧密关联入场、退出及特殊订单的策略。本规范同样允许事件状态机直接提供明确的目标和规则证据。[LEAN 框架](https://www.quantconnect.com/docs/v2/writing-algorithms/algorithm-framework/overview)、[混合策略](https://www.quantconnect.com/docs/v2/writing-algorithms/algorithm-framework/hybrid-algorithms)
 
@@ -13,7 +13,7 @@
 | RiskDecision | 目标、固定硬约束、可选 Agent 风险建议 → 收紧后的数量、禁止新增风险、清仓及重入限制 | 不允许 Agent 建议扩大硬阈值或改变批准的交易权限 |
 | ExecutionPlan | 风险结果、完整账户视图、后端能力 → 需要核对的请求或确定的数量差计划 | 不把计划、编译成功或请求超时当成交 |
 
-当前参考实现是**多品种目标集合和单品种数量限额检查器**。它不是组合优化器，没有总杠杆、跨币种净值、相关性、保证金、费用、购买力或账户总风险模型。这些计算由明确的组合/风险方法插件完成，保留其固定证据，再进入这条链；目标后端仍必须执行自己的交易前校验。
+基础 1.0 fixture 接受已经算好的多品种目标，并做单品种硬限额检查。新增 [方法工作流](methods.md) 在本插件实际实现动态选品种、等权/置信度/逆波动率配置、跨币种线性估值、比例费用预留、回撤/总净敞口/分组限制，再复用同一基础链。相关性优化、非线性合约、保证金和券商购买力仍需专门方法与真实后端校验，不能把目标名义预算冒充可用保证金。
 
 ## 2. 所有阶段共有的约定
 
@@ -75,7 +75,7 @@
 
 这是字段示意，变量应替换成真实固定引用和已验证的归属，不是可直接发往券商的 JSON。
 
-同一目标不能重复同一 InstrumentRef。`createdAt` 必须与信号视图 `asOf` 一致；新增配置引用的是仍有效的同品种信号，目标有效期也不能晚于该信号。`evidence` 保存从判断到数量的组合规则、价格/汇率和单位转换依据。参考实现不自行进行这些转换。
+同一目标不能重复同一 InstrumentRef。`createdAt` 必须与信号视图 `asOf` 一致；新增配置引用的是仍有效的同品种信号，目标有效期也不能晚于该信号。`evidence` 保存从判断到数量的组合规则、价格/汇率和单位转换依据。基础 validator 不自行转换；方法工作流的 constructPortfolio 执行有定义的转换。目标 schema 1.1 还允许空集合和 `purpose:"hold"`：没有新判断时保留持仓，执行时读取当前量，仍受硬上限和风险退出约束。
 
 经典状态机可以使用 `signalRefs: []`，并提供：
 
@@ -151,7 +151,7 @@ Agent 建议不能新增 `allowShort`、替换硬策略、提高账户权限或�
 
 一个目标集合只要还有未解决项目，参考结果不对其他项目输出部分交易意图。这只是计划生成的完整性规则，**不是跨市场原子成交保证**。
 
-目标向零方向量化到允许步长；不会为达到最小量而擅自增加风险。最终数量以精确整数余数检查步长，而不依赖 Decimal34 的再次舍入；极小步长或现有持仓导致的残余差不符合要求时，交回后端处理。OCO、Bracket、追踪止损、reduce-only、精确平仓、部分成交保护和撤单/成交竞态都由后端 planner/adapter 实现并测试。即使 profile 声称支持，这个参考函数也不冒充已实现这些能力，不会降级成裸单。
+目标向零方向量化到允许步长；不会为达到最小量而擅自增加风险。最终数量以精确整数余数检查步长，而不依赖 Decimal34 的再次舍入；极小步长或现有持仓导致的残余差不符合要求时，交回后端处理。基础 planExecution 把复杂执行留给 planner；新增 [执行模块](execution.md) 已实现有界拆单、反向平仓确认、实际成交量驱动的保护/OCO、改单/撤单/未知与恢复的可重放状态机。它仅对明确支持和测试的语义生成命令，仍由目标 adapter 真正发送并采集回执；追踪止损、对冲票据精确平仓及任意未实现 requirement 不会降级成裸单。
 
 执行意图保存 `intentId / scope / side / quantity / purpose / deadline / signalRefs`；计划保存 strategy.source、target、risk decision、账户快照、目标 profile 的固定引用/摘要。`intentId` 根据固定输入生成，但原生适配器仍须持久保存发送前后的账本并按真实回执核对；这里没有实现跨进程 exactly-once 或原生交易幂等。
 
@@ -170,7 +170,7 @@ Agent 建议不能新增 `allowShort`、替换硬策略、提高账户权限或�
 
 `executionAt` 可省略，默认 `asOf`；`guards / advice` 可省略为空，其余必需。输出包括 `signals / target / riskDecision / executionPlan`，始终标明 `validationScope: "fixed-input-pipeline-evaluation"` 和 `nativeEngineExecuted: false`。
 
-工具 `strategy_pipeline` 负责读取 fixture、检查实际固定引用并按需保存 resource 证据。先用 `strategy_publish` 发布真正的源，再发布明确标注 demo 的资源和 `strategy.target` 教学 profile，然后把返回的引用传入 `examples/pipeline-fixture.js`：
+工具 `strategy_pipeline` 负责读取 fixture、检查实际固定引用并按需保存 resource 证据，也接受 methods.md 的 1.1 工作流。专门的 `strategy_workflow` 要求 1.1 工作流。先用 `strategy_publish` 发布真正的源，再发布明确标注 demo 的资源和 `strategy.target` 教学 profile，然后把返回的引用传入 `examples/pipeline-fixture.js`：
 
 ```js
 createPipelineFixture({ strategySource, targetProfile, strategyId, evidence, asOf })
@@ -184,4 +184,4 @@ factory 生成两个虚构品种的教学输入，不制造 artifact ID，也不
 
 Agent 输出是外部输入事件；回测重放冻结的时间线，不在每次重跑时临时调用模型。实盘生成、数据截止、迟到结果、失败行为、模型版本和后台服务的边界见 [Agent 外部输入](agent-inputs.md)。如果研究阶段调用历史模型重建信号，必须明确这是重建实验，并处理训练信息泄漏；不能冒充当时实际收到的信号。
 
-这条链可以让技术指标、Agent、因子模型等共用目标和风控，但本轮没有上线自动模型调度器、原生后端消费服务或翻译等价性证明。新增实际后端时，应先让它消费同一冻结 fixture，对照计划、回执、状态和成交轨迹，再单独证明故障恢复与实时交易语义。
+技术指标、Agent、因子模型共用目标和风控；`strategy_decision` 已提供异步隔离判断、持久化时间线和本机消费桥。工具推演、服务完成请求和原生后端成功消费是三种不同证据。新增实际后端时，应让它消费同一冻结 fixture，对照计划、回执、状态和成交轨迹，再单独验证故障恢复与实时交易语义，不能只凭服务已启动宣称翻译等价或实盘挂载成功。

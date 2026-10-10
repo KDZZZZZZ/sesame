@@ -1,5 +1,6 @@
 import { Decimal } from '@sesame/plugin-sdk/decimal';
 import { artifactRef, canonical, check, clone, decimal, digest, object, text } from '@sesame/plugin-sdk/protocol';
+import { evaluateMethodPipeline } from './workflow.js';
 
 // A deterministic reference contract, not a broker adapter or portfolio optimizer.
 // All clocks, account observations and model outputs are supplied by the caller.
@@ -147,17 +148,17 @@ export function replaySignals(events, { asOf, scope: requestedScope, guards = []
 /** Quantity targets may cover multiple instruments; sizing and currency conversion are upstream. */
 export function validatePortfolioTarget(target, signalState) {
   allowed(target, ['schemaVersion', 'id', 'scope', 'createdAt', 'validUntil', 'strategySource', 'evidence', 'items'], 'portfolio target');
-  check(target.schemaVersion === PIPELINE_VERSION, 'Unsupported pipeline version'); text(target.id); scope(target.scope);
+  check([PIPELINE_VERSION, '1.1.0'].includes(target.schemaVersion), 'Unsupported pipeline version'); text(target.id); scope(target.scope);
   check(scoped(target.scope, signalState.scope), 'Target and signals have different ownership');
   check(time(target.createdAt) === time(signalState.asOf), 'Construct targets against a signal view at the same decision time');
   check(time(target.validUntil) > time(target.createdAt), 'Target must have a positive validity interval');
   ref(target.strategySource); check(target.strategySource.kind === 'strategy.source', 'An exact strategy.source is required'); refs(target.evidence, 'target evidence', true);
   const seen = new Set();
-  for (const item of list(target.items, 'target items', true)) {
+  for (const item of list(target.items, 'target items', target.schemaVersion !== '1.1.0')) {
     allowed(item, ['instrument', 'quantity', 'purpose', 'signalRefs', 'stateMachineEvidence', 'requirements'], 'target item');
     instrument(item.instrument); measure(item.quantity); const key = canonical(item.instrument);
     check(!seen.has(key), 'Duplicate instrument target'); seen.add(key);
-    check(['allocate', 'exit'].includes(item.purpose), 'Target purpose must be allocate or exit');
+    check(['allocate', 'exit', ...(target.schemaVersion === '1.1.0' ? ['hold'] : [])].includes(item.purpose), 'Target purpose must be allocate, exit or explicitly versioned hold');
     list(item.signalRefs, 'signalRefs').forEach(signalRef); list(item.requirements, 'requirements').forEach(text);
     check(new Set(item.signalRefs.map(canonical)).size === item.signalRefs.length, 'Repeated signal reference');
     if (item.stateMachineEvidence !== undefined) {
@@ -166,7 +167,7 @@ export function validatePortfolioTarget(target, signalState) {
     }
     for (const selected of item.signalRefs) check(signalState.history.some(signal => same(signalIdentity(signal), selected) && same(signal.scope.instrument, item.instrument)), 'Target has no recorded signal evidence for this instrument');
     if (item.purpose === 'exit') check(Decimal.compare(item.quantity.value, '0') === 0, 'An exit target must be flat');
-    else {
+    else if (item.purpose === 'allocate') {
       check(item.signalRefs.length > 0 || item.stateMachineEvidence, 'Allocation needs active signals or fixed classic-state-machine evidence');
       for (const selected of item.signalRefs) {
         const signal = signalState.active.find(value => same(signalIdentity(value), selected));
@@ -215,7 +216,7 @@ export function assessRisk({ target, signals, policy, advice = [] }) {
   for (const item of target.items) {
     const limit = policy.limits.find(value => same(value.instrument, item.instrument)); check(limit, 'Missing explicit hard limit for target instrument');
     check(limit.unit === item.quantity.unit, 'Target and risk quantity units differ');
-    let cap = limit.maxAbsPosition, mode = 'allow'; const reasons = [], evidence = [policy.evidence], newRiskValidity = [time(target.validUntil), time(policy.validUntil)];
+    let cap = limit.maxAbsPosition, mode = item.purpose === 'hold' ? 'halt' : 'allow'; const reasons = [], evidence = [policy.evidence], newRiskValidity = [time(target.validUntil), time(policy.validUntil)];
     if (signals.guards.some(guard => same(guard.scope.instrument, item.instrument) && time(guard.issuedAt) <= now && now < time(guard.blockedUntil))) { mode = 'halt'; reasons.push({ reason: 'risk_cooldown' }); }
     if (item.purpose === 'allocate' && item.stateMachineEvidence && signals.guards.some(guard => same(guard.scope.instrument, item.instrument) && time(guard.issuedAt) <= now && time(item.stateMachineEvidence.evaluatedAt) <= time(guard.issuedAt))) { mode = 'halt'; reasons.push({ reason: 'state_machine_evidence_predates_risk_exit' }); }
     for (const value of advice.filter(value => same(value.scope.instrument, item.instrument) && time(value.availableAt) <= now && now < time(value.expiresAt))) {
@@ -308,7 +309,8 @@ export function planExecution({ decision, snapshot, capabilities, asOf }) {
     check(rows.every(row => Decimal.compare(row.quantity.value, '0') >= 0) || rows.every(row => Decimal.compare(row.quantity.value, '0') <= 0), 'Offsetting hedge positions require an explicit backend position planner');
     const current = rows.reduce((sum, row) => Decimal.add(sum, row.quantity.value), '0');
     if (!exactSumEquals(rows.map(row => row.quantity.value), current)) { reasons.push({ instrument: item.instrument, reason: 'quantity_arithmetic_exceeds_precision' }); continue; }
-    let target = Decimal.quantize(item.quantity.value, spec.step, Decimal.compare(item.quantity.value, '0') < 0 ? 'ceil' : 'floor');
+    const requested = item.mode === 'flatten' ? '0' : item.purpose === 'hold' ? current : item.quantity.value;
+    let target = Decimal.quantize(requested, spec.step, Decimal.compare(requested, '0') < 0 ? 'ceil' : 'floor');
     const reverses = Decimal.compare(current, '0') * Decimal.compare(target, '0') < 0;
     const riskMode = item.mode === 'flatten' ? 'flatten' : now < time(item.newRiskValidUntil) ? item.mode : 'halt';
     if (riskMode === 'halt' && (reverses || Decimal.compare(Decimal.abs(target), Decimal.abs(current)) > 0)) target = current;
@@ -332,6 +334,7 @@ export function planExecution({ decision, snapshot, capabilities, asOf }) {
 
 /** Public tool entry: a closed, JSON-only fixture; its exact artifact refs are resolved by the host tool. */
 export function evaluatePipeline(fixture) {
+  if (fixture?.schemaVersion === '1.1.0') return evaluateMethodPipeline(fixture, { replaySignals, assessRisk, planExecution });
   allowed(fixture, ['schemaVersion', 'asOf', 'executionAt', 'scope', 'events', 'guards', 'target', 'policy', 'advice', 'snapshot', 'capabilities'], 'pipeline fixture');
   check(fixture.schemaVersion === PIPELINE_VERSION, 'Unsupported pipeline version');
   const signals = replaySignals(fixture.events, { asOf: fixture.asOf, scope: fixture.scope, guards: fixture.guards ?? [] });

@@ -17,7 +17,7 @@ function fixture(version, versions = ['1.0.0']) {
   const parameterMap = { instrument: { binding: 'instrument' }, threshold: { nativeInput: 'Threshold' } };
   const artifacts = new Map([
     [sourceRef.id, { ref: sourceRef, manifest: { content: { sourcePath: 'strategy.svl.json', sourceDigest: checked.sourceDigest }, blobs: [{ path: 'strategy.svl.json', digest: digest(bytes), size: bytes.length }] } }],
-    [targetRef.id, { ref: targetRef, producer: { id: 'sesame/mt5' }, manifest: { content: { id: 'sesame.mt5.mql5', svl: { versions } } } }],
+    [targetRef.id, { ref: targetRef, producer: { id: 'sesame/mt5' }, manifest: { content: { id: 'sesame.mt5.mql5', svl: { versions, events: ['bar.closed'] } } } }],
     [translationRef.id, { ref: translationRef, manifest: { content: { source: sourceRef, target: targetRef, nativeParameterMap: parameterMap } } }],
   ]);
   const records = new Map([

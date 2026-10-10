@@ -15,6 +15,7 @@ test('pipeline tool resolves real artifacts, preserves demo evidence and rejects
   const { Type } = await import('@sesame/plugin-sdk/schema');
   const { createTools } = await import('../packages/strategy-authoring/index.js');
   const { createPipelineFixture } = await import('../packages/strategy-authoring/examples/pipeline-fixture.js');
+  const { createMethodWorkflow } = await import('../packages/strategy-authoring/examples/method-workflow.js');
   const directory = mkdtempSync(join(tmpdir(), 'sesame-pipeline-tool-')), store = new Store(directory), api = new ContractArtifacts(store);
   const workspace = join(directory, 'work'); mkdirSync(workspace);
   t.after(() => { store.close(); rmSync(directory, { recursive: true, force: true }); });
@@ -52,4 +53,17 @@ test('pipeline tool resolves real artifacts, preserves demo evidence and rejects
   const forged = structuredClone(fixture); forged.target.strategySource.digest = `sha256:${'0'.repeat(64)}`;
   writeFileSync(join(workspace, 'forged.json'), JSON.stringify(forged));
   await assert.rejects(call('strategy_pipeline', { fixture_path: 'forged.json' }), /artifact|reference|digest|identity/i);
+
+  const method = createMethodWorkflow({ strategySource: source.ref, strategyId: JSON.parse(sourceBytes).strategyId, evidence, targetProfile });
+  writeFileSync(join(workspace, 'method.json'), JSON.stringify(method));
+  const workflow = await call('strategy_workflow', { fixture_path: 'method.json', output_path: 'method-result.json', operation_id: 'method-evaluation' });
+  assert.equal(workflow.validationScope, 'fixed-input-strategy-method-workflow');
+  assert.equal(workflow.nativeEngineExecuted, false);
+  assert.equal(workflow.executionProgram.status, 'ready');
+  assert.equal(workflow.executionReplay.status, 'working');
+  assert.equal(workflow.executionReplay.commands.filter(command => command.kind === 'submit').length, 2);
+  assert.equal(api.read(workflow.evidence).manifest.provenance.kind, 'demo');
+  assert.ok(api.read(workflow.evidence).manifest.dependencies.some(ref => ref.digest === source.ref.digest));
+  assert.equal(JSON.parse(readFileSync(join(workspace, 'method-result.json'))).executionProgram.digest, workflow.executionProgram.digest);
+  await assert.rejects(call('strategy_workflow', { fixture_path: 'fixture.json' }), /method workflow 1.1/);
 });

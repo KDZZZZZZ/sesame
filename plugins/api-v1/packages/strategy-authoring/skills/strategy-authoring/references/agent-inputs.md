@@ -1,6 +1,44 @@
 # Agent 参与策略：外部决策输入
 
-这是策略创作与后端适配的工程规范。当前插件可以验证 SVL 和重放固定输入；本文件不表示已提供常驻模型服务、原生引擎的历史回调桥或生产级订单传输。各目标插件必须报告实际实现的范围。
+这是策略创作与后端适配的工程规范。插件提供独立 Agent 决策服务、可选本机后端桥、持久请求记录及固定时间线回放；原生引擎的事件适配与交易传输仍由目标插件完成。参考求值、模型判断、原生回测是三种不同证据。
+
+## 工具与调用顺序
+
+1. `strategy_decision({action:"models"})` 返回用户已经配置的模型及配置摘要。选择并固定完整 `{provider,id,configurationDigest}`，无需重新填写 API Key。
+2. 将请求写入工作区 JSON，调用 `strategy_decision({action:"submit",request_path:"strategies/decision.json"})`。立即得到 job ID，主 Agent 可以继续其他工作。
+3. `strategy_decision({action:"status",job_id,wait:true})` 等待任务；不传 wait 则立即查看状态。停止等待不会取消模型任务，取消使用 `action:"cancel"`。
+4. `strategy_decision({action:"timeline",job_id,as_of_ms,output_path,operation_id})` 导出截止该 UTC 时刻的 `signals/advice/guards`，可送入 strategy_workflow。不会重新请求模型，也不导出晚于截止时间完成的任务。
+5. 背景改变、用户撤回策略时调用 `action:"invalidate"`，取消同一 portfolio run 的旧任务、退休旧信号，并使旧风险建议失效。历史模式必须传 `as_of_ms`，使用当前模拟 UTC 时刻；不得早于已触发请求、已完成结果或之前的失效事件。实时模式省略此值时使用当前时间。限制风险的模型结果也会使旧代次的在途请求失效，但不会清除其他独立风险来源的建议。
+
+请求 schemaVersion 为 `1.0.0`，包含：
+
+- `requestId`：相同内容重复提交返回原任务，同 ID 不同内容拒绝。
+- `scope`：`{strategyId,runId,account:{connectionId,accountId},instrument:{sourceId,instrumentId}}`；`channel` 为判断通道名。
+- `mode`：live 或 historical；`triggeredAt`、`dataCutoffAt` 均为 `{basis:"utc",unixMs}`。
+- `inputs`：`[{ref:完整ArtifactRef,availableAt:UTC时间,paths?:[blob路径]}]`。服务读取成果的实际 content 和指定文本/JSON blob，总量限 1 MiB；不要另写未经引用固定的内容。
+- `program`：`{id,version,role:"signal"|"risk",feedback:"market"|"account",model,prompt,ttlMs,maxInputAgeMs,maxTokens,timeoutMs,maxRetries?:0..3,temperature?,reasoning?,failurePolicy:"halt_new_risk"}`。整体超时最多三十分钟，重试固定间隔五秒，不能延长信号寿命。
+- 历史模式另带 `simulation:{id,parametersDigest,stateDigest,step,latencyMs}`。同一 run 固定模拟身份和参数；每步须等待上一步返回后按模拟时钟推进，不能混合不同模拟账户路径。
+
+signal 返回 `{direction:"long"|"short"|"flat",confidence?:"十进制字符串",reason,evidence:[已有输入引用]}`；risk 返回 `{action:"allow"|"halt"|"flatten"|"cap",cap?:{value,unit},reason,evidence}`，仅 cap 可含数量。模型不能自行提供下单命令、时间、有效期、账户身份或更宽的硬风险政策。
+
+模型上下文只有固定程序与引用输入，不包含主聊天、长期记忆、任意工具或隐藏推理。失败、过期、撤回、superseded 和重启导致的 interrupted 有独立状态。重启不会自动重发未确认请求。配置摘要不等于供应商权重摘要，保存记录明确标注这一点。
+
+代次变化与故障阻断持久保存发生时点。`timeline` 按 `as_of_ms` 投影：未来的失效、恢复与代次不能改变过去查询；摘要覆盖 scope、查询时点、可见代次和完整输出。显式 invalidate 后，旧风险许可不能满足新信号的 `requiredRiskSources`，必须生成新的风险判断。历史查询只读保存记录，不使用当前系统时钟代替回测时钟。
+
+## 本机后端桥
+
+`strategy_decision({action:"bridge_start"})` 返回 loopback endpoint 和随机 Bearer token。仅将 token 写入后端本地配置，不放进报告、SVL 源或成果。桥监听 127.0.0.1，拒绝浏览器 Origin，应用退出后失效。
+
+| 请求 | 用途 |
+| --- | --- |
+| GET /health | 鉴权健康检查 |
+| POST /requests，body 为完整请求 | 排队并立即返回 202，不等待模型 |
+| GET /requests/{jobId} | 状态与结构化输出 |
+| POST /timeline，{jobId,asOf} | 已保存的 signals/advice/guards |
+| POST /cancel，{jobId,reason,asOf?} | 取消单个任务；可传明确模拟时刻 |
+| POST /invalidate，{jobId,reason,evidence?,asOf?} | 作废此 run 的旧代次、旧信号与旧风险建议；历史模式必填 asOf |
+
+携带 `Authorization: Bearer <token>`。bridge_stop 关闭入口但不取消已有模型任务；取消用 cancel/invalidate。插件卸载或应用退出会取消任务。原生事件循环只做有短截止的本机提交/读取，不同步等待远端模型；桥不可用时，持仓和保护仍由后端管理。
 
 ## 两种角色，共用时间线
 
@@ -49,13 +87,17 @@ Agent 可以生成方向、预测期限、幅度等信号，也可以根据公�
 
 策略必须预先声明每种必需判断缺失、过期或超时后的动作：例如暂停新增风险并继续管理已有保护，或切换到经过验证的纯算法模式。不能在失败后临时猜测“继续上一次判断”，也不能把缺失的风险判断当作风险为零。
 
+本服务固定采用 `halt_new_risk`：新任务仍在排队或运行时，原先未过期的有效判断可以继续使用；一旦最新任务失败、响应过期、被取消或在重启时中断，就退休旧信号并持久生成带 scope 与证据的阻断 guard，即使之前没有任何信号。只有同通道、较晚修订且在阻断时刻之后完成的有效判断才能解除该阻断，旧信号不会因此恢复。故障 guard 保守作用于关联品种，已有持仓的减仓和保护处理继续执行。尚未解除时 `blockedUntil` 为 UTC `Number.MAX_SAFE_INTEGER`；已经恢复也不会向过去查询泄漏未来的解除时间。
+
+更新修订而产生的 `superseded` 不另加故障 guard；被替代的迟到结果不能覆盖新结果，也不能阻断较新的成功判断。消费者必须处理完整 `signals/advice/guards`，不能只取最近一条方向。普通信号寿命结束后自然变为无效，不意味着自动清仓；某个必需来源缺失时，由固定风险政策拒绝新增风险。
+
 Agent 风险建议只能在固定硬性限制内收紧。提高额度、放宽最大损失或更换约束属于另一个策略/政策修订。风险清仓应同时使相关旧信号失效或进入冷却，否则下一次组合计算可能立即重新入场。信号自然过期是否退出已有仓位必须由策略明确规定，不能统一假设过期即市价清仓。
 
 实际运行时，硬性政策由后端从该 run 固定的配置与摘要读取；Agent 决策消息不能携带一份替代政策。`strategy_pipeline` 只校验给定 fixture 与引用存在性，不能据此认证调用方的交易授权，也不能取代后端下单前的实时硬风险检查。
 
 迟到输出不得覆盖较新的修订；过期输出不得恢复效力。重试复用请求身份。原生发送结果不明时先核对账本和券商状态，不能因为 Agent 又输出同一方向便再次下单。
 
-撤回、清仓或新的风险限制到达后，消费者须废弃受影响的旧计划并重算，不能把 `validUntil` 当作忽略新事件的许可。决策任务还应绑定请求开始时的运行代次；风险事件可以使该代次失效，防止风控前发起、风控后才完成的模型任务被当成一次新判断。本轮固定输入工具没有实现实时任务取消或事件调度，这两项必须由实际生产者/后端适配器落实并测试。
+撤回、清仓或新的风险限制到达后，消费者须废弃受影响的旧计划并重算，不能把 `validUntil` 当作忽略新事件的许可。决策服务已实现请求代次、取消与过期拒绝；后端仍须把新 risk/guard 送入自己的计划重算和下单前检查，不能忽略时间线的 guard。
 
 ## 后端适配与证据
 

@@ -2,7 +2,7 @@
 
 Start with a frozen `strategy.source` SVL artifact. The host derives the graph from that source. Read the target profile and implement the actual native MQL5 program; `mt5_translation_file` registers a [single workspace JSON manifest](translation-file.md) using short arguments, while `mt5_translation` accepts the same content inline. Both record the exact source revision, every generated file and every source node mapping. Translation registration checks structure, not behavioral equivalence.
 
-The initial profile provides Agent-authored translation, not an automatic operator compiler. `svl.operators` is empty for that reason. MQL5 has native callbacks for ticks, timers and trade transactions. Detect forming/closed bars explicitly from the observed broker series; do not synthesize a closed event merely because a local timer elapsed. External-input events are unsupported by this profile. FIX is optional and is not required by this target.
+The profile provides Agent-authored translation, not an automatic operator compiler. `svl.operators` is empty for that reason. Read `svl.versions` and the explicit `operatorCapabilities` matrix; software admission is not a claim of verified native support. Each translation needs its own [native conformance evidence](conformance.md), including function/module traces for newer sources. MQL5 has native callbacks for ticks, timers and trade transactions. Detect forming/closed bars explicitly from the observed broker series; do not synthesize a closed event merely because a local timer elapsed. External-input events are unsupported by this profile. FIX is optional and is not required by this target.
 
 ## Numerical policy
 
@@ -21,3 +21,7 @@ The native rules file is derived from SVL for the existing SDK trace format. It 
 Persist acknowledged native request IDs and the run/decision/intent mapping before treating a request as owned. Recover outstanding orders and positions from broker evidence after restart; never infer ownership by timing or automatically replay a command whose outcome is unknown. Account-scoped tickets may exceed JSON safe integers and must stay strings. Manual and external trades have unknown strategy correlation. Source state must commit per event, and a failed action must not leave a partially committed state advertised as valid.
 
 A backtest translation may be compiled and sent to the real Tester. A live translation additionally needs broker/channel checks and explicit user intent to deploy. Compiling or publishing a translation never starts trading. Actual native Tester and live-channel evidence is independent from host SVL replay.
+
+## Agent decision inputs
+
+An external-input strategy must declare its software bridge and fixed secret-free configuration. Use the strategy authoring plugin’s asynchronous local decision service for live signals; use immutable arrival-ordered files for Tester. Neither translation registration nor a past signal snapshot installs a live model loop. See [external input conformance](conformance.md#external-agent-inputs-live-bridge-and-frozen-tester-timeline).

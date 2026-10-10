@@ -891,9 +891,9 @@
     },
     {
       "id": "sesame/mt5",
-      "version": "1.3.1",
+      "version": "1.4.0",
       "directory": "mt5",
-      "treeDigest": "sha256:9db2821d3a96da429b1972b4a26922c1f8724f7921ff16a27655dbc2b3d2d55e",
+      "treeDigest": "sha256:74e1f1ca965853da7a53418a6c8b1180d9a04be0b5bafd9f27843c6d8efad896",
       "files": [
         {
           "path": "LICENSE",
@@ -931,6 +931,11 @@
           "bytes": 5300
         },
         {
+          "path": "backend/conformance.js",
+          "sha256": "62c57238604906a2710d36eff4bbf0d25404a962a9beb4e80198a3a77d325a02",
+          "bytes": 19011
+        },
+        {
           "path": "backend/connect.js",
           "sha256": "8661d4b0f1128e40a1279c73ecdf6734b6baf9490927c8bfa2fec4af9f42cbf3",
           "bytes": 14001
@@ -947,8 +952,8 @@
         },
         {
           "path": "backend/contracts.js",
-          "sha256": "e0586728afef06e25045523001fd8ba79da62df1b03fde61bc95bcbba17c9944",
-          "bytes": 13794
+          "sha256": "a2022848aea7c228198a3af987bb136f9eb7b3d8d7f9ac20116d27c9adad40df",
+          "bytes": 13824
         },
         {
           "path": "backend/dependencies.js",
@@ -974,6 +979,11 @@
           "path": "backend/execution_guard.py",
           "sha256": "cd7a172c3c8169fd7054697634c178c6453526bf68c0b0e81ea358e8191fc3c6",
           "bytes": 6439
+        },
+        {
+          "path": "backend/external-inputs.js",
+          "sha256": "edf411c51d0f9d6a7437e1e39f4bff5c56c82aced12c5428f044aabb5b0b6e23",
+          "bytes": 6089
         },
         {
           "path": "backend/frozen-compiler.js",
@@ -1027,8 +1037,8 @@
         },
         {
           "path": "backend/parameters.js",
-          "sha256": "00e62aa1339de4778e983edbf4f4c797c2dbd31f71e9d97967d48d213bfd627b",
-          "bytes": 5686
+          "sha256": "25df67dc19450aa59410e5a345996f192eac5b25e0345f52b9bdce8b53f9c282",
+          "bytes": 6439
         },
         {
           "path": "backend/platform.js",
@@ -1076,9 +1086,19 @@
           "bytes": 18045
         },
         {
+          "path": "backend/sdk/Conformance.mqh",
+          "sha256": "f8dea98906d5f8380210d8cb4992d3f1ddbe797557da58330192f436de1ea967",
+          "bytes": 1116
+        },
+        {
           "path": "backend/sdk/Expert.mqh",
           "sha256": "88434dbb4d9525c4dc625ab53c60f7911c2c5ded4a17f8d2a0da778587c2515e",
           "bytes": 868
+        },
+        {
+          "path": "backend/sdk/FrozenInputs.mqh",
+          "sha256": "4e5368e6ee3b9411322f5c85103be9fd5bbfece4bca980539bb79d51c4ffc461",
+          "bytes": 3534
         },
         {
           "path": "backend/sdk/Results.mqh",
@@ -1121,9 +1141,14 @@
           "bytes": 3862
         },
         {
+          "path": "backend/svl-capabilities.js",
+          "sha256": "7ec2a09b4b09a2ff9b1d07293382495fcfd0930642462b4701a84695226cf42a",
+          "bytes": 5353
+        },
+        {
           "path": "backend/target.js",
-          "sha256": "bbbef495df71643cfbd459860f6b0ccce2132b0f65b7d01e2e0669fdd28a3b56",
-          "bytes": 13665
+          "sha256": "897c6eb2733532b204815570c028c21dc48aef723bfa18652b728d33a8df6f22",
+          "bytes": 14312
         },
         {
           "path": "backend/template/Experts/Strategy.mq5",
@@ -1202,8 +1227,8 @@
         },
         {
           "path": "backend/tester.js",
-          "sha256": "c31257d48652f88e3e7a9faa3e73dbfb2b72acf3c4e7b707963df141636909b3",
-          "bytes": 28818
+          "sha256": "dee978949c3c852c0143580210a85df4cc7165adad4b5da0815f541a0edaccbb",
+          "bytes": 29074
         },
         {
           "path": "backend/tool-groups.json",
@@ -1217,8 +1242,8 @@
         },
         {
           "path": "backend/translation-input.js",
-          "sha256": "f35a203c3904d80e26f6f8dbeb1c49cc52f40f377a4d57b1c0339a3c7dec2a1b",
-          "bytes": 3644
+          "sha256": "3f7bbe78913b4158c0863f5e765868b5d1e1c2fb1a6d18ecbe661659ccb68b97",
+          "bytes": 3824
         },
         {
           "path": "backend/visual/catalog.js",
@@ -1252,13 +1277,13 @@
         },
         {
           "path": "package.json",
-          "sha256": "6928e0bd087d6384fd490733bd7e233d0cd76e47d8764e52b35b5dde656f5402",
+          "sha256": "ca2628eb3d87f448155294c684ec56c2376b804aa8cf1f555454264e7a962f0c",
           "bytes": 97
         },
         {
           "path": "plugin.json",
-          "sha256": "fe5915b65a13c0815fbc02ff7e251392e039b5bb2c59ce73b6726cb16a29d3d7",
-          "bytes": 2086
+          "sha256": "fbd7af8a044533d39d4e0131ec2191864205f6e4b1a060fb8e92353b3328e778",
+          "bytes": 2249
         },
         {
           "path": "prompt.md",
@@ -1307,8 +1332,8 @@
         },
         {
           "path": "skills/svl-mql5/SKILL.md",
-          "sha256": "09e5be7b6f314c7dbdcff4087c7425c8316d70ec60a893e7e834d3f66e42d683",
-          "bytes": 3071
+          "sha256": "5d67451d6943d1dd8cb876c56e0a1ef064620f89de5d5873df4bda5ae2cf7070",
+          "bytes": 4012
         },
         {
           "path": "skills/visual-state-machines/SKILL.md",
@@ -1327,8 +1352,18 @@
         },
         {
           "path": "target/README.md",
-          "sha256": "799e5751fb442e99ce7519c1afcdea9a0644713d4339ab41cc472a634fad7993",
-          "bytes": 3870
+          "sha256": "2a2062e6fb03bb08721e958d9c5a3cce93617fd7397114199d56786fca3a92ab",
+          "bytes": 4585
+        },
+        {
+          "path": "target/conformance.md",
+          "sha256": "87f5804ed1ee8542485203a5df3e4cf0811aed82986df969ebf6a3214998d0a2",
+          "bytes": 10895
+        },
+        {
+          "path": "target/examples/FrozenTimeline.mq5",
+          "sha256": "50c8b80789f1340812f3f1142efd8a3148e6c62fc8be626e179d691ec73e120d",
+          "bytes": 1177
         },
         {
           "path": "target/examples/Strategy.mq5",
@@ -1427,8 +1462,8 @@
         },
         {
           "path": "tools/strategy.js",
-          "sha256": "7d876a779f2c1a965abad6b81fa1188ad0b090aa140b659689826bc6d14af06a",
-          "bytes": 1655
+          "sha256": "7308421ab0de6afd972635704b2df1ba49e829cfd7638934ad4854bd56730a2c",
+          "bytes": 3740
         },
         {
           "path": "tools/system/index.js",
@@ -1462,8 +1497,8 @@
         },
         {
           "path": "tools.json",
-          "sha256": "93f7c4044b0aec036b8cf8adbff8896422da5ed3c5f5842b4ebfa719fb107457",
-          "bytes": 50520
+          "sha256": "0cd4cbedd358a585018c81e3083ba1c9af229a27baad1aeb2709437d3a57bc25",
+          "bytes": 55820
         }
       ]
     },

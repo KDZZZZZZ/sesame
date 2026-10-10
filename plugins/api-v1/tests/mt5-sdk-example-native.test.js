@@ -8,7 +8,7 @@ import { execute } from '../../optional-api-v1/packages/mt5/backend/compiler-wor
 import { digest } from '../../optional-api-v1/packages/mt5/backend/support.js';
 import { SDK_VERSION } from '../../optional-api-v1/packages/mt5/backend/contracts.js';
 
-test('packaged Product lifecycle example compiles with installed native MetaEditor and actual SDK headers', { skip: process.env.MT5AGENT_NATIVE_TESTS !== '1', timeout: 300000 }, async t => {
+for (const example of ['Strategy.mq5', 'FrozenTimeline.mq5']) test(`packaged ${example} lifecycle example compiles with installed native MetaEditor and actual SDK headers`, { skip: process.env.MT5AGENT_NATIVE_TESTS !== '1', timeout: 300000 }, async t => {
   const native = installation(); assert.ok(native, 'Install/configure MT5 before native acceptance');
   const root = await mkdtemp(join(tmpdir(), 'sesame-sdk-example-')); let retain = false;
   t.after(async () => { if (!retain) await rm(root, { recursive: true, force: true }); else t.diagnostic(`Unconfirmed native cleanup retained at ${root}`); });
@@ -18,7 +18,7 @@ test('packaged Product lifecycle example compiles with installed native MetaEdit
   await cp(new URL('../../optional-api-v1/packages/mt5/backend/sdk/', import.meta.url), join(root, 'Include', 'Product'), { recursive: true });
   await writeFile(join(root, 'Include', 'Product', 'Build.mqh'), `#define PRODUCT_BUILD_ID "compile_only_sdk_example"\n#define PRODUCT_SDK_VERSION "${SDK_VERSION}"\n`);
   await copyFile(native.editor, join(root, '.compiler', 'MetaEditor64.exe'));
-  const source = await readFile(new URL('../../optional-api-v1/packages/mt5/target/examples/Strategy.mq5', import.meta.url));
+  const source = await readFile(new URL(`../../optional-api-v1/packages/mt5/target/examples/${example}`, import.meta.url));
   await writeFile(join(root, 'Experts', 'Strategy.mq5'), source);
   const files = await fileManifest(root), manifest = JSON.stringify({ files, compiler_sha256: files['.compiler/MetaEditor64.exe'].sha256 });
   await writeFile(join(root, 'manifest.json'), manifest);

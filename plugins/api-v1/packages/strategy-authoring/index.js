@@ -1,4 +1,8 @@
 import { evaluatePipeline } from './lib/pipeline.js';
+import { createDecisionTools, activateDecisions } from './lib/agent-decision-tools.js';
+import { createQuantTools } from './lib/quant-functions.js';
+
+export function activate(host) { return activateDecisions(host); }
 
 const fail = (condition, message) => { if (!condition) throw new Error(message); };
 const json = bytes => JSON.parse(Buffer.from(bytes).toString('utf8'));
@@ -38,6 +42,29 @@ export function createTools(host) {
     const bytes = await host.workspace.file('read', path, undefined, signal);
     fail(bytes.length <= 1024 * 1024, 'SVL source exceeds 1 MiB');
     return { bytes, ...host.svl.validateSource(bytes.toString('utf8')) };
+  };
+  const evaluateFixture = async (args, signal, methodOnly = false) => {
+    const bytes = await host.workspace.file('read', args.fixture_path, undefined, signal);
+    fail(bytes.length <= 4 * 1024 * 1024, 'Pipeline fixture exceeds 4 MiB');
+    const fixture = json(bytes), dependencies = pinnedInputs(host, fixture);
+    if (methodOnly) fail(fixture.schemaVersion === '1.1.0', 'strategy_workflow requires the method workflow 1.1 fixture');
+    const declared = readSource(host, fixture.schemaVersion === '1.1.0' ? fixture.strategySource : fixture.target?.strategySource);
+    fail(declared.source.strategyId === fixture.scope?.strategyId, 'Pipeline ownership differs from the frozen strategy source');
+    const result = evaluatePipeline(fixture);
+    signal?.throwIfAborted();
+    const output = JSON.stringify(result, null, 2) + '\n';
+    if (args.output_path) await host.workspace.file('write', args.output_path, output, signal);
+    let evidence;
+    if (args.operation_id) {
+      const inputBlob = host.artifacts.blob(bytes), outputBlob = host.artifacts.blob(output);
+      evidence = host.artifacts.publish({ operationId: args.operation_id, manifest: {
+        kind: 'resource', schemaVersion: '1.0.0',
+        content: { type: 'strategy-pipeline-evaluation', inputPath: 'input.json', resultPath: 'pipeline.json', validationScope: result.validationScope, nativeEngineExecuted: false },
+        dependencies, blobs: [{ ...inputBlob, path: 'input.json', mediaType: 'application/json' }, { ...outputBlob, path: 'pipeline.json', mediaType: 'application/json' }],
+        provenance: { kind: dependencies.some(ref => { const manifest = host.artifacts.read(ref).manifest; return manifest.provenance?.kind === 'demo' || manifest.content.provenance?.kind === 'demo'; }) ? 'demo' : 'derived', references: dependencies },
+      } });
+    }
+    return { ...result, ...(evidence ? { evidence } : {}) };
   };
   return [
     define('strategy_validate', 'Validate an authored SVL/1 JSON file and return its actual semantic digest, operators and graph. This does not run a native engine or place orders.', {
@@ -83,27 +110,13 @@ export function createTools(host) {
       fixture_path: string('Workspace JSON conforming to the plugin pipeline.md fixture contract'),
       output_path: optional('Optional workspace path for the complete evaluation result'),
       operation_id: optional('If provided, preserve the fixture and result as a resource artifact'),
-    }, async (args, signal) => {
-      const bytes = await host.workspace.file('read', args.fixture_path, undefined, signal);
-      fail(bytes.length <= 4 * 1024 * 1024, 'Pipeline fixture exceeds 4 MiB');
-      const fixture = json(bytes), dependencies = pinnedInputs(host, fixture);
-      const declared = readSource(host, fixture.target?.strategySource);
-      fail(declared.source.strategyId === fixture.scope?.strategyId, 'Pipeline ownership differs from the frozen strategy source');
-      const result = evaluatePipeline(fixture);
-      signal?.throwIfAborted();
-      const output = JSON.stringify(result, null, 2) + '\n';
-      if (args.output_path) await host.workspace.file('write', args.output_path, output, signal);
-      let evidence;
-      if (args.operation_id) {
-        const inputBlob = host.artifacts.blob(bytes), outputBlob = host.artifacts.blob(output);
-        evidence = host.artifacts.publish({ operationId: args.operation_id, manifest: {
-          kind: 'resource', schemaVersion: '1.0.0',
-          content: { type: 'strategy-pipeline-evaluation', inputPath: 'input.json', resultPath: 'pipeline.json', validationScope: 'fixed-input-pipeline-evaluation', nativeEngineExecuted: false },
-          dependencies, blobs: [{ ...inputBlob, path: 'input.json', mediaType: 'application/json' }, { ...outputBlob, path: 'pipeline.json', mediaType: 'application/json' }],
-          provenance: { kind: dependencies.some(ref => { const manifest = host.artifacts.read(ref).manifest; return manifest.provenance?.kind === 'demo' || manifest.content.provenance?.kind === 'demo'; }) ? 'demo' : 'derived', references: dependencies },
-        } });
-      }
-      return { ...result, ...(evidence ? { evidence } : {}) };
-    }),
+    }, (args, signal) => evaluateFixture(args, signal)),
+    define('strategy_workflow', 'Run frozen dynamic-universe selection, actual equal/confidence/inverse-volatility portfolio sizing, hard portfolio risk and a replayable execution ledger. Returns quantities, cash, risk evidence, linked order definitions and proposed commands; never sends orders or invokes a model.', {
+      fixture_path: string('Workspace JSON conforming to methods.md workflow schema 1.1'),
+      output_path: optional('Optional workspace path for the complete workflow and execution checkpoint'),
+      operation_id: optional('If provided, preserve the frozen input and full result as a resource artifact'),
+    }, (args, signal) => evaluateFixture(args, signal, true)),
+    ...createDecisionTools(host),
+    ...createQuantTools(host),
   ];
 }

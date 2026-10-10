@@ -13,12 +13,13 @@ export const translationManifestProperties = {
   title: Type.String({ description: '工程名称', minLength: 1, maxLength: 120 }), source: ref, target: ref,
   mode: Type.Union(['backtest', 'live'].map(Type.Literal)),
   parameter_map: Type.Record(Type.String(), Type.Union([
-    Type.Object({ nativeInput: text('实际 MQL5 input 参数名') }, { additionalProperties: false }),
+    Type.Object({ nativeInput: text('实际 MQL5 input 参数名'), encoding: Type.Optional(Type.Literal('json')) }, { additionalProperties: false }),
     Type.Object({ binding: Type.Union(['instrument', 'account'].map(Type.Literal)) }, { additionalProperties: false }),
   ])),
   files: Type.Record(Type.String(), Type.String({ maxLength: 1048576 }), { minProperties: 1, maxProperties: 128 }),
   source_map: Type.Array(Type.Object({
     nodeId: text('实际 SVL 节点 ID'),
+    functionId: Type.Optional(text('函数节点的完整 functionId；主节点省略。扩展模块使用展开后的完整 ID')),
     generated: Type.Array(Type.Object({ path: text('实际相对路径'), startLine: Type.Integer({ minimum: 1 }), endLine: Type.Integer({ minimum: 1 }) }, { additionalProperties: false })),
     instrumentation: Type.Union(['direct', 'inlined', 'boundary', 'unobservable'].map(Type.Literal)), reason: Type.Optional(text('不可观测原因')),
   }, { additionalProperties: false }), { maxItems: 1000 }),
