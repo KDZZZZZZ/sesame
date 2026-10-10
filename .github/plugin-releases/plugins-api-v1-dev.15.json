@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "tag": "plugins-api-v1-dev.15",
+  "title": "Sesame core plugins — documentation cleanup",
+  "sourceCommit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+  "sourceRoot": "plugins/api-v1",
+  "profile": "core",
+  "archive": {
+    "name": "sesame-official-plugins-api-v1-dev.15.tar.gz",
+    "sha256": "ec15b7c82d0a9eed52b45eee70499fd10cb49c94056e86e51766355143fed04c"
+  },
+  "lockSha256": "3e3b5adb2be904cbf27b2be0d03d24dfb7f82f3d2abff2e3d5f5532fbf2a29db",
+  "pullRequest": 35
+}

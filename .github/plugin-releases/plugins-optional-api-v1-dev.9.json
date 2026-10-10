@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "tag": "plugins-optional-api-v1-dev.9",
+  "title": "Sesame optional plugins — documentation cleanup",
+  "sourceCommit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+  "sourceRoot": "plugins/optional-api-v1",
+  "profile": "optional",
+  "archive": {
+    "name": "sesame-optional-plugins-api-v1-dev.9.tar.gz",
+    "sha256": "1369b39e6441a62882f44e53b2a96519cfff66f180a20a02deea3c962d6fbca1"
+  },
+  "lockSha256": "7d4258b274c41deae053d4bebeebd046a1090b9b9746bc30278aee06e37b8f80",
+  "pullRequest": 35
+}
