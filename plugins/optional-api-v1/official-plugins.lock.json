@@ -767,7 +767,7 @@
       "id": "sesame/manual-trading",
       "version": "1.0.0",
       "directory": "manual-trading",
-      "treeDigest": "sha256:e8dcad9185aec454ca6939e7115bacfb2cd6c76c979e3bdec54c668f6aebb850",
+      "treeDigest": "sha256:a6af56a637e8a360c1aaf75db32fe98b9a95abe29f9017a076fa6e958cbe949b",
       "files": [
         {
           "path": "LICENSE",
@@ -806,8 +806,8 @@
         },
         {
           "path": "prompt.md",
-          "sha256": "3ede8d413b34a6845ef96106f05f77c83071bfd3272b5969e372433817606ec0",
-          "bytes": 978
+          "sha256": "a0a95aae2e675f0c5d70215c5603b9529de0226d02982b49f52829b960af80e0",
+          "bytes": 1204
         },
         {
           "path": "service.js",
@@ -816,8 +816,8 @@
         },
         {
           "path": "skills/manual-trading/SKILL.md",
-          "sha256": "100a671ce43ee32f18baf5b8a6b671e46aeee6fdaa0d047ea44133b52b118f5e",
-          "bytes": 3112
+          "sha256": "c64310482ccea2125eff07894b75b58f9b864c436d048782515adf153bc52283",
+          "bytes": 3382
         },
         {
           "path": "tools.json",
