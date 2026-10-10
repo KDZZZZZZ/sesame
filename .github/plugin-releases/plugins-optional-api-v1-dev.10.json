@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "tag": "plugins-optional-api-v1-dev.10",
+  "title": "Sesame optional plugins — persistent CCXT live feeds",
+  "sourceCommit": "c4635e97cb1a0b7bae88c8319f018de0e1ddb717",
+  "sourceRoot": "plugins/optional-api-v1",
+  "profile": "optional",
+  "archive": {
+    "name": "sesame-optional-plugins-api-v1-dev.10.tar.gz",
+    "sha256": "152f512859d3c41150744f57c9797db1482e69dc22880b2e4a875d88198e285c"
+  },
+  "lockSha256": "11e65124a60455076f47ce11786ed4f0dc92390e24f180c42687eefc37da2e66",
+  "pullRequest": 37
+}
