@@ -126,6 +126,24 @@ class Tests(unittest.TestCase):
         with self.assertRaises(b.Failure): self.query(self.request("positions"))
         self.assertTrue(Trader.last.stopped)
 
+    def test_recovered_cancel_rechecks_unique_native_ownership_and_pending_state(self):
+        class Trading(Trader):
+            cancels = 0
+            def cancel_order_stock(self, *args): Trading.cancels += 1; return 0
+        module = types.ModuleType("xtquant"); module.xtconstant = types.SimpleNamespace(STOCK_BUY=23, STOCK_SELL=24, FIX_PRICE=11)
+        row = dict(account_id="00123", order_id=123, stock_code="600000.SH", order_remark="Sfixed", order_type=23, order_volume=100, traded_volume=0, order_status=50)
+        request = self.request("cancel", account_id="00123", order_id="123", remark="Sfixed", original_intent={"symbol":"600000.SH","side":"buy","shares":"100","price":"10"})
+        with patch.dict(sys.modules, {"xtquant":module}):
+            for bad in ({"account_id":"other"}, {"order_id":0}, {"stock_code":"000001.SZ"}, {"order_remark":"foreign"}, {"order_type":24}, {"order_volume":200}, {"order_status":56}, {"traded_volume":100}):
+                Trader.result = [types.SimpleNamespace(**{**row, **bad})]
+                with self.assertRaises(b.Failure) as caught: b.query(request, Data(), Trading, lambda a,k:(a,k))
+                self.assertEqual(caught.exception.details, {"submission_attempted":False}); self.assertEqual(Trading.cancels, 0)
+            Trader.result = [types.SimpleNamespace(**row), types.SimpleNamespace(**{**row,"order_id":124})]
+            with self.assertRaises(b.Failure): b.query(request, Data(), Trading, lambda a,k:(a,k))
+            self.assertEqual(Trading.cancels, 0)
+            Trader.result = [types.SimpleNamespace(**{**row,"order_status":55,"traded_volume":20})]
+            self.assertEqual(b.query(request, Data(), Trading, lambda a,k:(a,k))["status"],"cancel_requested"); self.assertEqual(Trading.cancels, 1)
+
     def test_guarded_order_runs_inside_actual_bridge_and_expired_intent_never_sends(self):
         class Quotes(Data):
             def get_full_tick(self, symbols):

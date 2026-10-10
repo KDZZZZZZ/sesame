@@ -111,6 +111,55 @@ test('cancel is separately idempotent and reading its evidence never repeats can
   assert.deepEqual(await f.create().cancel(cancel),result);assert.equal(f.cancels,1);
   assert.equal((await f.service.status({operation_id:'cancel-once',refresh:true})).status,'cancel_requested');assert.equal(f.cancels,1);
 });
+test('MT5 timeout recovery can cancel one exact active pending order and rechecks it before sending',async()=>{
+  const f=fixture(),args={...await prepared(f),action:'limit',limit_price:'99'};
+  f.adapter.submit=async()=>{throw new Error('native timeout');};const original=await f.service.execute(args);
+  const pending={ticket:'700',symbol:original.symbol,comment:original.remark,type:2,state:1,volume_current:'0.1'};
+  let rows=[pending],cancels=0,revision=f.account.revision;
+  const host={plugins:{isActive:()=>true},tools:{call:async({name,arguments:a})=>{
+    if(name==='mt5_settings')return {details:{settings:{version:revision,account:{login:f.account.accountId,server:f.account.server}}}};
+    if(name==='mt5_command')return {details:{status:'returned',result:{result:{retcode:10012,order:'0',deal:'0'}}}};
+    if(name==='mt5_trade'){cancels++;assert.equal(a.arguments.request.order,'700');assert.equal(a.arguments.request.action,'TRADE_ACTION_REMOVE');return {details:{status:'returned',result:{result:{retcode:10009}}}};}
+    const values={account_info:{login:f.account.accountId,server:f.account.server},orders_get:rows,positions_get:[],history_deals_get:[]};
+    return {details:{status:'returned',result:{result:values[a.tool]}}};
+  }}};
+  const native=createAdapters(host);f.adapter.status=native.status;f.adapter.cancel=native.cancel;
+  rows=[pending,{...pending,ticket:'701'}];assert.equal((await f.service.status({operation_id:args.operation_id,refresh:true})).status,'outcome_unknown');
+  rows=[pending];assert.equal((await f.service.status({operation_id:args.operation_id,refresh:true})).status,'order_observed');
+  const cancel={operation_id:'recovered-cancel',original_operation_id:args.operation_id,user_authorized:true};
+  for(const [i,bad] of [[{...pending,state:4}],[{...pending,type:3}],[{...pending,ticket:'0'}],[{...pending,symbol:'OTHER'}],[{...pending,comment:'foreign'}],[pending,{...pending,ticket:'701'}]].entries()){
+    rows=bad;assert.equal((await f.service.cancel({...cancel,operation_id:`invalid-cancel-${i}`})).status,'rejected');assert.equal(cancels,0);
+  }
+  rows=[pending];revision='other';assert.equal((await f.service.cancel({...cancel,operation_id:'changed-connection'})).status,'rejected');assert.equal(cancels,0);
+  revision=f.account.revision;assert.equal((await f.service.cancel(cancel)).status,'cancel_requested');
+  assert.equal((await f.service.cancel(cancel)).status,'cancel_requested');assert.equal(cancels,1);
+});
+test('QMT recovery binds each read to the account and connection, then cancels only one fresh exact order',async()=>{
+  const f=fixture();delete f.account.server;f.account.connectionId='fixture-route';
+  const observed=await f.service.observe({backend:'qmt',symbol:'600000.SH'});
+  const args={...f.intent('qmt-unknown'),observation_id:observed.observation_id,action:'limit',quantity:'100',limit_price:'99'};
+  f.adapter.submit=async()=>{throw new Error('native timeout');};const original=await f.service.execute(args);
+  const command={status:'outcome_unknown',remark:'SOwnQmtOrder',intent:{symbol:original.symbol,side:'buy',shares:'100',price:'99'}};
+  const pending={account_id:f.account.accountId,stock_code:original.symbol,order_remark:command.remark,order_id:'700',order_type:'23',order_status:'50',order_volume:'100',traded_volume:'0'};
+  let rows=[pending],connection={id:f.account.connectionId,revision:f.account.revision},cancels=0;
+  const host={plugins:{isActive:()=>true},tools:{call:async({name,arguments:a})=>{
+    if(name==='qmt_environment')return {details:{configuration:{account_id:f.account.accountId,connection_id:f.account.connectionId,version:f.account.revision}}};
+    if(name==='qmt_command')return {details:command};
+    if(name==='qmt_cancel'){cancels++;assert.equal(a.order_id,'700');assert.equal(a.original_operation_id,args.operation_id);return {details:{status:'cancel_requested'}};}
+    return {details:{connection,items:a.action==='orders'?rows:[],nextCursor:null}};
+  }}};
+  const native=createAdapters(host);f.adapter.status=native.status;f.adapter.cancel=native.cancel;
+  connection={id:'other-route',revision:'2'};
+  await assert.rejects(f.service.status({operation_id:args.operation_id,refresh:true}),{code:'CONNECTION_CHANGED'});
+  assert.equal((await f.service.status({operation_id:args.operation_id})).status,'outcome_unknown');
+  connection={id:f.account.connectionId,revision:f.account.revision};rows=[{...pending,account_id:'other'},{...pending,stock_code:'000001.SZ'}];
+  assert.equal((await f.service.status({operation_id:args.operation_id,refresh:true})).status,'outcome_unknown');
+  rows=[pending,{...pending,order_id:'701'}];assert.equal((await f.service.status({operation_id:args.operation_id,refresh:true})).status,'outcome_unknown');
+  rows=[pending];assert.equal((await f.service.status({operation_id:args.operation_id,refresh:true})).status,'order_observed');
+  const cancel={operation_id:'qmt-cancel',original_operation_id:args.operation_id,user_authorized:true};
+  rows=[{...pending,order_status:'56'}];assert.equal((await f.service.cancel({...cancel,operation_id:'already-filled'})).status,'rejected');assert.equal(cancels,0);
+  rows=[pending];assert.equal((await f.service.cancel(cancel)).status,'cancel_requested');assert.equal((await f.service.cancel(cancel)).status,'cancel_requested');assert.equal(cancels,1);
+});
 test('scope, user intent, and record ownership cannot be widened by the helper',async()=>{
   const f=fixture(),args=await prepared(f);
   await assert.rejects(f.service.execute({...args,user_authorized:false}),{code:'FORBIDDEN'});

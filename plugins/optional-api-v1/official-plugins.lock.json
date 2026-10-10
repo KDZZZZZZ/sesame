@@ -767,7 +767,7 @@
       "id": "sesame/manual-trading",
       "version": "1.0.0",
       "directory": "manual-trading",
-      "treeDigest": "sha256:cc741240fb25ebc087659fc30fc0b909494f29a2b8e7f051a927eb2722d88ef1",
+      "treeDigest": "sha256:b89c895a97f3bd43288edaedfb59dec69adc7f7b3fefbe6dc729b122f37ad03b",
       "files": [
         {
           "path": "BACKENDS.md",
@@ -791,8 +791,8 @@
         },
         {
           "path": "adapters.js",
-          "sha256": "6a966dd3aec84bb2aa14566ed6cd77ee1591861190e206d08db726fba1436e15",
-          "bytes": 14286
+          "sha256": "f3cecdb9b0f1c2e96a84adf96df29412e173609cc535b79b82de146b43219af9",
+          "bytes": 16689
         },
         {
           "path": "index.js",
@@ -816,8 +816,8 @@
         },
         {
           "path": "service.js",
-          "sha256": "60936c3af5ed757b10003f78a8b5b3f5ea00abebd6ad14122a611f5398b3463f",
-          "bytes": 13232
+          "sha256": "d414c4c96c37b825e91ee440e2f8b86820de7d06aa65b988f885935d899c0865",
+          "bytes": 13417
         },
         {
           "path": "skills/manual-trading/SKILL.md",
@@ -1637,7 +1637,7 @@
       "id": "sesame/qmt",
       "version": "1.2.0",
       "directory": "qmt",
-      "treeDigest": "sha256:be6b74f9674f1b5d72439e73269fabe46f1862f6874686ed94b325d4f8fcebb2",
+      "treeDigest": "sha256:dfba21c4d8d63d6c441bfef7017026ad57824740e81d4b21e3052c8a57cb6a49",
       "files": [
         {
           "path": "LICENSE",
@@ -1661,8 +1661,8 @@
         },
         {
           "path": "bridge.py",
-          "sha256": "bf2d1089135ed1ce7278844a872f0f8dc677ea6a987293c12a6bcfac42b624dc",
-          "bytes": 16379
+          "sha256": "324aeec014d4ba47356c16fb5854703ea7e2c92d6eb29c23f046a12815c17f6d",
+          "bytes": 17548
         },
         {
           "path": "configuration.js",
@@ -1676,8 +1676,8 @@
         },
         {
           "path": "index.js",
-          "sha256": "7be9eb83707ee8c6a568ec18cf4b625cd3353cee7d138c79aa14dd6c4c8d2c1c",
-          "bytes": 6745
+          "sha256": "62fa17b80527a246e4557746c3b7bae259743d7775a40fd0d63037fd57965616",
+          "bytes": 6963
         },
         {
           "path": "mapping.js",
@@ -1706,8 +1706,8 @@
         },
         {
           "path": "service.js",
-          "sha256": "42877fca5155d3dcf644993089fefd7c5a31d1bd090dc3ac61d5077ed3912f8c",
-          "bytes": 25184
+          "sha256": "ede2d09c819675443c53cddcac93489fe078f464609344de9eff587d99dd2b2d",
+          "bytes": 25532
         },
         {
           "path": "skills/qmt-readonly/SKILL.md",
@@ -1716,8 +1716,8 @@
         },
         {
           "path": "tools.json",
-          "sha256": "c8a0dd26198dc61cc09d09d7d02cfbd0c0afeace854fc446783a5f3df3594e07",
-          "bytes": 12108
+          "sha256": "f6bfa34e65a1acbe3e43493d8f229b89ee9ae364190cda0f37bb9e23624e8051",
+          "bytes": 12326
         },
         {
           "path": "worker.js",

@@ -187,6 +187,21 @@ test('explicit trading intents persist before transport, reuse exact results and
 test('activation service context cannot authorize trading; current tool scope is checked explicitly',async t=>{
  const {host,config}=await fixture(t);host.scope={kind:'service'};let calls=0;const service=createService(host,{platform:'win32',request:async()=>{calls++;return receipt({status:'submitted',order_id:'1'})}});t.after(()=>service.dispose());const args={operation_id:'scope',user_authorized:true,account_id:config.account_id,connection_revision:'2',symbol:'600000.SH',side:'buy',shares:'100',price:'10'};await assert.rejects(service.command('order',args),{code:'FORBIDDEN'});assert.equal((await service.command('order',args,undefined,{kind:'main'})).status,'submitted');assert.equal(calls,1);await assert.rejects(service.command('order',{...args,operation_id:'child'},undefined,{kind:'child'}),{code:'FORBIDDEN'});
 });
+test('cancelling an unknown QMT order carries only its retained original intent for native recovery',async t=>{
+ const {host,config}=await fixture(t);host.scope={kind:'main'};let orders=0,cancels=0;
+ const service=createService(host,{platform:'win32',request:async payload=>{
+   if(payload.action==='order'){orders++;throw Object.assign(Error('lost receipt'),{code:'SOURCE_UNAVAILABLE'});}
+   cancels++;assert.deepEqual(payload.original_intent,{symbol:'600000.SH',side:'buy',shares:'100',price:'10'});
+   assert.equal(payload.remark,host.storage.get('qmt_commands','unknown').remark);
+   return receipt({status:'cancel_requested',order_id:'123'});
+ }});t.after(()=>service.dispose());
+ const original={operation_id:'unknown',user_authorized:true,account_id:config.account_id,connection_revision:'2',symbol:'600000.SH',side:'buy',shares:'100',price:'10'};
+ await assert.rejects(service.command('order',original));
+ const args={operation_id:'recovered-cancel',user_authorized:true,account_id:config.account_id,connection_revision:'2',original_operation_id:'unknown',order_id:'123'};
+ const result=await service.command('cancel',args);assert.equal(result.status,'cancel_requested');assert.deepEqual(await service.command('cancel',args),result);assert.equal(orders,1);assert.equal(cancels,1);
+ const prior=host.storage.get('qmt_commands','unknown');delete prior.intent;host.storage.put('qmt_commands',prior);
+ await assert.rejects(service.command('cancel',{...args,operation_id:'unverifiable-legacy'}),{code:'INVALID_ARGUMENT'});assert.equal(cancels,1);
+});
 
 test('native execution guard is passed unchanged, durable pre-send rejection is queryable and never replayed',async t=>{
  const {host,config}=await fixture(t);host.scope={kind:'service'};let calls=0;

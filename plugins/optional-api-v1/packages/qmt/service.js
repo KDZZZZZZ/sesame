@@ -197,8 +197,14 @@ export function createService(host, { platform = process.platform, now = Date.no
         const fingerprint=digest({action,args,connection:connection(c)}),old=storedCommand(args.operation_id);
         if(old){check(old.fingerprint===fingerprint,'Operation ID already used for different input','IDEMPOTENCY_CONFLICT');return old;}
         let payload={...args,remark:'S'+digest(args.operation_id).slice(7,30)};
-        if(action==='cancel'){const original=storedCommand(args.original_operation_id);check(original?.action==='order'&&original.status==='submitted'&&original.result?.order_id===args.order_id&&canonical(original.connection)===canonical(connection(c)),'Cancel must reference an accepted Sesame order on this connection','INVALID_ARGUMENT');payload.remark=original.remark;}
+        if(action==='cancel'){
+          const original=storedCommand(args.original_operation_id),accepted=original?.status==='submitted'&&original.result?.order_id===args.order_id,recoverable=original?.status==='outcome_unknown'&&original.intent;
+          check(original?.action==='order'&&(accepted||recoverable)&&canonical(original.connection)===canonical(connection(c)),'Cancel requires an accepted order or a recoverable original intent on this connection','INVALID_ARGUMENT');
+          payload.remark=original.remark;
+          if(original.intent) payload.original_intent=original.intent;
+        }
         let record={id:args.operation_id,action,fingerprint,connection:connection(c),remark:payload.remark,status:'outcome_unknown',createdAt:now()};
+        if(action==='order')record.intent={symbol:args.symbol,side:args.side,shares:args.shares,price:args.price};
         host.storage.put('qmt_commands',record); // durable boundary before native submission; never replay unknown intent.
         try{signal?.throwIfAborted();const r=await read(c,action,payload,signal);check(r.result.status===(action==='order'?'submitted':'cancel_requested')&&/^[1-9]\d*$/.test(r.result.order_id??''),'Native submission receipt is invalid','SOURCE_DATA_INVALID');check(action!=='cancel'||r.result.order_id===args.order_id,'Cancel receipt order ID differs','SOURCE_DATA_INVALID');record={...record,status:r.result.status,result:r.result,meta:metadata(r)};host.storage.put('qmt_commands',record);return record;}
         catch(error){const notSent=error.details?.submission_attempted===false;record={...record,status:error.code==='BROKER_REJECTED'||notSent?'rejected':'outcome_unknown',error:{code:error.code??'SOURCE_UNAVAILABLE',message:notSent?'Native execution guard rejected before submission.':'Submission outcome is unconfirmed; inspect native orders/fills before taking another action.'}};host.storage.put('qmt_commands',record);throw error;}

@@ -29,7 +29,7 @@ export function createService(host,{now=Date.now,adapters=createAdapters(host,{n
   const save=value=>host.storage.put('commands',value);
   function commandId(id){check(typeof id==='string' && /^[A-Za-z0-9_-]{1,100}$/.test(id),'INVALID_ARGUMENT','Use a stable operation ID');return `manual-${digest(id).slice(7,39)}`;}
   function recordFor(id){const record=stored('commands',id);check(record,'NOT_FOUND','Manual trade operation not found');owner(record);return record;}
-  function requireOpen(record){check(['submitted','execution_reported','partially_filled'].includes(record.status),'UNCONFIRMED_ORDER','Order result is not confirmed; query first, never resend blindly');}
+  function requireOpen(record){check(['submitted','execution_reported','partially_filled','order_observed','execution_observed'].includes(record.status),'UNCONFIRMED_ORDER','Order result is not confirmed; query first, never resend blindly');}
   return {
     inspect() {main();return {policy:POLICY,compositionAvailable:typeof host.tools.call==='function',backends:[{id:'mt5',plugin:'sesame/mt5',minimumPluginVersion:'1.3.0',channel:'Configured official Python SDK',actions:['market','limit','close','cancel','status'],requires:'Verified UTC tick.time_msc and existing terminal trading permissions'},{id:'qmt',plugin:'sesame/qmt',minimumPluginVersion:'1.2.0',channel:'Configured Windows MiniQMT STOCK',actions:['limit','cancel','status'],requires:'Existing broker-authorized native Windows session; no native broker acceptance has been tested'}],unavailable:[{id:'ccxt',reason:'Existing plugin is public market data only'},{id:'akshare',reason:'Research/market data only'},{id:'vnpy',reason:'Current plugin provides backtesting, no live gateway'},{id:'backtrader',reason:'Current plugin provides backtesting, no broker bridge'}],note:'M5+ is the default decision cadence, not a promise of profitability or fills. API timing alone does not measure model reasoning latency.'};},
     async observe(args,signal) {
@@ -99,7 +99,7 @@ export function createService(host,{now=Date.now,adapters=createAdapters(host,{n
       if(['submitting','outcome_unknown'].includes(status)) {
         if(confirmed!=='outcome_unknown')status=confirmed;
         else if(evidence.deals?.length)status='execution_observed';
-        else if(evidence.orders?.length)status='order_observed';
+        else if(evidence.orders?.length===1)status='order_observed';
       }
       record=save({...record,status,evidence,checkedAt:now(),note:'A missing order/deal is not proof of rejection. Broker receipts and observed fills are distinct.'});
       return record;
@@ -114,7 +114,7 @@ export function createService(host,{now=Date.now,adapters=createAdapters(host,{n
         check(!host.storage.list('commands').some(x=>x.kind==='cancel' && x.originalOperationId===original.id && ['submitting','outcome_unknown'].includes(x.status)),'UNRESOLVED_CANCEL','An earlier cancellation result is unknown; query that operation instead of replacing its ID');
         let record={id:args.operation_id,fingerprint,kind:'cancel',backend:original.backend,account:original.account,symbol:original.symbol,conversationId:host.scope.conversationId,originalOperationId:original.id,backendCommandId,createdAt:now(),status:'submitting'};save(record);
         try {const receipt=await adapters.cancel(original,original.backend==='qmt'?args.operation_id:backendCommandId,bounded(signal));record={...record,receipt,status:outcome(original.backend,receipt),completedAt:now()};if(['execution_reported','submitted'].includes(record.status))record.status='cancel_requested';}
-        catch(error){record={...record,status:'outcome_unknown',error:{code:error.code??'SOURCE_UNAVAILABLE',message:'Cancellation unconfirmed; inspect the original order and fills'},completedAt:now()};}
+        catch(error){const notSent=error.details?.submission_attempted===false;record={...record,status:notSent?'rejected':'outcome_unknown',error:{code:error.code??'SOURCE_UNAVAILABLE',message:notSent?'Cancellation preflight rejected before native dispatch.':'Cancellation unconfirmed; inspect the original order and fills'},completedAt:now()};}
         return save(record);
       });
     },

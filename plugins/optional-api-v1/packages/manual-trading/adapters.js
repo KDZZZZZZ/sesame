@@ -1,11 +1,16 @@
 import { randomUUID } from 'node:crypto';
 import { Decimal } from '@sesame/plugin-sdk/decimal';
+import { canonical } from '@sesame/plugin-sdk/protocol';
 
 export const check = (ok, code, message) => { if (!ok) throw Object.assign(new Error(message), { code }); };
 export const decimal = value => { const v=String(value); check(v.length<=40 && /^(0|[1-9]\d*)(\.\d+)?$/.test(v) && Decimal.compare(v,'0')>0,'SOURCE_DATA_INVALID','Expected a positive decimal amount'); return v; };
 // MT5 uses zero IDs when a timed-out request has no confirmed order/deal. Zero
 // must never join unrelated history (such as balance/credit adjustments).
 const nativeId=value=>typeof value==='string' && /^[1-9]\d{0,19}$/.test(value)?value:typeof value==='number' && Number.isSafeInteger(value) && value>0?String(value):null;
+const positive=value=>['string','number'].includes(typeof value) && Number.isFinite(Number(value)) && Number(value)>0;
+const mt5Pending=(row,record)=>String(row.type)===(record.side==='buy'?'2':'3') && ['1','3'].includes(String(row.state)) && positive(row.volume_current);
+const qmtOwned=(row,record,remark)=>typeof remark==='string' && remark.length>0 && row.account_id===record.account.accountId && row.stock_code===record.symbol && row.order_remark===remark && nativeId(row.order_id)!==null && String(row.order_type)===(record.side==='buy'?'23':'24');
+const qmtPending=row=>['48','49','50','55'].includes(String(row.order_status)) && positive(row.order_volume) && Number(row.traded_volume)>=0 && Number(row.traded_volume)<Number(row.order_volume);
 export function payload(result) {
   check(!result?.isError,'BACKEND_ERROR','Backend tool returned an error; inspect its receipt');
   if (result && Object.hasOwn(result,'details')) return result.details;
@@ -110,25 +115,38 @@ export function createAdapters(host, {now=Date.now}={}) {
       const orderId=nativeId(command.result?.result?.order), dealId=nativeId(command.result?.result?.deal);
       const ownSymbol=x=>x.symbol===record.symbol,ownRemark=x=>typeof record.remark==='string' && record.remark.length>0 && x.comment===record.remark;
       const matchesDeal=x=>ownSymbol(x) && ['0','1'].includes(String(x.type)) && nativeId(x.ticket)!==null && nativeId(x.order)!==null && (ownRemark(x) || orderId!==null && nativeId(x.order)===orderId || dealId!==null && nativeId(x.ticket)===dealId);
-      return {command,orders:orders.filter(x=>ownSymbol(x) && nativeId(x.ticket)!==null && (ownRemark(x) || orderId!==null && nativeId(x.ticket)===orderId)),deals:deals.filter(matchesDeal),positions:positions.filter(x=>ownSymbol(x) && nativeId(x.ticket)!==null && ownRemark(x)),coverage:'Native queried range; missing matches do not prove no order was sent'};
+      return {command,orders:orders.filter(x=>ownSymbol(x) && nativeId(x.ticket)!==null && (ownRemark(x) || orderId!==null && nativeId(x.ticket)===orderId) && (record.action!=='limit'||mt5Pending(x,record))),deals:deals.filter(matchesDeal),positions:positions.filter(x=>ownSymbol(x) && nativeId(x.ticket)!==null && ownRemark(x)),coverage:'Native queried range; missing matches do not prove no order was sent'};
     }
     const reads=await Promise.all(['orders','fills'].map(action=>call('qmt','qmt_read',{action,page:{limit:200}},signal)));
-    return {command,orders:reads[0].items.filter(x=>x.order_remark===command.remark),deals:reads[1].items.filter(x=>x.order_remark===command.remark),coverage:reads.some(x=>x.nextCursor)?'truncated_current_day':'current_trading_day_only',complete:false};
+    for(const read of reads) check(read.connection?.id===record.account.connectionId && read.connection.revision===record.account.revision,'CONNECTION_CHANGED','Cannot recover against a different QMT connection');
+    return {command,orders:reads[0].items.filter(x=>qmtOwned(x,record,command.remark) && qmtPending(x)),deals:reads[1].items.filter(x=>qmtOwned(x,record,command.remark) && typeof x.traded_id==='string' && x.traded_id.length>0 && positive(x.traded_volume)),coverage:reads.some(x=>x.nextCursor)?'truncated_current_day':'current_trading_day_only',complete:false};
   }
   const command=(record,signal)=>call(record.backend,record.backend==='mt5'?'mt5_command':'qmt_command',record.backend==='mt5'?{command_id:record.backendCommandId}:{operation_id:record.id},signal);
   async function cancel(record,operationId,signal) {
+    let request;
+    try {
     const identityNow=await identity(record.backend,signal);
-    check(JSON.stringify(identityNow)===JSON.stringify(record.account),'CONNECTION_CHANGED','Cancellation account/configuration changed');
+    check(canonical(identityNow)===canonical(record.account),'CONNECTION_CHANGED','Cancellation account/configuration changed');
+    check(record.action==='limit','UNCONFIRMED_ORDER','Cancellation requires a pending limit order');
     const original=await call(record.backend,record.backend==='mt5'?'mt5_command':'qmt_command',record.backend==='mt5'?{command_id:record.backendCommandId}:{operation_id:record.id},signal);
     if(record.backend==='qmt') {
-      check(original.status==='submitted' && original.result?.order_id,'UNCONFIRMED_ORDER','Only an accepted QMT order can be cancelled');
-      return call('qmt','qmt_cancel',{operation_id:operationId,user_authorized:true,account_id:record.account.accountId,connection_revision:record.account.revision,original_operation_id:record.id,order_id:original.result.order_id},signal);
+      check(original.status==='submitted'||original.status==='outcome_unknown'&&original.intent?.symbol===record.symbol&&original.intent?.side===record.side&&original.intent?.shares===record.quantity,'UNCONFIRMED_ORDER','Stored QMT order intent cannot establish a recoverable cancellation');
+      const read=await call('qmt','qmt_read',{action:'orders',page:{limit:200}},signal);
+      check(read.connection?.id===record.account.connectionId && read.connection.revision===record.account.revision,'CONNECTION_CHANGED','QMT cancellation connection changed');
+      check(!read.nextCursor,'SOURCE_DATA_INVALID','Cannot prove a unique pending order from a partial order page');
+      const candidates=read.items.filter(x=>qmtOwned(x,record,original.remark));
+      const knownId=nativeId(original.result?.order_id);
+      check(candidates.length===1 && qmtPending(candidates[0]) && (knownId===null||nativeId(candidates[0].order_id)===knownId),'UNCONFIRMED_ORDER','A unique matching active QMT order is required');
+      request={operation_id:operationId,user_authorized:true,account_id:record.account.accountId,connection_revision:record.account.revision,original_operation_id:record.id,order_id:nativeId(candidates[0].order_id)};
+    } else {
+      const [info,orders]=await Promise.all([py('account_info',{},signal),py('orders_get',{symbol:record.symbol},signal)]);
+      check(String(info.login)===record.account.accountId && info.server===record.account.server,'ACCOUNT_MISMATCH','Connected cancellation account changed');
+      const candidates=orders.filter(x=>x.symbol===record.symbol && x.comment===record.remark && nativeId(x.ticket)!==null),knownId=nativeId(original.result?.result?.order);
+      check(candidates.length===1 && mt5Pending(candidates[0],record) && (knownId===null||nativeId(candidates[0].ticket)===knownId),'UNCONFIRMED_ORDER','A unique matching active pending order is required');
+      request={server:'python',tool:'order_send',arguments:{request:{action:'TRADE_ACTION_REMOVE',order:nativeId(candidates[0].ticket)}},command_id:operationId};
     }
-    const ticket=String(original.result?.result?.order??'');
-    check(/^[1-9]\d*$/.test(ticket) && record.action==='limit','UNCONFIRMED_ORDER','Cancellation requires a confirmed pending order ticket');
-    const [info,orders]=await Promise.all([py('account_info',{},signal),py('orders_get',{ticket},signal)]);
-    check(String(info.login)===record.account.accountId && info.server===record.account.server && orders.length===1 && String(orders[0].ticket)===ticket && orders[0].symbol===record.symbol && orders[0].comment===record.remark,'ACCOUNT_MISMATCH','Current order no longer matches this submission');
-    return call('mt5','mt5_trade',{server:'python',tool:'order_send',arguments:{request:{action:'TRADE_ACTION_REMOVE',order:ticket}},command_id:operationId},signal);
+    } catch(error) {error.details={...error.details,submission_attempted:false};throw error;}
+    return call(record.backend,record.backend==='mt5'?'mt5_trade':'qmt_cancel',request,signal);
   }
   return {snapshot,identity,submit,status,cancel,orderRequest,command};
 }

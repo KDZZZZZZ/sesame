@@ -179,11 +179,21 @@ def query(request, data, trader_type, account_type):
                 need(type(order_id) is int and order_id > 0, "Broker rejected the submission; no accepted order ID was returned", "BROKER_REJECTED")
                 return {"order_id": str(order_id), "status": "submitted", "execution_confirmed": False, **({"execution_timing":timing} if timing is not None else {})}
             order_id = request.get("order_id")
-            need(isinstance(order_id, str) and order_id.isdigit() and 0 < int(order_id) <= 9223372036854775807, "Invalid native order ID", "INVALID_ARGUMENT")
+            def cancel_need(condition, message, code="UNCONFIRMED_ORDER"):
+                if not condition:
+                    raise Failure(code, message, {"submission_attempted": False})
+            cancel_need(isinstance(order_id, str) and order_id.isdigit() and 0 < int(order_id) <= 9223372036854775807, "Invalid native order ID", "INVALID_ARGUMENT")
             rows = trader.query_stock_orders(account)
-            need(rows is not None, "Cannot verify order ownership", "AMBIGUOUS_SOURCE_RESULT")
+            cancel_need(isinstance(rows, (list, tuple)), "Cannot verify order ownership", "AMBIGUOUS_SOURCE_RESULT")
             matched = [r for r in rows if str(getattr(r, "order_id", "")) == order_id]
-            need(len(matched) == 1 and str(getattr(matched[0], "account_id", "")) == config["account_id"] and getattr(matched[0], "order_remark", None) == request.get("remark"), "Order ownership does not match the original Sesame submission", "INVALID_ARGUMENT")
+            cancel_need(len(matched) == 1 and str(getattr(matched[0], "account_id", "")) == config["account_id"] and getattr(matched[0], "order_remark", None) == request.get("remark"), "Order ownership does not match the original Sesame submission", "INVALID_ARGUMENT")
+            if request.get("original_intent") is not None:
+                intent = request["original_intent"]
+                same_remark = [r for r in rows if str(getattr(r, "account_id", "")) == config["account_id"] and getattr(r, "order_remark", None) == request["remark"]]
+                row = matched[0]
+                pending_states = (48, 49, 50, 55)  # Unreported, reporting, reported, partially filled.
+                verified = len(same_remark) == 1 and getattr(row, "stock_code", None) == intent["symbol"] and getattr(row, "order_type", None) == (xtconstant.STOCK_BUY if intent["side"] == "buy" else xtconstant.STOCK_SELL) and str(getattr(row, "order_volume", "")) == intent["shares"] and getattr(row, "order_status", None) in pending_states and 0 <= getattr(row, "traded_volume", -1) < getattr(row, "order_volume", 0)
+                cancel_need(verified, "A unique matching active native order is required for cancellation")
             result = trader.cancel_order_stock(account, int(order_id))
             need(result == 0, "Broker rejected cancel submission", "BROKER_REJECTED")
             return {"order_id": order_id, "status": "cancel_requested", "cancellation_confirmed": False}
