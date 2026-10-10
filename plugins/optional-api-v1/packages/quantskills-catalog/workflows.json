@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "policy": "One method workflow per need. Backends are choices, not a bundle to install. Verify published availability separately. References are suggestions, not claims of imported or validated code.",
+  "policy": "Consolidate sources within the same method. Different methods remain independently installable and loadable. Backend choices do not imply installation; verify actual published availability.",
   "workflows": {
     "market-data": {
       "purpose": "获取明确市场与来源的数据，允许同屏并用不同后端。",
@@ -21,39 +21,47 @@
     },
     "market-explanation": {
       "purpose": "解释政策、制度、群体行为与叙事如何影响市场，比较替代解释。",
-      "primary_plugins": [
-        "sesame/market-interpretation"
-      ],
+      "primary_plugins": [],
       "shared_plugins": [
         "sesame/data-access",
         "sesame/reports"
       ],
-      "selection": "在一个解释框架中选择行为、制度、历史或叙事方法，保留矛盾证据与证伪条件。定性故事不是可交易信号，需要跨时复盘时再选 judgment-evolution。",
+      "selection": "Choose the requested interpretive method independently. Preserve competing evidence within that method; do not bundle unrelated methods.",
       "reference_names": [
         "skill-global-macro-rates-fx-lab",
         "skill-macro-futures-scenario-analysis",
         "skill-macro-monitor"
-      ]
+      ],
+      "method_choices": {
+        "behavioral-finance": "sesame/behavioral-finance",
+        "institutional-analysis": "sesame/institutional-analysis",
+        "narrative-analysis": "sesame/narrative-analysis"
+      }
     },
     "technical-analysis": {
       "purpose": "用量价、结构、波浪或 ICT 等视角解释行情和绘图。",
-      "primary_plugins": [
-        "sesame/technical-analysis"
-      ],
+      "primary_plugins": [],
       "shared_plugins": [
         "sesame/data-access",
         "sesame/canvas-control"
       ],
-      "selection": "同一行情问题共用确认时序和备选解释，不为每个理论安装重复插件。主观计数、已确认结构与经过样本外检验的规则分开标注。",
+      "selection": "Select a single requested theory; different theories are separate plugins. Do not install or load other methods implicitly.",
       "reference_names": [
         "skill-quant-factor-directional-alpha",
         "skill-quant-factor-risk-pattern-alpha"
-      ]
+      ],
+      "method_choices": {
+        "ict": "sesame/ict",
+        "price-action": "sesame/price-action",
+        "elliott-wave": "sesame/elliott-wave",
+        "wyckoff": "sesame/wyckoff",
+        "dow-theory": "sesame/dow-theory"
+      }
     },
     "strategy-research": {
       "purpose": "将想法变成有数据、可视化逻辑、原生回测和样本外证据的策略研究。",
       "primary_plugins": [
-        "sesame/quant-research"
+        "sesame/strategy-research"
       ],
       "shared_plugins": [
         "sesame/data-access",
@@ -76,7 +84,7 @@
     "factor-research": {
       "purpose": "整合因子创意、生成、去冗余、评估和迭代，保留全部实验。",
       "primary_plugins": [
-        "sesame/quant-research"
+        "sesame/factor-research"
       ],
       "shared_plugins": [
         "sesame/data-access",

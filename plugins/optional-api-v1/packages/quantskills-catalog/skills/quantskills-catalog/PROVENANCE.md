@@ -27,6 +27,6 @@ Operational guidance now follows native task-managed stdio execution and actual 
 
 ## Plugin API v1 package 2.1.0
 
-`workflows.json` 与新增 `catalog_recommend` 为 Sesame 原创编排指引，将相同用户需求收敛到一个方法流程。参考链接选自上述已保存目录；不复制参考仓库源码或书籍正文。方法包分别维护自身采用的论文、书籍、开源实现、许可证与取舍记录。推荐不会检查在线发布或安装状态，也不运行策略、访问账户或自动下载依赖。
+`workflows.json` 与新增 `catalog_recommend` 为 Sesame 原创选择指引：同一方法的重复来源合并，不同理论保持独立。比如只选 ICT 时不会推荐安装或加载 PA、波浪等包；不指定方法时返回选择项。参考链接选自上述已保存目录；不复制参考仓库源码或书籍正文。方法包分别维护自身采用的论文、书籍、开源实现、许可证与取舍记录。推荐不会检查在线发布或安装状态，也不运行策略、访问账户或自动下载依赖。
 
 协议回归：在公开仓库执行 `node --test plugins/optional-api-v1/tests/quantskills-routing.test.mjs`。该测试启动真实 stdio Python 进程，验证请求隔离、错误恢复、选择路由和元数据一致性；不将其称为量化方法有效性验证。

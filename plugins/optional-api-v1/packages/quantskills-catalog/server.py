@@ -1,5 +1,6 @@
 """Offline references and deduplicated Sesame workflows (Python standard library)."""
 import json
+from copy import deepcopy
 from pathlib import Path
 import sys
 
@@ -56,10 +57,22 @@ def handle_recommend(args):
     need = text_arg(args, "need", required=True)
     if need not in ROUTES:
         raise ValueError("Unknown need; use one of: " + ", ".join(ROUTES))
-    route = ROUTES[need]
+    route = deepcopy(ROUTES[need])
+    method = text_arg(args, "method")
+    choices = route.get("method_choices", {})
+    if method:
+        if method not in choices:
+            raise ValueError("The selected method does not belong to this need")
+        route["primary_plugins"] = [choices[method]]
+        route["purpose"] = "Research and annotate only the explicitly selected method: " + method
+        del route["method_choices"]
+        route["selection"] = "Use only the selected method. Read its own provenance; do not install or load other method plugins implicitly."
+        # General directory suggestions are not sources for every individual theory.
+        route["reference_names"] = []
     # Routing metadata cannot establish runtime/install/license/publication status.
     return {
-        "need": need, "workflow": route,
+        "need": need, "method": method or None, "workflow": route,
+        "selection_required": bool(choices) and not method,
         "references": [brief(item) for item in ITEMS if item["name"] in route["reference_names"]],
         "availability": "not_checked",
         "next_steps": [

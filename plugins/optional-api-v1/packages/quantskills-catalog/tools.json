@@ -91,7 +91,7 @@
     },
     {
       "name": "catalog_recommend",
-      "description": "Route a user need to a single consolidated Sesame method workflow and appropriate backend choices. Availability is not checked; use the actual plugin catalog before installation.",
+      "description": "Route a user need to independently selectable methods and backend choices. Consolidate only sources of the same method. Does not install plugins or check availability.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -107,6 +107,20 @@
               "report",
               "judgment-review"
             ]
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "ict",
+              "price-action",
+              "elliott-wave",
+              "wyckoff",
+              "dow-theory",
+              "behavioral-finance",
+              "institutional-analysis",
+              "narrative-analysis"
+            ],
+            "description": "Optional explicit method for technical-analysis or market-explanation. Without it return choices only; do not automatically load all methods."
           }
         },
         "required": [

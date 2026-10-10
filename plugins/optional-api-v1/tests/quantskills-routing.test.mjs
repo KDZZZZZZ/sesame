@@ -37,14 +37,14 @@ test('invalid JSON and invalid limits return errors without terminating the MCP 
   assert.equal(responses.at(-1).result.structuredContent.total_items, 214);
 });
 
-test('method routing consolidates overlapping factor/strategy work without installing or claiming availability', () => {
+test('workflow routing keeps factor research separate from general strategy experiments', () => {
   const [factor, strategy, backtest] = exchange([
     call(1, 'catalog_recommend', { need: 'factor-research' }),
     call(2, 'catalog_recommend', { need: 'strategy-research' }),
     call(3, 'catalog_recommend', { need: 'native-backtest' }),
   ]).map(response => response.result.structuredContent);
-  assert.deepEqual(factor.workflow.primary_plugins, ['sesame/quant-research']);
-  assert.deepEqual(strategy.workflow.primary_plugins, factor.workflow.primary_plugins);
+  assert.deepEqual(factor.workflow.primary_plugins, ['sesame/factor-research']);
+  assert.deepEqual(strategy.workflow.primary_plugins, ['sesame/strategy-research']);
   assert.deepEqual(backtest.workflow.primary_plugins, []);
   assert.ok(backtest.workflow.backend_choices.includes('sesame/backtrader'));
   for (const response of [factor, strategy, backtest]) {
@@ -53,6 +53,23 @@ test('method routing consolidates overlapping factor/strategy work without insta
     assert.ok(response.references.length > 0);
     assert.equal(response.snapshot_date, json('catalog.json').meta.snapshot_date);
   }
+});
+
+test('selecting only ICT returns no other theory, and does not mutate later choices', () => {
+  const [ict, all, mismatch] = exchange([
+    call(1, 'catalog_recommend', { need: 'technical-analysis', method: 'ict' }),
+    call(2, 'catalog_recommend', { need: 'technical-analysis' }),
+    call(3, 'catalog_recommend', { need: 'factor-research', method: 'ict' }),
+  ]);
+  assert.deepEqual(ict.result.structuredContent.workflow.primary_plugins, ['sesame/ict']);
+  assert.equal(ict.result.structuredContent.selection_required, false);
+  assert.equal(ict.result.structuredContent.workflow.method_choices, undefined);
+  assert.ok(!JSON.stringify(ict).includes('sesame/elliott-wave'));
+  assert.ok(!JSON.stringify(ict).includes('sesame/price-action'));
+  assert.deepEqual(all.result.structuredContent.workflow.primary_plugins, []);
+  assert.equal(all.result.structuredContent.selection_required, true);
+  assert.equal(all.result.structuredContent.workflow.method_choices.ict, 'sesame/ict');
+  assert.equal(mismatch.error.code, -32602);
 });
 
 test('runtime schema, route references and preserved source snapshot agree', () => {

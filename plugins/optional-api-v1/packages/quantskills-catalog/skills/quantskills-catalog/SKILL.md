@@ -1,6 +1,6 @@
 ---
 name: quantskills-catalog
-description: "按用户需求选择合并后的 Sesame 方法流程与可选后端，并按需查询 QuantSkills 参考目录。"
+description: "按用户指定的方法选择独立 Sesame 插件，只合并同方法的重复来源，并按需查询 QuantSkills 参考目录。"
 ---
 
 此包为按需安装的标准 MCP，要求 Sesame >=0.2.0-0；不是默认包。服务器使用现有 Python 标准库，不在加载时下载依赖。先核对固定版本与实际工具测试，不能把解析器/参考目录当成行情账户或交易后端。
@@ -13,20 +13,20 @@ description: "按用户需求选择合并后的 Sesame 方法流程与可选后�
 
 ## 先按需求去重
 
-用 `catalog_recommend({"need":"factor-research"})` 获取一个完整方法流程，再决定是否需要数据或回测后端。返回的 ID 是路由建议，`availability: not_checked` 不代表已安装、已发布或原生依赖已准备。必须以当时 `plugin_catalog` 和实际环境检查为准，不安装不存在的包，不把所有 `backend_choices` 都装上。
+用 `catalog_recommend({"need":"factor-research"})` 获取所选需求的流程，再决定是否需要数据或回测后端。用户只要 ICT，就用 `catalog_recommend({"need":"technical-analysis","method":"ict"})`，只加载 `sesame/ict`。不传 method 时返回选择项和 `selection_required:true`，不能理解成要安装或同时启用全部方法。返回的 ID 是路由建议，`availability: not_checked` 不代表已安装、已发布或原生依赖已准备。必须以当时 `plugin_catalog` 和实际环境检查为准，不安装不存在的包，不把所有 `backend_choices` 都装上。
 
 | 用户需要 | need | 合并方式 |
 | --- | --- | --- |
 | 看不同市场行情 | `market-data` | 按市场选一个明确来源；多个已绑定来源可以共存 |
-| 理解政策、制度、群体行为和市场叙事 | `market-explanation` | 一个解释框架选择多种视角，比较替代解释和证伪条件 |
-| 波浪、Price Action、ICT、量价图解 | `technical-analysis` | 共用确认时序、候选标注与绘图流程，不按理论重复安装 |
-| 自主研究、开发、验证策略 | `strategy-research` | 共用实验流程；语言操作交 strategy-authoring，原生执行交后端 |
-| 挖掘、评估、优化因子 | `factor-research` | 同一研究流程保存假设、全部尝试、去冗余、成本与样本外结果 |
+| 理解政策、制度、群体行为或市场叙事 | `market-explanation` | 行为金融、制度分析、叙事分析分别选择，方法内比较证据和证伪条件 |
+| 波浪、Price Action、ICT 等图解 | `technical-analysis` | 用 method 单独选理论；数据、时点事实和绘图基础可复用，不能强制混用理论 |
+| 自主研究、开发、验证策略 | `strategy-research` | 独立策略实验流程，不预载因子挖掘或具体算法；语言操作交 strategy-authoring |
+| 挖掘、评估、优化因子 | `factor-research` | 独立因子研究包，保存假设、全部尝试、去冗余、成本与样本外结果 |
 | 运行成熟引擎回测 | `native-backtest` | 按原生语言与引擎选择，保留各自撮合假设 |
 | 研究报告或策略 tearsheet | `report` | 统一使用 reports，不复制排版插件 |
 | 复核未来可验证判断 | `judgment-review` | 判断账本与本轮因子/策略实验分工 |
 
-需要更专门的方法时再查上游参考。先读所选项目原文、实际代码、许可证与数据要求，保留出处；未审计的目录条目不能直接获得执行授权，也不能把其自述当成实测结果。同需 Skill 合并时记录各来源保留的长处、冲突和舍弃理由，原作者与许可证不得抹去。
+**同一方法去重，不同方法独立。** 例如多个 ICT Skill 可在一个 ICT 包内取长补短，ICT 与波浪不能因为都能分析行情而合并。安装一种方法不会自动安装或加载另一种。需要更专门的方法时再查上游参考，先读原文、实际代码、许可证与数据要求，保留出处；未审计条目不能直接获得执行授权，也不能把自述当成实测结果。合并时记录保留的长处、冲突和舍弃理由，原作者与许可证不得抹去。
 
 ## 工具
 
@@ -34,7 +34,7 @@ description: "按用户需求选择合并后的 Sesame 方法流程与可选后�
 - `catalog_filter` — 按分类、工作流阶段、资产类型、验证程度筛选
 - `catalog_list_categories` — 列出所有分类及数量
 - `catalog_get_item` — 按精确名称获取单条完整详情
-- `catalog_recommend` — 按 need 返回去重流程、共享基础插件、可选后端和参考条目
+- `catalog_recommend` — 按 need / method 返回独立方法、共享基础插件、可选后端和参考条目
 
 ## 使用示例
 
