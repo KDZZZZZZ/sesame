@@ -16,7 +16,8 @@ test('the 19-entry unified directory exactly reconstructs two fixed released arc
   assert.equal(catalog.plugins.filter(item => item.distribution === 'core').length, 9);
   assert.equal(catalog.plugins.filter(item => item.distribution === 'optional').length, 10);
   for (const p of catalog.plugins) assert.equal(p.engines.sesame, '>=0.2.0-0');
-  assert.deepEqual(catalog.releases.map(item => item.tag), ['plugins-api-v1-dev.13', 'plugins-optional-api-v1-dev.5']);
+  assert.deepEqual(catalog.releases.map(item => item.tag), ['plugins-api-v1-dev.14', 'plugins-optional-api-v1-dev.6']);
+  for (const [id, version] of Object.entries({ 'sesame/akshare': '1.0.5', 'sesame/data-access': '2.3.1', 'sesame/orchestration': '2.1.1', 'sesame/reports': '2.0.3' })) assert.equal(catalog.plugins.find(item => item.id === id).version, version);
   const mt5 = catalog.plugins.find(item => item.id === 'sesame/mt5');
   assert.equal(mt5.version, '1.2.0'); assert.ok(mt5.tools.includes('mt5_translation_file'));
   assert.equal(mt5.package.treeDigest, 'sha256:6ae118d2bdb1c1e837c30a8fb0ec0eb51f1fecbce8f16780bb66ac0b1ac4f8d3');

@@ -810,3 +810,36 @@ package lock entries, both historical installation catalogs and all published
 assets remain unchanged. Final-head semantic review, trusted pre-merge gate and
 publication evidence are separate steps; this section does not claim those
 steps have already run.
+
+
+## Published clock fix and guide patches — core dev.14 / optional dev.6
+
+[PR27](https://github.com/KDZZZZZZ/sesame/pull/27) was normally merged at 2026-10-10T02:13:05Z as `270118d5b054690188856591c8adc57483200777`, preserving final reviewed head `40a4cabbba8e83e9065b1ba358f9da05c79a4bd5` and source `f50d88ae9607bc1e4018aafe3adb424a42e5f67a`. The [trusted pre-merge gate](https://github.com/KDZZZZZZ/sesame/actions/runs/38016088263) completed at 2026-10-10T02:12:26Z, after the 2026-10-10T02:08:51Z independent Agent review and its [2026-10-10T02:12:07Z maintainer record](https://github.com/KDZZZZZZ/sesame/pull/27#issuecomment-6092576030). The recorder is authenticated; the Agent name is part of that attestation. Human approval remains not-recorded. The first record had a noncanonical prefix and was rejected; its failed gate was not used to merge.
+
+The [main-branch publication workflow](https://github.com/KDZZZZZZ/sesame/actions/runs/38016147662) published both prereleases. All ten actual downloaded assets matched GitHub sizes/digests and local SHA-256 values. The actual host extractor and verifier accepted exactly nine core and ten optional packages. Four versions changed: AKShare 1.0.5, data-access 2.3.1, orchestration 2.1.1 and reports 2.0.3. The other fifteen complete lock entries match dev.13/dev.5. No plugin was activated and no running app, dependency environment, terminal or account was modified by this download verification.
+
+### [plugins-api-v1-dev.14](https://github.com/KDZZZZZZ/sesame/releases/tag/plugins-api-v1-dev.14)
+
+Published at 2026-10-10T02:13:48Z.
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `application-official-plugins.lock.json` | 1956 | `9a8925bbca0431d80a18b175a5f95e977dd9d6f6619d3c209c1a40f5d1a23a61` |
+| `official-plugins.lock.json` | 20555 | `6b4754e8b69a850f1ce3878d45c244a5e7a10c7e041f0f4fe8c9d799349937b0` |
+| `review.json` | 5589 | `0384e4bbfdb9e6e428a6586824f8aab7a0c1b232be9ae5f89acfd3a1d5640664` |
+| `sesame-official-plugins-api-v1-dev.14.tar.gz` | 565311 | `5a999fa700acf46b08cb5caded9d8693b3350c910eebaa1eb724d6ad8d9cea85` |
+| `SHA256SUMS` | 204 | `05f64074d0e93a00b87bfd9431d024587f97c56f477949a0bb263deb053119de` |
+
+### [plugins-optional-api-v1-dev.6](https://github.com/KDZZZZZZ/sesame/releases/tag/plugins-optional-api-v1-dev.6)
+
+Published at 2026-10-10T02:14:31Z.
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `application-official-plugins.lock.json` | 2119 | `1e46a41083880669d91c1c22361758e6e55eafac0f0a0578755469722940b0ad` |
+| `official-plugins.lock.json` | 40150 | `54ff0612e3a85f64f9d9d40f5446579e2521791b69dbce6766e0ffba21af3fc7` |
+| `review.json` | 5597 | `8b7ffa55858c50df26923c234039c788a89de301564b21d6385943463fb4c381` |
+| `sesame-optional-plugins-api-v1-dev.6.tar.gz` | 1623183 | `2cee0eeeb914f4cc13162e96023d72dd134fc4f4abd2c0c7b988d1593b33a9a3` |
+| `SHA256SUMS` | 203 | `4212083dac5a3cbed3136977bb7220df53c2df14606e9985905490407a9c94e4` |
+
+The catalog selects only these actual published releases. Historical stable 0.1.4 and optional three-entry catalogs retain their original bytes. The website preview remains descriptive; the Agent resolves the separate installation catalog and preserves formal expected-digest/version checks. Development plugin publication does not announce a 0.2.0 application installer.
