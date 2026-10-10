@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "tag": "plugins-api-v1-dev.14",
   "title": "Sesame API 1 core development plugins 14 — current generic guides",
-  "sourceCommit": "53f9f85d63216b4e3519f10a09424c48b5f0d6e0",
+  "sourceCommit": "f50d88ae9607bc1e4018aafe3adb424a42e5f67a",
   "sourceRoot": "plugins/api-v1",
   "profile": "core",
   "archive": {
