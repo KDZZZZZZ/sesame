@@ -11,8 +11,9 @@ export const descriptors = [
 
 /** Test injection supplies only the fixed query boundary, never a runtime/store object. */
 export function createService(host, { platform = process.platform, now = Date.now, pollMs = 1000, request } = {}) {
-  const bindings = new Map(), pages = new Map(), revisions = new Map(), streams = new Set(), lifetime = new AbortController();
+  const bindings = new Map(), pages = new Map(), revisions = new Map(), closedThrough = new Map(), streams = new Set(), lifetime = new AbortController();
   request ??= (payload, signal) => host.environment.executeWorker('worker.js', payload, { signal, timeoutMs: 30000 });
+  let nextRevision=0n;
   const storedCommand=id=>{try{return host.storage.get('qmt_commands',id)}catch(error){if(error.code==='not_found'||error.code==='NOT_FOUND')return undefined;throw error}};
   const current = () => {
     if (platform !== 'win32') prerequisite(host, 'Use this plugin on native Windows x64 with broker-authorized MiniQMT; macOS and Linux are not QMT hosts');
@@ -38,7 +39,7 @@ export function createService(host, { platform = process.platform, now = Date.no
     const key=item.id, prior=revisions.get(key);
     if(prior?.closed && item.isClosed===false)item={...item,isClosed:true,closure:prior.closure};
     const hash = digest(item);
-    const revision = prior ? (prior.hash === hash ? prior.revision : String(BigInt(prior.revision) + 1n)) : '0';
+    const revision = prior?.hash === hash ? prior.revision : String(nextRevision++);
     while(revisions.size >= 20000 && !revisions.has(key)) revisions.delete(revisions.keys().next().value);
     revisions.set(key, { hash, revision, ...(item.isClosed===true?{closed:true,closure:item.closure}:{}) }); return { ...item, revision };
   }
@@ -82,6 +83,8 @@ export function createService(host, { platform = process.platform, now = Date.no
     const symbol = instrumentSymbol(c,input.instrument), from = rangeDate(input.range.from), to = rangeDate(input.range.to);
     check(from <= to && Date.parse(to)-Date.parse(from) <= 10*366*86400000, 'Daily range exceeds ten years', 'INVALID_ARGUMENT');
     const seriesId = digest({connection:connection(c),instrument:input.instrument,spec:input.spec});
+    check(closedThrough.has(seriesId)||closedThrough.size<2048,'Daily series state exceeds budget','RESOURCE_EXHAUSTED');
+    if(!closedThrough.has(seriesId))closedThrough.set(seriesId,null);
     const r = await read(c,'bars',{symbols:[symbol],start:from.slice(0,10).replaceAll('-',''),end:to.slice(0,10).replaceAll('-',''),forming:true},context.signal);
     const native = [...r.result.items];
     if(input.includeForming && r.result.tick) {
@@ -90,7 +93,7 @@ export function createService(host, { platform = process.platform, now = Date.no
       const date = new Date(sourceTime.unixMs+8*3600000).toISOString().slice(0,10);
       const lastDate = native.length ? new Date(Math.max(...native.map(row=>Number(row.time)))+8*3600000).toISOString().slice(0,10) : null;
       const sameDay = native.find(row=>new Date(Number(row.time)+8*3600000).toISOString().slice(0,10)===date);
-      if(date >= from.slice(0,10) && date <= to.slice(0,10) && (!lastDate || date >= lastDate) && sameDay?.is_closed !== true && !revisions.get(`${seriesId}:${date}`)?.closed) {
+      if(date >= from.slice(0,10) && date <= to.slice(0,10) && (!lastDate || date >= lastDate) && sameDay?.is_closed !== true && !(closedThrough.get(seriesId) && date<=closedThrough.get(seriesId))) {
         const replacement={time:String(sourceTime.unixMs),open:tick.open,high:tick.high,low:tick.low,close:tick.lastPrice,volume:tick.volume};
         const at=native.findIndex(row=>new Date(Number(row.time)+8*3600000).toISOString().slice(0,10)===date);
         if(at>=0)native[at]=replacement;else native.push(replacement);
@@ -98,6 +101,7 @@ export function createService(host, { platform = process.platform, now = Date.no
     }
     native.sort((a,b)=>Number(a.time)-Number(b.time));
     const tickTime=r.result.tick?.time;
+    for(let i=0;i<native.length;i++){const bar=dailyBar(native[i],seriesId,r.sample.to,{nextSourceTime:native[i+1]?.time ?? (/^\d{13}$/.test(tickTime??'')?tickTime:undefined)});const date=bar.openTime.value.slice(0,10);if(bar.isClosed && (!closedThrough.get(seriesId)||date>closedThrough.get(seriesId)))closedThrough.set(seriesId,date);}
     const rows=native.map((row,index)=>revised(dailyBar(row,seriesId,r.sample.to,{nextSourceTime:native[index+1]?.time ?? (/^\d{13}$/.test(tickTime??'')?tickTime:undefined)}))).filter(bar=>(bar.openTime.value+'.000')>=from && (bar.openTime.value+'.000')<to && (input.includeForming || bar.isClosed)).sort((a,b)=>a.openTime.value.localeCompare(b.openTime.value));
     check(new Set(rows.map(x=>x.id)).size===rows.length,'Duplicate native daily rows','SOURCE_DATA_INVALID');
     return {rows,meta:metadata(r,[warning('LOCAL_HISTORY','Only existing cached daily data is read. Empty data does not prove complete coverage; explicitly download missing ranges.'),warning('DAILY_POLL','Daily OHLC uses native source timestamps. No minute bars or native volume units are inferred.')]),extra:{seriesId,coverage:{requested:input.range,observedRange:rows.length?{from:rows[0].openTime,to:rows.at(-1).openTime}:null,complete:false,gaps:[{range:input.range,reason:'not_loaded'}]}}};
@@ -213,6 +217,6 @@ export function createService(host, { platform = process.platform, now = Date.no
       const r = await read(c, action, args, signal);
       return { ...r.result, connection: connection(c), meta: metadata(r), nativeFieldPolicy: 'Integer IDs and SDK float values remain text. Native order timestamps/price_type are not reinterpreted. No strategy correlation or all-history completeness is claimed.' };
     },
-    async dispose() { lifetime.abort(); await Promise.allSettled([...streams].map(stream => stream.close())); bindings.clear(); pages.clear(); revisions.clear(); },
+    async dispose() { lifetime.abort(); await Promise.allSettled([...streams].map(stream => stream.close())); bindings.clear(); pages.clear(); revisions.clear(); closedThrough.clear(); },
   };
 }

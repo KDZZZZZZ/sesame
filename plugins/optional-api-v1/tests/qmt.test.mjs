@@ -204,3 +204,13 @@ test('old full-tick cannot replace a completed historical day and UTC fractional
  const after=await service.market.queryBars({...args,range:{...args.range,from:{basis:'utc',unixMs:at('2026-10-09T09:30:00')+1}}},{bindingId:'market'});assert.equal(after.data.page.items.length,0);
  const narrow=await service.market.queryBars({...args,range:{...args.range,to:{basis:'utc',unixMs:at('2026-10-09T00:00:00')}}},{bindingId:'market'});assert.equal(narrow.data.page.items[0].close,'10.8');
 });
+
+test('bounded revision cache never rewinds a live revision or loses a confirmed closed-day boundary',async t=>{
+ const {host,config}=await fixture(t);let price='10',history=false,empty=false;
+ const service=createService(host,{platform:'win32',request:async p=>receipt({items:empty?[]:history?Array.from({length:2100},(_,i)=>dailyRow(new Date(Date.UTC(2018,0,1+i)).toISOString().slice(0,10))):[dailyRow('2026-10-08','10.8'),dailyRow('2026-10-09')],tick:{...tick,time:String(at(empty?'2026-10-08T14:00:00':'2026-10-09T14:00:00')),open:'9',high:'11',low:'8',lastPrice:price,volume:'100'}},at('2026-10-09T15:05:00'))});t.after(()=>service.dispose());await bind(service,'market');
+ const args={instrument:instrumentRef(config,'600000.SH'),spec:dailySpec,range:{from:{basis:'utc',unixMs:at('2018-01-01T00:00:00')},to:{basis:'utc',unixMs:at('2027-01-01T00:00:00')}},includeForming:true,direction:'backward',page:{limit:2}};
+ await service.market.queryBars(args,{bindingId:'market'});price='10.5';const prior=(await service.market.queryBars(args,{bindingId:'market'})).data.page.items.at(-1).revision;
+ history=true;for(let i=0;i<10;i++)await service.market.queryBars({...args,instrument:instrumentRef(config,`${600001+i}.SH`)},{bindingId:'market'});
+ history=false;price='10.7';const after=await service.market.queryBars(args,{bindingId:'market'});assert.ok(BigInt(after.data.page.items.at(-1).revision)>BigInt(prior));
+ empty=true;const narrow=await service.market.queryBars({...args,range:{from:{basis:'utc',unixMs:at('2026-10-08T00:00:00')},to:{basis:'utc',unixMs:at('2026-10-09T00:00:00')}}},{bindingId:'market'});assert.equal(narrow.data.page.items.length,0,'an evicted closed row is not fabricated from an old tick');
+});
