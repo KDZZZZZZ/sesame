@@ -58,7 +58,7 @@ MT5 checkouts. Workspace commands expose incomplete snapshot diagnostics. The
 plugin-manager owns verified catalog installation and same-session loading;
 its native static checks remain distinct from actual activation and environment
 verification. The [unified API 1 catalog](CATALOG.md) pins the actual
-core dev.14 and optional dev.8 releases: nine default and twenty-two optional entries.
+core dev.15 and optional dev.9 releases: nine default and twenty-two optional entries.
 Their source commit, archive, file/tree and review hashes were selected only after
 publication and actual download verification. Explicit updates preserve the host's
 current-digest and version checks. The published 0.1.4 catalog is unchanged.
@@ -132,13 +132,9 @@ test environment. Record actual checks and limitations, including native targets
 that were not available. Never mark a package safe solely because it supplied a
 passing test or manifest claim.
 
-The 0.2.0 application uses the reviewed core dev.14 archive; optional entries use
-optional dev.8. These historical build tags remain immutable. Their development
-labels describe the plugin archive publication, not whether a compatible
-application installer is available. No retagging, repacking or application lock
-change is needed to use these verified bytes in 0.2.0. New plugin bytes require a
-new version, review and archive; never replace a fixed artifact or the historical
-0.1.4 catalog. The API 1 catalog retains its existing channel and byte identity.
+Application bundles keep their fixed plugin archive pins. Later plugin updates
+use separately reviewed catalog entries and explicit installation. New package
+bytes require a new version, review and archive; never replace a fixed artifact.
 
 Each package retains its own LICENSE and PROVENANCE. Official Sesame plugin code
 is MIT only within its stated package scope. Existing third-party attribution and
