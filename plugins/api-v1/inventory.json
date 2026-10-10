@@ -12,7 +12,7 @@
   "packages": [
     {
       "id": "sesame/akshare",
-      "version": "1.0.6",
+      "version": "1.0.7",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -48,7 +48,7 @@
     },
     {
       "id": "sesame/backtrader",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -147,7 +147,7 @@
     },
     {
       "id": "sesame/ccxt",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -933,7 +933,7 @@
     },
     {
       "id": "sesame/vnpy",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
