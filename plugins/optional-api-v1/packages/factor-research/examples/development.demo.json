@@ -1,0 +1,1730 @@
+[
+  {
+    "instrument": "DEMO-01",
+    "decisionAt": "2024-02-01T09:30:00.000Z",
+    "universeKnownAt": "2024-02-01T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "1",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "4",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-01T09:31:00.000Z",
+      "end": "2024-02-01T16:00:00.000Z",
+      "availableAt": "2024-02-01T16:01:00.000Z",
+      "return": "0.001",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-02",
+    "decisionAt": "2024-02-01T09:30:00.000Z",
+    "universeKnownAt": "2024-02-01T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "2",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "7",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-01T09:31:00.000Z",
+      "end": "2024-02-01T16:00:00.000Z",
+      "availableAt": "2024-02-01T16:01:00.000Z",
+      "return": "0.008",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-03",
+    "decisionAt": "2024-02-01T09:30:00.000Z",
+    "universeKnownAt": "2024-02-01T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "3",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "10",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-01T09:31:00.000Z",
+      "end": "2024-02-01T16:00:00.000Z",
+      "availableAt": "2024-02-01T16:01:00.000Z",
+      "return": "-0.004",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-04",
+    "decisionAt": "2024-02-01T09:30:00.000Z",
+    "universeKnownAt": "2024-02-01T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "4",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "2",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-01T09:31:00.000Z",
+      "end": "2024-02-01T16:00:00.000Z",
+      "availableAt": "2024-02-01T16:01:00.000Z",
+      "return": "0.003",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-05",
+    "decisionAt": "2024-02-01T09:30:00.000Z",
+    "universeKnownAt": "2024-02-01T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "5",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "5",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-01T09:31:00.000Z",
+      "end": "2024-02-01T16:00:00.000Z",
+      "availableAt": "2024-02-01T16:01:00.000Z",
+      "return": "-0.009",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-06",
+    "decisionAt": "2024-02-01T09:30:00.000Z",
+    "universeKnownAt": "2024-02-01T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "6",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "8",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-01T09:31:00.000Z",
+      "end": "2024-02-01T16:00:00.000Z",
+      "availableAt": "2024-02-01T16:01:00.000Z",
+      "return": "-0.002",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-07",
+    "decisionAt": "2024-02-01T09:30:00.000Z",
+    "universeKnownAt": "2024-02-01T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "7",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "0",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-01T09:31:00.000Z",
+      "end": "2024-02-01T16:00:00.000Z",
+      "availableAt": "2024-02-01T16:01:00.000Z",
+      "return": "0.005",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-08",
+    "decisionAt": "2024-02-01T09:30:00.000Z",
+    "universeKnownAt": "2024-02-01T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "8",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "3",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-01T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-01T09:31:00.000Z",
+      "end": "2024-02-01T16:00:00.000Z",
+      "availableAt": "2024-02-01T16:01:00.000Z",
+      "return": "-0.007",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-01",
+    "decisionAt": "2024-02-02T09:30:00.000Z",
+    "universeKnownAt": "2024-02-02T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "1",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "5",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-02T09:31:00.000Z",
+      "end": "2024-02-02T16:00:00.000Z",
+      "availableAt": "2024-02-02T16:01:00.000Z",
+      "return": "0.004",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-02",
+    "decisionAt": "2024-02-02T09:30:00.000Z",
+    "universeKnownAt": "2024-02-02T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "2",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "8",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-02T09:31:00.000Z",
+      "end": "2024-02-02T16:00:00.000Z",
+      "availableAt": "2024-02-02T16:01:00.000Z",
+      "return": "-0.008",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-03",
+    "decisionAt": "2024-02-02T09:30:00.000Z",
+    "universeKnownAt": "2024-02-02T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "3",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "0",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-02T09:31:00.000Z",
+      "end": "2024-02-02T16:00:00.000Z",
+      "availableAt": "2024-02-02T16:01:00.000Z",
+      "return": "-0.001",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-04",
+    "decisionAt": "2024-02-02T09:30:00.000Z",
+    "universeKnownAt": "2024-02-02T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "4",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "3",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-02T09:31:00.000Z",
+      "end": "2024-02-02T16:00:00.000Z",
+      "availableAt": "2024-02-02T16:01:00.000Z",
+      "return": "0.006",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-05",
+    "decisionAt": "2024-02-02T09:30:00.000Z",
+    "universeKnownAt": "2024-02-02T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "5",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "6",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-02T09:31:00.000Z",
+      "end": "2024-02-02T16:00:00.000Z",
+      "availableAt": "2024-02-02T16:01:00.000Z",
+      "return": "-0.006",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-06",
+    "decisionAt": "2024-02-02T09:30:00.000Z",
+    "universeKnownAt": "2024-02-02T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "6",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "9",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-02T09:31:00.000Z",
+      "end": "2024-02-02T16:00:00.000Z",
+      "availableAt": "2024-02-02T16:01:00.000Z",
+      "return": "0.001",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-07",
+    "decisionAt": "2024-02-02T09:30:00.000Z",
+    "universeKnownAt": "2024-02-02T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "7",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "1",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-02T09:31:00.000Z",
+      "end": "2024-02-02T16:00:00.000Z",
+      "availableAt": "2024-02-02T16:01:00.000Z",
+      "return": "0.008",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-08",
+    "decisionAt": "2024-02-02T09:30:00.000Z",
+    "universeKnownAt": "2024-02-02T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "8",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "4",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-02T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-02T09:31:00.000Z",
+      "end": "2024-02-02T16:00:00.000Z",
+      "availableAt": "2024-02-02T16:01:00.000Z",
+      "return": "-0.004",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-01",
+    "decisionAt": "2024-02-03T09:30:00.000Z",
+    "universeKnownAt": "2024-02-03T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "1",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "6",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-03T09:31:00.000Z",
+      "end": "2024-02-03T16:00:00.000Z",
+      "availableAt": "2024-02-03T16:01:00.000Z",
+      "return": "0.007",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-02",
+    "decisionAt": "2024-02-03T09:30:00.000Z",
+    "universeKnownAt": "2024-02-03T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "2",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "9",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-03T09:31:00.000Z",
+      "end": "2024-02-03T16:00:00.000Z",
+      "availableAt": "2024-02-03T16:01:00.000Z",
+      "return": "-0.005",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-03",
+    "decisionAt": "2024-02-03T09:30:00.000Z",
+    "universeKnownAt": "2024-02-03T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "3",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "1",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-03T09:31:00.000Z",
+      "end": "2024-02-03T16:00:00.000Z",
+      "availableAt": "2024-02-03T16:01:00.000Z",
+      "return": "0.002",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-04",
+    "decisionAt": "2024-02-03T09:30:00.000Z",
+    "universeKnownAt": "2024-02-03T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "4",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "4",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-03T09:31:00.000Z",
+      "end": "2024-02-03T16:00:00.000Z",
+      "availableAt": "2024-02-03T16:01:00.000Z",
+      "return": "0.009",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-05",
+    "decisionAt": "2024-02-03T09:30:00.000Z",
+    "universeKnownAt": "2024-02-03T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "5",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "7",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-03T09:31:00.000Z",
+      "end": "2024-02-03T16:00:00.000Z",
+      "availableAt": "2024-02-03T16:01:00.000Z",
+      "return": "-0.003",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-06",
+    "decisionAt": "2024-02-03T09:30:00.000Z",
+    "universeKnownAt": "2024-02-03T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "6",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "10",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-03T09:31:00.000Z",
+      "end": "2024-02-03T16:00:00.000Z",
+      "availableAt": "2024-02-03T16:01:00.000Z",
+      "return": "0.004",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-07",
+    "decisionAt": "2024-02-03T09:30:00.000Z",
+    "universeKnownAt": "2024-02-03T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "7",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "2",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-03T09:31:00.000Z",
+      "end": "2024-02-03T16:00:00.000Z",
+      "availableAt": "2024-02-03T16:01:00.000Z",
+      "return": "-0.008",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-08",
+    "decisionAt": "2024-02-03T09:30:00.000Z",
+    "universeKnownAt": "2024-02-03T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "8",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "5",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-03T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-03T09:31:00.000Z",
+      "end": "2024-02-03T16:00:00.000Z",
+      "availableAt": "2024-02-03T16:01:00.000Z",
+      "return": "-1.000",
+      "status": "delisting_included"
+    }
+  },
+  {
+    "instrument": "DEMO-01",
+    "decisionAt": "2024-02-04T09:30:00.000Z",
+    "universeKnownAt": "2024-02-04T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "1",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "7",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-04T09:31:00.000Z",
+      "end": "2024-02-04T16:00:00.000Z",
+      "availableAt": "2024-02-04T16:01:00.000Z",
+      "return": "-0.009",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-02",
+    "decisionAt": "2024-02-04T09:30:00.000Z",
+    "universeKnownAt": "2024-02-04T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "2",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "10",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-04T09:31:00.000Z",
+      "end": "2024-02-04T16:00:00.000Z",
+      "availableAt": "2024-02-04T16:01:00.000Z",
+      "return": "-0.002",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-03",
+    "decisionAt": "2024-02-04T09:30:00.000Z",
+    "universeKnownAt": "2024-02-04T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "3",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "2",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-04T09:31:00.000Z",
+      "end": "2024-02-04T16:00:00.000Z",
+      "availableAt": "2024-02-04T16:01:00.000Z",
+      "return": "0.005",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-04",
+    "decisionAt": "2024-02-04T09:30:00.000Z",
+    "universeKnownAt": "2024-02-04T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "4",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "5",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-04T09:31:00.000Z",
+      "end": "2024-02-04T16:00:00.000Z",
+      "availableAt": "2024-02-04T16:01:00.000Z",
+      "return": "-0.007",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-05",
+    "decisionAt": "2024-02-04T09:30:00.000Z",
+    "universeKnownAt": "2024-02-04T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "5",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "8",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-04T09:31:00.000Z",
+      "end": "2024-02-04T16:00:00.000Z",
+      "availableAt": "2024-02-04T16:01:00.000Z",
+      "return": "0.000",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-06",
+    "decisionAt": "2024-02-04T09:30:00.000Z",
+    "universeKnownAt": "2024-02-04T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "6",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "0",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-04T09:31:00.000Z",
+      "end": "2024-02-04T16:00:00.000Z",
+      "availableAt": "2024-02-04T16:01:00.000Z",
+      "return": "0.007",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-07",
+    "decisionAt": "2024-02-04T09:30:00.000Z",
+    "universeKnownAt": "2024-02-04T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "7",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "3",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-04T09:31:00.000Z",
+      "end": "2024-02-04T16:00:00.000Z",
+      "availableAt": "2024-02-04T16:01:00.000Z",
+      "return": "-0.005",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-08",
+    "decisionAt": "2024-02-04T09:30:00.000Z",
+    "universeKnownAt": "2024-02-04T08:00:00.000Z",
+    "eligible": false,
+    "features": {
+      "rank_signal": {
+        "value": "8",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "6",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-04T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-04T09:31:00.000Z",
+      "end": "2024-02-04T16:00:00.000Z",
+      "availableAt": "2024-02-04T16:01:00.000Z",
+      "return": null,
+      "status": "unavailable"
+    }
+  },
+  {
+    "instrument": "DEMO-01",
+    "decisionAt": "2024-02-07T09:30:00.000Z",
+    "universeKnownAt": "2024-02-07T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "1",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "10",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-07T09:31:00.000Z",
+      "end": "2024-02-07T16:00:00.000Z",
+      "availableAt": "2024-02-07T16:01:00.000Z",
+      "return": "0.000",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-02",
+    "decisionAt": "2024-02-07T09:30:00.000Z",
+    "universeKnownAt": "2024-02-07T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "2",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "2",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-07T09:31:00.000Z",
+      "end": "2024-02-07T16:00:00.000Z",
+      "availableAt": "2024-02-07T16:01:00.000Z",
+      "return": "0.007",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-03",
+    "decisionAt": "2024-02-07T09:30:00.000Z",
+    "universeKnownAt": "2024-02-07T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "3",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "5",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-07T09:31:00.000Z",
+      "end": "2024-02-07T16:00:00.000Z",
+      "availableAt": "2024-02-07T16:01:00.000Z",
+      "return": "-0.005",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-04",
+    "decisionAt": "2024-02-07T09:30:00.000Z",
+    "universeKnownAt": "2024-02-07T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "4",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "8",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-07T09:31:00.000Z",
+      "end": "2024-02-07T16:00:00.000Z",
+      "availableAt": "2024-02-07T16:01:00.000Z",
+      "return": "0.002",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-05",
+    "decisionAt": "2024-02-07T09:30:00.000Z",
+    "universeKnownAt": "2024-02-07T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "5",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "0",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-07T09:31:00.000Z",
+      "end": "2024-02-07T16:00:00.000Z",
+      "availableAt": "2024-02-07T16:01:00.000Z",
+      "return": "0.009",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-06",
+    "decisionAt": "2024-02-07T09:30:00.000Z",
+    "universeKnownAt": "2024-02-07T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "6",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "3",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-07T09:31:00.000Z",
+      "end": "2024-02-07T16:00:00.000Z",
+      "availableAt": "2024-02-07T16:01:00.000Z",
+      "return": "-0.003",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-07",
+    "decisionAt": "2024-02-07T09:30:00.000Z",
+    "universeKnownAt": "2024-02-07T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "7",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "6",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-07T09:31:00.000Z",
+      "end": "2024-02-07T16:00:00.000Z",
+      "availableAt": "2024-02-07T16:01:00.000Z",
+      "return": "0.004",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-08",
+    "decisionAt": "2024-02-07T09:30:00.000Z",
+    "universeKnownAt": "2024-02-07T08:00:00.000Z",
+    "eligible": false,
+    "features": {
+      "rank_signal": {
+        "value": "8",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "9",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-07T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-07T09:31:00.000Z",
+      "end": "2024-02-07T16:00:00.000Z",
+      "availableAt": "2024-02-07T16:01:00.000Z",
+      "return": null,
+      "status": "unavailable"
+    }
+  },
+  {
+    "instrument": "DEMO-01",
+    "decisionAt": "2024-02-08T09:30:00.000Z",
+    "universeKnownAt": "2024-02-08T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "1",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "0",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-08T09:31:00.000Z",
+      "end": "2024-02-08T16:00:00.000Z",
+      "availableAt": "2024-02-08T16:01:00.000Z",
+      "return": "0.003",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-02",
+    "decisionAt": "2024-02-08T09:30:00.000Z",
+    "universeKnownAt": "2024-02-08T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "2",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "3",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-08T09:31:00.000Z",
+      "end": "2024-02-08T16:00:00.000Z",
+      "availableAt": "2024-02-08T16:01:00.000Z",
+      "return": "-0.009",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-03",
+    "decisionAt": "2024-02-08T09:30:00.000Z",
+    "universeKnownAt": "2024-02-08T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "3",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "6",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-08T09:31:00.000Z",
+      "end": "2024-02-08T16:00:00.000Z",
+      "availableAt": "2024-02-08T16:01:00.000Z",
+      "return": "-0.002",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-04",
+    "decisionAt": "2024-02-08T09:30:00.000Z",
+    "universeKnownAt": "2024-02-08T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "4",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "9",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-08T09:31:00.000Z",
+      "end": "2024-02-08T16:00:00.000Z",
+      "availableAt": "2024-02-08T16:01:00.000Z",
+      "return": "0.005",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-05",
+    "decisionAt": "2024-02-08T09:30:00.000Z",
+    "universeKnownAt": "2024-02-08T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "5",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "1",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-08T09:31:00.000Z",
+      "end": "2024-02-08T16:00:00.000Z",
+      "availableAt": "2024-02-08T16:01:00.000Z",
+      "return": "-0.007",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-06",
+    "decisionAt": "2024-02-08T09:30:00.000Z",
+    "universeKnownAt": "2024-02-08T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "6",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "4",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-08T09:31:00.000Z",
+      "end": "2024-02-08T16:00:00.000Z",
+      "availableAt": "2024-02-08T16:01:00.000Z",
+      "return": "0.000",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-07",
+    "decisionAt": "2024-02-08T09:30:00.000Z",
+    "universeKnownAt": "2024-02-08T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "7",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "7",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-08T09:31:00.000Z",
+      "end": "2024-02-08T16:00:00.000Z",
+      "availableAt": "2024-02-08T16:01:00.000Z",
+      "return": "0.007",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-08",
+    "decisionAt": "2024-02-08T09:30:00.000Z",
+    "universeKnownAt": "2024-02-08T08:00:00.000Z",
+    "eligible": false,
+    "features": {
+      "rank_signal": {
+        "value": "8",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "10",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-08T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-08T09:31:00.000Z",
+      "end": "2024-02-08T16:00:00.000Z",
+      "availableAt": "2024-02-08T16:01:00.000Z",
+      "return": null,
+      "status": "unavailable"
+    }
+  },
+  {
+    "instrument": "DEMO-01",
+    "decisionAt": "2024-02-09T09:30:00.000Z",
+    "universeKnownAt": "2024-02-09T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "1",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "1",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-09T09:31:00.000Z",
+      "end": "2024-02-09T16:00:00.000Z",
+      "availableAt": "2024-02-09T16:01:00.000Z",
+      "return": "0.006",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-02",
+    "decisionAt": "2024-02-09T09:30:00.000Z",
+    "universeKnownAt": "2024-02-09T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "2",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "4",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-09T09:31:00.000Z",
+      "end": "2024-02-09T16:00:00.000Z",
+      "availableAt": "2024-02-09T16:01:00.000Z",
+      "return": "-0.006",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-03",
+    "decisionAt": "2024-02-09T09:30:00.000Z",
+    "universeKnownAt": "2024-02-09T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "3",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "7",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-09T09:31:00.000Z",
+      "end": "2024-02-09T16:00:00.000Z",
+      "availableAt": "2024-02-09T16:01:00.000Z",
+      "return": "0.001",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-04",
+    "decisionAt": "2024-02-09T09:30:00.000Z",
+    "universeKnownAt": "2024-02-09T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "4",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "10",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-09T09:31:00.000Z",
+      "end": "2024-02-09T16:00:00.000Z",
+      "availableAt": "2024-02-09T16:01:00.000Z",
+      "return": "0.008",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-05",
+    "decisionAt": "2024-02-09T09:30:00.000Z",
+    "universeKnownAt": "2024-02-09T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "5",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "2",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-09T09:31:00.000Z",
+      "end": "2024-02-09T16:00:00.000Z",
+      "availableAt": "2024-02-09T16:01:00.000Z",
+      "return": "-0.004",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-06",
+    "decisionAt": "2024-02-09T09:30:00.000Z",
+    "universeKnownAt": "2024-02-09T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "6",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "5",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-09T09:31:00.000Z",
+      "end": "2024-02-09T16:00:00.000Z",
+      "availableAt": "2024-02-09T16:01:00.000Z",
+      "return": "0.003",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-07",
+    "decisionAt": "2024-02-09T09:30:00.000Z",
+    "universeKnownAt": "2024-02-09T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "7",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "8",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-09T09:31:00.000Z",
+      "end": "2024-02-09T16:00:00.000Z",
+      "availableAt": "2024-02-09T16:01:00.000Z",
+      "return": "-0.009",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-08",
+    "decisionAt": "2024-02-09T09:30:00.000Z",
+    "universeKnownAt": "2024-02-09T08:00:00.000Z",
+    "eligible": false,
+    "features": {
+      "rank_signal": {
+        "value": "8",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "0",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-09T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-09T09:31:00.000Z",
+      "end": "2024-02-09T16:00:00.000Z",
+      "availableAt": "2024-02-09T16:01:00.000Z",
+      "return": null,
+      "status": "unavailable"
+    }
+  },
+  {
+    "instrument": "DEMO-01",
+    "decisionAt": "2024-02-10T09:30:00.000Z",
+    "universeKnownAt": "2024-02-10T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "1",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "2",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-10T09:31:00.000Z",
+      "end": "2024-02-10T16:00:00.000Z",
+      "availableAt": "2024-02-10T16:01:00.000Z",
+      "return": "0.009",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-02",
+    "decisionAt": "2024-02-10T09:30:00.000Z",
+    "universeKnownAt": "2024-02-10T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "2",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "5",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-10T09:31:00.000Z",
+      "end": "2024-02-10T16:00:00.000Z",
+      "availableAt": "2024-02-10T16:01:00.000Z",
+      "return": "-0.003",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-03",
+    "decisionAt": "2024-02-10T09:30:00.000Z",
+    "universeKnownAt": "2024-02-10T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "3",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "8",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-10T09:31:00.000Z",
+      "end": "2024-02-10T16:00:00.000Z",
+      "availableAt": "2024-02-10T16:01:00.000Z",
+      "return": "0.004",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-04",
+    "decisionAt": "2024-02-10T09:30:00.000Z",
+    "universeKnownAt": "2024-02-10T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "4",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "0",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-10T09:31:00.000Z",
+      "end": "2024-02-10T16:00:00.000Z",
+      "availableAt": "2024-02-10T16:01:00.000Z",
+      "return": "-0.008",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-05",
+    "decisionAt": "2024-02-10T09:30:00.000Z",
+    "universeKnownAt": "2024-02-10T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "5",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "3",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-10T09:31:00.000Z",
+      "end": "2024-02-10T16:00:00.000Z",
+      "availableAt": "2024-02-10T16:01:00.000Z",
+      "return": "-0.001",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-06",
+    "decisionAt": "2024-02-10T09:30:00.000Z",
+    "universeKnownAt": "2024-02-10T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "6",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "6",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-10T09:31:00.000Z",
+      "end": "2024-02-10T16:00:00.000Z",
+      "availableAt": "2024-02-10T16:01:00.000Z",
+      "return": "0.006",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-07",
+    "decisionAt": "2024-02-10T09:30:00.000Z",
+    "universeKnownAt": "2024-02-10T08:00:00.000Z",
+    "eligible": true,
+    "features": {
+      "rank_signal": {
+        "value": "7",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "9",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-10T09:31:00.000Z",
+      "end": "2024-02-10T16:00:00.000Z",
+      "availableAt": "2024-02-10T16:01:00.000Z",
+      "return": "-0.006",
+      "status": "observed"
+    }
+  },
+  {
+    "instrument": "DEMO-08",
+    "decisionAt": "2024-02-10T09:30:00.000Z",
+    "universeKnownAt": "2024-02-10T08:00:00.000Z",
+    "eligible": false,
+    "features": {
+      "rank_signal": {
+        "value": "8",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      },
+      "rotation": {
+        "value": "1",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      },
+      "constant": {
+        "value": "1",
+        "availableAt": "2024-02-10T09:00:00.000Z"
+      }
+    },
+    "label": {
+      "start": "2024-02-10T09:31:00.000Z",
+      "end": "2024-02-10T16:00:00.000Z",
+      "availableAt": "2024-02-10T16:01:00.000Z",
+      "return": null,
+      "status": "unavailable"
+    }
+  }
+]

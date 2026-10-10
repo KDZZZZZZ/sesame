@@ -1,0 +1,37 @@
+{
+  "id": "sesame/strategy-research",
+  "apiVersion": "1",
+  "version": "1.0.0",
+  "title": "策略实验流程",
+  "description": "按需组织固定研究计划、时间切分、试验预算与真实引擎交接，不强制算法。",
+  "author": {
+    "name": "Sesame contributors"
+  },
+  "license": "MIT",
+  "default_state": "discoverable",
+  "agent_scope": "all",
+  "entry": "index.js",
+  "tool_definitions": "tools.json",
+  "tool_names": [],
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "resources": [
+    "PROVENANCE.md",
+    "README.md",
+    "examples/input.demo.json",
+    "examples/plan.demo.json",
+    "examples/timing.demo.json",
+    "examples/trials.demo.json",
+    "scripts/experiment.mjs",
+    "skills/strategy-research/references/evidence.md",
+    "skills/strategy-research/references/execution.md"
+  ],
+  "provides": {},
+  "engines": {
+    "sesame": ">=0.2.0-0"
+  }
+}
