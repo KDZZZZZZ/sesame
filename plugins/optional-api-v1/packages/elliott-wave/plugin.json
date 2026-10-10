@@ -1,0 +1,35 @@
+{
+  "id": "sesame/elliott-wave",
+  "apiVersion": "1",
+  "version": "1.0.0",
+  "title": "Elliott 波浪候选",
+  "description": "独立波浪研究：明确结构类型、级别、锚点、标准推动浪约束、替代计数和确认时刻；主观候选与验证分开。",
+  "author": {
+    "name": "Sesame contributors"
+  },
+  "license": "MIT",
+  "default_state": "discoverable",
+  "agent_scope": "all",
+  "entry": "index.js",
+  "tool_definitions": "tools.json",
+  "tool_names": [],
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "resources": [
+    "LICENSE",
+    "PROVENANCE.md",
+    "README.md",
+    "examples/case.json",
+    "examples/expected.md",
+    "skills/elliott-wave/references/method.md",
+    "skills/elliott-wave/references/validation.md"
+  ],
+  "provides": {},
+  "engines": {
+    "sesame": ">=0.2.0-0"
+  }
+}

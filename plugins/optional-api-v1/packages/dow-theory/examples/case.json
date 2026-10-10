@@ -1,0 +1,24 @@
+{
+  "provenance_kind": "demo",
+  "as_of": "2026-01-03T22:00:00Z",
+  "rule": "each index close strictly exceeds its predeclared secondary-reaction close high",
+  "indices": [
+    {
+      "id": "industrial-demo",
+      "threshold": "110",
+      "close": "111",
+      "available_at": "2026-01-03T21:01:00Z"
+    },
+    {
+      "id": "transport-demo",
+      "threshold": "210",
+      "close": "209",
+      "available_at": "2026-01-03T21:02:00Z"
+    }
+  ],
+  "future_observation": {
+    "index": "transport-demo",
+    "close": "212",
+    "available_at": "2026-01-04T21:02:00Z"
+  }
+}

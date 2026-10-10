@@ -1,0 +1,18 @@
+{
+  "provenance_kind": "demo",
+  "as_of": "2026-01-02T12:00:00Z",
+  "policy": {
+    "announced_at": "2026-01-01T10:00:00Z",
+    "effective_at": "2026-02-01T00:00:00Z",
+    "scope": "new contracts only"
+  },
+  "case_a": {
+    "collateral": "daily mark-to-market",
+    "participants": "leveraged dealers"
+  },
+  "case_b": {
+    "collateral": "fixed historical value",
+    "participants": "unlevered funds"
+  },
+  "price_pattern": "similar decline"
+}
