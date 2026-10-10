@@ -767,7 +767,7 @@
       "id": "sesame/manual-trading",
       "version": "1.0.0",
       "directory": "manual-trading",
-      "treeDigest": "sha256:eb0127421e15de83ad1a72eb59822df2979591f796cec188f34f2d4492def326",
+      "treeDigest": "sha256:cc741240fb25ebc087659fc30fc0b909494f29a2b8e7f051a927eb2722d88ef1",
       "files": [
         {
           "path": "BACKENDS.md",
@@ -791,8 +791,8 @@
         },
         {
           "path": "adapters.js",
-          "sha256": "6c764be3b04aaebf9bbdc4e5a5faa4bc4eeb8c9da7ce2bbf3e568b6a466196ad",
-          "bytes": 13612
+          "sha256": "6a966dd3aec84bb2aa14566ed6cd77ee1591861190e206d08db726fba1436e15",
+          "bytes": 14286
         },
         {
           "path": "index.js",

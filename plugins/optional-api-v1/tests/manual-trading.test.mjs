@@ -78,6 +78,32 @@ test('native guard rejection is distinguished from timeout and return/retcode fr
   assert.equal(outcome('mt5',{status:'returned',result:{result:{retcode:10010}}}),'partially_filled');
   assert.equal(outcome('qmt',{status:'submitted'}),'submitted');
 });
+test('zero native IDs and non-trade history cannot resolve an unknown order or unlock replacement IDs',async()=>{
+  const f=fixture(),args=await prepared(f),submit=f.adapter.submit;
+  f.adapter.submit=async()=>{throw new Error('native timeout');};
+  const original=await f.service.execute(args);assert.equal(original.status,'outcome_unknown');
+  const next=await prepared(f,'replacement');
+  await assert.rejects(f.service.execute(next),{code:'UNRESOLVED_ORDER'});
+  let deals=[
+    {ticket:'700',order:'0',symbol:'',comment:'Balance correction',type:2},
+    {ticket:'701',order:'800',symbol:'FIXTURE',comment:original.remark,type:2},
+    {ticket:'702',order:'801',symbol:'OTHER',comment:original.remark,type:0},
+    {ticket:'0',order:'802',symbol:'FIXTURE',comment:original.remark,type:0},
+    {ticket:'703',order:'0',symbol:'FIXTURE',comment:original.remark,type:0},
+  ];
+  const host={plugins:{isActive:()=>true},tools:{call:async({name,arguments:a})=>{
+    if(name==='mt5_command')return {details:{status:'returned',result:{result:{retcode:10012,order:'0',deal:'0'}}}};
+    const values={account_info:{login:f.account.accountId,server:f.account.server},orders_get:[],positions_get:[],history_deals_get:deals};
+    return {details:{status:'returned',result:{result:values[a.tool]}}};
+  }}};
+  f.adapter.status=createAdapters(host).status;
+  const unresolved=await f.service.status({operation_id:args.operation_id,refresh:true});
+  assert.equal(unresolved.status,'outcome_unknown');assert.deepEqual(unresolved.evidence.deals,[]);
+  await assert.rejects(f.service.execute(next),{code:'UNRESOLVED_ORDER'});assert.equal(f.submissions,0);
+  deals=[{ticket:'704',order:'803',symbol:'FIXTURE',comment:original.remark,type:0}];
+  assert.equal((await f.service.status({operation_id:args.operation_id,refresh:true})).status,'execution_observed');
+  f.adapter.submit=submit;assert.equal((await f.service.execute(next)).status,'execution_reported');assert.equal(f.submissions,1);
+});
 test('cancel is separately idempotent and reading its evidence never repeats cancellation',async()=>{
   const f=fixture(),args=await prepared(f);args.action='limit';await f.service.execute(args);
   const cancel={operation_id:'cancel-once',original_operation_id:args.operation_id,user_authorized:true};

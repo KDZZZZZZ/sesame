@@ -3,6 +3,9 @@ import { Decimal } from '@sesame/plugin-sdk/decimal';
 
 export const check = (ok, code, message) => { if (!ok) throw Object.assign(new Error(message), { code }); };
 export const decimal = value => { const v=String(value); check(v.length<=40 && /^(0|[1-9]\d*)(\.\d+)?$/.test(v) && Decimal.compare(v,'0')>0,'SOURCE_DATA_INVALID','Expected a positive decimal amount'); return v; };
+// MT5 uses zero IDs when a timed-out request has no confirmed order/deal. Zero
+// must never join unrelated history (such as balance/credit adjustments).
+const nativeId=value=>typeof value==='string' && /^[1-9]\d{0,19}$/.test(value)?value:typeof value==='number' && Number.isSafeInteger(value) && value>0?String(value):null;
 export function payload(result) {
   check(!result?.isError,'BACKEND_ERROR','Backend tool returned an error; inspect its receipt');
   if (result && Object.hasOwn(result,'details')) return result.details;
@@ -104,9 +107,10 @@ export function createAdapters(host, {now=Date.now}={}) {
     if(backend==='mt5') {
       const info=await py('account_info',{},signal);check(String(info.login)===record.account.accountId && info.server===record.account.server,'ACCOUNT_MISMATCH','Do not recover an order against a different logged-in account');
       const [orders,deals,positions]=await Promise.all([py('orders_get',{symbol:record.symbol},signal),py('history_deals_get',{date_from:new Date(record.createdAt-60000).toISOString(),date_to:new Date(now()+1000).toISOString()},signal),py('positions_get',{symbol:record.symbol},signal)]);
-      const orderId=command.result?.result?.order, dealId=command.result?.result?.deal;
-      const matches=x=>x.comment===record.remark || orderId && String(x.order)===String(orderId) || dealId && String(x.ticket)===String(dealId);
-      return {command,orders:orders.filter(x=>x.comment===record.remark || orderId && String(x.ticket)===String(orderId)),deals:deals.filter(matches),positions:positions.filter(x=>x.comment===record.remark),coverage:'Native queried range; missing matches do not prove no order was sent'};
+      const orderId=nativeId(command.result?.result?.order), dealId=nativeId(command.result?.result?.deal);
+      const ownSymbol=x=>x.symbol===record.symbol,ownRemark=x=>typeof record.remark==='string' && record.remark.length>0 && x.comment===record.remark;
+      const matchesDeal=x=>ownSymbol(x) && ['0','1'].includes(String(x.type)) && nativeId(x.ticket)!==null && nativeId(x.order)!==null && (ownRemark(x) || orderId!==null && nativeId(x.order)===orderId || dealId!==null && nativeId(x.ticket)===dealId);
+      return {command,orders:orders.filter(x=>ownSymbol(x) && nativeId(x.ticket)!==null && (ownRemark(x) || orderId!==null && nativeId(x.ticket)===orderId)),deals:deals.filter(matchesDeal),positions:positions.filter(x=>ownSymbol(x) && nativeId(x.ticket)!==null && ownRemark(x)),coverage:'Native queried range; missing matches do not prove no order was sent'};
     }
     const reads=await Promise.all(['orders','fills'].map(action=>call('qmt','qmt_read',{action,page:{limit:200}},signal)));
     return {command,orders:reads[0].items.filter(x=>x.order_remark===command.remark),deals:reads[1].items.filter(x=>x.order_remark===command.remark),coverage:reads.some(x=>x.nextCursor)?'truncated_current_day':'current_trading_day_only',complete:false};
