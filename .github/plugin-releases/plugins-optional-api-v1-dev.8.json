@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "tag": "plugins-optional-api-v1-dev.8",
+  "title": "Sesame API1 optional development plugins8 — exact CCXT route restoration",
+  "sourceCommit": "04261febd94d483b7d87d8564116099d394e3246",
+  "sourceRoot": "plugins/optional-api-v1",
+  "profile": "optional",
+  "archive": {
+    "name": "sesame-optional-plugins-api-v1-dev.8.tar.gz",
+    "sha256": "f20be226f06f995464504023e9d0f88d19b9afbc83ad5f9d54fc86ef9711e6b0"
+  },
+  "lockSha256": "64b4ac35b1e38591b31ce4d647fa7fdd5ffcb3375458b3a2b8ecde7244437c01",
+  "pullRequest": 31
+}
