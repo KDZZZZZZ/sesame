@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 const { installation, stageFrozenBuild } = await mt5Import('native.js');
 const { macPrefix, wineCommand, winePrefix, wineEnvironment } = await mt5Import('platform.js');
-import { digest } from '../packages/mt5/backend/support.js';
+import { digest } from '../../optional-api-v1/packages/mt5/backend/support.js';
 
 test('Tester uses the connected Wine profile for FILE_COMMON without changing the host environment', () => {
   const original = { USER: process.env.USER, LOGNAME: process.env.LOGNAME };
@@ -37,7 +37,7 @@ test('Mac discovers the official prefix and launches the bundled Wine with space
     await mkdir(join(binary, '..'), { recursive: true });
     await writeFile(binary, '#!/bin/sh\nprintf "%s\\n" "$WINEPREFIX" "$@"\n', { mode: 0o700 });
     assert.equal(wineCommand(), binary);
-    const child = spawnSync(process.execPath, [...process.execArgv, 'packages/mt5/scripts/mt5.mjs', 'editor', '/profile:spaced name'], {
+    const child = spawnSync(process.execPath, [...process.execArgv, '../optional-api-v1/packages/mt5/scripts/mt5.mjs', 'editor', '/profile:spaced name'], {
       cwd: resolve(import.meta.dirname, '..'), env: { ...process.env, DISPLAY: '' }, encoding: 'utf8', timeout: 10000,
     });
     assert.equal(child.status, 0, child.stderr);

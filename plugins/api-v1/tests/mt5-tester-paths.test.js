@@ -2,14 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import { join } from 'node:path';
-import { Tester } from '../packages/mt5/backend/tester.js';
+import { Tester } from '../../optional-api-v1/packages/mt5/backend/tester.js';
 const harness=()=>{let row={id:'pass_fixture',build_id:'build_fixture'};const storage={directory:'/unused/long/application/workspace',get:()=>structuredClone(row),put:(_kind,value)=>row=structuredClone(value)};return{tester:new Tester({storage}),row:()=>row}};
 test('Tester uses and cleans a private short native runner without touching the application workspace',async()=>{const{tester,row}=harness();let runner;tester.executeInDirectory=async(_pass,_signal,directory)=>{runner=directory;assert.notEqual(directory,tester.storage.directory);await fs.writeFile(join(directory,'owned-file'),'owned');return 'done'};assert.equal(await tester.execute(row(),new AbortController().signal),'done');assert.equal(row().temporary_paths.tester_runner,runner);await assert.rejects(fs.stat(runner),{code:'ENOENT'});});
 test('failed preparation cleans its own temporary native runner',async()=>{const{tester,row}=harness();let runner;tester.executeInDirectory=async(_pass,_signal,directory)=>{runner=directory;throw Error('preflight unavailable')};await assert.rejects(tester.execute(row(),new AbortController().signal),/preflight unavailable/);await assert.rejects(fs.stat(runner),{code:'ENOENT'});});
 test('unconfirmed process cleanup preserves the owned runner for diagnosis',async t=>{const{tester,row}=harness();let runner;tester.executeInDirectory=async(_pass,_signal,directory)=>{runner=directory;throw Object.assign(Error('job not settled'),{code:'runtime_cleanup_failed'})};await assert.rejects(tester.execute(row(),new AbortController().signal),/job not settled/);t.after(()=>fs.rm(runner,{recursive:true,force:true}));assert.ok((await fs.stat(runner)).isDirectory());});
 
 test('unconfirmed native cleanup survives diagnostic ENOSPC and keeps the pass/job unknown',async t=>{
-  const {tmpdir}=await import('node:os'),{digest}=await import('../packages/mt5/backend/support.js');
+  const {tmpdir}=await import('node:os'),{digest}=await import('../../optional-api-v1/packages/mt5/backend/support.js');
   const root=await fs.mkdtemp(join(tmpdir(),'tester-diagnostic-failure-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
   const nativeDirectory=join(root,'native');await fs.mkdir(nativeDirectory);for(const file of ['terminal64.exe','metatester64.exe','MetaEditor64.exe'])await fs.writeFile(join(nativeDirectory,file),'controlled fixture, never executed');
   const bytes=Buffer.from('frozen controlled EX5 fixture'),pass={id:'pass_io_fixture',backtest_id:'bt_fixture',build_id:'build_fixture',status:'queued',connection_version:1,artifact_digest:digest(bytes),config:{symbol:'EURUSD',period:'M1',from_date:'2026-09-25',to_date:'2026-10-09',deposit:100000,currency:'USD',leverage:100,model:4,parameters:{}},risk_limits:{max_risk_per_trade_pct:0.5,max_daily_loss_pct:2,max_open_positions:1,max_lots:'1'}};

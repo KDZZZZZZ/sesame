@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { Type } from '@sesame/plugin-sdk/schema';
 import { canonical, check } from '@sesame/plugin-sdk/protocol';
-import { createTools as dataTools } from '../packages/data-access/tools.js';
+import { createTools as dataTools } from '../packages/data-access/index.js';
 import { createTools as canvasTools } from '../packages/canvas-control/tools.js';
 import { compute } from '../packages/canvas-control/resources/close-line.js';
 

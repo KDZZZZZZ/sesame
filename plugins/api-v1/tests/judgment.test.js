@@ -4,8 +4,8 @@ import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Store, judgmentHost } from './judgment-host.js';
-import { JudgmentService, independentBlocks } from '../packages/judgment-evolution/service.js';
-import { definitions } from '../packages/judgment-evolution/tools.js';
+import { JudgmentService, independentBlocks } from '../../optional-api-v1/packages/judgment-evolution/service.js';
+import { definitions } from '../../optional-api-v1/packages/judgment-evolution/tools.js';
 import { Type } from '@sesame/plugin-sdk/schema';
 
 function fixture() {
@@ -168,10 +168,10 @@ test('coverage requires full-source semantic review, including responses without
 });
 
 test('official judgment declarations match runtime schemas and declare main-only scope', () => {
-  const manifest = JSON.parse(readFileSync(new URL('../packages/judgment-evolution/plugin.json', import.meta.url)));
-  const tools = JSON.parse(readFileSync(new URL('../packages/judgment-evolution/tools.json', import.meta.url)));
+  const manifest = JSON.parse(readFileSync(new URL('../../optional-api-v1/packages/judgment-evolution/plugin.json', import.meta.url)));
+  const tools = JSON.parse(readFileSync(new URL('../../optional-api-v1/packages/judgment-evolution/tools.json', import.meta.url)));
   assert.equal(manifest.id, 'sesame/judgment-evolution'); assert.equal(manifest.agent_scope, 'main');
-  assert.equal(manifest.default_state, 'mounted');
+  assert.equal(manifest.default_state, 'discoverable');
   assert.deepEqual(manifest.tool_names.toSorted(), definitions.map(([name]) => name).toSorted());
   for (const [name, description, properties] of definitions) {
     const declaration = tools.find(tool => tool.name === name);

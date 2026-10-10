@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "tag": "plugins-api-v1-dev.13",
+  "title": "Sesame API 1 core development plugins 13 — nine generic defaults",
+  "sourceCommit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
+  "sourceRoot": "plugins/api-v1",
+  "profile": "core",
+  "archive": {
+    "name": "sesame-official-plugins-api-v1-dev.13.tar.gz",
+    "sha256": "f04416fde2d86bfca52008292d72f107e22fe9b065bb20f9b938799578749337"
+  },
+  "lockSha256": "b612ee5ea170f8bc426a60e22f4773b45a0d3d26abc2695aea3c5e99be81e6bf",
+  "pullRequest": 25
+}

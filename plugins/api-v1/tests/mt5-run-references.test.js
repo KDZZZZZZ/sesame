@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { Type } from '@sesame/plugin-sdk/schema';
-import { NativeRunObserver } from '../packages/mt5/backend/run-observer.js';
-import { createTools as testerTools } from '../packages/mt5/tools/tester/index.js';
-import { createTools as deploymentTools } from '../packages/mt5/tools/deployment/index.js';
+import { NativeRunObserver } from '../../optional-api-v1/packages/mt5/backend/run-observer.js';
+import { createTools as testerTools } from '../../optional-api-v1/packages/mt5/tools/tester/index.js';
+import { createTools as deploymentTools } from '../../optional-api-v1/packages/mt5/tools/deployment/index.js';
 
 function fixture() {
   const rows = new Map([
@@ -54,6 +54,6 @@ test('deployment responses distinguish the checked backtest record from the live
 });
 
 test('published tool descriptions and schemas match the report-reference tools', async () => {
-  const f = fixture(), definitions = JSON.parse(await readFile(new URL('../packages/mt5/tools.json', import.meta.url)));
+  const f = fixture(), definitions = JSON.parse(await readFile(new URL('../../optional-api-v1/packages/mt5/tools.json', import.meta.url)));
   for (const tool of f.tools) assert.deepEqual(JSON.parse(JSON.stringify({ ...tool, execute: undefined })), definitions.find(item => item.name === tool.name));
 });

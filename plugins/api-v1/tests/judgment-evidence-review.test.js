@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { Store, judgmentHost } from './judgment-host.js';
-import { JudgmentService } from '../packages/judgment-evolution/service.js';
+import { JudgmentService } from '../../optional-api-v1/packages/judgment-evolution/service.js';
 
 function fixture(t) {
   const directory = mkdtempSync(join(tmpdir(), 'mt5agent-judgment-evidence-review-')), store = new Store(directory);

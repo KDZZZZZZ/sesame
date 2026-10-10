@@ -1,0 +1,40 @@
+{
+  "id": "sesame/judgment-evolution",
+  "title": "判断复盘与准则演进",
+  "description": "主 Agent 可见的按需复盘 skill：事前登记未来判断，自主选择时机核验、归因和迭代准则，不定时发送聊天消息。",
+  "version": "2.1.0",
+  "default_state": "discoverable",
+  "agent_scope": "main",
+  "tool_names": [
+    "judgment_review_queue",
+    "judgment_review_due",
+    "judgment_record",
+    "judgment_list",
+    "judgment_read",
+    "judgment_resolve",
+    "judgment_defer",
+    "judgment_reflect",
+    "judgment_rule",
+    "judgment_rules",
+    "judgment_retire_rule",
+    "judgment_audit_source",
+    "judgment_coverage"
+  ],
+  "entry": "index.js",
+  "tool_definitions": "tools.json",
+  "prompts": [
+    "prompt.md"
+  ],
+  "resources": [
+    "references.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "apiVersion": "1",
+  "provides": {},
+  "license": "MIT",
+  "engines": {
+    "sesame": ">=0.2.0-0"
+  }
+}

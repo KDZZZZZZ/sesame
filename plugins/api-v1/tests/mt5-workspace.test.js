@@ -4,10 +4,10 @@ import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import { join, resolve, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { Store, hostForStore } from './mt5-host.js';
-import { MT5 } from '../packages/mt5/backend/service.js';
-import { projectFiles } from '../packages/mt5/backend/contracts.js';
-import { visualTemplate } from '../packages/mt5/backend/visual/index.js';
-import { readTree } from '../packages/mt5/backend/support.js';
+import { MT5 } from '../../optional-api-v1/packages/mt5/backend/service.js';
+import { projectFiles } from '../../optional-api-v1/packages/mt5/backend/contracts.js';
+import { visualTemplate } from '../../optional-api-v1/packages/mt5/backend/visual/index.js';
+import { readTree } from '../../optional-api-v1/packages/mt5/backend/support.js';
 
 test('checkout returns real host paths and save checks writable SDK content', async t => {
   const root = await mkdtemp(join(tmpdir(), 'mt5-host-checkout-')); t.after(() => rm(root, { recursive: true, force: true }));

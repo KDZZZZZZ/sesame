@@ -634,3 +634,90 @@ Twelve additional Electron renderer checks passed, covering network, file and
 WebRTC isolation, desktop/mobile rendering, trusted clicks, concurrent inspection,
 loop and memory limits, cancellation and utility-process IPC. These checks apply
 to the matching development host, not to an arbitrary HTML viewer.
+
+## Unreleased 0.2 distribution proposal — nine defaults, ten optional
+
+This section describes a source candidate, not an application release or a
+published installation catalog. The stable 0.1.4 catalog and the fixed API 1
+release plans/catalog pins retain their original bytes. Package-by-package
+changes and dependency boundaries are in REORGANIZATION.md.
+
+The public SDK source suite ran 227 tests: 212 passed and 15 platform/native or
+host opt-in cases skipped, with no failures. Native opt-ins were not enabled.
+The Python dependency-installer fixtures passed six checks. The existing thirteen
+fixed release plans reconstructed successfully; new profile metadata does not
+change historical archive bytes. Five profile/inventory checks and six release
+identity checks passed, including actual nine-package archive membership,
+engine/legacy-grant rejection and preview metadata without install authority.
+
+An additional opt-in test used a fresh temporary Store, actual public
+HostContext, HostWorkspace, ContractArtifacts and plugin manager. It assembled
+only the nine core packages, loaded generic tools without a backend, validated
+and replayed both public SVL teaching examples, and froze a demo data/report.
+Fresh MT5 and judgment packages passed formal test/install/activation into their
+own private storage, without bundled_origin or migration grants. Synthetic old
+MT5 rows and an invalid synthetic legacy judgment database were neither read as
+state nor copied or modified. Restart preserved the new private records and
+fixed artifacts. This test made zero fetch requests and did not start MT5,
+MetaEditor, a Tester, a model call or trading. It used a fixture ModelRuntime,
+not a live Agent conversation.
+
+The same temporary report path was inspected by the actual host Playwright
+renderer at 1000 and 390 pixels: rendered status, no diagnostics. The renderer
+receipt recorded zero simulated interactions, so this is render/bridge evidence,
+not a claim that every gallery interaction was exercised. The offline editorial
+example remains reproducible byte-for-byte from its local assets and explicitly
+fictional demo data. No market values or native performance are invented.
+
+The final SVL-reference and QMT targeted command ran 23 tests: 21 passed and two
+explicit host/native opt-ins skipped. QMT's separate author's validation and
+independent review identify controlled Windows adapter fixtures, not an actual
+broker terminal acceptance. Normalized orders/fills are deliberately unsupported
+where source time units cannot be established; raw daily records remain marked
+as raw. Native Windows/QMT trading and all multi-backend live acceptance remain
+outside these source checks. Independent final-head review and publication gates
+are still required before releasing this reorganization.
+
+Final optional source tests after QMT review fixes: 38 JavaScript tests, 36 passed
+and two explicit opt-ins skipped. Python adapters passed 17 checks, with six
+actual-engine opt-ins skipped in this run. Independent reviewer Codex
+refactor_plugins completed the QMT source review at 2026-10-10T00:14:14Z on
+d25ad293945bc0f5fd11725c97c91fc5dbefc863: 16 independent, 18 public, one
+actual temporary HostContext/reopen and nine Python checks passed (44 total),
+with one Windows native gate skipped. This candidate imports those package bytes
+unchanged. Final bundle/profile/head review is still separate and pending.
+
+
+Independent review fixes in this candidate retain their separate evidence scopes.
+AKShare 1.0.4 now implements source-qualified daily closure, precise UTC range
+bounds, requested paging direction and forming policy, complete instrument and
+bar/page/snapshot fields, and exact OHLC/quantity checks. Codex refactor_plugins
+reviewed source 763f4a0e6bbeea4b4b6cc430713bb7eb5c696c6a at
+2026-10-10T00:32:18Z: ten independent, eleven public provider and four environment
+checks passed (25 total). These were controlled responses, not a fresh upstream
+network acceptance.
+
+MT5 retains its native history source price rather than substituting a position
+close price: the mapping accepts price, price_open, then open_price, and the
+actual order done_time alias. Codex refactor_plugins reviewed source
+78dd9fc3f57c0fd441963414e9e41b9af3102ddc at 2026-10-10T00:34:18Z;
+twelve public and three independent mapping checks passed. This change does not
+run a terminal, backtest or order. It is integrated into the optional 1.2.0
+candidate without restoring old migration grants or changing live state.
+
+The distribution infrastructure was independently reviewed at exact head
+e06f56e8152adaa1d9df37f72ae88de4c3465b4e: 17 focused tests and all thirteen
+historical reconstructions passed. Only exact allowlisted historical plans may
+omit a profile; new releases cannot remove metadata to evade the minimum engine
+range, package membership or optional activation policy. These source-stage
+checks do not replace final-head review of the merged candidate and its archives.
+
+
+After importing the reviewed AKShare/MT5 source fixes and merged distribution
+infrastructure, the integrated candidate passed 27 provider/mapping checks and
+22 profile/release/archive/inventory checks. These short checks ran on the
+integrated source, with no network/native or live application mutations. The
+nine-core lock and archive are unchanged from the earlier candidate; the optional
+lock was regenerated for exactly those reviewed source changes. The existing
+22-entry install catalog still validates against the two already published
+releases, independently of this 19-entry preview.

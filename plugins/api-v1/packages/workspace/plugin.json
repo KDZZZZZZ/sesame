@@ -1,22 +1,36 @@
 {
   "id": "sesame/workspace",
-  "title": "工作区与执行",
-  "description": "工作区文件读写、精确编辑与受任务生命周期管理的本机代码执行。",
-  "version": "1.0.2",
+  "title": "工作区、文件与执行",
+  "description": "工作区编辑、外部文件操作和受任务管理的本机执行，复用已有环境并保留冻结证据。",
+  "version": "1.1.0",
   "default_state": "mounted",
   "tool_names": [
     "read",
     "write",
     "edit",
-    "bash"
+    "bash",
+    "host_files_list",
+    "host_files_search",
+    "host_files_read",
+    "host_files_import",
+    "host_files_write",
+    "host_files_mkdir",
+    "host_files_move",
+    "host_files_remove",
+    "host_files_run"
   ],
   "prompts": [
     "prompt.md"
   ],
-  "skills": [],
+  "skills": [
+    "skills/prepare-environment"
+  ],
   "entry": "index.js",
   "tool_definitions": "tools.json",
   "apiVersion": "1",
   "provides": {},
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "sesame": ">=0.2.0-0"
+  }
 }

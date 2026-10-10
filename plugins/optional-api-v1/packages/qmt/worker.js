@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 /** One fixed SDK bridge. Cancellation targets only the Python process tree we own. */
 export async function execute(payload, { signal, directory }) {
   if (process.platform !== 'win32') throw Object.assign(new Error('QMT requires native Windows x64, a broker-authorized running MiniQMT, and its compatible Python SDK.'), { code: 'PREREQUISITE_REQUIRED' });
-  if (!isAbsolute(payload.python) || !['verify','prepare','search','describe','quotes','asset','positions','orders','fills'].includes(payload.action)) throw Object.assign(new Error('Invalid fixed QMT bridge request'), { code: 'INVALID_ARGUMENT' });
+  if (!isAbsolute(payload.python) || !['verify','prepare','search','describe','quotes','asset','positions','orders','fills','bars','download_history','order','cancel'].includes(payload.action)) throw Object.assign(new Error('Invalid fixed QMT bridge request'), { code: 'INVALID_ARGUMENT' });
   const cwd = join(directory, 'bridge'); await mkdir(cwd, { recursive: true });
   signal?.throwIfAborted();
   return await new Promise((resolve, reject) => {

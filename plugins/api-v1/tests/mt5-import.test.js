@@ -20,13 +20,19 @@ async function setup(t) {
   return { official, store, dataDirectory, write };
 }
 
-test('a new connection reuses native MCP settings without exporting passwords and keeps application default permissions', async t => {
+test('fresh private settings do not import native credentials until the explicit import action', async t => {
   const { official, store, dataDirectory, write } = await setup(t);
   await write('assistant.ini', '[MCP.MetaTrader]\r\nEnable=1\r\nEndpoint=http://127.0.0.1:22346/mcp\r\nApiKey=native-terminal-secret\r\n[MCP.MetaEditor]\r\nEnable=1\r\nEndpoint=http://127.0.0.1:22345/mcp\r\nApiKey=native-editor-secret\r\n[Assistant]\r\nApiKey=unrelated-ai-secret\r\nPermissionsTrade=1\r\nPermissionsShell=1\r\n');
   await write('common.ini', '[Common]\nLogin=700123\nServer=Example-Demo\nPassword=do-not-import-password\n[Experts]\nEnabled=1\n', 'utf8');
   const original = await readFile(join(dataDirectory, 'config/assistant.ini'));
   await official.init();
-  const settings = official.settings();
+  const initial = official.settings();
+  assert.equal(initial.servers.terminal.authenticated, false);
+  assert.equal(initial.servers.metaeditor.authenticated, false);
+  assert.deepEqual(initial.account, { login: '', server: '', password_configured: false });
+  assert.equal(store.list('mt5_command').length, 0);
+  assert.deepEqual(await readFile(join(dataDirectory, 'config/assistant.ini')), original);
+  const settings = await official.configure({ expected_version: initial.version, import_native: true });
   assert.equal(settings.servers.terminal.authenticated, true);
   assert.equal(settings.servers.metaeditor.authenticated, true);
   assert.deepEqual(settings.account, { login: '700123', server: 'Example-Demo', password_configured: false });

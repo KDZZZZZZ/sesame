@@ -4,11 +4,11 @@ import { mkdtemp, mkdir, writeFile, readFile, readdir, rm } from 'node:fs/promis
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { Store, hostForStore } from './mt5-host.js';
-import { configureDependencies, discoverDependencies, inspectDependencies } from '../packages/mt5/backend/dependencies.js';
-import { compileNative, fileManifest } from '../packages/mt5/backend/native.js';
-import { compileLocal } from '../packages/mt5/backend/local-compiler.js';
-import { digest } from '../packages/mt5/backend/support.js';
-import { wineCommand, wineEnvironment } from '../packages/mt5/backend/platform.js';
+import { configureDependencies, discoverDependencies, inspectDependencies } from '../../optional-api-v1/packages/mt5/backend/dependencies.js';
+import { compileNative, fileManifest } from '../../optional-api-v1/packages/mt5/backend/native.js';
+import { compileLocal } from '../../optional-api-v1/packages/mt5/backend/local-compiler.js';
+import { digest } from '../../optional-api-v1/packages/mt5/backend/support.js';
+import { wineCommand, wineEnvironment } from '../../optional-api-v1/packages/mt5/backend/platform.js';
 
 async function fixture(t) {
   const root = await mkdtemp(join(tmpdir(), 'sesame-dependencies-')); t.after(() => rm(root, { recursive: true, force: true }));
@@ -98,7 +98,7 @@ test('local compiler checks snapshot digest before any native process starts', a
 
 test('official catalog reports an actionable prerequisite when native dependencies are absent', async t => {
   const f = await fixture(t);
-  const { MT5Official } = await import('../packages/mt5/backend/official.js');
+  const { MT5Official } = await import('../../optional-api-v1/packages/mt5/backend/official.js');
   const official = await new MT5Official(f.host, null).init(); t.after(() => official.close());
   const catalog = await official.catalog('python');
   assert.equal(catalog.items[0].status, 'not_installed');

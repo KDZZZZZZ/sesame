@@ -5,9 +5,9 @@ import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { installation } from '../packages/mt5/backend/native.js';
-import { Tester } from '../packages/mt5/backend/tester.js';
-import { MT5MCP } from '../packages/mt5/backend/mcp.js';
+import { installation } from '../../optional-api-v1/packages/mt5/backend/native.js';
+import { Tester } from '../../optional-api-v1/packages/mt5/backend/tester.js';
+import { MT5MCP } from '../../optional-api-v1/packages/mt5/backend/mcp.js';
 
 test('native Tester loads frozen EX5 from short owned runner and collects real SDK output', {skip:process.env.MT5AGENT_NATIVE_TESTER_TESTS!=='1',timeout:300000},async t=>{
   for(const key of ['SESAME_TESTER_PASS_JSON','SESAME_TESTER_CONNECTION_JSON','SESAME_TESTER_EX5'])assert.ok(process.env[key],`${key} must point to an explicit local acceptance input`);

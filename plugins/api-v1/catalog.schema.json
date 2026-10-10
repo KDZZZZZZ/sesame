@@ -108,8 +108,40 @@
                 "pattern": "^[a-f0-9]{64}$"
               }
             }
+          },
+          "profile": {
+            "enum": [
+              "core",
+              "optional"
+            ]
+          },
+          "engines": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sesame"
+            ],
+            "properties": {
+              "sesame": {
+                "const": ">=0.2.0-0"
+              }
+            }
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "profile"
+              ]
+            },
+            "then": {
+              "required": [
+                "engines"
+              ]
+            }
+          }
+        ]
       }
     },
     "plugins": {
@@ -318,9 +350,28 @@
           "feedbackUrl": {
             "type": "string",
             "format": "uri"
+          },
+          "distribution": {
+            "enum": [
+              "core",
+              "optional"
+            ]
+          },
+          "engines": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sesame"
+            ],
+            "properties": {
+              "sesame": {
+                "const": ">=0.2.0-0"
+              }
+            }
           }
         }
       }
     }
-  }
+  },
+  "description": "Historical development releases may predate engine/profile metadata. New profiled releases require Sesame >=0.2.0-0 and declare core or optional distribution; candidate inventories are not installable catalogs."
 }

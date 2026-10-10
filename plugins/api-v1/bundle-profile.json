@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "kind": "core",
+  "engines": {
+    "sesame": ">=0.2.0-0"
+  },
+  "packages": [
+    "sesame/canvas-control",
+    "sesame/configuration",
+    "sesame/data-access",
+    "sesame/memory",
+    "sesame/orchestration",
+    "sesame/plugin-manager",
+    "sesame/reports",
+    "sesame/strategy-authoring",
+    "sesame/workspace"
+  ]
+}

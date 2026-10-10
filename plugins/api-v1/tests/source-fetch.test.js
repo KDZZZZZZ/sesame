@@ -4,7 +4,7 @@ import { EventEmitter, once } from 'node:events';
 import { Readable } from 'node:stream';
 import { createServer } from 'node:http';
 import { setTimeout as delay } from 'node:timers/promises';
-import { createSourceFetcher } from '../packages/web-sources/fetch.js';
+import { createSourceFetcher } from '../../optional-api-v1/packages/web-sources/fetch.js';
 
 const code = value => error => error.code === value;
 

@@ -103,3 +103,15 @@ sample. Absolute inputs, parent traversal and symlinks that resolve outside the
 package remain rejected. `quantskills-catalog` has no caller-selected file resolver
 and is unchanged at 2.0.1. The published dev.12 catalog entries remain 2.0.1 until
 these candidates are reviewed, published and selected by a subsequent metadata PR.
+
+## Unreleased 0.2 distribution
+
+The new candidate reorganizes 22 historical identities into nine default and ten
+optional packages. `inventory.json` is a source preview, with explicit
+`unreleased-candidate` status and no install-authority fields. The installation
+catalog above still selects the released 22-package set; it is not silently
+regenerated from changed files. After the candidate bundles pass review and are
+published, a distinct metadata PR must select their fixed release records. Those
+entries additionally identify `distribution` and `engines.sesame: ">=0.2.0-0"`.
+The formal minimum is 0.2.0, with compatible development previews allowed. Stable
+0.1.4 retains its independent historical catalog.

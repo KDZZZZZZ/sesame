@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ensureMT5Connection } from '../packages/mt5/backend/connect.js';
-import { MT5AutoConnection } from '../packages/mt5/backend/auto-connect.js';
+import { ensureMT5Connection } from '../../optional-api-v1/packages/mt5/backend/connect.js';
+import { MT5AutoConnection } from '../../optional-api-v1/packages/mt5/backend/auto-connect.js';
 const account={login:'123456',server:'Fixture-Demo'},server={enabled:true,url:'http://127.0.0.1:22346/',token:'fixture-token'};
 function fixture(){let launches=0,closes=0;const mt5={native:{directory:'/fixture',dataDirectory:'/fixture'},official:{config:{version:1,account,servers:{terminal:server}},jobs:new Set(),access:()=>({}),redact:x=>x,clients:new Map([['terminal',{close:()=>closes++}]])},tester:{pending:new Set()},deployments:{list:()=>[]}};const info={account,terminal:{server_connected:true}};const deps={readNativeSettings:async()=>({servers:{terminal:server},account}),startTerminal:async()=>{launches++;},probeAccount:async()=>info};return{mt5,deps,info,get launches(){return launches;},get closes(){return closes;}};}
 const refused=()=>Object.assign(new Error('refused'),{cause:{code:'ECONNREFUSED'}});

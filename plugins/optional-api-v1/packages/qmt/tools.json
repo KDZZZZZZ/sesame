@@ -1,7 +1,6 @@
 [
   {
     "name": "qmt_environment",
-    "label": "qmt_environment",
     "description": "Inspect existing QMT configuration and Python paths without launching or downloading. verify imports the SDK explicitly; prepare first reuses an importable existing SDK and only then installs pinned wheels in a private Windows CPython 3.12 environment. Requires broker-authorized MiniQMT for later reads.",
     "parameters": {
       "type": "object",
@@ -43,7 +42,6 @@
   },
   {
     "name": "qmt_configure",
-    "label": "qmt_configure",
     "description": "Save exact existing QMT connection paths and the authorized mainland STOCK account. Uses revision and operation ID; does not launch, log in to or change the broker terminal. Obtain the actual localhost market port from the existing MiniQMT settings.",
     "parameters": {
       "type": "object",
@@ -137,8 +135,7 @@
   },
   {
     "name": "qmt_read",
-    "label": "qmt_read",
-    "description": "Perform fixed read-only XtQuant calls on the configured Windows MiniQMT. search/describe/quotes map mainland stocks; asset/positions query the configured STOCK account. orders/fills preserve native fields and cover only the current trading day. None is ambiguous and raises an error. No order, cancel, transfer, script execution or terminal launch exists.",
+    "description": "Perform fixed read-only XtQuant calls on the configured Windows MiniQMT. search/describe/quotes map mainland stocks; asset/positions query the configured STOCK account. orders/fills preserve native fields and cover only the current trading day. None is ambiguous and raises an error. This tool never submits or cancels orders; explicit main-conversation trading tools are separate. No transfer, script execution or terminal launch exists.",
     "parameters": {
       "type": "object",
       "required": [
@@ -210,6 +207,145 @@
           },
           "additionalProperties": false,
           "description": "search/positions/orders/fills use a frozen 60-second snapshot; default 200 rows, repeat unchanged filters with nextCursor"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "qmt_download_history",
+    "description": "Explicitly download a requested unadjusted daily stock range into the already configured MiniQMT data cache. This is a user-requested data preparation action, not an automatic startup download. Reuse local history first.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "symbol",
+        "start",
+        "end"
+      ],
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "pattern": "^\\d{6}\\.(SH|SZ|BJ)$"
+        },
+        "start": {
+          "type": "string",
+          "pattern": "^\\d{8}$"
+        },
+        "end": {
+          "type": "string",
+          "pattern": "^\\d{8}$"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "qmt_order",
+    "description": "Only after an explicit user instruction: submit a limit buy or sell for integer STOCK shares on the exact configured account/revision. Broker permission, T+1 available shares, lot rules, price limits and session rules govern acceptance; submitted does not mean filled. No automatic retry after an unknown outcome. Reuse operation_id for the exact same intent, inspect orders/fills first on failure.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "operation_id",
+        "user_authorized",
+        "account_id",
+        "connection_revision",
+        "symbol",
+        "side",
+        "shares",
+        "price"
+      ],
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,100}$"
+        },
+        "user_authorized": {
+          "type": "boolean",
+          "const": true
+        },
+        "account_id": {
+          "type": "string",
+          "description": "Exact authorized account ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "connection_revision": {
+          "type": "string",
+          "description": "Exact configured connection revision",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "symbol": {
+          "type": "string",
+          "pattern": "^\\d{6}\\.(SH|SZ|BJ)$"
+        },
+        "side": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "buy"
+            },
+            {
+              "type": "string",
+              "const": "sell"
+            }
+          ]
+        },
+        "shares": {
+          "type": "string",
+          "pattern": "^[1-9]\\d*$"
+        },
+        "price": {
+          "type": "string",
+          "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "qmt_cancel",
+    "description": "Only after an explicit user instruction: request cancellation of a previously accepted Sesame order from original_operation_id on the exact account/revision. The native current-day order must still match the original remark. A cancel request is not confirmation; query orders/fills. Unknown intents are never replayed.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "operation_id",
+        "user_authorized",
+        "account_id",
+        "connection_revision",
+        "original_operation_id",
+        "order_id"
+      ],
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,100}$"
+        },
+        "user_authorized": {
+          "type": "boolean",
+          "const": true
+        },
+        "account_id": {
+          "type": "string",
+          "description": "Exact authorized account ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "connection_revision": {
+          "type": "string",
+          "description": "Exact configured connection revision",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "original_operation_id": {
+          "type": "string",
+          "description": "Accepted qmt_order operation ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "order_id": {
+          "type": "string",
+          "pattern": "^[1-9]\\d*$"
         }
       },
       "additionalProperties": false

@@ -28,6 +28,7 @@ export async function readCatalog(signal, fetcher = globalThis.fetch) {
   const releases = new Map();
   for (const release of catalog.releases) {
     check(release && typeof release === 'object', 'Invalid release record');
+    if (release.profile !== undefined) check(['core', 'optional'].includes(release.profile) && release.engines?.sesame === '>=0.2.0-0', 'Invalid profiled release compatibility');
     const optional = release.sourceRoot === 'plugins/optional-api-v1';
     check(optional || release.sourceRoot === 'plugins/api-v1', 'Unexpected release source root');
     check(new RegExp(`^plugins-${optional ? 'optional-' : ''}api-v1-dev\\.[1-9][0-9]*$`).test(release.tag) && !releases.has(release.tag) && hex(release.sourceCommit, 40) && hex(release.releaseCommit, 40), 'Release must have immutable source and publication commits');
@@ -42,6 +43,7 @@ export async function readCatalog(signal, fetcher = globalThis.fetch) {
     check(/^\d+\.\d+\.\d+$/.test(entry.version) && ['active', 'withdrawn'].includes(entry.status) && entry.apiVersion === '1' && ['sesame-native', 'agent-plugins'].includes(entry.format), 'Invalid catalog version, format or status');
     const slug = entry.id.split('/')[1], release = releases.get(entry.release);
     check(release && entry.source?.repository === REPOSITORY && entry.source.commit === release.sourceCommit && entry.source.path === `${release.sourceRoot}/packages/${slug}`, 'Source must pin an official package release commit');
+    if (release.profile) check(entry.distribution === release.profile && entry.engines?.sesame === release.engines.sesame, 'Package compatibility differs from its released profile');
     check(entry.review?.automated === 'package-static-review' && entry.review.human === 'not-recorded' && entry.review.record?.url === release.review.url && entry.review.record?.sha256 === release.review.sha256, 'Catalog must link its review record without claiming human approval');
     const files = entry.package?.files;
     check(Array.isArray(files) && files.length > 0 && files.length <= 1024, 'Missing package file index');

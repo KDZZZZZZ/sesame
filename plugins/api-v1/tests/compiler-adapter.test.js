@@ -4,8 +4,8 @@ import { mkdtemp, mkdir, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
-import { compileNative } from '../packages/mt5/backend/native.js';
-import { digest } from '../packages/mt5/backend/support.js';
+import { compileNative } from '../../optional-api-v1/packages/mt5/backend/native.js';
+import { digest } from '../../optional-api-v1/packages/mt5/backend/support.js';
 
 test('compiler worker adapter retains verified EX5 bytes and full UTF16 diagnostics', async t => {
   const directory = await mkdtemp(join(tmpdir(), 'sesame-compiler-adapter-'));

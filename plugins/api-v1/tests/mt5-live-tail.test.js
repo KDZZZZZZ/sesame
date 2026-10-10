@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MT5MarketProvider } from '../packages/mt5/backend/providers.js';
-import { sourceIdentity } from '../packages/mt5/backend/contract-mapping.js';
+import { MT5MarketProvider } from '../../optional-api-v1/packages/mt5/backend/providers.js';
+import { sourceIdentity } from '../../optional-api-v1/packages/mt5/backend/contract-mapping.js';
 const server='Fixture-Demo',instrument={sourceId:sourceIdentity(server),instrumentId:'EURUSD'},spec={timeframe:'15m',priceBasis:'bid',adjustment:'none',session:'all',calendarRevision:{status:'unknown'}};
 function fixture(){const calls=[],rows=Array.from({length:20},(_,i)=>({time:`2026-10-09T${String(10+Math.floor(i/4)).padStart(2,'0')}:${String(i%4*15).padStart(2,'0')}:00`,open:'1',high:'2',low:'0',close:'1.1',tick_volume:'3'}));const mt5={official:{config:{version:1,account:{server,login:'42'}}},market:{read:async(tool,input)=>{if(tool==='get_trading_account_info')return{terminal:{server_connected:true},account:{server,login:'42'}};calls.push(input);return{history:structuredClone(input.limit<rows.length?rows.slice(0,-1).slice(-input.limit):rows)};}}};const p=new MT5MarketProvider(mt5),context={bindingId:'b',signal:new AbortController().signal};p.bind({},context);return{p,context,calls,rows};}
 test('small native tails include the actually observed forming bar, not truncated latest-N closed rows',async()=>{const f=fixture();const r=await f.p.bars({instrument,spec,tailLimit:2,includeForming:true},f.context,true);assert.equal(r.bars.length,2);assert.equal(r.bars.at(-1).isClosed,false);assert.equal(r.bars.at(-1).openTime.value,f.rows.at(-1).time);assert.ok(f.calls[0].limit>f.rows.length);const closed=await f.p.bars({instrument,spec,tailLimit:2,includeForming:false},f.context,true);assert.equal(closed.bars.length,2);assert.ok(closed.bars.every(b=>b.isClosed));});

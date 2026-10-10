@@ -2,8 +2,8 @@
   "id": "sesame/canvas-control",
   "title": "工作台与图表编排",
   "description": "主 Agent 编排水平工作台窗口，以及图表区内部的行情图、实时指标和研究曲线。",
-  "version": "2.1.0",
-  "default_state": "mounted",
+  "version": "2.1.1",
+  "default_state": "discoverable",
   "agent_scope": "main",
   "tool_names": [
     "canvas_inspect",
@@ -37,5 +37,8 @@
   "resources": [
     "resources/close-line.json",
     "resources/close-line.js"
-  ]
+  ],
+  "engines": {
+    "sesame": ">=0.2.0-0"
+  }
 }
