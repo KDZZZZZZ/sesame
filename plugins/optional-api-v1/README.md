@@ -1,8 +1,10 @@
 # Optional plugins for Sesame 0.2.0 / Plugin API 1
 
-**Published development plugins; installable entries are identified by the published catalog.** These twenty-two packages require `>=0.2.0-0`
-(formal minimum 0.2.0, including its development previews). Sesame 0.2.0 has not
-been formally released. They do not enter the nine-package default lock or the
+**Optional plugins for Sesame 0.2.0; installable entries are identified by the published catalog.** These twenty-two packages require `>=0.2.0-0`
+(formal minimum 0.2.0, including compatible development builds). Their reviewed
+archive identities remain fixed; application installers are listed on the
+[release page](https://github.com/KDZZZZZZ/sesame/releases/tag/v0.2.0). They do not
+enter the nine-package default lock or the
 historical 0.1.4 catalog. Installation/inspection does not silently download a
 terminal or a large Python environment.
 
