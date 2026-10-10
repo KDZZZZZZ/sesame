@@ -2,7 +2,7 @@
   "id": "sesame/akshare",
   "title": "AKShare A股研究数据",
   "description": "可选只读AKShare：A股品种搜索、历史日线、报价及真实日线60秒轮询订阅；复用已有依赖，不提供交易所tick流或交易。",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "license": "MIT",
   "default_state": "discoverable",
   "entry": "index.js",
