@@ -60,3 +60,9 @@ test('standard MCP engines must be present inside the host extension',t=>{
   f.json(join(f.pkg,'plugin.json'),standard);assert.throws(()=>buildLock(f.root),/engine/);
   f.json(join(f.pkg,'plugin.json'),{...standard,extensions:{'bot.sesame':{...extension,engines:f.manifest.engines}}});assert.equal(buildLock(f.root).packages.length,1);
 });
+test('historical policy changes trigger both static checks and publication verification',()=>{
+  for(const path of ['plugin-api-v1.yml','plugin-catalog.yml','plugin-api1-release.yml']) {
+    const text=readFileSync(new URL(`../workflows/${path}`,import.meta.url),'utf8');
+    for(const line of text.split('\n').filter(line=>/^    paths:/.test(line))) assert.ok(line.includes("'.github/scripts/historical-plugin-releases.json'"),path);
+  }
+});
