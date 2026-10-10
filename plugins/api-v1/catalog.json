@@ -4,39 +4,47 @@
   "channel": "development",
   "releases": [
     {
-      "tag": "plugins-api-v1-dev.12",
-      "releaseCommit": "e35da9047d628a37f78adc2552d0799881dca6dd",
-      "sourceCommit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
+      "tag": "plugins-api-v1-dev.13",
+      "releaseCommit": "fbfe1478cd7c5258f1b6057ae04df844b62a1302",
+      "sourceCommit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
       "sourceRoot": "plugins/api-v1",
+      "profile": "core",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
       "archive": {
-        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/sesame-official-plugins-api-v1-dev.12.tar.gz",
-        "sha256": "03a25eed1bb65a57c2c4d13c9109a8bbb59d708d715ba5ffa3623e3a3a713126"
+        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.13/sesame-official-plugins-api-v1-dev.13.tar.gz",
+        "sha256": "f04416fde2d86bfca52008292d72f107e22fe9b065bb20f9b938799578749337"
       },
       "lock": {
-        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/official-plugins.lock.json",
-        "sha256": "1eac31369ae9cfa99790bd7e238eee5b903aa6e04f2e5e39dd7171ad49687156"
+        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.13/official-plugins.lock.json",
+        "sha256": "b612ee5ea170f8bc426a60e22f4773b45a0d3d26abc2695aea3c5e99be81e6bf"
       },
       "review": {
-        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/review.json",
-        "sha256": "d5ccad379e9a3afa13b9980729c706d9d54b30e7e8d36ab2cc761270f6228c48"
+        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.13/review.json",
+        "sha256": "5a8bcfcc7a444b954b6fcf1910d20406295b73a67b9c6a580564c8b19dfc9436"
       }
     },
     {
-      "tag": "plugins-optional-api-v1-dev.4",
-      "releaseCommit": "3a4bef2cc8222075791e1c10df8578d6049a2dee",
-      "sourceCommit": "1f380819fa4e7a50198ebdf2e596295bf223795b",
+      "tag": "plugins-optional-api-v1-dev.5",
+      "releaseCommit": "fbfe1478cd7c5258f1b6057ae04df844b62a1302",
+      "sourceCommit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
       "sourceRoot": "plugins/optional-api-v1",
+      "profile": "optional",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
       "archive": {
-        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.4/sesame-optional-plugins-api-v1-dev.4.tar.gz",
-        "sha256": "068b9b6f8923ad8c5f9fe646d3a95a88d41d11594df688d558436b30c93549b3"
+        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.5/sesame-optional-plugins-api-v1-dev.5.tar.gz",
+        "sha256": "3c9907193bc24926474bc20f7fea85ed68ad49e180ee5b81001a6be2db22c57c"
       },
       "lock": {
-        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.4/official-plugins.lock.json",
-        "sha256": "e9caeb9feadd95b45bc7b59ddf0fbedf9f7e28f3310315aca1baf9dcfeca6e19"
+        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.5/official-plugins.lock.json",
+        "sha256": "17d27f002d47729dec7bb33ceed81f3ceae1ed81b29c37ba1197f8964ab5ae9e"
       },
       "review": {
-        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.4/review.json",
-        "sha256": "6e000b1dcc4978ebe167db257babd44c17cb5eb5b3b574d800dfb1fd032e346b"
+        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.5/review.json",
+        "sha256": "833ca1c34bd5b3778d5155e5f2c72753f0a05398f034e60c9ccbfdba7b4fec2d"
       }
     }
   ],
@@ -44,9 +52,13 @@
     {
       "id": "sesame/akshare",
       "name": "akshare",
-      "version": "1.0.2",
+      "version": "1.0.4",
       "apiVersion": "1",
       "format": "sesame-native",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "distribution": "optional",
       "title": "AKShare A股研究数据",
       "description": "可选只读AKShare：A股品种搜索、历史日线、报价及真实日线60秒轮询订阅；复用已有依赖，不提供交易所tick流或交易。",
       "license": "MIT",
@@ -55,14 +67,14 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.4",
+      "release": "plugins-optional-api-v1-dev.5",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "1f380819fa4e7a50198ebdf2e596295bf223795b",
+        "commit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
         "path": "plugins/optional-api-v1/packages/akshare"
       },
       "package": {
-        "treeDigest": "sha256:296539a63112b222d4f7572199dfb1992370f838c0daa52ee65fc8c0170c323d",
+        "treeDigest": "sha256:775a173b3afeefed92f351895fabd1f815dfdcc5a2fb49b8e2896c9ea79de4ab",
         "files": [
           {
             "path": "LICENSE",
@@ -71,13 +83,13 @@
           },
           {
             "path": "README.md",
-            "sha256": "323e4e8cd39fd016f640c95f1844ec1ce4cf8070b96d5bc942b015c026b3b979",
-            "bytes": 2153
+            "sha256": "db6f22c2d61d3235a7b48ea1a0d19133a29b1417cdf348ef0e24a49dbe023e59",
+            "bytes": 3050
           },
           {
             "path": "VALIDATION.md",
-            "sha256": "1d648fa02c93afa83988181f32c9baa3aca5afd4ff022f6e001eab7ff5e13e1b",
-            "bytes": 3653
+            "sha256": "ac219ecae6e5cf2733045bc5498732f9151ddd45ab56895996f1720104e380c8",
+            "bytes": 4294
           },
           {
             "path": "bridge.py",
@@ -91,13 +103,13 @@
           },
           {
             "path": "package.json",
-            "sha256": "006f1bdf4cab463550f574b466d3f56e9b5f75496abe616e1a656ba0d8cb9e07",
+            "sha256": "dc856403720253815859608b811222caf250ca7b513c821307912bee961c9fb4",
             "bytes": 120
           },
           {
             "path": "plugin.json",
-            "sha256": "73b16c2c7121e37d36e71f5914c8767300b78394e159ef3add6a3cae329308ff",
-            "bytes": 762
+            "sha256": "c5c722b5db2543ae7ec8c0dc1ab6cd44f98b99a77beab7e0260145666f2eeab4",
+            "bytes": 808
           },
           {
             "path": "prompt.md",
@@ -106,8 +118,8 @@
           },
           {
             "path": "provider.js",
-            "sha256": "911dbd5f14c351da732c0e25f6e8e4c4bff651ef9d56930810e15130e76b90fb",
-            "bytes": 15711
+            "sha256": "0629233daf67fe05e4c6255baa86eb13215376f273e1663be050b167e66186c9",
+            "bytes": 18720
           },
           {
             "path": "skills/akshare-research/SKILL.md",
@@ -126,8 +138,8 @@
           },
           {
             "path": "tests/provider.test.js",
-            "sha256": "1a859777e9c76a44f63935f2a189436bb66f20aa3f51f94d443e6c7b417e73b1",
-            "bytes": 7297
+            "sha256": "35a3daff3415b89e9f88c2eeb728693e1678d61e3851072e3e147229f805f4a2",
+            "bytes": 11640
           },
           {
             "path": "tools.json",
@@ -153,21 +165,25 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.4/review.json",
-          "sha256": "6e000b1dcc4978ebe167db257babd44c17cb5eb5b3b574d800dfb1fd032e346b"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.5/review.json",
+          "sha256": "833ca1c34bd5b3778d5155e5f2c72753f0a05398f034e60c9ccbfdba7b4fec2d"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1f380819fa4e7a50198ebdf2e596295bf223795b/plugins/optional-api-v1/packages/akshare",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b/plugins/optional-api-v1/packages/akshare",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
       "id": "sesame/canvas-control",
       "name": "canvas-control",
-      "version": "2.1.0",
+      "version": "2.1.1",
       "apiVersion": "1",
       "format": "sesame-native",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "distribution": "core",
       "title": "工作台与图表编排",
       "description": "主 Agent 编排水平工作台窗口，以及图表区内部的行情图、实时指标和研究曲线。",
       "license": "MIT",
@@ -176,14 +192,14 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.12",
+      "release": "plugins-api-v1-dev.13",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
+        "commit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
         "path": "plugins/api-v1/packages/canvas-control"
       },
       "package": {
-        "treeDigest": "sha256:84e67b3a7f25a4bfe3e535adbb15f1c10ee98ec6543cde403659ef3c7a9ac09b",
+        "treeDigest": "sha256:9aba85bb25c50dabed717a260e85dd8d2ca4aa379e46d39e53c90cd54e2ef3f4",
         "files": [
           {
             "path": "LICENSE",
@@ -207,18 +223,18 @@
           },
           {
             "path": "package.json",
-            "sha256": "97a6a811f75d3dbf014621e2bd81f08effaef7a713149ece92b336fbf869e6db",
+            "sha256": "454ff8579e462aef25d3a08562c37a6b9ba956098a690e250a5a5e3b892e0811",
             "bytes": 108
           },
           {
             "path": "plugin.json",
-            "sha256": "0c9e8702bf4bd5c974fccde09d043062a07ad2b5543d79d14ec530242c2ebda6",
-            "bytes": 883
+            "sha256": "fba73e17e9407627905da9d961166c5ad498b3bf94d5437b05ae011b2d790b95",
+            "bytes": 934
           },
           {
             "path": "prompt.md",
-            "sha256": "a12b36693b894b332e701a5882bcc7614da51c70b6c336a97e204cd6fc9e9126",
-            "bytes": 6481
+            "sha256": "48ab82b5beea63305748399c69fb4fa718f0403d6fb8e7398f6bc0c5687f25a4",
+            "bytes": 6784
           },
           {
             "path": "resources/close-line.js",
@@ -259,21 +275,25 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/review.json",
-          "sha256": "d5ccad379e9a3afa13b9980729c706d9d54b30e7e8d36ab2cc761270f6228c48"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.13/review.json",
+          "sha256": "5a8bcfcc7a444b954b6fcf1910d20406295b73a67b9c6a580564c8b19dfc9436"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770/plugins/api-v1/packages/canvas-control",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b/plugins/api-v1/packages/canvas-control",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
       "id": "sesame/configuration",
       "name": "configuration",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "apiVersion": "1",
       "format": "sesame-native",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "distribution": "core",
       "title": "配置助手",
       "description": "主 Agent 读取和修改应用模型、提供方与偏好设置；凭据留在宿主配置界面。",
       "license": "MIT",
@@ -282,14 +302,14 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.12",
+      "release": "plugins-api-v1-dev.13",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
+        "commit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
         "path": "plugins/api-v1/packages/configuration"
       },
       "package": {
-        "treeDigest": "sha256:f12bb324af122a0acd3e8010496b9b785888f2f2a3d92c965e7b860205bc1137",
+        "treeDigest": "sha256:ceec5c249243013552e7c012a44b34be7e251b627021f03cc355b267c34493a2",
         "files": [
           {
             "path": "LICENSE",
@@ -303,18 +323,18 @@
           },
           {
             "path": "package.json",
-            "sha256": "f79b46648a326f63a8fa9187bfa972d49a16b6fddc3bdd4a6b721597c9a61556",
+            "sha256": "e305729e4c5aa45fdfd0c66fcc2e171f0c0e5d3aaae43175cf0743bd94a29595",
             "bytes": 107
           },
           {
             "path": "plugin.json",
-            "sha256": "f827a4dad2fcb96a6a14c5979dd1bee80ef54c84c75dc1fb89ad0c01c2787480",
-            "bytes": 548
+            "sha256": "b99406571b55d6a5b7cba2c8264bd4a0ce921604f6f761a0573b6ec054e40585",
+            "bytes": 599
           },
           {
             "path": "prompt.md",
-            "sha256": "d77ad46fad9f8f9c91b51d3fc1fcd1e494e9bba734d448c510915900789215b5",
-            "bytes": 291
+            "sha256": "83e8316754ffc3146a3296837d90715bf4f2b8f23ff76f700b299962f04ccfbc",
+            "bytes": 516
           },
           {
             "path": "skills/configure-application/SKILL.md",
@@ -347,37 +367,41 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/review.json",
-          "sha256": "d5ccad379e9a3afa13b9980729c706d9d54b30e7e8d36ab2cc761270f6228c48"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.13/review.json",
+          "sha256": "5a8bcfcc7a444b954b6fcf1910d20406295b73a67b9c6a580564c8b19dfc9436"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770/plugins/api-v1/packages/configuration",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b/plugins/api-v1/packages/configuration",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
       "id": "sesame/data-access",
       "name": "data-access",
-      "version": "2.2.0",
+      "version": "2.3.0",
       "apiVersion": "1",
       "format": "sesame-native",
-      "title": "自动数据服务",
-      "description": "按需查询行情、网页及已登记输入，复用共享缓存，固定可追溯证据。",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "distribution": "core",
+      "title": "数据与研究证据",
+      "description": "发现提供方、查询与冻结数据、读取输入和登记可追溯代码计算结果。",
       "license": "MIT",
       "author": {
         "name": "Sesame contributors",
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.12",
+      "release": "plugins-api-v1-dev.13",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
+        "commit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
         "path": "plugins/api-v1/packages/data-access"
       },
       "package": {
-        "treeDigest": "sha256:248d7bd4fe0188c8aebb53f27e243af291c2d8618dfd0ded667312993f68be40",
+        "treeDigest": "sha256:f25e8bd12ba68c6fb5dd11842738bbf098b233cf43441cb37149b9c607ff44aa",
         "files": [
           {
             "path": "LICENSE",
@@ -385,9 +409,14 @@
             "bytes": 1063
           },
           {
+            "path": "data.js",
+            "sha256": "46c978a0767efaf12347d410f8dca4dcf0b7d512a7fdb98c06c71a62963234f0",
+            "bytes": 2328
+          },
+          {
             "path": "index.js",
-            "sha256": "b201e9ffdb3337da815d3b652d75098eac8767fb080ad7bb40713dffc4939419",
-            "bytes": 42
+            "sha256": "abd21af1bd163674a9beb12a979662cf3d370fc9791de91315dc2ec73bcb63bc",
+            "bytes": 198
           },
           {
             "path": "market-read.js",
@@ -401,23 +430,38 @@
           },
           {
             "path": "package.json",
-            "sha256": "faede23b91ed61f307fe8b371fec161bc8e1b404bc905b74126ff3efe69c634d",
+            "sha256": "3b7e3031ab93ebca093cb0292055e9bd2e510b03987f7982a4a833ddadbba4d6",
             "bytes": 105
           },
           {
             "path": "plugin.json",
-            "sha256": "45f61bbf707fe790368c0921371644e765b8c8181836936bd974921f0eaa9320",
-            "bytes": 714
+            "sha256": "6e6c9bf4da3af8f56c1c5e303eab0cdea58e8dcb905bb054da965d997564b143",
+            "bytes": 822
           },
           {
             "path": "prompt.md",
-            "sha256": "771ada9c408e1afae3949d479e8e13cd6957b489af44ac53a26892060e7274dd",
-            "bytes": 3070
+            "sha256": "1ff2317facdb9fe9bf20c5f24f3467fcc0de35d54179be5f3e6d632bdbc42aeb",
+            "bytes": 3919
+          },
+          {
+            "path": "research-tools.js",
+            "sha256": "41ba6460bfb26e3a34617a263624a0cf6b901e09360517d569be905453d596a2",
+            "bytes": 4117
+          },
+          {
+            "path": "skills/analyze-data/SKILL.md",
+            "sha256": "169356d4c8c47f983f57dbd17739d2c2c915f16cc8dd5f3c642660f7687364d0",
+            "bytes": 1909
           },
           {
             "path": "skills/market-discovery/SKILL.md",
             "sha256": "bf870d66a10279e24885293ae2fa57304475b87d090ad8e73c35be84a1743ae0",
             "bytes": 7239
+          },
+          {
+            "path": "support.js",
+            "sha256": "cc471c0ce6b82d9ce56a0b1f3bae0bdf416d4e4ab952801f27dc573cba52a509",
+            "bytes": 546
           },
           {
             "path": "tools.js",
@@ -426,8 +470,8 @@
           },
           {
             "path": "tools.json",
-            "sha256": "1eaceee1fdcb5d9b5bc3ef4a1de33d6a7a085258dc3f14bfe58319c8a2539746",
-            "bytes": 20645
+            "sha256": "68f11cd96fdf3f86d718ee076d744cda108f955cc6df74a2235bd6cb9c194c91",
+            "bytes": 23370
           }
         ]
       },
@@ -437,116 +481,33 @@
         "market_instruments",
         "data_sources",
         "data_query",
-        "data_snapshot"
+        "data_snapshot",
+        "data_read",
+        "research_register"
       ],
       "review": {
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/review.json",
-          "sha256": "d5ccad379e9a3afa13b9980729c706d9d54b30e7e8d36ab2cc761270f6228c48"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.13/review.json",
+          "sha256": "5a8bcfcc7a444b954b6fcf1910d20406295b73a67b9c6a580564c8b19dfc9436"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770/plugins/api-v1/packages/data-access",
-      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
-    },
-    {
-      "id": "sesame/host-files",
-      "name": "host-files",
-      "version": "2.1.0",
-      "apiVersion": "1",
-      "format": "sesame-native",
-      "title": "宿主文件与环境",
-      "description": "检查并按任务读写宿主文件、复用已有环境及显式运行宿主命令。",
-      "license": "MIT",
-      "author": {
-        "name": "Sesame contributors",
-        "url": "https://github.com/KDZZZZZZ/sesame"
-      },
-      "status": "active",
-      "release": "plugins-api-v1-dev.12",
-      "source": {
-        "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
-        "path": "plugins/api-v1/packages/host-files"
-      },
-      "package": {
-        "treeDigest": "sha256:3b2886a827f5b8568de1bdc9d9ea95931ed85483b9e075bbaf3d62a6e104e892",
-        "files": [
-          {
-            "path": "LICENSE",
-            "sha256": "2681aaf69ad3f8a595707e154e1e065a0077db9f1d25f8f5df73c02c5657477a",
-            "bytes": 1063
-          },
-          {
-            "path": "index.js",
-            "sha256": "b201e9ffdb3337da815d3b652d75098eac8767fb080ad7bb40713dffc4939419",
-            "bytes": 42
-          },
-          {
-            "path": "package.json",
-            "sha256": "ca95a389345203fd65dcb43a76921de925998e5712ecdead90df0d6c6bd66a04",
-            "bytes": 104
-          },
-          {
-            "path": "plugin.json",
-            "sha256": "04b858e3e82ef0d5aad9d587a44e4915522c1cfa5c465b70566e25a34585028b",
-            "bytes": 670
-          },
-          {
-            "path": "prompt.md",
-            "sha256": "652d396c617d87a8fc6c3dc4e0a6ad2140da6558f9b1e3d48c93c4ff15f429f9",
-            "bytes": 2038
-          },
-          {
-            "path": "skills/prepare-environment/SKILL.md",
-            "sha256": "ca8907e587d59e100e0b2a101b2ef18e86dd687c9decab8ad28056be994ab3c3",
-            "bytes": 1779
-          },
-          {
-            "path": "tools.js",
-            "sha256": "10a5d1828ee7f3812b0203783e08105c7eed99ad35354a69c3ff849f7153cc67",
-            "bytes": 3540
-          },
-          {
-            "path": "tools.json",
-            "sha256": "cbc22048d2e04859d464bf0c3d58df913039cf5d7ea7fb2ec9303f6b7aebeb79",
-            "bytes": 7803
-          }
-        ]
-      },
-      "tools": [
-        "host_files_list",
-        "host_files_search",
-        "host_files_read",
-        "host_files_import",
-        "host_files_write",
-        "host_files_mkdir",
-        "host_files_move",
-        "host_files_remove",
-        "host_files_run"
-      ],
-      "review": {
-        "automated": "package-static-review",
-        "human": "not-recorded",
-        "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/review.json",
-          "sha256": "d5ccad379e9a3afa13b9980729c706d9d54b30e7e8d36ab2cc761270f6228c48"
-        },
-        "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
-      },
-      "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770/plugins/api-v1/packages/host-files",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b/plugins/api-v1/packages/data-access",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
       "id": "sesame/judgment-evolution",
       "name": "judgment-evolution",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "apiVersion": "1",
       "format": "sesame-native",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "distribution": "optional",
       "title": "判断复盘与准则演进",
       "description": "主 Agent 可见的按需复盘 skill：事前登记未来判断，自主选择时机核验、归因和迭代准则，不定时发送聊天消息。",
       "license": "MIT",
@@ -555,14 +516,14 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.12",
+      "release": "plugins-optional-api-v1-dev.5",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
-        "path": "plugins/api-v1/packages/judgment-evolution"
+        "commit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
+        "path": "plugins/optional-api-v1/packages/judgment-evolution"
       },
       "package": {
-        "treeDigest": "sha256:38ea263ccac3658f9cd2a48f07257a3bd281f3a76607e70ff21396906b187a81",
+        "treeDigest": "sha256:9e0bba23ef8746e61d3700cec9ec2a6f6748402093b9e22d656c3f7935c40708",
         "files": [
           {
             "path": "LICENSE",
@@ -571,23 +532,23 @@
           },
           {
             "path": "index.js",
-            "sha256": "9e0ade6d65eff56df59bc06dc733dc7095d72f62fe72d2ed4a24cf2f09181a9b",
-            "bytes": 1339
+            "sha256": "28e3c2aefbf1ca48e851fbd284d472508967b2f5ae6ad260c0a63e744bce5ee3",
+            "bytes": 375
           },
           {
             "path": "package.json",
-            "sha256": "a0cec95dc3812217997b00054ad361911ea5da7a2e1003bd7f1664329350d388",
+            "sha256": "8af47581acc04ff7f07492ec39b9df3473f84c7e6c17cc3715d56b0a4e78207f",
             "bytes": 112
           },
           {
             "path": "plugin.json",
-            "sha256": "5295572a7a1f0f1c7fa723c11074c08baa9d0b0c2919cb085e140f2fa7ac8545",
-            "bytes": 1044
+            "sha256": "2787f5a9431eb59c3c223396ac7a364b4dd8acdcc21a9d8fde5b0bd16150e014",
+            "bytes": 945
           },
           {
             "path": "prompt.md",
-            "sha256": "34423ce187b8b2113c54628d91cfa0129cc758136f18d29197c927619649f12e",
-            "bytes": 632
+            "sha256": "0156ec00a40ad37b5edefdb525de53b5180cd9280ef21feacab4ddcc0f75e4e7",
+            "bytes": 957
           },
           {
             "path": "references.md",
@@ -645,21 +606,25 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/review.json",
-          "sha256": "d5ccad379e9a3afa13b9980729c706d9d54b30e7e8d36ab2cc761270f6228c48"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.5/review.json",
+          "sha256": "833ca1c34bd5b3778d5155e5f2c72753f0a05398f034e60c9ccbfdba7b4fec2d"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770/plugins/api-v1/packages/judgment-evolution",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b/plugins/optional-api-v1/packages/judgment-evolution",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
       "id": "sesame/market-data-parser",
       "name": "market-data-parser",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "apiVersion": "1",
       "format": "agent-plugins",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "distribution": "optional",
       "title": "公开汇率解析",
       "description": "基于公开金融数据接口思路新写的结构化市场数据解析 skill（新写适配层，非上游现成 skill）。解析 exchangerate-api 风格 JSON 与 TCMB 风格 XML 汇率数据；解析失败时 isError=true。",
       "license": "MIT",
@@ -667,14 +632,14 @@
         "name": "Sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.12",
+      "release": "plugins-optional-api-v1-dev.5",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
-        "path": "plugins/api-v1/packages/market-data-parser"
+        "commit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
+        "path": "plugins/optional-api-v1/packages/market-data-parser"
       },
       "package": {
-        "treeDigest": "sha256:132bf721bf522c2e6de1ade18d41d2d0980f3660a8db253eed36ec18875e1448",
+        "treeDigest": "sha256:244628e8b1fcdafab6d25f2a57ef919ecb8e2beb8143afc8d3c84338fd337194",
         "files": [
           {
             "path": "LICENSE",
@@ -688,13 +653,13 @@
           },
           {
             "path": "package.json",
-            "sha256": "b5ea100e1beeeec94349637c173a903541188c126e915f4c78ebf09173194ea4",
+            "sha256": "7b11815eb169165429a514d59223ec3a37617fd6cc08b2ffda2aef7451aaea71",
             "bytes": 131
           },
           {
             "path": "plugin.json",
-            "sha256": "378fa42e4819c9caa2297331b9c14f700b97d446abbf3b03e5203f97dc6f52c5",
-            "bytes": 2562
+            "sha256": "b315b8ae6148071a9e2c627f78ebea1b675dbd061bc0a737fa850f1f40d8d42b",
+            "bytes": 2620
           },
           {
             "path": "sample_fx.json",
@@ -708,8 +673,8 @@
           },
           {
             "path": "server.py",
-            "sha256": "6d0a7a403c3cfdcbb74c48981e8e13c5a28df0ac32e149ea48f843dcc48bb12e",
-            "bytes": 6393
+            "sha256": "64df2fb14716552f5ed56df3de33ae467736a350ba0cd4b3ad4b142fe9091fcd",
+            "bytes": 6411
           },
           {
             "path": "skills/market-data-parser/PROVENANCE.md",
@@ -718,8 +683,8 @@
           },
           {
             "path": "skills/market-data-parser/SKILL.md",
-            "sha256": "9d520f86b88069092c5aa0079de2771f8ec472f3f4ae923ab4512a72ce6a61e2",
-            "bytes": 2549
+            "sha256": "689330d313fc2fab55783e689bde4e3984b2cb58b90a8132f0afd37170b86803",
+            "bytes": 2815
           },
           {
             "path": "tools.json",
@@ -742,21 +707,25 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/review.json",
-          "sha256": "d5ccad379e9a3afa13b9980729c706d9d54b30e7e8d36ab2cc761270f6228c48"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.5/review.json",
+          "sha256": "833ca1c34bd5b3778d5155e5f2c72753f0a05398f034e60c9ccbfdba7b4fec2d"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Declared stdio tests and servers execute locally as the current user; inspect and reuse an existing compatible runtime. No dependency installer is executed by the catalog downloader.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770/plugins/api-v1/packages/market-data-parser",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b/plugins/optional-api-v1/packages/market-data-parser",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
       "id": "sesame/memory",
       "name": "memory",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "apiVersion": "1",
       "format": "sesame-native",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "distribution": "core",
       "title": "长期记忆",
       "description": "按用户、项目、经验和参考资料检索长期记忆；主 Agent 合并候选、修订和遗忘。闲置记忆归档按需召回。",
       "license": "MIT",
@@ -765,14 +734,14 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.12",
+      "release": "plugins-api-v1-dev.13",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
+        "commit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
         "path": "plugins/api-v1/packages/memory"
       },
       "package": {
-        "treeDigest": "sha256:b8765951eedef977c37783d80e5f195054bdabf893108e35a54200c14ce1f949",
+        "treeDigest": "sha256:062a0c37f06a21ab5ec3c21d0d48d816480dfa88b7601388f5d0fbb35e121569",
         "files": [
           {
             "path": "LICENSE",
@@ -786,18 +755,18 @@
           },
           {
             "path": "package.json",
-            "sha256": "11f5e433ae9da98a9bc46a859102f8aee9280c4e4b8d2e85db13cf5c8d597004",
+            "sha256": "b398c7d55eaadde1cfb6c450c97157a5b05f010910a87f85a7c7957e17ccaef4",
             "bytes": 100
           },
           {
             "path": "plugin.json",
-            "sha256": "dcaf35e94b65d5166c6de4f89cf7dd7024102acbccea69844e82e427c9fa33ee",
-            "bytes": 630
+            "sha256": "ad23603215c892d7efd3d518a77be7113bbd0a0b65a1981776d2a2fecaa1bfe3",
+            "bytes": 676
           },
           {
             "path": "prompt.md",
-            "sha256": "7db834c51de671cca584f743019077638366501d82a04c8658ef464f802194e4",
-            "bytes": 1889
+            "sha256": "9c73eb8cd36a014c9eb81eca5b007c09193b671a33b3d0024cd166da0584170d",
+            "bytes": 2154
           },
           {
             "path": "skills/manage-memory/SKILL.md",
@@ -832,21 +801,25 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/review.json",
-          "sha256": "d5ccad379e9a3afa13b9980729c706d9d54b30e7e8d36ab2cc761270f6228c48"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.13/review.json",
+          "sha256": "5a8bcfcc7a444b954b6fcf1910d20406295b73a67b9c6a580564c8b19dfc9436"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770/plugins/api-v1/packages/memory",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b/plugins/api-v1/packages/memory",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
       "id": "sesame/mt5",
       "name": "mt5",
-      "version": "1.1.9",
+      "version": "1.2.0",
       "apiVersion": "1",
       "format": "sesame-native",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "distribution": "optional",
       "title": "MetaTrader 5",
       "description": "MT5 行情、账户、原生 MQL5 工程、编译、Tester、交易与持久运行观察。",
       "license": "MIT",
@@ -855,14 +828,14 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.12",
+      "release": "plugins-optional-api-v1-dev.5",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
-        "path": "plugins/api-v1/packages/mt5"
+        "commit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
+        "path": "plugins/optional-api-v1/packages/mt5"
       },
       "package": {
-        "treeDigest": "sha256:bd4b357767f24c9f568a6a2cf591e09aea88ddd4f5e2045452165f18dabb79c2",
+        "treeDigest": "sha256:6ae118d2bdb1c1e837c30a8fb0ec0eb51f1fecbce8f16780bb66ac0b1ac4f8d3",
         "files": [
           {
             "path": "LICENSE",
@@ -906,8 +879,8 @@
           },
           {
             "path": "backend/contract-mapping.js",
-            "sha256": "da1abe6d90b088e14540ba851f73daa66e3a417f080ee5d5b13f6e14896d38ad",
-            "bytes": 20941
+            "sha256": "353e9f8bfa27542d6b602c02dce99cc9d0546e9603b236073e890cf2cecc8eca",
+            "bytes": 21002
           },
           {
             "path": "backend/contracts.js",
@@ -970,11 +943,6 @@
             "bytes": 6479
           },
           {
-            "path": "backend/migration.js",
-            "sha256": "8bb25e9e1ab01514867dee78716b36e2a27543d9aab74574dfce11d7f44a27e7",
-            "bytes": 2352
-          },
-          {
             "path": "backend/native-settings.js",
             "sha256": "0c4ce27e0d103f3609e865aeb16844cfff06ea1c4bb39daf3d3ffebaaeade565",
             "bytes": 2686
@@ -986,8 +954,8 @@
           },
           {
             "path": "backend/official.js",
-            "sha256": "aadeaffcfe3fb5366226e190932fe905c88e1ee7818b2f96e07fbfc592561d27",
-            "bytes": 26779
+            "sha256": "1094a9f4a72631826dabe0f99094f0e3e36568e091998f79354507398cd86704",
+            "bytes": 26505
           },
           {
             "path": "backend/parameters.js",
@@ -1211,23 +1179,23 @@
           },
           {
             "path": "index.js",
-            "sha256": "cb9c8fb8b8b9038b5b0bb15538463e492fc7a0c659f4b2bc164691033f718804",
-            "bytes": 4693
+            "sha256": "5bda8f5d8552b018cc9c552875cbd91a0c2644c08b931e9a98fd0b849655357e",
+            "bytes": 4620
           },
           {
             "path": "package.json",
-            "sha256": "9f117ff23546e83228dda4fd1435ec3b140b004716afd13e10c801e4ea5e2c4e",
+            "sha256": "690c8b93a89c7c9402f445e769fc9851a86554c9c1907f92585644be1f04ccd1",
             "bytes": 97
           },
           {
             "path": "plugin.json",
-            "sha256": "e6e1e28c8bebf3f996c0efc305640e818d1e410ca73897842c98fdd66f737531",
-            "bytes": 2360
+            "sha256": "1cbbb3f6c8893cc3b6a1c004b08bf033c755075ff1043c64c54ecb546fa09302",
+            "bytes": 2068
           },
           {
             "path": "prompt.md",
-            "sha256": "1212ff9c1a2ad003df617b84b3744932d3edb7692c4db4a1f366b66f2fea120c",
-            "bytes": 1588
+            "sha256": "3f0e2a5a027abe216888bc424342e8000ec68ef334d0227b49200c6a306102e2",
+            "bytes": 1903
           },
           {
             "path": "scripts/README.md",
@@ -1251,8 +1219,8 @@
           },
           {
             "path": "skills/connection/SKILL.md",
-            "sha256": "e323bf2e9d6798f7159f0e9151c07c9b9b234d1366476d10ce1cbd11bb83fd58",
-            "bytes": 1035
+            "sha256": "c691e881d1d30fe630f3c267110bd9444e23705e0b703436bc32fdff5f198c55",
+            "bytes": 1275
           },
           {
             "path": "skills/dependencies/SKILL.md",
@@ -1462,37 +1430,41 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/review.json",
-          "sha256": "d5ccad379e9a3afa13b9980729c706d9d54b30e7e8d36ab2cc761270f6228c48"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.5/review.json",
+          "sha256": "833ca1c34bd5b3778d5155e5f2c72753f0a05398f034e60c9ccbfdba7b4fec2d"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770/plugins/api-v1/packages/mt5",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b/plugins/optional-api-v1/packages/mt5",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
       "id": "sesame/orchestration",
       "name": "orchestration",
-      "version": "2.0.1",
+      "version": "2.1.0",
       "apiVersion": "1",
       "format": "sesame-native",
-      "title": "会话与委派",
-      "description": "主子 Agent 的协作规则、任务委派与结果检查。",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "distribution": "core",
+      "title": "会话协作与使用规范",
+      "description": "主子Agent协作、成果交付和Sesame通用使用指南；按需安装具体后端。",
       "license": "MIT",
       "author": {
         "name": "Sesame contributors",
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.12",
+      "release": "plugins-api-v1-dev.13",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
+        "commit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
         "path": "plugins/api-v1/packages/orchestration"
       },
       "package": {
-        "treeDigest": "sha256:7541975668574054308c55513876491a3a6dbc5c45d9331d72f563ac301474f2",
+        "treeDigest": "sha256:40d617b29fe66ea9f108f20ac1add4004acdac7adc5ba629a69272aab131ea94",
         "files": [
           {
             "path": "LICENSE",
@@ -1506,18 +1478,58 @@
           },
           {
             "path": "package.json",
-            "sha256": "e08722522e97c0d52acbcf0d5c1243d52174ad0f5f7e58308526223c9cfaf5dd",
+            "sha256": "95486b72a08123ae8cc784a12a380635a6c21b5b8e1281b6f7a5f747e140b5f7",
             "bytes": 107
           },
           {
             "path": "plugin.json",
-            "sha256": "64a2b6764745b9feb600b3798b665173c9f0238a178943904682f5270f0134c2",
-            "bytes": 454
+            "sha256": "b52ef038a4ab7852e576894fc287e1aef33fb7b0b9ee6c04dd54246f3b7cb677",
+            "bytes": 988
           },
           {
             "path": "prompt.md",
-            "sha256": "ac99feeac36f583ee45faf7e966882508a924117cfcbb6c61746ac0fc2343993",
-            "bytes": 3261
+            "sha256": "3c49022c35ed4cb9b84c586677f02d7279330effffb596ea9e70f14e3fbc39dc",
+            "bytes": 5682
+          },
+          {
+            "path": "skills/sesame-user-guide/SKILL.md",
+            "sha256": "ab5f007278e5af3c681f79a9bacfbef910d08375fa3abb785b541356e001d59b",
+            "bytes": 4100
+          },
+          {
+            "path": "skills/sesame-user-guide/references/chat-and-commands.md",
+            "sha256": "22689be9a1d97f91d790cac344d89a7436769d704a7da3583f3b751d9d3c57e1",
+            "bytes": 5539
+          },
+          {
+            "path": "skills/sesame-user-guide/references/dashboard.md",
+            "sha256": "87036913e73e63f5091ffcfef3f563bceb511d3e5a3c8faa29a3306a89a5e4ed",
+            "bytes": 6519
+          },
+          {
+            "path": "skills/sesame-user-guide/references/installation.md",
+            "sha256": "d5ec21cac235160b05eaa388b515f291069d28b65e4a9fa2e4cdb4c35f2fa313",
+            "bytes": 1852
+          },
+          {
+            "path": "skills/sesame-user-guide/references/settings.md",
+            "sha256": "9f8108378a3bd198fabe56b0dcff14e6ec1de9cc455d31f49e39652fb8e4c0d6",
+            "bytes": 1050
+          },
+          {
+            "path": "skills/sesame-user-guide/references/troubleshooting.md",
+            "sha256": "59c4a21293ca92c4b6b08436bb078837ca41460164c007f6a44dd6a686376534",
+            "bytes": 3541
+          },
+          {
+            "path": "skills/sesame-user-guide/references/website-docs.md",
+            "sha256": "fdea8ff5cffe5be162f684c90e255e23bf0bd05bb5d6a0eff0332eb0e605e0b8",
+            "bytes": 1204
+          },
+          {
+            "path": "skills/sesame-user-guide/references/workflows.md",
+            "sha256": "33075a32e69402e0c6a1c2d479c8ba2ade6e7683681f03164df2ae626afb267e",
+            "bytes": 6385
           },
           {
             "path": "support.js",
@@ -1545,21 +1557,25 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/review.json",
-          "sha256": "d5ccad379e9a3afa13b9980729c706d9d54b30e7e8d36ab2cc761270f6228c48"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.13/review.json",
+          "sha256": "5a8bcfcc7a444b954b6fcf1910d20406295b73a67b9c6a580564c8b19dfc9436"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770/plugins/api-v1/packages/orchestration",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b/plugins/api-v1/packages/orchestration",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
       "id": "sesame/plugin-manager",
       "name": "plugin-manager",
-      "version": "2.0.1",
+      "version": "2.1.1",
       "apiVersion": "1",
       "format": "sesame-native",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "distribution": "core",
       "title": "插件管理",
       "description": "发现和加载插件；主 Agent 创建、验证、测试、安装、升级、回滚及导出外部插件。",
       "license": "MIT",
@@ -1568,14 +1584,14 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.12",
+      "release": "plugins-api-v1-dev.13",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
+        "commit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
         "path": "plugins/api-v1/packages/plugin-manager"
       },
       "package": {
-        "treeDigest": "sha256:f72960175c6ce029cbeec7fb067517da0c5cf48f0a3e02237110700fe2098ae6",
+        "treeDigest": "sha256:11a1874247e7508ad1d8703b0edc4d9050c77dc259efc9ad1632dfac036bb0e2",
         "files": [
           {
             "path": "LICENSE",
@@ -1584,8 +1600,8 @@
           },
           {
             "path": "catalog.js",
-            "sha256": "e2df4ed6dc5e6bde45d67d9c3a5feaad833f6562c767bacbe9a612557f1d1f74",
-            "bytes": 7729
+            "sha256": "c98534d0251f148bea315505646f942a525024d191d852fca4f3da2e1a866a6e",
+            "bytes": 13010
           },
           {
             "path": "index.js",
@@ -1594,28 +1610,28 @@
           },
           {
             "path": "package.json",
-            "sha256": "eb9c9e9b86046322dcea737ac754eb304fea202179647edf304629b46a6a1839",
+            "sha256": "db2fbcf5f04ead24e1b6c628df216ae142e5a44372157cc5be24a303b19ffac4",
             "bytes": 108
           },
           {
             "path": "plugin.json",
-            "sha256": "70ec8f4e651e26dec0a6166e66a3bab84a644666dbdba0244c5b8948d4b420f1",
-            "bytes": 1047
+            "sha256": "f6c3e8226b9bb19ee50b4d7675a4bdbec68477825a7915aa9d11e5f288e403f5",
+            "bytes": 1093
           },
           {
             "path": "prompt.md",
-            "sha256": "543392c63e6604ccf524982a5baa03a448616b448c1d8676217edc1ca187fdeb",
-            "bytes": 3166
+            "sha256": "851054430048dac7a4cb9ce7eab90e927db7440ad7c728d12598150cb242b06b",
+            "bytes": 4567
           },
           {
             "path": "tools.js",
-            "sha256": "7e4d9b9144f02a9c01de711bc00e29f8627eddc20384f18ce659c67ed01cb267",
-            "bytes": 4925
+            "sha256": "6b089d2cd145b03c59a3908655de0a9117ad49c7b9f435a62916c49f7f7316fe",
+            "bytes": 5369
           },
           {
             "path": "tools.json",
-            "sha256": "e7027859ede3675d79969a4ae29cbecdf38164a882b13ec3b1ef133a19297506",
-            "bytes": 13632
+            "sha256": "7abbf32451e1a12ccd212ac899c58be53b992722bba4ee4fc3a371bf4ecbfb8b",
+            "bytes": 14457
           }
         ]
       },
@@ -1640,37 +1656,41 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/review.json",
-          "sha256": "d5ccad379e9a3afa13b9980729c706d9d54b30e7e8d36ab2cc761270f6228c48"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.13/review.json",
+          "sha256": "5a8bcfcc7a444b954b6fcf1910d20406295b73a67b9c6a580564c8b19dfc9436"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770/plugins/api-v1/packages/plugin-manager",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b/plugins/api-v1/packages/plugin-manager",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
       "id": "sesame/qmt",
       "name": "qmt",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "apiVersion": "1",
       "format": "sesame-native",
-      "title": "QMT 只读行情与账户",
-      "description": "可选 Windows MiniQMT 适配：A股品种/报价、现金账户/股票持仓，以及原生当日委托成交查询。复用现有券商授权与 Python，缺失依赖显式准备。",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "distribution": "optional",
+      "title": "QMT 行情与股票账户",
+      "description": "可选 Windows MiniQMT：A股日线、报价、股票账户、当日委托成交，以及显式授权的限价下单和撤单。既有配置优先；缺失依赖按需准备。",
       "license": "MIT",
       "author": {
         "name": "Sesame contributors",
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.4",
+      "release": "plugins-optional-api-v1-dev.5",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "1f380819fa4e7a50198ebdf2e596295bf223795b",
+        "commit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
         "path": "plugins/optional-api-v1/packages/qmt"
       },
       "package": {
-        "treeDigest": "sha256:209b1a6ed09c3deae79f533a5b12ff1e02001db02585f9b8efbfc04dace7f0be",
+        "treeDigest": "sha256:e4b3a67b4151149cd915cba7c56c5415145ffc72d3a7ad7fedd6a5716cc50eba",
         "files": [
           {
             "path": "LICENSE",
@@ -1679,13 +1699,18 @@
           },
           {
             "path": "README.md",
-            "sha256": "974ee14b45f7253b0c67a6b4a62af920cf81996d28c312b433646eedd051ef7c",
-            "bytes": 3366
+            "sha256": "f05fcc761fadd8024bd62c45f958bd2284cd92e5b03f885e50e7a88400e95656",
+            "bytes": 5500
+          },
+          {
+            "path": "VALIDATION.md",
+            "sha256": "1e99c4d27fed99dc25d44998b40bacd1865fdd0356783ea53f823309ff9aa383",
+            "bytes": 4187
           },
           {
             "path": "bridge.py",
-            "sha256": "25a46b933e586df53a2ff4526ed6c48c4d54439786e5f6638f55a3d1b5e43fcd",
-            "bytes": 10736
+            "sha256": "c748c17c32123be5d08e783b9e471de0017f678e503243d64dd7bafcd2610b7c",
+            "bytes": 15794
           },
           {
             "path": "configuration.js",
@@ -1694,28 +1719,28 @@
           },
           {
             "path": "index.js",
-            "sha256": "3b19aa1c168eb4d62dc1173e0eb1d1d410070b4300d1810e4fa6e1855ac7d737",
-            "bytes": 3562
+            "sha256": "a539a2302dd9426b35f93aedf7ac91d430622dc4a63a9bdb5accb25aa9012909",
+            "bytes": 5799
           },
           {
             "path": "mapping.js",
-            "sha256": "73888268e3d00d233ebc152ae621b94b244afabe9a222c17a7877fd082db4960",
-            "bytes": 5406
+            "sha256": "cad1795c382037353d78f03a6144e464612443f120441287fac809c7469ccea3",
+            "bytes": 7532
           },
           {
             "path": "package.json",
-            "sha256": "145a91f3b1ee7bca2bd509120cdfce9db007af43248d5634a344acee81b27060",
-            "bytes": 129
+            "sha256": "ec81795ce3de0ed604c6865dd793a0696aafabda225189e20ebac2d4f9bc8c5a",
+            "bytes": 137
           },
           {
             "path": "plugin.json",
-            "sha256": "fc5f3e973d844d0c282842a397c564b24e206ff90cafd3dfe32d159d8eacaf56",
-            "bytes": 742
+            "sha256": "8b78a9b522061e519d9008b35ba21d3d9cf6b7f090ab0ae264dfc0cb8ad05f30",
+            "bytes": 983
           },
           {
             "path": "prompt.md",
-            "sha256": "3f5a360fa3f5a98ba4844dbf40b8275e96abe8f6521dadcec69053e533908404",
-            "bytes": 915
+            "sha256": "2875ffdaf7b165fe33fc8409e2944f2a58336925250e6182e12cd9c9ab93bfe9",
+            "bytes": 1505
           },
           {
             "path": "requirements.txt",
@@ -1724,50 +1749,57 @@
           },
           {
             "path": "service.js",
-            "sha256": "53d4bb854a7feeb6300650a6ee4f537810a8024d62388e17ddf42ac7cedd41b6",
-            "bytes": 12398
+            "sha256": "887b3ccdd90dab160e1a55515d64a9dff2e02ed7694c366309e4affa42398194",
+            "bytes": 24830
           },
           {
             "path": "skills/qmt-readonly/SKILL.md",
-            "sha256": "8e4e9ea49c68fdb4da25974306fd38d7201bf82409f674996e62950fe0c05ddf",
-            "bytes": 3251
+            "sha256": "960aa5cc878a9c8c3452757bed4dc853406626e0ae4388c77556ce0d994c7518",
+            "bytes": 4867
           },
           {
             "path": "tools.json",
-            "sha256": "8fd2f1f1cfede4cec306b6d0e8be71b5dd4ae2aaa487bcc4677de855994bfd91",
-            "bytes": 6141
+            "sha256": "0b77e880069c0cd46e33c1b1f3ce86623e95b384f0acd41d45fd6ec149db424f",
+            "bytes": 10322
           },
           {
             "path": "worker.js",
-            "sha256": "02c79759c9a82739b42e388b0819d1656ae1ea3544bbb86b2ae75643a569c559",
-            "bytes": 3261
+            "sha256": "629fb5dd51d3336d2051ee88a7c261772e877a506c995f2cab443257d4089a58",
+            "bytes": 3304
           }
         ]
       },
       "tools": [
         "qmt_environment",
         "qmt_configure",
-        "qmt_read"
+        "qmt_read",
+        "qmt_download_history",
+        "qmt_order",
+        "qmt_cancel"
       ],
       "review": {
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.4/review.json",
-          "sha256": "6e000b1dcc4978ebe167db257babd44c17cb5eb5b3b574d800dfb1fd032e346b"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.5/review.json",
+          "sha256": "833ca1c34bd5b3778d5155e5f2c72753f0a05398f034e60c9ccbfdba7b4fec2d"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1f380819fa4e7a50198ebdf2e596295bf223795b/plugins/optional-api-v1/packages/qmt",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b/plugins/optional-api-v1/packages/qmt",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
       "id": "sesame/quantskills-catalog",
       "name": "quantskills-catalog",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "apiVersion": "1",
       "format": "agent-plugins",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "distribution": "optional",
       "title": "QuantSkills 目录",
       "description": "提供 QuantSkills 社区目录的按需查询能力，支持按分类、工作流阶段、资产类型和验证程度筛选。",
       "license": "MIT",
@@ -1775,14 +1807,14 @@
         "name": "Sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.12",
+      "release": "plugins-optional-api-v1-dev.5",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
-        "path": "plugins/api-v1/packages/quantskills-catalog"
+        "commit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
+        "path": "plugins/optional-api-v1/packages/quantskills-catalog"
       },
       "package": {
-        "treeDigest": "sha256:1b22b9ac208414daf2ff5659fa4b12300e874c4d926dffaa0e0edff3f12f6b7f",
+        "treeDigest": "sha256:01dffa3d6eb034c371c08d2ac93661227223d4be6098ba4a773dda7f21983a29",
         "files": [
           {
             "path": "LICENSE",
@@ -1801,17 +1833,17 @@
           },
           {
             "path": "package.json",
-            "sha256": "58c94ac4566eca23441b68f406faf4ac6f2acbcbc880fff3ea9ff47059840d94",
+            "sha256": "252516b25ed6f17294aa77d270829d64e2114c6dd7b52853da19f45028405842",
             "bytes": 132
           },
           {
             "path": "plugin.json",
-            "sha256": "21d2266c1c95bc0c3a3aa29ec35ca685830571a5ca16324e61ab6bfba501ba20",
-            "bytes": 7130
+            "sha256": "1dd2ea2d7d28069ddc7edcedc37aa97421bf51464a5335f74ac03ade7a400ae6",
+            "bytes": 7188
           },
           {
             "path": "server.py",
-            "sha256": "759b93a010835685b9380c2d9a2816f7ca6e07bad909e58cf85d3c48bd5f5297",
+            "sha256": "9dd3c2a0b92221af443ac31e10436e79bc55fa57f8d995c27eae2c73b747454d",
             "bytes": 6600
           },
           {
@@ -1821,8 +1853,8 @@
           },
           {
             "path": "skills/quantskills-catalog/SKILL.md",
-            "sha256": "90a1c5d61df0607fcea5ee403344d48063119cd056844bc7727ece7e8a07c03e",
-            "bytes": 2246
+            "sha256": "3aafd5879f717880a5c347b165f6015f9c4f99b1ca10bd8c9766c19b8d615908",
+            "bytes": 2512
           },
           {
             "path": "tools.json",
@@ -1853,21 +1885,25 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/review.json",
-          "sha256": "d5ccad379e9a3afa13b9980729c706d9d54b30e7e8d36ab2cc761270f6228c48"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.5/review.json",
+          "sha256": "833ca1c34bd5b3778d5155e5f2c72753f0a05398f034e60c9ccbfdba7b4fec2d"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Declared stdio tests and servers execute locally as the current user; inspect and reuse an existing compatible runtime. No dependency installer is executed by the catalog downloader.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770/plugins/api-v1/packages/quantskills-catalog",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b/plugins/optional-api-v1/packages/quantskills-catalog",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
       "id": "sesame/reports",
       "name": "reports",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "apiVersion": "1",
       "format": "sesame-native",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "distribution": "core",
       "title": "交互报告",
       "description": "编写、冻结与发布 report/1 HTML 报告，使用固定数据引用、离线 SVG 图表与只读渲染桥。",
       "license": "MIT",
@@ -1875,14 +1911,14 @@
         "name": "Sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.12",
+      "release": "plugins-api-v1-dev.13",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
+        "commit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
         "path": "plugins/api-v1/packages/reports"
       },
       "package": {
-        "treeDigest": "sha256:9b16447da02fc8e69227104078a40f7d4a8b33145a657a1963b6e9b8e3b1120f",
+        "treeDigest": "sha256:349050e6e3cc36e6abcea6b700b055827fc88d40a2d91248ec4c2f954d8d47b1",
         "files": [
           {
             "path": "LICENSE",
@@ -1921,18 +1957,18 @@
           },
           {
             "path": "package.json",
-            "sha256": "fa1a15630976bbd22c33f885364650177fdbd6ae00d8b621fb745ddb81723ece",
+            "sha256": "407329d49e3dd637cb5b020ced8332f5398e1e23696d1c9fbe4917ddedbce98d",
             "bytes": 120
           },
           {
             "path": "plugin.json",
-            "sha256": "4d3c3147e377e88157eeef7333ffcbad4e300634aa9ac7071ae5448f767e4b51",
-            "bytes": 925
+            "sha256": "78b2079ab80c4e593154ce3bf7a7514e716eecf5458721d2d1338cc0f1d4739c",
+            "bytes": 971
           },
           {
             "path": "prompt.md",
-            "sha256": "378d0154868047c80312992301b6bc739a9d084dfefdf2996e9f7fbd16d3b6de",
-            "bytes": 1512
+            "sha256": "fef555b7b58dd0c97d14e84e3f52b8332732b462533de16ffe9c53882e15f04f",
+            "bytes": 1939
           },
           {
             "path": "repair.md",
@@ -1982,113 +2018,25 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/review.json",
-          "sha256": "d5ccad379e9a3afa13b9980729c706d9d54b30e7e8d36ab2cc761270f6228c48"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.13/review.json",
+          "sha256": "5a8bcfcc7a444b954b6fcf1910d20406295b73a67b9c6a580564c8b19dfc9436"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770/plugins/api-v1/packages/reports",
-      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
-    },
-    {
-      "id": "sesame/research",
-      "name": "research",
-      "version": "2.0.1",
-      "apiVersion": "1",
-      "format": "sesame-native",
-      "title": "研究数据",
-      "description": "读取后端输入并登记可追溯的代码计算结果。",
-      "license": "MIT",
-      "author": {
-        "name": "Sesame contributors",
-        "url": "https://github.com/KDZZZZZZ/sesame"
-      },
-      "status": "active",
-      "release": "plugins-api-v1-dev.12",
-      "source": {
-        "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
-        "path": "plugins/api-v1/packages/research"
-      },
-      "package": {
-        "treeDigest": "sha256:f19cbe29bc1dd8c36525be371fccc5b8b19d7ac4368f9e0077698ab12eebcfa4",
-        "files": [
-          {
-            "path": "LICENSE",
-            "sha256": "2681aaf69ad3f8a595707e154e1e065a0077db9f1d25f8f5df73c02c5657477a",
-            "bytes": 1063
-          },
-          {
-            "path": "data.js",
-            "sha256": "46c978a0767efaf12347d410f8dca4dcf0b7d512a7fdb98c06c71a62963234f0",
-            "bytes": 2328
-          },
-          {
-            "path": "index.js",
-            "sha256": "b201e9ffdb3337da815d3b652d75098eac8767fb080ad7bb40713dffc4939419",
-            "bytes": 42
-          },
-          {
-            "path": "package.json",
-            "sha256": "81c78f8506d7de4f7429e727d4df6bb58ce984206e47188da16a5da3f1f56619",
-            "bytes": 102
-          },
-          {
-            "path": "plugin.json",
-            "sha256": "1b25768a2079b7185c987e8430ba66017d52cbc475be386de37512f79fdaca92",
-            "bytes": 479
-          },
-          {
-            "path": "prompt.md",
-            "sha256": "3dc0947fbe2068a9d2deabb233230b1b83d67b65b199768292e651e200bc25e1",
-            "bytes": 521
-          },
-          {
-            "path": "skills/analyze-data/SKILL.md",
-            "sha256": "36082d95cd2e2a9f41a0452c54a7d4a159a272c0f709c8e5262f40be25c316fd",
-            "bytes": 1891
-          },
-          {
-            "path": "support.js",
-            "sha256": "cc471c0ce6b82d9ce56a0b1f3bae0bdf416d4e4ab952801f27dc573cba52a509",
-            "bytes": 546
-          },
-          {
-            "path": "tools.js",
-            "sha256": "41ba6460bfb26e3a34617a263624a0cf6b901e09360517d569be905453d596a2",
-            "bytes": 4117
-          },
-          {
-            "path": "tools.json",
-            "sha256": "a1af69bd9438f0067a9c2ec83873713b399bcf5bc311566af49124bd96a17d88",
-            "bytes": 2728
-          }
-        ]
-      },
-      "tools": [
-        "data_read",
-        "research_register"
-      ],
-      "review": {
-        "automated": "package-static-review",
-        "human": "not-recorded",
-        "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/review.json",
-          "sha256": "d5ccad379e9a3afa13b9980729c706d9d54b30e7e8d36ab2cc761270f6228c48"
-        },
-        "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
-      },
-      "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770/plugins/api-v1/packages/research",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b/plugins/api-v1/packages/reports",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
       "id": "sesame/rss-collect",
       "name": "rss-collect",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "apiVersion": "1",
       "format": "agent-plugins",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "distribution": "optional",
       "title": "RSS / Atom 解析",
       "description": "基于 feedparser 思路新写的 RSS/Atom 订阅源解析 skill（新写适配层，非上游现成 skill）。输入已获取的 XML 内容或包内文件路径；解析失败时 isError=true。",
       "license": "MIT",
@@ -2096,14 +2044,14 @@
         "name": "Sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.12",
+      "release": "plugins-optional-api-v1-dev.5",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
-        "path": "plugins/api-v1/packages/rss-collect"
+        "commit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
+        "path": "plugins/optional-api-v1/packages/rss-collect"
       },
       "package": {
-        "treeDigest": "sha256:d41f924f12596fb9eaccd21817fb26d0da0a5edbfb9eae8227aadf91d5f9cf11",
+        "treeDigest": "sha256:4f4db0371dccb2b63720080b344d90f9d3ab03ccd68e1cd9cb5bbd54b5f5d38b",
         "files": [
           {
             "path": "LICENSE",
@@ -2117,13 +2065,13 @@
           },
           {
             "path": "package.json",
-            "sha256": "ab03c978a5355731f1670c838b05f1f384e881d8d03472c54fd175b73ac7b5be",
+            "sha256": "cc23d892bafd4dc89579766109bfa78d72e7a411964d883b69672484c2b81807",
             "bytes": 124
           },
           {
             "path": "plugin.json",
-            "sha256": "04ad9c8b3a7695977815c1ff1afe54c1203ec8b6ef892aa3a0306fe25076fc18",
-            "bytes": 4672
+            "sha256": "53c6a3893fe2448ef4f78195086f6a5676175a6bcf314ae6d5fd7810d1220005",
+            "bytes": 4730
           },
           {
             "path": "sample.atom",
@@ -2132,8 +2080,8 @@
           },
           {
             "path": "server.py",
-            "sha256": "6ea8ed8145ba25ad5ef1df262eb81ccbee6e66f4d2dce613a4fe0a9c19d86804",
-            "bytes": 5940
+            "sha256": "3077d72c1b5c4f79397806dfa2cd3a796c92f8f1ea43be27276f2526cd2808c5",
+            "bytes": 5958
           },
           {
             "path": "skills/rss-collect/PROVENANCE.md",
@@ -2142,8 +2090,8 @@
           },
           {
             "path": "skills/rss-collect/SKILL.md",
-            "sha256": "c7603c1e5dbe06cc42a3244d4dd94f5544c76c1412cb429b9899a7c0d66e0e32",
-            "bytes": 2915
+            "sha256": "6cfe9edd8f74b5e7ff4ecf0cafe63832d0ab2fb8f396288af39439f1f4d64c13",
+            "bytes": 3181
           },
           {
             "path": "tools.json",
@@ -2162,21 +2110,25 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/review.json",
-          "sha256": "d5ccad379e9a3afa13b9980729c706d9d54b30e7e8d36ab2cc761270f6228c48"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.5/review.json",
+          "sha256": "833ca1c34bd5b3778d5155e5f2c72753f0a05398f034e60c9ccbfdba7b4fec2d"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Declared stdio tests and servers execute locally as the current user; inspect and reuse an existing compatible runtime. No dependency installer is executed by the catalog downloader.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770/plugins/api-v1/packages/rss-collect",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b/plugins/optional-api-v1/packages/rss-collect",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
       "id": "sesame/strategy-authoring",
       "name": "strategy-authoring",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "apiVersion": "1",
       "format": "sesame-native",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "distribution": "core",
       "title": "SVL 策略创作",
       "description": "编写、验证与发布平台无关 SVL 策略源，从同一源码生成图，并对固定事件做可复现求值。原生翻译、回测与运行由目标插件提供。",
       "license": "MIT",
@@ -2184,14 +2136,14 @@
         "name": "Sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.12",
+      "release": "plugins-api-v1-dev.13",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
+        "commit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
         "path": "plugins/api-v1/packages/strategy-authoring"
       },
       "package": {
-        "treeDigest": "sha256:ce8c4d02d892bb7e1017c20a1e153546023501941dd9715fb384549ac47e5297",
+        "treeDigest": "sha256:07c0011ba11245b6e3bd1dcce67eacad574dcf3434ef71b41724c4bf114df7c1",
         "files": [
           {
             "path": "LICENSE",
@@ -2225,28 +2177,33 @@
           },
           {
             "path": "package.json",
-            "sha256": "a9aa3f54cbb12e2fb687e356bf46ce073c7987844595f6d61d4855e3bc1e33d9",
+            "sha256": "28c0acf37ea08c4d1ae8cff1e8873597e019fe5941e0daf9bf83f2d56f02e33c",
             "bytes": 131
           },
           {
             "path": "plugin.json",
-            "sha256": "1e27f791cf9858223cdaeec61994c61e9b38c0239e87a454b7ae5561a48db550",
-            "bytes": 877
+            "sha256": "5730a19b4e947d977befee9d3fc73cf8e4a5ddd3ea732941af4ec4c4da74f851",
+            "bytes": 1054
           },
           {
             "path": "prompt.md",
-            "sha256": "7897f71df64a46b1d41a17ef447c7a668967faa0d6e1ff278e53c7202d6a4dc2",
-            "bytes": 962
+            "sha256": "eed4bcb9d4469fd01528c43976b52d2c4e9f1333b98c1a399f09addca3b0e6f1",
+            "bytes": 1224
           },
           {
             "path": "skills/strategy-authoring/SKILL.md",
-            "sha256": "0a368bee46cf67f4adae04b4c86871f29461cbebf3413ba4346dc2cdabe35291",
-            "bytes": 3922
+            "sha256": "4facc4a0e95b7ea47de6bedb03a593fffc28e54c94a4e0c02d036ee5d0a506fa",
+            "bytes": 4208
+          },
+          {
+            "path": "skills/strategy-authoring/references/architecture.md",
+            "sha256": "44ca10d5f921ed9cde35276ccc256201908ae12c2eaaa34effb4b758cf0bdd4d",
+            "bytes": 6072
           },
           {
             "path": "skills/strategy-authoring/references/language.md",
-            "sha256": "b25c2a1c0f65ef501a740635ef33950a723701ec750bbc10effddce40f1fde40",
-            "bytes": 19729
+            "sha256": "64713075218b44f88ad90d5e88bf8164d7f47b95cd62d97c306606f30edfe31c",
+            "bytes": 21297
           },
           {
             "path": "tools.json",
@@ -2265,124 +2222,25 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/review.json",
-          "sha256": "d5ccad379e9a3afa13b9980729c706d9d54b30e7e8d36ab2cc761270f6228c48"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.13/review.json",
+          "sha256": "5a8bcfcc7a444b954b6fcf1910d20406295b73a67b9c6a580564c8b19dfc9436"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770/plugins/api-v1/packages/strategy-authoring",
-      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
-    },
-    {
-      "id": "sesame/user-guide",
-      "name": "user-guide",
-      "version": "2.0.1",
-      "apiVersion": "1",
-      "format": "sesame-native",
-      "title": "Sesame 使用指南",
-      "description": "按用户目标讲解 Sesame 工作台、设置、聊天命令、并行研究与策略流程，包含官网 docs 和可交互演示。",
-      "license": "MIT",
-      "author": {
-        "name": "Sesame"
-      },
-      "status": "active",
-      "release": "plugins-api-v1-dev.12",
-      "source": {
-        "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
-        "path": "plugins/api-v1/packages/user-guide"
-      },
-      "package": {
-        "treeDigest": "sha256:706963af2eca573ce902357e2d38e06cf4d4c497ef2ad6b36553e3f6435c683f",
-        "files": [
-          {
-            "path": "LICENSE",
-            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
-            "bytes": 1076
-          },
-          {
-            "path": "package.json",
-            "sha256": "5b4af76565787e90e021171d3e8c2ce0fd2dd0f8d1ef2b31f62125ac4726149e",
-            "bytes": 123
-          },
-          {
-            "path": "plugin.json",
-            "sha256": "95b79d4d6fe576f993febdccbe5304abe94305011c68f34e7c133fdaf3f06e30",
-            "bytes": 953
-          },
-          {
-            "path": "prompt.md",
-            "sha256": "9a0eaf79cc5e5f9c41afb67ae3bb489961a813e6da663fd4c332b206b73de2be",
-            "bytes": 2012
-          },
-          {
-            "path": "skills/sesame-user-guide/SKILL.md",
-            "sha256": "6868fd93647101912e0b033175264d58cab6c8f43422eefbcedbca2c4f5dd0bc",
-            "bytes": 4085
-          },
-          {
-            "path": "skills/sesame-user-guide/references/chat-and-commands.md",
-            "sha256": "1881feb5076cc92a0a84b86d4d45c332fdb076fe7d3b74c11c483979337e7c5e",
-            "bytes": 5533
-          },
-          {
-            "path": "skills/sesame-user-guide/references/dashboard.md",
-            "sha256": "c0ae7a5605935596e169fe0e51779ba6d057f5ddb88cee485117b8fcfe58f233",
-            "bytes": 6418
-          },
-          {
-            "path": "skills/sesame-user-guide/references/installation.md",
-            "sha256": "8f79a15dd850ce65698495f882947c1daeaa4ea547bd66ece8c819426d1cfd02",
-            "bytes": 3049
-          },
-          {
-            "path": "skills/sesame-user-guide/references/settings.md",
-            "sha256": "a14be74d8130bc3643586787beef1f93e1f2835ad9c868665e4e4567939f546b",
-            "bytes": 8590
-          },
-          {
-            "path": "skills/sesame-user-guide/references/troubleshooting.md",
-            "sha256": "1116f881ca6253dd91d7fd0da329bfadf0d10f0c81021d3c0d8b22c94e38ee9e",
-            "bytes": 3451
-          },
-          {
-            "path": "skills/sesame-user-guide/references/website-docs.md",
-            "sha256": "b3c4bb0988379d9f7efa72995817d8188f8efcbc76ce1e250b3d77a2870ebaee",
-            "bytes": 13311
-          },
-          {
-            "path": "skills/sesame-user-guide/references/workflows.md",
-            "sha256": "87b381149cae21a2e5359074cb8fc1bf2d99963387f0d56ae73c64399bbd8ae7",
-            "bytes": 6356
-          },
-          {
-            "path": "tools.json",
-            "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
-            "bytes": 3
-          }
-        ]
-      },
-      "tools": [],
-      "review": {
-        "automated": "package-static-review",
-        "human": "not-recorded",
-        "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/review.json",
-          "sha256": "d5ccad379e9a3afa13b9980729c706d9d54b30e7e8d36ab2cc761270f6228c48"
-        },
-        "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
-      },
-      "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770/plugins/api-v1/packages/user-guide",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b/plugins/api-v1/packages/strategy-authoring",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
       "id": "sesame/vnpy",
       "name": "vnpy",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "apiVersion": "1",
       "format": "sesame-native",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "distribution": "optional",
       "title": "VeighNa CTA 回测",
       "description": "按需复用或安装本机 VeighNa 环境，以固定数据和 Agent 编写的 Python 策略运行真实 CTA 回测引擎并保存结果。",
       "license": "MIT",
@@ -2391,14 +2249,14 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.4",
+      "release": "plugins-optional-api-v1-dev.5",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "1f380819fa4e7a50198ebdf2e596295bf223795b",
+        "commit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
         "path": "plugins/optional-api-v1/packages/vnpy"
       },
       "package": {
-        "treeDigest": "sha256:0a7a028c9cccaaff2790e911809ae96fb6c8b001b5219a6eb1407bec07d4983e",
+        "treeDigest": "sha256:0ff62c87069b648d0d42a97a859365451804cd7295a2a90827e528a254a3e9c3",
         "files": [
           {
             "path": "LICENSE",
@@ -2417,8 +2275,8 @@
           },
           {
             "path": "README.md",
-            "sha256": "b2be5f42c6fbdf62b5183e0f97471ff55c3f8e5a817e43bdd8a6d53462b04c3a",
-            "bytes": 5528
+            "sha256": "92ef97ba2408c90188b027e116c39e9702c7309e34d3b88ded99be01f2555b67",
+            "bytes": 5877
           },
           {
             "path": "VALIDATION.md",
@@ -2452,13 +2310,13 @@
           },
           {
             "path": "package.json",
-            "sha256": "d6c6578007778f3144a449fe9e0f16d7d692ea8144fb73ea28d77ff8faf220d6",
+            "sha256": "0901a548496a3a8f41a56ee6a96f294911705f80aba5204b7dd06f8d12d5e222",
             "bytes": 98
           },
           {
             "path": "plugin.json",
-            "sha256": "15e379f5de7114fc52325c6a51299f93c34e5e9650886bee25c2d0c00a945424",
-            "bytes": 667
+            "sha256": "769d0ab13e6c3d85204f3540348532b5f151480b3a44265ee99d31a3bd59337f",
+            "bytes": 779
           },
           {
             "path": "prompt.md",
@@ -2477,8 +2335,8 @@
           },
           {
             "path": "skills/vnpy-backtest/SKILL.md",
-            "sha256": "81d1da2f991f337ff93ed3049fd3733f09a1849d8bc99564c2b82f324ca93033",
-            "bytes": 3388
+            "sha256": "91265f49d4781e425d4eaea6a786682db02220f6234d5c41a6e63ef1fffeb932",
+            "bytes": 3790
           },
           {
             "path": "tools.json",
@@ -2496,21 +2354,25 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.4/review.json",
-          "sha256": "6e000b1dcc4978ebe167db257babd44c17cb5eb5b3b574d800dfb1fd032e346b"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.5/review.json",
+          "sha256": "833ca1c34bd5b3778d5155e5f2c72753f0a05398f034e60c9ccbfdba7b4fec2d"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1f380819fa4e7a50198ebdf2e596295bf223795b/plugins/optional-api-v1/packages/vnpy",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b/plugins/optional-api-v1/packages/vnpy",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
       "id": "sesame/web-extract",
       "name": "web-extract",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "apiVersion": "1",
       "format": "agent-plugins",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "distribution": "optional",
       "title": "网页正文提取",
       "description": "基于 trafilatura 思路新写的轻量网页正文与链接提取 skill（新写适配层，非上游现成 skill）。输入已抓取的 HTML 内容或包内文件路径，输出标题、正文、预览、链接和元数据；解析失败时 isError=true。",
       "license": "MIT",
@@ -2518,14 +2380,14 @@
         "name": "Sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.12",
+      "release": "plugins-optional-api-v1-dev.5",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
-        "path": "plugins/api-v1/packages/web-extract"
+        "commit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
+        "path": "plugins/optional-api-v1/packages/web-extract"
       },
       "package": {
-        "treeDigest": "sha256:b785db2f088b79f3a865affa69f4575b229640dde6476840e6171d47a3e6e9c6",
+        "treeDigest": "sha256:cc3208389b5a59daf24b9895ad45f27a7e3de693c336f38abc618e166e4ec6de",
         "files": [
           {
             "path": "LICENSE",
@@ -2539,13 +2401,13 @@
           },
           {
             "path": "package.json",
-            "sha256": "7aa6766d872e7b28b54d5f4aa95dd07d5df2c319c300664032614c5850bf9c38",
+            "sha256": "6d1e64d02ef7acb2b04b6e0ef74e58d49c3d8260e4ad6649aff8ae79638befb3",
             "bytes": 124
           },
           {
             "path": "plugin.json",
-            "sha256": "426f1bd693db4cc49d866f179ea2d064496e6c1315d30289f3a98bf36c62e338",
-            "bytes": 6125
+            "sha256": "5cff39817fca8156e38cfaeee7023459d1a1264b915328ffa74cff7273733c3b",
+            "bytes": 6183
           },
           {
             "path": "sample.html",
@@ -2554,8 +2416,8 @@
           },
           {
             "path": "server.py",
-            "sha256": "05d34582765265f7093049454a6553f6049078e7dd1429e29370878a99d12ae6",
-            "bytes": 5001
+            "sha256": "347951ea10097d95b4d2b15dca676a58e94b2626a263acd99361fb618654ff42",
+            "bytes": 5019
           },
           {
             "path": "skills/web-extract/PROVENANCE.md",
@@ -2564,8 +2426,8 @@
           },
           {
             "path": "skills/web-extract/SKILL.md",
-            "sha256": "8373a2694ede6ab5cf698fb8e9eda4808408e6f81055700dd768d31e9288dbb8",
-            "bytes": 2891
+            "sha256": "62210f451cc243621c838481981ed2dfbbb2f30bf30222a5edc16dd29123198c",
+            "bytes": 3157
           },
           {
             "path": "tools.json",
@@ -2584,21 +2446,25 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/review.json",
-          "sha256": "d5ccad379e9a3afa13b9980729c706d9d54b30e7e8d36ab2cc761270f6228c48"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.5/review.json",
+          "sha256": "833ca1c34bd5b3778d5155e5f2c72753f0a05398f034e60c9ccbfdba7b4fec2d"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Declared stdio tests and servers execute locally as the current user; inspect and reuse an existing compatible runtime. No dependency installer is executed by the catalog downloader.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770/plugins/api-v1/packages/web-extract",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b/plugins/optional-api-v1/packages/web-extract",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
       "id": "sesame/web-sources",
       "name": "web-sources",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "apiVersion": "1",
       "format": "sesame-native",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "distribution": "optional",
       "title": "公开来源",
       "description": "抓取 HTTP/HTTPS 资料，支持公网与内网，保存来源和输入快照。",
       "license": "MIT",
@@ -2607,14 +2473,14 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.12",
+      "release": "plugins-optional-api-v1-dev.5",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
-        "path": "plugins/api-v1/packages/web-sources"
+        "commit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
+        "path": "plugins/optional-api-v1/packages/web-sources"
       },
       "package": {
-        "treeDigest": "sha256:b179febe72295839268698f823f2f40a23254cbdf9978f9ae6944a33f84d5eee",
+        "treeDigest": "sha256:c87785d1d7ca448b7db5e60247868976a1caedf1e421bd411a32ec1e26387a7a",
         "files": [
           {
             "path": "LICENSE",
@@ -2638,18 +2504,18 @@
           },
           {
             "path": "package.json",
-            "sha256": "f6ea56ca8faea705a2d935b68b363e0863aef5f315c5bd0dd91e7015f162f8fe",
+            "sha256": "0e18b7f43c3d38e7e93a25df3940fcde418b897fab6758573c8ca9d4316f421d",
             "bytes": 105
           },
           {
             "path": "plugin.json",
-            "sha256": "fbe69a6fe07a39e6ae6f32f863c4581a9b246f19e791aedf65fee788923ece1c",
-            "bytes": 432
+            "sha256": "acf38ba0f06df97296ef3d41213b26bd8d09ac2a08f46196f61ffb8bced92ff8",
+            "bytes": 478
           },
           {
             "path": "prompt.md",
-            "sha256": "a4e8b910672731863b6b264163690ee25634b8dfcfce82e3984a1c26d91eec2f",
-            "bytes": 536
+            "sha256": "697400fdfbeeb64d27a37ceb9a51edac94f93d81a7435df9189c625a3a0cdfd1",
+            "bytes": 804
           },
           {
             "path": "support.js",
@@ -2675,37 +2541,41 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/review.json",
-          "sha256": "d5ccad379e9a3afa13b9980729c706d9d54b30e7e8d36ab2cc761270f6228c48"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.5/review.json",
+          "sha256": "833ca1c34bd5b3778d5155e5f2c72753f0a05398f034e60c9ccbfdba7b4fec2d"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770/plugins/api-v1/packages/web-sources",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b/plugins/optional-api-v1/packages/web-sources",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
       "id": "sesame/workspace",
       "name": "workspace",
-      "version": "1.0.2",
+      "version": "1.1.0",
       "apiVersion": "1",
       "format": "sesame-native",
-      "title": "工作区与执行",
-      "description": "工作区文件读写、精确编辑与受任务生命周期管理的本机代码执行。",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "distribution": "core",
+      "title": "工作区、文件与执行",
+      "description": "工作区编辑、外部文件操作和受任务管理的本机执行，复用已有环境并保留冻结证据。",
       "license": "MIT",
       "author": {
         "name": "Sesame contributors",
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.12",
+      "release": "plugins-api-v1-dev.13",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
+        "commit": "1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b",
         "path": "plugins/api-v1/packages/workspace"
       },
       "package": {
-        "treeDigest": "sha256:b988d38874e9b907afd29d43af68c1c16036601666ddb61bdc674134bad6eac9",
+        "treeDigest": "sha256:9ce9fc9c28f3b427772560fa8dd2363bc3991bab78a4abbb42fa40b1ec591bc3",
         "files": [
           {
             "path": "LICENSE",
@@ -2713,24 +2583,34 @@
             "bytes": 1063
           },
           {
+            "path": "host-files.js",
+            "sha256": "10a5d1828ee7f3812b0203783e08105c7eed99ad35354a69c3ff849f7153cc67",
+            "bytes": 3540
+          },
+          {
             "path": "index.js",
-            "sha256": "b201e9ffdb3337da815d3b652d75098eac8767fb080ad7bb40713dffc4939419",
-            "bytes": 42
+            "sha256": "12213f5616a5899ce7d98cc4fd93285e703463827e7feda2e3a52db6abe77ddd",
+            "bytes": 202
           },
           {
             "path": "package.json",
-            "sha256": "b57fcdf1a1fc1c65483d7c545b685784bb4e49f794b376bfe3d547a63c1b6252",
+            "sha256": "e4feb3459283a0bd5e82417a315011d8525bc40ce0903c5df930640c7d3b5e4c",
             "bytes": 103
           },
           {
             "path": "plugin.json",
-            "sha256": "a67c8b8a38e66baad3eac0d810c68a63f144dbdc4a0a7203955ed5ea6978838d",
-            "bytes": 468
+            "sha256": "4f895c7bf647586b8ab3e60f0f3cb61c1e3132167f8d0b4a78739d2791eeb649",
+            "bytes": 797
           },
           {
             "path": "prompt.md",
-            "sha256": "1412a90249d128a5e94ec5d916630dfe6755fd2a2b8cd9c90aedccce25462e94",
-            "bytes": 2283
+            "sha256": "68bac2191202832d78ce40bcfab9e2899d4d61693b6320992ebc3a23cf0dc8ed",
+            "bytes": 4588
+          },
+          {
+            "path": "skills/prepare-environment/SKILL.md",
+            "sha256": "ca8907e587d59e100e0b2a101b2ef18e86dd687c9decab8ad28056be994ab3c3",
+            "bytes": 1779
           },
           {
             "path": "tools.js",
@@ -2739,8 +2619,8 @@
           },
           {
             "path": "tools.json",
-            "sha256": "0d7f7f64ba8eef59839ce3e214d820eeebfcf8aab051bb968c8d0ef37b7ef50f",
-            "bytes": 3435
+            "sha256": "570333207e01781607727fd69c5f5b77afc7caa25552d82397301f63562b9108",
+            "bytes": 11235
           }
         ]
       },
@@ -2748,19 +2628,28 @@
         "read",
         "write",
         "edit",
-        "bash"
+        "bash",
+        "host_files_list",
+        "host_files_search",
+        "host_files_read",
+        "host_files_import",
+        "host_files_write",
+        "host_files_mkdir",
+        "host_files_move",
+        "host_files_remove",
+        "host_files_run"
       ],
       "review": {
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.12/review.json",
-          "sha256": "d5ccad379e9a3afa13b9980729c706d9d54b30e7e8d36ab2cc761270f6228c48"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.13/review.json",
+          "sha256": "5a8bcfcc7a444b954b6fcf1910d20406295b73a67b9c6a580564c8b19dfc9436"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770/plugins/api-v1/packages/workspace",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b/plugins/api-v1/packages/workspace",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     }
   ]

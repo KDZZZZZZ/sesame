@@ -721,3 +721,34 @@ nine-core lock and archive are unchanged from the earlier candidate; the optiona
 lock was regenerated for exactly those reviewed source changes. The existing
 22-entry install catalog still validates against the two already published
 releases, independently of this 19-entry preview.
+
+
+## Published nine-core and ten-optional development distribution
+
+PR25 was merged normally at 2026-10-10T00:47:04Z as `fbfe1478cd7c5258f1b6057ae04df844b62a1302`, preserving reviewed head `2b22848ebe31d2e90674ad60f63d5cfb4e5ce2fb` and source `1af5e03b8f142d269e1d9c0c51d27f28d79b6d3b`. The [trusted pre-merge gate](https://github.com/KDZZZZZZ/sesame/actions/runs/38010413630) succeeded before that merge; the [publication workflow](https://github.com/KDZZZZZZ/sesame/actions/runs/38010528632) then published both prereleases.
+
+The [review record](https://github.com/KDZZZZZZ/sesame/pull/25#issuecomment-6091777907) is a repository-maintainer attestation naming the independent Agent reviewer, not human approval or cryptographic authentication of the Agent identity. Review completion was 00:43:27Z, recording 00:45:27Z and gate check 00:45:40Z on 2026-10-10; each downloaded `review.json` preserves the actual completed-gate and static-check times. Human approval is `not-recorded`.
+
+All ten assets were actually downloaded and checked against GitHub sizes/digests and their local SHA-256 values. The actual host extractor and package verifier accepted exactly nine core and ten optional packages. Every packaged engine range is `>=0.2.0-0`; no manifest grants legacy storage. MT5 1.2.0 and `mt5_translation_file` were confirmed in the optional archive. These verification steps did not activate plugins, install dependencies, change live state or operate any terminal/account.
+
+### [Core dev.13 — nine defaults](https://github.com/KDZZZZZZ/sesame/releases/tag/plugins-api-v1-dev.13)
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `SHA256SUMS` | 204 | `d42819a57036d030defef0ee341046dd0799d493072c630908235c7ac676c124` |
+| `application-official-plugins.lock.json` | 1956 | `7fa7aa0426e784f2267795a9423e10f555836a725e1ce2bbaaf521d08dc1a98c` |
+| `official-plugins.lock.json` | 20555 | `b612ee5ea170f8bc426a60e22f4773b45a0d3d26abc2695aea3c5e99be81e6bf` |
+| `review.json` | 5861 | `5a8bcfcc7a444b954b6fcf1910d20406295b73a67b9c6a580564c8b19dfc9436` |
+| `sesame-official-plugins-api-v1-dev.13.tar.gz` | 564287 | `f04416fde2d86bfca52008292d72f107e22fe9b065bb20f9b938799578749337` |
+
+### [Optional dev.5 — ten integrations](https://github.com/KDZZZZZZ/sesame/releases/tag/plugins-optional-api-v1-dev.5)
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `SHA256SUMS` | 203 | `89ece579f9362535f4f258c4e8c74403d95fbc199bade786250fa72addc0616f` |
+| `application-official-plugins.lock.json` | 2119 | `eeba4001bacff9ec4966d0eb85035f721080b93dec607848d2234860ca5127e9` |
+| `official-plugins.lock.json` | 40150 | `17d27f002d47729dec7bb33ceed81f3ceae1ed81b29c37ba1197f8964ab5ae9e` |
+| `review.json` | 5869 | `833ca1c34bd5b3778d5155e5f2c72753f0a05398f034e60c9ccbfdba7b4fec2d` |
+| `sesame-optional-plugins-api-v1-dev.5.tar.gz` | 1616015 | `3c9907193bc24926474bc20f7fea85ed68ad49e180ee5b81001a6be2db22c57c` |
+
+The subsequent catalog metadata selects only these published fixed releases and exposes 19 entries. The stable 26-entry 0.1.4 catalog and the original three-entry optional catalog remain byte-identical. Published development plugins do not mean an application 0.2.0 installer is available.
