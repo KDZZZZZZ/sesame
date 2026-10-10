@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { buildLock, readProfile, createArchive, sha256 } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
-import { prepareRelease } from './release-plugins.mjs';
+import { prepareRelease, validatePlan } from './release-plugins.mjs';
 const lockBytes = lock => Buffer.from(JSON.stringify(lock, null, 2) + "\n");
 function fixture(t) {
   const repo = mkdtempSync(join(tmpdir(), 'sesame-profile-infra-'));
@@ -19,7 +19,7 @@ function fixture(t) {
   git('init','-q');git('config','user.email','fixture@example.invalid');git('config','user.name','Fixture');
   const lock=buildLock(root);writeFileSync(join(root,'official-plugins.lock.json'),lockBytes(lock));git('add','.');git('commit','-qm','fixed source');
   const plan={schemaVersion:1,sourceCommit:git('rev-parse','HEAD'),sourceRoot:'plugins/api-v1',profile:'core',tag:'plugins-api-v1-dev.99',title:'Fixture',archive:{name:'sesame-official-plugins-api-v1-dev.99.tar.gz',sha256:sha256(createArchive(root,lock))},lockSha256:sha256(lockBytes(lock)),pullRequest:999};
-  return {repo,root,pkg,json,manifest,profile,plan};
+  return {repo,root,pkg,json,manifest,profile,plan,git};
 }
 test('fixed source profile is materialized and required by release reconstruction',t=>{
   const f=fixture(t);assert.equal(prepareRelease(f.repo,f.plan).pin.packages.length,1);
@@ -38,4 +38,25 @@ test('data-only validation rejects altered engines, membership, activation and l
 test('historical sources without profiles retain legacy semantics',t=>{
   const f=fixture(t);rmSync(join(f.root,'bundle-profile.json'));f.json(join(f.pkg,'plugin.json'),{...f.manifest,engines:undefined,migration:{collections:['old']}});
   assert.equal(readProfile(f.root),null);assert.equal(buildLock(f.root).packages.length,1);
+});
+test('only exact allowlisted historical plans can omit a profile',t=>{
+  const plans=JSON.parse(readFileSync(new URL('./historical-plugin-releases.json',import.meta.url)));
+  assert.equal(plans.length,13);
+  for(const plan of plans) {
+    assert.equal(validatePlan(plan),plan);
+    for(const patch of [{sourceCommit:'e'.repeat(40)},{pullRequest:999},{lockSha256:'f'.repeat(64)}]) assert.throws(()=>validatePlan({...plan,...patch}),/immutable/);
+  }
+  const f=fixture(t);f.git('rm','plugins/api-v1/bundle-profile.json');f.git('commit','-qm','remove profile');
+  const plan={...f.plan,sourceCommit:f.git('rev-parse','HEAD')};
+  assert.throws(()=>prepareRelease(f.repo,plan),/profile/);
+  assert.throws(()=>prepareRelease(f.repo,{...plan,profile:undefined}),/profile/);
+  const old=plans[0],tag='plugins-api-v1-dev.100';
+  assert.throws(()=>validatePlan({...old,tag,archive:{...old.archive,name:'sesame-official-plugins-api-v1-dev.100.tar.gz'}}),/profile/);
+});
+test('standard MCP engines must be present inside the host extension',t=>{
+  const f=fixture(t),extension={id:f.manifest.id,apiVersion:'1',builtin:{default_state:'discoverable',tool_definitions:'tools.json'}};
+  const standard={$schema:'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json',name:'example',version:'1.0.0',license:'MIT',engines:f.manifest.engines,extensions:{'bot.sesame':extension}};
+  f.json(join(f.pkg,'mcp.json'),{mcpServers:{analysis:{command:'node',args:[]}}});f.json(join(f.pkg,'tools.json'),{analysis:[]});
+  f.json(join(f.pkg,'plugin.json'),standard);assert.throws(()=>buildLock(f.root),/engine/);
+  f.json(join(f.pkg,'plugin.json'),{...standard,extensions:{'bot.sesame':{...extension,engines:f.manifest.engines}}});assert.equal(buildLock(f.root).packages.length,1);
 });

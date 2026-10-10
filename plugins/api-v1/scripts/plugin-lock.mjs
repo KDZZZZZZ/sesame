@@ -66,7 +66,7 @@ export function buildLock(source = root) {
     const id = extension?.id ?? manifest.id;
     fail(id === `sesame/${directory}`, `Incorrect publisher identity: ${directory}`);
     if (profile) {
-      fail((extension?.engines ?? manifest.engines)?.sesame === profile.engines.sesame, `${id}: Sesame engine range differs from its profile`);
+      fail((manifest.$schema ? extension?.engines : manifest.engines)?.sesame === profile.engines.sesame, `${id}: Sesame engine range differs from its profile`);
       fail(!Object.hasOwn(manifest, 'migration') && !Object.hasOwn(extension ?? {}, 'migration'), `${id}: profiled packages cannot request legacy host storage grants`);
       const state = extension?.builtin?.default_state ?? manifest.default_state;
       fail(profile.kind === 'optional' ? state === 'discoverable' : ['mounted', 'discoverable'].includes(state), `${id}: profile default state differs`);
