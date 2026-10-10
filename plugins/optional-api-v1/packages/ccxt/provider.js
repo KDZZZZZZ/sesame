@@ -69,28 +69,76 @@ export class CCXTProvider {
     this.sequence = 0n;
   }
   bind(input, context) {
-    const exchange =
-      input.configuration?.exchange ?? input.connection?.id?.split(":")[1];
-    check(
-      ["kraken", "coinbase", "okx"].includes(exchange),
-      "Select an explicit public exchange",
-      "INVALID_ARGUMENT",
-    );
-    const proxy = input.configuration?.publicProxy ?? null;
-    if (proxy) {
-      let parsed;
-      try {
-        parsed = new URL(proxy);
-      } catch {
-        check(false, "Invalid explicit public proxy URL");
-      }
+    const supplied = input.configuration !== undefined;
+    let configuration;
+    if (supplied) {
+      configuration = input.configuration;
       check(
-        ["http:", "https:"].includes(parsed.protocol) &&
-          !parsed.username &&
-          !parsed.password,
-        "Public proxy must be HTTP(S), without credentials",
+        configuration &&
+          typeof configuration === "object" &&
+          !Array.isArray(configuration) &&
+          Object.keys(configuration).every((key) =>
+            ["exchange", "publicProxy"].includes(key),
+          ),
+        "configuration accepts only exchange and publicProxy; unknown fields never fall back to direct",
+        "INVALID_ARGUMENT",
+      );
+      check(
+        ["kraken", "coinbase", "okx"].includes(configuration.exchange),
+        "Select an explicit supported public exchange",
+        "INVALID_ARGUMENT",
+      );
+      if (Object.hasOwn(configuration, "publicProxy")) {
+        check(
+          typeof configuration.publicProxy === "string" &&
+            configuration.publicProxy.length > 0,
+          "publicProxy must be a nonempty credential-free HTTP(S) URL",
+          "INVALID_ARGUMENT",
+        );
+        let parsed;
+        try {
+          parsed = new URL(configuration.publicProxy);
+        } catch {
+          check(false, "Invalid explicit publicProxy URL", "INVALID_ARGUMENT");
+        }
+        check(
+          ["http:", "https:"].includes(parsed.protocol) &&
+            !parsed.username &&
+            !parsed.password &&
+            !parsed.search &&
+            !parsed.hash &&
+            parsed.pathname === "/",
+          "publicProxy must be HTTP(S) without credentials, query, fragment or proxy path",
+          "INVALID_ARGUMENT",
+        );
+      }
+    } else {
+      check(
+        input.connection &&
+          typeof input.connection.id === "string" &&
+          typeof input.connection.revision === "string",
+        "Provide explicit configuration first or an exact previously saved connection",
+        "PREREQUISITE_REQUIRED",
+      );
+      const saved = this.host.storage.get(
+        "public_connections",
+        digest(input.connection),
+        true,
+      );
+      check(
+        saved && canonical(saved.connection) === canonical(input.connection),
+        "Exact public connection configuration is unavailable; explicitly bind the authorized route",
+        "CONNECTION_CHANGED",
+      );
+      configuration = saved.configuration;
+      // Stored data is plugin-private but still validated before any request.
+      return this.bind(
+        { configuration, connection: input.connection },
+        context,
       );
     }
+    const exchange = configuration.exchange,
+      proxy = configuration.publicProxy ?? null;
     const connection = {
       id: `ccxt:${exchange}`,
       revision: proxy
@@ -100,9 +148,23 @@ export class CCXTProvider {
     check(
       !input.connection ||
         canonical(input.connection) === canonical(connection),
-      "Exchange/library revision changed",
+      "Exact connection does not identify this authorized public route",
       "CONNECTION_CHANGED",
     );
+    const id = digest(connection),
+      saved = this.host.storage.get("public_connections", id, true);
+    const frozen = { exchange, ...(proxy ? { publicProxy: proxy } : {}) };
+    check(
+      !saved || canonical(saved.configuration) === canonical(frozen),
+      "Stored public route identity conflicts",
+      "CONNECTION_CHANGED",
+    );
+    if (!saved)
+      this.host.storage.put("public_connections", {
+        id,
+        connection,
+        configuration: frozen,
+      });
     this.bindings.set(context.bindingId, {
       exchange,
       proxy,
@@ -115,6 +177,7 @@ export class CCXTProvider {
       health: "configured",
       limitations: [
         "Public network read and compatible dependency must succeed before data is available.",
+        "Exact public route persists in private plugin storage; connection-only bindings never guess or switch it.",
       ],
     };
   }
