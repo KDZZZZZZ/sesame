@@ -1,5 +1,10 @@
 """Fixed public-only CCXT boundary. No API keys, private calls or orders."""
-import sys, json, math, decimal, ccxt
+import sys
+import json
+import math
+import decimal
+
+import ccxt
 from datetime import datetime
 
 def norm(v):
@@ -26,20 +31,37 @@ exchange = getattr(ccxt, p['exchange'])(settings)
 try:
     markets = exchange.load_markets()
     if p['action'] == 'markets':
-        rows = [{k: m.get(k) for k in ['id', 'symbol', 'base', 'quote', 'active', 'spot', 'precision', 'limits']} for m in markets.values() if m.get('spot') and m.get('active') is not False]
+        rows = []
+        fields = ['id', 'symbol', 'base', 'quote', 'active', 'spot', 'precision', 'limits']
+        for market in markets.values():
+            if market.get('spot') and market.get('active') is not False:
+                row = {key: market.get(key) for key in fields}
+                row['precisionMode'] = exchange.precisionMode
+                rows.append(row)
     else:
         m = exchange.market(p['symbol'])
         if not m.get('spot') or m.get('active') is False:
             raise ValueError('Only active public spot markets')
         if p['action'] == 'bars':
-            if p['timeframe'] not in ['1m', '5m', '15m', '1h', '1d'] or not exchange.has.get('fetchOHLCV') or p['timeframe'] not in exchange.timeframes:
+            supported = (
+                p['timeframe'] in ['1m', '5m', '15m', '1h', '1d']
+                and exchange.has.get('fetchOHLCV')
+                and p['timeframe'] in exchange.timeframes
+            )
+            if not supported:
                 raise ValueError('Unsupported OHLCV timeframe')
             rows = exchange.fetch_ohlcv(p['symbol'], p['timeframe'], int(p['since']), 500)
         elif p['action'] == 'ticker':
             rows = exchange.fetch_ticker(p['symbol'])
         else:
             raise ValueError('Unsupported fixed public operation')
-    print(json.dumps({'rows': norm(rows), 'library': ccxt.__version__, 'exchange': exchange.id, 'observedAt': int(datetime.now().timestamp() * 1000)}, allow_nan=False))
+    receipt = {
+        'rows': norm(rows),
+        'library': ccxt.__version__,
+        'exchange': exchange.id,
+        'observedAt': int(datetime.now().timestamp() * 1000),
+    }
+    print(json.dumps(receipt, allow_nan=False))
 finally:
     close = getattr(exchange, 'close', None)
     if close:

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CCXTProvider } from "../packages/ccxt/provider.js";
+import { CCXTProvider, displayDecimals } from "../packages/ccxt/provider.js";
 const instrument = { sourceId: "ccxt:kraken:spot", instrumentId: "BTC/USD" },
   spec = {
     timeframe: "1m",
@@ -123,4 +123,34 @@ test("Source malformed OHLC/negative volume and cross-exchange binding reject", 
   );
   await f.provider.unbind(f.context);
   assert.equal(f.provider.pages.size, 0);
+});
+
+test("Display decimals use exact source precision, never a blanket eight", () => {
+  assert.equal(
+    displayDecimals({
+      precisionMode: 4,
+      precision: { price: "0.000000000001" },
+    }),
+    12,
+  );
+  assert.equal(
+    displayDecimals({ precisionMode: 4, precision: { price: "0.1" } }),
+    1,
+  );
+  assert.equal(
+    displayDecimals({ precisionMode: 2, precision: { price: 10 } }),
+    10,
+  );
+  assert.throws(
+    () => displayDecimals({ precisionMode: 3, precision: { price: 8 } }),
+    { code: "UNSUPPORTED_CAPABILITY" },
+  );
+  assert.throws(
+    () =>
+      displayDecimals({
+        precisionMode: 4,
+        precision: { price: "0.0000000000000000000001" },
+      }),
+    { code: "UNSUPPORTED_CAPABILITY" },
+  );
 });

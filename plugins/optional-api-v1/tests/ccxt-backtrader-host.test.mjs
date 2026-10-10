@@ -80,7 +80,16 @@ test(
       observedAt: Date.now(),
       rows:
         action === "markets"
-          ? [{ symbol: "BTC/USD", id: "XXBTZUSD", base: "BTC", quote: "USD" }]
+          ? [
+              {
+                symbol: "BTC/USD",
+                id: "XXBTZUSD",
+                base: "BTC",
+                quote: "USD",
+                precisionMode: 4,
+                precision: { price: "0.1" },
+              },
+            ]
           : [
               [1000, "10", "11", "9", "10.5", "1"],
               [61000, "10.5", "12", "10", "11", "2"],

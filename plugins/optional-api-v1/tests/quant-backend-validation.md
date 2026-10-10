@@ -26,3 +26,26 @@ No Windows/Linux engine execution, authenticated exchange APIs, live broker, mar
 - `inspect` now validates and atomically selects an existing environment, without installing/upgrading it. Real fresh host CCXT inspect→worker query on existing 4.5.85 returned 23 Kraken BTC/USD closed hourly bars, downloads `[]`. Backtrader inspect→actual Cerebro also passed with existing 1.9.78.123.
 - Separate official Backtrader Analyzer captures every bar, including indicator warmup, without wrapping strategy callbacks. Actual SMA(3) six-bar strategy kept exactly two prenext, one nextstart and three next hooks; six unique equity rows were captured. Orders separately expose notificationBarTime and actual executedTime from order.executed.dt (null before an execution timestamp exists).
 - Six dedicated tests passed with real existing environments and explicit Kraken public proxy. Log `/tmp/sesame-quant-review-final.log`. No shared configuration or live host modified. Formatter changes make JS and both Python boundaries readable; manifest author identifies Sesame contributors.
+
+## Real host market_read → Backtrader verification
+
+The exact fixed DataRef projection was verified through the installed data-access plugin, not merely an adapter-created sample. Log `/tmp/sesame-quant-market-read-live.log`, evidence `/tmp/sesame-quant-public-live-O7haKg/evidence.json`. Actual Kraken BTC/USD displayDecimals is 1, derived from CCXT TICK_SIZE price precision 0.1. A tiny-tick regression verifies 12-place display and significant-digit/unrepresentable modes explicitly reject.
+
+Executed input (timestamps are an example bounded historical interval, not an instruction to refresh the same operation):
+
+```json
+{
+  "operation_id": "real-kraken-host-market-read",
+  "title": "Fixed public Kraken BTC/USD",
+  "provider": {"pluginId":"sesame/ccxt","providerId":"market"},
+  "configuration": {"exchange":"kraken","publicProxy":"http://127.0.0.1:7897"},
+  "instrument": {"sourceId":"ccxt:kraken:spot","instrumentId":"BTC/USD"},
+  "spec": {"timeframe":"1h","priceBasis":"last","adjustment":"none","session":"all","calendarRevision":{"status":"unknown"}},
+  "range": {"from":{"basis":"utc","unixMs":1791342000000},"to":{"basis":"utc","unixMs":1791597600000}},
+  "include_forming": false,
+  "volume_kind": "real",
+  "max_rows": 500
+}
+```
+
+Use the returned `ref` unchanged as `backtrader_backtest.data` in that same Store. `market_read` returns columns `datetime/open/high/low/close/volume` (plus identity/coverage/volume evidence): datetime is the original UTC SourceTime, volume is selected Decimal text, so no `columns` override or transformation is required for this source. Actual 71-row returned ref digest `sha256:a0b8f959ad6e33f625d0912b5033e78e44ef04d8ddc30b4a1a3c71821757cef4` ran successfully through the revised Analyzer engine; result digest `sha256:5536dc5a16ccc6718c0dc0a8d99ea7a62724bdc1990010b77cfb1f06d5bc39cd`. One simulated closed trade, final cash/equity 9999.101693. No real transaction.

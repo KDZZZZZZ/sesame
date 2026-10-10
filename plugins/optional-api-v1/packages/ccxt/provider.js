@@ -10,6 +10,35 @@ const intervals = {
 };
 const unknown = (reason) => ({ status: "unknown", reason }),
   value = (value) => ({ status: "value", value });
+export function displayDecimals(row) {
+  const precision = row.precision?.price;
+  let digits;
+  if (row.precisionMode === 2 && Number.isInteger(precision)) {
+    digits = precision;
+  } else if (row.precisionMode === 4) {
+    const tick = decimal(
+      typeof precision === "number" ? String(precision) : precision,
+    );
+    check(
+      Decimal.compare(tick, "0") > 0,
+      "Invalid source precision",
+      "SOURCE_DATA_INVALID",
+    );
+    digits = (tick.split(".")[1] ?? "").length;
+  } else {
+    check(
+      false,
+      "Market has no reliable fixed display precision; significant-digit modes are unsupported",
+      "UNSUPPORTED_CAPABILITY",
+    );
+  }
+  check(
+    digits >= 0 && digits <= 20,
+    "Display precision exceeds supported 20 decimal places",
+    "UNSUPPORTED_CAPABILITY",
+  );
+  return digits;
+}
 export const descriptor = {
   id: "market",
   contract: "sesame.market",
@@ -252,7 +281,7 @@ export class CCXTProvider {
           tickSize: unknown(
             "CCXT precision mode is not a fixed tick guarantee",
           ),
-          displayDecimals: 8,
+          displayDecimals: displayDecimals(row),
         },
         quantity: {
           unit: row.base,

@@ -9,3 +9,5 @@ Adapter: MIT. CCXT library: MIT, obtained separately from official PyPI, not bun
 If direct exchange connectivity is unavailable, the user may explicitly select `configuration.publicProxy` as a credential-free HTTP(S) URL. The plugin never reads system proxy settings or account keys; the selected route contributes to the connection revision. No exchange fallback occurs automatically.
 
 `inspect` validates and selects a compatible existing environment by saving only a private selection receipt. It never installs or upgrades dependencies. Ready after inspect is immediately usable; prepare is needed only when no compatible dependency is found.
+
+Display decimals are derived from the source CCXT precisionMode: DECIMAL_PLACES uses its declared count and TICK_SIZE uses the exact decimal tick's scale (maximum 20 places). Significant-digit or missing modes and greater precision are explicitly unsupported by describeInstrument; there is no blanket eight-decimal assumption. This is display metadata, not a claim that the exchange accepts an executable order at that tick.
