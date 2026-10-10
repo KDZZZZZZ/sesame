@@ -891,9 +891,9 @@
     },
     {
       "id": "sesame/mt5",
-      "version": "1.3.0",
+      "version": "1.3.1",
       "directory": "mt5",
-      "treeDigest": "sha256:9130db7f140ef6a685bc40b24c2ae5c8aac445b9653d5b38564401f0728faf5c",
+      "treeDigest": "sha256:9db2821d3a96da429b1972b4a26922c1f8724f7921ff16a27655dbc2b3d2d55e",
       "files": [
         {
           "path": "LICENSE",
@@ -1027,8 +1027,8 @@
         },
         {
           "path": "backend/parameters.js",
-          "sha256": "daee0432070356acba35e9f60c59587d22ee720129d7fdf3910589a6c5a36c0a",
-          "bytes": 5360
+          "sha256": "00e62aa1339de4778e983edbf4f4c797c2dbd31f71e9d97967d48d213bfd627b",
+          "bytes": 5686
         },
         {
           "path": "backend/platform.js",
@@ -1122,8 +1122,8 @@
         },
         {
           "path": "backend/target.js",
-          "sha256": "abc1ad0143602b9379353add35baf24056f49f2901e37e61ff7bc7adfde36b48",
-          "bytes": 13387
+          "sha256": "bbbef495df71643cfbd459860f6b0ccce2132b0f65b7d01e2e0669fdd28a3b56",
+          "bytes": 13665
         },
         {
           "path": "backend/template/Experts/Strategy.mq5",
@@ -1252,12 +1252,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "58027bd00b29788abdfe5fcdd03a91e0a71258a6adf5457c22897006e3381638",
+          "sha256": "6928e0bd087d6384fd490733bd7e233d0cd76e47d8764e52b35b5dde656f5402",
           "bytes": 97
         },
         {
           "path": "plugin.json",
-          "sha256": "27bf79760eee0c3f3e310a0991c77dc48e18849e9c5767a0269e5d62777a8c7d",
+          "sha256": "fe5915b65a13c0815fbc02ff7e251392e039b5bb2c59ce73b6726cb16a29d3d7",
           "bytes": 2086
         },
         {

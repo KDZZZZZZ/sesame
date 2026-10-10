@@ -43,6 +43,8 @@ export function translationBinding(host, mt5, buildId, config) {
   if (!revision.translation) return null;
   const translation = host.artifacts.read(revision.translation).manifest.content, artifact = host.artifacts.read(translation.source), blob = artifact.manifest.blobs.find(blob => blob.path === artifact.manifest.content.sourcePath);
   const { source } = validateSource(host.artifacts.readBlob(blob).toString('utf8'));
+  const target = host.artifacts.read(translation.target).manifest.content;
+  requireValue(Array.isArray(target.svl?.versions) && target.svl.versions.includes(source.schemaVersion), '固定 MT5 目标不支持此 SVL 语言版本；先使用明确支持该版本的目标重新验证与翻译', 422, 'UNSUPPORTED_CAPABILITY');
   const mapping = parameterMapping(source, translation.nativeParameterMap), account = mt5.official.config.account, native = { ...(config.parameters ?? {}) }, parameters = {};
   const instrument = { sourceId: sourceIdentity(account.server), instrumentId: config.symbol };
   for (const [name, declaration] of Object.entries(source.parameters)) {

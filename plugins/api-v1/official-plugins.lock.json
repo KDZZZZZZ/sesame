@@ -551,9 +551,9 @@
     },
     {
       "id": "sesame/strategy-authoring",
-      "version": "1.0.2",
+      "version": "1.1.0",
       "directory": "strategy-authoring",
-      "treeDigest": "sha256:07c0011ba11245b6e3bd1dcce67eacad574dcf3434ef71b41724c4bf114df7c1",
+      "treeDigest": "sha256:b476a7da0841f9f3fda47b7d3b3ecdd898ba073fca0ec71d9449529405049f01",
       "files": [
         {
           "path": "LICENSE",
@@ -581,29 +581,54 @@
           "bytes": 3346
         },
         {
+          "path": "examples/function-threshold.replay.json",
+          "sha256": "df0a71d17d755a6da1629cfd7376a7a1a4fcdacafc53af15a7e9ec2379c8af1d",
+          "bytes": 694
+        },
+        {
+          "path": "examples/function-threshold.svl.json",
+          "sha256": "662517e63e50cfa352c115526730ee32e27afa3c54e77e10948d77027d698169",
+          "bytes": 3119
+        },
+        {
+          "path": "examples/pipeline-fixture.js",
+          "sha256": "41b88bb552e4cb660ab10f10d014b9a0056dfa997374daa2054d2bea7ac6194a",
+          "bytes": 2869
+        },
+        {
           "path": "index.js",
-          "sha256": "b90eea4192a6ec143315c88715aaf6e17dc191b8638fc34715714b1606334bca",
-          "bytes": 5951
+          "sha256": "67e91a82ad346274f9e2838eb38198ce6672e1d3a9c0fe12224b7cf2e7898901",
+          "bytes": 9208
+        },
+        {
+          "path": "lib/pipeline.js",
+          "sha256": "5efe5d9c90ec43a737444e57e785946a08be88075865c4ffa0f5b9b3c8f968d3",
+          "bytes": 32473
         },
         {
           "path": "package.json",
-          "sha256": "28c0acf37ea08c4d1ae8cff1e8873597e019fe5941e0daf9bf83f2d56f02e33c",
+          "sha256": "728ee4d9c1a2295ad19f53ea291c80a61a2d5b4052dff768acef1392654e5a1a",
           "bytes": 131
         },
         {
           "path": "plugin.json",
-          "sha256": "5730a19b4e947d977befee9d3fc73cf8e4a5ddd3ea732941af4ec4c4da74f851",
-          "bytes": 1054
+          "sha256": "7a01ab6d61239400e872cb540ff0c774496e03a6c991d8076796c2fbf2d2ec91",
+          "bytes": 1343
         },
         {
           "path": "prompt.md",
-          "sha256": "eed4bcb9d4469fd01528c43976b52d2c4e9f1333b98c1a399f09addca3b0e6f1",
-          "bytes": 1224
+          "sha256": "4066a223d32539d50e0357bd7036369e9a46ebe2cfa44cab07e396d50d0434cb",
+          "bytes": 1651
         },
         {
           "path": "skills/strategy-authoring/SKILL.md",
-          "sha256": "4facc4a0e95b7ea47de6bedb03a593fffc28e54c94a4e0c02d036ee5d0a506fa",
-          "bytes": 4208
+          "sha256": "8fc1dadec96f42cb80b22c5483716db79c7cc0e3c16632e8aa0919063cb0a542",
+          "bytes": 5417
+        },
+        {
+          "path": "skills/strategy-authoring/references/agent-inputs.md",
+          "sha256": "d5d8ca17691119748710eeac9a1a6cf850b7346a56ec68c15c777044162547ed",
+          "bytes": 7656
         },
         {
           "path": "skills/strategy-authoring/references/architecture.md",
@@ -612,13 +637,18 @@
         },
         {
           "path": "skills/strategy-authoring/references/language.md",
-          "sha256": "64713075218b44f88ad90d5e88bf8164d7f47b95cd62d97c306606f30edfe31c",
-          "bytes": 21297
+          "sha256": "a3cc31d67b4ae4ca668f7ff739107f8950035efeafc0976f27af89bd4dede37e",
+          "bytes": 24640
+        },
+        {
+          "path": "skills/strategy-authoring/references/pipeline.md",
+          "sha256": "2df060ad91c4621448faab50ba3237ac93e42935d611362a1ba9eb119f96369c",
+          "bytes": 16714
         },
         {
           "path": "tools.json",
-          "sha256": "2fdab8d895889c0a2b76f8b9b650937a0c26e21d09e63cbb7b4e93b302efac57",
-          "bytes": 6012
+          "sha256": "3c0938865fd1f8d94a03d8f5144e44415d7e7c8d51bb7218fcc47870f3dd23ec",
+          "bytes": 7136
         }
       ]
     },

@@ -211,5 +211,37 @@
       },
       "additionalProperties": false
     }
+  },
+  {
+    "name": "strategy_pipeline",
+    "label": "strategy_pipeline",
+    "description": "Check and evaluate a frozen signal → target portfolio → risk → execution fixture. Reads exact artifact references and preserves optional evidence. No model, broker, matching engine or native strategy is executed.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "fixture_path"
+      ],
+      "properties": {
+        "fixture_path": {
+          "type": "string",
+          "description": "Workspace JSON conforming to the plugin pipeline.md fixture contract",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "output_path": {
+          "type": "string",
+          "description": "Optional workspace path for the complete evaluation result",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "operation_id": {
+          "type": "string",
+          "description": "If provided, preserve the fixture and result as a resource artifact",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
   }
 ]

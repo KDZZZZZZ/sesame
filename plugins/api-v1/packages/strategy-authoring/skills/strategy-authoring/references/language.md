@@ -1,6 +1,6 @@
 # SVL/1 创作参考
 
-适用于 `sesame/strategy-authoring` 1.0.2、语言 `svl/1`、schema `1.0.0`。本文件及包内示例足以使用本插件的四个工具；无需读取 Sesame 本体源码或本地私有文档。这里记录当前公开 SDK 的可用子集，不把候选语法或目标平台能力当成已经实现的功能。
+适用于 `sesame/strategy-authoring` 1.1.0、语言 `svl/1`、源语义 schema `1.0.0` / `1.1.0`。新语义需要匹配的宿主 SDK；旧宿主明确拒绝而不降级。成果容器 schema 仍为 `1.0.0`。本文件及包内示例足以使用语言创作工具；无需读取 Sesame 本体源码或本地私有文档。这里记录当前公开 SDK 的可用子集，不把候选语法或目标平台能力当成已经实现的功能。
 
 SVL 描述输入、判断、状态更新和交易**意图**。`strategy_validate` 做结构、引用、原语和预算检查；它不是完整静态类型推断器，不能证明每个动态值都合法。`strategy_replay` 执行固定输入，动态类型/单位、分支和错误须在这里验证。二者都不连接券商、不撮合、不编译原生代码、不下单。目标插件另行声明翻译、编译、回测和运行限制。
 
@@ -26,11 +26,11 @@ SVL 描述输入、判断、状态更新和交易**意图**。`strategy_validate
 
 ## 源结构与固定语义
 
-顶层必须是 JSON 对象，**不能是 Markdown、JSON 字符串或节点数组**。必需键为 `language`、`schemaVersion`、`strategyId`、`semantics`、`parameters`、`inputs`、`state`、`nodes`、`handlers`。可选 `functions`、`extensions` 当前只能是空数组；省略时补为 `[]`。禁止其他顶层字段。
+顶层必须是 JSON 对象，**不能是 Markdown、JSON 字符串或节点数组**。必需键为 `language`、`schemaVersion`、`strategyId`、`semantics`、`parameters`、`inputs`、`state`、`nodes`、`handlers`。可选 `functions` 在源 schema `1.0.0` 只能是空数组，`1.1.0` 支持下述纯函数；`extensions` 仍只能为空。省略时补为 `[]`。禁止其他顶层字段。
 
 | 字段 | 实际形状 |
 | --- | --- |
-| `language` / `schemaVersion` | 固定 `"svl/1"` / `"1.0.0"` |
+| `language` / `schemaVersion` | `"svl/1"` / `"1.0.0"` 或 `"1.1.0"`，后者显式启用新语义 |
 | `strategyId` | 非空稳定文本；修改逻辑通过新源修订表示 |
 | `parameters` / `inputs` / `state` | 按 ID 命名的对象；没有条目也写 `{}`，不能写 `[]` |
 | `nodes` / `handlers` | 有序数组；节点、事件与步骤格式见下文 |
@@ -130,7 +130,7 @@ SVL 描述输入、判断、状态更新和交易**意图**。`strategy_validate
 
 ## 当前全部原语
 
-下表参数末尾 `?` 表示可选；实际 JSON 键不带问号。没有 `function.call`、任意表达式、网络节点、自定义函数或扩展执行器。
+下表参数末尾 `?` 表示可选；实际 JSON 键不带问号。`1.0.0` 保持原目录；最后六行仅 `1.1.0` 可用。没有任意代码表达式、网络节点或扩展执行器。
 
 | 原语 | 参数 | 结果与语义 |
 | --- | --- | --- |
@@ -154,14 +154,42 @@ SVL 描述输入、判断、状态更新和交易**意图**。`strategy_validate
 | `state.set` | stateId,value | state 效果；stateId 是已声明状态的字符串字面量；value 必须匹配该状态类型 |
 | `order.submit` | account,instrument,side,positionEffect,orderType,quantity,timeInForce,limitPrice?,stopPrice? | intent 效果；见下一节 |
 | `order.cancel` | account,orderRef | intent 效果；orderRef 为 `{account:AccountRef,orderId:string}`，须属同账户 |
+| `function.call` | functionId,arguments | 1.1：类型化纯函数；静态 functionId，形参通过 record 构造器传入 |
+| `value.isReady` | value | 1.1：显式就绪判断，缺失为 false；不吞运行错误 |
+| `value.select` | condition,whenTrue,whenFalse | 1.1：条件 boolean；仅求值选中分支，条件缺失则 not_ready |
+| `series.window` | series,count,offset? | 1.1：从最新值往前取 count 项，offset 缺省 0；不足完整窗口 not_ready，保留原采样时间 |
+| `series.add`, `series.sub`, `series.mul`, `series.div` | left,right | 1.1：逐项十进制运算，窗口长度和逐项时间必须对齐；无隐式广播或重排 |
+| `time.compare`, `time.elapsed` | left,right / from,to | 1.1：compare 返回 -1/0/1；elapsed 返回非负 UTC 毫秒差；不推测墙钟时区 |
 
 参考求值器检查 cross 的窗口身份、数组长度和逐样本时间。来自同一输入的纯教学窗口可以完全不含时间，但这不是市场时序证据；跨输入必须提供可比较且逐项对齐的完整时间。Bar 核对 openTime/endTime，Quote 核对 time；没有 bars.time。部分缺失、非法或冲突的时间不会退回按索引猜测。wall 的 authority/zone/fold 不得丢失或猜测，同长度不代表同时间。适配与测试仍须核对真实来源、闭合和可获知时间；这不认证完整防前视。
 
-同一事件内通过 `state.set` 复制的值保留窗口证据，record 内的 series 也一样。进入下一事件或从持久检查点恢复时，历史值不自动具有当前窗口身份；不要把保存过的数组当成新的行情窗口。字段投影和 SMA/EMA 继承原采样位置，截断、重排或自写数组不能获得这种证据。
+同一事件内通过 `state.set` 复制的值保留窗口证据，record 内的 series 也一样。进入下一事件或从持久检查点恢复时，历史值不自动具有当前窗口身份；不要把保存过的数组当成新的行情窗口。字段投影、SMA/EMA 与 1.1 的 series.window/逐项运算保留经检查的原采样位置，任意重排或自写数组不能获得这种证据。
 
 `account` 原语要求完整输入形如 `{complete:true,account:AccountRef,positions:[],orders:[],pendingIntents:[]}`。不能把资金快照单独包成 `complete:true`：未读齐持仓/挂单/本地未决账本时保持不完整。匹配项带精确 `instrument`，按需带 `side/quantity`；scope=run 时要有可信 `runId`，缺归属返回 not_ready。
 
 `orders` 只含尚未结束的订单，`pendingIntents` 含未发送、发送中和结果不明的意图；调用方不能把已完结历史记录当成此账本。固定回放不会替你把本次生成的意图写进下一个事件快照，必须明确提供下一事件当时的账本；真实目标还须实现持久 outbox 与重启核验。
+
+## 1.1 纯函数与通用组合
+
+先读 `examples/function-threshold.svl.json` 与 `examples/function-threshold.replay.json`。它把旧阈值示例的比较抽成一个函数，四个事件仍依次缺数、低于、高于、等于阈值；没有交易意图。不要仅改源版本便假定执行后端支持新原语。
+
+```json
+{
+  "id": "aboveThreshold",
+  "parameters": { "value": { "kind": "decimal" }, "threshold": { "kind": "decimal" } },
+  "nodes": [{ "id": "test", "op": "compare.gt", "inputs": { "left": { "parameter": "value" }, "right": { "parameter": "threshold" } } }],
+  "result": { "node": "test" },
+  "output": { "kind": "boolean" }
+}
+```
+
+调用节点为 `{"id":"above","op":"function.call","inputs":{"functionId":"aboveThreshold","arguments":{"record":{"value":{"node":"latest"},"threshold":{"parameter":"threshold"}}}}}`。函数内 parameter 只指形参，不捕获策略全局参数、输入、状态或账户；通过形参传入需要的数据。函数不含 state/intent 效果，不允许直接或间接递归。函数声明最多 64 个、每个最多 64 个形参、调用深度最多 16，总节点数与事件运算预算仍受限制。形参和输出运行时核对类型/单位，缺数传播；不能靠函数调用丢失时间证据。
+
+1.1 的图包含函数体及调用位置，参考 trace 记录 functionId/callPath。图上的函数节点可展开说明其内部逻辑；这不等于原生目标已提供逐节点成交证据。
+
+`series.window` 的 count 是 1..10000 整数、offset 是 0..10000 整数；offset=0 的窗口止于当前可用末项。禁止负 offset 读未来。两个 `series.window` 截出不同时间段时，即使长度相同也不能直接逐项相减；需要显式且有定义的对齐方法。序列算术可以组合已有指标（如同一窗口的两条 EMA 相减），不是自动添加完整指标库。
+
+`time.compare` 只比较 UTC，或可证明属于同一 authority/zone/fold 的合法墙钟；跨钟拒绝。`time.elapsed` 只接受 UTC 且 to>=from，避免把夏令时墙钟差当实际时长。时间比较不会自行证明资料当时可获知，外部 Agent 输入仍须遵守 [可用时间规范](agent-inputs.md)。
 
 ## 控制流与交易意图
 
@@ -209,7 +237,7 @@ fixture 文件顶层是 `{runId:string,parameters?:object,initialState?:object,e
 | `Unresolved ... expression` | 引用命名空间、大小写、ID 是否存在；local 是否离开 forEach |
 | `when must reference a boolean node` / `Actions must have state or intent effects` | when 用布尔纯节点 ID，actions 用状态/意图节点 ID |
 | `Expected ...` / `Value units differ` | 回放参数/初始状态/动态值实际类型；Decimal 字符串不等于 integer |
-| `Unsupported operator` / `UNSUPPORTED_CAPABILITY` | 是否使用目录外原语或非空 functions/extensions；不要假装执行 |
+| `Unsupported operator` / `UNSUPPORTED_CAPABILITY` | 是否用错源语义版本、使用目录外原语或非空 extensions；不要假装执行 |
 | `paused` / `Action is not ready` | 阅读该事件 error/trace，补足输入或修逻辑；不要忽略暂停继续发单 |
 
 若这份参考未覆盖某种语言能力，先声明能力缺口或按现有原语明确组合。不要读私有宿主代码来发明接口，不要把图的解释文字当成可执行语义。完成源回放后再读取目标插件的 profile、翻译要求和 SDK 示例，分别保留真实编译、Tester、账户运行与报告证据。

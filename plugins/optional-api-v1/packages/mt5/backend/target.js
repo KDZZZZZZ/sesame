@@ -70,6 +70,7 @@ export async function registerTranslation(host, mt5, args) {
     }
     const checked = readSource(host, args.source), target = host.artifacts.read(args.target);
     requireValue(args.target.kind === 'strategy.target' && target.producer.id === host.plugin.id && target.manifest.content.id === 'sesame.mt5.mql5', '需要 MT5 插件发布的固定目标 profile');
+    requireValue(Array.isArray(target.manifest.content.svl?.versions) && target.manifest.content.svl.versions.includes(checked.source.schemaVersion), '目标 profile 不支持此 SVL 语义版本；不能将新版本规则静默按旧版翻译', 422, 'UNSUPPORTED_CAPABILITY');
     requireValue(['backtest', 'live'].includes(args.mode), 'MT5 翻译模式为 backtest 或 live');
     requireValue(typeof args.title === 'string' && args.title.trim() && args.title.length <= 120, '需要 1–120 字符工程名称');
     requireValue(checked.source.handlers.every(handler => target.manifest.content.svl.events.includes(handler.event.type)), '目标不能直接表达此 SVL 事件；请先修订源或选择其他目标');

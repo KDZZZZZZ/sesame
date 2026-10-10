@@ -1,3 +1,5 @@
+import { evaluatePipeline } from './lib/pipeline.js';
+
 const fail = (condition, message) => { if (!condition) throw new Error(message); };
 const json = bytes => JSON.parse(Buffer.from(bytes).toString('utf8'));
 const refSchema = Type => Type.Object({ id: Type.String(), revision: Type.String(), digest: Type.String({ pattern: '^sha256:[a-f0-9]{64}$' }), kind: Type.Literal('strategy.source'), schemaVersion: Type.Literal('1.0.0') }, { additionalProperties: false });
@@ -10,6 +12,23 @@ function readSource(host, ref) {
   const validated = host.svl.validateSource(host.artifacts.readBlob(blob).toString('utf8'));
   fail(validated.sourceDigest === content.sourceDigest, 'SVL semantic digest does not match the published source');
   return validated;
+}
+
+function pinnedInputs(host, fixture) {
+  const refs = new Map(), pending = [fixture]; let budget = 100000;
+  while (pending.length) {
+    fail(--budget >= 0, 'Pipeline fixture exceeds its structural budget');
+    const value = pending.pop();
+    if (!value || typeof value !== 'object') continue;
+    if (['id', 'revision', 'digest', 'kind', 'schemaVersion'].every(key => Object.hasOwn(value, key))) {
+      host.artifacts.read(value);
+      if (value.kind === 'strategy.source') readSource(host, value);
+      refs.set(JSON.stringify([value.id, value.revision, value.digest, value.kind, value.schemaVersion]), value);
+      fail(refs.size <= 256, 'Pipeline fixture has too many pinned inputs');
+    } else for (const child of Object.values(value)) pending.push(child);
+  }
+  fail(refs.size <= 256, 'Pipeline fixture has too many pinned inputs');
+  return [...refs.values()];
 }
 
 export function createTools(host) {
@@ -36,7 +55,7 @@ export function createTools(host) {
       const blob = host.artifacts.blob(validated.bytes);
       signal?.throwIfAborted();
       const published = host.artifacts.publish({ operationId: args.operation_id, ...(args.artifact_id ? { artifactId: args.artifact_id, expectedRevision: args.expected_revision ?? null } : {}), manifest: {
-        kind: 'strategy.source', schemaVersion: '1.0.0', content: { schemaVersion: '1.0.0', strategyId: validated.source.strategyId, title: args.title, language: 'svl/1', languageVersion: '1.0.0', sourcePath: 'strategy.svl.json', sourceDigest: validated.sourceDigest, extensions: validated.source.extensions ?? [], parent: args.parent ?? null, changeSummary: args.change_summary },
+        kind: 'strategy.source', schemaVersion: '1.0.0', content: { schemaVersion: '1.0.0', strategyId: validated.source.strategyId, title: args.title, language: validated.source.language, languageVersion: validated.source.schemaVersion, sourcePath: 'strategy.svl.json', sourceDigest: validated.sourceDigest, extensions: validated.source.extensions ?? [], parent: args.parent ?? null, changeSummary: args.change_summary },
         blobs: [{ ...blob, path: 'strategy.svl.json', mediaType: 'application/json' }], dependencies: args.parent ? [args.parent] : [], provenance: { kind: 'user_input', references: args.parent ? [args.parent] : [] },
       } });
       return { ref: published, sourceDigest: validated.sourceDigest, graph: host.svl.graph(validated.source), validationScope: 'svl-source-only' };
@@ -59,6 +78,32 @@ export function createTools(host) {
         evidence = host.artifacts.publish({ operationId: args.operation_id, manifest: { kind: 'resource', schemaVersion: '1.0.0', content: { type: 'svl-evaluation', source: args.source, sourceDigest: validated.sourceDigest, inputPath: 'input.json', resultPath: 'replay.json', status: result.status, validationScope: 'fixed-input-svl-evaluation' }, dependencies: [args.source], blobs: [{ ...inputBlob, path: 'input.json', mediaType: 'application/json' }, { ...outputBlob, path: 'replay.json', mediaType: 'application/json' }], provenance: { kind: 'derived', references: [args.source] } } });
       }
       return { ...result, ...(evidence ? { evidence } : {}), validationScope: 'fixed-input-svl-evaluation', nativeEngineExecuted: false };
+    }),
+    define('strategy_pipeline', 'Check and evaluate a frozen signal → target portfolio → risk → execution fixture. Reads exact artifact references and preserves optional evidence. No model, broker, matching engine or native strategy is executed.', {
+      fixture_path: string('Workspace JSON conforming to the plugin pipeline.md fixture contract'),
+      output_path: optional('Optional workspace path for the complete evaluation result'),
+      operation_id: optional('If provided, preserve the fixture and result as a resource artifact'),
+    }, async (args, signal) => {
+      const bytes = await host.workspace.file('read', args.fixture_path, undefined, signal);
+      fail(bytes.length <= 4 * 1024 * 1024, 'Pipeline fixture exceeds 4 MiB');
+      const fixture = json(bytes), dependencies = pinnedInputs(host, fixture);
+      const declared = readSource(host, fixture.target?.strategySource);
+      fail(declared.source.strategyId === fixture.scope?.strategyId, 'Pipeline ownership differs from the frozen strategy source');
+      const result = evaluatePipeline(fixture);
+      signal?.throwIfAborted();
+      const output = JSON.stringify(result, null, 2) + '\n';
+      if (args.output_path) await host.workspace.file('write', args.output_path, output, signal);
+      let evidence;
+      if (args.operation_id) {
+        const inputBlob = host.artifacts.blob(bytes), outputBlob = host.artifacts.blob(output);
+        evidence = host.artifacts.publish({ operationId: args.operation_id, manifest: {
+          kind: 'resource', schemaVersion: '1.0.0',
+          content: { type: 'strategy-pipeline-evaluation', inputPath: 'input.json', resultPath: 'pipeline.json', validationScope: 'fixed-input-pipeline-evaluation', nativeEngineExecuted: false },
+          dependencies, blobs: [{ ...inputBlob, path: 'input.json', mediaType: 'application/json' }, { ...outputBlob, path: 'pipeline.json', mediaType: 'application/json' }],
+          provenance: { kind: dependencies.some(ref => { const manifest = host.artifacts.read(ref).manifest; return manifest.provenance?.kind === 'demo' || manifest.content.provenance?.kind === 'demo'; }) ? 'demo' : 'derived', references: dependencies },
+        } });
+      }
+      return { ...result, ...(evidence ? { evidence } : {}) };
     }),
   ];
 }

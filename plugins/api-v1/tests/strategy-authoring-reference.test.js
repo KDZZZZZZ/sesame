@@ -50,6 +50,20 @@ test('the stateful reference validates through the public tool and executes its 
   assert.deepEqual(svl.evaluateReplay(source, fixture), result);
 });
 
+test('the 1.1 function example preserves threshold decisions and exposes its body and call trace', async () => {
+  const path = 'examples/function-threshold.svl.json', source = bytes(path).toString(), fixture = json('examples/function-threshold.replay.json');
+  const checked = await validateTool(path), result = svl.evaluateReplay(source, fixture);
+  assert.equal(result.status, 'completed');
+  assert.deepEqual(result.events.map(event => event.state.lastAbove), [false, false, true, false]);
+  assert.ok(result.events.every(event => event.intents.length === 0));
+  assert.equal(checked.graph.functions.length, 1);
+  assert.equal(checked.graph.functions[0].id, 'aboveThreshold');
+  assert.ok(checked.graph.calls.some(call => call.nodeId === 'above' && call.functionId === 'aboveThreshold'));
+  assert.ok(result.events[2].trace.some(row => row.functionId === 'aboveThreshold' && row.callPath.length > 0));
+  const unsupported = JSON.parse(source); unsupported.schemaVersion = '1.0.0';
+  assert.throws(() => svl.validateSource(unsupported), /function|operator|capability/i);
+});
+
 test('the declared crossover example yields a typed intent and blocks missing or pending account evidence', async () => {
   const path = 'examples/crossover.svl.json', source = bytes(path).toString(), fixture = json('examples/crossover.replay.json');
   const checked = await validateTool(path), result = svl.evaluateReplay(source, fixture);

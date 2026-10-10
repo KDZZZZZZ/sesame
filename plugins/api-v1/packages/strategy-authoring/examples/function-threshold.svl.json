@@ -1,0 +1,167 @@
+{
+  "language": "svl/1",
+  "schemaVersion": "1.1.0",
+  "strategyId": "example.function-threshold",
+  "semantics": {
+    "numeric": {
+      "precision": 34,
+      "rounding": "half_even"
+    },
+    "missing": "not_ready",
+    "onError": "pause",
+    "eventOrdering": "input_sequence",
+    "duplicateEvent": "ignore",
+    "stateCommit": "per_event"
+  },
+  "parameters": {
+    "instrument": {
+      "type": "instrument"
+    },
+    "threshold": {
+      "type": "decimal",
+      "default": "100",
+      "min": "0"
+    }
+  },
+  "inputs": {
+    "bars": {
+      "kind": "bars",
+      "instrument": {
+        "parameter": "instrument"
+      },
+      "timeframe": "1m",
+      "barPolicy": "closed",
+      "priceBasis": "last",
+      "adjustment": "none",
+      "session": "regular",
+      "lookback": 2
+    }
+  },
+  "state": {
+    "lastClose": {
+      "type": {
+        "kind": "decimal"
+      },
+      "initial": "0"
+    },
+    "lastAbove": {
+      "type": {
+        "kind": "boolean"
+      },
+      "initial": false
+    }
+  },
+  "nodes": [
+    {
+      "id": "latest",
+      "op": "series.value",
+      "inputs": {
+        "series": {
+          "input": "bars",
+          "field": "close"
+        },
+        "offset": 0
+      }
+    },
+    {
+      "id": "above",
+      "op": "function.call",
+      "inputs": {
+        "functionId": "aboveThreshold",
+        "arguments": {
+          "record": {
+            "value": {
+              "node": "latest"
+            },
+            "threshold": {
+              "parameter": "threshold"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "remember-close",
+      "op": "state.set",
+      "inputs": {
+        "stateId": "lastClose",
+        "value": {
+          "node": "latest"
+        }
+      }
+    },
+    {
+      "id": "remember-above",
+      "op": "state.set",
+      "inputs": {
+        "stateId": "lastAbove",
+        "value": true
+      }
+    },
+    {
+      "id": "remember-below",
+      "op": "state.set",
+      "inputs": {
+        "stateId": "lastAbove",
+        "value": false
+      }
+    }
+  ],
+  "handlers": [
+    {
+      "id": "on-close",
+      "event": {
+        "type": "bar.closed",
+        "input": "bars"
+      },
+      "steps": [
+        {
+          "id": "remember-threshold",
+          "when": "above",
+          "actions": [
+            "remember-close",
+            "remember-above"
+          ],
+          "elseActions": [
+            "remember-close",
+            "remember-below"
+          ]
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "id": "aboveThreshold",
+      "parameters": {
+        "value": {
+          "kind": "decimal"
+        },
+        "threshold": {
+          "kind": "decimal"
+        }
+      },
+      "nodes": [
+        {
+          "id": "compare",
+          "op": "compare.gt",
+          "inputs": {
+            "left": {
+              "parameter": "value"
+            },
+            "right": {
+              "parameter": "threshold"
+            }
+          }
+        }
+      ],
+      "result": {
+        "node": "compare"
+      },
+      "output": {
+        "kind": "boolean"
+      }
+    }
+  ],
+  "extensions": []
+}
