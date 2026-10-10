@@ -227,6 +227,7 @@ export class MT5Official {
       return this.command(id, owner);
     }
     const task = (async () => {
+      try {
       const definition = (await this.tools(server, signal, { startIfNeeded: !this.access(server, tool, owner).blocked_reason })).find(t => t.name === tool);
       requireValue(definition, '此连接没有提供该工具，请刷新 mt5_catalog', 404, 'mt5_tool_missing');
       validate(definition.inputSchema, args);
@@ -235,6 +236,13 @@ export class MT5Official {
       if (server === 'launcher' && args.use_startup_config) requireValue(this.config.startup_ini, '请先在前端保存原生 INI', 409);
       if (server === 'launcher' && args.use_account_login) requireValue(this.config.account.login, '请先在前端保存账户 Login', 409);
       signal?.throwIfAborted();
+      } catch (error) {
+        // Only typed local preflight rejections prove the requested command was
+        // not dispatched. Idempotency conflicts, aborts and native/transport
+        // failures are deliberately outside this classification.
+        if (error instanceof ApiError) error.details = { ...error.details, submission_attempted: false };
+        throw error;
+      }
       let command = { id, fingerprint, conversation_id: owner ?? null, server, tool, operation_class: this.permission(server, tool), status: 'running', result: null, dataset_id: null, error: null, created_at: now(), completed_at: null };
       this.storage.put('mt5_command', command);
       try {

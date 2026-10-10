@@ -6,6 +6,8 @@ import { Value } from '@sesame/plugin-sdk/schema/value';
 import { createService, outcome } from '../packages/manual-trading/service.js';
 import { createAdapters, payload } from '../packages/manual-trading/adapters.js';
 import { createTools } from '../packages/manual-trading/index.js';
+import { MT5Official } from '../packages/mt5/backend/official.js';
+import { PYTHON_TOOLS } from '../packages/mt5/backend/python-tools.js';
 
 const clone=x=>x===undefined?undefined:structuredClone(x);
 function fixture() {
@@ -59,6 +61,24 @@ test('account changes, cancellation and lost permissions before dispatch cannot 
   const result=await f.service.execute(args);assert.equal(result.status,'rejected');assert.equal(result.error.code,'CONNECTION_CHANGED');assert.equal(f.submissions,0);
   const g=fixture(),other=await prepared(g),controller=new AbortController();controller.abort();
   assert.equal((await g.service.execute(other,controller.signal)).status,'rejected');assert.equal(g.submissions,0);
+});
+test('typed MT5 permission rejection before native dispatch stays rejected without locking the account',async()=>{
+  const f=fixture(),args=await prepared(f),official=new MT5Official({storage:f.host.storage,datasets:{register:()=>{}}},null);
+  official.config={version:1,allow_trading:true,allow_host_operations:true,account:{login:f.account.accountId,server:f.account.server},servers:{},startup_ini:''};
+  let sends=0,deny=true;
+  official.tools=async()=>PYTHON_TOOLS;
+  official.python={available:()=>true,call:async()=>{sends++;return {result:{retcode:10009,order:'700',deal:'701'}};}};
+  f.adapter.submit=async(_observation,intent,signal)=>{
+    if(deny){official.config.version=2;official.config.allow_trading=false;}
+    return official.call({command_id:intent.backendCommandId,server:'python',tool:'order_send',arguments:{request:{action:'TRADE_ACTION_DEAL',symbol:'FIXTURE',volume:0.1,type:'ORDER_TYPE_BUY'}}},f.host.scope.conversationId,signal);
+  };
+  const rejected=await f.service.execute(args);assert.equal(rejected.status,'rejected');assert.equal(rejected.error.code,'mt5_permission_denied');
+  assert.equal(sends,0);assert.equal(f.host.storage.list('mt5_command').length,0);
+  deny=false;official.config.version=3;official.config.allow_trading=true;f.account.revision='3';
+  const next=await prepared(f,'permission-restored');assert.equal((await f.service.execute(next)).status,'execution_reported');assert.equal(sends,1);
+  official.python.call=async()=>{sends++;throw new DOMException('native reply interrupted','AbortError');};
+  const interrupted=await prepared(f,'unknown-native');assert.equal((await f.service.execute(interrupted)).status,'outcome_unknown');assert.equal(sends,2);
+  await assert.rejects(f.service.execute(await prepared(f,'cannot-replay-abort')),{code:'UNRESOLVED_ORDER'});
 });
 test('unknown sends persist and block new IDs on same account even after config revision change',async()=>{
   const f=fixture(),args=await prepared(f);f.adapter.submit=async()=>{throw new Error('response lost after native submission');};
