@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "tag": "plugins-api-v1-dev.16",
   "title": "Sesame core plugins — interactive reports and account preferences",
-  "sourceCommit": "c4635e97cb1a0b7bae88c8319f018de0e1ddb717",
+  "sourceCommit": "8445b44ac846c6f63b71a99d64e0d8486ca7fa88",
   "sourceRoot": "plugins/api-v1",
   "profile": "core",
   "archive": {
     "name": "sesame-official-plugins-api-v1-dev.16.tar.gz",
-    "sha256": "f5f32d8f4bbd0565447ea6e439be1efb4fd92e4f674bd67411416bfcf3f14a65"
+    "sha256": "5ba4cfe67ba080ad138a843335eff5453d5fc1a51afd60149cb9aaabfa7ff113"
   },
-  "lockSha256": "885a2a43ffe941b05313a5959b22db28856521dff0187cf8ec59d089aed840c4",
+  "lockSha256": "e946a0ce5d9ad02a2ccf25046a3a4afe87e13abc35ca37c2535b84df315f29bd",
   "pullRequest": 37
 }
