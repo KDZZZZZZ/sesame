@@ -26,5 +26,8 @@
   "author": {
     "name": "Sesame contributors",
     "url": "https://github.com/KDZZZZZZ/sesame"
-  }
+  },
+  "resources": [
+    "PROVENANCE.md"
+  ]
 }
