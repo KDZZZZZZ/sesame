@@ -1,4 +1,14 @@
-# CCXT adapter 1.0.1 route validation
+# CCXT adapter validation
+
+## Persistent public sessions and latest candles (1.0.3)
+
+Controlled provider/transport tests cover Coinbase's native 300-candle cap, the current forming candle, one-second recent-tail refresh, source-proven closed bars, network-gap resnapshot, suspension gaps, process reuse across BTC/ETH, independent request cancellation, worker crash recovery, exact-route separation, pool eviction, idle expiry and plugin disposal. Python boundary tests verify cached markets and the persistent rate limiter, metadata refresh, native request limits, recoverable JSONL errors and rejection of private operations/credentials/route changes. No host ABI or account/trading operation was added.
+
+The opt-in `ccxt-public-live.test.mjs` ran on 2026-10-10 with an existing pinned CCXT environment and an explicitly configured public proxy. Actual Coinbase BTC/USD 1h initial snapshot returned 300 candles including the current forming bar; the following refresh returned three recent candles; ETH/USD returned its current candle. All three receipts shared a session ID and increasing request numbers. Observed request durations were 7076 ms (initial), 412 ms (refresh) and 954 ms (ETH). A separate raw-worker check observed 5997/1158/380 ms for BTC/BTC/ETH. These are one-run observations, not latency guarantees.
+
+Existing formal install/activate and persisted-route host tests pass. The opt-in Kraken dependency-inspection/real-read test returned 23 source-closed hourly candles with no downloads. Its first attempt received an upstream network failure; a repeat succeeded on the same explicit route. This remains public polling with upstream latency/failures, not a guaranteed exchange tick feed. Test storage was temporary; installed application files and live user data were not modified.
+
+## Exact public route persistence (1.0.1)
 
 The previous 1.0.0 route lived only in transient bindings; unknown configuration fields such as `proxy` silently selected direct access. Version 1.0.1 persists only explicit credential-free exchange/publicProxy configuration under exact connection ID/revision in public HostContext plugin storage. Direct and proxy revision identities remain unchanged from 1.0.0, but unknown references cannot be guessed: an authorized configuration must first be explicitly registered.
 

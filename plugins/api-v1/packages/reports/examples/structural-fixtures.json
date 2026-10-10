@@ -1,0 +1,322 @@
+{
+  "provenance": {
+    "kind": "demo"
+  },
+  "description": "Fictional fixed records for structural chart interaction checks; no market or account observations.",
+  "charts": [
+    {
+      "id": "treemap",
+      "title": "Gross exposure by sleeve — fictional example",
+      "caption": "Area represents gross exposure. Long and short positions remain separate; zero positions have no area.",
+      "spec": {
+        "kind": "treemap",
+        "title": "Gross exposure by sleeve — fictional example",
+        "unit": "USD",
+        "rows": [
+          {
+            "id": "portfolio",
+            "parentId": null,
+            "label": "Gross exposure",
+            "value": "100000.00"
+          },
+          {
+            "id": "long",
+            "parentId": "portfolio",
+            "label": "Long sleeve",
+            "side": "long",
+            "value": "70000.00"
+          },
+          {
+            "id": "short",
+            "parentId": "portfolio",
+            "label": "Short sleeve",
+            "side": "short",
+            "value": "30000.00"
+          },
+          {
+            "id": "alpha",
+            "parentId": "long",
+            "label": "Alpha",
+            "value": "40000.00"
+          },
+          {
+            "id": "beta",
+            "parentId": "long",
+            "label": "Beta",
+            "value": "30000.00"
+          },
+          {
+            "id": "gamma",
+            "parentId": "short",
+            "label": "Gamma hedge",
+            "value": "30000.00"
+          },
+          {
+            "id": "flat",
+            "parentId": "short",
+            "label": "Flat position",
+            "value": "0.00"
+          }
+        ]
+      }
+    },
+    {
+      "id": "threads",
+      "title": "Observed signal → order → fill records — fictional example",
+      "caption": "Each line is one recorded signal, order and fill route. Missing stages stay disconnected.",
+      "spec": {
+        "kind": "threads",
+        "title": "Observed signal → order → fill records — fictional example",
+        "rows": [
+          {
+            "recordId": "route-001",
+            "signalId": "signal-ema-17",
+            "orderId": "order-041",
+            "fillId": "fill-101",
+            "quantity": "0.02"
+          },
+          {
+            "recordId": "route-002",
+            "signalId": "signal-ema-17",
+            "orderId": "order-041",
+            "fillId": "fill-102",
+            "quantity": "0.03"
+          },
+          {
+            "recordId": "route-003",
+            "signalId": "signal-breakout-8",
+            "orderId": "order-042",
+            "fillId": null,
+            "quantity": null
+          },
+          {
+            "recordId": "route-004",
+            "signalId": null,
+            "orderId": "manual-043",
+            "fillId": "fill-103",
+            "quantity": "0.01"
+          }
+        ]
+      }
+    },
+    {
+      "id": "flow",
+      "title": "One allocation batch — fictional example",
+      "caption": "A single allocation batch in USD; every internal node conserves its observed amount.",
+      "spec": {
+        "kind": "flow",
+        "title": "One allocation batch — fictional example",
+        "unit": "USD",
+        "nodes": [
+          {
+            "id": "cash",
+            "label": "Capital",
+            "role": "source"
+          },
+          {
+            "id": "fund",
+            "label": "Allocation",
+            "role": "transit"
+          },
+          {
+            "id": "long",
+            "label": "Long sleeve",
+            "role": "sink"
+          },
+          {
+            "id": "hedge",
+            "label": "Hedge sleeve",
+            "role": "sink"
+          },
+          {
+            "id": "fees",
+            "label": "Recorded fees",
+            "role": "sink"
+          }
+        ],
+        "rows": [
+          {
+            "id": "transfer",
+            "source": "cash",
+            "target": "fund",
+            "value": "1000.10",
+            "batch": "allocation-001"
+          },
+          {
+            "id": "allocate-long",
+            "source": "fund",
+            "target": "long",
+            "value": "700.00",
+            "batch": "allocation-001"
+          },
+          {
+            "id": "allocate-hedge",
+            "source": "fund",
+            "target": "hedge",
+            "value": "300.00",
+            "batch": "allocation-001"
+          },
+          {
+            "id": "pay-fees",
+            "source": "fund",
+            "target": "fees",
+            "value": "0.10",
+            "batch": "allocation-001"
+          }
+        ]
+      }
+    },
+    {
+      "id": "network-circular",
+      "title": "Signed observed relations — fictional example",
+      "caption": "Actual signed relationships on a fixed circle. Weight controls line width; distance has no statistical meaning.",
+      "spec": {
+        "kind": "network-circular",
+        "title": "Signed observed relations — fictional example",
+        "directed": false,
+        "nodes": [
+          {
+            "id": "a",
+            "label": "Trend"
+          },
+          {
+            "id": "b",
+            "label": "Carry"
+          },
+          {
+            "id": "c",
+            "label": "Volatility"
+          },
+          {
+            "id": "d",
+            "label": "Liquidity"
+          },
+          {
+            "id": "e",
+            "label": "Momentum"
+          }
+        ],
+        "rows": [
+          {
+            "id": "a-b",
+            "source": "a",
+            "target": "b",
+            "weight": "0.42",
+            "sign": 1
+          },
+          {
+            "id": "a-c",
+            "source": "a",
+            "target": "c",
+            "weight": "0.31",
+            "sign": -1
+          },
+          {
+            "id": "b-d",
+            "source": "b",
+            "target": "d",
+            "weight": "0.27",
+            "sign": 1
+          },
+          {
+            "id": "c-e",
+            "source": "c",
+            "target": "e",
+            "weight": "0.62",
+            "sign": -1
+          },
+          {
+            "id": "a-e",
+            "source": "a",
+            "target": "e",
+            "weight": "0.51",
+            "sign": 1
+          },
+          {
+            "id": "b-e",
+            "source": "b",
+            "target": "e",
+            "weight": "0.00",
+            "sign": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "network-force",
+      "title": "Signed observed relations — fictional example",
+      "caption": "The same observed edges in a deterministic layout. Drag a node to inspect connections; geometry does not change the observations.",
+      "spec": {
+        "kind": "network-force",
+        "title": "Signed observed relations — fictional example",
+        "directed": false,
+        "nodes": [
+          {
+            "id": "a",
+            "label": "Trend"
+          },
+          {
+            "id": "b",
+            "label": "Carry"
+          },
+          {
+            "id": "c",
+            "label": "Volatility"
+          },
+          {
+            "id": "d",
+            "label": "Liquidity"
+          },
+          {
+            "id": "e",
+            "label": "Momentum"
+          }
+        ],
+        "rows": [
+          {
+            "id": "a-b",
+            "source": "a",
+            "target": "b",
+            "weight": "0.42",
+            "sign": 1
+          },
+          {
+            "id": "a-c",
+            "source": "a",
+            "target": "c",
+            "weight": "0.31",
+            "sign": -1
+          },
+          {
+            "id": "b-d",
+            "source": "b",
+            "target": "d",
+            "weight": "0.27",
+            "sign": 1
+          },
+          {
+            "id": "c-e",
+            "source": "c",
+            "target": "e",
+            "weight": "0.62",
+            "sign": -1
+          },
+          {
+            "id": "a-e",
+            "source": "a",
+            "target": "e",
+            "weight": "0.51",
+            "sign": 1
+          },
+          {
+            "id": "b-e",
+            "source": "b",
+            "target": "e",
+            "weight": "0.00",
+            "sign": 0
+          }
+        ]
+      }
+    }
+  ]
+}

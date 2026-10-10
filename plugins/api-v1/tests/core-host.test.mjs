@@ -33,6 +33,7 @@ test('nine defaults provide backend-free authoring/reports; MT5 and judgments in
     };
     await open();
     assert.deepEqual([...runtime.plugins.entries.values()].map(entry => entry.id).sort(), lock.packages.map(pkg => pkg.id).sort());
+    for (const entry of runtime.plugins.entries.values()) assert.notEqual(entry.runtime_status, 'failed', `${entry.id}: ${JSON.stringify(entry.diagnostics)}`);
     assert.deepEqual(runtime.providers.list('sesame.market'), []); assert.deepEqual(runtime.providers.list('sesame.account'), []);
     const session = await runtime.session('conv_main'), call = async (name, args) => {
       const tool = runtime.plugins.definitions({ conversationId: 'conv_main' }).find(item => item.name === name); assert.ok(tool, name);

@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
+import { runInNewContext } from 'node:vm';
 import { createTools as reportTools } from '../packages/reports/index.js';
 
 const root = fileURLToPath(new URL('../packages/', import.meta.url));
@@ -35,6 +36,8 @@ test('report template escapes authored text and retains only local chart assets 
   const html = writes[0][2];
   assert.match(html, /&lt;script&gt;invalid\(\)&lt;\/script&gt;/); assert.match(html, /\\u003c\/script>/);
   assert.doesNotMatch(html, /<script>invalid\(\)/); assert.doesNotMatch(html, /<script[^>]+src=|<link[^>]+href=/i);
+  assert.match(html, /reportKit\.render/); assert.match(html, /reportKit\.rows\(config.dataId\)/);
+  assert.match(html, /kit-verdict-headline/); assert.match(html, /kit-appendix/);
   assert.match(html, /window\.report\.track\(initialize\(\)\)/); assert.match(html, /readData\(dataId/); assert.match(html, /DEMO SAMPLE/);
   await assert.rejects(template.execute({ kind: 'matrix' }), /value column/);
 });
@@ -46,4 +49,19 @@ test('the committed gallery is reproducible from its original local assets and e
   const data = JSON.parse(readFileSync(join(root, 'reports/examples/demo-data.json'))); assert.equal(data.provenance.kind, 'demo');
   assert.equal(data.monthly.filter(row => row.change === null).length, 1);
   assert.match(before.toString(), /FICTIONAL DEMO/); assert.doesNotMatch(before.toString(), /<script[^>]+src=|<link[^>]+href=/i);
+});
+
+// Exercise the migrated data adapter without a browser: no host globals beyond
+// the public read-only bridge are available in the new report runtime.
+test('reportKit pages exact fixed bindings, retains strings and reports cursor and row-budget failures', async () => {
+  const source = readFileSync(join(root, 'reports/assets/report-kit.js'), 'utf8');
+  const build = readData => { const context = { window: { report: { readData } }, document: { documentElement: { lang: 'en' } } }; runInNewContext(source, context); return context.window.reportKit; };
+  const calls = [], values = [{ value: '9007199254740993.0000000000001' }, { value: null }];
+  const kit = build(async (id, options) => { calls.push({ id, ...options }); return options.cursor ? { rows: [values[1]], page: { nextCursor: null } } : { rows: [values[0]], page: { nextCursor: 'page-two' } }; });
+  assert.equal(JSON.stringify(await kit.rows('exact-binding')), JSON.stringify(values));
+  assert.deepEqual(calls.map(call => call.id), ['exact-binding', 'exact-binding']);
+  assert.equal(calls[1].cursor, 'page-two');
+  await assert.rejects(build(async () => ({ rows: [], page: { nextCursor: 'repeated' } })).rows('data'), /cursor repeated/);
+  await assert.rejects(build(async () => ({ rows: values, page: {} })).rows('data', { maxRows: 1 }), /row budget/);
+  await assert.rejects(build(async () => { throw new Error('unbound fixed data'); }).rows('not-bound'), /unbound fixed data/);
 });

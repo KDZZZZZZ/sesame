@@ -1,12 +1,19 @@
-# Sesame editorial report components
+# Sesame report components
 
-Sesame Charts 1.0.1, the report scaffolds and the integration tools in this
-directory are original Sesame code, distributed under the local MIT license.
+reportKit, the report stylesheet, Sesame Charts 1.1.0, the scaffolds and the
+integration tools in this directory are Sesame code, distributed under the local
+MIT license. The reportKit visual layout and writing/design guidance are restored
+from Sesame's original pre-refactor reports (0.1.4), rather than replacing that
+layout with an unrelated gallery style. The borderless typography, conclusion,
+metric rules, numbered evidence sections, legends, hover inspection and folded
+methods retain the original design. Only the read-only data bridge, resource
+lifecycle and optional interaction extensions are adapted for API 1. Components
+and style fallbacks are packaged here, with no imports from the private host.
 They require no CDN, external font or third-party chart runtime. The immutable
 report artifact retains the authored HTML, local assets and fixed DataRef inputs.
 
 Design research examined [Lieflat Charts](https://github.com/larashero3-dotcom/lieflat-charts)
-at commit `eace082a317b696c5570c25826a53a7fa113e984` on 2026-10-09, including its
+at commit `eace082a317b696c5570c25826a53a7fa113e984` on 2026-10-09 and rechecked on 2026-10-10, including its
 license, third-party notices, SVG gallery, report-09 dashboard and report catalog.
 Its current license is **PolyForm Noncommercial 1.0.0**, not MIT. No Lieflat
 template, JavaScript, color-token file, font, screenshot or other asset is
@@ -18,8 +25,10 @@ that remain visible, restrained color, readable source notes, separate fast
 overview and row inspection, and chart selection by data shape. Concrete new
 implementations include zero-centered signed bars, gap-preserving time series,
 keyboard-selectable marks linked to a row table, explicit missing matrix cells,
-and unit charts that reject fractional or excessive unit counts. The component
-API, layout, styles and SVG routines were authored for Sesame's fixed-data bridge.
+and labelled unit charts that reject fractional or excessive unit counts. The optional component
+API and SVG routines were independently authored for Sesame's fixed-data bridge.
+They supplement, rather than replace, the original reportKit layout and skills.
+No upstream requirement to copy templates or impose a chart count is adopted.
 
 The example dataset is explicitly **demo** throughout. It is not market history,
 portfolio performance, a survey or a native backtest. Financial calculations and
@@ -29,3 +38,5 @@ coordinates use JavaScript numbers while source tables retain exact strings.
 Future use of upstream code must retain its actual terms and required notices,
 or obtain a suitable additional license. Merely being publicly readable or free
 of charge does not make that upstream code permissively licensed.
+
+The optional independently authored collection now also includes waterfall, paired comparisons, strip plots, supplied-bin histograms, supplied-statistic boxes, supplied-grid ridgelines/violins, calendars, parallel coordinates, rank trajectories, lifecycle events, exposure treemaps, identified record threads, conserved flows and circular/stable-force network layouts. The statistics, temporal and structural modules contain no copied upstream code. All gallery input is explicitly fictional; financial estimates are not calculated inside these renderers. Selection and filtering preserve the identity of fixed source rows.

@@ -1,8 +1,8 @@
 {
   "id": "sesame/reports",
   "title": "交互报告",
-  "description": "编写、冻结与发布 report/1 HTML 报告，使用固定数据引用、离线 SVG 图表与只读渲染桥。",
-  "version": "2.0.3",
+  "description": "编写、冻结与发布统一风格的交互报告，支持统计、时序、结构图与固定数据明细联动。",
+  "version": "2.1.0",
   "default_state": "mounted",
   "tool_names": [
     "report_data",
@@ -22,11 +22,22 @@
   "resources": [
     "repair.md",
     "PROVENANCE.md",
+    "assets/report-kit.js",
     "assets/editorial-charts.js",
     "assets/editorial.css",
     "templates/research-brief.html",
     "examples/demo-data.json",
-    "examples/editorial-demo.html"
+    "examples/editorial-demo.html",
+    "assets/charts-statistics.js",
+    "assets/charts-temporal.js",
+    "assets/charts-structure.js",
+    "examples/chart-gallery.md",
+    "examples/statistical-fixtures.json",
+    "examples/temporal-fixtures.json",
+    "examples/structural-fixtures.json",
+    "skills/report-design/statistical-charts.md",
+    "skills/report-design/temporal-charts.md",
+    "skills/report-design/structural-charts.md"
   ],
   "templates": {
     "report_repair": "repair.md"

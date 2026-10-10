@@ -10,6 +10,35 @@ export const treeDigest = files => `sha256:${sha256(JSON.stringify([...files].so
 const safePath = path => typeof path === 'string' && path.length > 0 && path.length <= 512 && !/[\x00-\x1f\\:]/.test(path) && !path.startsWith('/') && path.split('/').every(part => part && part !== '.' && part !== '..' && !/[. ]$/.test(part) && !/^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part));
 const semver = value => typeof value === 'string' && /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(value);
 
+/** A package may require a newer host than its bundle profile. Keep the source
+ * format deliberately narrow (one SemVer lower bound); compound ranges and
+ * widened alternatives need a separate review rather than a guessed subset. */
+export function engineWithinProfile(range, profileRange) {
+  const lower = value => {
+    const match = typeof value === 'string' && /^>=(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/.exec(value);
+    if (!match) return null;
+    const pre = match[4]?.split('.') ?? null;
+    if (pre?.some(part => /^\d+$/.test(part) && !/^(0|[1-9]\d*)$/.test(part))) return null;
+    return { numbers: match.slice(1, 4).map(BigInt), pre };
+  };
+  const requested = lower(range), minimum = lower(profileRange);
+  if (!requested || !minimum) return false;
+  // SemVer ranges admit prereleases only at their explicitly named base.
+  // A higher prerelease base would add hosts excluded by the profile range.
+  for (let i = 0; i < 3; i++) if (requested.numbers[i] !== minimum.numbers[i]) return requested.numbers[i] > minimum.numbers[i] && !requested.pre;
+  if (!requested.pre || !minimum.pre) return !requested.pre;
+  for (let i = 0; i < Math.max(requested.pre.length, minimum.pre.length); i++) {
+    const a = requested.pre[i], b = minimum.pre[i];
+    if (a === b) continue;
+    if (a === undefined || b === undefined) return b === undefined;
+    const an = /^\d+$/.test(a), bn = /^\d+$/.test(b);
+    if (an && bn) return BigInt(a) > BigInt(b);
+    if (an !== bn) return !an;
+    return a > b;
+  }
+  return true;
+}
+
 // A fixed gzip header and RFC 1951 stored blocks make archive bytes independent
 // of Node's bundled zlib version, compression tuning and the runner platform.
 // These source bundles are small; portability is more valuable than compression.
@@ -68,7 +97,7 @@ export function buildLock(source = root) {
     const id = extension?.id ?? manifest.id;
     fail(id === `sesame/${directory}`, `Incorrect publisher identity: ${directory}`);
     if (profile) {
-      fail((manifest.$schema ? extension?.engines : manifest.engines)?.sesame === profile.engines.sesame, `${id}: Sesame engine range differs from its profile`);
+      fail(engineWithinProfile((manifest.$schema ? extension?.engines : manifest.engines)?.sesame, profile.engines.sesame), `${id}: Sesame engine range must not widen its profile`);
       fail(!Object.hasOwn(manifest, 'migration') && !Object.hasOwn(extension ?? {}, 'migration'), `${id}: profiled packages cannot request legacy host storage grants`);
       const state = extension?.builtin?.default_state ?? manifest.default_state;
       fail(profile.kind === 'optional' ? state === 'discoverable' : ['mounted', 'discoverable'].includes(state), `${id}: profile default state differs`);

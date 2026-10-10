@@ -83,7 +83,7 @@
   {
     "name": "report_template",
     "label": "report_template",
-    "description": "Write an editable, self-contained report/1 HTML template with original offline SVG charts, row filtering and linked exact-value tables. Reads a named fixed data binding when the report opens.",
+    "description": "Write an editable report/1 HTML scaffold with Sesame’s original typography, conclusion, numbered evidence and folded methods. Optional comparison, distribution, temporal and relationship charts use the same style. Read report-design for chart field mappings; all chart data comes from named fixed bindings.",
     "parameters": {
       "type": "object",
       "required": [
@@ -95,8 +95,6 @@
         "takeaway",
         "source_note",
         "kind",
-        "x",
-        "y",
         "unit",
         "columns"
       ],
@@ -164,18 +162,82 @@
             {
               "type": "string",
               "const": "units"
+            },
+            {
+              "type": "string",
+              "const": "waterfall"
+            },
+            {
+              "type": "string",
+              "const": "dumbbell"
+            },
+            {
+              "type": "string",
+              "const": "strip"
+            },
+            {
+              "type": "string",
+              "const": "histogram"
+            },
+            {
+              "type": "string",
+              "const": "boxplot"
+            },
+            {
+              "type": "string",
+              "const": "ridgeline"
+            },
+            {
+              "type": "string",
+              "const": "violin"
+            },
+            {
+              "type": "string",
+              "const": "calendar"
+            },
+            {
+              "type": "string",
+              "const": "parallel"
+            },
+            {
+              "type": "string",
+              "const": "bump"
+            },
+            {
+              "type": "string",
+              "const": "lifecycle"
+            },
+            {
+              "type": "string",
+              "const": "treemap"
+            },
+            {
+              "type": "string",
+              "const": "threads"
+            },
+            {
+              "type": "string",
+              "const": "flow"
+            },
+            {
+              "type": "string",
+              "const": "network-circular"
+            },
+            {
+              "type": "string",
+              "const": "network-force"
             }
           ]
         },
         "x": {
           "type": "string",
-          "description": "Category or x-coordinate column",
+          "description": "Category or x-coordinate column; required by line/bar/scatter/matrix/units",
           "minLength": 1,
           "maxLength": 20000
         },
         "y": {
           "type": "string",
-          "description": "Value or matrix row column",
+          "description": "Value or matrix row column; required by line/bar/scatter/matrix/units",
           "minLength": 1,
           "maxLength": 20000
         },
@@ -220,6 +282,38 @@
         },
         "demo": {
           "type": "boolean"
+        },
+        "chart_options": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true,
+          "description": "Chart-specific field mappings and display options from report-design. Do not put data rows, callbacks or computed financial results here."
+        },
+        "chart_data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "property",
+              "data_id"
+            ],
+            "properties": {
+              "property": {
+                "type": "string",
+                "description": "Extra chart data property, for example nodes",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "data_id": {
+                "type": "string",
+                "description": "Fixed report data binding to read for that property",
+                "minLength": 1,
+                "maxLength": 20000
+              }
+            },
+            "additionalProperties": false
+          },
+          "maxItems": 8
         }
       },
       "additionalProperties": false

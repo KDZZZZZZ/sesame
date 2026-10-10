@@ -73,9 +73,9 @@
     },
     {
       "id": "sesame/configuration",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "configuration",
-      "treeDigest": "sha256:ceec5c249243013552e7c012a44b34be7e251b627021f03cc355b267c34493a2",
+      "treeDigest": "sha256:c608a4c895630f5db73d2d144bbb3a743f35599cd0212c6c27481851d37b23e1",
       "files": [
         {
           "path": "LICENSE",
@@ -89,12 +89,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "e305729e4c5aa45fdfd0c66fcc2e171f0c0e5d3aaae43175cf0743bd94a29595",
+          "sha256": "a02810ec4a553df6701a499f36e050b7a045458400dce926a5b7e414f7b99eb4",
           "bytes": 107
         },
         {
           "path": "plugin.json",
-          "sha256": "b99406571b55d6a5b7cba2c8264bd4a0ce921604f6f761a0573b6ec054e40585",
+          "sha256": "10376d1d944f3c284ecdaf1b8ac849f0fa388e25195643c97cffae4c7ff8f2eb",
           "bytes": 599
         },
         {
@@ -104,8 +104,8 @@
         },
         {
           "path": "skills/configure-application/SKILL.md",
-          "sha256": "e71ad7f203823092d407783051d07c5d98487b297fa9ce5d277f32053cd313aa",
-          "bytes": 546
+          "sha256": "2694caa7ed81a845f4d037f14eabb68c72c2945595cd509a92b5b505e8f7d9a7",
+          "bytes": 1550
         },
         {
           "path": "support.js",
@@ -114,13 +114,13 @@
         },
         {
           "path": "tools.js",
-          "sha256": "6a283e6dd9d8f76053e23fb6d0ed216ef82917b76a03ec32a9e2fc9046141f4c",
-          "bytes": 1502
+          "sha256": "c45a581bdb1821d02356175d3ed4f96b61e7943684da88cb48f17f65e98618ac",
+          "bytes": 2380
         },
         {
           "path": "tools.json",
-          "sha256": "86c0c94043f478f3bfd9af99da494af97e5bf94583e53803db573de1a8f64822",
-          "bytes": 4336
+          "sha256": "aec2a1881f3d870f85d49bf32ed907b5a57feebf4e057e1b9e11141ea9a2e20a",
+          "bytes": 10384
         }
       ]
     },
@@ -393,9 +393,9 @@
     },
     {
       "id": "sesame/reports",
-      "version": "2.0.3",
+      "version": "2.1.0",
       "directory": "reports",
-      "treeDigest": "sha256:615064416e0218f6be8a2565b51602731edc18a76b7d90b0962cd529d4952e84",
+      "treeDigest": "sha256:f4ea4a20e02a4135634616c7e1555dfcd5d3e98138d1d9251851b48fffee58d6",
       "files": [
         {
           "path": "LICENSE",
@@ -404,18 +404,48 @@
         },
         {
           "path": "PROVENANCE.md",
-          "sha256": "adecae6023f162328f1f55512b58f26cb28e1848838a7adfa2f03fea2a97c6f8",
-          "bytes": 1981
+          "sha256": "6a30a5c2ee4a92725ec8d7840619883e30c4bde8f37d2643ed4ccc5647c1765a",
+          "bytes": 3358
+        },
+        {
+          "path": "assets/charts-statistics.js",
+          "sha256": "8e19242c4583c872927a7ceea9a410eec98ca4b14e0875e2bf2d6d62b7774f80",
+          "bytes": 24587
+        },
+        {
+          "path": "assets/charts-structure.js",
+          "sha256": "4a0d908f4845aac9c51d4c54f4daeef0b5ec7762098bb1d4f82e1b0d4b0461f2",
+          "bytes": 29095
+        },
+        {
+          "path": "assets/charts-temporal.js",
+          "sha256": "5ae9f7b255253cbc53d8574f175016f5fd77714d9d23c9e3a929c73e6528cf45",
+          "bytes": 36369
         },
         {
           "path": "assets/editorial-charts.js",
-          "sha256": "e2f30c3f4d5b1da510beaffa6b9e72e32a4aec362b62a32b2ae91f97490254d0",
-          "bytes": 13352
+          "sha256": "94528c6ca6067d57807fe201dfe7459f443ef55537e45a58872e7cb5e37239ce",
+          "bytes": 16552
         },
         {
           "path": "assets/editorial.css",
-          "sha256": "a64c8dbe8d7617b6dfcc03edac82f9272fc9cc53cc9a2172f8613cd05da56ddb",
-          "bytes": 5126
+          "sha256": "b721786c083704044382f5950c5825f4e5e18c451d18f8bdae01168a68b33b24",
+          "bytes": 30653
+        },
+        {
+          "path": "assets/report-kit.js",
+          "sha256": "2e6fe859d25270c2cdd16d2ada799d18ce389be2c4a9127fa070490c11d35769",
+          "bytes": 45095
+        },
+        {
+          "path": "examples/chart-gallery.html",
+          "sha256": "df87a6ede9671860d9f1b1513ca5578a5632bc1ad1595a2122bc1b3add2cc378",
+          "bytes": 200867
+        },
+        {
+          "path": "examples/chart-gallery.md",
+          "sha256": "faf63d421bdfa4b3876772388ae3a0856a1b48321f88b1ed40e60a3656fda29a",
+          "bytes": 1820
         },
         {
           "path": "examples/demo-data.json",
@@ -424,63 +454,98 @@
         },
         {
           "path": "examples/editorial-demo.html",
-          "sha256": "c0935774fda2998cb1d3f3ded242a5ed04d113e38f8406298995555c69a38652",
-          "bytes": 24367
+          "sha256": "6e66ed3d9d2c10d995c14b106f2781fa949019ae06d07501422c7b841146e8fd",
+          "bytes": 98835
+        },
+        {
+          "path": "examples/statistical-fixtures.json",
+          "sha256": "396689015733faa3404a3104a0b554dbb073538064707eba55442a9889c6b56d",
+          "bytes": 5242
+        },
+        {
+          "path": "examples/structural-fixtures.json",
+          "sha256": "f2961cb14aff19203ee27ecbcca1f051cbb08999a4d422d765bea072cb29687a",
+          "bytes": 8191
+        },
+        {
+          "path": "examples/temporal-fixtures.json",
+          "sha256": "5245daa0c485a5a4787d90967f848fa2aaa5f1fbd1ae2f4d8f28c09d4fb46581",
+          "bytes": 6032
         },
         {
           "path": "index.js",
-          "sha256": "42861b457cf80409432eff5b85baed346a87fb0ce6435fdf395b412200c421db",
-          "bytes": 14072
+          "sha256": "2d17755bd1fb1ff2c2bc0e06d1b7ff69a15b578fa5995be21d06fe4b7375385c",
+          "bytes": 16666
         },
         {
           "path": "package.json",
-          "sha256": "a1c71c67890c84624b3cfabfb424e8a591d352d9d66a89d2854c8ebeafaf1712",
+          "sha256": "cccad0ed68dd73cad8a365c0ae97dfcc468e59713bb14aaafdb9edc3b299e9a8",
           "bytes": 120
         },
         {
           "path": "plugin.json",
-          "sha256": "13bb4615ace29eb926f6d9c428cd3f8aa8d126ef2526d4683b67deba7f3e33ff",
-          "bytes": 971
+          "sha256": "8ac273cd8c5599bee8d2ea58cda04d20fb9bf85d9a20864100078a7aec451e02",
+          "bytes": 1406
         },
         {
           "path": "prompt.md",
-          "sha256": "fef555b7b58dd0c97d14e84e3f52b8332732b462533de16ffe9c53882e15f04f",
-          "bytes": 1939
+          "sha256": "0fda13ab5dd121be1d5a0587275379636fd7557972b7baa2824eb8c9c247daa6",
+          "bytes": 2656
         },
         {
           "path": "repair.md",
-          "sha256": "454751d188c26506fd73ce451084df8d3a44c3a3a0212e442b0993bd21e593d3",
-          "bytes": 1181
+          "sha256": "467fefc41e41e3cb2ab7c35f15756b569493dba516994bddfd216ec2df2a75ba",
+          "bytes": 1354
+        },
+        {
+          "path": "scripts/build-chart-gallery.mjs",
+          "sha256": "fcb6f52d9aed4306db976c465c5096a60ecff55674b34679ae57b2dfef8c1891",
+          "bytes": 5583
         },
         {
           "path": "scripts/build-demo.mjs",
-          "sha256": "be1fa3ae35e316874318d8b4e877545258a6ad24744ddbecf15645c8b47733af",
-          "bytes": 5411
+          "sha256": "2d46f02ea6426db7531ccf39ab62e3fc2e90a36ccd6f53d2e2f261d3d6647397",
+          "bytes": 6103
         },
         {
           "path": "skills/interactive-report/SKILL.md",
-          "sha256": "a27ea0203a2fc9b66f14dd92905df839d617e07785993e3a2f7663c78d469b58",
-          "bytes": 1783
+          "sha256": "65da9d5f670df3576bd7a321f2e0d6359796de49f02b2186cb563e0c35ed9688",
+          "bytes": 3946
         },
         {
           "path": "skills/report-design/SKILL.md",
-          "sha256": "801b3b527f445e1ac33b2f9f1d6936cf1730e3594e4178222c969b45a14530a2",
-          "bytes": 1804
+          "sha256": "4b1980dc53a331327cc3a9c150e74c059caa0c9a51e62ef203f324012f8c6552",
+          "bytes": 10403
+        },
+        {
+          "path": "skills/report-design/statistical-charts.md",
+          "sha256": "d2194da71c5c66cc9a71b2b104cb9d4fb925bfa816da1c215ea6f51e5c71c6b8",
+          "bytes": 6813
+        },
+        {
+          "path": "skills/report-design/structural-charts.md",
+          "sha256": "1ac639d41ea5b1203aad305c8b4833a5c1b798ab5e2fd2e84d9590b8dfdf6b16",
+          "bytes": 6583
+        },
+        {
+          "path": "skills/report-design/temporal-charts.md",
+          "sha256": "62877f3f7760e733fcc95454a64e5b0b3adfee7f25a4a4cd859e7a7c20fe9388",
+          "bytes": 9953
         },
         {
           "path": "skills/report-writing/SKILL.md",
-          "sha256": "4043de6b197563f023c769340f760f5bb03021cf05f8f739708c2ec9a526b9f5",
-          "bytes": 2866
+          "sha256": "cda6be84c8c11b0f61023fe042126ebbc8060a767a7366280496d08ff66b6572",
+          "bytes": 5186
         },
         {
           "path": "templates/research-brief.html",
-          "sha256": "5ba2d27cb83663252fc77880df6bbcc0f6176bfe12a270591587ba1d0defff95",
-          "bytes": 1815
+          "sha256": "3f79a1b7cecb12a357f107f43338ef7cc61afa15578e771a752d06bba380ebee",
+          "bytes": 3959
         },
         {
           "path": "tools.json",
-          "sha256": "2a7d2dc543820054c0c7864486e5ca9efeb44aadc70db7567f960983cd6efcdf",
-          "bytes": 17163
+          "sha256": "3578856f79b3c7a46dec39ccd46a1d2e3626dcccf05540ae7d1a4d0d17c475b5",
+          "bytes": 19941
         }
       ]
     },
