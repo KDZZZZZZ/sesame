@@ -936,3 +936,49 @@ remains 31 entries and changes only the CCXT version. The installation catalog
 continues to pin published optional dev.7 until dev.8 is actually released and a
 separate metadata PR is reviewed. Final-head review, pre-merge gate, publication
 and actual-download evidence are subsequent steps, not claimed by this section.
+
+
+## Published CCXT route restoration — optional dev.8
+
+[PR31](https://github.com/KDZZZZZZ/sesame/pull/31) was normally merged at
+2026-10-10T04:25:21Z as `e27ec7f38bf7a7c633adb99f945035224f300f37`, preserving reviewed
+head `03049a534311cc57d5367973d6195093b1aa14e3` and source `04261febd94d483b7d87d8564116099d394e3246`.
+The independent Agent review completed at 04:22:58Z and its authenticated
+[maintainer attestation](https://github.com/KDZZZZZZ/sesame/pull/31#issuecomment-6093732753)
+was recorded at 04:23:58Z. The [trusted pre-merge gate](https://github.com/KDZZZZZZ/sesame/actions/runs/38023923305)
+checked at 04:24:10Z and completed at 04:24:15Z, before merge. The
+[automatic publication workflow](https://github.com/KDZZZZZZ/sesame/actions/runs/38024008400)
+then published optional dev.8 at 04:27:04Z. All times are UTC on 2026-10-10.
+
+The final reviewer read all thirteen changed files, verified the nine author
+files against the previously reviewed source, reran five controlled provider and
+actual temporary Host/canvas/reopen checks, and rebuilt all four reproducible
+assets from fixed Git source. It did not claim to rerun the root's separate
+thirteen invalid-configuration and four restoration cases. The named Agent
+review is attested by the authenticated maintainer; human approval remains
+not-recorded. There was no fresh public-market or production-dashboard acceptance
+in this release review.
+
+All five actual release assets were downloaded and checked against GitHub
+sizes/SHA-256; the four reproducible files also equal the reviewed candidate.
+The actual host safe extractor/verifier accepted 22 optional packages. Only
+CCXT changes to 1.0.1, tree `sha256:547cfc07e72dd6ee7bcdfe1ce860dc7a8797272126eb25cda109bfa86d046301`;
+the other 21 complete optional lock entries and core dev.14 remain unchanged.
+This verification did not activate plugins or modify any running application's
+cache, terminal, account, dependency environment or private source.
+
+### [plugins-optional-api-v1-dev.8](https://github.com/KDZZZZZZ/sesame/releases/tag/plugins-optional-api-v1-dev.8)
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `application-official-plugins.lock.json` | 4139 | `b1d1004acdefaffeab79a097b217eb67b742ae141c567ed0cbe760173d0e6e55` |
+| `official-plugins.lock.json` | 71981 | `64b4ac35b1e38591b31ce4d647fa7fdd5ffcb3375458b3a2b8ecde7244437c01` |
+| `review.json` | 4868 | `5880e695d96ba2a07ffee69d33a19a33259130c6ab0296c409f51e8f63b76c7d` |
+| `sesame-optional-plugins-api-v1-dev.8.tar.gz` | 2229953 | `f20be226f06f995464504023e9d0f88d19b9afbc83ad5f9d54fc86ef9711e6b0` |
+| `SHA256SUMS` | 203 | `6190b9fc595d3de3685a00d8e8b923caed5c872737a55b01f6644e055bde762e` |
+
+The catalog update retains 31 exact identities (9 core and 22 optional), now
+with 494 file records, and selects only published core dev.14 / optional dev.8.
+Its five reconstruction/resolution/publication checks and actual published
+metadata validation passed. Historical stable and optional catalogs retain
+their bytes. Application 0.2.0 is still not formally released.

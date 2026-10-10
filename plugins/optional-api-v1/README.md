@@ -39,7 +39,7 @@ host-readable without granting access to old mutable application collections.
 
 The new plugin-manager reads the unified `../api-v1/catalog.json`; the old three-entry
 catalog here is retained as historical metadata. The unified directory selects
-actually published core dev.14 and optional dev.7: nine defaults and these twenty-two
+actually published core dev.14 and optional dev.8: nine defaults and these twenty-two
 optional packages. Each entry fixes its source, files, package tree and
 publication review. Formal application 0.2.0 is still not released.
 

@@ -16,13 +16,15 @@ test('the 31-entry unified directory exactly reconstructs two fixed released arc
   assert.equal(catalog.plugins.filter(item => item.distribution === 'core').length, 9);
   assert.equal(catalog.plugins.filter(item => item.distribution === 'optional').length, 22);
   for (const p of catalog.plugins) assert.equal(p.engines.sesame, '>=0.2.0-0');
-  assert.deepEqual(catalog.releases.map(item => item.tag), ['plugins-api-v1-dev.14', 'plugins-optional-api-v1-dev.7']);
+  assert.deepEqual(catalog.releases.map(item => item.tag), ['plugins-api-v1-dev.14', 'plugins-optional-api-v1-dev.8']);
   for (const [id, version] of Object.entries({ 'sesame/akshare': '1.0.5', 'sesame/data-access': '2.3.1', 'sesame/orchestration': '2.1.1', 'sesame/reports': '2.0.3' })) assert.equal(catalog.plugins.find(item => item.id === id).version, version);
   const mt5 = catalog.plugins.find(item => item.id === 'sesame/mt5');
   assert.equal(mt5.version, '1.2.0'); assert.ok(mt5.tools.includes('mt5_translation_file'));
   assert.equal(mt5.package.treeDigest, 'sha256:6ae118d2bdb1c1e837c30a8fb0ec0eb51f1fecbce8f16780bb66ac0b1ac4f8d3');
   assert.equal(catalog.plugins.find(item => item.id === 'sesame/plugin-manager').version, '2.1.1', 'Only the actually released manager enters the catalog');
   assert.equal(catalog.plugins.find(item => item.id === 'sesame/quantskills-catalog').version, '2.1.0');
+  assert.equal(catalog.plugins.find(item => item.id === 'sesame/ccxt').version, '1.0.1');
+  assert.equal(catalog.plugins.find(item => item.id === 'sesame/ccxt').package.treeDigest, 'sha256:547cfc07e72dd6ee7bcdfe1ce860dc7a8797272126eb25cda109bfa86d046301');
   assert.equal(catalog.plugins.find(item => item.id === 'sesame/backtrader').license, 'GPL-3.0-or-later');
 });
 
