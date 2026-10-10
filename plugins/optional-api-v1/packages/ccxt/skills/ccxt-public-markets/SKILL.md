@@ -11,3 +11,9 @@ description: Use explicit CCXT exchange public spot instruments, UTC candles and
 6. Freeze research data through generic data-access. Read-only public candles do not prove trade permission or a broker session. Native float-derived Decimal strings cannot restore exchange precision lost by CCXT.
 
 `inspect` validates and selects a compatible existing environment by saving only a private selection receipt. It never installs or upgrades dependencies. Ready after inspect is immediately usable; prepare is needed only when no compatible dependency is found.
+
+## Exact public route and dashboard binding
+
+Use `configuration:{exchange:'kraken'}` for an explicitly selected direct route. If the user selects a credential-free proxy, the exact field is `configuration:{exchange:'kraken',publicProxy:'http://127.0.0.1:7897'}`. `proxy`, `proxyUrl`, null/boolean proxy values and unknown fields are rejected; they do not silently select direct access. The local address is an example, not a default. Never read system proxy settings or insert credentials.
+
+The first explicit bind saves only this public configuration in private plugin storage, keyed by its returned exact connection ID/revision. Persist that connection through `canvas_binding`; later dashboard or restarted host connection-only bindings restore exactly the saved route. If the record is missing or mismatched, supply the authorized configuration explicitly instead of guessing or changing routes. `plugin_read` can read this package's `README.md` and `PROVENANCE.md`.

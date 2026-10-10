@@ -224,9 +224,9 @@
     },
     {
       "id": "sesame/ccxt",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "directory": "ccxt",
-      "treeDigest": "sha256:a4328a4a4b7e35f6cb5ec4adf219adf70dbd30337ba19aac4bf33b57305ea0cd",
+      "treeDigest": "sha256:547cfc07e72dd6ee7bcdfe1ce860dc7a8797272126eb25cda109bfa86d046301",
       "files": [
         {
           "path": "LICENSE",
@@ -235,13 +235,18 @@
         },
         {
           "path": "PROVENANCE.md",
-          "sha256": "208ef6ef82fdab88878c63ecd8896fc180e0f87db01299c66101723432cd2ccc",
-          "bytes": 1499
+          "sha256": "06bd924c7c81d8b9dac02f96ddcdd596fd35a8590900264bd4f7f82c0240e8b6",
+          "bytes": 1881
         },
         {
           "path": "README.md",
-          "sha256": "4fba6e64af9535e2ad34d15d7b8be99cc82f567fd15713362ff692a6d39f64aa",
-          "bytes": 2404
+          "sha256": "489b0f9a499b09ff0f9ac93fd78485f5d2242f14d3b00e200878b63adc044214",
+          "bytes": 3452
+        },
+        {
+          "path": "VALIDATION.md",
+          "sha256": "b1c7704441d3f12bab71e77ba395f04cb3856008fef109a3ba2000742330791c",
+          "bytes": 1619
         },
         {
           "path": "bridge.py",
@@ -260,13 +265,13 @@
         },
         {
           "path": "package.json",
-          "sha256": "6864fc4e84ad72946de794ebf8e74cbcc331196a0204b83897c9c4482c9d0f70",
+          "sha256": "ad417f77277c4c7c90c4caa9c94e479e8335aba9a511810f25a38e8d9e8d159b",
           "bytes": 117
         },
         {
           "path": "plugin.json",
-          "sha256": "80a5735e66fa5719a3bdbab53cb8a00b9f70001f378bc56865fe79e08d00a602",
-          "bytes": 674
+          "sha256": "42c9268335c4342042b58c6922c7ff91ba93e89a632c20b819860eb9ba74f498",
+          "bytes": 691
         },
         {
           "path": "prompt.md",
@@ -275,13 +280,13 @@
         },
         {
           "path": "provider.js",
-          "sha256": "799e5f059112e7a841ffab26cf8270189b3213aa8956edcdac9050aab2d180ff",
-          "bytes": 18639
+          "sha256": "a844582dc8765820bea0ab075758b989a5f9895f8fd95164e32fd1b2617b7e4d",
+          "bytes": 21162
         },
         {
           "path": "skills/ccxt-public-markets/SKILL.md",
-          "sha256": "1fbb4004c8791f5fc194f501c60fd557b7718b76ffb2e242b47592c32f2f2c11",
-          "bytes": 2020
+          "sha256": "b05dbbc4f6a6a6f0565ff42e772cdfd38d357ac502dd3910f956a2b98cd993fa",
+          "bytes": 2992
         },
         {
           "path": "tools.json",

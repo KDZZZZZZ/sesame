@@ -11,3 +11,5 @@ Official references used for API behavior:
 - [Pinned PyPI distribution 4.5.85](https://pypi.org/project/ccxt/4.5.85/). Explicit prepare obtains dependencies only from official PyPI; no Python engine is bundled or installed at activation.
 
 Actual scope: explicit Kraken/Coinbase/OKX public spot sources, generic market instruments and OHLCV/polling subscriptions; no account credentials, order submission or live broker capability. Exchange data rights/terms are separate from the adapter and library software licenses. Time/source/coverage/closure and precision limitations remain in provider metadata and the Skill.
+
+Adapter 1.0.1 adds strict public configuration fields and plugin-private durable connection-ID/revision lookup, so a dashboard or restarted host preserves the explicitly selected public route. The underlying CCXT dependency remains 4.5.85. These storage records contain only exchange and credential-free publicProxy, never exchange credentials or discovered system proxy settings.

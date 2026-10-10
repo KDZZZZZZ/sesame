@@ -19,7 +19,12 @@ function fixture() {
     [60000, "10", "12", "9", "11", "2"],
     [120000, "11", "12", "10", "11.5", "3"],
   ];
+  const records = new Map();
   const provider = new CCXTProvider({
+      storage: {
+        get: (_name, id) => records.get(id),
+        put: (_name, row) => records.set(row.id, structuredClone(row)),
+      },
       environment: {
         executeWorker: async () => ({
           library: "4.5.85",
