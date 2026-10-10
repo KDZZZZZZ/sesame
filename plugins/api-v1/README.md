@@ -11,7 +11,7 @@ The defaults are `canvas-control`, `configuration`, `data-access`, `memory`,
 `orchestration`, `plugin-manager`, `reports`, `strategy-authoring` and `workspace`.
 Canvas and settings are discoverable; the other seven are mounted. No market,
 account or native strategy backend is required to author sources, run fixed
-replays, work with local data or publish reports. Twenty-two optional source packages live in
+replays, work with local data or publish reports. Twenty-two optional packages live in
 [`../optional-api-v1/`](../optional-api-v1/README.md), including MT5, QMT, AKShare
 and vn.py. Installing Sesame does not install their terminals or environments.
 
@@ -29,7 +29,7 @@ advertised there until their matching application and end-to-end checks are read
 - `official-plugins.lock.json`: every packaged byte and package tree digest.
 - `bundle-profile.json`: the reviewed, exact nine-package distribution set.
 - `catalog.json` / `catalog.sources.json`: separately pinned, already published package entries.
-- `inventory.json`: the nineteen-package **unreleased preview**, with no installation digests or authority.
+- `inventory.json`: the 31-package descriptive preview, with no installation digests or authority.
 - `scripts/plugin-lock.mjs`: data-only validation, lock generation and deterministic archive creation.
 - `tests/`: source-repository tests; never included in the application bundle.
 
@@ -57,7 +57,7 @@ MT5 checkouts. Workspace commands expose incomplete snapshot diagnostics. The
 plugin-manager owns verified catalog installation and same-session loading;
 its native static checks remain distinct from actual activation and environment
 verification. The [unified development catalog](CATALOG.md) pins the actual
-core dev.14 and optional dev.6 releases: nine default and ten optional entries.
+core dev.14 and optional dev.7 releases: nine default and twenty-two optional entries.
 Their source commit, archive, file/tree and review hashes were selected only after
 publication and actual download verification. Explicit updates preserve the host's
 current-digest and version checks. The published 0.1.4 catalog is unchanged.

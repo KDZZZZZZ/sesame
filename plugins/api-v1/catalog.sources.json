@@ -7,9 +7,9 @@
       "reviewSha256": "0384e4bbfdb9e6e428a6586824f8aab7a0c1b232be9ae5f89acfd3a1d5640664"
     },
     {
-      "tag": "plugins-optional-api-v1-dev.6",
-      "releaseCommit": "270118d5b054690188856591c8adc57483200777",
-      "reviewSha256": "8b7ffa55858c50df26923c234039c788a89de301564b21d6385943463fb4c381"
+      "tag": "plugins-optional-api-v1-dev.7",
+      "releaseCommit": "bcb234f575841e7f77f093c77df2fd0cb7f6595a",
+      "reviewSha256": "cedc5e0cf6cdf0f98f741bd1fafa1a8d96ac2efefbefeedacb2f9930bb809790"
     }
   ],
   "withdrawn": []

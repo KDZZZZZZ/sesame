@@ -1,6 +1,6 @@
 # Optional plugins for Sesame 0.2.0 / Plugin API 1
 
-**Source candidates; installable entries are identified by the published catalog.** These twenty-two packages require `>=0.2.0-0`
+**Published development plugins; installable entries are identified by the published catalog.** These twenty-two packages require `>=0.2.0-0`
 (formal minimum 0.2.0, including its development previews). Sesame 0.2.0 has not
 been formally released. They do not enter the nine-package default lock or the
 historical 0.1.4 catalog. Installation/inspection does not silently download a
@@ -39,8 +39,8 @@ host-readable without granting access to old mutable application collections.
 
 The new plugin-manager reads the unified `../api-v1/catalog.json`; the old three-entry
 catalog here is retained as historical metadata. The unified directory selects
-actually published core dev.14 and optional dev.6: nine defaults and these ten
-optional integrations; new source candidates are not installable until their reviewed release is selected. Each entry fixes its source, files, package tree and
+actually published core dev.14 and optional dev.7: nine defaults and these twenty-two
+optional packages. Each entry fixes its source, files, package tree and
 publication review. Formal application 0.2.0 is still not released.
 
 For a released entry, give the Agent an exact name, inspect its metadata and

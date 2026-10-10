@@ -843,3 +843,66 @@ Published at 2026-10-10T02:14:31Z.
 | `SHA256SUMS` | 203 | `4212083dac5a3cbed3136977bb7220df53c2df14606e9985905490407a9c94e4` |
 
 The catalog selects only these actual published releases. Historical stable 0.1.4 and optional three-entry catalogs retain their original bytes. The website preview remains descriptive; the Agent resolves the separate installation catalog and preserves formal expected-digest/version checks. Development plugin publication does not announce a 0.2.0 application installer.
+
+
+## Published independent methods and research workflows — optional dev.7
+
+[PR29](https://github.com/KDZZZZZZ/sesame/pull/29) was normally merged at
+2026-10-10T03:41:09Z as `bcb234f575841e7f77f093c77df2fd0cb7f6595a`, preserving
+final reviewed head `0983633643b366b9e7b626f4c7addb45601360f7` and fixed source
+`1033980403590600b04e7cbb3ab7d4bbcc3d5ce8`. The
+[trusted pre-merge gate](https://github.com/KDZZZZZZ/sesame/actions/runs/38021361807)
+checked that head at 03:40:09Z and completed at 03:40:12Z, after the final scoped
+Agent review at 03:35:54Z and its
+[maintainer record](https://github.com/KDZZZZZZ/sesame/pull/29#issuecomment-6093391644)
+at 03:39:58Z. The
+[automatic publication workflow](https://github.com/KDZZZZZZ/sesame/actions/runs/38021432446)
+then published the prerelease at 03:42:54Z. All times are UTC on 2026-10-10.
+
+The authenticated maintainer attests to named Agent reviews; this is not human
+approval or cryptographic authentication of an Agent identity. Implementation
+review was partitioned by authorship: the root Agent reviewed backend and method
+implementations; a different Agent reviewed root-authored routing/metadata;
+and another reviewed the two research workflows. The final identity/byte reviewer
+did not claim independent review of its own Backtrader implementation. The actual
+`review.json` preserves these scopes, exact head, check identities and timestamps.
+Human approval remains not-recorded.
+
+The unchanged integrated source suite passed 79 JavaScript and 39 Python checks,
+with two explicit network/platform skips. The independent research-package review
+passed 42 checks, including actual temporary Host installation, isolated skill
+loading, immutable selection before holdout export and reopen. These staged
+counts are not one final-head aggregate. After a PR finding, Backtrader's controlled
+`SystemExit` was repaired and independently tested with real processes; six exit
+cases produced failed receipts, while KeyboardInterrupt and abrupt termination
+produced no fabricated completion. The formal backend suite then passed six checks
+with one explicit network skip, including successful native simulations and
+same-operation reuse. Cancellation and unknown executions remain non-replayable.
+No Windows brokerage acceptance or real trading result is claimed by this release.
+
+All five assets were actually downloaded and compared byte-for-byte with GitHub
+size/digest metadata; the four reproducible assets also match the independently
+rebuilt final candidate. The actual host safe extractor and package verifier
+accepted exactly 22 optional packages without activation. The existing nine-core
+dev.14 archive and application pin are unchanged. No running app/cache, dependency
+environment, terminal, account or application release was modified.
+
+### [plugins-optional-api-v1-dev.7](https://github.com/KDZZZZZZ/sesame/releases/tag/plugins-optional-api-v1-dev.7)
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `application-official-plugins.lock.json` | 4139 | `020e7a2d220478cfb86918cd5e16d54e4326875eea5c93f1a52c55f339a227ce` |
+| `official-plugins.lock.json` | 71813 | `2e831901e986e81d359d99bea254ec640c4f33c286d15e5377755cfe50830a0d` |
+| `review.json` | 6665 | `cedc5e0cf6cdf0f98f741bd1fafa1a8d96ac2efefbefeedacb2f9930bb809790` |
+| `sesame-optional-plugins-api-v1-dev.7.tar.gz` | 2222268 | `f83bcfe48310f91ac5c277bd4ccfa3a9b10a246ee63af80b96b34762303a03f4` |
+| `SHA256SUMS` | 203 | `bc2135663a3c8c4963d1f9259b383ebdc83f87d2e39f6fa0405f89165833ef33` |
+
+The next catalog selection combines unchanged core dev.14 with optional dev.7:
+31 exact names, nine core and 22 optional, with 493 fixed file records. Each of the
+eight methods and two research workflows remains an independent optional package.
+Backtrader retains GPL-3.0-or-later; the catalog does not relabel it MIT. The
+stable 26-entry 0.1.4 and original three-entry optional directories remain byte-identical.
+The 31-entry catalog reconstruction/name-resolution/publication-boundary suite
+passed five tests, and actual published-release validation passed. The application
+0.2.0 is not formally released; these plugin prereleases require a compatible
+`>=0.2.0-0` host. Website previews remain descriptive and do not authorize code installation.
