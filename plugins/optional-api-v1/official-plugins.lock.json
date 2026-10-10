@@ -767,13 +767,8 @@
       "id": "sesame/manual-trading",
       "version": "1.0.0",
       "directory": "manual-trading",
-      "treeDigest": "sha256:9b9fd575216c482905f6758c27079509c5fe1a3ac3ef35f5bffc533390309d84",
+      "treeDigest": "sha256:044d92feee51fa3dc858e8b3cf108311f37315190301557ec8f59db16b364e27",
       "files": [
-        {
-          "path": "BACKENDS.md",
-          "sha256": "ef59beef560ff3d0c7536ac67ae67dea854bed23f80574c4f2873d396cf443d8",
-          "bytes": 2433
-        },
         {
           "path": "LICENSE",
           "sha256": "2681aaf69ad3f8a595707e154e1e065a0077db9f1d25f8f5df73c02c5657477a",
@@ -781,13 +776,13 @@
         },
         {
           "path": "PROVENANCE.md",
-          "sha256": "067e0f503f6ec8207436b4e6bd2b3fc758f25664cd8de45e8ce3e2eb8c279dbc",
-          "bytes": 994
+          "sha256": "3b60e65ad01c4acc2845b8e7639c63bff9eb952a17c336f2f1be0412f963d8db",
+          "bytes": 514
         },
         {
           "path": "README.md",
-          "sha256": "ee32295831de8dff4db12eb1ba4f013d61cfa2621a379e2c86bc6db2f3a6491f",
-          "bytes": 2889
+          "sha256": "f9f72cacdb657d19528c071dc1268cedd389e542157031cb1c64ba657e4a6131",
+          "bytes": 2641
         },
         {
           "path": "adapters.js",
@@ -806,13 +801,13 @@
         },
         {
           "path": "plugin.json",
-          "sha256": "d1d910eb24da373833ef00727f92ac42616a0691bcd20a111f1c07c230bd6c5c",
-          "bytes": 934
+          "sha256": "ee85f2604429ec90dd37254492e5c5bbf3b411c12d71e2e2261be25a1576eac4",
+          "bytes": 907
         },
         {
           "path": "prompt.md",
-          "sha256": "c25c6d6364491f9e55a2a02f15c7522f019a1a0515bba7eaf868dcc3c9f2d0a6",
-          "bytes": 863
+          "sha256": "3ede8d413b34a6845ef96106f05f77c83071bfd3272b5969e372433817606ec0",
+          "bytes": 978
         },
         {
           "path": "service.js",
@@ -821,8 +816,8 @@
         },
         {
           "path": "skills/manual-trading/SKILL.md",
-          "sha256": "a0b667c44a27f5957ada49982e8670fa5eab747ea668ea46f5a54dcc760b2bf1",
-          "bytes": 4113
+          "sha256": "100a671ce43ee32f18baf5b8a6b671e46aeee6fdaa0d047ea44133b52b118f5e",
+          "bytes": 3112
         },
         {
           "path": "tools.json",
@@ -893,7 +888,7 @@
       "id": "sesame/mt5",
       "version": "1.3.0",
       "directory": "mt5",
-      "treeDigest": "sha256:d20584a835f62583678836ff95c1f5441b6e24611129547e07c1ef12684943a0",
+      "treeDigest": "sha256:8768aa00c4c44d7fd75e628ea58d4f63d5cd1b7a209e8e6e8a0e928d3dcd1ab5",
       "files": [
         {
           "path": "LICENSE",
@@ -902,8 +897,8 @@
         },
         {
           "path": "TRADING.md",
-          "sha256": "8e5c1a1c896ada030e6181b3fe6baf3f829306201ef5e61e8e7dcae50d80eedd",
-          "bytes": 4865
+          "sha256": "7e4bab7ccb457ed1e68779313bbc2809cd163cc0f02dd2cb5aae6bb5f7e1ef37",
+          "bytes": 6594
         },
         {
           "path": "backend/README.md",
@@ -1262,8 +1257,8 @@
         },
         {
           "path": "prompt.md",
-          "sha256": "3f0e2a5a027abe216888bc424342e8000ec68ef334d0227b49200c6a306102e2",
-          "bytes": 1903
+          "sha256": "d95c17a8e897e7bfa3ff3f5e21182377aaf1fdae4806848cc5782b551bc6fdd1",
+          "bytes": 2081
         },
         {
           "path": "scripts/README.md",
@@ -1637,7 +1632,7 @@
       "id": "sesame/qmt",
       "version": "1.2.0",
       "directory": "qmt",
-      "treeDigest": "sha256:dfba21c4d8d63d6c441bfef7017026ad57824740e81d4b21e3052c8a57cb6a49",
+      "treeDigest": "sha256:a8eb6d7223fb4d55e1787320669d3779c1273c7ebe89b29720a7fe1b682e5103",
       "files": [
         {
           "path": "LICENSE",
@@ -1651,8 +1646,8 @@
         },
         {
           "path": "TRADING.md",
-          "sha256": "36bb14bb0b27d33e1afa736b4614042457f7f1550dccb2dbceb0b93c6179f33b",
-          "bytes": 3284
+          "sha256": "010399341ad5743272f8280c59d977468c67bfa0f3f0d072b912842bfffeba57",
+          "bytes": 4584
         },
         {
           "path": "VALIDATION.md",
@@ -1696,8 +1691,8 @@
         },
         {
           "path": "prompt.md",
-          "sha256": "2875ffdaf7b165fe33fc8409e2944f2a58336925250e6182e12cd9c9ab93bfe9",
-          "bytes": 1505
+          "sha256": "3ff5bf011ea26e33a84fc96159d3a19750bd2e5da4aa462f9bdf9d3a33d064be",
+          "bytes": 1681
         },
         {
           "path": "requirements.txt",
@@ -1711,8 +1706,8 @@
         },
         {
           "path": "skills/qmt-readonly/SKILL.md",
-          "sha256": "ff9b6de4e450676f7ecdf21bc621fafc4baa26a2f1a0842fd3232b8f234f9917",
-          "bytes": 5275
+          "sha256": "8343ae9685a00b05ae4cc16373e2b2fce301926fcaba046eced395c541097d1d",
+          "bytes": 5552
         },
         {
           "path": "tools.json",

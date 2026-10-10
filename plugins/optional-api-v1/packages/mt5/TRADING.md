@@ -28,8 +28,14 @@ It supports market/limit and targeted position reduction. Inside the serialized 
 
 Broker wall time or reception time cannot replace a verified UTC source time. The independent manual-trading plugin measures the model round trip and defaults to M5+; M1 has not been benchmarked.
 
+The manual-trading helper requires Sesame 0.2.1+ and this package 1.3.0+ with an already configured official Python SDK channel. Its MT5 mapping covers market buy/sell, limit pending orders, exact-position close, pending cancellation and status. It does not install, enable or log in to a terminal. Pure MCP remains available through this package's native tools, but its broker wall timestamps do not establish UTC freshness for the helper. Advanced types and amendments remain the native tools' responsibility.
+
+Python order_send also accepts `cancellation_guard` next to request: exact expected_account, expected_server, symbol, remark, positive decimal order ticket and buy/sell side. It is mutually exclusive with execution_guard and permits only TRADE_ACTION_REMOVE of that exact ticket. Inside the worker, after any queue delay, it verifies the account and permissions, one matching symbol/remark order, ticket, limit type, PLACED/PARTIAL status and remaining volume, then rechecks the account immediately before sending once. It cannot make external terminal account changes atomic with an SDK call.
+
 ## Failure and recovery
 
 Inspect transport status, native isError/error and retcode. Accepted order, partial fill, rejection and unknown are distinct. A timeout may happen after acceptance. Keep command_id, read mt5_command, then query real pending orders/positions and bounded historical orders/deals using native IDs and the exact remark. Missing/empty queries do not prove no order. Never change ID/channel to replay an unknown send. Cancellation can race fills and also needs final order/fill evidence.
+
+For an unknown helper order, zero native IDs and balance/credit adjustments are not evidence. Recovery requires positive native IDs, the exact symbol and an actual BUY/SELL deal or uniquely matching active pending order. A recovered pending order can be cancelled after a fresh ownership read and the native cancellation_guard, even if the original command lacked a confirmed ticket. Ambiguous, filled, foreign or changed-account orders are refused. Typed local schema/permission preflight refusals before dispatch explicitly carry submission_attempted:false; transport failures and native Abort/timeout remain unknown.
 
 Primary references: [MCP capabilities](https://www.metatrader5.com/en/terminal/help/mcp_and_ai/capabilities), [Python order_send](https://www.mql5.com/en/docs/python_metatrader5/mt5ordersend_py). Package fixtures do not certify all live brokers.

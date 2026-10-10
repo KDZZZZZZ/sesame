@@ -25,4 +25,4 @@ description: Discover and reuse authorized Windows MiniQMT configuration, prepar
 
 仅主Agent收到明确用户交易请求后使用 `qmt_order`：user_authorized=true、精确account_id/connection_revision、symbol、buy或sell、正整数shares与正Decimal限价。先读账户、持仓availableQuantity、报价与品种实际规则；可卖量不等于允许当天新买卖出，T+1/涨跌停/数量步长/时段/权限由券商真实检查。不要保证成交。调用结果submitted只表示订单编号已返回。unknown或取消/超时可能已送达，保持原operation_id读取既有记录，不自动重报，也不要换ID规避。对照原生当日orders/fills和remark人工确定后才能做新的用户意图。
 
-撤单使用独立operation_id并引用原qmt_order的original_operation_id/order_id，精确账户/版本不变；native记录remark必须匹配。cancel_requested仅表示请求已受理，随后查询确认；不能当已撤或零成交。不得调用任意交易脚本或资金划拨，不对回测/安装请求隐含交易授权。
+撤单使用独立operation_id并引用原qmt_order的original_operation_id/order_id，精确账户/版本不变；native记录remark必须匹配。原请求超时也可按 TRADING.md 用保留的原始意图恢复，但只能撤唯一且精确匹配的活动订单，原生进程会再次核对账户、品种、方向、数量、标记和单号。旧unknown记录缺少原始意图时留给终端核对，不绕过检查。cancel_requested仅表示请求已受理，随后查询确认；不能当已撤或零成交。不得调用任意交易脚本或资金划拨，不对回测/安装请求隐含交易授权。
