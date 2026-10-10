@@ -1,3 +1,39 @@
+# SVL 1.2, strategy methods and supervised Agent tasks — 2026-10-10
+
+This publication updates only `sesame/strategy-authoring` 1.2.0,
+`sesame/orchestration` 2.2.0 and the optional `sesame/mt5` 1.4.0.
+Each requires Sesame >=0.2.2. The published application remains independently
+versioned; publishing these packages does not update or release the application.
+All other package bytes retain the current main-branch versions.
+
+After integrating the latest published configuration and trading fixes, the full
+matching-SDK core suite passed 399 checks with 17 explicit native/platform opt-in
+skips; the optional suite passed 129 checks with 10 explicit environment/platform
+skips. There were no failures. This run included the fixed strategy pipeline,
+portfolio/risk/execution methods, frozen Agent decisions, loopback decision
+bridge, quant functions, real host integration using temporary stores and actual
+browser report interactions. No model, terminal, broker or trading opt-in was
+enabled in this publication run. Earlier native observations are not a claim
+that every generated backend strategy is equivalent to SVL.
+
+Reproduction (Node 24; matching application SDK available locally):
+
+```sh
+SESAME_HOST_ROOT=/path/to/matching-host \
+SESAME_PLUGIN_SDK_LOADER=/path/to/matching-host/modules/plugins/sdk-loader.js \
+npm run test:sdk --prefix plugins/api-v1
+SESAME_PLUGIN_SDK_LOADER=/path/to/matching-host/modules/plugins/sdk-loader.js \
+npm test --prefix plugins/optional-api-v1
+```
+
+Both source locks, the descriptive inventory, changed-package version increments
+and deterministic archive identities are checked separately. The immutable
+publication records contain the exact reviewed commits, CI checks and semantic
+review evidence. The installation catalog is updated only after the archive,
+lock and review assets have been published and their hashes verified.
+
+---
+
 # Sesame 0.2.0 compatibility documentation
 
 This documentation-only transition keeps all 31 package implementations, both
