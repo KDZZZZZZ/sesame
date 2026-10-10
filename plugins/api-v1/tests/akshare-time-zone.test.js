@@ -106,6 +106,26 @@ test('UTC projection follows historical Shanghai DST and preserves millisecond h
   } finally { f.provider.dispose(); }
 });
 
+test('UTC ranges keep their instant ordering across Shanghai clock rollback and spring-forward', async () => {
+  const f = fixture();
+  f.provider.host.environment.executeWorker = async (_entry, payload) => ({ interface: payload.interface, observedAt: 0, akshareVersion: '1.19.1', rows: ['1991-04-13', '1991-04-14', '1991-09-14', '1991-09-15', '1991-09-16'].map(date => ({ ...row('02'), date })) });
+  const query = async (from, to) => f.provider.queryBars({ ...f.query, page: { limit: 20 }, range: { from: { basis: 'utc', unixMs: Date.parse(from) }, to: { basis: 'utc', unixMs: Date.parse(to) } } }, f.context);
+  try {
+    // Both endpoints are in the repeated hour: wall strings reverse, instants do not.
+    assert.deepEqual((await query('1991-09-14T16:45:00Z', '1991-09-14T17:15:00Z')).data.page.items, []);
+    // Distinct instants can even have identical wall representations.
+    assert.deepEqual((await query('1991-09-14T16:15:00Z', '1991-09-14T17:15:00Z')).data.page.items, []);
+    const spanning = await query('1991-09-14T00:30:00Z', '1991-09-15T01:30:00.001Z');
+    assert.deepEqual(spanning.data.page.items.map(bar => bar.openTime.value), ['1991-09-14T09:30:00', '1991-09-15T09:30:00']);
+    assert.deepEqual((await query('1991-09-15T01:30:00.001Z', '1991-09-16T01:30:00Z')).data.page.items, []);
+    assert.deepEqual((await query('1991-04-13T17:30:00Z', '1991-04-13T18:30:00Z')).data.page.items, []);
+    const spring = await query('1991-04-13T01:30:00Z', '1991-04-14T00:30:00.001Z');
+    assert.deepEqual(spring.data.page.items.map(bar => bar.openTime.value), ['1991-04-13T09:30:00', '1991-04-14T09:30:00']);
+    await assert.rejects(query('1991-09-14T17:15:00Z', '1991-09-14T16:45:00Z'), /ascending/);
+    for (const value of ['1991-09-15T01:15:00', '1991-04-14T02:15:00']) await assert.rejects(f.provider.queryBars({ ...f.query, range: { from: wall(value), to: { basis: 'utc', unixMs: Date.parse('1991-10-01T00:00:00Z') } } }, f.context), { code: 'UNSUPPORTED_CAPABILITY' });
+  } finally { f.provider.dispose(); }
+});
+
 const hostRoot = process.env.SESAME_HOST_ROOT;
 test('unchanged data-access market_read freezes zoned, legacy and UTC requests through real public host ports', { skip: !hostRoot }, async t => {
   const load = path => import(pathToFileURL(join(hostRoot, path)));

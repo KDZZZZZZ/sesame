@@ -785,6 +785,16 @@ empty after cleanup. This is source/host-port acceptance, not a complete
 Runtime.init, Agent/UI, Windows broker or trading test. No running application's
 cache, database, terminal or account was changed.
 
+A subsequent PR review found that UTC endpoints spanning the September 1991
+rollback could have equal or reversed wall representations. The pre-fix fixture
+reproduced the false ascending-range rejection. The candidate now retains UTC
+ordering and duration and compares uniquely resolved source-bar instants. Mixed
+wall boundaries with an ambiguous or nonexistent instant are rejected rather
+than assigned a fold. The new regression also covers spring-forward and exact
+inclusive/exclusive daily-open boundaries. The updated public command passed
+24 checks; this does not replace the earlier independent review or claim it
+already reviewed these later bytes.
+
 Three core packages receive documentation-only patch releases. Orchestration
 2.1.1 describes the current five settings panels, generic connection action,
 account positions/orders and fixed indicator parameter editing; it reads actual

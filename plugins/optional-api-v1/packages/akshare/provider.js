@@ -87,14 +87,20 @@ export class AKShareProvider {
         check(input.spec.calendarRevision?.status === 'unknown', 'No pinned exchange calendar is supplied', 'UNSUPPORTED_CAPABILITY');
         check(['all', 'regular'].includes(input.spec.session), 'Unsupported session', 'UNSUPPORTED_CAPABILITY');
         const from = wall(input.range?.from), to = wall(input.range?.to), legacy = legacyWallRange(input.range);
-        check(from < to, 'Range must be ascending');
-        check(Date.parse(to + 'Z') - Date.parse(from + 'Z') <= 366 * 30 * 86400000, 'Maximum history range is 30 years');
-        const result = await this.page(input, context, async () => { const name = binding.source === 'sina' ? 'stock_zh_a_daily' : binding.source==='tencent'?'stock_zh_a_hist_tx':'stock_zh_a_hist'; const args = { symbol: binding.source !== 'eastmoney' ? (/^(920|[48])/.test(input.instrument.instrumentId)?'bj':/^[69]/.test(input.instrument.instrumentId)?'sh':'sz')+input.instrument.instrumentId : input.instrument.instrumentId, start_date: from.slice(0, 10).replaceAll('-', ''), end_date: to.slice(0, 10).replaceAll('-', ''), adjust: {none:'',forward:'qfq',backward:'hfq'}[input.spec.adjustment], ...(binding.source === 'eastmoney' ? { period: 'daily' } : {}) }; check(binding.source !== 'sina' || /^[036]/.test(input.instrument.instrumentId), 'Sina adapter supports Shanghai/Shenzhen codes only', 'UNSUPPORTED_CAPABILITY'); const response = await this.fetch(name, args, context), seriesId = digest([input.instrument, input.spec]); check(this.closedThrough.has(seriesId)||this.closedThrough.size<2048,'Daily series state exceeds budget','RESOURCE_EXHAUSTED');
+        const utc = input.range.from.basis === 'utc' || input.range.to.basis === 'utc';
+        // A historical rollback makes projected wall endpoints non-injective.
+        // Keep UTC ordering and duration in UTC, then compare actual bar instants.
+        const instant = time => time.basis === 'utc' ? time.unixMs : wallInstant(time);
+        const lower = utc ? instant(input.range.from) : Date.parse(from + 'Z');
+        const upper = utc ? instant(input.range.to) : Date.parse(to + 'Z');
+        check(lower < upper, 'Range must be ascending');
+        check(upper - lower <= 366 * 30 * 86400000, 'Maximum history range is 30 years');
+        const result = await this.page(input, context, async () => { const name = binding.source === 'sina' ? 'stock_zh_a_daily' : binding.source==='tencent'?'stock_zh_a_hist_tx':'stock_zh_a_hist'; const args = { symbol: binding.source !== 'eastmoney' ? (/^(920|[48])/.test(input.instrument.instrumentId)?'bj':/^[69]/.test(input.instrument.instrumentId)?'sh':'sz')+input.instrument.instrumentId : input.instrument.instrumentId, start_date: (from < to ? from : to).slice(0, 10).replaceAll('-', ''), end_date: (from > to ? from : to).slice(0, 10).replaceAll('-', ''), adjust: {none:'',forward:'qfq',backward:'hfq'}[input.spec.adjustment], ...(binding.source === 'eastmoney' ? { period: 'daily' } : {}) }; check(binding.source !== 'sina' || /^[036]/.test(input.instrument.instrumentId), 'Sina adapter supports Shanghai/Shenzhen codes only', 'UNSUPPORTED_CAPABILITY'); const response = await this.fetch(name, args, context), seriesId = digest([input.instrument, input.spec]); check(this.closedThrough.has(seriesId)||this.closedThrough.size<2048,'Daily series state exceeds budget','RESOURCE_EXHAUSTED');
             const mapped=response.rows.map(r=>mapBar(r,binding.source,seriesId,response.observedAt)).sort((a,b)=>a.openTime.value.localeCompare(b.openTime.value));
             check(new Set(mapped.map(bar=>bar.id)).size===mapped.length,'Duplicate upstream daily dates','SOURCE_DATA_INVALID');
             for(let i=0;i<mapped.length;i++)if(mapped[i].isClosed||mapped[i+1]?.openTime.value>mapped[i].openTime.value){const date=mapped[i].openTime.value.slice(0,10);if(!this.closedThrough.get(seriesId)||date>this.closedThrough.get(seriesId))this.closedThrough.set(seriesId,date);}
             if(!this.closedThrough.has(seriesId))this.closedThrough.set(seriesId,null);
-            const bars=mapped.map(bar=>this.revise(this.closedThrough.get(seriesId)&&bar.openTime.value.slice(0,10)<=this.closedThrough.get(seriesId)?{...bar,isClosed:true,closure:'source'}:bar)).filter(b=>(b.openTime.value+'.000')>=from && (b.openTime.value+'.000')<to && (input.includeForming!==false||b.isClosed)).map(bar => legacy ? legacyBar(bar) : bar);
+            const bars=mapped.map(bar=>this.revise(this.closedThrough.get(seriesId)&&bar.openTime.value.slice(0,10)<=this.closedThrough.get(seriesId)?{...bar,isClosed:true,closure:'source'}:bar)).filter(bar=>{const instant=utc?wallInstant(bar.openTime):Date.parse(bar.openTime.value+'Z');return instant>=lower&&instant<upper&&(input.includeForming!==false||bar.isClosed);}).map(bar => legacy ? legacyBar(bar) : bar);
             const meta=this.meta(response,binding.source);
             meta.source.timeBasis = { ...timeBasis };
             if (legacy) meta.warnings.push('Wall times are represented without zone for this legacy request; the source time basis remains Asia/Shanghai, retained in meta.source.timeBasis. No clock conversion was performed.');
@@ -116,5 +122,18 @@ export function wall(time) {
  }
  check(time?.basis==='wall'&&time.authority===authority&&(!time.zone||time.zone===authority)&&time.fold===undefined&&/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,3})?$/.test(time.value),'Range requires unambiguous Asia/Shanghai wall or UTC time','UNSUPPORTED_CAPABILITY');
  const value=time.value.includes('.')?time.value.padEnd(23,'0'):time.value+'.000';check(Number.isFinite(Date.parse(value+'Z'))&&new Date(value+'Z').toISOString().slice(0,23)===value,'Invalid date');return value;
+}
+function wallInstant(time) {
+ const value = wall(time), nominal = Date.parse(value + 'Z'), offsets = new Set();
+ // Sample the declared zone on both sides of the source date. Only an exact
+ // round trip is accepted; an ambiguous or nonexistent source clock is not
+ // silently assigned a fold. Daily 09:30 bars have a unique Shanghai instant.
+ for (const days of [-2, -1, 0, 1, 2]) {
+  const sample = nominal + days * 86400000;
+  offsets.add(Date.parse(wall({ basis: 'utc', unixMs: sample }) + 'Z') - sample);
+ }
+ const matches = [...offsets].map(offset => nominal - offset).filter(unixMs => wall({ basis: 'utc', unixMs }) === value);
+ check(matches.length === 1, 'Wall time has no unique Asia/Shanghai instant', 'UNSUPPORTED_CAPABILITY');
+ return matches[0];
 }
 export function mapBar(row, source, seriesId, observedAt) { const em = source === 'eastmoney', date = String(row[em ? '日期' : 'date']).slice(0, 10); check(/^\d{4}-\d\d-\d\d$/.test(date) && Number.isFinite(Date.parse(date + 'T00:00:00Z')) && new Date(date + 'T00:00:00Z').toISOString().slice(0, 10) === date, 'Invalid upstream trading date'); const openTime = wallTime(date + 'T09:30:00'), endTime = wallTime(date + 'T15:00:00'), prices = Object.fromEntries(['open', 'high', 'low', 'close'].map((key, i) => [key, decimal(row[em ? ['开盘', '最高', '最低', '收盘'][i] : key])])); check(Decimal.compare(prices.high,prices.low)>=0&&['open','close'].every(k=>Decimal.compare(prices[k],prices.low)>=0&&Decimal.compare(prices[k],prices.high)<=0),'Upstream OHLC is inconsistent','SOURCE_DATA_INVALID');const volume = row[em ? '成交量' : 'volume'];if(volume!==null&&volume!==undefined)check(Decimal.compare(decimal(volume),'0')>=0,'Upstream volume is negative','SOURCE_DATA_INVALID'); const quantity = volume === null || volume === undefined ? { status: 'unknown' } : { status: 'value', value: { value: decimal(volume), unit: em ? 'lot' : 'share' } }; return { id: `${seriesId}:${date}`, revision: '1', openTime, endTime, ...prices, isClosed:row.is_closed===true,closure:row.is_closed===true?'source':'unknown',turnover:{status:'unknown',reason:'Upstream turnover currency and coverage are not established'},volume: { default:quantity.status==='value'?'real':'none', tick: { status: 'unsupported' }, real: quantity } }; }
