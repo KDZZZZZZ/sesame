@@ -170,7 +170,9 @@ if __name__ == "__main__":
     exit_code = 0
     try:
         result = main(json.loads(Path(sys.argv[1]).read_text()))
-    except Exception as error:
+    # Explicit strategy exits are controlled failures, not missing receipts.
+    # KeyboardInterrupt and OS termination remain unconfirmed interruptions.
+    except (Exception, SystemExit) as error:
         result = {
             "status": "failed",
             "error": {"type": type(error).__name__, "message": str(error)},

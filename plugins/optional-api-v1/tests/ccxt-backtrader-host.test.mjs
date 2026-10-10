@@ -53,11 +53,11 @@ async function host(t, name) {
     store,
     directory,
     installed,
-    call: async (name, args) =>
+    call: async (name, args, signal) =>
       (
         await tools
           .find((tool) => tool.name === name)
-          .execute("quant-test", args)
+          .execute("quant-test", args, signal)
       ).details,
   };
 }
@@ -327,6 +327,93 @@ class Warmup(bt.Strategy):
     });
     assert.equal(failed.status, "failed");
     assert.deepEqual(failed.data, []);
+    for (const stage of ["import", "next"]) {
+      for (const code of [0, 7]) {
+        const controlledSource =
+          stage === "import"
+            ? `raise SystemExit(${code})\n`
+            : `import backtrader as bt\nclass RoundTrip(bt.Strategy):\n def next(self):raise SystemExit(${code})\n`;
+        await writeFile(strategy, controlledSource);
+        const exitArgs = {
+          ...args,
+          operation_id: `controlled-exit-${stage}-${code}`,
+        };
+        const outcome = await f.call("backtrader_backtest", exitArgs);
+        assert.equal(outcome.status, "failed");
+        assert.equal(outcome.diagnostics.type, "SystemExit");
+        assert.deepEqual(outcome.data, []);
+        const completedExecutions = f.store.list("execution").length;
+        assert.deepEqual(
+          await f.call("backtrader_backtest", exitArgs),
+          outcome,
+        );
+        assert.equal(
+          f.store.list("execution").length,
+          completedExecutions,
+          "controlled exit outcome never reruns",
+        );
+        assert.equal(
+          (await f.call("backtrader_result", { ref: outcome.ref })).manifest
+            .content.status,
+          "failed",
+        );
+      }
+    }
+
+    await writeFile(strategy, "import os\nos._exit(7)\n");
+    const abruptArgs = { ...args, operation_id: "abrupt-no-receipt" };
+    await assert.rejects(f.call("backtrader_backtest", abruptArgs), {
+      code: "ENOENT",
+    });
+    const abruptCount = f.store.list("execution").length;
+    assert.equal(
+      (await f.call("backtrader_backtest", abruptArgs)).status,
+      "unknown",
+    );
+    assert.equal(f.store.list("execution").length, abruptCount);
+
+    const marker = join(
+      f.runtime.workspaces.root("conv_main"),
+      "cancel-started.txt",
+    );
+    await writeFile(
+      strategy,
+      `import time\nfrom pathlib import Path\nimport backtrader as bt\nclass RoundTrip(bt.Strategy):\n def next(self):\n  Path(${JSON.stringify(marker)}).write_text("started")\n  time.sleep(60)\n`,
+    );
+    const canceledArgs = { ...args, operation_id: "canceled-owned-engine" },
+      controller = new AbortController();
+    const canceled = f.call(
+      "backtrader_backtest",
+      canceledArgs,
+      controller.signal,
+    );
+    const observedFailure = assert.rejects(canceled);
+    let started = false;
+    for (let attempt = 0; attempt < 250; attempt++) {
+      try {
+        await readFile(marker);
+        started = true;
+        break;
+      } catch {}
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+    assert.equal(
+      started,
+      true,
+      "Abort only after actual native strategy entered next",
+    );
+    controller.abort();
+    await observedFailure;
+    const canceledCount = f.store.list("execution").length;
+    assert.equal(
+      (await f.call("backtrader_backtest", canceledArgs)).status,
+      "unknown",
+    );
+    assert.equal(
+      f.store.list("execution").length,
+      canceledCount,
+      "canceled native work is never replayed",
+    );
     assert.equal(
       (await f.call("backtrader_result", { ref: result.ref })).manifest.content
         .statistics.closedTrades,
