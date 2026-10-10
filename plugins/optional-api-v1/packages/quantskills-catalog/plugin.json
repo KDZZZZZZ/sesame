@@ -3,8 +3,8 @@
     "name": "Sesame"
   },
   "name": "quantskills-catalog",
-  "version": "2.0.2",
-  "description": "提供 QuantSkills 社区目录的按需查询能力，支持按分类、工作流阶段、资产类型和验证程度筛选。",
+  "version": "2.1.0",
+  "description": "查询固定 QuantSkills 元数据，按需求选择去重后的 Sesame 方法流程和可选后端；安装与可用性另行核验。",
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "extensions": {
     "bot.sesame": {
@@ -68,7 +68,7 @@
               }
             ],
             "total_items": 214,
-            "version": "2.0.2"
+            "version": "2.1.0"
           }
         },
         {
@@ -92,7 +92,7 @@
             ],
             "count": 1,
             "query": "alpha191",
-            "version": "2.0.2"
+            "version": "2.1.0"
           }
         },
         {
@@ -155,7 +155,7 @@
               "category": "02 因子研发工具箱",
               "limit": 5
             },
-            "version": "2.0.2"
+            "version": "2.1.0"
           }
         },
         {
@@ -187,7 +187,7 @@
               "verification_level": "pending_review",
               "workflow_stage": "研究信号 / Research signal"
             },
-            "version": "2.0.2"
+            "version": "2.1.0"
           }
         }
       ],
