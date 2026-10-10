@@ -6,7 +6,7 @@ Select and persist one exact connection: `akshare:eastmoney`, `akshare:sina`, or
 
 `quotes.subscribe` polls the chosen Eastmoney/Tencent snapshot every 60 seconds, without overlapping reads. Quote time is the actual HTTP observation time; exchange event time is unavailable, freshness unknown, and bid/ask are unknown when absent. This is not an exchange tick feed. Tencent reads one all-market snapshot per poll (at most five selected instruments).
 
-`bars.subscribe` polls actual daily history every 60 seconds and returns the selected daily tail. Today’s upstream row is forming until 15:00 Asia/Shanghai. No minute bars are created from quote snapshots, no calendar completeness is claimed. A gap terminates the stream with the actual error and requires a new snapshot.
+`bars.subscribe` polls actual daily history every 60 seconds and returns the selected daily tail. The latest source row remains forming/closure unknown until a later source-dated row or explicit source completion flag proves closure; HTTP receipt time and 15:00 wall time never certify it. No minute bars are created from quote snapshots, no calendar completeness is claimed. A gap terminates the stream with the actual error and requires a new snapshot.
 
 History is paged, Decimal text and explicitly source-labelled. Eastmoney volume is lot, Sina/Tencent normalized history volume is share. AKShare 1.19.1 excludes sz000 stocks from its conversion; for these A-share stock inputs the bridge preserves native_volume and explicitly applies lot×100.
 
