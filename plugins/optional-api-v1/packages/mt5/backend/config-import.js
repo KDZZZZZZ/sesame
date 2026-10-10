@@ -112,7 +112,7 @@ export class MT5ConfigImports {
       if (servers[name] && stableJSON(servers[name]) !== stableJSON(server)) throw invalid();
       servers[name] = server;
     }
-    requireValue(this.pending().length < 32, '待导入配置过多，请先处理已有配置或在设置中填写');
+    requireValue(this.pending().length < 32, '待导入配置过多；先用 mt5_settings 查看待导入引用并按用户意图处理已有配置，必要时再重新发送导出');
     writeFileSync(this.path(messageId), JSON.stringify({ message_id: messageId, conversation_id: conversation.id, expires_at: this.clock() + TTL, servers }), { flag: 'wx', mode: 0o600 });
     securePath(this.path(messageId));
     const content = parts.map((part, i) => part.type === 'text' ? { type: 'text', text: redact(matches[i]?.text ?? part.text, servers) } : part);

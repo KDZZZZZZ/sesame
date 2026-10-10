@@ -9,22 +9,25 @@ const root = fileURLToPath(new URL('../../../', import.meta.url));
 const catalogBytes = readFileSync(new URL('../catalog.json', import.meta.url));
 const catalog = JSON.parse(catalogBytes);
 
-test('the 31-entry unified directory exactly reconstructs two fixed released archives', () => {
+test('the unified directory reconstructs selected releases and preserves each package minimum', () => {
   assert.deepEqual(validateCatalog(root), catalog);
-  assert.equal(catalog.plugins.length, 31);
+  assert.equal(catalog.plugins.length, 32);
   assert.equal(catalog.plugins.filter(item => item.format === 'agent-plugins').length, 4);
   assert.equal(catalog.plugins.filter(item => item.distribution === 'core').length, 9);
-  assert.equal(catalog.plugins.filter(item => item.distribution === 'optional').length, 22);
-  for (const p of catalog.plugins) assert.equal(p.engines.sesame, '>=0.2.0-0');
-  assert.deepEqual(catalog.releases.map(item => item.tag), ['plugins-api-v1-dev.15', 'plugins-optional-api-v1-dev.9']);
-  for (const [id, version] of Object.entries({ 'sesame/akshare': '1.0.6', 'sesame/data-access': '2.3.1', 'sesame/orchestration': '2.1.2', 'sesame/reports': '2.0.3' })) assert.equal(catalog.plugins.find(item => item.id === id).version, version);
+  assert.equal(catalog.plugins.filter(item => item.distribution === 'optional').length, 23);
+  const sources = JSON.parse(readFileSync(new URL('../catalog.sources.json', import.meta.url)));
+  assert.deepEqual(catalog.releases.map(item => ({ tag: item.tag, releaseCommit: item.releaseCommit, reviewSha256: item.review.sha256 })), sources.releases);
+  for (const p of catalog.plugins) {
+    assert.equal(p.engines.sesame, p.id === 'sesame/manual-trading' ? '>=0.2.1' : '>=0.2.0-0');
+    const release = catalog.releases.find(item => item.tag === p.release);
+    assert.equal(p.source.commit, release.sourceCommit);
+    const manifest = JSON.parse(execFileSync('git', ['show', `${p.source.commit}:${p.source.path}/plugin.json`], { cwd: root }));
+    assert.equal(p.version, manifest.version, `${p.id}: only the fixed published version enters the catalog`);
+    assert.deepEqual(p.engines, manifest.extensions?.['bot.sesame']?.engines ?? manifest.engines);
+  }
   const mt5 = catalog.plugins.find(item => item.id === 'sesame/mt5');
-  assert.equal(mt5.version, '1.2.0'); assert.ok(mt5.tools.includes('mt5_translation_file'));
-  assert.equal(mt5.package.treeDigest, 'sha256:6ae118d2bdb1c1e837c30a8fb0ec0eb51f1fecbce8f16780bb66ac0b1ac4f8d3');
-  assert.equal(catalog.plugins.find(item => item.id === 'sesame/plugin-manager').version, '2.1.2', 'Only the actually released manager enters the catalog');
-  assert.equal(catalog.plugins.find(item => item.id === 'sesame/quantskills-catalog').version, '2.1.0');
-  assert.equal(catalog.plugins.find(item => item.id === 'sesame/ccxt').version, '1.0.2');
-  assert.equal(catalog.plugins.find(item => item.id === 'sesame/ccxt').package.treeDigest, 'sha256:ba29b5dfcc1e398303587f79d1ca528ffff4273ddc264cca9296b9e203fec565');
+  assert.ok(mt5.tools.includes('mt5_translation_file'));
+  assert.ok(catalog.plugins.find(item => item.id === 'sesame/manual-trading').tools.includes('manual_trade_execute'));
   assert.equal(catalog.plugins.find(item => item.id === 'sesame/backtrader').license, 'GPL-3.0-or-later');
 });
 

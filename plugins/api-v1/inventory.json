@@ -12,7 +12,7 @@
   "packages": [
     {
       "id": "sesame/akshare",
-      "version": "1.0.6",
+      "version": "1.0.7",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -48,7 +48,7 @@
     },
     {
       "id": "sesame/backtrader",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -147,7 +147,7 @@
     },
     {
       "id": "sesame/ccxt",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -180,7 +180,7 @@
     },
     {
       "id": "sesame/configuration",
-      "version": "2.0.2",
+      "version": "2.0.3",
       "distribution": "core",
       "state": "discoverable",
       "engines": {
@@ -456,12 +456,12 @@
         "zh": "Agent 手动交易"
       },
       "summary": {
-        "en": "Turn a recent observation into one user-directed guarded MT5/QMT order, then inspect real receipts and fills.",
-        "zh": "将最新观察转换为一次经原生时效检查的 MT5/QMT 人工指令报单，并核对真实回执与成交。"
+        "en": "Apply authorization, timing, fresh-quote checks, one-time submission and evidence-based receipt recovery to Agent manual trading.",
+        "zh": "规范 Agent 手动交易的授权、时效、报价核验、单次执行和基于证据的回执恢复。"
       },
       "dependencies": {
-        "en": "Sesame 0.2.1+, MT5 1.3.0+ Python SDK or QMT 1.2.0+ on authorized Windows; M5+ decisions, no broker credentials stored here.",
-        "zh": "需要 Sesame 0.2.1+ 与 MT5 1.3.0+ Python SDK 或已授权 Windows QMT 1.2.0+；使用 M5+ 决策，本插件不保存券商密钥。"
+        "en": "Sesame 0.2.1+ and an existing supported trading backend. Read that backend's own resources for its account, platform and API requirements; use M5+ decisions.",
+        "zh": "需要 Sesame 0.2.1+ 与已有可用交易后端；账户、平台与 API 前提见该后端自身资源，使用 M5+ 决策。"
       },
       "tools": [
         "manual_trade_inspect",
@@ -940,7 +940,7 @@
     },
     {
       "id": "sesame/vnpy",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -1035,7 +1035,7 @@
     },
     {
       "id": "sesame/workspace",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "distribution": "core",
       "state": "mounted",
       "engines": {

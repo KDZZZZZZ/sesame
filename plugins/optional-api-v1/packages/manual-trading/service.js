@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { canonical, digest } from '@sesame/plugin-sdk/protocol';
-import { createAdapters, check, decimal } from './adapters.js';
+import { createAdapters, check, decimal, sameAccount } from './adapters.js';
 
 export const POLICY=Object.freeze({minimumTimeframe:'5m',maxDecisionAgeMs:60000,maxQuoteAgeMs:5000,maxQuoteToSendMs:1000,maxReadMs:10000,maxReceiptWaitMs:10000,m1Verified:false});
 const queues=new Map();
@@ -56,7 +56,6 @@ export function createService(host,{now=Date.now,adapters=createAdapters(host,{n
         check(now()>=observation.capturedAt && now()<observation.expiresAt,'SIGNAL_EXPIRED','The model decision outlived the observed quote; reassess M5+ with a new observation');
         // An unknown send on this account blocks replacement IDs even after a fresh
         // quote. Only positive broker evidence can resolve it, never absence.
-        const sameAccount=(a,b)=>a.accountId===b.accountId && (a.server??a.connectionId)===(b.server??b.connectionId);
         const uncertain=host.storage.list('commands').find(x=>x.kind==='order' && ['submitting','outcome_unknown'].includes(x.status) && x.backend===observation.backend && sameAccount(x.account,observation.account));
         check(!uncertain,'UNRESOLVED_ORDER',`An earlier account order has an unknown result (${uncertain?.id}); query it before new orders`);
         const began=now(), request={...args,backendCommandId:commandId(args.operation_id),remark:`SMan${digest(args.operation_id).slice(7,27)}`};
@@ -87,13 +86,16 @@ export function createService(host,{now=Date.now,adapters=createAdapters(host,{n
       main();return exclusive(host,async()=>{
       let record=recordFor(args.operation_id);
       if(!args.refresh || record.status==='preparing' || record.status==='rejected')return record;
-      const current=await adapters.identity(record.backend,bounded(signal));check(canonical(current)===canonical(record.account),'CONNECTION_CHANGED','Cannot recover against a different account/configuration');
+      const current=await adapters.identity(record.backend,bounded(signal));check(sameAccount(current,record.account),'CONNECTION_CHANGED','Cannot recover against a different account/connection');
+      const verifyCurrent=async()=>check(canonical(await adapters.identity(record.backend,bounded(signal)))===canonical(current),'CONNECTION_CHANGED','Configuration changed during recovery');
       if(record.kind==='cancel') {
-        const original=recordFor(record.originalOperationId),evidence=await adapters.status(original,bounded(signal)),receipt=await adapters.command(record,bounded(signal));
+        const original=recordFor(record.originalOperationId),evidence=await adapters.status(original,bounded(signal),current),receipt=await adapters.command(record,bounded(signal));
+        await verifyCurrent();
         const result=outcome(record.backend,receipt),status=result==='rejected'?'rejected':['submitted','execution_reported','cancel_requested'].includes(result)?'cancel_requested':record.status;
-        return save({...record,status,receipt,evidence,checkedAt:now(),note:'This is original-order evidence. A cancel request/absence is not confirmation; inspect native final status and fills.'});
+        return save({...record,status,receipt,evidence,checkedAccount:current,checkedAt:now(),note:'This is original-order evidence. A cancel request/absence is not confirmation; inspect native final status and fills.'});
       }
-      const evidence=await adapters.status(record,bounded(signal));
+      const evidence=await adapters.status(record,bounded(signal),current);
+      await verifyCurrent();
       const confirmed=outcome(record.backend,evidence.command);
       let status=record.status;
       if(['submitting','outcome_unknown'].includes(status)) {
@@ -101,7 +103,7 @@ export function createService(host,{now=Date.now,adapters=createAdapters(host,{n
         else if(evidence.deals?.length)status='execution_observed';
         else if(evidence.orders?.length===1)status='order_observed';
       }
-      record=save({...record,status,evidence,checkedAt:now(),note:'A missing order/deal is not proof of rejection. Broker receipts and observed fills are distinct.'});
+      record=save({...record,status,evidence,checkedAccount:current,checkedAt:now(),note:'A missing order/deal is not proof of rejection. Broker receipts and observed fills are distinct.'});
       return record;
       });
     },

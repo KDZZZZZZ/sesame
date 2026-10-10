@@ -3,7 +3,7 @@
   "apiVersion": "1",
   "version": "1.0.0",
   "title": "Agent 手动交易",
-  "description": "在已有 MT5/QMT 配置上，将最新行情复核、信号有效期和一次报单放进原生执行链，保留可查询回执；默认 M5 及以上。",
+  "description": "规范 Agent 手动交易的授权、时效、报价核验、单次执行与回执恢复；复用已有可用交易后端，默认 M5 及以上。",
   "license": "MIT",
   "default_state": "discoverable",
   "entry": "index.js",
@@ -30,7 +30,6 @@
   ],
   "resources": [
     "README.md",
-    "BACKENDS.md",
     "PROVENANCE.md"
   ],
   "provides": {},

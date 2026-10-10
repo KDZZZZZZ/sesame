@@ -285,7 +285,7 @@
   {
     "name": "configuration_open",
     "label": "configuration_open",
-    "description": "打开现有模型设置窗口，供用户安全填写凭据或完成授权。",
+    "description": "按用户要求打开设置，或处理无法复用的模型认证。后端环境和连接由对应插件主动发现、导入并验证，不用此工具让用户手填。",
     "parameters": {
       "type": "object",
       "required": [
