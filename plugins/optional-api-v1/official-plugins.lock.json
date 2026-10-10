@@ -90,7 +90,7 @@
       "id": "sesame/backtrader",
       "version": "1.0.0",
       "directory": "backtrader",
-      "treeDigest": "sha256:253e2a6cab83b95bc3416a63f11d3b2b4c3f14b945556ee7c1098a1fa90963c9",
+      "treeDigest": "sha256:dbac642cc4b338b1d38596a44159d73acd9d62ec4f8c0869545fb96e8ca8919c",
       "files": [
         {
           "path": "LICENSE",
@@ -134,8 +134,8 @@
         },
         {
           "path": "runner.py",
-          "sha256": "554d86b109ebca6486966bbaa04ca70f855898ec8ffd7d99b60dfc57c16a4cf6",
-          "bytes": 6093
+          "sha256": "b4a431539de1508caaf89572cbe1eb41a950adadd3e6f16f8afb4065f2e026ff",
+          "bytes": 6261
         },
         {
           "path": "skills/backtrader-fixed-research/SKILL.md",
