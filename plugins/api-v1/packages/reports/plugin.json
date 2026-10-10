@@ -2,7 +2,7 @@
   "id": "sesame/reports",
   "title": "交互报告",
   "description": "编写、冻结与发布 report/1 HTML 报告，使用固定数据引用、离线 SVG 图表与只读渲染桥。",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "default_state": "mounted",
   "tool_names": [
     "report_data",

@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { setImmediate } from "node:timers/promises";
 import { CCXTProvider, displayDecimals } from "../packages/ccxt/provider.js";
 const instrument = { sourceId: "ccxt:kraken:spot", instrumentId: "BTC/USD" },
   spec = {
@@ -158,4 +159,120 @@ test("Display decimals use exact source precision, never a blanket eight", () =>
       }),
     { code: "UNSUPPORTED_CAPABILITY" },
   );
+});
+
+function cappedCoinbase(now) {
+  const requests = [], records = new Map();
+  const provider = new CCXTProvider({
+    storage: {
+      get: (_name, id) => records.get(id),
+      put: (_name, row) => records.set(row.id, structuredClone(row)),
+    },
+    environment: {
+      executeWorker: async (_path, payload) => {
+        requests.push(payload);
+        const duration = 3600000;
+        const rows = Array.from({ length: Math.min(payload.limit ?? 500, 300) }, (_, i) => [
+          Math.ceil(payload.since / duration) * duration + i * duration,
+          "10", "12", "9", "11", "2",
+        ]).filter(row => row[0] <= Math.floor(now() / duration) * duration);
+        return { library: "4.5.85", exchange: "coinbase", observedAt: now(), rows };
+      },
+    },
+  });
+  const context = { bindingId: "coinbase" };
+  provider.bind({ configuration: { exchange: "coinbase" } }, context);
+  return { provider, context, requests };
+}
+
+test("Backward Coinbase window honors its native 300 candle cap and reaches the forming candle", async () => {
+  const now = Date.UTC(2026, 9, 10, 8, 23), duration = 3600000;
+  const f = cappedCoinbase(() => now);
+  const result = await f.provider.queryBars({
+    instrument: { sourceId: "ccxt:coinbase:spot", instrumentId: "BTC/USD" },
+    spec: { ...spec, timeframe: "1h" },
+    range: { from: { basis: "utc", unixMs: now - 500 * duration }, to: { basis: "utc", unixMs: now } },
+    direction: "backward", includeForming: true, page: { limit: 500 },
+  }, f.context);
+  assert.equal(f.requests[0].limit, 300);
+  assert.equal(result.data.page.items.at(-1).openTime.unixMs, Math.floor(now / duration) * duration);
+  assert.equal(result.data.page.items.at(-1).isClosed, false);
+  assert.equal(result.data.page.items.at(-2).closure, "source");
+  assert.equal(result.data.coverage.complete, false);
+  await f.provider.unbind(f.context);
+});
+
+test("Live initial tail reaches now and one-second refresh queries only the recent window", async t => {
+  const now = Date.UTC(2026, 9, 10, 8, 23), duration = 3600000;
+  t.mock.timers.enable({ apis: ["Date", "setTimeout"], now });
+  const f = cappedCoinbase(() => Date.now());
+  const handle = await f.provider.subscribeBars({
+    instrument: { sourceId: "ccxt:coinbase:spot", instrumentId: "BTC/USD" },
+    spec: { ...spec, timeframe: "1h" }, includeForming: true, tailLimit: 500,
+  }, f.context);
+  const currentOpen = Math.floor(now / duration) * duration;
+  assert.equal(handle.snapshot.bars.at(-1).openTime.unixMs, currentOpen);
+  handle.ready(() => {});
+  t.mock.timers.tick(1000);
+  await setImmediate();
+  assert.equal(f.requests.length, 2);
+  assert.equal(f.requests[1].since, currentOpen - 2 * duration);
+  await handle.close();
+  t.mock.timers.tick(10000);
+  await setImmediate();
+  assert.equal(f.requests.length, 2, "Closing a chart stops only its polling");
+  await f.provider.unbind(f.context);
+});
+
+test("A completed-bar tail includes a real source successor even for tailLimit one", async t => {
+  const now = Date.UTC(2026, 9, 10, 8, 23), duration = 3600000;
+  t.mock.timers.enable({ apis: ["Date"], now });
+  const f = cappedCoinbase(() => Date.now());
+  const stream = await f.provider.subscribeBars({
+    instrument: { sourceId: "ccxt:coinbase:spot", instrumentId: "BTC/USD" },
+    spec: { ...spec, timeframe: "1h" }, includeForming: false, tailLimit: 1,
+  }, f.context);
+  assert.equal(stream.snapshot.bars.length, 1);
+  assert.equal(stream.snapshot.bars[0].openTime.unixMs, Math.floor(now / duration) * duration - duration);
+  assert.equal(stream.snapshot.bars[0].closure, "source");
+  await stream.close();
+});
+
+test("A transient read reports a recoverable gap and the same binding can immediately resnapshot", async t => {
+  t.mock.timers.enable({ apis: ["Date", "setTimeout"], now: Date.UTC(2026, 9, 10, 8, 23) });
+  const f = cappedCoinbase(() => Date.now()), input = {
+    instrument: { sourceId: "ccxt:coinbase:spot", instrumentId: "BTC/USD" },
+    spec: { ...spec, timeframe: "1h" }, includeForming: true, tailLimit: 500,
+  };
+  const first = await f.provider.subscribeBars(input, f.context), events = [];
+  const original = f.provider.host.environment.executeWorker;
+  f.provider.host.environment.executeWorker = async () => { throw Object.assign(Error("temporary network failure"), { code: "SOURCE_UNAVAILABLE" }); };
+  first.ready(event => events.push(event));
+  t.mock.timers.tick(1000);
+  await setImmediate();
+  assert.equal(events[0].type, "stream.gap");
+  assert.equal(events[0].payload.recovery, "snapshot");
+  assert.equal(events[0].payload.reason.code, "SOURCE_UNAVAILABLE");
+  await first.close();
+  f.provider.host.environment.executeWorker = original;
+  const recovered = await f.provider.subscribeBars(input, f.context);
+  assert.equal(recovered.snapshot.instrument.sourceId, first.snapshot.instrument.sourceId);
+  assert.equal(recovered.snapshot.bars.at(-1).openTime.unixMs, first.snapshot.bars.at(-1).openTime.unixMs);
+  await recovered.close();
+});
+
+test("A suspended process requires a fresh snapshot instead of silently skipping elapsed candles", async t => {
+  t.mock.timers.enable({ apis: ["Date", "setTimeout"], now: Date.UTC(2026, 9, 10, 8, 23) });
+  const f = cappedCoinbase(() => Date.now());
+  const handle = await f.provider.subscribeBars({
+    instrument: { sourceId: "ccxt:coinbase:spot", instrumentId: "BTC/USD" },
+    spec: { ...spec, timeframe: "1h" }, includeForming: true, tailLimit: 500,
+  }, f.context), events = [];
+  handle.ready(event => events.push(event));
+  t.mock.timers.tick(5 * 3600000);
+  await setImmediate();
+  assert.equal(events.length, 1);
+  assert.equal(events[0].type, "stream.gap");
+  assert.equal(events[0].payload.reason.code, "GAP_DETECTED");
+  await handle.close();
 });

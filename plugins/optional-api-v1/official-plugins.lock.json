@@ -224,9 +224,9 @@
     },
     {
       "id": "sesame/ccxt",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "directory": "ccxt",
-      "treeDigest": "sha256:ba29b5dfcc1e398303587f79d1ca528ffff4273ddc264cca9296b9e203fec565",
+      "treeDigest": "sha256:8886d388c0bb6e41a46a79220c8873eb8b1b507636f73749125508ae381d0c74",
       "files": [
         {
           "path": "LICENSE",
@@ -240,18 +240,18 @@
         },
         {
           "path": "README.md",
-          "sha256": "db4e380e69ffdea145c5d9a7f636acef55b0c92fd3dcb9dba49b2ccdf7f7ac1b",
-          "bytes": 3395
+          "sha256": "774ad317bf2337202361f4d0c98f662eff1d981107b905a32f42c92805212053",
+          "bytes": 4428
         },
         {
           "path": "VALIDATION.md",
-          "sha256": "b1c7704441d3f12bab71e77ba395f04cb3856008fef109a3ba2000742330791c",
-          "bytes": 1619
+          "sha256": "eff3fc8d43a559239feee76fb76e3a4cdf11597efeb9178596813e1d0155ae93",
+          "bytes": 3426
         },
         {
           "path": "bridge.py",
-          "sha256": "9ec50a48f1fb802f51c4d0fa05e4e3db073a25a90524e9b4cc0728eeccb43abe",
-          "bytes": 2645
+          "sha256": "f3c64694d2332d6c6b2925d20617fc3471fdacfcbe2ca5e82a279a5970ef38fa",
+          "bytes": 6231
         },
         {
           "path": "environment.js",
@@ -260,17 +260,17 @@
         },
         {
           "path": "index.js",
-          "sha256": "00cf4e17afd547f6470d496e2aef4b41e026a80dcb458c40a2618a78d6dec0ca",
-          "bytes": 1317
+          "sha256": "f765c1ec595249b728d16461442520402b7440085b8473fa46191b60157b5537",
+          "bytes": 1316
         },
         {
           "path": "package.json",
-          "sha256": "970d59b011b7720dd3763feebc33f0ffd6c9efbee1b5339db6c204d2a15b94ef",
+          "sha256": "7ddd54395fdf1b444658789fd6624f489707ac6b33f140472520f5381bdb8ae0",
           "bytes": 117
         },
         {
           "path": "plugin.json",
-          "sha256": "05a8cc719f81ade920b2b482ad1e30dd068344256910b2048fc7ab0fa475185f",
+          "sha256": "adb0d3d0b7d8d8567812135f1854b3921ec40288f72c5c52f4bd97a1d19d965b",
           "bytes": 691
         },
         {
@@ -280,13 +280,13 @@
         },
         {
           "path": "provider.js",
-          "sha256": "a844582dc8765820bea0ab075758b989a5f9895f8fd95164e32fd1b2617b7e4d",
-          "bytes": 21162
+          "sha256": "26fd1908fd7b9d2b7e346d7c5352c22a93527530cf2c02bf61eb652fd673e011",
+          "bytes": 22228
         },
         {
           "path": "skills/ccxt-public-markets/SKILL.md",
-          "sha256": "b05dbbc4f6a6a6f0565ff42e772cdfd38d357ac502dd3910f956a2b98cd993fa",
-          "bytes": 2992
+          "sha256": "259409abce0e26e8b1b7d7fa5cd85b34b18a4d7503331d939a66eec373dd53c7",
+          "bytes": 3330
         },
         {
           "path": "tools.json",
@@ -295,8 +295,8 @@
         },
         {
           "path": "worker.js",
-          "sha256": "080bc3bd7d8020b99d50f8c1fe407ee33d73aabbb1ab6a80c8b3011260961b52",
-          "bytes": 2238
+          "sha256": "2b2890cbb7be17a219b66f8e03c8327abcc3ade1793fa77c3de166b3a3b75015",
+          "bytes": 7503
         }
       ]
     },

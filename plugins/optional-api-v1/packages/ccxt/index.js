@@ -26,7 +26,7 @@ export function createTools(host) {
         library: "4.5.85",
         market: "public spot",
         timeframes: ["1m", "5m", "15m", "1h", "1d"],
-        pollIntervalMs: 60000,
+        pollIntervalMs: 1000,
         orders: false,
         apiKeys: false,
         coverage: "partial/unknown",

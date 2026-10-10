@@ -2,7 +2,7 @@
   "id": "sesame/configuration",
   "title": "配置助手",
   "description": "主 Agent 读取和修改应用模型、提供方与偏好设置；凭据留在宿主配置界面。",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "default_state": "discoverable",
   "agent_scope": "main",
   "tool_names": [

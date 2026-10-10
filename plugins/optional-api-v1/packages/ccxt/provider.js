@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { check, canonical, digest, decimal } from "@sesame/plugin-sdk/protocol";
 import { Decimal } from "@sesame/plugin-sdk/decimal";
+import { closeWorkers } from "./worker.js";
+const POLL_INTERVAL = 1000;
+const sourceLimits = { kraken: 500, coinbase: 300, okx: 300 };
 const intervals = {
   "1m": 60000,
   "5m": 300000,
@@ -51,7 +54,7 @@ export const descriptor = {
   ],
   limits: {
     transportMode: "poll",
-    minPollIntervalMs: 60000,
+    minPollIntervalMs: POLL_INTERVAL,
     maxPageSize: 500,
     timeframes: Object.keys(intervals),
     priceBases: ["last"],
@@ -376,7 +379,7 @@ export class CCXTProvider {
     return { ...bar, revision };
   }
   async queryBars(input, context) {
-    this.bound(context, input.instrument);
+    const binding = this.bound(context, input.instrument);
     const duration = intervals[input.spec?.timeframe];
     check(
       duration &&
@@ -405,14 +408,16 @@ export class CCXTProvider {
         "Series budget exceeded",
         "RESOURCE_EXHAUSTED",
       );
+      const sourceLimit = sourceLimits[binding.exchange];
       const since =
         input.direction === "backward"
-          ? Math.max(from.unixMs, to.unixMs - 500 * duration)
+          ? Math.max(from.unixMs, to.unixMs - sourceLimit * duration)
           : from.unixMs;
       const receipt = await this.call(context, "bars", {
         symbol: input.instrument.instrumentId,
         timeframe: input.spec.timeframe,
         since,
+        limit: sourceLimit,
       });
       const rows = receipt.rows
         .map((row) => {
@@ -538,8 +543,9 @@ export class CCXTProvider {
         input.tailLimit <= 500,
       "tailLimit must be 1..500",
     );
-    const read = async () => {
-      const now = Date.now(),
+    const read = async (tail = input.tailLimit) => {
+      const duration = intervals[input.spec.timeframe],
+        open = Math.floor(Date.now() / duration) * duration,
         result = await this.queryBars(
           {
             ...input,
@@ -547,12 +553,13 @@ export class CCXTProvider {
             range: {
               from: {
                 basis: "utc",
-                unixMs:
-                  now - (input.tailLimit + 3) * intervals[input.spec.timeframe],
+                // One extra source candle proves closure when the caller only
+                // wants completed bars, including a tail of a single bar.
+                unixMs: open - (tail - 1 + (input.includeForming === false ? 1 : 0)) * duration,
               },
               to: {
                 basis: "utc",
-                unixMs: now + intervals[input.spec.timeframe],
+                unixMs: open + duration,
               },
             },
             page: { limit: 500 },
@@ -587,8 +594,17 @@ export class CCXTProvider {
         const tick = () => {
           task = (async () => {
             try {
-              const next = await read();
+              // Refresh only the forming candle and its predecessor. The
+              // configured worker retains its markets and HTTP session.
+              const next = await read(3);
               if (signal.aborted) return;
+              const last = prior.bars.at(-1)?.openTime.unixMs;
+              check(
+                last === undefined || !next.bars.length ||
+                  next.bars[0].openTime.unixMs <= last + intervals[input.spec.timeframe],
+                "Latest source window no longer overlaps; refresh the snapshot",
+                "GAP_DETECTED",
+              );
               const old = new Map(
                   prior.bars.map((bar) => [bar.id, bar.revision]),
                 ),
@@ -626,13 +642,13 @@ export class CCXTProvider {
               controller.abort();
             } finally {
               if (!signal.aborted) {
-                timer = setTimeout(tick, 60000);
+                timer = setTimeout(tick, POLL_INTERVAL);
                 timer.unref?.();
               }
             }
           })();
         };
-        timer = setTimeout(tick, 60000);
+        timer = setTimeout(tick, POLL_INTERVAL);
         timer.unref?.();
       },
       close: async () => {
@@ -664,5 +680,6 @@ export class CCXTProvider {
     this.pages.clear();
     this.revisions.clear();
     this.closedThrough.clear();
+    await closeWorkers(this.host.storage.directory);
   }
 }

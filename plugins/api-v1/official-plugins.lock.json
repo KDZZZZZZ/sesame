@@ -73,9 +73,9 @@
     },
     {
       "id": "sesame/configuration",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "directory": "configuration",
-      "treeDigest": "sha256:ceec5c249243013552e7c012a44b34be7e251b627021f03cc355b267c34493a2",
+      "treeDigest": "sha256:c608a4c895630f5db73d2d144bbb3a743f35599cd0212c6c27481851d37b23e1",
       "files": [
         {
           "path": "LICENSE",
@@ -89,12 +89,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "e305729e4c5aa45fdfd0c66fcc2e171f0c0e5d3aaae43175cf0743bd94a29595",
+          "sha256": "a02810ec4a553df6701a499f36e050b7a045458400dce926a5b7e414f7b99eb4",
           "bytes": 107
         },
         {
           "path": "plugin.json",
-          "sha256": "b99406571b55d6a5b7cba2c8264bd4a0ce921604f6f761a0573b6ec054e40585",
+          "sha256": "10376d1d944f3c284ecdaf1b8ac849f0fa388e25195643c97cffae4c7ff8f2eb",
           "bytes": 599
         },
         {
@@ -104,8 +104,8 @@
         },
         {
           "path": "skills/configure-application/SKILL.md",
-          "sha256": "e71ad7f203823092d407783051d07c5d98487b297fa9ce5d277f32053cd313aa",
-          "bytes": 546
+          "sha256": "2694caa7ed81a845f4d037f14eabb68c72c2945595cd509a92b5b505e8f7d9a7",
+          "bytes": 1550
         },
         {
           "path": "support.js",
@@ -114,13 +114,13 @@
         },
         {
           "path": "tools.js",
-          "sha256": "6a283e6dd9d8f76053e23fb6d0ed216ef82917b76a03ec32a9e2fc9046141f4c",
-          "bytes": 1502
+          "sha256": "c45a581bdb1821d02356175d3ed4f96b61e7943684da88cb48f17f65e98618ac",
+          "bytes": 2380
         },
         {
           "path": "tools.json",
-          "sha256": "86c0c94043f478f3bfd9af99da494af97e5bf94583e53803db573de1a8f64822",
-          "bytes": 4336
+          "sha256": "aec2a1881f3d870f85d49bf32ed907b5a57feebf4e057e1b9e11141ea9a2e20a",
+          "bytes": 10384
         }
       ]
     },
@@ -393,9 +393,9 @@
     },
     {
       "id": "sesame/reports",
-      "version": "2.0.3",
+      "version": "2.0.4",
       "directory": "reports",
-      "treeDigest": "sha256:615064416e0218f6be8a2565b51602731edc18a76b7d90b0962cd529d4952e84",
+      "treeDigest": "sha256:37d8a8f39833265ef484a6eb8223ab5c3769b6aba8b6f66e5869d372c4bacf73",
       "files": [
         {
           "path": "LICENSE",
@@ -414,8 +414,8 @@
         },
         {
           "path": "assets/editorial.css",
-          "sha256": "a64c8dbe8d7617b6dfcc03edac82f9272fc9cc53cc9a2172f8613cd05da56ddb",
-          "bytes": 5126
+          "sha256": "6f8b75f01c55437b9df7686939076f284939f225f997fc5dab2fc8b400e0d683",
+          "bytes": 6181
         },
         {
           "path": "examples/demo-data.json",
@@ -424,8 +424,8 @@
         },
         {
           "path": "examples/editorial-demo.html",
-          "sha256": "c0935774fda2998cb1d3f3ded242a5ed04d113e38f8406298995555c69a38652",
-          "bytes": 24367
+          "sha256": "ba40dade6dcbe266c7b60abe36ae29daf5219e3e2ca21fd8579fc60d52d1e556",
+          "bytes": 25422
         },
         {
           "path": "index.js",
@@ -434,18 +434,18 @@
         },
         {
           "path": "package.json",
-          "sha256": "a1c71c67890c84624b3cfabfb424e8a591d352d9d66a89d2854c8ebeafaf1712",
+          "sha256": "35ba15dd2acfb464c0b92c1c4ae14b215ddb72007872c8bca2ed7ade6f32ff3c",
           "bytes": 120
         },
         {
           "path": "plugin.json",
-          "sha256": "13bb4615ace29eb926f6d9c428cd3f8aa8d126ef2526d4683b67deba7f3e33ff",
+          "sha256": "3a6f3e9393b3d8d76ce3416dc06f3001656b7b7f235971cc0a701d964d372c4b",
           "bytes": 971
         },
         {
           "path": "prompt.md",
-          "sha256": "fef555b7b58dd0c97d14e84e3f52b8332732b462533de16ffe9c53882e15f04f",
-          "bytes": 1939
+          "sha256": "63937ae913d535b0108b108a02c110c6ca38cfb8149e17921a1db79a3a2dde1a",
+          "bytes": 2529
         },
         {
           "path": "repair.md",
@@ -464,13 +464,13 @@
         },
         {
           "path": "skills/report-design/SKILL.md",
-          "sha256": "801b3b527f445e1ac33b2f9f1d6936cf1730e3594e4178222c969b45a14530a2",
-          "bytes": 1804
+          "sha256": "654de0253d4d163b6440e900053730224b77d50504d929e07009c4af98241657",
+          "bytes": 2947
         },
         {
           "path": "skills/report-writing/SKILL.md",
-          "sha256": "4043de6b197563f023c769340f760f5bb03021cf05f8f739708c2ec9a526b9f5",
-          "bytes": 2866
+          "sha256": "c0ddb601889f4ad32b4e4849a4ae56d2a9639414a2658f3834c3548c61d41164",
+          "bytes": 2974
         },
         {
           "path": "templates/research-brief.html",
