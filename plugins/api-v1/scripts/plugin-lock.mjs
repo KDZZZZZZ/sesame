@@ -123,7 +123,7 @@ export function buildLock(source = root) {
     for (const file of files.filter(file => /\.(?:m?js|cjs)$/.test(file.path))) {
       const text = readFileSync(join(path, file.path), 'utf8');
       if (profile) fail(!/\bstorage\s*(?:(?:\?\.)?\[\s*['"]legacy['"]\s*\]|(?:\?\.|\.)\s*legacy\b)/.test(text), `${id}: profiled packages must use private storage`);
-      for (const match of text.matchAll(/(?:\bfrom\s*|\bimport\s*\(|\bimport\s*|\brequire\s*\()\s*['"]([^'"]+)['"]/g)) {
+      for (const match of text.matchAll(/(?:(?<!['"])\bfrom\s*|\bimport\s*\(|\bimport\s*|\brequire\s*\()\s*['"]([^'"]+)['"]/g)) {
         const specifier = match[1];
         if (specifier.startsWith('.')) {
           const target = relative(path, resolve(dirname(join(path, file.path)), specifier)).replaceAll('\\', '/');
