@@ -1,0 +1,40 @@
+{
+  "id": "sesame/manual-trading",
+  "apiVersion": "1",
+  "version": "1.0.0",
+  "title": "Agent 手动交易",
+  "description": "在已有 MT5/QMT 配置上，将最新行情复核、信号有效期和一次报单放进原生执行链，保留可查询回执；默认 M5 及以上。",
+  "license": "MIT",
+  "default_state": "discoverable",
+  "entry": "index.js",
+  "tool_names": [
+    "manual_trade_inspect",
+    "manual_trade_observe",
+    "manual_trade_execute",
+    "manual_trade_status",
+    "manual_trade_cancel"
+  ],
+  "main_tool_names": [
+    "manual_trade_inspect",
+    "manual_trade_observe",
+    "manual_trade_execute",
+    "manual_trade_status",
+    "manual_trade_cancel"
+  ],
+  "tool_definitions": "tools.json",
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "resources": [
+    "README.md",
+    "BACKENDS.md",
+    "PROVENANCE.md"
+  ],
+  "provides": {},
+  "engines": {
+    "sesame": ">=0.2.1"
+  }
+}

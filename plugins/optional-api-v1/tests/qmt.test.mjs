@@ -188,6 +188,17 @@ test('activation service context cannot authorize trading; current tool scope is
  const {host,config}=await fixture(t);host.scope={kind:'service'};let calls=0;const service=createService(host,{platform:'win32',request:async()=>{calls++;return receipt({status:'submitted',order_id:'1'})}});t.after(()=>service.dispose());const args={operation_id:'scope',user_authorized:true,account_id:config.account_id,connection_revision:'2',symbol:'600000.SH',side:'buy',shares:'100',price:'10'};await assert.rejects(service.command('order',args),{code:'FORBIDDEN'});assert.equal((await service.command('order',args,undefined,{kind:'main'})).status,'submitted');assert.equal(calls,1);await assert.rejects(service.command('order',{...args,operation_id:'child'},undefined,{kind:'child'}),{code:'FORBIDDEN'});
 });
 
+test('native execution guard is passed unchanged, durable pre-send rejection is queryable and never replayed',async t=>{
+ const {host,config}=await fixture(t);host.scope={kind:'service'};let calls=0;
+ const execution_guard={observed_at:1700000000000,expires_at:1700000060000,max_quote_age_ms:5000,max_quote_to_send_ms:1000,price_limit:'10.2'};
+ const service=createService(host,{platform:'win32',request:async payload=>{calls++;assert.deepEqual(payload.execution_guard,execution_guard);throw Object.assign(Error('expired fixture'),{code:'SIGNAL_EXPIRED',details:{submission_attempted:false}});}});t.after(()=>service.dispose());
+ const args={operation_id:'expired-guard',user_authorized:true,account_id:config.account_id,connection_revision:'2',symbol:'600000.SH',side:'buy',shares:'100',price:'10',execution_guard};
+ await assert.rejects(service.command('order',args,undefined,{kind:'main'}),{code:'SIGNAL_EXPIRED'});
+ assert.equal(service.commandRecord(args.operation_id,{kind:'main'}).status,'rejected');
+ assert.equal((await service.command('order',args,undefined,{kind:'main'})).status,'rejected');assert.equal(calls,1);
+ assert.throws(()=>service.commandRecord(args.operation_id,{kind:'child'}),{code:'FORBIDDEN'});
+});
+
 test('backward pages select newest data but stay ascending, published wall authority works and stale source never proves closure',async t=>{
  const {host,config}=await fixture(t);const data={items:[dailyRow('2026-10-01'),dailyRow('2026-10-08')],tick:{...tick,time:String(at('2026-10-09T14:00:00')),open:'9',high:'11',low:'8',lastPrice:'10',volume:'100'}};
  const service=createService(host,{platform:'win32',request:async()=>receipt(data,at('2026-10-09T15:05:00'))});t.after(()=>service.dispose());await bind(service,'market');

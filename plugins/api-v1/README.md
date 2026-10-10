@@ -11,7 +11,7 @@ The defaults are `canvas-control`, `configuration`, `data-access`, `memory`,
 `orchestration`, `plugin-manager`, `reports`, `strategy-authoring` and `workspace`.
 Canvas and settings are discoverable; the other seven are mounted. No market,
 account or native strategy backend is required to author sources, run fixed
-replays, work with local data or publish reports. Twenty-two optional packages live in
+replays, work with local data or publish reports. Twenty-three optional packages live in
 [`../optional-api-v1/`](../optional-api-v1/README.md), including MT5, QMT, AKShare
 and vn.py. Installing Sesame does not install their terminals or environments.
 
@@ -30,7 +30,7 @@ installations are not automatically converted. Use this separate API 1 catalog.
 - `official-plugins.lock.json`: every packaged byte and package tree digest.
 - `bundle-profile.json`: the reviewed, exact nine-package distribution set.
 - `catalog.json` / `catalog.sources.json`: separately pinned, already published package entries.
-- `inventory.json`: the 31-package descriptive inventory, with no installation digests or authority.
+- `inventory.json`: the 32-package descriptive inventory, with no installation digests or authority.
 - `scripts/plugin-lock.mjs`: data-only validation, lock generation and deterministic archive creation.
 - `tests/`: source-repository tests; never included in the application bundle.
 

@@ -21,10 +21,10 @@ function fixture(t, kind = 'optional') {
   writeFileSync(join(root, 'bundle-profile.json'), JSON.stringify(profile));
   return { root, pkg, manifest, profile, write };
 }
-test('candidate distribution has nine defaults and twenty-two optional identities, with no duplicate tools from merged packages', () => {
+test('candidate distribution has nine defaults and twenty-three optional identities, with no duplicate tools from merged packages', () => {
   const defaults = buildLock(core), options = buildLock(optional);
-  assert.equal(defaults.packages.length, 9); assert.equal(options.packages.length, 22);
-  const ids = [...defaults.packages, ...options.packages].map(item => item.id); assert.equal(new Set(ids).size, 31);
+  assert.equal(defaults.packages.length, 9); assert.equal(options.packages.length, 23);
+  const ids = [...defaults.packages, ...options.packages].map(item => item.id); assert.equal(new Set(ids).size, 32);
   assert.deepEqual(defaults.packages.map(item => item.id), readProfile(core).packages);
   assert.ok(options.packages.some(item => item.id === 'sesame/mt5'));
   for (const id of ['sesame/host-files', 'sesame/user-guide', 'sesame/research']) assert.ok(!ids.includes(id));
@@ -67,10 +67,10 @@ test('descriptive inventory records compatibility without claiming an applicatio
   assert.equal(preview.application.released, undefined);
   assert.equal(preview.application.minimum, '0.2.0');
   assert.equal(preview.packages.filter(p => p.distribution === 'core').length, 9);
-  assert.equal(preview.packages.filter(p => p.distribution === 'optional').length, 22);
+  assert.equal(preview.packages.filter(p => p.distribution === 'optional').length, 23);
   for (const item of preview.packages) {
     for (const key of ['source', 'sourceCommit', 'package', 'treeDigest', 'review', 'release']) assert.equal(item[key], undefined);
-    assert.equal(item.engines.sesame, '>=0.2.0-0');
+    assert.equal(item.engines.sesame, item.id==='sesame/manual-trading'?'>=0.2.1':'>=0.2.0-0');
     assert.ok(item.title.en && item.title.zh && item.dependencies.en && item.dependencies.zh);
   }
 });

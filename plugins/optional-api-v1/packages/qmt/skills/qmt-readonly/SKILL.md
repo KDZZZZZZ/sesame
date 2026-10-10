@@ -19,6 +19,8 @@ description: Discover and reuse authorized Windows MiniQMT configuration, prepar
 
 ## 日线与明确授权的股票操作
 
+手动交易接口逐项见 TRADING.md。qmt_command 只读取已有下单/撤单回执；不重放请求。qmt_order 的 execution_guard 在原生进程启动后、报单前复核源报价、账户、可用持仓与决策时效；配合独立 manual-trading 插件记录模型决策延迟，默认 M5+。只有日线行情不代表提供分钟历史，本插件也不提供改单/市价单/自动挂载。
+
 优先通过 market provider `bars.history`/`bars.subscribe` 使用已有未复权D1数据（session regular、priceBasis last、adjustment none）。若缺本地历史，向用户说明后显式 `qmt_download_history {symbol,start:YYYYMMDD,end:YYYYMMDD}`；普通查询不会下载。当前日使用原生时间/OHLC形成中柱，1秒是目标轮询间隔，不是1秒K线。分钟周期与未验证volume单位不猜测。
 
 仅主Agent收到明确用户交易请求后使用 `qmt_order`：user_authorized=true、精确account_id/connection_revision、symbol、buy或sell、正整数shares与正Decimal限价。先读账户、持仓availableQuantity、报价与品种实际规则；可卖量不等于允许当天新买卖出，T+1/涨跌停/数量步长/时段/权限由券商真实检查。不要保证成交。调用结果submitted只表示订单编号已返回。unknown或取消/超时可能已送达，保持原operation_id读取既有记录，不自动重报，也不要换ID规避。对照原生当日orders/fills和remark人工确定后才能做新的用户意图。

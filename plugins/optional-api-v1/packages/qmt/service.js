@@ -184,6 +184,7 @@ export function createService(host, { platform = process.platform, now = Date.no
   accounts.queryOrders=async()=>check(false,'Native order_time unit is unverified; only raw current-day qmt_read orders is supported','UNSUPPORTED_CAPABILITY');
   accounts.queryFills=async()=>check(false,'Native traded_time unit is unverified; only raw current-day qmt_read fills is supported','UNSUPPORTED_CAPABILITY');
   return { market, account: accounts,
+    commandRecord(id,scope=host.scope){check(scope?.kind==='main','Command receipts are for the main conversation','FORBIDDEN');const record=storedCommand(id);check(record,'QMT command not found','NOT_FOUND');return record;},
     async download(args,signal){const c=current();instrumentSymbol(c,instrumentRef(c,args.symbol));check(/^\d{8}$/.test(args.start)&&/^\d{8}$/.test(args.end)&&args.start<=args.end,'Use ordered YYYYMMDD bounds','INVALID_ARGUMENT');const dates=[args.start,args.end].map(x=>x.slice(0,4)+'-'+x.slice(4,6)+'-'+x.slice(6,8));for(const date of dates)check(new Date(date+'T00:00:00Z').toISOString().slice(0,10)===date,'Invalid download date','INVALID_ARGUMENT');check(Date.parse(dates[1])-Date.parse(dates[0])<=3660*86400000,'Download range exceeds ten years','INVALID_ARGUMENT');return read(c,'download_history',{symbols:[args.symbol],start:args.start,end:args.end},signal);},
     async command(action,args,signal,scope=host.scope){
       check(scope?.kind==='main','Trading tools are only available in the main user conversation','FORBIDDEN');
@@ -200,7 +201,7 @@ export function createService(host, { platform = process.platform, now = Date.no
         let record={id:args.operation_id,action,fingerprint,connection:connection(c),remark:payload.remark,status:'outcome_unknown',createdAt:now()};
         host.storage.put('qmt_commands',record); // durable boundary before native submission; never replay unknown intent.
         try{signal?.throwIfAborted();const r=await read(c,action,payload,signal);check(r.result.status===(action==='order'?'submitted':'cancel_requested')&&/^[1-9]\d*$/.test(r.result.order_id??''),'Native submission receipt is invalid','SOURCE_DATA_INVALID');check(action!=='cancel'||r.result.order_id===args.order_id,'Cancel receipt order ID differs','SOURCE_DATA_INVALID');record={...record,status:r.result.status,result:r.result,meta:metadata(r)};host.storage.put('qmt_commands',record);return record;}
-        catch(error){record={...record,status:error.code==='BROKER_REJECTED'?'rejected':'outcome_unknown',error:{code:error.code??'SOURCE_UNAVAILABLE',message:'Submission outcome is unconfirmed; inspect native orders/fills before taking another action.'}};host.storage.put('qmt_commands',record);throw error;}
+        catch(error){const notSent=error.details?.submission_attempted===false;record={...record,status:error.code==='BROKER_REJECTED'||notSent?'rejected':'outcome_unknown',error:{code:error.code??'SOURCE_UNAVAILABLE',message:notSent?'Native execution guard rejected before submission.':'Submission outcome is unconfirmed; inspect native orders/fills before taking another action.'}};host.storage.put('qmt_commands',record);throw error;}
       });
     },
     async native(action, args, signal) {

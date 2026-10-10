@@ -3,6 +3,7 @@ import contextlib
 import datetime as dt
 import decimal
 import importlib.metadata
+import importlib.util
 import json
 import math
 import os
@@ -12,6 +13,10 @@ import struct
 import subprocess
 import sys
 import time
+
+_guard_spec = importlib.util.spec_from_file_location("sesame_qmt_execution_guard", Path(__file__).with_name("execution_guard.py"))
+_guard = importlib.util.module_from_spec(_guard_spec)
+_guard_spec.loader.exec_module(_guard)
 
 
 class Failure(Exception):
@@ -163,12 +168,16 @@ def query(request, data, trader_type, account_type):
                     raise Failure("INVALID_ARGUMENT", "Invalid limit price")
                 try:
                     connect_market(data, config)
-                    stock(data, symbol)
+                    spec = stock(data, symbol)
+                    send = lambda: trader.order_stock(account, symbol, xtconstant.STOCK_BUY if side == "buy" else xtconstant.STOCK_SELL, int(shares), xtconstant.FIX_PRICE, float(number), "Sesame", request["remark"])
+                    if request.get("execution_guard") is not None:
+                        order_id, timing = _guard.submit(trader, account, data, spec["detail"], request, send)
+                    else:
+                        order_id, timing = send(), None
                 finally:
                     data.disconnect()
-                order_id = trader.order_stock(account, symbol, xtconstant.STOCK_BUY if side == "buy" else xtconstant.STOCK_SELL, int(shares), xtconstant.FIX_PRICE, float(number), "Sesame", request["remark"])
                 need(type(order_id) is int and order_id > 0, "Broker rejected the submission; no accepted order ID was returned", "BROKER_REJECTED")
-                return {"order_id": str(order_id), "status": "submitted", "execution_confirmed": False}
+                return {"order_id": str(order_id), "status": "submitted", "execution_confirmed": False, **({"execution_timing":timing} if timing is not None else {})}
             order_id = request.get("order_id")
             need(isinstance(order_id, str) and order_id.isdigit() and 0 < int(order_id) <= 9223372036854775807, "Invalid native order ID", "INVALID_ARGUMENT")
             rows = trader.query_stock_orders(account)

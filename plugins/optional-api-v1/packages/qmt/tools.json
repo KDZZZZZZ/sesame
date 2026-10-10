@@ -298,6 +298,42 @@
         "price": {
           "type": "string",
           "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$"
+        },
+        "execution_guard": {
+          "type": "object",
+          "required": [
+            "observed_at",
+            "expires_at",
+            "max_quote_age_ms",
+            "max_quote_to_send_ms",
+            "price_limit"
+          ],
+          "properties": {
+            "observed_at": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "expires_at": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max_quote_age_ms": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5000
+            },
+            "max_quote_to_send_ms": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            },
+            "price_limit": {
+              "type": "string",
+              "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Optional final-mile guard in the native worker: decision deadline, account/available shares/cash, fresh source timestamp and price boundary. No retry; submitted is not filled."
         }
       },
       "additionalProperties": false
@@ -346,6 +382,25 @@
         "order_id": {
           "type": "string",
           "pattern": "^[1-9]\\d*$"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "qmt_command",
+    "description": "Read a stored QMT order/cancel receipt by operation_id without submitting or replaying it. outcome_unknown is unresolved even if a current-day search returns no match; inspect qmt_read orders/fills. This is not a live broker query.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "operation_id"
+      ],
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "description": "Existing QMT operation ID",
+          "minLength": 1,
+          "maxLength": 20000
         }
       },
       "additionalProperties": false

@@ -126,5 +126,24 @@ class Tests(unittest.TestCase):
         with self.assertRaises(b.Failure): self.query(self.request("positions"))
         self.assertTrue(Trader.last.stopped)
 
+    def test_guarded_order_runs_inside_actual_bridge_and_expired_intent_never_sends(self):
+        class Quotes(Data):
+            def get_full_tick(self, symbols):
+                return {s:{"time":int(b.time.time()*1000),"askPrice":[10.1],"bidPrice":[10]} for s in symbols}
+        class Trading(Trader):
+            sends = 0
+            def query_stock_asset(self, account): return types.SimpleNamespace(account_id="00123",cash=100000)
+            def order_stock(self, *args): Trading.sends += 1; return 123
+        module=types.ModuleType("xtquant");module.xtconstant=types.SimpleNamespace(STOCK_BUY=23,STOCK_SELL=24,FIX_PRICE=11)
+        now=int(b.time.time()*1000)
+        guard={"observed_at":now,"expires_at":now+60000,"max_quote_age_ms":5000,"max_quote_to_send_ms":1000,"price_limit":"10.2"}
+        request=self.request("order",account_id="00123",symbol="600000.SH",side="buy",shares="100",price="10",remark="Sguard",execution_guard=guard)
+        with patch.dict(sys.modules,{"xtquant":module}):
+            data=Quotes();result=b.query(request,data,Trading,lambda a,k:(a,k))
+            self.assertEqual(result["order_id"],"123");self.assertIn("execution_timing",result);self.assertEqual(Trading.sends,1);self.assertTrue(data.disconnected);self.assertTrue(Trader.last.stopped)
+            request["execution_guard"]={**guard,"observed_at":now-60001,"expires_at":now-1}
+            with self.assertRaises(b._guard.GuardRejected) as caught:b.query(request,Quotes(),Trading,lambda a,k:(a,k))
+            self.assertEqual(caught.exception.details,{"submission_attempted":False});self.assertEqual(Trading.sends,1);self.assertTrue(Trader.last.stopped)
+
 
 if __name__ == "__main__": unittest.main()
