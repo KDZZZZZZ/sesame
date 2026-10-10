@@ -202,6 +202,25 @@ test('cancelling an unknown QMT order carries only its retained original intent 
  const prior=host.storage.get('qmt_commands','unknown');delete prior.intent;host.storage.put('qmt_commands',prior);
  await assert.rejects(service.command('cancel',{...args,operation_id:'unverifiable-legacy'}),{code:'INVALID_ARGUMENT'});assert.equal(cancels,1);
 });
+test('QMT cancellation survives a same-account configuration revision but cannot cross account ownership',async t=>{
+ const {host,config}=await fixture(t);host.scope={kind:'main'};let cancels=0;
+ const service=createService(host,{platform:'win32',request:async payload=>{
+   if(payload.action==='order')throw Object.assign(Error('lost receipt'),{code:'SOURCE_UNAVAILABLE'});
+   cancels++;assert.equal(payload.account_id,config.account_id);assert.equal(payload.config.version,3);
+   return receipt({status:'cancel_requested',order_id:'123'});
+ }});t.after(()=>service.dispose());
+ const original={operation_id:'unknown-account',user_authorized:true,account_id:config.account_id,connection_revision:'2',symbol:'600000.SH',side:'buy',shares:'100',price:'10'};
+ await assert.rejects(service.command('order',original));
+ assert.equal(service.commandRecord(original.operation_id).accountId,config.account_id);
+ await configure(host,{operation_id:'same-account-update',expected_version:2,changes:{sector:'沪深A股'}});
+ const cancel={operation_id:'new-revision-cancel',user_authorized:true,account_id:config.account_id,connection_revision:'3',original_operation_id:original.operation_id,order_id:'123'};
+ assert.equal((await service.command('cancel',cancel)).status,'cancel_requested');assert.equal(cancels,1);
+ const saved=host.storage.get('qmt_commands',original.operation_id),legacy={...saved};delete legacy.accountId;host.storage.put('qmt_commands',legacy);
+ await assert.rejects(service.command('cancel',{...cancel,operation_id:'legacy-without-account'}),{code:'INVALID_ARGUMENT'});assert.equal(cancels,1);
+ host.storage.put('qmt_commands',saved);
+ await configure(host,{operation_id:'different-account',expected_version:3,changes:{account_id:'009999999999'}});
+ await assert.rejects(service.command('cancel',{...cancel,operation_id:'foreign-account',account_id:'009999999999',connection_revision:'4'}),{code:'INVALID_ARGUMENT'});assert.equal(cancels,1);
+});
 
 test('native execution guard is passed unchanged, durable pre-send rejection is queryable and never replayed',async t=>{
  const {host,config}=await fixture(t);host.scope={kind:'service'};let calls=0;

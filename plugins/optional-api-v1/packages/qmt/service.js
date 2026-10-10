@@ -199,11 +199,12 @@ export function createService(host, { platform = process.platform, now = Date.no
         let payload={...args,remark:'S'+digest(args.operation_id).slice(7,30)};
         if(action==='cancel'){
           const original=storedCommand(args.original_operation_id),accepted=original?.status==='submitted'&&original.result?.order_id===args.order_id,recoverable=original?.status==='outcome_unknown'&&original.intent;
-          check(original?.action==='order'&&(accepted||recoverable)&&canonical(original.connection)===canonical(connection(c)),'Cancel requires an accepted order or a recoverable original intent on this connection','INVALID_ARGUMENT');
+          const originalAccountMatches=original?.accountId===c.account_id || original?.accountId===undefined && original?.connection?.revision===String(c.version);
+          check(original?.action==='order'&&(accepted||recoverable)&&original.connection?.id===c.connection_id&&originalAccountMatches,'Cancel requires an accepted order or a recoverable original intent on this account/connection','INVALID_ARGUMENT');
           payload.remark=original.remark;
           if(original.intent) payload.original_intent=original.intent;
         }
-        let record={id:args.operation_id,action,fingerprint,connection:connection(c),remark:payload.remark,status:'outcome_unknown',createdAt:now()};
+        let record={id:args.operation_id,action,fingerprint,connection:connection(c),accountId:c.account_id,remark:payload.remark,status:'outcome_unknown',createdAt:now()};
         if(action==='order')record.intent={symbol:args.symbol,side:args.side,shares:args.shares,price:args.price};
         host.storage.put('qmt_commands',record); // durable boundary before native submission; never replay unknown intent.
         try{signal?.throwIfAborted();const r=await read(c,action,payload,signal);check(r.result.status===(action==='order'?'submitted':'cancel_requested')&&/^[1-9]\d*$/.test(r.result.order_id??''),'Native submission receipt is invalid','SOURCE_DATA_INVALID');check(action!=='cancel'||r.result.order_id===args.order_id,'Cancel receipt order ID differs','SOURCE_DATA_INVALID');record={...record,status:r.result.status,result:r.result,meta:metadata(r)};host.storage.put('qmt_commands',record);return record;}

@@ -767,7 +767,7 @@
       "id": "sesame/manual-trading",
       "version": "1.0.0",
       "directory": "manual-trading",
-      "treeDigest": "sha256:044d92feee51fa3dc858e8b3cf108311f37315190301557ec8f59db16b364e27",
+      "treeDigest": "sha256:e8dcad9185aec454ca6939e7115bacfb2cd6c76c979e3bdec54c668f6aebb850",
       "files": [
         {
           "path": "LICENSE",
@@ -786,8 +786,8 @@
         },
         {
           "path": "adapters.js",
-          "sha256": "5696c313be25bdc66e1982143ee30bf6b4dde4a5e5864a8059621a25beab15bf",
-          "bytes": 16889
+          "sha256": "bb6c283a5cf26bf73e4a7b65a673130e942edc0e67ba030e8c276ba2ac90df26",
+          "bytes": 17968
         },
         {
           "path": "index.js",
@@ -811,8 +811,8 @@
         },
         {
           "path": "service.js",
-          "sha256": "d414c4c96c37b825e91ee440e2f8b86820de7d06aa65b988f885935d899c0865",
-          "bytes": 13417
+          "sha256": "45a90d98790d2fce4094ab9e3caa6eeeb79bbecbfb9b032a8693e97e3eab2f16",
+          "bytes": 13611
         },
         {
           "path": "skills/manual-trading/SKILL.md",
@@ -888,7 +888,7 @@
       "id": "sesame/mt5",
       "version": "1.3.0",
       "directory": "mt5",
-      "treeDigest": "sha256:89c83c7f844e434238606e23f21ec5d9ec04c9877621d7be59cf59eec10c5a60",
+      "treeDigest": "sha256:d4e7816399ba7c8f935a9abac700d2e253a7ed24c475746f06b9fd2b397f2116",
       "files": [
         {
           "path": "LICENSE",
@@ -897,8 +897,8 @@
         },
         {
           "path": "TRADING.md",
-          "sha256": "0c1a008ee8794a40173f90eeb10d1352c07aa9190d35c46275cd7fe500e1b4f9",
-          "bytes": 6724
+          "sha256": "0fe0c20d0f05509991a272054ab49c808f7065a9996c26af41852c369a24854f",
+          "bytes": 7285
         },
         {
           "path": "backend/README.md",
@@ -1632,7 +1632,7 @@
       "id": "sesame/qmt",
       "version": "1.2.0",
       "directory": "qmt",
-      "treeDigest": "sha256:a8eb6d7223fb4d55e1787320669d3779c1273c7ebe89b29720a7fe1b682e5103",
+      "treeDigest": "sha256:b6ca71d68a0adf34378315ad438cc257a9a676dbd1d919b9da2314be2bf6cddc",
       "files": [
         {
           "path": "LICENSE",
@@ -1646,8 +1646,8 @@
         },
         {
           "path": "TRADING.md",
-          "sha256": "010399341ad5743272f8280c59d977468c67bfa0f3f0d072b912842bfffeba57",
-          "bytes": 4584
+          "sha256": "fe8dc25c58ee52fbd94ed136796b0d036581e8c360b35eed75d6a46e6f627123",
+          "bytes": 5132
         },
         {
           "path": "VALIDATION.md",
@@ -1701,8 +1701,8 @@
         },
         {
           "path": "service.js",
-          "sha256": "ede2d09c819675443c53cddcac93489fe078f464609344de9eff587d99dd2b2d",
-          "bytes": 25532
+          "sha256": "8718722787fb426701ce425b7639b7bec1bb4368c4495ed8efee7f81cb767be7",
+          "bytes": 25735
         },
         {
           "path": "skills/qmt-readonly/SKILL.md",

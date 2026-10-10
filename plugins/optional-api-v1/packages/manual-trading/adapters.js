@@ -3,6 +3,7 @@ import { Decimal } from '@sesame/plugin-sdk/decimal';
 import { canonical } from '@sesame/plugin-sdk/protocol';
 
 export const check = (ok, code, message) => { if (!ok) throw Object.assign(new Error(message), { code }); };
+export const sameAccount=(a,b)=>a?.accountId===b?.accountId && typeof a?.accountId==='string' && (typeof a.server==='string'?a.server===b.server && b.connectionId===undefined:typeof a.connectionId==='string' && a.connectionId===b.connectionId && b.server===undefined);
 export const decimal = value => { const v=String(value); check(v.length<=40 && /^(0|[1-9]\d*)(\.\d+)?$/.test(v) && Decimal.compare(v,'0')>0,'SOURCE_DATA_INVALID','Expected a positive decimal amount'); return v; };
 // MT5 uses zero IDs when a timed-out request has no confirmed order/deal. Zero
 // must never join unrelated history (such as balance/credit adjustments).
@@ -107,18 +108,25 @@ export function createAdapters(host, {now=Date.now}={}) {
     const request=orderRequest(observation,args);
     return await call(observation.backend,observation.backend==='mt5'?'mt5_trade':'qmt_order',request,signal);
   }
-  async function status(record,signal) {
-    const backend=record.backend, command=await call(backend,backend==='mt5'?'mt5_command':'qmt_command',backend==='mt5'?{command_id:record.backendCommandId}:{operation_id:record.id},signal);
+  async function status(record,signal,expectedCurrent) {
+    const backend=record.backend,current=await identity(backend,signal);
+    check(sameAccount(current,record.account),'CONNECTION_CHANGED','Cannot recover against a different account or connection');
+    check(!expectedCurrent || canonical(current)===canonical(expectedCurrent),'CONNECTION_CHANGED','Configuration changed before recovery reads');
+    const verifyConfiguration=async()=>check(canonical(await identity(backend,signal))===canonical(current),'CONNECTION_CHANGED','Configuration changed during recovery reads');
+    const command=await call(backend,backend==='mt5'?'mt5_command':'qmt_command',backend==='mt5'?{command_id:record.backendCommandId}:{operation_id:record.id},signal);
     if(backend==='mt5') {
-      const info=await py('account_info',{},signal);check(String(info.login)===record.account.accountId && info.server===record.account.server,'ACCOUNT_MISMATCH','Do not recover an order against a different logged-in account');
+      const verifyNativeAccount=async()=>{const info=await py('account_info',{},signal);check(String(info.login)===record.account.accountId && info.server===record.account.server,'ACCOUNT_MISMATCH','Do not recover an order against a different logged-in account');};
+      await verifyNativeAccount();
       const [orders,deals,positions]=await Promise.all([py('orders_get',{symbol:record.symbol},signal),py('history_deals_get',{date_from:new Date(record.createdAt-60000).toISOString(),date_to:new Date(now()+1000).toISOString()},signal),py('positions_get',{symbol:record.symbol},signal)]);
+      await verifyNativeAccount();await verifyConfiguration();
       const orderId=nativeId(command.result?.result?.order), dealId=nativeId(command.result?.result?.deal);
       const ownSymbol=x=>x.symbol===record.symbol,ownRemark=x=>typeof record.remark==='string' && record.remark.length>0 && x.comment===record.remark;
       const matchesDeal=x=>ownSymbol(x) && ['0','1'].includes(String(x.type)) && nativeId(x.ticket)!==null && nativeId(x.order)!==null && (ownRemark(x) || orderId!==null && nativeId(x.order)===orderId || dealId!==null && nativeId(x.ticket)===dealId);
       return {command,orders:orders.filter(x=>ownSymbol(x) && nativeId(x.ticket)!==null && (ownRemark(x) || orderId!==null && nativeId(x.ticket)===orderId) && (record.action!=='limit'||mt5Pending(x,record))),deals:deals.filter(matchesDeal),positions:positions.filter(x=>ownSymbol(x) && nativeId(x.ticket)!==null && ownRemark(x)),coverage:'Native queried range; missing matches do not prove no order was sent'};
     }
     const reads=await Promise.all(['orders','fills'].map(action=>call('qmt','qmt_read',{action,page:{limit:200}},signal)));
-    for(const read of reads) check(read.connection?.id===record.account.connectionId && read.connection.revision===record.account.revision,'CONNECTION_CHANGED','Cannot recover against a different QMT connection');
+    for(const read of reads) check(read.connection?.id===current.connectionId && read.connection.revision===current.revision,'CONNECTION_CHANGED','Cannot recover against a different QMT connection');
+    await verifyConfiguration();
     return {command,orders:reads[0].items.filter(x=>qmtOwned(x,record,command.remark) && qmtPending(x)),deals:reads[1].items.filter(x=>qmtOwned(x,record,command.remark) && typeof x.traded_id==='string' && x.traded_id.length>0 && positive(x.traded_volume)),coverage:reads.some(x=>x.nextCursor)?'truncated_current_day':'current_trading_day_only',complete:false};
   }
   const command=(record,signal)=>call(record.backend,record.backend==='mt5'?'mt5_command':'qmt_command',record.backend==='mt5'?{command_id:record.backendCommandId}:{operation_id:record.id},signal);
@@ -126,18 +134,18 @@ export function createAdapters(host, {now=Date.now}={}) {
     let request;
     try {
     const identityNow=await identity(record.backend,signal);
-    check(canonical(identityNow)===canonical(record.account),'CONNECTION_CHANGED','Cancellation account/configuration changed');
+    check(sameAccount(identityNow,record.account),'CONNECTION_CHANGED','Cancellation account/connection changed');
     check(record.action==='limit','UNCONFIRMED_ORDER','Cancellation requires a pending limit order');
     const original=await call(record.backend,record.backend==='mt5'?'mt5_command':'qmt_command',record.backend==='mt5'?{command_id:record.backendCommandId}:{operation_id:record.id},signal);
     if(record.backend==='qmt') {
       check(original.status==='submitted'||original.status==='outcome_unknown'&&original.intent?.symbol===record.symbol&&original.intent?.side===record.side&&original.intent?.shares===record.quantity,'UNCONFIRMED_ORDER','Stored QMT order intent cannot establish a recoverable cancellation');
       const read=await call('qmt','qmt_read',{action:'orders',page:{limit:200}},signal);
-      check(read.connection?.id===record.account.connectionId && read.connection.revision===record.account.revision,'CONNECTION_CHANGED','QMT cancellation connection changed');
+      check(read.connection?.id===identityNow.connectionId && read.connection.revision===identityNow.revision,'CONNECTION_CHANGED','QMT cancellation connection changed');
       check(!read.nextCursor,'SOURCE_DATA_INVALID','Cannot prove a unique pending order from a partial order page');
       const candidates=read.items.filter(x=>qmtOwned(x,record,original.remark));
       const knownId=nativeId(original.result?.order_id);
       check(candidates.length===1 && qmtPending(candidates[0]) && (knownId===null||nativeId(candidates[0].order_id)===knownId),'UNCONFIRMED_ORDER','A unique matching active QMT order is required');
-      request={operation_id:operationId,user_authorized:true,account_id:record.account.accountId,connection_revision:record.account.revision,original_operation_id:record.id,order_id:nativeId(candidates[0].order_id)};
+      request={operation_id:operationId,user_authorized:true,account_id:record.account.accountId,connection_revision:identityNow.revision,original_operation_id:record.id,order_id:nativeId(candidates[0].order_id)};
     } else {
       const [info,orders]=await Promise.all([py('account_info',{},signal),py('orders_get',{symbol:record.symbol},signal)]);
       check(String(info.login)===record.account.accountId && info.server===record.account.server,'ACCOUNT_MISMATCH','Connected cancellation account changed');
@@ -146,6 +154,7 @@ export function createAdapters(host, {now=Date.now}={}) {
       const ticket=nativeId(candidates[0].ticket);
       request={server:'python',tool:'order_send',arguments:{request:{action:'TRADE_ACTION_REMOVE',order:ticket},cancellation_guard:{expected_account:record.account.accountId,expected_server:record.account.server,symbol:record.symbol,remark:record.remark,order:ticket,side:record.side}},command_id:operationId};
     }
+    check(canonical(await identity(record.backend,signal))===canonical(identityNow),'CONNECTION_CHANGED','Configuration changed during cancellation preflight');
     } catch(error) {error.details={...error.details,submission_attempted:false};throw error;}
     return call(record.backend,record.backend==='mt5'?'mt5_trade':'qmt_cancel',request,signal);
   }

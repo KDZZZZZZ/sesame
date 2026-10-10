@@ -86,9 +86,9 @@ test('unknown sends persist and block new IDs on same account even after config 
   assert.equal((await f.create().execute(args)).status,'outcome_unknown');
   f.account.revision='2';const next=await prepared(f,'new-id');
   await assert.rejects(f.service.execute(next),{code:'UNRESOLVED_ORDER'});
-  f.account.revision='1';assert.equal((await f.service.status({operation_id:args.operation_id,refresh:true})).status,'outcome_unknown');assert.equal(f.refreshes,1);
+  assert.equal((await f.service.status({operation_id:args.operation_id,refresh:true})).status,'outcome_unknown');assert.equal(f.refreshes,1);
   f.adapter.status=async()=>({command:{status:'unknown'},orders:[{order:'1001'}],deals:[]});
-  assert.equal((await f.service.status({operation_id:args.operation_id,refresh:true})).status,'order_observed');
+  const recovered=await f.service.status({operation_id:args.operation_id,refresh:true});assert.equal(recovered.status,'order_observed');assert.equal(recovered.account.revision,'1');assert.equal(recovered.checkedAccount.revision,'2');
 });
 test('native guard rejection is distinguished from timeout and return/retcode from a fill',()=>{
   assert.equal(outcome('mt5',{status:'failed',result:{submission_attempted:false}}),'rejected');
@@ -112,6 +112,7 @@ test('zero native IDs and non-trade history cannot resolve an unknown order or u
     {ticket:'703',order:'0',symbol:'FIXTURE',comment:original.remark,type:0},
   ];
   const host={plugins:{isActive:()=>true},tools:{call:async({name,arguments:a})=>{
+    if(name==='mt5_settings')return {details:{settings:{version:f.account.revision,account:{login:f.account.accountId,server:f.account.server}}}};
     if(name==='mt5_command')return {details:{status:'returned',result:{result:{retcode:10012,order:'0',deal:'0'}}}};
     const values={account_info:{login:f.account.accountId,server:f.account.server},orders_get:[],positions_get:[],history_deals_get:deals};
     return {details:{status:'returned',result:{result:values[a.tool]}}};
@@ -135,9 +136,9 @@ test('MT5 timeout recovery can cancel one exact active pending order and recheck
   const f=fixture(),args={...await prepared(f),action:'limit',limit_price:'99'};
   f.adapter.submit=async()=>{throw new Error('native timeout');};const original=await f.service.execute(args);
   const pending={ticket:'700',symbol:original.symbol,comment:original.remark,type:2,state:1,volume_current:'0.1'};
-  let rows=[pending],cancels=0,revision=f.account.revision;
+  let rows=[pending],cancels=0,revision=f.account.revision,configuredServer=f.account.server;
   const host={plugins:{isActive:()=>true},tools:{call:async({name,arguments:a})=>{
-    if(name==='mt5_settings')return {details:{settings:{version:revision,account:{login:f.account.accountId,server:f.account.server}}}};
+    if(name==='mt5_settings')return {details:{settings:{version:revision,account:{login:f.account.accountId,server:configuredServer}}}};
     if(name==='mt5_command')return {details:{status:'returned',result:{result:{retcode:10012,order:'0',deal:'0'}}}};
     if(name==='mt5_trade'){cancels++;assert.equal(a.arguments.request.order,'700');assert.equal(a.arguments.request.action,'TRADE_ACTION_REMOVE');assert.deepEqual(a.arguments.cancellation_guard,{expected_account:f.account.accountId,expected_server:f.account.server,symbol:original.symbol,remark:original.remark,order:'700',side:'buy'});return {details:{status:'returned',result:{result:{retcode:10009}}}};}
     const values={account_info:{login:f.account.accountId,server:f.account.server},orders_get:rows,positions_get:[],history_deals_get:[]};
@@ -150,8 +151,8 @@ test('MT5 timeout recovery can cancel one exact active pending order and recheck
   for(const [i,bad] of [[{...pending,state:4}],[{...pending,type:3}],[{...pending,ticket:'0'}],[{...pending,symbol:'OTHER'}],[{...pending,comment:'foreign'}],[pending,{...pending,ticket:'701'}]].entries()){
     rows=bad;assert.equal((await f.service.cancel({...cancel,operation_id:`invalid-cancel-${i}`})).status,'rejected');assert.equal(cancels,0);
   }
-  rows=[pending];revision='other';assert.equal((await f.service.cancel({...cancel,operation_id:'changed-connection'})).status,'rejected');assert.equal(cancels,0);
-  revision=f.account.revision;assert.equal((await f.service.cancel(cancel)).status,'cancel_requested');
+  rows=[pending];configuredServer='Other-Server';assert.equal((await f.service.cancel({...cancel,operation_id:'changed-connection'})).status,'rejected');assert.equal(cancels,0);
+  configuredServer=f.account.server;revision='2';assert.equal((await f.service.cancel(cancel)).status,'cancel_requested');
   assert.equal((await f.service.cancel(cancel)).status,'cancel_requested');assert.equal(cancels,1);
 });
 test('QMT recovery binds each read to the account and connection, then cancels only one fresh exact order',async()=>{
@@ -165,20 +166,64 @@ test('QMT recovery binds each read to the account and connection, then cancels o
   const host={plugins:{isActive:()=>true},tools:{call:async({name,arguments:a})=>{
     if(name==='qmt_environment')return {details:{configuration:{account_id:f.account.accountId,connection_id:f.account.connectionId,version:f.account.revision}}};
     if(name==='qmt_command')return {details:command};
-    if(name==='qmt_cancel'){cancels++;assert.equal(a.order_id,'700');assert.equal(a.original_operation_id,args.operation_id);return {details:{status:'cancel_requested'}};}
+    if(name==='qmt_cancel'){cancels++;assert.equal(a.order_id,'700');assert.equal(a.original_operation_id,args.operation_id);assert.equal(a.connection_revision,'2');return {details:{status:'cancel_requested'}};}
     return {details:{connection,items:a.action==='orders'?rows:[],nextCursor:null}};
   }}};
   const native=createAdapters(host);f.adapter.status=native.status;f.adapter.cancel=native.cancel;
   connection={id:'other-route',revision:'2'};
   await assert.rejects(f.service.status({operation_id:args.operation_id,refresh:true}),{code:'CONNECTION_CHANGED'});
   assert.equal((await f.service.status({operation_id:args.operation_id})).status,'outcome_unknown');
-  connection={id:f.account.connectionId,revision:f.account.revision};rows=[{...pending,account_id:'other'},{...pending,stock_code:'000001.SZ'}];
+  f.account.revision='2';connection={id:f.account.connectionId,revision:f.account.revision};rows=[{...pending,account_id:'other'},{...pending,stock_code:'000001.SZ'}];
   assert.equal((await f.service.status({operation_id:args.operation_id,refresh:true})).status,'outcome_unknown');
   rows=[pending,{...pending,order_id:'701'}];assert.equal((await f.service.status({operation_id:args.operation_id,refresh:true})).status,'outcome_unknown');
   rows=[pending];assert.equal((await f.service.status({operation_id:args.operation_id,refresh:true})).status,'order_observed');
   const cancel={operation_id:'qmt-cancel',original_operation_id:args.operation_id,user_authorized:true};
   rows=[{...pending,order_status:'56'}];assert.equal((await f.service.cancel({...cancel,operation_id:'already-filled'})).status,'rejected');assert.equal(cancels,0);
   rows=[pending];assert.equal((await f.service.cancel(cancel)).status,'cancel_requested');assert.equal((await f.service.cancel(cancel)).status,'cancel_requested');assert.equal(cancels,1);
+});
+test('MT5 old-revision recovery brackets native account and current configuration before unlocking new orders',async()=>{
+  const f=fixture(),args=await prepared(f),submit=f.adapter.submit;
+  f.adapter.submit=async()=>{throw new Error('native timeout');};const original=await f.service.execute(args);
+  f.account.revision='2';let nativeAccount={login:f.account.accountId,server:f.account.server},change='terminal';
+  const deal={ticket:'704',order:'803',symbol:original.symbol,comment:original.remark,type:0};
+  const host={plugins:{isActive:()=>true},tools:{call:async({name,arguments:a})=>{
+    if(name==='mt5_settings')return {details:{settings:{version:f.account.revision,account:{login:f.account.accountId,server:f.account.server}}}};
+    if(name==='mt5_command')return {details:{status:'returned',result:{result:{retcode:10012,order:'0',deal:'0'}}}};
+    if(a.tool==='history_deals_get'){
+      if(change==='terminal')nativeAccount={...nativeAccount,login:'other-account'};
+      if(change==='configuration')f.account.revision=String(Number(f.account.revision)+1);
+    }
+    const values={account_info:{...nativeAccount},orders_get:[],positions_get:[],history_deals_get:[deal]};
+    return {details:{status:'returned',result:{result:values[a.tool]}}};
+  }}};
+  f.adapter.status=createAdapters(host).status;
+  await assert.rejects(f.service.status({operation_id:args.operation_id,refresh:true}),{code:'ACCOUNT_MISMATCH'});
+  nativeAccount={login:f.account.accountId,server:f.account.server};change='configuration';
+  await assert.rejects(f.service.status({operation_id:args.operation_id,refresh:true}),{code:'CONNECTION_CHANGED'});
+  assert.equal((await f.service.status({operation_id:args.operation_id})).status,'outcome_unknown');
+  await assert.rejects(f.service.execute(await prepared(f,'still-blocked')),{code:'UNRESOLVED_ORDER'});
+  change=null;const recovered=await f.service.status({operation_id:args.operation_id,refresh:true});
+  assert.equal(recovered.status,'execution_observed');assert.equal(recovered.account.revision,'1');assert.equal(recovered.checkedAccount.revision,'3');
+  f.adapter.submit=submit;assert.equal((await f.service.execute(await prepared(f,'new-verified-intent'))).status,'execution_reported');assert.equal(f.submissions,1);
+});
+test('QMT recovery rejects a configuration change after individually matching reads',async()=>{
+  const f=fixture();delete f.account.server;f.account.connectionId='fixture-route';
+  const observed=await f.service.observe({backend:'qmt',symbol:'600000.SH'}),args={...f.intent('qmt-revision'),observation_id:observed.observation_id,action:'limit',quantity:'100',limit_price:'99'};
+  f.adapter.submit=async()=>{throw new Error('native timeout');};const original=await f.service.execute(args);
+  f.account.revision='2';let change=true;
+  const command={status:'outcome_unknown',remark:'SOriginal'},connection={id:f.account.connectionId,revision:'2'};
+  const order={account_id:f.account.accountId,stock_code:original.symbol,order_remark:command.remark,order_id:'700',order_type:'23',order_status:'50',order_volume:'100',traded_volume:'0'};
+  const host={plugins:{isActive:()=>true},tools:{call:async({name,arguments:a})=>{
+    if(name==='qmt_environment')return {details:{configuration:{account_id:f.account.accountId,connection_id:f.account.connectionId,version:f.account.revision}}};
+    if(name==='qmt_command')return {details:command};
+    if(a.action==='fills'&&change)f.account.revision='3';
+    return {details:{connection,items:a.action==='orders'?[order]:[],nextCursor:null}};
+  }}};
+  f.adapter.status=createAdapters(host).status;
+  await assert.rejects(f.service.status({operation_id:args.operation_id,refresh:true}),{code:'CONNECTION_CHANGED'});
+  assert.equal((await f.service.status({operation_id:args.operation_id})).status,'outcome_unknown');
+  await assert.rejects(f.service.execute({...f.intent('blocked'),observation_id:(await f.service.observe({backend:'qmt',symbol:'600000.SH'})).observation_id}),{code:'UNRESOLVED_ORDER'});
+  change=false;connection.revision='3';assert.equal((await f.service.status({operation_id:args.operation_id,refresh:true})).status,'order_observed');
 });
 test('scope, user intent, and record ownership cannot be widened by the helper',async()=>{
   const f=fixture(),args=await prepared(f);
