@@ -1,15 +1,15 @@
-# Sesame 0.2.0 安装与开始使用
+# Sesame 0.2.1 安装与开始使用
 
-[下载安装包](https://github.com/KDZZZZZZ/sesame/releases/tag/v0.2.0) · [插件目录](https://sesame.bot/zh/plugins/) · [使用文档](https://sesame.bot/zh/docs/)
+[下载安装包](https://github.com/KDZZZZZZ/sesame/releases/tag/v0.2.1) · [插件目录](https://sesame.bot/zh/plugins/) · [使用文档](https://sesame.bot/zh/docs/)
 
 ## 选择安装包
 
 | 系统 | 文件 | 安装方式 |
 | --- | --- | --- |
-| macOS 13+，Apple Silicon（M 系列） | `Sesame-0.2.0-mac-arm64.dmg` | 打开后拖入 Applications，再从 Applications 启动 |
-| Windows 10/11 x64 | `Sesame-0.2.0-win-x64.exe` | 运行安装器，选择安装目录 |
-| Linux x64，Debian/Ubuntu 系 | `Sesame-0.2.0-linux-x64.deb` | 在文件所在目录运行 `sudo apt install ./Sesame-0.2.0-linux-x64.deb` |
-| Linux x64，其他兼容桌面发行版 | `Sesame-0.2.0-linux-x64.AppImage` | 添加执行权限后运行；依赖发行版的 FUSE 支持，也可使用 `--appimage-extract-and-run` |
+| macOS 13+，Apple Silicon（M 系列） | `Sesame-0.2.1-mac-arm64.dmg` | 打开后拖入 Applications，再从 Applications 启动 |
+| Windows 10/11 x64 | `Sesame-0.2.1-win-x64.exe` | 运行安装器，选择安装目录 |
+| Linux x64，Debian/Ubuntu 系 | `Sesame-0.2.1-linux-x64.deb` | 在文件所在目录运行 `sudo apt install ./Sesame-0.2.1-linux-x64.deb` |
+| Linux x64，其他兼容桌面发行版 | `Sesame-0.2.1-linux-x64.AppImage` | 添加执行权限后运行；依赖发行版的 FUSE 支持，也可使用 `--appimage-extract-and-run` |
 
 下载时可用同一发行页的 `SHA256SUMS.txt` 核对文件。当前 macOS 包是本机签名，未经过 Apple 公证；Windows 包未购买代码签名证书，首次启动可能被系统拦截。确认来源与校验值后，macOS 可在「系统设置 → 隐私与安全性」允许打开，Windows 可在 SmartScreen 中查看「更多信息」。请勿全局关闭系统安全检查。
 
