@@ -90,7 +90,7 @@ export function createService(host, { platform = process.platform, now = Date.no
       const date = new Date(sourceTime.unixMs+8*3600000).toISOString().slice(0,10);
       const lastDate = native.length ? new Date(Math.max(...native.map(row=>Number(row.time)))+8*3600000).toISOString().slice(0,10) : null;
       const sameDay = native.find(row=>new Date(Number(row.time)+8*3600000).toISOString().slice(0,10)===date);
-      if(date >= from.slice(0,10) && date <= to.slice(0,10) && (!lastDate || date >= lastDate) && sameDay?.is_closed !== true && !(sameDay && revisions.get(dailyBar(sameDay,seriesId,r.sample.to).id)?.closed)) {
+      if(date >= from.slice(0,10) && date <= to.slice(0,10) && (!lastDate || date >= lastDate) && sameDay?.is_closed !== true && !revisions.get(`${seriesId}:${date}`)?.closed) {
         const replacement={time:String(sourceTime.unixMs),open:tick.open,high:tick.high,low:tick.low,close:tick.lastPrice,volume:tick.volume};
         const at=native.findIndex(row=>new Date(Number(row.time)+8*3600000).toISOString().slice(0,10)===date);
         if(at>=0)native[at]=replacement;else native.push(replacement);
