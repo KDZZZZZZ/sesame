@@ -4,47 +4,47 @@
   "channel": "development",
   "releases": [
     {
-      "tag": "plugins-api-v1-dev.15",
-      "releaseCommit": "d261af5b74ff342395e4ec8da14ec5cc238c080f",
-      "sourceCommit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+      "tag": "plugins-api-v1-dev.16",
+      "releaseCommit": "28e457777d94924f847bf1717713300100fece65",
+      "sourceCommit": "8445b44ac846c6f63b71a99d64e0d8486ca7fa88",
       "sourceRoot": "plugins/api-v1",
       "profile": "core",
       "engines": {
         "sesame": ">=0.2.0-0"
       },
       "archive": {
-        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.15/sesame-official-plugins-api-v1-dev.15.tar.gz",
-        "sha256": "ec15b7c82d0a9eed52b45eee70499fd10cb49c94056e86e51766355143fed04c"
+        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.16/sesame-official-plugins-api-v1-dev.16.tar.gz",
+        "sha256": "5ba4cfe67ba080ad138a843335eff5453d5fc1a51afd60149cb9aaabfa7ff113"
       },
       "lock": {
-        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.15/official-plugins.lock.json",
-        "sha256": "3e3b5adb2be904cbf27b2be0d03d24dfb7f82f3d2abff2e3d5f5532fbf2a29db"
+        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.16/official-plugins.lock.json",
+        "sha256": "e946a0ce5d9ad02a2ccf25046a3a4afe87e13abc35ca37c2535b84df315f29bd"
       },
       "review": {
-        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.15/review.json",
-        "sha256": "20b7a27d16d82fde2ddb87e4a091dd53f8dba978ec467051b35efd55f1472f7b"
+        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.16/review.json",
+        "sha256": "5937611dcea1f3b7a6aecb9582aa80ab62ea2be1fbc84e63d5020a3c85189d17"
       }
     },
     {
-      "tag": "plugins-optional-api-v1-dev.9",
-      "releaseCommit": "d261af5b74ff342395e4ec8da14ec5cc238c080f",
-      "sourceCommit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+      "tag": "plugins-optional-api-v1-dev.10",
+      "releaseCommit": "28e457777d94924f847bf1717713300100fece65",
+      "sourceCommit": "22b75960507da4789045816c22dd9ba00e40ed30",
       "sourceRoot": "plugins/optional-api-v1",
       "profile": "optional",
       "engines": {
         "sesame": ">=0.2.0-0"
       },
       "archive": {
-        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/sesame-optional-plugins-api-v1-dev.9.tar.gz",
-        "sha256": "1369b39e6441a62882f44e53b2a96519cfff66f180a20a02deea3c962d6fbca1"
+        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/sesame-optional-plugins-api-v1-dev.10.tar.gz",
+        "sha256": "8a6e738808756e69ad4425f3c1278d15e36238c18b2d9ddebb0f1d5663500f52"
       },
       "lock": {
-        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/official-plugins.lock.json",
-        "sha256": "7d4258b274c41deae053d4bebeebd046a1090b9b9746bc30278aee06e37b8f80"
+        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/official-plugins.lock.json",
+        "sha256": "8d839157c432f8f5376535341893c0557731aa5cfc80412d288a4e00e04daf9d"
       },
       "review": {
-        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-        "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+        "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+        "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
       }
     }
   ],
@@ -67,10 +67,10 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/akshare"
       },
       "package": {
@@ -165,13 +165,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/akshare",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/akshare",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -192,10 +192,10 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/backtrader"
       },
       "package": {
@@ -267,13 +267,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/backtrader",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/backtrader",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -293,10 +293,10 @@
         "name": "Sesame contributors"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/behavioral-finance"
       },
       "package": {
@@ -374,13 +374,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/behavioral-finance",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/behavioral-finance",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -401,10 +401,10 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.15",
+      "release": "plugins-api-v1-dev.16",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "8445b44ac846c6f63b71a99d64e0d8486ca7fa88",
         "path": "plugins/api-v1/packages/canvas-control"
       },
       "package": {
@@ -484,19 +484,19 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.15/review.json",
-          "sha256": "20b7a27d16d82fde2ddb87e4a091dd53f8dba978ec467051b35efd55f1472f7b"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.16/review.json",
+          "sha256": "5937611dcea1f3b7a6aecb9582aa80ab62ea2be1fbc84e63d5020a3c85189d17"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/api-v1/packages/canvas-control",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/8445b44ac846c6f63b71a99d64e0d8486ca7fa88/plugins/api-v1/packages/canvas-control",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
       "id": "sesame/ccxt",
       "name": "ccxt",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "apiVersion": "1",
       "format": "sesame-native",
       "engines": {
@@ -511,14 +511,14 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/ccxt"
       },
       "package": {
-        "treeDigest": "sha256:ba29b5dfcc1e398303587f79d1ca528ffff4273ddc264cca9296b9e203fec565",
+        "treeDigest": "sha256:23c70d18644e66a839a4b55def320569cc3ddf15f41277c4b9ffa45879810fe1",
         "files": [
           {
             "path": "LICENSE",
@@ -532,18 +532,18 @@
           },
           {
             "path": "README.md",
-            "sha256": "db4e380e69ffdea145c5d9a7f636acef55b0c92fd3dcb9dba49b2ccdf7f7ac1b",
-            "bytes": 3395
+            "sha256": "774ad317bf2337202361f4d0c98f662eff1d981107b905a32f42c92805212053",
+            "bytes": 4428
           },
           {
             "path": "VALIDATION.md",
-            "sha256": "b1c7704441d3f12bab71e77ba395f04cb3856008fef109a3ba2000742330791c",
-            "bytes": 1619
+            "sha256": "eff3fc8d43a559239feee76fb76e3a4cdf11597efeb9178596813e1d0155ae93",
+            "bytes": 3426
           },
           {
             "path": "bridge.py",
-            "sha256": "9ec50a48f1fb802f51c4d0fa05e4e3db073a25a90524e9b4cc0728eeccb43abe",
-            "bytes": 2645
+            "sha256": "f3c64694d2332d6c6b2925d20617fc3471fdacfcbe2ca5e82a279a5970ef38fa",
+            "bytes": 6231
           },
           {
             "path": "environment.js",
@@ -552,17 +552,17 @@
           },
           {
             "path": "index.js",
-            "sha256": "00cf4e17afd547f6470d496e2aef4b41e026a80dcb458c40a2618a78d6dec0ca",
-            "bytes": 1317
+            "sha256": "f765c1ec595249b728d16461442520402b7440085b8473fa46191b60157b5537",
+            "bytes": 1316
           },
           {
             "path": "package.json",
-            "sha256": "970d59b011b7720dd3763feebc33f0ffd6c9efbee1b5339db6c204d2a15b94ef",
+            "sha256": "7ddd54395fdf1b444658789fd6624f489707ac6b33f140472520f5381bdb8ae0",
             "bytes": 117
           },
           {
             "path": "plugin.json",
-            "sha256": "05a8cc719f81ade920b2b482ad1e30dd068344256910b2048fc7ab0fa475185f",
+            "sha256": "adb0d3d0b7d8d8567812135f1854b3921ec40288f72c5c52f4bd97a1d19d965b",
             "bytes": 691
           },
           {
@@ -572,13 +572,13 @@
           },
           {
             "path": "provider.js",
-            "sha256": "a844582dc8765820bea0ab075758b989a5f9895f8fd95164e32fd1b2617b7e4d",
-            "bytes": 21162
+            "sha256": "1b3012f7d5571d73d39ccd084ee7d1e42c23687f2b058774a261847533678701",
+            "bytes": 23774
           },
           {
             "path": "skills/ccxt-public-markets/SKILL.md",
-            "sha256": "b05dbbc4f6a6a6f0565ff42e772cdfd38d357ac502dd3910f956a2b98cd993fa",
-            "bytes": 2992
+            "sha256": "259409abce0e26e8b1b7d7fa5cd85b34b18a4d7503331d939a66eec373dd53c7",
+            "bytes": 3330
           },
           {
             "path": "tools.json",
@@ -587,8 +587,8 @@
           },
           {
             "path": "worker.js",
-            "sha256": "080bc3bd7d8020b99d50f8c1fe407ee33d73aabbb1ab6a80c8b3011260961b52",
-            "bytes": 2238
+            "sha256": "2b2890cbb7be17a219b66f8e03c8327abcc3ade1793fa77c3de166b3a3b75015",
+            "bytes": 7503
           }
         ]
       },
@@ -600,19 +600,19 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/ccxt",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/ccxt",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
       "id": "sesame/configuration",
       "name": "configuration",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "apiVersion": "1",
       "format": "sesame-native",
       "engines": {
@@ -627,14 +627,14 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.15",
+      "release": "plugins-api-v1-dev.16",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "8445b44ac846c6f63b71a99d64e0d8486ca7fa88",
         "path": "plugins/api-v1/packages/configuration"
       },
       "package": {
-        "treeDigest": "sha256:ceec5c249243013552e7c012a44b34be7e251b627021f03cc355b267c34493a2",
+        "treeDigest": "sha256:c608a4c895630f5db73d2d144bbb3a743f35599cd0212c6c27481851d37b23e1",
         "files": [
           {
             "path": "LICENSE",
@@ -648,12 +648,12 @@
           },
           {
             "path": "package.json",
-            "sha256": "e305729e4c5aa45fdfd0c66fcc2e171f0c0e5d3aaae43175cf0743bd94a29595",
+            "sha256": "a02810ec4a553df6701a499f36e050b7a045458400dce926a5b7e414f7b99eb4",
             "bytes": 107
           },
           {
             "path": "plugin.json",
-            "sha256": "b99406571b55d6a5b7cba2c8264bd4a0ce921604f6f761a0573b6ec054e40585",
+            "sha256": "10376d1d944f3c284ecdaf1b8ac849f0fa388e25195643c97cffae4c7ff8f2eb",
             "bytes": 599
           },
           {
@@ -663,8 +663,8 @@
           },
           {
             "path": "skills/configure-application/SKILL.md",
-            "sha256": "e71ad7f203823092d407783051d07c5d98487b297fa9ce5d277f32053cd313aa",
-            "bytes": 546
+            "sha256": "2694caa7ed81a845f4d037f14eabb68c72c2945595cd509a92b5b505e8f7d9a7",
+            "bytes": 1550
           },
           {
             "path": "support.js",
@@ -673,13 +673,13 @@
           },
           {
             "path": "tools.js",
-            "sha256": "6a283e6dd9d8f76053e23fb6d0ed216ef82917b76a03ec32a9e2fc9046141f4c",
-            "bytes": 1502
+            "sha256": "c45a581bdb1821d02356175d3ed4f96b61e7943684da88cb48f17f65e98618ac",
+            "bytes": 2380
           },
           {
             "path": "tools.json",
-            "sha256": "86c0c94043f478f3bfd9af99da494af97e5bf94583e53803db573de1a8f64822",
-            "bytes": 4336
+            "sha256": "aec2a1881f3d870f85d49bf32ed907b5a57feebf4e057e1b9e11141ea9a2e20a",
+            "bytes": 10384
           }
         ]
       },
@@ -692,13 +692,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.15/review.json",
-          "sha256": "20b7a27d16d82fde2ddb87e4a091dd53f8dba978ec467051b35efd55f1472f7b"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.16/review.json",
+          "sha256": "5937611dcea1f3b7a6aecb9582aa80ab62ea2be1fbc84e63d5020a3c85189d17"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/api-v1/packages/configuration",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/8445b44ac846c6f63b71a99d64e0d8486ca7fa88/plugins/api-v1/packages/configuration",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -719,10 +719,10 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.15",
+      "release": "plugins-api-v1-dev.16",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "8445b44ac846c6f63b71a99d64e0d8486ca7fa88",
         "path": "plugins/api-v1/packages/data-access"
       },
       "package": {
@@ -814,13 +814,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.15/review.json",
-          "sha256": "20b7a27d16d82fde2ddb87e4a091dd53f8dba978ec467051b35efd55f1472f7b"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.16/review.json",
+          "sha256": "5937611dcea1f3b7a6aecb9582aa80ab62ea2be1fbc84e63d5020a3c85189d17"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/api-v1/packages/data-access",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/8445b44ac846c6f63b71a99d64e0d8486ca7fa88/plugins/api-v1/packages/data-access",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -840,10 +840,10 @@
         "name": "Sesame contributors"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/dow-theory"
       },
       "package": {
@@ -921,13 +921,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/dow-theory",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/dow-theory",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -947,10 +947,10 @@
         "name": "Sesame contributors"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/elliott-wave"
       },
       "package": {
@@ -1028,13 +1028,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/elliott-wave",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/elliott-wave",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -1054,10 +1054,10 @@
         "name": "Sesame contributors"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/factor-research"
       },
       "package": {
@@ -1145,13 +1145,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/factor-research",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/factor-research",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -1171,10 +1171,10 @@
         "name": "Sesame contributors"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/ict"
       },
       "package": {
@@ -1272,13 +1272,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/ict",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/ict",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -1298,10 +1298,10 @@
         "name": "Sesame contributors"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/institutional-analysis"
       },
       "package": {
@@ -1379,13 +1379,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/institutional-analysis",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/institutional-analysis",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -1406,10 +1406,10 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/judgment-evolution"
       },
       "package": {
@@ -1496,13 +1496,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/judgment-evolution",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/judgment-evolution",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -1522,10 +1522,10 @@
         "name": "Sesame"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/market-data-parser"
       },
       "package": {
@@ -1597,13 +1597,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Declared stdio tests and servers execute locally as the current user; inspect and reuse an existing compatible runtime. No dependency installer is executed by the catalog downloader.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/market-data-parser",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/market-data-parser",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -1624,10 +1624,10 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.15",
+      "release": "plugins-api-v1-dev.16",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "8445b44ac846c6f63b71a99d64e0d8486ca7fa88",
         "path": "plugins/api-v1/packages/memory"
       },
       "package": {
@@ -1691,13 +1691,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.15/review.json",
-          "sha256": "20b7a27d16d82fde2ddb87e4a091dd53f8dba978ec467051b35efd55f1472f7b"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.16/review.json",
+          "sha256": "5937611dcea1f3b7a6aecb9582aa80ab62ea2be1fbc84e63d5020a3c85189d17"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/api-v1/packages/memory",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/8445b44ac846c6f63b71a99d64e0d8486ca7fa88/plugins/api-v1/packages/memory",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -1718,10 +1718,10 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/mt5"
       },
       "package": {
@@ -2320,13 +2320,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/mt5",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/mt5",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -2346,10 +2346,10 @@
         "name": "Sesame contributors"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/narrative-analysis"
       },
       "package": {
@@ -2427,13 +2427,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/narrative-analysis",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/narrative-analysis",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -2454,10 +2454,10 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.15",
+      "release": "plugins-api-v1-dev.16",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "8445b44ac846c6f63b71a99d64e0d8486ca7fa88",
         "path": "plugins/api-v1/packages/orchestration"
       },
       "package": {
@@ -2554,13 +2554,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.15/review.json",
-          "sha256": "20b7a27d16d82fde2ddb87e4a091dd53f8dba978ec467051b35efd55f1472f7b"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.16/review.json",
+          "sha256": "5937611dcea1f3b7a6aecb9582aa80ab62ea2be1fbc84e63d5020a3c85189d17"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/api-v1/packages/orchestration",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/8445b44ac846c6f63b71a99d64e0d8486ca7fa88/plugins/api-v1/packages/orchestration",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -2581,10 +2581,10 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.15",
+      "release": "plugins-api-v1-dev.16",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "8445b44ac846c6f63b71a99d64e0d8486ca7fa88",
         "path": "plugins/api-v1/packages/plugin-manager"
       },
       "package": {
@@ -2653,13 +2653,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.15/review.json",
-          "sha256": "20b7a27d16d82fde2ddb87e4a091dd53f8dba978ec467051b35efd55f1472f7b"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.16/review.json",
+          "sha256": "5937611dcea1f3b7a6aecb9582aa80ab62ea2be1fbc84e63d5020a3c85189d17"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/api-v1/packages/plugin-manager",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/8445b44ac846c6f63b71a99d64e0d8486ca7fa88/plugins/api-v1/packages/plugin-manager",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -2679,10 +2679,10 @@
         "name": "Sesame contributors"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/price-action"
       },
       "package": {
@@ -2780,13 +2780,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/price-action",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/price-action",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -2807,10 +2807,10 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/qmt"
       },
       "package": {
@@ -2905,13 +2905,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/qmt",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/qmt",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -2931,10 +2931,10 @@
         "name": "Sesame"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/quantskills-catalog"
       },
       "package": {
@@ -3018,19 +3018,19 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Declared stdio tests and servers execute locally as the current user; inspect and reuse an existing compatible runtime. No dependency installer is executed by the catalog downloader.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/quantskills-catalog",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/quantskills-catalog",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
       "id": "sesame/reports",
       "name": "reports",
-      "version": "2.0.3",
+      "version": "2.1.0",
       "apiVersion": "1",
       "format": "sesame-native",
       "engines": {
@@ -3038,20 +3038,20 @@
       },
       "distribution": "core",
       "title": "交互报告",
-      "description": "编写、冻结与发布 report/1 HTML 报告，使用固定数据引用、离线 SVG 图表与只读渲染桥。",
+      "description": "编写、冻结与发布统一风格的交互报告，支持统计、时序、结构图与固定数据明细联动。",
       "license": "MIT",
       "author": {
         "name": "Sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.15",
+      "release": "plugins-api-v1-dev.16",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "8445b44ac846c6f63b71a99d64e0d8486ca7fa88",
         "path": "plugins/api-v1/packages/reports"
       },
       "package": {
-        "treeDigest": "sha256:615064416e0218f6be8a2565b51602731edc18a76b7d90b0962cd529d4952e84",
+        "treeDigest": "sha256:f4ea4a20e02a4135634616c7e1555dfcd5d3e98138d1d9251851b48fffee58d6",
         "files": [
           {
             "path": "LICENSE",
@@ -3060,18 +3060,48 @@
           },
           {
             "path": "PROVENANCE.md",
-            "sha256": "adecae6023f162328f1f55512b58f26cb28e1848838a7adfa2f03fea2a97c6f8",
-            "bytes": 1981
+            "sha256": "6a30a5c2ee4a92725ec8d7840619883e30c4bde8f37d2643ed4ccc5647c1765a",
+            "bytes": 3358
+          },
+          {
+            "path": "assets/charts-statistics.js",
+            "sha256": "8e19242c4583c872927a7ceea9a410eec98ca4b14e0875e2bf2d6d62b7774f80",
+            "bytes": 24587
+          },
+          {
+            "path": "assets/charts-structure.js",
+            "sha256": "4a0d908f4845aac9c51d4c54f4daeef0b5ec7762098bb1d4f82e1b0d4b0461f2",
+            "bytes": 29095
+          },
+          {
+            "path": "assets/charts-temporal.js",
+            "sha256": "5ae9f7b255253cbc53d8574f175016f5fd77714d9d23c9e3a929c73e6528cf45",
+            "bytes": 36369
           },
           {
             "path": "assets/editorial-charts.js",
-            "sha256": "e2f30c3f4d5b1da510beaffa6b9e72e32a4aec362b62a32b2ae91f97490254d0",
-            "bytes": 13352
+            "sha256": "94528c6ca6067d57807fe201dfe7459f443ef55537e45a58872e7cb5e37239ce",
+            "bytes": 16552
           },
           {
             "path": "assets/editorial.css",
-            "sha256": "a64c8dbe8d7617b6dfcc03edac82f9272fc9cc53cc9a2172f8613cd05da56ddb",
-            "bytes": 5126
+            "sha256": "b721786c083704044382f5950c5825f4e5e18c451d18f8bdae01168a68b33b24",
+            "bytes": 30653
+          },
+          {
+            "path": "assets/report-kit.js",
+            "sha256": "2e6fe859d25270c2cdd16d2ada799d18ce389be2c4a9127fa070490c11d35769",
+            "bytes": 45095
+          },
+          {
+            "path": "examples/chart-gallery.html",
+            "sha256": "df87a6ede9671860d9f1b1513ca5578a5632bc1ad1595a2122bc1b3add2cc378",
+            "bytes": 200867
+          },
+          {
+            "path": "examples/chart-gallery.md",
+            "sha256": "faf63d421bdfa4b3876772388ae3a0856a1b48321f88b1ed40e60a3656fda29a",
+            "bytes": 1820
           },
           {
             "path": "examples/demo-data.json",
@@ -3080,63 +3110,98 @@
           },
           {
             "path": "examples/editorial-demo.html",
-            "sha256": "c0935774fda2998cb1d3f3ded242a5ed04d113e38f8406298995555c69a38652",
-            "bytes": 24367
+            "sha256": "6e66ed3d9d2c10d995c14b106f2781fa949019ae06d07501422c7b841146e8fd",
+            "bytes": 98835
+          },
+          {
+            "path": "examples/statistical-fixtures.json",
+            "sha256": "396689015733faa3404a3104a0b554dbb073538064707eba55442a9889c6b56d",
+            "bytes": 5242
+          },
+          {
+            "path": "examples/structural-fixtures.json",
+            "sha256": "f2961cb14aff19203ee27ecbcca1f051cbb08999a4d422d765bea072cb29687a",
+            "bytes": 8191
+          },
+          {
+            "path": "examples/temporal-fixtures.json",
+            "sha256": "5245daa0c485a5a4787d90967f848fa2aaa5f1fbd1ae2f4d8f28c09d4fb46581",
+            "bytes": 6032
           },
           {
             "path": "index.js",
-            "sha256": "42861b457cf80409432eff5b85baed346a87fb0ce6435fdf395b412200c421db",
-            "bytes": 14072
+            "sha256": "2d17755bd1fb1ff2c2bc0e06d1b7ff69a15b578fa5995be21d06fe4b7375385c",
+            "bytes": 16666
           },
           {
             "path": "package.json",
-            "sha256": "a1c71c67890c84624b3cfabfb424e8a591d352d9d66a89d2854c8ebeafaf1712",
+            "sha256": "cccad0ed68dd73cad8a365c0ae97dfcc468e59713bb14aaafdb9edc3b299e9a8",
             "bytes": 120
           },
           {
             "path": "plugin.json",
-            "sha256": "13bb4615ace29eb926f6d9c428cd3f8aa8d126ef2526d4683b67deba7f3e33ff",
-            "bytes": 971
+            "sha256": "8ac273cd8c5599bee8d2ea58cda04d20fb9bf85d9a20864100078a7aec451e02",
+            "bytes": 1406
           },
           {
             "path": "prompt.md",
-            "sha256": "fef555b7b58dd0c97d14e84e3f52b8332732b462533de16ffe9c53882e15f04f",
-            "bytes": 1939
+            "sha256": "0fda13ab5dd121be1d5a0587275379636fd7557972b7baa2824eb8c9c247daa6",
+            "bytes": 2656
           },
           {
             "path": "repair.md",
-            "sha256": "454751d188c26506fd73ce451084df8d3a44c3a3a0212e442b0993bd21e593d3",
-            "bytes": 1181
+            "sha256": "467fefc41e41e3cb2ab7c35f15756b569493dba516994bddfd216ec2df2a75ba",
+            "bytes": 1354
+          },
+          {
+            "path": "scripts/build-chart-gallery.mjs",
+            "sha256": "fcb6f52d9aed4306db976c465c5096a60ecff55674b34679ae57b2dfef8c1891",
+            "bytes": 5583
           },
           {
             "path": "scripts/build-demo.mjs",
-            "sha256": "be1fa3ae35e316874318d8b4e877545258a6ad24744ddbecf15645c8b47733af",
-            "bytes": 5411
+            "sha256": "2d46f02ea6426db7531ccf39ab62e3fc2e90a36ccd6f53d2e2f261d3d6647397",
+            "bytes": 6103
           },
           {
             "path": "skills/interactive-report/SKILL.md",
-            "sha256": "a27ea0203a2fc9b66f14dd92905df839d617e07785993e3a2f7663c78d469b58",
-            "bytes": 1783
+            "sha256": "65da9d5f670df3576bd7a321f2e0d6359796de49f02b2186cb563e0c35ed9688",
+            "bytes": 3946
           },
           {
             "path": "skills/report-design/SKILL.md",
-            "sha256": "801b3b527f445e1ac33b2f9f1d6936cf1730e3594e4178222c969b45a14530a2",
-            "bytes": 1804
+            "sha256": "4b1980dc53a331327cc3a9c150e74c059caa0c9a51e62ef203f324012f8c6552",
+            "bytes": 10403
+          },
+          {
+            "path": "skills/report-design/statistical-charts.md",
+            "sha256": "d2194da71c5c66cc9a71b2b104cb9d4fb925bfa816da1c215ea6f51e5c71c6b8",
+            "bytes": 6813
+          },
+          {
+            "path": "skills/report-design/structural-charts.md",
+            "sha256": "1ac639d41ea5b1203aad305c8b4833a5c1b798ab5e2fd2e84d9590b8dfdf6b16",
+            "bytes": 6583
+          },
+          {
+            "path": "skills/report-design/temporal-charts.md",
+            "sha256": "62877f3f7760e733fcc95454a64e5b0b3adfee7f25a4a4cd859e7a7c20fe9388",
+            "bytes": 9953
           },
           {
             "path": "skills/report-writing/SKILL.md",
-            "sha256": "4043de6b197563f023c769340f760f5bb03021cf05f8f739708c2ec9a526b9f5",
-            "bytes": 2866
+            "sha256": "cda6be84c8c11b0f61023fe042126ebbc8060a767a7366280496d08ff66b6572",
+            "bytes": 5186
           },
           {
             "path": "templates/research-brief.html",
-            "sha256": "5ba2d27cb83663252fc77880df6bbcc0f6176bfe12a270591587ba1d0defff95",
-            "bytes": 1815
+            "sha256": "3f79a1b7cecb12a357f107f43338ef7cc61afa15578e771a752d06bba380ebee",
+            "bytes": 3959
           },
           {
             "path": "tools.json",
-            "sha256": "2a7d2dc543820054c0c7864486e5ca9efeb44aadc70db7567f960983cd6efcdf",
-            "bytes": 17163
+            "sha256": "3578856f79b3c7a46dec39ccd46a1d2e3626dcccf05540ae7d1a4d0d17c475b5",
+            "bytes": 19941
           }
         ]
       },
@@ -3151,13 +3216,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.15/review.json",
-          "sha256": "20b7a27d16d82fde2ddb87e4a091dd53f8dba978ec467051b35efd55f1472f7b"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.16/review.json",
+          "sha256": "5937611dcea1f3b7a6aecb9582aa80ab62ea2be1fbc84e63d5020a3c85189d17"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/api-v1/packages/reports",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/8445b44ac846c6f63b71a99d64e0d8486ca7fa88/plugins/api-v1/packages/reports",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -3177,10 +3242,10 @@
         "name": "Sesame"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/rss-collect"
       },
       "package": {
@@ -3243,13 +3308,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Declared stdio tests and servers execute locally as the current user; inspect and reuse an existing compatible runtime. No dependency installer is executed by the catalog downloader.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/rss-collect",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/rss-collect",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -3269,10 +3334,10 @@
         "name": "Sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.15",
+      "release": "plugins-api-v1-dev.16",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "8445b44ac846c6f63b71a99d64e0d8486ca7fa88",
         "path": "plugins/api-v1/packages/strategy-authoring"
       },
       "package": {
@@ -3355,13 +3420,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.15/review.json",
-          "sha256": "20b7a27d16d82fde2ddb87e4a091dd53f8dba978ec467051b35efd55f1472f7b"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.16/review.json",
+          "sha256": "5937611dcea1f3b7a6aecb9582aa80ab62ea2be1fbc84e63d5020a3c85189d17"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/api-v1/packages/strategy-authoring",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/8445b44ac846c6f63b71a99d64e0d8486ca7fa88/plugins/api-v1/packages/strategy-authoring",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -3381,10 +3446,10 @@
         "name": "Sesame contributors"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/strategy-research"
       },
       "package": {
@@ -3477,13 +3542,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/strategy-research",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/strategy-research",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -3504,10 +3569,10 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/vnpy"
       },
       "package": {
@@ -3609,13 +3674,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/vnpy",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/vnpy",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -3635,10 +3700,10 @@
         "name": "Sesame"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/web-extract"
       },
       "package": {
@@ -3701,13 +3766,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Declared stdio tests and servers execute locally as the current user; inspect and reuse an existing compatible runtime. No dependency installer is executed by the catalog downloader.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/web-extract",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/web-extract",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -3728,10 +3793,10 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/web-sources"
       },
       "package": {
@@ -3796,13 +3861,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/web-sources",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/web-sources",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -3823,10 +3888,10 @@
         "url": "https://github.com/KDZZZZZZ/sesame"
       },
       "status": "active",
-      "release": "plugins-api-v1-dev.15",
+      "release": "plugins-api-v1-dev.16",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "8445b44ac846c6f63b71a99d64e0d8486ca7fa88",
         "path": "plugins/api-v1/packages/workspace"
       },
       "package": {
@@ -3898,13 +3963,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.15/review.json",
-          "sha256": "20b7a27d16d82fde2ddb87e4a091dd53f8dba978ec467051b35efd55f1472f7b"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-api-v1-dev.16/review.json",
+          "sha256": "5937611dcea1f3b7a6aecb9582aa80ab62ea2be1fbc84e63d5020a3c85189d17"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/api-v1/packages/workspace",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/8445b44ac846c6f63b71a99d64e0d8486ca7fa88/plugins/api-v1/packages/workspace",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     },
     {
@@ -3924,10 +3989,10 @@
         "name": "Sesame contributors"
       },
       "status": "active",
-      "release": "plugins-optional-api-v1-dev.9",
+      "release": "plugins-optional-api-v1-dev.10",
       "source": {
         "repository": "https://github.com/KDZZZZZZ/sesame",
-        "commit": "379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac",
+        "commit": "22b75960507da4789045816c22dd9ba00e40ed30",
         "path": "plugins/optional-api-v1/packages/wyckoff"
       },
       "package": {
@@ -4005,13 +4070,13 @@
         "automated": "package-static-review",
         "human": "not-recorded",
         "record": {
-          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.9/review.json",
-          "sha256": "a5adbce1f2651bbb1b0a4605cd5fada93efca0f5946d7b439ccd8ae31fa500cb"
+          "url": "https://github.com/KDZZZZZZ/sesame/releases/download/plugins-optional-api-v1-dev.10/review.json",
+          "sha256": "35740ab340391b0876777a51d89f0c1a845bbe47bafde761fd3b88e52069ec33"
         },
         "notes": "The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety."
       },
       "requirements": "Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.",
-      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/379c9acdab6112b0ec1ca1b0f7a9041b8b6a95ac/plugins/optional-api-v1/packages/wyckoff",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/tree/22b75960507da4789045816c22dd9ba00e40ed30/plugins/optional-api-v1/packages/wyckoff",
       "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
     }
   ]
