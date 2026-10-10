@@ -8,7 +8,7 @@ Open Sesame. 用自然语言研究市场、安排并行研究任务，并把结�
 
 ## 插件库
 
-在 **[Sesame 插件库](https://sesame.bot/zh/plugins/)** 浏览插件，将精确名称（例如 `sesame/ict`）发给兼容的 Sesame，Agent 会按固定目录核验并在当前对话中加载。[Plugin API 1 插件目录](plugins/api-v1/CATALOG.md) 包括默认核心包与按需包；每个插件声明自己的最低应用版本，安装时会核验兼容性。从 0.1.4 升级后，请按名称重新安装所需的 API 1 插件，旧插件不能直接复用。
+在 **[Sesame 插件库](https://sesame.bot/zh/plugins/)** 浏览插件，将精确名称（例如 `sesame/ict`）发给兼容的 Sesame，Agent 会按固定目录核验并在当前对话中加载。[Plugin API 1 插件目录](plugins/api-v1/CATALOG.md) 包括 32 个插件：9 个默认核心包与 23 个按需包。每个插件声明自己的最低应用版本，安装时会核验兼容性；`sesame/manual-trading` 需要 0.2.1，其余当前包支持 0.2.0。从 0.1.4 升级后，请按名称重新安装所需的 API 1 插件，旧插件不能直接复用。
 
 Sesame 0.1.4 请使用[历史 26 个插件的目录](plugins/)；其版本、来源摘要和安装方式保持不变。作者保留版权，逐包许可证、自动检查、独立 Agent 审阅与人工批准分别记录，见[贡献流程](plugins/CONTRIBUTING.md)。以下下载与上手说明适用于 0.2.1。
 

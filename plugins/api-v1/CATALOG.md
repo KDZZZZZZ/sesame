@@ -2,7 +2,7 @@
 
 The unified directory is
 `https://raw.githubusercontent.com/KDZZZZZZ/sesame/main/plugins/api-v1/catalog.json`.
-It lists nine default and twenty-two optional plugins by exact publisher-qualified
+It lists 32 plugins: nine default and twenty-three optional, by exact publisher-qualified
 name. Host compatibility is checked against each package's `engines.sesame`
 range. The plugin-manager supports formal installation and explicit updates.
 The historical catalog remains separate; its packages are not automatically
@@ -10,17 +10,18 @@ converted into API 1 packages.
 
 ## Fixed publication sources
 
-`catalog.sources.json` selects **core dev.15** and **optional dev.9** by their
-exact publication commits and review asset hashes. The generator reads each
+[`catalog.sources.json`](catalog.sources.json) selects one published core release
+and one published optional release by their exact tags, publication commits and
+review asset hashes. The generator reads each
 release plan at that commit, reconstructs its archive from the immutable source,
 and verifies the archive, lock, package files and tree digests. It never imports
 candidate JavaScript or executes package scripts. The generated catalog keeps
 release/archive/lock/review identities alongside each package's file index.
 
 These pins deliberately do not follow the latest release, current package source
-or a floating branch. Both releases were published by the main-branch workflow
-after PR35's exact-head independent Agent review, static checks and pre-merge
-gate. Their downloaded assets were checked against GitHub digests and the
+or a floating branch. Selected releases are published by the main-branch workflow
+after exact-head independent Agent review, static checks and the pre-merge
+gate. Their downloaded assets are checked against GitHub digests and the
 reconstructed archive bytes before this metadata update. Human approval is not recorded.
 A later reviewed publication must explicitly advance the selected source release.
 
@@ -51,7 +52,7 @@ is required, and a uniform release matching its profile keeps the summary.
 
 ## Query, install and explicit update
 
-`plugin_catalog({plugin_id:"sesame/mt5"})` returns version 1.2.0, its fixed
+`plugin_catalog({plugin_id:"sesame/mt5"})` returns the selected published version, its fixed
 source/package/release information, and a digest of the complete catalog bytes.
 The same directory supports native `sesame-native` packages and the four standard
 `agent-plugins` MCP packages. It does not turn old stable factory IDs into API 1
@@ -119,8 +120,11 @@ it has no caller-selected file resolver.
 
 ## Distribution and descriptive inventory
 
-The nine core and twenty-two optional entries expose `distribution` and the minimum
+The nine core and twenty-three optional entries expose `distribution` and the minimum
 `engines.sesame` range. MT5 and all other market/execution backends are optional.
+`sesame/manual-trading` requires Sesame 0.2.1 or newer; the other selected packages
+support Sesame 0.2.0 or newer, including their declared compatible development builds.
+Always check the individual entry instead of assuming one minimum for the catalog.
 The old `host-files`, `user-guide` and `research` names were merged into
 `workspace`, `orchestration` and `data-access`, respectively; no installer aliases
 pretend they are separate packages.
@@ -130,6 +134,14 @@ Installing `sesame/ict` does not install another technical method. CCXT provides
 explicit-source public spot data; Backtrader runs a selected authored strategy
 against fixed data. They do not add a default broker or trading authorization.
 Backtrader's package and engine retain GPL-3.0-or-later licensing.
+Agent manual trading coordinates explicit user instructions with an existing
+supported trading backend; installing it does not grant ongoing trading authorization.
+
+Catalog updates are independent of application installers. The application release record
+[`RELEASE-ASSETS.json`](../../RELEASE-ASSETS.json) records the archives associated
+with the published application; selecting newer catalog packages does not replace
+the plugins already contained in that installer. Installed copies update only
+through the explicit update flow above.
 
 `inventory.json` is a descriptive snapshot marked `descriptive-inventory`. It
 records compatible application versions. It is not an installation catalog:
