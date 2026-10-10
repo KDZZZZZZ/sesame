@@ -2,14 +2,14 @@
   "schemaVersion": 1,
   "releases": [
     {
-      "tag": "plugins-api-v1-dev.12",
-      "releaseCommit": "e35da9047d628a37f78adc2552d0799881dca6dd",
-      "reviewSha256": "d5ccad379e9a3afa13b9980729c706d9d54b30e7e8d36ab2cc761270f6228c48"
+      "tag": "plugins-api-v1-dev.13",
+      "releaseCommit": "fbfe1478cd7c5258f1b6057ae04df844b62a1302",
+      "reviewSha256": "5a8bcfcc7a444b954b6fcf1910d20406295b73a67b9c6a580564c8b19dfc9436"
     },
     {
-      "tag": "plugins-optional-api-v1-dev.4",
-      "releaseCommit": "3a4bef2cc8222075791e1c10df8578d6049a2dee",
-      "reviewSha256": "6e000b1dcc4978ebe167db257babd44c17cb5eb5b3b574d800dfb1fd032e346b"
+      "tag": "plugins-optional-api-v1-dev.5",
+      "releaseCommit": "fbfe1478cd7c5258f1b6057ae04df844b62a1302",
+      "reviewSha256": "833ca1c34bd5b3778d5155e5f2c72753f0a05398f034e60c9ccbfdba7b4fec2d"
     }
   ],
   "withdrawn": []

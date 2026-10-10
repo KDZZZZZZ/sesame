@@ -9,24 +9,29 @@ const root = fileURLToPath(new URL('../../../', import.meta.url));
 const catalogBytes = readFileSync(new URL('../catalog.json', import.meta.url));
 const catalog = JSON.parse(catalogBytes);
 
-test('the 22-entry unified directory exactly reconstructs two fixed released archives', () => {
+test('the 19-entry unified directory exactly reconstructs two fixed released archives', () => {
   assert.deepEqual(validateCatalog(root), catalog);
-  assert.equal(catalog.plugins.length, 22);
+  assert.equal(catalog.plugins.length, 19);
   assert.equal(catalog.plugins.filter(item => item.format === 'agent-plugins').length, 4);
-  assert.deepEqual(catalog.releases.map(item => item.tag), ['plugins-api-v1-dev.12', 'plugins-optional-api-v1-dev.4']);
+  assert.equal(catalog.plugins.filter(item => item.distribution === 'core').length, 9);
+  assert.equal(catalog.plugins.filter(item => item.distribution === 'optional').length, 10);
+  for (const p of catalog.plugins) assert.equal(p.engines.sesame, '>=0.2.0-0');
+  assert.deepEqual(catalog.releases.map(item => item.tag), ['plugins-api-v1-dev.13', 'plugins-optional-api-v1-dev.5']);
   const mt5 = catalog.plugins.find(item => item.id === 'sesame/mt5');
-  assert.equal(mt5.version, '1.1.9'); assert.ok(mt5.tools.includes('mt5_translation_file'));
-  assert.equal(mt5.package.treeDigest, 'sha256:bd4b357767f24c9f568a6a2cf591e09aea88ddd4f5e2045452165f18dabb79c2');
-  assert.equal(catalog.plugins.find(item => item.id === 'sesame/plugin-manager').version, '2.0.1', 'Unreleased manager candidates must not enter the published catalog');
+  assert.equal(mt5.version, '1.2.0'); assert.ok(mt5.tools.includes('mt5_translation_file'));
+  assert.equal(mt5.package.treeDigest, 'sha256:6ae118d2bdb1c1e837c30a8fb0ec0eb51f1fecbce8f16780bb66ac0b1ac4f8d3');
+  assert.equal(catalog.plugins.find(item => item.id === 'sesame/plugin-manager').version, '2.1.1', 'Only the actually released manager enters the catalog');
 });
 
 test('exact official/native/MCP/optional names resolve from the same fixed catalog snapshot', async () => {
   const fetcher = async url => { assert.equal(url, CATALOG_URL); return new Response(catalogBytes); };
-  for (const id of ['sesame/mt5', 'sesame/user-guide', 'sesame/web-extract', 'sesame/rss-collect', 'sesame/market-data-parser', 'sesame/quantskills-catalog', 'sesame/akshare', 'sesame/qmt', 'sesame/vnpy']) {
+  for (const id of ['sesame/mt5', 'sesame/orchestration', 'sesame/web-extract', 'sesame/rss-collect', 'sesame/market-data-parser', 'sesame/quantskills-catalog', 'sesame/akshare', 'sesame/qmt', 'sesame/vnpy']) {
     const result = await catalogQuery({ plugin_id: id }, undefined, fetcher);
     assert.deepEqual(result.items.map(item => item.id), [id]); assert.match(result.catalog_digest, /^sha256:[0-9a-f]{64}$/);
   }
-  assert.deepEqual((await catalogQuery({ plugin_id: 'sesame/mt5-official' }, undefined, fetcher)).items, [], 'Old stable factory IDs are not API 1 aliases');
+  for (const plugin_id of ['sesame/mt5-official', 'sesame/host-files', 'sesame/user-guide', 'sesame/research']) {
+    assert.deepEqual((await catalogQuery({ plugin_id }, undefined, fetcher)).items, [], 'Removed or old stable identities are not aliases');
+  }
 });
 
 test('stable 0.1.4 and the historical optional catalog remain byte-identical to the dev12 publishing commit', () => {

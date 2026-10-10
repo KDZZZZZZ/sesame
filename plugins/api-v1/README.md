@@ -1,6 +1,6 @@
 # Default plugins for Sesame 0.2.0 / Plugin API 1
 
-**Unreleased 0.2.0 candidate. The minimum is `>=0.2.0-0`: development previews are allowed; the formal minimum is 0.2.0. No 0.2.0 application release is advertised here. These packages cannot be used in 0.1.4.**
+**Published development plugins; application 0.2.0 is not formally released. The minimum is `>=0.2.0-0`: development previews are allowed; the formal minimum is 0.2.0. No 0.2.0 application release is advertised here. These packages cannot be used in 0.1.4.**
 
 This directory contains exactly nine default packages for the next application bundle. The application
 keeps the protocol, verified loader and general interface. Plugin implementations,
@@ -26,7 +26,7 @@ advertised there until their matching application and end-to-end checks are read
 
 - `packages/<name>/plugin.json`: publisher-qualified identity, version, API and capabilities.
 - `packages/<name>/package.json`: Node module scope, version and per-package license.
-- `official-plugins.lock.json`: every candidate packaged byte and package tree digest.
+- `official-plugins.lock.json`: every packaged byte and package tree digest.
 - `bundle-profile.json`: the reviewed, exact nine-package distribution set.
 - `catalog.json` / `catalog.sources.json`: separately pinned, already published package entries.
 - `inventory.json`: the nineteen-package **unreleased preview**, with no installation digests or authority.
@@ -56,12 +56,11 @@ Development bundle 4 completes real-path delivery for research/web inputs and
 MT5 checkouts. Workspace commands expose incomplete snapshot diagnostics. The
 plugin-manager owns verified catalog installation and same-session loading;
 its native static checks remain distinct from actual activation and environment
-verification. The [unified development catalog](CATALOG.md) still pins the actual
-dev.12/dev.4 bytes (22 historical API 1 entries). The nineteen reorganized candidates
-must first pass review and publish as separate fixed core/optional archives;
-only then may a metadata PR select those releases. This prevents preview versions
-from appearing installable early. Explicit updates preserve the host's current-digest
-and version checks. The published 0.1.4 catalog is unchanged.
+verification. The [unified development catalog](CATALOG.md) pins the actual
+core dev.13 and optional dev.5 releases: nine default and ten optional entries.
+Their source commit, archive, file/tree and review hashes were selected only after
+publication and actual download verification. Explicit updates preserve the host's
+current-digest and version checks. The published 0.1.4 catalog is unchanged.
 
 ## Validate and build
 

@@ -1,6 +1,6 @@
 # Optional plugins for Sesame 0.2.0 / Plugin API 1
 
-**Unreleased reorganization candidate.** These ten packages require `>=0.2.0-0`
+**Published development plugins; the application remains a development preview.** These ten packages require `>=0.2.0-0`
 (formal minimum 0.2.0, including its development previews). Sesame 0.2.0 has not
 been formally released. They do not enter the nine-package default lock or the
 historical 0.1.4 catalog. Installation/inspection does not silently download a
@@ -29,9 +29,10 @@ host-readable without granting access to old mutable application collections.
 ## Install through a matching development host
 
 The new plugin-manager reads the unified `../api-v1/catalog.json`; the old three-entry
-catalog here is retained as historical metadata. The unified directory continues to
-select released dev.12/dev.4 bytes until both reorganized archives are independently
-reviewed and published. It does not yet install these candidate versions.
+catalog here is retained as historical metadata. The unified directory selects
+actually published core dev.13 and optional dev.5: nine defaults and these ten
+optional integrations. Each entry fixes its source, files, package tree and
+publication review. Formal application 0.2.0 is still not released.
 
 For a released entry, give the Agent an exact name, inspect its metadata and
 `catalog_digest`, then call `plugin_install_catalog`. It downloads only fixed source
@@ -48,13 +49,13 @@ Dependencies, configuration and platform adapters live in each plugin. Check exi
 
 Use Node 24 and set `SESAME_PLUGIN_SDK_LOADER` to the matching public SDK loader, then `npm test`. `npm run test:python` runs controlled Python adapter checks; set `SESAME_VNPY_PYTHON` to an actual compatible environment to also run real engine tests. QMT has a separate explicit Windows native opt-in test; it never runs automatically against a brokerage account. The code and fixtures copy no private application implementation.
 
-`npm run lock` / `npm run check` use the shared data-only package validator. The historical three-package catalog is checked against its own fixed Git source, independently of this candidate's ten-package membership. The separate optional archive uses the same deterministic lock/files structure as the core archive, but is never automatically assembled into the nine-package default set. Each package retains its own MIT license and dependency/source notices; this does not relicense third-party runtimes or the private application.
+`npm run lock` / `npm run check` use the shared data-only package validator. The historical three-package catalog is checked against its own fixed Git source, independently of the ten-package membership. The separate optional archive uses the same deterministic lock/files structure as the core archive, but is never automatically assembled into the nine-package default set. Each package retains its own MIT license and dependency/source notices; this does not relicense third-party runtimes or the private application.
 
 ## Historical release evidence
 
 The following records describe the earlier three-package bundles, not the current
-unreleased ten-package candidate. See package VALIDATION files and the new package
-review for current source-specific results and unresolved review findings.
+published ten-package development bundle. See package VALIDATION files and the new package
+review for current source-specific results and limitations.
 
 The earlier Python checks comprised six real vn.py engine tests and seven QMT
 controlled fixtures. Actual application checks covered catalog/current-session

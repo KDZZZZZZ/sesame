@@ -2,25 +2,27 @@
 
 The unified directory is
 `https://raw.githubusercontent.com/KDZZZZZZ/sesame/main/plugins/api-v1/catalog.json`.
-It lists the 19 official packages and the three optional integrations by exact
-publisher-qualified name. It requires a matching Plugin API 1 host and the
-plugin-manager 2.1.0 client. The client in this PR is a candidate, not a published
-release; existing clients continue to read the separate optional-only directory
-until explicitly updated. Sesame 0.1.4 and its website catalog are unchanged.
+It lists nine default and ten optional plugins by exact publisher-qualified name.
+All require `engines.sesame: ">=0.2.0-0"`: compatible development builds are allowed,
+with formal minimum 0.2.0. The application 0.2.0 is not formally released. The
+published plugin-manager 2.1.1 reads this directory and supports formal install
+and explicit update. Sesame 0.1.4 and its historical catalog are unchanged.
 
 ## Fixed publication sources
 
-`catalog.sources.json` selects **official dev.12** and **optional dev.4** by their
+`catalog.sources.json` selects **core dev.13** and **optional dev.5** by their
 exact publication commits and review asset hashes. The generator reads each
 release plan at that commit, reconstructs its archive from the immutable source,
 and verifies the archive, lock, package files and tree digests. It never imports
 candidate JavaScript or executes package scripts. The generated catalog keeps
 release/archive/lock/review identities alongside each package's file index.
 
-These pins deliberately do not follow the latest release, current package source,
-a floating branch, or the unreviewed manager candidate. In particular the catalog
-still describes published plugin-manager 2.0.1, while this PR develops 2.1.0. A
-later reviewed publication must explicitly advance the selected source release.
+These pins deliberately do not follow the latest release, current package source
+or a floating branch. Both releases were published by the main-branch workflow
+after PR25's exact-head independent Agent review, static checks and pre-merge
+gate. Their actual downloaded assets were checked against GitHub digests and the
+host package verifier before this metadata update. Human approval is not recorded.
+A later reviewed publication must explicitly advance the selected source release.
 
 ```sh
 node plugins/api-v1/scripts/catalog.mjs --check
@@ -38,7 +40,7 @@ this directory. To withdraw an entry, record its exact ID in the source file's
 
 ## Query, install and explicit update
 
-`plugin_catalog({plugin_id:"sesame/mt5"})` returns version 1.1.9, its fixed
+`plugin_catalog({plugin_id:"sesame/mt5"})` returns version 1.2.0, its fixed
 source/package/release information, and a digest of the complete catalog bytes.
 The same directory supports native `sesame-native` packages and the four standard
 `agent-plugins` MCP packages. It does not turn old stable factory IDs into API 1
@@ -88,30 +90,31 @@ release metadata. Automated byte checks, maintainer-recorded independent Agent
 review, and actual human approval are distinct. Follow the fixed `review.json`
 URL and hash for the publication evidence; static checks are not a safety verdict.
 
-When the validating workflow itself is introduced in a PR, the existing trusted
-base cannot run the new check yet. That first PR needs the recorded local byte and
-publication checks plus independent review; later PRs use the merged trusted
-validator. No new release plan is added by this catalog/client PR.
+The trusted main validator checks this metadata PR against already published
+releases. No package code, package lock, release plan or prior asset is changed by
+selecting a new catalog source. The stable 0.1.4 and three-entry historical optional
+catalogs retain their original bytes.
 
-## Candidate parser path correction
+## Parser file boundaries
 
-The same PR contains a minimal 2.0.2 candidate for `web-extract`, `rss-collect`
-and `market-data-parser`. Their trusted package root now uses the same canonical
-filesystem representation as the resolved input. A macOS `/var` → `/private/var`
-alias (or an equivalent directory symlink) no longer rejects an ordinary bundled
-sample. Absolute inputs, parent traversal and symlinks that resolve outside the
-package remain rejected. `quantskills-catalog` has no caller-selected file resolver
-and is unchanged at 2.0.1. The published dev.12 catalog entries remain 2.0.1 until
-these candidates are reviewed, published and selected by a subsequent metadata PR.
+Published 2.0.2 `web-extract`, `rss-collect` and `market-data-parser` canonicalize
+the trusted package root in the same way as the resolved input. A macOS `/var`
+→ `/private/var` alias no longer rejects a bundled sample. Absolute inputs,
+parent traversal and symlinks escaping the package remain rejected.
+`quantskills-catalog` 2.0.2 retains its reference-only behavior and now declares
+the same host engine range; it has no caller-selected file resolver.
 
-## Unreleased 0.2 distribution
+## Distribution and descriptive preview
 
-The new candidate reorganizes 22 historical identities into nine default and ten
-optional packages. `inventory.json` is a source preview, with explicit
-`unreleased-candidate` status and no install-authority fields. The installation
-catalog above still selects the released 22-package set; it is not silently
-regenerated from changed files. After the candidate bundles pass review and are
-published, a distinct metadata PR must select their fixed release records. Those
-entries additionally identify `distribution` and `engines.sesame: ">=0.2.0-0"`.
-The formal minimum is 0.2.0, with compatible development previews allowed. Stable
-0.1.4 retains its independent historical catalog.
+The nine core and ten optional entries expose `distribution` and the minimum
+`engines.sesame` range. MT5 and all other market/execution backends are optional.
+The old `host-files`, `user-guide` and `research` names were merged into
+`workspace`, `orchestration` and `data-access`, respectively; no installer aliases
+pretend they are separate packages.
+
+`inventory.json` remains a descriptive snapshot of the reviewed source, marked
+`unreleased-candidate` for the 0.2 application design. It is not an installation
+catalog: it omits file/source hashes and cannot select bytes to execute. Website
+copy buttons return exact names; the Agent resolves this separately published
+catalog and verifies its fixed digests. Plugin development releases do not imply
+that an application 0.2.0 installer is available.
