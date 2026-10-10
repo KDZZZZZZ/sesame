@@ -136,7 +136,7 @@ export function projectFiles(files) {
     const segments = path.split('/');
     requireValue(segments.every(segment => segment && segment !== '.' && segment !== '..' && !/[. ]$/.test(segment) && !/^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(segment)), '工程路径无效或是 Windows 保留名称');
     requireValue(!seen.has(path.toLowerCase()), '工程路径在 Windows 下重名'); seen.add(path.toLowerCase());
-    requireValue(/^Experts\/[A-Za-z0-9_ /-]+\.mq5$/.test(path) || /^Include\/Strategy\/[A-Za-z0-9_ /-]+\.mqh$/.test(path) || ['strategy.json', 'observability/rules.json', 'inputs/default.set', 'README.md'].includes(path), '文件必须位于策略目录；平台 SDK 不能由工程覆盖');
+    requireValue(/^Experts\/[A-Za-z0-9_ /-]+\.mq5$/.test(path) || /^Include\/Strategy\/[A-Za-z0-9_ /-]+\.mqh$/.test(path) || ['strategy.json', 'observability/rules.json', 'inputs/default.set', 'inputs/svl-timeline.ndjson', 'README.md'].includes(path), '文件必须位于策略目录；平台 SDK 不能由工程覆盖');
     bytes += Buffer.byteLength(content); requireValue(bytes <= 4 * 1024 * 1024 && Buffer.byteLength(content) <= 1024 * 1024, '工程文件大小超过限制');
   }
   if (files['strategy.json']) {

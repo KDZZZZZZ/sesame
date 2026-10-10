@@ -30,8 +30,8 @@ test('the skill exposes a declared self-contained language reference and every s
     const path = `examples/${name}.${suffix}.json`;
     assert.ok(manifest.resources.includes(path), path); assert.ok(reference.includes(path), path);
   }
-  const table = reference.split('## 当前全部原语')[1].split('参考求值器检查 cross')[0];
-  for (const id of Object.keys(svl.OPERATORS)) assert.ok(table.includes('`' + id + '`'), `Documented operator: ${id}`);
+  // Versioned additions have their own tables after the original time notes.
+  for (const id of Object.keys(svl.OPERATORS)) assert.ok(reference.includes('`' + id + '`'), `Documented operator: ${id}`);
   assert.deepEqual(json('tools.json'), JSON.parse(JSON.stringify(createTools({ tools: helpers }).map(({ execute, ...definition }) => definition))));
 });
 
@@ -48,6 +48,20 @@ test('the stateful reference validates through the public tool and executes its 
   assert.equal(result.events[2].trace.find(row => row.nodeId === 'above').value, true);
   assert.equal(result.events[3].trace.find(row => row.nodeId === 'above').value, false, 'Equality is not strict greater-than');
   assert.deepEqual(svl.evaluateReplay(source, fixture), result);
+});
+
+test('the 1.1 function example preserves threshold decisions and exposes its body and call trace', async () => {
+  const path = 'examples/function-threshold.svl.json', source = bytes(path).toString(), fixture = json('examples/function-threshold.replay.json');
+  const checked = await validateTool(path), result = svl.evaluateReplay(source, fixture);
+  assert.equal(result.status, 'completed');
+  assert.deepEqual(result.events.map(event => event.state.lastAbove), [false, false, true, false]);
+  assert.ok(result.events.every(event => event.intents.length === 0));
+  assert.equal(checked.graph.functions.length, 1);
+  assert.equal(checked.graph.functions[0].id, 'aboveThreshold');
+  assert.ok(checked.graph.calls.some(call => call.nodeId === 'above' && call.functionId === 'aboveThreshold'));
+  assert.ok(result.events[2].trace.some(row => row.functionId === 'aboveThreshold' && row.callPath.length > 0));
+  const unsupported = JSON.parse(source); unsupported.schemaVersion = '1.0.0';
+  assert.throws(() => svl.validateSource(unsupported), /function|operator|capability/i);
 });
 
 test('the declared crossover example yields a typed intent and blocks missing or pending account evidence', async () => {

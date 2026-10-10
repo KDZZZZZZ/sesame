@@ -257,9 +257,9 @@
     },
     {
       "id": "sesame/orchestration",
-      "version": "2.1.3",
+      "version": "2.2.0",
       "directory": "orchestration",
-      "treeDigest": "sha256:ed5fc8702af90b615dc4ce64553ba80b35998b9704b2921d45b369cca51a09d8",
+      "treeDigest": "sha256:f33584fdb5ab817ea8b5982d2ed3c9248f88ee5c56447d553b0902d0929042ab",
       "files": [
         {
           "path": "LICENSE",
@@ -273,18 +273,18 @@
         },
         {
           "path": "package.json",
-          "sha256": "a2c030ab8f237962371100baeec33f5160ff604fbb7e0a6b59caf47a5d366a27",
+          "sha256": "cc15ceea026615e84133177cea3dadcfdf09d49a7cf772b97cff3c4c00ae19d6",
           "bytes": 107
         },
         {
           "path": "plugin.json",
-          "sha256": "502d8107c2f2f8d069366655a76202894c0f4f996b4a6023fbbc7f54931d89f0",
-          "bytes": 988
+          "sha256": "98d882bffe1325979b97e36deac4c4476b09f90fe204cb4d7ec511f4a2c6a232",
+          "bytes": 1022
         },
         {
           "path": "prompt.md",
-          "sha256": "033dc7247528794809d76c6978bef192854fa14a931b436b18a9b0e85072eafb",
-          "bytes": 7043
+          "sha256": "c1fbe5f1c4d5bd2d41a7a1a5180fb2e9c56f7487a742796db3c91b4b31bdb988",
+          "bytes": 7671
         },
         {
           "path": "skills/sesame-user-guide/SKILL.md",
@@ -333,13 +333,13 @@
         },
         {
           "path": "tools.js",
-          "sha256": "4687503beae7e4bfb70bbec2d89c312a0b3ee908a0053a6213e48b8c11a848fb",
-          "bytes": 2020
+          "sha256": "545a61e8ad729143354e768eeac7879b66d42e2b2c15860b4bf6b5e981f424d5",
+          "bytes": 2704
         },
         {
           "path": "tools.json",
-          "sha256": "6976f4fd54da3d14a4f7fc7ffd2e0268e5b320891c4ba2afc8fd1666919c9ca7",
-          "bytes": 4524
+          "sha256": "44118aecfb849efd9ea99bc15d0c627507c17eb4524f8d88548a41cdada8fc8f",
+          "bytes": 5832
         }
       ]
     },
@@ -551,9 +551,9 @@
     },
     {
       "id": "sesame/strategy-authoring",
-      "version": "1.0.2",
+      "version": "1.2.0",
       "directory": "strategy-authoring",
-      "treeDigest": "sha256:07c0011ba11245b6e3bd1dcce67eacad574dcf3434ef71b41724c4bf114df7c1",
+      "treeDigest": "sha256:5531ab2bbb185e2306c80814d4daae5ef8d24820870e73c7733cd8f4239d2778",
       "files": [
         {
           "path": "LICENSE",
@@ -581,44 +581,144 @@
           "bytes": 3346
         },
         {
+          "path": "examples/function-threshold.replay.json",
+          "sha256": "df0a71d17d755a6da1629cfd7376a7a1a4fcdacafc53af15a7e9ec2379c8af1d",
+          "bytes": 694
+        },
+        {
+          "path": "examples/function-threshold.svl.json",
+          "sha256": "662517e63e50cfa352c115526730ee32e27afa3c54e77e10948d77027d698169",
+          "bytes": 3119
+        },
+        {
+          "path": "examples/method-workflow.js",
+          "sha256": "b39e1a70b54b8cd425c7fe7315f4dc6a5b4864163bad87987e28255efd674a00",
+          "bytes": 2737
+        },
+        {
+          "path": "examples/pipeline-fixture.js",
+          "sha256": "41b88bb552e4cb660ab10f10d014b9a0056dfa997374daa2054d2bea7ac6194a",
+          "bytes": 2869
+        },
+        {
           "path": "index.js",
-          "sha256": "b90eea4192a6ec143315c88715aaf6e17dc191b8638fc34715714b1606334bca",
-          "bytes": 5951
+          "sha256": "48633238e8e2de4869bfdd5223e1d066e68090b53444dbf885f8ded991247b56",
+          "bytes": 10408
+        },
+        {
+          "path": "lib/agent-decision-tools.js",
+          "sha256": "a15eea0e91e7a80b73bde718a09ef84a7bf0ccf2402fb9f568e30ab2f16f5003",
+          "bytes": 6720
+        },
+        {
+          "path": "lib/agent-decisions.js",
+          "sha256": "2d753b7ff0e3696ffc9afa5ce95f8b75bd79995bde79c00ff02ffc2e4ce8ad64",
+          "bytes": 31871
+        },
+        {
+          "path": "lib/decision-bridge.js",
+          "sha256": "100e1a63b4957966393cfa5f3d7520606714e480398e1c44f595e55bfb462b31",
+          "bytes": 4006
+        },
+        {
+          "path": "lib/execution.js",
+          "sha256": "bc70abf5819b1ee89a6dffa2b7fdc57b11edc3ce847f68510fe6c89bd3061449",
+          "bytes": 33656
+        },
+        {
+          "path": "lib/method-support.js",
+          "sha256": "ec54cefb49781b0ec200a8a237516af11cb75ae22933381fd24047e90f5dbe07",
+          "bytes": 7638
+        },
+        {
+          "path": "lib/pipeline.js",
+          "sha256": "8d14348e74394a0c76eabbddfa6b3d0bd823522e3d3d97ce2956ee202d5d43aa",
+          "bytes": 32943
+        },
+        {
+          "path": "lib/portfolio-risk.js",
+          "sha256": "21b4b650da2e40fa70436bbbe157abcf2d32728c76b40c02cef4dfcee105a1d4",
+          "bytes": 9277
+        },
+        {
+          "path": "lib/portfolio.js",
+          "sha256": "15445c1748c29b605bc34bff27d659cd87b65305a8508c1e48536ccf3dbcc996",
+          "bytes": 9963
+        },
+        {
+          "path": "lib/quant-functions.js",
+          "sha256": "fba82b87c06d027b1db0477ed34389aa25d3d2167d42aa90e73a886f0d85b147",
+          "bytes": 8802
+        },
+        {
+          "path": "lib/universe.js",
+          "sha256": "731c044bbb3a1df2d283964ff3db40cec4443ad3bedc984a2f2478aa60418589",
+          "bytes": 5731
+        },
+        {
+          "path": "lib/workflow.js",
+          "sha256": "9dfa06771428a9093a94b06faef0550f952f75b97045f7db5267ff85d5573ad4",
+          "bytes": 3363
         },
         {
           "path": "package.json",
-          "sha256": "28c0acf37ea08c4d1ae8cff1e8873597e019fe5941e0daf9bf83f2d56f02e33c",
+          "sha256": "0ea7eea46ab006b5895e457d1ad16b58ab5b6e814fe2b0555257659c298d713b",
           "bytes": 131
         },
         {
           "path": "plugin.json",
-          "sha256": "5730a19b4e947d977befee9d3fc73cf8e4a5ddd3ea732941af4ec4c4da74f851",
-          "bytes": 1054
+          "sha256": "4875a5a3d6671857d4b7de332d071ff68f58c6a2550d1775b68bf4769cac339e",
+          "bytes": 1646
         },
         {
           "path": "prompt.md",
-          "sha256": "eed4bcb9d4469fd01528c43976b52d2c4e9f1333b98c1a399f09addca3b0e6f1",
-          "bytes": 1224
+          "sha256": "eb9d89a4ac7dc7be1e319c3e69f0d7d4c5cea94fa71844493f80d8b6688dc5c9",
+          "bytes": 2154
         },
         {
           "path": "skills/strategy-authoring/SKILL.md",
-          "sha256": "4facc4a0e95b7ea47de6bedb03a593fffc28e54c94a4e0c02d036ee5d0a506fa",
-          "bytes": 4208
+          "sha256": "0257d26719e48e452a0523a3f5d20d284956a8bae2966a4a721b6fec4ddb9ee9",
+          "bytes": 6321
+        },
+        {
+          "path": "skills/strategy-authoring/references/agent-inputs.md",
+          "sha256": "6ee7c754e74c15e703beb614d0a211052cb8ac6dc2c992316a736036ba6e64ac",
+          "bytes": 13156
         },
         {
           "path": "skills/strategy-authoring/references/architecture.md",
-          "sha256": "44ca10d5f921ed9cde35276ccc256201908ae12c2eaaa34effb4b758cf0bdd4d",
-          "bytes": 6072
+          "sha256": "9b674f6495d9eb72560dca2772df448f3f43a18ab3edf1f55227fa25a76e789a",
+          "bytes": 7929
+        },
+        {
+          "path": "skills/strategy-authoring/references/execution.md",
+          "sha256": "f09411cd716acd44cf04a03931f459eee8dca11a89fc4a769563f6a21e62e118",
+          "bytes": 8462
         },
         {
           "path": "skills/strategy-authoring/references/language.md",
-          "sha256": "64713075218b44f88ad90d5e88bf8164d7f47b95cd62d97c306606f30edfe31c",
-          "bytes": 21297
+          "sha256": "30ff73f7c12bfb66119aadad658da7dd64db19e3d185b5df3d53b89230a84ab1",
+          "bytes": 36603
+        },
+        {
+          "path": "skills/strategy-authoring/references/methods.md",
+          "sha256": "27a4c5d7064385988eab8e9b8d12e22fdb863af29b28a3321e33526a5dcde906",
+          "bytes": 10730
+        },
+        {
+          "path": "skills/strategy-authoring/references/pipeline.md",
+          "sha256": "3211ae44ef160805d1e6904f6caf598fba4c16847665474e76a51e61ac539e05",
+          "bytes": 17525
+        },
+        {
+          "path": "skills/strategy-authoring/references/quant-functions.md",
+          "sha256": "50eba836ce61deb9e96bb553d0b03de15014aaffcc00e27e1abef5a80261a76e",
+          "bytes": 3230
         },
         {
           "path": "tools.json",
-          "sha256": "2fdab8d895889c0a2b76f8b9b650937a0c26e21d09e63cbb7b4e93b302efac57",
-          "bytes": 6012
+          "sha256": "23b1c88d81a3bd091def35301f7fdf87305afc9818682fa238338a6bb0910f3f",
+          "bytes": 11842
         }
       ]
     },
