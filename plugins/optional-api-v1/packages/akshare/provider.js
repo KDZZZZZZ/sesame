@@ -3,6 +3,7 @@ import { check, digest, canonical, decimal } from '@sesame/plugin-sdk/protocol';
 import { randomUUID } from 'node:crypto';
 const authority = 'Asia/Shanghai';
 const timeBasis = Object.freeze({ kind: 'wall', authority, zone: authority });
+const wallFormatter = new Intl.DateTimeFormat('en-GB', { timeZone: authority, calendar: 'iso8601', numberingSystem: 'latn', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3, hourCycle: 'h23' });
 const wallTime = value => ({ basis: 'wall', authority, zone: authority, value });
 const legacyWallRange = range => range.from.basis === 'wall' && range.to.basis === 'wall' && range.from.zone === undefined && range.to.zone === undefined;
 function legacyBar(bar) {
@@ -102,7 +103,17 @@ export class AKShareProvider {
     }
 }
 export function wall(time) {
- if(time?.basis==='utc'){check(Number.isSafeInteger(time.unixMs),'Invalid UTC range');return new Date(time.unixMs+8*3600000).toISOString().slice(0,23);}
+ if(time?.basis==='utc'){
+  check(Number.isSafeInteger(time.unixMs),'Invalid UTC range');
+  const date = new Date(time.unixMs);
+  check(Number.isFinite(date.getTime()) && date.getUTCFullYear() >= 1 && date.getUTCFullYear() <= 9999, 'Invalid UTC date');
+  // Asia/Shanghai included historical DST; its known IANA zone is not a fixed
+  // +08:00 offset. Keep milliseconds when projecting an exact UTC boundary.
+  const parts = Object.fromEntries(wallFormatter.formatToParts(date).map(part => [part.type, part.value]));
+  const value = `${parts.year.padStart(4, '0')}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}.${parts.fractionalSecond}`;
+  check(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}$/.test(value), 'Unsupported wall date');
+  return value;
+ }
  check(time?.basis==='wall'&&time.authority===authority&&(!time.zone||time.zone===authority)&&time.fold===undefined&&/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,3})?$/.test(time.value),'Range requires unambiguous Asia/Shanghai wall or UTC time','UNSUPPORTED_CAPABILITY');
  const value=time.value.includes('.')?time.value.padEnd(23,'0'):time.value+'.000';check(Number.isFinite(Date.parse(value+'Z'))&&new Date(value+'Z').toISOString().slice(0,23)===value,'Invalid date');return value;
 }

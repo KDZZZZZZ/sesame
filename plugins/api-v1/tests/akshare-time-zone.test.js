@@ -4,7 +4,7 @@ import { mkdtemp, realpath, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { AKShareProvider, descriptor, mapBar } from '../../optional-api-v1/packages/akshare/provider.js';
+import { AKShareProvider, descriptor, mapBar, wall as projectWall } from '../../optional-api-v1/packages/akshare/provider.js';
 import { marketReadTools } from '../packages/data-access/market-read.js';
 
 const authority = 'Asia/Shanghai';
@@ -83,6 +83,26 @@ test('UTC ranges and subscriptions retain canonical zone after a legacy read; ex
       const badRange = range(); badRange.from = { ...badRange.from, ...change };
       await assert.rejects(f.provider.queryBars({ ...f.query, range: badRange }, f.context), { code: 'UNSUPPORTED_CAPABILITY' });
     }
+  } finally { f.provider.dispose(); }
+});
+
+
+test('UTC projection follows historical Shanghai DST and preserves millisecond half-open bounds', async () => {
+  for (const [utc, expected] of [
+    ['1991-07-01T00:30:00.001Z', '1991-07-01T09:30:00.001'],
+    ['1991-01-01T01:30:00.001Z', '1991-01-01T09:30:00.001'],
+    ['2024-09-02T01:30:00.001Z', '2024-09-02T09:30:00.001'],
+  ]) assert.equal(projectWall({ basis: 'utc', unixMs: Date.parse(utc) }), expected);
+  const f = fixture();
+  f.provider.host.environment.executeWorker = async (_entry, payload) => ({ interface: payload.interface, observedAt: 0, akshareVersion: '1.19.1', rows: [{ ...row('02'), date: '1991-07-01' }] });
+  try {
+    const instant = Date.parse('1991-07-01T00:30:00Z');
+    const query = { ...f.query, range: { from: { basis: 'utc', unixMs: instant }, to: { basis: 'utc', unixMs: instant + 1 } } };
+    const included = await f.provider.queryBars(query, f.context);
+    assert.equal(included.data.page.items.length, 1); checkZone(included.data.page.items[0], authority);
+    assert.equal(included.data.page.items[0].openTime.value, '1991-07-01T09:30:00');
+    const excluded = await f.provider.queryBars({ ...query, range: { from: { basis: 'utc', unixMs: instant + 1 }, to: { basis: 'utc', unixMs: instant + 2 } } }, f.context);
+    assert.equal(excluded.data.page.items.length, 0);
   } finally { f.provider.dispose(); }
 });
 
