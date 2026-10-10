@@ -17,6 +17,6 @@ export function createTools(host) {
     define('configuration_update', '按用户要求修改回复语言、账户视图的精确连接/账户选择或已认证模型。偏好修改使用 configuration_read 返回的 preferences.version 作为 expected_version；不传凭据。模型切换不传 expected_version，queued 后等待本轮结束再确认。', {
       command_id: Type.String({ minLength: 16, maxLength: 128, pattern: '^[A-Za-z0-9_-]+$' }), target: Type.Union(['model', 'preferences'].map(Type.Literal)), expected_version: Type.Optional(Type.Integer({ minimum: 1 })), changes: Type.Union([model, preferences]),
     }, args => host.configuration.update(args)),
-    define('configuration_open', '打开现有模型设置窗口，供用户安全填写凭据或完成授权。', { dialog: Type.Literal('settings') }, args => host.configuration.open(args)),
+    define('configuration_open', '按用户要求打开设置，或处理无法复用的模型认证。后端环境和连接由对应插件主动发现、导入并验证，不用此工具让用户手填。', { dialog: Type.Literal('settings') }, args => host.configuration.open(args)),
   ];
 }
