@@ -3,7 +3,7 @@
   "title": "QMT 行情与股票账户",
   "description": "可选 Windows MiniQMT：A股日线、报价、股票账户、当日委托成交，以及显式授权的限价下单和撤单。既有配置优先；缺失依赖按需准备。",
   "apiVersion": "1",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "license": "MIT",
   "default_state": "discoverable",
   "entry": "index.js",

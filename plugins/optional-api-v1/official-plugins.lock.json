@@ -5,9 +5,9 @@
   "packages": [
     {
       "id": "sesame/akshare",
-      "version": "1.0.5",
+      "version": "1.0.6",
       "directory": "akshare",
-      "treeDigest": "sha256:e106e54b12477b9f6a29da1bf0f001c11eedf6642d8cf9afeeb5dfe5050ff871",
+      "treeDigest": "sha256:c302954cd0b81bd6de67fb35b81259c7226f7880046bfef30b7c07c45a1d4f06",
       "files": [
         {
           "path": "LICENSE",
@@ -16,8 +16,8 @@
         },
         {
           "path": "README.md",
-          "sha256": "bfa71f22568d2c606d7bde270207573e5a0e33fc6b650b1c46249e0612c9a7c7",
-          "bytes": 4158
+          "sha256": "30e962375c11988b139ed37b26554167c9636448a442821156baf9f70399ea25",
+          "bytes": 4016
         },
         {
           "path": "VALIDATION.md",
@@ -36,12 +36,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "e3d7fc8c191bf14833872193b466733f8c4ed867cef1870cabbd13ba4bd14d3b",
+          "sha256": "b55401e7bd448c84a8cf297982c6cd8696d9bc7c098d64daa290662550d04030",
           "bytes": 120
         },
         {
           "path": "plugin.json",
-          "sha256": "bcc1101c79104965e397582efd16f3cf01d8edf4e9bd469b24aeceb6b3bd0911",
+          "sha256": "0d61bba910c38f8b7a7f59cb33f621277906797f28c658410e22bce2adcd826c",
           "bytes": 808
         },
         {
@@ -88,9 +88,9 @@
     },
     {
       "id": "sesame/backtrader",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "directory": "backtrader",
-      "treeDigest": "sha256:dbac642cc4b338b1d38596a44159d73acd9d62ec4f8c0869545fb96e8ca8919c",
+      "treeDigest": "sha256:d74df2494ad49b9cafb85d84463b36e432e4962900f5557609b86b360da94c3a",
       "files": [
         {
           "path": "LICENSE",
@@ -104,8 +104,8 @@
         },
         {
           "path": "README.md",
-          "sha256": "07677204834bf05758e95a422d3140908d5c462a53afd9dca0ce54eaa4bde36c",
-          "bytes": 2789
+          "sha256": "bb9a375e861cabad9dd5f1859259cec3abf7fd4869a21dce19fa2af548df74f2",
+          "bytes": 2732
         },
         {
           "path": "environment.js",
@@ -119,12 +119,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "5180c871f17020961ef9469457bf9f98ba9cb0111540adb9482c95bbc1d914bb",
+          "sha256": "62ee8a0cb8ef676049ae3b01a55b6e72bc50c70ff02b62efb556631c062552af",
           "bytes": 136
         },
         {
           "path": "plugin.json",
-          "sha256": "7997833f3ff7c4c181d6525b06893f574286e6f88dd086fa1e5a2b63113bd9d5",
+          "sha256": "d03267239651a2a81769a5406ece007285550e97ac3531436c4c924a418afef2",
           "bytes": 696
         },
         {
@@ -224,9 +224,9 @@
     },
     {
       "id": "sesame/ccxt",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "directory": "ccxt",
-      "treeDigest": "sha256:547cfc07e72dd6ee7bcdfe1ce860dc7a8797272126eb25cda109bfa86d046301",
+      "treeDigest": "sha256:ba29b5dfcc1e398303587f79d1ca528ffff4273ddc264cca9296b9e203fec565",
       "files": [
         {
           "path": "LICENSE",
@@ -240,8 +240,8 @@
         },
         {
           "path": "README.md",
-          "sha256": "489b0f9a499b09ff0f9ac93fd78485f5d2242f14d3b00e200878b63adc044214",
-          "bytes": 3452
+          "sha256": "db4e380e69ffdea145c5d9a7f636acef55b0c92fd3dcb9dba49b2ccdf7f7ac1b",
+          "bytes": 3395
         },
         {
           "path": "VALIDATION.md",
@@ -265,12 +265,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "ad417f77277c4c7c90c4caa9c94e479e8335aba9a511810f25a38e8d9e8d159b",
+          "sha256": "970d59b011b7720dd3763feebc33f0ffd6c9efbee1b5339db6c204d2a15b94ef",
           "bytes": 117
         },
         {
           "path": "plugin.json",
-          "sha256": "42c9268335c4342042b58c6922c7ff91ba93e89a632c20b819860eb9ba74f498",
+          "sha256": "05a8cc719f81ade920b2b482ad1e30dd068344256910b2048fc7ab0fa475185f",
           "bytes": 691
         },
         {
@@ -1557,9 +1557,9 @@
     },
     {
       "id": "sesame/qmt",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "directory": "qmt",
-      "treeDigest": "sha256:e4b3a67b4151149cd915cba7c56c5415145ffc72d3a7ad7fedd6a5716cc50eba",
+      "treeDigest": "sha256:0d3889e4f5efbe4403bb646da42c29cecf9ed287769c39c2c8c32c26bc4bd291",
       "files": [
         {
           "path": "LICENSE",
@@ -1568,13 +1568,13 @@
         },
         {
           "path": "README.md",
-          "sha256": "f05fcc761fadd8024bd62c45f958bd2284cd92e5b03f885e50e7a88400e95656",
-          "bytes": 5500
+          "sha256": "c54a6b068503000d95175329339c8c5c28ad79349c0ada6e56776f1588cb443a",
+          "bytes": 5313
         },
         {
           "path": "VALIDATION.md",
-          "sha256": "1e99c4d27fed99dc25d44998b40bacd1865fdd0356783ea53f823309ff9aa383",
-          "bytes": 4187
+          "sha256": "3570d3257d374f8f1f505f5ab65fe2cf92ff13b1afa8de733da0caeccb8144b1",
+          "bytes": 4088
         },
         {
           "path": "bridge.py",
@@ -1598,12 +1598,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "ec81795ce3de0ed604c6865dd793a0696aafabda225189e20ebac2d4f9bc8c5a",
+          "sha256": "16df2910545022cceb0c7a5a06c071ea6664115032b63d97ed88fce30f195580",
           "bytes": 137
         },
         {
           "path": "plugin.json",
-          "sha256": "8b78a9b522061e519d9008b35ba21d3d9cf6b7f090ab0ae264dfc0cb8ad05f30",
+          "sha256": "c0fff865f4ac45883b87f1ddc6da9a297d058d6ef258adecbdc204c3feecf0e9",
           "bytes": 983
         },
         {
@@ -1839,9 +1839,9 @@
     },
     {
       "id": "sesame/vnpy",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "directory": "vnpy",
-      "treeDigest": "sha256:0ff62c87069b648d0d42a97a859365451804cd7295a2a90827e528a254a3e9c3",
+      "treeDigest": "sha256:800da78ed64983a9914a80a9b8ee79dc38d74b1a70916f3fcebaefd4af334736",
       "files": [
         {
           "path": "LICENSE",
@@ -1860,8 +1860,8 @@
         },
         {
           "path": "README.md",
-          "sha256": "92ef97ba2408c90188b027e116c39e9702c7309e34d3b88ded99be01f2555b67",
-          "bytes": 5877
+          "sha256": "24704f849e1d9cca4a7e8c36e432e2337d6ee3b289eb404f9a8611ae9ed4b7b2",
+          "bytes": 5520
         },
         {
           "path": "VALIDATION.md",
@@ -1895,12 +1895,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "0901a548496a3a8f41a56ee6a96f294911705f80aba5204b7dd06f8d12d5e222",
+          "sha256": "f0e069f6def8ff174949c98c04fd2f1fe89ecd9914d633b8c562788d41e7eefc",
           "bytes": 98
         },
         {
           "path": "plugin.json",
-          "sha256": "769d0ab13e6c3d85204f3540348532b5f151480b3a44265ee99d31a3bd59337f",
+          "sha256": "35e2d62626cb2fc5cdaf9287c96b94505c4ca83ec747f9784dfbb27e64ccb823",
           "bytes": 779
         },
         {

@@ -1,8 +1,8 @@
-当前 API 1 正式最低目标为 Sesame 0.2.0，开发范围 engines.sesame 为 >=0.2.0-0；宿主必须通过正式兼容性校验。默认仅 9 个通用包，其他包需要安装后才能 plugin_load。先区别未安装、未加载、disabled、缺依赖与实际激活失败，不能用默认包身份推断可选包拥有旧宿主迁移权限。
+宿主必须按插件清单的 engines.sesame 通过兼容性校验。默认仅 9 个通用包，其他包需要安装后才能 plugin_load。先区别未安装、未加载、disabled、缺依赖与实际激活失败，不能用默认包身份推断可选包拥有旧宿主迁移权限。
 
 插件有三种策略：默认挂载自动进入当前会话；可发现只提供元数据，plugin_load 后才获得提示词、工具与 skill；不可使用不能发现、加载或调用。需要额外能力先 plugin_discover，再按需 plugin_load；plugin_load 会立即刷新当前 Pi 会话，本轮即可继续调用新工具。先用 plugin_read 阅读采用流程的 skill 正文，不把尚未调用的工具声称为已经验证。
 
-用户给出官方或可选插件精确名时，先 plugin_catalog 查询 https://raw.githubusercontent.com/KDZZZZZZ/sesame/main/plugins/api-v1/catalog.json。统一目录固定已发布 development release、源提交、每文件与整包摘要，包含原生包和四个标准MCP包；只适用于匹配的 Plugin API 1 宿主，官网稳定0.1.4目录另行维护。自动静态检查、具名Agent审阅记录与人类批准分开，不能把未记录人工批准说成安全认证。
+用户给出官方或可选插件精确名时，先 plugin_catalog 查询 https://raw.githubusercontent.com/KDZZZZZZ/sesame/main/plugins/api-v1/catalog.json。统一目录固定发布归档、源提交、每文件与整包摘要，包含原生包和标准 MCP 包；只适用于兼容的 Plugin API 1 宿主。自动静态检查、具名Agent审阅记录与人类批准分开，不能把未记录人工批准说成安全认证。
 
 缺失包以精确 plugin_id、返回的 catalog_digest 与稳定 command_id 调 plugin_install_catalog，默认 action:install。已有同版本同摘要会明确返回 already-installed，不重测或覆盖；已有不同版本不能悄悄安装替换。先 plugin_inspect 获取当前 digest，再按用户更新目标显式传 action:update、expected_digest。工具会固定下载→每文件和tree校验→正式 plugin_test→plugin_update，宿主仍检查 expected_digest、更高版本、运行状态和原有迁移授权。原生检查不执行工厂；MCP测试会执行已固定的本地服务器和声明断言。返回后检查 runtime_status/diagnostics；允许加载时立即 plugin_load 刷新当前会话，禁用插件仍禁用。低版本请走显式 rollback，不改catalog绕过版本规则。一次操作重试沿用 command_id 和全部固定参数；目录变化先重新查询并核对目标与摘要；仍在当前用户授权范围内则使用新操作ID继续，只有目标、权限或计费等实质变化才询问。依赖准备按插件 skill 单独处理，先检查并复用已有配置和程序，仅为任务显式准备缺失依赖。
 

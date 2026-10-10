@@ -2,8 +2,6 @@
 
 `sesame/vnpy` is an optional API 1 plugin. It runs the real VeighNa CTA `BacktestingEngine` on a fixed `DataRef` and one Agent-authored `CtaTemplate` Python file. It preserves the exact Python source, parameters, bar input, environment inventory, process receipt, daily results, simulated orders and fills as immutable artifacts. It does not connect a live gateway, publish account state, or place broker orders.
 
-This development package requires Sesame API 1 native plugin support. It is an optional backend, not a default application dependency. Publication alone does not mean a released application supports installing it.
-
 ## Use
 
 1. Call `vnpy_environment` with `action: "inspect"` and an existing `python_path` when needed. Inspection performs a real import and engine construction; it does not download anything.
@@ -30,6 +28,6 @@ Existing compatible configured Python is reused read-only first. A new private v
 
 `vnpy_environment prepare` can return `ready:false`, a phase, downloaded byte/source/hash receipts, `retryable`, and the precise next action. Repeat with the same original base path to finish downloads and installation. After three unchanged failures or source/hash/resume integrity errors, stop automatic retries and diagnose/use existing dependencies. This is not a global install or a download on load. The complete pinned engine import and pip consistency checks still determine readiness.
 
-## Application compatibility
+## Environment setup
 
-Requires the Sesame API1 host targeting 0.2.0 (`>=0.2.0-0` permits its development previews). Stable 0.2.0 has not yet been released. Installation does not initialize dependencies or download them at startup. Inspect and reuse an existing configured environment first; explicitly prepare missing dependencies only when needed.
+Installation does not initialize dependencies or download them at startup. Inspect and reuse an existing configured environment first; explicitly prepare missing dependencies only when needed.

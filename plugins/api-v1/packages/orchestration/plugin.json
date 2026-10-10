@@ -2,7 +2,7 @@
   "id": "sesame/orchestration",
   "title": "会话协作与使用规范",
   "description": "主子Agent协作、成果交付和Sesame通用使用指南；按需安装具体后端。",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "default_state": "mounted",
   "tool_names": [
     "agent_delegate",

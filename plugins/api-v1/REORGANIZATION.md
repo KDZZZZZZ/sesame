@@ -1,14 +1,11 @@
-# 0.2 plugin distribution candidate
+# Plugin distribution
 
-This source proposal targets Sesame **0.2.0**, which has not been formally
-released. Every package declares `engines.sesame: ">=0.2.0-0"`, allowing matching
-0.2 development previews. This is the first explicit host-version contract for
-these reorganized packages; historical API 1 packages did not uniformly declare
-it. The host checks this range during formal inspection and installation. Native
-manifests use `engines`; standard MCP manifests use `extensions["bot.sesame"].engines`.
+The host checks each package's declared compatibility range during inspection
+and installation. Native manifests use `engines`; standard MCP manifests use
+`extensions["bot.sesame"].engines`.
 
-The application archive is actually built from nine default packages. Ten other
-packages have moved to a separate optional root and are discoverable only after
+The application archive is actually built from nine default packages. Optional backend and method
+packages live in a separate root and are discoverable only after
 installation. Default inclusion does not mount every tool: canvas/configuration
 remain discoverable, while the other seven core packages start mounted. Nothing
 here installs MT5, QMT, Python dependencies or a brokerage terminal automatically.
@@ -25,7 +22,7 @@ here installs MT5, QMT, Python dependencies or a brokerage terminal automaticall
 | market-data-parser | Keep 2.0.2 | Optional MCP | Python standard library. Canonical trusted package root fixes OS path aliases without allowing external symlink escapes. |
 | memory | Keep 2.0.1 | Default, mounted | Generic memory port; preserve source, applicability and uncertainty across tasks. |
 | mt5 | Keep 1.2.0 | Optional | User's authorized MT5/MetaEditor; private storage only, no legacy migration grant. Explicit native configuration discovery/import remains available. No automatic terminal installation/start or implicit connection import. |
-| orchestration | Merge user-guide into 2.1.0 | Default, mounted | Generic task ports; public self-contained guides now distinguish 0.2 preview, default tools, optional backends and native prerequisites. |
+| orchestration | Merge user-guide into 2.1.0 | Default, mounted | Generic task ports; self-contained guides cover default tools, optional backends and native prerequisites. |
 | plugin-manager | Keep 2.1.1 | Default, mounted | Fixed catalog/source hashes; formal test and explicit expected-digest update, same-version no-op, disabled-state preservation. Profile/engine metadata checked when present. |
 | quantskills-catalog | Keep 2.0.2 | Optional MCP | Python standard library; curated repository references remain references, not installed dependencies or trading approval. |
 | reports | Keep 2.0.2 | Default, mounted | Fixed report/DataRefs and read-only renderer. Original MIT editorial components, offline demo, exact-value table and visible demo provenance retained. |
@@ -73,19 +70,14 @@ release plan must name its `core` or `optional` profile. Only the thirteen exact
 profiles and retain their old build semantics; new releases cannot omit the
 profile. Prior archives and digests are not rewritten.
 
-`inventory.json` is an **unreleased preview**, generated from both source roots
-and reviewed explanatory policy. It contains no installation source commit,
-file list or package digest and must not be passed to the installer. The website
-can mirror it at an exact public commit, with its preview status visible.
+`inventory.json` describes the packages in both source roots. It contains no
+installation source commit, file list or package digest and must not be passed
+to the installer.
 
-The existing API 1 installation catalog continues to select actually published
-dev.12 and optional dev.4 bytes (22 historical entries) until the new 9+10 bundles
-are independently reviewed, gated and published. Then a separate metadata PR
-selects the two new immutable releases and regenerates all 19 entries from their
-exact source/lock/review records. Explicit update uses formal plugin_test and
-plugin_update with the installed expected digest. A same-version byte mismatch
-is rejected. No floating latest, candidate setup scripts or hidden upgrades.
+The API 1 installation catalog selects published archives with exact source,
+lock and review hashes. A separately reviewed metadata PR updates that selection
+after publication. Explicit updates use formal `plugin_test` and `plugin_update`
+with the installed expected digest. A same-version byte mismatch is rejected.
+No floating latest, candidate setup scripts or hidden upgrades.
 
-The stable `plugins/catalog.json` remains the 26-entry Sesame 0.1.4 historical
-catalog. It cannot load these native API 1 candidates. The website must present
-0.1.4 downloads and the unreleased 0.2 preview separately.
+The historical `plugins/catalog.json` remains separate and unchanged.
