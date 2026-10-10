@@ -30,7 +30,7 @@ window.report.track(initialize()).catch(error => {
 
 筛选、比较、图例开关、缩放和逐笔检查操作固定输入。异步交互也交给 report.track。给控件可访问名称，键盘与窄屏可用。重新生成 chart 容器前，reportKit.destroy(container) 释放旧图；SesameCharts.chart 同一目标自动替换旧图，离开页面时可调用返回句柄的 destroy()。
 
-可用 reportKit 的原版趋势/面积/柱形/横条/散点/热图；需要真实计数或选点联动时，把 SesameCharts 的 units/matrix/可选点图放在 custom 中，与原版叙事共存。长表和方法默认折叠，用户仍能展开核对全部细节。不要让所有数据表挤占结论区。
+可用 reportKit 的原版趋势/面积/柱形/横条/散点/热图；需要真实计数或选点联动时，把 SesameCharts 的 统计对照、分布、时序、结构和可选点图放在 custom 中，与原版叙事共存。长表和方法默认折叠，用户仍能展开核对全部细节。不要让所有数据表挤占结论区。
 
 Strategy 报告将真实策略、翻译、run、result 放入 report_publish.related，数值数据用 data 的固定引用。报告自己根据这些真实输入组织样本外表现、参数比较、权益、回撤与逐笔证据；不同后端可呈现各自数据。不存在隐式 MT5 backtest_ids 或自动注入的原生回测组件。没有完成回测时明确说明，不捏造收益。
 

@@ -1,4 +1,4 @@
-/* Sesame editorial charts 1.0.2 — MIT, Sesame contributors.
+/* Sesame editorial charts 1.1.0 — MIT, Sesame contributors.
  * Original implementation. No third-party chart runtime or network dependency. */
 (function (global) {
   'use strict';
@@ -12,8 +12,14 @@
   };
   const html = (name, className, text) => { const n = document.createElement(name); if (className) n.className = className; if (text !== undefined) n.textContent = String(text); return n; };
   const numeric = value => value === null || value === undefined || value === '' ? null : (typeof value === 'number' || typeof value === 'string' && /^-?(?:0|[1-9]\d*)(?:\.\d+)?$/.test(value)) && Number.isFinite(Number(value)) ? Number(value) : fail(`invalid numeric value ${String(value).slice(0,60)}`);
-  const scale = (domain, range) => { const [a,b] = domain, [x,y] = range; return value => x + (value-a)/(b-a || 1)*(y-x); };
-  const extent = values => { if (!values.length) return [0,1]; const min=Math.min(...values),max=Math.max(...values); return min===max?[min===0?0:min-Math.abs(min)*.05,max===0?1:max+Math.abs(max)*.05]:[min,max]; };
+  const scale = (domain, range) => {
+    const [a,b] = domain, [x,y] = range, span=b-a;
+    if(a===b)return ()=> (x+y)/2;
+    if(Number.isFinite(span))return value=>x+(value-a)/span*(y-x);
+    const magnitude=Math.max(Math.abs(a),Math.abs(b));
+    return value=>x+(value/magnitude-a/magnitude)/(b/magnitude-a/magnitude)*(y-x);
+  };
+  const extent = values => { if (!values.length) return [0,1]; const min=Math.min(...values),max=Math.max(...values); return min===max?[min===0?0:Math.max(-Number.MAX_VALUE,min-Math.abs(min)*.05),max===0?1:Math.min(Number.MAX_VALUE,max+Math.abs(max)*.05)]:[min,max]; };
   const format = (value, unit = '') => value === null || value === undefined ? '—' : `${new Intl.NumberFormat(document.documentElement.lang || 'en',{maximumFractionDigits:3}).format(value)}${unit ? ` ${unit}` : ''}`;
   const exactUnits=(value,unit)=>{
     const parts=value=>{const match=String(value).match(/^(-?)(\d+)(?:\.(\d*))?(?:e([+-]?\d+))?$/i);if(!match)fail('invalid unit count');return {coefficient:BigInt((match[1]||'')+match[2]+(match[3]||'')),scale:(match[3]||'').length-Number(match[4]||0)};};
@@ -22,20 +28,32 @@
     const count=numerator/denominator;if(count>1000n)fail('unit chart exceeds 1,000 units; choose and label a larger exact unitValue');return Number(count);
   };
   const observers = new WeakMap();
+  const builtins=['line','bar','scatter','matrix','units'], renderers=new Map();
+  function register(kind,renderer){
+    if(typeof kind!=='string'||!/^[-a-z][a-z0-9-]*$/.test(kind)||typeof renderer!=='function')fail('a chart kind and renderer are required');
+    if(builtins.includes(kind)||renderers.has(kind))fail(`chart kind already registered: ${kind}`);
+    renderers.set(kind,renderer);
+  }
+  const kinds=()=>[...builtins,...renderers.keys()];
   function chart(target, spec) {
     if (typeof target === 'string') target=document.querySelector(target);
-    if (!target || !Array.isArray(spec.rows)) fail('target and rows are required');
+    if (!target || !spec || !Array.isArray(spec.rows)) fail('target and rows are required');
+    if(spec.rows.some(row=>!row||typeof row!=='object'||Array.isArray(row)))fail('rows must be objects');
     if (spec.rows.length>2500) fail('more than 2,500 marks; aggregate or filter the fixed data first');
-    if (!['line','bar','scatter','matrix','units'].includes(spec.kind)) fail('unknown chart kind');
+    if (!kinds().includes(spec.kind)) fail('unknown chart kind');
+    if(spec.height!==undefined&&(!Number.isFinite(spec.height)||spec.height<120||spec.height>12000))fail('height must be between 120 and 12,000 pixels');
     observers.get(target)?.disconnect();
-    const state={observer:null,pendingFrame:null,svg:null,measured:0};
-    state.disconnect=()=>{state.observer?.disconnect();if(state.pendingFrame!==null){global.cancelAnimationFrame(state.pendingFrame);state.pendingFrame=null;}};
+    const state={observer:null,pendingFrame:null,svg:null,measured:0,cleanups:[]};
+    state.disposeRender=()=>{for(const cleanup of state.cleanups.splice(0))cleanup();};
+    state.disconnect=()=>{state.observer?.disconnect();if(state.pendingFrame!==null){global.cancelAnimationFrame(state.pendingFrame);state.pendingFrame=null;}state.disposeRender();};
     state.handle={get svg(){return state.svg;},destroy:()=>{if(observers.get(target)!==state)return;state.disconnect();observers.delete(target);target.replaceChildren();}};
     observers.set(target,state);
     try{return drawChart(target,spec,state);}catch(error){state.disconnect();observers.delete(target);throw error;}
   }
   function drawChart(target,spec,state){
-    const measured=target.clientWidth,rows=spec.rows,width=Math.max(280,measured || 760),height=spec.height || Math.min(320,Math.max(240,width*.4)),pad={left:65,right:24,top:25,bottom:52};
+    state.disposeRender();
+    const measured=target.clientWidth,rows=spec.rows,width=Math.max(280,measured || 760),pad={left:65,right:24,top:25,bottom:52};
+    let height=spec.height || Math.min(320,Math.max(240,width*.4));
     const svg=node('svg',{viewBox:`0 0 ${width} ${height}`,role:'img','aria-label':spec.title || spec.kind}),frame=html('div','sc-frame'),tooltip=html('div','sc-tooltip');
     tooltip.setAttribute('role','status');tooltip.hidden=true;frame.append(svg,tooltip);target.replaceChildren(frame);
     const complete=()=>{
@@ -54,18 +72,18 @@
       state.observer.observe(target);
       return state.handle;
     };
-    if (!rows.length){svg.append(node('text',{x:width/2,y:height/2,'text-anchor':'middle',class:'sc-label'},spec.emptyLabel || 'No observations'));return complete();}
-    const missing=rows.filter(r=>numeric(r[spec.value || spec.y])===null||(spec.kind==='scatter'&&numeric(r[spec.x])===null)).length;
+    if (!rows.length&&!(renderers.has(spec.kind)&&Array.isArray(spec.nodes)&&spec.nodes.length)){svg.append(node('text',{x:width/2,y:height/2,'text-anchor':'middle',class:'sc-label'},spec.emptyLabel || 'No observations'));return complete();}
     const label = row => `${row[spec.x] ?? row[spec.label] ?? ''}${spec.kind==='matrix'?` / ${row[spec.y]}`:''}: ${row[spec.value || spec.y] ?? 'missing'}${spec.unit ? ` ${spec.unit}` : ''}`;
-    const mark=(n,row,index)=>{
-      const title=node('title',{},label(row));n.append(title);n.setAttribute('tabindex','0');n.setAttribute('role','button');n.setAttribute('aria-label',label(row));n.setAttribute('data-row-index',index);
-      const show=()=>{tooltip.textContent=label(row);tooltip.hidden=false;};
+    const mark=(n,row,index,labelOverride)=>{
+      const text=labelOverride===undefined?label(row):String(labelOverride);
+      const title=node('title',{},text);n.append(title);n.setAttribute('tabindex','0');n.setAttribute('role','button');n.setAttribute('aria-label',text);n.setAttribute('data-row-index',index);
+      const show=()=>{tooltip.textContent=text;tooltip.hidden=false;};
       const select=()=>{svg.querySelectorAll('.sc-selected').forEach(el=>el.classList.remove('sc-selected'));n.classList.add('sc-selected');show();target.dispatchEvent(new CustomEvent('chartselect',{bubbles:true,detail:{row,index}}));spec.onSelect?.(row,index);};
       n.addEventListener('pointerenter',show);n.addEventListener('focus',show);n.addEventListener('pointerleave',()=>{if(document.activeElement!==n)tooltip.hidden=true;});n.addEventListener('blur',()=>tooltip.hidden=true);n.addEventListener('click',select);n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select();}});svg.append(n);return n;
     };
     function yAxis(domain) {
       const sy=scale(domain,[height-pad.bottom,pad.top]);
-      for(let i=0;i<=4;i++){const value=domain[0]+(domain[1]-domain[0])*i/4,y=sy(value);svg.append(node('line',{x1:pad.left,x2:width-pad.right,y1:y,y2:y,class:'sc-grid'}),node('text',{x:pad.left-10,y:y+4,'text-anchor':'end',class:'sc-axis'},format(value)));}
+      for(let i=0;i<=4;i++){const t=i/4,value=domain[0]*(1-t)+domain[1]*t,y=sy(value);svg.append(node('line',{x1:pad.left,x2:width-pad.right,y1:y,y2:y,class:'sc-grid'}),node('text',{x:pad.left-10,y:y+4,'text-anchor':'end',class:'sc-axis'},format(value)));}
       if(spec.unit)svg.append(node('text',{x:pad.left,y:12,class:'sc-axis'},spec.unit));
       return sy;
     }
@@ -73,6 +91,16 @@
       const sx=scale([0,Math.max(values.length-1,1)],[pad.left,width-pad.right]);
       const stride=Math.max(1,Math.ceil(values.length/Math.max(2,Math.floor((width-pad.left-pad.right)/70))));values.forEach((value,i)=>{if((i%stride===0&&(i===0||sx(values.length-1)-sx(i)>=65))||i===values.length-1)svg.append(node('text',{x:sx(i),y:height-16,'text-anchor':i===0?'start':i===values.length-1?'end':'middle',class:'sc-axis'},String(value).slice(0,24)));});return sx;
     }
+    if(renderers.has(spec.kind)){
+      const context={target,spec,rows,width,get height(){return height;},pad,svg,frame,node,html,numeric,extent,scale,format,mark,yAxis,categories,
+        note:text=>frame.append(html('p','sc-missing-note',text)),
+        setHeight:value=>{if(!Number.isFinite(value)||value<120||value>12000)fail('chart height is outside the supported range');height=value;svg.setAttribute('viewBox',`0 0 ${width} ${height}`);},
+        onCleanup:fn=>{if(typeof fn!=='function')fail('cleanup must be a function');state.cleanups.push(fn);}
+      };
+      renderers.get(spec.kind)(context);
+      return complete();
+    }
+    const missing=rows.filter(r=>numeric(r[spec.value || spec.y])===null||(spec.kind==='scatter'&&numeric(r[spec.x])===null)).length;
     if(spec.kind==='line'){
       const ys=rows.map(r=>numeric(r[spec.y])),domain=extent(ys.filter(v=>v!==null)),sy=yAxis(domain),sx=categories(rows.map(r=>r[spec.x]));
       let path='',drawing=false;ys.forEach((y,i)=>{if(y===null){drawing=false;return;}path+=`${drawing?'L':'M'}${sx(i)},${sy(y)} `;drawing=true;});svg.append(node('path',{d:path,fill:'none',class:'sc-line'}));
@@ -114,11 +142,26 @@
     return complete();
   }
   function table(target,rows,columns,{limit=100}={}){
+    if(!Number.isInteger(limit)||limit<1||limit>1000)fail('table limit must be between 1 and 1,000');
     if(typeof target==='string')target=document.querySelector(target);const wrap=html('div','sc-table-wrap'),t=html('table','sc-table'),head=html('thead'),tr=html('tr');
-    for(const c of columns)tr.append(html('th',null,typeof c==='string'?c:c.title));head.append(tr);t.append(head);const body=html('tbody');
-    rows.slice(0,limit).forEach((row,i)=>{const tr=html('tr');tr.dataset.rowIndex=i;for(const c of columns){const key=typeof c==='string'?c:c.key;tr.append(html('td',null,row[key]===null||row[key]===undefined?'—':row[key]));}body.append(tr);});t.append(body);wrap.append(t);target.replaceChildren(wrap);
-    if(rows.length>limit)target.append(html('p','sc-missing-note',`${limit} / ${rows.length} rows shown. Filter to inspect more.`));
-    return {select:index=>{body.querySelectorAll('tr').forEach((row,i)=>row.classList.toggle('sc-row-selected',i===index));},destroy:()=>target.replaceChildren()};
+    for(const c of columns)tr.append(html('th',null,typeof c==='string'?c:c.title));head.append(tr);t.append(head);const body=html('tbody'),note=html('p','sc-missing-note');
+    let start=0;
+    const render=()=>{
+      body.replaceChildren();
+      rows.slice(start,start+limit).forEach((row,i)=>{const tr=html('tr');tr.dataset.rowIndex=start+i;for(const c of columns){const key=typeof c==='string'?c:c.key,value=row[key];tr.append(html('td',null,value===null||value===undefined?'—':typeof value==='object'?JSON.stringify(value):value));}body.append(tr);});
+      note.textContent=`${start+1}–${Math.min(start+limit,rows.length)} / ${rows.length} rows shown. Filter or select a chart mark to inspect more.`;note.hidden=rows.length<=limit;
+    };
+    render();t.append(body);wrap.append(t);target.replaceChildren(wrap,note);
+    return {select:index=>{
+      if(Number.isInteger(index)&&index>=0&&index<rows.length&&(index<start||index>=start+limit)){start=Math.floor(index/limit)*limit;render();}
+      body.querySelectorAll('tr').forEach(row=>row.classList.toggle('sc-row-selected',Number(row.dataset.rowIndex)===index));
+    },destroy:()=>target.replaceChildren()};
+  }
+  function destroy(target){
+    if(typeof target==='string')target=document.querySelector(target);
+    if(!target)return;
+    const hosts=[target,...Array.from(target.querySelectorAll('.sc-frame'),frame=>frame.parentElement)];
+    for(const host of new Set(hosts))observers.get(host)?.handle.destroy();
   }
   async function readRows(dataId,{maxRows=50000,limit=1000}={}){
     if(!global.report || typeof global.report.readData!=='function')fail('the report/1 read-only data bridge is unavailable');
@@ -126,5 +169,5 @@
     do{const result=await global.report.readData(dataId,{...(cursor?{cursor}:{}),limit});if(!Array.isArray(result.rows))fail('invalid data page');rows.push(...result.rows);if(rows.length>maxRows)fail('data exceeds the declared row budget; filter or aggregate before publishing');cursor=result.page?.nextCursor;if(cursor){if(seen.has(cursor))fail('repeated page cursor');seen.add(cursor);}}while(cursor);
     return rows;
   }
-  Object.defineProperty(global,'SesameCharts',{value:Object.freeze({version:'1.0.2',chart,table,readRows,format,numeric}),configurable:false});
+  Object.defineProperty(global,'SesameCharts',{value:Object.freeze({version:'1.1.0',chart,table,readRows,format,numeric,register,kinds,destroy}),configurable:false});
 })(window);

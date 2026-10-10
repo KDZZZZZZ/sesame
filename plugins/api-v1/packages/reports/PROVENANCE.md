@@ -1,6 +1,6 @@
 # Sesame report components
 
-reportKit, the report stylesheet, Sesame Charts 1.0.2, the scaffolds and the
+reportKit, the report stylesheet, Sesame Charts 1.1.0, the scaffolds and the
 integration tools in this directory are Sesame code, distributed under the local
 MIT license. The reportKit visual layout and writing/design guidance are restored
 from Sesame's original pre-refactor reports (0.1.4), rather than replacing that
@@ -38,3 +38,5 @@ coordinates use JavaScript numbers while source tables retain exact strings.
 Future use of upstream code must retain its actual terms and required notices,
 or obtain a suitable additional license. Merely being publicly readable or free
 of charge does not make that upstream code permissively licensed.
+
+The optional independently authored collection now also includes waterfall, paired comparisons, strip plots, supplied-bin histograms, supplied-statistic boxes, supplied-grid ridgelines/violins, calendars, parallel coordinates, rank trajectories, lifecycle events, exposure treemaps, identified record threads, conserved flows and circular/stable-force network layouts. The statistics, temporal and structural modules contain no copied upstream code. All gallery input is explicitly fictional; financial estimates are not calculated inside these renderers. Selection and filtering preserve the identity of fixed source rows.

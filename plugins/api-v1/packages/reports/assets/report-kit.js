@@ -549,6 +549,7 @@
 
   function destroy(target) {
     const root = resolve(target);
+    window.SesameCharts?.destroy(root);
     for (const figure of [root, ...root.querySelectorAll('.kit-chart')]) { chartInstances.get(figure)?.(); chartInstances.delete(figure); }
   }
 

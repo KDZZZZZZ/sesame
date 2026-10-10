@@ -1,9 +1,9 @@
 ---
 name: report-design
-description: 延续 Sesame 原版 reportKit 的结论、指标、图表章节与折叠方法，按问题选图，并按需补充单位点阵和下钻交互；编写或更新研究、策略报告时使用。
+description: 延续 Sesame 原版 reportKit 的结论、指标、图表章节与折叠方法，按问题选择统计对照、分布、时序、结构图并下钻真实记录；编写或更新研究、策略报告时使用。
 ---
 
-默认从 `report_template` 起步，保留原版 reportKit 的字体、留白、无框图表和章节层级，再按研究问题编辑 outline。模板会将 `assets/editorial.css`、`assets/report-kit.js` 和可选的 `assets/editorial-charts.js` 内联，报告可独立运行。宿主提供数据桥与主题；reportKit 是本插件的组件，不是宿主自动注入的全局能力。从零写 HTML 时可复用这些资产并随成果打包。
+默认从 `report_template` 起步，保留原版 reportKit 的字体、留白、无框图表和章节层级，再按研究问题编辑 outline。模板会将 `assets/editorial.css`、`assets/report-kit.js`、`assets/editorial-charts.js` 及三个可选图表模块内联，报告可独立运行。宿主提供数据桥与主题；reportKit 是本插件的组件，不是宿主自动注入的全局能力。从零写 HTML 时可复用这些资产并随成果打包。
 
 ## 页面骨架
 
@@ -82,7 +82,28 @@ block 类型：
 } }
 ```
 
-可交互实例见 `examples/editorial-demo.html`。它只是虚构样本，不能用于金融结论。更多图型按数据问题选择并自行实现；不为了增加花样重复画同一组证据。Lieflat 上游当前为 PolyForm Noncommercial，不能把受限模板或资产直接拷入 MIT 成果。
+## 按研究问题选择补充图形
+
+| 要回答的问题 | `kind` | 字段和数据要求 |
+|---|---|---|
+| 净收益被哪些成本改变 | `waterfall` | [统计对照](statistical-charts.md)：起点、增减、终点必须对账 |
+| 优化前后、样本内外差在哪 | `dumbbell` | 同口径、同单位的一对值 |
+| 哪些交易撑起收益或造成尾部损失 | `strip`、`histogram`、`boxplot` | 逐笔原值或已登记的分箱、分位统计 |
+| 市况或因子组的分布怎么不同 | `ridgeline`、`violin` | 已登记密度网格、样本数与方法；不在报告估计 KDE |
+| 亏损、休市和缺数据发生在哪天 | `calendar` | [时序比较](temporal-charts.md)：日期、明确时区与覆盖状态 |
+| 如何同时比较参数、收益、回撤、换手 | `parallel` | 3–6 个维度，按真实字段筛选，无隐藏综合评分 |
+| 排名是否稳定 | `bump` | 固定比较全集、并列规则、缺失保留断线 |
+| 策略或判断准则何时验证、停用、恢复 | `lifecycle` | 真实状态事件、版本 ID 和证据链接 |
+| 仓位集中在哪里 | `treemap` | [结构与关系](structural-charts.md)：非负敞口，层级不重复计入 |
+| 一笔信号怎样走到订单和成交 | `threads` | 有关联 ID 的真实记录链，缺项不补造 |
+| 多少信号通过过滤并成交 | `flow` | 同批次流向，显式起终点，数量守恒 |
+| 资产或因子怎样相连 | `network-circular`、`network-force` | 真实节点和边；布局距离不代表相关强度或因果 |
+
+使用 `report_template(kind, chart_options)` 可直接生成上述图形的可编辑骨架。`chart_options` 只放字段映射、统计方法说明及显示选项；主数据自动来自 `data_id`。关系图的节点另有固定绑定时，用 `chart_data:[{property:'nodes',data_id:'nodes-binding'}]`，并把两个 binding 都传给 `report_publish.data`。高级交互继续在 `custom` 中直接调用 `SesameCharts.chart`，不要求重写页面或改变宿主协议。
+
+各图支持鼠标、键盘选中原始记录；`onSelect(row,index)` 的节点选择可能来自另一个绑定，此时 index 为 -1，应按 ID 或直接展示 row，不能误选第一个表格行。`parallel` 的 `onFilter(rows,indices)` 用于联动明细。模板搜索只筛选明细，不丢弃瀑布步骤或资金流向，保证图的含义完整。一次最多呈现 2,500 行；过大数据先保留来源地聚合或分组展示。
+
+`reportKit.destroy(container)` 会同时释放其中的可选图表；独立使用时也可调用 `SesameCharts.destroy(container)` 或返回句柄的 `destroy()`。当前组件列表可读 `SesameCharts.kinds()`。可读实例见 `examples/editorial-demo.html` 和 `examples/chart-gallery.md` 图集索引；插件还包含可在浏览器打开的完整离线演示 `examples/chart-gallery.html`。样本均明确为虚构演示，不能用于金融结论。不为了增加花样重复画同一组证据；仍可自主实现适合问题的新表达。Lieflat 上游当前为 PolyForm Noncommercial，不能把受限模板或资产直接拷入 MIT 成果。
 
 ## 视觉与本地化
 

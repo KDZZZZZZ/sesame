@@ -5,6 +5,7 @@
 const config={{CONFIG}};
 async function initialize(){
  const rows=await reportKit.rows(config.dataId);
+ const chartData=Object.fromEntries(await Promise.all(config.chartData.map(async item=>[item.property,await reportKit.rows(item.data_id)])));
  // This outline is editable. Add evidence, metrics, comparisons and custom interactions
  // to suit the question; the reusable components supply the familiar Sesame styling.
  reportKit.render('#report',{
@@ -20,17 +21,31 @@ async function initialize(){
    const filter=document.createElement('input');filter.id='filter';filter.type='search';filter.placeholder=config.labels.placeholder;label.append(filter);toolbar.append(label);
    const count=document.createElement('span');count.id='row-count';count.className='report-source';count.setAttribute('role','status');toolbar.append(count);details.append(toolbar);
    const table=document.createElement('div');table.id='table';details.append(table);element.append(details);
-   function render(){
-    const q=filter.value.trim().toLowerCase(),visible=rows.filter(row=>!q||Object.values(row).some(value=>String(value??'').toLowerCase().includes(q)));
+   const selected=document.createElement('div');selected.className='report-selected-record';selected.hidden=true;details.append(selected);
+   let candidates=rows,visible=rows,grid;
+   function renderTable(){
+    const q=filter.value.trim().toLowerCase();visible=candidates.filter(row=>!q||Object.values(row).some(value=>String(value??'').toLowerCase().includes(q)));
     count.textContent=`${visible.length} / ${rows.length}`;
-    const grid=SesameCharts.table(table,visible,config.columns);
-    reportKit.destroy(chart);chart.replaceChildren();
-    if(['matrix','units'].includes(config.chart.kind)) SesameCharts.chart(chart,{...config.chart,rows:visible,onSelect:(_,index)=>{details.open=true;grid.select(index);}});
-    else reportKit.chart(chart,{...config.chart,data:visible,caption:config.chart.unit,tone:config.chart.kind==='bar'?'signed':undefined,onSelect:(_,index)=>{details.open=true;grid.select(index);}});
+    grid=SesameCharts.table(table,visible,config.columns);
    }
-   filter.addEventListener('input',render);render();
+   function select(row){
+    details.open=true;selected.hidden=true;
+    if(candidates.includes(row)){
+     if(!visible.includes(row)){filter.value='';renderTable();}
+     grid.select(visible.indexOf(row));
+    }else{selected.hidden=false;SesameCharts.table(selected,[row],Object.keys(row));grid.select(-1);}
+   }
+   filter.addEventListener('input',renderTable);renderTable();
+   // Search affects the inspector only. A partial set of flow links, calendar
+   // observations or waterfall steps would change the meaning of the chart.
+   const options={...config.chart,...chartData,onSelect:select};
+   if(['line','bar','scatter'].includes(config.chart.kind)) reportKit.chart(chart,{...options,data:rows,caption:config.chart.unit,tone:config.chart.kind==='bar'?'signed':undefined});
+   else{
+    const header=document.createElement('div');header.className='kit-chart-head';const title=document.createElement('strong');title.textContent=config.chart.title;header.append(title);element.insertBefore(header,chart);
+    SesameCharts.chart(chart,{...options,rows,onFilter:filtered=>{candidates=filtered;renderTable();}});
+   }
   }}]}],
-  method:{steps:[config.sourceNote],sources:[{label:config.labels.binding,value:config.dataId}]}
+  method:{steps:[config.sourceNote],sources:[{label:config.labels.binding,value:[config.dataId,...config.chartData.map(item=>item.data_id)].join(', ')}]}
  });
 }
 window.report.track(initialize()).catch(error=>{const panel=document.getElementById('report');panel.className='status-error';panel.textContent=error.message;});
