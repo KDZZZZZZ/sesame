@@ -57,15 +57,21 @@ export function createTools(host) {
       const ref = host.artifacts.publish({ operationId: args.operation_id, manifest: { kind: 'data', schemaVersion: '1.0.0', content: { format: 'json-rows', path: 'rows.json', rowCount: dataset.rows.length, columns, provenance }, dependencies: pinned, blobs: [{ ...blob, path: 'rows.json', mediaType: 'application/json' }], provenance } });
       return { ref, rowCount: dataset.rows.length, columns, provenance };
     }),
-    define('report_template', 'Write an editable, self-contained report/1 HTML template with original offline SVG charts, row filtering and linked exact-value tables. Reads a named fixed data binding when the report opens.', {
+    define('report_template', 'Write an editable report/1 HTML scaffold using Sesame’s original reportKit typography, conclusion, numbered evidence sections, charts and folded methods. Optional unit and matrix charts supplement the same style. Reads a named fixed data binding.', {
       output_path: string('Workspace HTML path to create'), title: string('Descriptive report title'), summary: string('Main finding supported by the bound data'), data_id: string('Exact binding ID to include in report_publish.data'), chart_title: string('Chart title with scope and period'), takeaway: string('The supported point this chart makes'), source_note: string('Source, observation period, units and material limitations'),
       kind: Type.Union(['line', 'bar', 'scatter', 'matrix', 'units'].map(value => Type.Literal(value))), x: string('Category or x-coordinate column'), y: string('Value or matrix row column'), value: optional('Matrix numeric value column'), unit: string('Displayed measurement unit'), unit_value: Type.Optional(Type.Number({ exclusiveMinimum: 0 })), columns: Type.Array(string('Exact column name in the data'), { minItems: 1, maxItems: 32 }), locale: Type.Optional(Type.Union([Type.Literal('en'), Type.Literal('zh-CN')])), demo: Type.Optional(Type.Boolean()),
     }, async (args, signal) => {
       fail(args.kind !== 'matrix' || args.value, 'Matrix charts require a value column');
-      const zh = args.locale === 'zh-CN', config = { dataId: args.data_id, columns: args.columns, chart: { kind: args.kind, x: args.x, y: args.y, ...(args.value ? { value: args.value } : {}), unit: args.unit, ...(args.unit_value ? { unitValue: args.unit_value } : {}), title: args.chart_title } };
-      const values = { LOCALE: args.locale ?? 'en', TITLE: args.title, SUMMARY: args.summary, LABEL: args.demo ? (zh ? '演示样本 · 非实盘结果' : 'DEMO SAMPLE · NOT LIVE RESULTS') : (zh ? '研究笔记' : 'RESEARCH BRIEF'), FILTER_LABEL: zh ? '筛选明细' : 'Filter rows', FILTER_PLACEHOLDER: zh ? '搜索固定数据' : 'Search the frozen data', CHART_TITLE: args.chart_title, TAKEAWAY: args.takeaway, TABLE_TITLE: zh ? '原始数值' : 'Exact values', SOURCE_NOTE: args.source_note };
+      const zh = args.locale === 'zh-CN';
+      const config = {
+        dataId: args.data_id, title: args.title, summary: args.summary, takeaway: args.takeaway, sourceNote: args.source_note,
+        label: args.demo ? (zh ? '演示样本 · 非实盘结果' : 'DEMO SAMPLE · NOT LIVE RESULTS') : (zh ? '研究笔记' : 'RESEARCH BRIEF'),
+        labels: zh ? { sample: '样本', unit: '单位', evidence: '证据', table: '查看明细', filter: '筛选', placeholder: '搜索固定数据', binding: '固定数据' } : { sample: 'Sample', unit: 'Unit', evidence: 'Evidence', table: 'Inspect the values', filter: 'Filter', placeholder: 'Search the frozen data', binding: 'Fixed data' },
+        columns: args.columns, chart: { kind: args.kind, x: args.x, y: args.y, ...(args.value ? { value: args.value } : {}), unit: args.unit, ...(args.unit_value ? { unitValue: args.unit_value } : {}), title: args.chart_title },
+      };
+      const values = { LOCALE: args.locale ?? 'en', TITLE: args.title };
       let html = asset('templates/research-brief.html').replace(/\{\{([A-Z_]+)\}\}/g, (token, key) => Object.hasOwn(values, key) ? escapeHTML(values[key]) : token);
-      html = html.replace('{{STYLES}}', () => asset('assets/editorial.css')).replace('{{CHARTS}}', () => asset('assets/editorial-charts.js')).replace('{{CONFIG}}', () => scriptJSON(config));
+      html = html.replace('{{STYLES}}', () => asset('assets/editorial.css')).replace('{{KIT}}', () => asset('assets/report-kit.js')).replace('{{CHARTS}}', () => asset('assets/editorial-charts.js')).replace('{{CONFIG}}', () => scriptJSON(config));
       await host.workspace.file('write', args.output_path, html, signal);
       return { path: args.output_path, bytes: Buffer.byteLength(html), runtime: 'sesame-report/1', runtimeRevision: '1.0.0', binding: args.data_id, editable: true };
     }),

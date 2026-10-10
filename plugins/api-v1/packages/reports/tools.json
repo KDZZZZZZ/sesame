@@ -83,7 +83,7 @@
   {
     "name": "report_template",
     "label": "report_template",
-    "description": "Write an editable, self-contained report/1 HTML template with original offline SVG charts, row filtering and linked exact-value tables. Reads a named fixed data binding when the report opens.",
+    "description": "Write an editable report/1 HTML scaffold using Sesame’s original reportKit typography, conclusion, numbered evidence sections, charts and folded methods. Optional unit and matrix charts supplement the same style. Reads a named fixed data binding.",
     "parameters": {
       "type": "object",
       "required": [

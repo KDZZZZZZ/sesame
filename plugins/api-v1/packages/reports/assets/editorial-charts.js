@@ -1,4 +1,4 @@
-/* Sesame editorial charts 1.0.1 — MIT, Sesame contributors.
+/* Sesame editorial charts 1.0.2 — MIT, Sesame contributors.
  * Original implementation. No third-party chart runtime or network dependency. */
 (function (global) {
   'use strict';
@@ -96,9 +96,19 @@
       const unit=spec.unitValue ?? 1; if(!Number.isFinite(unit)||unit<=0)fail('unitValue must be positive');
       const counts=rows.map(row=>numeric(row[spec.y])===null?0:exactUnits(row[spec.y],unit));
       if(counts.reduce((a,b)=>a+b,0)>1000)fail('unit chart exceeds 1,000 units; choose and label a larger exact unitValue');
-      const across=Math.max(1,Math.floor((width-pad.left-pad.right)/16));
-      let offset=0;rows.forEach((row,i)=>{for(let n=0;n<counts[i];n++){const k=offset++,x=pad.left+(k%across)*16,y=pad.top+Math.floor(k/across)*16;mark(node('circle',{cx:x,cy:y,r:4,class:i%2?'sc-unit-alt':'sc-point'}),row,i);}});
-      svg.setAttribute('viewBox',`0 0 ${width} ${Math.max(85,pad.top+Math.ceil(offset/across)*16+55)}`);svg.append(node('text',{x:pad.left,y:Math.max(65,pad.top+Math.ceil(offset/across)*16+28),class:'sc-axis'},`1 dot = ${unit} ${spec.unit || 'observations'}`));
+      // Keep categories visible: a pooled dot strip hides which count belongs
+      // to which observation and makes zero indistinguishable from missing.
+      const left=80,right=60,across=Math.max(1,Math.floor((width-left-right)/16));
+      let top=22;
+      rows.forEach((row,i)=>{
+        const category=String(row[spec.x]??'—'),label=node('text',{x:left-12,y:top+4,'text-anchor':'end',class:'sc-axis'},category.length>12?category.slice(0,11)+'…':category);
+        label.append(node('title',{},category));svg.append(label);
+        for(let n=0;n<counts[i];n++)mark(node('circle',{cx:left+(n%across)*16,cy:top+Math.floor(n/across)*16,r:4,class:'sc-point'}),row,i);
+        svg.append(node('text',{x:width-right+16,y:top+4,class:'sc-axis'},row[spec.y]??'—'));
+        top+=Math.max(1,Math.ceil(counts[i]/across))*16+14;
+      });
+      svg.setAttribute('viewBox',`0 0 ${width} ${top+30}`);
+      svg.append(node('text',{x:left,y:top+12,class:'sc-axis'},`1 dot = ${unit} ${spec.unit || 'observations'}`));
     }
     if(missing){const note=html('p','sc-missing-note',`${missing} ${spec.missingLabel || 'missing values; never replaced with zero'}`);frame.append(note);}
     return complete();
@@ -116,5 +126,5 @@
     do{const result=await global.report.readData(dataId,{...(cursor?{cursor}:{}),limit});if(!Array.isArray(result.rows))fail('invalid data page');rows.push(...result.rows);if(rows.length>maxRows)fail('data exceeds the declared row budget; filter or aggregate before publishing');cursor=result.page?.nextCursor;if(cursor){if(seen.has(cursor))fail('repeated page cursor');seen.add(cursor);}}while(cursor);
     return rows;
   }
-  Object.defineProperty(global,'SesameCharts',{value:Object.freeze({version:'1.0.1',chart,table,readRows,format,numeric}),configurable:false});
+  Object.defineProperty(global,'SesameCharts',{value:Object.freeze({version:'1.0.2',chart,table,readRows,format,numeric}),configurable:false});
 })(window);

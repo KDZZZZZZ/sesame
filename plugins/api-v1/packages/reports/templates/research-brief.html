@@ -1,17 +1,37 @@
 <!doctype html>
 <html lang="{{LOCALE}}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{TITLE}}</title><style>{{STYLES}}</style></head>
-<body><main>
-<header class="report-header"><p class="eyebrow">{{LABEL}}</p><h1>{{TITLE}}</h1><p class="lede">{{SUMMARY}}</p></header>
-<div class="report-toolbar"><label>{{FILTER_LABEL}} <input id="filter" type="search" placeholder="{{FILTER_PLACEHOLDER}}"></label><span id="row-count" class="report-source" role="status"></span></div>
-<div class="report-grid"><section class="report-panel wide"><h2>{{CHART_TITLE}}</h2><p class="takeaway">{{TAKEAWAY}}</p><div id="chart"></div></section><section class="report-panel wide"><h2>{{TABLE_TITLE}}</h2><div id="table"></div></section></div>
-<footer class="report-footer"><p>{{SOURCE_NOTE}}</p><p class="report-source" id="data-source"></p></footer>
-</main><script>{{CHARTS}}</script><script>
+<body><main id="report" aria-label="{{TITLE}}"></main>
+<script>{{KIT}}</script><script>{{CHARTS}}</script><script>
 const config={{CONFIG}};
 async function initialize(){
- const rows=await SesameCharts.readRows(config.dataId);
- document.getElementById('data-source').textContent=config.dataId;
- function render(){const q=document.getElementById('filter').value.trim().toLowerCase(),visible=rows.filter(row=>!q||Object.values(row).some(value=>String(value??'').toLowerCase().includes(q)));document.getElementById('row-count').textContent=`${visible.length} / ${rows.length}`;const table=SesameCharts.table('#table',visible,config.columns);SesameCharts.chart('#chart',{...config.chart,rows:visible,onSelect:(_,index)=>table.select(index)});}
- document.getElementById('filter').addEventListener('input',render);render();
+ const rows=await reportKit.rows(config.dataId);
+ // This outline is editable. Add evidence, metrics, comparisons and custom interactions
+ // to suit the question; the reusable components supply the familiar Sesame styling.
+ reportKit.render('#report',{
+  title:config.title,eyebrow:config.label,
+  meta:[{label:config.labels.sample,value:rows.length},{label:config.labels.unit,value:config.chart.unit}],
+  verdict:{tone:'neutral',headline:config.summary},
+  sections:[{title:config.labels.evidence,takeaway:config.takeaway,blocks:[{type:'custom',render(element){
+   const chart=document.createElement('div');chart.id='chart';element.append(chart);
+   const details=document.createElement('details');details.className='report-inspect';
+   const summary=document.createElement('summary');summary.textContent=config.labels.table;details.append(summary);
+   const toolbar=document.createElement('div');toolbar.className='report-toolbar';
+   const label=document.createElement('label');label.textContent=config.labels.filter;
+   const filter=document.createElement('input');filter.id='filter';filter.type='search';filter.placeholder=config.labels.placeholder;label.append(filter);toolbar.append(label);
+   const count=document.createElement('span');count.id='row-count';count.className='report-source';count.setAttribute('role','status');toolbar.append(count);details.append(toolbar);
+   const table=document.createElement('div');table.id='table';details.append(table);element.append(details);
+   function render(){
+    const q=filter.value.trim().toLowerCase(),visible=rows.filter(row=>!q||Object.values(row).some(value=>String(value??'').toLowerCase().includes(q)));
+    count.textContent=`${visible.length} / ${rows.length}`;
+    const grid=SesameCharts.table(table,visible,config.columns);
+    reportKit.destroy(chart);chart.replaceChildren();
+    if(['matrix','units'].includes(config.chart.kind)) SesameCharts.chart(chart,{...config.chart,rows:visible,onSelect:(_,index)=>{details.open=true;grid.select(index);}});
+    else reportKit.chart(chart,{...config.chart,data:visible,caption:config.chart.unit,tone:config.chart.kind==='bar'?'signed':undefined,onSelect:(_,index)=>{details.open=true;grid.select(index);}});
+   }
+   filter.addEventListener('input',render);render();
+  }}]}],
+  method:{steps:[config.sourceNote],sources:[{label:config.labels.binding,value:config.dataId}]}
+ });
 }
-window.report.track(initialize()).catch(error=>{const panel=document.getElementById('chart');panel.className='status-error';panel.textContent=error.message;});
+window.report.track(initialize()).catch(error=>{const panel=document.getElementById('report');panel.className='status-error';panel.textContent=error.message;});
 </script></body></html>
