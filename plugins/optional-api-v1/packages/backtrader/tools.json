@@ -1,0 +1,202 @@
+[
+  {
+    "name": "backtrader_environment",
+    "description": "Inspect existing pinned Backtrader/Python first; explicit prepare installs private PyPI dependencies only if missing. No startup downloads.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "inspect"
+            },
+            {
+              "type": "string",
+              "const": "prepare"
+            }
+          ]
+        },
+        "python_path": {
+          "type": "string",
+          "description": "Existing native Python executable",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "backtrader_backtest",
+    "description": "Run real Cerebro on one fixed UTC/offset DataRef and authored backtrader.Strategy file. Managed host execution, stocklike cash simulation, never connects a broker; no SVL equivalence. Frozen operation never replays an interrupted run.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "operation_id",
+        "title",
+        "data",
+        "strategy_path",
+        "class_name",
+        "config"
+      ],
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "description": "Immutable operation key",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "description": "Result title",
+          "minLength": 1
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "id",
+            "revision",
+            "digest",
+            "kind",
+            "schemaVersion"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "kind": {
+              "type": "string",
+              "const": "data"
+            },
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0.0"
+            }
+          },
+          "additionalProperties": false
+        },
+        "strategy_path": {
+          "type": "string",
+          "description": "Authored workspace Python file",
+          "minLength": 1
+        },
+        "class_name": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "config": {
+          "type": "object",
+          "required": [
+            "capital",
+            "commission",
+            "slippage"
+          ],
+          "properties": {
+            "capital": {
+              "type": "string",
+              "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+            },
+            "commission": {
+              "type": "string",
+              "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+            },
+            "slippage": {
+              "type": "string",
+              "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+            }
+          },
+          "additionalProperties": false
+        },
+        "parameters": {
+          "type": "object",
+          "patternProperties": {
+            "^.*$": {}
+          }
+        },
+        "columns": {
+          "type": "object",
+          "properties": {
+            "datetime": {
+              "type": "string"
+            },
+            "open": {
+              "type": "string"
+            },
+            "high": {
+              "type": "string"
+            },
+            "low": {
+              "type": "string"
+            },
+            "close": {
+              "type": "string"
+            },
+            "volume": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 600
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "backtrader_result",
+    "description": "Read fixed result and report DataRefs without rerunning native code.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "ref"
+      ],
+      "properties": {
+        "ref": {
+          "type": "object",
+          "required": [
+            "id",
+            "revision",
+            "digest",
+            "kind",
+            "schemaVersion"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "kind": {
+              "type": "string",
+              "const": "strategy.result"
+            },
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0.0"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]

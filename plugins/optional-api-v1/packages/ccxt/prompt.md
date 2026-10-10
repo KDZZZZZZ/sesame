@@ -1,0 +1,1 @@
+Read this plugin skill when using ccxt. First reuse an existing verified environment, then explicitly prepare private pinned dependencies if missing. No startup downloads; current-user host execution, not an OS sandbox. Never infer broker permission or SVL equivalence.

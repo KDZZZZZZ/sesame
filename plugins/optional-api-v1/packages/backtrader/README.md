@@ -1,0 +1,7 @@
+# Backtrader optional native research engine
+
+Preview requires Sesame >=0.2.0-0 (target stable 0.2.0). Discoverable and opt-in. Runs actual pinned Backtrader Cerebro on immutable json-rows DataRef plus one authored `backtrader.Strategy` Python file. Freezes original code/input/environment/config/native receipt, publishes strategy.result and equity/trades/orders DataRefs for existing host reports. No live broker setup, secret access, account provider, automatic SVL conversion or equivalence claim. Stocklike cash model, UTC/explicit offset input, native floating-point execution.
+
+Inspect existing 64-bit Python >=3.11 first. Explicit prepare reuses Backtrader 1.9.78.123 or downloads only into private plugin data via official PyPI, persisting cache and download hash report. No global/shared environment updates or startup downloads. Process cancellation uses the owned host command lifecycle; cleanup failure retains owned execution files. Interrupted reserved operations remain unknown and are never automatically replayed.
+
+Adapter and engine: GPL-3.0-or-later. Library is installed separately, not shipped. [Official quickstart](https://www.backtrader.com/docu/quickstart/quickstart/), [Cerebro](https://www.backtrader.com/docu/cerebro/), [source/license](https://github.com/mementum/backtrader), [pinned distribution](https://pypi.org/project/backtrader/1.9.78.123/). These files do not relicense the proprietary Sesame application.
