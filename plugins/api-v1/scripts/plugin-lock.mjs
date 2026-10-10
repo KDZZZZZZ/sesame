@@ -23,7 +23,9 @@ export function engineWithinProfile(range, profileRange) {
   };
   const requested = lower(range), minimum = lower(profileRange);
   if (!requested || !minimum) return false;
-  for (let i = 0; i < 3; i++) if (requested.numbers[i] !== minimum.numbers[i]) return requested.numbers[i] > minimum.numbers[i];
+  // SemVer ranges admit prereleases only at their explicitly named base.
+  // A higher prerelease base would add hosts excluded by the profile range.
+  for (let i = 0; i < 3; i++) if (requested.numbers[i] !== minimum.numbers[i]) return requested.numbers[i] > minimum.numbers[i] && !requested.pre;
   if (!requested.pre || !minimum.pre) return !requested.pre;
   for (let i = 0; i < Math.max(requested.pre.length, minimum.pre.length); i++) {
     const a = requested.pre[i], b = minimum.pre[i];
