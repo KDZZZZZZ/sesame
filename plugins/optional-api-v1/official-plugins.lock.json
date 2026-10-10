@@ -784,7 +784,7 @@
       "id": "sesame/qmt",
       "version": "1.1.0",
       "directory": "qmt",
-      "treeDigest": "sha256:ca3de2e3e2effc4f2f7672f997f732016a3d3df2f90651dfe761b85c04220524",
+      "treeDigest": "sha256:e4b3a67b4151149cd915cba7c56c5415145ffc72d3a7ad7fedd6a5716cc50eba",
       "files": [
         {
           "path": "LICENSE",
@@ -798,8 +798,8 @@
         },
         {
           "path": "VALIDATION.md",
-          "sha256": "135905e29970c84673ca4120b4ece4c475572d1b4fb05e53ac9fcfd70bc92b47",
-          "bytes": 3822
+          "sha256": "1e99c4d27fed99dc25d44998b40bacd1865fdd0356783ea53f823309ff9aa383",
+          "bytes": 4187
         },
         {
           "path": "bridge.py",
@@ -843,8 +843,8 @@
         },
         {
           "path": "service.js",
-          "sha256": "1f0c65714b9b2084742f7aab9563b639f8978446b6646734829c1ab3a575bfd7",
-          "bytes": 24108
+          "sha256": "887b3ccdd90dab160e1a55515d64a9dff2e02ed7694c366309e4affa42398194",
+          "bytes": 24830
         },
         {
           "path": "skills/qmt-readonly/SKILL.md",

@@ -642,7 +642,7 @@ published installation catalog. The stable 0.1.4 catalog and the fixed API 1
 release plans/catalog pins retain their original bytes. Package-by-package
 changes and dependency boundaries are in REORGANIZATION.md.
 
-The public SDK source suite ran 226 tests: 211 passed and 15 platform/native or
+The public SDK source suite ran 227 tests: 212 passed and 15 platform/native or
 host opt-in cases skipped, with no failures. Native opt-ins were not enabled.
 The Python dependency-installer fixtures passed six checks. The existing sixteen
 fixed release plans reconstructed successfully; new profile metadata does not
@@ -677,3 +677,12 @@ where source time units cannot be established; raw daily records remain marked
 as raw. Native Windows/QMT trading and all multi-backend live acceptance remain
 outside these source checks. Independent final-head review and publication gates
 are still required before releasing this reorganization.
+
+Final optional source tests after QMT review fixes: 38 JavaScript tests, 36 passed
+and two explicit opt-ins skipped. Python adapters passed 17 checks, with six
+actual-engine opt-ins skipped in this run. Independent reviewer Codex
+refactor_plugins completed the QMT source review at 2026-10-10T00:14:14Z on
+d25ad293945bc0f5fd11725c97c91fc5dbefc863: 16 independent, 18 public, one
+actual temporary HostContext/reopen and nine Python checks passed (44 total),
+with one Windows native gate skipped. This candidate imports those package bytes
+unchanged. Final bundle/profile/head review is still separate and pending.
