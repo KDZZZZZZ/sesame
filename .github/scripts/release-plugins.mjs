@@ -10,6 +10,10 @@ const REPOSITORY = 'KDZZZZZZ/sesame';
 const CHECKS = [{ name: 'package-static-review', path: '.github/workflows/plugin-api-v1.yml' }, { name: 'catalog-static-review', path: '.github/workflows/plugin-catalog.yml' }];
 const assert = (value, message) => { if (!value) throw new Error(message); };
 const git = (root, args) => execFileSync('git', args, { cwd: root, maxBuffer: 20 * 1024 * 1024 });
+const canonical = value => Array.isArray(value) ? value.map(canonical) : value && typeof value === 'object' ? Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])])) : value;
+// Exact existing plans, loaded from the trusted publisher. Candidate plan files
+// cannot declare themselves historical by omitting a profile or choosing a date.
+const historical = new Map(JSON.parse(readFileSync(new URL('./historical-plugin-releases.json', import.meta.url))).map(plan => [plan.tag, JSON.stringify(canonical(plan))]));
 export function validatePlan(plan) {
   assert(plan.schemaVersion === 1 && /^[a-f0-9]{40}$/.test(plan.sourceCommit), 'Release requires a fixed source commit');
   const optional = plan.sourceRoot === 'plugins/optional-api-v1';
@@ -20,6 +24,8 @@ export function validatePlan(plan) {
   assert(plan.profile === undefined || plan.profile === (optional ? 'optional' : 'core'), 'Release profile differs from its source root');
   assert(Number.isSafeInteger(plan.pullRequest) && plan.pullRequest > 0, 'Release requires a reviewed pull request');
   assert(typeof plan.title === 'string' && plan.title.length > 0 && plan.title.length <= 160, 'Invalid release title');
+  if (historical.has(plan.tag)) assert(JSON.stringify(canonical(plan)) === historical.get(plan.tag), 'Historical release plan identity is immutable');
+  else assert(plan.profile === (optional ? 'optional' : 'core'), 'Every new release plan requires its distribution profile');
   return plan;
 }
 

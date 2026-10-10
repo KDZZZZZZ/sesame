@@ -1,0 +1,171 @@
+[
+  {
+    "schemaVersion": 1,
+    "tag": "plugins-api-v1-dev.10",
+    "title": "Sesame official API 1 development plugins 10",
+    "sourceCommit": "28780323014de0a2e21dc82895a87bfe107e5cdf",
+    "sourceRoot": "plugins/api-v1",
+    "archive": {
+      "name": "sesame-official-plugins-api-v1-dev.10.tar.gz",
+      "sha256": "8e234a8b5d6dc28fd3d3065ee817f2b28bd023bfc9279a8494c9d32891aca3ae"
+    },
+    "lockSha256": "77e2384498ec3a97d7698bed981fe8e341f02a0cdf0731b2ac2b57c1f4039bb1",
+    "pullRequest": 19
+  },
+  {
+    "schemaVersion": 1,
+    "tag": "plugins-api-v1-dev.11",
+    "title": "Sesame official API 1 development plugins 11",
+    "sourceCommit": "a1887d64e95ecc414b15ecaf3a6e1e8c76d45c29",
+    "sourceRoot": "plugins/api-v1",
+    "archive": {
+      "name": "sesame-official-plugins-api-v1-dev.11.tar.gz",
+      "sha256": "d3555841baf68b640711632d88b513d3f6b45fb2c41be1e765e99fdf8cc7267a"
+    },
+    "lockSha256": "54be263ce85184ca162f4b5e60ab9e7fea473214caf978a33e2af9936d493def",
+    "pullRequest": 20
+  },
+  {
+    "schemaVersion": 1,
+    "tag": "plugins-api-v1-dev.12",
+    "title": "Sesame official API 1 development plugins 12",
+    "sourceCommit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
+    "sourceRoot": "plugins/api-v1",
+    "archive": {
+      "name": "sesame-official-plugins-api-v1-dev.12.tar.gz",
+      "sha256": "03a25eed1bb65a57c2c4d13c9109a8bbb59d708d715ba5ffa3623e3a3a713126"
+    },
+    "lockSha256": "1eac31369ae9cfa99790bd7e238eee5b903aa6e04f2e5e39dd7171ad49687156",
+    "pullRequest": 21
+  },
+  {
+    "schemaVersion": 1,
+    "tag": "plugins-api-v1-dev.4",
+    "title": "Sesame API 1 development bundle 4",
+    "sourceCommit": "90dec0df01ab21aff82e375f5a58e2a78cd89103",
+    "sourceRoot": "plugins/api-v1",
+    "archive": {
+      "name": "sesame-official-plugins-api-v1-dev.4.tar.gz",
+      "sha256": "72b7ab9f36fe5163aed8d7edece356149edcf753f9f57cf18fa3dca57578d297"
+    },
+    "lockSha256": "492e6671eea059d44dd9deb815096d161ba49c4202f65d5f9401a5265f9455e5",
+    "pullRequest": 5
+  },
+  {
+    "schemaVersion": 1,
+    "tag": "plugins-api-v1-dev.5",
+    "title": "Sesame API 1 development bundle 5",
+    "sourceCommit": "3f3c422fe3dd3bfe7ff780f4d593f6cf2d7ef9c8",
+    "sourceRoot": "plugins/api-v1",
+    "archive": {
+      "name": "sesame-official-plugins-api-v1-dev.5.tar.gz",
+      "sha256": "5efc0809d1f8096148f818c65fa8857875704bb3a79107e5468c1f1b10726df2"
+    },
+    "lockSha256": "637351a7c3f4caac49c8d84a5ebdb545d4bbdf71af05914e0af14ab22f2beb49",
+    "pullRequest": 9
+  },
+  {
+    "schemaVersion": 1,
+    "tag": "plugins-api-v1-dev.6",
+    "title": "Sesame official API 1 development plugins 6",
+    "sourceCommit": "ccb59e990eed65911fa1a10b029a7aee7ce8115a",
+    "sourceRoot": "plugins/api-v1",
+    "archive": {
+      "name": "sesame-official-plugins-api-v1-dev.6.tar.gz",
+      "sha256": "06a82fbc7ee55d9629475a6594f6491b1a5364055c010aaebe38f199f36b7511"
+    },
+    "lockSha256": "aa853ebcddf87e9d8ae567ece3d4d70db5b8bec3b8fb1b31c13c83f171bd5c3b",
+    "pullRequest": 13
+  },
+  {
+    "schemaVersion": 1,
+    "tag": "plugins-api-v1-dev.7",
+    "title": "Sesame official API 1 development plugins 7",
+    "sourceCommit": "3eee24417941893335936ec1b166f034a4d5077f",
+    "sourceRoot": "plugins/api-v1",
+    "archive": {
+      "name": "sesame-official-plugins-api-v1-dev.7.tar.gz",
+      "sha256": "ea67af11ec9aa1f99eb2edc0bab3e298e4541c6c5130f4322c52888055d37076"
+    },
+    "lockSha256": "09ca34b35ad4d7ababe198f3655a096078bcef77834c4f954538ba92c76e7b41",
+    "pullRequest": 14
+  },
+  {
+    "schemaVersion": 1,
+    "tag": "plugins-api-v1-dev.8",
+    "title": "Sesame official API 1 development plugins 8",
+    "sourceCommit": "3fe35eb22e47b5ece40f7dfc094c834c8da90d21",
+    "sourceRoot": "plugins/api-v1",
+    "archive": {
+      "name": "sesame-official-plugins-api-v1-dev.8.tar.gz",
+      "sha256": "a1d12ffd5adfa921a22c6f05dc0bc446f5d83195ae946b996201da9b4b0fd797"
+    },
+    "lockSha256": "91748a44978ed4bf40df3ba8d77ae20c19217391937721df5170babea9eed90e",
+    "pullRequest": 16
+  },
+  {
+    "schemaVersion": 1,
+    "tag": "plugins-api-v1-dev.9",
+    "title": "Sesame official API 1 development plugins 9",
+    "sourceCommit": "ba26c869658ec5a41afad691778558c48f0135b2",
+    "sourceRoot": "plugins/api-v1",
+    "archive": {
+      "name": "sesame-official-plugins-api-v1-dev.9.tar.gz",
+      "sha256": "e2c16fb395c5f4b0d2b6b9e1ef71e3836e4d9751db610de796c19566d71d6a46"
+    },
+    "lockSha256": "0986f8332e29d794e4f28b6e0061f25bb941894a2b7c3790abf72b7771a6e764",
+    "pullRequest": 18
+  },
+  {
+    "schemaVersion": 1,
+    "tag": "plugins-optional-api-v1-dev.1",
+    "title": "Sesame optional API 1 development plugins 1",
+    "sourceCommit": "90dec0df01ab21aff82e375f5a58e2a78cd89103",
+    "sourceRoot": "plugins/optional-api-v1",
+    "archive": {
+      "name": "sesame-optional-plugins-api-v1-dev.1.tar.gz",
+      "sha256": "1c9e2861b6f01a101118c966f9f59f685ba03a14e5bf1b176f62a274d4c6fda9"
+    },
+    "lockSha256": "23034f3aa127cf1e3b92e27fe759040331e3d9b12610150e295c957bf388c936",
+    "pullRequest": 5
+  },
+  {
+    "schemaVersion": 1,
+    "tag": "plugins-optional-api-v1-dev.2",
+    "title": "Sesame optional API 1 development plugins 2",
+    "sourceCommit": "3f3c422fe3dd3bfe7ff780f4d593f6cf2d7ef9c8",
+    "sourceRoot": "plugins/optional-api-v1",
+    "archive": {
+      "name": "sesame-optional-plugins-api-v1-dev.2.tar.gz",
+      "sha256": "93ec8010c6d619d527ae3155105c5d215dd436934a41edb26b93528d5d942c2e"
+    },
+    "lockSha256": "940aecf9f4e0be3bec6b780c365256f5609c7870e3da1b8156ccf4a9590819f8",
+    "pullRequest": 9
+  },
+  {
+    "schemaVersion": 1,
+    "tag": "plugins-optional-api-v1-dev.3",
+    "title": "Sesame optional API 1 development plugins 3",
+    "sourceCommit": "dccac911c5fd5d627c30cb6d6ca53f6e5d3de25d",
+    "sourceRoot": "plugins/optional-api-v1",
+    "archive": {
+      "name": "sesame-optional-plugins-api-v1-dev.3.tar.gz",
+      "sha256": "4eb9d2de40524ee0b13541b64c0bee1fd0df443186de154d38ec186c245c7fda"
+    },
+    "lockSha256": "34fdb661118896f4f268955ec8a9b2ccb49c0857f495d0f005913eba23395e24",
+    "pullRequest": 11
+  },
+  {
+    "schemaVersion": 1,
+    "tag": "plugins-optional-api-v1-dev.4",
+    "title": "Sesame optional API 1 development plugins 4",
+    "sourceCommit": "1f380819fa4e7a50198ebdf2e596295bf223795b",
+    "sourceRoot": "plugins/optional-api-v1",
+    "archive": {
+      "name": "sesame-optional-plugins-api-v1-dev.4.tar.gz",
+      "sha256": "068b9b6f8923ad8c5f9fe646d3a95a88d41d11594df688d558436b30c93549b3"
+    },
+    "lockSha256": "e9caeb9feadd95b45bc7b59ddf0fbedf9f7e28f3310315aca1baf9dcfeca6e19",
+    "pullRequest": 15
+  }
+]

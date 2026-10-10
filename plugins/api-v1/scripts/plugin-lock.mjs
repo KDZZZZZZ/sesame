@@ -47,6 +47,8 @@ export function packageFiles(directory, base = '') {
 export function readProfile(source) {
   const path = join(source, 'bundle-profile.json');
   if (!existsSync(path)) return null; // Historical fixed releases predate profiles.
+  const stat = lstatSync(path);
+  fail(stat.isFile() && !stat.isSymbolicLink() && stat.nlink === 1, 'Bundle profile must be an ordinary file');
   const value = JSON.parse(readFileSync(path));
   fail(value.schemaVersion === 1 && ['core', 'optional'].includes(value.kind) && value.engines?.sesame === '>=0.2.0-0', 'Invalid bundle profile or Sesame engine range');
   fail(Array.isArray(value.packages) && value.packages.length > 0 && value.packages.every(id => /^sesame\/[a-z][a-z0-9-]*$/.test(id)) && new Set(value.packages).size === value.packages.length, 'Profile requires unique package identities');
@@ -66,7 +68,7 @@ export function buildLock(source = root) {
     const id = extension?.id ?? manifest.id;
     fail(id === `sesame/${directory}`, `Incorrect publisher identity: ${directory}`);
     if (profile) {
-      fail((extension?.engines ?? manifest.engines)?.sesame === profile.engines.sesame, `${id}: Sesame engine range differs from its profile`);
+      fail((manifest.$schema ? extension?.engines : manifest.engines)?.sesame === profile.engines.sesame, `${id}: Sesame engine range differs from its profile`);
       fail(!Object.hasOwn(manifest, 'migration') && !Object.hasOwn(extension ?? {}, 'migration'), `${id}: profiled packages cannot request legacy host storage grants`);
       const state = extension?.builtin?.default_state ?? manifest.default_state;
       fail(profile.kind === 'optional' ? state === 'discoverable' : ['mounted', 'discoverable'].includes(state), `${id}: profile default state differs`);

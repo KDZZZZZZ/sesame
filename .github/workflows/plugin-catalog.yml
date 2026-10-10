@@ -2,10 +2,10 @@ name: Plugin catalog
 on:
   push:
     branches: [main]
-    paths: ['plugins/**', '.github/scripts/*catalog*', '.github/workflows/plugin-catalog.yml']
+    paths: ['.github/scripts/historical-plugin-releases.json', 'plugins/**', '.github/scripts/*catalog*', '.github/workflows/plugin-catalog.yml']
   pull_request_target:
     types: [opened, synchronize, reopened]
-    paths: ['plugins/**', '.github/scripts/*catalog*', '.github/workflows/plugin-catalog.yml', '.github/CODEOWNERS']
+    paths: ['.github/scripts/historical-plugin-releases.json', 'plugins/**', '.github/scripts/*catalog*', '.github/workflows/plugin-catalog.yml', '.github/CODEOWNERS']
   workflow_dispatch:
 permissions:
   contents: read
