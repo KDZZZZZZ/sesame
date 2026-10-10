@@ -1,6 +1,6 @@
-# Default plugins for Sesame 0.2.0 / Plugin API 1
+# Default plugins / Plugin API 1
 
-**For Sesame 0.2.0 and compatible newer hosts. The declared range `>=0.2.0-0` also permits matching development builds. Installers and their release status are listed on the [application release page](https://github.com/KDZZZZZZ/sesame/releases/tag/v0.2.0). These API 1 packages cannot be used in 0.1.4.**
+**For Sesame 0.2.0 and compatible newer hosts. The core packages' declared range `>=0.2.0-0` also permits matching development builds. Installers are listed on the [application release page](https://github.com/KDZZZZZZ/sesame/releases/latest). These API 1 packages cannot be used in 0.1.4. Optional packages declare their own minimum; `sesame/manual-trading` requires 0.2.1.**
 
 This directory contains exactly nine default packages for the 0.2 application bundle. The application
 keeps the protocol, verified loader and general interface. Plugin implementations,
@@ -57,8 +57,8 @@ Development bundle 4 completes real-path delivery for research/web inputs and
 MT5 checkouts. Workspace commands expose incomplete snapshot diagnostics. The
 plugin-manager owns verified catalog installation and same-session loading;
 its native static checks remain distinct from actual activation and environment
-verification. The [unified API 1 catalog](CATALOG.md) pins the actual
-core dev.15 and optional dev.9 releases: nine default and twenty-two optional entries.
+verification. The [unified API 1 catalog](CATALOG.md) pins already published core
+and optional releases selected in `catalog.sources.json`: nine default and twenty-three optional entries.
 Their source commit, archive, file/tree and review hashes were selected only after
 publication and actual download verification. Explicit updates preserve the host's
 current-digest and version checks. The published 0.1.4 catalog is unchanged.
