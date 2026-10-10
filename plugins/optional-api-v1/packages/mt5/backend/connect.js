@@ -40,7 +40,7 @@ export async function ensureMT5Connection(mt5, { start_if_needed = true } = {}, 
   signal?.throwIfAborted();
   if (official.jobs.size) return unavailable('mt5_busy', 'MT5 调用正在执行，请完成后再恢复连接', steps);
   const selected = original.servers.terminal;
-  if (!selected.enabled) return unavailable('connection_disabled', '交易终端连接已被关闭，请在设置中启用后再连接', steps);
+  if (!selected.enabled) return unavailable('connection_disabled', '交易终端连接已关闭；先读取 mt5_settings，只有用户要求恢复此连接时，才由 mt5_update_configuration 启用后再 mt5_connect', steps);
   const blocked = official.access('terminal', 'get_trading_account_info', null).blocked_reason;
   if (blocked) return unavailable('mt5_permission_denied', blocked, steps);
   let nativeSettings;
@@ -61,7 +61,7 @@ export async function ensureMT5Connection(mt5, { start_if_needed = true } = {}, 
   catch { steps.push({ step: 'discover', status: 'failed', reason: '忽略不支持的本机 MCP 地址，保留已选终端' }); }
   if (sameEndpoint) add('native', nativeServer);
   if (!candidates.length) return unavailable(mt5.native ? 'mcp_not_configured' : 'mt5_not_installed',
-    mt5.native ? '本机尚无可用的 MCP 凭据，请在 MT5 的 MCP 设置启用内部服务器并把当前 API Key 保存到 Sesame' : '未找到唯一的 MT5 安装，请安装或明确指定终端目录', steps);
+    mt5.native ? '本机可读配置没有可用 MCP 凭据；先检查 mt5_settings 的待导入引用。仍缺失时请用户从 MT5「工具 → 选项 → MCP」复制当前连接导出发给 Sesame，再由 mt5_import_configuration 导入并验证' : '未找到唯一的 MT5 安装；先用 mt5_dependencies inspect 与本机文件/进程查找已有安装，保存准确终端路径；确认未安装后再准备依赖', steps);
 
   const deadline = AbortSignal.timeout(timeoutMs);
   const combined = AbortSignal.any([deadline, ...(signal ? [signal] : [])]);
@@ -118,8 +118,8 @@ export async function ensureMT5Connection(mt5, { start_if_needed = true } = {}, 
       signal?.throwIfAborted();
       const code = lastError?.upstreamStatus === 401 ? 'mcp_auth_failed' : refused && !started ? 'terminal_not_running' : 'mcp_unreachable';
       return unavailable(code, code === 'mcp_auth_failed'
-        ? 'MT5 拒绝当前 MCP 密钥；读取本机文件也未通过认证。请导入 MT5「工具 → 选项 → MCP」当前导出，或将 API Key 保存到 Sesame 的交易终端设置'
-        : code === 'terminal_not_running' ? '交易终端 MCP 尚未启动；请打开所选 MT5 并启用内部服务器' : 'MT5 MCP 暂不可用，请检查原生 MCP 服务与本机连接', steps, { started });
+        ? 'MT5 拒绝当前 MCP 密钥；本机候选凭据未通过认证。先检查 mt5_settings 的待导入引用；仍缺失时请用户从 MT5「工具 → 选项 → MCP」复制当前连接导出发给 Sesame，再由 mt5_import_configuration 导入并验证'
+        : code === 'terminal_not_running' ? '交易终端 MCP 尚未启动；先按 connection/dependencies 指南核对所选安装与已有进程并恢复该服务，不另开一个终端代替发现' : 'MT5 MCP 暂不可用，请检查原生 MCP 服务与本机连接', steps, { started });
     }
     steps.push({ step: 'authenticate', source: chosen.source, status: 'verified' });
     // Connecting to MCP is not proof of a broker connection. Allow saved-login recovery a short bounded wait.

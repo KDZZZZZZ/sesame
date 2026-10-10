@@ -132,7 +132,7 @@ export class MT5Official {
   }
   client(server) {
     const config = this.config.servers[server];
-    requireValue(config?.enabled && config.token, '请先在前端配置并启用此 MCP 连接', 503, 'mt5_not_configured');
+    requireValue(config?.enabled && config.token, '此 MCP 连接尚未配置或未启用；先用 mt5_settings 读取已保存配置与待导入引用，按 connection skill 发现、导入并验证，尊重用户明确禁用的连接', 503, 'mt5_not_configured');
     if (!this.clients.has(server)) this.clients.set(server, new MT5MCP({ ...config, server }));
     return this.clients.get(server);
   }
@@ -232,9 +232,9 @@ export class MT5Official {
       requireValue(definition, '此连接没有提供该工具，请刷新 mt5_catalog', 404, 'mt5_tool_missing');
       validate(definition.inputSchema, args);
       const { blocked_reason: blocked } = managed ? this.deploymentAccess() : this.access(server, tool, owner); requireValue(!blocked, blocked, 403, 'mt5_permission_denied');
-      if (server === 'python' && tool === 'login') requireValue(this.config.account.login, '请先在前端保存账户 Login', 409);
-      if (server === 'launcher' && args.use_startup_config) requireValue(this.config.startup_ini, '请先在前端保存原生 INI', 409);
-      if (server === 'launcher' && args.use_account_login) requireValue(this.config.account.login, '请先在前端保存账户 Login', 409);
+      if (server === 'python' && tool === 'login') requireValue(this.config.account.login, '尚未绑定账户；先用 mt5_settings 查已有配置，按用户选择由 mt5_update_configuration 保存准确的 login/server，不猜测切换账户', 409);
+      if (server === 'launcher' && args.use_startup_config) requireValue(this.config.startup_ini, '未保存原生启动 INI；连接任务优先使用 mt5_connect 复用终端已有配置，不为恢复连接编造 INI', 409);
+      if (server === 'launcher' && args.use_account_login) requireValue(this.config.account.login, '尚未绑定账户；先用 mt5_settings 查已有配置，按用户选择由 mt5_update_configuration 保存准确的 login/server，不猜测切换账户', 409);
       signal?.throwIfAborted();
       } catch (error) {
         // Only typed local preflight rejections prove the requested command was

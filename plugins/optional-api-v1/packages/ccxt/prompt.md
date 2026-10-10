@@ -1,3 +1,5 @@
 Read this plugin skill when using ccxt. First reuse an existing verified environment, then explicitly prepare private pinned dependencies if missing. No startup downloads; current-user host execution, not an OS sandbox. Never infer broker permission or SVL equivalence.
 
 `inspect` validates and selects a compatible existing environment by saving only a private selection receipt. It never installs or upgrades dependencies. Ready after inspect is immediately usable; prepare is needed only when no compatible dependency is found.
+
+Do the environment setup within the user's task: inspect saved/known Python first, then use host_files discovery for other existing venv/Conda executables and pass the exact python_path to inspect. A failed candidate is not proof that no environment exists. Public market data needs no exchange credentials. Do not open Sesame Settings or ask the user to fill backend fields; preserve the chosen exchange and exact saved connection. If the route cannot work, diagnose the actual network failure; any alternative exchange or proxy still needs the user's route choice.

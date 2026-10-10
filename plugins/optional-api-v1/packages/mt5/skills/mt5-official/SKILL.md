@@ -27,10 +27,10 @@ description: 使用官方 MT5/MetaEditor MCP、Windows Python API 和启动参�
 
 ## Python 与启动
 
-- Python 先 initialize，再调用账户/数据 API。initialize/login 通过交易插件调用，因为它们可能启动终端或切换已有 EA 的账户；只使用用户在前端保存的账户；shutdown 仅关闭本产品 IPC，不停止终端。Windows 官方包在 Linux/macOS 需对应 Wine 内的 Windows Python，不能在 Linux pip 装一个同名替代库充数。
+- Python 先 initialize，再调用账户/数据 API。initialize/login 通过交易插件调用，因为它们可能启动终端或切换已有 EA 的账户；先按 connection skill 复用并核验 MT5 已保存的账户，不把用户送到 Sesame 设置页、不猜测切换账号；shutdown 仅关闭本产品 IPC，不停止终端。Windows 官方包在 Linux/macOS 需对应 Wine 内的 Windows Python，不能在 Linux pip 装一个同名替代库充数。
 - 32 个官方函数均在目录列出，包括盘口订阅、订单保证金/利润计算、order_check 与 order_send。同一进程维持 market_book_add/get/release 与 last_error。所有对话共享一个 Python 连接，不能假定 last_error 是另一个对话调用前的值。
 - timeframe、flags、action、type 等可用官方常量名；ISO 时间必须带时区；ticket/magic/position 用十进制字符串。order_check 成功不保证执行成功。
-- launcher 的 start_terminal / start_editor 只发送启动请求。/portable、/profile、使用已配置 Login 与用户保存的 INI 对新终端生效，同目录不能启动两个实例。使用 INI 需前端保存，密码不由 Agent 传入。MetaTester 的 install/uninstall/start/stop/restart/help 也是明确的白名单命令；系统插件默认可发现，按需加载，尊重用户显式禁用的设置。没有提供任意宿主命令执行入口。
+- launcher 的 start_terminal / start_editor 只发送启动请求。/portable、/profile、使用已配置 Login 与已保存的 INI 对新终端生效，同目录不能启动两个实例。启动优先按 connection skill 复用已保存配置，不要求用户在 Sesame 手填 INI；mt5_update_configuration 不接受密码或任意 INI。MetaTester 的 install/uninstall/start/stop/restart/help 也是明确的白名单命令；系统能力按需加载，discoverable 不表示用户禁止，尊重用户显式禁用的设置。此 launcher 不提供任意命令入口；任务需要的本机环境检查使用工作区的 host_files 工具。
 - MQL5 原生语言 API（事件回调、指标、Custom Symbols、DOM、ONNX/OpenCL、文件/网络、Tester 回调等）通过编写 EA/指标/脚本并原生编译使用，不伪装成独立 REST 工具。DLL、WebRequest 等仍受终端/操作系统限制。
 
 官方参考：

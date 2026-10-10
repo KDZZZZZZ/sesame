@@ -7,8 +7,8 @@ description: 先发现并复用 MT5、MCP、Windows Python 和 Wine，真实缺�
 
 ## 先复用，再安装
 
-1. 检查返回的 `discovered`、`settings` 和已有脱敏 `connections`；有 Terminal/MetaEditor MCP 配置时先用 `mt5_catalog` 查看各连接的当前目录，用 `mt5_connect` 核验绑定账户。MCP 能力可独立于本机安装存在，不为已有远程 MCP 额外启动第二个本机终端。
-2. 本机路径不唯一或缺失时，用 `host_files` 的发现、读取和命令工具检查用户已有安装。Windows 查已安装应用与 `%APPDATA%/MetaQuotes/Terminal/*/origin.txt` 的安装/数据目录关系；macOS 查 MetaTrader 应用及其现有 Wine prefix；Linux 查现有 Wine prefix。读取已有配置时不把密码/token写回工具参数、报告或长期记忆。
+1. 检查返回的 `discovered`、`settings` 和已有脱敏 `connections`；有 Terminal/MetaEditor MCP 配置时先用 `mt5_catalog` 查看各连接的当前目录，用 `mt5_connect` 核验绑定账户。已配置的本机 MCP 可能可用而本机安装目录尚未发现，不因此额外启动第二个终端。路径配置由 Agent 调工具保存，不弹 Sesame 设置页。
+2. 本机路径不唯一或缺失时，用 `host_files_list/search/read/run` 检查用户已有安装，并核对现有进程的可执行文件路径。Windows 查已安装应用与 `%APPDATA%/MetaQuotes/Terminal/*/origin.txt` 的安装/数据目录关系；macOS 查 MetaTrader 应用及其现有 Wine prefix；Linux 查现有 Wine prefix。仅查任务相关目录和必要字段，不输出整份凭据文件或全部进程参数。读取已有配置时不把密码/token写回工具参数、报告或长期记忆；有效 MCP 凭据的后台导入与 GUI 导出回退见 connection skill。
 3. 对已确认的安装调用 `mt5_dependencies configure`，传新的稳定 `command_id`、刚读到的 `expected_version` 和 `changes`。可分别指定 `terminal_directory`、`data_directory`、Windows `python.exe`、非 Windows 的 `wine` 绝对路径和 `wine_prefix`。编译使用本机 MetaEditor。配置不会覆盖文件、更改账户、下载软件或启动终端；运行中构建、Tester、持久 EA 的依赖不能被改指向别处。
 4. 只有确认缺失的组件才下载。使用 `host_files_mkdir` 创建返回的 `private_directory`，用 `host_files_run` 的 `argv` 数组、真实 `cwd` 和有界 `timeout` 执行安装脚本；不要通过字符串拼接 shell。下载和记录放在该目录内；不要把第三方程序拷进插件源码或应用安装目录。安装器由本插件提供或来自下列官方来源，先核对来源、摘要或签名，再执行必要安装步骤。没有适用安装权限时说明实际失败条件，不转为模拟结果。
 5. 安装后保存准确路径，再 `inspect` 带 `probe:true`。这只核对本机依赖路径，不能代替真实编译、Python IPC、终端账户或交易授权验证。
