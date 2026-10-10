@@ -6,14 +6,26 @@
   },
   "packages": [
     "sesame/akshare",
+    "sesame/backtrader",
+    "sesame/behavioral-finance",
+    "sesame/ccxt",
+    "sesame/dow-theory",
+    "sesame/elliott-wave",
+    "sesame/factor-research",
+    "sesame/ict",
+    "sesame/institutional-analysis",
     "sesame/judgment-evolution",
     "sesame/market-data-parser",
     "sesame/mt5",
+    "sesame/narrative-analysis",
+    "sesame/price-action",
     "sesame/qmt",
     "sesame/quantskills-catalog",
     "sesame/rss-collect",
+    "sesame/strategy-research",
     "sesame/vnpy",
     "sesame/web-extract",
-    "sesame/web-sources"
+    "sesame/web-sources",
+    "sesame/wyckoff"
   ]
 }

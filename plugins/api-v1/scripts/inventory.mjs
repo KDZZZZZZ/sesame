@@ -26,5 +26,6 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const text = JSON.stringify(buildInventory(), null, 2) + '\n', path = join(root, 'inventory.json');
   if (process.argv.includes('--write')) writeFileSync(path, text);
   else if (readFileSync(path, 'utf8') !== text) throw new Error('Preview inventory differs from current reviewed sources');
-  console.log('Validated candidate inventory: 9 core + 10 optional; no install authority');
+  const inventory = JSON.parse(text);
+  console.log(`Validated candidate inventory: ${inventory.packages.filter(p => p.distribution === 'core').length} core + ${inventory.packages.filter(p => p.distribution === 'optional').length} optional; no install authority`);
 }

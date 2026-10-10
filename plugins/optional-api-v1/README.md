@@ -1,13 +1,16 @@
 # Optional plugins for Sesame 0.2.0 / Plugin API 1
 
-**Published development plugins; the application remains a development preview.** These ten packages require `>=0.2.0-0`
+**Source candidates; installable entries are identified by the published catalog.** These twenty-two packages require `>=0.2.0-0`
 (formal minimum 0.2.0, including its development previews). Sesame 0.2.0 has not
 been formally released. They do not enter the nine-package default lock or the
 historical 0.1.4 catalog. Installation/inspection does not silently download a
 terminal or a large Python environment.
 
-The exact optional set is AKShare, judgment-evolution, market-data-parser, MT5,
-QMT, quantskills-catalog, rss-collect, vn.py, web-extract and web-sources.
+The optional set contains six backends (MT5, AKShare, QMT, vn.py, CCXT and
+Backtrader), eight independent analysis methods, separate strategy and factor
+research workflows, judgment-evolution, four web/reference MCP packages and
+web-sources. Each method is its own installable package; selecting ICT does not
+load Price Action, Elliott Wave, Wyckoff or Dow Theory.
 `bundle-profile.json` and the lock enforce this set. The three source moves into
 core are described in the [package review](../api-v1/REORGANIZATION.md).
 MT5 and judgment start with private plugin storage; neither asks the host for
@@ -25,13 +28,19 @@ host-readable without granting access to old mutable application collections.
 | `sesame/web-sources` | Fetch source-labelled web evidence | Network access to the selected source; not a parser or brokerage feed. |
 | `sesame/web-extract`, `sesame/rss-collect`, `sesame/market-data-parser` | Parse supplied HTML/feed/JSON/XML | Existing Python 3, standard-library MCP processes; explicit file boundaries. |
 | `sesame/quantskills-catalog` | Curated skill reference index | Existing Python 3; guidance, not an execution engine. |
+| `sesame/ccxt` | Public spot market data from an explicit Kraken, Coinbase or OKX source | Reuses or explicitly prepares native CCXT 4.5.85. 60-second polling; no private accounts or trading tools. |
+| `sesame/backtrader` | Real Cerebro with an authored native Strategy and fixed DataRef | Reuses or explicitly prepares Backtrader 1.9.78.123. Explicit feed timeframe/compression; stocklike cash simulation, no broker connection or SVL equivalence. Optional wrapper and engine are GPL-3.0-or-later. |
+| `sesame/ict`, `sesame/price-action`, `sesame/elliott-wave`, `sesame/wyckoff`, `sesame/dow-theory` | Five independently selected technical methods | Each retains its own sources, evidence rules and counterexamples. Only ICT/Price Action include bounded observation helpers; no performance claim. |
+| `sesame/behavioral-finance`, `sesame/institutional-analysis`, `sesame/narrative-analysis` | Three independently selected social and interpretive methods | Dated primary evidence, competing explanations and explicit limits; no automatic inference of motives or causation. |
+| `sesame/strategy-research` | Separate experiment planning and evidence-ledger workflow | Existing Node.js 22+ for bounded resource checks; actual backtests use a separately selected engine. No algorithm is preselected. |
+| `sesame/factor-research` | Separate point-in-time factor diagnostics and fixed-selection holdout workflow | Existing Node.js 22+; descriptive statistics, explicit cost assumptions and trial records. No significance or live execution claim. |
 
 ## Install through a matching development host
 
 The new plugin-manager reads the unified `../api-v1/catalog.json`; the old three-entry
 catalog here is retained as historical metadata. The unified directory selects
 actually published core dev.14 and optional dev.6: nine defaults and these ten
-optional integrations. Each entry fixes its source, files, package tree and
+optional integrations; new source candidates are not installable until their reviewed release is selected. Each entry fixes its source, files, package tree and
 publication review. Formal application 0.2.0 is still not released.
 
 For a released entry, give the Agent an exact name, inspect its metadata and
@@ -49,12 +58,12 @@ Dependencies, configuration and platform adapters live in each plugin. Check exi
 
 Use Node 24 and set `SESAME_PLUGIN_SDK_LOADER` to the matching public SDK loader, then `npm test`. `npm run test:python` runs controlled Python adapter checks; set `SESAME_VNPY_PYTHON` to an actual compatible environment to also run real engine tests. QMT has a separate explicit Windows native opt-in test; it never runs automatically against a brokerage account. The code and fixtures copy no private application implementation.
 
-`npm run lock` / `npm run check` use the shared data-only package validator. The historical three-package catalog is checked against its own fixed Git source, independently of the ten-package membership. The separate optional archive uses the same deterministic lock/files structure as the core archive, but is never automatically assembled into the nine-package default set. Each package retains its own MIT license and dependency/source notices; this does not relicense third-party runtimes or the private application.
+`npm run lock` / `npm run check` use the shared data-only package validator. The historical three-package catalog is checked against its own fixed Git source, independently of current membership. The separate optional archive uses the same deterministic lock/files structure as the core archive, but is never automatically assembled into the nine-package default set. Each package retains its declared license and dependency/source notices; Backtrader is GPL-3.0-or-later and the other current wrappers are MIT. This does not relicense third-party runtimes or the private application. See [ecosystem organization](ECOSYSTEM.md) and each package's provenance for the reviewed scope.
 
 ## Historical release evidence
 
 The following records describe the earlier three-package bundles, not the current
-published ten-package development bundle. See package VALIDATION files and the new package
+previously published ten-package development bundle. See package VALIDATION files and the new package
 review for current source-specific results and limitations.
 
 The earlier Python checks comprised six real vn.py engine tests and seven QMT

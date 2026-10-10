@@ -87,6 +87,610 @@
       ]
     },
     {
+      "id": "sesame/backtrader",
+      "version": "1.0.0",
+      "directory": "backtrader",
+      "treeDigest": "sha256:253e2a6cab83b95bc3416a63f11d3b2b4c3f14b945556ee7c1098a1fa90963c9",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "e1c0ad728983d8a57335e52cf1064f1affd1d454173d8cebd3ed8b4a72b48704",
+          "bytes": 35121
+        },
+        {
+          "path": "PROVENANCE.md",
+          "sha256": "4394d0973d5b2a0cb1f6df646f9b611700cfcc95fc94fee0912c54bcaea1cc5b",
+          "bytes": 1909
+        },
+        {
+          "path": "README.md",
+          "sha256": "07677204834bf05758e95a422d3140908d5c462a53afd9dca0ce54eaa4bde36c",
+          "bytes": 2789
+        },
+        {
+          "path": "environment.js",
+          "sha256": "90ebcf684031146b8091e2ed4c0c9805204f36632b8325d7934a8952fc3b8008",
+          "bytes": 7882
+        },
+        {
+          "path": "index.js",
+          "sha256": "255e7aee43af0e990845cd4e1223aae79ddf578c8aab567aac82dae564f8418a",
+          "bytes": 13759
+        },
+        {
+          "path": "package.json",
+          "sha256": "5180c871f17020961ef9469457bf9f98ba9cb0111540adb9482c95bbc1d914bb",
+          "bytes": 136
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "7997833f3ff7c4c181d6525b06893f574286e6f88dd086fa1e5a2b63113bd9d5",
+          "bytes": 696
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "b0104078b355fb923b45271aa671d91c68cc5ea883069703d9e422320d064a0a",
+          "bytes": 537
+        },
+        {
+          "path": "runner.py",
+          "sha256": "554d86b109ebca6486966bbaa04ca70f855898ec8ffd7d99b60dfc57c16a4cf6",
+          "bytes": 6093
+        },
+        {
+          "path": "skills/backtrader-fixed-research/SKILL.md",
+          "sha256": "3b9e17d0ede5319e0e0e95ae0628714eed70ace255d3ddf2c33191deffb1383d",
+          "bytes": 2868
+        },
+        {
+          "path": "tools.json",
+          "sha256": "600d8463a8e9c3d72689f99de94b5c328c43319cd02f3b473adacb011e41fe94",
+          "bytes": 6155
+        }
+      ]
+    },
+    {
+      "id": "sesame/behavioral-finance",
+      "version": "1.0.0",
+      "directory": "behavioral-finance",
+      "treeDigest": "sha256:87e63f4aa7466703a8f97dafcd8ad70aec9b8577815280dff5747857cfccffca",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "b7637276b2a7ade3e5777543663d646194efc378d05bbe7aad248161d58acc34",
+          "bytes": 1076
+        },
+        {
+          "path": "PROVENANCE.md",
+          "sha256": "150c13c644784cb64d313e782ec018300ee1c6fbbf418744bf2c8e5ba1fcb591",
+          "bytes": 2128
+        },
+        {
+          "path": "README.md",
+          "sha256": "37cff0154f3c1b601aa0a5b720c9e25ce8a8e7795eef852956e8e69e4a5ac185",
+          "bytes": 967
+        },
+        {
+          "path": "examples/case.json",
+          "sha256": "ca2e625e70fb038ca230a71a91aa05f880a8c87c4a0ff0c55dad5d51c1fb8542",
+          "bytes": 456
+        },
+        {
+          "path": "examples/expected.md",
+          "sha256": "efc6141f140df13bc8d03a2fd08c173acecd1e5c2cbab8b87c8e80581143915d",
+          "bytes": 511
+        },
+        {
+          "path": "index.js",
+          "sha256": "66fd44a7bc1efcff0ceda22c155a2fb1861c7adf1abfd75300bc58e36a2c3765",
+          "bytes": 125
+        },
+        {
+          "path": "package.json",
+          "sha256": "6a26306bb1d4af1c0288c4884ff8561424e7f640b9a309d0ded402a43b517f04",
+          "bytes": 113
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "0d2ee10c9406611a061ebf32b033a416eceb84e4defcb7200b56649263c317e8",
+          "bytes": 850
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "aee0cbaa685ed4e9b348b50c08c99699cfb3d24592b526af7a1e7f096e3ea791",
+          "bytes": 325
+        },
+        {
+          "path": "skills/behavioral-finance/SKILL.md",
+          "sha256": "6df911fc53f9f59958301419201e486365b737ef9a4b78287a5dbbcac2585674",
+          "bytes": 1943
+        },
+        {
+          "path": "skills/behavioral-finance/references/evidence.md",
+          "sha256": "459d5ff613b0cd46a470b800db93c8dd09c33e636cc567e9f35ef856b1a9ae59",
+          "bytes": 2692
+        },
+        {
+          "path": "skills/behavioral-finance/references/method.md",
+          "sha256": "6ac85512a919d6da8a11d85e666c24523cd14d97962d94b0a72239457c1d7074",
+          "bytes": 1620
+        },
+        {
+          "path": "tools.json",
+          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "bytes": 3
+        }
+      ]
+    },
+    {
+      "id": "sesame/ccxt",
+      "version": "1.0.0",
+      "directory": "ccxt",
+      "treeDigest": "sha256:a4328a4a4b7e35f6cb5ec4adf219adf70dbd30337ba19aac4bf33b57305ea0cd",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+          "bytes": 1076
+        },
+        {
+          "path": "PROVENANCE.md",
+          "sha256": "208ef6ef82fdab88878c63ecd8896fc180e0f87db01299c66101723432cd2ccc",
+          "bytes": 1499
+        },
+        {
+          "path": "README.md",
+          "sha256": "4fba6e64af9535e2ad34d15d7b8be99cc82f567fd15713362ff692a6d39f64aa",
+          "bytes": 2404
+        },
+        {
+          "path": "bridge.py",
+          "sha256": "9ec50a48f1fb802f51c4d0fa05e4e3db073a25a90524e9b4cc0728eeccb43abe",
+          "bytes": 2645
+        },
+        {
+          "path": "environment.js",
+          "sha256": "e44e2ff401f5be3467dc086465336a7c60a9380f947ddba854417413dedf5603",
+          "bytes": 7872
+        },
+        {
+          "path": "index.js",
+          "sha256": "00cf4e17afd547f6470d496e2aef4b41e026a80dcb458c40a2618a78d6dec0ca",
+          "bytes": 1317
+        },
+        {
+          "path": "package.json",
+          "sha256": "6864fc4e84ad72946de794ebf8e74cbcc331196a0204b83897c9c4482c9d0f70",
+          "bytes": 117
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "80a5735e66fa5719a3bdbab53cb8a00b9f70001f378bc56865fe79e08d00a602",
+          "bytes": 674
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "e123f8f6445bc3f6a3aed05d3b218917a8b70a2046a7a632516c02a8baed8ffe",
+          "bytes": 531
+        },
+        {
+          "path": "provider.js",
+          "sha256": "799e5f059112e7a841ffab26cf8270189b3213aa8956edcdac9050aab2d180ff",
+          "bytes": 18639
+        },
+        {
+          "path": "skills/ccxt-public-markets/SKILL.md",
+          "sha256": "1fbb4004c8791f5fc194f501c60fd557b7718b76ffb2e242b47592c32f2f2c11",
+          "bytes": 2020
+        },
+        {
+          "path": "tools.json",
+          "sha256": "130bf39e4bbfac1b5b074fe26600df7fd11b184a9949591b5b2fd6e031277bf1",
+          "bytes": 1058
+        },
+        {
+          "path": "worker.js",
+          "sha256": "080bc3bd7d8020b99d50f8c1fe407ee33d73aabbb1ab6a80c8b3011260961b52",
+          "bytes": 2238
+        }
+      ]
+    },
+    {
+      "id": "sesame/dow-theory",
+      "version": "1.0.0",
+      "directory": "dow-theory",
+      "treeDigest": "sha256:611ac358f12e678495c8ca0ff280dd24dfbb387ed7201d12fbb6e205d7338625",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "b7637276b2a7ade3e5777543663d646194efc378d05bbe7aad248161d58acc34",
+          "bytes": 1076
+        },
+        {
+          "path": "PROVENANCE.md",
+          "sha256": "897d211ea70c8703a0679534ee805d7a533db9a1aa11eface3f4b1b97baa9eb4",
+          "bytes": 2430
+        },
+        {
+          "path": "README.md",
+          "sha256": "b999c6a49705123002a0d1057a55644e5f6b17afcd3806c153542f0c238900f3",
+          "bytes": 947
+        },
+        {
+          "path": "examples/case.json",
+          "sha256": "15b6012192a7925b6e5ea6d2d77357d38f5c8b69b529d1e3e34b17b9edea829b",
+          "bytes": 577
+        },
+        {
+          "path": "examples/expected.md",
+          "sha256": "2bfb7b724a07ed9452bce4c9d81962c4c3d1b6a3d096d0ab8ce74c8de3753cb0",
+          "bytes": 512
+        },
+        {
+          "path": "index.js",
+          "sha256": "66fd44a7bc1efcff0ceda22c155a2fb1861c7adf1abfd75300bc58e36a2c3765",
+          "bytes": 125
+        },
+        {
+          "path": "package.json",
+          "sha256": "0c57bd1ebfaea13021eb86e57939863692c42c73932c9f0fed5a6e1c2b6d7bfe",
+          "bytes": 105
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "cde513d29c9e37f37eff1eee650f322672d5d1e8ea7d6c68ec864bfe1bb85456",
+          "bytes": 824
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "b4d25420ae530cddd4027553f3e0e544117cd745cd63ebbf7911388ffe428c3c",
+          "bytes": 313
+        },
+        {
+          "path": "skills/dow-theory/SKILL.md",
+          "sha256": "b1835238e0a269defb2839d342dec53fd1fe964245e288daaba989103f1caf1f",
+          "bytes": 2031
+        },
+        {
+          "path": "skills/dow-theory/references/method.md",
+          "sha256": "b05618dbfad54076b49829825e6d33bbccbd615b76fab981bc2756e1780388bd",
+          "bytes": 1861
+        },
+        {
+          "path": "skills/dow-theory/references/validation.md",
+          "sha256": "f9e16d45df0c10dcdf5f81ca74f3417a647d6671183cf58352d94b22543c69c7",
+          "bytes": 1769
+        },
+        {
+          "path": "tools.json",
+          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "bytes": 3
+        }
+      ]
+    },
+    {
+      "id": "sesame/elliott-wave",
+      "version": "1.0.0",
+      "directory": "elliott-wave",
+      "treeDigest": "sha256:dbf0be2fc96f892bfc0942204f00743abcf0d444f8b9601536b9e1bf4c3f88a3",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "b7637276b2a7ade3e5777543663d646194efc378d05bbe7aad248161d58acc34",
+          "bytes": 1076
+        },
+        {
+          "path": "PROVENANCE.md",
+          "sha256": "4553d2a6bf55a6b2f0c2ffb8347010100a347cfbf255e1fc81b8f6f100f007bf",
+          "bytes": 2466
+        },
+        {
+          "path": "README.md",
+          "sha256": "9b730994f75d0f618ba114328a32885b027aef226a2b679a8c91d2b2938f7fe4",
+          "bytes": 969
+        },
+        {
+          "path": "examples/case.json",
+          "sha256": "5147be9842a8220271c1cb26e0c1f5993f960eeb6ffd066f3c3a086189e53a09",
+          "bytes": 858
+        },
+        {
+          "path": "examples/expected.md",
+          "sha256": "c671719127f641f1ae9afa9cfe3b695d72fd7f6bc1931062f9bbef9b21725f69",
+          "bytes": 555
+        },
+        {
+          "path": "index.js",
+          "sha256": "66fd44a7bc1efcff0ceda22c155a2fb1861c7adf1abfd75300bc58e36a2c3765",
+          "bytes": 125
+        },
+        {
+          "path": "package.json",
+          "sha256": "06e1fc531f3a26cbc87cca9886e3b40cf72e15ae25b1d7ecab393d1f041621a1",
+          "bytes": 107
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "ea4168e301cff8b94f990b528b0c0aaf80d5451d63d51b600a8d9a2ddcea71a4",
+          "bytes": 848
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "68e4c6b7814c7e13ec02814dad1c8751794ccac9463f090764ec4da4795f71e1",
+          "bytes": 321
+        },
+        {
+          "path": "skills/elliott-wave/SKILL.md",
+          "sha256": "bd13e41f438ca53eae729d19e1df71737a32301164cec9835a67fcea7b8c6d59",
+          "bytes": 2109
+        },
+        {
+          "path": "skills/elliott-wave/references/method.md",
+          "sha256": "6142004ebf90a2eb9f1e8e7a0eebb6b7a9168c6ea02a88d1bf67fa5758519090",
+          "bytes": 1778
+        },
+        {
+          "path": "skills/elliott-wave/references/validation.md",
+          "sha256": "f9e16d45df0c10dcdf5f81ca74f3417a647d6671183cf58352d94b22543c69c7",
+          "bytes": 1769
+        },
+        {
+          "path": "tools.json",
+          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "bytes": 3
+        }
+      ]
+    },
+    {
+      "id": "sesame/factor-research",
+      "version": "1.0.0",
+      "directory": "factor-research",
+      "treeDigest": "sha256:419d782fff2310866efa37ba332f9c8a3cd74571e4475db82701aa68e73733c6",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+          "bytes": 1076
+        },
+        {
+          "path": "PROVENANCE.md",
+          "sha256": "c14e3cc1b19347cfa7fbcaa2000308814a221c7e8bce7d7cb2b076940cb3815e",
+          "bytes": 5174
+        },
+        {
+          "path": "README.md",
+          "sha256": "6729dd33f8777118cc4ef1071835dfbbbe08b99b4c66afd9d18543f01e374154",
+          "bytes": 1887
+        },
+        {
+          "path": "examples/development.demo.json",
+          "sha256": "d2a27cffd87889b52bde17f2214c7554c59713cdce738d1976e3885be88eb64b",
+          "bytes": 44404
+        },
+        {
+          "path": "examples/holdout.demo.json",
+          "sha256": "19813672a64b27426ec97b5fefee17f35635ebb9abb4d22055e1ed514ca6f7f8",
+          "bytes": 22197
+        },
+        {
+          "path": "examples/plan.demo.json",
+          "sha256": "6594aa712ea775f08a3d64eef7b6a7788982c597fb350f544f1b359e18ecad32",
+          "bytes": 1943
+        },
+        {
+          "path": "index.js",
+          "sha256": "f2ccfd4f971d770ff2003d29f443f70146936c7f5e5ff4a41d2836dc679a8a3f",
+          "bytes": 45
+        },
+        {
+          "path": "package.json",
+          "sha256": "c213f763eb9c5b2eed6af6ae9e30b16646158dba349b9be10305ef9a2891e7b5",
+          "bytes": 109
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "73718da1d1addda6a5cd8e55bbfce045cbc9d9fe62d0abe68289c7ed74105c0b",
+          "bytes": 872
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "7afec4afdcd3f8c3a14d280da581816dc67514c3840f99d3d12dab03b7640b8a",
+          "bytes": 696
+        },
+        {
+          "path": "scripts/factor.mjs",
+          "sha256": "2d6902e93a9f5f2562dce0ada58becc81473a05362ede7ab7fc9aa90a5b45d80",
+          "bytes": 21727
+        },
+        {
+          "path": "skills/factor-research/SKILL.md",
+          "sha256": "2fd82f97bb346e1534241f60299824d8e5b6401196eea6e9d56705033e9651c7",
+          "bytes": 2736
+        },
+        {
+          "path": "skills/factor-research/references/execution.md",
+          "sha256": "c92d197c04cb2bdfae2474cd82b7b2b415da46e12dab64cd092f868db20b1dc0",
+          "bytes": 4995
+        },
+        {
+          "path": "skills/factor-research/references/method.md",
+          "sha256": "3e5a6030390b26abf1902a06aab5092e2656878fb04b0545964acc0faaf53884",
+          "bytes": 2834
+        },
+        {
+          "path": "tools.json",
+          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "bytes": 3
+        }
+      ]
+    },
+    {
+      "id": "sesame/ict",
+      "version": "1.0.0",
+      "directory": "ict",
+      "treeDigest": "sha256:ad93140c92862e8614c74a19f9b8f38926e2d8fbcde5172cfa2cfeb3423736c4",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "b7637276b2a7ade3e5777543663d646194efc378d05bbe7aad248161d58acc34",
+          "bytes": 1076
+        },
+        {
+          "path": "PROVENANCE.md",
+          "sha256": "59dce218444ad61d8e7c5671296d73f2de00bcf998e2b2a3a4bac044b40863f8",
+          "bytes": 2384
+        },
+        {
+          "path": "README.md",
+          "sha256": "668d128c0662a5c435d051be4ca2013a15ae4ea8203d5860443692586b7f45d0",
+          "bytes": 942
+        },
+        {
+          "path": "examples/bars.json",
+          "sha256": "3b475c9d668a7afaac75778acecc70b621fb5e992f2a59560b194e064f2d541a",
+          "bytes": 6505
+        },
+        {
+          "path": "examples/expected.md",
+          "sha256": "bf56a29d37c3cf1d6a1c1b9387e0126c3c5b61ebed9494acad9bc6bfc10e4591",
+          "bytes": 643
+        },
+        {
+          "path": "examples/source.json",
+          "sha256": "2feb68724c120551298977493f834cb32449fce1ba83f7d6dbda86fe5384ac18",
+          "bytes": 506
+        },
+        {
+          "path": "index.js",
+          "sha256": "66fd44a7bc1efcff0ceda22c155a2fb1861c7adf1abfd75300bc58e36a2c3765",
+          "bytes": 125
+        },
+        {
+          "path": "package.json",
+          "sha256": "3d9a3fd0342655d8e27aeeefe6e3ca29b71f862e967b9aec57e58bbc7ae42fd1",
+          "bytes": 98
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "7f91c7f4eaef65cc36706d62423bbd6a1b5352cb5c3b56da4591ccf627ad95bc",
+          "bytes": 936
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "7d78f641c9bff20238713e5ad4294a77f57a0896e3659b6390214d84a4e9c065",
+          "bytes": 319
+        },
+        {
+          "path": "scripts/bar_input.py",
+          "sha256": "7628efc0b5f3f311187649e279aacaa415f09b3936c0dc82db5fa6aadb96658b",
+          "bytes": 10396
+        },
+        {
+          "path": "scripts/observe.py",
+          "sha256": "72eb93dcfaf4774614bf9cbde9714293a8a7afa84b0726d1795d8d8778f73e6d",
+          "bytes": 1309
+        },
+        {
+          "path": "skills/ict/SKILL.md",
+          "sha256": "cceb69b82674dfdb8d09dedb85c30dd0f230512f081977b125be67beb92e423a",
+          "bytes": 2377
+        },
+        {
+          "path": "skills/ict/references/execution.md",
+          "sha256": "4ca571eea3b19fa6ddfa5b46d377130283009c7059ff10b15771602603eb2410",
+          "bytes": 4042
+        },
+        {
+          "path": "skills/ict/references/method.md",
+          "sha256": "4864789422d02acd347a052c79cdeffc75b8b3d17422f901bd6fbe39499c9ced",
+          "bytes": 2142
+        },
+        {
+          "path": "skills/ict/references/validation.md",
+          "sha256": "f9e16d45df0c10dcdf5f81ca74f3417a647d6671183cf58352d94b22543c69c7",
+          "bytes": 1769
+        },
+        {
+          "path": "tools.json",
+          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "bytes": 3
+        }
+      ]
+    },
+    {
+      "id": "sesame/institutional-analysis",
+      "version": "1.0.0",
+      "directory": "institutional-analysis",
+      "treeDigest": "sha256:67c68392f1d6a001e536a33440688f30683b93dc9f772746e276ed88e02e66ae",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "b7637276b2a7ade3e5777543663d646194efc378d05bbe7aad248161d58acc34",
+          "bytes": 1076
+        },
+        {
+          "path": "PROVENANCE.md",
+          "sha256": "1edc3b2ffce5f4fce5f0522d1641f6c778a327333271931cfe6e880d24078962",
+          "bytes": 2735
+        },
+        {
+          "path": "README.md",
+          "sha256": "ac074974c9619a38411374bd09d433aacf34e001f50bc682f66b6d72525599ad",
+          "bytes": 987
+        },
+        {
+          "path": "examples/case.json",
+          "sha256": "ad0864aed53f589b1176d48f10f7c3c15f927f578b082a1cd51597862efdf3f6",
+          "bytes": 448
+        },
+        {
+          "path": "examples/expected.md",
+          "sha256": "266086b0f0a731436e9b8a89ed6d3e0dd3e72a2d1457ba5524bc1cc76b42661a",
+          "bytes": 512
+        },
+        {
+          "path": "index.js",
+          "sha256": "66fd44a7bc1efcff0ceda22c155a2fb1861c7adf1abfd75300bc58e36a2c3765",
+          "bytes": 125
+        },
+        {
+          "path": "package.json",
+          "sha256": "703e57228148e1bc67fa412bf1183067d68e3e78ccc508f5fc5eebb99439603b",
+          "bytes": 117
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "f9a21f63a3ddfab569c5c5da5d323bc79ad69a7d2eb34751d1fe68b1d31f947a",
+          "bytes": 874
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "6a3e4fb4f9e06dffd81cac24b99fbdd006856399314a8ba06d557d977acf4926",
+          "bytes": 343
+        },
+        {
+          "path": "skills/institutional-analysis/SKILL.md",
+          "sha256": "cedf89bbdfc13a0ea3114ea971a93e87b54adcde08a3b26fe5ecc2b9af5e7030",
+          "bytes": 1945
+        },
+        {
+          "path": "skills/institutional-analysis/references/evidence.md",
+          "sha256": "459d5ff613b0cd46a470b800db93c8dd09c33e636cc567e9f35ef856b1a9ae59",
+          "bytes": 2692
+        },
+        {
+          "path": "skills/institutional-analysis/references/method.md",
+          "sha256": "bbb899ff75b1066ce2a72c91a369314d508320bea72000fdcc5b10b310095044",
+          "bytes": 1939
+        },
+        {
+          "path": "tools.json",
+          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "bytes": 3
+        }
+      ]
+    },
+    {
       "id": "sesame/judgment-evolution",
       "version": "2.1.0",
       "directory": "judgment-evolution",
@@ -781,6 +1385,172 @@
       ]
     },
     {
+      "id": "sesame/narrative-analysis",
+      "version": "1.0.0",
+      "directory": "narrative-analysis",
+      "treeDigest": "sha256:040222981d1b7c038ec12fe7d32f8ed24546427a92def7c40d38488afc3bd902",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "b7637276b2a7ade3e5777543663d646194efc378d05bbe7aad248161d58acc34",
+          "bytes": 1076
+        },
+        {
+          "path": "PROVENANCE.md",
+          "sha256": "67c1dd003b55d80baf41af87ae2677cdf4ac0f3019989885acf4a3bf97354a1f",
+          "bytes": 2452
+        },
+        {
+          "path": "README.md",
+          "sha256": "ad08b9352ad488f356d3842c0ab4008dd25e203e6af825980403fe0869d9e5f3",
+          "bytes": 964
+        },
+        {
+          "path": "examples/case.json",
+          "sha256": "9fd7ed2d8210b1a36c8353fbf375ae397cef279de7e7ec184070f2b631e64944",
+          "bytes": 749
+        },
+        {
+          "path": "examples/expected.md",
+          "sha256": "39c18ed48ed4e86f67a5bab84a2b113eb023a7a22a8c3beadd1dd0e748b6ff26",
+          "bytes": 514
+        },
+        {
+          "path": "index.js",
+          "sha256": "66fd44a7bc1efcff0ceda22c155a2fb1861c7adf1abfd75300bc58e36a2c3765",
+          "bytes": 125
+        },
+        {
+          "path": "package.json",
+          "sha256": "3f9d2eda3051b7713b3bd3a10a3be307cd9bacaa12f6be2cf2e8275cd183f48b",
+          "bytes": 113
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "0f1638a491dd73f9dda5e2a532256bb95281fa6240d222492a20ef8e3b7bab05",
+          "bytes": 847
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "b48595f40b11800146f680c226a8d10778f4ce9cf8639ada56ea054780d9ae76",
+          "bytes": 319
+        },
+        {
+          "path": "skills/narrative-analysis/SKILL.md",
+          "sha256": "ed0e5dab069496fd1a43ab9a63110fa5e6040eda158b3757d8b7ab9517ef78c9",
+          "bytes": 1909
+        },
+        {
+          "path": "skills/narrative-analysis/references/evidence.md",
+          "sha256": "459d5ff613b0cd46a470b800db93c8dd09c33e636cc567e9f35ef856b1a9ae59",
+          "bytes": 2692
+        },
+        {
+          "path": "skills/narrative-analysis/references/method.md",
+          "sha256": "ba7f0d05ced7c5faf502d776e8f4423fe18a5df08a658db80105bcfe9f89639c",
+          "bytes": 1768
+        },
+        {
+          "path": "tools.json",
+          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "bytes": 3
+        }
+      ]
+    },
+    {
+      "id": "sesame/price-action",
+      "version": "1.0.0",
+      "directory": "price-action",
+      "treeDigest": "sha256:4ff62adf910fb5cee8e02293ce518579162d585ef9917c9b8faf241f7ce1db2f",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "b7637276b2a7ade3e5777543663d646194efc378d05bbe7aad248161d58acc34",
+          "bytes": 1076
+        },
+        {
+          "path": "PROVENANCE.md",
+          "sha256": "86212a3d78dc3241caa2fc886dabf37014303f9d3ee7d7b58730e2e80ac5758e",
+          "bytes": 3086
+        },
+        {
+          "path": "README.md",
+          "sha256": "9ac6b517c48ea335d5f5e61e0cc1c0c4c25cb29f6a44566d8f252f9f864e83b7",
+          "bytes": 954
+        },
+        {
+          "path": "examples/bars.json",
+          "sha256": "3b475c9d668a7afaac75778acecc70b621fb5e992f2a59560b194e064f2d541a",
+          "bytes": 6505
+        },
+        {
+          "path": "examples/expected.md",
+          "sha256": "c9f9c61bd43a805dcabeaacf205437f56378735423876b022b41ae549ab7f29d",
+          "bytes": 659
+        },
+        {
+          "path": "examples/source.json",
+          "sha256": "2feb68724c120551298977493f834cb32449fce1ba83f7d6dbda86fe5384ac18",
+          "bytes": 506
+        },
+        {
+          "path": "index.js",
+          "sha256": "66fd44a7bc1efcff0ceda22c155a2fb1861c7adf1abfd75300bc58e36a2c3765",
+          "bytes": 125
+        },
+        {
+          "path": "package.json",
+          "sha256": "ff6cf431fb42d0b99c8fdb6a43bf59d7d8f84c0767cb7b9d6313b47890774a4e",
+          "bytes": 107
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "cfcebf4e0a44a81a32e1614e9e063e4ae0128905f46647e51cda3aebe714624e",
+          "bytes": 966
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "c3792d19312635b99822d66242da6fe799e03b20accf8a81288743b2bf3d6a20",
+          "bytes": 320
+        },
+        {
+          "path": "scripts/bar_input.py",
+          "sha256": "7628efc0b5f3f311187649e279aacaa415f09b3936c0dc82db5fa6aadb96658b",
+          "bytes": 10396
+        },
+        {
+          "path": "scripts/observe.py",
+          "sha256": "2bea4ab05991ca16e38348a17c7be57f513b0a9e5401815cc8a4b83237c7df87",
+          "bytes": 2339
+        },
+        {
+          "path": "skills/price-action/SKILL.md",
+          "sha256": "5182a61ff52cbf4d8502f20d3602d603e83c3590dc8f1df12b51e3cf10ff7f4e",
+          "bytes": 2257
+        },
+        {
+          "path": "skills/price-action/references/execution.md",
+          "sha256": "c05ab725e63a3cc8f2bed4ea084d052c0298e04b2fe55faf5cd6746ad424734d",
+          "bytes": 4061
+        },
+        {
+          "path": "skills/price-action/references/method.md",
+          "sha256": "4a34c5d2e230304469fc1baee208833147ad1e4f6240265a0131677111ad5e2f",
+          "bytes": 2058
+        },
+        {
+          "path": "skills/price-action/references/validation.md",
+          "sha256": "f9e16d45df0c10dcdf5f81ca74f3417a647d6671183cf58352d94b22543c69c7",
+          "bytes": 1769
+        },
+        {
+          "path": "tools.json",
+          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "bytes": 3
+        }
+      ]
+    },
+    {
       "id": "sesame/qmt",
       "version": "1.1.0",
       "directory": "qmt",
@@ -865,9 +1635,9 @@
     },
     {
       "id": "sesame/quantskills-catalog",
-      "version": "2.0.2",
+      "version": "2.1.0",
       "directory": "quantskills-catalog",
-      "treeDigest": "sha256:01dffa3d6eb034c371c08d2ac93661227223d4be6098ba4a773dda7f21983a29",
+      "treeDigest": "sha256:f8981b0e9a3255f3d64e425c6d839e65cebfcbe266558848a8591eb4660d96cc",
       "files": [
         {
           "path": "LICENSE",
@@ -886,33 +1656,38 @@
         },
         {
           "path": "package.json",
-          "sha256": "252516b25ed6f17294aa77d270829d64e2114c6dd7b52853da19f45028405842",
+          "sha256": "36e45a00717042c551fd2cb4993440072fa17c0e70f6647e6f0c68a08a436a8c",
           "bytes": 132
         },
         {
           "path": "plugin.json",
-          "sha256": "1dd2ea2d7d28069ddc7edcedc37aa97421bf51464a5335f74ac03ade7a400ae6",
-          "bytes": 7188
+          "sha256": "de7df31be9fbc93c74278e5d7d80762be5e1d3867fffbd88fd457ad570eaf7b8",
+          "bytes": 7196
         },
         {
           "path": "server.py",
-          "sha256": "9dd3c2a0b92221af443ac31e10436e79bc55fa57f8d995c27eae2c73b747454d",
-          "bytes": 6600
+          "sha256": "340493550038907dcda4913f146218194d17ffa2b039d913663dcdd9a5797ccc",
+          "bytes": 6545
         },
         {
           "path": "skills/quantskills-catalog/PROVENANCE.md",
-          "sha256": "eb6a184822aaac0c7cb71beab6b487592be16a08fcfab0af8225f2a874feb066",
-          "bytes": 2341
+          "sha256": "56024e4743a5ee6f15e1c0d2c54e1a3f288923b190b9b4a1ee5f8f887d4f3861",
+          "bytes": 3316
         },
         {
           "path": "skills/quantskills-catalog/SKILL.md",
-          "sha256": "3aafd5879f717880a5c347b165f6015f9c4f99b1ca10bd8c9766c19b8d615908",
-          "bytes": 2512
+          "sha256": "9ef90f2b6679a3eda173acbbc31ff8f19ae567d74dd83d35a9c97273c95794fe",
+          "bytes": 5283
         },
         {
           "path": "tools.json",
-          "sha256": "de248f0174cc5a32c589280583c69dc8760518930e17f51ea06c31e22c3640f9",
-          "bytes": 2041
+          "sha256": "2f61a56ba30749cc14466a6eb0b4fac51f77a3143914ee53d7231ceb39e89bdf",
+          "bytes": 3786
+        },
+        {
+          "path": "workflows.json",
+          "sha256": "bfb78cf377b717ccd1b9f22a41cc23fe65120e04afa1599339d6820b78dd6e1c",
+          "bytes": 5930
         }
       ]
     },
@@ -966,6 +1741,94 @@
           "path": "tools.json",
           "sha256": "5220feea5bc47af36e49002946f8a91fd44d4d7ed6383f252a37bfb302262541",
           "bytes": 709
+        }
+      ]
+    },
+    {
+      "id": "sesame/strategy-research",
+      "version": "1.0.0",
+      "directory": "strategy-research",
+      "treeDigest": "sha256:3093c8eee5a73ef0b1b8b07c8f04b1b678c045b7d6b9bddc576926b49e1b430e",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+          "bytes": 1076
+        },
+        {
+          "path": "PROVENANCE.md",
+          "sha256": "c14e3cc1b19347cfa7fbcaa2000308814a221c7e8bce7d7cb2b076940cb3815e",
+          "bytes": 5174
+        },
+        {
+          "path": "README.md",
+          "sha256": "a298bc55be1767b6541d4193ab0192b79a9acd6b8c3c80a30f4212fc77348967",
+          "bytes": 1813
+        },
+        {
+          "path": "examples/input.demo.json",
+          "sha256": "4b5f7f37113fec6e01e7d32355bab67522ffa5951157179baa1fdcdc22edb95e",
+          "bytes": 1023
+        },
+        {
+          "path": "examples/plan.demo.json",
+          "sha256": "73fe9eb776ca0b94a6bf54694acb580ee5c3215f16ee9cb22d2c095f20ad187d",
+          "bytes": 1993
+        },
+        {
+          "path": "examples/timing.demo.json",
+          "sha256": "a05a37303b0cd4daffbaf64e9fad9f9b5b65d11c6215304bd844ff9a92fb10aa",
+          "bytes": 4548
+        },
+        {
+          "path": "examples/trials.demo.json",
+          "sha256": "fc7baa3193097c468af2004fbe50207fdb4bbee25e1462064243fb60a0c757e4",
+          "bytes": 2278
+        },
+        {
+          "path": "index.js",
+          "sha256": "f2ccfd4f971d770ff2003d29f443f70146936c7f5e5ff4a41d2836dc679a8a3f",
+          "bytes": 45
+        },
+        {
+          "path": "package.json",
+          "sha256": "4aba4c808032fa570482b5a6dc7f43268d09b1c062302af59c7e402507978f4e",
+          "bytes": 111
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "04922cde661cf5d19632d11be6dd9ee5d95979e7788a759761d338e484c5665b",
+          "bytes": 910
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "a1fa0af1bbb44b83ca1c4c2dcaaf45ecef013e7110878f8686a31e63058a6609",
+          "bytes": 925
+        },
+        {
+          "path": "scripts/experiment.mjs",
+          "sha256": "58e88721a18f8cdfda49062e943d32a5913ab87c99552ce7e40f7e7f71d03875",
+          "bytes": 12988
+        },
+        {
+          "path": "skills/strategy-research/SKILL.md",
+          "sha256": "c7e9ab9ea65e85ebe2c5fe1f16a6257f6f46a973a73c93ba0f4f604d97c8d8c2",
+          "bytes": 2730
+        },
+        {
+          "path": "skills/strategy-research/references/evidence.md",
+          "sha256": "aad9917d4c3c4cdcaa874f99933993564992ca898b987a8ef595b72310b791d3",
+          "bytes": 1789
+        },
+        {
+          "path": "skills/strategy-research/references/execution.md",
+          "sha256": "aa0e07addd05e13d9f1d3d799afaf1f946417c4746d91443302cc69b151d2e4e",
+          "bytes": 3389
+        },
+        {
+          "path": "tools.json",
+          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "bytes": 3
         }
       ]
     },
@@ -1170,6 +2033,79 @@
           "path": "tools.json",
           "sha256": "d9e1b81287897af1686ec7592dd217ac3943e18a4b218c9695ca5e8c817fab42",
           "bytes": 593
+        }
+      ]
+    },
+    {
+      "id": "sesame/wyckoff",
+      "version": "1.0.0",
+      "directory": "wyckoff",
+      "treeDigest": "sha256:7c698c143a88165fd8d53585b427e3dd45fe7cc46bb54db6443c2d2b462a1e59",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "b7637276b2a7ade3e5777543663d646194efc378d05bbe7aad248161d58acc34",
+          "bytes": 1076
+        },
+        {
+          "path": "PROVENANCE.md",
+          "sha256": "7d7608b3975ca076f8b9012fefdec5abdb39a258e5072e88920419fd1614402f",
+          "bytes": 2315
+        },
+        {
+          "path": "README.md",
+          "sha256": "6f8efc0b0d5a74ccebb8a11a0f38acfb8c9c97e6604af7e81259c5ffd3f7c07e",
+          "bytes": 968
+        },
+        {
+          "path": "examples/case.json",
+          "sha256": "4f295fcb2d0d260aecbad003c946b8104034e3dcf2d76e19f18c186cd387effd",
+          "bytes": 482
+        },
+        {
+          "path": "examples/expected.md",
+          "sha256": "2e226352cc80e8585fc33683d52aa2b34e4a5e1132716604e254d1bb196cef1e",
+          "bytes": 508
+        },
+        {
+          "path": "index.js",
+          "sha256": "66fd44a7bc1efcff0ceda22c155a2fb1861c7adf1abfd75300bc58e36a2c3765",
+          "bytes": 125
+        },
+        {
+          "path": "package.json",
+          "sha256": "8db25c8e8d745d95f30333d6dd2d67c3a7dd485b49e24c579ad0e2c98bd74b07",
+          "bytes": 102
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "f88548d62b3a7559d86460ec054cffd9d103ca7025a1ec5b6d5b9ccea7aba5c2",
+          "bytes": 842
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "a7fb16df4a1fda8a6fc6ad8a93f301462a5b0a8e1dcf7b591baa9f742ebd4753",
+          "bytes": 317
+        },
+        {
+          "path": "skills/wyckoff/SKILL.md",
+          "sha256": "511175e0f89502be506d27c93583a6fdc5de0dc1d0c7a11e071c5d3c36ce06d0",
+          "bytes": 2067
+        },
+        {
+          "path": "skills/wyckoff/references/method.md",
+          "sha256": "d67ac992f9dcf4342184603295a0948885b9dc0c30d4e51303f8ca07441c66b0",
+          "bytes": 1719
+        },
+        {
+          "path": "skills/wyckoff/references/validation.md",
+          "sha256": "f9e16d45df0c10dcdf5f81ca74f3417a647d6671183cf58352d94b22543c69c7",
+          "bytes": 1769
+        },
+        {
+          "path": "tools.json",
+          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "bytes": 3
         }
       ]
     }

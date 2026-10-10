@@ -21,10 +21,10 @@ function fixture(t, kind = 'optional') {
   writeFileSync(join(root, 'bundle-profile.json'), JSON.stringify(profile));
   return { root, pkg, manifest, profile, write };
 }
-test('candidate distribution has nine defaults and ten optional identities, with no duplicate tools from merged packages', () => {
+test('candidate distribution has nine defaults and twenty-two optional identities, with no duplicate tools from merged packages', () => {
   const defaults = buildLock(core), options = buildLock(optional);
-  assert.equal(defaults.packages.length, 9); assert.equal(options.packages.length, 10);
-  const ids = [...defaults.packages, ...options.packages].map(item => item.id); assert.equal(new Set(ids).size, 19);
+  assert.equal(defaults.packages.length, 9); assert.equal(options.packages.length, 22);
+  const ids = [...defaults.packages, ...options.packages].map(item => item.id); assert.equal(new Set(ids).size, 31);
   assert.deepEqual(defaults.packages.map(item => item.id), readProfile(core).packages);
   assert.ok(options.packages.some(item => item.id === 'sesame/mt5'));
   for (const id of ['sesame/host-files', 'sesame/user-guide', 'sesame/research']) assert.ok(!ids.includes(id));
@@ -40,7 +40,7 @@ test('the actual default archive contains only the nine reviewed packages and th
     names.push(name); offset += 512 + Math.ceil(size / 512) * 512;
   }
   assert.deepEqual(names.sort(), ['official-plugins.lock.json', ...lock.packages.flatMap(pkg => pkg.files.map(file => `${pkg.directory}/${file.path}`))].sort());
-  assert.equal(names.some(name => /^(mt5|akshare|qmt|vnpy|judgment-evolution|web-sources|web-extract|rss-collect|market-data-parser|quantskills-catalog)\//.test(name)), false);
+  for (const pkg of buildLock(optional).packages) assert.equal(names.some(name => name.startsWith(`${pkg.directory}/`)), false, pkg.id);
 });
 test('profile enforcement rejects omitted or old engines, implicit mounting, legacy grants and altered membership', t => {
   const f = fixture(t); assert.equal(buildLock(f.root).packages.length, 1);
@@ -67,7 +67,7 @@ test('source preview identifies all candidates but grants no installation author
   assert.equal(preview.application.released, false);
   assert.equal(preview.application.minimum, '0.2.0');
   assert.equal(preview.packages.filter(p => p.distribution === 'core').length, 9);
-  assert.equal(preview.packages.filter(p => p.distribution === 'optional').length, 10);
+  assert.equal(preview.packages.filter(p => p.distribution === 'optional').length, 22);
   for (const item of preview.packages) {
     for (const key of ['source', 'sourceCommit', 'package', 'treeDigest', 'review', 'release']) assert.equal(item[key], undefined);
     assert.equal(item.engines.sesame, '>=0.2.0-0');

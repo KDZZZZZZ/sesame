@@ -48,6 +48,69 @@
       "sourcePath": "plugins/optional-api-v1/packages/akshare"
     },
     {
+      "id": "sesame/backtrader",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "GPL-3.0-or-later",
+      "author": {
+        "name": "Sesame contributors",
+        "url": "https://github.com/KDZZZZZZ/sesame"
+      },
+      "category": "backend",
+      "title": {
+        "en": "Backtrader",
+        "zh": "Backtrader 回测"
+      },
+      "summary": {
+        "en": "Run native Cerebro against fixed data and preserve equity, trades and source.",
+        "zh": "用固定数据运行原生 Cerebro，保存权益、交易与策略源。"
+      },
+      "dependencies": {
+        "en": "Native Python with Backtrader 1.9.78.123; GPL-3.0-or-later optional wrapper and engine. No live trading or SVL equivalence claim.",
+        "zh": "需原生 Python 与 Backtrader 1.9.78.123；可选封装及引擎为 GPL-3.0-or-later。不含实盘，不声明 SVL 等价。"
+      },
+      "tools": [
+        "backtrader_environment",
+        "backtrader_backtest",
+        "backtrader_result"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/backtrader"
+    },
+    {
+      "id": "sesame/behavioral-finance",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors"
+      },
+      "category": "research",
+      "title": {
+        "en": "Behavioral finance",
+        "zh": "行为金融"
+      },
+      "summary": {
+        "en": "Test behavioral explanations against observable incentives and competing hypotheses.",
+        "zh": "用可观察的激励和竞争假设检验行为解释。"
+      },
+      "dependencies": {
+        "en": "Needs dated primary evidence or datasets. Does not infer investor psychology from a chart alone.",
+        "zh": "需注明日期的原始证据或数据，不能只凭图形推断投资者心理。"
+      },
+      "tools": [],
+      "sourcePath": "plugins/optional-api-v1/packages/behavioral-finance"
+    },
+    {
       "id": "sesame/canvas-control",
       "version": "2.1.1",
       "distribution": "core",
@@ -82,6 +145,39 @@
         "indicator_publish"
       ],
       "sourcePath": "plugins/api-v1/packages/canvas-control"
+    },
+    {
+      "id": "sesame/ccxt",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors",
+        "url": "https://github.com/KDZZZZZZ/sesame"
+      },
+      "category": "backend",
+      "title": {
+        "en": "CCXT public markets",
+        "zh": "CCXT 公开行情"
+      },
+      "summary": {
+        "en": "Read explicitly selected Kraken, Coinbase or OKX spot candles.",
+        "zh": "读取明确选择的 Kraken、Coinbase 或 OKX 现货 K 线。"
+      },
+      "dependencies": {
+        "en": "Native Python and CCXT 4.5.85, reused or explicitly prepared. Public reads only; 60-second polling, no private account or orders.",
+        "zh": "复用或明确准备原生 Python 与 CCXT 4.5.85；仅公开读取、60 秒轮询，不含账户或下单。"
+      },
+      "tools": [
+        "ccxt_environment",
+        "ccxt_catalog"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/ccxt"
     },
     {
       "id": "sesame/configuration",
@@ -153,6 +249,151 @@
         "research_register"
       ],
       "sourcePath": "plugins/api-v1/packages/data-access"
+    },
+    {
+      "id": "sesame/dow-theory",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors"
+      },
+      "category": "research",
+      "title": {
+        "en": "Dow Theory",
+        "zh": "道氏理论"
+      },
+      "summary": {
+        "en": "Examine trend structure and explicit inter-market confirmation.",
+        "zh": "研究趋势结构与明确的跨市场确认。"
+      },
+      "dependencies": {
+        "en": "Use comparable sourced series; unavailable confirming evidence remains missing.",
+        "zh": "使用可比且有来源的序列；缺少确认资料时保持证据不足。"
+      },
+      "tools": [],
+      "sourcePath": "plugins/optional-api-v1/packages/dow-theory"
+    },
+    {
+      "id": "sesame/elliott-wave",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors"
+      },
+      "category": "research",
+      "title": {
+        "en": "Elliott Wave",
+        "zh": "艾略特波浪"
+      },
+      "summary": {
+        "en": "Compare explicit wave counts, alternatives and invalidation levels.",
+        "zh": "对照明确的浪形计数、备选解释与失效位置。"
+      },
+      "dependencies": {
+        "en": "Requires sourced price evidence; wave labels remain interpretations. Independently selected method.",
+        "zh": "需有来源的价格证据；浪形标记是解释，可独立选择本方法。"
+      },
+      "tools": [],
+      "sourcePath": "plugins/optional-api-v1/packages/elliott-wave"
+    },
+    {
+      "id": "sesame/factor-research",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors"
+      },
+      "category": "research",
+      "title": {
+        "en": "Factor research",
+        "zh": "因子研究"
+      },
+      "summary": {
+        "en": "Evaluate selected factor columns, redundancy, cost assumptions and held-out outcomes.",
+        "zh": "评估所选因子列、冗余、成本假设与留出样本结果。"
+      },
+      "dependencies": {
+        "en": "Existing Node.js 22+ and fixed point-in-time data; selection is frozen before OOS evaluation. No model family is preloaded.",
+        "zh": "需现有 Node.js 22+ 与固定时点数据，样本外评估前冻结选择；不预加载模型流派。"
+      },
+      "tools": [],
+      "sourcePath": "plugins/optional-api-v1/packages/factor-research"
+    },
+    {
+      "id": "sesame/ict",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors"
+      },
+      "category": "research",
+      "title": {
+        "en": "ICT",
+        "zh": "ICT"
+      },
+      "summary": {
+        "en": "Study liquidity, structure and three-candle gaps using independently selected ICT guidance.",
+        "zh": "独立使用 ICT 指导研究流动性、结构与三柱缺口。"
+      },
+      "dependencies": {
+        "en": "Choose a market data source for observations. Other technical theories are not loaded; helper scripts need Python 3.",
+        "zh": "观察需选行情来源；不加载其他技术理论，辅助脚本需 Python 3。"
+      },
+      "tools": [],
+      "sourcePath": "plugins/optional-api-v1/packages/ict"
+    },
+    {
+      "id": "sesame/institutional-analysis",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors"
+      },
+      "category": "research",
+      "title": {
+        "en": "Institutional analysis",
+        "zh": "制度分析"
+      },
+      "summary": {
+        "en": "Trace rules, participants and implementation channels behind market changes.",
+        "zh": "追踪市场变化背后的规则、参与者和实施路径。"
+      },
+      "dependencies": {
+        "en": "Use jurisdiction-specific primary sources and effective dates; no automatic legal or trading conclusion.",
+        "zh": "使用对应地区的原始材料与生效日期，不自动推导法律或交易结论。"
+      },
+      "tools": [],
+      "sourcePath": "plugins/optional-api-v1/packages/institutional-analysis"
     },
     {
       "id": "sesame/judgment-evolution",
@@ -320,6 +561,35 @@
       "sourcePath": "plugins/optional-api-v1/packages/mt5"
     },
     {
+      "id": "sesame/narrative-analysis",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors"
+      },
+      "category": "research",
+      "title": {
+        "en": "Narrative analysis",
+        "zh": "叙事分析"
+      },
+      "summary": {
+        "en": "Track narratives, their propagation and counterevidence separately from price effects.",
+        "zh": "追踪叙事、传播及反证，并与价格影响分开。"
+      },
+      "dependencies": {
+        "en": "Needs dated, attributable text evidence. Attention and co-movement do not prove causation.",
+        "zh": "需可归属且有日期的文本证据；关注度与共同变化不证明因果。"
+      },
+      "tools": [],
+      "sourcePath": "plugins/optional-api-v1/packages/narrative-analysis"
+    },
+    {
       "id": "sesame/orchestration",
       "version": "2.1.1",
       "distribution": "core",
@@ -398,6 +668,35 @@
       "sourcePath": "plugins/api-v1/packages/plugin-manager"
     },
     {
+      "id": "sesame/price-action",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors"
+      },
+      "category": "research",
+      "title": {
+        "en": "Price Action",
+        "zh": "Price Action 价格行为"
+      },
+      "summary": {
+        "en": "Inspect price structure, confirmed pivots, breaks and failed moves.",
+        "zh": "研究价格结构、已确认摆点、突破与失败动作。"
+      },
+      "dependencies": {
+        "en": "Fixed bars and explicit confirmation times; helper scripts need Python 3. No forced ICT or wave guidance.",
+        "zh": "需固定 K 线与明确确认时间；辅助脚本需 Python 3，不强制 ICT 或波浪指导。"
+      },
+      "tools": [],
+      "sourcePath": "plugins/optional-api-v1/packages/price-action"
+    },
+    {
       "id": "sesame/qmt",
       "version": "1.1.0",
       "distribution": "optional",
@@ -435,7 +734,7 @@
     },
     {
       "id": "sesame/quantskills-catalog",
-      "version": "2.0.2",
+      "version": "2.1.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -463,7 +762,8 @@
         "catalog_search",
         "catalog_filter",
         "catalog_list_categories",
-        "catalog_get_item"
+        "catalog_get_item",
+        "catalog_recommend"
       ],
       "sourcePath": "plugins/optional-api-v1/packages/quantskills-catalog"
     },
@@ -566,6 +866,35 @@
         "strategy_replay"
       ],
       "sourcePath": "plugins/api-v1/packages/strategy-authoring"
+    },
+    {
+      "id": "sesame/strategy-research",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Strategy research",
+        "zh": "策略研究"
+      },
+      "summary": {
+        "en": "Plan hypotheses, fixed trials and out-of-sample evaluation with an experiment ledger.",
+        "zh": "用实验账本组织假设、固定试验及样本外评估。"
+      },
+      "dependencies": {
+        "en": "Existing Node.js 22+; actual backtests require a separately selected engine. No algorithm is preselected.",
+        "zh": "需现有 Node.js 22+；真实回测需另选引擎，不预选策略算法。"
+      },
+      "tools": [],
+      "sourcePath": "plugins/optional-api-v1/packages/strategy-research"
     },
     {
       "id": "sesame/vnpy",
@@ -704,6 +1033,35 @@
         "host_files_run"
       ],
       "sourcePath": "plugins/api-v1/packages/workspace"
+    },
+    {
+      "id": "sesame/wyckoff",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors"
+      },
+      "category": "research",
+      "title": {
+        "en": "Wyckoff",
+        "zh": "威科夫"
+      },
+      "summary": {
+        "en": "Analyze ranges, price-volume relationships and phase hypotheses.",
+        "zh": "研究区间、量价关系与阶段假设。"
+      },
+      "dependencies": {
+        "en": "Requires price and volume with known units; unknown or tick volume limits conclusions.",
+        "zh": "需价格及单位明确的成交量；未知量或 tick volume 限制结论。"
+      },
+      "tools": [],
+      "sourcePath": "plugins/optional-api-v1/packages/wyckoff"
     }
   ]
 }
