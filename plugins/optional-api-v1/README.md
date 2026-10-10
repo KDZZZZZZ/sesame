@@ -1,8 +1,10 @@
 # Optional plugins for Sesame 0.2.0 / Plugin API 1
 
-**Published development plugins; installable entries are identified by the published catalog.** These twenty-two packages require `>=0.2.0-0`
-(formal minimum 0.2.0, including its development previews). Sesame 0.2.0 has not
-been formally released. They do not enter the nine-package default lock or the
+**Optional plugins for Sesame 0.2.0; installable entries are identified by the published catalog.** These twenty-two packages require `>=0.2.0-0`
+(formal minimum 0.2.0, including compatible development builds). Their reviewed
+archive identities remain fixed; application installers are listed on the
+[release page](https://github.com/KDZZZZZZ/sesame/releases/tag/v0.2.0). They do not
+enter the nine-package default lock or the
 historical 0.1.4 catalog. Installation/inspection does not silently download a
 terminal or a large Python environment.
 
@@ -35,13 +37,13 @@ host-readable without granting access to old mutable application collections.
 | `sesame/strategy-research` | Separate experiment planning and evidence-ledger workflow | Existing Node.js 22+ for bounded resource checks; actual backtests use a separately selected engine. No algorithm is preselected. |
 | `sesame/factor-research` | Separate point-in-time factor diagnostics and fixed-selection holdout workflow | Existing Node.js 22+; descriptive statistics, explicit cost assumptions and trial records. No significance or live execution claim. |
 
-## Install through a matching development host
+## Install through Sesame 0.2.0 or a compatible API 1 host
 
 The new plugin-manager reads the unified `../api-v1/catalog.json`; the old three-entry
 catalog here is retained as historical metadata. The unified directory selects
 actually published core dev.14 and optional dev.8: nine defaults and these twenty-two
 optional packages. Each entry fixes its source, files, package tree and
-publication review. Formal application 0.2.0 is still not released.
+publication review. Check the application release page for available installers.
 
 For a released entry, give the Agent an exact name, inspect its metadata and
 `catalog_digest`, then call `plugin_install_catalog`. It downloads only fixed source
@@ -50,7 +52,7 @@ checks activation and refreshes the current session. Updates explicitly supply t
 current `expected_digest`; identical version/bytes return already-installed. Native
 tests are manifest/schema/JavaScript checks, not behavioral or environment approval.
 
-The directory is development-only and requires Plugin API 1. A stable 0.1.4 installation cannot use these native packages. The stable catalog is deliberately unchanged. A previously installed different version requires an explicit update/rollback with its expected digest; catalog installation does not silently replace it or enable a disabled plugin.
+The directory requires Plugin API 1 and accepts Sesame 0.2.0 through each package's declared engines range. Its fixed plugin archive tags and existing channel remain unchanged. A 0.1.4 installation cannot use these packages; its historical catalog is deliberately preserved. A previously installed different version requires an explicit update/rollback with its expected digest; catalog installation does not silently replace it or enable a disabled plugin.
 
 Dependencies, configuration and platform adapters live in each plugin. Check existing installations and saved configuration, reuse them where compatible, prepare only missing dependencies for the requested task, then verify actual calls. Native code uses the current system user's permissions with task process cleanup; it is not an OS sandbox. Trading permissions are not inferred from a successful import or read-only query.
 

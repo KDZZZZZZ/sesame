@@ -18,14 +18,14 @@ export function buildInventory(directory = root) {
     }
   }
   if (entries.length !== Object.keys(policy).length) throw new Error('Inventory policy contains absent packages');
-  return { schemaVersion: 1, apiVersion: '1', status: 'unreleased-candidate', application: { minimum: '0.2.0', engines: { sesame: '>=0.2.0-0' }, released: false },
-    notice: 'This source preview is not an installation catalog. It has no source commits or package digests. Installable entries are generated separately only from fixed, actually published releases.',
+  return { schemaVersion: 1, apiVersion: '1', status: 'descriptive-inventory', application: { minimum: '0.2.0', engines: { sesame: '>=0.2.0-0' } },
+    notice: 'This descriptive inventory is not an installation catalog. It has no source commits or package digests. Installable entries are generated separately only from fixed, actually published releases.',
     packages: entries.sort((a, b) => a.id < b.id ? -1 : 1) };
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const text = JSON.stringify(buildInventory(), null, 2) + '\n', path = join(root, 'inventory.json');
   if (process.argv.includes('--write')) writeFileSync(path, text);
-  else if (readFileSync(path, 'utf8') !== text) throw new Error('Preview inventory differs from current reviewed sources');
+  else if (readFileSync(path, 'utf8') !== text) throw new Error('Descriptive inventory differs from current reviewed sources');
   const inventory = JSON.parse(text);
-  console.log(`Validated candidate inventory: ${inventory.packages.filter(p => p.distribution === 'core').length} core + ${inventory.packages.filter(p => p.distribution === 'optional').length} optional; no install authority`);
+  console.log(`Validated descriptive inventory: ${inventory.packages.filter(p => p.distribution === 'core').length} core + ${inventory.packages.filter(p => p.distribution === 'optional').length} optional; no install authority`);
 }

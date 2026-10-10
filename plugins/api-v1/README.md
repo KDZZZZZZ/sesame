@@ -1,8 +1,8 @@
 # Default plugins for Sesame 0.2.0 / Plugin API 1
 
-**Published development plugins; application 0.2.0 is not formally released. The minimum is `>=0.2.0-0`: development previews are allowed; the formal minimum is 0.2.0. No 0.2.0 application release is advertised here. These packages cannot be used in 0.1.4.**
+**For Sesame 0.2.0 and compatible newer hosts. The declared range `>=0.2.0-0` also permits matching development builds. Installers and their release status are listed on the [application release page](https://github.com/KDZZZZZZ/sesame/releases/tag/v0.2.0). These API 1 packages cannot be used in 0.1.4.**
 
-This directory contains exactly nine default packages for the next application bundle. The application
+This directory contains exactly nine default packages for the 0.2 application bundle. The application
 keeps the protocol, verified loader and general interface. Plugin implementations,
 skills, templates, resources and platform integrations live here and are assembled
 into application distributions from a fixed, reviewed archive.
@@ -19,8 +19,9 @@ See the [package-by-package review](REORGANIZATION.md) for the three merges,
 private-storage changes, dependencies and actual validation scope.
 
 `../catalog.json` and `../packages/` continue to describe the released 0.1.4
-packages. Their fixed commits and digests are unchanged. API 1 packages will not be
-advertised there until their matching application and end-to-end checks are ready.
+packages. Their fixed commits and digests are unchanged. After upgrading from
+0.1.4, ask Sesame to install the required API 1 packages by name; old plugin
+installations are not automatically converted. Use this separate API 1 catalog.
 
 ## Layout
 
@@ -29,7 +30,7 @@ advertised there until their matching application and end-to-end checks are read
 - `official-plugins.lock.json`: every packaged byte and package tree digest.
 - `bundle-profile.json`: the reviewed, exact nine-package distribution set.
 - `catalog.json` / `catalog.sources.json`: separately pinned, already published package entries.
-- `inventory.json`: the 31-package descriptive preview, with no installation digests or authority.
+- `inventory.json`: the 31-package descriptive inventory, with no installation digests or authority.
 - `scripts/plugin-lock.mjs`: data-only validation, lock generation and deterministic archive creation.
 - `tests/`: source-repository tests; never included in the application bundle.
 
@@ -56,7 +57,7 @@ Development bundle 4 completes real-path delivery for research/web inputs and
 MT5 checkouts. Workspace commands expose incomplete snapshot diagnostics. The
 plugin-manager owns verified catalog installation and same-session loading;
 its native static checks remain distinct from actual activation and environment
-verification. The [unified development catalog](CATALOG.md) pins the actual
+verification. The [unified API 1 catalog](CATALOG.md) pins the actual
 core dev.14 and optional dev.8 releases: nine default and twenty-two optional entries.
 Their source commit, archive, file/tree and review hashes were selected only after
 publication and actual download verification. Explicit updates preserve the host's
@@ -131,11 +132,13 @@ test environment. Record actual checks and limitations, including native targets
 that were not available. Never mark a package safe solely because it supplied a
 passing test or manifest claim.
 
-During integration, publish only a clearly labelled development prerelease with
-the deterministic archive and a checksum file. Fix its exact commit and hashes in
-the application. Keep the stable catalog unchanged until a compatible application
-release has passed its integration checks. Subsequent changes require a new package
-version, archive and application lock; never silently replace a fixed artifact.
+The 0.2.0 application uses the reviewed core dev.14 archive; optional entries use
+optional dev.8. These historical build tags remain immutable. Their development
+labels describe the plugin archive publication, not whether a compatible
+application installer is available. No retagging, repacking or application lock
+change is needed to use these verified bytes in 0.2.0. New plugin bytes require a
+new version, review and archive; never replace a fixed artifact or the historical
+0.1.4 catalog. The API 1 catalog retains its existing channel and byte identity.
 
 Each package retains its own LICENSE and PROVENANCE. Official Sesame plugin code
 is MIT only within its stated package scope. Existing third-party attribution and

@@ -1,3 +1,25 @@
+# Sesame 0.2.0 compatibility documentation
+
+This documentation-only transition keeps all 31 package implementations, both
+locks, the installable catalog, its source selection and every existing release
+plan unchanged. Core dev.14 and optional dev.8 remain the exact verified sources;
+no plugin is repacked, retagged or given a new version. The application lock does
+not change. The installable catalog retains its existing channel and bytes.
+
+The descriptive inventory now says `descriptive-inventory` and records the
+minimum application version without asserting whether an application installer
+has been released. Installer availability belongs to the application release
+page. Users moving from 0.1.4 must install the required API 1 plugin versions;
+the historical catalog remains intact.
+
+Validation: all ten profile/catalog tests passed, including reconstruction of the
+31 entries from the two fixed archives, published-source identity checks and the
+historical-catalog byte checks. A direct Git comparison confirmed no package,
+lock, installable catalog, selected release or release-plan changes. These checks
+are not new plugin/native/runtime acceptance tests.
+
+---
+
 # Candidate unified API 1 directory and explicit updates — 2026-10-09
 
 This candidate adds no release plan and has not published a new package version.

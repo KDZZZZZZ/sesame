@@ -1,15 +1,14 @@
 {
   "schemaVersion": 1,
   "apiVersion": "1",
-  "status": "unreleased-candidate",
+  "status": "descriptive-inventory",
   "application": {
     "minimum": "0.2.0",
     "engines": {
       "sesame": ">=0.2.0-0"
-    },
-    "released": false
+    }
   },
-  "notice": "This source preview is not an installation catalog. It has no source commits or package digests. Installable entries are generated separately only from fixed, actually published releases.",
+  "notice": "This descriptive inventory is not an installation catalog. It has no source commits or package digests. Installable entries are generated separately only from fixed, actually published releases.",
   "packages": [
     {
       "id": "sesame/akshare",
