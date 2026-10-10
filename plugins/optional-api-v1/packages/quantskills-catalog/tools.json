@@ -8,17 +8,21 @@
         "properties": {
           "query": {
             "type": "string",
-            "description": "Keyword to search"
+            "description": "Keyword to search",
+            "maxLength": 2000,
+            "minLength": 1
           },
           "limit": {
             "type": "integer",
             "default": 20,
-            "maximum": 100
+            "maximum": 100,
+            "minimum": 1
           }
         },
         "required": [
           "query"
-        ]
+        ],
+        "additionalProperties": false
       }
     },
     {
@@ -29,26 +33,32 @@
         "properties": {
           "category": {
             "type": "string",
-            "description": "Category name (e.g. '02 因子研发工具箱')"
+            "description": "Category name (e.g. '02 因子研发工具箱')",
+            "maxLength": 2000
           },
           "stage": {
             "type": "string",
-            "description": "Workflow stage (e.g. 'data-ingestion')"
+            "description": "Workflow stage (e.g. 'data-ingestion')",
+            "maxLength": 2000
           },
           "asset_type": {
             "type": "string",
-            "description": "Asset type: skill, agent, template, infrastructure"
+            "description": "Asset type: skill, agent, template, infrastructure",
+            "maxLength": 2000
           },
           "verification_level": {
             "type": "string",
-            "description": "Verification level: published_endpoint, pending_review, unknown"
+            "description": "Verification level: published_endpoint, pending_review, unknown",
+            "maxLength": 2000
           },
           "limit": {
             "type": "integer",
             "default": 50,
-            "maximum": 214
+            "maximum": 1000,
+            "minimum": 1
           }
-        }
+        },
+        "additionalProperties": false
       }
     },
     {
@@ -56,7 +66,8 @@
       "description": "List all categories with counts",
       "inputSchema": {
         "type": "object",
-        "properties": {}
+        "properties": {},
+        "additionalProperties": false
       }
     },
     {
@@ -67,12 +78,55 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "Exact item name (repo name)"
+            "description": "Exact item name (repo name)",
+            "maxLength": 2000,
+            "minLength": 1
           }
         },
         "required": [
           "name"
-        ]
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "catalog_recommend",
+      "description": "Route a user need to independently selectable methods and backend choices. Consolidate only sources of the same method. Does not install plugins or check availability.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "need": {
+            "type": "string",
+            "enum": [
+              "market-data",
+              "market-explanation",
+              "technical-analysis",
+              "strategy-research",
+              "factor-research",
+              "native-backtest",
+              "report",
+              "judgment-review"
+            ]
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "ict",
+              "price-action",
+              "elliott-wave",
+              "wyckoff",
+              "dow-theory",
+              "behavioral-finance",
+              "institutional-analysis",
+              "narrative-analysis"
+            ],
+            "description": "Optional explicit method for technical-analysis or market-explanation. Without it return choices only; do not automatically load all methods."
+          }
+        },
+        "required": [
+          "need"
+        ],
+        "additionalProperties": false
       }
     }
   ]

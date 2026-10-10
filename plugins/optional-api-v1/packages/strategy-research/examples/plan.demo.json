@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "experimentId": "demo-experiment-only",
+  "hypothesis": "Demonstrate chronological evidence checks; no market hypothesis is tested.",
+  "data": {
+    "sha256": "sha256:4b5f7f37113fec6e01e7d32355bab67522ffa5951157179baa1fdcdc22edb95e",
+    "timingSha256": "sha256:a05a37303b0cd4daffbaf64e9fad9f9b5b65d11c6215304bd844ff9a92fb10aa",
+    "provenance": "demo",
+    "universe": "point-in-time",
+    "adjustments": "raw",
+    "delistings": "not-applicable",
+    "availability": "timestamped",
+    "evidence": [
+      "Entirely fictional one-asset data authored for a reproducible software example; no vendor or market."
+    ]
+  },
+  "splits": [
+    {
+      "name": "train",
+      "start": "2024-01-01T00:00:00.000Z",
+      "end": "2024-01-06T00:00:00.000Z"
+    },
+    {
+      "name": "validation",
+      "start": "2024-01-06T00:00:00.000Z",
+      "end": "2024-01-11T00:00:00.000Z"
+    },
+    {
+      "name": "holdout",
+      "start": "2024-01-11T00:00:00.000Z",
+      "end": "2024-01-16T00:00:00.000Z"
+    }
+  ],
+  "embargoMs": 86400000,
+  "trialBudget": 4,
+  "objective": "Check declared evidence and count all attempted trials; not maximize fabricated performance.",
+  "baseline": "A declared no-trade baseline for a future real engine run.",
+  "failureCriteria": "Reject future features, changed input bytes, tuning after holdout, unknown execution evidence.",
+  "costs": {
+    "commissionBps": "5",
+    "slippageBps": "5",
+    "borrowBpsPerPeriod": "0",
+    "executionLag": "Only a selected engine may define matching; the demo executes no engine.",
+    "description": "Example assumptions, not measured market costs."
+  },
+  "engine": {
+    "pluginId": "sesame/backtrader",
+    "version": "1.0.0",
+    "compatibility": "not_checked",
+    "evidence": "Illustrative optional backend; confirm actual catalog availability and installed compatibility before use."
+  },
+  "limitations": [
+    "This is a software fixture with no live or historical market performance."
+  ]
+}

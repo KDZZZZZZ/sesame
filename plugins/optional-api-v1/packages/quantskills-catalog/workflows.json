@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "policy": "Consolidate sources within the same method. Different methods remain independently installable and loadable. Backend choices do not imply installation; verify actual published availability.",
+  "workflows": {
+    "market-data": {
+      "purpose": "获取明确市场与来源的数据，允许同屏并用不同后端。",
+      "primary_plugins": [
+        "sesame/data-access"
+      ],
+      "backend_choices": [
+        "sesame/mt5",
+        "sesame/akshare",
+        "sesame/qmt",
+        "sesame/ccxt"
+      ],
+      "selection": "MT5 原有券商品种、AKShare 公开 A 股、Windows 券商授权 QMT、CCXT 明确交易所公共现货。先核验覆盖、授权、时间和单位再绑定，不因安装后端而更换已有图表。",
+      "reference_names": [
+        "skill-intraday-data-quality-auditor",
+        "skill-a-share-pit-fundamental-vintage-builder"
+      ]
+    },
+    "market-explanation": {
+      "purpose": "解释政策、制度、群体行为与叙事如何影响市场，比较替代解释。",
+      "primary_plugins": [],
+      "shared_plugins": [
+        "sesame/data-access",
+        "sesame/reports"
+      ],
+      "selection": "Choose the requested interpretive method independently. Preserve competing evidence within that method; do not bundle unrelated methods.",
+      "reference_names": [
+        "skill-global-macro-rates-fx-lab",
+        "skill-macro-futures-scenario-analysis",
+        "skill-macro-monitor"
+      ],
+      "method_choices": {
+        "behavioral-finance": "sesame/behavioral-finance",
+        "institutional-analysis": "sesame/institutional-analysis",
+        "narrative-analysis": "sesame/narrative-analysis"
+      }
+    },
+    "technical-analysis": {
+      "purpose": "用量价、结构、波浪或 ICT 等视角解释行情和绘图。",
+      "primary_plugins": [],
+      "shared_plugins": [
+        "sesame/data-access",
+        "sesame/canvas-control"
+      ],
+      "selection": "Select a single requested theory; different theories are separate plugins. Do not install or load other methods implicitly.",
+      "reference_names": [
+        "skill-quant-factor-directional-alpha",
+        "skill-quant-factor-risk-pattern-alpha"
+      ],
+      "method_choices": {
+        "ict": "sesame/ict",
+        "price-action": "sesame/price-action",
+        "elliott-wave": "sesame/elliott-wave",
+        "wyckoff": "sesame/wyckoff",
+        "dow-theory": "sesame/dow-theory"
+      }
+    },
+    "strategy-research": {
+      "purpose": "将想法变成有数据、可视化逻辑、原生回测和样本外证据的策略研究。",
+      "primary_plugins": [
+        "sesame/strategy-research"
+      ],
+      "shared_plugins": [
+        "sesame/data-access",
+        "sesame/strategy-authoring",
+        "sesame/reports"
+      ],
+      "backend_choices": [
+        "sesame/mt5",
+        "sesame/vnpy",
+        "sesame/backtrader"
+      ],
+      "selection": "先固定假设、预算、数据与接受标准，使用同一个研究流程。按引擎实际能力翻译原生策略，SVL 参考回放不冒充原生回测，回测通过不触发交易。",
+      "reference_names": [
+        "skill-backtesting-bias-avoidance",
+        "skill-backtest-overfit",
+        "skill-backtest-assumption-check",
+        "skill-quant-strategy-diagnostics"
+      ]
+    },
+    "factor-research": {
+      "purpose": "整合因子创意、生成、去冗余、评估和迭代，保留全部实验。",
+      "primary_plugins": [
+        "sesame/factor-research"
+      ],
+      "shared_plugins": [
+        "sesame/data-access",
+        "sesame/reports"
+      ],
+      "selection": "因子生成、评价和优化共用实验记录与时点规则，不重复安装同义 Skill；多重尝试和失败也保留。样本内高 IC 不等于已验证的盈利策略。",
+      "reference_names": [
+        "skill-factor-mine",
+        "skill-factor-idea-generation",
+        "skill-factor-evaluate",
+        "skill-factor-loop-evolve",
+        "skill-factor-orthogonalize",
+        "skill-factor-blend",
+        "skill-factor-ic-decay"
+      ]
+    },
+    "native-backtest": {
+      "purpose": "在选定的成熟引擎上运行固定策略与数据，保存真实结果。",
+      "primary_plugins": [],
+      "shared_plugins": [
+        "sesame/data-access",
+        "sesame/reports"
+      ],
+      "backend_choices": [
+        "sesame/mt5",
+        "sesame/vnpy",
+        "sesame/backtrader"
+      ],
+      "selection": "MQL5 用 MT5 Tester、兼容 CTA Python 用 vn.py、Backtrader Strategy 用 Cerebro。撮合假设不可互换；对比结果须统一日期、成本、复权、数量与期末仓位处理。",
+      "reference_names": [
+        "skill-backtest",
+        "skill-factor-backtest",
+        "skill-backtest-assumption-check"
+      ]
+    },
+    "report": {
+      "purpose": "把已有证据交付成可交互、可核对数据的报告。",
+      "primary_plugins": [
+        "sesame/reports"
+      ],
+      "shared_plugins": [
+        "sesame/data-access"
+      ],
+      "selection": "研究报告和策略 tearsheet 共用呈现插件，由任务选择内容，避免为相同排版安装同义包。来源、计算、交互与实际渲染检查分别保存。",
+      "reference_names": [
+        "skill-strategy-tearsheet-report",
+        "skill-strategy-performance-report"
+      ]
+    },
+    "judgment-review": {
+      "purpose": "复核此前登记的未来可验证判断，更新个人判断准则。",
+      "primary_plugins": [
+        "sesame/judgment-evolution"
+      ],
+      "shared_plugins": [
+        "sesame/memory"
+      ],
+      "selection": "判断账本与策略/因子实验分工，记录原判断、到期证据和修订，不能为事后解释改写原预测。复盘不注入用户消息，不自动执行交易。",
+      "reference_names": [
+        "skill-quant-strategy-diagnostics"
+      ]
+    }
+  }
+}

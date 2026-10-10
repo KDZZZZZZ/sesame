@@ -1,0 +1,7 @@
+{
+  "name": "@sesame/plugin-ccxt",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "license": "MIT"
+}

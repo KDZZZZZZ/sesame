@@ -1,0 +1,27 @@
+{
+  "provenance_kind": "demo",
+  "as_of": "2026-01-01T12:00:00Z",
+  "predeclared_range": [
+    "100",
+    "110"
+  ],
+  "observations": [
+    {
+      "id": "a",
+      "low": "99",
+      "close": "101",
+      "volume_kind": "tick",
+      "volume": "500",
+      "volume_unit": "tick"
+    },
+    {
+      "id": "b",
+      "low": "100",
+      "close": "102",
+      "volume_kind": "tick",
+      "volume": "700",
+      "volume_unit": "tick"
+    }
+  ],
+  "participant_identity": "unknown"
+}

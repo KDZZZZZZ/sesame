@@ -1,0 +1,19 @@
+{
+  "provenance_kind": "demo",
+  "as_of": "2026-01-01T12:00:00Z",
+  "evidence": [
+    {
+      "id": "e1",
+      "observation": "price fell 2%",
+      "available_at": "2026-01-01T11:55:00Z"
+    },
+    {
+      "id": "e2",
+      "observation": "survey published after event",
+      "available_at": "2026-01-01T13:00:00Z"
+    }
+  ],
+  "pre_release_expectations": "unknown",
+  "investor_cost_basis": "unknown",
+  "candidate": "loss aversion around price 100"
+}

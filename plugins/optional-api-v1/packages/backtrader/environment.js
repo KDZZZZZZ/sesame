@@ -1,0 +1,285 @@
+import {
+  mkdir,
+  readFile,
+  writeFile,
+  rename,
+  lstat,
+  rm,
+} from "node:fs/promises";
+import { join } from "node:path";
+import { randomUUID } from "node:crypto";
+import { check } from "@sesame/plugin-sdk/protocol";
+export const NAME = "backtrader",
+  VERSION = "1.9.78.123";
+const locks = new Map();
+const json = (bytes) => JSON.parse(bytes.toString());
+export async function command(host, argv, cwd, signal, timeout = 120, env) {
+  signal?.throwIfAborted();
+  const result = await host.workspace.run(argv, { cwd, signal, timeout, env });
+  check(
+    result.exitCode === 0,
+    "Dependency/engine command failed; inspect its owned execution receipt",
+    "PROCESS_EXIT",
+  );
+  return result;
+}
+async function inspect(host, python, signal) {
+  const path = join(host.storage.directory, `.probe-${randomUUID()}.json`);
+  try {
+    await command(
+      host,
+      [
+        python,
+        "-I",
+        "-B",
+        "-c",
+        `import json,sys,struct,importlib,importlib.metadata as m; from pathlib import Path; module=importlib.import_module('${NAME}'); Path(sys.argv[1]).write_text(json.dumps({'python':sys.executable,'version':list(sys.version_info[:3]),'platform':sys.platform,'bits':struct.calcsize('P')*8,'library':m.version('${NAME}'),'packages':{d.metadata['Name']:d.version for d in m.distributions()}}))`,
+        path,
+      ],
+      host.storage.directory,
+      signal,
+      30,
+    );
+    const data = json(await readFile(path));
+    check(
+      data.bits === 64 &&
+        data.version[0] === 3 &&
+        data.version[1] >= 11 &&
+        data.platform === process.platform &&
+        data.library === VERSION,
+      "Compatible native 64-bit Python >=3.11 with pinned library is required",
+      "PREREQUISITE_REQUIRED",
+    );
+    return data;
+  } finally {
+    await rm(path, { force: true });
+  }
+}
+export async function selected(host, signal) {
+  let value;
+  try {
+    value = json(
+      await readFile(join(host.storage.directory, "selection.json")),
+    );
+  } catch (e) {
+    check(
+      e.code !== "ENOENT",
+      "Explicitly inspect/prepare an existing or private environment first",
+      "PREREQUISITE_REQUIRED",
+    );
+    throw e;
+  }
+  return { ...value, ...(await inspect(host, value.python, signal)) };
+}
+export async function environment(host, args, signal) {
+  const key = host.storage.directory;
+  check(
+    !locks.has(key),
+    "Environment preparation already in progress",
+    "ENVIRONMENT_BUSY",
+  );
+  const task = perform(host, args, signal);
+  locks.set(key, task);
+  try {
+    return await task;
+  } finally {
+    if (locks.get(key) === task) locks.delete(key);
+  }
+}
+async function perform(host, args, signal) {
+  await mkdir(host.storage.directory, { recursive: true });
+  const root = join(host.storage.directory, `${NAME}-${VERSION}`),
+    privatePython = join(
+      root,
+      process.platform === "win32" ? "Scripts/python.exe" : "bin/python",
+    );
+  let prior;
+  try {
+    prior = json(
+      await readFile(join(host.storage.directory, "selection.json")),
+    );
+  } catch (e) {
+    if (e.code !== "ENOENT") throw e;
+  }
+  const candidates = [
+    ...new Set(
+      [
+        args.python_path,
+        prior?.python,
+        privatePython,
+        host.environment.pythonPath,
+        process.platform === "win32" ? "python.exe" : "python3",
+      ].filter(Boolean),
+    ),
+  ];
+  const failures = [];
+  let found;
+  for (const python of candidates) {
+    try {
+      found = await inspect(host, python, signal);
+      break;
+    } catch (error) {
+      signal?.throwIfAborted();
+      failures.push({ python, code: error.code ?? "PROCESS_EXIT" });
+    }
+  }
+  if (found) {
+    const result = {
+      ...found,
+      ready: true,
+      reused: true,
+      origin:
+        prior?.python === found.python ? prior.origin : "existing-readonly",
+      downloads: prior?.python === found.python ? (prior.downloads ?? []) : [],
+      audit: prior?.python === found.python ? (prior.audit ?? null) : null,
+    };
+    await save(host, result);
+    return result;
+  }
+  if (args.action === "inspect")
+    return {
+      ready: false,
+      required: `${NAME} ${VERSION}, native 64-bit Python >=3.11. Explicit prepare creates private dependencies only when no compatible existing environment exists.`,
+      failures,
+    };
+  let base;
+  for (const python of [
+    ...new Set(
+      [
+        args.python_path,
+        host.environment.pythonPath,
+        process.platform === "win32" ? "python.exe" : "python3",
+      ].filter(Boolean),
+    ),
+  ]) {
+    const path = join(host.storage.directory, `.base-${randomUUID()}.json`);
+    try {
+      await command(
+        host,
+        [
+          python,
+          "-I",
+          "-c",
+          "import sys,struct,json;from pathlib import Path;Path(sys.argv[1]).write_text(json.dumps({'v':list(sys.version_info[:2]),'bits':struct.calcsize('P')*8,'platform':sys.platform}))",
+          path,
+        ],
+        host.storage.directory,
+        signal,
+        30,
+      );
+      const info = json(await readFile(path));
+      if (
+        info.v[0] === 3 &&
+        info.v[1] >= 11 &&
+        info.bits === 64 &&
+        info.platform === process.platform
+      ) {
+        base = python;
+        break;
+      }
+    } catch (error) {
+      signal?.throwIfAborted();
+    } finally {
+      await rm(path, { force: true });
+    }
+  }
+  check(
+    base,
+    "Configure an existing native 64-bit Python >=3.11; plugin does not install Python or system packages",
+    "PREREQUISITE_REQUIRED",
+  );
+  try {
+    check(
+      !(await lstat(root)).isSymbolicLink(),
+      "Private environment cannot be a symlink",
+      "FORBIDDEN",
+    );
+  } catch (e) {
+    if (e.code !== "ENOENT") throw e;
+  }
+  if (!(await exists(privatePython)))
+    await command(
+      host,
+      [base, "-I", "-m", "venv", root],
+      host.storage.directory,
+      signal,
+      120,
+    );
+  const report = join(root, "pip-report.json"),
+    cache = join(host.storage.directory, "pip-cache");
+  await command(
+    host,
+    [
+      privatePython,
+      "-I",
+      "-m",
+      "pip",
+      "install",
+      "--index-url",
+      "https://pypi.org/simple",
+      "--disable-pip-version-check",
+      "--no-input",
+      "--cache-dir",
+      cache,
+      "--report",
+      report,
+      `${NAME}==${VERSION}`,
+    ],
+    host.storage.directory,
+    signal,
+    600,
+    {
+      PIP_CONFIG_FILE: process.platform === "win32" ? "NUL" : "/dev/null",
+      PIP_EXTRA_INDEX_URL: "",
+      PIP_INDEX_URL: "https://pypi.org/simple",
+      PIP_TRUSTED_HOST: "",
+    },
+  );
+  const audit = json(await readFile(report));
+  for (const item of audit.install) {
+    const url = new URL(item.download_info.url);
+    check(
+      ["files.pythonhosted.org", "pypi.org"].includes(url.hostname) &&
+        url.protocol === "https:",
+      "Dependency receipt is outside official PyPI",
+      "SOURCE_UNTRUSTED",
+    );
+    check(
+      /^[a-f0-9]{64}$/.test(
+        item.download_info.archive_info.hashes?.sha256 ?? "",
+      ),
+      "Dependency receipt lacks SHA256",
+      "SOURCE_UNTRUSTED",
+    );
+  }
+  const result = {
+    ...(await inspect(host, privatePython, signal)),
+    ready: true,
+    reused: false,
+    origin: "private-venv",
+    downloads: audit.install.map((item) => ({
+      name: item.metadata.name,
+      version: item.metadata.version,
+      url: item.download_info.url,
+      sha256: item.download_info.archive_info.hashes.sha256,
+    })),
+    audit,
+  };
+  await save(host, result);
+  return result;
+}
+async function exists(path) {
+  try {
+    await lstat(path);
+    return true;
+  } catch (e) {
+    if (e.code === "ENOENT") return false;
+    throw e;
+  }
+}
+async function save(host, value) {
+  const target = join(host.storage.directory, "selection.json"),
+    temp = target + "." + randomUUID();
+  await writeFile(temp, JSON.stringify(value), { mode: 0o600 });
+  await rename(temp, target);
+}

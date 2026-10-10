@@ -1,0 +1,37 @@
+import { environment } from "./environment.js";
+import { CCXTProvider, descriptor } from "./provider.js";
+export async function activate(host) {
+  const provider = new CCXTProvider(host),
+    dispose = host.providers.register(descriptor, provider);
+  return { dispose };
+}
+export function createTools(host) {
+  const { define, Type, string } = host.tools;
+  return [
+    define(
+      "ccxt_environment",
+      "Inspect and select existing pinned CCXT Python first; explicit prepare creates private dependencies only if unavailable. No startup downloads or API keys.",
+      {
+        action: Type.Union(["inspect", "prepare"].map(Type.Literal)),
+        python_path: Type.Optional(string("Existing native Python executable")),
+      },
+      (args, signal) => environment(host, args, signal),
+    ),
+    define(
+      "ccxt_catalog",
+      "Describe the supported public-only exchanges and provider limitations; never starts requests or trades.",
+      {},
+      () => ({
+        exchanges: ["kraken", "coinbase", "okx"],
+        library: "4.5.85",
+        market: "public spot",
+        timeframes: ["1m", "5m", "15m", "1h", "1d"],
+        pollIntervalMs: 60000,
+        orders: false,
+        apiKeys: false,
+        coverage: "partial/unknown",
+        closed: "later source candle only",
+      }),
+    ),
+  ];
+}

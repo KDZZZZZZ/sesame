@@ -1,0 +1,35 @@
+{
+  "id": "sesame/dow-theory",
+  "apiVersion": "1",
+  "version": "1.0.0",
+  "title": "Dow Theory 趋势确认",
+  "description": "独立 Dow 理论研究：主要/次级趋势、收盘与多指数确认；历史版本明确，缺确认保持未确认。",
+  "author": {
+    "name": "Sesame contributors"
+  },
+  "license": "MIT",
+  "default_state": "discoverable",
+  "agent_scope": "all",
+  "entry": "index.js",
+  "tool_definitions": "tools.json",
+  "tool_names": [],
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "resources": [
+    "LICENSE",
+    "PROVENANCE.md",
+    "README.md",
+    "examples/case.json",
+    "examples/expected.md",
+    "skills/dow-theory/references/method.md",
+    "skills/dow-theory/references/validation.md"
+  ],
+  "provides": {},
+  "engines": {
+    "sesame": ">=0.2.0-0"
+  }
+}

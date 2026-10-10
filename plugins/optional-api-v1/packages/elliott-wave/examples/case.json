@@ -1,0 +1,39 @@
+{
+  "provenance_kind": "demo",
+  "method": "standard upward impulse candidate",
+  "as_of": "2026-01-01T12:00:00Z",
+  "anchors": [
+    {
+      "id": "p0",
+      "price": "100",
+      "confirmed_at": "2026-01-01T06:00:00Z"
+    },
+    {
+      "id": "p1",
+      "price": "110",
+      "confirmed_at": "2026-01-01T07:00:00Z"
+    },
+    {
+      "id": "p2",
+      "price": "105",
+      "confirmed_at": "2026-01-01T08:00:00Z"
+    },
+    {
+      "id": "p3",
+      "price": "125",
+      "confirmed_at": "2026-01-01T09:00:00Z"
+    },
+    {
+      "id": "p4",
+      "price": "108",
+      "confirmed_at": "2026-01-01T10:00:00Z"
+    },
+    {
+      "id": "p5",
+      "price": "128",
+      "confirmed_at": "2026-01-01T11:00:00Z"
+    }
+  ],
+  "alternate": "unfinished corrective structure; no unique count",
+  "planned_primary_invalidation": "wave4 overlaps wave1 territory"
+}

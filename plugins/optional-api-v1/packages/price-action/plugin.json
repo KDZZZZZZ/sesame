@@ -1,0 +1,39 @@
+{
+  "id": "sesame/price-action",
+  "apiVersion": "1",
+  "version": "1.0.0",
+  "title": "Price Action 价格行为",
+  "description": "独立价格行为研究：趋势/区间语境、延迟确认摆动和收盘突破，区分确定性观察与人工解读。",
+  "author": {
+    "name": "Sesame contributors"
+  },
+  "license": "MIT",
+  "default_state": "discoverable",
+  "agent_scope": "all",
+  "entry": "index.js",
+  "tool_definitions": "tools.json",
+  "tool_names": [],
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "resources": [
+    "LICENSE",
+    "PROVENANCE.md",
+    "README.md",
+    "examples/bars.json",
+    "examples/expected.md",
+    "examples/source.json",
+    "scripts/bar_input.py",
+    "scripts/observe.py",
+    "skills/price-action/references/execution.md",
+    "skills/price-action/references/method.md",
+    "skills/price-action/references/validation.md"
+  ],
+  "provides": {},
+  "engines": {
+    "sesame": ">=0.2.0-0"
+  }
+}

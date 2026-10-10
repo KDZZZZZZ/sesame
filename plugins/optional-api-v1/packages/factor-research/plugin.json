@@ -1,0 +1,36 @@
+{
+  "id": "sesame/factor-research",
+  "apiVersion": "1",
+  "version": "1.0.0",
+  "title": "因子研究",
+  "description": "按需评估选定因子列的可得时点、秩相关、冗余与固定样本外，不强制挖掘模型。",
+  "author": {
+    "name": "Sesame contributors"
+  },
+  "license": "MIT",
+  "default_state": "discoverable",
+  "agent_scope": "all",
+  "entry": "index.js",
+  "tool_definitions": "tools.json",
+  "tool_names": [],
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "resources": [
+    "PROVENANCE.md",
+    "README.md",
+    "examples/development.demo.json",
+    "examples/holdout.demo.json",
+    "examples/plan.demo.json",
+    "scripts/factor.mjs",
+    "skills/factor-research/references/execution.md",
+    "skills/factor-research/references/method.md"
+  ],
+  "provides": {},
+  "engines": {
+    "sesame": ">=0.2.0-0"
+  }
+}

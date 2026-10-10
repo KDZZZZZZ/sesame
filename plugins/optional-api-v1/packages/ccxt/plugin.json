@@ -1,0 +1,37 @@
+{
+  "id": "sesame/ccxt",
+  "title": "CCXT optional backend",
+  "description": "Public spot market data only",
+  "version": "1.0.0",
+  "apiVersion": "1",
+  "engines": {
+    "sesame": ">=0.2.0-0"
+  },
+  "default_state": "discoverable",
+  "entry": "index.js",
+  "tool_definitions": "tools.json",
+  "tool_names": [
+    "ccxt_environment",
+    "ccxt_catalog"
+  ],
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "provides": {
+    "sesame.market": "1"
+  },
+  "license": "MIT",
+  "workers": [
+    "worker.js"
+  ],
+  "author": {
+    "name": "Sesame contributors",
+    "url": "https://github.com/KDZZZZZZ/sesame"
+  },
+  "resources": [
+    "PROVENANCE.md"
+  ]
+}

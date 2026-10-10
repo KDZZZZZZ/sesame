@@ -11,7 +11,7 @@ The defaults are `canvas-control`, `configuration`, `data-access`, `memory`,
 `orchestration`, `plugin-manager`, `reports`, `strategy-authoring` and `workspace`.
 Canvas and settings are discoverable; the other seven are mounted. No market,
 account or native strategy backend is required to author sources, run fixed
-replays, work with local data or publish reports. Ten optional packages live in
+replays, work with local data or publish reports. Twenty-two optional source packages live in
 [`../optional-api-v1/`](../optional-api-v1/README.md), including MT5, QMT, AKShare
 and vn.py. Installing Sesame does not install their terminals or environments.
 
