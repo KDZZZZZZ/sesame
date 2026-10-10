@@ -89,3 +89,16 @@ test('non-trading native deals become signed ledger entries without guessing fil
   assert.equal(withdrawal.amount.value, '-20'); assert.deepEqual(deposit.relatedFillIds, []);
   assert.equal(mapLedgerEntry({ ...base, type: 'DEAL_TYPE_BUY' }, context), null);
 });
+
+ test('actual native history deal price_open is this fill price, never price_close; missing fees remain unknown',()=>{
+  const buy={deal_id:'101',order_id:'201',position_id:'201',symbol:'BTCUSD',action:'buy',entry:'in',reason:'Expert',open_time:'2026-10-10T03:27:00',price_open:82539.24,volume:.01,profit:0,commission:-.27,magic_number:61011108,contract_size:1};
+  const sell={deal_id:'102',order_id:'202',position_id:'201',symbol:'BTCUSD',action:'sell',entry:'out',reason:'Expert',open_time:'2026-10-10T03:28:01',price_open:82555.80,price_close:82539.24,volume:.01,volume_closed:.01,profit:.17,commission:-.27,magic_number:61011108,contract_size:1};
+  const opened=mapFill(buy,context),closed=mapFill(sell,context);assert.equal(opened.price,'82539.24');assert.equal(closed.price,'82555.8');assert.equal(closed.side,'sell');assert.equal(closed.quantity.value,'0.01');assert.equal(closed.fees.status,'unknown');assert.equal(opened.fees.status,'unknown');assert.equal(closed.realizedPnl.value.value,'0.17');
+  assert.equal(mapFill({...sell,price:'82555.8000000000000001'},context).price,'82555.8000000000000001','canonical price retains priority and precision');
+  assert.throws(()=>mapFill({...sell,price_open:undefined},context),{code:'INVALID_NATIVE_DATA'},'price_close is not a valid missing-fill-price substitute');
+ });
+ test('native historical order done_time is a supported update alias without replacing canonical time_done',()=>{
+  const row={order_id:'202',symbol:'BTCUSD',action:'sell',state:'filled',open_time:'2026-10-10T03:27:00',done_time:'2026-10-10T03:28:01',volume:.01,volume_current:0};
+  const mapped=mapOrder(row,context);assert.equal(mapped.updatedAt.value,'2026-10-10T03:28:01');assert.equal(mapped.createdAt.value,'2026-10-10T03:27:00');
+  assert.equal(mapOrder({...row,time_done:'2026-10-10T03:28:02'},context).updatedAt.value,'2026-10-10T03:28:02');
+ });

@@ -192,7 +192,7 @@ export function mapOrder(row, { account, sourceId, server, revisions = new Revis
   const ticket = nativeId(first(row.order_id, row.ticket)), id = scopedId('order', account, ticket), nativeStatus = String(first(row.state, row.status, 'unknown'));
   const nativeType = typeName(first(row.type, row.action)), orderType = ({ 0: 'buy', 1: 'sell', 2: 'buy_limit', 3: 'sell_limit', 4: 'buy_stop', 5: 'sell_stop', 6: 'buy_stop_limit', 7: 'sell_stop_limit' })[nativeType] ?? nativeType;
   const initial = nonNegative(first(row.volume_initial, row.volume)), remaining = first(row.volume_current, row.volume_remaining);
-  const createdAt = sourceTime(first(row.time_setup, row.open_time, row.time), server), updatedAt = present(first(row.time_done, row.update_time)) && !/^0+$/.test(String(first(row.time_done, row.update_time))) ? sourceTime(first(row.time_done, row.update_time), server) : createdAt;
+  const createdAt = sourceTime(first(row.time_setup, row.open_time, row.time), server), updatedAt = present(first(row.time_done, row.done_time, row.update_time)) && !/^0+$/.test(String(first(row.time_done, row.done_time, row.update_time))) ? sourceTime(first(row.time_done, row.done_time, row.update_time), server) : createdAt;
   const kind = orderType.includes('stop_limit') ? 'stop_limit' : orderType.includes('limit') ? 'limit' : orderType.includes('stop') ? 'stop' : ['buy', 'sell', '0', '1'].includes(orderType) ? 'market' : 'other';
   const filled = present(remaining) ? subtract(initial, nonNegative(remaining)) : present(row.volume_filled) ? nonNegative(row.volume_filled) : fail('The native source omitted filled and remaining order quantities');
   return revisions.apply(id, { id, account, instrument: instrumentIdentity(sourceId, row.symbol), nativeId: value(ticket), clientId: unknown('No verified client request ID was reported'), side: side(orderType), positionEffect: unknown('MT5 order type alone does not establish position effect'), orderType: kind,
@@ -209,7 +209,7 @@ export function mapFill(row, { account, sourceId, server, currency, revisions = 
   const fees = moneyCurrency && costs.every(key => present(row[key])) ? value(costs.map(key => ({ value: decimal(row[key]), currency: String(moneyCurrency) }))) : unknown('The native source did not report all fee components and their currency');
   return revisions.apply(id, { id, account, instrument: instrumentIdentity(sourceId, row.symbol), nativeId: ticket,
     orderId: present(order) && String(order) !== '0' ? value(scopedId('order', account, order)) : unknown('The native source did not report an order ID'), nativeOrderId: present(order) && String(order) !== '0' ? value(nativeId(order)) : unknown(),
-    time: sourceTime(first(row.time_msc, row.open_time, row.time), server), side: side(first(row.action, row.type)), quantity: quantity(nonNegative(row.volume)), price: decimal(first(row.price, row.open_price)), positionEffect: textValue(row.entry),
+    time: sourceTime(first(row.time_msc, row.open_time, row.time), server), side: side(first(row.action, row.type)), quantity: quantity(nonNegative(row.volume)), price: decimal(first(row.price, row.price_open, row.open_price)), positionEffect: textValue(row.entry),
     fees, realizedPnl: moneyValue(row.profit, moneyCurrency), correlation: unknown('Manual and external trades have no verified strategy trace'), correction: notApplicable('No native correction relationship was reported'),
   });
 }
