@@ -60,11 +60,11 @@ test('historical source trees without profiles retain their exact legacy build s
   f.write({ ...f.manifest, engines: undefined, migration: { collections: ['old'] } });
   assert.equal(readProfile(f.root), null); assert.equal(buildLock(f.root).packages.length, 1);
 });
-test('source preview identifies all candidates but grants no installation authority', () => {
+test('descriptive inventory records compatibility without claiming an application release', () => {
   const preview = buildInventory(core);
   assert.deepEqual(preview, JSON.parse(readFileSync(join(core, 'inventory.json'))));
-  assert.equal(preview.status, 'unreleased-candidate');
-  assert.equal(preview.application.released, false);
+  assert.equal(preview.status, 'descriptive-inventory');
+  assert.equal(preview.application.released, undefined);
   assert.equal(preview.application.minimum, '0.2.0');
   assert.equal(preview.packages.filter(p => p.distribution === 'core').length, 9);
   assert.equal(preview.packages.filter(p => p.distribution === 'optional').length, 22);

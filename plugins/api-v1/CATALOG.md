@@ -1,12 +1,19 @@
-# Plugin API 1 development catalog
+# Plugin catalog for Sesame 0.2.0 / API 1
 
 The unified directory is
 `https://raw.githubusercontent.com/KDZZZZZZ/sesame/main/plugins/api-v1/catalog.json`.
 It lists nine default and twenty-two optional plugins by exact publisher-qualified name.
 All require `engines.sesame: ">=0.2.0-0"`: compatible development builds are allowed,
-with formal minimum 0.2.0. The application 0.2.0 is not formally released. The
-published plugin-manager 2.1.1 reads this directory and supports formal install
-and explicit update. Sesame 0.1.4 and its historical catalog are unchanged.
+with formal minimum 0.2.0. The published plugin-manager 2.1.1 reads this directory
+and supports formal install and explicit update. Use the [application release
+page](https://github.com/KDZZZZZZ/sesame/releases/tag/v0.2.0) for installer availability.
+Sesame 0.1.4 and its historical catalog are unchanged. After upgrading the app,
+install the required API 1 versions by name; the old plugins are not converted.
+
+The catalog retains `channel:"development"` as its existing publication-channel
+identity. Compatibility is determined by each package's `engines.sesame` range,
+which accepts the formal 0.2.0 application. Keeping the existing tags, catalog
+bytes and application pins avoids changing already verified package identities.
 
 ## Fixed publication sources
 
@@ -106,7 +113,7 @@ routes requests to independently selected methods. It checks actual catalog
 availability instead of claiming every external reference is installed or audited;
 it has no caller-selected file resolver.
 
-## Distribution and descriptive preview
+## Distribution and descriptive inventory
 
 The nine core and twenty-two optional entries expose `distribution` and the minimum
 `engines.sesame` range. MT5 and all other market/execution backends are optional.
@@ -120,9 +127,9 @@ explicit-source public spot data; Backtrader runs a selected authored strategy
 against fixed data. They do not add a default broker or trading authorization.
 Backtrader's package and engine retain GPL-3.0-or-later licensing.
 
-`inventory.json` remains a descriptive snapshot of the reviewed source, marked
-`unreleased-candidate` for the 0.2 application design. It is not an installation
-catalog: it omits file/source hashes and cannot select bytes to execute. Website
-copy buttons return exact names; the Agent resolves this separately published
-catalog and verifies its fixed digests. Plugin development releases do not imply
-that an application 0.2.0 installer is available.
+`inventory.json` is a descriptive snapshot marked `descriptive-inventory`. It
+records the minimum compatible application version, not application release
+status. It is not an installation catalog: it omits file/source hashes and cannot
+select bytes to execute. Website copy buttons return exact names; the Agent
+resolves the installation catalog and verifies its fixed digests. The application
+release page remains the source of installer availability.
