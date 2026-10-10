@@ -70,7 +70,7 @@ test('descriptive inventory records compatibility without claiming an applicatio
   assert.equal(preview.packages.filter(p => p.distribution === 'optional').length, 23);
   for (const item of preview.packages) {
     for (const key of ['source', 'sourceCommit', 'package', 'treeDigest', 'review', 'release']) assert.equal(item[key], undefined);
-    const minimum = { 'sesame/manual-trading': '>=0.2.1', 'sesame/strategy-authoring': '>=0.2.2', 'sesame/mt5': '>=0.2.2' };
+    const minimum = { 'sesame/manual-trading': '>=0.2.1', 'sesame/orchestration': '>=0.2.2', 'sesame/strategy-authoring': '>=0.2.2', 'sesame/mt5': '>=0.2.2' };
     assert.equal(item.engines.sesame, minimum[item.id] ?? '>=0.2.0-0');
     assert.ok(item.title.en && item.title.zh && item.dependencies.en && item.dependencies.zh);
   }

@@ -257,9 +257,9 @@
     },
     {
       "id": "sesame/orchestration",
-      "version": "2.1.2",
+      "version": "2.2.0",
       "directory": "orchestration",
-      "treeDigest": "sha256:dfd9dab0c766f5695576d1e1559725cc21f1b847246fc40b31b3dcbee27f3ed9",
+      "treeDigest": "sha256:305753848fde507d3055173b0163435ef4541ea1698b65e9390bd2d0a0acd4c3",
       "files": [
         {
           "path": "LICENSE",
@@ -273,18 +273,18 @@
         },
         {
           "path": "package.json",
-          "sha256": "b40a41d8bfbe721c2cec5f46248f3267a2348b4975e477683fbcd1f890e84c97",
+          "sha256": "cc15ceea026615e84133177cea3dadcfdf09d49a7cf772b97cff3c4c00ae19d6",
           "bytes": 107
         },
         {
           "path": "plugin.json",
-          "sha256": "e884612fc2e59ec73fb24a875e28c42f4713d46a19b377d9f154fa5c9809bc51",
-          "bytes": 988
+          "sha256": "98d882bffe1325979b97e36deac4c4476b09f90fe204cb4d7ec511f4a2c6a232",
+          "bytes": 1022
         },
         {
           "path": "prompt.md",
-          "sha256": "70932cf22881e8cdfcdd3df9f81f1c4871cfa44aaea07ec08b4572c148a04a6b",
-          "bytes": 5532
+          "sha256": "68e40074a63d4aeafa4a1927dbbea530058bc729c86b6308bd0b97e647acfac7",
+          "bytes": 6160
         },
         {
           "path": "skills/sesame-user-guide/SKILL.md",
@@ -333,13 +333,13 @@
         },
         {
           "path": "tools.js",
-          "sha256": "4687503beae7e4bfb70bbec2d89c312a0b3ee908a0053a6213e48b8c11a848fb",
-          "bytes": 2020
+          "sha256": "545a61e8ad729143354e768eeac7879b66d42e2b2c15860b4bf6b5e981f424d5",
+          "bytes": 2704
         },
         {
           "path": "tools.json",
-          "sha256": "6976f4fd54da3d14a4f7fc7ffd2e0268e5b320891c4ba2afc8fd1666919c9ca7",
-          "bytes": 4524
+          "sha256": "44118aecfb849efd9ea99bc15d0c627507c17eb4524f8d88548a41cdada8fc8f",
+          "bytes": 5832
         }
       ]
     },

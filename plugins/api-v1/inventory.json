@@ -626,11 +626,11 @@
     },
     {
       "id": "sesame/orchestration",
-      "version": "2.1.2",
+      "version": "2.2.0",
       "distribution": "core",
       "state": "mounted",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.2"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -651,8 +651,10 @@
         "zh": "运行 Agent 任务需要配置模型；无需交易后端。"
       },
       "tools": [
+        "agent_list",
         "agent_delegate",
         "agent_inspect",
+        "agent_stop",
         "agent_finish"
       ],
       "sourcePath": "plugins/api-v1/packages/orchestration"
