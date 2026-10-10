@@ -139,7 +139,7 @@ test('MT5 timeout recovery can cancel one exact active pending order and recheck
   const host={plugins:{isActive:()=>true},tools:{call:async({name,arguments:a})=>{
     if(name==='mt5_settings')return {details:{settings:{version:revision,account:{login:f.account.accountId,server:f.account.server}}}};
     if(name==='mt5_command')return {details:{status:'returned',result:{result:{retcode:10012,order:'0',deal:'0'}}}};
-    if(name==='mt5_trade'){cancels++;assert.equal(a.arguments.request.order,'700');assert.equal(a.arguments.request.action,'TRADE_ACTION_REMOVE');return {details:{status:'returned',result:{result:{retcode:10009}}}};}
+    if(name==='mt5_trade'){cancels++;assert.equal(a.arguments.request.order,'700');assert.equal(a.arguments.request.action,'TRADE_ACTION_REMOVE');assert.deepEqual(a.arguments.cancellation_guard,{expected_account:f.account.accountId,expected_server:f.account.server,symbol:original.symbol,remark:original.remark,order:'700',side:'buy'});return {details:{status:'returned',result:{result:{retcode:10009}}}};}
     const values={account_info:{login:f.account.accountId,server:f.account.server},orders_get:rows,positions_get:[],history_deals_get:[]};
     return {details:{status:'returned',result:{result:values[a.tool]}}};
   }}};

@@ -28,6 +28,30 @@ def number(value):
         raise GuardRejected("INVALID_ARGUMENT", "Expected a positive finite amount")
 
 
+def guarded_cancel(mt5, request, guard, clock=lambda: int(time.time() * 1000)):
+    """Verify the configured account and unique live pending order in this worker."""
+    need(isinstance(guard, dict) and set(guard) == {"expected_account", "expected_server", "symbol", "remark", "order", "side"}, "INVALID_ARGUMENT", "Invalid cancellation guard")
+    need(all(isinstance(guard[k], str) and guard[k] for k in guard) and guard["side"] in ("buy", "sell") and guard["order"].isdigit() and 0 < int(guard["order"]) < 2**64, "INVALID_ARGUMENT", "Explicit cancellation ownership required")
+    need(set(request) == {"action", "order"} and request["action"] == mt5.TRADE_ACTION_REMOVE and str(request["order"]) == guard["order"], "INVALID_ARGUMENT", "Guard only supports the exact pending order removal")
+    def account_matches():
+        account, terminal = mt5.account_info(), mt5.terminal_info()
+        need(account is not None and terminal is not None and str(account.login) == guard["expected_account"] and account.server == guard["expected_server"], "ACCOUNT_MISMATCH", "Cancellation account changed")
+        need(getattr(account, "trade_allowed", None) is True and getattr(account, "trade_expert", None) is True and getattr(terminal, "connected", None) is True and getattr(terminal, "trade_allowed", None) is True and getattr(terminal, "tradeapi_disabled", True) is False, "FORBIDDEN", "Cancellation channel is not permitted")
+    account_matches()
+    rows = mt5.orders_get(symbol=guard["symbol"])
+    need(isinstance(rows, (list, tuple)), "SOURCE_UNAVAILABLE", "Cannot verify current pending orders")
+    matched = [row for row in rows if row.symbol == guard["symbol"] and row.comment == guard["remark"]]
+    need(len(matched) == 1, "ORDER_CHANGED", "Cancellation requires one exact native order")
+    row = matched[0]
+    expected_type = mt5.ORDER_TYPE_BUY_LIMIT if guard["side"] == "buy" else mt5.ORDER_TYPE_SELL_LIMIT
+    need(str(row.ticket) == guard["order"] and row.type == expected_type and row.state in (mt5.ORDER_STATE_PLACED, mt5.ORDER_STATE_PARTIAL) and number(row.volume_current) > 0, "ORDER_CHANGED", "Pending order changed or is no longer active")
+    account_matches()  # A slow native order query cannot bypass a changed account.
+    sent = clock()
+    result = mt5.order_send(request)
+    completed = clock()
+    return result, {"cancellation_verified_at":sent,"send_started_at":sent,"receipt_at":completed,"send_to_receipt_ms":completed-sent}
+
+
 def guarded_send(mt5, request, guard, clock=lambda: int(time.time() * 1000), monotonic=time.monotonic):
     """All checks and the single send run in this same serialized native worker."""
     start, mono_start = clock(), monotonic()

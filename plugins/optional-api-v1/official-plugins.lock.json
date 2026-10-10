@@ -767,7 +767,7 @@
       "id": "sesame/manual-trading",
       "version": "1.0.0",
       "directory": "manual-trading",
-      "treeDigest": "sha256:b89c895a97f3bd43288edaedfb59dec69adc7f7b3fefbe6dc729b122f37ad03b",
+      "treeDigest": "sha256:9b9fd575216c482905f6758c27079509c5fe1a3ac3ef35f5bffc533390309d84",
       "files": [
         {
           "path": "BACKENDS.md",
@@ -791,8 +791,8 @@
         },
         {
           "path": "adapters.js",
-          "sha256": "f3cecdb9b0f1c2e96a84adf96df29412e173609cc535b79b82de146b43219af9",
-          "bytes": 16689
+          "sha256": "5696c313be25bdc66e1982143ee30bf6b4dde4a5e5864a8059621a25beab15bf",
+          "bytes": 16889
         },
         {
           "path": "index.js",
@@ -893,7 +893,7 @@
       "id": "sesame/mt5",
       "version": "1.3.0",
       "directory": "mt5",
-      "treeDigest": "sha256:5b27a8835c02a3d06faccb032d357e7ea6f71f9ceeef0ddc43aef4465785d3f7",
+      "treeDigest": "sha256:d20584a835f62583678836ff95c1f5441b6e24611129547e07c1ef12684943a0",
       "files": [
         {
           "path": "LICENSE",
@@ -972,8 +972,8 @@
         },
         {
           "path": "backend/execution_guard.py",
-          "sha256": "cd7a172c3c8169fd7054697634c178c6453526bf68c0b0e81ea358e8191fc3c6",
-          "bytes": 6439
+          "sha256": "5605a94e745fe439a38c5277809f92a94a419e8df968ae20ae10669c0ad90cb4",
+          "bytes": 8903
         },
         {
           "path": "backend/frozen-compiler.js",
@@ -1062,13 +1062,13 @@
         },
         {
           "path": "backend/python-tools.js",
-          "sha256": "9ab9acb83b149ff5fc66584f825d834d640390d3adc2b47d4b3a36794e728dfd",
-          "bytes": 6053
+          "sha256": "fbc926c1d642d4f42b487d1247e1b6c40328020d5b6d652a85ab4a02a113f45b",
+          "bytes": 6743
         },
         {
           "path": "backend/python-worker.py",
-          "sha256": "eade89d4f9de19765557dc6414b1de4c28fb99ddfbca1965be327a356ef35640",
-          "bytes": 6213
+          "sha256": "a1a123c52e641105982e99086443fd438597e9893c6727b1551d9f5febfa2e0b",
+          "bytes": 6698
         },
         {
           "path": "backend/run-observer.js",

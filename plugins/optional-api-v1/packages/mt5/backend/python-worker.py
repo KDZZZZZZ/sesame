@@ -78,8 +78,11 @@ for line in sys.stdin:
             raise ValueError('Function not allowed')
         supplied = dict(command.get('arguments', {}))
         execution_guard = supplied.pop('execution_guard', None)
-        if execution_guard is not None and name != 'order_send':
-            raise ValueError('Execution guard is only supported for order_send')
+        cancellation_guard = supplied.pop('cancellation_guard', None)
+        if execution_guard is not None and cancellation_guard is not None:
+            raise _guard.GuardRejected('INVALID_ARGUMENT', 'Execution and cancellation guards are mutually exclusive')
+        if (execution_guard is not None or cancellation_guard is not None) and name != 'order_send':
+            raise _guard.GuardRejected('INVALID_ARGUMENT', 'Guards are only supported for order_send')
         args = convert_input(supplied)
         timing = None
         if 'count' in args and not 1 <= args['count'] <= 100000:
@@ -96,6 +99,8 @@ for line in sys.stdin:
             result = mt5.login(int(account['login']), timeout=15000, **credentials)
         elif name == 'order_send' and execution_guard is not None:
             result, timing = _guard.guarded_send(mt5, args['request'], execution_guard)
+        elif name == 'order_send' and cancellation_guard is not None:
+            result, timing = _guard.guarded_cancel(mt5, args['request'], cancellation_guard)
         else:
             positional = POSITIONAL.get(name, [])
             if name in {'history_orders_get', 'history_deals_get'} and 'date_from' in args:

@@ -143,7 +143,8 @@ export function createAdapters(host, {now=Date.now}={}) {
       check(String(info.login)===record.account.accountId && info.server===record.account.server,'ACCOUNT_MISMATCH','Connected cancellation account changed');
       const candidates=orders.filter(x=>x.symbol===record.symbol && x.comment===record.remark && nativeId(x.ticket)!==null),knownId=nativeId(original.result?.result?.order);
       check(candidates.length===1 && mt5Pending(candidates[0],record) && (knownId===null||nativeId(candidates[0].ticket)===knownId),'UNCONFIRMED_ORDER','A unique matching active pending order is required');
-      request={server:'python',tool:'order_send',arguments:{request:{action:'TRADE_ACTION_REMOVE',order:nativeId(candidates[0].ticket)}},command_id:operationId};
+      const ticket=nativeId(candidates[0].ticket);
+      request={server:'python',tool:'order_send',arguments:{request:{action:'TRADE_ACTION_REMOVE',order:ticket},cancellation_guard:{expected_account:record.account.accountId,expected_server:record.account.server,symbol:record.symbol,remark:record.remark,order:ticket,side:record.side}},command_id:operationId};
     }
     } catch(error) {error.details={...error.details,submission_attempted:false};throw error;}
     return call(record.backend,record.backend==='mt5'?'mt5_trade':'qmt_cancel',request,signal);
