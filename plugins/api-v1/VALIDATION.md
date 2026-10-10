@@ -657,11 +657,9 @@ WebRTC isolation, desktop/mobile rendering, trusted clicks, concurrent inspectio
 loop and memory limits, cancellation and utility-process IPC. These checks apply
 to the matching development host, not to an arbitrary HTML viewer.
 
-## Unreleased 0.2 distribution proposal — nine defaults, ten optional
+## Distribution reorganization — nine defaults, ten optional
 
-This section describes a source candidate, not an application release or a
-published installation catalog. The stable 0.1.4 catalog and the fixed API 1
-release plans/catalog pins retain their original bytes. Package-by-package
+This section records the distribution reorganization checks. Package-by-package
 changes and dependency boundaries are in REORGANIZATION.md.
 
 The public SDK source suite ran 227 tests: 212 passed and 15 platform/native or
@@ -819,8 +817,7 @@ already reviewed these later bytes.
 
 Three core packages receive documentation-only patch releases. Orchestration
 2.1.1 describes the current five settings panels, generic connection action,
-account positions/orders and fixed indicator parameter editing; it reads actual
-website release status instead of making a permanent unreleased assertion.
+account positions/orders and fixed indicator parameter editing.
 Reports 2.0.3 starts from the selected backend's fixed data/result and presents
 MT5 tools only as an installed-backend example. Data-access 2.3.1 explicitly
 limits MT5 paging advice to that source. Package/inventory checks passed eight
@@ -925,9 +922,7 @@ eight methods and two research workflows remains an independent optional package
 Backtrader retains GPL-3.0-or-later; the catalog does not relabel it MIT. The
 stable 26-entry 0.1.4 and original three-entry optional directories remain byte-identical.
 The 31-entry catalog reconstruction/name-resolution/publication-boundary suite
-passed five tests, and actual published-release validation passed. The application
-0.2.0 is not formally released; these plugin prereleases require a compatible
-`>=0.2.0-0` host. Website previews remain descriptive and do not authorize code installation.
+passed five tests, and actual published-release validation passed.
 
 
 ## CCXT exact-route restoration — optional dev.8 candidate
@@ -1003,4 +998,20 @@ The catalog update retains 31 exact identities (9 core and 22 optional), now
 with 494 file records, and selects only published core dev.14 / optional dev.8.
 Its five reconstruction/resolution/publication checks and actual published
 metadata validation passed. Historical stable and optional catalogs retain
-their bytes. Application 0.2.0 is still not formally released.
+their bytes.
+
+
+## Plugin documentation cleanup
+
+Orchestration and plugin-manager receive documentation-only patch versions,
+as do AKShare, QMT, vn.py, CCXT and Backtrader. Their guides no longer prescribe
+application-release announcements; compatibility continues to be checked from
+the unchanged manifest engines ranges. The user guide links to the bilingual
+plugin installation, management, development and publication guide.
+
+The portable core suite passed 34 tests with one explicit host opt-in skip.
+The optional suite, using the matching public SDK loader, passed 74 tests with
+eight native/host opt-in skips. Every changed packaged file is Markdown or a
+version-only manifest: executable code, permissions and provider contracts are
+unchanged. Both package locks and the descriptive inventory reconstruct.
+These checks do not repeat native broker execution or install dependencies.

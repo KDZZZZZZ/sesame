@@ -1,6 +1,6 @@
 # QMT market and stock account adapter — API 1
 
-Optional plugin `sesame/qmt`, not part of the 19 official package archive. Runs fixed XtQuant calls against an existing authorized Windows x64 MiniQMT. Installation and platform access are explicit; loading the plugin neither downloads dependencies nor starts a broker terminal.
+Optional plugin `sesame/qmt`. Runs fixed XtQuant calls against an existing authorized Windows x64 MiniQMT. Installation and platform access are explicit; loading the plugin neither downloads dependencies nor starts a broker terminal.
 
 | Contract | Implemented capabilities |
 | --- | --- |
@@ -24,6 +24,6 @@ Maintainer checks: run `node --import "$SESAME_PLUGIN_SDK_LOADER" --test plugins
 
 API mapping audited against [official quick start](https://dict.thinktrader.net/nativeApi/start_now.html), [XtData](https://dict.thinktrader.net/nativeApi/xtdata.html), [XtTrader](https://dict.thinktrader.net/nativeApi/xttrader.html), and the publisher's [250807.1.2 wheel](https://pypi.org/project/xtquant/250807.1.2/) (SHA-256 `91f19ff9a92971c5abe64fbd077e5212e0418f0820aa3427aef3444230f72921`). See the bundled skill for the operational procedure.
 
-## Application compatibility
+## Environment setup
 
-Requires the Sesame API1 host targeting 0.2.0 (`>=0.2.0-0` permits its development previews). Stable 0.2.0 has not yet been released. Installation does not initialize dependencies or download them at startup. Inspect and reuse an existing configured environment first; explicitly prepare missing dependencies only when needed.
+Installation does not initialize dependencies or download them at startup. Inspect and reuse an existing configured environment first; explicitly prepare missing dependencies only when needed.

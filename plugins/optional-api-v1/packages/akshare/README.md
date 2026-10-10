@@ -16,8 +16,8 @@ History is paged, Decimal text and explicitly source-labelled. Eastmoney volume 
 
 Market-prefixed history requests map 920xxx and legacy 4/8 codes to Beijing (`bj`), 6/other 9 codes to Shanghai, and remaining A-share codes to Shenzhen. The [BSE code announcement](https://www.bse.cn/important_news/200021617.html) establishes the 920 segment. Sina remains limited to its supported Shanghai/Shenzhen codes. Explicit research arguments already require a market prefix and are never re-inferred.
 
-## Application compatibility
+## Environment setup
 
-Requires the Sesame API1 host targeting 0.2.0 (`>=0.2.0-0` permits its development previews). Stable 0.2.0 has not yet been released. Installation does not initialize dependencies or download them at startup. Inspect and reuse an existing configured environment first; explicitly prepare missing dependencies only when needed.
+Installation does not initialize dependencies or download them at startup. Inspect and reuse an existing configured environment first; explicitly prepare missing dependencies only when needed.
 
 Quote and daily-bar polling use a 60-second refresh interval; this is neither a 60-second bar nor an exchange tick subscription. Public quote timestamps may be HTTP observation times (marked `observationTimeOnly`), not exchange time. Bind the selected Eastmoney, Sina or Tencent source explicitly; do not silently merge or fail over between sources. Source errors and unknown freshness must remain visible.

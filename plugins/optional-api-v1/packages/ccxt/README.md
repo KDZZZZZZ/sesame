@@ -1,6 +1,6 @@
 # CCXT optional public spot provider
 
-Preview requires Sesame >=0.2.0-0 (target stable 0.2.0). Discoverable, never default. Implements generic market search/description and UTC historical/forming bar queries plus 60s polling subscriptions. Explicit exchanges: Kraken, Coinbase and OKX. No API key, account, order or trading tools. Network availability and exchange-specific histories differ; one response is <=500 rows and never claims full range coverage. CCXT latest candles may be incomplete: only a later source candle confirms prior closure, never the HTTP observation clock.
+Discoverable, never default. Implements generic market search/description and UTC historical/forming bar queries plus 60s polling subscriptions. Explicit exchanges: Kraken, Coinbase and OKX. No API key, account, order or trading tools. Network availability and exchange-specific histories differ; one response is <=500 rows and never claims full range coverage. CCXT latest candles may be incomplete: only a later source candle confirms prior closure, never the HTTP observation clock.
 
 `ccxt_environment` inspects/reuses existing 64-bit native Python >=3.11 and CCXT 4.5.85. Explicit prepare installs into this plugin's private data only, with persistent pip cache and official PyPI download hashes/report. Failure retains the private dependency cache for explicit retry; no startup/global installs or shared-environment upgrade. Agent skill gives the generic host bind/read/live/data-access path rather than duplicate dashboard tools.
 

@@ -12,7 +12,7 @@
   "packages": [
     {
       "id": "sesame/akshare",
-      "version": "1.0.5",
+      "version": "1.0.6",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -48,7 +48,7 @@
     },
     {
       "id": "sesame/backtrader",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -147,7 +147,7 @@
     },
     {
       "id": "sesame/ccxt",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -590,7 +590,7 @@
     },
     {
       "id": "sesame/orchestration",
-      "version": "2.1.1",
+      "version": "2.1.2",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -623,7 +623,7 @@
     },
     {
       "id": "sesame/plugin-manager",
-      "version": "2.1.1",
+      "version": "2.1.2",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -697,7 +697,7 @@
     },
     {
       "id": "sesame/qmt",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -897,7 +897,7 @@
     },
     {
       "id": "sesame/vnpy",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {

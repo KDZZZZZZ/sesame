@@ -1,6 +1,6 @@
-# QMT 1.1.0 candidate validation
+# QMT 1.1.0 validation
 
-This candidate targets the Sesame API1 0.2.0 host (development previews permitted by `>=0.2.0-0`), remains discoverable, and adds no startup dependency download or terminal launch.
+The plugin remains discoverable and adds no startup dependency download or terminal launch.
 
 Executed on macOS using the actual SDK loader:
 
