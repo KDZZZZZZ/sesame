@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -65,4 +65,8 @@ test('historical policy changes trigger both static checks and publication verif
     const text=readFileSync(new URL(`../workflows/${path}`,import.meta.url),'utf8');
     for(const line of text.split('\n').filter(line=>/^    paths:/.test(line))) assert.ok(line.includes("'.github/scripts/historical-plugin-releases.json'"),path);
   }
+});
+test('a profile symlink cannot read outside candidate metadata',t=>{
+  const f=fixture(t),path=join(f.root,'bundle-profile.json'),outside=join(f.repo,'outside.json');
+  f.json(outside,f.profile);rmSync(path);symlinkSync(outside,path);assert.throws(()=>readProfile(f.root),/ordinary file/);
 });

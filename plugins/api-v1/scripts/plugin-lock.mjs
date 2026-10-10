@@ -47,6 +47,8 @@ export function packageFiles(directory, base = '') {
 export function readProfile(source) {
   const path = join(source, 'bundle-profile.json');
   if (!existsSync(path)) return null; // Historical fixed releases predate profiles.
+  const stat = lstatSync(path);
+  fail(stat.isFile() && !stat.isSymbolicLink() && stat.nlink === 1, 'Bundle profile must be an ordinary file');
   const value = JSON.parse(readFileSync(path));
   fail(value.schemaVersion === 1 && ['core', 'optional'].includes(value.kind) && value.engines?.sesame === '>=0.2.0-0', 'Invalid bundle profile or Sesame engine range');
   fail(Array.isArray(value.packages) && value.packages.length > 0 && value.packages.every(id => /^sesame\/[a-z][a-z0-9-]*$/.test(id)) && new Set(value.packages).size === value.packages.length, 'Profile requires unique package identities');
