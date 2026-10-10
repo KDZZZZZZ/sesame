@@ -196,3 +196,10 @@ test('backward pages select newest data but stay ascending, published wall autho
  const second=await service.market.queryBars({...args,page:{limit:1,cursor:first.data.page.nextCursor}},{bindingId:'market'});assert.equal(second.data.page.items[0].openTime.value,'2026-10-01T09:30:00');
  assert.equal(dailyBar(dailyRow('2026-10-08'),'sample',at('2026-10-10T00:00:00')).isClosed,false);
 });
+
+test('old full-tick cannot replace a completed historical day and UTC fractional bounds stay exact',async t=>{
+ const {host,config}=await fixture(t);const service=createService(host,{platform:'win32',request:async()=>receipt({items:[dailyRow('2026-10-08','10.8'),dailyRow('2026-10-09','11')],tick:{...tick,time:String(at('2026-10-08T14:00:00')),open:'9',high:'10',low:'8',lastPrice:'9.2',volume:'100'}},at('2026-10-09T15:05:00'))});t.after(()=>service.dispose());await bind(service,'market');
+ const args={instrument:instrumentRef(config,'600000.SH'),spec:dailySpec,range:{from:{basis:'utc',unixMs:at('2026-10-08T09:30:00')},to:{basis:'utc',unixMs:at('2026-10-10T00:00:00')}},includeForming:true,page:{limit:20}};
+ const all=await service.market.queryBars(args,{bindingId:'market'});assert.equal(all.data.page.items[0].close,'10.8');assert.equal(all.data.page.items[0].isClosed,true);
+ const after=await service.market.queryBars({...args,range:{...args.range,from:{basis:'utc',unixMs:at('2026-10-09T09:30:00')+1}}},{bindingId:'market'});assert.equal(after.data.page.items.length,0);
+});

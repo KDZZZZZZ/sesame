@@ -69,9 +69,9 @@ export function createService(host, { platform = process.platform, now = Date.no
     return structuredClone({ data: { items: input.direction==='backward' ? snapshot.rows.slice(Math.max(0,snapshot.rows.length-offset-limit),snapshot.rows.length-offset) : snapshot.rows.slice(offset, offset + limit), nextCursor, snapshotId: snapshot.id, consistency: 'snapshot' }, meta: snapshot.meta, ...(snapshot.extra ?? {}) });
   }
   function rangeDate(time) {
-    if(time?.basis === 'utc') { check(Number.isSafeInteger(time.unixMs), 'Invalid UTC bound', 'INVALID_ARGUMENT'); return new Date(time.unixMs+8*3600000).toISOString().slice(0,19); }
+    if(time?.basis === 'utc') { check(Number.isSafeInteger(time.unixMs), 'Invalid UTC bound', 'INVALID_ARGUMENT'); return new Date(time.unixMs+8*3600000).toISOString().slice(0,23); }
     check(time?.basis === 'wall' && time.authority === 'Asia/Shanghai' && time.fold === undefined && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(time.value), 'Use UTC or unambiguous Asia/Shanghai wall bounds', 'UNSUPPORTED_CAPABILITY');
-    check(new Date(time.value+'Z').toISOString().slice(0,19) === time.value, 'Invalid wall bound', 'INVALID_ARGUMENT'); return time.value;
+    check(new Date(time.value+'Z').toISOString().slice(0,19) === time.value, 'Invalid wall bound', 'INVALID_ARGUMENT'); return time.value+'.000';
   }
   function specCheck(input) {
     check(input.spec?.timeframe === '1d' && input.spec.priceBasis === 'last' && input.spec.adjustment === 'none' && ['regular','default'].includes(input.spec.session), 'Only unadjusted regular daily stock bars are supported', 'UNSUPPORTED_CAPABILITY');
@@ -88,7 +88,9 @@ export function createService(host, { platform = process.platform, now = Date.no
       const tick = r.result.tick, sourceTime = quote(c,{symbol,tick}).time;
       check(sourceTime.basis === 'utc', 'Forming daily row needs native epoch time', 'UNSUPPORTED_CAPABILITY');
       const date = new Date(sourceTime.unixMs+8*3600000).toISOString().slice(0,10);
-      if(date >= from.slice(0,10) && date <= to.slice(0,10)) {
+      const lastDate = native.length ? new Date(Math.max(...native.map(row=>Number(row.time)))+8*3600000).toISOString().slice(0,10) : null;
+      const sameDay = native.find(row=>new Date(Number(row.time)+8*3600000).toISOString().slice(0,10)===date);
+      if(date >= from.slice(0,10) && date <= to.slice(0,10) && (!lastDate || date >= lastDate) && sameDay?.is_closed !== true) {
         const replacement={time:String(sourceTime.unixMs),open:tick.open,high:tick.high,low:tick.low,close:tick.lastPrice,volume:tick.volume};
         const at=native.findIndex(row=>new Date(Number(row.time)+8*3600000).toISOString().slice(0,10)===date);
         if(at>=0)native[at]=replacement;else native.push(replacement);
@@ -96,7 +98,7 @@ export function createService(host, { platform = process.platform, now = Date.no
     }
     native.sort((a,b)=>Number(a.time)-Number(b.time));
     const tickTime=r.result.tick?.time;
-    const rows=native.map((row,index)=>revised(dailyBar(row,seriesId,r.sample.to,{nextSourceTime:native[index+1]?.time ?? (/^\d{13}$/.test(tickTime??'')?tickTime:undefined)}))).filter(bar=>bar.openTime.value>=from && bar.openTime.value<to && (input.includeForming || bar.isClosed)).sort((a,b)=>a.openTime.value.localeCompare(b.openTime.value));
+    const rows=native.map((row,index)=>revised(dailyBar(row,seriesId,r.sample.to,{nextSourceTime:native[index+1]?.time ?? (/^\d{13}$/.test(tickTime??'')?tickTime:undefined)}))).filter(bar=>(bar.openTime.value+'.000')>=from && (bar.openTime.value+'.000')<to && (input.includeForming || bar.isClosed)).sort((a,b)=>a.openTime.value.localeCompare(b.openTime.value));
     check(new Set(rows.map(x=>x.id)).size===rows.length,'Duplicate native daily rows','SOURCE_DATA_INVALID');
     return {rows,meta:metadata(r,[warning('LOCAL_HISTORY','Only existing cached daily data is read. Empty data does not prove complete coverage; explicitly download missing ranges.'),warning('DAILY_POLL','Daily OHLC uses native source timestamps. No minute bars or native volume units are inferred.')]),extra:{seriesId,coverage:{requested:input.range,observedRange:rows.length?{from:rows[0].openTime,to:rows.at(-1).openTime}:null,complete:false,gaps:[{range:input.range,reason:'not_loaded'}]}}};
   }
