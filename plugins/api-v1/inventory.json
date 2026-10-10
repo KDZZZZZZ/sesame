@@ -13,7 +13,7 @@
   "packages": [
     {
       "id": "sesame/akshare",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {

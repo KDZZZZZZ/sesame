@@ -12,7 +12,7 @@ export function buildInventory(directory = root) {
       const manifest = JSON.parse(readFileSync(join(source, 'packages', pkg.directory, 'plugin.json'))), extension = manifest.extensions?.['bot.sesame'];
       if (!policy[pkg.directory]) throw new Error(`Missing reviewed package explanation: ${pkg.id}`);
       const standard = Boolean(manifest.$schema), names = standard ? Object.values(JSON.parse(readFileSync(join(source, 'packages', pkg.directory, extension.builtin.tool_definitions)))).flat().map(tool => tool.name) : manifest.tool_names;
-      entries.push({ id: pkg.id, version: pkg.version, distribution: profile.kind, state: standard ? extension.builtin.default_state : manifest.default_state, engines: extension?.engines ?? manifest.engines,
+      entries.push({ id: pkg.id, version: pkg.version, distribution: profile.kind, state: standard ? extension.builtin.default_state : manifest.default_state, engines: standard ? extension?.engines : manifest.engines,
         format: standard ? 'agent-plugins' : 'sesame-native', license: manifest.license, author: manifest.author ?? { name: 'Sesame contributors' },
         ...policy[pkg.directory], tools: names, sourcePath: `plugins/${profile.kind === 'core' ? 'api-v1' : 'optional-api-v1'}/packages/${pkg.directory}` });
     }

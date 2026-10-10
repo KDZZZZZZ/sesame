@@ -36,7 +36,7 @@ here installs MT5, QMT, Python dependencies or a brokerage terminal automaticall
 | web-extract | Keep 2.0.2 | Optional MCP | Python standard library; canonical package root and external-path rejection retained; local sample versus network extraction clearly distinguished. |
 | web-sources | Keep 2.0.2 | Optional | Explicit HTTP sources and host dataset ports; ordinary source failures and provenance remain visible. |
 | workspace | Merge host-files into 1.1.0 | Default, mounted | Thirteen tools. Actual current-user host execution, real cwd, bounded diagnostics and frozen-evidence failures; inspect/reuse before installing missing dependencies. |
-| akshare | Keep 1.0.3 candidate | Optional | Compatible Python, fixed AKShare dependency; explicit source, observed polling, no tick-feed promise. Separate author's validation applies. |
+| akshare | Upgrade 1.0.4 candidate | Optional | Compatible Python, fixed AKShare dependency; explicit source, observed polling, no tick-feed promise. Separate author's validation applies. |
 | qmt | Upgrade 1.1.0 candidate | Optional | Authorized Windows broker terminal and compatible SDK. D1/history, source-qualified closure, raw daily orders/fills, explicit stock order/cancel; normalized order/fill timestamps remain unsupported where native units cannot be proven. No Windows broker-native acceptance is claimed. |
 | vnpy | Keep 1.0.2 candidate | Optional | Compatible Python and pinned vn.py/CTA engine; explicit preparation reuses environments and resumable downloads. Actual native CTA evidence is distinct from live brokerage execution. |
 
@@ -69,9 +69,9 @@ synthetic input, not native execution or proof of real market chronology.
 `bundle-profile.json` is enforced during lock construction, including membership,
 engine range, optional activation policy and absence of legacy grants. The
 release builder materializes that profile from the exact source commit. A new
-release plan must name its `core` or `optional` profile. Historical commits without
-profiles retain their old build semantics; prior archives and digests are not
-rewritten.
+release plan must name its `core` or `optional` profile. Only the thirteen exact allowlisted historical release plans may omit
+profiles and retain their old build semantics; new releases cannot omit the
+profile. Prior archives and digests are not rewritten.
 
 `inventory.json` is an **unreleased preview**, generated from both source roots
 and reviewed explanatory policy. It contains no installation source commit,

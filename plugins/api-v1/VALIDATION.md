@@ -644,7 +644,7 @@ changes and dependency boundaries are in REORGANIZATION.md.
 
 The public SDK source suite ran 227 tests: 212 passed and 15 platform/native or
 host opt-in cases skipped, with no failures. Native opt-ins were not enabled.
-The Python dependency-installer fixtures passed six checks. The existing sixteen
+The Python dependency-installer fixtures passed six checks. The existing thirteen
 fixed release plans reconstructed successfully; new profile metadata does not
 change historical archive bytes. Five profile/inventory checks and six release
 identity checks passed, including actual nine-package archive membership,
@@ -686,3 +686,38 @@ d25ad293945bc0f5fd11725c97c91fc5dbefc863: 16 independent, 18 public, one
 actual temporary HostContext/reopen and nine Python checks passed (44 total),
 with one Windows native gate skipped. This candidate imports those package bytes
 unchanged. Final bundle/profile/head review is still separate and pending.
+
+
+Independent review fixes in this candidate retain their separate evidence scopes.
+AKShare 1.0.4 now implements source-qualified daily closure, precise UTC range
+bounds, requested paging direction and forming policy, complete instrument and
+bar/page/snapshot fields, and exact OHLC/quantity checks. Codex refactor_plugins
+reviewed source 763f4a0e6bbeea4b4b6cc430713bb7eb5c696c6a at
+2026-10-10T00:32:18Z: ten independent, eleven public provider and four environment
+checks passed (25 total). These were controlled responses, not a fresh upstream
+network acceptance.
+
+MT5 retains its native history source price rather than substituting a position
+close price: the mapping accepts price, price_open, then open_price, and the
+actual order done_time alias. Codex refactor_plugins reviewed source
+78dd9fc3f57c0fd441963414e9e41b9af3102ddc at 2026-10-10T00:34:18Z;
+twelve public and three independent mapping checks passed. This change does not
+run a terminal, backtest or order. It is integrated into the optional 1.2.0
+candidate without restoring old migration grants or changing live state.
+
+The distribution infrastructure was independently reviewed at exact head
+e06f56e8152adaa1d9df37f72ae88de4c3465b4e: 17 focused tests and all thirteen
+historical reconstructions passed. Only exact allowlisted historical plans may
+omit a profile; new releases cannot remove metadata to evade the minimum engine
+range, package membership or optional activation policy. These source-stage
+checks do not replace final-head review of the merged candidate and its archives.
+
+
+After importing the reviewed AKShare/MT5 source fixes and merged distribution
+infrastructure, the integrated candidate passed 27 provider/mapping checks and
+22 profile/release/archive/inventory checks. These short checks ran on the
+integrated source, with no network/native or live application mutations. The
+nine-core lock and archive are unchanged from the earlier candidate; the optional
+lock was regenerated for exactly those reviewed source changes. The existing
+22-entry install catalog still validates against the two already published
+releases, independently of this 19-entry preview.

@@ -5,9 +5,9 @@
   "packages": [
     {
       "id": "sesame/akshare",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "directory": "akshare",
-      "treeDigest": "sha256:d5d0e761d6ad8259d15a26f4895674ba894d13ac4b57f93de4ef895ab105d83e",
+      "treeDigest": "sha256:775a173b3afeefed92f351895fabd1f815dfdcc5a2fb49b8e2896c9ea79de4ab",
       "files": [
         {
           "path": "LICENSE",
@@ -16,13 +16,13 @@
         },
         {
           "path": "README.md",
-          "sha256": "06fb5b7ad1448279484841ea13ea1aede7b103ff315a64b9da3b8556c03d989c",
-          "bytes": 2919
+          "sha256": "db6f22c2d61d3235a7b48ea1a0d19133a29b1417cdf348ef0e24a49dbe023e59",
+          "bytes": 3050
         },
         {
           "path": "VALIDATION.md",
-          "sha256": "1d648fa02c93afa83988181f32c9baa3aca5afd4ff022f6e001eab7ff5e13e1b",
-          "bytes": 3653
+          "sha256": "ac219ecae6e5cf2733045bc5498732f9151ddd45ab56895996f1720104e380c8",
+          "bytes": 4294
         },
         {
           "path": "bridge.py",
@@ -36,12 +36,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "657a585a0c20a8cec7725ad77f7416391f480657cafe641b04e6972c32764c5c",
+          "sha256": "dc856403720253815859608b811222caf250ca7b513c821307912bee961c9fb4",
           "bytes": 120
         },
         {
           "path": "plugin.json",
-          "sha256": "ab3b70f4ec578a1bfcceb8c20313c686adb24452234d58ebc2784cf8c2130500",
+          "sha256": "c5c722b5db2543ae7ec8c0dc1ab6cd44f98b99a77beab7e0260145666f2eeab4",
           "bytes": 808
         },
         {
@@ -51,8 +51,8 @@
         },
         {
           "path": "provider.js",
-          "sha256": "911dbd5f14c351da732c0e25f6e8e4c4bff651ef9d56930810e15130e76b90fb",
-          "bytes": 15711
+          "sha256": "0629233daf67fe05e4c6255baa86eb13215376f273e1663be050b167e66186c9",
+          "bytes": 18720
         },
         {
           "path": "skills/akshare-research/SKILL.md",
@@ -71,8 +71,8 @@
         },
         {
           "path": "tests/provider.test.js",
-          "sha256": "1a859777e9c76a44f63935f2a189436bb66f20aa3f51f94d443e6c7b417e73b1",
-          "bytes": 7297
+          "sha256": "35a3daff3415b89e9f88c2eeb728693e1678d61e3851072e3e147229f805f4a2",
+          "bytes": 11640
         },
         {
           "path": "tools.json",
@@ -216,7 +216,7 @@
       "id": "sesame/mt5",
       "version": "1.2.0",
       "directory": "mt5",
-      "treeDigest": "sha256:d1a33aeb1a2f78f79c21abb6fdc9010194243342ca2735f07d414cd561ac5917",
+      "treeDigest": "sha256:6ae118d2bdb1c1e837c30a8fb0ec0eb51f1fecbce8f16780bb66ac0b1ac4f8d3",
       "files": [
         {
           "path": "LICENSE",
@@ -260,8 +260,8 @@
         },
         {
           "path": "backend/contract-mapping.js",
-          "sha256": "da1abe6d90b088e14540ba851f73daa66e3a417f080ee5d5b13f6e14896d38ad",
-          "bytes": 20941
+          "sha256": "353e9f8bfa27542d6b602c02dce99cc9d0546e9603b236073e890cf2cecc8eca",
+          "bytes": 21002
         },
         {
           "path": "backend/contracts.js",
