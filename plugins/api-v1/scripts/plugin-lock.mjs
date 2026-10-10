@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readFileSync, readdirSync, lstatSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, readdirSync, lstatSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -44,8 +44,20 @@ export function packageFiles(directory, base = '') {
   return files;
 }
 
+export function readProfile(source) {
+  const path = join(source, 'bundle-profile.json');
+  if (!existsSync(path)) return null; // Historical fixed releases predate profiles.
+  const stat = lstatSync(path);
+  fail(stat.isFile() && !stat.isSymbolicLink() && stat.nlink === 1, 'Bundle profile must be an ordinary file');
+  const value = JSON.parse(readFileSync(path));
+  fail(value.schemaVersion === 1 && ['core', 'optional'].includes(value.kind) && value.engines?.sesame === '>=0.2.0-0', 'Invalid bundle profile or Sesame engine range');
+  fail(Array.isArray(value.packages) && value.packages.length > 0 && value.packages.every(id => /^sesame\/[a-z][a-z0-9-]*$/.test(id)) && new Set(value.packages).size === value.packages.length, 'Profile requires unique package identities');
+  fail(Object.keys(value).every(key => ['schemaVersion', 'kind', 'engines', 'packages'].includes(key)), 'Unknown profile field');
+  return value;
+}
+
 export function buildLock(source = root) {
-  const packagesDirectory = join(source, 'packages'), packages = [];
+  const packagesDirectory = join(source, 'packages'), packages = [], profile = readProfile(source);
   for (const directory of readdirSync(packagesDirectory).sort()) {
     fail(/^[a-z][a-z0-9-]*$/.test(directory), `Package directory must be a simple slug: ${directory}`);
     const path = join(packagesDirectory, directory), stat = lstatSync(path);
@@ -55,6 +67,12 @@ export function buildLock(source = root) {
     const manifest = JSON.parse(readFileSync(join(path, 'plugin.json'))), npm = JSON.parse(readFileSync(join(path, 'package.json'))), extension = manifest.extensions?.['bot.sesame'];
     const id = extension?.id ?? manifest.id;
     fail(id === `sesame/${directory}`, `Incorrect publisher identity: ${directory}`);
+    if (profile) {
+      fail((manifest.$schema ? extension?.engines : manifest.engines)?.sesame === profile.engines.sesame, `${id}: Sesame engine range differs from its profile`);
+      fail(!Object.hasOwn(manifest, 'migration') && !Object.hasOwn(extension ?? {}, 'migration'), `${id}: profiled packages cannot request legacy host storage grants`);
+      const state = extension?.builtin?.default_state ?? manifest.default_state;
+      fail(profile.kind === 'optional' ? state === 'discoverable' : ['mounted', 'discoverable'].includes(state), `${id}: profile default state differs`);
+    }
     fail((extension?.apiVersion ?? manifest.apiVersion) === '1', `${id}: API version must be 1`);
     fail(semver(manifest.version) && npm.version === manifest.version && npm.type === 'module', `${id}: package version or module scope differs`);
     fail(typeof manifest.license === 'string' && manifest.license === npm.license && names.has('LICENSE'), `${id}: explicit per-package license is required`);
@@ -75,6 +93,7 @@ export function buildLock(source = root) {
     }
     for (const file of files.filter(file => /\.(?:m?js|cjs)$/.test(file.path))) {
       const text = readFileSync(join(path, file.path), 'utf8');
+      if (profile) fail(!/\bstorage\s*(?:(?:\?\.)?\[\s*['"]legacy['"]\s*\]|(?:\?\.|\.)\s*legacy\b)/.test(text), `${id}: profiled packages must use private storage`);
       for (const match of text.matchAll(/(?:\bfrom\s*|\bimport\s*\(|\bimport\s*|\brequire\s*\()\s*['"]([^'"]+)['"]/g)) {
         const specifier = match[1];
         if (specifier.startsWith('.')) {
@@ -85,6 +104,7 @@ export function buildLock(source = root) {
     }
     packages.push({ id, version: manifest.version, directory, treeDigest: treeDigest(files), files });
   }
+  if (profile) fail(JSON.stringify(packages.map(pkg => pkg.id).sort()) === JSON.stringify([...profile.packages].sort()), 'Package set differs from the reviewed core/optional profile');
   fail(packages.length > 0 && packages.length <= 100, 'Bundle requires 1–100 packages');
   return { schemaVersion: 1, apiVersion: '1', channel: 'development', packages };
 }

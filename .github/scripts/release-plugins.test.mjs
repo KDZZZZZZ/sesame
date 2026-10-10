@@ -4,13 +4,20 @@ import { validatePlan, reviewEvidence, validateAssets, releaseCommitFor } from '
 import { sha256 } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
 
 const sha = 'a'.repeat(40);
-const plan = () => ({ schemaVersion: 1, sourceCommit: sha, sourceRoot: 'plugins/api-v1', tag: 'plugins-api-v1-dev.4', title: 'Development bundle 4', archive: { name: 'sesame-official-plugins-api-v1-dev.4.tar.gz', sha256: 'b'.repeat(64) }, lockSha256: 'c'.repeat(64), pullRequest: 5 });
+const plan = () => ({ schemaVersion: 1, sourceCommit: sha, sourceRoot: 'plugins/api-v1', profile: 'core', tag: 'plugins-api-v1-dev.99', title: 'Development fixture', archive: { name: 'sesame-official-plugins-api-v1-dev.99.tar.gz', sha256: 'b'.repeat(64) }, lockSha256: 'c'.repeat(64), pullRequest: 5 });
 const pr = () => ({ merged: true, merged_at: '2026-10-09T16:00:00Z', base: { ref: 'main' }, head: { sha, repo: { full_name: 'KDZZZZZZ/sesame' } }, user: { id: 1 }, merge_commit_sha: 'd'.repeat(40), merged_by: { login: 'maintainer' } });
 const checks = () => ['package-static-review', 'catalog-static-review'].map((name, id) => ({ id, name, head_sha: sha, workflow: { path: `.github/workflows/${id ? 'plugin-catalog' : 'plugin-api-v1'}.yml`, event: 'pull_request_target' }, status: 'completed', conclusion: 'success' }));
 
 test('release plans pin only allowed development roots, exact bytes and PRs', () => {
-  assert.equal(validatePlan(plan()).tag, 'plugins-api-v1-dev.4');
+  assert.equal(validatePlan(plan()).tag, 'plugins-api-v1-dev.99');
   for (const change of [{ sourceCommit: 'main' }, { sourceRoot: '../../private' }, { tag: 'v1.0.0' }, { archive: { name: '../asset', sha256: 'b'.repeat(64) } }, { pullRequest: 0 }]) assert.throws(() => validatePlan({ ...plan(), ...change }));
+});
+test('candidate release profiles match only their fixed package root', () => {
+  assert.equal(validatePlan({ ...plan(), profile: 'core' }).profile, 'core');
+  for (const profile of ['optional', 'all', null]) assert.throws(() => validatePlan({ ...plan(), profile }), /profile/);
+  const optional = { ...plan(), sourceRoot: 'plugins/optional-api-v1', tag: 'plugins-optional-api-v1-dev.5', archive: { name: 'sesame-optional-plugins-api-v1-dev.5.tar.gz', sha256: 'b'.repeat(64) }, profile: 'optional' };
+  assert.equal(validatePlan(optional).profile, 'optional');
+  assert.throws(() => validatePlan({ ...optional, profile: 'core' }), /profile/);
 });
 test('new tags identify the publishing revision while existing tags cannot be moved', () => {
   assert.equal(releaseCommitFor(sha, null, null), sha);
