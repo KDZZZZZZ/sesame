@@ -19,7 +19,7 @@ Sesame 0.1.4 请使用[历史 26 个插件的目录](plugins/)；其版本、来
 | 设备 | 安装包 | 下载大小 |
 | --- | --- | --- |
 | macOS 13+ · Apple Silicon（M 系列） | [DMG](https://github.com/KDZZZZZZ/sesame/releases/download/v0.2.0/Sesame-0.2.0-mac-arm64.dmg) | 254.8 MB |
-| Windows x64 | [安装器](https://github.com/KDZZZZZZ/sesame/releases/download/v0.2.0/Sesame-0.2.0-win-x64.exe) | 224.5 MB |
+| Windows 10/11 x64 | [安装器](https://github.com/KDZZZZZZ/sesame/releases/download/v0.2.0/Sesame-0.2.0-win-x64.exe) | 224.5 MB |
 | Linux x64 · Debian / Ubuntu 系 | [DEB](https://github.com/KDZZZZZZ/sesame/releases/download/v0.2.0/Sesame-0.2.0-linux-x64.deb) | 204.8 MB |
 | Linux x64 · 其他兼容桌面发行版 | [AppImage](https://github.com/KDZZZZZZ/sesame/releases/download/v0.2.0/Sesame-0.2.0-linux-x64.AppImage) | 236.0 MB |
 

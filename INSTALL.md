@@ -7,7 +7,7 @@
 | 系统 | 文件 | 安装方式 |
 | --- | --- | --- |
 | macOS 13+，Apple Silicon（M 系列） | `Sesame-0.2.0-mac-arm64.dmg` | 打开后拖入 Applications，再从 Applications 启动 |
-| Windows x64 | `Sesame-0.2.0-win-x64.exe` | 运行安装器，选择安装目录 |
+| Windows 10/11 x64 | `Sesame-0.2.0-win-x64.exe` | 运行安装器，选择安装目录 |
 | Linux x64，Debian/Ubuntu 系 | `Sesame-0.2.0-linux-x64.deb` | 在文件所在目录运行 `sudo apt install ./Sesame-0.2.0-linux-x64.deb` |
 | Linux x64，其他兼容桌面发行版 | `Sesame-0.2.0-linux-x64.AppImage` | 添加执行权限后运行；依赖发行版的 FUSE 支持，也可使用 `--appimage-extract-and-run` |
 
