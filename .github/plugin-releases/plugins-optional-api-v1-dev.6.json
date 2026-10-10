@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "tag": "plugins-optional-api-v1-dev.6",
+  "title": "Sesame API 1 optional development plugins 6 — AKShare clock consistency",
+  "sourceCommit": "f50d88ae9607bc1e4018aafe3adb424a42e5f67a",
+  "sourceRoot": "plugins/optional-api-v1",
+  "profile": "optional",
+  "archive": {
+    "name": "sesame-optional-plugins-api-v1-dev.6.tar.gz",
+    "sha256": "2cee0eeeb914f4cc13162e96023d72dd134fc4f4abd2c0c7b988d1593b33a9a3"
+  },
+  "lockSha256": "54ff0612e3a85f64f9d9d40f5446579e2521791b69dbce6766e0ffba21af3fc7",
+  "pullRequest": 27
+}

@@ -32,19 +32,19 @@
 ```text
 /skill:sesame-user-guide 带我用三步上手，并告诉我怎么拖动图表
 /skill:analyze-data 比较这两份已有研究的结论与数据质量
-/skill:configure-application 检查为什么没有行情
+/skill:configure-application 检查当前模型与偏好配置
 ```
 
 当前没有斜杠菜单或补全列表，也没有产品内置 `/help`、`/new`、`/model`、`/reset`。未知命令会作为普通文本交给 Agent，不应声称已执行特殊操作。用户可以直接问“现在可用的 /skill 命令有哪些”。
 
 ## 官方 skill 名称参考
 
-下面是随应用发布的名称，不代表全部已加载。回答“现在可用什么”前必须检查当前插件状态与本会话加载情况，不能把本表整张当成可执行清单。默认挂载通常可直接调用；可发现插件需要先让 Agent 按需加载；不可使用的不列为可用命令。
+下面列出官方默认与可选插件中的 skill 名称，不代表全部已安装或加载。回答“现在可用什么”前必须检查当前插件状态与本会话加载情况，不能把本表整张当成可执行清单。默认挂载通常可直接调用；可发现插件需要先让 Agent 按需加载；不可使用的不列为可用命令。
 
 | 插件 / skill 名称 | 用户用途 |
 | --- | --- |
 | sesame/orchestration / `sesame-user-guide` | 产品上手与操作说明。 |
-| sesame/configuration / `configure-application` | 检查模型、MT5 配置并引导补齐缺项。 |
+| sesame/configuration / `configure-application` | 读取模型与通用偏好设置，核对版本后修改。具体后端连接由相应插件管理。 |
 | sesame/memory / `manage-memory` | 整理长期偏好、研究结论和纠错经验。 |
 | sesame/data-access / `analyze-data` | 依据数据分析问题。 |
 | sesame/reports / `report-writing`、`report-design`、`interactive-report` | 把研究写成可阅读、可交互的报告。 |
@@ -56,6 +56,6 @@
 | sesame/rss-collect / `rss-collect` | 整理 RSS/Atom 订阅内容。 |
 | sesame/market-data-parser / `market-data-parser` | 整理支持格式的市场数据。 |
 
-外部插件还可能增加 skill。不是每个插件都有 skill；内部工具名也不是 `/命令`。本指南与配置助手只对主 Agent 开放，subagent 的可用列表因此可能不同。
+外部插件还可能增加 skill。不是每个插件都有 skill；内部工具名也不是 `/命令`。配置助手只对主 Agent 开放；本指南随会话协作插件提供。subagent 的实际可用列表仍以其已加载插件和作用域为准。
 
 维护依据：`composer.tsx`、`mention-editor.tsx`、`lib/mentions.ts`、`message-history.js`；`runtime.js` 将用户文本交给 Pi 的 `session.prompt`，已安装 Pi SDK 的 skill 展开使用 `/skill:`，`PluginRegistry.loader` 仅提供本会话活动的 Skills，不加载 CLI 内置命令或模板。

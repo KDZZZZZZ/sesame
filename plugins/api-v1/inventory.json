@@ -13,7 +13,7 @@
   "packages": [
     {
       "id": "sesame/akshare",
-      "version": "1.0.4",
+      "version": "1.0.5",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -118,7 +118,7 @@
     },
     {
       "id": "sesame/data-access",
-      "version": "2.3.0",
+      "version": "2.3.1",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -321,7 +321,7 @@
     },
     {
       "id": "sesame/orchestration",
-      "version": "2.1.0",
+      "version": "2.1.1",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -469,7 +469,7 @@
     },
     {
       "id": "sesame/reports",
-      "version": "2.0.2",
+      "version": "2.0.3",
       "distribution": "core",
       "state": "mounted",
       "engines": {

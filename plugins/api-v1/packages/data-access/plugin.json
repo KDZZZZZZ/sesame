@@ -2,7 +2,7 @@
   "id": "sesame/data-access",
   "title": "数据与研究证据",
   "description": "发现提供方、查询与冻结数据、读取输入和登记可追溯代码计算结果。",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "default_state": "mounted",
   "tool_names": [
     "market_read",

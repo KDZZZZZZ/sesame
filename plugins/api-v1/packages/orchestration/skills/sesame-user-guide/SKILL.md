@@ -21,7 +21,7 @@ description: 教用户使用 Sesame 工作台、图表拖拽与滚动、@ 报告
 | 首次安装、各系统的额外环境、签名提示、更新与备份 | [安装与首次配置](references/installation.md) |
 | 三个窗口、按钮、拖动、调整大小、滚轮、图表组件 | [Dashboard 操作](references/dashboard.md) |
 | 输入、历史、停止、@、/clear、/skill、可用命令 | [聊天与命令](references/chat-and-commands.md) |
-| User 设置、模型、MT5、插件、网络、工程、记忆 | [设置解释](references/settings.md) |
+| User 设置、数据与账户连接、策略成果与运行、模型与运行状态、Agent 插件、记忆与工作区 | [设置解释](references/settings.md) |
 | 能帮我做什么、并行 subagent、绘图、研究与策略示例 | [按目标使用 Agent](references/workflows.md) |
 | 拖不动、图表不见、没有行情、引用为空、任务失败 | [常见问题](references/troubleshooting.md) |
 

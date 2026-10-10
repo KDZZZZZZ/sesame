@@ -5,9 +5,9 @@
   "packages": [
     {
       "id": "sesame/akshare",
-      "version": "1.0.4",
+      "version": "1.0.5",
       "directory": "akshare",
-      "treeDigest": "sha256:775a173b3afeefed92f351895fabd1f815dfdcc5a2fb49b8e2896c9ea79de4ab",
+      "treeDigest": "sha256:e106e54b12477b9f6a29da1bf0f001c11eedf6642d8cf9afeeb5dfe5050ff871",
       "files": [
         {
           "path": "LICENSE",
@@ -16,13 +16,13 @@
         },
         {
           "path": "README.md",
-          "sha256": "db6f22c2d61d3235a7b48ea1a0d19133a29b1417cdf348ef0e24a49dbe023e59",
-          "bytes": 3050
+          "sha256": "bfa71f22568d2c606d7bde270207573e5a0e33fc6b650b1c46249e0612c9a7c7",
+          "bytes": 4158
         },
         {
           "path": "VALIDATION.md",
-          "sha256": "ac219ecae6e5cf2733045bc5498732f9151ddd45ab56895996f1720104e380c8",
-          "bytes": 4294
+          "sha256": "1fc4567b5de712680873824a2dda448f9e2c44fd81619a8a8453fc313a792183",
+          "bytes": 6816
         },
         {
           "path": "bridge.py",
@@ -36,12 +36,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "dc856403720253815859608b811222caf250ca7b513c821307912bee961c9fb4",
+          "sha256": "e3d7fc8c191bf14833872193b466733f8c4ed867cef1870cabbd13ba4bd14d3b",
           "bytes": 120
         },
         {
           "path": "plugin.json",
-          "sha256": "c5c722b5db2543ae7ec8c0dc1ab6cd44f98b99a77beab7e0260145666f2eeab4",
+          "sha256": "bcc1101c79104965e397582efd16f3cf01d8edf4e9bd469b24aeceb6b3bd0911",
           "bytes": 808
         },
         {
@@ -51,8 +51,8 @@
         },
         {
           "path": "provider.js",
-          "sha256": "0629233daf67fe05e4c6255baa86eb13215376f273e1663be050b167e66186c9",
-          "bytes": 18720
+          "sha256": "1f518ec9452ae19364dd6fb9957ed0cabc9bfba7a1dabc53236f09678632a074",
+          "bytes": 21894
         },
         {
           "path": "skills/akshare-research/SKILL.md",
