@@ -276,3 +276,51 @@ test("A suspended process requires a fresh snapshot instead of silently skipping
   assert.equal(events[0].payload.reason.code, "GAP_DETECTED");
   await handle.close();
 });
+
+for (const elapsed of [1000, 5 * 3600000]) {
+  test(`Empty public windows preserve the last observation when recovering after ${elapsed}ms`, async t => {
+    t.mock.timers.enable({ apis: ["Date", "setTimeout"], now: Date.UTC(2026, 9, 10, 8, 23) });
+    const f = cappedCoinbase(() => Date.now()), input = {
+      instrument: { sourceId: "ccxt:coinbase:spot", instrumentId: "BTC/USD" },
+      spec: { ...spec, timeframe: "1h" }, includeForming: true, tailLimit: 20,
+    };
+    t.after(() => f.provider.dispose());
+    const handle = await f.provider.subscribeBars(input, f.context), events = [];
+    const snapshot = structuredClone(handle.snapshot);
+    const original = f.provider.host.environment.executeWorker;
+    let empty = true;
+    f.provider.host.environment.executeWorker = async (...args) => {
+      const receipt = await original(...args);
+      return {
+        ...receipt,
+        rows: empty ? [] : receipt.rows.map((row, index, rows) => index === rows.length - 1 ? [...row.slice(0, 4), "11.5", row[5]] : row),
+      };
+    };
+    handle.ready(event => events.push(event));
+    for (let i = 0; i < 2; i++) {
+      t.mock.timers.tick(1000);
+      await setImmediate();
+      assert.deepEqual(events, [], "An empty source window must not invent updates or removals");
+      assert.deepEqual(handle.snapshot, snapshot, "The initial observation remains immutable");
+    }
+    empty = false;
+    t.mock.timers.tick(elapsed);
+    await setImmediate();
+    assert.equal(events.length, 1);
+    if (elapsed === 1000) {
+      assert.equal(events[0].type, "bars.upsert");
+      assert.equal(events[0].payload.bars.length, 1, "Unchanged candles are not replayed after an empty window");
+      assert.equal(events[0].payload.bars[0].id, snapshot.bars.at(-1).id);
+      assert.equal(events[0].payload.bars[0].close, "11.5");
+    } else {
+      assert.equal(events[0].type, "stream.gap");
+      assert.equal(events[0].payload.reason.code, "GAP_DETECTED");
+      assert.equal(events[0].payload.recovery, "snapshot");
+      t.mock.timers.tick(10000);
+      await setImmediate();
+      assert.equal(events.length, 1, "A gap stops deltas until the host requests a fresh snapshot");
+      const recovered = await f.provider.subscribeBars(input, f.context);
+      assert.equal(recovered.snapshot.bars.at(-1).openTime.unixMs, Math.floor(Date.now() / 3600000) * 3600000);
+    }
+  });
+}

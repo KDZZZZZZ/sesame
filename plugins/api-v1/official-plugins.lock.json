@@ -395,7 +395,7 @@
       "id": "sesame/reports",
       "version": "2.1.0",
       "directory": "reports",
-      "treeDigest": "sha256:58fa265ee8854aa9c7275b9beaea47eb2ea9109c306d091b380f178fdc6316c0",
+      "treeDigest": "sha256:f4ea4a20e02a4135634616c7e1555dfcd5d3e98138d1d9251851b48fffee58d6",
       "files": [
         {
           "path": "LICENSE",
@@ -409,8 +409,8 @@
         },
         {
           "path": "assets/charts-statistics.js",
-          "sha256": "ddda7251d02d1ea037e494708a3832b14b6c61d43f1ce13f8a1a1aacddd2309e",
-          "bytes": 23752
+          "sha256": "8e19242c4583c872927a7ceea9a410eec98ca4b14e0875e2bf2d6d62b7774f80",
+          "bytes": 24587
         },
         {
           "path": "assets/charts-structure.js",
@@ -419,8 +419,8 @@
         },
         {
           "path": "assets/charts-temporal.js",
-          "sha256": "a9138557e74d54c0be628d29c641777333c316ece4ef42c6c81a7ffe1b972d8d",
-          "bytes": 35701
+          "sha256": "5ae9f7b255253cbc53d8574f175016f5fd77714d9d23c9e3a929c73e6528cf45",
+          "bytes": 36369
         },
         {
           "path": "assets/editorial-charts.js",
@@ -434,13 +434,13 @@
         },
         {
           "path": "assets/report-kit.js",
-          "sha256": "8a53131995b0dfa3e0b03fa1b9492715b0317ebbeb80c4e0d41f2b7e520ac1c2",
-          "bytes": 42387
+          "sha256": "2e6fe859d25270c2cdd16d2ada799d18ce389be2c4a9127fa070490c11d35769",
+          "bytes": 45095
         },
         {
           "path": "examples/chart-gallery.html",
-          "sha256": "84532c0c9f395f23f0231ceb1fbd8c85f1049d42e621e1dba5d9d706908d10f0",
-          "bytes": 196656
+          "sha256": "df87a6ede9671860d9f1b1513ca5578a5632bc1ad1595a2122bc1b3add2cc378",
+          "bytes": 200867
         },
         {
           "path": "examples/chart-gallery.md",
@@ -454,8 +454,8 @@
         },
         {
           "path": "examples/editorial-demo.html",
-          "sha256": "4ef5e89143f9f89e2748bded42ccc4c6f1f8fc5ae18b8ec158173943a03d19e4",
-          "bytes": 96127
+          "sha256": "6e66ed3d9d2c10d995c14b106f2781fa949019ae06d07501422c7b841146e8fd",
+          "bytes": 98835
         },
         {
           "path": "examples/statistical-fixtures.json",

@@ -45,31 +45,41 @@
     // values or either endpoint (which may intentionally be very small).
     return i > 0 && i < total && range[0] < 0 && range[1] > 0 && Math.abs(value) <= Math.max(Math.abs(range[0]), Math.abs(range[1])) * Number.EPSILON * 4 ? 0 : value;
   };
-  const tickText = (ctx, value) => value !== 0 && (Math.abs(value) >= 1e7 || Math.abs(value) < 1e-4) ? value.toExponential(2) : ctx.format(value);
+  const tickStep = values => Math.min(...values.slice(1).map((value, i) => value - values[i]).filter(step => step > 0 && Number.isFinite(step)));
+  const tickText = (ctx, value, step) => {
+    const digits = Math.max(3, Math.ceil(-Math.log10(step)));
+    if (value !== 0 && (Math.abs(value) >= 1e7 || Math.abs(value) < 1e-4 || digits > 20)) {
+      const precision = Number.isFinite(step) ? Math.max(2, Math.min(16, Math.ceil(Math.log10(Math.abs(value)) - Math.log10(step)) + 1)) : 2;
+      return value.toExponential(precision);
+    }
+    return new Intl.NumberFormat(document.documentElement.lang || 'en', { maximumFractionDigits: Math.min(20, digits) }).format(value);
+  };
   function line(ctx, attrs) { ctx.svg.append(ctx.node('line', { class: 'sc-grid', ...attrs })); }
-  function label(ctx, x, y, value, anchor = 'middle') {
+  function label(ctx, x, y, value, anchor = 'middle', truncate = true) {
     const text = String(value), max = Math.max(5, Math.floor((ctx.pad.left - 15) / 6));
-    const n = ctx.node('text', { x, y, 'text-anchor': anchor, class: 'sc-axis' }, anchor === 'end' && text.length > max ? `${text.slice(0, max - 1)}…` : text);
+    const n = ctx.node('text', { x, y, 'text-anchor': anchor, class: 'sc-axis' }, truncate && anchor === 'end' && text.length > max ? `${text.slice(0, max - 1)}…` : text);
     n.append(ctx.node('title', {}, text));ctx.svg.append(n);return n;
   }
   function xAxis(ctx, range, height) {
     const left = ctx.pad.left, right = ctx.width - ctx.pad.right, bottom = height - ctx.pad.bottom;
     const sx = ctx.scale(range, [left, right]), ticks = ctx.width < 420 ? 3 : 4;
-    for (let i = 0; i <= ticks; i++) {
-      const value = tickValue(range, i, ticks), x = sx(value);
+    const values = [...new Set(Array.from({ length: ticks + 1 }, (_, i) => tickValue(range, i, ticks)))], step = tickStep(values);
+    values.forEach((value, i) => {
+      const x = sx(value);
       line(ctx, { x1: x, x2: x, y1: ctx.pad.top, y2: bottom });
-      label(ctx, x, bottom + 21, tickText(ctx, value), i === 0 ? 'start' : i === ticks ? 'end' : 'middle');
-    }
+      label(ctx, x, bottom + 21, tickText(ctx, value, step), i === 0 ? 'start' : i === values.length - 1 ? 'end' : 'middle', false);
+    });
     if (ctx.spec.unit) label(ctx, right, height - 5, ctx.spec.unit, 'end');
     return sx;
   }
   function yAxis(ctx, range, height, unit = ctx.spec.unit) {
     const sy = ctx.scale(range, [height - ctx.pad.bottom, ctx.pad.top]);
-    for (let i = 0; i <= 4; i++) {
-      const value = tickValue(range, i, 4), y = sy(value);
+    const values = [...new Set(Array.from({ length: 5 }, (_, i) => tickValue(range, i, 4)))], step = tickStep(values);
+    values.forEach(value => {
+      const y = sy(value);
       line(ctx, { x1: ctx.pad.left, x2: ctx.width - ctx.pad.right, y1: y, y2: y });
-      label(ctx, ctx.pad.left - 9, y + 4, tickText(ctx, value), 'end');
-    }
+      label(ctx, ctx.pad.left - 9, y + 4, tickText(ctx, value, step), 'end');
+    });
     if (unit) label(ctx, ctx.pad.left, 12, unit, 'start');
     return sy;
   }
@@ -212,11 +222,12 @@
       ctx.mark(ctx.node('rect', { x: left + Math.min(.5, width / 10), y: sy(bin.value), width: Math.max(.4, width - Math.min(1, width / 5)), height: Math.max(.8, baseline - sy(bin.value)), fill: color, 'data-stat-mark': 'histogram', 'data-bin-lower': bin.a, 'data-bin-upper': bin.b }), bin.row, bin.index, description);
     });
     const boundaries = [...new Set(bins.flatMap(bin => [bin.a, bin.b]))].sort((a, b) => a - b);
+    const boundaryStep = tickStep(boundaries);
     let previousX = -Infinity;
     boundaries.forEach((value, i) => {
       const position = sx(value), last = i === boundaries.length - 1;
       if (last || position - previousX >= 48 && (i === 0 || sx(boundaries.at(-1)) - position >= 48)) {
-        label(ctx, position, height - 19, tickText(ctx, value), i === 0 ? 'start' : last ? 'end' : 'middle');previousX = position;
+        label(ctx, position, height - 19, tickText(ctx, value, boundaryStep), i === 0 ? 'start' : last ? 'end' : 'middle', false);previousX = position;
       }
     });
     if (spec.unit) label(ctx, ctx.width - pad.right, height - 3, spec.unit, 'end');

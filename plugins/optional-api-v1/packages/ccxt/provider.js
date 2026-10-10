@@ -621,7 +621,9 @@ export class CCXTProvider {
                   payload: { seriesId: next.seriesId, bars },
                   observedAt: Date.now(),
                 });
-              prior = next;
+              // An empty read does not confirm removal of observed candles.
+              // Retain the last nonempty window to detect gaps on recovery.
+              if (next.bars.length) prior = next;
             } catch (error) {
               if (!signal.aborted)
                 emit({

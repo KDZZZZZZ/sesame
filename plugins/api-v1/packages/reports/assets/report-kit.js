@@ -59,6 +59,11 @@
   // Axis labels carry exactly the precision the tick step needs: 9,990 / 10,000 / 10,010, not 1万 / 1万 / 1万.
   const axisFormat = values => {
     const step = values.length > 1 ? Math.abs(values[1] - values[0]) : Math.abs(values[0]) || 1;
+    const magnitude = Math.max(...values.map(Math.abs));
+    if (magnitude >= 1e21 || step > 0 && step < 1e-6) {
+      const digits = Number.isFinite(step) && step > 0 ? Math.max(2, Math.min(16, Math.ceil(Math.log10(magnitude || 1) - Math.log10(step)) + 1)) : 2;
+      return value => value === 0 ? '0' : value.toExponential(digits);
+    }
     if (step >= 100000) return value => formatNumber(value, { notation: 'compact', maximumFractionDigits: Math.max(0, 2 - Math.floor(Math.log10(step / 1000))) });
     const digits = Math.max(0, Math.min(6, -Math.floor(Math.log10(step) + 1e-9)));
     return value => formatNumber(value, { maximumFractionDigits: digits, minimumFractionDigits: digits });
@@ -180,12 +185,33 @@
   const css = name => `var(${name},var(--report-default-${name.slice(2)}))`;
   const palette = () => [1, 2, 3, 4, 5, 6].map(i => css(`--chart-series-${i}`));
   const niceStep = (span, count) => { const raw = span / Math.max(1, count), power = 10 ** Math.floor(Math.log10(raw || 1)), n = raw / power; return (n >= 7.5 ? 10 : n >= 3.5 ? 5 : n >= 1.5 ? 2 : 1) * power; };
-  const ticks = (low, high, count) => {
-    if (low === high) { const pad = Math.abs(low) * 0.1 || 1; low -= pad; high += pad; }
-    const step = niceStep(high - low, count), start = Math.floor(low / step) * step, end = Math.ceil(high / step) * step, out = [];
-    for (let v = start; v <= end + step / 2; v += step) out.push(Number(v.toPrecision(12)));
-    return out;
+  const interpolate = (low, high, t) => t === 0 ? low : t === 1 ? high : low * (1 - t) + high * t;
+  const position = (value, low, high, start, end) => {
+    if (low === high) return (start + end) / 2;
+    const span = high - low, magnitude = Math.max(Math.abs(low), Math.abs(high));
+    const fraction = Number.isFinite(span) ? (value - low) / span : (value / magnitude - low / magnitude) / (high / magnitude - low / magnitude);
+    return start + fraction * (end - start);
   };
+  const ticks = (low, high, count) => {
+    if (!finite(low) || !finite(high) || low > high) fail('Chart domains must have finite ordered endpoints.');
+    count = Math.max(1, Math.min(10, Math.floor(count) || 5));
+    if (low === high) {
+      const pad = low === 0 ? 1 : Math.abs(low) * .1 || Number.MIN_VALUE;
+      low = Number.isFinite(low - pad) ? low - pad : low;
+      high = Number.isFinite(high + pad) ? high + pad : high;
+    }
+    const fallback = () => [...new Set(Array.from({ length: count + 1 }, (_, i) => interpolate(low, high, i / count)))];
+    if (high > low && (high - low) / count === 0) return fallback();
+    const step = niceStep(high - low, count), start = Math.floor(low / step) * step, end = Math.ceil(high / step) * step;
+    if (!finite(step) || step <= 0 || !finite(start) || !finite(end) || start + step === start) return fallback();
+    const intervals = Math.round((end - start) / step);
+    if (!Number.isSafeInteger(intervals) || intervals < 1 || intervals > 24) return fallback();
+    // An integer loop is bounded even when a nice step is below a large
+    // endpoint's ULP. Do not round distinct source coordinates to 12 digits.
+    const out = [...new Set(Array.from({ length: intervals + 1 }, (_, i) => start + i * step))];
+    return out.every(finite) && out[0] <= low && out.at(-1) >= high ? out : fallback();
+  };
+  const numericCoordinate = value => finite(value) || typeof value === 'string' && /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(value.trim()) && Number.isFinite(Number(value));
   // Broker and dataset times are wall-clock strings; position them as UTC and print them unchanged.
   const parseTime = value => {
     if (finite(value)) return value;
@@ -217,17 +243,24 @@
     if (!ys.length || ys.some(y => typeof y !== 'string')) fail(`${path}.y must name a numeric row field or an array of fields.`);
     if (spec.series != null && (typeof spec.series !== 'string' || ys.length > 1)) fail(`${path}.series must name one grouping field and needs a single y.`);
     const xValues = data.map(row => row?.[spec.x]).filter(value => value != null);
-    const xType = spec.xType ?? (['bar', 'hbar'].includes(spec.kind) ? 'category' : xValues.every(finite) ? 'number' : xValues.every(value => !Number.isNaN(parseTime(value))) ? 'time' : 'category');
+    const xType = spec.xType ?? (['bar', 'hbar'].includes(spec.kind) ? 'category' : xValues.every(numericCoordinate) ? 'number' : xValues.every(value => !Number.isNaN(parseTime(value))) ? 'time' : 'category');
     if (!['time', 'number', 'category'].includes(xType)) fail(`${path}.xType must be time, number or category.`);
-    const groups = new Map();
+    const groups = new Map(), categoryKeys = new Map();
     for (const row of data) {
       const names = spec.series ? [[String(row?.[spec.series] ?? '—'), ys[0]]] : ys.map(y => [spec.labels?.[y] ?? y, y]);
       for (const [name, key] of names) {
         const raw = row?.[key], y = raw == null || raw === '' ? null : Number(raw);
         if (y != null && !Number.isFinite(y)) fail(`${path}: field "${key}" holds a non-numeric value (${JSON.stringify(raw).slice(0, 40)}).`);
         const xRaw = row?.[spec.x];
+        if (xType !== 'category' && (xRaw == null || typeof xRaw === 'string' && xRaw.trim() === '')) fail(`${path}: field "${spec.x}" has a missing ${xType} coordinate; retain or filter missing observations explicitly.`);
+        if (xType === 'number' && !numericCoordinate(xRaw)) fail(`${path}: field "${spec.x}" holds a value that is not a number.`);
         const x = xType === 'time' ? parseTime(xRaw) : xType === 'number' ? Number(xRaw) : String(xRaw ?? '—');
-        if (xType !== 'category' && !Number.isFinite(x)) fail(`${path}: field "${spec.x}" holds a value that is not a ${xType} (${JSON.stringify(xRaw).slice(0, 40)}).`);
+        if (xType !== 'category' && !Number.isFinite(x)) fail(`${path}: field "${spec.x}" holds a value that is not a ${xType} (${String(JSON.stringify(xRaw)).slice(0, 40)}).`);
+        if (['bar', 'hbar'].includes(spec.kind)) {
+          if (!categoryKeys.has(name)) categoryKeys.set(name, new Set());
+          if (categoryKeys.get(name).has(x)) fail(`${path}: duplicate category within series "${name}"; aggregate explicitly or provide a distinct category/series field.`);
+          categoryKeys.get(name).add(x);
+        }
         if (!groups.has(name)) groups.set(name, []);
         groups.get(name).push({ x, y, raw: xRaw, rawValue: raw, row });
       }
@@ -317,18 +350,16 @@
     const yTicks = ticks(Math.min(...ysAll), Math.max(...ysAll), height < 220 ? 4 : 5);
     const format = axisFormat(yTicks);
     const left = Math.max(...yTicks.map(v => format(v).length)) * 6.6 + 14, right = width - 14, top = 12, bottom = height - 26;
-    const y = v => bottom - (v - yTicks[0]) / (yTicks.at(-1) - yTicks[0] || 1) * (bottom - top);
+    const y = v => position(v, yTicks[0], yTicks.at(-1), bottom, top);
     const categories = model.xType === 'category' ? [...new Set(model.series.flatMap(series => series.points.map(p => p.x)))] : null;
     const xs = points.map(p => categories ? categories.indexOf(p.x) : p.x), lo = Math.min(...xs), hi = Math.max(...xs);
-    const x = v => left + ((categories ? categories.indexOf(v) : v) - lo) / (hi - lo || 1) * (right - left);
+    const x = v => position(categories ? categories.indexOf(v) : v, lo, hi, left, right);
     yAxis(svg, y, yTicks, left, right, format);
     const xNumber = axisFormat(ticks(lo, hi, 5));
     const xLabel = v => model.xType === 'time' ? timeLabel(v, hi - lo) : model.xType === 'number' ? xNumber(v) : String(v);
     const xCount = Math.max(2, Math.min(categories ? categories.length : 6, Math.floor((right - left) / 90)));
-    for (let i = 0; i < xCount; i++) {
-      const value = categories ? categories[Math.round(i * (categories.length - 1) / (xCount - 1))] : lo + (hi - lo) * i / (xCount - 1);
-      svg.append(axisLabel({ class: 'kit-axis', x: x(value), y: height - 8, 'text-anchor': i === 0 ? 'start' : i === xCount - 1 ? 'end' : 'middle' }, xLabel(value), (right - left) / Math.max(1, xCount - 1) - 8));
-    }
+    const xTicks = [...new Set(Array.from({ length: xCount }, (_, i) => categories ? categories[Math.round(i * (categories.length - 1) / (xCount - 1))] : interpolate(lo, hi, i / (xCount - 1))))];
+    xTicks.forEach((value, i) => svg.append(axisLabel({ class: 'kit-axis', x: x(value), y: height - 8, 'text-anchor': i === 0 ? 'start' : i === xTicks.length - 1 ? 'end' : 'middle' }, xLabel(value), (right - left) / Math.max(1, xTicks.length - 1) - 8)));
     if (model.baseline != null) svg.append(s('line', { class: 'kit-baseline', x1: left, x2: right, y1: y(model.baseline), y2: y(model.baseline) }));
     for (const mark of list(model.marks, `${model.path}.marks`, 6)) {
       const at = model.xType === 'time' ? parseTime(mark.x) : mark.x, px = x(at);
@@ -376,7 +407,7 @@
         if (!hit || hit.y == null) return;
         hot.append(s('circle', { cx: x(hit.x), cy: y(hit.y), r: 4.5, fill: colors[i % colors.length], class: 'kit-hot' }));
         rows.push([series.name, formatValue(hit.rawValue, unitOf), colors[i % colors.length]]);
-        if (model.kind === 'scatter') rows.push([model.x, model.xType === 'time' ? String(hit.raw) : formatValue(hit.x, {})]);
+        if (model.kind === 'scatter') rows.push([model.x, model.xType === 'time' ? String(hit.raw) : formatValue(hit.raw, {})]);
       });
       showTip(tip, svg, ax / width * box.width, y(anchor.y) / height * box.height, model.xType === 'time' ? String(anchor.raw) : xLabel(anchor.x), rows);
     };
@@ -392,7 +423,7 @@
     const values = visible.flatMap(series => series.points.map(p => p.y)).filter(v => v != null).concat(0, model.baseline ?? 0);
     const yTicks = ticks(Math.min(...values), Math.max(...values), height < 220 ? 4 : 5), format = axisFormat(yTicks);
     const left = Math.max(...yTicks.map(v => format(v).length)) * 6.6 + 14, right = width - 10, top = 16, bottom = height - 26;
-    const y = v => bottom - (v - yTicks[0]) / (yTicks.at(-1) - yTicks[0] || 1) * (bottom - top);
+    const y = v => position(v, yTicks[0], yTicks.at(-1), bottom, top);
     const svg = s('svg', { viewBox: `0 0 ${width} ${height}`, class: 'kit-svg' });
     yAxis(svg, y, yTicks, left, right, format);
     const band = (right - left) / Math.max(1, categories.length), inner = Math.min(band * 0.72, 56), bar = inner / Math.max(1, visible.length);
@@ -431,7 +462,7 @@
     const bar = shown.length > 1 ? 12 : 16, gap = 3, row = Math.max(30, shown.length * (bar + gap) + 12);
     const height = model.height ?? categories.length * row + 12;
     const left = labelRoom + 12, right = width - 74;
-    const x = v => left + (v - lo) / (hi - lo || 1) * (right - left);
+    const x = v => position(v, lo, hi, left, right);
     const svg = s('svg', { viewBox: `0 0 ${width} ${height}`, class: 'kit-svg' });
     const signed = model.tone === 'signed' && model.series.length === 1, unitOf = { format: model.format, digits: model.digits, unit: model.unit };
     categories.forEach((category, c) => {

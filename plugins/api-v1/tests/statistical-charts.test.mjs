@@ -158,6 +158,22 @@ test('statistical charts render and select real fixed rows in Chromium', { skip:
       assert.equal(result.positiveDensity, 1);assert.match(result.emptyCount, /count: 0.*n=0/);assert.equal(result.outliers, 2);
     });
 
+    await t.test('axis precision follows a close numeric span rather than collapsing all labels', async () => {
+      const result = await page.evaluate(() => [[1.00001, 1.00003], [1e-12, 3e-12], [1e7, 1e7 + .01]].map(values => {
+        drawScratch({ kind: 'strip', y: 'value', rows: values.map(value => ({ value })) });
+        const svg = document.querySelector('#scratch svg'), baseline = svg.viewBox.baseVal.height - 31;
+        return { values, ticks: [...svg.querySelectorAll(`text[y="${baseline}"]`)].map(n => n.firstChild.textContent),
+          raw: [...svg.querySelectorAll('[data-row-index]')].map(n => n.getAttribute('aria-label')) };
+      }));
+      for (const entry of result) {
+        assert.ok(entry.ticks.length >= 3);assert.equal(new Set(entry.ticks).size, entry.ticks.length);
+        const numbers = entry.ticks.map(value => Number(value.replaceAll(',', '')));
+        assert.ok(numbers.every(Number.isFinite));assert.equal(numbers[0], entry.values[0]);assert.equal(numbers.at(-1), entry.values.at(-1));
+        assert.ok(numbers.slice(1).every((value, i) => value > numbers[i]));
+      }
+      assert.match(result[0].raw[0], /1\.00001/);assert.match(result[0].raw[1], /1\.00003/);
+    });
+
     await t.test('empty, missing, extreme, resized, and destroyed charts keep honest states', async () => {
       const result = await page.evaluate(async () => {
         drawScratch({ kind: 'boxplot', rows: [] });const empty = document.querySelector('#scratch svg').textContent;

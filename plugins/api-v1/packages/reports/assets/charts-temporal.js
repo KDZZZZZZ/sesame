@@ -301,6 +301,13 @@
         nextPossible = rank + count;
       }
     });
+    if (spec.ties === 'dense') periods.forEach((_, period) => {
+      const counts = new Map(); observations.filter(item => item.period === period && item.rank !== null).forEach(item => counts.set(item.rank, (counts.get(item.rank) || 0) + 1));
+      // Every lower dense rank needs at least one member. Known ties occupy
+      // additional members even when other rows or ranks are missing.
+      const minimumMembers = Math.max(0, ...counts.keys()) + [...counts.values()].reduce((extra, count) => extra + count - 1, 0);
+      if (minimumMembers > universe.length) fail('ranks contradict dense ties: known ties require more members than the fixed universe');
+    });
     if (['competition', 'dense'].includes(spec.ties)) periods.forEach((_, period) => {
       const values = observations.filter(item => item.period === period && item.rank !== null); if (values.length !== universe.length) return;
       let expected = 1; const ranks = [...new Set(values.map(item => item.rank))].sort((a, b) => a - b);

@@ -214,15 +214,21 @@ test('temporal charts preserve source semantics through real browser interaction
           reject({ ...base, rows: [base.rows[0], base.rows[0]] }), reject({ ...base, rows: [{ ...base.rows[0], rank: 1.2 }] }),
           reject({ ...base, rows: [{ ...base.rows[0], rank: '0.99999999999999999' }] }),
           reject({ ...base, universe: ['A', 'B', 'C', 'D'], rows: [{ ...base.rows[0], rank: 1 }, { ...base.rows[1], rank: 1 }, { ...base.rows[2], rank: 2 }] }),
-          reject({ ...base, universe: ['A', 'B', 'C', 'D'], rows: [{ ...base.rows[0], rank: 4 }, { ...base.rows[1], rank: 4 }] })];
+          reject({ ...base, universe: ['A', 'B', 'C', 'D'], rows: [{ ...base.rows[0], rank: 4 }, { ...base.rows[1], rank: 4 }] }),
+          reject({ ...base, ties: 'dense', universe: ['A', 'B', 'C', 'D'], rows: [{ ...base.rows[0], rank: 3 }, { ...base.rows[1], rank: 3 }, { ...base.rows[2], rank: 3 }] })];
       });
       assert.match(rejected[0], /cannot tie/);assert.match(rejected[1], /contradict dense/);assert.match(rejected[2], /fixed universe/);
       assert.match(rejected[3], /fixed universe/);assert.match(rejected[4], /duplicate item\/time/);assert.match(rejected[5], /positive integer/);
       assert.match(rejected[6], /exact integers/);assert.match(rejected[7], /already occupy/);assert.match(rejected[8], /already occupy/);
+      assert.match(rejected[9], /contradict dense.*fixed universe/);
       assert.equal(await page.evaluate(() => {
         const base = fixture.charts.find(c => c.id === 'bump').spec;
         return reject({ ...base, universe: ['A', 'B', 'C', 'D'], rows: [{ ...base.rows[0], rank: '1.000' }, { ...base.rows[1], rank: 1 }, { ...base.rows[2], rank: 3 }] });
       }), '', 'possible partial competition ranks and exact integer decimal strings remain valid');
+      assert.equal(await page.evaluate(() => {
+        const base = fixture.charts.find(c => c.id === 'bump').spec;
+        return reject({ ...base, ties: 'dense', universe: ['A', 'B', 'C', 'D', 'E'], rows: [{ ...base.rows[0], rank: 3 }, { ...base.rows[1], rank: 3 }, { ...base.rows[2], rank: 3 }] });
+      }), '', 'missing members can fill ranks 1 and 2 in a five-member universe without inventing rows');
       await page.locator('#bump button').filter({ hasText: /^A$/ }).click();
     });
 

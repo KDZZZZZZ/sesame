@@ -147,7 +147,7 @@
     },
     {
       "id": "sesame/ccxt",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -169,8 +169,8 @@
         "zh": "读取明确选择的 Kraken、Coinbase 或 OKX 现货 K 线。"
       },
       "dependencies": {
-        "en": "Native Python and CCXT 4.5.85, reused or explicitly prepared. Public reads only; 60-second polling, no private account or orders.",
-        "zh": "复用或明确准备原生 Python 与 CCXT 4.5.85；仅公开读取、60 秒轮询，不含账户或下单。"
+        "en": "Native Python and CCXT 4.5.85, reused or explicitly prepared. Public reads only; one-second polling after each completed read, bounded by network and exchange limits. No private account or orders.",
+        "zh": "复用或明确准备原生 Python 与 CCXT 4.5.85；仅公开读取；每次读取完成后间隔一秒轮询，受网络与交易所限速约束，不含账户或下单。"
       },
       "tools": [
         "ccxt_environment",
@@ -180,7 +180,7 @@
     },
     {
       "id": "sesame/configuration",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "core",
       "state": "discoverable",
       "engines": {
@@ -768,7 +768,7 @@
     },
     {
       "id": "sesame/reports",
-      "version": "2.0.3",
+      "version": "2.1.0",
       "distribution": "core",
       "state": "mounted",
       "engines": {
