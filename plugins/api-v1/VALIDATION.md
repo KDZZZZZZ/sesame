@@ -752,3 +752,51 @@ All ten assets were actually downloaded and checked against GitHub sizes/digests
 | `sesame-optional-plugins-api-v1-dev.5.tar.gz` | 1616015 | `3c9907193bc24926474bc20f7fea85ed68ad49e180ee5b81001a6be2db22c57c` |
 
 The subsequent catalog metadata selects only these published fixed releases and exposes 19 entries. The stable 26-entry 0.1.4 catalog and the original three-entry optional catalog remain byte-identical. Published development plugins do not mean an application 0.2.0 installer is available.
+
+## AKShare clock consistency and current generic guides — candidate dev.14 / optional dev.6
+
+AKShare 1.0.5 makes its declared Asia/Shanghai clock consistent across instrument
+descriptions, bindings, bars and subscriptions. Canonical bars retain the known
+IANA zone. A wall range that omits the optional zone receives a separate legacy
+representation after canonical revision calculation; it cannot mutate shared
+bars or manufacture an update. Source metadata preserves the full clock. UTC
+bounds use the declared IANA rules, including historical daylight saving and
+millisecond boundaries, rather than a fixed eight-hour offset. The strict
+data-access market_read validator is unchanged.
+
+The source command passed 23 tests, including real temporary Store, HostContext,
+ProviderRegistry and ContractArtifacts integration with controlled provider rows.
+Independent reviewer Codex refactor_plugins reran those 23 checks and nine
+additional checks on source 86cd7f7947d3dd7ad1088bc6bc3bf4ff145d6ff5: 32 passed.
+The independent cases cover 503 source rows over two pages, zoned wall, unzoned
+wall and UTC ranges, concurrent representations, fixed snapshot retries, a real
+subscription polling callback without false revisions, and the 1991 Shanghai
+daylight-saving boundary. The historical fixed-offset finding was reproduced
+before the repair and passed afterward.
+
+At 2026-10-10T01:49:37Z the same independent reviewer also completed a fresh
+read-only Tencent check using a new temporary Store and the actual public host
+ports. It reused an existing AKShare 1.19.1 environment without preparation or
+downloads. Each of three upstream queries returned 23 rows; market_read froze
+22 closed rows for each clock representation with equal price, volume, bar IDs
+and revisions. The original query and canonical source clock were preserved.
+Retries made no additional upstream request, and bindings and snapshots were
+empty after cleanup. This is source/host-port acceptance, not a complete
+Runtime.init, Agent/UI, Windows broker or trading test. No running application's
+cache, database, terminal or account was changed.
+
+Three core packages receive documentation-only patch releases. Orchestration
+2.1.1 describes the current five settings panels, generic connection action,
+account positions/orders and fixed indicator parameter editing; it reads actual
+website release status instead of making a permanent unreleased assertion.
+Reports 2.0.3 starts from the selected backend's fixed data/result and presents
+MT5 tools only as an installed-backend example. Data-access 2.3.1 explicitly
+limits MT5 paging advice to that source. Package/inventory checks passed eight
+tests, and the unchanged market_read implementation passed its 14 tests. The
+guides were checked against the actual frontend, without changing that frontend.
+
+The source candidate changes exactly these four packages. The other fifteen
+package lock entries, both historical installation catalogs and all published
+assets remain unchanged. Final-head semantic review, trusted pre-merge gate and
+publication evidence are separate steps; this section does not claim those
+steps have already run.
