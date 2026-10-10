@@ -49,6 +49,13 @@ export function buildCatalog(root = repository, sources = JSON.parse(readFileSyn
         requirements: standard ? 'Plugin API 1 host. Declared stdio tests and servers execute locally as the current user; inspect and reuse an existing compatible runtime. No dependency installer is executed by the catalog downloader.' : 'Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.',
         documentationUrl: `https://github.com/${REPOSITORY}/tree/${plan.sourceCommit}/${path}`, feedbackUrl: `https://github.com/${REPOSITORY}/issues` });
     }
+    // Published readers interpret this optional shorthand as exact equality for
+    // every package, not as a lower bound. prepareRelease already validated the
+    // real profile and each manifest; keep all entry-level ranges and fixed pins.
+    if (release.profile && plugins.some(pkg => pkg.release === release.tag && pkg.engines?.sesame !== release.engines.sesame)) {
+      delete release.profile;
+      delete release.engines;
+    }
   }
   require(withdrawals.every(id => ids.has(id)), 'Cannot withdraw an unknown package identity');
   plugins.sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
