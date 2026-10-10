@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { Type } from '@sesame/plugin-sdk/schema';
 import { Check } from '@sesame/plugin-sdk/schema/value';
-import { createTools } from '../packages/host-files/tools.js';
+import { createTools } from '../packages/workspace/host-files.js';
 
 function fixture() {
   const calls = [];
@@ -14,10 +14,10 @@ function fixture() {
 
 test('declared host file schemas match nine concrete SDK ports', () => {
   const f = fixture();
-  const declared = JSON.parse(readFileSync(new URL('../packages/host-files/tools.json', import.meta.url)));
-  const manifest = JSON.parse(readFileSync(new URL('../packages/host-files/plugin.json', import.meta.url)));
+  const declared = JSON.parse(readFileSync(new URL('../packages/workspace/tools.json', import.meta.url))).filter(tool => tool.name.startsWith('host_files_'));
+  const manifest = JSON.parse(readFileSync(new URL('../packages/workspace/plugin.json', import.meta.url)));
   assert.deepEqual(f.tools.map(({ execute, ...tool }) => tool), declared);
-  assert.deepEqual(f.tools.map(tool => tool.name), manifest.tool_names);
+  assert.deepEqual(f.tools.map(tool => tool.name), manifest.tool_names.filter(name => name.startsWith('host_files_')));
   assert.equal(f.tools.length, 9);
 });
 

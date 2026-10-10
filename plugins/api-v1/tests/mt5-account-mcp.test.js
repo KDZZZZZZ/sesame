@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mapAccountSummary, mapAccountSnapshot } from '../packages/mt5/backend/contract-mapping.js';
-import { MT5AccountProvider } from '../packages/mt5/backend/providers.js';
+import { mapAccountSummary, mapAccountSnapshot } from '../../optional-api-v1/packages/mt5/backend/contract-mapping.js';
+import { MT5AccountProvider } from '../../optional-api-v1/packages/mt5/backend/providers.js';
 
 // Field names and JSON types from the actual 2026-10-09 official MCP build 6230
 // get_trading_account_info response. Account identity and amounts are synthetic;

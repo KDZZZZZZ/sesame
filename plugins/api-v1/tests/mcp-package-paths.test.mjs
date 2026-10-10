@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
-const packages = fileURLToPath(new URL('../packages/', import.meta.url));
+const packages = fileURLToPath(new URL('../../optional-api-v1/packages/', import.meta.url));
 for (const name of ['web-extract', 'rss-collect', 'market-data-parser']) {
   test(`${name}: aliased package roots read bundled samples while external paths and symlinks remain rejected`, { skip: process.platform === 'win32' ? 'This filesystem alias regression uses POSIX symlinks; Windows native path behavior has not been validated.' : false }, t => {
     const root = realpathSync(mkdtempSync(join(tmpdir(), 'sesame-mcp-root-'))); t.after(() => rmSync(root, { recursive: true, force: true }));

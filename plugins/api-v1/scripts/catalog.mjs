@@ -27,7 +27,7 @@ export function buildCatalog(root = repository, sources = JSON.parse(readFileSyn
     git(root, ['merge-base', '--is-ancestor', plan.sourceCommit, selected.releaseCommit]);
     const prepared = prepareRelease(root, plan), lock = JSON.parse(prepared.files.get('official-plugins.lock.json'));
     const download = `https://github.com/${REPOSITORY}/releases/download/${plan.tag}`;
-    const release = { tag: plan.tag, releaseCommit: selected.releaseCommit, sourceCommit: plan.sourceCommit, sourceRoot: plan.sourceRoot,
+    const release = { tag: plan.tag, releaseCommit: selected.releaseCommit, sourceCommit: plan.sourceCommit, sourceRoot: plan.sourceRoot, ...(plan.profile ? { profile: plan.profile, engines: { sesame: '>=0.2.0-0' } } : {}),
       archive: { url: `${download}/${plan.archive.name}`, sha256: plan.archive.sha256 },
       lock: { url: `${download}/official-plugins.lock.json`, sha256: plan.lockSha256 },
       review: { url: `${download}/review.json`, sha256: selected.reviewSha256 } };
@@ -38,6 +38,7 @@ export function buildCatalog(root = repository, sources = JSON.parse(readFileSyn
       const extension = manifest.extensions?.['bot.sesame'], standard = Boolean(manifest.$schema);
       const definitions = jsonAt(root, plan.sourceCommit, `${path}/${standard ? extension.builtin.tool_definitions : manifest.tool_definitions}`);
       plugins.push({ id: pkg.id, name: pkg.directory, version: pkg.version, apiVersion: '1', format: standard ? 'agent-plugins' : 'sesame-native',
+        ...(plan.profile ? { engines: extension?.engines ?? manifest.engines, distribution: plan.profile } : {}),
         title: standard ? extension.builtin.title : manifest.title, description: manifest.description, license: manifest.license,
         author: manifest.author ?? { name: 'Sesame contributors', url: `https://github.com/${REPOSITORY}` }, status: withdrawals.includes(pkg.id) ? 'withdrawn' : 'active',
         release: plan.tag, source: { repository: `https://github.com/${REPOSITORY}`, commit: plan.sourceCommit, path },

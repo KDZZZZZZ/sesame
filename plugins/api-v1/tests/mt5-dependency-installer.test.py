@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch
 import zipfile
 
-spec = importlib.util.spec_from_file_location('installer', Path(__file__).parents[1] / 'packages/mt5/scripts/install-mt5-python.py')
+spec = importlib.util.spec_from_file_location('installer', Path(__file__).parents[2] / 'optional-api-v1/packages/mt5/scripts/install-mt5-python.py')
 installer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(installer)
 

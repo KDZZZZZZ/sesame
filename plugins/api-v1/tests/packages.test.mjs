@@ -11,7 +11,7 @@ const root = fileURLToPath(new URL('../packages/', import.meta.url));
 test('standard MCP servers return their declared schemas and ten exact sample results', () => {
   let samples = 0;
   for (const name of ['web-extract', 'rss-collect', 'market-data-parser', 'quantskills-catalog']) {
-    const directory = join(root, name), manifest = JSON.parse(readFileSync(join(directory, 'plugin.json'))), extension = manifest.extensions['bot.sesame'];
+    const directory = fileURLToPath(new URL(`../../optional-api-v1/packages/${name}/`, import.meta.url)), manifest = JSON.parse(readFileSync(join(directory, 'plugin.json'))), extension = manifest.extensions['bot.sesame'];
     assert.equal(extension.id, `sesame/${name}`); assert.equal(extension.apiVersion, '1'); assert.equal(manifest.version, JSON.parse(readFileSync(join(directory, 'package.json'))).version);
     const operations = [{ method: 'initialize', params: {} }, { method: 'tools/list' }, ...extension.tests.map(sample => ({ method: 'tools/call', params: { name: sample.tool, arguments: sample.arguments } }))];
     if (name !== 'quantskills-catalog') operations.push({ method: 'tools/call', params: { name: extension.tests[0].tool, arguments: { file_path: '../../package.json' } } });

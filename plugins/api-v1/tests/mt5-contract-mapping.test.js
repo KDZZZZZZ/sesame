@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { accountIdentity, barEnd, decimal, mapAccountSnapshot, mapBar, mapFill, mapInstrument, mapLedgerEntry, mapOrder, mapPosition, nativeId, Revisions, sourceTime } from '../packages/mt5/backend/contract-mapping.js';
+import { accountIdentity, barEnd, decimal, mapAccountSnapshot, mapBar, mapFill, mapInstrument, mapLedgerEntry, mapOrder, mapPosition, nativeId, Revisions, sourceTime } from '../../optional-api-v1/packages/mt5/backend/contract-mapping.js';
 
 const context = { account: { connectionId: 'terminal', accountId: 'broker-7001' }, sourceId: 'broker-source', server: 'Broker-Demo', currency: 'USD', revisions: new Revisions() };
 const barContext = { ...context, seriesId: 'EURUSD-1m', spec: { timeframe: '1m' } };

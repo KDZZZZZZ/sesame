@@ -1,4 +1,4 @@
-import { execute as executeCompiler } from '../packages/mt5/backend/compiler-worker.js';
+import { execute as executeCompiler } from '../../optional-api-v1/packages/mt5/backend/compiler-worker.js';
 import { mt5Import, mt5Path } from './mt5-path.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -281,7 +281,7 @@ test('Windows compiler reuses the installed native MetaEditor and process contro
 test('MT5 doctor recognizes the native Windows terminal and compiler', {
   skip: process.platform !== 'win32' || process.env.MT5AGENT_NATIVE_TESTS !== '1',
 }, () => {
-  const result = spawnSync(process.execPath, [...process.execArgv, fileURLToPath(new URL('../packages/mt5/scripts/mt5.mjs', import.meta.url)), 'doctor'], { encoding: 'utf8', windowsHide: true });
+  const result = spawnSync(process.execPath, [...process.execArgv, fileURLToPath(new URL('../../optional-api-v1/packages/mt5/scripts/mt5.mjs', import.meta.url)), 'doctor'], { encoding: 'utf8', windowsHide: true });
   assert.equal(result.status, 0, result.stderr + result.stdout);
   const status = JSON.parse(result.stdout);
   assert.equal(status.installed, true);

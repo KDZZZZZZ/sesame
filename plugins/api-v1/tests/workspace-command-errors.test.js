@@ -79,7 +79,7 @@ test('successful and nonzero commands preserve the host truncation flag for shor
 });
 
 test('workspace tool schemas match the shipped descriptions after failure diagnostics change', () => {
-  const expected = JSON.parse(readFileSync(new URL('../packages/workspace/tools.json', import.meta.url)));
+  const expected = JSON.parse(readFileSync(new URL('../packages/workspace/tools.json', import.meta.url))).filter(tool => !tool.name.startsWith('host_files_'));
   const actual = createTools({ tools: toolsPort, workspace: {} }).map(({ execute, ...definition }) => definition);
   assert.deepEqual(JSON.parse(JSON.stringify(actual)), expected);
 });

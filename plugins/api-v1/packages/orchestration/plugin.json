@@ -1,8 +1,8 @@
 {
   "id": "sesame/orchestration",
-  "title": "会话与委派",
-  "description": "主子 Agent 的协作规则、任务委派与结果检查。",
-  "version": "2.0.1",
+  "title": "会话协作与使用规范",
+  "description": "主子Agent协作、成果交付和Sesame通用使用指南；按需安装具体后端。",
+  "version": "2.1.0",
   "default_state": "mounted",
   "tool_names": [
     "agent_delegate",
@@ -12,10 +12,24 @@
   "prompts": [
     "prompt.md"
   ],
-  "skills": [],
+  "skills": [
+    "skills"
+  ],
   "entry": "index.js",
   "tool_definitions": "tools.json",
   "apiVersion": "1",
   "provides": {},
-  "license": "MIT"
+  "license": "MIT",
+  "resources": [
+    "skills/sesame-user-guide/references/installation.md",
+    "skills/sesame-user-guide/references/dashboard.md",
+    "skills/sesame-user-guide/references/chat-and-commands.md",
+    "skills/sesame-user-guide/references/settings.md",
+    "skills/sesame-user-guide/references/workflows.md",
+    "skills/sesame-user-guide/references/troubleshooting.md",
+    "skills/sesame-user-guide/references/website-docs.md"
+  ],
+  "engines": {
+    "sesame": ">=0.2.0-0"
+  }
 }

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "kind": "optional",
+  "engines": {
+    "sesame": ">=0.2.0-0"
+  },
+  "packages": [
+    "sesame/akshare",
+    "sesame/judgment-evolution",
+    "sesame/market-data-parser",
+    "sesame/mt5",
+    "sesame/qmt",
+    "sesame/quantskills-catalog",
+    "sesame/rss-collect",
+    "sesame/vnpy",
+    "sesame/web-extract",
+    "sesame/web-sources"
+  ]
+}

@@ -2,7 +2,7 @@
 // is exercised separately against the installed SDK/host test harness.
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-export { digest, id } from '../packages/mt5/backend/support.js';
+export { digest, id } from '../../optional-api-v1/packages/mt5/backend/support.js';
 export { mt5Import, mt5Path } from './mt5-path.js';
 const copy = value => value === undefined ? value : structuredClone(value);
 export class Store {

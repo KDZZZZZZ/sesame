@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { buildLock, createArchive, sha256 } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
+import { buildLock, createArchive, sha256, readProfile } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
 import { readSemanticReview, validateGateSnapshot } from './semantic-review.mjs';
 
 const REPOSITORY = 'KDZZZZZZ/sesame';
@@ -17,6 +17,7 @@ export function validatePlan(plan) {
   assert(new RegExp(`^plugins-${optional ? 'optional-' : ''}api-v1-dev\\.[1-9][0-9]*$`).test(plan.tag), 'Development release tag is required');
   assert(plan.archive?.name === `sesame-${optional ? 'optional' : 'official'}-plugins-api-v1-${plan.tag.split('-').at(-1)}.tar.gz`, 'Unexpected archive filename');
   assert(/^[a-f0-9]{64}$/.test(plan.archive.sha256) && /^[a-f0-9]{64}$/.test(plan.lockSha256), 'Release digests must be fixed');
+  assert(plan.profile === undefined || plan.profile === (optional ? 'optional' : 'core'), 'Release profile differs from its source root');
   assert(Number.isSafeInteger(plan.pullRequest) && plan.pullRequest > 0, 'Release requires a reviewed pull request');
   assert(typeof plan.title === 'string' && plan.title.length > 0 && plan.title.length <= 160, 'Invalid release title');
   return plan;
@@ -24,7 +25,7 @@ export function validatePlan(plan) {
 
 export function materializeSource(repository, plan, destination) {
   const prefix = `${plan.sourceRoot}/`;
-  const tree = git(repository, ['ls-tree', '-r', '-z', plan.sourceCommit, '--', `${prefix}packages`, `${prefix}official-plugins.lock.json`]).toString();
+  const tree = git(repository, ['ls-tree', '-r', '-z', plan.sourceCommit, '--', `${prefix}packages`, `${prefix}official-plugins.lock.json`, `${prefix}bundle-profile.json`]).toString();
   for (const record of tree.split('\0').filter(Boolean)) {
     const [meta, path] = record.split('\t'), [mode, type, oid] = meta.split(' ');
     assert(['100644', '100755'].includes(mode) && type === 'blob' && path.startsWith(prefix), 'Release source contains a non-file entry');
@@ -40,6 +41,8 @@ export function prepareRelease(repository, input) {
   const plan = validatePlan(input), temp = mkdtempSync(join(tmpdir(), 'sesame-release-'));
   try {
     materializeSource(repository, plan, temp);
+    const profile = readProfile(temp);
+    assert(profile ? plan.profile === profile.kind : plan.profile === undefined, 'Fixed release profile differs or is missing');
     const lock = buildLock(temp), lockBytes = Buffer.from(JSON.stringify(lock, null, 2) + '\n');
     assert(readFileSync(join(temp, 'official-plugins.lock.json')).equals(lockBytes), 'Source lock differs from package files');
     const archive = createArchive(temp, lock);

@@ -1,0 +1,93 @@
+{
+  "author": {
+    "name": "Sesame"
+  },
+  "name": "market-data-parser",
+  "version": "2.0.2",
+  "description": "基于公开金融数据接口思路新写的结构化市场数据解析 skill（新写适配层，非上游现成 skill）。解析 exchangerate-api 风格 JSON 与 TCMB 风格 XML 汇率数据；解析失败时 isError=true。",
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "extensions": {
+    "bot.sesame": {
+      "dependencies": [],
+      "tests": [
+        {
+          "server": "analysis",
+          "tool": "parse_fx_json",
+          "arguments": {
+            "file_path": "sample_fx.json",
+            "codes": [
+              "EUR",
+              "JPY",
+              "GBP",
+              "CNY"
+            ]
+          },
+          "expected": {
+            "format": "exchangerate-json",
+            "provider": "https://www.exchangerate-api.com",
+            "base": "USD",
+            "date": "2026-10-03",
+            "total_currencies": 166,
+            "returned_currencies": 4,
+            "rates": {
+              "EUR": 0.889,
+              "JPY": 157.82,
+              "GBP": 0.756,
+              "CNY": 6.71
+            },
+            "source": "sample_fx.json",
+            "version": "2.0.2"
+          }
+        },
+        {
+          "server": "analysis",
+          "tool": "parse_fx_xml",
+          "arguments": {
+            "file_path": "sample_fx.xml",
+            "codes": [
+              "USD",
+              "EUR"
+            ]
+          },
+          "expected": {
+            "format": "tcmb-xml",
+            "date": "10/02/2026",
+            "bulletin_no": "2026/186",
+            "total_currencies": 22,
+            "returned_currencies": 2,
+            "currencies": [
+              {
+                "code": "USD",
+                "name": "US DOLLAR",
+                "unit": "1",
+                "forex_buying": "48.9699",
+                "forex_selling": "49.0582"
+              },
+              {
+                "code": "EUR",
+                "name": "EURO",
+                "unit": "1",
+                "forex_buying": "55.0826",
+                "forex_selling": "55.1819"
+              }
+            ],
+            "source": "sample_fx.xml",
+            "version": "2.0.2"
+          }
+        }
+      ],
+      "builtin": {
+        "title": "公开汇率解析",
+        "default_state": "discoverable",
+        "tool_definitions": "tools.json"
+      },
+      "id": "sesame/market-data-parser",
+      "apiVersion": "1",
+      "provides": {},
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      }
+    }
+  },
+  "license": "MIT"
+}

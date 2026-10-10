@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, copyFile, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { installation, fileManifest, compileNative } from '../packages/mt5/backend/native.js';
-import { execute } from '../packages/mt5/backend/compiler-worker.js';
-import { digest } from '../packages/mt5/backend/support.js';
+import { installation, fileManifest, compileNative } from '../../optional-api-v1/packages/mt5/backend/native.js';
+import { execute } from '../../optional-api-v1/packages/mt5/backend/compiler-worker.js';
+import { digest } from '../../optional-api-v1/packages/mt5/backend/support.js';
 
 // Explicit opt-in: copies the installed compiler read-only, compiles a harmless
 // script, and never starts a trading terminal, logs in, or executes the script.

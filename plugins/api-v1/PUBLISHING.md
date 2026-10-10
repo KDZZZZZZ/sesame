@@ -114,3 +114,15 @@ be described as having passed semantic review before publication. Their original
 version and prerelease. Every new publication under the updated publisher uses
 the pre-merge semantic gate above, while retries of already published releases
 only verify their historical bytes and evidence.
+
+## Candidate distribution profiles
+
+The 0.2 candidate has a `core` profile with nine default packages and an
+`optional` profile with ten on-demand packages. `bundle-profile.json` belongs to
+the immutable source and is validated before archive creation. New plans declare
+`profile: "core"` or `profile: "optional"`; a plan/profile mismatch is rejected.
+Profile-less historical source commits keep their original build behavior.
+Publish both reviewed groups separately, then propose a metadata-only catalog PR
+that selects the actual published source, archive, lock and review hashes. Never
+use the preview `inventory.json` as an installation catalog or claim app 0.2.0 is
+released because development plugins are published.

@@ -1,18 +1,41 @@
 {
   "id": "sesame/strategy-authoring",
   "apiVersion": "1",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "title": "SVL 策略创作",
   "description": "编写、验证与发布平台无关 SVL 策略源，从同一源码生成图，并对固定事件做可复现求值。原生翻译、回测与运行由目标插件提供。",
-  "author": {"name": "Sesame"},
+  "author": {
+    "name": "Sesame"
+  },
   "license": "MIT",
-  "default_state": "discoverable",
+  "default_state": "mounted",
   "agent_scope": "all",
   "entry": "index.js",
   "tool_definitions": "tools.json",
-  "tool_names": ["strategy_validate", "strategy_publish", "strategy_graph", "strategy_replay"],
-  "prompts": ["prompt.md"],
-  "skills": ["skills"],
-  "resources": ["skills/strategy-authoring/references/language.md", "examples/close-threshold.svl.json", "examples/close-threshold.replay.json", "examples/crossover.svl.json", "examples/crossover.replay.json"],
-  "provides": {"sesame.strategy": "1"}
+  "tool_names": [
+    "strategy_validate",
+    "strategy_publish",
+    "strategy_graph",
+    "strategy_replay"
+  ],
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "resources": [
+    "skills/strategy-authoring/references/language.md",
+    "skills/strategy-authoring/references/architecture.md",
+    "examples/close-threshold.svl.json",
+    "examples/close-threshold.replay.json",
+    "examples/crossover.svl.json",
+    "examples/crossover.replay.json"
+  ],
+  "provides": {
+    "sesame.strategy": "1"
+  },
+  "engines": {
+    "sesame": ">=0.2.0-0"
+  }
 }

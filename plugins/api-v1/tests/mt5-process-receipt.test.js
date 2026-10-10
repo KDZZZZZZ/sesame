@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import { PassThrough, Writable } from 'node:stream';
-import { runTesterProcess } from '../packages/mt5/backend/tester-process.js';
+import { runTesterProcess } from '../../optional-api-v1/packages/mt5/backend/tester-process.js';
 
 const request = { terminal: '/private/tester/terminal64.exe', ini: '/private/tester/pass.ini', directory: '/private/tester' };
 const native = { directory: '/private/installed', python: '/private/python.exe' };

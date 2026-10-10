@@ -1,11 +1,22 @@
-# Official plugins for Sesame Plugin API 1
+# Default plugins for Sesame 0.2.0 / Plugin API 1
 
-**Development branch. These packages are not the stable 0.1.4 catalog.**
+**Unreleased 0.2.0 candidate. The minimum is `>=0.2.0-0`: development previews are allowed; the formal minimum is 0.2.0. No 0.2.0 application release is advertised here. These packages cannot be used in 0.1.4.**
 
-This directory is the source of the next official plugin bundle. The application
+This directory contains exactly nine default packages for the next application bundle. The application
 keeps the protocol, verified loader and general interface. Plugin implementations,
 skills, templates, resources and platform integrations live here and are assembled
 into application distributions from a fixed, reviewed archive.
+
+The defaults are `canvas-control`, `configuration`, `data-access`, `memory`,
+`orchestration`, `plugin-manager`, `reports`, `strategy-authoring` and `workspace`.
+Canvas and settings are discoverable; the other seven are mounted. No market,
+account or native strategy backend is required to author sources, run fixed
+replays, work with local data or publish reports. Ten optional packages live in
+[`../optional-api-v1/`](../optional-api-v1/README.md), including MT5, QMT, AKShare
+and vn.py. Installing Sesame does not install their terminals or environments.
+
+See the [package-by-package review](REORGANIZATION.md) for the three merges,
+private-storage changes, dependencies and actual validation scope.
 
 `../catalog.json` and `../packages/` continue to describe the released 0.1.4
 packages. Their fixed commits and digests are unchanged. API 1 packages will not be
@@ -16,7 +27,9 @@ advertised there until their matching application and end-to-end checks are read
 - `packages/<name>/plugin.json`: publisher-qualified identity, version, API and capabilities.
 - `packages/<name>/package.json`: Node module scope, version and per-package license.
 - `official-plugins.lock.json`: every candidate packaged byte and package tree digest.
+- `bundle-profile.json`: the reviewed, exact nine-package distribution set.
 - `catalog.json` / `catalog.sources.json`: separately pinned, already published package entries.
+- `inventory.json`: the nineteen-package **unreleased preview**, with no installation digests or authority.
 - `scripts/plugin-lock.mjs`: data-only validation, lock generation and deterministic archive creation.
 - `tests/`: source-repository tests; never included in the application bundle.
 
@@ -30,11 +43,11 @@ their process boundary and `bot.sesame` manifest namespace.
 Development bundle 3 replaced `sesame/sandbox` with `sesame/workspace`. Its
 read/write/edit/bash tools use a real task cwd and managed native processes,
 with Bash on macOS/Linux and PowerShell on Windows. Execution has the current
-user's permissions; this is not OS isolation. The host-files plugin adds explicit
-write/mkdir/move/remove/run ports. Report and indicator renderer isolation remains.
+user's permissions; this is not OS isolation. Workspace now includes the explicit
+host-file list/search/read/import/write/mkdir/move/remove/run ports. Report and indicator renderer isolation remains.
 
-MT5 1.1.0 checks and reuses existing native tools. No MT5 program, compiler VM,
-Wine distribution or mandatory runtime image is embedded in the 19-package archive.
+Optional MT5 checks and reuses existing native tools. No MT5 package, terminal,
+compiler VM, Wine distribution or mandatory runtime image is embedded in the nine-package archive.
 Plugin skills guide dependency discovery, explicit preparation when missing, and
 actual verification. Optional integrations live separately in
 `../optional-api-v1/packages/` and do not enter this lock.
@@ -43,10 +56,12 @@ Development bundle 4 completes real-path delivery for research/web inputs and
 MT5 checkouts. Workspace commands expose incomplete snapshot diagnostics. The
 plugin-manager owns verified catalog installation and same-session loading;
 its native static checks remain distinct from actual activation and environment
-verification. The [unified development catalog](CATALOG.md) now pins all 19 published
-official packages and the three optional integrations. Explicit updates pass the
-current digest through the formal host update flow. Its 2.1.0 client is a candidate
-until separately released; the published 0.1.4 catalog is unchanged.
+verification. The [unified development catalog](CATALOG.md) still pins the actual
+dev.12/dev.4 bytes (22 historical API 1 entries). The nineteen reorganized candidates
+must first pass review and publish as separate fixed core/optional archives;
+only then may a metadata PR select those releases. This prevents preview versions
+from appearing installable early. Explicit updates preserve the host's current-digest
+and version checks. The published 0.1.4 catalog is unchanged.
 
 ## Validate and build
 
@@ -60,6 +75,8 @@ npm run test:python
 npm run lock
 npm run check
 node scripts/plugin-lock.mjs --archive /absolute/output/official-plugins-api1-dev.tar.gz
+node scripts/plugin-lock.mjs --write --source ../optional-api-v1
+node scripts/inventory.mjs --check
 ```
 
 `npm test` runs the portable `.test.mjs` source checks. `test:sdk` additionally
@@ -69,6 +86,10 @@ application. It fails explicitly if that loader is missing; it does not replace
 the SDK with a copied or guessed implementation. No private host path is fixed in
 this repository. The application also runs report, strategy and cleanup integration
 tests against its verified assembled bundle.
+`SESAME_HOST_ROOT=/path/to/matching/host node --import "$SESAME_PLUGIN_SDK_LOADER" --test tests/core-host.test.mjs`
+uses temporary state to check the nine defaults, backend-free source/graph/replay/report
+creation and fresh optional MT5/judgment installation. `SESAME_REPORT_INSPECT=1`
+also runs the real report inspector. It does not operate a terminal or account.
 `test:python` runs the dependency installer boundary suite without writing bytecode
 into the plugin packages. These fixture checks do not claim a native compiler ran.
 The separate opt-in native compiler test requires the actual installed toolchain.
@@ -81,6 +102,14 @@ The application separately fixes the source commit and both hashes, verifies the
 archive and all package files before atomically replacing its assembled directory,
 and refuses missing, changed or extra files. A directory override is not a trust
 bypass: it must contain the same verified lock metadata.
+
+Profiled packages declare `engines.sesame` in a native manifest, or in
+`extensions['bot.sesame']` for a standard MCP manifest. The host checks the SemVer
+range before testing or activation. The reviewed profile validator additionally
+requires the exact package set, private storage with no legacy grants and optional
+packages in discoverable state. Historical fixed releases without profiles retain
+their original build semantics and hashes. A new profiled release plan must name
+`profile:"core"` or `profile:"optional"`; the core archive physically contains only nine packages.
 
 Tree hashes deliberately use the same algorithm as the released catalog:
 

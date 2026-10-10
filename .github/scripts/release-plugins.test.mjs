@@ -12,6 +12,13 @@ test('release plans pin only allowed development roots, exact bytes and PRs', ()
   assert.equal(validatePlan(plan()).tag, 'plugins-api-v1-dev.4');
   for (const change of [{ sourceCommit: 'main' }, { sourceRoot: '../../private' }, { tag: 'v1.0.0' }, { archive: { name: '../asset', sha256: 'b'.repeat(64) } }, { pullRequest: 0 }]) assert.throws(() => validatePlan({ ...plan(), ...change }));
 });
+test('candidate release profiles match only their fixed package root', () => {
+  assert.equal(validatePlan({ ...plan(), profile: 'core' }).profile, 'core');
+  for (const profile of ['optional', 'all', null]) assert.throws(() => validatePlan({ ...plan(), profile }), /profile/);
+  const optional = { ...plan(), sourceRoot: 'plugins/optional-api-v1', tag: 'plugins-optional-api-v1-dev.5', archive: { name: 'sesame-optional-plugins-api-v1-dev.5.tar.gz', sha256: 'b'.repeat(64) }, profile: 'optional' };
+  assert.equal(validatePlan(optional).profile, 'optional');
+  assert.throws(() => validatePlan({ ...optional, profile: 'core' }), /profile/);
+});
 test('new tags identify the publishing revision while existing tags cannot be moved', () => {
   assert.equal(releaseCommitFor(sha, null, null), sha);
   const previous = 'b'.repeat(40);

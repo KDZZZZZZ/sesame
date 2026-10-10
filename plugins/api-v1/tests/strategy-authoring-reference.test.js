@@ -73,9 +73,13 @@ test('the state type repair addresses the actual object error without implying c
   malformed.state.lastClose.type = { kind: 'decimal' };
   assert.deepEqual((await validateTool(path, Buffer.from(JSON.stringify(malformed)))).diagnostics, []);
   const dynamicMismatch = json(path); dynamicMismatch.state.lastClose = { type: { kind: 'integer' }, initial: 0 };
-  assert.deepEqual(svl.validateSource(dynamicMismatch).diagnostics, []);
-  const result = svl.evaluateReplay(dynamicMismatch, json('examples/close-threshold.replay.json'));
-  assert.equal(result.status, 'paused'); assert.equal(result.events.length, 2);
-  assert.deepEqual(result.state, { lastClose: 0, lastAbove: false }); assert.deepEqual(result.events[1].intents, []);
-  assert.match(result.events[1].error.message, /integer/);
+  assert.throws(() => svl.validateSource(dynamicMismatch), /expects integer/);
+  const dynamic = json(path);
+  dynamic.nodes.find(node => node.id === 'remember-close').inputs.value = { input: 'bars', field: 'custom' };
+  const fixture = json('examples/close-threshold.replay.json');
+  assert.deepEqual(svl.validateSource(dynamic).diagnostics, []);
+  fixture.events[1].inputs.bars[0].custom = false;
+  const result = svl.evaluateReplay(dynamic, fixture);
+  assert.equal(result.status, 'paused'); assert.deepEqual(result.events.at(-1).intents, []);
+  assert.match(result.events.at(-1).error.message, /Decimal|decimal/);
 });

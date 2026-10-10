@@ -4,8 +4,8 @@ import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { Type } from '@sesame/plugin-sdk/schema';
-import { createTools } from '../packages/research/tools.js';
-import { digest } from '../packages/research/support.js';
+import { createTools } from '../packages/data-access/research-tools.js';
+import { digest } from '../packages/data-access/support.js';
 
 async function fixture(t) {
   const root = await mkdtemp(join(tmpdir(), 'sesame-research-real-path-')); t.after(() => rm(root, { recursive: true, force: true }));
@@ -20,7 +20,7 @@ async function fixture(t) {
 
 test('research data defaults to the real cwd and schemas match native path instructions', async t => {
   const f = await fixture(t);
-  assert.deepEqual(JSON.parse(JSON.stringify(f.tools.map(({ execute, ...tool }) => tool))), JSON.parse(await readFile(new URL('../packages/research/tools.json', import.meta.url))));
+  assert.deepEqual(JSON.parse(JSON.stringify(f.tools.map(({ execute, ...tool }) => tool))), JSON.parse(await readFile(new URL('../packages/data-access/tools.json', import.meta.url))).filter(tool => ['data_read', 'research_register'].includes(tool.name)));
   const data = await f.call('data_read', { dataset_id: f.input.id });
   assert.equal(data.path, join(f.root, 'inputs', 'fixed.json')); assert.deepEqual(JSON.parse(await readFile(data.path)), f.input.rows);
   assert.doesNotMatch(f.tools[0].description, /bwrap|沙箱/);
@@ -40,7 +40,7 @@ test('research registration retains frozen output and refuses paths or inputs ou
 
 test('web source delivery returns an actual readable native path, not a mount alias', async t => {
   const { createServer } = await import('node:http');
-  const { createTools: sourceTools } = await import('../packages/web-sources/tools.js');
+  const { createTools: sourceTools } = await import('../../optional-api-v1/packages/web-sources/tools.js');
   const root = await mkdtemp(join(tmpdir(), 'sesame-source-native-')); t.after(() => rm(root, { recursive: true, force: true }));
   const server = createServer((_request, response) => response.end('native source fixture'));
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve)); t.after(() => new Promise(resolve => server.close(resolve)));

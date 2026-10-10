@@ -1,6 +1,6 @@
 # SVL/1 创作参考
 
-适用于 `sesame/strategy-authoring` 1.0.1、语言 `svl/1`、schema `1.0.0`。本文件及包内示例足以使用本插件的四个工具；无需读取 Sesame 本体源码或本地私有文档。这里记录当前公开 SDK 的可用子集，不把候选语法或目标平台能力当成已经实现的功能。
+适用于 `sesame/strategy-authoring` 1.0.2、语言 `svl/1`、schema `1.0.0`。本文件及包内示例足以使用本插件的四个工具；无需读取 Sesame 本体源码或本地私有文档。这里记录当前公开 SDK 的可用子集，不把候选语法或目标平台能力当成已经实现的功能。
 
 SVL 描述输入、判断、状态更新和交易**意图**。`strategy_validate` 做结构、引用、原语和预算检查；它不是完整静态类型推断器，不能证明每个动态值都合法。`strategy_replay` 执行固定输入，动态类型/单位、分支和错误须在这里验证。二者都不连接券商、不撮合、不编译原生代码、不下单。目标插件另行声明翻译、编译、回测和运行限制。
 
@@ -93,7 +93,7 @@ SVL 描述输入、判断、状态更新和交易**意图**。`strategy_validate
 
 `SourceTime` 只有两种形状：`{basis:"utc",unixMs:安全整数}` 或 `{basis:"wall",authority:"来源时钟",value:"2026-10-09T10:30:00"}`。后者保留无时区墙钟，可带秒的小数；未知券商时区不能直接添加 `Z`。可获知时间、交易所时间和记录时间不能互换。
 
-数学原语返回 Decimal 字符串或带单位数值，即使两个输入都是整数。若要递增计数，用 decimal 状态与 `"1"`；不要把 `math.add` 的字符串输出赋给 integer 状态。加/减/比较必须量纲一致；乘/除最多有一个带单位操作数，禁止自行推导 `price×lot→money`。显式换算需要目标支持的、可核对的输入与逻辑。
+静态可确定的状态赋值类型/单位冲突会在 validate 时拒绝；动态 record 字段仍需要回放检查。数学原语返回 Decimal 字符串或带单位数值，即使两个输入都是整数。若要递增计数，用 decimal 状态与 `"1"`；不要把 `math.add` 的字符串输出赋给 integer 状态。加/减/比较必须量纲一致；乘/除最多有一个带单位操作数，禁止自行推导 `price×lot→money`。显式换算需要目标支持的、可核对的输入与逻辑。
 
 ## 输入定义与表达式
 
@@ -107,6 +107,8 @@ SVL 描述输入、判断、状态更新和交易**意图**。`strategy_validate
 | `orderEvents` | `binding:string`，目标订单/成交回报绑定名 |
 | `timer` | `intervalMs:正安全整数,clock:{basis:"trading"或"wall",alignment:SourceTime,missed:"skip"或"emit_once"}` |
 | `external` | `schema:ArtifactRef,availabilityPolicy:ArtifactRef`；外部模型/数据边界，不能包含任意可执行代码 |
+
+上表所有字段均必需；未声明字段被拒绝。instrument 为引用真实参数的 Expr，不能省略为默认品种；binding 是显式账户/订单绑定名。timer.clock 三个字段必须完整，external.schema 与 availabilityPolicy 都是固定 ArtifactRef。
 
 `ArtifactRef` 为 `{id,revision,digest,kind,schemaVersion}`，前四个身份值不能用“最新”替代，digest 格式为 `sha256:` 加 64 位小写十六进制。品种、周期、价格口径、交易时段和 lookback 要满足目标 profile；SVL 结构通过不代表这些数据真的可获得。SMA 交叉通常至少需要最大周期 + 1 根连续已知柱。
 
@@ -153,13 +155,17 @@ SVL 描述输入、判断、状态更新和交易**意图**。`strategy_validate
 | `order.submit` | account,instrument,side,positionEffect,orderType,quantity,timeInForce,limitPrice?,stopPrice? | intent 效果；见下一节 |
 | `order.cancel` | account,orderRef | intent 效果；orderRef 为 `{account:AccountRef,orderId:string}`，须属同账户 |
 
-参考求值器检查 cross 的数组长度和数值，但无法证明行情时间真的对齐；适配与测试必须核对源时间。`account` 原语要求完整输入形如 `{complete:true,account:AccountRef,positions:[],orders:[],pendingIntents:[]}`。不能把资金快照单独包成 `complete:true`：未读齐持仓/挂单/本地未决账本时保持不完整。匹配项带精确 `instrument`，按需带 `side/quantity`；scope=run 时要有可信 `runId`，缺归属返回 not_ready。
+参考求值器检查 cross 的窗口身份、数组长度和逐样本时间。来自同一输入的纯教学窗口可以完全不含时间，但这不是市场时序证据；跨输入必须提供可比较且逐项对齐的完整时间。Bar 核对 openTime/endTime，Quote 核对 time；没有 bars.time。部分缺失、非法或冲突的时间不会退回按索引猜测。wall 的 authority/zone/fold 不得丢失或猜测，同长度不代表同时间。适配与测试仍须核对真实来源、闭合和可获知时间；这不认证完整防前视。
+
+同一事件内通过 `state.set` 复制的值保留窗口证据，record 内的 series 也一样。进入下一事件或从持久检查点恢复时，历史值不自动具有当前窗口身份；不要把保存过的数组当成新的行情窗口。字段投影和 SMA/EMA 继承原采样位置，截断、重排或自写数组不能获得这种证据。
+
+`account` 原语要求完整输入形如 `{complete:true,account:AccountRef,positions:[],orders:[],pendingIntents:[]}`。不能把资金快照单独包成 `complete:true`：未读齐持仓/挂单/本地未决账本时保持不完整。匹配项带精确 `instrument`，按需带 `side/quantity`；scope=run 时要有可信 `runId`，缺归属返回 not_ready。
 
 `orders` 只含尚未结束的订单，`pendingIntents` 含未发送、发送中和结果不明的意图；调用方不能把已完结历史记录当成此账本。固定回放不会替你把本次生成的意图写进下一个事件快照，必须明确提供下一事件当时的账本；真实目标还须实现持久 outbox 与重启核验。
 
 ## 控制流与交易意图
 
-handler 形状是 `{id,event:{type,input},steps:[]}`，input 是已声明输入 ID。事件类型仅 `tick/bar.updated/bar.closed/timer/order.updated/fill/external.input/recovery`。匹配 type 和 input 的 handler 按源数组顺序执行；输入适配器负责正确区分形成中/已闭合柱，不能只改标签绕过。
+handler 形状是 `{id,event:{type,input},steps:[]}`，input 是已声明输入 ID。事件类型仅 `tick/bar.updated/bar.closed/timer/order.updated/fill/external.input/recovery`。tick 对应 quotes；bar.updated/bar.closed 对应 bars；timer 对应 timer；order.updated/fill 对应 orderEvents；external.input 对应 external。recovery 目前只验证输入存在，目标须说明其恢复映射，不能冒称已具备通用恢复类型证明。匹配 type 和 input 的 handler 按源数组顺序执行；输入适配器负责正确区分形成中/已闭合柱，不能只改标签绕过。
 
 step 有三种形状：
 
@@ -167,7 +173,7 @@ step 有三种形状：
 - `{id,when:"boolean-node",actions:[...],elseActions?:[...]}`：when 是布尔纯节点的 ID 字符串，不是表达式对象；not_ready 时两边都不执行。
 - `{id,forEach:{input:Expr,item:"localId",maxItems:1..1000},steps:[...]}`：按有限数组顺序迭代；超限报错而非截断。
 
-actions/elseActions 只能引用 `state.set/order.submit/order.cancel`，不能直接放 math/compare 节点。一次状态写入后，后续读取看见新工作状态；不要假定纯节点只计算一次。无无限循环、递归或不受限函数调用。
+同一步 actions 或 elseActions 内不得重复同一个 action 节点；不要用重复 ID 表达多份订单。actions/elseActions 只能引用 `state.set/order.submit/order.cancel`，不能直接放 math/compare 节点。一次状态写入后，后续读取看见新工作状态；不要假定纯节点只计算一次。无无限循环、递归或不受限函数调用。
 
 `order.submit` 参数：account 是 **AccountRef**，不是整个账户快照；通常用 `{input:"account",field:"account"}`。instrument 是 InstrumentRef。side 为 `buy/sell`，positionEffect 为 `open/close/close_today/close_yesterday/auto`，orderType 为 `market/limit/stop/stop_limit`，timeInForce 为 `day/gtc/ioc/fok`。quantity 是大于零的 `{value:Decimal,unit:string}`。
 

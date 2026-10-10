@@ -634,3 +634,46 @@ Twelve additional Electron renderer checks passed, covering network, file and
 WebRTC isolation, desktop/mobile rendering, trusted clicks, concurrent inspection,
 loop and memory limits, cancellation and utility-process IPC. These checks apply
 to the matching development host, not to an arbitrary HTML viewer.
+
+## Unreleased 0.2 distribution proposal — nine defaults, ten optional
+
+This section describes a source candidate, not an application release or a
+published installation catalog. The stable 0.1.4 catalog and the fixed API 1
+release plans/catalog pins retain their original bytes. Package-by-package
+changes and dependency boundaries are in REORGANIZATION.md.
+
+The public SDK source suite ran 226 tests: 211 passed and 15 platform/native or
+host opt-in cases skipped, with no failures. Native opt-ins were not enabled.
+The Python dependency-installer fixtures passed six checks. The existing sixteen
+fixed release plans reconstructed successfully; new profile metadata does not
+change historical archive bytes. Five profile/inventory checks and six release
+identity checks passed, including actual nine-package archive membership,
+engine/legacy-grant rejection and preview metadata without install authority.
+
+An additional opt-in test used a fresh temporary Store, actual public
+HostContext, HostWorkspace, ContractArtifacts and plugin manager. It assembled
+only the nine core packages, loaded generic tools without a backend, validated
+and replayed both public SVL teaching examples, and froze a demo data/report.
+Fresh MT5 and judgment packages passed formal test/install/activation into their
+own private storage, without bundled_origin or migration grants. Synthetic old
+MT5 rows and an invalid synthetic legacy judgment database were neither read as
+state nor copied or modified. Restart preserved the new private records and
+fixed artifacts. This test made zero fetch requests and did not start MT5,
+MetaEditor, a Tester, a model call or trading. It used a fixture ModelRuntime,
+not a live Agent conversation.
+
+The same temporary report path was inspected by the actual host Playwright
+renderer at 1000 and 390 pixels: rendered status, no diagnostics. The renderer
+receipt recorded zero simulated interactions, so this is render/bridge evidence,
+not a claim that every gallery interaction was exercised. The offline editorial
+example remains reproducible byte-for-byte from its local assets and explicitly
+fictional demo data. No market values or native performance are invented.
+
+The final SVL-reference and QMT targeted command ran 23 tests: 21 passed and two
+explicit host/native opt-ins skipped. QMT's separate author's validation and
+independent review identify controlled Windows adapter fixtures, not an actual
+broker terminal acceptance. Normalized orders/fills are deliberately unsupported
+where source time units cannot be established; raw daily records remain marked
+as raw. Native Windows/QMT trading and all multi-backend live acceptance remain
+outside these source checks. Independent final-head review and publication gates
+are still required before releasing this reorganization.

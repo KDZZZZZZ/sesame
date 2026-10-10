@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import { NativeRunObserver } from '../packages/mt5/backend/run-observer.js';
+import { NativeRunObserver } from '../../optional-api-v1/packages/mt5/backend/run-observer.js';
 import { digest, canonical } from '@sesame/plugin-sdk/protocol';
 const bytes=Buffer.from('frozen EX5 fixture'),translation={id:'translation',revision:'1',kind:'strategy.translation',schemaVersion:'1.0.0',digest:digest('translation')};
 const build={id:'build-fixed',status:'succeeded',conversation_id:'child',owner_run_id:'child-run',ex5_sha256:digest(bytes),manifest_digest:digest('manifest'),translation};const manifest={compiler_sha256:digest('compiler'),files:{}};

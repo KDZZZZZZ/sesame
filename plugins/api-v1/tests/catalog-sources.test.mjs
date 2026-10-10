@@ -29,8 +29,8 @@ test('exact official/native/MCP/optional names resolve from the same fixed catal
   assert.deepEqual((await catalogQuery({ plugin_id: 'sesame/mt5-official' }, undefined, fetcher)).items, [], 'Old stable factory IDs are not API 1 aliases');
 });
 
-test('stable 0.1.4 and the existing optional catalog remain byte-identical to the dev12 publishing commit', () => {
-  for (const path of ['plugins/catalog.json', 'plugins/optional-api-v1/catalog.json', 'plugins/optional-api-v1/official-plugins.lock.json']) {
+test('stable 0.1.4 and the historical optional catalog remain byte-identical to the dev12 publishing commit', () => {
+  for (const path of ['plugins/catalog.json', 'plugins/optional-api-v1/catalog.json']) {
     assert.deepEqual(readFileSync(new URL(`../../../${path}`, import.meta.url)), execFileSync('git', ['show', `e35da9047d628a37f78adc2552d0799881dca6dd:${path}`], { cwd: root }));
   }
 });

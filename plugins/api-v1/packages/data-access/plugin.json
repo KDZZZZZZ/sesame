@@ -1,8 +1,8 @@
 {
   "id": "sesame/data-access",
-  "title": "自动数据服务",
-  "description": "按需查询行情、网页及已登记输入，复用共享缓存，固定可追溯证据。",
-  "version": "2.2.0",
+  "title": "数据与研究证据",
+  "description": "发现提供方、查询与冻结数据、读取输入和登记可追溯代码计算结果。",
+  "version": "2.3.0",
   "default_state": "mounted",
   "tool_names": [
     "market_read",
@@ -10,7 +10,9 @@
     "market_instruments",
     "data_sources",
     "data_query",
-    "data_snapshot"
+    "data_snapshot",
+    "data_read",
+    "research_register"
   ],
   "prompts": [
     "prompt.md"
@@ -26,9 +28,13 @@
     "market_instruments",
     "data_sources",
     "data_query",
-    "data_snapshot"
+    "data_snapshot",
+    "data_read"
   ],
   "apiVersion": "1",
   "provides": {},
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "sesame": ">=0.2.0-0"
+  }
 }

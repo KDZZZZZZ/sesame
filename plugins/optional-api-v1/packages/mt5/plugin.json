@@ -1,0 +1,88 @@
+{
+  "id": "sesame/mt5",
+  "title": "MetaTrader 5",
+  "description": "MT5 行情、账户、原生 MQL5 工程、编译、Tester、交易与持久运行观察。",
+  "version": "1.2.0",
+  "default_state": "discoverable",
+  "tool_names": [
+    "mt5_catalog",
+    "mt5_call",
+    "mt5_cache",
+    "mt5_command",
+    "mt5_chart",
+    "mt5_edit",
+    "mt5_python",
+    "mt5_system",
+    "mt5_test",
+    "mt5_backtest",
+    "mt5_trade",
+    "mt5_deployment",
+    "mt5_project",
+    "mt5_inspect",
+    "mt5_compile",
+    "mt5_settings",
+    "mt5_update_configuration",
+    "mt5_import_configuration",
+    "mt5_connect",
+    "mt5_report_data",
+    "mt5_trade_detail",
+    "mt5_target",
+    "mt5_translation",
+    "mt5_translation_file",
+    "mt5_dependencies"
+  ],
+  "entry": "index.js",
+  "prompts": [
+    "prompt.md",
+    "tools/official/prompt.md",
+    "tools/charts/prompt.md",
+    "tools/editor/prompt.md",
+    "tools/python/prompt.md",
+    "tools/system/prompt.md",
+    "tools/tester/prompt.md",
+    "tools/trading/prompt.md",
+    "tools/deployment/prompt.md",
+    "tools/authoring/prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "resources": [
+    "skills/visual-state-machines/references/language.md",
+    "target/README.md",
+    "target/translation-file.md",
+    "target/sdk-integration.md",
+    "target/examples/Strategy.mq5",
+    "backend/sdk/Expert.mqh",
+    "backend/sdk/Results.mqh",
+    "backend/sdk/Risk.mqh",
+    "backend/sdk/Telemetry.mqh",
+    "backend/sdk/Trade.mqh",
+    "backend/sdk/Visual.mqh",
+    "scripts/install-mt5-python.py",
+    "scripts/install-mt5-macos.sh",
+    "scripts/README.md"
+  ],
+  "tool_definitions": "tools.json",
+  "main_tool_names": [
+    "mt5_deployment",
+    "mt5_settings",
+    "mt5_update_configuration",
+    "mt5_import_configuration",
+    "mt5_connect",
+    "mt5_dependencies"
+  ],
+  "apiVersion": "1",
+  "provides": {
+    "sesame.market": "1",
+    "sesame.account": "1",
+    "sesame.strategy": "1"
+  },
+  "workers": [
+    "backend/compiler-worker.js"
+  ],
+  "license": "MIT",
+  "engines": {
+    "sesame": ">=0.2.0-0"
+  }
+}
