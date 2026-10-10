@@ -1,4 +1,4 @@
-# Development plugin publication
+# Plugin API 1 publication
 
 Plugin changes are proposed through a pull request. CI checks the submitted files
 as data with the validator from the trusted base commit; it never imports a
@@ -99,8 +99,8 @@ metadata change; it does not erase prior releases or rewrite their bytes.
 comments, self-approval and stale approvals do not count as human approval. If
 there is no independent approval on the exact head, it says `not-recorded`.
 GitHub's configured repository rules govern merging; the publisher does not
-bypass them or claim a green check certifies safety. The stable 0.1.4 catalog and
-API 1 development releases remain separate.
+bypass them or claim a green check certifies safety. The legacy installation
+catalog and the Plugin API 1 catalog remain separate.
 
 ## Historical release boundary
 
@@ -115,14 +115,14 @@ version and prerelease. Every new publication under the updated publisher uses
 the pre-merge semantic gate above, while retries of already published releases
 only verify their historical bytes and evidence.
 
-## Candidate distribution profiles
+## Distribution profiles
 
-The 0.2 candidate has a `core` profile with nine default packages and an
-`optional` profile with ten on-demand packages. `bundle-profile.json` belongs to
+The distribution has a `core` profile for app-bundled foundational packages and
+an `optional` profile for on-demand integrations and methods. `bundle-profile.json` belongs to
 the immutable source and is validated before archive creation. New plans declare
 `profile: "core"` or `profile: "optional"`; a plan/profile mismatch is rejected.
 Profile-less historical source commits keep their original build behavior.
 Publish both reviewed groups separately, then propose a metadata-only catalog PR
 that selects the actual published source, archive, lock and review hashes. Never
-use the preview `inventory.json` as an installation catalog or claim app 0.2.0 is
-released because development plugins are published.
+use the descriptive `inventory.json` as an installation catalog. Application
+release status is checked independently of plugin archive publication.

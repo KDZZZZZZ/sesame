@@ -1,10 +1,16 @@
 # Submit or update a plugin
 
+For the current Plugin API 1 ecosystem, start with the [plugin development guide](api-v1/README.md) and [reviewed publication process](api-v1/PUBLISHING.md). It accepts the supported native, Skill and MCP formats; choose the format that matches the capabilities you need. Preserve author attribution, licenses and provenance for every format.
+
+## Legacy catalog workflow
+
+The steps below apply to the historical `plugins/catalog.json` catalog and its `plugins/packages/` sources. They do not restrict the formats supported by Plugin API 1.
+
 1. Publish source you have permission to distribute. Choose an unused
    `publisher/name` ID, retain author copyright and include `LICENSE` and
    `PROVENANCE.md`. Explain network requests, file access, external accounts,
    limitations and how to exercise the plugin. Listing never transfers copyright.
-2. For the current client, provide a standard stdio MCP package: `plugin.json`,
+2. For the legacy catalog, provide a standard stdio MCP package: `plugin.json`,
    `mcp.json`, static `tools.json`, an explicit Python or Node entrypoint and
    skills where useful. Packages must be self-contained. No native host import,
    executable install hook, embedded credential, symlink, archive or floating
