@@ -10,7 +10,7 @@ and explicit update. Sesame 0.1.4 and its historical catalog are unchanged.
 
 ## Fixed publication sources
 
-`catalog.sources.json` selects **core dev.13** and **optional dev.5** by their
+`catalog.sources.json` selects **core dev.14** and **optional dev.6** by their
 exact publication commits and review asset hashes. The generator reads each
 release plan at that commit, reconstructs its archive from the immutable source,
 and verifies the archive, lock, package files and tree digests. It never imports
@@ -19,7 +19,7 @@ release/archive/lock/review identities alongside each package's file index.
 
 These pins deliberately do not follow the latest release, current package source
 or a floating branch. Both releases were published by the main-branch workflow
-after PR25's exact-head independent Agent review, static checks and pre-merge
+after PR27's exact-head independent Agent review, static checks and pre-merge
 gate. Their actual downloaded assets were checked against GitHub digests and the
 host package verifier before this metadata update. Human approval is not recorded.
 A later reviewed publication must explicitly advance the selected source release.

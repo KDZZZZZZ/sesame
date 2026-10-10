@@ -57,7 +57,7 @@ MT5 checkouts. Workspace commands expose incomplete snapshot diagnostics. The
 plugin-manager owns verified catalog installation and same-session loading;
 its native static checks remain distinct from actual activation and environment
 verification. The [unified development catalog](CATALOG.md) pins the actual
-core dev.13 and optional dev.5 releases: nine default and ten optional entries.
+core dev.14 and optional dev.6 releases: nine default and ten optional entries.
 Their source commit, archive, file/tree and review hashes were selected only after
 publication and actual download verification. Explicit updates preserve the host's
 current-digest and version checks. The published 0.1.4 catalog is unchanged.
