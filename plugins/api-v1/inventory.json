@@ -148,7 +148,7 @@
     },
     {
       "id": "sesame/ccxt",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {

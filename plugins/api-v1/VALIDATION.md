@@ -906,3 +906,33 @@ The 31-entry catalog reconstruction/name-resolution/publication-boundary suite
 passed five tests, and actual published-release validation passed. The application
 0.2.0 is not formally released; these plugin prereleases require a compatible
 `>=0.2.0-0` host. Website previews remain descriptive and do not authorize code installation.
+
+
+## CCXT exact-route restoration — optional dev.8 candidate
+
+CCXT 1.0.1 fixes a real 1.0.0 chart-rebind failure: an exchange route was only
+held in transient bindings, and unrecognized configuration could silently use
+direct access. The plugin now accepts only its documented exchange and optional
+credential-free publicProxy fields, persists explicitly selected routes in its
+private storage and restores a connection only when its ID/revision matches.
+Unknown fields, wrong types, credential-bearing URLs and unknown references fail
+before a worker request. Route revision calculation remains unchanged; an older
+reference needs explicit registration of the same authorized configuration, not
+an inferred route or automatic system-proxy discovery. README is a declared
+resource, and the skill gives the exact public configuration fields.
+
+The root Agent independently reviewed all nine files at author source
+`b53b446baacf01d7e75885b2177a726358da3ab3` at 2026-10-10T04:16:56Z.
+It reran five formal temporary Host checks and independently exercised thirteen
+invalid configurations plus four restoration/cross-reference/old-reference
+boundaries. Those checks passed without public network requests, live caches or
+account/terminal operations. Controlled OHLCV responses prove route persistence
+and failure behavior, not fresh market retrieval or production chart rendering.
+
+The publisher's integrated profile checks passed seven tests. The new optional
+lock contains the same 22 identities and changes only CCXT 1.0.0 to 1.0.1; the
+other 21 complete entries and the core dev.14 lock are byte-identical. Inventory
+remains 31 entries and changes only the CCXT version. The installation catalog
+continues to pin published optional dev.7 until dev.8 is actually released and a
+separate metadata PR is reviewed. Final-head review, pre-merge gate, publication
+and actual-download evidence are subsequent steps, not claimed by this section.
