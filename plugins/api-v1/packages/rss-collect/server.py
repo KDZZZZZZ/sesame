@@ -1,8 +1,8 @@
 import sys, json, os, re
 import xml.etree.ElementTree as ET
 
-VERSION = "2.0.1"
-PLUGIN_ROOT = os.path.dirname(os.path.abspath(__file__))
+VERSION = "2.0.2"
+PLUGIN_ROOT = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
 
 def resolve_path(p):
     target = os.path.realpath(os.path.join(PLUGIN_ROOT, p))

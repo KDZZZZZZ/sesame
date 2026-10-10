@@ -15,7 +15,8 @@ advertised there until their matching application and end-to-end checks are read
 
 - `packages/<name>/plugin.json`: publisher-qualified identity, version, API and capabilities.
 - `packages/<name>/package.json`: Node module scope, version and per-package license.
-- `official-plugins.lock.json`: every packaged byte and the digest of each package tree.
+- `official-plugins.lock.json`: every candidate packaged byte and package tree digest.
+- `catalog.json` / `catalog.sources.json`: separately pinned, already published package entries.
 - `scripts/plugin-lock.mjs`: data-only validation, lock generation and deterministic archive creation.
 - `tests/`: source-repository tests; never included in the application bundle.
 
@@ -40,9 +41,12 @@ actual verification. Optional integrations live separately in
 
 Development bundle 4 completes real-path delivery for research/web inputs and
 MT5 checkouts. Workspace commands expose incomplete snapshot diagnostics. The
-plugin-manager owns verified optional-catalog installation and same-session loading;
+plugin-manager owns verified catalog installation and same-session loading;
 its native static checks remain distinct from actual activation and environment
-verification. See `../optional-api-v1/` for the separately pinned development catalog.
+verification. The [unified development catalog](CATALOG.md) now pins all 19 published
+official packages and the three optional integrations. Explicit updates pass the
+current digest through the formal host update flow. Its 2.1.0 client is a candidate
+until separately released; the published 0.1.4 catalog is unchanged.
 
 ## Validate and build
 

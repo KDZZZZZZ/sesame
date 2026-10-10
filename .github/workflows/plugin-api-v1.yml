@@ -35,10 +35,8 @@ jobs:
         run: node trusted/plugins/api-v1/scripts/plugin-lock.mjs --check --source candidate/plugins/api-v1
       - name: Validate optional package data with the trusted base validator
         run: |
-          if test -f candidate/plugins/optional-api-v1/official-plugins.lock.json; then
-            node trusted/plugins/api-v1/scripts/plugin-lock.mjs --check --source candidate/plugins/optional-api-v1
-            node trusted/.github/scripts/validate-api1-catalog.mjs candidate
-          fi
+          node trusted/plugins/api-v1/scripts/plugin-lock.mjs --check --source candidate/plugins/optional-api-v1
+          node trusted/.github/scripts/validate-api1-catalog.mjs candidate --published
       - name: Validate fixed release plans without publishing
         run: node trusted/.github/scripts/release-plugins.mjs --check candidate
       - name: Test trusted lock and archive code

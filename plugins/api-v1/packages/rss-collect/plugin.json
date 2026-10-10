@@ -3,7 +3,7 @@
     "name": "Sesame"
   },
   "name": "rss-collect",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "基于 feedparser 思路新写的 RSS/Atom 订阅源解析 skill（新写适配层，非上游现成 skill）。输入已获取的 XML 内容或包内文件路径；解析失败时 isError=true。",
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "extensions": {
@@ -46,7 +46,7 @@
               }
             ],
             "source": "sample.atom",
-            "version": "2.0.1"
+            "version": "2.0.2"
           }
         },
         {
@@ -78,7 +78,7 @@
               }
             ],
             "source": "inline",
-            "version": "2.0.1"
+            "version": "2.0.2"
           }
         }
       ],

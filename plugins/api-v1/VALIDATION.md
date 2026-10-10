@@ -1,3 +1,65 @@
+# Candidate unified API 1 directory and explicit updates — 2026-10-09
+
+This candidate adds no release plan and has not published a new package version.
+The 22 directory entries are reconstructed from already published official
+`plugins-api-v1-dev.12` and optional `plugins-optional-api-v1-dev.4` at their fixed
+publication/source commits. The directory SHA-256 is
+`e824ee294edad74d41288f2053ce88957fb159b923dcabd879a5ea919e0b5af5`.
+It describes MT5 1.1.9, plugin-manager 2.0.1 and the four MCP packages at 2.0.1.
+The new plugin-manager 2.1.0 and three parser 2.0.2 candidates are deliberately
+absent from this released-byte directory. After their own reviewed publication,
+a separate metadata PR must select that new immutable release; existing assets
+and dev.12 pins must not be overwritten. Stable 0.1.4 and the optional-only catalog
+remain byte-for-byte unchanged.
+
+The portable suite passed 29 checks. This includes 14 catalog-client cases,
+five fixed-source/publication cases and three real Python alias/escape cases.
+The separate SDK schema test passed and matched the committed manager tool
+schemas to its factories. An actual JSON Schema validator accepted all 22 entries.
+The fixed-release check rebuilt all 13 existing release plans successfully; the
+catalog publication check also read live GitHub asset metadata for both selected
+releases and verified their publication commits and archive/lock/review digests.
+These are byte/identity checks, not an approval or behavior certification.
+
+A temporary integration used the actual matching Runtime, Store, HostContext,
+HostWorkspace, PluginManager and Pi sessions. The network fixture served the
+candidate catalog and the independently verified, already downloaded dev.12
+package bytes; it did not claim the new directory was already live. It checked:
+
+- A bundled MT5 1.1.8 package followed formal test/update to 1.1.9 with the
+  original expected digest passed unchanged to the host. Main and existing child
+  Pi sessions gained `mt5_translation_file` without session recreation; the
+  child's workspace file and durable bundled origin were preserved.
+- Repeating the exact installed version/digest fetched only the catalog and made
+  no second test or package mutation. A disabled package remained disabled.
+- All four published 2.0.1 MCP packages passed formal test/install/load from a
+  canonical temporary path, including their ten actual Python MCP assertions.
+
+The Runtime integration disabled MT5 and automatic connection before init. It
+made zero model requests and performed no terminal, Tester, deployment or trade
+actions. All temporary runtime state was removed; the live app, DB and bundle
+were not changed. It validates the matching development host's update/refresh
+ports, not arbitrary older hosts.
+
+The MCP checks initially reproduced a macOS path-alias bug: resolved sample paths
+used `/private/var` while the trusted package root still used `/var`. The minimal
+fix canonicalizes that root in web-extract, rss-collect and market-data-parser,
+which advance to 2.0.2; quantskills-catalog remains unchanged at 2.0.1. All three
+candidate packages then passed six declared assertions through the actual host
+with an explicitly aliased temporary runtime root. The separate portable
+Python cases accept packaged samples through that alias and reject absolute
+external paths, parent escapes, external file symlinks and external directory
+symlinks. Windows native alias behavior was not tested. No containment condition,
+expected result or host digest check was relaxed.
+
+The candidate official lock changes exactly those three parsers and the manager;
+the other 15 complete entries equal dev.12. No private host source is included.
+As explained in [CATALOG.md](CATALOG.md), this validator's introducing PR still
+runs the old trusted base in CI; the new local checks and independent review must
+be assessed explicitly. Subsequent PRs use the merged trusted validator.
+
+---
+
 # Published release evidence — 2026-10-09
 
 These records describe completed publications, not proposed plans. Each exact PR head received a separate Agent review, recorded by the repository maintainer; **independent human approval was not recorded**. The trusted main-branch semantic gate completed before normal merge. The publisher then checked the same head, review and discussion snapshot and published immutable development assets as `github-actions[bot]`. The stable 0.1.4 catalog remains separate.
