@@ -2,7 +2,7 @@
 
 The unified directory is
 `https://raw.githubusercontent.com/KDZZZZZZ/sesame/main/plugins/api-v1/catalog.json`.
-It lists nine default and ten optional plugins by exact publisher-qualified name.
+It lists nine default and twenty-two optional plugins by exact publisher-qualified name.
 All require `engines.sesame: ">=0.2.0-0"`: compatible development builds are allowed,
 with formal minimum 0.2.0. The application 0.2.0 is not formally released. The
 published plugin-manager 2.1.1 reads this directory and supports formal install
@@ -10,7 +10,7 @@ and explicit update. Sesame 0.1.4 and its historical catalog are unchanged.
 
 ## Fixed publication sources
 
-`catalog.sources.json` selects **core dev.14** and **optional dev.6** by their
+`catalog.sources.json` selects **core dev.14** and **optional dev.7** by their
 exact publication commits and review asset hashes. The generator reads each
 release plan at that commit, reconstructs its archive from the immutable source,
 and verifies the archive, lock, package files and tree digests. It never imports
@@ -19,7 +19,7 @@ release/archive/lock/review identities alongside each package's file index.
 
 These pins deliberately do not follow the latest release, current package source
 or a floating branch. Both releases were published by the main-branch workflow
-after PR27's exact-head independent Agent review, static checks and pre-merge
+after PR27's and PR29's exact-head independent Agent reviews, static checks and pre-merge
 gate. Their actual downloaded assets were checked against GitHub digests and the
 host package verifier before this metadata update. Human approval is not recorded.
 A later reviewed publication must explicitly advance the selected source release.
@@ -101,16 +101,24 @@ Published 2.0.2 `web-extract`, `rss-collect` and `market-data-parser` canonicali
 the trusted package root in the same way as the resolved input. A macOS `/var`
 → `/private/var` alias no longer rejects a bundled sample. Absolute inputs,
 parent traversal and symlinks escaping the package remain rejected.
-`quantskills-catalog` 2.0.2 retains its reference-only behavior and now declares
-the same host engine range; it has no caller-selected file resolver.
+`quantskills-catalog` 2.1.0 retains its historical 214-entry reference snapshot and
+routes requests to independently selected methods. It checks actual catalog
+availability instead of claiming every external reference is installed or audited;
+it has no caller-selected file resolver.
 
 ## Distribution and descriptive preview
 
-The nine core and ten optional entries expose `distribution` and the minimum
+The nine core and twenty-two optional entries expose `distribution` and the minimum
 `engines.sesame` range. MT5 and all other market/execution backends are optional.
 The old `host-files`, `user-guide` and `research` names were merged into
 `workspace`, `orchestration` and `data-access`, respectively; no installer aliases
 pretend they are separate packages.
+
+The eight method packages and the two research workflows are separate choices.
+Installing `sesame/ict` does not install another technical method. CCXT provides
+explicit-source public spot data; Backtrader runs a selected authored strategy
+against fixed data. They do not add a default broker or trading authorization.
+Backtrader's package and engine retain GPL-3.0-or-later licensing.
 
 `inventory.json` remains a descriptive snapshot of the reviewed source, marked
 `unreleased-candidate` for the 0.2 application design. It is not an installation
