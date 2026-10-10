@@ -482,6 +482,9 @@ export class CCXTProvider {
         boundary = Math.max(boundary ?? -Infinity, rows.at(-2).openTime.unixMs);
       this.closedThrough.set(seriesId, boundary);
       const bars = rows
+        // A native page can extend past the requested range. It may prove a
+        // candle closed, but must not rewrite revisions outside this read.
+        .filter((row) => row.openTime.unixMs >= from.unixMs && row.openTime.unixMs < to.unixMs)
         .map((row) =>
           this.revise({
             ...row,
@@ -493,12 +496,7 @@ export class CCXTProvider {
             turnover: unknown("No quote-volume currency receipt"),
           }),
         )
-        .filter(
-          (bar) =>
-            bar.openTime.unixMs >= from.unixMs &&
-            bar.openTime.unixMs < to.unixMs &&
-            (input.includeForming !== false || bar.isClosed),
-        );
+        .filter((bar) => input.includeForming !== false || bar.isClosed);
       return {
         items: bars,
         meta: this.meta(receipt),
@@ -575,8 +573,34 @@ export class CCXTProvider {
         meta: result.meta,
       };
     };
-    const snapshot = await read(),
-      position = { streamId: randomUUID(), epoch: randomUUID(), seq: "0" };
+    const snapshot = await read();
+    if (snapshot.bars.length < input.tailLimit) {
+      // Native caps can leave room for fewer than tailLimit candles, especially
+      // when the newest candle is needed only as proof of its predecessor's close.
+      // At most one older page fills that initial tail; live ticks stay read(3).
+      const requested = snapshot.coverage.requested,
+        duration = intervals[input.spec.timeframe],
+        cap = sourceLimits[this.bound(context).exchange],
+        to = snapshot.bars[0]?.openTime ?? {
+          basis: "utc",
+          unixMs: Math.max(requested.from.unixMs, requested.to.unixMs - cap * duration),
+        };
+      if (requested.from.unixMs < to.unixMs) {
+        const earlier = await this.queryBars({
+          ...input, direction: "backward",
+          range: { from: requested.from, to },
+          page: { limit: input.tailLimit - snapshot.bars.length },
+        }, { ...context, signal });
+        snapshot.bars = [...earlier.data.page.items, ...snapshot.bars].slice(-input.tailLimit);
+        snapshot.coverage = {
+          ...snapshot.coverage,
+          observedRange: snapshot.bars.length
+            ? { from: snapshot.bars[0].openTime, to: snapshot.bars.at(-1).endTime }
+            : null,
+        };
+      }
+    }
+    const position = { streamId: randomUUID(), epoch: randomUUID(), seq: "0" };
     let timer,
       task,
       prior = snapshot,

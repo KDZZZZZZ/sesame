@@ -226,7 +226,7 @@
       "id": "sesame/ccxt",
       "version": "1.0.3",
       "directory": "ccxt",
-      "treeDigest": "sha256:5dc10cf1d19159de1029d429c28afb924d10a178777bd7a72979deac151959e4",
+      "treeDigest": "sha256:23c70d18644e66a839a4b55def320569cc3ddf15f41277c4b9ffa45879810fe1",
       "files": [
         {
           "path": "LICENSE",
@@ -280,8 +280,8 @@
         },
         {
           "path": "provider.js",
-          "sha256": "9f2c1ecf8990ce4ee67e186ca7b08b20fe8c6487a7d1719de1fe8c8f66da44b1",
-          "bytes": 22404
+          "sha256": "1b3012f7d5571d73d39ccd084ee7d1e42c23687f2b058774a261847533678701",
+          "bytes": 23774
         },
         {
           "path": "skills/ccxt-public-markets/SKILL.md",
