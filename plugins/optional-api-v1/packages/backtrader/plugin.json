@@ -2,7 +2,7 @@
   "id": "sesame/backtrader",
   "title": "BACKTRADER optional backend",
   "description": "Native fixed-data Cerebro backtests; no live broker",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "apiVersion": "1",
   "engines": {
     "sesame": ">=0.2.0-0"

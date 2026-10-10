@@ -1,6 +1,6 @@
 # Optional plugins for Sesame 0.2.0 / Plugin API 1
 
-**Optional plugins for Sesame 0.2.0; installable entries are identified by the published catalog.** These twenty-two packages require `>=0.2.0-0`
+**Optional plugins for Sesame 0.2.0; installable entries are identified by the published catalog.** The twenty-three source packages declare their own compatible host ranges; existing packages require `>=0.2.0-0`, while manual-trading requires `>=0.2.1`
 (formal minimum 0.2.0, including compatible development builds). Their reviewed
 archive identities remain fixed; application installers are listed on the
 [release page](https://github.com/KDZZZZZZ/sesame/releases/tag/v0.2.0). They do not
@@ -10,7 +10,7 @@ terminal or a large Python environment.
 
 The optional set contains six backends (MT5, AKShare, QMT, vn.py, CCXT and
 Backtrader), eight independent analysis methods, separate strategy and factor
-research workflows, judgment-evolution, four web/reference MCP packages and
+research workflows, Agent manual trading, judgment-evolution, four web/reference MCP packages and
 web-sources. Each method is its own installable package; selecting ICT does not
 load Price Action, Elliott Wave, Wyckoff or Dow Theory.
 `bundle-profile.json` and the lock enforce this set. The three source moves into
@@ -26,6 +26,7 @@ host-readable without granting access to old mutable application collections.
 | `sesame/vnpy` | Actual CTA backtesting of authored Python against fixed DataRefs | Reuses native VeighNa 4.5.0 / CTA 1.4.1. Real macOS engine, simulated matching, errors, warmup and frozen artifacts verified. Not a broker bridge or SVL equivalence claim. |
 | `sesame/qmt` | MiniQMT daily market/account adapter and explicit stock order/cancel tools | Requires existing broker-authorized Windows MiniQMT and compatible Python/XtQuant. Contract/host fixtures are separate from native Windows broker acceptance, which has not occurred. Readiness never grants trading authorization. |
 | `sesame/mt5` | Native terminal, account, compiler, Tester and target workflows | Existing compatible terminal and explicit connection/configuration. No terminal distribution is embedded. |
+| `sesame/manual-trading` | General Agent trading discipline: authorization, timing, quote checks, single submission and receipt recovery | Sesame 0.2.1+ and an existing supported trading backend; M5+ decision cadence. Concrete backend requirements belong to that plugin's resources. |
 | `sesame/judgment-evolution` | Private prediction/outcome ledger | Local SQLite; no default legacy-data import. |
 | `sesame/web-sources` | Fetch source-labelled web evidence | Network access to the selected source; not a parser or brokerage feed. |
 | `sesame/web-extract`, `sesame/rss-collect`, `sesame/market-data-parser` | Parse supplied HTML/feed/JSON/XML | Existing Python 3, standard-library MCP processes; explicit file boundaries. |

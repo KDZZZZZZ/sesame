@@ -1,3 +1,5 @@
 原始订单、改单撤单、平仓、脚本、模板及图表开关。默认可发现，按需加载；主 Agent 应读取实际应用与终端交易权限，按用户要求调整。按用户明确的交易或程序运行要求操作，已有权限本身不是下单指令。受管理策略挂载使用 mt5_deployment，仍需实际账户、终端权限、用户执行意图及冻结构建检查。
 
 先调用 mt5_catalog 获取实际 tool、inputSchema、workspace 与 agent_tool。只用 mt5_trade 调用属于本插件的方法。使用稳定 command_id，unknown 先查询真实状态，不换 ID 重发。遵守原生文件、权限和账户范围；不得借另一传输绕过已禁用插件。
+
+手动交易先读 TRADING.md。Python order_send 也归 mt5_trade，不是 mt5_python；execution_guard 在原生报单前检查账户、最新 UTC tick 与有效期。盘中 Agent 决策优先配合独立 manual-trading 插件，一次调用完成末端复核和下单，默认 M5+。

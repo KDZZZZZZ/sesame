@@ -126,5 +126,42 @@ class Tests(unittest.TestCase):
         with self.assertRaises(b.Failure): self.query(self.request("positions"))
         self.assertTrue(Trader.last.stopped)
 
+    def test_recovered_cancel_rechecks_unique_native_ownership_and_pending_state(self):
+        class Trading(Trader):
+            cancels = 0
+            def cancel_order_stock(self, *args): Trading.cancels += 1; return 0
+        module = types.ModuleType("xtquant"); module.xtconstant = types.SimpleNamespace(STOCK_BUY=23, STOCK_SELL=24, FIX_PRICE=11)
+        row = dict(account_id="00123", order_id=123, stock_code="600000.SH", order_remark="Sfixed", order_type=23, order_volume=100, traded_volume=0, order_status=50)
+        request = self.request("cancel", account_id="00123", order_id="123", remark="Sfixed", original_intent={"symbol":"600000.SH","side":"buy","shares":"100","price":"10"})
+        with patch.dict(sys.modules, {"xtquant":module}):
+            for bad in ({"account_id":"other"}, {"order_id":0}, {"stock_code":"000001.SZ"}, {"order_remark":"foreign"}, {"order_type":24}, {"order_volume":200}, {"order_status":56}, {"traded_volume":100}):
+                Trader.result = [types.SimpleNamespace(**{**row, **bad})]
+                with self.assertRaises(b.Failure) as caught: b.query(request, Data(), Trading, lambda a,k:(a,k))
+                self.assertEqual(caught.exception.details, {"submission_attempted":False}); self.assertEqual(Trading.cancels, 0)
+            Trader.result = [types.SimpleNamespace(**row), types.SimpleNamespace(**{**row,"order_id":124})]
+            with self.assertRaises(b.Failure): b.query(request, Data(), Trading, lambda a,k:(a,k))
+            self.assertEqual(Trading.cancels, 0)
+            Trader.result = [types.SimpleNamespace(**{**row,"order_status":55,"traded_volume":20})]
+            self.assertEqual(b.query(request, Data(), Trading, lambda a,k:(a,k))["status"],"cancel_requested"); self.assertEqual(Trading.cancels, 1)
+
+    def test_guarded_order_runs_inside_actual_bridge_and_expired_intent_never_sends(self):
+        class Quotes(Data):
+            def get_full_tick(self, symbols):
+                return {s:{"time":int(b.time.time()*1000),"askPrice":[10.1],"bidPrice":[10]} for s in symbols}
+        class Trading(Trader):
+            sends = 0
+            def query_stock_asset(self, account): return types.SimpleNamespace(account_id="00123",cash=100000)
+            def order_stock(self, *args): Trading.sends += 1; return 123
+        module=types.ModuleType("xtquant");module.xtconstant=types.SimpleNamespace(STOCK_BUY=23,STOCK_SELL=24,FIX_PRICE=11)
+        now=int(b.time.time()*1000)
+        guard={"observed_at":now,"expires_at":now+60000,"max_quote_age_ms":5000,"max_quote_to_send_ms":1000,"price_limit":"10.2"}
+        request=self.request("order",account_id="00123",symbol="600000.SH",side="buy",shares="100",price="10",remark="Sguard",execution_guard=guard)
+        with patch.dict(sys.modules,{"xtquant":module}):
+            data=Quotes();result=b.query(request,data,Trading,lambda a,k:(a,k))
+            self.assertEqual(result["order_id"],"123");self.assertIn("execution_timing",result);self.assertEqual(Trading.sends,1);self.assertTrue(data.disconnected);self.assertTrue(Trader.last.stopped)
+            request["execution_guard"]={**guard,"observed_at":now-60001,"expires_at":now-1}
+            with self.assertRaises(b._guard.GuardRejected) as caught:b.query(request,Quotes(),Trading,lambda a,k:(a,k))
+            self.assertEqual(caught.exception.details,{"submission_attempted":False});self.assertEqual(Trading.sends,1);self.assertTrue(Trader.last.stopped)
+
 
 if __name__ == "__main__": unittest.main()

@@ -1,0 +1,218 @@
+[
+  {
+    "name": "manual_trade_inspect",
+    "description": "Inspect supported manual trading channels and enforced latency policy. Does not connect, configure, install, or trade.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "manual_trade_observe",
+    "description": "Read current account, symbol conditions, positions and a source-timestamped executable quote from an already loaded MT5/QMT backend. Returns an observation_id that starts the model decision clock; no order is sent.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "backend",
+        "symbol"
+      ],
+      "properties": {
+        "backend": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "mt5"
+            },
+            {
+              "type": "string",
+              "const": "qmt"
+            }
+          ]
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Exact broker symbol"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "manual_trade_execute",
+    "description": "Submit one explicitly user-authorized order from a recent observation. M5+ only. In the native process recheck account, available position/specification, deadline and latest quote, then send once without another model turn. Stable operation_id prevents duplicates; stale/slow preparation rejects. unknown must be queried, never resent.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "operation_id",
+        "observation_id",
+        "user_authorized",
+        "action",
+        "side",
+        "quantity",
+        "price_limit"
+      ],
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,100}$"
+        },
+        "observation_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "ID from manual_trade_observe; one intent per observation"
+        },
+        "user_authorized": {
+          "type": "boolean",
+          "const": true
+        },
+        "timeframe": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "5m"
+            },
+            {
+              "type": "string",
+              "const": "15m"
+            },
+            {
+              "type": "string",
+              "const": "30m"
+            },
+            {
+              "type": "string",
+              "const": "1h"
+            },
+            {
+              "type": "string",
+              "const": "4h"
+            },
+            {
+              "type": "string",
+              "const": "1d"
+            }
+          ]
+        },
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "market"
+            },
+            {
+              "type": "string",
+              "const": "limit"
+            },
+            {
+              "type": "string",
+              "const": "close"
+            }
+          ]
+        },
+        "side": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "buy"
+            },
+            {
+              "type": "string",
+              "const": "sell"
+            }
+          ]
+        },
+        "quantity": {
+          "type": "string",
+          "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+          "maxLength": 40,
+          "description": "MT5 lots or QMT integer shares, based on the user intent"
+        },
+        "price_limit": {
+          "type": "string",
+          "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+          "maxLength": 40,
+          "description": "Maximum buy/minimum sell executable quote. A market fill can still slip; use a limit order for a hard order-price limit"
+        },
+        "limit_price": {
+          "type": "string",
+          "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+          "maxLength": 40,
+          "description": "Required only for limit orders"
+        },
+        "position_id": {
+          "type": "string",
+          "pattern": "^[1-9]\\d*$",
+          "description": "Required MT5 position ticket for close"
+        },
+        "stop_loss": {
+          "type": "string",
+          "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+          "maxLength": 40,
+          "description": "Optional MT5 stop loss"
+        },
+        "take_profit": {
+          "type": "string",
+          "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+          "maxLength": 40,
+          "description": "Optional MT5 take profit"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "manual_trade_status",
+    "description": "Read a durable receipt; refresh reads the backend command and actual orders/fills for recovery. No matching record never proves a timed-out send failed. Does not replay or place orders.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "operation_id"
+      ],
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Existing operation ID"
+        },
+        "refresh": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "manual_trade_cancel",
+    "description": "Request cancellation of a confirmed pending order created through this plugin, using a separate stable operation ID. Does not close a filled position. Query afterwards; cancel_requested is not confirmed cancellation.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "operation_id",
+        "original_operation_id",
+        "user_authorized"
+      ],
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,100}$"
+        },
+        "original_operation_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Original manual_trade_execute operation"
+        },
+        "user_authorized": {
+          "type": "boolean",
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]

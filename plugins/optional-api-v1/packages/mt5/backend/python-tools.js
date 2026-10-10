@@ -9,6 +9,12 @@ const enumeration = s('官方常量名，例如 TIMEFRAME_M5 / COPY_TICKS_ALL / 
 enumeration.type = ['string', 'integer'];
 const request = { type: 'object', description: '官方 MqlTradeRequest 字段；action/type/type_time/type_filling 可用官方常量名，ticket 使用字符串。', additionalProperties: false,
   properties: { action: enumeration, magic: ticket, order: ticket, symbol, volume: n('手数'), price: n('价格'), stoplimit: n('StopLimit 价格'), sl: n('止损'), tp: n('止盈'), deviation: i('points'), type: enumeration, type_filling: enumeration, type_time: enumeration, expiration: i('UTC 秒'), comment: s('备注'), position: ticket, position_by: ticket } };
+const executionGuard = { type: 'object', additionalProperties: false, description: 'Optional Sesame final-mile guard; checked inside the native worker immediately before order_send. Supports market/limit orders and position reduction only; no retry.', properties: {
+  observed_at: i('Original observation UTC milliseconds'), expires_at: i('Decision expiry UTC milliseconds, at most 60 seconds after observation'),
+  max_quote_age_ms: {type:'integer',minimum:1,maximum:5000}, max_quote_to_send_ms:{type:'integer',minimum:1,maximum:1000},
+  price_limit:s('Maximum buy/minimum sell executable quote; positive decimal text'), side:{type:'string',enum:['buy','sell']}, expected_account:ticket, expected_server:s('Exact broker server'),
+}, required:['observed_at','expires_at','max_quote_age_ms','max_quote_to_send_ms','price_limit','side','expected_account','expected_server'] };
+const cancellationGuard = { type:'object', additionalProperties:false, description:'Optional native pending-limit cancellation guard. Rechecks exact account, server, symbol, remark, positive order ID, side and active status after queuing, immediately before REMOVE. Mutually exclusive with execution_guard.', properties:{expected_account:ticket,expected_server:s('Exact broker server'),symbol,remark:s('Exact original order comment'),order:ticket,side:{type:'string',enum:['buy','sell']}},required:['expected_account','expected_server','symbol','remark','order','side'] };
 const methods = [
   ['initialize', '连接配置的终端；账户和路径由用户设置，不接受 Agent 密码。', {}],
   ['login', '登录用户预先配置的账户。', {}],
@@ -30,7 +36,7 @@ const methods = [
   ['order_calc_margin', '计算保证金，不发单。', { action: enumeration, symbol, volume: n('手数'), price: n('价格') }, ['action', 'symbol', 'volume', 'price']],
   ['order_calc_profit', '计算盈亏，不发单。', { action: enumeration, symbol, volume: n('手数'), price_open: n('入场价格'), price_close: n('退出价格') }, ['action', 'symbol', 'volume', 'price_open', 'price_close']],
   ['order_check', '检查交易请求；通过不代表订单会成交。', { request }, ['request']],
-  ['order_send', '向实际账户提交交易请求；需用户开启交易权限。', { request }, ['request']],
+  ['order_send', '向实际账户提交交易请求；需用户交易意图与实际权限。可选 execution_guard 在原生进程中校验账户、有效期、最新 tick、数量与价格边界，先 order_check 再刷新报价并仅发送一次；cancellation_guard 在原生撤单前复核账户及唯一匹配活动挂单。返回执行耗时。unknown 不重发。通过 mt5_trade 调用。', { request, execution_guard:executionGuard, cancellation_guard:cancellationGuard }, ['request']],
   ['positions_total', '当前持仓数量。', {}], ['positions_get', '当前持仓。', { symbol, group: s('组过滤'), ticket }],
   ['history_orders_total', 'UTC 区间历史订单数量。', { date_from: date, date_to: date }, ['date_from', 'date_to']],
   ['history_orders_get', '历史订单：使用 UTC 起止时间、ticket 或 position。', { date_from: date, date_to: date, group: s('组过滤'), ticket, position: ticket }],

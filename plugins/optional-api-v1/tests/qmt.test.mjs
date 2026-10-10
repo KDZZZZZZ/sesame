@@ -187,6 +187,51 @@ test('explicit trading intents persist before transport, reuse exact results and
 test('activation service context cannot authorize trading; current tool scope is checked explicitly',async t=>{
  const {host,config}=await fixture(t);host.scope={kind:'service'};let calls=0;const service=createService(host,{platform:'win32',request:async()=>{calls++;return receipt({status:'submitted',order_id:'1'})}});t.after(()=>service.dispose());const args={operation_id:'scope',user_authorized:true,account_id:config.account_id,connection_revision:'2',symbol:'600000.SH',side:'buy',shares:'100',price:'10'};await assert.rejects(service.command('order',args),{code:'FORBIDDEN'});assert.equal((await service.command('order',args,undefined,{kind:'main'})).status,'submitted');assert.equal(calls,1);await assert.rejects(service.command('order',{...args,operation_id:'child'},undefined,{kind:'child'}),{code:'FORBIDDEN'});
 });
+test('cancelling an unknown QMT order carries only its retained original intent for native recovery',async t=>{
+ const {host,config}=await fixture(t);host.scope={kind:'main'};let orders=0,cancels=0;
+ const service=createService(host,{platform:'win32',request:async payload=>{
+   if(payload.action==='order'){orders++;throw Object.assign(Error('lost receipt'),{code:'SOURCE_UNAVAILABLE'});}
+   cancels++;assert.deepEqual(payload.original_intent,{symbol:'600000.SH',side:'buy',shares:'100',price:'10'});
+   assert.equal(payload.remark,host.storage.get('qmt_commands','unknown').remark);
+   return receipt({status:'cancel_requested',order_id:'123'});
+ }});t.after(()=>service.dispose());
+ const original={operation_id:'unknown',user_authorized:true,account_id:config.account_id,connection_revision:'2',symbol:'600000.SH',side:'buy',shares:'100',price:'10'};
+ await assert.rejects(service.command('order',original));
+ const args={operation_id:'recovered-cancel',user_authorized:true,account_id:config.account_id,connection_revision:'2',original_operation_id:'unknown',order_id:'123'};
+ const result=await service.command('cancel',args);assert.equal(result.status,'cancel_requested');assert.deepEqual(await service.command('cancel',args),result);assert.equal(orders,1);assert.equal(cancels,1);
+ const prior=host.storage.get('qmt_commands','unknown');delete prior.intent;host.storage.put('qmt_commands',prior);
+ await assert.rejects(service.command('cancel',{...args,operation_id:'unverifiable-legacy'}),{code:'INVALID_ARGUMENT'});assert.equal(cancels,1);
+});
+test('QMT cancellation survives a same-account configuration revision but cannot cross account ownership',async t=>{
+ const {host,config}=await fixture(t);host.scope={kind:'main'};let cancels=0;
+ const service=createService(host,{platform:'win32',request:async payload=>{
+   if(payload.action==='order')throw Object.assign(Error('lost receipt'),{code:'SOURCE_UNAVAILABLE'});
+   cancels++;assert.equal(payload.account_id,config.account_id);assert.equal(payload.config.version,3);
+   return receipt({status:'cancel_requested',order_id:'123'});
+ }});t.after(()=>service.dispose());
+ const original={operation_id:'unknown-account',user_authorized:true,account_id:config.account_id,connection_revision:'2',symbol:'600000.SH',side:'buy',shares:'100',price:'10'};
+ await assert.rejects(service.command('order',original));
+ assert.equal(service.commandRecord(original.operation_id).accountId,config.account_id);
+ await configure(host,{operation_id:'same-account-update',expected_version:2,changes:{sector:'沪深A股'}});
+ const cancel={operation_id:'new-revision-cancel',user_authorized:true,account_id:config.account_id,connection_revision:'3',original_operation_id:original.operation_id,order_id:'123'};
+ assert.equal((await service.command('cancel',cancel)).status,'cancel_requested');assert.equal(cancels,1);
+ const saved=host.storage.get('qmt_commands',original.operation_id),legacy={...saved};delete legacy.accountId;host.storage.put('qmt_commands',legacy);
+ await assert.rejects(service.command('cancel',{...cancel,operation_id:'legacy-without-account'}),{code:'INVALID_ARGUMENT'});assert.equal(cancels,1);
+ host.storage.put('qmt_commands',saved);
+ await configure(host,{operation_id:'different-account',expected_version:3,changes:{account_id:'009999999999'}});
+ await assert.rejects(service.command('cancel',{...cancel,operation_id:'foreign-account',account_id:'009999999999',connection_revision:'4'}),{code:'INVALID_ARGUMENT'});assert.equal(cancels,1);
+});
+
+test('native execution guard is passed unchanged, durable pre-send rejection is queryable and never replayed',async t=>{
+ const {host,config}=await fixture(t);host.scope={kind:'service'};let calls=0;
+ const execution_guard={observed_at:1700000000000,expires_at:1700000060000,max_quote_age_ms:5000,max_quote_to_send_ms:1000,price_limit:'10.2'};
+ const service=createService(host,{platform:'win32',request:async payload=>{calls++;assert.deepEqual(payload.execution_guard,execution_guard);throw Object.assign(Error('expired fixture'),{code:'SIGNAL_EXPIRED',details:{submission_attempted:false}});}});t.after(()=>service.dispose());
+ const args={operation_id:'expired-guard',user_authorized:true,account_id:config.account_id,connection_revision:'2',symbol:'600000.SH',side:'buy',shares:'100',price:'10',execution_guard};
+ await assert.rejects(service.command('order',args,undefined,{kind:'main'}),{code:'SIGNAL_EXPIRED'});
+ assert.equal(service.commandRecord(args.operation_id,{kind:'main'}).status,'rejected');
+ assert.equal((await service.command('order',args,undefined,{kind:'main'})).status,'rejected');assert.equal(calls,1);
+ assert.throws(()=>service.commandRecord(args.operation_id,{kind:'child'}),{code:'FORBIDDEN'});
+});
 
 test('backward pages select newest data but stay ascending, published wall authority works and stale source never proves closure',async t=>{
  const {host,config}=await fixture(t);const data={items:[dailyRow('2026-10-01'),dailyRow('2026-10-08')],tick:{...tick,time:String(at('2026-10-09T14:00:00')),open:'9',high:'11',low:'8',lastPrice:'10',volume:'100'}};

@@ -3,9 +3,15 @@ import datetime
 import json
 import math
 import sys
+import importlib.util
+from pathlib import Path
 
 import MetaTrader5 as mt5
 import numpy as np
+
+_guard_spec = importlib.util.spec_from_file_location("sesame_execution_guard", Path(__file__).with_name("execution_guard.py"))
+_guard = importlib.util.module_from_spec(_guard_spec)
+_guard_spec.loader.exec_module(_guard)
 
 ALLOWED = set('initialize login shutdown version last_error account_info terminal_info symbols_total symbols_get symbol_info symbol_info_tick symbol_select market_book_add market_book_get market_book_release copy_rates_from copy_rates_from_pos copy_rates_range copy_ticks_from copy_ticks_range orders_total orders_get order_calc_margin order_calc_profit order_check order_send positions_total positions_get history_orders_total history_orders_get history_deals_total history_deals_get'.split())
 POSITIONAL = {
@@ -70,7 +76,15 @@ for line in sys.stdin:
         name = command['tool']
         if name not in ALLOWED:
             raise ValueError('Function not allowed')
-        args = convert_input(command.get('arguments', {}))
+        supplied = dict(command.get('arguments', {}))
+        execution_guard = supplied.pop('execution_guard', None)
+        cancellation_guard = supplied.pop('cancellation_guard', None)
+        if execution_guard is not None and cancellation_guard is not None:
+            raise _guard.GuardRejected('INVALID_ARGUMENT', 'Execution and cancellation guards are mutually exclusive')
+        if (execution_guard is not None or cancellation_guard is not None) and name != 'order_send':
+            raise _guard.GuardRejected('INVALID_ARGUMENT', 'Guards are only supported for order_send')
+        args = convert_input(supplied)
+        timing = None
         if 'count' in args and not 1 <= args['count'] <= 100000:
             raise ValueError('count must be 1..100000')
         if name == 'initialize':
@@ -83,6 +97,10 @@ for line in sys.stdin:
             account = command.get('account') or {}
             credentials = {k: account[k] for k in ['password', 'server'] if account.get(k)}
             result = mt5.login(int(account['login']), timeout=15000, **credentials)
+        elif name == 'order_send' and execution_guard is not None:
+            result, timing = _guard.guarded_send(mt5, args['request'], execution_guard)
+        elif name == 'order_send' and cancellation_guard is not None:
+            result, timing = _guard.guarded_cancel(mt5, args['request'], cancellation_guard)
         else:
             positional = POSITIONAL.get(name, [])
             if name in {'history_orders_get', 'history_deals_get'} and 'date_from' in args:
@@ -90,9 +108,13 @@ for line in sys.stdin:
             values = [args.pop(key) for key in positional]
             result = getattr(mt5, name)(*values, **args)
         output = {'result': clean(result), 'last_error': clean(mt5.last_error()), 'package_version': mt5.__version__}
+        if timing is not None:
+            output['execution_timing'] = timing
         text = json.dumps(output, ensure_ascii=True, allow_nan=False)
         if len(text) > 8 * 1024 * 1024:
             raise ValueError('Result exceeds 8 MiB; use a smaller time range')
+    except _guard.GuardRejected as error:
+        text = json.dumps({'error': error.code, 'message': str(error), 'submission_attempted': False})
     except Exception as error:
         # Do not echo exceptions containing user credentials or native process arguments.
         text = json.dumps({'error': type(error).__name__, 'message': 'Official Python call failed; check function parameters and terminal connection.'})

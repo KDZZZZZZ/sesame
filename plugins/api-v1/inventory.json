@@ -12,7 +12,7 @@
   "packages": [
     {
       "id": "sesame/akshare",
-      "version": "1.0.6",
+      "version": "1.0.7",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -48,7 +48,7 @@
     },
     {
       "id": "sesame/backtrader",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -147,7 +147,7 @@
     },
     {
       "id": "sesame/ccxt",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -180,7 +180,7 @@
     },
     {
       "id": "sesame/configuration",
-      "version": "2.0.2",
+      "version": "2.0.3",
       "distribution": "core",
       "state": "discoverable",
       "engines": {
@@ -438,6 +438,41 @@
       "sourcePath": "plugins/optional-api-v1/packages/judgment-evolution"
     },
     {
+      "id": "sesame/manual-trading",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.1"
+      },
+      "format": "sesame-native",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Agent manual trading",
+        "zh": "Agent 手动交易"
+      },
+      "summary": {
+        "en": "Apply authorization, timing, fresh-quote checks, one-time submission and evidence-based receipt recovery to Agent manual trading.",
+        "zh": "规范 Agent 手动交易的授权、时效、报价核验、单次执行和基于证据的回执恢复。"
+      },
+      "dependencies": {
+        "en": "Sesame 0.2.1+ and an existing supported trading backend. Read that backend's own resources for its account, platform and API requirements; use M5+ decisions.",
+        "zh": "需要 Sesame 0.2.1+ 与已有可用交易后端；账户、平台与 API 前提见该后端自身资源，使用 M5+ 决策。"
+      },
+      "tools": [
+        "manual_trade_inspect",
+        "manual_trade_observe",
+        "manual_trade_execute",
+        "manual_trade_status",
+        "manual_trade_cancel"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/manual-trading"
+    },
+    {
       "id": "sesame/market-data-parser",
       "version": "2.0.2",
       "distribution": "optional",
@@ -506,7 +541,7 @@
     },
     {
       "id": "sesame/mt5",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -590,7 +625,7 @@
     },
     {
       "id": "sesame/orchestration",
-      "version": "2.1.2",
+      "version": "2.1.3",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -697,7 +732,7 @@
     },
     {
       "id": "sesame/qmt",
-      "version": "1.1.1",
+      "version": "1.2.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -727,7 +762,8 @@
         "qmt_read",
         "qmt_download_history",
         "qmt_order",
-        "qmt_cancel"
+        "qmt_cancel",
+        "qmt_command"
       ],
       "sourcePath": "plugins/optional-api-v1/packages/qmt"
     },
@@ -897,7 +933,7 @@
     },
     {
       "id": "sesame/vnpy",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -992,7 +1028,7 @@
     },
     {
       "id": "sesame/workspace",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "distribution": "core",
       "state": "mounted",
       "engines": {

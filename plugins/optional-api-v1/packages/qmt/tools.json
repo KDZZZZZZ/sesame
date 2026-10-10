@@ -298,6 +298,42 @@
         "price": {
           "type": "string",
           "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$"
+        },
+        "execution_guard": {
+          "type": "object",
+          "required": [
+            "observed_at",
+            "expires_at",
+            "max_quote_age_ms",
+            "max_quote_to_send_ms",
+            "price_limit"
+          ],
+          "properties": {
+            "observed_at": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "expires_at": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max_quote_age_ms": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5000
+            },
+            "max_quote_to_send_ms": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            },
+            "price_limit": {
+              "type": "string",
+              "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Optional final-mile guard in the native worker: decision deadline, account/available shares/cash, fresh source timestamp and price boundary. No retry; submitted is not filled."
         }
       },
       "additionalProperties": false
@@ -305,7 +341,7 @@
   },
   {
     "name": "qmt_cancel",
-    "description": "Only after an explicit user instruction: request cancellation of a previously accepted Sesame order from original_operation_id on the exact account/revision. The native current-day order must still match the original remark. A cancel request is not confirmation; query orders/fills. Unknown intents are never replayed.",
+    "description": "Only after an explicit user instruction: cancel a previously accepted Sesame order, or an unknown original intent recovered as one exact active native order. Reuse the exact account/revision; the native process verifies ID, account and original remark, and for retained intents also unique ownership, symbol, side, quantity and active status before cancellation. Unknown original orders are never resubmitted. A cancel request is not confirmation; query orders/fills.",
     "parameters": {
       "type": "object",
       "required": [
@@ -339,13 +375,32 @@
         },
         "original_operation_id": {
           "type": "string",
-          "description": "Accepted qmt_order operation ID",
+          "description": "Original qmt_order operation ID; unknown results require a retained intent and exact native recovery",
           "minLength": 1,
           "maxLength": 20000
         },
         "order_id": {
           "type": "string",
           "pattern": "^[1-9]\\d*$"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "qmt_command",
+    "description": "Read a stored QMT order/cancel receipt by operation_id without submitting or replaying it. outcome_unknown is unresolved even if a current-day search returns no match; inspect qmt_read orders/fills. This is not a live broker query.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "operation_id"
+      ],
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "description": "Existing QMT operation ID",
+          "minLength": 1,
+          "maxLength": 20000
         }
       },
       "additionalProperties": false

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "tag": "plugins-api-v1-dev.17",
+  "title": "Sesame core plugins — proactive configuration and current-user permissions",
+  "sourceCommit": "131541e1477dd6645aaa3ee625318640902ed11c",
+  "sourceRoot": "plugins/api-v1",
+  "profile": "core",
+  "archive": {
+    "name": "sesame-official-plugins-api-v1-dev.17.tar.gz",
+    "sha256": "c4b0dfaf2fd90f9f21cbb1910c53e16e44e7b06f8ce7f366d1284172e591e8ed"
+  },
+  "lockSha256": "c3c6735554b151a1bb07f4017d21e99522e39691452708f28cd18b7b743d478f",
+  "pullRequest": 38
+}
