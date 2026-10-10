@@ -134,6 +134,16 @@ async function backtest(host, args, signal) {
       }
     );
   }
+  check(
+    ["minutes", "days", "weeks", "months"].includes(
+      args.config.feed?.timeframe,
+    ) &&
+      Number.isInteger(args.config.feed?.compression) &&
+      args.config.feed.compression >= 1 &&
+      args.config.feed.compression <= 100000,
+    "Explicit feed timeframe/compression is required; no timestamp interval inference",
+    "INVALID_ARGUMENT",
+  );
   for (const key of ["capital", "commission", "slippage"]) {
     decimal(args.config[key]);
     check(
@@ -386,7 +396,20 @@ export function createTools(host) {
         strategy_path: string("Authored workspace Python file"),
         class_name: Type.String({ pattern: "^[A-Za-z_][A-Za-z0-9_]*$" }),
         config: Type.Object(
-          { capital: number, commission: number, slippage: number },
+          {
+            capital: number,
+            commission: number,
+            slippage: number,
+            feed: Type.Object(
+              {
+                timeframe: Type.Union(
+                  ["minutes", "days", "weeks", "months"].map(Type.Literal),
+                ),
+                compression: Type.Integer({ minimum: 1, maximum: 100000 }),
+              },
+              { additionalProperties: false },
+            ),
+          },
           { additionalProperties: false },
         ),
         parameters: Type.Optional(Type.Record(Type.String(), Type.Unknown())),

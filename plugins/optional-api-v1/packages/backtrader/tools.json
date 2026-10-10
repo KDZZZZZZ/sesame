@@ -98,7 +98,8 @@
           "required": [
             "capital",
             "commission",
-            "slippage"
+            "slippage",
+            "feed"
           ],
           "properties": {
             "capital": {
@@ -112,6 +113,41 @@
             "slippage": {
               "type": "string",
               "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+            },
+            "feed": {
+              "type": "object",
+              "required": [
+                "timeframe",
+                "compression"
+              ],
+              "properties": {
+                "timeframe": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "minutes"
+                    },
+                    {
+                      "type": "string",
+                      "const": "days"
+                    },
+                    {
+                      "type": "string",
+                      "const": "weeks"
+                    },
+                    {
+                      "type": "string",
+                      "const": "months"
+                    }
+                  ]
+                },
+                "compression": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 100000
+                }
+              },
+              "additionalProperties": false
             }
           },
           "additionalProperties": false

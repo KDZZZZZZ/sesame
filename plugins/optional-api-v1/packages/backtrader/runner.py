@@ -118,7 +118,22 @@ def main(request):
 
     config = request["config"]
     cerebro = bt.Cerebro(stdstats=False)
-    cerebro.adddata(FixedFeed())
+    feed = config["feed"]
+    timeframes = {
+        "minutes": bt.TimeFrame.Minutes,
+        "days": bt.TimeFrame.Days,
+        "weeks": bt.TimeFrame.Weeks,
+        "months": bt.TimeFrame.Months,
+    }
+    if (
+        feed.get("timeframe") not in timeframes
+        or type(feed.get("compression")) is not int
+        or not 1 <= feed["compression"] <= 100000
+    ):
+        raise ValueError("Explicit supported feed timeframe/compression is required")
+    cerebro.adddata(FixedFeed(
+        timeframe=timeframes[feed["timeframe"]], compression=feed["compression"]
+    ))
     cerebro.addstrategy(strategy, **request.get("parameters", {}))
     cerebro.addanalyzer(ReceiptAnalyzer, _name="receipt")
     cerebro.broker.setcash(float(config["capital"]))
@@ -134,6 +149,7 @@ def main(request):
             "name": "Backtrader Cerebro",
             "version": importlib.metadata.version("backtrader"),
         },
+        "feed": feed,
         "statistics": {
             "finalEquity": text(cerebro.broker.getvalue()),
             "finalCash": text(cerebro.broker.getcash()),

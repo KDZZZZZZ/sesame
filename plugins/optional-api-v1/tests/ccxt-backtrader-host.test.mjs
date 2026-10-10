@@ -170,7 +170,7 @@ test(
         digest: "sha256:" + "e".repeat(64),
       };
     const rows = Array.from({ length: 6 }, (_, i) => ({
-      datetime: new Date(Date.UTC(2026, 0, 1 + i)).toISOString(),
+      datetime: new Date(Date.UTC(2026, 0, 1) + i * 3600000).toISOString(),
       open: String(100 + i),
       high: String(102 + i),
       low: String(99 + i),
@@ -213,8 +213,20 @@ test(
       data: ref,
       strategy_path: strategy,
       class_name: "RoundTrip",
-      config: { capital: "10000", commission: "0.001", slippage: "0" },
+      config: {
+        capital: "10000",
+        commission: "0.001",
+        slippage: "0",
+        feed: { timeframe: "minutes", compression: 60 },
+      },
     };
+    await assert.rejects(
+      f.call("backtrader_backtest", {
+        ...args,
+        operation_id: "missing-feed",
+        config: { capital: "10000", commission: "0.001", slippage: "0" },
+      }),
+    );
     const result = await f.call("backtrader_backtest", args);
     assert.equal(
       result.status,
@@ -269,7 +281,7 @@ class Warmup(bt.Strategy):
  def prenext(self):self.hooks.append(["prenext",len(self)])
  def nextstart(self):self.hooks.append(["nextstart",len(self)])
  def next(self):self.hooks.append(["next",len(self)])
- def stop(self):Path("hooks.json").write_text(json.dumps(self.hooks))
+ def stop(self):Path("hooks.json").write_text(json.dumps({"hooks":self.hooks,"timeframe":self.data._timeframe,"compression":self.data._compression}))
 `,
     );
     const warmup = await f.call("backtrader_backtest", {
@@ -295,7 +307,9 @@ class Warmup(bt.Strategy):
     const hooks = JSON.parse(
       Buffer.from(warmExecution.files["hooks.json"], "base64").toString(),
     );
-    assert.deepEqual(hooks, [
+    assert.equal(hooks.timeframe, 4, "Strategy sees Minutes, not default Days");
+    assert.equal(hooks.compression, 60);
+    assert.deepEqual(hooks.hooks, [
       ["prenext", 1],
       ["prenext", 2],
       ["nextstart", 3],
