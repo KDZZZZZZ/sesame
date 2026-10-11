@@ -764,6 +764,249 @@
       ]
     },
     {
+      "id": "sesame/kurumi-replay",
+      "version": "0.1.1-dev.3",
+      "directory": "kurumi-replay",
+      "treeDigest": "sha256:a1ed3f983a224f51a1a93b90fa372c1b63c129cc87922f78c92d184c5ba15f55",
+      "files": [
+        {
+          "path": "DATA.md",
+          "sha256": "56e6a0c94a3a2925b252bea8723f79c33febbe4ebe4ab74a90785f47ec1df990",
+          "bytes": 22907
+        },
+        {
+          "path": "LICENSE",
+          "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+          "bytes": 1076
+        },
+        {
+          "path": "PROVENANCE.md",
+          "sha256": "fec443495136861c992afe0c131a0c1ab09c81b54f74aebba5c0810a111614d1",
+          "bytes": 1794
+        },
+        {
+          "path": "README.md",
+          "sha256": "74f52b39234a0f39ad3033e26bc7784fe9945cbb102c9427d17123546e010dfd",
+          "bytes": 15114
+        },
+        {
+          "path": "RULES.md",
+          "sha256": "20cf9aa3143a96fd6ce0423e5a580c1a59fe00b16d6401d848ddeb35d010baab",
+          "bytes": 28590
+        },
+        {
+          "path": "assets/editorial.css",
+          "sha256": "b721786c083704044382f5950c5825f4e5e18c451d18f8bdae01168a68b33b24",
+          "bytes": 30653
+        },
+        {
+          "path": "assets/report-kit.js",
+          "sha256": "2e6fe859d25270c2cdd16d2ada799d18ce389be2c4a9127fa070490c11d35769",
+          "bytes": 45095
+        },
+        {
+          "path": "data-windows.json",
+          "sha256": "84e5911bdd12bd5b7ee53567b9a6a34d3502c3235e75ea94a65aa3f71b8b78d5",
+          "bytes": 16496
+        },
+        {
+          "path": "data.js",
+          "sha256": "c7676429cfc8bfc51b8faf99b24d9f2779f1ff48c5d6176cd20e62ae104f99bd",
+          "bytes": 28778
+        },
+        {
+          "path": "engine.js",
+          "sha256": "fc0acd2f69e4d51fb59360554cc4b2fc861621ae54b84769474152af8de555ce",
+          "bytes": 21551
+        },
+        {
+          "path": "index.js",
+          "sha256": "6ed3d50378732ab2397939f714c6b6b57583b4cbff39770d110ac37347388c2a",
+          "bytes": 7099
+        },
+        {
+          "path": "ledger.js",
+          "sha256": "e318d8f49b3751a84d71a3c019941b25579bdee93c4d6e4d2cb8a2e18e21def3",
+          "bytes": 1988
+        },
+        {
+          "path": "markers.js",
+          "sha256": "a0f4c22505eadca426058f09eeb6e0fa62e4632ea31d00f4c7aa47533795b1b0",
+          "bytes": 20118
+        },
+        {
+          "path": "native-dependencies.json",
+          "sha256": "1497c11b6874b3b08b9380792c833a8cb1bbc0adf0957c586b42a445a813195c",
+          "bytes": 69521
+        },
+        {
+          "path": "native-engine.js",
+          "sha256": "5bbeeb305358df2d70e3d83ed8a7e7483dbc699e1bf61aec68300c9e7317d496",
+          "bytes": 27074
+        },
+        {
+          "path": "native-engine.py",
+          "sha256": "91ad1b488ee28821c542fee7035b9f9b5df4e12e7dae52eaaccc76b53279f2d5",
+          "bytes": 27861
+        },
+        {
+          "path": "package.json",
+          "sha256": "645874c03e56c28b47614f39fd7c71fe79046251bdf9ee2ce3f8dab52829a969",
+          "bytes": 188
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "563d71f22c614c6e321104b1dd940cd2aad525075faddc5c3b075f414217fcd4",
+          "bytes": 1429
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "5d9cc023091c9fb6145fe858cddb6597d94f8ff27c68fb58e14c96633586f580",
+          "bytes": 523
+        },
+        {
+          "path": "providers.js",
+          "sha256": "ae8b4bc1818145172672060e28dd623625ddf556b28397d00cde4e257b833c99",
+          "bytes": 42376
+        },
+        {
+          "path": "report.js",
+          "sha256": "b5954c01c9bd757e9d1dd45f03b40856bd7d7062e81e8067d34d0ca451d06668",
+          "bytes": 13408
+        },
+        {
+          "path": "reveal-cutoff.js",
+          "sha256": "e7b72eb5ff872e91d6253da566285034552099a85a5ed6b83f18780023be9c20",
+          "bytes": 573
+        },
+        {
+          "path": "runtime-adapter.js",
+          "sha256": "e86c6bc70de036eefb7c17fefbced583bf42e492331ee81726c6fbd94334cd6c",
+          "bytes": 10033
+        },
+        {
+          "path": "scripts/check-market-transport.mjs",
+          "sha256": "db9861ba991cbe578c88a9c80b8bdf1898b7232aa9e62feeedf066e14dca764b",
+          "bytes": 4405
+        },
+        {
+          "path": "scripts/data-cache.mjs",
+          "sha256": "456c541d258c000f7ea5391f31892a2d400943784fd45f81ef6a80808043f0bc",
+          "bytes": 6257
+        },
+        {
+          "path": "scripts/data-core.mjs",
+          "sha256": "0cb8ae51618d510fa9f0c32cc73a342c86e12360888e22476018bddca4019f72",
+          "bytes": 18423
+        },
+        {
+          "path": "scripts/data-detail.mjs",
+          "sha256": "1562400326148f3b24663612b3ea64da1286cd0b1b7e68884a56a3ab31c8a7bf",
+          "bytes": 17466
+        },
+        {
+          "path": "scripts/data-inspect.mjs",
+          "sha256": "70489bea7ce6bb13e696d15095a6fd15ec139d1bb008911227f88854136ce64f",
+          "bytes": 3948
+        },
+        {
+          "path": "scripts/data-install.mjs",
+          "sha256": "892bfda65f9ce280405d501bd224b3649cdddef99858afc1deaf479afca884a5",
+          "bytes": 8366
+        },
+        {
+          "path": "scripts/data-worker.mjs",
+          "sha256": "34f4542b594aacf815427b3dfb4c3b5ca61a723871001321330b69044865ba56",
+          "bytes": 7174
+        },
+        {
+          "path": "scripts/verify-network.mjs",
+          "sha256": "0757debff81ee7ac28801df77db580c2f2bc87138ff4bfc771221c4131a5ff03",
+          "bytes": 3298
+        },
+        {
+          "path": "service.js",
+          "sha256": "116af821d353d3f251bf37252ad8ec51b1553c5bf2caf24bf029a6f85ddda65d",
+          "bytes": 35850
+        },
+        {
+          "path": "skills/kurumi-replay/SKILL.md",
+          "sha256": "3393be76b12b8ba2a9c21782017b52d158008add7d4f7a052b8a06ebdab0899b",
+          "bytes": 5014
+        },
+        {
+          "path": "tests/data.test.mjs",
+          "sha256": "65b4363c6852d466a81079affbe741e987358163dc498246cf3561a07636fe4e",
+          "bytes": 39607
+        },
+        {
+          "path": "tests/display-host.test.mjs",
+          "sha256": "7085d63e37f2af96017d5c620acf0c663a1e0e5c183904cb77492ccb2f8d97c3",
+          "bytes": 4667
+        },
+        {
+          "path": "tests/display.test.mjs",
+          "sha256": "f74539527d12995028b2fcf14672283cef9ed616e17e0b480d4cb9ffe839f440",
+          "bytes": 5272
+        },
+        {
+          "path": "tests/engine.test.mjs",
+          "sha256": "3762b28f8d8a773b5546b390023dd1435cd3e6d5164aca353cb45a7b870c1b9e",
+          "bytes": 19746
+        },
+        {
+          "path": "tests/fixtures/markers-browser.jsx",
+          "sha256": "fc621ba8d03324fc60c15fd9c1755dbe86a25106c2d5b1eae138876b890674f3",
+          "bytes": 3742
+        },
+        {
+          "path": "tests/markers.test.mjs",
+          "sha256": "b16ec1ef73fc377ade1ad32e40c50370f9bf733bafe6ca0ed28c89bcc5d8063d",
+          "bytes": 33216
+        },
+        {
+          "path": "tests/native-engine.test.mjs",
+          "sha256": "6fc3d110da26fa29f3bbe2da57c83baf24ce4c7122b82fc1a2721bfb90ac0a2d",
+          "bytes": 23380
+        },
+        {
+          "path": "tests/persistence-host.test.mjs",
+          "sha256": "78e4b7cf79a72eea40b81d12a56080167602bc254d0865682ec553b77b614fb1",
+          "bytes": 4363
+        },
+        {
+          "path": "tests/plugin.test.mjs",
+          "sha256": "7b1cb2567d7604eb6b9b0a8544e75802d443d5277c63021f83f7cbb07bbd66f1",
+          "bytes": 2914
+        },
+        {
+          "path": "tests/providers.test.mjs",
+          "sha256": "235b455b601f96f95587da0e069d8e15db17d0cfdc53f94cba2a5547fc3b4202",
+          "bytes": 25108
+        },
+        {
+          "path": "tests/recovery-store-host.test.mjs",
+          "sha256": "99ed12d0dabeaad33ac74f73242824039afcef0ae6175b81861ad7475f8630c5",
+          "bytes": 10422
+        },
+        {
+          "path": "tests/runtime-adapter-host.test.mjs",
+          "sha256": "ee553aee85a901c622217cb945fc949f330e9ce8f505972ad47cfcf5e68c909c",
+          "bytes": 4680
+        },
+        {
+          "path": "tests/service.test.mjs",
+          "sha256": "31c7b3aef7b9065cc2b111882031dfabd7ec411e2f20c61dd40252c53b128a87",
+          "bytes": 18573
+        },
+        {
+          "path": "tools.json",
+          "sha256": "994b40cb5107b9bf6a0930222b8c522dd6cd85acc050d37ec8f086b88e2e3d23",
+          "bytes": 10076
+        }
+      ]
+    },
+    {
       "id": "sesame/manual-trading",
       "version": "1.0.0",
       "directory": "manual-trading",
