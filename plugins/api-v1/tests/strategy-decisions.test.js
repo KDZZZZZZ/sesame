@@ -202,6 +202,60 @@ test('a pending replacement may use a still-valid prior output, but its failure 
   f.setTime(100020); reject(new Error('model timeout')); await f.service.wait(job.id); assert.deepEqual(f.service.timeline(scope, time(100020)).effective, []); await f.service.close();
 });
 
+test('newer same-channel success clears an older block even at the same millisecond', async () => {
+  for (const mode of ['live', 'historical']) for (const role of ['signal', 'risk']) {
+    let failed = true;
+    const f = fixture(() => { if (failed) throw new Error('offline'); return role === 'signal' ? { direction: 'long', reason: 'Recovered', evidence: [ref] } : { action: 'allow', reason: 'Recovered', evidence: [ref] }; });
+    const input = request('same-time-failure'); input.mode = mode; input.program.role = role;
+    if (mode === 'historical') input.simulation = { id: 'same-time', parametersDigest: digest('p'), stateDigest: digest('s0'), step: 0, latencyMs: 0 };
+    const bad = await f.service.wait(f.service.submit(input).id); assert.equal(bad.status, 'failed');
+    const before = f.service.timeline(scope, time(99999)); assert.deepEqual(f.service.timeline(scope, time(100000)).effective, []);
+    failed = false; input.requestId = 'same-time-recovery';
+    if (input.simulation) { input.simulation.step = 1; input.simulation.stateDigest = digest('s1'); }
+    const good = await f.service.wait(f.service.submit(input).id); assert.equal(good.status, 'completed'); assert.ok(good.revision > bad.revision);
+    assert.deepEqual(good.output.availableAt, bad.failedAt);
+    const after = f.service.timeline(scope, time(100000)); assert.deepEqual(after.effective, [good.output.id]); assert.equal(after.guards[0].blockedUntil.unixMs, 100000);
+    assert.deepEqual(f.service.timeline(scope, time(99999)), before); await f.service.close();
+  }
+});
+
+test('same-time recovery cannot clear another channel failure', async () => {
+  let failed = true;
+  const f = fixture(() => { if (failed) throw new Error('offline'); return { direction: 'long', reason: 'Recovered one channel', evidence: [ref] }; });
+  const own = request('own-failure'); await f.service.wait(f.service.submit(own).id);
+  const other = request('other-failure'); other.channel = 'other'; await f.service.wait(f.service.submit(other).id);
+  failed = false; own.requestId = 'own-recovery'; await f.service.wait(f.service.submit(own).id);
+  const blocks = f.host.storage.list('decision_block'); assert.equal(blocks.filter(block => block.clearedAt?.unixMs === 100000).length, 1); assert.equal(blocks.filter(block => !block.clearedAt).length, 1);
+  assert.deepEqual(f.service.timeline(scope, time(100000)).effective, []); await f.service.close();
+});
+
+test('same-time recovery does not revive signals published before the failure in other channels', async () => {
+  let failed = false;
+  const f = fixture(() => { if (failed) throw new Error('offline'); return { direction: 'long', reason: 'Observed', evidence: [ref] }; });
+  const other = request('earlier-other'); other.channel = 'other'; const old = await f.service.wait(f.service.submit(other).id);
+  failed = true; await f.service.wait(f.service.submit(request('failed-own')).id);
+  failed = false; const good = await f.service.wait(f.service.submit(request('recovered-own')).id);
+  const view = f.service.timeline(scope, time(100000)); assert.deepEqual(view.effective, [good.output.id]); assert.equal(view.guards[0].retireThroughSequence, old.output.sequence);
+  const replay = replaySignals(view.signals, { scope: view.scope, asOf: view.asOf, guards: view.guards }); assert.ok(replay.inactive.some(row => row.signal.id === old.output.id && row.reason === 'risk_retired'));
+  await f.service.close();
+});
+
+test('context reset and risk recovery preserve causal order for signals at the same timestamp', async () => {
+  for (const manual of [true, false]) {
+    const f = fixture(input => input.requestId.startsWith('halt/') ? { action: 'halt', reason: 'Risk', evidence: [ref] }
+      : input.requestId.startsWith('allow/') ? { action: 'allow', reason: 'Rechecked', evidence: [ref] } : { direction: 'long', reason: 'Observed', evidence: [ref] });
+    const old = await f.service.wait(f.service.submit(request('earlier')).id);
+    if (manual) f.service.invalidate(scope, 'New context', [ref]);
+    else {
+      const risk = request('halt'); risk.program.role = 'risk'; risk.program.id = risk.channel = 'risk'; await f.service.wait(f.service.submit(risk).id);
+      risk.requestId = 'allow'; await f.service.wait(f.service.submit(risk).id);
+    }
+    const good = await f.service.wait(f.service.submit(request('after-reset')).id);
+    const view = f.service.timeline(scope, time(100000)); assert.ok(view.effective.includes(good.output.id)); assert.ok(!view.effective.includes(old.output.id));
+    assert.equal(view.guards[0].retireThroughSequence, old.output.sequence); await f.service.close();
+  }
+});
+
 test('first-ever failure has a blocking guard even with no retired signals, and newer failures stay blocked', async () => {
   const f = fixture(() => { throw new Error('offline'); });
   await f.service.wait(f.service.submit(request('first-failure')).id); const first = f.service.timeline(scope, time(100000));

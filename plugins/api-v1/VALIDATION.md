@@ -7,7 +7,7 @@ versioned; publishing these packages does not update or release the application.
 All other package bytes retain the current main-branch versions.
 
 After integrating the latest published configuration and trading fixes, the full
-matching-SDK core suite passed 402 checks with 17 explicit native/platform opt-in
+matching-SDK core suite passed 407 checks with 17 explicit native/platform opt-in
 skips; the optional suite passed 129 checks with 10 explicit environment/platform
 skips. There were no failures. This run included the fixed strategy pipeline,
 portfolio/risk/execution methods, frozen Agent decisions, loopback decision
@@ -26,17 +26,19 @@ SESAME_PLUGIN_SDK_LOADER=/path/to/matching-host/modules/plugins/sdk-loader.js \
 npm test --prefix plugins/optional-api-v1
 ```
 
-Post-review corrections also passed all 81 execution, portfolio-method and pipeline
-checks. They cover parent cancellation after protective exits, late-fill races,
-contradictory reconciliation and feasible integer/fractional order splits. The
+Post-review corrections also passed all 109 decision, execution, portfolio-method, pipeline
+and host-integration checks. They cover parent cancellation after protective exits, late-fill races,
+contradictory reconciliation, feasible integer/fractional order splits and
+same-millisecond recovery ordered by channel revision and event sequence. The
 trusted module validator remains unchanged; the field-list spelling has equivalent
 JavaScript string semantics.
 
 Both source locks, the descriptive inventory, changed-package version increments
 and deterministic archive identities are checked separately. The immutable
 publication records contain the exact reviewed commits, CI checks and semantic
-review evidence. The installation catalog is updated only after the archive,
-lock and review assets have been published and their hashes verified.
+review evidence. The installation catalog remains on the currently compatible releases while the
+public application is 0.2.1. These archives can be selected after a matching
+application is available and the archive, lock and review hashes are verified.
 
 ---
 

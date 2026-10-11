@@ -553,7 +553,7 @@
       "id": "sesame/strategy-authoring",
       "version": "1.2.0",
       "directory": "strategy-authoring",
-      "treeDigest": "sha256:8da639b9a82a2ed09115b45dee28b5bdbdaa270f4049c10c1558b03d078613eb",
+      "treeDigest": "sha256:aac7f8e3b5f49cec522dbf5088fb38fd9f7e90263e7b8021efdaeafaed91cbba",
       "files": [
         {
           "path": "LICENSE",
@@ -612,8 +612,8 @@
         },
         {
           "path": "lib/agent-decisions.js",
-          "sha256": "2d753b7ff0e3696ffc9afa5ce95f8b75bd79995bde79c00ff02ffc2e4ce8ad64",
-          "bytes": 31871
+          "sha256": "7545547a0d0ebe6473d0d08612124e974346f2777d20dffc3b1cda04153fdc6d",
+          "bytes": 32103
         },
         {
           "path": "lib/decision-bridge.js",
@@ -632,8 +632,8 @@
         },
         {
           "path": "lib/pipeline.js",
-          "sha256": "8d14348e74394a0c76eabbddfa6b3d0bd823522e3d3d97ce2956ee202d5d43aa",
-          "bytes": 32943
+          "sha256": "cbe63ef7a1e7114e08d6695b6c0103586e774b10d7e243d804f0766df87f9246",
+          "bytes": 33231
         },
         {
           "path": "lib/portfolio-risk.js",
@@ -707,8 +707,8 @@
         },
         {
           "path": "skills/strategy-authoring/references/pipeline.md",
-          "sha256": "3211ae44ef160805d1e6904f6caf598fba4c16847665474e76a51e61ac539e05",
-          "bytes": 17525
+          "sha256": "c84c34a658adb936af2ed8f099710dae914afbdf39178359cc2beaf86683fcd0",
+          "bytes": 18112
         },
         {
           "path": "skills/strategy-authoring/references/quant-functions.md",
