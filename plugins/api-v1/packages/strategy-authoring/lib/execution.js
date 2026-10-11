@@ -153,6 +153,7 @@ function processEvent(state, program, event) {
       if (payload.status === 'not_found' || payload.includesClosed !== true || payload.fillsComplete !== true) { order.unknown = true; order.reconciliationRequired = true; }
       else {
         measure(payload.quantity); check(payload.quantity.unit === order.quantity.unit, 'Reconciled quantity unit differs'); positive(payload.quantity.value, 'reconciled quantity'); bounded(payload.fills, 'reconciled fills').forEach(fill => applyFill(state, order, fill, event)); dec(payload.filledQuantity, 'reconciled filled quantity', true); check(Decimal.compare(payload.filledQuantity, order.filled) === 0, 'Reconciliation is missing or contradicts fill evidence');
+        check(Decimal.compare(payload.quantity.value, order.filled) >= 0, 'Reconciled order quantity is below its recorded fills');
         if (payload.venueOrderId) { text(payload.venueOrderId); if (order.venueOrderId) check(order.venueOrderId === payload.venueOrderId, 'Reconciliation changed venue identity'); order.venueOrderId = payload.venueOrderId; }
         order.quantity = clone(payload.quantity); order.phase = 'submitted'; order.terminal = terminal.has(payload.status) ? payload.status : null; order.unknown = false; order.reconciliationRequired = false; order.pendingCancel = null; order.pendingModify = null;
         check(payload.status !== 'filled' || Decimal.compare(order.filled, order.quantity.value) === 0, 'A filled status needs all executions');
@@ -177,6 +178,16 @@ function protectionReady(state) {
 function newRiskReady(state) { return !state.halted && !Object.values(state.orders).some(order => order.unknown || order.reconciliationRequired || order.role === 'reduce' && order.status !== 'filled') && protectionReady(state); }
 function schedule(state, program) {
   const now = utc(state.availableAt);
+  // Once protection starts exiting an instrument, the old entry decision must
+  // not reopen it through the parent's remainder or later entry chunks.
+  const exiting = new Set(Object.values(state.orders).filter(order => order.parentOrderId && Decimal.compare(order.filled, '0') > 0).map(order => key(order.scope.instrument)));
+  for (const order of Object.values(state.orders)) {
+    if (order.parentOrderId || order.reduceOnly || !exiting.has(key(order.scope.instrument)) || terminal.has(order.status)) continue;
+    supersede(state, order, ['submit', 'modify']);
+    if (order.unknown || order.reconciliationRequired) continue;
+    if (['held', 'initialized', 'prepared'].includes(order.phase)) { order.terminal = 'cancelled'; updateStatus(order); }
+    else if (!order.pendingCancel) addCommand(state, order, 'cancel', { reason: 'protection_exit_started' });
+  }
   for (const order of Object.values(state.orders)) {
     if (order.unknown || order.reconciliationRequired) { supersede(state, order, ['submit', 'modify', 'cancel']); addCommand(state, order, 'reconcile', { reason: 'unresolved_outcome', venueOrderId: order.venueOrderId }); continue; }
     if (order.parentOrderId) {

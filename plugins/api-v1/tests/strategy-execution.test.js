@@ -72,6 +72,13 @@ test('cancel/modify rejections require reconciliation instead of assuming the or
   for (const kind of ['cancel', 'modify']) { const h = setup(); h.send(h.orders[0]); h.event(`${kind}_requested`, h.orders[0], { requestId: 'req', ...(kind === 'modify' ? { quantity: { value: '3', unit: 'share' } } : {}) }); h.event(`${kind}_rejected`, h.orders[0], { requestId: 'req', reason: 'venue changed meanwhile' }); assert.equal(h.run().status, 'needs_reconciliation'); assert.equal(commands(h.run(), 'reconcile').length, 1); }
 });
 
+test('a reconciliation cannot shrink quantity below real fills and release the next entry chunk', () => {
+  const h = setup(f => { f.portfolio.budget.value = '1000'; f.policy.limits[0].maxOrderQuantity = '5'; }), [parent, next] = h.orders;
+  assert.ok(next); h.send(parent);
+  h.event('reconciled', parent, { status: 'accepted', venueOrderId: `venue-${parent.orderId}`, quantity: { value: '3', unit: 'share' }, fills: [{ executionId: 'recovered-four', quantity: { value: '4', unit: 'share' }, price: { value: '100', currency: 'USD' } }], filledQuantity: '4', includesClosed: true, fillsComplete: true });
+  const r = h.run(); assert.equal(r.status, 'paused'); assert.match(r.error.message, /below its recorded fills/); assert.deepEqual(r.commands, []); assert.notEqual(orderState(r, next).phase, 'prepared');
+});
+
 test('protection activates for each actual partial fill, resizes before submission, and blocks additional risk until acknowledged', () => {
   const h = setup(bracket), [parent, stop, take] = h.orders; h.send(parent); h.fill('2'); let r = h.run(); assert.equal(commands(r, 'submit', stop)[0].payload.quantity.value, '2'); assert.equal(commands(r, 'submit', take)[0].payload.quantity.value, '2');
   h.fill('3'); r = h.run(); assert.equal(commands(r, 'submit', stop).length, 1); assert.equal(commands(r, 'submit', stop)[0].payload.quantity.value, '5'); assert.equal(r.orders.filter(order => order.parentOrderId).every(order => order.quantity.value === '5'), true);
@@ -81,6 +88,33 @@ test('a partial take-profit reduces the sibling stop; flattening cancels remaini
   const h = setup(bracket), [parent, stop, take] = h.orders; h.send(parent); h.fill('5'); h.send(stop); h.send(take); h.fill('2', take); let r = h.run(); assert.equal(commands(r, 'modify', stop)[0].payload.quantity.value, '3');
   h.event('modify_requested', stop, { requestId: 'stop-resize', quantity: { value: '3', unit: 'share' } }); h.event('modified', stop, { requestId: 'stop-resize' }); h.fill('3', take); r = h.run(); assert.equal(commands(r, 'cancel', stop).length, 1);
   h.event('cancel_requested', stop, { requestId: 'stop-cancel' }); h.event('cancelled', stop, { requestId: 'stop-cancel', filledQuantity: '0' }); r = h.run(); assert.equal(r.status, 'completed'); assert.equal(Object.values(r.positions)[0], '0');
+});
+
+test('the first protective fill cancels the parent remainder and waits for native cancellation evidence', () => {
+  const h = setup(bracket), [parent, stop, take] = h.orders; h.send(parent); h.fill('2'); h.send(stop); h.send(take); h.fill('2', stop);
+  let r = h.run(); assert.equal(commands(r, 'cancel', parent)[0].payload.reason, 'protection_exit_started'); assert.equal(orderState(r, parent).status, 'partially_filled');
+  h.event('cancel_requested', parent, { requestId: 'parent-cancel' }); r = h.run(); assert.equal(orderState(r, parent).status, 'pending_cancel'); assert.equal(commands(r, 'cancel', parent).length, 0);
+  h.event('cancelled', parent, { requestId: 'parent-cancel', filledQuantity: '2' }); r = h.run(); assert.equal(orderState(r, parent).status, 'cancelled'); assert.equal(Object.values(r.positions)[0], '0');
+});
+
+test('a parent fill racing with protective cancellation remains visible and blocks further entry', () => {
+  const h = setup(f => { bracket(f); f.execution.config.onProtectionFailure = 'flatten'; }), [parent, stop, take] = h.orders;
+  h.send(parent); h.fill('2'); h.send(stop); h.send(take); h.fill('2', stop); h.event('cancel_requested', parent, { requestId: 'parent-cancel' }); h.fill('1', parent);
+  let r = h.run(); assert.equal(r.status, 'needs_reconciliation'); assert.equal(Object.values(r.positions)[0], '1'); assert.equal(orderState(r, parent).filled, '3'); assert.ok(r.breaches.some(value => value.reason === 'protection_unavailable'));
+  assert.equal(commands(r, 'submit').filter(value => !value.payload.reduceOnly).length, 0); assert.equal(commands(r, 'emergency_reduce', stop)[0].payload.quantity.value, '1');
+  h.event('cancelled', parent, { requestId: 'parent-cancel', filledQuantity: '3' }); r = h.run(); assert.equal(orderState(r, parent).status, 'cancelled'); assert.equal(Object.values(r.positions)[0], '1');
+});
+
+test('a protective exit withdraws unsent later chunks and cancels a chunk already sent', () => {
+  for (const sent of [false, true]) {
+    const h = setup(f => { bracket(f); f.policy.limits[0].maxOrderQuantity = '2'; }), [parent, stop, take, next] = h.orders;
+    h.send(parent); h.fill('2'); h.send(stop); h.send(take); assert.equal(commands(h.run(), 'submit', next).length, 1);
+    if (sent) h.send(next);
+    h.fill('1', stop); const r = h.run(); assert.equal(commands(r, 'submit').filter(value => !value.payload.reduceOnly).length, 0);
+    if (sent) assert.equal(commands(r, 'cancel', next)[0].payload.reason, 'protection_exit_started');
+    else assert.equal(orderState(r, next).status, 'cancelled');
+    assert.equal(r.orders.filter(order => order.role === 'entry' && order.phase === 'held').every(order => order.status === 'cancelled'), true);
+  }
 });
 
 test('unsent protective amendments coalesce to the latest quantity and disappear when cancellation replaces them', () => {
