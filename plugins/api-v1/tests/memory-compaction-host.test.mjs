@@ -43,13 +43,13 @@ async function fixture(t, responder = input => ({ entries: [proposal(input)] }))
       store.put('message', { id, role: 'user', conversation_id: cid, content: [{ type: 'text', text }], ...patch });
       return { type: 'message', id: `pi_${id}`, message: { role: 'user', content: [{ type: 'text', text }], timestamp: 1234 } };
     },
-    async run(entries = [], { reason = 'threshold', cid = 'main', signal = new AbortController().signal } = {}) {
-      await registry.beforeCompact(cid, { reason, signal, branchEntries: entries, preparation: { firstKeptEntryId: 'keep', messagesToSummarize: entries.map(entry => entry.message), turnPrefixMessages: [] } }, model);
+    async run(entries = [], { reason = 'threshold', cid = 'main', signal = new AbortController().signal, sessionModel = model } = {}) {
+      await registry.beforeCompact(cid, { reason, signal, branchEntries: entries, preparation: { firstKeptEntryId: 'keep', messagesToSummarize: entries.map(entry => entry.message), turnPrefixMessages: [] } }, sessionModel);
       return store.list('plugin:sesame/memory:compaction_receipts').filter(value => value.conversationId === cid).at(-1);
     },
-    artifact(content, cid = 'main', files = []) {
+    artifact(content, cid = 'main', files = [], kind = 'resource') {
       return runtime.contractArtifacts.publish({ id: 'example/evidence', version: '1.0.0', digest: 'sha256:' + 'a'.repeat(64) }, {
-        operationId: crypto.randomUUID(), manifest: { kind: 'resource', schemaVersion: '1.0.0', content, dependencies: [], blobs: files.map(file => ({ ...runtime.contractArtifacts.blob(file.text), path: file.path, mediaType: file.mediaType })) },
+        operationId: crypto.randomUUID(), manifest: { kind, schemaVersion: '1.0.0', content, dependencies: [], blobs: files.map(file => ({ ...runtime.contractArtifacts.blob(file.text), path: file.path, mediaType: file.mediaType })) },
       }, { conversationId: cid });
     },
   });
@@ -126,6 +126,76 @@ integration('failed inference retains only references and can catch up after the
   f.respond = input => ({ entries: [proposal(input)] });
   const next = await f.run([]); assert.equal(next.counts.saved, 1); assert.equal(next.pendingSources, 0);
   assert.doesNotMatch(JSON.stringify(f.store.events('0')), /sensitive provider response/);
+});
+
+integration('a reordered retry cannot mistake another applied entry for its own receipt', async t => {
+  const second = { title: '报告图表', summary: '保留图表', content: '报告应保留清晰的图表。' };
+  const f = await fixture(t, input => ({ entries: [proposal(input), proposal(input, second)] }));
+  const save = f.runtime.memory.save.bind(f.runtime.memory); let reject = true;
+  f.runtime.memory.save = (cid, input, ...args) => {
+    if (reject && input.title === second.title) { reject = false; throw Object.assign(new Error('Concurrent revision'), { status: 409, code: 'version_conflict' }); }
+    return save(cid, input, ...args);
+  };
+  const first = await f.run([f.message('human', preference + second.content)]);
+  assert.equal(first.status, 'failed'); assert.equal(first.counts.saved, 1); assert.equal(first.pendingSources, 1);
+  f.respond = input => ({ entries: [proposal(input, second), proposal(input)] });
+  const next = await f.run([]);
+  assert.equal(next.status, 'completed'); assert.equal(next.counts.saved, 1); assert.equal(next.counts.deduplicated, 1);
+  assert.equal(next.pendingSources, 0); assert.equal(f.main.search({}).items.length, 2);
+  assert.ok(f.main.search({}).items.some(item => f.main.read(item.id).content === second.content));
+});
+
+integration('an applied receipt only deduplicates the exact entry fingerprint', async t => {
+  const f = await fixture(t, input => ({ entries: [proposal(input), proposal(input, { title: 'second', content: 'A separate preference.' })] }));
+  const save = f.runtime.memory.save.bind(f.runtime.memory);
+  f.runtime.memory.save = (cid, input, ...args) => {
+    if (input.title === 'second') throw Object.assign(new Error('Stale input'), { status: 409, code: 'version_conflict' });
+    return save(cid, input, ...args);
+  };
+  await f.run([f.message('human', preference)]);
+  const saved = f.main.search({}).items[0];
+  f.respond = input => ({ entries: [proposal(input, { content: '同一标题下改写后的不同内容。' })] });
+  const retry = await f.run([]);
+  assert.equal(retry.status, 'partial'); assert.equal(retry.counts.uncertain, 1); assert.equal(retry.pendingSources, 1);
+  assert.equal(f.main.read(saved.id).version, 1);
+});
+
+integration('an uncertain write is not replayed or marked complete after a new paraphrase', async t => {
+  const f = await fixture(t), save = f.runtime.memory.save.bind(f.runtime.memory); let interrupt = true;
+  f.runtime.memory.save = (cid, input, ...args) => {
+    const saved = save(cid, input, ...args);
+    if (interrupt) { interrupt = false; throw Object.assign(new Error('Lost response after commit'), { code: 'STORAGE_INTERRUPTED' }); }
+    return saved;
+  };
+  const first = await f.run([f.message('human', preference)]); assert.equal(first.status, 'failed');
+  const saved = f.main.search({}).items[0];
+  f.respond = input => ({ entries: [proposal(input, { content: '所有报告使用中文，注明数据口径及其适用范围。' })] });
+  const retry = await f.run([]);
+  assert.equal(retry.status, 'partial'); assert.equal(retry.counts.uncertain, 1); assert.equal(retry.pendingSources, 1);
+  assert.equal(f.main.read(saved.id).version, 1); assert.equal(f.main.search({}).items.length, 1);
+});
+
+integration('a model-less session skips inference and retains evidence for a later configured session', async t => {
+  const f = await fixture(t);
+  const first = await f.run([f.message('human', preference)], { sessionModel: null });
+  assert.equal(first.status, 'skipped'); assert.equal(first.pendingSources, 1); assert.equal(f.calls.length, 0);
+  assert.equal(f.store.events('0').filter(event => event.type === 'plugin.lifecycle' && event.data?.status === 'failed').length, 0);
+  const next = await f.run([]);
+  assert.equal(next.status, 'completed'); assert.equal(next.counts.saved, 1); assert.equal(next.pendingSources, 0);
+});
+
+integration('newer artifacts from other conversations or kinds cannot evict eligible local evidence', async t => {
+  const f = await fixture(t, () => ({ entries: [] }));
+  const ref = f.artifact({ lesson: 'Main conversation evidence' });
+  const key = `${ref.id}:${ref.revision}`;
+  f.store.put('contract_artifact', { ...f.store.get('contract_artifact', key), createdAt: 1 });
+  for (let index = 0; index < 25; index++) {
+    f.artifact({ lesson: `Child evidence ${index}` }, 'child');
+    f.artifact({ lookback: index + 1 }, 'main', [], 'parameters');
+  }
+  const receipt = await f.run([]);
+  assert.equal(receipt.status, 'completed'); assert.equal(f.calls.length, 1);
+  assert.equal(f.calls[0].documents[0].source.id, ref.id);
 });
 
 integration('large evidence is bounded and the next compaction resumes remaining chunks without storing raw text', async t => {

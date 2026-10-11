@@ -58,14 +58,13 @@ function discoverSources(event, host, candidates) {
   let recent = [], offset = 0;
   for (;;) {
     const page = host.artifacts.list({ limit: 2000, offset });
-    recent = [...recent, ...page.items].sort((a, b) => b.createdAt - a.createdAt).slice(0, 20);
+    const eligible = page.items.filter(item => ['report', 'strategy.result', 'strategy.validation', 'resource'].includes(item.ref.kind)
+      && host.artifacts.read(item.ref).context?.conversationId === host.scope.conversationId);
+    recent = [...recent, ...eligible].sort((a, b) => b.createdAt - a.createdAt).slice(0, 20);
     if (!page.hasMore) break;
     offset += page.items.length;
   }
-  for (const item of recent) {
-    const artifact = host.artifacts.read(item.ref);
-    if (artifact.context?.conversationId === host.scope.conversationId && ['report', 'strategy.result', 'strategy.validation', 'resource'].includes(item.ref.kind)) enqueue(host, { type: 'artifact', ...item.ref });
-  }
+  for (const item of recent) enqueue(host, { type: 'artifact', ...item.ref });
 }
 
 function existingMemories(host, documents) {
@@ -134,12 +133,14 @@ function validatePlan(result, documents, memories, candidates, host) {
   });
 }
 
-function applyEntry(host, { candidate, target, memory }, batchId, index) {
-  const operationId = hash([batchId, index]);
+function applyEntry(host, { candidate, target, memory }, batchId) {
+  const operationId = hash([batchId, memory.category, memory.scope, memory.title]);
+  const fingerprint = hash({ ...memory, tags: [...memory.tags].sort(), sources: memory.sources.map(sourceKey).sort() });
   const previous = host.storage.get('compaction_operations', operationId, true);
-  // An interrupted write is never replayed from a newly generated paraphrase.
-  // The record deliberately contains no copy of the remembered content.
-  if (previous) return previous.status === 'applied' ? 'deduplicated' : 'uncertain';
+  // A retry may reorder entries or produce a new paraphrase. Only an exact
+  // applied entry is deduplicated; a known rejection can be reconsidered with
+  // fresh versions. Unknown writes must not be replayed. No prose is journaled.
+  if (previous && previous.status !== 'rejected') return previous.status === 'applied' && previous.fingerprint === fingerprint ? 'deduplicated' : 'uncertain';
   const current = host.memory.search({ query: memory.title.slice(0, 450), limit: 200, include_expired: true }).items.map(item => host.memory.read(item.id));
   const unseenTarget = !target && current.find(value => value.category === memory.category && same(value.scope, memory.scope) && value.title === memory.title);
   target ??= unseenTarget;
@@ -162,17 +163,17 @@ function applyEntry(host, { candidate, target, memory }, batchId, index) {
     write.sources = [...new Map([...target.sources, ...memory.sources].map(source => [sourceKey(source), source])).values()];
     assert(write.sources.length <= 20, 'MEMORY_SOURCE_BUDGET');
   }
-  host.storage.put('compaction_operations', { id: operationId, status: 'applying', createdAt: Date.now() });
+  host.storage.put('compaction_operations', { id: operationId, fingerprint, status: 'applying', createdAt: Date.now() });
   let saved;
   try {
     saved = propose ? host.memory.propose(write) : host.memory.save({ ...write, ...(target ? { id: target.id, expected_version: target.version } : {}) });
   } catch (error) {
     // Known rejections have no new write. Unknown failures stay uncertain.
     const rejected = ['version_conflict', 'memory_forgotten', 'memory_source_invalid', 'memory_scope_denied'].includes(error.code);
-    host.storage.put('compaction_operations', { id: operationId, status: rejected ? 'rejected' : 'uncertain', createdAt: Date.now() });
+    host.storage.put('compaction_operations', { id: operationId, fingerprint, status: rejected ? 'rejected' : 'uncertain', createdAt: Date.now() });
     throw error;
   }
-  host.storage.put('compaction_operations', { id: operationId, status: 'applied', createdAt: Date.now() });
+  host.storage.put('compaction_operations', { id: operationId, fingerprint, status: 'applied', createdAt: Date.now() });
   if (candidate && !propose) host.memory.resolveCandidate({ id: candidate.id, action: 'accept', expected_version: candidate.version, ...write });
   return propose ? 'proposed' : target ? 'revised' : saved.deduplicated ? 'deduplicated' : 'saved';
 }
@@ -191,6 +192,9 @@ export async function curate(event, host) {
   const inputBudget = Math.floor((contextWindow - maxTokens) * 0.8) - Buffer.byteLength(SYSTEM);
   const chunkSize = Math.min(CHUNK, Math.max(256, Math.floor(inputBudget / 8)));
   try {
+    // Source references survive a model-less compaction for the next configured
+    // session. This is an expected lifecycle state, not a failed model request.
+    if (!event.model) { receipt.status = 'skipped'; receipt.code = 'MODEL_UNAVAILABLE'; return receipt; }
     for (const queued of pending) {
       event.signal.throwIfAborted();
       if (receipt.processedChunks >= MAX_BATCHES) break;
@@ -210,7 +214,6 @@ export async function curate(event, host) {
         const documents = [{ key, source: queued.source, text: evidence.slice(offset, end), truncated: offset > 0 || end < evidence.length }];
         const memories = existingMemories(host, documents);
         const batchId = hash([host.scope.conversationId, key]);
-        assert(event.model, 'MODEL_UNAVAILABLE');
         const input = { scope: host.scope, documents, memories: memories.map(({ id, version, category, scope, title, summary, content, evidence, pinned, status }) => ({ id, version, category, scope, title: redact(title), summary: redact(summary), content: redact(content.slice(0, 1500)), truncated: content.length > 1500, evidence, pinned, status })),
           candidates: candidates.filter(candidate => candidate.sources.some(source => sourceKey(source) === sourceKey(queued.source))).slice(0, 12).map(({ id, category, title, summary, evidence }) => ({ id, category, title: redact(title), summary: redact(summary), evidence })), categories: host.memory.tree().categories };
         while (Buffer.byteLength(JSON.stringify(input)) > inputBudget && input.memories.length) input.memories.pop();
@@ -222,11 +225,15 @@ export async function curate(event, host) {
           maxTokens, reasoning: 'off', timeoutMs: 60000 }, event.signal);
         event.signal.throwIfAborted();
         const entries = validatePlan(result.text, documents, visibleMemories, visibleCandidates, host);
-        for (const [index, entry] of entries.entries()) {
+        let uncertain = false;
+        for (const entry of entries) {
           event.signal.throwIfAborted();
-          count(applyEntry(host, entry, batchId, index));
+          const outcome = applyEntry(host, entry, batchId);
+          count(outcome); uncertain ||= outcome === 'uncertain';
         }
-        offset = end; receipt.processedChunks++;
+        receipt.processedChunks++;
+        if (uncertain) break;
+        offset = end;
         host.storage.put('compaction_sources', { ...queued, contentDigest: evidenceDigest, offset, status: end === evidence.length ? 'done' : 'pending' });
       }
       if (!evidence.length) host.storage.put('compaction_sources', { ...queued, status: 'done', contentDigest: evidenceDigest });

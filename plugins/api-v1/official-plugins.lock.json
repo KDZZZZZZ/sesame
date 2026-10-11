@@ -206,7 +206,7 @@
       "id": "sesame/memory",
       "version": "2.1.0",
       "directory": "memory",
-      "treeDigest": "sha256:cd8653319e3db69082723977f84bc07a3a87fd49209381c12aa0f9b6a583ef92",
+      "treeDigest": "sha256:87ecd3a156efae734060f4455ecf202301a88e3aeffc9b17221fddbb587ffa9e",
       "files": [
         {
           "path": "LICENSE",
@@ -215,8 +215,8 @@
         },
         {
           "path": "compaction.js",
-          "sha256": "1d50e8b4fcba176ff62c451a5e4c683b6c8b432826459cc81904aabf780ded09",
-          "bytes": 19833
+          "sha256": "9710d8e16d30385dacad2d5e9284063fd83aeb8e3d44235bdd77e4cc3170c547",
+          "bytes": 20524
         },
         {
           "path": "curation.md",

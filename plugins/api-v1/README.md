@@ -1,6 +1,6 @@
 # Default plugins / Plugin API 1
 
-**For compatible Sesame 0.2 hosts. Each package declares its actual minimum in `engines.sesame`; plugin-manager, orchestration, reports and strategy-authoring in this source tree require 0.2.2. Installers are listed on the [application release page](https://github.com/KDZZZZZZ/sesame/releases/latest). These API 1 packages cannot be used in 0.1.4. Source, published archives and the install catalog may select different package versions.**
+**For compatible Sesame 0.2 hosts. Each package declares its actual minimum in `engines.sesame`; memory, plugin-manager, orchestration, reports and strategy-authoring in this source tree require 0.2.2. Installers are listed on the [application release page](https://github.com/KDZZZZZZ/sesame/releases/latest). These API 1 packages cannot be used in 0.1.4. Source, published archives and the install catalog may select different package versions.**
 
 This directory contains exactly nine default packages for the 0.2 application bundle. The application
 keeps the protocol, verified loader and general interface. Plugin implementations,
