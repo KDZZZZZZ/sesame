@@ -1,8 +1,8 @@
 {
   "id": "sesame/plugin-manager",
   "title": "插件管理",
-  "description": "发现和加载插件；主 Agent 创建、验证、测试、安装、升级、回滚及导出外部插件。",
-  "version": "2.1.2",
+  "description": "发现和管理插件；内外部 Agent 共用开发 Skill 与模板，创建、验证、测试、安装、升级和交付插件。",
+  "version": "2.2.0",
   "default_state": "mounted",
   "tool_names": [
     "plugin_discover",
@@ -24,7 +24,8 @@
   "prompts": [
     "prompt.md"
   ],
-  "skills": [],
+  "skills": ["skills"],
+  "resources": ["README.md", "scaffold.js", "scripts/create-plugin.mjs"],
   "entry": "index.js",
   "tool_definitions": "tools.json",
   "main_tool_names": [
@@ -44,6 +45,6 @@
   "provides": {},
   "license": "MIT",
   "engines": {
-    "sesame": ">=0.2.0-0"
+    "sesame": ">=0.2.2"
   }
 }

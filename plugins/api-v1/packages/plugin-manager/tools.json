@@ -158,7 +158,7 @@
   {
     "name": "plugin_create",
     "label": "plugin_create",
-    "description": "主 Agent 创建标准插件草稿。mcp-python 模板自带波动率工具和测试；随后用 write/edit 修改。",
+    "description": "主 Agent 创建插件草稿；先读 develop-plugins skill。native 使用与外部 Agent 相同的公开模板；skill/mcp-python 沿用宿主模板。随后实现业务并 validate/test/install，不覆盖已有目录。",
     "parameters": {
       "type": "object",
       "required": [
@@ -201,8 +201,24 @@
             {
               "type": "string",
               "const": "mcp-python"
+            },
+            {
+              "type": "string",
+              "const": "native"
             }
           ]
+        },
+        "publisher": {
+          "type": "string",
+          "description": "仅 native：发布者 slug，默认 local",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "min_host": {
+          "type": "string",
+          "description": "仅 native：最低 Sesame 版本，默认 0.2.0",
+          "minLength": 1,
+          "maxLength": 20000
         }
       },
       "additionalProperties": false

@@ -14,4 +14,8 @@ test('committed manager schemas match the SDK factories and expose only explicit
   assert.equal(Value.Check(schema, args), true);
   assert.equal(Value.Check(schema, { ...args, action: 'update', expected_digest: `sha256:${'2'.repeat(64)}` }), true);
   for (const input of [{ ...args, action: 'force' }, { ...args, action: 'update', expected_digest: 'main' }, { ...args, bypass_version: true }]) assert.equal(Value.Check(schema, input), false);
+  const create = tools.find(tool => tool.name === 'plugin_create').parameters;
+  const native = { command_id: 'schema-native-fixture', name: 'sample', description: 'Fixture', template: 'native', publisher: 'fixture', min_host: '0.2.2' };
+  assert.equal(Value.Check(create, native), true);
+  assert.equal(Value.Check(create, { ...native, template: 'unknown' }), false);
 });
