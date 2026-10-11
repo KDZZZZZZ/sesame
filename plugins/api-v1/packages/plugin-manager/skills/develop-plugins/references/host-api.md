@@ -249,7 +249,7 @@ const ref = host.artifacts.publish({
 
 完整可用例子：[close-line.json](https://github.com/KDZZZZZZ/sesame/blob/main/plugins/api-v1/packages/canvas-control/resources/close-line.json)、[close-line.js](https://github.com/KDZZZZZZ/sesame/blob/main/plugins/api-v1/packages/canvas-control/resources/close-line.js)。挂载路径是 `indicator_publish` → `chart_script`；每幅图自己的实例、参数、generation 不共享缩放状态。
 
-`host.layout.inspect()` 取得当前 version；`apply({command_id,expected_version,operations})` 调整图表；`script(args)` 挂载/移除指标。操作 schema 在 [canvas-control/tools.js](https://github.com/KDZZZZZZ/sesame/blob/main/plugins/api-v1/packages/canvas-control/tools.js)。显示名称不是行情绑定；应先用 `market_instruments`/`canvas_binding` 得到完整 provider、connection、instrument、spec。检查当前客户端回执后再声称图已画出。
+`host.layout.inspect()` 同步取得当前 version；`apply({command_id,expected_version,operations})` 同步调整图表；`await host.layout.script(args)` 异步挂载/移除指标。首次 put 省略 `script_id`；替换时传入该图仍拥有的实例 ID，并保存返回的新实例 ID。操作 schema 在 [canvas-control/tools.js](https://github.com/KDZZZZZZ/sesame/blob/main/plugins/api-v1/packages/canvas-control/tools.js)。显示名称不是行情绑定；应先用 `market_instruments`/`canvas_binding` 得到完整 provider、connection、instrument、spec。检查当前客户端回执后再声称图已画出；失败恢复与重复刷新例子见 [recovery](recovery.md)。
 
 ## 6. 策略与运行事实
 
@@ -325,6 +325,8 @@ wait 取消只停止等待，cancel 才停止任务；均不撤销已发生的�
 常用签名：`workspace.file(op,path,content?,signal?)`、`workspace.run(argv,options)`；`op` 支持 read/access/mkdir/write/write_base64/write_tree，run 接收参数数组，timeout 单位为秒。成功返回 executionId/exitCode/output 等；失败保存执行证据，snapshot_errors 表示记录不完整。主 Agent 工作区持久，子任务工作区结束后清理。
 
 `storage.get(collection,id,optional?) / list(collection) / put(collection,{id,...}) / update(collection,id,changes) / delete(collection,id)` 管理插件自身持久记录。`transaction(fn)` 用于同步存储事务；`idempotent(id,fingerprint,fn)`、`idempotentAsync(...)` 用于本地重复操作。它们不能让一次已经发给券商的请求具有跨系统“恰好一次”保证。
+
+`get` 的 optional 默认 `false`，记录不存在会抛错；首次运行的可选状态请传 `true`，缺失返回 `null`。对象读写可能改变键顺序；用深结构相等或 SDK `canonical` 比较内容，不用普通 JSON 字符串的字节相等。持续任务必须测试真实存储往返和重启后的继续运行，详见 [recovery](recovery.md)。
 
 `environment.executeWorker(path,payload,{signal?,timeoutMs?,runId?})` 要求 path 在 manifest.workers 中；模块导出 `execute(payload,{signal,runId,directory,pythonPath})`。timeoutMs 默认 120000、最高 600000。这里是带归属与取消信号的原生模块调用，**不是 Worker 线程、独立子进程或 OS 沙箱**；worker 应响应取消，并自行管理创建的进程。
 
