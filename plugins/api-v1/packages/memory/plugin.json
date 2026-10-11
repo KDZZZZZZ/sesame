@@ -1,8 +1,8 @@
 {
   "id": "sesame/memory",
   "title": "长期记忆",
-  "description": "按用户、项目、经验和参考资料检索长期记忆；主 Agent 合并候选、修订和遗忘。闲置记忆归档按需召回。",
-  "version": "2.0.1",
+  "description": "每次压缩前整理带来源的长期记忆，合并偏好与经验；主 Agent 审核候选和冲突，闲置记忆归档按需召回。",
+  "version": "2.1.0",
   "default_state": "mounted",
   "tool_names": [
     "memory_search",
@@ -26,6 +26,6 @@
   "provides": {},
   "license": "MIT",
   "engines": {
-    "sesame": ">=0.2.0-0"
+    "sesame": ">=0.2.2"
   }
 }
