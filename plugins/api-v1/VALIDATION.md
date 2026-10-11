@@ -1089,3 +1089,14 @@ compiler/Tester arguments quote MetaQuotes option values correctly. The targeted
 61 Node checks and three Python command-construction tests passed. This follow-up
 does not repeat live login, native compilation, deployment or trading. The running
 user application and its existing account were left unchanged.
+
+The unpublished 1.4.1 source was followed by MT5 1.4.2 after the PR 44 review
+identified a Windows TEMP path quoting defect. Native Windows terminal/editor
+startup now quotes option values and argv0 explicitly without a shell; Wine keeps
+its private space-free INI path. The regression exercises preparation through the
+actual launch function with a spaced Unicode TEMP directory, successful startup,
+disabled-trading recovery and a refused close. The affected suite passed 52 Node
+checks with one native opt-in skip, plus three Python command-line checks.
+Real Windows MT5 execution was not repeated. New release plans replace the
+unpublished plans; the original review and failed workflow remain in the audit
+history rather than being retroactively treated as a passing publication.
