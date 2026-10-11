@@ -10,6 +10,7 @@ Use the smallest plugin form that implements the requested behavior. This is the
 ## Read only the relevant references
 
 - [Authoring, testing, installation and delivery](references/authoring.md): start here.
+- [Reliable development and recovery](references/recovery.md): read before implementing tools, Agent tasks, chart attachment or a package update. Preserve a working repair path.
 - [Open HostContext and product contracts](references/host-api.md): exact ports, signatures, scopes and current limits. Do not invent methods from a design draft.
 - [Public scaffold CLI](../../scripts/create-plugin.mjs): generates a native or instruction-only package using the same recipe as Sesame's native `plugin_create`.
 - [Publication protocol](https://github.com/KDZZZZZZ/sesame/blob/main/plugins/api-v1/PUBLISHING.md): use when preparing a public release.
@@ -18,7 +19,7 @@ Use the smallest plugin form that implements the requested behavior. This is the
 
 1. Identify the behavior, inputs, final output, required host version and an existing plugin example. Distinguish a research method from a market provider or a trading backend. Tools/skills may declare `provides:{}`.
 2. Inside Sesame, use `plugin_create` with `template:"native"`, `"skill"` or `"mcp-python"`. Native supports `publisher` and `min_host`. Ordinary subagents may author files with workspace tools; ask their parent to perform main-only plugin management. Outside Sesame, clone the public repository and run the packaged CLI, or author the same files directly.
-3. Replace the starter behavior with the actual feature. A generated echo or a placeholder method is not the user's completed plugin. Keep `tool_names`, `tools.json` and the factory consistent. Preserve package-local imports, use HostContext/public SDK, and declare only implemented capabilities.
+3. Replace the starter behavior with the actual feature in a separate draft, never in the running application or installed digest directory. A generated echo or a placeholder method is not the user's completed plugin. Keep `tool_names`, `tools.json` and the complete factory consistent in main and subagent scopes; control visibility with manifest/task allowlists. Preserve package-local imports, use HostContext/public SDK, and declare only implemented capabilities.
 4. Write a concise prompt plus a focused Skill. Keep long API references out of the always-loaded prompt. Specify inputs, procedure, outputs, verification and failure handling. Use actual provider identities and immutable artifacts rather than guessed method names, ticker strings or temporary paths.
 5. Test meaningful behavior and failure cases. External Agents may test portable logic and MCP without Sesame; SDK and actual host activation require a matching host. Clearly report those checks as pending when unavailable; never invent a host receipt.
 6. In Sesame, run `plugin_validate → plugin_test → plugin_install` using the exact returned digest, inspect runtime diagnostics, then `plugin_load` and a real feature check. For an installed ID, use explicit update with expected_digest and a higher version. The CLI does not generate installation authority, hashes accepted as test receipts, or automatic user consent.

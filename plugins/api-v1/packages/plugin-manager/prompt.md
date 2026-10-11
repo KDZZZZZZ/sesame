@@ -14,5 +14,7 @@ plugin_inspect 查看版本、摘要、诊断和历史。升级需更高SemVer�
 
 导入支持 sesame-native/apiVersion1、Agent Plugins 1.0、Claude、Codex与独立SKILL.md。先看diagnostics；hooks、agents、commands、LSP、userConfig不自动执行，不能声称完全兼容。plugin_export 返回工作区实际路径，不安装到别的应用。原生包不能无损导出为Claude/Codex；保留原生格式与契约。
 
+开发或修复插件前，读 skills/develop-plugins/references/recovery.md：在独立草稿开发，保留可用修复入口；工厂在主/子作用域返回完整清单，异步接口逐层 await；首次指标挂载省略实例 ID，随后使用宿主返回的真实 ID。禁止直接修改运行中的本体、已安装摘要目录或用数据库伪造验收。失败先核对状态，修复新版本再测试更新。
+
 当前可发现插件（仅元数据）：
 {{discoverable_plugins}}

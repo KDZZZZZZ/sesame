@@ -347,7 +347,7 @@
       "id": "sesame/plugin-manager",
       "version": "2.2.0",
       "directory": "plugin-manager",
-      "treeDigest": "sha256:a54be72b70ba66175813881d6df3cbd8e43897efbf16176ab9a28d9ab1bca58c",
+      "treeDigest": "sha256:f8f71e027c9eff838662d8a6c9689dccfb8272c29e7b3f42e3743af3efee26a7",
       "files": [
         {
           "path": "LICENSE",
@@ -381,8 +381,8 @@
         },
         {
           "path": "prompt.md",
-          "sha256": "07305175d4aa38e86e6a6d6aac8a63234541b0c8a9d8eea6cfc2acf9986b86fb",
-          "bytes": 4708
+          "sha256": "236863d0054c5a6b099c092558f07ffe0751bad7f6cc4455334b961dc4a41f48",
+          "bytes": 5135
         },
         {
           "path": "scaffold.js",
@@ -396,8 +396,8 @@
         },
         {
           "path": "skills/develop-plugins/SKILL.md",
-          "sha256": "fd1b9a29689ed9a1106eeaa67f642b49baae86ad04a4c28a266965bd75b65284",
-          "bytes": 6194
+          "sha256": "ec922f66fa1214bbb6d8ae51802f0c420dccf789863c591058125718fe4afe20",
+          "bytes": 6543
         },
         {
           "path": "skills/develop-plugins/references/authoring.md",
@@ -408,6 +408,11 @@
           "path": "skills/develop-plugins/references/host-api.md",
           "sha256": "30983d209a1effdd1ca35096ba930ed59c374ce81c445e0d15995f66981ddbd8",
           "bytes": 28630
+        },
+        {
+          "path": "skills/develop-plugins/references/recovery.md",
+          "sha256": "b7ee1a5c84c5f8e13a125d63955eccb879410e91fe408cae0834af72b9f928da",
+          "bytes": 4682
         },
         {
           "path": "tools.js",
