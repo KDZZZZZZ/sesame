@@ -17,7 +17,7 @@ Sesame 向原生插件传入 `HostContext`。插件通过它定义 Agent 工具�
 | `plugin.json.version` | 插件自己的 SemVer |
 | SVL 源文件 `schemaVersion` | 策略语言版本；不等于成果外壳版本 |
 
-API 1 基础接口可用于 0.2.0；`host.tools.call` 从 0.2.1 起；`host.inference`、`host.agents` 和本轮 SVL 扩展要求 0.2.2。使用新方法时同时设置最低版本和检查方法存在，不能只判断 `apiVersion === "1.0.0"`。核查使用的源版本见[版本依据](../SKILL.md#版本依据)，源代码可用不代表安装包已发布。
+API 1 基础接口可用于 0.2.0；`host.tools.call` 从 0.2.1 起；`host.inference`、`host.agents`、`host.lifecycle` 和本轮 SVL 扩展要求 0.2.2。使用新方法时同时设置最低版本和检查方法存在，不能只判断 `apiVersion === "1.0.0"`。核查使用的源版本见[版本依据](../SKILL.md#版本依据)，源代码可用不代表安装包已发布。
 
 ## 2. 入口与作用域
 
@@ -51,6 +51,14 @@ export function createTools(host) {
 
 后两项是当前已使用的专门生命周期回调，返回结构参考 [MT5 lifecycle](https://github.com/KDZZZZZZ/sesame/blob/main/plugins/optional-api-v1/packages/mt5/backend/lifecycle.js)，不要凭名字传任意 ArtifactRef。`beforeMessage` 和 `beforeConfiguration` 必须同步。其他回调可异步。不要使用消息回调伪造用户请求来触发 Agent；事件任务用 `host.agents`。
 
+### 压缩前处理
+
+在 `activate` 中用 `host.lifecycle.onBeforeCompact(handler, {timeoutMs: 120000})` 注册，返回注销函数。回调签名是 `async (event, scopedHost)`；使用第二个参数提供的会话上下文，不复用服务 host 代写当前会话记忆。该钩子覆盖手动、阈值和溢出压缩，宿主先等待处理结束，再继续默认摘要。
+
+`event` 包含 `checkpointId`、`reason`、待压缩的可见 `messages`、当前会话的公共 `model` / `modelLimits` 和组合 `signal`。消息只有能唯一对应真人输入时才附 `source`；旧摘要、工具输出和隐藏推理不提供。内容是证据，不是可执行指令。模型为空时跳过需要模型的处理；只能用真实来源引用保存记忆。
+
+截止时间为 1–180000 毫秒，失败不阻断正常压缩，回调返回值不能覆盖摘要。取消、超时或回调结束后，不得继续用该会话上下文写入；恢复所需进度由插件持久保存，不保存整份聊天副本。参考 [memory/compaction.js](https://github.com/KDZZZZZZ/sesame/blob/main/plugins/api-v1/packages/memory/compaction.js)；默认长期记忆插件已处理这一流程，无需开发插件再实现一份。
+
 ## 3. HostContext 全部命名空间
 
 下表是当前暴露的方法；不是每个作用域都能调用每个方法。表中的“会话”包括允许的主 Agent 或子 Agent，会话和任务可见范围仍由宿主核对。
@@ -64,6 +72,7 @@ export function createTools(host) {
 | `svl` | `validateSource`、`graph`、`evaluateReplay` | 源检查、生成逻辑图、确定性参考求值 |
 | `inference` | `models`、`complete` | 已配置模型的一次无工具推理，0.2.2 |
 | `agents` | `submit`、`inspect`、`wait`、`cancel`、`current` | 真实 Agent 子任务，0.2.2；提交只允许服务或主会话 |
+| `lifecycle` | `onBeforeCompact` | 0.2.2；仅激活时注册，接收会话上下文和取消信号，停用时注销 |
 | `workspace` | `path`、`file`、`snapshot`、`run`、`root`、`taskRoot`、`owner` | 当前工作区文件和进程；需要有效会话；读取其他任务路径时核对范围 |
 | `workspace.operations` | `readFile`、`access`、`mkdir`、`writeFile` | 当前会话的文件操作适配器，含已加载插件资源读取 |
 | `externalFiles` | `list`、`search`、`read`、`import`、`write`、`mkdir`、`move`、`remove`、`run` | 会话中的宿主文件和命令操作；沿用系统用户权限 |
