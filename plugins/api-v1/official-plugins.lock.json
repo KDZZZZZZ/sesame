@@ -204,9 +204,9 @@
     },
     {
       "id": "sesame/memory",
-      "version": "2.0.1",
+      "version": "2.1.0",
       "directory": "memory",
-      "treeDigest": "sha256:062a0c37f06a21ab5ec3c21d0d48d816480dfa88b7601388f5d0fbb35e121569",
+      "treeDigest": "sha256:cd8653319e3db69082723977f84bc07a3a87fd49209381c12aa0f9b6a583ef92",
       "files": [
         {
           "path": "LICENSE",
@@ -214,29 +214,39 @@
           "bytes": 1063
         },
         {
+          "path": "compaction.js",
+          "sha256": "1d50e8b4fcba176ff62c451a5e4c683b6c8b432826459cc81904aabf780ded09",
+          "bytes": 19833
+        },
+        {
+          "path": "curation.md",
+          "sha256": "793e047af5ff5e5282d16a82b9d38c21cb51f39f4e9d6b2d5ed72dc858844a04",
+          "bytes": 2812
+        },
+        {
           "path": "index.js",
-          "sha256": "b201e9ffdb3337da815d3b652d75098eac8767fb080ad7bb40713dffc4939419",
-          "bytes": 42
+          "sha256": "52fd1ef8b3f8eef29a64afba2493a9304082d0f768540d514d2eb397e04d3c5b",
+          "bytes": 86
         },
         {
           "path": "package.json",
-          "sha256": "b398c7d55eaadde1cfb6c450c97157a5b05f010910a87f85a7c7957e17ccaef4",
+          "sha256": "d1a67bf769e734ae1a1ec0800839a6eea17c8d082e5117aa6d5c6867335833d2",
           "bytes": 100
         },
         {
           "path": "plugin.json",
-          "sha256": "ad23603215c892d7efd3d518a77be7113bbd0a0b65a1981776d2a2fecaa1bfe3",
-          "bytes": 676
+          "sha256": "7c829e6ae1456be152db8a25d83851fdb7650b7be956de345d6fb9f3f21d062f",
+          "bytes": 674
         },
         {
           "path": "prompt.md",
-          "sha256": "9c73eb8cd36a014c9eb81eca5b007c09193b671a33b3d0024cd166da0584170d",
-          "bytes": 2154
+          "sha256": "4f68878d69e274d464ae1ba20d394f797952c5f2c7299a365d6552ad29bfa7bf",
+          "bytes": 2823
         },
         {
           "path": "skills/manage-memory/SKILL.md",
-          "sha256": "74e75082808fc94b23f72c848dc794d63bc4d6ff8dfc46b2e1c43e0e79a792bf",
-          "bytes": 2961
+          "sha256": "cac8382d865f54e17c5021976a60595ad062478367284d9d113c1dc569149c05",
+          "bytes": 5389
         },
         {
           "path": "support.js",
@@ -245,8 +255,8 @@
         },
         {
           "path": "tools.js",
-          "sha256": "10528d2529e5d06df852d1f333c2b55edaa796f867b515c995ed6bba75b83459",
-          "bytes": 4607
+          "sha256": "f1e6ef21bb1d2c455dabdae84c917a4c1493d7a196a78a6294a03e0b5359d6e9",
+          "bytes": 4776
         },
         {
           "path": "tools.json",
