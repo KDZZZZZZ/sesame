@@ -7,7 +7,7 @@ versioned; publishing these packages does not update or release the application.
 All other package bytes retain the current main-branch versions.
 
 After integrating the latest published configuration and trading fixes, the full
-matching-SDK core suite passed 403 checks with 17 explicit native/platform opt-in
+matching-SDK core suite passed 402 checks with 17 explicit native/platform opt-in
 skips; the optional suite passed 129 checks with 10 explicit environment/platform
 skips. There were no failures. This run included the fixed strategy pipeline,
 portfolio/risk/execution methods, frozen Agent decisions, loopback decision
