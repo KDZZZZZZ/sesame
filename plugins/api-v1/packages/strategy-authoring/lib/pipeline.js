@@ -100,9 +100,10 @@ export function validateSignalEvent(event) {
 }
 
 function validateGuard(guard) {
-  allowed(guard, ['id', 'scope', 'issuedAt', 'blockedUntil', 'retiredSignals', 'reason', 'evidence'], 'reentry guard');
+  allowed(guard, ['id', 'scope', 'issuedAt', 'blockedUntil', 'retireThroughSequence', 'retiredSignals', 'reason', 'evidence'], 'reentry guard');
   text(guard.id); scope(guard.scope, true); text(guard.reason);
   check(time(guard.blockedUntil) >= time(guard.issuedAt), 'Cooldown cannot precede its risk decision');
+  if (guard.retireThroughSequence !== undefined) integer(guard.retireThroughSequence, 'guard sequence cutoff', -1);
   list(guard.retiredSignals, 'retiredSignals').forEach(signalRef); refs(guard.evidence, 'guard evidence', true);
 }
 
@@ -137,7 +138,7 @@ export function replaySignals(events, { asOf, scope: requestedScope, guards = []
     if (event.kind === 'withdrawal') continue;
     let reason = time(event.expiresAt) <= now ? 'expired' : null;
     const applicable = guards.filter(guard => same(guard.scope, event.scope) && time(guard.issuedAt) <= now);
-    if (applicable.some(guard => time(event.generatedAt) <= time(guard.issuedAt) || guard.retiredSignals.some(retired => same(retired, signalIdentity(event))))) reason = 'risk_retired';
+    if (applicable.some(guard => time(event.generatedAt) < time(guard.issuedAt) || time(event.generatedAt) === time(guard.issuedAt) && (guard.retireThroughSequence === undefined || event.sequence <= guard.retireThroughSequence) || guard.retiredSignals.some(retired => same(retired, signalIdentity(event))))) reason = 'risk_retired';
     else if (applicable.some(guard => now < time(guard.blockedUntil))) reason = 'risk_cooldown';
     if (reason) inactive.push({ signal: signalIdentity(event), reason }); else active.push(event);
   }

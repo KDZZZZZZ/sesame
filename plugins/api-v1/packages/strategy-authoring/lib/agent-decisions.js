@@ -170,7 +170,7 @@ export class AgentDecisionService {
     const id = digest(['decision-block', record.id]);
     if (this.host.storage.get('decision_block', id, true)) return;
     const retiredSignals = this.host.storage.list('decision_job').filter(job => job.channel === record.channel && job.status === 'completed' && job.request.program.role === 'signal' && job.output.availableAt.unixMs <= at).map(job => ({ id: job.output.id, revision: job.output.revision }));
-    this.host.storage.put('decision_block', { id, channel: record.channel, revision: record.revision, jobId: record.id, scope: clone(record.request.scope), issuedAt: utc(at), clearedAt: null,
+    this.host.storage.put('decision_block', { id, channel: record.channel, revision: record.revision, jobId: record.id, scope: clone(record.request.scope), issuedAt: utc(at), retireThroughSequence: run.sequence - 1, clearedAt: null,
       retiredSignals, reason: `decision_${status}`, evidence: record.request.inputs.map(input => clone(input.ref)) });
   }
   finishFailure(id, status, changes = {}, asOf) {
@@ -186,7 +186,7 @@ export class AgentDecisionService {
     return this.get(id);
   }
   clearBlocks(record, generated) {
-    for (const block of this.host.storage.list('decision_block')) if (block.channel === record.channel && block.revision < record.revision && !block.clearedAt && generated > block.issuedAt.unixMs)
+    for (const block of this.host.storage.list('decision_block')) if (block.channel === record.channel && block.revision < record.revision && !block.clearedAt && generated >= block.issuedAt.unixMs)
       this.host.storage.update('decision_block', block.id, { clearedAt: utc(generated), clearedBy: record.id });
   }
   recordEpoch(scopeValue, epoch, at, reason, evidence, kind = 'risk') {
@@ -210,7 +210,7 @@ export class AgentDecisionService {
       group.retiredSignals.push({ id: job.output.id, revision: job.output.revision }); groups.set(instrumentKey, group);
     }
     for (const group of groups.values()) this.host.storage.put('decision_guard', { id: digest([key, epoch, group.scope.instrument]), ...group,
-      issuedAt: utc(at), blockedUntil: utc(at), reason, evidence: clone(evidence) });
+      issuedAt: utc(at), retireThroughSequence: this.host.storage.get('decision_run', key).sequence - 1, blockedUntil: utc(at), reason, evidence: clone(evidence) });
   }
   invalidate(scopeValue, reason, evidence, asOf) {
     text(reason); const key = runKey(scopeValue), run = this.host.storage.get('decision_run', key, true);
@@ -318,7 +318,7 @@ export class AgentDecisionService {
     for (const block of this.host.storage.list('decision_block')) if (runKey(block.scope) === key && block.issuedAt.unixMs <= now) {
       // Never reveal a future recovery in a historical view. Retired signals stay
       // retired after recovery; only a later valid channel judgment reopens risk.
-      guards.push({ id: block.id, scope: clone(block.scope), issuedAt: clone(block.issuedAt), blockedUntil: block.clearedAt && block.clearedAt.unixMs <= now ? clone(block.clearedAt) : utc(Number.MAX_SAFE_INTEGER), retiredSignals: clone(block.retiredSignals), reason: block.reason, evidence: clone(block.evidence) });
+      guards.push({ id: block.id, scope: clone(block.scope), issuedAt: clone(block.issuedAt), ...(block.retireThroughSequence === undefined ? {} : { retireThroughSequence: block.retireThroughSequence }), blockedUntil: block.clearedAt && block.clearedAt.unixMs <= now ? clone(block.clearedAt) : utc(Number.MAX_SAFE_INTEGER), retiredSignals: clone(block.retiredSignals), reason: block.reason, evidence: clone(block.evidence) });
     }
     guards.sort((a, b) => a.issuedAt.unixMs - b.issuedAt.unixMs || a.id.localeCompare(b.id));
     const channels = new Map(); records.filter(job => job.request.program.role === 'signal' || job.epoch >= invalidatedEpoch).forEach(job => channels.set(job.channel, job));
