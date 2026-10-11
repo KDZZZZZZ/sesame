@@ -43,7 +43,7 @@ export function marketMap(records, { asOf, maxDataAgeMs, currency, fx }) {
   bounded(records, 'instrument metadata', 1, 1000); uniqueInstruments(records); bounded(fx, 'FX records');
   const fxMap = new Map();
   for (const rate of fx) {
-    fields(rate, ['from', 'to', 'rate', 'observedAt', 'availableAt', 'evidence'], 'FX rate'); text(rate.from); text(rate.to); dec(rate.rate, 'FX rate', true); check(Decimal.compare(rate.rate, '0') > 0, 'FX rate must be positive'); available(rate, asOf, maxDataAgeMs, 'FX');
+    fields(rate, [`from`, 'to', 'rate', 'observedAt', 'availableAt', 'evidence'], 'FX rate'); text(rate.from); text(rate.to); dec(rate.rate, 'FX rate', true); check(Decimal.compare(rate.rate, '0') > 0, 'FX rate must be positive'); available(rate, asOf, maxDataAgeMs, 'FX');
     const k = `${rate.from}\0${rate.to}`; check(!fxMap.has(k), 'Duplicate FX pair'); fxMap.set(k, rate);
   }
   return new Map(records.map(record => {
