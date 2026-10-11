@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -34,8 +34,10 @@ async function fixture(t, responder = input => ({ entries: [proposal(input)] }))
   runtime.contractArtifacts = new ContractArtifacts(store);
   runtime.memory = new MemoryService(runtime, { clock: () => time }).init();
   const registry = runtime.plugins = new PluginRegistry(runtime);
-  const entry = { id: 'sesame/memory', version: '2.1.0', root, entryPath: join(root, 'index.js'), module: Promise.resolve(plugin), default_state: 'mounted', tool_names: [], resources: [], skills: [], definitions: [], diagnostics: [] };
-  registry.register(entry); await registry.start(entry); assert.equal(entry.runtime_status, 'ready');
+  const manifest = JSON.parse(readFileSync(join(root, 'plugin.json'), 'utf8'));
+  const entry = { ...manifest, root, entryPath: join(root, manifest.entry), module: Promise.resolve(plugin), resources: [], skills: [], definitions: [], diagnostics: [] };
+  t.after(async () => { await registry.close(); runtime.memory.close(); store.close(); rmSync(directory, { recursive: true, force: true }); });
+  registry.register(entry); await registry.start(entry); assert.equal(entry.runtime_status, 'ready', JSON.stringify(entry.diagnostics));
   Object.assign(f, { runtime, registry, entry, main: runtime.memory.facade('main'), child: runtime.memory.facade('child'), advance: days => { time += days * 86400000; },
     message(id, text, cid = 'main', patch = {}) {
       store.put('message', { id, role: 'user', conversation_id: cid, content: [{ type: 'text', text }], ...patch });
@@ -51,7 +53,6 @@ async function fixture(t, responder = input => ({ entries: [proposal(input)] }))
       }, { conversationId: cid });
     },
   });
-  t.after(async () => { await registry.close(); runtime.memory.close(); store.close(); rmSync(directory, { recursive: true, force: true }); });
   return f;
 }
 
