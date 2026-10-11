@@ -1,4 +1,4 @@
-import { Decimal, abs, artifactRef, bounded, check, clone, dec, digest, exactAdd, exactLots, fields, integer, key, measure, min, neg, owned, references, same, scope, sealed, stepMultiple, text, time, uniqueInstruments, utc, verifySeal } from './method-support.js';
+import { Decimal, abs, artifactRef, bounded, check, clone, dec, digest, exactAdd, exactLots, exactMul, fields, integer, key, measure, min, neg, owned, references, same, scope, sealed, stepMultiple, text, time, uniqueInstruments, utc, verifySeal } from './method-support.js';
 
 const terminal = new Set(['filled', 'cancelled', 'rejected', 'expired']);
 const active = order => !terminal.has(order.status) && !['held', 'initialized'].includes(order.status);
@@ -52,11 +52,18 @@ export function createExecutionProgram({ decision, plan, snapshot, capabilities,
       let remaining = abs(leg.signed); if (Decimal.compare(remaining, '0') === 0) continue;
       check(stepMultiple(remaining, spec.step), 'Order delta does not fit the quantity step');
       const maxOrder = exactLots([item.limit.maxOrderQuantity], ['1'], spec.step); positive(maxOrder, 'maximum order quantity');
+      let minOrder = exactLots([spec.minimum], ['1'], spec.step);
+      if (Decimal.compare(minOrder, spec.minimum) < 0 || Decimal.compare(minOrder, '0') === 0) minOrder = exactAdd(minOrder, spec.step);
+      let chunksLeft = BigInt(exactLots([remaining], [maxOrder], '1'));
+      if (Decimal.compare(exactMul(chunksLeft.toString(), maxOrder), remaining) < 0) chunksLeft++;
+      const children = protection && !leg.reduce ? Number(!!protection.stopPrice) + Number(!!protection.takeProfitPrice) : 0;
+      check(chunksLeft * BigInt(1 + children) <= BigInt(1000 - orders.length), 'Execution program exceeds 1000 orders');
+      check(Decimal.compare(minOrder, maxOrder) <= 0 && Decimal.compare(remaining, exactMul(chunksLeft.toString(), minOrder)) >= 0, 'Order delta cannot be split within the minimum and maximum quantities');
       let previousChunk = null, chunk = 0;
       while (Decimal.compare(remaining, '0') > 0) {
-        const children = protection && !leg.reduce ? Number(!!protection.stopPrice) + Number(!!protection.takeProfitPrice) : 0;
         check(orders.length + 1 + children <= 1000, 'Execution program exceeds 1000 orders');
-        const quantity = min(remaining, maxOrder); check(Decimal.compare(quantity, spec.minimum) >= 0, 'Split-order residual is below the minimum quantity');
+        const quantity = min(maxOrder, exactAdd(remaining, neg(exactMul((chunksLeft - 1n).toString(), minOrder)))); chunksLeft--;
+        check(Decimal.compare(quantity, spec.minimum) >= 0, 'Split-order residual is below the minimum quantity');
         const orderType = leg.reduce ? 'market' : entry?.orderType ?? 'market'; support(capabilities, config, orderFeature[orderType]); if (leg.reduce) support(capabilities, config, 'reduceOnly');
         const orderId = digest([decision.digest, position.instrument, legIndex, chunk++]);
         const order = { orderId, scope: { ...clone(decision.scope), instrument: clone(position.instrument) }, side: Decimal.compare(leg.signed, '0') > 0 ? 'buy' : 'sell', quantity: { value: quantity, unit: spec.unit }, orderType, ...(orderType !== 'market' && entry?.limitPrice ? { limitPrice: clone(entry.limitPrice) } : {}), ...(orderType !== 'market' && entry?.stopPrice ? { stopPrice: clone(entry.stopPrice) } : {}), timeInForce: entry?.timeInForce ?? 'gtc', reduceOnly: leg.reduce, role: leg.reduce ? 'reduce' : 'entry', activation: previousChunk ? { kind: 'after_filled', orderId: previousChunk } : leg.afterFlat ? { kind: 'after_flat', orderId: previousClose } : { kind: 'immediate' }, deadline: clone(leg.reduce ? decision.validUntil : time(Math.min(utc(decision.validUntil), utc(item.newRiskValidUntil)))) };

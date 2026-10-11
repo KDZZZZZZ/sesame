@@ -25,6 +25,18 @@ test('submission, acknowledgement and partial/final execution replay determinist
   h.fill('3'); r = h.run(); assert.equal(r.status, 'completed'); assert.equal(r.orders[0].filled, '5'); assert.deepEqual(h.run(), r); assert.equal(r.nativeEngineExecuted, false);
 });
 
+test('split orders reserve a valid minimum for every remaining chunk, including fractional lots', () => {
+  for (const [budget, maximum, minimum, step, expected] of [
+    ['600', '4', '3', '1', ['3', '3']],
+    ['900', '4', '3', '1', ['3', '3', '3']],
+    ['60', '0.4', '0.25', '0.1', ['0.3', '0.3']],
+  ]) {
+    const h = setup(f => { f.portfolio.budget.value = budget; f.policy.limits[0].maxOrderQuantity = maximum; Object.assign(f.portfolio.instruments[0], { minimum, step }); Object.assign(f.capabilities.instruments[0], { minimum, step }); });
+    assert.deepEqual(h.orders.map(order => order.quantity.value), expected); assert.equal(h.program.status, 'ready');
+  }
+  assert.throws(() => setup(f => { f.policy.limits[0].maxOrderQuantity = '4'; f.portfolio.instruments[0].minimum = f.capabilities.instruments[0].minimum = '3'; }), /cannot be split/);
+});
+
 test('duplicate event and execution IDs are idempotent while conflicting execution facts pause without losing prior fills', () => {
   const h = setup(); h.send(h.orders[0]); const fill = h.fill('2'); h.events.push(copy(fill)); let r = h.run(); assert.equal(r.orders[0].filled, '2');
   h.event('fill', h.orders[0], copy(fill.payload)); r = h.run(); assert.equal(r.orders[0].filled, '2');

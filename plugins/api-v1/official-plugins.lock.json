@@ -553,7 +553,7 @@
       "id": "sesame/strategy-authoring",
       "version": "1.2.0",
       "directory": "strategy-authoring",
-      "treeDigest": "sha256:29b8f6ee853e26b313a83a2b9388c1189782e748366b22ad9874433bb580b15d",
+      "treeDigest": "sha256:8da639b9a82a2ed09115b45dee28b5bdbdaa270f4049c10c1558b03d078613eb",
       "files": [
         {
           "path": "LICENSE",
@@ -622,8 +622,8 @@
         },
         {
           "path": "lib/execution.js",
-          "sha256": "54969438d21dda438b6e4ad572622f72b6ffe7f21ef58d05eedf2cffd568bc6b",
-          "bytes": 34656
+          "sha256": "95f32dc8e5016146a149a09b291555755c0de3b9232edd06d0eb7167b2c92377",
+          "bytes": 35452
         },
         {
           "path": "lib/method-support.js",
