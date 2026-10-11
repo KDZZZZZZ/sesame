@@ -1,6 +1,6 @@
 # Default plugins / Plugin API 1
 
-**For Sesame 0.2.0 and compatible newer hosts. The core packages' declared range `>=0.2.0-0` also permits matching development builds. Installers are listed on the [application release page](https://github.com/KDZZZZZZ/sesame/releases/latest). These API 1 packages cannot be used in 0.1.4. Optional packages declare their own minimum; `sesame/manual-trading` requires 0.2.1.**
+**For compatible Sesame 0.2 hosts. Each package declares its actual minimum in `engines.sesame`; memory, plugin-manager, orchestration, reports and strategy-authoring in this source tree require 0.2.2. Installers are listed on the [application release page](https://github.com/KDZZZZZZ/sesame/releases/latest). These API 1 packages cannot be used in 0.1.4. Source, published archives and the install catalog may select different package versions.**
 
 This directory contains exactly nine default packages for the 0.2 application bundle. The application
 keeps the protocol, verified loader and general interface. Plugin implementations,
@@ -24,6 +24,13 @@ packages. Their fixed commits and digests are unchanged. After upgrading from
 installations are not automatically converted. Use this separate API 1 catalog.
 
 ## Layout
+
+Start with the [shared plugin development Skill](packages/plugin-manager/skills/develop-plugins/SKILL.md),
+the [authoring guide](packages/plugin-manager/skills/develop-plugins/references/authoring.md)
+and the [open interface reference](packages/plugin-manager/skills/develop-plugins/references/host-api.md).
+They are shipped inside plugin-manager so internal and external Agents learn from the same source.
+The [portable scaffold CLI](packages/plugin-manager/scripts/create-plugin.mjs) requires only Node;
+actual installation and activation are checked by a matching Sesame host.
 
 - `packages/<name>/plugin.json`: publisher-qualified identity, version, API and capabilities.
 - `packages/<name>/package.json`: Node module scope, version and per-package license.
@@ -90,6 +97,9 @@ tests against its verified assembled bundle.
 uses temporary state to check the nine defaults, backend-free source/graph/replay/report
 creation and fresh optional MT5/judgment installation. `SESAME_REPORT_INSPECT=1`
 also runs the real report inspector. It does not operate a terminal or account.
+With the same environment and loader, `tests/plugin-authoring-host.test.mjs` checks
+internal native creation, the external CLI, real validation/install/load/tool calls,
+stale-digest rejection and restart persistence using temporary application state.
 `test:python` runs the dependency installer boundary suite without writing bytecode
 into the plugin packages. These fixture checks do not claim a native compiler ran.
 The separate opt-in native compiler test requires the actual installed toolchain.
