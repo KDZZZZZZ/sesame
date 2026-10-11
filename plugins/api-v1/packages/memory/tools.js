@@ -28,7 +28,7 @@ export function createTools(host) {
     }, args => {
       const memory = api();
       if (args.action === 'candidates') return memory.candidates();
-      if (args.action === 'stats') return memory.stats();
+      if (args.action === 'stats') return { ...memory.stats(), compaction: host.storage.list('compaction_receipts').filter(item => item.conversationId === conversationId).sort((a, b) => b.updatedAt - a.updatedAt)[0] ?? null };
       if (args.action === 'save') return memory.save({ ...args.entry, ...(args.id ? { id: args.id } : {}), expected_version: args.expected_version });
       if (['accept', 'reject'].includes(args.action)) return memory.resolveCandidate({ id: args.id, expected_version: args.expected_version, action: args.action, ...args.entry });
       return memory[args.action](args.id, args.expected_version);

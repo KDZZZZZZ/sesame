@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "tag": "plugins-api-v1-dev.21",
+  "title": "Sesame core plugins — shared authoring and memory curation",
+  "sourceCommit": "22e07a4a78df17fa2c03180cb1f6d2c505f64c89",
+  "sourceRoot": "plugins/api-v1",
+  "profile": "core",
+  "archive": {
+    "name": "sesame-official-plugins-api-v1-dev.21.tar.gz",
+    "sha256": "5b524bce48392de251be05def85d3cfa350688b1d45ac49cf1fa1d58a867cb04"
+  },
+  "lockSha256": "a0b53b50f788d6b1583f6c61aa53ade61f63cc2849dac8c2327b149bb4336cd9",
+  "pullRequest": 47
+}
