@@ -1,0 +1,16 @@
+.backtest-controls{display:flex;flex-wrap:wrap;gap:1rem;align-items:end;margin:1rem 0}
+.backtest-controls label{display:grid;gap:.3rem;font-size:.8rem;color:var(--report-muted)}
+.backtest-controls select{font:inherit;color:var(--report-ink);background:var(--report-paper);border:1px solid var(--report-line);border-radius:6px;padding:.45rem .7rem;max-width:100%}
+.backtest-detail{margin-top:1.5rem}.backtest-detail:focus{outline:none}.backtest-detail h3{font:600 1.15rem var(--report-sans);margin:.5rem 0}
+.backtest-sensitivity{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:1.2rem;min-width:0}.backtest-sensitivity>div{min-width:0}
+.backtest-logic{overflow:auto;max-height:560px;overscroll-behavior:contain}.backtest-logic svg{display:block;max-width:none;height:auto}
+.backtest-logic rect{fill:var(--report-paper);stroke:var(--report-line)}.backtest-logic text{fill:var(--report-ink);font:11px var(--report-mono)}
+.backtest-logic path{stroke:var(--report-muted);stroke-width:1;fill:none}.backtest-logic [role=button]{cursor:pointer}.backtest-logic [role=button]:focus rect{stroke:var(--report-ink);stroke-width:2}
+.backtest-node{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.6 var(--report-mono);max-height:240px;overflow:auto}
+.backtest-handler{padding:.65rem 0;border-bottom:1px solid var(--report-line)}.backtest-handler strong{font-size:.85rem}.backtest-flow{display:flex;flex-wrap:wrap;gap:.6rem;color:var(--report-muted);font-size:.8rem}
+.backtest-pagination{display:flex;align-items:center;gap:.6rem;margin:.7rem 0;font-size:.75rem;color:var(--report-muted)}.backtest-pagination button:disabled{opacity:.35;cursor:default}
+
+/* Drawdown remains a positive exact magnitude but is colored as loss, also after resize. */
+.backtest-matrix[data-metric=max_drawdown_pct] .sc-bar{fill:var(--report-negative)}
+.backtest-matrix rect[role=button]{pointer-events:all}
+.backtest-flow.backtest-loop{display:block;margin:.6rem 0 .6rem .5rem;padding-left:.8rem;border-left:2px solid var(--report-line)}.backtest-loop>strong{font-weight:500}

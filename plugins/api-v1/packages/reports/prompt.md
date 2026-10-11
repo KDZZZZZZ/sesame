@@ -7,3 +7,5 @@ reportKit 是本插件打包的显示组件，不是宿主通用 API。HTML 中�
 发布使用 report_publish；随后必须以返回的完整 ref 调用 report_check，只有真实 receipt 为 rendered 才说已经渲染通过。失败时修原 HTML、按 artifact_id/expected_revision 发新 revision 并检查新 ref。旧版本的成功不代替新版本检查。报告引用优先读取固定 revision，available_for_analysis=false 的未完成成果不能作为证据。examples/editorial-demo.html 为明确虚构的交互演示，不是用户市场、账户或回测结果。
 
 补充图表直接用 report_template 的 kind、chart_options 和可选 chart_data，字段契约在 report-design 的三个子文档。直方、箱线、密度使用已登记的计算结果，瀑布和流向必须能对账。图集索引见 examples/chart-gallery.md；按需读取对应的 fixture 和组件源码。只把与研究问题有关的图加入报告，不能用组件演示数值替代真实数据。
+
+回测与优化报告必须进入 Strategy：发布时填写 strategy_source，先读 report-writing/backtest.md。必备内容为同源 SVL 逻辑可视化、品种×周期的已选最优参数结果热力图、点格子查看全部参数组、参数对夏普/回撤/净盈亏的敏感性图。report_backtest_template 提供可编辑起点；选优与统计来自登记结果，样本外不得参与重新选优。保留 Agent 自由扩展洞见、图形和分析的空间。

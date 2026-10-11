@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { backtestTemplate } from './backtest-template.js';
 
 const fail = (condition, message) => { if (!condition) throw new Error(message); };
 const utf8 = bytes => new TextDecoder('utf-8', { fatal: true }).decode(bytes);
@@ -89,6 +90,7 @@ export function createTools(host) {
       await host.workspace.file('write', args.output_path, html, signal);
       return { path: args.output_path, bytes: Buffer.byteLength(html), runtime: 'sesame-report/1', runtimeRevision: '1.0.0', binding: args.data_id, editable: true };
     }),
+    backtestTemplate(host, refSchema),
     define('report_read', 'List fixed report artifact revisions or read an exact report reference, including its pinned data and related evidence.', {
       ref: Type.Optional(refSchema(Type, 'report')), include_checks: Type.Optional(Type.Boolean()), limit: Type.Optional(Type.Integer({ minimum: 1, maximum: 100 })), offset: Type.Optional(Type.Integer({ minimum: 0 })),
     }, args => args.ref ? { ...host.artifacts.read(args.ref), ...(args.include_checks ? { checks: host.artifacts.receipts(args.ref) } : {}) } : host.artifacts.list({ kind: 'report', limit: args.limit ?? 30, offset: args.offset ?? 0 })),
@@ -98,19 +100,34 @@ export function createTools(host) {
     define('report_publish', 'Publish Agent-authored HTML and packaged assets as an immutable report/1 artifact. All data and related artifacts are fixed references; report code gets only the read-only bridge. Publication does not claim successful rendering.', {
       operation_id: string('Stable idempotency key for this exact report'), title: string('Report title'), summary: string('Supported takeaway'), html_path: string('Authored workspace HTML file'), locale: Type.Optional(string('BCP 47 language, for example en or zh-CN')), provenance_kind: originSchema(Type),
       data: Type.Array(Type.Object({ id: string('Local data binding ID used by report.readData'), ref: dataRef, usage: string('What this fixed data supports') }, { additionalProperties: false }), { maxItems: 32 }),
+      strategy_source: Type.Optional(refSchema(Type, 'strategy.source')),
       related: Type.Optional(Type.Array(Type.Object({ role: Type.Union(['strategy', 'translation', 'run', 'result', 'source'].map(role => Type.Literal(role))), artifact: Type.Optional(anyRef), record: Type.Optional(Type.Object({ id: Type.String(), version: Type.Integer({ minimum: 1 }) }, { additionalProperties: false })) }, { additionalProperties: false }), { maxItems: 32 })),
       references: dependencies, features: Type.Optional(Type.Array(Type.Union(['interactive', 'strategy_details', 'trade_details'].map(value => Type.Literal(value))), { maxItems: 3 })),
       assets: Type.Optional(Type.Array(Type.Object({ path: string('Safe relative path used by the HTML'), source_path: string('Workspace file containing this asset'), media_type: string('Exact MIME type') }, { additionalProperties: false }), { maxItems: 64 })),
       artifact_id: optional('Existing report artifact ID for a new revision'), expected_revision: optional('Exact current revision when updating'),
     }, async (args, signal) => {
-      const bytes = await host.workspace.file('read', args.html_path, undefined, signal), html = utf8(bytes);
+      let bytes = await host.workspace.file('read', args.html_path, undefined, signal), html = utf8(bytes);
       fail(bytes.length > 0 && bytes.length <= 1024 * 1024 && /<[a-z][a-z0-9:-]*(?:\s+(?:[^<>"']|"[^"<>]*"|'[^'<>]*')*)?\s*\/?>/i.test(html), 'Report requires valid authored HTML up to 1 MiB');
       assertPackaged(html, 'HTML');
-      const related = args.related ?? [], refs = uniqueRefs([...args.data.map(binding => binding.ref), ...related.flatMap(item => item.artifact ? [item.artifact] : []), ...(args.references ?? [])]);
+      const related = [...(args.related ?? [])];
+      if (args.strategy_source) {
+        fail(args.strategy_source.kind === 'strategy.source', 'strategy_source requires a fixed SVL source');
+        if (!related.some(item => item.role === 'strategy' && item.artifact?.id === args.strategy_source.id && item.artifact?.revision === args.strategy_source.revision && item.artifact?.digest === args.strategy_source.digest)) related.push({ role: 'strategy', artifact: args.strategy_source });
+      }
+      fail(related.length <= 32, 'At most 32 related entries, including strategy_source');
+      const refs = uniqueRefs([...args.data.map(binding => binding.ref), ...related.flatMap(item => item.artifact ? [item.artifact] : []), ...(args.references ?? [])]);
       const records = refs.map(ref => host.artifacts.read(ref));
       fail(new Set(args.data.map(binding => binding.id)).size === args.data.length, 'Report data binding IDs must be unique');
       fail(!records.some(record => record.manifest.content.provenance?.kind === 'demo') || args.provenance_kind === 'demo', 'Reports with demo inputs must remain labelled demo');
       if (args.provenance_kind === 'demo') fail(/demo|演示|样本/i.test(html), 'Demo reports must visibly identify their data as demo');
+      if (args.provenance_kind === 'demo') {
+        // Authored JavaScript can contain the word "demo" without displaying it.
+        // Publish an explicit badge from the artifact provenance as well.
+        const badge = '<aside data-sesame-provenance="demo" role="note" style="display:block!important;visibility:visible!important;opacity:1!important;padding:8px 0;font:600 12px/1.5 system-ui;color:var(--report-muted,#626262)">DEMO · 演示数据</aside>';
+        html = /<body\b[^>]*>/i.test(html) ? html.replace(/<body\b[^>]*>/i, value => value + badge) : badge + html;
+        bytes = Buffer.from(html, 'utf8');
+        fail(bytes.length <= 1024 * 1024, 'Report including provenance badge exceeds 1 MiB');
+      }
       for (const relation of related) { fail(Boolean(relation.artifact) !== Boolean(relation.record), 'Related evidence requires exactly one artifact or versioned record'); if (relation.record) host.records.read(relation.record.id, relation.record.version); }
       const blobs = [{ ...host.artifacts.blob(bytes), path: 'index.html', mediaType: 'text/html' }], paths = new Set(['index.html']);
       let total = bytes.length;
@@ -123,7 +140,8 @@ export function createTools(host) {
       }
       signal?.throwIfAborted();
       const provenance = { kind: args.provenance_kind, references: refs };
-      const content = { schemaVersion: '1.0.0', title: args.title, summary: args.summary, entry: 'index.html', runtime: 'sesame-report/1', runtimeRevision: '1.0.0', data: args.data, related, features: args.features ?? ['interactive'], locale: args.locale ?? 'en', provenance };
+      const features = [...new Set([...(args.features ?? ['interactive']), ...(args.strategy_source ? ['strategy_details'] : [])])];
+      const content = { schemaVersion: '1.0.0', title: args.title, summary: args.summary, entry: 'index.html', runtime: 'sesame-report/1', runtimeRevision: '1.0.0', data: args.data, related, features, locale: args.locale ?? 'en', provenance };
       const ref = host.artifacts.publish({ operationId: args.operation_id, ...(args.artifact_id ? { artifactId: args.artifact_id, expectedRevision: args.expected_revision ?? null } : {}), manifest: { kind: 'report', schemaVersion: '1.0.0', content, dependencies: refs, blobs, provenance } });
       return { ref, title: args.title, data: args.data, runtime: content.runtime, runtimeRevision: content.runtimeRevision, renderStatus: 'not_checked' };
     }),
