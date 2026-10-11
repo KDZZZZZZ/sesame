@@ -1,0 +1,67 @@
+{
+  "id": "sesame/kurumi-replay",
+  "apiVersion": "1",
+  "version": "0.1.1-dev.3",
+  "title": "久留美 · 三章连续挑战",
+  "description": "非官方久留美三章连续模拟挑战，真实历史、真实角色Agent、只读行情与模拟账户观战。",
+  "default_state": "discoverable",
+  "agent_scope": "all",
+  "entry": "index.js",
+  "tool_names": [
+    "kurumi_prepare",
+    "kurumi_status",
+    "kurumi_start",
+    "kurumi_continue",
+    "kurumi_step",
+    "kurumi_pause",
+    "kurumi_reconcile",
+    "kurumi_display",
+    "kurumi_export",
+    "kurumi_report",
+    "kurumi_observe",
+    "kurumi_decide",
+    "kurumi_recover"
+  ],
+  "tool_definitions": "tools.json",
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "resources": [
+    "README.md",
+    "RULES.md",
+    "DATA.md",
+    "PROVENANCE.md",
+    "data-windows.json",
+    "native-dependencies.json"
+  ],
+  "provides": {
+    "sesame.market": "1",
+    "sesame.account": "1"
+  },
+  "engines": {
+    "sesame": ">=0.2.2"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Sesame contributors (internal Agent implementation)"
+  },
+  "workers": [
+    "runtime-adapter.js"
+  ],
+  "main_tool_names": [
+    "kurumi_prepare",
+    "kurumi_status",
+    "kurumi_start",
+    "kurumi_continue",
+    "kurumi_step",
+    "kurumi_pause",
+    "kurumi_reconcile",
+    "kurumi_display",
+    "kurumi_export",
+    "kurumi_report",
+    "kurumi_recover"
+  ]
+}

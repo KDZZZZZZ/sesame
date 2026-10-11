@@ -438,6 +438,49 @@
       "sourcePath": "plugins/optional-api-v1/packages/judgment-evolution"
     },
     {
+      "id": "sesame/kurumi-replay",
+      "version": "0.1.1-dev.3",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.2"
+      },
+      "format": "sesame-native",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors (internal Agent implementation)"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Kurumi replay",
+        "zh": "久留美连续模拟"
+      },
+      "summary": {
+        "en": "Observe a simulated continuous challenge through read-only market/account providers and real, scoped character subagents.",
+        "zh": "通过只读行情/模拟账户与真实受限角色子Agent观战三章连续挑战。"
+      },
+      "dependencies": {
+        "en": "Sesame 0.2.2+, configured OpenAI gpt-6.1-sol, locally downloaded historical bid/ask data and a privately prepared mature matching engine. No real broker.",
+        "zh": "需要Sesame 0.2.2+、已配置OpenAI gpt-6.1-sol、本机真实bid/ask历史和私有成熟撮合依赖。不连接真实券商。"
+      },
+      "tools": [
+        "kurumi_prepare",
+        "kurumi_status",
+        "kurumi_start",
+        "kurumi_continue",
+        "kurumi_step",
+        "kurumi_pause",
+        "kurumi_reconcile",
+        "kurumi_display",
+        "kurumi_export",
+        "kurumi_report",
+        "kurumi_observe",
+        "kurumi_decide",
+        "kurumi_recover"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/kurumi-replay"
+    },
+    {
       "id": "sesame/manual-trading",
       "version": "1.0.0",
       "distribution": "optional",

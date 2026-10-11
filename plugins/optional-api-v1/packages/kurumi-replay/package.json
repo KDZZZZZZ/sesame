@@ -1,0 +1,10 @@
+{
+  "name": "@sesame/kurumi-replay",
+  "version": "0.1.1-dev.3",
+  "type": "module",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.mjs"
+  }
+}
