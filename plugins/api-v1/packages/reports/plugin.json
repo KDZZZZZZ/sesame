@@ -1,12 +1,13 @@
 {
   "id": "sesame/reports",
   "title": "交互报告",
-  "description": "编写、冻结与发布统一风格的交互报告，支持统计、时序、结构图与固定数据明细联动。",
-  "version": "2.1.0",
+  "description": "统一风格的交互研究与策略报告，含 SVL 逻辑图、回测选优热力图、全部参数组与敏感性分析。",
+  "version": "2.2.0",
   "default_state": "mounted",
   "tool_names": [
     "report_data",
     "report_template",
+    "report_backtest_template",
     "report_read",
     "report_check",
     "report_publish"
@@ -37,7 +38,12 @@
     "examples/structural-fixtures.json",
     "skills/report-design/statistical-charts.md",
     "skills/report-design/temporal-charts.md",
-    "skills/report-design/structural-charts.md"
+    "skills/report-design/structural-charts.md",
+    "backtest-template.js",
+    "assets/backtest-explorer.js",
+    "assets/backtest.css",
+    "templates/backtest.html",
+    "skills/report-writing/backtest.md"
   ],
   "templates": {
     "report_repair": "repair.md"
@@ -52,6 +58,6 @@
   },
   "agent_scope": "all",
   "engines": {
-    "sesame": ">=0.2.0-0"
+    "sesame": ">=0.2.2"
   }
 }

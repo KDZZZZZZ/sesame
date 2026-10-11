@@ -42,10 +42,12 @@ test('nine defaults provide backend-free authoring/reports; MT5 and judgments in
     for (const name of ['host_files_read', 'research_register', 'report_publish', 'strategy_validate']) assert.ok(session.getActiveToolNames().includes(name), name);
     assert.equal(session.getActiveToolNames().some(name => /^(mt5_|qmt_|akshare_|vnpy_)/.test(name)), false);
     const work = runtime.workspaces.root('conv_main');
+    let strategySource;
     for (const name of ['close-threshold', 'crossover']) {
       for (const suffix of ['svl', 'replay']) await cp(join(source, 'packages/strategy-authoring/examples', `${name}.${suffix}.json`), join(work, `${name}.${suffix}.json`));
       const checked = await call('strategy_validate', { source_path: `${name}.svl.json` }); assert.deepEqual(checked.diagnostics, []);
       const published = await call('strategy_publish', { operation_id: `core-${name}`, source_path: `${name}.svl.json`, title: `Demo ${name}`, change_summary: 'Offline reference fixture' });
+      strategySource = published.ref;
       const graph = await call('strategy_graph', { source: published.ref }); assert.equal(graph.sourceDigest, checked.sourceDigest);
       const replay = await call('strategy_replay', { source: published.ref, fixture_path: `${name}.replay.json`, output_path: `${name}-result.json`, operation_id: `replay-${name}` });
       assert.equal(replay.status, 'completed'); assert.equal(replay.nativeEngineExecuted, false);
@@ -58,6 +60,22 @@ test('nine defaults provide backend-free authoring/reports; MT5 and judgments in
     if (process.env.SESAME_REPORT_INSPECT === '1') {
       const receipt = await call('report_check', { ref: report.ref }); assert.equal(receipt.status, 'rendered', JSON.stringify(receipt));
       t.diagnostic(JSON.stringify({ renderReceipt: receipt }));
+    }
+    const trials = [{ trial_id: 'fixture-trial', symbol: 'TEST', timeframe: 'H1', sample: 'fixture-only', status: 'completed', selected: true, parameters: { lookback: '20' }, sharpe: null, max_drawdown_pct: '3.25', net_profit: '-4.50' }];
+    store.put('dataset', { id: 'core-demo-trials', rows: trials, provenance: { kind: 'demo' } });
+    const trialData = await call('report_data', { operation_id: 'core-trial-data', dataset_id: 'core-demo-trials' });
+    await call('report_backtest_template', { output_path: 'backtest.html', title: 'Demo Strategy', summary: 'Rendering fixture only', strategy_source: strategySource, data_id: 'trials', parameters: ['lookback'], selection_rule: 'Only synthetic fixture trial; no fitted strategy', source_note: 'Synthetic USD result with no terminal execution', currency: 'USD' });
+    const strategyReport = await call('report_publish', { operation_id: 'core-demo-strategy', title: 'Demo Strategy', summary: 'Rendering fixture only', html_path: 'backtest.html', strategy_source: strategySource, provenance_kind: 'demo', data: [{ id: 'trials', ref: trialData.ref, usage: 'All fixture trials' }] });
+    const strategyContent = runtime.contractArtifacts.read(strategyReport.ref).manifest;
+    assert.match(runtime.contractArtifacts.resource(strategyReport.ref, 'index.html').bytes.toString(), /<aside data-sesame-provenance="demo"/);
+    assert.deepEqual(strategyContent.content.related, [{ role: 'strategy', artifact: strategySource }]);
+    assert.ok(strategyContent.dependencies.some(ref => ref.digest === strategySource.digest));
+    assert.ok(strategyContent.content.features.includes('strategy_details'));
+    assert.equal(store.get('report', strategyReport.ref.id).kind, 'strategy', 'UI routes to Strategy without an Agent-written classification flag');
+    assert.deepEqual(runtime.contractArtifacts.reportData(strategyReport.ref, 'trials').rows, trials);
+    if (process.env.SESAME_REPORT_INSPECT === '1') {
+      const receipt = await call('report_check', { ref: strategyReport.ref }); assert.equal(receipt.status, 'rendered', JSON.stringify(receipt));
+      t.diagnostic(JSON.stringify({ strategyRenderReceipt: receipt }));
     }
     store.put('mt5_project', { id: 'legacy-fixture', title: 'Must remain outside plugin private storage' });
     await writeFile(join(store.directory, 'judgments.sqlite'), 'old synthetic bytes; not a database');

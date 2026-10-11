@@ -54,6 +54,23 @@ def require(ok, operation):
 def emit(value):
     print(json.dumps(value, separators=(',', ':')), flush=True)
 
+def metaquotes_command_line(terminal, paths):
+    """Quote MetaQuotes option values, not the complete /option:value token.
+
+    CreateProcessW receives the executable separately; no shell is involved.
+    Whole-token CRT quoting leaves a trailing quote in MetaQuotes' own parser.
+    """
+    parts = [subprocess.list2cmdline([terminal]), '/portable']
+    for option, value in paths:
+        if option not in ('compile', 'include', 'config'):
+            raise ValueError('Unsupported MetaQuotes path option')
+        if any(ch in value for ch in ('"', '\x00', '\r', '\n')):
+            raise ValueError('Invalid character in MetaQuotes path')
+        parts.append('/' + option + ':"' + value + '"')
+    if paths and paths[0][0] == 'compile':
+        parts.append('/log')
+    return ' '.join(parts)
+
 def run():
     request = json.loads(sys.stdin.readline(65537))
     kind = request.get('kind', 'tester')
@@ -62,12 +79,12 @@ def run():
         terminal = request['editor']
         if not os.path.isabs(runner) or os.path.normcase(terminal) != os.path.normcase(os.path.join(runner, '.compiler', 'MetaEditor64.exe')):
             raise ValueError('Compiler must belong to the frozen private build')
-        arguments = [terminal, '/portable', '/compile:' + os.path.join(runner, 'Experts', 'Strategy.mq5'), '/include:' + runner, '/log']
+        command_line = metaquotes_command_line(terminal, [('compile', os.path.join(runner, 'Experts', 'Strategy.mq5')), ('include', runner)])
     elif kind == 'tester':
         terminal, ini = request['terminal'], request['ini']
         if not os.path.isabs(runner) or os.path.normcase(os.path.dirname(terminal)) != os.path.normcase(runner) or os.path.normcase(os.path.dirname(ini)) != os.path.normcase(runner) or os.path.basename(terminal).lower() != 'terminal64.exe':
             raise ValueError('Tester inputs must belong to the private runner')
-        arguments = [terminal, '/portable', '/config:' + ini]
+        command_line = metaquotes_command_line(terminal, [('config', ini)])
     else:
         raise ValueError('Unknown native process kind')
     canceled = threading.Event()
@@ -90,7 +107,7 @@ def run():
         require(k.SetInformationJobObject(job, 9, c.byref(limits), c.sizeof(limits)), 'SetInformationJobObject')
         startup = STARTUPINFO()
         startup.cb = c.sizeof(startup)
-        command = c.create_unicode_buffer(subprocess.list2cmdline(arguments))
+        command = c.create_unicode_buffer(command_line)
         require(k.CreateProcessW(terminal, command, None, None, False, 0x4, None, runner, c.byref(startup), c.byref(process)), 'CreateProcessW suspended')
         require(k.AssignProcessToJobObject(job, process.hProcess), 'AssignProcessToJobObject')
         assigned = True

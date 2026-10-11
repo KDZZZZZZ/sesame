@@ -1121,7 +1121,7 @@
   {
     "name": "mt5_import_configuration",
     "label": "mt5_import_configuration",
-    "description": "导入主会话用户直接提供的 MT5 MCP 配置引用，密钥只在插件后台传递。只保存 Terminal/MetaEditor 连接，随后 mt5_connect 核验账户；MetaEditor 用目录单独核验。",
+    "description": "导入主会话用户直接提供的 MT5 MCP 或账户凭据引用；凭据仅在插件后台传递，保存后立即生效，不登录、不启动终端。随后 mt5_connect 核验账户；MetaEditor、Python 与 Tester 分别验证。",
     "parameters": {
       "type": "object",
       "required": [

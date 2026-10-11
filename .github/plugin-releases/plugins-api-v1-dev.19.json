@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "tag": "plugins-api-v1-dev.19",
+  "title": "Sesame core plugins — Strategy reports and simplified guidance",
+  "sourceCommit": "ccee9459e990497bca2ed11a009ddc60fc33d8a7",
+  "sourceRoot": "plugins/api-v1",
+  "profile": "core",
+  "archive": {
+    "name": "sesame-official-plugins-api-v1-dev.19.tar.gz",
+    "sha256": "51712fd4c559e3abbc2a730bb63edbddd0ccefc2279d05b3d546a3432540ba57"
+  },
+  "lockSha256": "7b6f9620a84ac3c27b407128a7f5c971ea73338a0885ed7f705a3086ac106c6e",
+  "pullRequest": 44
+}

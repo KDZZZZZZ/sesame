@@ -2,6 +2,80 @@ import { mt5Import, mt5Path } from './mt5-path.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 const { prepareTerminal, terminalStartupDiagnostic } = await mt5Import('terminal.js');
+import { mkdtemp, mkdir, readFile, rm, stat, access } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+
+async function fixture(t) {
+  const directory = await mkdtemp(join(tmpdir(), 'mt5 preparation with spaces-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  await mkdir(join(directory, 'mt5'));
+  const scope = { login: '7001', server: 'Fixture-Demo' }, events = [], paths = [];
+  const client = { workspace: { structuredContent: { workspace: { mql5_folder: 'C:\\Fixture\\MQL5', common_folder: 'C:\\Common' } } },
+    call: async tool => ({ structuredContent: tool === 'get_trading_open_positions' ? { positions: [], orders: [] } : { charts: [] } }), close() {} };
+  const mt5 = { native: { directory }, storage: { directory },
+    official: { config: { account: { ...scope, password: 'fixture-password' } }, clients: new Map(), jobs: new Set(), client: () => client, redact: x => x },
+    market: { connected: async () => ({ scope, info: { terminal: { mcp_trade_allowed: true, experts_trade_allowed: false } } }) },
+    tester: { pending: new Set() }, deployments: { list: () => [] } };
+  const ports = { resolveNativePath: async () => directory,
+    control: async (_, action) => { events.push(action); },
+    start: async (_native, _tool, _args, file) => {
+      events.push('start'); paths.push(file);
+      assert.equal(mt5.terminalPreparing, true);
+      assert.match(await readFile(file, 'utf8'), /Password=fixture-password/);
+      if (process.platform !== 'win32') {
+        assert.doesNotMatch(file, /\s/);
+        assert.equal((await stat(dirname(file))).mode & 0o777, 0o700);
+        assert.equal((await stat(file)).mode & 0o777, 0o600);
+      }
+    },
+    wait: async () => ({ terminal: { mcp_trade_allowed: true, experts_trade_allowed: true } }) };
+  return { mt5, ports, events, paths, directory };
+}
+
+test('space-containing storage uses a unique private INI directory, cleans every run and only starts after closing', async t => {
+  const f = await fixture(t);
+  for (let i = 0; i < 2; i++) {
+    assert.equal((await prepareTerminal(f.mt5, undefined, {}, f.ports)).verified, true);
+    await assert.rejects(access(dirname(f.paths[i])), { code: 'ENOENT' });
+  }
+  assert.notEqual(f.paths[0], f.paths[1]);
+  assert.deepEqual(f.events, ['inspect', 'close', 'start', 'inspect', 'close', 'start']);
+  assert.equal(f.mt5.terminalPreparing, false);
+});
+
+test('failed preparation recovery retains one private INI and removes it after verification', async t => {
+  const f = await fixture(t); let waits = 0;
+  f.ports.wait = async () => ({ terminal: { mcp_trade_allowed: true, experts_trade_allowed: false } });
+  const original = f.ports.start;
+  f.ports.start = async (...args) => { await original(...args); assert.match(await readFile(args[3], 'utf8'), new RegExp(`AllowLiveTrading=${waits++ === 0 ? 1 : 0}`)); };
+  await assert.rejects(prepareTerminal(f.mt5, undefined, {}, f.ports), { code: 'native_config_not_applied' });
+  assert.deepEqual(f.events, ['inspect', 'close', 'start', 'close', 'start']);
+  assert.equal(f.paths[0], f.paths[1]);
+  await assert.rejects(access(dirname(f.paths[0])), { code: 'ENOENT' });
+  assert.equal(f.mt5.terminalPreparing, false);
+});
+
+test('a terminal refusing to close is never replaced by a second instance', async t => {
+  const f = await fixture(t);
+  f.ports.control = async (_, action) => { f.events.push(action); if (action === 'close') throw new Error('refuse to close occupied terminal'); };
+  await assert.rejects(prepareTerminal(f.mt5, undefined, {}, f.ports), /refuse to close/);
+  assert.deepEqual(f.events, ['inspect', 'close']); assert.deepEqual(f.paths, []);
+  assert.equal(f.mt5.terminalPreparing, false);
+});
+
+test('concurrent preparation cannot replace the active INI or start another terminal', async t => {
+  const f = await fixture(t); let release, started;
+  const running = new Promise(resolve => { started = resolve; });
+  f.ports.wait = async () => { started(); await new Promise(resolve => { release = resolve; }); return { terminal: { mcp_trade_allowed: true, experts_trade_allowed: true } }; };
+  const first = prepareTerminal(f.mt5, undefined, {}, f.ports);
+  await running;
+  await assert.rejects(prepareTerminal(f.mt5, undefined, {}, f.ports), { code: 'terminal_preparing' });
+  assert.equal(f.paths.length, 1); assert.equal(f.mt5.terminalPreparing, true);
+  release(); await first;
+  assert.equal(f.events.filter(action => action === 'start').length, 1);
+  await assert.rejects(access(dirname(f.paths[0])), { code: 'ENOENT' });
+});
 
 test('automatic mounting preserves occupied terminals and native permission boundaries before touching files or processes', async () => {
   const scope = { login: '7001', server: 'Demo' };

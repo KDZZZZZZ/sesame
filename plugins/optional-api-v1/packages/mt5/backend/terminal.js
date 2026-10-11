@@ -1,7 +1,8 @@
 import { promises as fs } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, resolve, win32 } from 'node:path';
 import { winePrefix } from './platform.js';
-import { requireValue } from './support.js';
+import { requireValue, securePath } from './support.js';
 import { testerProxyLines, waitForTradingConnection } from './connection.js';
 import { controlTerminal, launch, winePath } from './process.js';
 import { nativeData } from './market.js';
@@ -77,28 +78,32 @@ export async function prepareTerminal(mt5, progress = () => {}, { restart = fals
   const dataDirectory = await resolveNativePath(win32.dirname(workspace.mql5_folder), mt5.native);
   const portable = resolve(dataDirectory).toLowerCase() === resolve(mt5.native.directory).toLowerCase();
   await control(mt5.native, 'inspect');
-  const file = join(mt5.storage.directory, 'mt5', 'managed-terminal.ini');
-  let preset = null, startup = '';
-  if (deployment) {
-    requireValue(/^[^\r\n=\0]+$/.test(deployment.symbol) && /^[A-Z][A-Z0-9]*$/.test(deployment.period), '挂载品种或周期无效');
-    for (const [key, value] of Object.entries(inputs)) requireValue(/^[A-Za-z][\w]*$/.test(key) && !/[\r\n\0]/.test(String(value)), '挂载参数无效');
-    preset = join(dataDirectory, 'MQL5/Presets', `${deployment.id}.set`);
-    await fs.mkdir(join(dataDirectory, 'MQL5/Presets'), { recursive: true });
-    await fs.writeFile(preset, Buffer.from('\uFEFF' + Object.entries(inputs).map(([k, v]) => `${k}=${v}`).join('\r\n') + '\r\n', 'utf16le'), { mode: 0o600 });
-    // Official StartUp preserves per-EA AllowLiveTrading. MCP chart_add_expert
-    // in build 6230 attaches with MQL_TRADE_ALLOWED=false even when the terminal
-    // is enabled. This opens one new, non-persistent chart, never a user's chart.
-    startup = ['[StartUp]', `Expert=MT5Agent\\${deployment.build_id}`, `ExpertParameters=${deployment.id}.set`, `Symbol=${deployment.symbol}`, `Period=${deployment.period}`, ''].join('\r\n');
-  }
-  await fs.writeFile(file, terminalConfig(config, true) + startup, { mode: 0o600 }); await fs.chmod(file, 0o600);
   const resetClient = () => { official.clients.get('terminal')?.close(); official.clients.delete('terminal'); return official.client('terminal'); };
   requireValue(!mt5.terminalPreparing, '已有终端准备正在执行', 409, 'terminal_preparing');
   mt5.terminalPreparationEpoch = (mt5.terminalPreparationEpoch ?? 0) + 1;
   mt5.terminalPreparing = true;
-  let closed = false;
+  let closed = false, directory, file, preset = null;
   const logDirectory = join(dataDirectory, 'logs'), logOffsets = new Map();
-  try { for (const name of await fs.readdir(logDirectory)) if (/^\d{8}\.log$/.test(name)) logOffsets.set(name, (await fs.stat(join(logDirectory, name))).size); } catch {}
   try {
+    // Wine quotes argv elements containing spaces; MT5's /config parser then
+    // retains the closing quote. Stage secrets in a unique private, space-free
+    // directory instead of the user's "Application Support" path or a shared file.
+    const temporaryRoot = process.platform === 'win32' || !/[\s"\0]/.test(tmpdir()) ? tmpdir() : '/tmp';
+    directory = await fs.mkdtemp(join(temporaryRoot, 'sesame-mt5-config-'));
+    await fs.chmod(directory, 0o700); securePath(directory);
+    file = join(directory, 'terminal.ini');
+    let startup = '';
+    if (deployment) {
+      requireValue(/^[^\r\n=\0]+$/.test(deployment.symbol) && /^[A-Z][A-Z0-9]*$/.test(deployment.period), '挂载品种或周期无效');
+      for (const [key, value] of Object.entries(inputs)) requireValue(/^[A-Za-z][\w]*$/.test(key) && !/[\r\n\0]/.test(String(value)), '挂载参数无效');
+      preset = join(dataDirectory, 'MQL5/Presets', `${deployment.id}.set`);
+      await fs.mkdir(join(dataDirectory, 'MQL5/Presets'), { recursive: true });
+      await fs.writeFile(preset, Buffer.from('\uFEFF' + Object.entries(inputs).map(([k, v]) => `${k}=${v}`).join('\r\n') + '\r\n', 'utf16le'), { mode: 0o600 });
+      // StartUp preserves per-EA AllowLiveTrading and opens one new chart.
+      startup = ['[StartUp]', `Expert=MT5Agent\\${deployment.build_id}`, `ExpertParameters=${deployment.id}.set`, `Symbol=${deployment.symbol}`, `Period=${deployment.period}`, ''].join('\r\n');
+    }
+    await fs.writeFile(file, terminalConfig(config, true) + startup, { flag: 'wx', mode: 0o600 }); securePath(file);
+    try { for (const name of await fs.readdir(logDirectory)) if (/^\d{8}\.log$/.test(name)) logOffsets.set(name, (await fs.stat(join(logDirectory, name))).size); } catch {}
     progress('restarting');
     await control(mt5.native, 'close'); closed = true;
     resetClient();
@@ -141,7 +146,7 @@ export async function prepareTerminal(mt5, progress = () => {}, { restart = fals
     throw error;
   } finally {
     try {
-      await fs.rm(file, { force: true });
+      if (directory) await fs.rm(directory, { recursive: true, force: true });
       if (preset) await fs.rm(preset, { force: true });
     } finally { mt5.terminalPreparing = false; }
   }

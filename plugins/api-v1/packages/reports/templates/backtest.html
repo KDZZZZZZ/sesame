@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="{{LOCALE}}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{TITLE}}</title><style>{{STYLES}}</style></head>
+<body><main id="report" aria-label="{{TITLE}}"></main>
+<script>{{KIT}}</script><script>{{CHARTS}}</script><script>{{EXPLORER}}</script><script>
+const config = {{CONFIG}};
+async function initialize() {
+  const identity = await window.report.readData(config.dataId, { limit: 1 });
+  const rows = await reportKit.rows(config.dataId, { maxRows: 100000 });
+  // Add insight, equity/trade evidence and bespoke interactions here. The source
+  // graph and all rows retain their exact identity; no backend is called here.
+  SesameBacktest.render('#report', { ...config, rows, demo: config.demo || identity.provenance?.kind === 'demo' });
+}
+window.report.track(initialize()).catch(error => {
+  const panel = document.getElementById('report'); panel.className = 'status-error'; panel.textContent = error.message;
+});
+</script></body></html>

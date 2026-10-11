@@ -44,7 +44,7 @@ Research：
 3. sections（3–4）：主要发现（趋势或对比图）→ 分组或驱动因素（bar / heatmap）→ 数据质量（排除原因 hbar + 被排除记录表）。
 4. method：清洗规则、统计口径、限制、来源。
 
-Strategy：
+Strategy（先读 [backtest.md](backtest.md)，其中四项必备内容不能省略；以下是可扩展的论证顺序）：
 
 1. verdict：验证期（或样本外）结果，以及是否支持策略假设。
 2. metrics：验证净利润、收益率、最大回撤、交易数、选中参数。

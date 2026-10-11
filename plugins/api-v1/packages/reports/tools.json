@@ -320,6 +320,143 @@
     }
   },
   {
+    "name": "report_backtest_template",
+    "label": "report_backtest_template",
+    "description": "Create an editable Strategy report with the graph derived from an exact SVL source, a symbol/timeframe heatmap of preselected optimization winners, all-trial inspection and parameter sensitivity charts. Read report-writing/backtest.md for frozen row fields and selection rules. This renders results; it never runs or optimizes a strategy.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "output_path",
+        "title",
+        "summary",
+        "strategy_source",
+        "data_id",
+        "parameters",
+        "selection_rule",
+        "source_note",
+        "currency"
+      ],
+      "properties": {
+        "output_path": {
+          "type": "string",
+          "description": "Workspace HTML path",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "title": {
+          "type": "string",
+          "description": "Strategy report title",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "summary": {
+          "type": "string",
+          "description": "Finding supported by actual results",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "strategy_source": {
+          "type": "object",
+          "required": [
+            "id",
+            "revision",
+            "digest",
+            "kind",
+            "schemaVersion"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "kind": {
+              "type": "string",
+              "const": "strategy.source"
+            },
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0.0"
+            }
+          },
+          "additionalProperties": false
+        },
+        "data_id": {
+          "type": "string",
+          "description": "Fixed report data binding containing all trials; see backtest.md",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Parameter key in each row.parameters",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "selection_metric": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "sharpe"
+            },
+            {
+              "type": "string",
+              "const": "max_drawdown_pct"
+            },
+            {
+              "type": "string",
+              "const": "net_profit"
+            }
+          ]
+        },
+        "selection_rule": {
+          "type": "string",
+          "description": "Prespecified optimization objective, sample, constraints and tie-break; selected rows must already be recorded upstream",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "source_note": {
+          "type": "string",
+          "description": "Engine, data range, sample split, costs, currency, metric definitions and limitations",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "currency": {
+          "type": "string",
+          "description": "One common profit currency for these rows; split different currencies into separate comparisons",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "locale": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "en"
+            },
+            {
+              "type": "string",
+              "const": "zh-CN"
+            }
+          ]
+        },
+        "demo": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
     "name": "report_read",
     "label": "report_read",
     "description": "List fixed report artifact revisions or read an exact report reference, including its pinned data and related evidence.",
@@ -540,6 +677,37 @@
             "additionalProperties": false
           },
           "maxItems": 32
+        },
+        "strategy_source": {
+          "type": "object",
+          "required": [
+            "id",
+            "revision",
+            "digest",
+            "kind",
+            "schemaVersion"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "kind": {
+              "type": "string",
+              "const": "strategy.source"
+            },
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0.0"
+            }
+          },
+          "additionalProperties": false
         },
         "related": {
           "type": "array",

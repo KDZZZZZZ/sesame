@@ -541,7 +541,7 @@
     },
     {
       "id": "sesame/mt5",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -626,7 +626,7 @@
     },
     {
       "id": "sesame/orchestration",
-      "version": "2.2.0",
+      "version": "2.2.1",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -807,11 +807,11 @@
     },
     {
       "id": "sesame/reports",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "distribution": "core",
       "state": "mounted",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.2"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -824,8 +824,8 @@
         "zh": "交互报告"
       },
       "summary": {
-        "en": "Create readable reports with offline charts, fixed data and real render checks.",
-        "zh": "用离线图表、固定数据和真实渲染检查生成直观报告。"
+        "en": "Explore strategy logic, optimization heatmaps and parameter sensitivity in interactive reports.",
+        "zh": "交互查看策略逻辑、回测优化热力图、全部参数试验和敏感性分析。"
       },
       "dependencies": {
         "en": "No market backend. Bundled charts use SVG and require no CDN.",
@@ -834,6 +834,7 @@
       "tools": [
         "report_data",
         "report_template",
+        "report_backtest_template",
         "report_read",
         "report_check",
         "report_publish"
