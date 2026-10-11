@@ -118,7 +118,7 @@ export class Tester {
     if (checked.engine) requireValue(build.engine_digest === checked.engine.digest && build.generated_digest === checked.engine.generated_digest, '构建与已校验源码身份不一致，请重新编译', 409, 'engine_mismatch');
     requireValue(implementation.status !== 'draft', `此构建的策略模块待实现：${implementation.pending_modules.join(', ')}。请完成模块代码和 strategy.json 声明后保存、重新编译。`, 409, 'strategy_incomplete');
     const account = this.mt5.official.config.account;
-    requireValue(account.login && account.server && account.password, '请在 MT5 连接中配置回测账户', 409, 'mt5_account_required');
+    requireValue(account.login && account.server && account.password, '真实 Tester 需要已绑定账户的登录密码；先读取 connection skill，通过 mt5_import_configuration 导入账户凭据引用。', 409, 'mt5_account_required');
     const ownership = owner ? this.mt5.host.workspace.owner(owner) ?? {} : {};
     const job = { ...ownership, id: id('bt'), version: 1, conversation_id: owner, project_id: build.project_id, build_id: buildId, revision: build.revision,
       artifact_digest: build.ex5_sha256, connection_version: this.mt5.official.config.version, config: testerConfig(config), parameter_space: structuredClone(parameterSpace), risk_limits: riskLimits(frozenRiskLimits ?? project.test_risk_limits),

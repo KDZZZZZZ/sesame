@@ -50,10 +50,12 @@ export async function importConfiguration(host, mt5, imports, args) {
   return host.configuration.exclusive(async () => {
     requireValue(mt5.official.settings().version === args.expected_version, 'MT5 配置已更新，请重新读取', 409, 'version_conflict');
     const pending = imports.read(args.source_message_id, host.scope.conversationId);
+    if (pending.binding) requireValue(pending.binding.login === mt5.official.config.account.login && pending.binding.server === mt5.official.config.account.server,
+      '账户绑定已改变，此密码引用不能用于其他账户；请确认目标并重新提供账户配置。', 409, 'mt5_account_binding_changed');
     const record = { id: args.command_id, conversation_id: host.scope.conversationId, fingerprint: hash, target: 'mt5', changes: { source_message_id: args.source_message_id }, status: 'running', created_at: now() };
     recordChange(host, record);
     let result;
-    try { result = await mt5.official.configure({ expected_version: args.expected_version, servers: pending.servers }); }
+    try { result = await mt5.official.configure({ expected_version: args.expected_version, servers: pending.servers, ...(pending.account ? { account: pending.account } : {}) }); }
     catch (cause) {
       const safe = { code: cause.code ?? 'mt5_import_failed', message: 'MT5 配置导入未完成，请重新读取连接设置后重试。' };
       recordChange(host, { ...record, status: 'failed', error: safe, completed_at: now() }); throw new ApiError(cause.status ?? 422, safe.code, safe.message);

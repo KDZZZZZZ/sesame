@@ -27,7 +27,7 @@ export function createTools(host) {
 
 export async function activate(host, options = {}) {
   const mt5 = await new MT5(host, options).init();
-  const imports = new MT5ConfigImports(host);
+  const imports = new MT5ConfigImports(host, Date.now, () => mt5.official.settings().account);
   const disposers = [];
   try {
     mt5.runObserver = new NativeRunObserver(host, mt5);

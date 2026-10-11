@@ -12,6 +12,18 @@ const invalid = () => new ApiError(422, 'mt5_import_invalid', 'MT5 MCP 导出格
 const summary = servers => Object.fromEntries(Object.entries(servers).map(([name, { token, url, enabled }]) => [name, { url, enabled, authenticated: Boolean(token) }]));
 const configMarker = /"mcpServers"\s*:|^\s*\[mcp_servers\./m;
 const redact = (text, servers) => Object.values(servers).reduce((value, { token }) => value.replaceAll(token, '[密钥已隐藏]').replaceAll(JSON.stringify(token).slice(1, -1), '[密钥已隐藏]'), text);
+const accountMarker = /"mt5Account"\s*:|^\s*MT5\s+(?:password|密码)\s*[:：]/im;
+const invalidAccount = () => new ApiError(422, 'mt5_account_import_invalid', 'MT5 账户配置无效；请使用完整 mt5Account JSON，或为已绑定账户提供 MT5 password: 密码。未保存任何凭据。');
+const accountSummary = account => ({ login: account.login, server: account.server, password_configured: Boolean(account.password) });
+const redactAccount = (text, account) => account ? text.replaceAll(JSON.stringify(account.password).slice(1, -1), '[密码已隐藏]').replaceAll(account.password, '[密码已隐藏]') : text;
+
+function validateAccount(account) {
+  if (!object(account) || Object.keys(account).some(key => !['login', 'server', 'password'].includes(key)) ||
+      typeof account.login !== 'string' || !/^[1-9][0-9]{0,19}$/.test(account.login) ||
+      typeof account.server !== 'string' || !account.server || account.server.length > 200 || /[\r\n\0]/.test(account.server) ||
+      typeof account.password !== 'string' || !account.password || account.password.length > 1024 || /[\r\n\0]/.test(account.password)) throw invalidAccount();
+  return { login: account.login, server: account.server, password: account.password };
+}
 
 function mergeServers(target, config) {
   if (!object(config)) throw invalid();
@@ -79,10 +91,38 @@ export function extractMT5Config(text) {
   return { servers, text: redact(sanitized, servers) };
 }
 
+// Only an explicit account marker is accepted. Ordinary chat and bare passwords
+// are never guessed to be account configuration or silently tied to an account.
+export function extractMT5Account(text, boundAccount = {}) {
+  if (!accountMarker.test(text)) return null;
+  const ranges = []; let account, binding;
+  const merge = value => {
+    const next = validateAccount(value);
+    if (account && stableJSON(account) !== stableJSON(next)) throw invalidAccount();
+    account = next;
+  };
+  for (const range of jsonBlocks(text)) {
+    const raw = text.slice(range.start, range.end);
+    if (!/"mt5Account"\s*:/.test(raw)) continue;
+    let parsed; try { parsed = JSON.parse(raw); } catch { throw invalidAccount(); }
+    merge(parsed.mt5Account); ranges.push(range);
+  }
+  for (const match of text.matchAll(/^[ \t]*MT5\s+(?:password|密码)[ \t]*[:：][ \t]?([^\r\n]*)\r?$/gim)) {
+    merge({ login: boundAccount.login, server: boundAccount.server, password: match[1] });
+    binding = { login: boundAccount.login, server: boundAccount.server };
+    ranges.push({ start: match.index, end: match.index + match[0].length });
+  }
+  if (!account) throw invalidAccount();
+  let sanitized = text;
+  for (const { start, end } of ranges.sort((a, b) => b.start - a.start)) sanitized = sanitized.slice(0, start) + '[MT5 账户配置已提取，密码已隐藏]' + sanitized.slice(end);
+  if (accountMarker.test(sanitized)) throw invalidAccount();
+  return { account, binding, text: redactAccount(sanitized, account) };
+}
+
 /** Credentials never enter chat entities, model context, events or tool arguments. */
 export class MT5ConfigImports {
-  constructor(host, clock = Date.now) {
-    this.host = host; this.clock = clock;
+  constructor(host, clock = Date.now, account = () => ({})) {
+    this.host = host; this.clock = clock; this.account = account;
     this.directory = join(host.storage.directory, 'mt5', 'pending-imports');
     mkdirSync(this.directory, { recursive: true, mode: 0o700 }); securePath(this.directory);
     this.pending();
@@ -99,24 +139,34 @@ export class MT5ConfigImports {
       let record;
       try { record = JSON.parse(readFileSync(path, 'utf8')); } catch { rmSync(path); continue; }
       if (!record || !object(record.servers) || !Number.isFinite(record.expires_at) || this.clock() >= record.expires_at) { rmSync(path); continue; }
-      result.push({ source_message_id: record.message_id, expires_at: new Date(record.expires_at).toISOString(), servers: summary(record.servers) });
+      result.push({ source_message_id: record.message_id, expires_at: new Date(record.expires_at).toISOString(), servers: summary(record.servers), ...(record.account ? { account: accountSummary(record.account) } : {}) });
     }
     return result;
   }
   prepare(messageId, conversation, parts, source, metadata) {
-    const matches = parts.map(part => part.type === 'text' ? extractMT5Config(part.text) : null);
+    const matches = parts.map(part => {
+      if (part.type !== 'text') return null;
+      const bound = this.account(), mcp = extractMT5Config(part.text), account = extractMT5Account(part.text, bound);
+      const text = mcp?.text ?? part.text;
+      return mcp || account ? { servers: mcp?.servers ?? {}, ...account, text: account ? extractMT5Account(text, bound)?.text ?? text : text } : null;
+    });
     if (!matches.some(Boolean)) return parts;
     requireValue(conversation.scope === 'main' && !source && metadata.origin !== 'automation', '请由用户在主会话中直接提供 MT5 配置', 403);
-    const servers = {};
+    const servers = {}; let account, binding;
     for (const match of matches.filter(Boolean)) for (const [name, server] of Object.entries(match.servers)) {
       if (servers[name] && stableJSON(servers[name]) !== stableJSON(server)) throw invalid();
       servers[name] = server;
     }
+    for (const match of matches.filter(value => value?.account)) {
+      if (account && stableJSON(account) !== stableJSON(match.account)) throw invalidAccount();
+      account = match.account;
+      if (match.binding) binding = match.binding;
+    }
     requireValue(this.pending().length < 32, '待导入配置过多；先用 mt5_settings 查看待导入引用并按用户意图处理已有配置，必要时再重新发送导出');
-    writeFileSync(this.path(messageId), JSON.stringify({ message_id: messageId, conversation_id: conversation.id, expires_at: this.clock() + TTL, servers }), { flag: 'wx', mode: 0o600 });
+    writeFileSync(this.path(messageId), JSON.stringify({ message_id: messageId, conversation_id: conversation.id, expires_at: this.clock() + TTL, servers, ...(account ? { account } : {}), ...(binding ? { binding } : {}) }), { flag: 'wx', mode: 0o600 });
     securePath(this.path(messageId));
-    const content = parts.map((part, i) => part.type === 'text' ? { type: 'text', text: redact(matches[i]?.text ?? part.text, servers) } : part);
-    content[matches.findIndex(Boolean)].text += `\n[Sesame 已安全提取用户提供的 MT5 配置]\nsource_message_id: ${messageId}\n${JSON.stringify(summary(servers))}\n可用 mt5_import_configuration 按此引用导入；按用户意图处理，不需要再次索取密钥。此引用 24 小时后过期。`;
+    const content = parts.map((part, i) => part.type === 'text' ? { type: 'text', text: redactAccount(redact(matches[i]?.text ?? part.text, servers), account) } : part);
+    content[matches.findIndex(Boolean)].text += `\n[Sesame 已安全提取用户提供的 MT5 配置]\nsource_message_id: ${messageId}\n${JSON.stringify({ servers: summary(servers), ...(account ? { account: accountSummary(account) } : {}) })}\n可用 mt5_import_configuration 按此引用导入；按用户意图处理，不需要再次索取凭据。此引用 24 小时后过期。`;
     return content;
   }
   read(messageId, conversationId) {

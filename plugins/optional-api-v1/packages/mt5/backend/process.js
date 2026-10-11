@@ -95,6 +95,7 @@ export async function launch(native, tool, args, configFile, testerAgent, signal
     }));
   }
   const executable = tool === 'start_editor' ? native.editor : native.terminal;
+  if (args.use_startup_config) requireValue(typeof configFile === 'string' && !/["\r\n\0]/.test(configFile), '原生启动配置路径无效', 400, 'invalid_native_path');
   const flags = [...(args.portable ? ['/portable'] : []), ...(args.profile ? [`/profile:${args.profile}`] : []), ...(args.use_account_login ? [`/login:${args.configured_login}`] : []), ...(args.use_startup_config ? [`/config:${winePath(configFile)}`] : [])];
   const env = environment(native, native.commonFolder);
   const { program, args: argv } = terminalInvocation(executable, flags, env, native);
