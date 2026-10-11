@@ -10,7 +10,7 @@ import { winePrefix, wineCommand as wine, wineEnvironment as environment, termin
 const worker = fileURLToPath(new URL('./python-worker.py', import.meta.url));
 const terminalControl = fileURLToPath(new URL('./terminal-control.py', import.meta.url));
 const exec = promisify(execFile);
-export const winePath = path => process.platform === 'win32' ? path : `Z:${path.replaceAll('/', '\\')}`;
+export const winePath = (path, platform = process.platform) => platform === 'win32' ? path : `Z:${path.replaceAll('/', '\\')}`;
 export const pythonPath = native => native?.python ?? process.env.MT5AGENT_PYTHON ?? join(winePrefix(native), 'drive_c/mt5agent-python/python.exe');
 
 export async function controlTerminal(native, action, signal) {
@@ -81,7 +81,22 @@ export const LAUNCH_TOOLS = [
   ...['install', 'uninstall', 'start', 'stop', 'restart', 'help'].map(action => ({ name: `tester_agent_${action}`, description: `MetaTester 官方 /${action} 命令。地址、端口和密码由用户配置，操作 Windows/Wine 中的测试代理服务，不是启动一次策略回测。`, inputSchema: { type: 'object', properties: {}, additionalProperties: false } })),
 ];
 
-export async function launch(native, tool, args, configFile, testerAgent, signal) {
+function windowsTerminalCommand(executable, flags) {
+  requireValue(typeof executable === 'string' && executable && !/["\r\n\0]/.test(executable), '原生程序路径无效', 400, 'invalid_native_path');
+  const args = flags.map(flag => {
+    if (flag === '/portable') return flag;
+    const option = /^\/(config|profile|login):([\s\S]+)$/.exec(flag);
+    requireValue(option && !/["\r\n\0]/.test(option[2]) && (option[1] !== 'login' || /^\d+$/.test(option[2])), '原生启动参数无效', 400, 'invalid_native_argument');
+    // MetaQuotes reads the raw command line: "/config:path with spaces" leaves
+    // a trailing quote in its value. Quote only the value, without CRT escaping.
+    return option[1] === 'login' ? flag : `/${option[1]}:"${option[2]}"`;
+  });
+  // Verbatim mode includes argv[0], so quote the executable too while leaving
+  // spawn's program path unchanged. No shell or credential argument is involved.
+  return { args, options: { windowsVerbatimArguments: true, argv0: `"${executable}"` } };
+}
+
+export async function launch(native, tool, args, configFile, testerAgent, signal, { spawnProcess = spawn, platform = process.platform } = {}) {
   requireValue(native, 'MT5 安装目录未找到', 503, 'mt5_unavailable');
   if (tool.startsWith('tester_agent_')) {
     const executable = join(native.directory, 'metatester64.exe'), action = tool.slice('tester_agent_'.length);
@@ -96,10 +111,11 @@ export async function launch(native, tool, args, configFile, testerAgent, signal
   }
   const executable = tool === 'start_editor' ? native.editor : native.terminal;
   if (args.use_startup_config) requireValue(typeof configFile === 'string' && !/["\r\n\0]/.test(configFile), '原生启动配置路径无效', 400, 'invalid_native_path');
-  const flags = [...(args.portable ? ['/portable'] : []), ...(args.profile ? [`/profile:${args.profile}`] : []), ...(args.use_account_login ? [`/login:${args.configured_login}`] : []), ...(args.use_startup_config ? [`/config:${winePath(configFile)}`] : [])];
+  const flags = [...(args.portable ? ['/portable'] : []), ...(args.profile ? [`/profile:${args.profile}`] : []), ...(args.use_account_login ? [`/login:${args.configured_login}`] : []), ...(args.use_startup_config ? [`/config:${winePath(configFile, platform)}`] : [])];
   const env = environment(native, native.commonFolder);
-  const { program, args: argv } = terminalInvocation(executable, flags, env, native);
-  if (process.platform === 'linux' && process.env.INVOCATION_ID) {
+  const command = platform === 'win32' ? windowsTerminalCommand(executable, flags) : null;
+  const { program, args: argv } = command ? { program: executable, args: command.args } : terminalInvocation(executable, flags, env, native);
+  if (platform === 'linux' && process.env.INVOCATION_ID) {
     // detached only separates process groups. A systemd service still kills its
     // entire cgroup on restart, so the trading terminal needs its own user unit.
     const unit = `mt5agent-${tool.replaceAll('_', '-')}-${randomUUID()}.service`;
@@ -112,7 +128,7 @@ export async function launch(native, tool, args, configFile, testerAgent, signal
       throw new ApiError(503, 'terminal_launch_unavailable', '独立终端启动尚未确认，请重试连接检查；未自动重复启动。');
     }
   }
-  const child = spawn(program, argv, { env, stdio: 'ignore', detached: true });
+  const child = spawnProcess(program, argv, { env, stdio: 'ignore', detached: true, ...command?.options });
   await new Promise((resolve, reject) => { child.once('spawn', resolve); child.once('error', reject); });
   child.unref();
   return { pid: child.pid, status: 'spawned', message: '已发送启动请求。请刷新原生能力确认连接；同目录已有终端时不会应用新的启动参数。' };

@@ -2,9 +2,11 @@ import { mt5Import, mt5Path } from './mt5-path.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 const { prepareTerminal, terminalStartupDiagnostic } = await mt5Import('terminal.js');
-import { mkdtemp, mkdir, readFile, rm, stat, access } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, readdir, rm, stat, access } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { EventEmitter } from 'node:events';
+const { launch } = await mt5Import('process.js');
 
 async function fixture(t) {
   const directory = await mkdtemp(join(tmpdir(), 'mt5 preparation with spaces-'));
@@ -75,6 +77,58 @@ test('concurrent preparation cannot replace the active INI or start another term
   release(); await first;
   assert.equal(f.events.filter(action => action === 'start').length, 1);
   await assert.rejects(access(dirname(f.paths[0])), { code: 'ENOENT' });
+});
+
+test('Windows spaced TEMP reaches the real launcher with value quotes, private credentials and cleanup on success or recovery', async t => {
+  for (const succeeds of [true, false]) {
+    const f = await fixture(t), privateTemp = join(f.directory, 'Jane Doe 芝麻 TEMP');
+    await mkdir(privateTemp);
+    f.mt5.native.terminal = 'C:\\Program Files\\MetaTrader 5\\terminal64.exe';
+    f.ports.platform = 'win32'; f.ports.temporaryDirectory = () => privateTemp;
+    const launches = [], progress = []; let waits = 0;
+    f.ports.wait = async () => ({ terminal: { mcp_trade_allowed: true, experts_trade_allowed: succeeds && ++waits === 1 } });
+    f.ports.start = async (native, tool, args, file, agent, signal) => {
+      f.events.push('start'); f.paths.push(file);
+      assert.equal(dirname(dirname(file)), privateTemp);
+      assert.match(file, /Jane Doe 芝麻 TEMP/);
+      const body = await readFile(file, 'utf8');
+      assert.match(body, /Password=fixture-password/);
+      assert.match(body, new RegExp(`AllowLiveTrading=${f.paths.length === 1 ? 1 : 0}`));
+      if (process.platform !== 'win32') {
+        assert.equal((await stat(dirname(file))).mode & 0o777, 0o700);
+        assert.equal((await stat(file)).mode & 0o777, 0o600);
+      }
+      return launch(native, tool, args, file, agent, signal, { platform: 'win32', spawnProcess: (program, argv, options) => {
+        assert.equal(f.events.at(-2), 'close', 'Every launch follows a confirmed close');
+        assert.equal(options.windowsVerbatimArguments, true);
+        assert.equal(options.argv0, `"${f.mt5.native.terminal}"`);
+        assert.equal(argv.find(flag => flag.startsWith('/config:')), `/config:"${file}"`);
+        assert.doesNotMatch(argv.join(' '), /fixture-password|\/password:/);
+        launches.push({ program, argv, argv0: options.argv0 });
+        const child = new EventEmitter(); child.pid = 12345; child.unref = () => {};
+        queueMicrotask(() => child.emit('spawn')); return child;
+      } });
+    };
+    const operation = prepareTerminal(f.mt5, value => progress.push(value), {}, f.ports);
+    if (succeeds) assert.equal((await operation).verified, true);
+    else await assert.rejects(operation, { code: 'native_config_not_applied' });
+    assert.equal(launches.length, succeeds ? 1 : 2);
+    if (!succeeds) assert.equal(f.paths[0], f.paths[1], 'Disabled recovery keeps the same owned config until verified');
+    assert.equal(f.mt5.terminalPreparing, false);
+    assert.deepEqual(await readdir(privateTemp), [], 'No credential directory remains after either outcome');
+    assert.doesNotMatch(JSON.stringify({ launches, progress }), /fixture-password/);
+  }
+});
+
+test('Windows spaced TEMP is cleaned if the existing terminal refuses to close', async t => {
+  const f = await fixture(t), privateTemp = join(f.directory, 'Jane Doe 芝麻 TEMP');
+  await mkdir(privateTemp);
+  f.ports.platform = 'win32'; f.ports.temporaryDirectory = () => privateTemp;
+  f.ports.control = async (_, action) => { f.events.push(action); if (action === 'close') throw new Error('refuse to close occupied terminal'); };
+  await assert.rejects(prepareTerminal(f.mt5, undefined, {}, f.ports), /refuse to close/);
+  assert.deepEqual(f.events, ['inspect', 'close']); assert.deepEqual(f.paths, []);
+  assert.deepEqual(await readdir(privateTemp), []);
+  assert.equal(f.mt5.terminalPreparing, false);
 });
 
 test('automatic mounting preserves occupied terminals and native permission boundaries before touching files or processes', async () => {
