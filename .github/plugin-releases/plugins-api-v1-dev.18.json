@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "tag": "plugins-api-v1-dev.18",
   "title": "Sesame core plugins — strategy methods and supervised Agent tasks",
-  "sourceCommit": "71d02a3ab9c893c8b13a3fff46529bbd4f0c0a9a",
+  "sourceCommit": "92131b4f3de02af130407ad94b6676ab0c9aff66",
   "sourceRoot": "plugins/api-v1",
   "profile": "core",
   "archive": {
     "name": "sesame-official-plugins-api-v1-dev.18.tar.gz",
-    "sha256": "37678f7b6cef40111cb1bb49ef4cb1524887aafd4ec459ee72df36beab06f856"
+    "sha256": "ec5814755fee7a3277bb2e05c1761632b1c5eb18b18c19f515ed982f84f0a2fc"
   },
-  "lockSha256": "0dfc62acf6610837f326fa891861694720d1febdd7b4abbe0dd11b309b323990",
+  "lockSha256": "c522818f13c4086222c4acafff0fb9e219bb348df1536e149622a640f0a6d25a",
   "pullRequest": 43
 }

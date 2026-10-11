@@ -26,6 +26,12 @@ SESAME_PLUGIN_SDK_LOADER=/path/to/matching-host/modules/plugins/sdk-loader.js \
 npm test --prefix plugins/optional-api-v1
 ```
 
+Post-review corrections also passed all 81 execution, portfolio-method and pipeline
+checks. They cover parent cancellation after protective exits, late-fill races,
+contradictory reconciliation and feasible integer/fractional order splits. The
+trusted module validator remains unchanged; the field-list spelling has equivalent
+JavaScript string semantics.
+
 Both source locks, the descriptive inventory, changed-package version increments
 and deterministic archive identities are checked separately. The immutable
 publication records contain the exact reviewed commits, CI checks and semantic
