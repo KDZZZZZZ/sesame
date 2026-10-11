@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "tag": "plugins-optional-api-v1-dev.12",
   "title": "Sesame optional plugins — MT5 frozen inputs and conformance checks",
-  "sourceCommit": "92131b4f3de02af130407ad94b6676ab0c9aff66",
+  "sourceCommit": "1a76329c3095c6094ad58ddc54155a5cf76409b0",
   "sourceRoot": "plugins/optional-api-v1",
   "profile": "optional",
   "archive": {
