@@ -347,7 +347,7 @@
       "id": "sesame/plugin-manager",
       "version": "2.2.0",
       "directory": "plugin-manager",
-      "treeDigest": "sha256:4e6bb189b02826036b4769083b36bfc0691b445ebb2ea062f59047e89c4123b0",
+      "treeDigest": "sha256:6edbe4a8bcab8cf6af75f72d19af37011096f8a899409f459dab296cda569669",
       "files": [
         {
           "path": "LICENSE",
@@ -411,8 +411,8 @@
         },
         {
           "path": "skills/develop-plugins/references/recovery.md",
-          "sha256": "a04d44ad685bb9a8a25ebbf95fe1e257edad29815097d1a468358860e46dbb89",
-          "bytes": 6284
+          "sha256": "f145f4e51a2399df72d9a88579bf4856690eb3d3a82db124b09a76cbcd9355fd",
+          "bytes": 6756
         },
         {
           "path": "tools.js",
