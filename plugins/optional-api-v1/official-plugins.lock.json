@@ -886,9 +886,9 @@
     },
     {
       "id": "sesame/mt5",
-      "version": "1.4.1",
+      "version": "1.4.2",
       "directory": "mt5",
-      "treeDigest": "sha256:5a9888f79ad597fa1e5ae661a98f8ee7a97aed4aaaa49528f89232a9bf8b3a48",
+      "treeDigest": "sha256:17e3bd3a1a9bac287ad4912f4255b4bd61f1b49d2ad6719bb0ae6deafc53b70a",
       "files": [
         {
           "path": "LICENSE",
@@ -1057,8 +1057,8 @@
         },
         {
           "path": "backend/process.js",
-          "sha256": "7bd90a2e61639fbfd4e88de0a8dd660de8efd4bd1a6a85d54aeb85e7fc7c8bf4",
-          "bytes": 9958
+          "sha256": "f62b1838c6bbce8316a43226885e57ef6a9ef1bb0f445e21241de91e065a5960",
+          "bytes": 11238
         },
         {
           "path": "backend/providers.js",
@@ -1207,8 +1207,8 @@
         },
         {
           "path": "backend/terminal.js",
-          "sha256": "9fa6687f43aaafe57792930e9459a5868c41c20fae5503a545a88cdad69eac7e",
-          "bytes": 10744
+          "sha256": "7e4e671ecd3b8027120291767ce0765f1d23fd0aec9b7d8472c948374f697b9c",
+          "bytes": 10760
         },
         {
           "path": "backend/tester-process.js",
@@ -1272,12 +1272,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "bfa532cef088106515c71f97190d3b88a48d4ef84a8380df1ee7209413807400",
+          "sha256": "237f733375b94eb3b24db84f822b260566ceb7897fdec22dfc6808948d27d9e8",
           "bytes": 97
         },
         {
           "path": "plugin.json",
-          "sha256": "facf55456b471a8a87503eef157d560b852eb12c4f9e53e18863335fe526dd3f",
+          "sha256": "7f4bb0dd8b6f7c223fc2c1f890cd7613a096f86344fc6b2be55c8abb89b85fdb",
           "bytes": 2249
         },
         {

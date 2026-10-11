@@ -49,7 +49,7 @@ async function localPath(path, native) {
 }
 
 /** Configure only an idle, precisely identified terminal; never force-kill or place a trade. */
-export async function prepareTerminal(mt5, progress = () => {}, { restart = false, deployment = null, inputs = null } = {}, { control = controlTerminal, start = launch, wait = waitForTradingConnection, resolveNativePath = localPath } = {}) {
+export async function prepareTerminal(mt5, progress = () => {}, { restart = false, deployment = null, inputs = null } = {}, { control = controlTerminal, start = launch, wait = waitForTradingConnection, resolveNativePath = localPath, temporaryDirectory = tmpdir, platform = process.platform } = {}) {
   const official = mt5.official, config = structuredClone(official.config);
   const { info, scope } = await mt5.market.connected();
   requireValue(info.terminal.mcp_trade_allowed === true, '原生 MCP 交易授权尚未就绪，自动准备未完成', 409, 'mcp_trading_not_authorized');
@@ -85,10 +85,10 @@ export async function prepareTerminal(mt5, progress = () => {}, { restart = fals
   let closed = false, directory, file, preset = null;
   const logDirectory = join(dataDirectory, 'logs'), logOffsets = new Map();
   try {
-    // Wine quotes argv elements containing spaces; MT5's /config parser then
-    // retains the closing quote. Stage secrets in a unique private, space-free
-    // directory instead of the user's "Application Support" path or a shared file.
-    const temporaryRoot = process.platform === 'win32' || !/[\s"\0]/.test(tmpdir()) ? tmpdir() : '/tmp';
+    // Wine needs a space-free path; native Windows launch quotes /config's value
+    // explicitly and can use the user's spaced TEMP path. Both remain private.
+    const temporary = temporaryDirectory();
+    const temporaryRoot = platform === 'win32' || !/[\s"\0]/.test(temporary) ? temporary : '/tmp';
     directory = await fs.mkdtemp(join(temporaryRoot, 'sesame-mt5-config-'));
     await fs.chmod(directory, 0o700); securePath(directory);
     file = join(directory, 'terminal.ini');

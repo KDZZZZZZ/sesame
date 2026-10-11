@@ -117,6 +117,15 @@ only verify their historical bytes and evidence.
 
 ## Distribution profiles
 
+The core development 19 and optional development 13 plans from PR 44 were never
+published. A Windows startup-path review arrived after merge, so the publisher
+rejected the changed review-thread set. This follow-up supersedes those unpublished
+plans with core development 20 and optional development 14; the source and failed
+publication remain in Git and Actions history. The publisher does not permanently
+reserve names for unpublished tags. Any future plan using such a name would still
+require a new complete exact-head review and pre-merge gate; resolving the old
+discussion does not authorize publication from its earlier review snapshot.
+
 The distribution has a `core` profile for app-bundled foundational packages and
 an `optional` profile for on-demand integrations and methods. `bundle-profile.json` belongs to
 the immutable source and is validated before archive creation. New plans declare

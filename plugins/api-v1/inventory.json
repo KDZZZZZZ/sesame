@@ -541,7 +541,7 @@
     },
     {
       "id": "sesame/mt5",
-      "version": "1.4.1",
+      "version": "1.4.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
