@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { basename, join, resolve, win32 } from 'node:path';
 import { winePrefix, wineCommand, wineEnvironment } from './platform.js';
 import { runTesterProcess } from './tester-process.js';
+import { stageFrozenTimeline } from './external-inputs.js';
 import { translationBinding } from './parameters.js';
 import { pythonPath } from './process.js';
 import { dependencyError } from './prerequisites.js';
@@ -240,6 +241,8 @@ export class Tester {
       this.storage.put('mt5_pass', { ...this.storage.get('mt5_pass', pass.id), temporary_paths: pass.temporary_paths });
     }
     requireValue(!existsSync(output), 'Tester 输出目录已存在；拒绝复用或重放');
+    const stagedTimeline = await stageFrozenTimeline(this.mt5, pass, output);
+    if (stagedTimeline) await fs.writeFile(join(archive, 'native-input-files.json'), JSON.stringify(stagedTimeline));
     const offsets = await this.logOffsets(runner);
     const started = Date.now(); let logs = '', cleanupConfirmed = false, cleanupFailure, poll, logRead, cancelWrite;
     const cancel = () => {

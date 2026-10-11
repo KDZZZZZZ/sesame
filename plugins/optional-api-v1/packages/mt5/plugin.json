@@ -2,7 +2,7 @@
   "id": "sesame/mt5",
   "title": "MetaTrader 5",
   "description": "MT5 行情、账户、原生 MQL5 工程、编译、Tester、交易与持久运行观察。",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "default_state": "discoverable",
   "tool_names": [
     "mt5_catalog",
@@ -29,7 +29,8 @@
     "mt5_target",
     "mt5_translation",
     "mt5_translation_file",
-    "mt5_dependencies"
+    "mt5_dependencies",
+    "mt5_conformance"
   ],
   "entry": "index.js",
   "prompts": [
@@ -62,7 +63,11 @@
     "scripts/install-mt5-python.py",
     "scripts/install-mt5-macos.sh",
     "scripts/README.md",
-    "TRADING.md"
+    "TRADING.md",
+    "target/conformance.md",
+    "backend/sdk/Conformance.mqh",
+    "backend/sdk/FrozenInputs.mqh",
+    "target/examples/FrozenTimeline.mq5"
   ],
   "tool_definitions": "tools.json",
   "main_tool_names": [
@@ -84,6 +89,6 @@
   ],
   "license": "MIT",
   "engines": {
-    "sesame": ">=0.2.0-0"
+    "sesame": ">=0.2.2"
   }
 }

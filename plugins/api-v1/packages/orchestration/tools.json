@@ -1,5 +1,15 @@
 [
   {
+    "name": "agent_list",
+    "label": "agent_list",
+    "description": "列出直属子任务；主 Agent 可观察所有子任务以及插件触发的待执行任务。插件触发的 Agent 与普通 subagent 共用任务、工作区与管理流程。",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
     "name": "agent_delegate",
     "label": "agent_delegate",
     "description": "委派研究或策略任务，返回会话和独立 Run；子任务异步执行，最终成果封存后销毁临时区。继续已结束会话时创建新的 Run。",
@@ -102,6 +112,35 @@
         },
         "wait": {
           "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "agent_stop",
+    "label": "agent_stop",
+    "description": "停止管理范围内的 subagent，或取消尚未启动的插件任务；保留已发布成果。停止不会撤销已经执行的外部操作，不自动重放。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "conversation_id": {
+          "type": "string",
+          "description": "要停止的子会话，与 plugin_task_id 二选一",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "plugin_task_id": {
+          "type": "string",
+          "description": "agent_list 返回的插件任务 ID，主 Agent 可取消",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "reason": {
+          "type": "string",
+          "description": "停止原因",
+          "minLength": 1,
+          "maxLength": 20000
         }
       },
       "additionalProperties": false
