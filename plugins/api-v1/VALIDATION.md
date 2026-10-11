@@ -1059,3 +1059,33 @@ eight native/host opt-in skips. Every changed packaged file is Markdown or a
 version-only manifest: executable code, permissions and provider contracts are
 unchanged. Both package locks and the descriptive inventory reconstruct.
 These checks do not repeat native broker execution or install dependencies.
+
+## Strategy report exploration and MT5 configuration follow-up
+
+`sesame/reports` 2.2.0 adds a backend-independent Strategy report starting point:
+its graph comes from an exact SVL artifact, matrix cells retain preselected
+optimization winners, every trial remains accessible, and parameter exploration
+shows Sharpe, drawdown and net profit. The editable template preserves the original
+report style. `strategy_source` links publication to the host's existing Strategy
+category. Training/holdout comparisons are kept separate, matrix pages share one
+color scale, and actual demo provenance forces a visible label.
+
+Authoring/rendering regressions cover missing/failed trials, conflicting winners,
+exact decimal values, parameter-name collisions, paging, keyboard selection,
+module functions and nested control flow. Independent browser review also
+checked 1,001 trials across plot pages and identical values across matrix pages.
+The real host inspector returned `rendered` at 1,000 and 390 pixels, with five
+interactions at each width. These fixtures test presentation and artifact identity;
+they are not live market or profitable backtest evidence.
+
+`sesame/orchestration` 2.2.1 updates the guide to the two remaining User menu
+entries. Connection, Strategy and memory tasks are handled through the Agent and
+its actual plugin interfaces.
+
+`sesame/mt5` 1.4.1 adds explicit, main-user credential-reference import with
+redaction, account binding, expiry, optimistic versions and immediate in-memory
+configuration. Managed startup INI files use unique private temporary directories;
+compiler/Tester arguments quote MetaQuotes option values correctly. The targeted
+61 Node checks and three Python command-construction tests passed. This follow-up
+does not repeat live login, native compilation, deployment or trading. The running
+user application and its existing account were left unchanged.
