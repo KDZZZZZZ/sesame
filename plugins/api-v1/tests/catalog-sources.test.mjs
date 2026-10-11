@@ -17,8 +17,9 @@ test('the unified directory reconstructs selected releases and preserves each pa
   assert.equal(catalog.plugins.filter(item => item.distribution === 'optional').length, 23);
   const sources = JSON.parse(readFileSync(new URL('../catalog.sources.json', import.meta.url)));
   assert.deepEqual(catalog.releases.map(item => ({ tag: item.tag, releaseCommit: item.releaseCommit, reviewSha256: item.review.sha256 })), sources.releases);
+  const requires022 = new Set(['sesame/reports', 'sesame/orchestration', 'sesame/strategy-authoring', 'sesame/mt5']);
   for (const p of catalog.plugins) {
-    assert.equal(p.engines.sesame, p.id === 'sesame/manual-trading' ? '>=0.2.1' : '>=0.2.0-0');
+    assert.equal(p.engines.sesame, requires022.has(p.id) ? '>=0.2.2' : p.id === 'sesame/manual-trading' ? '>=0.2.1' : '>=0.2.0-0');
     const release = catalog.releases.find(item => item.tag === p.release);
     assert.equal(p.source.commit, release.sourceCommit);
     const manifest = JSON.parse(execFileSync('git', ['show', `${p.source.commit}:${p.source.path}/plugin.json`], { cwd: root }));
