@@ -1,9 +1,9 @@
 {
   "id": "sesame/strategy-authoring",
   "apiVersion": "1",
-  "version": "1.0.2",
+  "version": "1.2.0",
   "title": "SVL 策略创作",
-  "description": "编写、验证与发布平台无关 SVL 策略源，从同一源码生成图，并对固定事件做可复现求值。原生翻译、回测与运行由目标插件提供。",
+  "description": "编写、可视化与重放 SVL 策略；提供指标函数、动态品种池、组合分配、风险与执行账本，以及隔离的 Agent 判断和冻结时间线。原生回测与交易由目标插件提供。",
   "author": {
     "name": "Sesame"
   },
@@ -16,7 +16,11 @@
     "strategy_validate",
     "strategy_publish",
     "strategy_graph",
-    "strategy_replay"
+    "strategy_replay",
+    "strategy_pipeline",
+    "strategy_workflow",
+    "strategy_decision",
+    "strategy_functions"
   ],
   "prompts": [
     "prompt.md"
@@ -30,12 +34,21 @@
     "examples/close-threshold.svl.json",
     "examples/close-threshold.replay.json",
     "examples/crossover.svl.json",
-    "examples/crossover.replay.json"
+    "examples/crossover.replay.json",
+    "skills/strategy-authoring/references/pipeline.md",
+    "skills/strategy-authoring/references/agent-inputs.md",
+    "examples/function-threshold.svl.json",
+    "examples/function-threshold.replay.json",
+    "examples/pipeline-fixture.js",
+    "skills/strategy-authoring/references/methods.md",
+    "skills/strategy-authoring/references/execution.md",
+    "skills/strategy-authoring/references/quant-functions.md",
+    "examples/method-workflow.js"
   ],
   "provides": {
     "sesame.strategy": "1"
   },
   "engines": {
-    "sesame": ">=0.2.0-0"
+    "sesame": ">=0.2.2"
   }
 }

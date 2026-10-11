@@ -2,11 +2,13 @@
   "id": "sesame/orchestration",
   "title": "会话协作与使用规范",
   "description": "主子Agent协作、成果交付和Sesame通用使用指南；按需安装具体后端。",
-  "version": "2.1.3",
+  "version": "2.2.0",
   "default_state": "mounted",
   "tool_names": [
+    "agent_list",
     "agent_delegate",
     "agent_inspect",
+    "agent_stop",
     "agent_finish"
   ],
   "prompts": [
@@ -30,6 +32,6 @@
     "skills/sesame-user-guide/references/website-docs.md"
   ],
   "engines": {
-    "sesame": ">=0.2.0-0"
+    "sesame": ">=0.2.2"
   }
 }

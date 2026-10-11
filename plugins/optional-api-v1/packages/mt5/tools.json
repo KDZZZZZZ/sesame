@@ -1366,6 +1366,10 @@
                       "description": "实际 MQL5 input 参数名",
                       "minLength": 1,
                       "maxLength": 20000
+                    },
+                    "encoding": {
+                      "type": "string",
+                      "const": "json"
                     }
                   },
                   "additionalProperties": false
@@ -1419,6 +1423,12 @@
               "nodeId": {
                 "type": "string",
                 "description": "实际 SVL 节点 ID",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "functionId": {
+                "type": "string",
+                "description": "函数节点的完整 functionId；主节点省略。扩展模块使用展开后的完整 ID",
                 "minLength": 1,
                 "maxLength": 20000
               },
@@ -1716,6 +1726,198 @@
           },
           "additionalProperties": false,
           "minProperties": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_conformance",
+    "label": "mt5_conformance",
+    "description": "prepare 固定SVL输入序列和数值公差，产生参考结果及可选MQL标识头；verify只读取真实成功Tester结果与原生逐输入/事件/函数trace，核对冻结代码、参数和参考重放。不能用编译成功、手填JSON或普通市场回测代替。仅证明所测fixture，不发送订单或启动终端。先读target/conformance.md。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "action",
+        "operation_id"
+      ],
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "prepare"
+            },
+            {
+              "type": "string",
+              "const": "verify"
+            }
+          ]
+        },
+        "operation_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{16,128}$",
+          "minLength": 16,
+          "maxLength": 128
+        },
+        "source": {
+          "type": "object",
+          "required": [
+            "id",
+            "revision",
+            "digest",
+            "kind",
+            "schemaVersion"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0.0"
+            }
+          },
+          "additionalProperties": false
+        },
+        "fixture_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "timeline_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "header_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "tolerances": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "path",
+              "absolute",
+              "relative"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "absolute": {
+                "type": "string"
+              },
+              "relative": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "maxItems": 256
+        },
+        "fixture": {
+          "type": "object",
+          "required": [
+            "id",
+            "revision",
+            "digest",
+            "kind",
+            "schemaVersion"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0.0"
+            }
+          },
+          "additionalProperties": false
+        },
+        "translation": {
+          "type": "object",
+          "required": [
+            "id",
+            "revision",
+            "digest",
+            "kind",
+            "schemaVersion"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0.0"
+            }
+          },
+          "additionalProperties": false
+        },
+        "result": {
+          "type": "object",
+          "required": [
+            "id",
+            "revision",
+            "digest",
+            "kind",
+            "schemaVersion"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0.0"
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

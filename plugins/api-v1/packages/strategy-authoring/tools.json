@@ -211,5 +211,178 @@
       },
       "additionalProperties": false
     }
+  },
+  {
+    "name": "strategy_pipeline",
+    "label": "strategy_pipeline",
+    "description": "Check and evaluate a frozen signal → target portfolio → risk → execution fixture. Reads exact artifact references and preserves optional evidence. No model, broker, matching engine or native strategy is executed.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "fixture_path"
+      ],
+      "properties": {
+        "fixture_path": {
+          "type": "string",
+          "description": "Workspace JSON conforming to the plugin pipeline.md fixture contract",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "output_path": {
+          "type": "string",
+          "description": "Optional workspace path for the complete evaluation result",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "operation_id": {
+          "type": "string",
+          "description": "If provided, preserve the fixture and result as a resource artifact",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "strategy_workflow",
+    "label": "strategy_workflow",
+    "description": "Run frozen dynamic-universe selection, actual equal/confidence/inverse-volatility portfolio sizing, hard portfolio risk and a replayable execution ledger. Returns quantities, cash, risk evidence, linked order definitions and proposed commands; never sends orders or invokes a model.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "fixture_path"
+      ],
+      "properties": {
+        "fixture_path": {
+          "type": "string",
+          "description": "Workspace JSON conforming to methods.md workflow schema 1.1",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "output_path": {
+          "type": "string",
+          "description": "Optional workspace path for the complete workflow and execution checkpoint",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "operation_id": {
+          "type": "string",
+          "description": "If provided, preserve the frozen input and full result as a resource artifact",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "strategy_decision",
+    "label": "strategy_decision",
+    "description": "Run an isolated versioned Agent signal or risk decision with the configured model and frozen artifact inputs. Submit is asynchronous; status waits optionally, cancel/invalidate retire requests, timeline exports actual saved outputs without new model calls. Never places orders.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "models"
+            },
+            {
+              "type": "string",
+              "const": "submit"
+            },
+            {
+              "type": "string",
+              "const": "status"
+            },
+            {
+              "type": "string",
+              "const": "cancel"
+            },
+            {
+              "type": "string",
+              "const": "invalidate"
+            },
+            {
+              "type": "string",
+              "const": "timeline"
+            },
+            {
+              "type": "string",
+              "const": "bridge_start"
+            },
+            {
+              "type": "string",
+              "const": "bridge_stop"
+            }
+          ]
+        },
+        "request_path": {
+          "type": "string",
+          "description": "Workspace JSON decision request conforming to references/agent-inputs.md",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "job_id": {
+          "type": "string",
+          "description": "Job ID returned by submit; selects its portfolio run for invalidate/timeline",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "wait": {
+          "type": "boolean",
+          "description": "Wait for this one job to finish; cancellation of the tool wait does not cancel the job"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Reason for cancel or invalidation",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "as_of_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "UTC time for timeline replay or cancel/invalidate; required for historical invalidation"
+        },
+        "output_path": {
+          "type": "string",
+          "description": "Workspace JSON path for the saved immutable decision timeline",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "operation_id": {
+          "type": "string",
+          "description": "Idempotency key to publish a saved timeline as an evidence resource",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "strategy_functions",
+    "label": "strategy_functions",
+    "description": "Write the versioned declarative SVL quant function module (RSI, ATR, MACD, Bollinger, Donchian, z-score and realized volatility) to the workspace. Embed the whole frozen extension in an SVL 1.2 source; formulas expand into the same graph and replay.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "output_path"
+      ],
+      "properties": {
+        "output_path": {
+          "type": "string",
+          "description": "Workspace JSON path for the complete frozen extension object",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
   }
 ]

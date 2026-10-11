@@ -244,6 +244,6 @@ test('cancellation before intake leaves no snapshot; persisted-snapshot corrupti
 
 test('manifest and static tool definitions expose the short entry without changing the inline schema', async t => {
   const f = await fixture(t), root = new URL('../../optional-api-v1/packages/mt5/', import.meta.url), definition = JSON.parse(await readFile(new URL('plugin.json', root))), tools = JSON.parse(await readFile(new URL('tools.json', root)));
-  assert.equal(definition.version, '1.2.0'); assert.ok(definition.tool_names.includes('mt5_translation_file')); assert.ok(definition.resources.includes('target/translation-file.md'));
+  assert.equal(definition.version, JSON.parse(await readFile(new URL('package.json', root))).version); assert.ok(definition.tool_names.includes('mt5_translation_file')); assert.ok(definition.resources.includes('target/translation-file.md'));
   for (const tool of createTools(f.host, f.mt5)) assert.deepEqual(JSON.parse(JSON.stringify({ ...tool, execute: undefined })), tools.find(item => item.name === tool.name));
 });
