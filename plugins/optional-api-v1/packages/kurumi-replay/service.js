@@ -22,6 +22,7 @@ import { prepareFxSupplement, publishFxSupplement } from './fx-supplement.js';
 export const PLAYER_TOOLS = Object.freeze(['kurumi_observe', 'kurumi_decide']);
 export const assert = (ok, message, code = 'INVALID_ARGUMENT') => { if (!ok) throw Object.assign(new Error(message), { code }); };
 const clone = value => structuredClone(value);
+const archivePendings = af => af?.pendings ?? (af?.pendingKind || af?.pendingFile ? [{ pendingKind: af.pendingKind, pendingPayload: af.pendingPayload, pendingFile: af.pendingFile }] : []);
 const prices = q => ({open:q.open,high:q.high,low:q.low,close:q.close});
 const roleBar=f=>({time:f.time,bid:prices(f.bid),ask:prices(f.ask),...(f.fx?{fx:{time:f.fx.time??f.time,bid:prices(f.fx.bid),ask:prices(f.fx.ask)}}:{})});
 function repeat(doc,id,input) {if(!doc?.commands[id])return false; assert(isDeepStrictEqual(doc.commands[id].input,input),'同command_id不同请求被拒绝','IDEMPOTENCY_CONFLICT');return true;}
@@ -111,8 +112,14 @@ export class ReplayService {
   async archiveSafe(kind, payload, opts = {}) {
     assert(!this.recordingSelectionError,this.recordingSelectionError?.message??'Recorder selection pending',this.recordingSelectionError?.code??'ARCHIVE_MISSING');
     if (!this.recorder) return null;
-    try { return await this.recorder.append(kind, payload, { simClockMs: opts.simClockMs ?? this.simClock() }); }
-    catch (error) { this.markArchiveFailed(error, { pendingKind: kind, pendingPayload: payload }); throw error; }
+    const simClockMs = opts.simClockMs ?? this.simClock(), frozenPayload = clone(payload);
+    try { return await this.recorder.append(kind, frozenPayload, { simClockMs }); }
+    catch (error) {
+      // This recorder code means the primary fsync already succeeded. Its next
+      // append repairs the mirror prefix; queuing this payload would duplicate it.
+      this.markArchiveFailed(error, error.code === 'ARCHIVE_MIRROR_FAILED' ? {} : { pendingKind: kind, pendingPayload: frozenPayload, simClockMs });
+      throw error;
+    }
   }
   async archiveFileSafe(relPath, content) {
     assert(!this.recordingSelectionError,this.recordingSelectionError?.message??'Recorder selection pending',this.recordingSelectionError?.code??'ARCHIVE_MISSING');
@@ -124,30 +131,62 @@ export class ReplayService {
     if (this.closed) return;
     try { this.mutate(undefined, d => { d.control.running=false; d.control.remaining=0; d.control.phase='archive_failed_paused';
       const prev = d.control.archiveFailed && typeof d.control.archiveFailed === 'object' ? d.control.archiveFailed : null;
-      const pendings = [...(prev?.pendings ?? (prev?.pendingKind || prev?.pendingFile ? [{ pendingKind: prev.pendingKind, pendingPayload: prev.pendingPayload, pendingFile: prev.pendingFile }] : []))];
+      const pendings = [...archivePendings(prev)];
       if (pending.pendingKind || pending.pendingFile) pendings.push(pending); // 后续错误（含清理/封存）不覆盖先前待补的已提交H1
-      d.control.archiveFailed = { at: Date.now(), error: error.message, pendings, failures: [...(prev?.failures ?? []), ...(prev ? [{ at: prev.at, error: prev.error }] : [])] };
+      d.control.archiveFailed = { failureId: randomUUID(), at: Date.now(), error: error.message, pendings, failures: [...(prev?.failures ?? []), ...(prev ? [{ at: prev.at, error: prev.error }] : [])] };
       d.control.error='归档失败，已暂停付费回合：'+error.message; }); }
     catch (persistenceError) { this.closed=true; this.loadError='归档失败且无法持久化暂停状态：'+persistenceError.message; }
   }
-  clearArchiveFailed(reason) {
-    const doc=this.getDocument();
-    if (!doc?.control.archiveFailed) return;
-    this.mutate(undefined, d => { d.control.archiveFailed=null; d.control.error=null; if(d.control.phase==='archive_failed_paused')d.control.phase='paused'; (d.archiveRecoveries??=[]).push({reason,recoveredAt:Date.now()}); });
+  clearArchiveFailed(reason, failureId) {
+    this.mutate(undefined, d => {
+      assert(failureId && d.control.archiveFailed?.failureId === failureId && !archivePendings(d.control.archiveFailed).length,
+        '恢复期间出现新的留档故障；保持暂停，请核对后显式恢复', 'ARCHIVE_RECOVERY_PENDING');
+      d.control.archiveFailed=null; d.control.error=null;
+      if(d.control.phase==='archive_failed_paused')d.control.phase='paused';
+      (d.archiveRecoveries??=[]).push({reason,recoveredAt:Date.now()});
+    });
   }
-  async assertArchiveHealthy() {
+  assertArchiveHealthy() {
+    // Two callers must not replay the same captured pending queue concurrently.
+    if (!this.archiveRepair) this.archiveRepair = this.#repairArchive().finally(() => { this.archiveRepair = null; });
+    return this.archiveRepair;
+  }
+  completePendingArchive(pending) {
+    this.mutate(undefined, d => {
+      const af=d.control.archiveFailed, pendings=archivePendings(af);
+      assert(af && isDeepStrictEqual(pendings[0],pending), '待补留档队列已改变；保持暂停', 'ARCHIVE_RECOVERY_PENDING');
+      af.pendings=pendings.slice(1); // Keep newer failures and their remaining queue.
+    });
+  }
+  async #repairArchive() {
     assert(!this.recordingSelectionError,this.recordingSelectionError?.message??'Recorder selection pending',this.recordingSelectionError?.code??'ARCHIVE_MISSING');
-    const af = this.getDocument()?.control?.archiveFailed;
+    let af = this.getDocument()?.control?.archiveFailed;
     if (!af) return;
+    assert(this.recorder, '归档器尚未就绪，保持暂停', 'ARCHIVE_MISSING');
+    // Give legacy persisted failures an identity before any asynchronous I/O.
+    if (!af.failureId) {
+      this.mutate(undefined, d => { d.control.archiveFailed.failureId ??= randomUUID(); });
+      af=this.getDocument().control.archiveFailed;
+    }
     // 已提交但未写入归档的条目必须按 pendings 队列逐个先补齐（含后续失败时排队的全部条目），
     // 不能仅以探测成功解除暂停；任何一个补不齐都保持暂停并抛错。
-    const pendings = af.pendings ?? (af.pendingKind || af.pendingFile ? [{ pendingKind: af.pendingKind, pendingPayload: af.pendingPayload, pendingFile: af.pendingFile }] : []);
+    const pendings = clone(archivePendings(af));
     if (!pendings.length) await this.recorder.append('archive_recovery_probe', { reason: '付费回合恢复前的归档健康探测' }, { simClockMs: this.simClock() });
     for (const p of pendings) {
-      if (p.pendingFile) {const f=p.pendingFile;const content=f.encoding==='base64'?Buffer.from(f.content,'base64'):f.content?.type==='Buffer'&&Array.isArray(f.content.data)?Buffer.from(f.content.data):f.content;await this.recorder.file(f.path,content);}
-      else await this.recorder.append(p.pendingKind, p.pendingPayload ?? { recovered: true }, { simClockMs: this.simClock() });
+      try {
+        if (p.pendingFile) {const f=p.pendingFile;const content=f.encoding==='base64'?Buffer.from(f.content,'base64'):f.content?.type==='Buffer'&&Array.isArray(f.content.data)?Buffer.from(f.content.data):f.content;await this.recorder.file(f.path,content);}
+        else await this.recorder.append(p.pendingKind, p.pendingPayload ?? { recovered: true }, { simClockMs: Object.hasOwn(p,'simClockMs') ? p.simClockMs : this.simClock() });
+      } catch (error) {
+        if (!p.pendingFile && error.code === 'ARCHIVE_MIRROR_FAILED') {
+          this.completePendingArchive(p); // Primary has it; only the mirror still needs repair.
+          this.markArchiveFailed(error);
+        }
+        throw error;
+      }
+      // Persist progress per item so a later failed item does not replay earlier writes.
+      this.completePendingArchive(p);
     }
-    this.clearArchiveFailed('pending_repair:' + (pendings.map(p => p.pendingFile?.path ?? p.pendingKind).join(',') || 'probe'));
+    this.clearArchiveFailed('pending_repair:' + (pendings.map(p => p.pendingFile?.path ?? p.pendingKind).join(',') || 'probe'), af.failureId);
   }
   async initialize() {
     if(!this.recorder){try{const selection=await recordingSelection(this.host.storage.directory);this.recordingSelection=selection;this.recorder=new Recorder(this.host.storage.directory,{mirrorRoot:selection.mirrorRoot});}catch(e){if(e.code!=='MIRROR_SELECTION_REQUIRED')throw e;this.recordingSelectionError={code:e.code,message:e.message};}}

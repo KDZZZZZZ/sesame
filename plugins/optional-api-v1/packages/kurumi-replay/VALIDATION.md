@@ -27,6 +27,9 @@ demo 输入继续标为 `demo`，不复制未揭示来源/剧情元数据；后�
 需要先核实原冻结来源，不能用当前行情补填或改写原 artifact。
 服务留档修正：角色目录封存成功不再清空之前失败的 journal/file 待补队列，
 只有显式逐项补写成功后才解除留档暂停；失败封存后重试也保留原待补证据。
+补写调用串行共享，逐项持久化进度；恢复期间新增的失败具有独立身份，不能被旧
+恢复清除。主日志已 fsync、仅镜像失败时只补镜像，不重复追加原逻辑记录。
+这包括真实临时双日志的镜像故障/重启回归，不等于所有磁盘崩溃窗口的证明。
 这些修正仅在仓库验证，**没有安装到当前 Sesame，也不代表真实周报验收通过**。
 
 合入包括独立 50x 实验、4H 决定及保存决定续接、双份留档、真实原生订单映射、
@@ -103,7 +106,7 @@ README、RULES 和各 HANDOFF 中按开发阶段记载的通过数量、待安�
   只读检查通过。发布计划与安装 catalog 未改。
 - 仓库 lock/release/semantic-review/catalog 边界测试 20/20 通过。
 - `npm run test:source --prefix plugins/optional-api-v1/packages/kurumi-replay`：
-  32 个选定文件，261 通过、0 失败、19 个实际 SDK/数据/前端 opt-in 跳过。
+  32 个选定文件，267 通过、0 失败、19 个实际 SDK/数据/前端 opt-in 跳过。
   该入口明确打印排除的文件，不替代未过滤的 `npm test`。
 - 宿主指标 schema 用 `KURUMI_INDICATOR_TOOL_SCHEMA` 显式指定公开
   `canvas-control/tools.json` 时，定向契约检查 1/1 通过；未设置时跳过，
