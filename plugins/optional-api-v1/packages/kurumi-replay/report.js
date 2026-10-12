@@ -40,24 +40,29 @@ export function reportHTML() {
 }
 export async function exportReplay(host,service,operationId,signal) {
  signal?.throwIfAborted(); assert(host.scope?.kind==='main','观众数据导出仅主Agent可用','SCOPE_DENIED');
- const rows=reportRows(service),state=service.getState();
+ const state=service.getState(),prepared=service.getData(),doc=service.getDocument(),view=service.observe(),consumed=service.getReplayPresentation?.(),nativeEnvironment=service.nativeEnvironment??null;
+ const rows=reportRows({getState:()=>state,getData:()=>prepared,getDocument:()=>doc,observe:()=>view,getReplayPresentation:()=>consumed,nativeEnvironment}),summary=rows[0];
  // Persist matching/role evidence and all committed state, never the internal
  // full future market arrays or the player authorization token.
- const checkpoint={engine:state,roleTasks:service.getDocument().roleTasks??[],roleEvidence:service.getDocument().roleEvidence??[],recoveries:service.getDocument().recoveries??[],nativeEnvironment:service.nativeEnvironment??null};
- const origin={kind:service.getData().provenance?.kind==='demo'?'demo':'derived',references:[]};
- const sourceBlob=host.artifacts.blob(JSON.stringify({provenance:service.getData().provenance,digests:service.getData().digests,checkpoint}));
+ const checkpoint={engine:state,roleTasks:doc.roleTasks??[],roleEvidence:doc.roleEvidence??[],recoveries:doc.recoveries??[],nativeEnvironment};
+ const origin={kind:prepared.provenance?.kind==='demo'?'demo':'derived',references:[]};
+ // Freeze bytes and descriptor before the first await. The service may advance
+ // during artifact publication; archives and report metadata must not follow it.
+ const sourceText=JSON.stringify({provenance:prepared.provenance,digests:prepared.digests,checkpoint}),rowsText=JSON.stringify(rows);
+ const descriptor={rowCount:rows.length,runId:summary.runId,engineVersion:summary.version,asOf:Date.parse(summary.asOf),status:summary.status,outcome:summary.outcome??null};
+ const sourceBlob=await host.artifacts.blob(sourceText);
  const source=await host.artifacts.publish({operationId:operationId+':source',manifest:{kind:'resource',schemaVersion:'1.0.0',content:{type:'kurumi-revealed-simulation-checkpoint',path:'source.json',provenance:origin},dependencies:[],blobs:[{...sourceBlob,path:'source.json',mediaType:'application/json'}],provenance:origin}});
- const provenance={kind:origin.kind,references:[source]},blob=host.artifacts.blob(JSON.stringify(rows));
+ const provenance={kind:origin.kind,references:[source]},blob=await host.artifacts.blob(rowsText);
  const data=await host.artifacts.publish({operationId:operationId+':data',manifest:{kind:'data',schemaVersion:'1.0.0',content:{format:'json-rows',path:'rows.json',rowCount:rows.length,columns:[...new Set(rows.flatMap(r=>Object.keys(r)))],provenance},dependencies:[source],blobs:[{...blob,path:'rows.json',mediaType:'application/json'}],provenance}});
- await service.archiveFileSafe(`exports/export-${operationId}-rows.json`,JSON.stringify(rows));
- await service.archiveFileSafe(`exports/export-${operationId}-checkpoint.json`,JSON.stringify({provenance:service.getData().provenance,digests:service.getData().digests,checkpoint}));
+ await service.archiveFileSafe(`exports/export-${operationId}-rows.json`,rowsText);
+ await service.archiveFileSafe(`exports/export-${operationId}-checkpoint.json`,sourceText);
  await service.archiveSafe('export_replay',{operationId,data,source,rowCount:rows.length,note:'已揭示行情/账户/账本/角色证据固定导出归档'});
- return {data,source,provenanceKind:origin.kind,rowCount:rows.length,runId:state.id,engineVersion:state.version,asOf:service.observe().asOf,note:'固定已揭示数据与原生成交/角色证据；主Agent可直接复用现有reports插件解说，未复制未来行情数组。'};
+ return {data,source,provenanceKind:origin.kind,...descriptor,note:'固定已揭示数据与原生成交/角色证据；主Agent可直接复用现有reports插件解说，未复制未来行情数组。'};
 }
 export async function publishReport(host,service,operationId,signal) {
- const frozen=await exportReplay(host,service,operationId,signal),{data,source}=frozen,state=service.getState();
+ const frozen=await exportReplay(host,service,operationId,signal),{data,source}=frozen;
  const provenance={kind:frozen.provenanceKind,references:[data,source]};
- const htmlText=reportHTML(),html=host.artifacts.blob(htmlText),title='久留美 · 三章连续挑战',summary=state.status==='complete'?(state.outcome==='victory'?'空仓结算达成目标。':'三章结算未达成目标。'):'真实角色模拟挑战进行中；当前尚不能判定胜利。';
+ const htmlText=reportHTML(),html=await host.artifacts.blob(htmlText),title='久留美 · 三章连续挑战',summary=frozen.status==='complete'?(frozen.outcome==='victory'?'空仓结算达成目标。':'三章结算未达成目标。'):'真实角色模拟挑战进行中；当前尚不能判定胜利。';
  const ref=await host.artifacts.publish({operationId,manifest:{kind:'report',schemaVersion:'1.0.0',content:{schemaVersion:'1.0.0',title,summary,entry:'index.html',runtime:'sesame-report/1',runtimeRevision:'1.0.0',data:[{id:'replay',ref:data,usage:'已揭示行情、精确模拟成交/费用/权益、角色提交与模型任务证据'}],related:[{role:'source',artifact:source}],features:['interactive','trade_details'],locale:'zh-CN',provenance},dependencies:provenance.references,blobs:[{...html,path:'index.html',mediaType:'text/html'}],provenance}});
  const receipt=await host.artifacts.inspect(ref,signal);
  await service.archiveFileSafe(`reports/report-${operationId}.html`,htmlText);
