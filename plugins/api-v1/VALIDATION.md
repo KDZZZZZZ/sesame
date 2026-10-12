@@ -1100,3 +1100,25 @@ checks with one native opt-in skip, plus three Python command-line checks.
 Real Windows MT5 execution was not repeated. New release plans replace the
 unpublished plans; the original review and failed workflow remain in the audit
 history rather than being retroactively treated as a passing publication.
+
+## MT5 dotted native timestamps — optional dev.15 candidate
+
+The terminal MCP returns history calendar dates in the dotted `2026.10.12 15:45:00`
+form. `sourceTime` normalized only the space and then rejected the date, so every
+affected bar failed contract mapping with `INVALID_NATIVE_DATA` and the whole
+provider request failed while the terminal itself returned actual data. The
+mapping now normalizes the dotted calendar date to ISO 8601 before wall-time
+parsing and rejects impossible calendar dates such as `2026.02.30` instead of
+letting `Date.parse` silently roll them into another day; numeric, ISO and
+offset inputs are unchanged.
+
+The new regression covers the dotted terminal timestamp, the mapped bar's
+open/end wall times, a real leap-day date, an impossible calendar date and a
+truncated timestamp that must still fail. The targeted contract-mapping suite
+passed 13 checks. An actual API 1 host running the
+corrected mapping delivered 42 M15 bars each for EURUSD and XAUUSD from a real
+terminal read with exact decimal strings and tick volume, and both charts
+rendered; the pre-fix mapping was reproduced against a real 22-bar response and
+failed there. Only `sesame/mt5` changes to 1.4.3; the other optional package
+bytes, the core lock and the installable catalog remain unchanged. This
+verification did not repeat native compilation, deployment or trading.

@@ -54,6 +54,15 @@ export function sourceTime(input, authority) {
     text = date.toISOString().replace(/Z$/, '');
   } else {
     text = String(input).replace(' ', 'T');
+    // The terminal's MCP responses use dotted calendar dates (2026.10.12 15:45:00);
+    // normalize them to ISO 8601 before wall-time parsing, rejecting impossible
+    // calendar dates that Date.parse would silently roll into another day.
+    const dotted = /^(\d{4})\.(\d{2})\.(\d{2})(.*)$/.exec(text);
+    if (dotted) {
+      const [, year, month, day, rest] = dotted, date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+      if (date.getUTCFullYear() !== Number(year) || date.getUTCMonth() !== Number(month) - 1 || date.getUTCDate() !== Number(day)) fail('Invalid native wall timestamp');
+      text = `${year}-${month}-${day}${rest}`;
+    }
     if (/(?:Z|[+-]\d\d:\d\d)$/.test(text)) {
       const unixMs = Date.parse(text);
       if (!Number.isFinite(unixMs)) fail('Invalid native UTC timestamp');
