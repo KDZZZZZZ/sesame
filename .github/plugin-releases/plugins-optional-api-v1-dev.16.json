@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "tag": "plugins-optional-api-v1-dev.15",
+  "tag": "plugins-optional-api-v1-dev.16",
   "title": "Sesame optional plugins — MT5 dotted native timestamps",
-  "sourceCommit": "458a41acc216fcc79136ce88579b1659de93f92c",
+  "sourceCommit": "4f842604bcd63a5fe60dc643e5b802518271e5bf",
   "sourceRoot": "plugins/optional-api-v1",
   "profile": "optional",
   "archive": {
-    "name": "sesame-optional-plugins-api-v1-dev.15.tar.gz",
+    "name": "sesame-optional-plugins-api-v1-dev.16.tar.gz",
     "sha256": "2215b98f770db2cbb720570d1d5f2a2ea0335bf7d071277045da94804e13d3c4"
   },
   "lockSha256": "161b1062f7b1d80a163d2de3f13fb4eadf4c7c071feb13c4665ce1101e86ef3b",
-  "pullRequest": 48
+  "pullRequest": 49
 }
