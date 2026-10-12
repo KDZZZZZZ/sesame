@@ -1,6 +1,8 @@
-# 久留美 · 三章连续挑战 (`sesame/kurumi-replay` 0.1.0)
+# 久留美 · 原生回放体验 (`sesame/kurumi-replay` 0.1.3-dev.3.8)
 
-普通、discoverable、Plugin API 1 可选插件；最低 Sesame 0.2.2。**不进入core/default bundle，不接真实券商，不发布或修改安装catalog。** 此包由 Sesame 内部主/子Agent实现，不调用外部Codex。
+普通、discoverable、Plugin API 1 可选插件；最低 Sesame 0.2.2。**当前是合入源码的未发布验收快照，整体体验验收未完成。** 不进入 core/default bundle，不接真实券商；本次不创建 Release 或修改安装 catalog。插件实现来自 Sesame 内部主/子 Agent，本次由 Codex 整理合入、文档及仓库检查。
+
+当前状态及剩余门槛见 [VALIDATION.md](VALIDATION.md)。第二次只验代表性片段：新 300000 JPY、全部 50x、4H 决定，达到效果即在已提交决定边界暂停。当前已有原生账户、闭合 H1/SMA20、简洁双方标注及主聊天 PK 的实测；形成中帧、真实 UTC 投资周报和完整新玩家安装/reload 仍待验。以下规则、阶段测试和 HANDOFF 保留实现参考及历史记录，以 VALIDATION.md 的当前状态为准。
 
 插件主体是只读 `sesame.market` / `sesame.account` 数据源，以及宿主真实 `agents.submit/inspect/wait/cancel/current` 角色子任务。主Agent管理与解说；Dashboard使用现有行情图/账户/Agent面板，报告使用打包的 MIT Sesame reportKit/CSS，不更改本体前端。
 
@@ -12,12 +14,13 @@
 - 每章末强制结算空仓；跳过月份无收益；章节边界暂停供主Agent展示下一章；破产立即停止模型请求，保留负余额。
 - 开局固定模拟规则：章1杠杆500/强平20%；章2杠杆25/强平50%；章3杠杆25/强平30%。费用和融资是明示挑战假设，不是假称漫画券商历史条款；不能为凑目标事后改变。
 - H1仅观看/决策；下一H1真实細粒度数据撮合。正式路径只接成熟引擎，不回退H1极值撮合。库与适配边界见 RULES.md/原生引擎说明。
+- 决策节奏默认4小时：角色一次付费决定执行第一根H1，同块最多3根自动延续保持当时实际剩余仓位与止损，不重开仓、不再请求模型；章边界提前结算，破产/缺数/取消在下一根前停住。`kurumi_configure` 可在无任务/恢复/待完成延续时改为1小时。
 
 ## 本机操作
 
 在Sesame主聊天加载本插件并说：“准备久留美连续挑战，先只让她决定一根H1，把原剧情对照与她的实际模拟成交分开画出来，告诉我当前资金。”
 
-主Agent：`kurumi_prepare` → `kurumi_start/step`（首次expected_version=0；默认1个角色回合）→ `kurumi_display` → 标准Agent任务观察 → `kurumi_status` → `kurumi_report`。下一次控制使用status控制revision，不用engineVersion混代。用户显式要求多步后可设置max_steps，绝不自动完成数百模型请求。
+主Agent：`kurumi_prepare` → `kurumi_start/step`（首次expected_version=0；默认1个角色回合；默认4小时节奏，可用 `kurumi_configure` 调整）→ `kurumi_display` → 标准Agent任务观察 → `kurumi_status` → `kurumi_report`。下一次控制使用status控制revision，不用engineVersion混代。用户显式要求多步后可设置max_steps，绝不自动完成数百模型请求。
 
 角色只允许 `kurumi_observe` / `kurumi_decide`；绑定真实宿主任务与随机授权、正确run/step、版本，普通子Agent不能劫持。角色输入没有未来剧情、原作结局、未揭示历史、窗口终点、观众标记或依赖文件路径。预训练模型可能记得历史，实验不声称严格盲测。
 
@@ -76,7 +79,7 @@ const candidate = await advanceNative(storageDirectory, state, decision, data, {
 
 时间允许非递减，同毫秒多行不去重、不重排。Nautilus 内部 ns=`sourceMs*1000000+同毫秒序号`；真实 time 保持源毫秒，nativeEventNs 标 internalOrderingOnly，不能说数据有纳秒精度。正数 decimal strings、非 crossed、真实 instrument tick 倍数；stop 必须精确对齐 tick，拒绝静默舍入。M1 kind（包括 m1_bidask）不受当前 profile 支持；对账/拒绝是明确边界，不存在伪造细粒度执行。
 
-EURCHF 另外请求 CHFJPY 的至多60秒 lookback 至本区间末（不得早于 playFrom）。每个 main event 选择 `fx.time<=event.time` 的最后已知双侧报价；max age 固定60000ms。主/FX 独立流保持其原顺序；同毫秒取该 FX 流最后记录，不虚构独立流的更细物理顺序。没有可用 FX、超龄或数据缺口则整个候选暂停；不取未来 FX，不填固定汇率。conversionTimeMs/age、rate/来源证据进入 closedLots。数据 chapter 需提供精确 `weekendGaps:[{from,to}]`，只接受实际 UTC 周五→周日 H1 整点48..50h；仅 closedHours/allowWeekendGap 不构成豁免。
+EURCHF 另外请求 CHFJPY 的至多60秒 lookback 至本区间末（不得早于 playFrom）。每个 main event 选择 `fx.time<=event.time` 的最后已知双侧报价；实际换汇的 max age 固定60000ms。主/FX 独立流保持其原顺序；同毫秒取该 FX 流最后记录，不虚构独立流的更细物理顺序。有持仓或非零目标时，没有可用 FX、超龄或数据缺口则整个候选暂停；不取未来 FX，不填固定汇率。只有步前 position=null、原始决定 target="0" 且 stop=null 时，全程无仓位、无换汇、零保证金，可在真实主报价上继续观看；FX 缺口明确记录为 fxUnavailable，不能作为汇率交给撮合器。JS 和 Python 各自核验这个条件，关闭已有仓位不适用。conversionTimeMs/age、rate/来源证据进入 closedLots。数据 chapter 需提供精确 `weekendGaps:[{from,to}]`，只接受实际 UTC 周五→周日 H1 整点48..50h；仅 closedHours/allowWeekendGap 不构成豁免。
 
 ### Fee / conversion / margin 的实际适配边界
 
@@ -111,6 +114,12 @@ main_tool_names声明十一个主控工具；主/子作用域工厂始终返回�
 
 `kurumi_recover {command_id, expected_version, decision_id}` 是 main-only 恢复接口，仅允许当前 run/step/version 的 failed_not_committed 原决定。核对原真实宿主 task/request 身份、终态与 failed decide 工具证据，确认引擎该步没有提交，持久预约后调用真实 adapter，CAS 提交一个 H1。原失败 evidence/error 和 task 证据保留，另记恢复记录；不创建新模型任务或伪造角色授权。暂停、关闭或版本变化阻止提交；中断预约需显式 reconcile。稳定 command 幂等，不自动重试。
 
+### 0.1.2-dev.1：4小时决策节奏与完整留档
+
+**4H 节奏**：`settings.decisionIntervalHours`（默认4，main-only `kurumi_configure` 在无任务/恢复/待完成延续时可改为1）。角色一次付费决定只执行第一根H1；同块其余最多3根为自动延续（`continuationOf` 标记原决定），保持当时实际剩余仓位与止损，不重开仓、不再请求模型。章边界（末章不足4根）提前结算并清除旧块占位；破产、缺数、取消都在下一根前停住，已原子提交小时不撤销。未完成块的持久占位只经显式 start/continue 恢复真实撮合，不自动发新付费；4H回执在块完成后更新为最终引擎版本/当前账户净值，重复同一决定返回同一个完成回执。
+
+**完整留档**（交易与账户证据优先于展示）：提交前完整角色输入落盘，写不进归档不提交；每根已提交H1归档 `h1_committed`（决定/延续标记/完整引擎状态/已揭示bar/ticks引用），缺数记 `h1_missing_data` 不计提交、不耗延续预算。归档写盘失败（ENOSPC/EACCES/镜像失败）立即暂停付费回合，失败条目入 pendings 队列且不被后续错误覆盖，显式恢复逐个补齐后才解除；已提交事实以引擎决定账本为准，归档异常不改写 committed 为 failed_not_committed。角色任务结束（含失败/未decide）由 protectArtifacts 钩子双副本封存完整会话 JSONL 与 runtime.sqlite 一致快照（VACUUM 一次同字节双写，排除已被快照涵盖的 WAL/SHM），cleanupRun 确认封存在场才允许清理；归属以登记 taskId 经 `agents.inspect(taskId).runId` 精确匹配。报告 HTML/CSS/data 与渲染回执、导出 rows/checkpoint、当时布局与指标代码/输入/计算结果全部文件化归档，主/镜像同字节。
+
 ### 0.1.1-dev.3：中断恢复显式核对与短状态 DTO
 
 恢复预约持久化原引擎版本、原决定ID、Run/step、原决定/成交数量、余额和固定来源。应用/插件重启只标 `recovery_requires_reconcile`、保存中断证据，不执行撮合、不启动角色。
@@ -121,3 +130,23 @@ main_tool_names声明十一个主控工具；主/子作用域工厂始终返回�
 关闭后的旧异步回调不访问已关闭 Store，不删除重启预约、不覆盖后来核对的证据。prepare 也拒绝活跃及待核对 recovery。
 status/recover/prepare 的 nativeEnvironment 只返回 ready、引擎/版本、固定配置摘要和必要私有路径/诊断；完整依赖、wheel 许可证仍在私有 receipt 和固定导出 artifact，不删证据。
 测试：`tests/recovery-store-host.test.mjs` 使用真实 Store 关闭/重开与隔离 DEMO 财务引擎验证中断、已提交、unknown 及重复 reconcile/recover，零网络/零角色调用；它不是历史原生撮合验收。真实 receipt-only 环境与实际 adapter quote 撮合另由 `tests/runtime-adapter-host.test.mjs` 验证。
+
+
+## 0.1.3-dev.1 独立新实验核心（未正式安装）
+
+终态完整双副本封存后才能显式创建独立新Run/300000JPY/20000000JPY目标；不覆盖旧continuous、不充值、不复活。新profile全部50x，旧500/25/25保持。费用/强平比率/FX60s不变。创建和重启不请求模型。完整接线、27项新测试分类与pending验收见ROUND2-CORE.md、ROUND2-PRESENTATION.md；普通tick级形成柱播放/自动主会话marker刷新与PK解说尚未接线，不能宣称原生沉浸体验已验收。SDK、正式宿主、client rendered、真实周报模型、新玩家安装与327早期FX缺口仍pending。未来安装/启动由主Agent验收决策。
+
+
+## 0.1.3-dev.2：最新目标覆盖早期全轮说明
+采用有界首章原生体验，不消费完整第二轮。新玩家空白私有state可直接创建50x，旧run必须先全量终态seal。默认42个预约角色/168已提交H1、每command1且每4H audience pause；manual pause须显式arm，5000在模型前拒绝。正常forming由实际Nautilus trace采样+原始journal prefix播放，金融不重放。NativeOrderTrace只在新50x真实生产，legacy未知状态不补造。
+主Agent解说用公开claim/read当前响应→自己普通native-chat自由正文→ack/read同一真实message，完整正文与固定证据封存；不需要private write或第二旁白模型。先diagnose并在真实SDK核实可见文本形状，不把fixture/public port读回当native UI displayed。方法依赖main-only公开catalog/inspect/显式install流程，无隐藏安装。完整可重放驱动、预算、周界/partial区别和pending见PORTABLE-EXPERIENCE.md。
+当前全部正式安装/加载/控制/paid角色及周报/SDK/client验收均未执行；isolated fixture与真实独立Nautilus结果不是正式原生观看通过证明。
+
+## CORE dev.3新增合约回归（未安装/角色/周报）
+58/58隔离测试通过，0失败0跳过；记录见外层verification `round2-core-clock-tests-20261012T072336593040Z.json`。本机日志完整，不代表SDK/client已验收。28工具main/sub同完整工厂；新main持久audience consumer、actual text-block普通主正文、20个真实来源typedH1预热producer、UTC pre-native account/source snapshot+report viewing hold。具体接口/仍待UI方对接见CORE-CLOCK-HANDOFF.md。DEFAULT角色42/168H/命令1/周报2不增费，正常main PK64以覆盖真实周界。
+
+### 追加审阅 dev.3.1（同CORE任务）
+已核验round2-public-main-chat-and-order-trace-review固定SHA，禁用旧extra narration inference/writer，main重复claim先读保存IDreconcile，连续public read failure暂停。native producer/prefix加共享kurumi.native-order-trace@1守卫；保护stop与全部实际qty/时间/父归属只来自cache/callback，不回填legacy。此次完整62/62、0fail0skip（未实际SDK/frontend验收），交接见CORE-ORDER-CHAT-HANDOFF.md。
+
+### dev.3.2 / 0.2.2实际公开shape接线
+最新67/67隔离回归（0fail0skip），真实message snapshot只读验证、UTF16多block追加及重启/unknown负例；driver直连UI runtime+native report receiver，移除不存在opener/字段门槛。实际SDK/current target pixel验收仍由已授权主Agent安装短测执行，见CORE-CLOCK-HANDOFF末尾；不以fixtures冒充已验收。

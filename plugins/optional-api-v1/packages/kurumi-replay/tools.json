@@ -32,6 +32,42 @@
     }
   },
   {
+    "name": "kurumi_configure",
+    "label": "kurumi_configure",
+    "description": "主Agent调整角色决策间隔：1或4个交易小时（新挑战默认4）；无任务在跑（含未核对角色任务/恢复/自动延续）时才可改，幂等与版本不丢。4h表示每4根可交易H1一次真实角色决定，末章不足4根提前结算；只改图表周期不算完成。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "command_id": {
+          "type": "string",
+          "description": "精确操作幂等ID；重试保持同ID与参数",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]{16,128}$"
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "kurumi_status返回的控制revision"
+        },
+        "decision_interval_hours": {
+          "type": "integer",
+          "enum": [
+            1,
+            4
+          ],
+          "description": "1=每根H1一次角色决定；4=每4根可交易H1一次角色决定"
+        }
+      },
+      "required": [
+        "command_id",
+        "expected_version",
+        "decision_interval_hours"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
     "name": "kurumi_start",
     "label": "kurumi_start",
     "description": "只在首次从300000JPY开始挑战；已有挑战只延续实际资金。选已配置openai/gpt-6.1-sol，真实受限子Agent决定后才推进。",
@@ -333,6 +369,530 @@
         "command_id",
         "expected_version",
         "decision_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "kurumi_repair_checkpoint_text",
+    "label": "kurumi_repair_checkpoint_text",
+    "description": "仅主Agent显式修复：在暂停且角色全部终态时，依据已封存原始角色JSONL和摘要恢复nativeJournal中UTF-8分块损坏的reason/utterance；非文本、价格、仓位、金额或未能证明的差异一律拒绝。完整备份前后检查点并追加修复证据，不改原始归档、不撮合、不请求模型，保留未完成自动延续。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "command_id": {
+          "type": "string",
+          "description": "精确操作幂等ID；重试保持同ID与参数",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]{16,128}$"
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "kurumi_status返回的控制revision，新挑战用0"
+        }
+      },
+      "required": [
+        "command_id",
+        "expected_version"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "kurumi_import_fx_supplement",
+    "label": "kurumi_import_fx_supplement",
+    "description": "主Agent显式导入已独立核验的 HistData 真实 CHFJPY 逐笔报价补充包；仅缺数暂停、无活跃任务时，绑定当前run及原快照、仅未提交时段；原报价优先、60秒限制不变，先双副本归档，不推进账户。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "command_id": {
+          "type": "string"
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bundle_directory": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "command_id",
+        "expected_version",
+        "bundle_directory"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "kurumi_archive_terminal",
+    "label": "kurumi_archive_terminal",
+    "description": "显式完整封存终态旧实验到双副本与不可变history；活跃/未知/未归档/待办阻塞，不重置旧账户。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "command_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "command_id",
+        "expected_version",
+        "run_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "kurumi_new_experiment",
+    "label": "kurumi_new_experiment",
+    "description": "只在终态旧实验完整封存后CAS创建独立300000JPY/目标20000000JPY/全部50x新Run；同ID返回同新Run，不调用模型，不称样本外。 Fresh truly empty private state may create directly with expected_version=0/omit previous_run_id; existing run still must seal terminal first.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "command_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "previous_run_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "profile_id": {
+          "type": "string",
+          "enum": [
+            "informed-replay-50x-v1"
+          ]
+        }
+      },
+      "required": [
+        "command_id",
+        "expected_version",
+        "profile_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "kurumi_experiment_history",
+    "label": "kurumi_experiment_history",
+    "description": "只读封存历史摘要与未知lifecycle事务，不推进。",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "kurumi_retry_committed_hooks",
+    "label": "kurumi_retry_committed_hooks",
+    "description": "已提交H1的展示/周报冻结钩子显式恢复；不重放交易，模块自身幂等，不在重启自动发付费任务。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "command_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "command_id",
+        "expected_version"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "kurumi_bind_experiment_fx",
+    "label": "kurumi_bind_experiment_fx",
+    "description": "显式绑定新Run全章合法窗口真实FX补充；新manifest精确runId，不复制旧24H指针，不宣称60s缺口已解决。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "command_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "bundle_directory": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "command_id",
+        "expected_version",
+        "run_id",
+        "bundle_directory"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "kurumi_refresh_presentation",
+    "label": "kurumi_refresh_presentation",
+    "description": "主会话显式刷新已消费行情的原作/实际成交标记和指标，尊重锁；真实客户端回执未核验时pending，不把工厂/fixture当屏幕通过。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "chart_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "chart_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "kurumi_weekly",
+    "label": "kurumi_weekly",
+    "description": "独立周报队列status/enable/disable/drain。启用或drain须显式authorize_generation；创建实验和重启不请求模型；未知请求不自动重付费。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "status",
+            "enable",
+            "disable",
+            "drain"
+          ]
+        },
+        "command_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "authorize_generation": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "action"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "kurumi_recording",
+    "label": "kurumi_recording",
+    "description": "每安装持久化归档mirror选择；新玩家默认插件私有路径，旧档须显式pin并验证，不猜作者目录、不移动旧档。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "status",
+            "pin"
+          ]
+        },
+        "command_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "mirror_root": {
+          "type": "string",
+          "minLength": 1
+        },
+        "acknowledge_existing": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "action"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "kurumi_experience",
+    "label": "kurumi_experience",
+    "description": "有界首章原生体验计划/status/configure/arm/record_gate；冻结预算拒绝5000，manual pause必须显式arm；记录真实native证据后决定边界暂停。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "status",
+            "configure",
+            "arm",
+            "record_gate",
+            "wait_boundary"
+          ]
+        },
+        "command_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "limits": {
+          "type": "object",
+          "properties": {
+            "maxPaidRoleDecisions": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maxCommittedHours": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maxStepsPerCommand": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maxWeeklyGenerations": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maxNarrationEvents": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maxNarrationGenerations": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "gate": {
+          "type": "string",
+          "enum": [
+            "portable_install",
+            "native_account",
+            "native_forming_indicators",
+            "native_comparison",
+            "weekly_report",
+            "native_chat",
+            "resume_idempotency"
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "schemaVersion": {
+                "type": "string",
+                "enum": [
+                  "1.0.0"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 16
+        },
+        "verified_by_main": {
+          "type": "boolean"
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120000
+        }
+      },
+      "required": [
+        "action"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "kurumi_method_workflow",
+    "label": "kurumi_method_workflow",
+    "description": "可重放main-only方法catalog/discover/inspect/显式install/load/adopt诊断；无隐含包或启动自动安装。采用须真实固定输入输出与成功receipt，只给角色一般风险假设。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "status",
+            "catalog",
+            "discover",
+            "inspect",
+            "install",
+            "load",
+            "adopt"
+          ]
+        },
+        "command_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "plugin_id": {
+          "type": "string"
+        },
+        "catalog_command_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "catalog_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "authorize_install": {
+          "type": "boolean"
+        },
+        "record": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "action"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "kurumi_narration",
+    "label": "kurumi_narration",
+    "description": "main-only公开tasks.read/messages.read的claim→主Agent普通native-chat正文→ack/reconcile；只读验证真实message及追加边界，完整封存，不需注入写API/第二旁白模型。实际SDK/client显示仍须验收。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "status",
+            "claim",
+            "ack",
+            "reconcile",
+            "diagnose"
+          ]
+        },
+        "event_id": {
+          "type": "string"
+        },
+        "text_field": {
+          "type": "string",
+          "enum": [
+            "content",
+            "text",
+            "body"
+          ]
+        }
+      },
+      "required": [
+        "action"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "kurumi_audience",
+    "label": "有界主观众驱动",
+    "description": "main-only持久真实H1源bootstrap、绑定configure、pump/resume刷新markers并消费report/PK待办，UTC native opened+normal main ack后release；无猜测UI/private端口，明确public契约。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "status",
+            "bootstrap",
+            "configure",
+            "pump",
+            "resume",
+            "release"
+          ]
+        },
+        "chart_id": {
+          "type": "string"
+        },
+        "native_report_bridge": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "client_receipt_contract": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "action"
       ],
       "additionalProperties": false
     }

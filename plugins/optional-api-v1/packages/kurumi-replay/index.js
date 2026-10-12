@@ -9,10 +9,14 @@ const playerNames = new Set(['kurumi_observe','kurumi_decide']);
 
 export async function activate(host) {
   assert(host.agents?.submit && host.inference?.models, '久留美插件需要 Sesame >=0.2.2 的真实Agent接口', 'HOST_INCOMPATIBLE');
+  assert(typeof host.workspace?.taskRoot === 'function', '久留美插件需要宿主公开的 workspace.taskRoot 接口封存角色临时区', 'HOST_INCOMPATIBLE');
   const service = new ReplayService(host); await service.initialize(); setService(host, service);
   const unregister = registerProviders(host, service);
   return {
     beforeDeactivate() { assert(!service.getDocument()?.control.active, '先暂停并核对角色任务结束再停用/升级', 'RUN_ACTIVE'); },
+    // 宿主 TaskCleanupService 在销毁角色临时区前 await 本钩子；归档失败会阻止当次清理。
+    protectArtifacts: runId => service.protectArtifacts(runId),
+    cleanupRun: (runId, protection) => service.cleanupRun(runId, protection),
     async dispose() { await service.dispose(); await disposeNative(host.storage.directory); await unregister(); removeService(host); },
   };
 }
@@ -61,8 +65,15 @@ async function displayOnce(host, service, signal) {
     assert(actualId&&verified.charts?.find(c=>c.id===id)?.script_ids?.includes(actualId)&&verified.scripts?.some(s=>s.id===actualId),
       '宿主未返回并确认当前图表的真实指标实例；不声明挂载成功','INDICATOR_INSTANCE_NOT_FOUND');
     host.storage.transaction(()=>host.storage.put('ui',{id:'audience-overlay',chartId:id,scriptId:actualId,artifact:audience.ref,runId:state.id}));
-    return {layout:verified,overlay:mounted,instanceId:actualId,audience,binding:exact,account:{connectionId:'kurumi-simulation',accountId:state.id},simulated:true,
-      note:'行情与指标实例已保存并经inspect核对；尚须当前版本客户端rendered回执确认显示。账户页选择久留美模拟账户。静态标记推进后display刷新；资金不重置。'};
+    // 当时布局/版本与指标素材归档（原始证据；渲染回执须由当前版本客户端另行确认）。
+    const stamp=`${state.id}_${state.chapter}_${state.version}`;
+    await service.archiveFileSafe(`markers/markers-${stamp}.js`,audience.bundle?.files?.['markers.js']??'');
+    await service.archiveFileSafe(`markers/markers-${stamp}.snapshot.json`,JSON.stringify(audience.bundle?.snapshot??null));
+    await service.archiveFileSafe(`layout/layout-${stamp}.json`,JSON.stringify(verified));
+    await service.archiveSafe('display_layout',{layoutVersionBefore:layout.version,layoutVersionAfter:verified.version,chartId:id,instanceId:actualId,audience:audience.ref,binding:exact,markerSnapshotDigest:audience.bundle?.snapshotDigest??null,note:'当时布局与版本、指标代码/输入/计算结果已文件化归档；渲染回执须由当前版本客户端另行确认'});
+    const dynamic=service.presentationEnabled?await service.refreshPresentation(host,{chart_id:id},signal):null;
+    return {layout:verified,overlay:mounted,instanceId:actualId,audience,dynamic,binding:exact,account:{connectionId:'kurumi-simulation',accountId:state.id},simulated:true,
+      note:'行情与指标实例已保存并经inspect核对；尚须当前版本客户端rendered回执确认显示。账户页选择久留美模拟账户。新实验可主会话refresh_presentation消费待办；服务侧每H1持久化展示/周报冻结，自动主会话布局/客户端回执仍须验收；资金不重置。'};
   } finally { await host.providers.unbind(binding.bindingId); }
 }
 export function createTools(host) {
@@ -76,7 +87,22 @@ export function createTools(host) {
       switch(def.name) {
         case 'kurumi_prepare': return args.action === 'clear' ? service.clear(signal) : service.prepare(signal);
         case 'kurumi_status': return service.status();
+        case 'kurumi_archive_terminal': return service.archiveTerminal(args,signal);
+        case 'kurumi_audience': return service.audienceControl(host,args,signal);
+        case 'kurumi_recording': return service.recordingControl(args,signal);
+        case 'kurumi_experience': return service.experienceControl(host,args,signal);
+        case 'kurumi_method_workflow': return service.methodWorkflow(host,args,signal);
+        case 'kurumi_narration': return service.narrationControl(host,args,signal);
+        case 'kurumi_new_experiment': return service.createExperiment(args,signal);
+        case 'kurumi_weekly': return service.weeklyControl(args,signal);
+        case 'kurumi_refresh_presentation': return service.refreshPresentation(host,args,signal);
+        case 'kurumi_experiment_history': return service.experimentHistory();
+        case 'kurumi_retry_committed_hooks': return service.retryCommittedHooks(args,signal);
+        case 'kurumi_bind_experiment_fx': return service.bindExperimentFx(args,signal);
+        case 'kurumi_import_fx_supplement': return service.importFxSupplement(args,signal);
+        case 'kurumi_configure': return service.configure(args, signal);
         case 'kurumi_recover': return service.recover(args,signal);
+        case 'kurumi_repair_checkpoint_text': return service.repairCheckpointText(args,signal);
         case 'kurumi_start': case 'kurumi_continue': return service.start(args, signal);
         case 'kurumi_step': return service.start({...args,max_steps:1},signal);
         case 'kurumi_pause': return service.pause(args,signal);

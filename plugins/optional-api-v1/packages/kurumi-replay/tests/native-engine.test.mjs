@@ -2,13 +2,22 @@
 import test,{after} from 'node:test';
 import assert from 'node:assert/strict';
 import {createRun,decideAndAdvance,snapshot,validateDecision,prepareNative,nativeStatus,advanceNative,joinAsOfQuotes,disposeNative} from '../native-engine.js';
+import {tmpdir,homedir} from 'node:os';
+import {mkdtempSync,mkdirSync,cpSync,rmSync,constants} from 'node:fs';
+import {join} from 'node:path';
+// Reuse verified dependencies but isolate every native worker and quote journal.
+const storage=mkdtempSync(join(tmpdir(),'kurumi-native-unit-'));
+const verifiedNative=process.env.KURUMI_TEST_NATIVE_SOURCE ?? join(homedir(),'Library/Application Support/Sesame/workspace/plugins/data/sesame/kurumi-replay/kurumi-native');
+mkdirSync(join(storage,'kurumi-native'));
+for(const entry of ['venv','wheels','environment.json','receipt.json'])cpSync(join(verifiedNative,entry),join(storage,'kurumi-native',entry),{recursive:true,mode:constants.COPYFILE_FICLONE,verbatimSymlinks:true});
+const fixturePython=join(storage,'kurumi-native','venv','bin','python');
 const H=3600000,T=Date.UTC(2024,0,8,10);
 const copy=x=>JSON.parse(JSON.stringify(x));
 function state(end=3,extra={}) {return createRun('native',[{symbol:'USDJPY',startIndex:0,endIndex:end,...extra},{symbol:'EURCHF',startIndex:0,endIndex:1},{symbol:'EURJPY',startIndex:0,endIndex:1}],{kind:'synthetic-native-fixture'});}
 const frames=(n=5,base=T)=>Array.from({length:n},(_,i)=>({time:base+i*H}));
 const decision=(s,target='1000',stop=null)=>({id:`d${s.version}`,runId:s.id,stepId:`${s.id}:${s.chapter}:${s.index}`,expectedVersion:s.version,target,stop,reason:'native fixture',utterance:'真实调用成熟撮合器的合成测试，不是历史行情'});
 const tick=(time,bid='100',ask='100.02',fx)=>({time,bid,ask,...(fx?{fx}:{})});
-function options(f,s,ticks) {return {quoteTicks:ticks,coverage:{from:f[s.index+1].time,to:f[s.index+1].time+H,complete:true,dataKind:'quote_ticks',liquidityAssumption:'unbounded_top_of_book',provenance:'synthetic-fixture'}};}
+function options(f,s,ticks) {return {pythonPath:fixturePython,quoteTicks:ticks,coverage:{from:f[s.index+1].time,to:f[s.index+1].time+H,complete:true,dataKind:'quote_ticks',liquidityAssumption:'unbounded_top_of_book',provenance:'synthetic-fixture'}};}
 async function advance(s,f,ticks,target='1000',stop=null) {return decideAndAdvance(s,decision(s,target,stop),f,options(f,s,ticks));}
 function amount(v){const neg=v.startsWith('-');const[a,b='']=(neg?v.slice(1):v).split('.');assert.ok(b.length<=18);return BigInt(a+b.padEnd(18,'0'))*(neg?-1n:1n);}
 function reconcile(s){let bal=amount('300000');for(const r of s.ledger){bal+=amount(r.realizedJpy)-amount(r.commission)-amount(r.financing);assert.equal(bal,amount(r.balanceAfter));}assert.equal(bal,amount(s.balance));}
@@ -108,6 +117,43 @@ test('native adapter leaves caller state, decision and quote array unchanged',as
  const s=state(),f=frames(),d=decision(s),opts=options(f,s,[tick(f[1].time)]);const before=JSON.stringify({s,f,d,opts});await decideAndAdvance(s,d,f,opts);assert.equal(JSON.stringify({s,f,d,opts}),before);
 });
 
+test('flat CHF hold consumes real main quotes without inventing an irrelevant FX rate',async()=>{
+ let s=await advance(state(1),frames(2),[tick(T+H)],'0');const f=frames(2),ms=f[1].time;
+ const raw=[tick(ms,'1','1.0002'),tick(ms+1000,'0.85','0.8502')];
+ const q=joinAsOfQuotes(raw,[tick(ms-60001,'160','160.2')],{zeroExposure:true});
+ assert.ok(q.every(t=>!t.fx&&t.fxUnavailable.reason==='stale'));
+ const original=copy(s);s=await advance(s,f,q,'0');
+ assert.equal(s.version,original.version+1);assert.equal(s.balance,original.balance);
+ assert.deepEqual(s.fills,original.fills);assert.deepEqual(s.ledger,original.ledger);
+ assert.equal(s.equity.at(-1).margin,'0');assert.equal(s.equity.at(-1).unrealizedJpy,'0');
+ assert.equal(s.nativeJournal.at(-1).ticks.length,2);
+});
+
+test('zero-exposure join option cannot bypass native validation for an opening order',async()=>{
+ let s=await advance(state(1),frames(2),[tick(T+H)],'0');const f=frames(2),ms=f[1].time;
+ const q=joinAsOfQuotes([tick(ms,'1','1.0002')],[],{zeroExposure:true});
+ const denied=await advance(s,f,q,'1000');
+ assert.equal(denied.status,'missing_data');assert.equal(denied.version,s.version);
+ assert.deepEqual(denied.fills,s.fills);assert.deepEqual(denied.ledger,s.ledger);
+});
+
+test('existing CHF exposure closing to zero still requires FX; no false flat exemption',async()=>{
+ let s=state(1);s.chapters[1].endIndex=3;s=await advance(s,frames(2),[tick(T+H)],'0');
+ const f=frames(4),ms=f[1].time;s=await advance(s,f,[tick(ms,'1','1.0002',{time:ms,bid:'160',ask:'160.2'})],'1000');
+ const before=copy(s),denied=await advance(s,f,[tick(f[2].time,'0.85','0.8502')],'0');
+ assert.equal(denied.status,'missing_data');assert.equal(denied.version,before.version);
+ assert.deepEqual(denied.position,before.position);assert.deepEqual(denied.ledger,before.ledger);
+});
+
+test('flat native account view reports exact zero margin with explicitly absent FX',async()=>{
+ let s=state(1);s.chapters[1].endIndex=3;s=await advance(s,frames(2),[tick(T+H)],'0');const f=frames(4),ms=f[1].time;
+ s=await advance(s,f,joinAsOfQuotes([tick(ms,'1','1.0002')],[],{zeroExposure:true}),'0');
+ const view=snapshot(s,f[1]);assert.equal(view.balance,'300000');assert.equal(view.equity,'300000');assert.equal(view.margin,'0');
+ assert.equal(view.fxStatus,'not_required_zero_exposure');assert.ok(!('fxAsOfTime'in view));assert.ok(!('fxAgeMs'in view));
+ const stale=await advance(s,f,[tick(f[2].time,'1','1.0002',{time:f[2].time-60001,bid:'160',ask:'160.2'})],'0');
+ assert.equal(stale.status,'missing_data','even flat path must not accept a supplied stale FX rate');
+});
+
 
 test('same-ms main quotes keep observed order and raw millisecond fill time',async()=>{
  const f=frames();const ms=f[1].time;
@@ -131,8 +177,6 @@ test('native CHFJPY uses actual asynchronous FX source time and bid/ask conversi
  s=await advance(s,f,q);assert.equal(s.fills[1].realizedJpy,'1666');assert.equal(s.fills[1].closedLots[0].conversionTimeMs,ms+500);assert.equal(s.fills[1].closedLots[0].conversionAgeMs,500);assert.equal(s.balance,'301660');reconcile(s);
 });
 
-// Stable owned test storage keeps the costly pinned venv reusable across test runs.
-const storage=new URL('../../../../../.data/plugin-envs/kurumi-replay-formal-tests/',import.meta.url).pathname;
 const fixtureLoader=(all,fx)=>async(_storage,{chapterId,symbol,from,to})=>({symbol,chapterId,from,to,rangeConvention:'inclusive UTC milliseconds',kind:'ticks',rows:(symbol==='CHFJPY'?fx:all).filter(x=>x.time>=from&&x.time<=to),sources:[{kind:'synthetic-fixture',timeBasis:'UTC milliseconds'}],historicalGaplessnessCertified:false});
 const dataFor=(s,f)=>({chapters:s.chapters,frames:[f,f,f],digests:s.dataDigests});
 
@@ -204,4 +248,4 @@ test('native stop must exactly align with tick; invalid precision never silently
 });
 
 test('native lifecycle disposal closes only the registered private worker and prevents queued restart',async()=>{await prepareNative(storage);let s=state(4),f=frames(6);const load=fixtureLoader([tick(f[1].time),tick(f[2].time),tick(f[3].time)]);s=await advanceNative(storage,s,decision(s),dataFor(s,f),{loadExecutionSlice:load});assert.equal((await disposeNative(storage+'unused-other')).killed,false);s=await advanceNative(storage,s,decision(s),dataFor(s,f),{loadExecutionSlice:load});assert.equal(s.nativeReceipt.cacheReused,true);const before=copy(s);assert.equal((await disposeNative(storage)).killed,true);assert.deepEqual(s,before);s=await advanceNative(storage,s,decision(s),dataFor(s,f),{loadExecutionSlice:load});assert.equal(s.nativeReceipt.cacheReused,false);reconcile(s);});
-after(()=>disposeNative(storage));
+after(async()=>{await disposeNative(storage);rmSync(storage,{recursive:true,force:true});});

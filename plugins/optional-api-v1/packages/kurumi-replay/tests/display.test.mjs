@@ -6,7 +6,7 @@ function fixture(){
  const book={open:'95',high:'95.1',low:'94.9',close:'95'};
  const state={id:'display-fixture-run',version:1,chapter:0,index:0,status:'paused',fills:[],orders:[],history:[],decisions:[],ledger:[],equity:[]};
  const data={provenance:{kind:'demo'},chapters:['AUDJPY','USDJPY','EURCHF'].map(symbol=>({symbol,startIndex:0,endIndex:1})),frames:[0,1,2].map(c=>[0,1].map(i=>({time:Date.UTC(2014,4,14)+c*86400000+i*3600000,bid:book,ask:{...book,close:'95.01'}})))};
- const service={getState:()=>state,getData:()=>data,status:()=>({alive:true,balance:'300000'})};
+ const service={getState:()=>state,getData:()=>data,status:()=>({alive:true,balance:'300000'}),archiveFileSafe:async()=>({}),archiveSafe:async()=>({})};
  const docs=new Map();let layout={version:1,charts:[],scripts:[]},next=0,rejectPut=false,unbinds=0;const calls=[];
  const host={plugin:{id:'sesame/kurumi-replay'},scope:{kind:'main'},storage:{directory:'/fixture/display',get:(c,id,optional=false)=>{if(!optional&&!docs.has(c+':'+id))throw Object.assign(Error('Resource not found'),{code:'NOT_FOUND'});return structuredClone(docs.get(c+':'+id));},put:(c,d)=>docs.set(c+':'+d.id,structuredClone(d)),transaction:f=>f()},
  tools:{Type:{Optional:s=>s},define:(name,description,properties,execute)=>({name,execute})},

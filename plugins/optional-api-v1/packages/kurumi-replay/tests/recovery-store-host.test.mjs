@@ -3,6 +3,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {mkdtemp,rm} from 'node:fs/promises';import {join} from 'node:path';import {tmpdir} from 'node:os';import {pathToFileURL} from 'node:url';
 import {ReplayService} from '../service.js';
+import {Recorder} from '../recording.js';
 import {createReferenceRun,decideReferenceAndAdvance,snapshotReference} from '../engine.js';
 import {auditLedger} from '../ledger.js';
 const app=process.env.KURUMI_DISPLAY_HOST_APP;
@@ -18,7 +19,7 @@ async function setup(t){
  async function open(){
   store=new Store(join(root,'state'));runtime=new Runtime(store,{piDir:join(root,'pi'),officialPluginsDirectory:join(root,'empty')});await runtime.init();
   host=createHostContext(runtime,{id:'sesame/kurumi-replay',version:'0.1.1-dev.3',digest:'sha256:'+'0'.repeat(64)},'conv_main');
-  service=new ReplayService({...host,agents:{inspect:()=>task,submit:()=>{throw Error('NO PAID TASK ALLOWED');}}});service.data=data;service.accountSnapshot=snapshotReference;service.verifyBackend=async()=>({ready:true});service.chooseModel=()=>model;
+  service=new ReplayService({...host,agents:{inspect:()=>task,submit:()=>{throw Error('NO PAID TASK ALLOWED');}}});service.recorder=new Recorder(host.storage.directory,{mirrorRoot:join(root,'isolated-mirror')});service.data=data;service.accountSnapshot=snapshotReference;service.verifyBackend=async()=>({ready:true});service.chooseModel=()=>model;
   service.advance=async(dir,state,decision)=>{advances++;return decideReferenceAndAdvance(state,decision,data.frames[state.chapter]);};
  }
  async function close(){await service.dispose();await runtime.close();store.close();}
@@ -37,7 +38,7 @@ test('real Store reopen: interrupted recovery only reconciles, explicit new reco
  await assert.rejects(f.service.prepare(),/活跃回合/);assert.throws(()=>f.service.reconcile(f.reconcile('live-reconcile')),{code:'DECISION_PENDING'});
  await f.close();finish();await rejected;await f.open();await f.service.initialize();
  assert.equal(f.service.status().control.phase,'recovery_requires_reconcile');assert.equal(f.service.status().recovery.requiresReconcile,true);assert.equal(f.advances,0);
- assert.throws(()=>f.service.start({command_id:'blocked-start',expected_version:f.service.status().revision}),{code:'DECISION_PENDING'});
+ await assert.rejects(()=>f.service.start({command_id:'blocked-start',expected_version:f.service.status().revision}),{code:'DECISION_PENDING'});
  await assert.rejects(f.recover('blocked-recover'),{code:'DECISION_PENDING'});await assert.rejects(f.service.prepare(),/活跃回合/);
  const before=f.service.getState(),args=f.reconcile('reconcile-uncommitted');const result=f.service.reconcile(args);
  assert.equal(result.reconciliation.status,'not_committed');assert.deepEqual(f.service.getState(),before);assert.equal(f.service.getDocument().recoveries[0].status,'interrupted_not_committed');assert.ok(f.service.getDocument().recoveries[0].interruptedAt);assert.equal(f.service.getDocument().roleEvidence[0].error.code,'OLD_NATIVE_ERROR');
@@ -67,7 +68,7 @@ test('real Store reopen: ambiguous engine version keeps guard, actionable diagno
  await f.close();await f.open();await f.service.initialize();const before=f.service.getState(),args=f.reconcile('unknown-reconcile');
  const result=f.service.reconcile(args);assert.equal(result.reconciliation.status,'unknown');assert.match(result.error,/kurumi_export/);assert.ok(result.recovery);assert.deepEqual(f.service.getState(),before);
  f.service.reconcile(args);f.service.reconcile(f.reconcile('unknown-new-observation'));assert.ok(f.service.status().recovery);
- await assert.rejects(f.service.prepare(),/活跃回合/);await assert.rejects(f.recover('unknown-recover'),{code:'DECISION_PENDING'});assert.throws(()=>f.service.start({command_id:'unknown-start',expected_version:f.service.status().revision}),{code:'DECISION_PENDING'});assert.equal(f.advances,0);
+ await assert.rejects(f.service.prepare(),/活跃回合/);await assert.rejects(f.recover('unknown-recover'),{code:'DECISION_PENDING'});await assert.rejects(()=>f.service.start({command_id:'unknown-start',expected_version:f.service.status().revision}),{code:'DECISION_PENDING'});assert.equal(f.advances,0);
 });
 
 test('real Store reopen: missing original evidence remains diagnosable without fabricated origin version',{skip:!app},async t=>{

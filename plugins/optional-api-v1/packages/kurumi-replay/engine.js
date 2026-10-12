@@ -97,11 +97,11 @@ function bookPair(frame) {
   ohlc(frame.bid); ohlc(frame.ask);
   for (const k of ['open','high','low','close']) if (cmp(D(frame.bid[k]),D(frame.ask[k])) > 0) fail('INVALID_DATA','Crossed bid/ask');
 }
-function validateFrame(frame, chapter) {
+function validateFrame(frame, chapter, requireFx = true) {
   if (!frame || !Number.isSafeInteger(frame.time) || frame.time < 0 || frame.time % HOUR !== 0)
     fail('INVALID_DATA','Missing/alignment error: frame.time must be UTC H1 open milliseconds');
   bookPair(frame);
-  if (quoteCurrency(chapter) === 'CHF') {
+  if (quoteCurrency(chapter) === 'CHF' && requireFx) {
     if (!frame.fx) fail('INVALID_DATA','CHF settlement requires synchronous CHFJPY bid/ask');
     if (frame.fx.time !== undefined && frame.fx.time !== frame.time) fail('INVALID_DATA','CHFJPY timestamp mismatch');
     bookPair(frame.fx);
@@ -136,7 +136,7 @@ function marginFor(q, frame, chapter, mode) {
 function metrics(s, frame, mode) {
   const chapter = chapterOf(s); const q = s.position ? BigInt(s.position.quantity) : 0n;
   const unrealized = s.position ? pnlAt(s.position,mark(frame,q > 0n,mode),frame,chapter,mode) : D('0');
-  const equity = add(D(s.balance),unrealized); const margin = marginFor(q,frame,chapter,mode);
+  const equity = add(D(s.balance),unrealized); const margin = q===0n ? D('0') : marginFor(q,frame,chapter,mode);
   return { balance:s.balance, unrealizedJpy:text(unrealized), equity:text(equity), margin:text(margin), freeMargin:text(sub(equity,margin)) };
 }
 
@@ -159,8 +159,9 @@ export function createReferenceRun(runId, chapters, dataDigests) {
 export function validateReferenceDecision(state, decision) {
   validateState(state);
   if (!decision || typeof decision !== 'object') fail('INVALID_DECISION','Decision object required');
-  const keys = ['id','runId','stepId','expectedVersion','target','stop','reason','utterance'];
-  if (Object.keys(decision).some(k => !keys.includes(k)) || keys.some(k => !(k in decision))) fail('INVALID_DECISION','Decision must contain exactly the documented fields');
+  const required = ['id','runId','stepId','expectedVersion','target','stop','reason','utterance'], optional = ['continuationOf'];
+  if (Object.keys(decision).some(k => ![...required,...optional].includes(k)) || required.some(k => !(k in decision))) fail('INVALID_DECISION','Decision must contain exactly the documented fields');
+  if ('continuationOf' in decision && decision.continuationOf !== null && typeof decision.continuationOf !== 'string') fail('INVALID_DECISION','continuationOf must be the original role decision id marking this bar as an automatic extension');
   for (const k of ['id','runId','stepId','reason','utterance']) if (typeof decision[k] !== 'string' || !decision[k].trim()) fail('INVALID_DECISION',`${k} is required`);
   quantity(decision.target); if (decision.stop !== null) positive(decision.stop);
   if (!Number.isSafeInteger(decision.expectedVersion) || decision.expectedVersion < 1) fail('INVALID_DECISION','expectedVersion must be a positive integer');
@@ -298,13 +299,14 @@ export function decideReferenceAndAdvance(state, decision, frames) {
   return s;
 }
 
-export function snapshotReference(state, frame) {
-  validateState(state); validateFrame(frame,chapterOf(state));
+export function snapshotReference(state, frame, {allowUnpricedFlat=false} = {}) {
+  validateState(state); validateFrame(frame,chapterOf(state), !(allowUnpricedFlat===true && state.position===null));
   if (state.revealedFrameTime !== null && state.revealedFrameTime !== frame.time) fail('INVALID_DATA','snapshot requires the current revealed frame, not a past/future frame');
   return { id:state.id, version:state.version, chapter:state.chapter, index:state.index, stepId:`${state.id}:${state.chapter}:${state.index}`, status:state.status,
     symbol:chapterOf(state).symbol, time:frame.time+HOUR, frameTime:frame.time, position:clone(state.position), ...metrics(state,frame,'close'), outcome:state.outcome,
     victoryBalance:GOAL, targetFactor:'66.6666667', ledgerCount:state.ledger.length, missingData:clone(state.missingData) };
 }
 
-// Production entry points use native rules and awaitable native matching.
+// Production entry points use immutable legacy or explicitly selected experiment
+// profiles, with native quote matching; the reference H1 model is not equivalence evidence.
 export {createRun,validateDecision,decideAndAdvance,snapshot} from './native-engine.js';

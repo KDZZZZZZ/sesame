@@ -765,14 +765,59 @@
     },
     {
       "id": "sesame/kurumi-replay",
-      "version": "0.1.1-dev.3",
+      "version": "0.1.3-dev.3.8",
       "directory": "kurumi-replay",
-      "treeDigest": "sha256:a1ed3f983a224f51a1a93b90fa372c1b63c129cc87922f78c92d184c5ba15f55",
+      "treeDigest": "sha256:5dfa24fdebc9108e572501140959b33c2dc0d989e1b0ccea55be43ef0337c039",
       "files": [
         {
+          "path": "COMMITTED-PROOF-FIX-HANDOFF.md",
+          "sha256": "24625171b0e5ce22f51b09f390b48316d5856d2bd8852da8fe95edaa2429c0b8",
+          "bytes": 1814
+        },
+        {
+          "path": "COMPACT-LABELS-HANDOFF.md",
+          "sha256": "605fe068436ee7cd8d2418efa1b10441d636c0af1c73d59fb3de2904d7d039c2",
+          "bytes": 2107
+        },
+        {
+          "path": "CORE-BOUNDED-HANDOFF.md",
+          "sha256": "94f8b22f0f1e2da68124932845fc106d0ff14fc3031d8b10de89fb9bb5429978",
+          "bytes": 3237
+        },
+        {
+          "path": "CORE-CLOCK-HANDOFF.md",
+          "sha256": "a7380d4658de8abe78c408e7dcb42ca84d6d14ce248f5802f3a864c443ac3e9d",
+          "bytes": 10443
+        },
+        {
+          "path": "CORE-FORMING-HANDOFF.md",
+          "sha256": "67aeaf09a201e81c3ff2022a495f00d08c218fed9f27daa1c6c18cbe177b2ae1",
+          "bytes": 2758
+        },
+        {
+          "path": "CORE-HANDOFF-INTEGRATION.md",
+          "sha256": "258147b79fd914620f9d96e554595fcbe62687a784a7871327293ba9772b7835",
+          "bytes": 1795
+        },
+        {
+          "path": "CORE-HANDOFF.md",
+          "sha256": "52dbfa6c3233ec344935cc2d5e7d4de81d9a3a31521b825f6bd786a2fa4afd5e",
+          "bytes": 3100
+        },
+        {
+          "path": "CORE-ORDER-CHAT-HANDOFF.md",
+          "sha256": "582a62ac1ba02ec02aecc91aca7fa01633351f6db5034599ab7085d8444648c2",
+          "bytes": 9463
+        },
+        {
           "path": "DATA.md",
-          "sha256": "56e6a0c94a3a2925b252bea8723f79c33febbe4ebe4ab74a90785f47ec1df990",
-          "bytes": 22907
+          "sha256": "9c941d30c85514ebe82549a95c995683a10321119eadff4838784a8ab13776aa",
+          "bytes": 23572
+        },
+        {
+          "path": "FORMING-FIX-HANDOFF.md",
+          "sha256": "d66500c87acd9d6186538424d24185d41c8dc548ffc27c0328755f1477f0cb7d",
+          "bytes": 1101
         },
         {
           "path": "LICENSE",
@@ -780,19 +825,69 @@
           "bytes": 1076
         },
         {
+          "path": "PLOT-TIME-FIX-HANDOFF.md",
+          "sha256": "6895b2e29b1af44eb28d517f48de61b311f14ffdc48edcf2429eed6a16486106",
+          "bytes": 1548
+        },
+        {
+          "path": "PORTABLE-EXPERIENCE.md",
+          "sha256": "fb8379f99d6d321ce64148a0afb19c321866baf1e9e61f9cd1db851525fef5a9",
+          "bytes": 10763
+        },
+        {
+          "path": "PRESTEP-JSON-FIX-HANDOFF.md",
+          "sha256": "4e3f1be386edd247631314064f1d6333695cd90ac5bcefdf90171cd12645ab64",
+          "bytes": 1480
+        },
+        {
           "path": "PROVENANCE.md",
-          "sha256": "fec443495136861c992afe0c131a0c1ab09c81b54f74aebba5c0810a111614d1",
-          "bytes": 1794
+          "sha256": "6dd23e706ccb7f6c87905bc10eeed5b16c7bb89cef744feb54c9b7d452258474",
+          "bytes": 1883
         },
         {
           "path": "README.md",
-          "sha256": "74f52b39234a0f39ad3033e26bc7784fe9945cbb102c9427d17123546e010dfd",
-          "bytes": 15114
+          "sha256": "155ea296dd9c4ed4cf8fd489c1ba56bfda9d7477a8be256529b3f2482b4a4e2d",
+          "bytes": 21618
+        },
+        {
+          "path": "ROUND2-CORE.md",
+          "sha256": "ec37ce46b84b18864205c6b56ba0c4b7f7ea898372d85662b4c6c0660c8b7558",
+          "bytes": 10010
+        },
+        {
+          "path": "ROUND2-NATIVE-EXPERIENCE.md",
+          "sha256": "2576819b4f298998817b9f43148ffef8954449193979ca7c2c32afd5f1b0a0b0",
+          "bytes": 20168
+        },
+        {
+          "path": "ROUND2-PRESENTATION.md",
+          "sha256": "1581d3a87d615d050f49f4ce89a4697aff09da2c70fc9446a44d9c429df4809d",
+          "bytes": 16652
         },
         {
           "path": "RULES.md",
-          "sha256": "20cf9aa3143a96fd6ce0423e5a580c1a59fe00b16d6401d848ddeb35d010baab",
-          "bytes": 28590
+          "sha256": "4fdf7d9bb26f381d7c3e7082920ec14c26af4d620b215f20efb7ee5808b3ddc1",
+          "bytes": 33309
+        },
+        {
+          "path": "UI-PUBLIC022-RECEIVER-HANDOFF.md",
+          "sha256": "1369b3f02c26c4a0024a99bb18b85166ecfd3d85cbdd53059b2eb55f3f72b0a8",
+          "bytes": 7712
+        },
+        {
+          "path": "UNSIGNED-REVISION-FIX-HANDOFF.md",
+          "sha256": "7bffb19f01c19ee34651eb54e825e81e46f8ded06dc591f97cc6867a17dd21af",
+          "bytes": 1692
+        },
+        {
+          "path": "VALIDATION.md",
+          "sha256": "c958ada8800f365cad815313b5faed98985d02f757d20dc1ff8ced3bddb58a05",
+          "bytes": 8098
+        },
+        {
+          "path": "analysis-plan.js",
+          "sha256": "b6454dfc33fca8e526590f0ed0f0b7970547c3f1cea4216066bf5e4ef7a2d3c0",
+          "bytes": 10152
         },
         {
           "path": "assets/editorial.css",
@@ -803,6 +898,16 @@
           "path": "assets/report-kit.js",
           "sha256": "2e6fe859d25270c2cdd16d2ada799d18ce389be2c4a9127fa070490c11d35769",
           "bytes": 45095
+        },
+        {
+          "path": "checkpoint-text-repair.js",
+          "sha256": "dbbc7b8cfb06207d3ab614cfde1901ae91611ea215934b9b62065b7aba6b55d5",
+          "bytes": 5043
+        },
+        {
+          "path": "committed-playback.js",
+          "sha256": "b67fd3d74b1b65bf0cfaa7ae25616777b126abe99ca658080f9f38c7e69900ed",
+          "bytes": 5044
         },
         {
           "path": "data-windows.json",
@@ -816,13 +921,38 @@
         },
         {
           "path": "engine.js",
-          "sha256": "fc0acd2f69e4d51fb59360554cc4b2fc861621ae54b84769474152af8de555ce",
-          "bytes": 21551
+          "sha256": "0b286ae42c140bc455b5c0736e3379b393ea5329166b710bfc9b43a993094a3b",
+          "bytes": 22089
+        },
+        {
+          "path": "experience-plan.js",
+          "sha256": "24b5ac7b37beb2abc2d1bb27ee6faef98d6c727989a1b87aa37d645c0addd1e6",
+          "bytes": 4030
+        },
+        {
+          "path": "experiment-fx.js",
+          "sha256": "f0b388b867205f26e9197f0458c4a27fa93615f529d162c7ab0501804052d52d",
+          "bytes": 6700
+        },
+        {
+          "path": "experiment-lifecycle.js",
+          "sha256": "81bb24c6eb447e4e277ae3cbc67bbafddbb8af279940f76263f210653975ab9a",
+          "bytes": 17784
+        },
+        {
+          "path": "experiment-profiles.js",
+          "sha256": "40ee72cef00ba70e80ddd11ec78bb18cb0a1966d52ddb62510eb4809bf6d50e0",
+          "bytes": 2921
+        },
+        {
+          "path": "fx-supplement.js",
+          "sha256": "f9097104cba81637938fbf865114cebfc6a3440cd18c759033f40b9d00de4e8f",
+          "bytes": 7403
         },
         {
           "path": "index.js",
-          "sha256": "6ed3d50378732ab2397939f714c6b6b57583b4cbff39770d110ac37347388c2a",
-          "bytes": 7099
+          "sha256": "677707b341ec39e6dafd05bb95ac53fe7c46f68077407ffdb35758114f39847d",
+          "bytes": 9937
         },
         {
           "path": "ledger.js",
@@ -830,9 +960,34 @@
           "bytes": 1988
         },
         {
+          "path": "main-audience-driver.js",
+          "sha256": "f077bc7d1f74b96834a8f7e06680e49c08c0c64de9aae0aa244ec05e1c70830e",
+          "bytes": 7784
+        },
+        {
+          "path": "main-chat-workflow.js",
+          "sha256": "ef765eeee2ab3fa0f84e5a97ea5c237fa47aa20f00a9a6015eed4502799e62a7",
+          "bytes": 9808
+        },
+        {
+          "path": "main-message-text.js",
+          "sha256": "755d016acc70ff5f26ec5e6d0aae3710704dca31cb8c1e884173adbbdb4843ad",
+          "bytes": 2917
+        },
+        {
           "path": "markers.js",
-          "sha256": "a0f4c22505eadca426058f09eeb6e0fa62e4632ea31d00f4c7aa47533795b1b0",
-          "bytes": 20118
+          "sha256": "db8e3f60cec815b3024e82367c7dd677fefdc5c81da34d48ffab115c3bcd2a9f",
+          "bytes": 31906
+        },
+        {
+          "path": "method-workflow.js",
+          "sha256": "5e286f8fc60702e8ff76403760c23f558a9214b87d0f3c348690dd88188d5abe",
+          "bytes": 4838
+        },
+        {
+          "path": "narration-queue.js",
+          "sha256": "ad0ec0b480ddfbc7c6d1dd80923f356dc5727c068fe282c9216d58979d10cf49",
+          "bytes": 3661
         },
         {
           "path": "native-dependencies.json",
@@ -841,23 +996,33 @@
         },
         {
           "path": "native-engine.js",
-          "sha256": "5bbeeb305358df2d70e3d83ed8a7e7483dbc699e1bf61aec68300c9e7317d496",
-          "bytes": 27074
+          "sha256": "87dfcad0ff4de10b0f0488986511f19d579ba207976b10f02fea996aa74a801d",
+          "bytes": 31551
         },
         {
           "path": "native-engine.py",
-          "sha256": "91ad1b488ee28821c542fee7035b9f9b5df4e12e7dae52eaaccc76b53279f2d5",
-          "bytes": 27861
+          "sha256": "c933298183628d0645cfe7f8104a96d542d535d88c482a882e335d1ae70f8c71",
+          "bytes": 36037
+        },
+        {
+          "path": "native-order-abi.js",
+          "sha256": "ab348800494a868f3a5b2e2771b996fc186c88065099b68ce23ecc0497627344",
+          "bytes": 3103
         },
         {
           "path": "package.json",
-          "sha256": "645874c03e56c28b47614f39fd7c71fe79046251bdf9ee2ce3f8dab52829a969",
-          "bytes": 188
+          "sha256": "4a408d7ed10d3700db58c22342233f4e5d7bdb494811e88aef06aeb84fb841d7",
+          "bytes": 331
         },
         {
           "path": "plugin.json",
-          "sha256": "563d71f22c614c6e321104b1dd940cd2aad525075faddc5c3b075f414217fcd4",
-          "bytes": 1429
+          "sha256": "6781681704a506b8d624cee45b4b8fe08bd420e4ef65ff2ae1fd449fac5b09ac",
+          "bytes": 2848
+        },
+        {
+          "path": "presentation-receipts.js",
+          "sha256": "a46c6cd96abfd3d48743510f4ece0187e438f51440e93ac25c5240d099130646",
+          "bytes": 3333
         },
         {
           "path": "prompt.md",
@@ -866,13 +1031,28 @@
         },
         {
           "path": "providers.js",
-          "sha256": "ae8b4bc1818145172672060e28dd623625ddf556b28397d00cde4e257b833c99",
-          "bytes": 42376
+          "sha256": "18df90a12d63c05e97906fe3b35c84d5fe29627f80cc56028415b01c3c33b2a2",
+          "bytes": 51971
+        },
+        {
+          "path": "recording-selection.js",
+          "sha256": "0294c3fe5ea8d3abc04d08539729a87223d9b059f8b25935a07320b484989c93",
+          "bytes": 3821
+        },
+        {
+          "path": "recording.js",
+          "sha256": "75efdc35f725c1b0a7da5018c93d8553b0002cd21a1c5240e2f146df9072c5cd",
+          "bytes": 22248
+        },
+        {
+          "path": "replay-presentation.js",
+          "sha256": "6581927191713553f88147b0686bc5283d7de9cbf02a2e02ea87fe5a12e4f451",
+          "bytes": 50915
         },
         {
           "path": "report.js",
-          "sha256": "b5954c01c9bd757e9d1dd45f03b40856bd7d7062e81e8067d34d0ca451d06668",
-          "bytes": 13408
+          "sha256": "72fb3d7e9b1d6bb1609cdbf5adf2aad4a6f038c68559d762b8ef020f21eb4ba6",
+          "bytes": 23599
         },
         {
           "path": "reveal-cutoff.js",
@@ -920,19 +1100,59 @@
           "bytes": 7174
         },
         {
+          "path": "scripts/test-source.mjs",
+          "sha256": "685c4e35fd0875df891ad20e134849afe68dbdd0908f23fc817e98ec92606950",
+          "bytes": 1796
+        },
+        {
           "path": "scripts/verify-network.mjs",
           "sha256": "0757debff81ee7ac28801df77db580c2f2bc87138ff4bfc771221c4131a5ff03",
           "bytes": 3298
         },
         {
           "path": "service.js",
-          "sha256": "116af821d353d3f251bf37252ad8ec51b1553c5bf2caf24bf029a6f85ddda65d",
-          "bytes": 35850
+          "sha256": "3bd7bec0443b110f2d3c246fd2b9ad43f99d97ad9e1712fc45926d528ca5ad75",
+          "bytes": 95306
         },
         {
           "path": "skills/kurumi-replay/SKILL.md",
-          "sha256": "3393be76b12b8ba2a9c21782017b52d158008add7d4f7a052b8a06ebdab0899b",
-          "bytes": 5014
+          "sha256": "94331970d98acedceff9f4038843c6a14a247dd73dc9002499646312d3e5f72d",
+          "bytes": 16415
+        },
+        {
+          "path": "tests/cadence-recording.test.mjs",
+          "sha256": "3a547549030aeffd05e3940c6cea64c1f887fafa27903170a7ad858bdadcc2fa",
+          "bytes": 8720
+        },
+        {
+          "path": "tests/checkpoint-text-repair.test.mjs",
+          "sha256": "2187aee4d188cfc63b10f42c2ae9689d00ce74811802f42f9f1fd52b8b937102",
+          "bytes": 7631
+        },
+        {
+          "path": "tests/committed-playback.test.mjs",
+          "sha256": "4119d57cc3bba179f5862df1ecbb68b14284a898963311d383351f087635bad4",
+          "bytes": 10200
+        },
+        {
+          "path": "tests/committed-source-proof-contract.test.mjs",
+          "sha256": "05f20fbdedc366cf122646aaebeaa8a89533cc86f228b9d43df4267dc7a671f6",
+          "bytes": 1771
+        },
+        {
+          "path": "tests/compact-label-contract.test.mjs",
+          "sha256": "da216761f1dd5ea2a63e6444e2ea355320d6feae085db3c2a637c37e1e32608a",
+          "bytes": 5288
+        },
+        {
+          "path": "tests/core-clock-workflow.test.mjs",
+          "sha256": "71709430403f1a190071d384d56d0c643ba4eee152d4c908097ee17b2eb4a30b",
+          "bytes": 12789
+        },
+        {
+          "path": "tests/core-lifecycle-roundtrip.test.mjs",
+          "sha256": "f25e63979dc274de43ed0c64b39b01df236fd275b5224bf7d4bc397a451d2770",
+          "bytes": 5487
         },
         {
           "path": "tests/data.test.mjs",
@@ -946,8 +1166,8 @@
         },
         {
           "path": "tests/display.test.mjs",
-          "sha256": "f74539527d12995028b2fcf14672283cef9ed616e17e0b480d4cb9ffe839f440",
-          "bytes": 5272
+          "sha256": "e1c44ba985d1ce75048106ae22090a41b49f0af6b0902cc2a4203b09686130c3",
+          "bytes": 5328
         },
         {
           "path": "tests/engine.test.mjs",
@@ -955,19 +1175,54 @@
           "bytes": 19746
         },
         {
+          "path": "tests/experiment-fx.test.mjs",
+          "sha256": "6a3c033e4c9f72984d3aec03ccb384682a779293e9bbede36eedc9eeedb99047",
+          "bytes": 7126
+        },
+        {
+          "path": "tests/experiment-hooks.test.mjs",
+          "sha256": "85c878dc9783711bcfee290b85da559717f6e1662e7b38af4a30bf37387eb305",
+          "bytes": 10622
+        },
+        {
+          "path": "tests/experiment-lifecycle.test.mjs",
+          "sha256": "bd1bdf7ad44b4da87c343580941f3cbc069f98aad5e12ff5c06eb3781ec499ee",
+          "bytes": 10319
+        },
+        {
+          "path": "tests/fixed-data-forming-contract.test.mjs",
+          "sha256": "4d04a8de6c76ca42106a673ec35d7a3ed965c2785074253ca4a957aca2b9dd89",
+          "bytes": 3573
+        },
+        {
           "path": "tests/fixtures/markers-browser.jsx",
           "sha256": "fc621ba8d03324fc60c15fd9c1755dbe86a25106c2d5b1eae138876b890674f3",
           "bytes": 3742
         },
         {
+          "path": "tests/fx-supplement.test.mjs",
+          "sha256": "654952281f4d5bcf01ff484d353555382cdde3f6d869eccccb4ad51ac6ca5890",
+          "bytes": 5759
+        },
+        {
+          "path": "tests/main-chat-workflow.test.mjs",
+          "sha256": "adb9fa3b5eba63749a2b20dbfd8e0342e1e52b6addc5e4a1b3a546d5582b775c",
+          "bytes": 13622
+        },
+        {
           "path": "tests/markers.test.mjs",
-          "sha256": "b16ec1ef73fc377ade1ad32e40c50370f9bf733bafe6ca0ed28c89bcc5d8063d",
-          "bytes": 33216
+          "sha256": "0e98c9c71b9ddc6e2bf7cb20627ecee0e3b7edc56711ed89539122b36bae0a58",
+          "bytes": 33811
         },
         {
           "path": "tests/native-engine.test.mjs",
-          "sha256": "6fc3d110da26fa29f3bbe2da57c83baf24ce4c7122b82fc1a2721bfb90ac0a2d",
-          "bytes": 23380
+          "sha256": "9aa092be97752f3f3de30ce85c3f22a0f73fda57454a8086e51d205b5fc4bc85",
+          "bytes": 26665
+        },
+        {
+          "path": "tests/native-order-abi.test.mjs",
+          "sha256": "b52910fdea0d7a1a7ea469fbb363773be60ec49f5ccfdf590f0b36db42edc334",
+          "bytes": 2804
         },
         {
           "path": "tests/persistence-host.test.mjs",
@@ -975,9 +1230,34 @@
           "bytes": 4363
         },
         {
+          "path": "tests/plot-time-contract.test.mjs",
+          "sha256": "7d18ebace2a60d00981221895aa18e8f4173d88ef638561fd5f580d27a3a961c",
+          "bytes": 3400
+        },
+        {
           "path": "tests/plugin.test.mjs",
-          "sha256": "7b1cb2567d7604eb6b9b0a8544e75802d443d5277c63021f83f7cbb07bbd66f1",
-          "bytes": 2914
+          "sha256": "4d202d5466b6ea6bc4222652b37426de590fc6c42c00678fe393a2c665e339c2",
+          "bytes": 3029
+        },
+        {
+          "path": "tests/portable-experience.test.mjs",
+          "sha256": "461896580896867b664be905d9ce79b0df9f2641e1f51b485a45f9c207576d17",
+          "bytes": 12998
+        },
+        {
+          "path": "tests/prestep-json-contract.test.mjs",
+          "sha256": "659adf1ab12e9111c96fbd2f3f528e7fe7496b8b4bb13552059f6a296013bd79",
+          "bytes": 3758
+        },
+        {
+          "path": "tests/profile-native50.test.mjs",
+          "sha256": "b4e1e32217729ab42e59559d16bb854e387245eeba66f488f69cc8ce04e52e0d",
+          "bytes": 8299
+        },
+        {
+          "path": "tests/profile-realcopy50.test.mjs",
+          "sha256": "5c5f09c66222a519e139f8c4e6f241a735c72af23d6d5acdfa4574f28ce08cca",
+          "bytes": 3838
         },
         {
           "path": "tests/providers.test.mjs",
@@ -985,9 +1265,34 @@
           "bytes": 25108
         },
         {
+          "path": "tests/recording.test.mjs",
+          "sha256": "f6e1d9bcfe0d1d3e878d18c3ecce7a0ac8f2c0bb9e4d7a868fa896203588357f",
+          "bytes": 8507
+        },
+        {
           "path": "tests/recovery-store-host.test.mjs",
-          "sha256": "99ed12d0dabeaad33ac74f73242824039afcef0ae6175b81861ad7475f8630c5",
-          "bytes": 10422
+          "sha256": "0234b30b33aa949ee03d83f1c0b3a8944a084d079e31199a65d75308c0ac31a0",
+          "bytes": 10574
+        },
+        {
+          "path": "tests/round2-presentation-fixtures.test.mjs",
+          "sha256": "14a780221ca3cacf6114b97839aed7614e2876c808ffd2b1f874cd836281c215",
+          "bytes": 5209
+        },
+        {
+          "path": "tests/round2-presentation-native-account.test.mjs",
+          "sha256": "775ede891cdd1d3ea4a3b5bf336119ad1d95c4e57879ecf2a5e6b491c2b6598d",
+          "bytes": 12589
+        },
+        {
+          "path": "tests/round2-presentation-pk.test.mjs",
+          "sha256": "52dff128c6a1cba730ec4f5ce8798d25a7ad2d72627d27f1d9f3e4c9e8fe450f",
+          "bytes": 7231
+        },
+        {
+          "path": "tests/round2-presentation.test.mjs",
+          "sha256": "945ef1108c024a30ebc61500e6d265f8e0808ce95d4cbf98219a73fc8352035f",
+          "bytes": 25433
         },
         {
           "path": "tests/runtime-adapter-host.test.mjs",
@@ -996,13 +1301,43 @@
         },
         {
           "path": "tests/service.test.mjs",
-          "sha256": "31c7b3aef7b9065cc2b111882031dfabd7ec411e2f20c61dd40252c53b128a87",
-          "bytes": 18573
+          "sha256": "7d3a7867a3b165d12a4c6e7f05371cc4bf34a653a60912d0129ac3de9a92542a",
+          "bytes": 21426
+        },
+        {
+          "path": "tests/ui-receiver-public022.test.mjs",
+          "sha256": "9efb83dc5c2f4bc49d1e32942dee20a79a0f4b220d96536abd3d61e2af7fd6b4",
+          "bytes": 17759
+        },
+        {
+          "path": "tests/unsigned-revision-contract.test.mjs",
+          "sha256": "7769563ab377c534b47ea6b8fed3913e28a6b123e0dbdbd0082617a00b0dbc82",
+          "bytes": 2967
+        },
+        {
+          "path": "tests/weekly-reports.test.mjs",
+          "sha256": "a99f56cfe28464b1db43896ba789d327656ec97a92fd6d14eed181b4ef8c772d",
+          "bytes": 22720
         },
         {
           "path": "tools.json",
-          "sha256": "994b40cb5107b9bf6a0930222b8c522dd6cd85acc050d37ec8f086b88e2e3d23",
-          "bytes": 10076
+          "sha256": "4d9479f0789c85ef79e2f5944186cfae16705e5597ea7c0e4de8cb1bd5b05354",
+          "bytes": 25822
+        },
+        {
+          "path": "utc-before-step.js",
+          "sha256": "39cd74b3cb96724ec9e76594240929b97b1604f12e255dd10beaa538e9d6a6e1",
+          "bytes": 8300
+        },
+        {
+          "path": "warmup-h1.js",
+          "sha256": "a0890b62d8ac9bfe7371397eff411430e343fbcf2839b3063f2c956b19c10d47",
+          "bytes": 5857
+        },
+        {
+          "path": "weekly-reports.js",
+          "sha256": "db5d139aaf701fd094e332a677d81acb8d545c552055a6d7597a0d89aa520fae",
+          "bytes": 32160
         }
       ]
     },

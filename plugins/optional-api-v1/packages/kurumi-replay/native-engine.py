@@ -37,6 +37,30 @@ class InputError(ValueError):
         super().__init__(message)
         self.code = code
 
+
+PROFILE_IDS = ('legacy-500-25-25-v1', 'informed-replay-50x-v1')
+def profile_rules(state):
+    r = state.get('rules', {})
+    selected = r.get('experimentProfile')
+    if 'experimentProfile' in r and (not isinstance(selected,dict) or not selected):
+        raise InputError('RULES_MISMATCH','Malformed experiment profile; only absent field means legacy')
+    profile_id = selected.get('id') if selected is not None else PROFILE_IDS[0]
+    if profile_id not in PROFILE_IDS:
+        raise InputError('RULES_MISMATCH', 'Unknown frozen experiment profile')
+    leverage = ['500','25','25'] if profile_id == PROFILE_IDS[0] else ['50','50','50']
+    rules = [{'leverage':lev,'stopout':stop} for lev,stop in zip(leverage,['0.2','0.5','0.3'])]
+    content = {'schemaVersion':1,'id':profile_id,'initialBalance':'300000','victoryBalance':'20000000','currency':'JPY',
+        'chapterRules':rules,'commissionJpyPer1000PerSide':'3','simulatedFinancingJpyPer1000UtcDay':'10','fxMaxAgeMs':60000,
+        'engine':'nautilus-trader','engineVersion':'1.231.0','model':'native-quote-tick-v1',
+        'interpretation':'informed replay of same history; not out-of-sample' if profile_id == PROFILE_IDS[1] else 'legacy continuous experiment'}
+    digest = 'sha256:'+hashlib.sha256(json.dumps(content,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
+    if selected and selected != {'id':profile_id,'digest':digest,'content':content}:
+        raise InputError('RULES_MISMATCH','Frozen profile content/digest changed')
+    keys = ('engine','engineVersion','model','initialBalance','victoryBalance','fxMaxAgeMs','commissionJpyPer1000PerSide','simulatedFinancingJpyPer1000UtcDay','chapterRules')
+    if any(r.get(k) != content[k] for k in keys):
+        raise InputError('RULES_MISMATCH','Fixed profile, costs or FX changed')
+    return rules
+
 def decimal(value):
     import re
     if not isinstance(value, str) or not re.fullmatch(r"-?(?:0|[1-9]\d*)(?:\.\d+)?", value):
@@ -61,6 +85,7 @@ def gap_allowed(chapter, before, after):
     return any(g.get("from")==before and g.get("to")==after for g in gaps) and a.weekday()==4 and b.weekday()==6 and 48*HOUR <= after-before <= 50*HOUR
 
 def validate_step(state, step):
+    profile_rules(state)
     chapter = state["chapters"][state["chapter"]]
     if not gap_allowed(chapter, step["previousTime"], step["from"]):
         raise InputError("INVALID_DATA", "Unexpected H1 gap: exact data-module weekendGaps entry required")
@@ -73,15 +98,21 @@ def validate_step(state, step):
     if not isinstance(ticks, list) or not ticks:
         raise InputError("INVALID_DATA", "No next-interval quote ticks")
     previous = step["from"]-1
+    # Derive this from authoritative pre-step exposure and the saved decision,
+    # never from a caller-supplied flag. Closing an existing position needs FX.
+    zero_exposure = state["position"] is None and step["decision"].get("target") == "0" and step["decision"].get("stop") is None
     for t in ticks:
         if type(t.get("time")) is not int or not (step["from"] <= t["time"] < step["to"]) or t["time"] < previous:
             raise InputError("INVALID_DATA", "Quote ticks must have nondecreasing UTC ms (stable same-ms source order) within this H1 interval")
         previous = t["time"]
         books = [t]
         if chapter["symbol"].endswith("CHF"):
-            if not isinstance(t.get("fx"), dict) or type(t["fx"].get("time")) is not int or t["fx"]["time"] > t["time"] or t["time"]-t["fx"]["time"] > state["rules"].get("fxMaxAgeMs", 60000):
+            if "fx" not in t and zero_exposure:
+                pass  # zero CHF PnL and zero margin need no conversion rate
+            elif not isinstance(t.get("fx"), dict) or type(t["fx"].get("time")) is not int or t["fx"]["time"] > t["time"] or t["time"]-t["fx"]["time"] > state["rules"].get("fxMaxAgeMs", 60000):
                 raise InputError("INVALID_DATA", "CHFJPY must be last-known as-of <= main time, age <= fixed 60000ms")
-            books.append(t["fx"])
+            else:
+                books.append(t["fx"])
         for book in books:
             bid, ask = decimal(book.get("bid")), decimal(book.get("ask"))
             if bid <= 0 or ask < bid:
@@ -107,6 +138,10 @@ class ChallengeStrategy(Strategy):
         self.adjusting = False
         self.error = None
         self.processed = 0
+        self.trace_enabled = state['rules'].get('experimentProfile',{}).get('id') == PROFILE_IDS[1]
+        self.order_meta = {}
+        if self.trace_enabled:
+            self.s.setdefault('nativeOrderTrace',[])
 
     def on_start(self):
         for instrument in self.instruments.values():
@@ -125,18 +160,52 @@ class ChallengeStrategy(Strategy):
 
     def metric(self):
         q = self.current_q()
+        if q == 0:
+            return {"balance":self.s["balance"], "unrealizedJpy":"0", "equity":self.s["balance"], "margin":"0", "freeMargin":self.s["balance"]}
         tick = self.context["tick"]
         mark = decimal(tick["bid"] if q > 0 else tick["ask"])
         pnl = D("0")
         for lot in (self.s["position"] or {}).get("lots", []):
             part = (mark-decimal(lot["entry"]))*D(lot["quantity"])
             pnl += part*self.conversion(part)
-        profile = PROFILES[self.s["chapter"]]
+        profile = profile_rules(self.s)[self.s["chapter"]]
         margin = D(abs(q))*decimal(tick["ask"])/D(profile["leverage"])
         if self.instrument().quote_currency.code == "CHF":
             margin *= decimal(tick["fx"]["ask"])
         equity = decimal(self.s["balance"])+pnl
         return {"balance":self.s["balance"], "unrealizedJpy":text(pnl), "equity":text(equity), "margin":text(margin), "freeMargin":text(equity-margin)}
+
+    def trace_order(self, order, event_name, event=None):
+        if not self.trace_enabled:
+            return
+        if order is None or self.context is None:
+            raise InputError('NATIVE_TRACE_MISSING', 'Actual cached order/context required for lifecycle evidence')
+        key = str(order.client_order_id)
+        if key not in self.order_meta:
+            if event_name != 'actual-order-factory-created':
+                raise InputError('NATIVE_TRACE_MISSING', 'Unknown cached order creation/parent; never infer from a later callback')
+            self.order_meta[key] = {'createdAt':self.context['tick']['time'], 'chapter':self.s['chapter'], 'parentDecisionId':self.context['decision'].get('continuationOf') or self.context['decision']['id'], 'decisionId':self.context['decision']['id']}
+        meta = self.order_meta[key]
+        quantity, filled = order.quantity.as_decimal(), order.filled_qty.as_decimal()
+        native_status = order.status.name
+        statuses = {'INITIALIZED':'pending','SUBMITTED':'pending','ACCEPTED':'working','TRIGGERED':'working','PARTIALLY_FILLED':'partially_filled','FILLED':'filled','PENDING_CANCEL':'cancel_pending','CANCELED':'cancelled','REJECTED':'rejected','DENIED':'rejected','EXPIRED':'expired','PENDING_UPDATE':'working'}
+        if native_status not in statuses:
+            raise InputError('NATIVE_TRACE_STATUS_UNSUPPORTED', 'Unknown actual Nautilus order status '+native_status)
+        trigger = getattr(order, 'trigger_price', None)
+        row = {'id':self.s['id']+':native-order-event:'+str(len(self.s['nativeOrderTrace'])+1),'nativeClientOrderId':key,'chapter':meta['chapter'],'createdAt':meta['createdAt'],'time':self.context['tick']['time'],'parentDecisionId':meta['parentDecisionId'],'decisionId':meta['decisionId'],'instrument':self.instrument().raw_symbol.value,'nativeInstrumentId':str(order.instrument_id),'side':'buy' if order.side==OrderSide.BUY else 'sell','quantity':text(quantity),'filledQuantity':text(filled),'remainingQuantity':text(quantity-filled),'status':statuses[native_status],'nativeStatus':native_status,'event':event_name,'orderType':'stop' if trigger is not None else 'market','stopPrice':text(trigger.as_decimal()) if trigger is not None else None,'reduceOnly':order.is_reduce_only,'reason':self.reasons.get(key),'nativeEventNs':str(event.ts_event) if event is not None else str(order.ts_init),'internalOrderingOnly':True,'sourceSequence':self.context['tick'].get('sourceSequence'),'engine':'nautilus-trader'}
+        self.s['nativeOrderTrace'].append(row)
+
+    def trace_event(self, event, name):
+        if self.trace_enabled:
+            self.trace_order(self.cache.order(event.client_order_id), name, event)
+
+    def on_order_submitted(self,event): self.trace_event(event,'OrderSubmitted')
+    def on_order_accepted(self,event): self.trace_event(event,'OrderAccepted')
+    def on_order_updated(self,event): self.trace_event(event,'OrderUpdated')
+    def on_order_pending_cancel(self,event): self.trace_event(event,'OrderPendingCancel')
+    def on_order_canceled(self,event): self.trace_event(event,'OrderCanceled')
+    def on_order_expired(self,event): self.trace_event(event,'OrderExpired')
+    def on_order_triggered(self,event): self.trace_event(event,'OrderTriggered')
 
     def cancel_stop(self):
         if self.stop_order is not None and not self.stop_order.is_closed:
@@ -150,6 +219,7 @@ class ChallengeStrategy(Strategy):
         order = self.order_factory.market(self.instrument().id, OrderSide.BUY if delta > 0 else OrderSide.SELL,
             Quantity.from_str(str(abs(delta))), reduce_only=reduce_only)
         self.reasons[str(order.client_order_id)] = reason
+        self.trace_order(order,'actual-order-factory-created')
         self.submit_order(order)
         if order.is_closed and order.status != OrderStatus.FILLED:
             raise InputError("NATIVE_ORDER_REJECTED", str(order))
@@ -163,6 +233,7 @@ class ChallengeStrategy(Strategy):
             Quantity.from_str(str(abs(q))), self.instrument().make_price(D(stop)), trigger_type=TriggerType.BID_ASK, reduce_only=True)
         self.reasons[str(order.client_order_id)] = "stop"
         self.stop_order = order
+        self.trace_order(order,'actual-order-factory-created')
         self.submit_order(order)
 
     def on_order_filled(self, event):
@@ -212,13 +283,18 @@ class ChallengeStrategy(Strategy):
             "instrument":self.instrument().raw_symbol.value, "signedQuantity":str(q), "closedQuantity":str(sum(abs(int(l["quantity"])) for l in closed)),
             "openedQuantity":str(remaining), "price":text(price), "realizedJpy":text(realized), "commission":text(commission), "financing":"0",
             "closedLots":closed, "balanceAfter":self.s["balance"], "reason":reason, "mode":"quote_tick", "engine":"nautilus-trader"}
+        if self.trace_enabled:
+            row['parentDecisionId'] = self.order_meta[str(event.client_order_id)]['parentDecisionId']
         self.s["fills"].append(copy.deepcopy(row))
         self.s["ledger"].append(row)
+        self.trace_event(event,"OrderFilled")
 
     def on_order_rejected(self, event):
+        self.trace_event(event,"OrderRejected")
         self.error = str(event)
 
     def on_order_denied(self, event):
+        self.trace_event(event,"OrderDenied")
         self.error = str(event)
 
     def finish_bankruptcy(self, force=False):
@@ -244,7 +320,7 @@ class ChallengeStrategy(Strategy):
             self.finish_bankruptcy(True)
             return
         m = self.metric()
-        if self.current_q() and D(m["equity"]) <= D(m["margin"])*D(PROFILES[self.s["chapter"]]["stopout"]):
+        if self.current_q() and D(m["equity"]) <= D(m["margin"])*D(profile_rules(self.s)[self.s["chapter"]]["stopout"]):
             self.cancel_stop()
             self.market(-self.current_q(), "stopout", True)
             self.open_risk = c["first"]
@@ -253,7 +329,7 @@ class ChallengeStrategy(Strategy):
         if c["first"]:
             account = self.cache.account_for_venue(VENUE)
             if account is not None:
-                account.set_leverage(self.instrument().id,D(PROFILES[self.s["chapter"]]["leverage"]))
+                account.set_leverage(self.instrument().id,D(profile_rules(self.s)[self.s["chapter"]]["leverage"]))
             target = int(c["decision"]["target"])
             status = "risk_blocked" if self.open_risk else "held" if target==self.current_q() else "filled"
             if not self.open_risk:
@@ -273,7 +349,7 @@ class ChallengeStrategy(Strategy):
                     trial_unrealized = (decimal(c["tick"]["bid"] if target > 0 else c["tick"]["ask"])-price)*D(delta)
                     trial_unrealized *= self.conversion(trial_unrealized)
                     before = self.metric()
-                    margin = D(abs(target))*decimal(c["tick"]["ask"])/D(PROFILES[self.s["chapter"]]["leverage"])
+                    margin = D(abs(target))*decimal(c["tick"]["ask"])/D(profile_rules(self.s)[self.s["chapter"]]["leverage"])
                     if self.instrument().quote_currency.code=="CHF":
                         margin *= decimal(c["tick"]["fx"]["ask"])
                     if D(before["equity"])+trial_unrealized-trial_fee >= margin and D(before["equity"])+trial_unrealized-trial_fee > 0:
@@ -343,7 +419,7 @@ def hydrate(step, root):
     return saved
 
 def core_equal(a,b):
-    return all(a.get(k)==b.get(k) for k in ("id","balance","position","version","chapter","index","ledger","decisions","dataDigests","nativeJournal","rules","chapters","fills","orders","history","equity","lastQuote","revealedFrameTime","bankrupt"))
+    return all(a.get(k)==b.get(k) for k in ("id","balance","position","version","chapter","index","ledger","decisions","dataDigests","nativeJournal","rules","chapters","fills","orders","history","equity","lastQuote","revealedFrameTime","bankrupt","nativeOrderTrace","nativeOrderTraceCoverage","lastPresentationTrace"))
 
 def rebuild(request):
     global SESSION
@@ -370,11 +446,15 @@ def rebuild(request):
         s.update(balance="300000", position=None, version=1, chapter=0, index=s["chapters"][0]["startIndex"], status="paused",
             fills=[], orders=[], history=[], decisions=[], equity=[], ledger=[], nativeJournal=[], outcome=None, bankrupt=False,
             missingData=None, revealedFrameTime=None, lastQuote=None)
+        if s['rules'].get('experimentProfile',{}).get('id') == PROFILE_IDS[1]:
+            s['nativeOrderTrace']=[]
+            s['nativeOrderTraceCoverage']=None
+            s['lastPresentationTrace']=[]
         engine = BacktestEngine(BacktestEngineConfig(logging=LoggingConfig(bypass_logging=True), risk_engine=RiskEngineConfig(bypass=True), run_analysis=False))
         instruments = {c["symbol"]:instrument(c["symbol"],c) for c in s["chapters"]}
         if any(c["symbol"].endswith("CHF") for c in s["chapters"]):
             instruments["CHFJPY"] = instrument("CHFJPY", {})
-        leverages = {instruments[c["symbol"]].id:D(PROFILES[i]["leverage"]) for i,c in enumerate(s["chapters"])}
+        leverages = {instruments[c["symbol"]].id:D(profile_rules(s)[i]["leverage"]) for i,c in enumerate(s["chapters"])}
         engine.add_venue(VENUE, OmsType.NETTING, AccountType.MARGIN, [Money(D("300000"),JPY)], base_currency=JPY,
             default_leverage=D("25"), leverages=leverages, fee_model=ChallengeFee(), fill_model=FillModel(prob_slippage=0.0,random_seed=0),
             reject_stop_orders=False, use_message_queue=False, bar_execution=False, trade_execution=False, frozen_account=True)
@@ -395,6 +475,9 @@ def rebuild(request):
             strategy.open_risk = False
             prev = s["lastQuote"]["time"] if s["lastQuote"] and s["position"] else saved["previousTime"]+HOUR
             consumed = []
+            presentation_trace = []
+            record_presentation = s['rules'].get('experimentProfile',{}).get('id') == PROFILE_IDS[1]
+            sample_indices = {((len(saved['ticks'])-1)*k)//7 for k in range(8)} if record_presentation else set()
             duplicate_sequence = 0
             last_source_ms = None
             for i,t in enumerate(saved["ticks"]):
@@ -418,6 +501,8 @@ def rebuild(request):
                 if strategy.error:
                     raise InputError("NATIVE_ORDER_ERROR",strategy.error)
                 consumed.append(copy.deepcopy(t))
+                if record_presentation and (i in sample_indices or s['bankrupt']):
+                    presentation_trace.append({'sequence':i,'time':t['time'],'quote':copy.deepcopy(t),'account':strategy.metric(),'position':copy.deepcopy(s['position']),'fillCount':len(s['fills']),'orderCount':len(s['orders']),'ledgerCount':len(s['ledger']),'nativeOrderTraceCount':len(s.get('nativeOrderTrace',[])),'bankrupt':s['bankrupt']})
                 if s["bankrupt"]:
                     break
             # Financing accrues between consumed actual quote timestamps only.
@@ -433,6 +518,11 @@ def rebuild(request):
                 recorded.pop("ticksRef",None)
                 recorded["ticks"] = consumed # terminal checkpoint never retains unconsumed future quotes
             s["nativeJournal"].append(recorded)
+            if record_presentation:
+                s['lastPresentationTrace'] = presentation_trace
+            s["lastConsumedInterval"] = {"chapter":s["chapter"],"index":s["index"],"from":saved["from"],"toExclusive":saved["to"],"lastTime":consumed[-1]["time"],"complete":not s["bankrupt"],"rowCount":len(consumed)}
+            if record_presentation:
+                s['nativeOrderTraceCoverage']={'abi':'kurumi.native-order-trace@1','complete':True,'engineVersion':s['version'],'asOfMs':saved['to'] if not s['bankrupt'] else consumed[-1]['time'],'actualQuoteTimeMs':consumed[-1]['time'],'eventCount':len(s['nativeOrderTrace']),'source':'actual Nautilus order factory + lifecycle callbacks; not inferred from fills'}
             if s["bankrupt"]:
                 break
             s["status"] = "paused"
@@ -451,7 +541,7 @@ def rebuild(request):
             "barExecution":False, "replayedSteps":len(s["nativeJournal"]), "processedQuotes":strategy.processed,
             "cacheReused":reused,"replayedStepsThisCall":0 if reused else len(journal)-1,"elapsedMs":int((time.monotonic()-started)*1000),
             "fxPolicy":"last-known bid/ask <= event UTC ms; max age 60000ms", "sourceTimePrecision":"milliseconds", "sameMsOrdering":"stable source order, internal ns sequence only",
-            "accountCurrency":"JPY", "nativeAccountFrozen":True, "nativeFrozenBalanceJpy":text(engine.cache.account_for_venue(VENUE).balance_total(JPY).as_decimal()), "authoritativeBalance":"exact challenge ledger", "liquidityAssumption":"unbounded_top_of_book"}
+            "accountCurrency":"JPY", "nativeAccountFrozen":True, "nativeFrozenBalanceJpy":text(engine.cache.account_for_venue(VENUE).balance_total(JPY).as_decimal()), "authoritativeBalance":"exact challenge ledger", "liquidityAssumption":"unbounded_top_of_book","experimentProfile":s["rules"].get("experimentProfile"),"chapterRules":profile_rules(s)}
         balance = D("300000")
         for row in s["ledger"]:
             balance += decimal(row["realizedJpy"])-decimal(row["commission"])-decimal(row["financing"])

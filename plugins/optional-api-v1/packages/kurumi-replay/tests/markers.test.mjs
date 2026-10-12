@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { ORIGINAL_REFERENCES, buildMarkerSnapshot, compute, createMarkerIndicator, publishMarkers } from '../markers.js';
 import { ReplayMarketProvider } from '../providers.js';
 import { createReferenceRun as createRun, decideReferenceAndAdvance as decideAndAdvance, snapshotReference as engineSnapshot } from '../engine.js';
@@ -22,7 +22,7 @@ function fixture() {
   const interval = (id = 'window', overrides = {}) => ({ id, symbol: 'AUDJPY', kind: 'interval', from: T + H, to: T + 3 * H, evidence: 'fitted', text: '95.610, 500000 AUD, 811600 JPY are comparison-only', ...overrides });
   return { chapters, frames, state, service, bar, bars, fill, interval, counts: () => ({ observes, subscribes }) };
 }
-const evaluate = (f, rows, bars = f.bars) => compute({ inputs: { price: { rows: bars }, overlay: { rows } } });
+const evaluate = (f, rows, bars = f.bars) => compute({ parameters:{label_mode:'events'}, inputs: { price: { rows: bars }, overlay: { rows } } });
 const markers = result => result.series.flatMap(s => s.markers);
 const series = (result, id) => result.series.find(s => s.seriesId === id).markers;
 async function sourceCompute(source) { const sourceURL='data:text/javascript;base64,' + Buffer.from(source).toString('base64'); return (await import(sourceURL)).compute; }
@@ -48,17 +48,21 @@ function publicSchemaValidate(value, schema, where = 'input') {
 }
 
 test('native definition matches public canvas-control indicator_publish schema and compiled compute is standalone', async () => {
-  const f = fixture(); f.state.fills.push(f.fill('buy', '1000'), f.fill('sell', '-1000', T + 3 * H));
+  const f = fixture(); f.state.fills.push(f.fill('buy', '1000'), f.fill('sell', '-1000', T + 3 * H - 1));
   const bundle = createMarkerIndicator(f.service, { originals: [f.interval()] });
-  const tools = JSON.parse(readFileSync(new URL('../../../../api-v1/packages/canvas-control/tools.json', import.meta.url), 'utf8'));
+  const original = new URL('../../../../api-v1/packages/canvas-control/tools.json', import.meta.url);
+  const contract = process.env.SESAME_TEST_CANVAS_TOOLS ?? (existsSync(original) ? original : (process.env.SESAME_OFFICIAL_PLUGINS_DIR ?? '/Applications/Sesame.app/Contents/Resources/official-plugins') + '/canvas-control/tools.json');
+  const tools = JSON.parse(readFileSync(contract, 'utf8'));
   const schema = tools.find(t => t.name === 'indicator_publish').parameters;
   publicSchemaValidate({ operation_id: 'marker_publication_0001', definition: bundle.definition, files: bundle.files }, schema);
   assert.equal(bundle.definition.inputs[0].forming, 'closed_only');
   const computeCompiled = await sourceCompute(bundle.files['markers.js']);
-  const output = computeCompiled({ inputs: { price: { rows: f.bars } } });
+  const output = computeCompiled({ parameters:{label_mode:'events'}, inputs: { price: { rows: f.bars } } });
   assert.deepEqual(output, evaluate(f, bundle.snapshot.rows));
-  assert.deepEqual(series(output, 'actual-buy')[0], { key: 'actual:test-run:buy', time: utc(T + 2 * H), position: 'at_price', price: '100.123456789012345678901', shape: 'arrow_up', color: '#238b62', text: 'SIMULATED 实际买 1000 AUD @ 100.123456789012345678901 · decision' });
+  assert.deepEqual(series(output, 'actual-buy')[0], { key: 'actual:test-run:buy', time: utc(T + 2 * H), position: 'at_price', price: '100.123456789012345678901', shape: 'arrow_up', color: '#238b62', text: '真实成交时刻 2010-01-01T02:00:00.000Z；H1显示锚 2010-01-01T02:00:00.000Z（非成交时点） · SIMULATED 实际买 1000 AUD @ 100.123456789012345678901 · decision' });
   assert.equal(series(output, 'actual-sell')[0].shape, 'arrow_down');
+  assert.equal(series(output, 'actual-sell')[0].time.unixMs,T+2*H);
+  assert.match(series(output, 'actual-sell')[0].text,/02:59:59\.999Z/);
   for (const m of markers(output)) { assert.ok(['above', 'below', 'at_price'].includes(m.position)); assert.ok(['circle', 'arrow_up', 'arrow_down'].includes(m.shape)); assert.equal(m.time.basis, 'utc'); }
 });
 

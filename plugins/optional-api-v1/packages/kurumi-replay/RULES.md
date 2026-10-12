@@ -18,7 +18,11 @@ service 可继续从 `engine.js` 导入 createRun/snapshot；它们已是 native
 
 同步纯函数参考实现仍在 engine.js，显式名称为 `createReferenceRun / validateReferenceDecision / decideReferenceAndAdvance / snapshotReference`；规则 engine=`reference-h1-only`, formalExecution=false。参考推进拒绝 native 状态，不能把参考成交冒充正式成交。
 
-## 固定假设，不向目标调参
+## 决策节奏与留档边界（0.1.2-dev.1）
+
+控制层默认4小时节奏：一次角色付费决定只经 `advanceNative` 执行第一根H1；同块最多3根自动延续用带 `continuationOf` 的协议决定调用同一原生适配器（target=当时实际剩余仓位、stop=当时实际止损），不重新开仓、不请求模型。原生 `validateDecision` 的白名单显式接受 `continuationOf` 可选字段（协议元数据，非撮合输入变化）。缺数返回 missing_data 不计提交、不耗延续预算，适配器对同一未提交H1可显式重试；章边界/破产/取消清除占位或停住。
+
+留档边界：CAS 提交后的每根 H1 由 service 归档（决定/延续标记/完整引擎状态/已揭示bar/ticks引用）；归档失败只暂停付费回合并排入 pendings 补齐队列，绝不改变已 CAS 的引擎账本或把 committed 改写为未提交。角色任务临时区（会话 JSONL、runtime.sqlite 完整 events）由 protectArtifacts/cleanupRun 钩子双副本封存后才允许宿主清理。
 
 | 章 | leverage | stopout | 性质 |
 |---|---:|---:|---|
@@ -46,13 +50,19 @@ Nautilus venue 为 NETTING/MARGIN/JPY，并设置分章杠杆。**native account
 
 ## 数据契约：同毫秒顺序、FX as-of 与严格周末
 
+### 0.1.2-dev.3：零敞口的换汇数据依赖修正
+
+原实现对空仓观看也无条件要求 CHFJPY，甚至计算 `0 × FX` 的保证金时读取不存在的汇率。现在仅当步前 `position=null`，且已保存角色决定 `target="0"、stop=null` 时，不要求一个没有任何资金用途的换汇价。实际主品种 tick 仍逐条消费并保存；缺失/超龄的 FX 以 `fxUnavailable` 留痕，绝不补成价格或声明新鲜。余额保持原值，浮盈和保证金严格为零；不新增成交、费用或融资。
+
+任何原有仓位、开仓、减仓、平仓均沿用 60000ms 上限和原双侧换汇方法。Python 重新根据真实状态和原决定计算零敞口条件，不信任 JS 的选项。原始只读数据和过去账本不改写；显式 `kurumi_recover` 可重用 `paused_without_fill` 的原始决定（核验原角色真实返回回执与终态），恢复后每根 H1 归档，并保留4小时块剩余3根的延续。原暂停回执保留，不把新的决定冒充旧角色输出。
+
 生产 advanceNative 直接调用数据模块 `loadExecutionSlice(storageDirectory, {chapterId,symbol,from,to,maxRows})`。读取范围为下一 H1 `[from, from+3600000-1]` inclusive UTC ms。要求返回 kind=`ticks`、相同 chapterId/symbol/from/to、rangeConvention=`inclusive UTC milliseconds`、真实 rows 与 sources。内部 coverage 转为 `[from,from+HOUR)`。
 
 coverage.complete=true 仅指**已校验本次本地 slice 的全部实际返回行**；保持 historicalGaplessnessCertified=false，不能据此声称历史逐笔无缺口。无报价、超预算、缺少源文件、时间错位或换汇超龄返回 missing_data；不推进 version、不记录 decision、不产生可提交的部分费用。来源 hash/身份错误、原生错误或取消抛错，service 应暂停，而非自动重试。
 
 Dukascopy 主流允许同毫秒多行，保持返回原顺序，接受非递减 UTC ms。Nautilus 内部用 `sourceMs*1000000 + 同毫秒序号` 排序；账本 time 始终保留原始毫秒，另存 nativeEventNs 与 internalOrderingOnly=true。此 ns 仅为内部确定性序号，不是来源有纳秒精度的证据；每毫秒 >=1000000 事件会拒绝，不跨毫秒编造时间。
 
-CHFJPY 为独立观测流。按主事件时最后已知 `fx.time <= event.time` 做双侧 as-of join；同毫秒独立 FX 流保持原顺序并取最后记录，两个独立流的同毫秒相对物理顺序未知，不虚构更细的来源次序。固定 fxMaxAgeMs=60000；正 CHF P&L 用 CHFJPY bid，负用 ask；margin 使用 ask。未有历史 FX 或 age>60000ms 则整个候选步暂停，绝不取下一条未来报价补齐。closedLots 保存 conversionSymbol/rate、conversionTimeMs、conversionAgeMs 与可得 source；snapshot 给出已消费 quote 的 FX as-of 时间/age。原生 FX cache 的 ts_event 保留实际 FX 毫秒，ts_init 为其已知报价交给撮合器的内部排序时间，不能冒称新鲜同步 FX。
+CHFJPY 为独立观测流。按主事件时最后已知 `fx.time <= event.time` 做双侧 as-of join；同毫秒独立 FX 流保持原顺序并取最后记录，两个独立流的同毫秒相对物理顺序未知，不虚构更细的来源次序。固定 fxMaxAgeMs=60000；正 CHF P&L 用 CHFJPY bid，负用 ask；margin 使用 ask。需要换汇时，未有历史 FX 或 age>60000ms 则整个候选步暂停，绝不取下一条未来报价补齐；全程零敞口的明确例外见上节。closedLots 保存 conversionSymbol/rate、conversionTimeMs、conversionAgeMs 与可得 source；snapshot 给出已消费 quote 的 FX as-of 时间/age。原生 FX cache 的 ts_event 保留实际 FX 毫秒，ts_init 为其已知报价交给撮合器的内部排序时间，不能冒称新鲜同步 FX。
 
 周末必须由 chapter.weekendGaps 提供 `{from:上一bar UTCms,to:下一bar UTCms}`；只允许 UTC 周五→周日，48..50 小时，且精确匹配相邻两根 H1 端点。支持夏季 Fri20→Sun21、冬季 Fri21→Sun22（49h），也支持合法 48/50h 边界；不自动放行任意工作日 gap。仅 closedHours 或旧 allowWeekendGap=true 不构成豁免。数据模块必须核对真实 returned 端点后提供此列表。
 
@@ -285,3 +295,17 @@ balance = 300000 + sum(ledger.realizedJpy)
 只有第三章 `endIndex` 强制结算、flat 后，`balance >= '20000000'` 才是 victory。未实现 equity 超目标、前面章已经盈利、甚至前面章已达到目标，都不提前判胜。20,000,000 / 300,000 的展示倍数是 **66.6666667**，不是 100；胜负直接做精确 balance 阈值比较，不用展示倍数做运算。
 
 测试涵盖 JPY/CHF 多空 bid/ask、精确金额、同步/极值换汇、long/short stop、风险开盘缺口、25 倍 margin、负余额、模拟融资/显式周末、全数组 index、强制收盘时间、跨章资金连续、missing_data 原子性、幂等性、严格决定校验、FIFO/反向、纯函数不变性及最终目标精确边界。独立 Node 测试成功不等于宿主安装成功、真实市场覆盖完整或券商回测等价。
+
+
+## 0.1.3-dev.1 独立新实验核心（未正式安装）
+
+终态完整双副本封存后才能显式创建独立新Run/300000JPY/20000000JPY目标；不覆盖旧continuous、不充值、不复活。新profile全部50x，旧500/25/25保持。费用/强平比率/FX60s不变。创建和重启不请求模型。完整接线、27项新测试分类与pending验收见ROUND2-CORE.md、ROUND2-PRESENTATION.md；普通tick级形成柱播放/自动主会话marker刷新与PK解说尚未接线，不能宣称原生沉浸体验已验收。SDK、正式宿主、client rendered、真实周报模型、新玩家安装与327早期FX缺口仍pending。未来安装/启动由主Agent验收决策。
+
+
+## 0.1.3-dev.2：最新目标覆盖早期全轮说明
+采用有界首章原生体验，不消费完整第二轮。新玩家空白私有state可直接创建50x，旧run必须先全量终态seal。默认42个预约角色/168已提交H1、每command1且每4H audience pause；manual pause须显式arm，5000在模型前拒绝。正常forming由实际Nautilus trace采样+原始journal prefix播放，金融不重放。NativeOrderTrace只在新50x真实生产，legacy未知状态不补造。
+主Agent解说用公开claim/read当前响应→自己普通native-chat自由正文→ack/read同一真实message，完整正文与固定证据封存；不需要private write或第二旁白模型。先diagnose并在真实SDK核实可见文本形状，不把fixture/public port读回当native UI displayed。方法依赖main-only公开catalog/inspect/显式install流程，无隐藏安装。完整可重放驱动、预算、周界/partial区别和pending见PORTABLE-EXPERIENCE.md。
+当前全部正式安装/加载/控制/paid角色及周报/SDK/client验收均未执行；isolated fixture与真实独立Nautilus结果不是正式原生观看通过证明。
+
+### dev.3 truthful source clock / main delivery
+Pre-play warmup is provider native monthly closed H1; never simulate a tick path/count/time. Bootstrap price source and amount/volume/time uncertainties explicitly. Before next quote or financing, preserve exact Mon00 previous-week account/ledger/source cut; next-week monetary events at or after Mon00 excluded. Await actual fixed report native opened receipt + ordinary main message ACK before advancing held clock. Ordered native public text blocks only; thinking/tool not stringified/archived. Default64 normal-main PK events cover bounded42 role4H and UTC boundary, no second narrator model. SDK install/native client must be tested separately under later user permission; SQLite/native synthetic passes not substituted.

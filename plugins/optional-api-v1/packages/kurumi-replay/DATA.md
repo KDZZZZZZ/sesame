@@ -159,3 +159,6 @@ const advanced = await advanceNative(storageDirectory, state, decision, data, { 
 实测 EURCHF 2015-01-15 09h小时闭区间：[1421312400000,1421315999999]，973笔，6162原文件字节，SHA256 `3c8a29abfba0ffff4d7d40f70d9968fb6514136419dc0c6949ed638cad82a148`。首09:00:06.042 bid1.20094/ask1.20102，末09:59:11.782 bid1.02542/ask1.02857；`from===to===首真实tick UTCms`确实只返回该毫秒1笔。超972行预算抛SLICE_LIMIT；首tick之前范围抛NO_QUOTES；回归测试封禁fetch且统计网络调用0，无安装/新state。独立两次实际load约345ms，receipt `verification-small-window.json`。
 
 该成功只证明**真实cache->public pinned decode->bounded inclusive local slice**，不是新HTTPS GET成功、完整loadData成功或原生成交成功；default loadData仍NOT_PREPARED。父会完成全窗后可设 `KURUMI_REAL_STORAGE` 跑正式opt-in测试，核验三章frozen规则、实际source hash、每帧H1/FX time及formal ticks wire shape。`KURUMI_REAL_CACHE_STORAGE`仅打开这个明确partial/non-ready诊断测试，不替代上述完整验收。
+
+
+真实换汇缺口：仅主 Agent 在缺数暂停且无活跃角色时，可用 kurumi_import_fx_supplement 显式导入已核验的 HistData CHFJPY Generic ASCII tick 补充包。包须绑定当前 runId、原 snapshot/config 摘要与未提交时段；原 ZIP、CSV、投影和清单双副本留档。原直接报价在60秒内始终优先，只在缺失或过期时选择补充源的过去真实报价；60秒上限不变，不插值、不更改已提交小时。导入不推进账户，之后使用最新revision、唯一command_id显式continue恢复原continuation。该补充来源必须在最终报告中披露，不得称为原 Dukascopy 原始行情。

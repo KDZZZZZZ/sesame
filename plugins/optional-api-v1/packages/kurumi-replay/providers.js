@@ -1,3 +1,4 @@
+import { readConsumedView, readSpectatorCheckpoint, consumedBars, observedH1Limitations } from './replay-presentation.js';
 import { revealedCutoff } from './reveal-cutoff.js';
 import { createHash, randomUUID } from 'node:crypto';
 
@@ -49,6 +50,34 @@ const accountRef = state => ({ connectionId: CONNECTION, accountId: state.id });
 const symbolOf = chapter => first(chapter.symbol, chapter.pair, chapter.instrument?.instrumentId, typeof chapter.instrument === 'string' ? chapter.instrument : undefined, /^[A-Z]{6}$/.test(chapter.id ?? '') ? chapter.id : undefined);
 const side = (raw, position = false) => { const s = String(raw).toLowerCase(); check(['buy', 'sell', 'long', 'short'].includes(s), 'Missing trade side', 'SOURCE_DATA_INVALID'); return position ? ['buy', 'long'].includes(s) ? 'long' : 'short' : ['buy', 'long'].includes(s) ? 'buy' : 'sell'; };
 
+// Exact adapter-only arithmetic; never changes the challenge ledger.
+const addDecimal=(a,b)=>{const part=x=>{const s=decimal(x),[w,f='']=s.replace(/^-/,'').split('.');return {n:BigInt(w+f)*(s.startsWith('-')?-1n:1n),s:f.length};};const x=part(a),y=part(b),scale=Math.max(x.s,y.s),n=x.n*10n**BigInt(scale-x.s)+y.n*10n**BigInt(scale-y.s);let t=(n<0n?-n:n).toString().padStart(scale+1,'0');if(scale)t=t.slice(0,-scale)+'.'+t.slice(-scale);return (n<0n?'-':'')+t.replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,'');};
+export const nativeOrderKey=fill=>{check(present(fill.nativeClientOrderId)&&Number.isSafeInteger(fill.chapter),'Native order identity is missing','SOURCE_DATA_INVALID');return `native:${fill.chapter}:${fill.nativeClientOrderId}`;};
+/** Native fills share a decision attribution, NOT an order identity. Partition
+ * by actual nativeClientOrderId+chapter. Old decisions are never rewritten.
+ * If only fills survive, requested/working/terminal order facts remain unknown;
+ * the required quantity is explicitly a fill-backed executed projection. */
+export function nativeOrderTraceAt(state,asOfMs){
+ let rows=state.nativeOrderTrace??[];check(Array.isArray(rows),'Native trace must be array','SOURCE_DATA_INVALID');
+ const c=state.nativeOrderTraceCoverage;if(Number.isSafeInteger(asOfMs)&&c?.engineVersion===state.version&&c.asOfMs===asOfMs&&Number.isSafeInteger(c.eventCount)){check(c.eventCount>=0&&c.eventCount<=rows.length,'Actual native lifecycle prefix count invalid','SOURCE_DATA_INVALID');rows=rows.slice(0,c.eventCount);}
+ return Number.isSafeInteger(asOfMs)?rows.filter(t=>{check(Number.isSafeInteger(t.time),'Native trace source clock missing','SOURCE_DATA_INVALID');return t.time<=asOfMs;}):rows;
+}
+export function nativeOrderCoverageAt(state,asOfMs){const c=state.nativeOrderTraceCoverage;return c?.complete===true&&c.engineVersion===state.version&&c.asOfMs===asOfMs&&Number.isSafeInteger(c.eventCount)&&nativeOrderTraceAt(state,asOfMs).length===c.eventCount;}
+export function projectNativeOrders(state,{asOfMs}={}){
+ const groups=new Map();for(const f of state.fills.filter(f=>!Number.isSafeInteger(asOfMs)||f.time<=asOfMs)){const key=nativeOrderKey(f),group=groups.get(key)??[];group.push(f);groups.set(key,group);}
+ const traces=new Map();for(const t of nativeOrderTraceAt(state,asOfMs)){check(Number.isSafeInteger(t.time)&&['buy','sell'].includes(t.side)&&present(t.quantity),'Native trace needs real time/side/requested quantity','SOURCE_DATA_INVALID');const key=nativeOrderKey(t);const prev=traces.get(key);check(!prev||t.time>=prev.time,'Native order trace chronology invalid','SOURCE_DATA_INVALID');traces.set(key,t);}
+ const keys=new Set([...groups.keys(),...traces.keys()]),result=[];
+ for(const id of keys){const fills=groups.get(id)??[],trace=traces.get(id),firstFill=fills[0],lastFill=fills.at(-1);let total='0';for(const f of fills)total=addDecimal(total,absDecimal(f.signedQuantity));
+  const direction=trace?.side??(firstFill?.signedQuantity.startsWith('-')?'sell':'buy');check(fills.every(f=>(f.signedQuantity.startsWith('-')?'sell':'buy')===direction),'One native order has conflicting directions','SOURCE_DATA_INVALID');
+  if(present(trace?.filledQuantity))check(compare(trace.filledQuantity,total)===0,'Native cache filled quantity and exact viewer fill prefix disagree','SOURCE_MISMATCH');
+  const quantity=trace?.quantity??total;check(compare(quantity,total)>=0,'Native order fills exceed actual native request','SOURCE_DATA_INVALID');
+  const row={id,nativeClientOrderId:trace?.nativeClientOrderId??firstFill.nativeClientOrderId,clientId:trace?.nativeClientOrderId??firstFill.nativeClientOrderId,instrument:trace?.instrument??firstFill.instrument,chapter:trace?.chapter??firstFill.chapter,time:trace?.createdAt??firstFill?.time??trace.time,updatedAt:Math.max(trace?.time??0,lastFill?.time??0),side:direction,quantity,filledQuantity:total,remainingQuantity:trace?.remainingQuantity,status:trace?.status??'unknown',orderType:trace?.orderType??(fills.every(f=>f.reason==='stop')?'stop':'market'),stopPrice:trace?.stopPrice,
+    nativeStatus:trace?.nativeStatus,sourceClassification:trace?'actual-native-order-trace':'actual-native-fill-backed-executed-quantity; requested/working/terminal-status unknown',decisionIds:[...new Set(fills.map(f=>f.orderId))],parentDecisionIds:[...new Set([trace?.parentDecisionId,...(trace?.parentDecisionIds??[]),...fills.map(f=>f.parentDecisionId??f.orderId)].filter(present))],executionReasons:[...new Set(fills.map(f=>f.reason??f.mode).filter(present))],rawFillIds:fills.map(f=>f.id),nativeTradeIds:fills.map(f=>f.nativeTradeId??null)};
+  check(Number.isSafeInteger(row.time),'Native order has no known time','SOURCE_DATA_INVALID');result.push(row);
+ }
+ return result;
+}
+
 export const marketDescriptor = { id: 'market', contract: 'sesame.market', versions: ['1.0.0'], capabilities: ['instruments.search', 'instruments.describe', 'bars.history', 'bars.subscribe'], connection: { required: false }, priceBases: ['bid', 'ask'], adjustments: ['none'], sessions: ['all'] };
 export const accountDescriptor = { id: 'account', contract: 'sesame.account', versions: ['1.0.0'], capabilities: ['accounts.list', 'account.snapshot', 'positions.query', 'orders.query', 'fills.query', 'history.query', 'account.subscribe'], connection: { required: false }, liveTopics: ['snapshot', 'positions', 'orders', 'fills', 'history'] };
 
@@ -60,7 +89,8 @@ class ReplayProvider {
     this.bindings = new Map(); this.snapshots = new Map(); this.cursors = new Map(); this.streams = new Set(); this.closed = false;
   }
   revealed() {
-    const state = this.service.getState(), data = this.service.getData();
+    const committed=this.service.getSpectatorState?.()??this.service.getState(),spectator=readSpectatorCheckpoint(this.host,committed?.id);
+    const state = spectator?.engine ?? committed, data = this.service.getData();
     check(state && data && typeof state.id === 'string' && state.id.length > 0, 'No active simulation', 'SOURCE_UNAVAILABLE');
     check(Array.isArray(data.chapters) && data.chapters.length > 0, 'Missing chapters', 'SOURCE_DATA_INVALID');
     if (state.dataDigests) check(canonical(state.dataDigests) === canonical(data.digests), 'Replay data no longer matches engine digests', 'CONNECTION_CHANGED');
@@ -70,8 +100,12 @@ class ReplayProvider {
     check(Number.isSafeInteger(chapter.startIndex) && Number.isSafeInteger(chapter.endIndex) && chapter.startIndex <= chapter.endIndex && state.index >= chapter.startIndex && state.index <= chapter.endIndex, 'Index outside current chapter', 'SOURCE_DATA_INVALID');
     const frame = this.frame(data, ci, state.index);
     check(frame, 'Current revealed frame is missing', 'SOURCE_DATA_INVALID');
-    const endTime = revealedCutoff(state,frame);
-    return { state, data, ci, chapter, frame, endTime };
+    const consumedView = this.service.getReplayPresentation?.() ?? readConsumedView(this.host,state.id);
+    const round2 = this.service.presentationEnabled === true || state.experimentProfile?.round === 2 || state.experiment?.round === 2 || state.rules?.experimentProfile?.id === 'informed-replay-50x-v1';
+    check(!round2 || consumedView, 'Round2 consumed-tick bridge not ready; missing data remains paused', 'CONSUMED_TICKS_REQUIRED');
+    check(!consumedView || consumedView.commitVersion===state.version, 'Presentation/account commit not atomic yet; refresh snapshot', 'SNAPSHOT_REQUIRED');
+    const endTime = consumedView?.cutoffMs ?? revealedCutoff(state,frame);
+    return { state, data, ci, chapter, frame, endTime, consumedView };
   }
   frameRows(data, ci) {
     const c = data.chapters[ci], symbol = symbolOf(c);
@@ -120,7 +154,7 @@ class ReplayProvider {
     return { from, to };
   }
   meta(r) {
-    return { observedAt: Date.now(), freshness: 'unknown', origin: 'demo', consistency: 'atomic', sourceTime: utc(r.endTime), warnings: ['SIMULATED replay data. This is not a broker account, executable price or live market feed.', 'Closed H1 bars only; numeric engine inputs may already contain binary floating-point rounding.'], source: { simulationId: r.state.id, simulationVersion: String(r.state.version), revealedThrough: utc(r.endTime) } };
+    return { observedAt: Date.now(), freshness: 'unknown', origin: 'demo', consistency: 'atomic', sourceTime: utc(r.endTime), warnings: ['SIMULATED replay data. This is not a broker account, executable price or live market feed.', r.consumedView ? 'Disclosed mixed source: observed native closed H1 preheat is NOT execution ticks; later consumed-only quote aggregation has forming bounded by revealedThrough; historical gaplessness unverified.' : 'Legacy closed H1 bars only; numeric engine inputs may already contain binary floating-point rounding.'], source: { ...(Array.isArray(r.state.ledger)?{costs:{commission:r.state.ledger.reduce((s,row)=>addDecimal(s,row.commission),'0'),financing:r.state.ledger.reduce((s,row)=>addDecimal(s,row.financing),'0'),currency:'JPY',classification:'exact recorded ledger sums'}}:{}), ...((r.state.rules?.engine==='nautilus-trader'||Array.isArray(r.state.nativeOrderTrace)||r.state.fills?.some(f=>present(f.nativeClientOrderId)))?{orderMapping:r.state.fills.filter(f=>f.time<=r.endTime).map(f=>({fillId:f.id,nativeOrderKey:nativeOrderKey(f),nativeClientOrderId:f.nativeClientOrderId,queryOrderId:`kurumi:${r.state.id}:order:${nativeOrderKey(f)}`,decisionId:f.orderId,parentDecisionId:f.parentDecisionId??f.orderId,executionReason:f.reason??f.mode??null,nativeTradeId:f.nativeTradeId??null})),orderCoverage:{complete:nativeOrderCoverageAt(r.state,r.endTime),reason:'Native fills identify executions, not unfilled/cancelled/working stop order states without nativeOrderTrace'}}:{}), ...(Array.isArray(r.state.nativeOrderTrace)?{nativeOrderParentLinks:nativeOrderTraceAt(r.state,r.endTime).map(t=>({nativeOrderKey:nativeOrderKey(t),nativeClientOrderId:t.nativeClientOrderId,parentDecisionId:t.parentDecisionId??null,parentDecisionIds:t.parentDecisionIds??null,nativeStatus:t.nativeStatus??null,event:t.event??null,nativeEventNs:t.nativeEventNs??null,internalOrderingOnly:t.internalOrderingOnly??null,sourceSequence:t.sourceSequence??null,nativeInstrumentId:t.nativeInstrumentId??null,quantity:t.quantity,filledQuantity:t.filledQuantity??null,remainingQuantity:t.remainingQuantity??null,stopPrice:t.stopPrice??null,reduceOnly:t.reduceOnly??null,source:'actual-native-order-trace'}))}:{}), simulationId: r.state.id, simulationVersion: String(r.state.version), revealedThrough: utc(r.endTime) } };
   }
   page(method, input, context, load) {
     const { page = {}, ...filters } = input, limit = page.limit ?? 100;
@@ -200,9 +234,13 @@ export class ReplayMarketProvider extends ReplayProvider {
   }
   async describeInstrument(input, context) { this.validateInput(input, ['instrument']); const r = this.bound(context, null, input.instrument); return { data: this.detail(r, this.selected(r, input.instrument)), meta: this.meta(r) }; }
   spec(spec) { check(spec?.timeframe === '1h' && ['bid', 'ask'].includes(spec.priceBasis) && spec.adjustment === 'none' && spec.session === 'all' && spec.calendarRevision?.status === 'unknown', 'Only 1h bid/ask, none adjustment, all session, unknown calendar is supported', 'UNSUPPORTED_CAPABILITY'); }
-  bars(r, instrument, spec) {
+  bars(r, instrument, spec, includeForming = false) {
     this.spec(spec); const item = this.selected(r, instrument), c = r.data.chapters[item.ci], last = item.ci < r.ci ? c.endIndex : r.state.index;
     const seriesId = `kurumi-series-${hash([instrument, spec]).slice(0, 24)}`, bars = [];
+    if(r.consumedView) {
+      const view=observedH1Limitations(r.consumedView,r.data);
+      return {seriesId,instrument:copy(instrument),spec:copy(spec),bars:consumedBars(view,item.symbol,spec.priceBasis,seriesId,includeForming)};
+    }
     let previousTime = -Infinity;
     // Warmup is real data before the first decision, not future revelation.
     const firstIndex = this.frameRows(r.data, item.ci).length > c.endIndex ? 0 : c.startIndex;
@@ -217,7 +255,8 @@ export class ReplayMarketProvider extends ReplayProvider {
       const ohlc = Object.fromEntries(['open', 'high', 'low', 'close'].map(k => [k, decimal(prices[k])]));
       check(compare(ohlc.low, ohlc.high) <= 0 && ['open', 'close'].every(k => compare(ohlc[k], ohlc.low) >= 0 && compare(ohlc[k], ohlc.high) <= 0), 'OHLC is inconsistent', 'SOURCE_DATA_INVALID');
       const body = { id: `${seriesId}:${f.time}`, openTime, endTime, ...ohlc, isClosed: true, closure: 'source', volume: { default: 'none', real: unknown('No real volume in replay input'), tick: unknown('No tick volume in replay input') }, turnover: unknown('No turnover in replay input') };
-      bars.push({ ...body, revision: hash(body) });
+      check(Number.isSafeInteger(r.state.version)&&r.state.version>=0,'Actual unsigned engine revision required','SOURCE_REVISION_REQUIRED');
+      bars.push({ ...body, revision: String(r.state.version) });
     }
     return { seriesId, instrument: copy(instrument), spec: copy(spec), bars };
   }
@@ -225,7 +264,7 @@ export class ReplayMarketProvider extends ReplayProvider {
     this.validateInput(input, ['instrument', 'spec', 'range', 'page', 'includeForming', 'direction']);
     const r = this.bound(context, null, input.instrument), range = this.range(input.range, r); this.spec(input.spec); this.selected(r, input.instrument);
     check(['forward', 'backward'].includes(input.direction ?? 'forward'), 'Invalid direction');
-    const result = this.page('queryBars', input, context, () => { const { bars, ...data } = this.bars(r, input.instrument, input.spec), items = bars.filter(b => b.openTime.unixMs >= range.from && b.openTime.unixMs < range.to && b.endTime.unixMs <= range.to); return { ...data, items: input.direction === 'backward' ? items.toReversed() : items, coverage: this.coverage(input.range, items), meta: this.meta(r) }; });
+    const result = this.page('queryBars', input, context, () => { const { bars, ...data } = this.bars(r, input.instrument, input.spec, input.includeForming===true), items = bars.filter(b => b.openTime.unixMs >= range.from && b.openTime.unixMs < range.to && (b.isClosed ? b.endTime.unixMs <= range.to : input.includeForming===true && b.native.revealedThrough.unixMs <= range.to)); return { ...data, items: input.direction === 'backward' ? items.toReversed() : items, coverage: this.coverage(input.range, items, b=>b.openTime, b=>b.isClosed?b.endTime:b.native.revealedThrough), meta: this.meta(r) }; });
     result.page.items.sort((a, b) => a.openTime.unixMs - b.openTime.unixMs);
     const { meta, ...data } = result; return { data, meta };
   }
@@ -234,7 +273,7 @@ export class ReplayMarketProvider extends ReplayProvider {
     check(!input.resumeToken, 'Replay subscriptions require a fresh snapshot', 'RESUME_EXPIRED');
     check(Number.isSafeInteger(input.tailLimit) && input.tailLimit > 0 && input.tailLimit <= 2000, 'tailLimit must be 1..2000');
     const fixed = copy(input);
-    const read = () => { const r = this.bound(context, null, fixed.instrument); if (fixed.range) this.range(fixed.range, r); const data = this.bars(r, fixed.instrument, fixed.spec); data.bars = data.bars.slice(-fixed.tailLimit); const range = { from: data.bars[0]?.openTime ?? utc(r.endTime - HOUR), to: utc(r.endTime) }; return { ...data, coverage: this.coverage(range, data.bars) }; };
+    const read = () => { const r = this.bound(context, null, fixed.instrument); if (fixed.range) this.range(fixed.range, r); const data = this.bars(r, fixed.instrument, fixed.spec, fixed.includeForming===true); data.bars = data.bars.slice(-fixed.tailLimit); const range = { from: data.bars[0]?.openTime ?? utc(r.endTime - HOUR), to: utc(r.endTime) }; return { ...data, coverage: this.coverage(range, data.bars, b=>b.openTime, b=>b.isClosed?b.endTime:b.native.revealedThrough) }; };
     return this.stream(read(), read, (old, next) => { const prior = new Map(old.bars.map(b => [b.id, b.revision])); const changed = next.bars.filter(b => b.revision !== prior.get(b.id)); return changed.length ? [{ type: 'bars.upsert', payload: { seriesId: next.seriesId, bars: changed } }] : []; }, context);
   }
 }
@@ -243,7 +282,8 @@ export class ReplayAccountProvider extends ReplayProvider {
   observed(r) {
     // The engine's public observer computes snapshot(state,currentFrame). Never
     // import/read a future frame to mark an account, or modify its ledger.
-    const observation = this.service.observe();
+    const spectator=readSpectatorCheckpoint(this.host,r.state.id);
+    const observation = spectator ? {account:{...spectator.account,id:r.state.id,version:r.state.version,time:spectator.account.quoteTimeMs??spectator.cutoffMs}} : this.service.getSpectatorState&&this.service.accountSnapshot ? {account:this.service.accountSnapshot(r.state,r.frame)} : this.service.observe();
     check(observation && typeof observation === 'object', 'No revealed observation', 'SOURCE_UNAVAILABLE');
     const account = observation.account ?? {};
     if (present(account.id)) check(account.id === r.state.id, 'Observation belongs to another simulation', 'ACCOUNT_MISMATCH');
@@ -256,33 +296,33 @@ export class ReplayAccountProvider extends ReplayProvider {
   summary(r, observed = {}) { return { ref: accountRef(r.state), name: `Kurumi SIMULATED ${r.state.id}`, broker: 'SIMULATED — no broker', server: value('kurumi-simulation'), nativeLogin: na(), mode: 'demo', baseCurrency: present(this.currency(r, observed)) ? value(this.currency(r, observed)) : unknown('Account currency not reported'), positionMode: 'netting' }; }
   accountSnapshot(r) {
     const o = this.observed(r), currency = this.currency(r, o), amount = key => money(first(o[key]?.status === 'value' ? o[key].value : o[key]?.status ? undefined : o[key], !Array.isArray(r.state[key]) ? r.state[key] : undefined), currency);
-    return { account: this.summary(r, o), snapshotId: `kurumi-${hash([r.state.id, r.state.version, r.state.chapter, r.state.index, r.state.balance, o]).slice(0, 32)}`, asOf: utc(r.endTime), balance: money(r.state.balance, currency), equity: amount('equity'), available: money(first(o.available?.status === 'value' ? o.available.value : o.available?.status ? undefined : o.available, o.freeMargin), currency), buyingPower: unsupported('Not a broker buying-power model'), unrealizedPnl: money(first(o.unrealizedPnl?.status === 'value' ? o.unrealizedPnl.value : o.unrealizedPnl?.status ? undefined : o.unrealizedPnl, o.unrealizedJpy), currency), realizedPnl: amount('realizedPnl'), margin: { used: money(typeof o.margin === 'string' ? o.margin : undefined, currency), free: money(o.freeMargin, currency), levelRatio: unknown(), maintenance: unknown() }, restrictions: [{ code: 'SIMULATED', description: 'Historical simulation only; no broker or live trading authority', observedAt: Date.now() }] };
+    return { account: this.summary(r, o), snapshotId: `kurumi-${hash([r.state.id, r.state.version, r.state.chapter, r.state.index, r.state.balance, o]).slice(0, 32)}`, asOf: utc(r.endTime), balance: money(r.state.balance, currency), equity: amount('equity'), available: money(first(o.available?.status === 'value' ? o.available.value : o.available?.status ? undefined : o.available, o.freeMargin), currency), buyingPower: unsupported('Not a broker buying-power model'), unrealizedPnl: money(first(o.unrealizedPnl?.status === 'value' ? o.unrealizedPnl.value : o.unrealizedPnl?.status ? undefined : o.unrealizedPnl, o.unrealizedJpy), currency), realizedPnl: Array.isArray(r.state.ledger)?money(r.state.ledger.reduce((sum,row)=>addDecimal(sum,row.realizedJpy),'0'),currency):amount('realizedPnl'), margin: { used: money(typeof o.margin === 'string' ? o.margin : undefined, currency), free: money(o.freeMargin, currency), levelRatio: unknown(), maintenance: unknown() }, restrictions: [{ code: 'SIMULATED', description: 'Historical simulation only; no broker or live trading authority', observedAt: Date.now() }] };
   }
   async listAccounts(input, context) { this.validateInput(input, ['page', 'range']); const r = this.bound(context); if (input.range) this.range(input.range, r); const result = this.page('listAccounts', input, context, () => ({ items: [this.summary(r, this.observed(r))], meta: this.meta(r) })); return { data: result.page, meta: result.meta }; }
   async snapshot(input, context) { this.validateInput(input, ['account', 'range']); check(input.account, 'Account reference is required'); const r = this.bound(context, input.account); if (input.range) this.range(input.range, r); return { data: this.accountSnapshot(r), meta: this.meta(r) }; }
   rowId(kind, row, r) { check(present(row.id), `${kind} ledger row needs stable id`, 'SOURCE_DATA_INVALID'); return `kurumi:${r.state.id}:${kind}:${row.id}`; }
-  revision(body) { return { ...body, revision: hash(body) }; }
+  revision(body,r) { const revision=r.consumedView?.revision??r.state.version;check(Number.isSafeInteger(revision)&&revision>=0,'Actual unsigned account source revision required','SOURCE_REVISION_REQUIRED');return { ...body, revision: String(revision) }; }
   instrument(row, r) { const symbol = first(row.symbol, row.instrument?.instrumentId, typeof row.instrument === 'string' ? row.instrument : undefined, row.pair); check(typeof symbol === 'string' && /^[A-Z]{6}$/.test(symbol), 'Ledger row needs FX symbol', 'SOURCE_DATA_INVALID'); check(this.allowedSymbol(symbol, r), 'Ledger instrument belongs to an unrevealed chapter', 'FUTURE_DATA_FORBIDDEN'); return identity(r.state, symbol); }
   time(row, r, key = 'time') { const t = eventTime(row[key]); check(t.unixMs <= r.endTime, 'Ledger contains unrevealed event', 'FUTURE_DATA_FORBIDDEN'); return t; }
   position(row, r, currency) {
     const instrument = this.instrument(row, r), unit = instrument.instrumentId.slice(0, 3);
     const opened = first(row.openedAt, row.time, row.openTime);
-    return this.revision({ id: this.rowId('position', row, r), account: accountRef(r.state), instrument, nativeId: value(String(row.id)), side: side(row.side, true), quantity: quantity(first(row.quantity, row.units), unit), availableQuantity: qv(row.availableQuantity, unit), averagePrice: dv(first(row.averagePrice, row.entryPrice, row.price)), markPrice: dv(row.markPrice), unrealizedPnl: money(row.unrealizedPnl, currency), realizedPnl: money(row.realizedPnl, currency), openedAt: present(opened) ? value(this.time({ time: opened }, r)) : unknown(), strategyRunId: unknown('Not a native strategy run') });
+    return this.revision({ id: this.rowId('position', row, r), account: accountRef(r.state), instrument, nativeId: value(String(row.id)), side: side(row.side, true), quantity: quantity(first(row.quantity, row.units), unit), availableQuantity: qv(row.availableQuantity, unit), averagePrice: dv(first(row.averagePrice, row.entryPrice, row.price)), markPrice: dv(row.markPrice), unrealizedPnl: money(row.unrealizedPnl, currency), realizedPnl: money(row.realizedPnl, currency), openedAt: present(opened) ? value(this.time({ time: opened }, r)) : unknown(), strategyRunId: unknown('Not a native strategy run') },r);
   }
   order(row, r) {
     const instrument = this.instrument(row, r), unit = instrument.instrumentId.slice(0, 3), createdAt = this.time({ time: first(row.createdAt, row.time) }, r), updatedAt = this.time({ time: first(row.updatedAt, row.createdAt, row.time) }, r);
     check(['pending', 'working', 'partially_filled', 'filled', 'cancel_pending', 'cancelled', 'rejected', 'expired', 'unknown'].includes(row.status), 'Unsupported order status', 'SOURCE_DATA_INVALID');
     const orderType = row.orderType ?? 'market'; check(['market', 'limit', 'stop', 'stop_limit', 'other'].includes(orderType), 'Invalid order type', 'SOURCE_DATA_INVALID');
-    return this.revision({ id: this.rowId('order', row, r), account: accountRef(r.state), instrument, nativeId: value(String(row.id)), clientId: present(row.clientId) ? value(String(row.clientId)) : unknown(), side: side(row.side), positionEffect: present(row.positionEffect) ? value(row.positionEffect) : unknown(), orderType, quantity: quantity(first(row.quantity, row.units), unit), filledQuantity: quantity(row.filledQuantity, unit), remainingQuantity: qv(row.remainingQuantity, unit), limitPrice: ['limit', 'stop_limit'].includes(orderType) ? dv(row.limitPrice) : na(), stopPrice: ['stop', 'stop_limit'].includes(orderType) ? dv(row.stopPrice) : na(), timeInForce: present(row.timeInForce) ? value(row.timeInForce) : unknown(), status: row.status, nativeStatus: row.status, createdAt, updatedAt, expiresAt: present(row.expiresAt) ? value(this.time({ time: row.expiresAt }, r)) : na(), rejectReason: present(row.rejectReason) ? value(row.rejectReason) : unknown(), correlation: unknown('No native execution trace') });
+    return this.revision({ id: this.rowId('order', row, r), account: accountRef(r.state), instrument, nativeId: value(String(row.nativeClientOrderId??row.id)), clientId: present(row.clientId) ? value(String(row.clientId)) : unknown(), side: side(row.side), positionEffect: present(row.positionEffect) ? value(row.positionEffect) : unknown(), orderType, quantity: quantity(first(row.quantity, row.units), unit), filledQuantity: quantity(row.filledQuantity, unit), remainingQuantity: qv(row.remainingQuantity, unit), limitPrice: ['limit', 'stop_limit'].includes(orderType) ? dv(row.limitPrice) : na(), stopPrice: ['stop', 'stop_limit'].includes(orderType) ? dv(row.stopPrice) : na(), timeInForce: present(row.timeInForce) ? value(row.timeInForce) : unknown(), status: row.status, nativeStatus: row.nativeStatus??row.sourceClassification??row.status, createdAt, updatedAt, expiresAt: present(row.expiresAt) ? value(this.time({ time: row.expiresAt }, r)) : na(), rejectReason: present(row.rejectReason) ? value(row.rejectReason) : unknown(), correlation: unknown('No native execution trace') },r);
   }
   fill(row, r, currency) {
     const instrument = this.instrument(row, r), orderId = present(row.orderId) ? value(this.rowId('order', { id: row.orderId }, r)) : unknown();
-    return this.revision({ id: this.rowId('fill', row, r), account: accountRef(r.state), instrument, nativeId: String(row.id), orderId, nativeOrderId: present(row.orderId) ? value(String(row.orderId)) : unknown(), time: this.time(row, r), side: side(row.side), quantity: quantity(first(row.quantity, row.units), instrument.instrumentId.slice(0, 3)), price: decimal(row.price), positionEffect: present(row.positionEffect) ? value(row.positionEffect) : unknown(), fees: Array.isArray(row.fees) ? value(row.fees.map(f => { check(present(f.currency ?? currency), 'Fee currency missing', 'SOURCE_DATA_INVALID'); return { value: decimal(f.value ?? f.amount), currency: f.currency ?? currency }; })) : unknown(), realizedPnl: money(row.realizedPnl, row.currency ?? currency), correlation: unknown('Simulation ledger, not broker execution'), correction: na() });
+    return this.revision({ id: this.rowId('fill', row, r), account: accountRef(r.state), instrument, nativeId: String(row.nativeTradeId??row.id), orderId, nativeOrderId: present(row.nativeClientOrderId??row.orderId) ? value(String(row.nativeClientOrderId??row.orderId)) : unknown(), time: this.time(row, r), side: side(row.side), quantity: quantity(first(row.quantity, row.units), instrument.instrumentId.slice(0, 3)), price: decimal(row.price), positionEffect: present(row.positionEffect) ? value(row.positionEffect) : unknown(), fees: Array.isArray(row.fees) ? value(row.fees.map(f => { check(present(f.currency ?? currency), 'Fee currency missing', 'SOURCE_DATA_INVALID'); return { value: decimal(f.value ?? f.amount), currency: f.currency ?? currency }; })) : unknown(), realizedPnl: money(row.realizedPnl, row.currency ?? currency), correlation: unknown('Simulation ledger, not broker execution'), correction: na() },r);
   }
   ledger(row, r, currency) {
     check(['deposit', 'withdrawal', 'fee', 'dividend', 'funding', 'adjustment', 'other'].includes(row.kind), 'History kind must map to a real ledger entry (trade PnL may use adjustment)', 'SOURCE_DATA_INVALID');
     check(present(row.amount?.currency ?? row.currency ?? currency), 'History amount currency missing', 'SOURCE_DATA_INVALID');
-    return this.revision({ id: this.rowId('history', row, r), account: accountRef(r.state), time: this.time(row, r), kind: row.kind, amount: { value: decimal(row.amount?.value ?? row.amount), currency: row.amount?.currency ?? row.currency ?? currency }, description: String(row.description ?? row.kind), nativeId: String(row.id), relatedFillIds: (row.relatedFillIds ?? []).map(id => this.rowId('fill', { id }, r)) });
+    return this.revision({ id: this.rowId('history', row, r), account: accountRef(r.state), time: this.time(row, r), kind: row.kind, amount: { value: decimal(row.amount?.value ?? row.amount), currency: row.amount?.currency ?? row.currency ?? currency }, description: String(row.description ?? row.kind), nativeId: String(row.id), relatedFillIds: (row.relatedFillIds ?? []).map(id => this.rowId('fill', { id }, r)) },r);
   }
   engineRows(topic, raw, r) {
     // Exact adapter for the portable engine.js ledger. Do not change its state.
@@ -297,13 +337,14 @@ export class ReplayAccountProvider extends ReplayProvider {
       }
       check(opening, 'Position has no opening fill', 'SOURCE_DATA_INVALID');
       const o = this.observed(r);
-      return { ...p, id: opening.id, side: q > 0n ? 'long' : 'short', quantity: absDecimal(p.quantity), averagePrice: p.entry, markPrice: (q > 0n ? r.frame.bid : r.frame.ask).close, openedAt: opening.time, unrealizedPnl: o.unrealizedJpy };
+      return { ...p, id: opening.id, side: q > 0n ? 'long' : 'short', quantity: absDecimal(p.quantity), averagePrice: p.entry, markPrice: r.state.lastQuote ? (q>0n?r.state.lastQuote.bid:r.state.lastQuote.ask) : r.consumedView ? r.consumedView.bars.filter(b=>b.symbol===p.instrument).at(-1)?.[q>0n?'bid':'ask']?.close : (q > 0n ? r.frame.bid : r.frame.ask).close, openedAt: opening.time, unrealizedPnl: o.unrealizedJpy };
     });
     if (topic === 'fills') return raw.map(f => {
       const q = BigInt(f.signedQuantity);
-      return { ...f, side: q > 0n ? 'buy' : 'sell', quantity: absDecimal(f.signedQuantity), realizedPnl: f.realizedJpy, currency: 'JPY', fees: present(f.commission) ? [{ value: negDecimal(f.commission), currency: 'JPY' }] : undefined, positionEffect: BigInt(f.closedQuantity) > 0n && BigInt(f.openedQuantity) > 0n ? 'reversal' : BigInt(f.closedQuantity) > 0n ? 'close' : 'open' };
+      return { ...f, ...(present(f.nativeClientOrderId)?{orderId:nativeOrderKey(f),decisionId:f.orderId,parentDecisionId:f.parentDecisionId??f.orderId}:{}), side: q > 0n ? 'buy' : 'sell', quantity: absDecimal(f.signedQuantity), realizedPnl: f.realizedJpy, currency: 'JPY', fees: present(f.commission) ? [{ value: negDecimal(f.commission), currency: 'JPY' }] : undefined, positionEffect: BigInt(f.closedQuantity) > 0n && BigInt(f.openedQuantity) > 0n ? 'reversal' : BigInt(f.closedQuantity) > 0n ? 'close' : 'open' };
     });
     if (topic === 'orders') {
+      if(r.state.rules?.engine==='nautilus-trader'||r.state.fills.some(f=>present(f.nativeClientOrderId)))return projectNativeOrders(r.state,{asOfMs:r.endTime});
       const result = [];
       for (const row of raw) {
         // 'held' is a decision without an order. Preserve rejection as rejection.
@@ -389,7 +430,7 @@ export class ReplayAccountProvider extends ReplayProvider {
     check(!input.resumeToken, 'Replay account subscription requires a fresh snapshot', 'RESUME_EXPIRED');
     check(Array.isArray(input.topics) && input.topics.length > 0 && new Set(input.topics).size === input.topics.length && input.topics.every(x => accountDescriptor.liveTopics.includes(x)), 'Unsupported account topics', 'UNSUPPORTED_CAPABILITY');
     check(input.account, 'Account reference is required');
-    const fixed = copy(input), read = () => { const r = this.bound(context, fixed.account); if (fixed.range) this.range(fixed.range, r); const result = { account: copy(fixed.account), coverage: fixed.topics.map(topic => ({ topic, complete: true })) }; for (const topic of fixed.topics) result[topic] = topic === 'snapshot' ? this.accountSnapshot(r) : this.rows(topic, r); return result; };
+    const fixed = copy(input), read = () => { const r = this.bound(context, fixed.account); if (fixed.range) this.range(fixed.range, r); const result = { account: copy(fixed.account), coverage: fixed.topics.map(topic => ({ topic, complete: topic==='orders'&&r.state.rules?.engine==='nautilus-trader'?nativeOrderCoverageAt(r.state,r.endTime):true })) }; for (const topic of fixed.topics) result[topic] = topic === 'snapshot' ? this.accountSnapshot(r) : this.rows(topic, r); return result; };
     return this.stream(read(), read, (old, next) => {
       const events = [];
       for (const topic of fixed.topics) {

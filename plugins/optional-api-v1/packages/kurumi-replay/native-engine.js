@@ -1,4 +1,6 @@
+import { validateNativeOrderABI } from './native-order-abi.js';
 import { isDeepStrictEqual } from 'node:util';
+import { getExperimentProfile, assertNativeRules, ROUND2_PROFILE_ID } from './experiment-profiles.js';
 // Awaitable native adapter. The service must CAS the returned state after await;
 // this module never commits a run store. Only explicit prepareNative installs private dependencies.
 import { spawn } from 'node:child_process';
@@ -10,18 +12,20 @@ import { createReferenceRun as referenceCreate, validateReferenceDecision as ref
 const here = dirname(fileURLToPath(import.meta.url));
 const copy = x => JSON.parse(JSON.stringify(x));
 const HOUR = 3600000;
-const PROFILES = [{leverage:'500',stopout:'0.2'},{leverage:'25',stopout:'0.5'},{leverage:'25',stopout:'0.3'}];
+const PROFILES = getExperimentProfile().content.chapterRules;
 function fail(code,message) { const error=new Error(message);error.code=code;throw error; }
-export function createRun(runId,chapters,dataDigests) {
+export function createRun(runId,chapters,dataDigests,{profileId}={}) {
+  const profile=getExperimentProfile(profileId);
   const s=referenceCreate(runId,chapters,dataDigests);
   s.rules={...s.rules,engine:'nautilus-trader',engineVersion:'1.231.0',model:'native-quote-tick-v1',leverage:null,stopout:null,
-    formalExecution:true,fxMaxAgeMs:60000,chapterRules:copy(PROFILES),h1Role:'view-and-decision-only',liquidityAssumption:'unbounded_top_of_book',accounting:'exact-adapter-ledger'};
+    formalExecution:true,fxMaxAgeMs:60000,chapterRules:copy(profile.content.chapterRules),h1Role:'view-and-decision-only',liquidityAssumption:'unbounded_top_of_book',accounting:'exact-adapter-ledger'};
+  if(profileId)s.rules.experimentProfile=profile;
   s.nativeJournal=[];s.lastQuote=null;s.bankrupt=false;s.nativeReceipt=null;
   return s;
 }
 export function validateDecision(state,decision) {
   if(state.rules?.engine!=='nautilus-trader') fail('ENGINE_MISMATCH','Formal adapter requires native createRun state, not H1 reference state');
-  if(state.rules.engineVersion!=='1.231.0'||state.rules.model!=='native-quote-tick-v1'||state.rules.fxMaxAgeMs!==60000||!isDeepStrictEqual(state.rules.chapterRules,PROFILES))fail('RULES_MISMATCH','Fixed engine/profile/as-of rules cannot be changed by a run checkpoint');
+  assertNativeRules(state);
   const result=referenceValidate(state,decision);
   if(!result.duplicate&&decision.stop!==null){
     const stop=d(decision.stop),tick=d(state.chapters[state.chapter].tickSize ?? (state.chapters[state.chapter].symbol.endsWith('JPY')?'0.001':'0.00001')),scale=Math.max(stop.s,tick.s);
@@ -31,9 +35,11 @@ export function validateDecision(state,decision) {
 }
 function invoke(request,options) {
   return new Promise((resolvePromise,reject)=>{
-    const python=options.pythonPath ?? process.env.KURUMI_NATIVE_PYTHON ?? resolve(here,'../../../../.data/plugin-envs/kurumi-replay-nautilus/bin/python');
+    const python=options.pythonPath ?? process.env.KURUMI_NATIVE_PYTHON;
+    if(!python){reject(Object.assign(new Error('Explicit verified private Python path required; no implicit author environment'),{code:'NATIVE_NOT_PREPARED'}));return;}
     const child=spawn(python,[resolve(here,'native-engine.py')],{stdio:['pipe','pipe','pipe'],signal:options.signal,
       env:{...process.env,PYTHONDONTWRITEBYTECODE:'1'}});
+    child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');
     let output='',diagnostic='',oversized=false;
     child.stdout.on('data',chunk=>{output+=chunk;if(Buffer.byteLength(output)>64*1024*1024){oversized=true;child.kill();}});
     child.stderr.on('data',chunk=>{diagnostic=(diagnostic+chunk).slice(-50000);});
@@ -60,7 +66,7 @@ export async function decideAndAdvance(state,decision,frames,options={}) {
   const step={decision:copy(decision),previousTime:current.time,from:next.time,to:next.time+HOUR,
     ticks:options.quoteTicks ?? next.quoteTicks ?? [],coverage:options.coverage ?? next.coverage ?? {}};
   if(options.stepRef){delete step.ticks;step.ticksRef=options.stepRef;}
-  try {return await (options.invokeImpl ?? invoke)({state,step,storageRoot:options.storageRoot,persistent:!!options.persistent},options);}
+  try {const result=await (options.invokeImpl ?? invoke)({state,step,storageRoot:options.storageRoot,persistent:!!options.persistent},options);validateNativeOrderABI(result);return result;}
   catch(e){
     if(e.code==='INVALID_DATA') {const s=copy(state);s.status='missing_data';s.missingData={code:e.code,message:e.message,chapter:s.chapter,index:s.index,nextIndex:s.index+1};return s;}
     throw e;
@@ -73,17 +79,21 @@ function str(v){while(v.s&&v.n%10n===0n){v.n/=10n;v.s--;}const negative=v.n<0n;l
 function minus(a,b){a=d(a);b=d(b);const s=Math.max(a.s,b.s);return str({n:a.n*10n**BigInt(s-a.s)-b.n*10n**BigInt(s-b.s),s});}
 export function snapshot(state,frame) {
   if(state.rules?.engine!=='nautilus-trader')fail('ENGINE_MISMATCH','Native state required');
+  const profile=assertNativeRules(state), chapterRule=profile.content.chapterRules[state.chapter];
   if(state.revealedFrameTime!==null&&frame?.time!==state.revealedFrameTime)fail('INVALID_DATA','snapshot requires current revealed frame metadata');
   const actual=state.lastQuote;
   const flatBook=p=>({open:p,high:p,low:p,close:p});
   const selected=actual ? {time:Math.floor(actual.time/HOUR)*HOUR,bid:flatBook(actual.bid),ask:flatBook(actual.ask),
     ...(actual.fx?{fx:{bid:flatBook(actual.fx.bid),ask:flatBook(actual.fx.ask)}}:{})} : frame;
-  const s=referenceSnapshot({...state,revealedFrameTime:null},selected);
-  if(state.chapter===0){const m=d(s.margin);s.margin=str({n:m.n*5n,s:m.s+2});}
+  const s=referenceSnapshot({...state,revealedFrameTime:null},selected,{allowUnpricedFlat:true});
+  // Reference display uses /25. Exact finite correction, never Number money.
+  const m=d(s.margin),factor=chapterRule.leverage==='500'?{n:5n,s:2}:chapterRule.leverage==='50'?{n:5n,s:1}:{n:1n,s:0};
+  s.margin=str({n:m.n*factor.n,s:m.s+factor.s});
   s.freeMargin=minus(s.equity,s.margin);
-  s.engine='nautilus-trader';s.engineVersion='1.231.0';s.leverage=PROFILES[state.chapter].leverage;s.stopout=PROFILES[state.chapter].stopout;
+  s.engine='nautilus-trader';s.engineVersion='1.231.0';s.leverage=chapterRule.leverage;s.stopout=chapterRule.stopout;s.experimentProfile=profile;
   s.bankrupt=state.bankrupt;s.nativeReceipt=copy(state.nativeReceipt);
   if(actual?.fx){s.fxAsOfTime=actual.fx.time;s.fxAgeMs=actual.time-actual.fx.time;s.fxMaxAgeMs=60000;}
+  if(actual?.fxUnavailable){s.fxStatus='not_required_zero_exposure';s.fxUnavailable=copy(actual.fxUnavailable);}
   if(actual){s.time=actual.time;s.frameTime=state.revealedFrameTime;s.priceSource='last-consumed-quote';}
   else{s.priceSource='already-revealed-H1-close';}
   return s; // no journal, interval tick array or future OHLC exposed
@@ -115,6 +125,7 @@ function command(argv,{signal,cwd,stdin,timeout=300000}={}) {
     const cancel=()=>{failure=new Error('Native operation cancelled');failure.code='CANCELLED';failure.name='AbortError';child.kill('SIGKILL');};
     signal?.addEventListener('abort',cancel,{once:true});if(signal?.aborted)cancel();
     const timer=setTimeout(()=>{failure=new Error(`Native command timeout (${argv[0]} ${argv[1] ?? ''})`);failure.code='NATIVE_TIMEOUT';child.kill('SIGKILL');},timeout);
+    child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');
     child.stdout.on('data',b=>{out+=b;if(Buffer.byteLength(out)>8*1024*1024){failure=new Error('Command output exceeded budget');failure.code='OUTPUT_LIMIT';child.kill('SIGKILL');}});
     child.stderr.on('data',b=>{err=(err+b).slice(-50000);});child.stdin.on('error',()=>{});
     child.on('error',e=>{failure=e;});child.on('close',code=>{clearTimeout(timer);signal?.removeEventListener('abort',cancel);if(failure){reject(failure);return;}if(code){const e=new Error(`Native command failed (${code}): ${err.slice(-3000)}`);e.code='NATIVE_PREPARE_FAILED';reject(e);return;}resolvePromise(out.trim());});
@@ -193,6 +204,8 @@ function persistentInvoke(request,{storageRoot,pythonPath,signal,timeoutMs=30000
     if(!worker) {
       const child=spawn(pythonPath,[join(here,'native-engine.py'),'--worker'],{stdio:['pipe','pipe','pipe'],env:{...process.env,PYTHONDONTWRITEBYTECODE:'1'}});
       worker={child,buffer:'',stderr:'',pending:null};workers.set(storageRoot,worker);
+      // Streaming decoding preserves Chinese text across OS pipe chunk boundaries.
+      child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');
       child.stdout.on('data',b=>{
         worker.buffer+=b;if(Buffer.byteLength(worker.buffer)>64*1024*1024){const e=new Error('Native worker output budget exceeded');e.code='OUTPUT_LIMIT';worker.pending?.reject(e);child.kill('SIGKILL');return;}
         const i=worker.buffer.indexOf('\n');if(i<0)return;
@@ -222,15 +235,27 @@ async function immutableTicks(root,rows,signal) {
   aborted(signal);return{path:file,digest:sha,rowCount:rows.length,bytes:bytes.length,sourceTimeBasis:'UTC milliseconds'};
 }
 /** Stable as-of join. Same-ms ordering is retained independently within each source stream. */
-export function joinAsOfQuotes(mainRows,fxRows,{fxMaxAgeMs=60000}={}) {
+export function joinAsOfQuotes(mainRows,fxRows,{fxMaxAgeMs=60000,zeroExposure=false,supplementalRows=[]}={}) {
   if(fxMaxAgeMs!==60000)fail('INVALID_FX_POLICY','Fixed challenge FX maximum age is 60000 ms, not a role-selectable rate');
-  const output=[];let i=0,last=null,previous=-Infinity,fxPrevious=-Infinity;
+  const output=[];let i=0,last=null,previous=-Infinity,fxPrevious=-Infinity,si=0,supplement=null,sp=-Infinity;
+  for(const r of supplementalRows){if(!Number.isSafeInteger(r.time)||r.time<sp)fail('INVALID_DATA','Supplementary FX is not chronological UTC ms');sp=r.time;}
   for(const r of fxRows ?? []){if(!Number.isSafeInteger(r.time)||r.time<fxPrevious)fail('INVALID_DATA','FX source is not stable chronological UTC ms');fxPrevious=r.time;}
   for(let index=0;index<mainRows.length;index++){
     const r=mainRows[index];if(!Number.isSafeInteger(r.time)||r.time<previous)fail('INVALID_DATA','Main quotes are not stable chronological UTC ms');previous=r.time;
     while(i<(fxRows?.length ?? 0)&&fxRows[i].time<=r.time)last=fxRows[i++];
+    while(si<supplementalRows.length&&supplementalRows[si].time<=r.time)supplement=supplementalRows[si++];
     const t={...copy(r),sourceSequence:index};
-    if(fxRows){if(!last||r.time-last.time>fxMaxAgeMs)fail('INVALID_DATA','No last-known CHFJPY within 60000 ms; no future interpolation');t.fx=copy(last);t.fxAgeMs=r.time-last.time;}
+    if(fxRows){
+      const originalFresh=last&&r.time-last.time<=fxMaxAgeMs;
+      const selected=originalFresh?last:(supplement&&r.time-supplement.time<=fxMaxAgeMs?supplement:null);
+      if(!selected){
+        if(zeroExposure!==true)fail('INVALID_DATA','No last-known CHFJPY within 60000 ms; no future interpolation');
+        // No conversion is performed. Retain the gap explicitly; never install
+        // a stale/future/synthetic quote in the native conversion input.
+        delete t.fx;delete t.fxAgeMs;
+        t.fxUnavailable={reason:last?'stale':'no_asof_quote',lastKnownTime:last?.time??null,ageMs:last?r.time-last.time:null};
+      }else{t.fx=copy(selected);t.fxAgeMs=r.time-selected.time;if(!originalFresh)t.fxSupplement={provider:selected.provider,originalLastKnownTime:last?.time??null,originalAgeMs:last?r.time-last.time:null};}
+    }
     output.push(t);
   }
   return output;
@@ -238,7 +263,7 @@ export function joinAsOfQuotes(mainRows,fxRows,{fxMaxAgeMs=60000}={}) {
 /** Formal service API: prepared private env -> verified slice -> native worker -> candidate state.
  * Only the service's subsequent atomic CAS commits/reveals this candidate.
  */
-export async function advanceNative(storageDirectory,state,decision,data,{signal,loadExecutionSlice:loader,timeoutMs}={}) {
+export async function advanceNative(storageDirectory,state,decision,data,{signal,loadExecutionSlice:loader,loadFxSupplement:supplementLoader,timeoutMs}={}) {
   aborted(signal);const v=validateDecision(state,decision);if(v.duplicate)return copy(state);
   const root=await ownedRoot(storageDirectory);const key=root,epoch=lifecycleEpochs.get(root)??0;const guard=()=>{aborted(signal);if((lifecycleEpochs.get(root)??0)!==epoch)fail('CANCELLED','Native lifecycle disposed; no queued work or candidate may commit');};
   const previous=queues.get(key) ?? Promise.resolve();
@@ -248,7 +273,7 @@ export async function advanceNative(storageDirectory,state,decision,data,{signal
     if(!next)return await decideAndAdvance(state,decision,f,{signal,pythonPath:status.pythonPath});
     const from=next.time,to=from+HOUR-1;
     const read=loader ?? (await import('./data.js')).loadExecutionSlice;
-    let rows,fxRows,sources,kind;
+    let rows,fxRows,sources,kind,supplementalRows=[];
     try {
       const main=await read(storageDirectory,{chapterId:chapter.id,symbol:chapter.symbol,from,to,maxRows:500000});aborted(signal);
       if(main.symbol!==chapter.symbol||main.chapterId!==chapter.id||main.from!==from||main.to!==to||main.rangeConvention!=='inclusive UTC milliseconds')fail('SOURCE_MISMATCH','Execution slice identity or range differs from the exact requested instrument');
@@ -258,8 +283,13 @@ export async function advanceNative(storageDirectory,state,decision,data,{signal
         const fx=await read(storageDirectory,{chapterId:chapter.id,symbol:chapter.fxSymbol ?? 'CHFJPY',from:minimum,to,maxRows:500000});aborted(signal);
         if(fx.symbol!==(chapter.fxSymbol ?? 'CHFJPY')||fx.chapterId!==chapter.id||fx.from!==minimum||fx.to!==to)fail('SOURCE_MISMATCH','CHFJPY slice identity/range mismatch');
         if(fx.kind!=='ticks')fail('UNSUPPORTED_DATA_KIND','CHFJPY must also use actual quote ticks');fxRows=fx.rows;sources=[...sources,...fx.sources];
+        if(supplementLoader||!loader){
+          const load=supplementLoader??(state.rules.experimentProfile?.id===ROUND2_PROFILE_ID?(await import('./experiment-fx.js')).loadExperimentFx:(await import('./fx-supplement.js')).loadFxSupplement);
+          const supplement=await load(storageDirectory,{runId:state.id,from,to,snapshotDigest:main.snapshotDigest,configDigest:main.configDigest});
+          supplementalRows=supplement.rows;sources=[...sources,...supplement.sources];
+        }
       }
-      rows=joinAsOfQuotes(rows,fxRows);
+      rows=joinAsOfQuotes(rows,fxRows,{zeroExposure:state.position===null&&decision.target==='0'&&decision.stop===null,supplementalRows});
     }catch(e){if(['INVALID_DATA','MISSING_DATA','NO_QUOTES','ENOENT','TIME_MISMATCH','SLICE_LIMIT'].includes(e.code)){const s=copy(state);s.status='missing_data';s.missingData={code:e.code,message:e.message,chapter:s.chapter,index:s.index,nextIndex:s.index+1};return s;}throw e;}
     const ref=await immutableTicks(root,rows,signal);
     const result=await decideAndAdvance(state,decision,f,{signal,pythonPath:status.pythonPath,storageRoot:root,persistent:true,stepRef:ref,quoteTicks:rows,
@@ -283,4 +313,23 @@ export async function disposeNative(storageDirectory) {
  const root=join(resolve(storageDirectory),'kurumi-native');lifecycleEpochs.set(root,(lifecycleEpochs.get(root)??0)+1);const worker=workers.get(root);if(!worker)return{disposed:true,killed:false};workers.delete(root);
  const e=Object.assign(new Error('Native worker disposed; no candidate committed'),{code:'CANCELLED'});worker.pending?.reject(e);worker.pending=null;const child=worker.child;if(child.exitCode!==null||child.signalCode!==null)return{disposed:true,killed:false};
  await new Promise((resolvePromise,reject)=>{const timer=setTimeout(()=>{child.kill('SIGKILL');},1500);const hard=setTimeout(()=>{cleanup();reject(Object.assign(new Error('Owned native worker did not close after cancellation'),{code:'NATIVE_DISPOSE_TIMEOUT'}));},5000);const done=()=>{cleanup();resolvePromise();};const cleanup=()=>{clearTimeout(timer);clearTimeout(hard);child.removeListener('close',done);};child.once('close',done);child.kill('SIGTERM');});return{disposed:true,killed:true};
+}
+
+/** Read only the last actually consumed interval. This bridge never reads an execution slice. */
+export async function consumedInterval(storageDirectory,engine,{signal}={}) {
+  aborted(signal);const item=engine.nativeJournal?.at(-1);if(!item)return {ticks:[],interval:null};
+  let ticks=item.ticks,rawBytes;
+  if(item.ticksRef){
+    const root=join(resolve(storageDirectory),'kurumi-native','steps'),file=resolve(item.ticksRef.path);
+    if(!file.startsWith(root+'/')||await fs.realpath(file)!==file||(await fs.lstat(file)).isSymbolicLink())fail('UNSAFE_PATH','Consumed tick ref must be an owned ordinary immutable steps file');
+    const bytes=await fs.readFile(file);if(bytes.length>128*1024*1024||digest(bytes)!==item.ticksRef.digest)fail('HASH_MISMATCH','Consumed quote bytes changed');
+    rawBytes=bytes;ticks=JSON.parse(bytes);if(ticks.length!==item.ticksRef.rowCount)fail('HASH_MISMATCH','Consumed quote row count changed');
+  }
+  if(!Array.isArray(ticks)||!ticks.length)fail('INVALID_DATA','Committed native interval lacks consumed quote evidence');
+  const entry=engine.decisions?.at(-1),chapter=entry?.executedChapter,index=entry?.executedIndex;
+  const info=engine.lastConsumedInterval??{chapter,index,from:item.from,toExclusive:item.to,lastTime:ticks.at(-1).time,complete:!engine.bankrupt,rowCount:ticks.length};
+  if(info.chapter!==chapter||info.index!==index||info.rowCount!==ticks.length||info.lastTime!==ticks.at(-1).time||info.from!==item.from||info.toExclusive!==item.to)fail('INVALID_DATA','Consumed interval/checkpoint mismatch');
+  let previous=item.from-1;for(const t of ticks){if(!Number.isSafeInteger(t.time)||t.time<previous||t.time<item.from||t.time>=item.to||t.time>info.lastTime)fail('INVALID_DATA','Unconsumed/future tick in checkpoint');previous=t.time;}
+  if(info.complete!==!engine.bankrupt)fail('INVALID_DATA','Terminal partial interval cannot be marked complete');
+  return {ticks:copy(ticks),interval:copy(info),bytes:rawBytes};
 }
