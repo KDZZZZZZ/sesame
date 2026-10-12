@@ -141,14 +141,16 @@ export class Recorder {
     try {
       await handle.writeFile(line);
       await handle.sync();
+      if (before === 0) {
+        // This is part of the append transaction: a directory-sync failure must
+        // roll the line back before the service queues it as unwritten.
+        const dir = await fs.open(dirname(path), 'r');
+        try { await dir.sync(); } finally { await dir.close(); }
+      }
     } catch (e) {
       try { await handle.truncate(before); await handle.sync(); } catch { /* 保留诊断 */ }
       throw e;
     } finally { await handle.close(); }
-    if (before === 0) {
-      const dir = await fs.open(dirname(path), 'r');
-      try { await dir.sync(); } finally { await dir.close(); }
-    }
   }
 
   /** 镜像恢复：镜像必须是权威日志的严格前缀；缺失行按权威字节补齐，不一致抛出。 */

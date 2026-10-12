@@ -767,7 +767,7 @@
       "id": "sesame/kurumi-replay",
       "version": "0.1.3-dev.3.8",
       "directory": "kurumi-replay",
-      "treeDigest": "sha256:4a98b55896ead82e12c1fc151b181390a42e444b86f00c93aebd18e208baa7e5",
+      "treeDigest": "sha256:cc2b89bed9b1f6866eb19fa4a49eed2a8a82b0ee6e95c85a6061a54223bd372a",
       "files": [
         {
           "path": "COMMITTED-PROOF-FIX-HANDOFF.md",
@@ -881,8 +881,8 @@
         },
         {
           "path": "VALIDATION.md",
-          "sha256": "f36480b556faa0a51a4333bccad70d2123f210eb80789cb43e8968d692b47048",
-          "bytes": 9899
+          "sha256": "1e071c75d68ff7cd56d971b58d9aca282d5e784b9c66f5ad5bf933b24814ce3e",
+          "bytes": 10206
         },
         {
           "path": "analysis-plan.js",
@@ -1041,8 +1041,8 @@
         },
         {
           "path": "recording.js",
-          "sha256": "75efdc35f725c1b0a7da5018c93d8553b0002cd21a1c5240e2f146df9072c5cd",
-          "bytes": 22248
+          "sha256": "6e8594bf843a22f90f419d4828a058dcef563ec4d7825024b8e1cf24a3a484b2",
+          "bytes": 22410
         },
         {
           "path": "replay-presentation.js",
@@ -1126,8 +1126,8 @@
         },
         {
           "path": "tests/archive-pending-protection.test.mjs",
-          "sha256": "f3de8944db52a82be1c90cb15f8bbf13feb641a28407a73670cad655ed17a723",
-          "bytes": 9811
+          "sha256": "a801751ae9bf0f08a0dca80678a27766c431ee0e89bf5b80a94bbd3cbf561868",
+          "bytes": 11481
         },
         {
           "path": "tests/cadence-recording.test.mjs",
@@ -1331,8 +1331,8 @@
         },
         {
           "path": "tests/weekly-reports.test.mjs",
-          "sha256": "7248ceb251500b8055c7c3b38eb00afe7aa87a43729b5b110dab85bbddc0cb83",
-          "bytes": 26604
+          "sha256": "d81276f539882338bbf4ee4ef5f72671bec16a73777763657bd0536c7626274e",
+          "bytes": 29002
         },
         {
           "path": "tools.json",
@@ -1351,8 +1351,8 @@
         },
         {
           "path": "weekly-reports.js",
-          "sha256": "74dd8b7848504a1ac29792e3dd91f16bce475a35d7a5cae2fe6f139d22ad49a9",
-          "bytes": 33074
+          "sha256": "6f0b7b937448af0fa914bb39cdc8f354593b56da20725fe5e0372f3471d60c21",
+          "bytes": 34180
         }
       ]
     },

@@ -117,6 +117,33 @@ test('known model failure is failed; unknown result/lost reply remains blocked, 
  for(const code of ['MODEL_REJECTED','NETWORK_LOST']){const f=fixture();await queueOne(f);f.host.inference.complete=async r=>{f.calls.inference.push(r);throw Object.assign(Error('synthetic failure'),{code});};await drainWeeklyQueue(f.host,f.service,{authorizeGeneration:true,model:f.model});const job=listWeeklyJobs(f.host)[0];assert.equal(job.status,code==='MODEL_REJECTED'?'failed':'unknown');await drainWeeklyQueue(f.host,f.service,{authorizeGeneration:true,model:f.model});assert.equal(f.calls.inference.length,1);assert.equal(job.output,null);}
 });
 
+for(const transport of ['inference','agents'])test(`${transport} request archive failure remains unsubmitted and restarts with the exact frozen request`,async()=>{
+ const f=fixture();await queueOne(f);const archive=f.service.archiveFileSafe;
+ f.service.archiveFileSafe=async(path,text)=>{
+  if(path.endsWith('/request.json')){assert.equal(listWeeklyJobs(f.host)[0].status,'request_archive_pending');throw Object.assign(Error('synthetic request mirror failure'),{code:'ARCHIVE_MIRROR_FAILED'});}
+  return archive(path,text);
+ };
+ const options={authorizeGeneration:true,transport,model:f.model,maxTokens:1234,collectFullAgentOutput:async()=>({complete:true,output:{text:'SYNTHETIC OUTPUT'},artifactRefs:[]})};
+ const result=await drainWeeklyQueue(f.host,f.service,options);const saved=listWeeklyJobs(f.host)[0];
+ assert.equal(result.results[0].status,'request_archive_pending');assert.equal(saved.status,'request_archive_pending');
+ assert.equal(f.calls.inference.length,0);assert.equal(f.calls.agent.length,0);
+ const restarted=fixture(new Map(structuredClone([...f.storage.map])));
+ await drainWeeklyQueue(restarted.host,restarted.service,{...options,maxTokens:9876});
+ const calls=transport==='inference'?restarted.calls.inference:restarted.calls.agent;
+ assert.deepEqual(calls,[saved.request]);assert.equal(listWeeklyJobs(restarted.host)[0].status,'sealed');
+ assert.ok(restarted.calls.archives.some(r=>r.path.endsWith('/request.json')&&r.text===JSON.stringify(saved.request)));
+ await drainWeeklyQueue(restarted.host,restarted.service,options);assert.equal(calls.length,1);
+});
+
+test('pre-submit cancellation keeps the frozen weekly request retryable without a model attempt',async()=>{
+ const f=fixture();await queueOne(f);const archive=f.service.archiveFileSafe,controller=new AbortController();
+ f.service.archiveFileSafe=async(path,text)=>{const receipt=await archive(path,text);if(path.endsWith('/request.json'))controller.abort();return receipt;};
+ await drainWeeklyQueue(f.host,f.service,{authorizeGeneration:true,model:f.model},controller.signal);
+ assert.equal(listWeeklyJobs(f.host)[0].status,'request_archive_pending');assert.equal(f.calls.inference.length,0);
+ f.service.archiveFileSafe=archive;await drainWeeklyQueue(f.host,f.service,{authorizeGeneration:true,model:f.model});
+ assert.equal(f.calls.inference.length,1);assert.equal(listWeeklyJobs(f.host)[0].status,'sealed');
+});
+
 test('restart after submitting marks unknown; explicit existing-output reconciliation uses CAS without model replay',async()=>{
  const f=fixture(),job=await queueOne(f);f.host.storage.put('round2-weekly',{...job,revision:job.revision+1,status:'submitting',requestId:job.id+'_generation',transport:'inference'});
  await drainWeeklyQueue(f.host,f.service,{authorizeGeneration:true,model:f.model});let current=listWeeklyJobs(f.host)[0];assert.equal(current.status,'unknown');assert.equal(f.calls.inference.length,0);

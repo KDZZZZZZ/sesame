@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtemp,mkdir,readFile,rm} from 'node:fs/promises';
+import {promises as fs} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {ReplayService} from '../service.js';
@@ -142,4 +143,26 @@ for (const duringRepair of [false,true]) test(`real recorder mirror failure ${du
   await restarted.assertArchiveHealthy();assert.deepEqual(await readFile(primary),bytes);
   assert.equal(restarted.getDocument().control.archiveFailed,null);assert.equal(restarted.getDocument().control.running,false);
   assert.deepEqual(restarted.getState(),original);assert.equal(f.calls.agent.length,0);assert.equal(f.calls.inference.length,0);
+});
+
+test('first journal directory-sync failure rolls back before service repair appends the evidence',async t=>{
+  const {service,f}=setup(),root=await mkdtemp(join(tmpdir(),'kurumi-directory-sync-'));
+  t.after(()=>rm(root,{recursive:true,force:true}));
+  const recorder=new Recorder(root),primary=join(recorder.root,'journal.ndjson');
+  service.recorder=recorder;await recorder.initialize();
+  const open=fs.open;let failures=0;
+  const mocked=t.mock.method(fs,'open',async function(path,...args){
+    const handle=await open.call(fs,path,...args);
+    if(path===recorder.root&&args[0]==='r'&&!failures++)handle.sync=async()=>{throw Object.assign(Error('synthetic directory fsync I/O failure'),{code:'EIO'});};
+    return handle;
+  });
+  await assert.rejects(service.archiveSafe('h1_committed',{version:1},{simClockMs:123}),{code:'ARCHIVE_WRITE_FAILED'});
+  assert.equal((await readFile(primary)).length,0,'failed transaction rolled back the already-fsynced line');
+  assert.equal(service.getDocument().control.archiveFailed.pendings.length,1);mocked.mock.restore();
+  const restarted=new ReplayService(f.host);restarted.data=f.data;restarted.recorder=new Recorder(root);
+  await restarted.assertArchiveHealthy();
+  const bytes=await readFile(primary);assert.deepEqual(await readFile(join(recorder.mirror,'journal.ndjson')),bytes);
+  const rows=bytes.toString().trim().split('\n').map(JSON.parse);
+  assert.deepEqual(rows.map(r=>r.kind),['h1_committed']);assert.equal(rows[0].seq,1);assert.equal(rows[0].simClockMs,123);
+  await new Recorder(root).initialize();assert.equal(restarted.getDocument().control.archiveFailed,null);
 });

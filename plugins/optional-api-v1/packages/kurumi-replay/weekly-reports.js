@@ -119,9 +119,24 @@ export async function drainWeeklyQueue(host,service,options={},signal){
         if(transport==='agents')check(typeof options.collectFullAgentOutput==='function','Public complete final-output collector required','FULL_AGENT_OUTPUT_REQUIRED');
         const requestId=job.id+'_generation',request=transport==='inference'?{requestId,model,systemPrompt:instructions,input:weeklyGenerationInput(job),maxTokens:options.maxTokens??32768,timeoutMs:options.timeoutMs??900000}:{requestId,model,title:'模拟UTC投资周报',kind:'research',instructions,input:weeklyGenerationInput(job),tools:[],lane:`weekly:${job.input.opening.runId}`,queue:'fifo',maxTurns:12,maxToolCalls:32};
         check(Buffer.byteLength(JSON.stringify(request)) <= (transport==='agents'?40000:1024*1024), 'Complete fixed input exceeds model transport budget; partition explicitly before generation', 'RESOURCE_EXHAUSTED');
-        job=cas(host,job.id,job.revision,{status:'submitting',transport,request,requestId,generationTrigger:options.generationTrigger??{kind:'explicit_worker',automatic:false}});
+        job=cas(host,job.id,job.revision,{status:'request_archive_pending',transport,request,requestId,generationTrigger:options.generationTrigger??{kind:'explicit_worker',automatic:false}});
+      }
+      if(job.status==='request_archive_pending'){
+        const {request,requestId,transport}=job,model=request.model;
+        check(canonical(options.model)===canonical(model),'Retry must retain the frozen request model','MODEL_UNAVAILABLE');
+        if(options.transport!==undefined)check(options.transport===transport,'Retry must retain the frozen request transport','INVALID_ARGUMENT');
+        if(transport==='agents')check(typeof options.collectFullAgentOutput==='function','Public complete final-output collector required','FULL_AGENT_OUTPUT_REQUIRED');
+        let inputReceipt;
         try{
-          const inputReceipt=await service.archiveFileSafe(`weekly/${job.id}/request.json`,JSON.stringify(request));check(inputReceipt,'Generation request archive unavailable','ARCHIVE_UNAVAILABLE');signal?.throwIfAborted();
+          inputReceipt=await service.archiveFileSafe(`weekly/${job.id}/request.json`,JSON.stringify(request));check(inputReceipt,'Generation request archive unavailable','ARCHIVE_UNAVAILABLE');signal?.throwIfAborted();
+        }catch(e){
+          // No model call has been attempted. Keep the exact persisted request
+          // retryable, including across process restart or pre-submit abort.
+          job=cas(host,job.id,job.revision,{status:'request_archive_pending',error:{code:e.code??'ARCHIVE_FAILED',message:e.message}});
+          results.push({id:job.id,status:job.status});continue;
+        }
+        job=cas(host,job.id,job.revision,{status:'submitting',requestArchive:inputReceipt,error:null});
+        try{
           if(transport==='inference'){
             const output=await host.inference.complete(request,signal);check(output?.requestId===requestId&&typeof output.text==='string','Unknown/incomplete inference output','MODEL_OUTPUT_UNKNOWN');
             job=cas(host,job.id,job.revision,{status:'output_saved',output:copy(output),model:copy(model)});
