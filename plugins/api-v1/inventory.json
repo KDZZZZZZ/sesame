@@ -438,6 +438,64 @@
       "sourcePath": "plugins/optional-api-v1/packages/judgment-evolution"
     },
     {
+      "id": "sesame/kurumi-replay",
+      "version": "0.1.3-dev.3.8",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.2"
+      },
+      "format": "sesame-native",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors (internal Agent implementation)"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Kurumi replay",
+        "zh": "久留美连续模拟"
+      },
+      "summary": {
+        "en": "Unpublished acceptance snapshot for a bounded native replay with simulated accounts, scoped character decisions and chart annotations.",
+        "zh": "未发布验收快照：原生行情/模拟账户、受限角色决定与简洁双方标注的有界回放。"
+      },
+      "dependencies": {
+        "en": "Sesame 0.2.2+, configured OpenAI gpt-6.1-sol, historical bid/ask data and private Nautilus dependencies. Full fresh installation and weekly report acceptance remain pending; see VALIDATION.md. No real broker.",
+        "zh": "需 Sesame 0.2.2+、OpenAI gpt-6.1-sol、历史 bid/ask 与私有 Nautilus 依赖；完整新安装和周报仍待验，见 VALIDATION.md。不连接真实券商。"
+      },
+      "tools": [
+        "kurumi_prepare",
+        "kurumi_status",
+        "kurumi_configure",
+        "kurumi_start",
+        "kurumi_continue",
+        "kurumi_step",
+        "kurumi_pause",
+        "kurumi_reconcile",
+        "kurumi_display",
+        "kurumi_export",
+        "kurumi_report",
+        "kurumi_observe",
+        "kurumi_decide",
+        "kurumi_recover",
+        "kurumi_repair_checkpoint_text",
+        "kurumi_import_fx_supplement",
+        "kurumi_archive_terminal",
+        "kurumi_new_experiment",
+        "kurumi_experiment_history",
+        "kurumi_retry_committed_hooks",
+        "kurumi_bind_experiment_fx",
+        "kurumi_refresh_presentation",
+        "kurumi_weekly",
+        "kurumi_recording",
+        "kurumi_experience",
+        "kurumi_method_workflow",
+        "kurumi_narration",
+        "kurumi_audience"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/kurumi-replay"
+    },
+    {
       "id": "sesame/manual-trading",
       "version": "1.0.0",
       "distribution": "optional",

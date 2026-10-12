@@ -764,6 +764,599 @@
       ]
     },
     {
+      "id": "sesame/kurumi-replay",
+      "version": "0.1.3-dev.3.8",
+      "directory": "kurumi-replay",
+      "treeDigest": "sha256:92f25ff8da5222f9035a8a3e9824854f3bdc2a498506188f6d2fb294c549927a",
+      "files": [
+        {
+          "path": "COMMITTED-PROOF-FIX-HANDOFF.md",
+          "sha256": "24625171b0e5ce22f51b09f390b48316d5856d2bd8852da8fe95edaa2429c0b8",
+          "bytes": 1814
+        },
+        {
+          "path": "COMPACT-LABELS-HANDOFF.md",
+          "sha256": "605fe068436ee7cd8d2418efa1b10441d636c0af1c73d59fb3de2904d7d039c2",
+          "bytes": 2107
+        },
+        {
+          "path": "CORE-BOUNDED-HANDOFF.md",
+          "sha256": "94f8b22f0f1e2da68124932845fc106d0ff14fc3031d8b10de89fb9bb5429978",
+          "bytes": 3237
+        },
+        {
+          "path": "CORE-CLOCK-HANDOFF.md",
+          "sha256": "a7380d4658de8abe78c408e7dcb42ca84d6d14ce248f5802f3a864c443ac3e9d",
+          "bytes": 10443
+        },
+        {
+          "path": "CORE-FORMING-HANDOFF.md",
+          "sha256": "67aeaf09a201e81c3ff2022a495f00d08c218fed9f27daa1c6c18cbe177b2ae1",
+          "bytes": 2758
+        },
+        {
+          "path": "CORE-HANDOFF-INTEGRATION.md",
+          "sha256": "258147b79fd914620f9d96e554595fcbe62687a784a7871327293ba9772b7835",
+          "bytes": 1795
+        },
+        {
+          "path": "CORE-HANDOFF.md",
+          "sha256": "52dbfa6c3233ec344935cc2d5e7d4de81d9a3a31521b825f6bd786a2fa4afd5e",
+          "bytes": 3100
+        },
+        {
+          "path": "CORE-ORDER-CHAT-HANDOFF.md",
+          "sha256": "582a62ac1ba02ec02aecc91aca7fa01633351f6db5034599ab7085d8444648c2",
+          "bytes": 9463
+        },
+        {
+          "path": "DATA.md",
+          "sha256": "9c941d30c85514ebe82549a95c995683a10321119eadff4838784a8ab13776aa",
+          "bytes": 23572
+        },
+        {
+          "path": "FORMING-FIX-HANDOFF.md",
+          "sha256": "d66500c87acd9d6186538424d24185d41c8dc548ffc27c0328755f1477f0cb7d",
+          "bytes": 1101
+        },
+        {
+          "path": "LICENSE",
+          "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+          "bytes": 1076
+        },
+        {
+          "path": "PLOT-TIME-FIX-HANDOFF.md",
+          "sha256": "6895b2e29b1af44eb28d517f48de61b311f14ffdc48edcf2429eed6a16486106",
+          "bytes": 1548
+        },
+        {
+          "path": "PORTABLE-EXPERIENCE.md",
+          "sha256": "fb8379f99d6d321ce64148a0afb19c321866baf1e9e61f9cd1db851525fef5a9",
+          "bytes": 10763
+        },
+        {
+          "path": "PRESTEP-JSON-FIX-HANDOFF.md",
+          "sha256": "4e3f1be386edd247631314064f1d6333695cd90ac5bcefdf90171cd12645ab64",
+          "bytes": 1480
+        },
+        {
+          "path": "PROVENANCE.md",
+          "sha256": "ffc54ac120062f0985a8629523aab41d4f4f441568644e9b0a14cadc3bd2b858",
+          "bytes": 1954
+        },
+        {
+          "path": "README.md",
+          "sha256": "d7639586f66479dcf0b9e2635183c7493b37c2e5d0425f58111bb5e8d895c3da",
+          "bytes": 21688
+        },
+        {
+          "path": "ROUND2-CORE.md",
+          "sha256": "ec37ce46b84b18864205c6b56ba0c4b7f7ea898372d85662b4c6c0660c8b7558",
+          "bytes": 10010
+        },
+        {
+          "path": "ROUND2-NATIVE-EXPERIENCE.md",
+          "sha256": "2576819b4f298998817b9f43148ffef8954449193979ca7c2c32afd5f1b0a0b0",
+          "bytes": 20168
+        },
+        {
+          "path": "ROUND2-PRESENTATION.md",
+          "sha256": "1581d3a87d615d050f49f4ce89a4697aff09da2c70fc9446a44d9c429df4809d",
+          "bytes": 16652
+        },
+        {
+          "path": "RULES.md",
+          "sha256": "4fdf7d9bb26f381d7c3e7082920ec14c26af4d620b215f20efb7ee5808b3ddc1",
+          "bytes": 33309
+        },
+        {
+          "path": "UI-PUBLIC022-RECEIVER-HANDOFF.md",
+          "sha256": "1369b3f02c26c4a0024a99bb18b85166ecfd3d85cbdd53059b2eb55f3f72b0a8",
+          "bytes": 7712
+        },
+        {
+          "path": "UNSIGNED-REVISION-FIX-HANDOFF.md",
+          "sha256": "7bffb19f01c19ee34651eb54e825e81e46f8ded06dc591f97cc6867a17dd21af",
+          "bytes": 1692
+        },
+        {
+          "path": "VALIDATION.md",
+          "sha256": "dabad5cad6b78553840f94062df3a7089c285e3cbb0b9f8339547ffd5aa1330d",
+          "bytes": 10841
+        },
+        {
+          "path": "analysis-plan.js",
+          "sha256": "b6454dfc33fca8e526590f0ed0f0b7970547c3f1cea4216066bf5e4ef7a2d3c0",
+          "bytes": 10152
+        },
+        {
+          "path": "assets/editorial.css",
+          "sha256": "b721786c083704044382f5950c5825f4e5e18c451d18f8bdae01168a68b33b24",
+          "bytes": 30653
+        },
+        {
+          "path": "assets/report-kit.js",
+          "sha256": "2e6fe859d25270c2cdd16d2ada799d18ce389be2c4a9127fa070490c11d35769",
+          "bytes": 45095
+        },
+        {
+          "path": "checkpoint-text-repair.js",
+          "sha256": "dbbc7b8cfb06207d3ab614cfde1901ae91611ea215934b9b62065b7aba6b55d5",
+          "bytes": 5043
+        },
+        {
+          "path": "committed-playback.js",
+          "sha256": "b67fd3d74b1b65bf0cfaa7ae25616777b126abe99ca658080f9f38c7e69900ed",
+          "bytes": 5044
+        },
+        {
+          "path": "data-windows.json",
+          "sha256": "84e5911bdd12bd5b7ee53567b9a6a34d3502c3235e75ea94a65aa3f71b8b78d5",
+          "bytes": 16496
+        },
+        {
+          "path": "data.js",
+          "sha256": "c7676429cfc8bfc51b8faf99b24d9f2779f1ff48c5d6176cd20e62ae104f99bd",
+          "bytes": 28778
+        },
+        {
+          "path": "engine.js",
+          "sha256": "0b286ae42c140bc455b5c0736e3379b393ea5329166b710bfc9b43a993094a3b",
+          "bytes": 22089
+        },
+        {
+          "path": "experience-plan.js",
+          "sha256": "24b5ac7b37beb2abc2d1bb27ee6faef98d6c727989a1b87aa37d645c0addd1e6",
+          "bytes": 4030
+        },
+        {
+          "path": "experiment-fx.js",
+          "sha256": "f0b388b867205f26e9197f0458c4a27fa93615f529d162c7ab0501804052d52d",
+          "bytes": 6700
+        },
+        {
+          "path": "experiment-lifecycle.js",
+          "sha256": "81bb24c6eb447e4e277ae3cbc67bbafddbb8af279940f76263f210653975ab9a",
+          "bytes": 17784
+        },
+        {
+          "path": "experiment-profiles.js",
+          "sha256": "40ee72cef00ba70e80ddd11ec78bb18cb0a1966d52ddb62510eb4809bf6d50e0",
+          "bytes": 2921
+        },
+        {
+          "path": "fx-supplement.js",
+          "sha256": "f9097104cba81637938fbf865114cebfc6a3440cd18c759033f40b9d00de4e8f",
+          "bytes": 7403
+        },
+        {
+          "path": "index.js",
+          "sha256": "677707b341ec39e6dafd05bb95ac53fe7c46f68077407ffdb35758114f39847d",
+          "bytes": 9937
+        },
+        {
+          "path": "ledger.js",
+          "sha256": "e318d8f49b3751a84d71a3c019941b25579bdee93c4d6e4d2cb8a2e18e21def3",
+          "bytes": 1988
+        },
+        {
+          "path": "main-audience-driver.js",
+          "sha256": "f077bc7d1f74b96834a8f7e06680e49c08c0c64de9aae0aa244ec05e1c70830e",
+          "bytes": 7784
+        },
+        {
+          "path": "main-chat-workflow.js",
+          "sha256": "ef765eeee2ab3fa0f84e5a97ea5c237fa47aa20f00a9a6015eed4502799e62a7",
+          "bytes": 9808
+        },
+        {
+          "path": "main-message-text.js",
+          "sha256": "755d016acc70ff5f26ec5e6d0aae3710704dca31cb8c1e884173adbbdb4843ad",
+          "bytes": 2917
+        },
+        {
+          "path": "markers.js",
+          "sha256": "db8e3f60cec815b3024e82367c7dd677fefdc5c81da34d48ffab115c3bcd2a9f",
+          "bytes": 31906
+        },
+        {
+          "path": "method-workflow.js",
+          "sha256": "5e286f8fc60702e8ff76403760c23f558a9214b87d0f3c348690dd88188d5abe",
+          "bytes": 4838
+        },
+        {
+          "path": "narration-queue.js",
+          "sha256": "ad0ec0b480ddfbc7c6d1dd80923f356dc5727c068fe282c9216d58979d10cf49",
+          "bytes": 3661
+        },
+        {
+          "path": "native-dependencies.json",
+          "sha256": "1497c11b6874b3b08b9380792c833a8cb1bbc0adf0957c586b42a445a813195c",
+          "bytes": 69521
+        },
+        {
+          "path": "native-engine.js",
+          "sha256": "87dfcad0ff4de10b0f0488986511f19d579ba207976b10f02fea996aa74a801d",
+          "bytes": 31551
+        },
+        {
+          "path": "native-engine.py",
+          "sha256": "c933298183628d0645cfe7f8104a96d542d535d88c482a882e335d1ae70f8c71",
+          "bytes": 36037
+        },
+        {
+          "path": "native-order-abi.js",
+          "sha256": "ab348800494a868f3a5b2e2771b996fc186c88065099b68ce23ecc0497627344",
+          "bytes": 3103
+        },
+        {
+          "path": "package.json",
+          "sha256": "4a408d7ed10d3700db58c22342233f4e5d7bdb494811e88aef06aeb84fb841d7",
+          "bytes": 331
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "6781681704a506b8d624cee45b4b8fe08bd420e4ef65ff2ae1fd449fac5b09ac",
+          "bytes": 2848
+        },
+        {
+          "path": "presentation-receipts.js",
+          "sha256": "a46c6cd96abfd3d48743510f4ece0187e438f51440e93ac25c5240d099130646",
+          "bytes": 3333
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "5d9cc023091c9fb6145fe858cddb6597d94f8ff27c68fb58e14c96633586f580",
+          "bytes": 523
+        },
+        {
+          "path": "providers.js",
+          "sha256": "18df90a12d63c05e97906fe3b35c84d5fe29627f80cc56028415b01c3c33b2a2",
+          "bytes": 51971
+        },
+        {
+          "path": "recording-selection.js",
+          "sha256": "0294c3fe5ea8d3abc04d08539729a87223d9b059f8b25935a07320b484989c93",
+          "bytes": 3821
+        },
+        {
+          "path": "recording.js",
+          "sha256": "6e8594bf843a22f90f419d4828a058dcef563ec4d7825024b8e1cf24a3a484b2",
+          "bytes": 22410
+        },
+        {
+          "path": "replay-presentation.js",
+          "sha256": "6581927191713553f88147b0686bc5283d7de9cbf02a2e02ea87fe5a12e4f451",
+          "bytes": 50915
+        },
+        {
+          "path": "report-provenance.js",
+          "sha256": "07036599ed8b6f079cb4eac99c1f2f02d284c38607707f8389bd26d1b14473f9",
+          "bytes": 2310
+        },
+        {
+          "path": "report.js",
+          "sha256": "93c7d86ed145847efa235a18ed77cbf8537655b2556256fc0356c77f8d1eaa94",
+          "bytes": 24082
+        },
+        {
+          "path": "reveal-cutoff.js",
+          "sha256": "e7b72eb5ff872e91d6253da566285034552099a85a5ed6b83f18780023be9c20",
+          "bytes": 573
+        },
+        {
+          "path": "runtime-adapter.js",
+          "sha256": "e86c6bc70de036eefb7c17fefbced583bf42e492331ee81726c6fbd94334cd6c",
+          "bytes": 10033
+        },
+        {
+          "path": "scripts/check-market-transport.mjs",
+          "sha256": "db9861ba991cbe578c88a9c80b8bdf1898b7232aa9e62feeedf066e14dca764b",
+          "bytes": 4405
+        },
+        {
+          "path": "scripts/data-cache.mjs",
+          "sha256": "456c541d258c000f7ea5391f31892a2d400943784fd45f81ef6a80808043f0bc",
+          "bytes": 6257
+        },
+        {
+          "path": "scripts/data-core.mjs",
+          "sha256": "0cb8ae51618d510fa9f0c32cc73a342c86e12360888e22476018bddca4019f72",
+          "bytes": 18423
+        },
+        {
+          "path": "scripts/data-detail.mjs",
+          "sha256": "1562400326148f3b24663612b3ea64da1286cd0b1b7e68884a56a3ab31c8a7bf",
+          "bytes": 17466
+        },
+        {
+          "path": "scripts/data-inspect.mjs",
+          "sha256": "70489bea7ce6bb13e696d15095a6fd15ec139d1bb008911227f88854136ce64f",
+          "bytes": 3948
+        },
+        {
+          "path": "scripts/data-install.mjs",
+          "sha256": "892bfda65f9ce280405d501bd224b3649cdddef99858afc1deaf479afca884a5",
+          "bytes": 8366
+        },
+        {
+          "path": "scripts/data-worker.mjs",
+          "sha256": "34f4542b594aacf815427b3dfb4c3b5ca61a723871001321330b69044865ba56",
+          "bytes": 7174
+        },
+        {
+          "path": "scripts/test-source.mjs",
+          "sha256": "685c4e35fd0875df891ad20e134849afe68dbdd0908f23fc817e98ec92606950",
+          "bytes": 1796
+        },
+        {
+          "path": "scripts/verify-network.mjs",
+          "sha256": "0757debff81ee7ac28801df77db580c2f2bc87138ff4bfc771221c4131a5ff03",
+          "bytes": 3298
+        },
+        {
+          "path": "service.js",
+          "sha256": "f386960deacc943d1bfaf87a06f73982e1aa36e78143b93b3e5d73bf5fac595d",
+          "bytes": 97291
+        },
+        {
+          "path": "skills/kurumi-replay/SKILL.md",
+          "sha256": "94331970d98acedceff9f4038843c6a14a247dd73dc9002499646312d3e5f72d",
+          "bytes": 16415
+        },
+        {
+          "path": "tests/archive-pending-protection.test.mjs",
+          "sha256": "a801751ae9bf0f08a0dca80678a27766c431ee0e89bf5b80a94bbd3cbf561868",
+          "bytes": 11481
+        },
+        {
+          "path": "tests/cadence-recording.test.mjs",
+          "sha256": "3a547549030aeffd05e3940c6cea64c1f887fafa27903170a7ad858bdadcc2fa",
+          "bytes": 8720
+        },
+        {
+          "path": "tests/checkpoint-text-repair.test.mjs",
+          "sha256": "2187aee4d188cfc63b10f42c2ae9689d00ce74811802f42f9f1fd52b8b937102",
+          "bytes": 7631
+        },
+        {
+          "path": "tests/committed-playback.test.mjs",
+          "sha256": "4119d57cc3bba179f5862df1ecbb68b14284a898963311d383351f087635bad4",
+          "bytes": 10200
+        },
+        {
+          "path": "tests/committed-source-proof-contract.test.mjs",
+          "sha256": "05f20fbdedc366cf122646aaebeaa8a89533cc86f228b9d43df4267dc7a671f6",
+          "bytes": 1771
+        },
+        {
+          "path": "tests/compact-label-contract.test.mjs",
+          "sha256": "da216761f1dd5ea2a63e6444e2ea355320d6feae085db3c2a637c37e1e32608a",
+          "bytes": 5288
+        },
+        {
+          "path": "tests/core-clock-workflow.test.mjs",
+          "sha256": "71709430403f1a190071d384d56d0c643ba4eee152d4c908097ee17b2eb4a30b",
+          "bytes": 12789
+        },
+        {
+          "path": "tests/core-lifecycle-roundtrip.test.mjs",
+          "sha256": "f25e63979dc274de43ed0c64b39b01df236fd275b5224bf7d4bc397a451d2770",
+          "bytes": 5487
+        },
+        {
+          "path": "tests/data.test.mjs",
+          "sha256": "65b4363c6852d466a81079affbe741e987358163dc498246cf3561a07636fe4e",
+          "bytes": 39607
+        },
+        {
+          "path": "tests/display-host.test.mjs",
+          "sha256": "7085d63e37f2af96017d5c620acf0c663a1e0e5c183904cb77492ccb2f8d97c3",
+          "bytes": 4667
+        },
+        {
+          "path": "tests/display.test.mjs",
+          "sha256": "e1c44ba985d1ce75048106ae22090a41b49f0af6b0902cc2a4203b09686130c3",
+          "bytes": 5328
+        },
+        {
+          "path": "tests/engine.test.mjs",
+          "sha256": "3762b28f8d8a773b5546b390023dd1435cd3e6d5164aca353cb45a7b870c1b9e",
+          "bytes": 19746
+        },
+        {
+          "path": "tests/experiment-fx.test.mjs",
+          "sha256": "6a3c033e4c9f72984d3aec03ccb384682a779293e9bbede36eedc9eeedb99047",
+          "bytes": 7126
+        },
+        {
+          "path": "tests/experiment-hooks.test.mjs",
+          "sha256": "61d1acdc9bdf0aa338231fb8d42c93fe38890e053385116ed66863aa27278f9f",
+          "bytes": 10647
+        },
+        {
+          "path": "tests/experiment-lifecycle.test.mjs",
+          "sha256": "bd1bdf7ad44b4da87c343580941f3cbc069f98aad5e12ff5c06eb3781ec499ee",
+          "bytes": 10319
+        },
+        {
+          "path": "tests/fixed-data-forming-contract.test.mjs",
+          "sha256": "4d04a8de6c76ca42106a673ec35d7a3ed965c2785074253ca4a957aca2b9dd89",
+          "bytes": 3573
+        },
+        {
+          "path": "tests/fixtures/markers-browser.jsx",
+          "sha256": "fc621ba8d03324fc60c15fd9c1755dbe86a25106c2d5b1eae138876b890674f3",
+          "bytes": 3742
+        },
+        {
+          "path": "tests/fx-supplement.test.mjs",
+          "sha256": "654952281f4d5bcf01ff484d353555382cdde3f6d869eccccb4ad51ac6ca5890",
+          "bytes": 5759
+        },
+        {
+          "path": "tests/main-chat-workflow.test.mjs",
+          "sha256": "adb9fa3b5eba63749a2b20dbfd8e0342e1e52b6addc5e4a1b3a546d5582b775c",
+          "bytes": 13622
+        },
+        {
+          "path": "tests/markers.test.mjs",
+          "sha256": "0e98c9c71b9ddc6e2bf7cb20627ecee0e3b7edc56711ed89539122b36bae0a58",
+          "bytes": 33811
+        },
+        {
+          "path": "tests/native-engine.test.mjs",
+          "sha256": "9aa092be97752f3f3de30ce85c3f22a0f73fda57454a8086e51d205b5fc4bc85",
+          "bytes": 26665
+        },
+        {
+          "path": "tests/native-order-abi.test.mjs",
+          "sha256": "b52910fdea0d7a1a7ea469fbb363773be60ec49f5ccfdf590f0b36db42edc334",
+          "bytes": 2804
+        },
+        {
+          "path": "tests/persistence-host.test.mjs",
+          "sha256": "78e4b7cf79a72eea40b81d12a56080167602bc254d0865682ec553b77b614fb1",
+          "bytes": 4363
+        },
+        {
+          "path": "tests/plot-time-contract.test.mjs",
+          "sha256": "7d18ebace2a60d00981221895aa18e8f4173d88ef638561fd5f580d27a3a961c",
+          "bytes": 3400
+        },
+        {
+          "path": "tests/plugin.test.mjs",
+          "sha256": "4d202d5466b6ea6bc4222652b37426de590fc6c42c00678fe393a2c665e339c2",
+          "bytes": 3029
+        },
+        {
+          "path": "tests/portable-experience.test.mjs",
+          "sha256": "461896580896867b664be905d9ce79b0df9f2641e1f51b485a45f9c207576d17",
+          "bytes": 12998
+        },
+        {
+          "path": "tests/prestep-json-contract.test.mjs",
+          "sha256": "659adf1ab12e9111c96fbd2f3f528e7fe7496b8b4bb13552059f6a296013bd79",
+          "bytes": 3758
+        },
+        {
+          "path": "tests/profile-native50.test.mjs",
+          "sha256": "b4e1e32217729ab42e59559d16bb854e387245eeba66f488f69cc8ce04e52e0d",
+          "bytes": 8299
+        },
+        {
+          "path": "tests/profile-realcopy50.test.mjs",
+          "sha256": "5c5f09c66222a519e139f8c4e6f241a735c72af23d6d5acdfa4574f28ce08cca",
+          "bytes": 3838
+        },
+        {
+          "path": "tests/providers.test.mjs",
+          "sha256": "235b455b601f96f95587da0e069d8e15db17d0cfdc53f94cba2a5547fc3b4202",
+          "bytes": 25108
+        },
+        {
+          "path": "tests/recording.test.mjs",
+          "sha256": "f6e1d9bcfe0d1d3e878d18c3ecce7a0ac8f2c0bb9e4d7a868fa896203588357f",
+          "bytes": 8507
+        },
+        {
+          "path": "tests/recovery-store-host.test.mjs",
+          "sha256": "0234b30b33aa949ee03d83f1c0b3a8944a084d079e31199a65d75308c0ac31a0",
+          "bytes": 10574
+        },
+        {
+          "path": "tests/report-rendering.test.mjs",
+          "sha256": "bc56bc7411b35e4dcdc9d3880597acbb2880a7611f2ae6199a3b8da0ffcddd92",
+          "bytes": 4004
+        },
+        {
+          "path": "tests/round2-presentation-fixtures.test.mjs",
+          "sha256": "14a780221ca3cacf6114b97839aed7614e2876c808ffd2b1f874cd836281c215",
+          "bytes": 5209
+        },
+        {
+          "path": "tests/round2-presentation-native-account.test.mjs",
+          "sha256": "775ede891cdd1d3ea4a3b5bf336119ad1d95c4e57879ecf2a5e6b491c2b6598d",
+          "bytes": 12589
+        },
+        {
+          "path": "tests/round2-presentation-pk.test.mjs",
+          "sha256": "52dff128c6a1cba730ec4f5ce8798d25a7ad2d72627d27f1d9f3e4c9e8fe450f",
+          "bytes": 7231
+        },
+        {
+          "path": "tests/round2-presentation.test.mjs",
+          "sha256": "6b876c70cff092ea35bc317b65e190c0fe8c31a7370bbe5d1c0c751c9c0fa46d",
+          "bytes": 25518
+        },
+        {
+          "path": "tests/runtime-adapter-host.test.mjs",
+          "sha256": "ee553aee85a901c622217cb945fc949f330e9ce8f505972ad47cfcf5e68c909c",
+          "bytes": 4680
+        },
+        {
+          "path": "tests/service.test.mjs",
+          "sha256": "7d3a7867a3b165d12a4c6e7f05371cc4bf34a653a60912d0129ac3de9a92542a",
+          "bytes": 21426
+        },
+        {
+          "path": "tests/ui-receiver-public022.test.mjs",
+          "sha256": "9efb83dc5c2f4bc49d1e32942dee20a79a0f4b220d96536abd3d61e2af7fd6b4",
+          "bytes": 17759
+        },
+        {
+          "path": "tests/unsigned-revision-contract.test.mjs",
+          "sha256": "7769563ab377c534b47ea6b8fed3913e28a6b123e0dbdbd0082617a00b0dbc82",
+          "bytes": 2967
+        },
+        {
+          "path": "tests/weekly-reports.test.mjs",
+          "sha256": "d81276f539882338bbf4ee4ef5f72671bec16a73777763657bd0536c7626274e",
+          "bytes": 29002
+        },
+        {
+          "path": "tools.json",
+          "sha256": "4d9479f0789c85ef79e2f5944186cfae16705e5597ea7c0e4de8cb1bd5b05354",
+          "bytes": 25822
+        },
+        {
+          "path": "utc-before-step.js",
+          "sha256": "39cd74b3cb96724ec9e76594240929b97b1604f12e255dd10beaa538e9d6a6e1",
+          "bytes": 8300
+        },
+        {
+          "path": "warmup-h1.js",
+          "sha256": "a0890b62d8ac9bfe7371397eff411430e343fbcf2839b3063f2c956b19c10d47",
+          "bytes": 5857
+        },
+        {
+          "path": "weekly-reports.js",
+          "sha256": "6f0b7b937448af0fa914bb39cdc8f354593b56da20725fe5e0372f3471d60c21",
+          "bytes": 34180
+        }
+      ]
+    },
+    {
       "id": "sesame/manual-trading",
       "version": "1.0.0",
       "directory": "manual-trading",
