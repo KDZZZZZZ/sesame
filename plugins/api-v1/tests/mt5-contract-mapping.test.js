@@ -102,3 +102,12 @@ test('non-trading native deals become signed ledger entries without guessing fil
   const mapped=mapOrder(row,context);assert.equal(mapped.updatedAt.value,'2026-10-10T03:28:01');assert.equal(mapped.createdAt.value,'2026-10-10T03:27:00');
   assert.equal(mapOrder({...row,time_done:'2026-10-10T03:28:02'},context).updatedAt.value,'2026-10-10T03:28:02');
  });
+ test('dotted native timestamps from the terminal MCP are normalized before wall-time parsing',()=>{
+  const wall=sourceTime('2026.10.12 15:45:00','Broker-Demo');
+  assert.equal(wall.basis,'wall');assert.equal(wall.value,'2026-10-12T15:45:00');assert.equal(wall.authority,'Broker-Demo');
+  const bar=mapBar({time:'2026.10.12 15:45:00',open:'1.1',high:'1.2',low:'1.0',close:'1.15',tick_volume:4},{...barContext,revisions:new Revisions()});
+  assert.equal(bar.openTime.value,'2026-10-12T15:45:00');assert.equal(bar.endTime.value,'2026-10-12T15:46:00.000');
+  assert.equal(sourceTime('2024.02.29 00:00:00','Broker-Demo').value,'2024-02-29T00:00:00');
+  assert.throws(()=>sourceTime('2026.02.30 15:45:00','Broker-Demo'),{code:'INVALID_NATIVE_DATA'});
+  assert.throws(()=>sourceTime('2026.10.12 15:45','Broker-Demo'),{code:'INVALID_NATIVE_DATA'});
+ });
