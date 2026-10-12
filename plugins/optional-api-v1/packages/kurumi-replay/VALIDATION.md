@@ -17,8 +17,9 @@
 URL 表达方式及尾部空白以兼容现有静态导入检查器。金融、撮合、服务和数据准备
 实现保持该验收版本；没有把隔离候选的行为修复提前推广。
 
-PR 审阅另修正三处源码问题：宿主指标 schema 测试改为显式环境变量 opt-in；
-报告初始化支持尚未选模型的空实验；周报输入冻结来源分类，并发布已消费来源证据的
+PR 审阅另修正报告/测试问题：宿主指标 schema 测试改为显式环境变量 opt-in；
+报告初始化支持尚未选模型的空实验；主报告沿用导出时冻结的来源分类，内外层元数据一致；
+周报输入冻结来源分类，并发布已消费来源证据的
 resource → data → output/report 依赖链。真实历史衍生资料标为 `derived`，
 demo 输入继续标为 `demo`，不复制未揭示来源/剧情元数据；后续可变状态不能改分类。
 缺少冻结分类的旧周报待办会明确报 `PROVENANCE_REQUIRED` 并在生成前停止，
@@ -99,7 +100,7 @@ README、RULES 和各 HANDOFF 中按开发阶段记载的通过数量、待安�
   只读检查通过。发布计划与安装 catalog 未改。
 - 仓库 lock/release/semantic-review/catalog 边界测试 20/20 通过。
 - `npm run test:source --prefix plugins/optional-api-v1/packages/kurumi-replay`：
-  31 个选定文件，257 通过、0 失败、19 个实际 SDK/数据/前端 opt-in 跳过。
+  31 个选定文件，259 通过、0 失败、19 个实际 SDK/数据/前端 opt-in 跳过。
   该入口明确打印排除的文件，不替代未过滤的 `npm test`。
 - 宿主指标 schema 用 `KURUMI_INDICATOR_TOOL_SCHEMA` 显式指定公开
   `canvas-control/tools.json` 时，定向契约检查 1/1 通过；未设置时跳过，

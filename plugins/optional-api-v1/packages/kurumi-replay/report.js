@@ -52,13 +52,13 @@ export async function exportReplay(host,service,operationId,signal) {
  await service.archiveFileSafe(`exports/export-${operationId}-rows.json`,JSON.stringify(rows));
  await service.archiveFileSafe(`exports/export-${operationId}-checkpoint.json`,JSON.stringify({provenance:service.getData().provenance,digests:service.getData().digests,checkpoint}));
  await service.archiveSafe('export_replay',{operationId,data,source,rowCount:rows.length,note:'已揭示行情/账户/账本/角色证据固定导出归档'});
- return {data,source,rowCount:rows.length,runId:state.id,engineVersion:state.version,asOf:service.observe().asOf,note:'固定已揭示数据与原生成交/角色证据；主Agent可直接复用现有reports插件解说，未复制未来行情数组。'};
+ return {data,source,provenanceKind:origin.kind,rowCount:rows.length,runId:state.id,engineVersion:state.version,asOf:service.observe().asOf,note:'固定已揭示数据与原生成交/角色证据；主Agent可直接复用现有reports插件解说，未复制未来行情数组。'};
 }
 export async function publishReport(host,service,operationId,signal) {
  const frozen=await exportReplay(host,service,operationId,signal),{data,source}=frozen,state=service.getState();
- const provenanceKind=service.getData().provenance?.kind==='demo'?'demo':'derived';
+ const provenance={kind:frozen.provenanceKind,references:[data,source]};
  const htmlText=reportHTML(),html=host.artifacts.blob(htmlText),title='久留美 · 三章连续挑战',summary=state.status==='complete'?(state.outcome==='victory'?'空仓结算达成目标。':'三章结算未达成目标。'):'真实角色模拟挑战进行中；当前尚不能判定胜利。';
- const ref=await host.artifacts.publish({operationId,manifest:{kind:'report',schemaVersion:'1.0.0',content:{schemaVersion:'1.0.0',title,summary,entry:'index.html',runtime:'sesame-report/1',runtimeRevision:'1.0.0',data:[{id:'replay',ref:data,usage:'已揭示行情、精确模拟成交/费用/权益、角色提交与模型任务证据'}],related:[{role:'source',artifact:source}],features:['interactive','trade_details'],locale:'zh-CN',provenance:{kind:provenanceKind,references:[data,source]}},dependencies:[data,source],blobs:[{...html,path:'index.html',mediaType:'text/html'}],provenance:{kind:'derived',references:[data,source]}}});
+ const ref=await host.artifacts.publish({operationId,manifest:{kind:'report',schemaVersion:'1.0.0',content:{schemaVersion:'1.0.0',title,summary,entry:'index.html',runtime:'sesame-report/1',runtimeRevision:'1.0.0',data:[{id:'replay',ref:data,usage:'已揭示行情、精确模拟成交/费用/权益、角色提交与模型任务证据'}],related:[{role:'source',artifact:source}],features:['interactive','trade_details'],locale:'zh-CN',provenance},dependencies:provenance.references,blobs:[{...html,path:'index.html',mediaType:'text/html'}],provenance}});
  const receipt=await host.artifacts.inspect(ref,signal);
  await service.archiveFileSafe(`reports/report-${operationId}.html`,htmlText);
  await service.archiveSafe('report_published',{operationId,ref,receipt,data,source,note:'每版报告HTML/CSS/data与渲染回执归档'});
