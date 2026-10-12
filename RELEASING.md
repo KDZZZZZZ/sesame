@@ -18,6 +18,7 @@ builds, but the plugin publisher cannot create or publish new ones.
    through the owner's work-branch → `dev` PR. Record the canonical repository,
    application tag, numeric draft Release ID, and each asset's exact filename,
    byte size and SHA-256. Review the build evidence alongside this change.
+   Update the active README download links and installation guide to that version.
    Do not replace the historical 0.2.1 record in `RELEASE-ASSETS.json`.
 4. Open `dev` → `main`. Check the full diff, tests, asset identities and actual
    validation evidence; resolve discussions. Only the owner merges.

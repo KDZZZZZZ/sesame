@@ -13,6 +13,8 @@ jobs:
   catalog-static-review:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    env:
+      CATALOG_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
     steps:
       - name: Check out trusted validator
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -28,10 +30,18 @@ jobs:
           path: candidate
           fetch-depth: 0
           persist-credentials: false
+      - name: Fetch the exact catalog baseline from the canonical repository
+        shell: bash
+        run: |
+          if [[ -z "$CATALOG_BASE_SHA" || "$CATALOG_BASE_SHA" == "0000000000000000000000000000000000000000" ]]; then
+            exit 0
+          fi
+          [[ "$CATALOG_BASE_SHA" =~ ^[a-f0-9]{40}$ ]] || { echo 'Invalid catalog baseline SHA' >&2; exit 1; }
+          git -C candidate -c core.hooksPath=/dev/null fetch --no-tags --no-recurse-submodules --no-write-fetch-head https://github.com/KDZZZZZZ/sesame.git "$CATALOG_BASE_SHA"
+          git -C candidate cat-file -e "${CATALOG_BASE_SHA}^{commit}"
       - name: Validate immutable sources, manifests, hashes and review records
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          CATALOG_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: node trusted/.github/scripts/validate-catalog.mjs candidate
       - name: Run trusted validator regression checks
         env:
