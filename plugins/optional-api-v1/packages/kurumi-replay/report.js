@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 const assert=(ok,message,code='INVALID_ARGUMENT')=>{if(!ok)throw Object.assign(new Error(message),{code});};
 const read = p => readFileSync(new URL(p,import.meta.url),'utf8');
 import { auditLedger } from './ledger.js';
+import { weeklyProvenanceKind } from './report-provenance.js';
 export { auditLedger } from './ledger.js';
 export function reportRows(service) {
   const state=service.getState(),data=service.getData(),doc=service.getDocument();assert(state&&data,'尚无可报告的已揭示挑战');
@@ -23,7 +24,7 @@ export function reportHTML() {
  async function initialize(){
  const rows=await reportKit.rows('replay'),s=rows.find(r=>r.type==='summary'),of=type=>rows.filter(r=>r.type===type),chapters=of('chapter'),source=of('source')[0];
  const complete=s.status==='complete';
- reportKit.render('#report',{title:'久留美 · 三章连续挑战',eyebrow:'Research · 非官方二创 · 模拟账户',subtitle:'真实历史行情、真实角色 Agent；不是漫画逐笔记录，也不是券商成交',meta:[{label:'已揭示至',value:s.asOf},{label:'模型',value:s.model.provider+'/'+s.model.id}],
+ reportKit.render('#report',{title:'久留美 · 三章连续挑战',eyebrow:'Research · 非官方二创 · 模拟账户',subtitle:'真实历史行情、真实角色 Agent；不是漫画逐笔记录，也不是券商成交',meta:[{label:'已揭示至',value:s.asOf},{label:'模型',value:s.model?s.model.provider+'/'+s.model.id:'尚未选择模型'}],
  verdict:{tone:s.outcome==='victory'?'positive':'caution',headline:complete?(s.outcome==='victory'?'空仓结算达成目标。':'三章结算尚未达成目标。'):'挑战仍在进行，当前不能判定胜利。',detail:'当前仅为小步功能验收，不能评价交易能力；资金不补款，历史可成交深度未重建。'},
  metrics:[{label:'已结算余额',value:s.balance,unit:'JPY'},{label:'当前可结算估值',value:s.markedEquity,unit:'JPY'},{label:'胜利目标',value:s.goalJPY,unit:'JPY'},{label:'最大观测回撤',value:s.maxDrawdownPct,unit:'%'},{label:'角色决定',value:s.decisionCount},{label:'成交笔数',value:s.fillCount}],
  sections:[{title:'三个副本，一条资金线',takeaway:'每章结束空仓结算，下一章只继承实际余额。',blocks:[{type:'table',columns:[{key:'chapter',label:'章'},{key:'symbol',label:'品种'},{key:'status',label:'状态'},{key:'startBalance',label:'起始余额 JPY'},{key:'endBalance',label:'结算余额 JPY'},{key:'revealedCount',label:'已揭示H1'}],rows:chapters},{type:'findings',items:[{claim:'禁止外部补款；跳过的月份不产生收益。',evidence:[{label:'初始资金',value:s.initialJPY,unit:'JPY'},{label:'外部入金',value:s.externalFunding,unit:'JPY'},{label:'目标资产倍数',value:s.targetFactor,unit:'倍'}]}]}]},
@@ -89,8 +90,9 @@ export async function publishWeeklyReport(host,service,job,signal){
  signal?.throwIfAborted();assert(job.inputRef&&job.output!==null,'周报必须已有固定DataRef与完整输出');
  const fullOutputRefs=job.output.artifactRefs??[];
  assert(fullOutputRefs.every(r=>r.id&&typeof r.revision==='string'&&/^sha256:[a-f0-9]{64}$/.test(r.digest??'')&&r.kind&&r.schemaVersion==='1.0.0'),'完整Agent输出引用必须固定','SOURCE_DATA_INVALID');
+ const provenanceKind=weeklyProvenanceKind(job.input),outputProvenance={kind:provenanceKind,references:[job.inputRef,...fullOutputRefs]};
  const outputRows=[{type:'agent-output',...job.output}],blob=await host.artifacts.blob(JSON.stringify(outputRows));
- const outputRef=await host.artifacts.publish({operationId:job.id+'_output',manifest:{kind:'data',schemaVersion:'1.0.0',content:{format:'json-rows',path:'output.json',rowCount:1,columns:Object.keys(outputRows[0]),provenance:{kind:'derived',references:[job.inputRef]}},dependencies:[job.inputRef,...fullOutputRefs],blobs:[{...blob,path:'output.json',mediaType:'application/json'}],provenance:{kind:'derived',references:[job.inputRef]}}});
+ const outputRef=await host.artifacts.publish({operationId:job.id+'_output',manifest:{kind:'data',schemaVersion:'1.0.0',content:{format:'json-rows',path:'output.json',rowCount:1,columns:Object.keys(outputRows[0]),provenance:outputProvenance},dependencies:outputProvenance.references,blobs:[{...blob,path:'output.json',mediaType:'application/json'}],provenance:outputProvenance}});
  // Optional Agent-authored presentation is frozen in the job before publish.
  // It may freely change outline/charts/HTML. The mandatory finance/raw evidence
  // bindings remain fixed; future frontend acceptance verifies their visibility.
@@ -103,7 +105,8 @@ export async function publishWeeklyReport(host,service,job,signal){
    const archived=await service.archiveFileSafe(`weekly/${job.id}/assets/${asset.path}`,asset.content);assert(archived,'Agent完整自定义资源归档不可用','ARCHIVE_UNAVAILABLE');
  }
  assert(assets.reduce((n,b)=>n+b.size,html.size)<=16*1024*1024,'完整周报资源预算超限，不截断','RESOURCE_EXHAUSTED');
- const ref=await host.artifacts.publish({operationId:job.id+'_report',manifest:{kind:'report',schemaVersion:'1.0.0',content:{schemaVersion:'1.0.0',title:'模拟UTC投资周报'+(partial?' · 部分周':''),summary:'固定截止财务对账与完整模型观点；同历史知情重放，非样本外。',entry:'index.html',runtime:'sesame-report/1',runtimeRevision:'1.0.0',data:[{id:'weekly',ref:job.inputRef,usage:'精确截止财务、已消费市场、真实订单/成交与方法版本'},{id:'agent-output',ref:outputRef,usage:'完整Agent输出及真实模型描述符'}],related:[{role:'source',artifact:job.inputRef}],features:['interactive','trade_details'],locale:'zh-CN',provenance:{kind:'demo',references:[job.inputRef,outputRef]}},dependencies:[job.inputRef,outputRef,...fullOutputRefs],blobs:[{...html,path:'index.html',mediaType:'text/html'},...assets],provenance:{kind:'demo',references:[job.inputRef,outputRef]}}});
+ const provenance={kind:provenanceKind,references:[job.inputRef,outputRef,...fullOutputRefs]};
+ const ref=await host.artifacts.publish({operationId:job.id+'_report',manifest:{kind:'report',schemaVersion:'1.0.0',content:{schemaVersion:'1.0.0',title:'模拟UTC投资周报'+(partial?' · 部分周':''),summary:'固定截止财务对账与完整模型观点；同历史知情重放，非样本外。',entry:'index.html',runtime:'sesame-report/1',runtimeRevision:'1.0.0',data:[{id:'weekly',ref:job.inputRef,usage:'精确截止财务、已消费市场、真实订单/成交与方法版本'},{id:'agent-output',ref:outputRef,usage:'完整Agent输出及真实模型描述符'}],related:[{role:'source',artifact:job.inputRef}],features:['interactive','trade_details'],locale:'zh-CN',provenance},dependencies:provenance.references,blobs:[{...html,path:'index.html',mediaType:'text/html'},...assets],provenance}});
  const archive=await service.archiveFileSafe(`weekly/${job.id}/report.html`,htmlText);assert(archive,'周报HTML归档不可用','ARCHIVE_UNAVAILABLE');
  // Real host inspector ONLY. A failed/pending receipt is not relabelled rendered.
  const receipt=await host.artifacts.inspect(ref,signal);

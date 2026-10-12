@@ -88,9 +88,9 @@ test('lost UI memo recovers exact published instance; foreign scripts never trig
  const g=fixture();g.layout.charts[0].script_ids=['foreign'];g.layout.scripts=[{id:'foreign',artifact:{id:'user-owned',revision:'1',digest:sha('foreign'),kind:'indicator',schemaVersion:'1.0.0'}}];const r=await onReplayCommitted(g.host,g.service,ctx(g,g.batch()));assert.equal(r.refresh.status,'pending');assert.equal(g.calls.script.length,0);assert.equal(g.layout.scripts.length,1);
 });
 
-test('new typed presentation indicator satisfies actual public indicator_publish schema (read-only resource)',async()=>{
+test('new typed presentation indicator satisfies actual public indicator_publish schema (read-only resource)',{skip:!process.env.KURUMI_INDICATOR_TOOL_SCHEMA&&'Set KURUMI_INDICATOR_TOOL_SCHEMA to an explicit public canvas-control tools.json'},async()=>{
  const {readFile}=await import('node:fs/promises');
- const tools=JSON.parse(await readFile('/Applications/Sesame.app/Contents/Resources/official-plugins/canvas-control/tools.json','utf8'));
+ const tools=JSON.parse(await readFile(process.env.KURUMI_INDICATOR_TOOL_SCHEMA,'utf8'));
  const schema=tools.find(t=>t.name==='indicator_publish').parameters;
  function validate(v,s){
   if(s.anyOf){assert.ok(s.anyOf.some(b=>{try{validate(v,b);return true;}catch{return false;}}));return;}

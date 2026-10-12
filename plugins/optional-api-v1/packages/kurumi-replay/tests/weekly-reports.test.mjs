@@ -4,12 +4,61 @@ import {writeFile,readFile,mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {onWeeklyBoundary,freezeWeeklyFrame,weeklyFinancials,weekStartUTC,listWeeklyJobs,drainWeeklyQueue,reconcileWeeklyOutput} from '../weekly-reports.js';
-import {weeklyReportHTML} from '../report.js';
+import {weeklyReportHTML,publishWeeklyReport} from '../report.js';
+import {weeklyProvenanceKind} from '../report-provenance.js';
 import {fixture,H,T,sha} from './round2-presentation-fixtures.test.mjs';
 const err=code=>e=>e.code===code,MON=T+2*H,WEEK=7*86400000;
 function context(f,cutoff,extras={}){const engine=structuredClone(f.engine);return {engine,runId:engine.id,chapter:engine.chapter,replayCutoffMs:cutoff,account:{engineVersion:engine.version,asOfMs:cutoff,quoteTimeMs:cutoff-1,balance:engine.balance,equity:engine.balance,unrealizedJpy:'0',margin:'0',freeMargin:engine.balance},market:{runId:engine.id,cutoffMs:cutoff,bars:[],sources:[]},methods:[],...extras};}
 async function queueOne(f){await onWeeklyBoundary(f.host,f.service,context(f,T));f.engine={...f.engine,version:2};await onWeeklyBoundary(f.host,f.service,context(f,MON));return listWeeklyJobs(f.host)[0];}
 function finances(f){f.engine={...f.engine,version:2,balance:'301987.5',fills:[{id:'fill1',chapter:0,time:T+H,signedQuantity:'1000',price:'100',realizedJpy:'0',commission:'3'},{id:'fill2',chapter:0,time:T+H+1,signedQuantity:'-1000',price:'102',realizedJpy:'2000',commission:'3'}],orders:[{id:'order1',chapter:0,time:T+H,status:'filled',target:'1000'}],ledger:[{type:'fill',id:'fill1',chapter:0,time:T+H,realizedJpy:'0',commission:'3',financing:'0',balanceAfter:'299997'},{type:'fill',id:'fill2',chapter:0,time:T+H+1,realizedJpy:'2000',commission:'3',financing:'0',balanceAfter:'301994'},{type:'financing',id:'cost1',chapter:0,time:T+H+2,realizedJpy:'0',commission:'0',financing:'6.5',balanceAfter:'301987.5'}],equity:[{chapter:0,time:T+H,equity:'299997',quantity:'1000',margin:'2000'}]};}
+
+test('observed weekly artifacts preserve frozen classification and the consumed source dependency chain',async()=>{
+ const f=fixture(),ref={id:'observed-source',revision:'1',digest:sha('observed source fixture'),kind:'resource',schemaVersion:'1.0.0'};
+ const raw={url:'https://example.invalid/consumed-ticks',digest:sha('consumed'),bytes:123};
+ f.data.provenance={kind:'derived',inputKind:'observed',sources:['FUTURE_SOURCE'],audienceOnlyAnchors:['FUTURE_STORY']};
+ const at=cutoff=>context(f,cutoff,{market:{runId:f.engine.id,cutoffMs:cutoff,bars:[],sources:[{sourceDigest:sha('consumed'),sourceRefs:[ref,raw,ref]}]}});
+ await onWeeklyBoundary(f.host,f.service,at(T));f.engine.version=2;await onWeeklyBoundary(f.host,f.service,at(MON));
+ const job=listWeeklyJobs(f.host)[0];assert.equal(JSON.stringify(job.input).includes('FUTURE_'),false);
+ assert.deepEqual(job.input.closing.sourceProvenance,{kind:'derived',inputKind:'observed'});
+ const source=f.artifacts.get(job.id+'_source'),data=f.artifacts.get(job.id+'_data');
+ assert.deepEqual(source.request.manifest.dependencies,[ref]);assert.deepEqual(data.request.manifest.dependencies,[source.ref]);
+ const sourceEvidence=JSON.parse(f.blobs.get(source.request.manifest.blobs[0].digest));
+ assert.deepEqual(sourceEvidence.closing.sources[0].sourceRefs,[ref,raw,ref]);
+ // Publication must not relabel a frozen observed week when the service moves.
+ f.data.provenance={kind:'demo'};await drainWeeklyQueue(f.host,f.service,{authorizeGeneration:true,model:f.model});
+ const sealed=listWeeklyJobs(f.host)[0],output=f.artifacts.get(job.id+'_output'),report=f.artifacts.get(job.id+'_report');
+ for(const item of [source,data,output,report]){
+  assert.equal(item.request.manifest.provenance.kind,'derived');
+  assert.deepEqual(item.request.manifest.content.provenance,item.request.manifest.provenance);
+  assert.deepEqual(item.request.manifest.dependencies,item.request.manifest.provenance.references);
+ }
+ assert.deepEqual(output.request.manifest.dependencies,[job.inputRef]);
+ assert.deepEqual(report.request.manifest.dependencies,[job.inputRef,sealed.outputRef]);
+ const before=f.artifacts.size;await publishWeeklyReport(f.host,f.service,sealed);assert.equal(f.artifacts.size,before);
+ assert.equal(f.calls.inference.length,1);
+});
+
+test('demo weekly sources, fixed data, output and report remain demo after later observed data',async()=>{
+ const f=fixture();const job=await queueOne(f);f.data.provenance={kind:'derived',inputKind:'observed'};
+ await drainWeeklyQueue(f.host,f.service,{authorizeGeneration:true,model:f.model});
+ for(const suffix of ['_source','_data','_output','_report']){
+  const {manifest}=f.artifacts.get(job.id+suffix).request;
+  assert.equal(manifest.provenance.kind,'demo');assert.deepEqual(manifest.content.provenance,manifest.provenance);
+ }
+ const input=structuredClone(job.input);input.closing.sourceProvenance={kind:'derived',inputKind:'observed'};
+ assert.equal(weeklyProvenanceKind(input),'demo');
+});
+
+test('unclassified frozen legacy weekly evidence fails explicitly without model or publication',async()=>{
+ const f=fixture();const job=await queueOne(f);delete job.input.opening.sourceProvenance;
+ const count=f.calls.publish.length;
+ await assert.rejects(publishWeeklyReport(f.host,f.service,{...job,output:{text:'SYNTHETIC'}}),err('PROVENANCE_REQUIRED'));
+ assert.equal(f.calls.publish.length,count);assert.equal(f.calls.inference.length,0);
+ f.storage.put('round2-weekly',job);
+ await assert.rejects(drainWeeklyQueue(f.host,f.service,{authorizeGeneration:true,model:f.model}),err('PROVENANCE_REQUIRED'));
+ assert.equal(f.calls.publish.length,count);assert.equal(f.calls.inference.length,0);
+ delete f.data.provenance;assert.throws(()=>freezeWeeklyFrame(f.host,f.service,context(f,MON)),err('PROVENANCE_REQUIRED'));
+});
 
 test('UTC weeks per chapter: initial partial, full week, final partial including no-action period',async()=>{
  const f=fixture();assert.equal(weekStartUTC(MON),MON);assert.equal(weekStartUTC(T),MON-WEEK);await onWeeklyBoundary(f.host,f.service,context(f,T));

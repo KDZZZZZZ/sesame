@@ -1,6 +1,7 @@
 import { nativeReportReceipt } from './presentation-receipts.js';
 import { canonical, digest, check, readConsumedView, observedH1Limitations } from './replay-presentation.js';
 import { publishWeeklyReport } from './report.js';
+import { freezeSourceClassification, weeklyProvenanceKind, weeklySourceEvidence, weeklySourceReferences } from './report-provenance.js';
 const WEEK=7*86400000, MONDAY=Date.UTC(1970,0,5), COLLECTION='round2-weekly';
 const copy=x=>structuredClone(x), utc=unixMs=>({basis:'utc',unixMs});
 export const weekStartUTC=t=>MONDAY+Math.floor((t-MONDAY)/WEEK)*WEEK;
@@ -36,7 +37,8 @@ export function freezeWeeklyFrame(host,service,context){
   if(['balance','equity','unrealizedJpy'].every(k=>typeof account[k]==='string'))check(cmp(add(account.balance,account.unrealizedJpy),account.equity)===0n,'Equity is not balance + unrealized PnL','LEDGER_MISMATCH');
   if(['equity','margin','freeMargin'].every(k=>typeof account[k]==='string'))check(cmp(add(account.equity,account.margin,true),account.freeMargin)===0n,'Free margin is not equity - margin','LEDGER_MISMATCH');
   const methods=copy(context.methods??[]);for(const m of methods){check(m.status!=='adopted'||(m.pluginId&&m.version&&m.method&&m.inputRefs?.length&&m.outputRef),'Adoption requires actual method input/output evidence','METHOD_EVIDENCE_REQUIRED');if(m.asOfMs!==undefined)check(m.asOfMs<=cutoff,'Future method evidence','FUTURE_DATA_FORBIDDEN');}
-  const frame={schemaVersion:'1.0.0',runId:context.runId,chapter:context.chapter??engine.chapter,cutoffMs:cutoff,engineVersion:engine.version,account,market:{runId:view.runId,cutoffMs:view.cutoffMs,bars:copy(view.bars),sources:copy(view.sources??[])},positions:copy(engine.position),orders:copy(engine.orders),fills:copy(engine.fills),costs:copy(engine.ledger),equity:copy(engine.equity),decisions:copy(engine.decisions),methods,
+  const sourceProvenance=freezeSourceClassification(service.getData()?.provenance);
+  const frame={schemaVersion:'1.0.0',runId:context.runId,chapter:context.chapter??engine.chapter,cutoffMs:cutoff,engineVersion:engine.version,account,sourceProvenance,market:{runId:view.runId,cutoffMs:view.cutoffMs,bars:copy(view.bars),sources:copy(view.sources??[])},positions:copy(engine.position),orders:copy(engine.orders),fills:copy(engine.fills),costs:copy(engine.ledger),equity:copy(engine.equity),decisions:copy(engine.decisions),methods,
     plugin:copy(host.plugin),methodVersions:methods.map(m=>({pluginId:m.pluginId,version:m.version,method:m.method,status:m.status})),profile:copy(engine.experimentProfile??engine.profile??engine.rules??null),sourceDigests:copy(engine.dataDigests??null),sourceCoverage:copy(context.sourceCoverage??{complete:false,unresolvedEarlyCHFJPYEvents:327,policy:'strict missing-data pause; no old-run bound supplement reuse'}),originalComparison:copy(context.originalComparison??[]),roleEvidence:copy(context.roleEvidence??[]),restrictions:['同一历史的知情重放，非独立样本外；无通过前瞻验证的专属规则','模型预训练可能记得历史；仅限制可显式访问的输入','原作区间/反算/拟合只供观众，不构建原作总资产/账本','缺失CHFJPY保持原60秒政策暂停，不插值/偷看未来']};
   for(const row of frame.originalComparison)check((row.knownAt?.unixMs??row.time?.unixMs??Infinity)<=cutoff,'Unrevealed original story','FUTURE_DATA_FORBIDDEN');
   // Original attachment is not a role input. Reporting generation is isolated
@@ -58,9 +60,13 @@ export function weeklyFinancials(open,close){
 }
 async function archive(host,service,job){
   const receipt=await service.archiveFileSafe(`weekly/${job.id}/input.json`,JSON.stringify(job.input));check(receipt,'Weekly archive unavailable; output must not be silently dropped','ARCHIVE_UNAVAILABLE');
+  const kind=weeklyProvenanceKind(job.input),references=weeklySourceReferences(job.input),origin={kind,references};
+  const sourceBlob=await host.artifacts.blob(JSON.stringify(weeklySourceEvidence(job.input)));
+  const sourceRef=await host.artifacts.publish({operationId:`${job.id}_source`,manifest:{kind:'resource',schemaVersion:'1.0.0',content:{type:'kurumi-frozen-weekly-sources',path:'source.json',provenance:origin},dependencies:references,blobs:[{...sourceBlob,path:'source.json',mediaType:'application/json'}],provenance:origin}});
+  const provenance={kind,references:[sourceRef]};
   const rows=[{type:'weekly-input',...job.input}],blob=await host.artifacts.blob(JSON.stringify(rows));
-  const ref=await host.artifacts.publish({operationId:`${job.id}_data`,manifest:{kind:'data',schemaVersion:'1.0.0',content:{format:'json-rows',path:'rows.json',rowCount:rows.length,columns:Object.keys(rows[0]),provenance:{kind:'demo',references:[]}},dependencies:[],blobs:[{...blob,path:'rows.json',mediaType:'application/json'}],provenance:{kind:'demo',references:[]}}});
-  return cas(host,job.id,job.revision,{status:'queued',inputRef:ref,inputArchive:receipt,error:null});
+  const ref=await host.artifacts.publish({operationId:`${job.id}_data`,manifest:{kind:'data',schemaVersion:'1.0.0',content:{format:'json-rows',path:'rows.json',rowCount:rows.length,columns:Object.keys(rows[0]),provenance},dependencies:[sourceRef],blobs:[{...blob,path:'rows.json',mediaType:'application/json'}],provenance}});
+  return cas(host,job.id,job.revision,{status:'queued',inputRef:ref,sourceRef,inputArchive:receipt,error:null});
 }
 async function queuePeriod(host,service,open,close,reason,signal,extra={}){
   signal?.throwIfAborted();const week=weekStartUTC(open.cutoffMs),period={fromMs:open.cutoffMs,toMs:close.cutoffMs,weekStartMs:week,weekEndMs:week+WEEK,utc:true,chapter:open.chapter,initialPartial:open.cutoffMs!==week,finalPartial:close.cutoffMs!==week+WEEK,partial:open.cutoffMs!==week||close.cutoffMs!==week+WEEK,reason,...extra.period};
@@ -107,6 +113,7 @@ export async function drainWeeklyQueue(host,service,options={},signal){
       if(['input_frozen','input_archive_failed'].includes(job.status))job=await archive(host,service,job);
       if(job.status==='submitting'){job=cas(host,job.id,job.revision,{status:'unknown',error:{code:'SUBMISSION_UNKNOWN',message:'Restart/lost reply; reconcile existing request; never auto-resubmit inference'}});results.push({id:job.id,status:job.status});continue;}
       if(job.status==='queued'){
+        weeklyProvenanceKind(job.input); // Missing legacy provenance needs explicit evidence repair before any generation.
         const model=options.model,configured=await host.inference.models();check(configured.some(m=>canonical(m)===canonical(model)),'Exact configured model descriptor required','MODEL_UNAVAILABLE');
         const transport=options.transport??'inference';check(['inference','agents'].includes(transport),'Unsupported transport');
         if(transport==='agents')check(typeof options.collectFullAgentOutput==='function','Public complete final-output collector required','FULL_AGENT_OUTPUT_REQUIRED');

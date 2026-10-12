@@ -1,6 +1,6 @@
 # 久留美 · 原生回放体验 (`sesame/kurumi-replay` 0.1.3-dev.3.8)
 
-普通、discoverable、Plugin API 1 可选插件；最低 Sesame 0.2.2。**当前是合入源码的未发布验收快照，整体体验验收未完成。** 不进入 core/default bundle，不接真实券商；本次不创建 Release 或修改安装 catalog。插件实现来自 Sesame 内部主/子 Agent，本次由 Codex 整理合入、文档及仓库检查。
+普通、discoverable、Plugin API 1 可选插件；最低 Sesame 0.2.2。**当前是合入源码的未发布验收快照，整体体验验收未完成。** 不进入 core/default bundle，不接真实券商；本次不创建 Release 或修改安装 catalog。插件实现来自 Sesame 内部主/子 Agent，本次由 Codex 整理合入、文档、仓库检查及审阅修正；报告/测试修正的范围见 VALIDATION.md。
 
 当前状态及剩余门槛见 [VALIDATION.md](VALIDATION.md)。第二次只验代表性片段：新 300000 JPY、全部 50x、4H 决定，达到效果即在已提交决定边界暂停。当前已有原生账户、闭合 H1/SMA20、简洁双方标注及主聊天 PK 的实测；形成中帧、真实 UTC 投资周报和完整新玩家安装/reload 仍待验。以下规则、阶段测试和 HANDOFF 保留实现参考及历史记录，以 VALIDATION.md 的当前状态为准。
 

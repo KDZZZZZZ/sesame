@@ -767,7 +767,7 @@
       "id": "sesame/kurumi-replay",
       "version": "0.1.3-dev.3.8",
       "directory": "kurumi-replay",
-      "treeDigest": "sha256:5dfa24fdebc9108e572501140959b33c2dc0d989e1b0ccea55be43ef0337c039",
+      "treeDigest": "sha256:f7ed7b69ba52b8e44ba69d418cf5b86be0af6001538282ac4382e792866e7db8",
       "files": [
         {
           "path": "COMMITTED-PROOF-FIX-HANDOFF.md",
@@ -841,13 +841,13 @@
         },
         {
           "path": "PROVENANCE.md",
-          "sha256": "6dd23e706ccb7f6c87905bc10eeed5b16c7bb89cef744feb54c9b7d452258474",
-          "bytes": 1883
+          "sha256": "9d1575f4ab4a09995c4e594332659414b384521b7e2e0c017f38ea88a055716f",
+          "bytes": 1947
         },
         {
           "path": "README.md",
-          "sha256": "155ea296dd9c4ed4cf8fd489c1ba56bfda9d7477a8be256529b3f2482b4a4e2d",
-          "bytes": 21618
+          "sha256": "bf10c1f3d9e6316df87a734c1cc2c672204dee20c441f718b0dc7589e4de0386",
+          "bytes": 21681
         },
         {
           "path": "ROUND2-CORE.md",
@@ -881,8 +881,8 @@
         },
         {
           "path": "VALIDATION.md",
-          "sha256": "c958ada8800f365cad815313b5faed98985d02f757d20dc1ff8ced3bddb58a05",
-          "bytes": 8098
+          "sha256": "90ed855cac723ef476e7939438a30bd5794ed67db58dde6917046afeae1a992f",
+          "bytes": 9206
         },
         {
           "path": "analysis-plan.js",
@@ -1050,9 +1050,14 @@
           "bytes": 50915
         },
         {
+          "path": "report-provenance.js",
+          "sha256": "07036599ed8b6f079cb4eac99c1f2f02d284c38607707f8389bd26d1b14473f9",
+          "bytes": 2310
+        },
+        {
           "path": "report.js",
-          "sha256": "72fb3d7e9b1d6bb1609cdbf5adf2aad4a6f038c68559d762b8ef020f21eb4ba6",
-          "bytes": 23599
+          "sha256": "94d4be49a97ef9b2a9fb8ba89a40be40eda1f475bbfe0fa6129b8f9834792ccd",
+          "bytes": 23746
         },
         {
           "path": "reveal-cutoff.js",
@@ -1181,8 +1186,8 @@
         },
         {
           "path": "tests/experiment-hooks.test.mjs",
-          "sha256": "85c878dc9783711bcfee290b85da559717f6e1662e7b38af4a30bf37387eb305",
-          "bytes": 10622
+          "sha256": "61d1acdc9bdf0aa338231fb8d42c93fe38890e053385116ed66863aa27278f9f",
+          "bytes": 10647
         },
         {
           "path": "tests/experiment-lifecycle.test.mjs",
@@ -1275,6 +1280,11 @@
           "bytes": 10574
         },
         {
+          "path": "tests/report-rendering.test.mjs",
+          "sha256": "286a6187aa1c1bb9413d35aed183eccce867257ea2b9db5ad5515010b715447d",
+          "bytes": 1192
+        },
+        {
           "path": "tests/round2-presentation-fixtures.test.mjs",
           "sha256": "14a780221ca3cacf6114b97839aed7614e2876c808ffd2b1f874cd836281c215",
           "bytes": 5209
@@ -1291,8 +1301,8 @@
         },
         {
           "path": "tests/round2-presentation.test.mjs",
-          "sha256": "945ef1108c024a30ebc61500e6d265f8e0808ce95d4cbf98219a73fc8352035f",
-          "bytes": 25433
+          "sha256": "6b876c70cff092ea35bc317b65e190c0fe8c31a7370bbe5d1c0c751c9c0fa46d",
+          "bytes": 25518
         },
         {
           "path": "tests/runtime-adapter-host.test.mjs",
@@ -1316,8 +1326,8 @@
         },
         {
           "path": "tests/weekly-reports.test.mjs",
-          "sha256": "a99f56cfe28464b1db43896ba789d327656ec97a92fd6d14eed181b4ef8c772d",
-          "bytes": 22720
+          "sha256": "7248ceb251500b8055c7c3b38eb00afe7aa87a43729b5b110dab85bbddc0cb83",
+          "bytes": 26604
         },
         {
           "path": "tools.json",
@@ -1336,8 +1346,8 @@
         },
         {
           "path": "weekly-reports.js",
-          "sha256": "db5d139aaf701fd094e332a677d81acb8d545c552055a6d7597a0d89aa520fae",
-          "bytes": 32160
+          "sha256": "74dd8b7848504a1ac29792e3dd91f16bce475a35d7a5cae2fe6f139d22ad49a9",
+          "bytes": 33074
         }
       ]
     },
