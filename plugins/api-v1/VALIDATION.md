@@ -1122,3 +1122,11 @@ rendered; the pre-fix mapping was reproduced against a real 22-bar response and
 failed there. Only `sesame/mt5` changes to 1.4.3; the other optional package
 bytes, the core lock and the installable catalog remain unchanged. This
 verification did not repeat native compilation, deployment or trading.
+
+The merged fix could not publish as optional development 15: the release
+workflow refused that plan because PR #48 retained an unresolved review
+discussion and no pre-merge semantic gate snapshot completed before merge, and
+the failed workflow remains in the audit history. The superseding development 16
+plan replaces the unpublished development 15 plan and releases the same validated
+source tree (`f793d7cf…`); the archive and lock digests are unchanged and no
+plugin code changed in the supersession.
