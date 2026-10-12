@@ -14,6 +14,9 @@ builds, but the plugin publisher cannot create or publish new ones.
    and `SHA256SUMS.txt`. The existing `Publish verified installer artifacts`
    workflow validates Windows/Linux artifact provenance and uploads to a draft;
    macOS verification/upload remains a separate build step.
+   Set the draft target to this public repository's `main`, and normally leave
+   the version tag uncreated until promotion. The publisher will resolve that
+   target and pin tag creation to the exact checked `main` commit.
 3. Update [`.github/application-release.json`](.github/application-release.json)
    through the owner's work-branch → `dev` PR. Record the canonical repository,
    application tag, numeric draft Release ID, and each asset's exact filename,
@@ -55,6 +58,14 @@ asset under an existing version fails. A new draft older than the current latest
 application version cannot become latest. Publication is restricted to the
 canonical repository and current `main` revision; a stale workflow cannot publish
 after main has moved.
+
+Before publishing a draft, any existing lightweight or annotated version tag
+must resolve to that exact workflow commit. A different commit, even an ancestor
+of `main`, is rejected. Malformed, cyclic or excessively nested annotations fail
+verification. If the tag does not exist, the draft's `target_commitish` must
+resolve to the workflow commit, and the publication request replaces that target
+with the fixed SHA. Already-published versions keep their historical tags and
+remain a read-only verification and skip.
 
 If a draft fails verification, fix the preparation or reviewed plan before
 retrying. If publication succeeded and only the mirror failed, retry `Mirror

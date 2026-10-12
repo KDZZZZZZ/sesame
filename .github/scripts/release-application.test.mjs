@@ -12,10 +12,10 @@ function fixture() {
   const sums = Buffer.from(assets.map(asset => `${asset.sha256}  ${asset.name}\n`).join(''));
   assets.push({ name: 'SHA256SUMS.txt', size: sums.length, sha256: sha256(sums) });
   const plan = { schemaVersion: 1, repository: 'KDZZZZZZ/sesame', tag: 'v0.2.3', releaseId: 42, assets };
-  const release = { id: 42, tag_name: plan.tag, draft: true, prerelease: false, published_at: null, assets: assets.map((asset, i) => ({ id: i + 1, name: asset.name, size: asset.size, digest: `sha256:${asset.sha256}`, state: 'uploaded' })) };
+  const release = { id: 42, tag_name: plan.tag, target_commitish: 'main', draft: true, prerelease: false, published_at: null, assets: assets.map((asset, i) => ({ id: i + 1, name: asset.name, size: asset.size, digest: `sha256:${asset.sha256}`, state: 'uploaded' })) };
   return { plan, release, sums };
 }
-function client(f = fixture(), { latest = { id: 41, tag_name: 'v0.2.2', draft: false, prerelease: false }, main = head, refreshed = f.release } = {}) {
+function client(f = fixture(), { latest = { id: 41, tag_name: 'v0.2.2', draft: false, prerelease: false }, main = head, refreshed = f.release, tag = { ref: `refs/tags/${f.plan.tag}`, object: { type: 'commit', sha: head } }, annotations = new Map(), target = { sha: head } } = {}) {
   const calls = [], downloads = [];
   let reads = 0;
   const request = async (path, options = {}) => {
@@ -24,6 +24,9 @@ function client(f = fixture(), { latest = { id: 41, tag_name: 'v0.2.2', draft: f
     if (path === '/releases/42') return structuredClone(++reads === 1 ? f.release : refreshed);
     if (path === '/releases/latest') return latest;
     if (path === '/git/ref/heads/main') return { object: { type: 'commit', sha: main } };
+    if (path === `/git/ref/tags/${f.plan.tag}`) return tag;
+    if (path.startsWith('/git/tags/') && annotations.has(path.slice('/git/tags/'.length))) return annotations.get(path.slice('/git/tags/'.length));
+    if (path === `/commits/${encodeURIComponent(refreshed.target_commitish)}`) return target;
     throw new Error(`Unexpected request: ${path}`);
   };
   return { calls, downloads, options: { request, readChecksums: async asset => { downloads.push(asset.name); return f.sums; }, env: context(), localSha: head } };
@@ -75,10 +78,77 @@ test('complete matching drafts publish once as stable/latest without editing tag
 });
 test('already published matching versions are verified and skipped without changing latest', async () => {
   const f = fixture(); f.release.draft = false; f.release.published_at = '2026-10-13T12:00:00Z';
-  const c = client(f, { latest: { id: 50, tag_name: 'v0.3.0', draft: false, prerelease: false } });
+  f.release.target_commitish = 'b'.repeat(40);
+  const c = client(f, { latest: { id: 50, tag_name: 'v0.3.0', draft: false, prerelease: false }, tag: { ref: `refs/tags/${f.plan.tag}`, object: { type: 'commit', sha: f.release.target_commitish } } });
   assert.equal((await releaseApplication(f.plan, { ...c.options, mode: 'publish' })).action, 'already-published');
   assert.equal(c.calls.some(call => call.method), false);
+  assert.deepEqual(c.calls.map(call => call.path), ['/releases/42']);
   assert.deepEqual(c.downloads, ['SHA256SUMS.txt']);
+});
+
+test('existing lightweight and annotated tags must resolve to the workflow commit before any write', async () => {
+  const wrong = 'b'.repeat(40), annotation = 'c'.repeat(40);
+  for (const object of [{ type: 'commit', sha: wrong }, { type: 'tag', sha: annotation }]) {
+    const f = fixture(), c = client(f, { tag: { ref: `refs/tags/${f.plan.tag}`, object }, annotations: new Map([[annotation, { sha: annotation, object: { type: 'commit', sha: wrong } }]]) });
+    await assert.rejects(releaseApplication(f.plan, { ...c.options, mode: 'publish' }), /tag.*workflow commit/);
+    assert.equal(c.calls.some(call => call.method), false);
+  }
+});
+
+test('matching nested annotated tags publish without resolving or changing ignored target_commitish', async () => {
+  const f = fixture(), first = 'c'.repeat(40), second = 'd'.repeat(40);
+  f.release.target_commitish = 'old-branch';
+  const c = client(f, { tag: { ref: `refs/tags/${f.plan.tag}`, object: { type: 'tag', sha: first } }, annotations: new Map([[first, { sha: first, object: { type: 'tag', sha: second } }], [second, { sha: second, object: { type: 'commit', sha: head } }]]), target: { sha: 'b'.repeat(40) } });
+  assert.equal((await releaseApplication(f.plan, { ...c.options, mode: 'publish' })).action, 'published');
+  assert.deepEqual(c.calls.filter(call => call.path.startsWith('/git/tags/')).map(call => call.path), [`/git/tags/${first}`, `/git/tags/${second}`]);
+  assert.equal(c.calls.some(call => call.path.startsWith('/commits/')), false);
+  assert.deepEqual(c.calls.slice(-2).map(call => call.path), ['/git/ref/heads/main', '/releases/42']);
+  assert.deepEqual(c.calls.filter(call => call.method), [{ path: '/releases/42', method: 'PATCH', body: { draft: false, prerelease: false, make_latest: 'true' } }]);
+});
+
+test('an absent tag rejects a draft target that resolves away from the workflow commit without writing', async () => {
+  const f = fixture(); f.release.target_commitish = 'other-branch';
+  const c = client(f, { tag: null, target: { sha: 'b'.repeat(40) } });
+  await assert.rejects(releaseApplication(f.plan, { ...c.options, mode: 'publish' }), /target.*workflow commit/);
+  assert.equal(c.calls.some(call => call.method), false);
+});
+
+test('an absent tag resolves the refreshed draft target and pins tag creation to the exact workflow SHA', async () => {
+  for (const target of ['main', 'release/application', head]) {
+    const f = fixture(), refreshed = { ...f.release, target_commitish: target }, c = client(f, { tag: null, refreshed });
+    assert.equal((await releaseApplication(f.plan, { ...c.options, mode: 'publish' })).action, 'published');
+    assert.ok(c.calls.some(call => call.path === `/commits/${encodeURIComponent(target)}`));
+    assert.deepEqual(c.calls.filter(call => call.method), [{ path: '/releases/42', method: 'PATCH', body: { draft: false, prerelease: false, make_latest: 'true', target_commitish: head } }]);
+  }
+});
+
+test('malformed, cyclic and over-deep tag objects fail within a bounded number of reads and never write', async () => {
+  const f = fixture(), first = 'c'.repeat(40), second = 'd'.repeat(40), ref = `refs/tags/${f.plan.tag}`;
+  const chain = Array.from({ length: 9 }, (_, i) => (i + 1).toString(16).padStart(40, '0'));
+  const scenarios = [
+    { tag: {} },
+    { tag: { ref: 'refs/tags/v0.0.1', object: { type: 'commit', sha: head } } },
+    ...[{ type: 'blob', sha: head }, { type: 'commit', sha: 'bad' }].map(object => ({ tag: { ref, object } })),
+    { tag: { ref, object: { type: 'tag', sha: first } }, annotations: new Map([[first, { sha: second, object: { type: 'commit', sha: head } }]]) },
+    { tag: { ref, object: { type: 'tag', sha: first } }, annotations: new Map([[first, { sha: first, object: null }]]) },
+    { tag: { ref, object: { type: 'tag', sha: first } }, annotations: new Map([[first, { sha: first, object: { type: 'tag', sha: second } }], [second, { sha: second, object: { type: 'tag', sha: first } }]]) },
+    { tag: { ref, object: { type: 'tag', sha: chain[0] } }, annotations: new Map(chain.map((sha, i) => [sha, { sha, object: { type: i + 1 === chain.length ? 'commit' : 'tag', sha: chain[i + 1] ?? head } }])) },
+  ];
+  for (const scenario of scenarios) {
+    const c = client(f, scenario);
+    await assert.rejects(releaseApplication(f.plan, { ...c.options, mode: 'publish' }), /tag|annotation/i);
+    assert.equal(c.calls.some(call => call.method), false);
+    assert.ok(c.calls.filter(call => call.path.startsWith('/git/tags/')).length <= 8);
+  }
+});
+
+test('an absent tag requires a valid target_commitish and resolved commit before any write', async () => {
+  for (const target_commitish of [undefined, null, '', '.', '..']) {
+    const f = fixture(); f.release.target_commitish = target_commitish;
+    const c = client(f, { tag: null });
+    await assert.rejects(releaseApplication(f.plan, { ...c.options, mode: 'publish' }), /target/);
+    assert.equal(c.calls.some(call => call.method), false);
+  }
 });
 test('newer latest, wrong latest identity, or main advancing prevents publication', async () => {
   for (const options of [{ latest: { id: 50, tag_name: 'v0.3.0', draft: false, prerelease: false } }, { latest: { id: 50, tag_name: 'v0.2.3', draft: false, prerelease: false } }, { main: 'b'.repeat(40) }]) {

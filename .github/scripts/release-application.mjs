@@ -9,6 +9,7 @@ const PLAN_PATH = '.github/application-release.json';
 const STABLE_TAG = /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 const SUMS = 'SHA256SUMS.txt';
 const MAX_SUMS = 64 * 1024;
+const MAX_TAG_ANNOTATIONS = 8;
 const assert = (value, message) => { if (!value) throw new Error(message); };
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 function fields(value, required, label) {
@@ -86,6 +87,33 @@ function checkLatest(plan, latest) {
   }
 }
 
+async function publicationTarget(plan, release, workflowSha, request) {
+  const reference = await request(`/git/ref/tags/${plan.tag}`, { allowMissing: true });
+  if (reference === null) {
+    const target = release.target_commitish;
+    assert(typeof target === 'string' && target.length > 0 && target.length <= 1024 && target.trim() === target && !['.', '..'].includes(target), 'Draft target_commitish is missing or malformed');
+    const commit = await request(`/commits/${encodeURIComponent(target)}`);
+    assert(commit?.sha === workflowSha, 'Draft target must resolve to the workflow commit');
+    // Freeze a movable branch target before GitHub creates the missing tag.
+    return { target_commitish: workflowSha };
+  }
+  assert(reference?.ref === `refs/tags/${plan.tag}`, 'Application tag reference is malformed or mismatched');
+  let object = reference.object;
+  const seen = new Set();
+  for (;;) {
+    assert(object && typeof object.sha === 'string' && /^[a-f0-9]{40}$/.test(object.sha) && ['commit', 'tag'].includes(object.type), 'Application tag object is malformed or does not resolve to a commit');
+    if (object.type === 'commit') {
+      assert(object.sha === workflowSha, 'Existing application tag must resolve to the workflow commit');
+      return {};
+    }
+    assert(seen.size < MAX_TAG_ANNOTATIONS && !seen.has(object.sha), 'Application tag annotation chain is cyclic or exceeds its depth budget');
+    seen.add(object.sha);
+    const annotation = await request(`/git/tags/${object.sha}`);
+    assert(annotation?.sha === object.sha, 'Application tag annotation identity differs from the requested object');
+    object = annotation.object;
+  }
+}
+
 /** Verification reads metadata and the small checksum file; installer bytes are never downloaded here. */
 export async function releaseApplication(input, { mode, request, readChecksums, env = process.env, localSha } = {}) {
   const plan = validateApplicationPlan(input);
@@ -102,9 +130,10 @@ export async function releaseApplication(input, { mode, request, readChecksums, 
   }
   checkLatest(plan, await request('/releases/latest', { allowMissing: true }));
   if (mode === 'verify') return result('verified-draft');
+  const target = await publicationTarget(plan, release, env.GITHUB_SHA, request);
   const main = await request('/git/ref/heads/main');
   assert(main?.object?.type === 'commit' && main.object.sha === env.GITHUB_SHA, 'Main advanced; publication must run against its current revision');
-  const published = validateApplicationAssets(plan, await request(path, { method: 'PATCH', body: { draft: false, prerelease: false, make_latest: 'true' } }));
+  const published = validateApplicationAssets(plan, await request(path, { method: 'PATCH', body: { draft: false, prerelease: false, make_latest: 'true', ...target } }));
   assert(published.draft === false, 'GitHub did not confirm application publication');
   return result('published');
 }
