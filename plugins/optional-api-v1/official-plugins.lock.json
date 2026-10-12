@@ -1129,9 +1129,9 @@
     },
     {
       "id": "sesame/mt5",
-      "version": "1.4.2",
+      "version": "1.4.3",
       "directory": "mt5",
-      "treeDigest": "sha256:17e3bd3a1a9bac287ad4912f4255b4bd61f1b49d2ad6719bb0ae6deafc53b70a",
+      "treeDigest": "sha256:fe9710a7bbb5785a6fac0bd1885faa31943b4f93e18e7c8d3839fd1d0fb258ca",
       "files": [
         {
           "path": "LICENSE",
@@ -1185,8 +1185,8 @@
         },
         {
           "path": "backend/contract-mapping.js",
-          "sha256": "353e9f8bfa27542d6b602c02dce99cc9d0546e9603b236073e890cf2cecc8eca",
-          "bytes": 21002
+          "sha256": "68ee1995f9889a585bdfcf7cc4ba06e1434733465966216d451559399772a304",
+          "bytes": 21672
         },
         {
           "path": "backend/contracts.js",
@@ -1515,12 +1515,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "237f733375b94eb3b24db84f822b260566ceb7897fdec22dfc6808948d27d9e8",
+          "sha256": "e9813421397bd3bad66e1e66c6d727ca3b04ec9ff8a2cbed2174f25d3ba41ac2",
           "bytes": 97
         },
         {
           "path": "plugin.json",
-          "sha256": "7f4bb0dd8b6f7c223fc2c1f890cd7613a096f86344fc6b2be55c8abb89b85fdb",
+          "sha256": "1901217cfdd26a7f79874b0ac66aada4020d0c59a7f933a29dff8f702ceca627",
           "bytes": 2249
         },
         {

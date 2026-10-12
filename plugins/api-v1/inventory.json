@@ -549,11 +549,11 @@
     },
     {
       "id": "sesame/memory",
-      "version": "2.0.1",
+      "version": "2.1.0",
       "distribution": "core",
       "state": "mounted",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.2"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -584,7 +584,7 @@
     },
     {
       "id": "sesame/mt5",
-      "version": "1.4.2",
+      "version": "1.4.3",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -704,11 +704,11 @@
     },
     {
       "id": "sesame/plugin-manager",
-      "version": "2.1.2",
+      "version": "2.2.0",
       "distribution": "core",
       "state": "mounted",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.2"
       },
       "format": "sesame-native",
       "license": "MIT",

@@ -1,4 +1,5 @@
 import { catalogQuery, installCatalog } from './catalog.js';
+import { createNativeDraft } from './scaffold.js';
 
 export function createTools(host) {
   const { define, Type, string, optional } = host.tools;
@@ -15,7 +16,11 @@ export function createTools(host) {
     define('plugin_install_catalog', '按固定catalog_digest获取官方或可选包并核验每文件/整包摘要。默认install只装缺失包；已有不同版本必须显式action:update和plugin_inspect返回的expected_digest，执行plugin_test→plugin_update，宿主保留版本/权限校验。同版本同摘要返回already-installed，禁用状态不改变。成功后刷新当前工具，依赖准备另行执行。', { ...command, plugin_id: string('目录精确 sesame/name'), catalog_digest: hash, action: Type.Optional(Type.Union(['install', 'update'].map(Type.Literal))), expected_digest: Type.Optional(hash) }, (args, signal) => installCatalog(host, args, signal)),
     define('plugin_read', '读取已挂载插件中声明的提示词、skill 或参考资源。传入插件 ID 和目录清单中的相对 path。', { plugin_id: string('插件 ID'), path: string('资源相对路径，例如 skills/analyze-data/SKILL.md') }, args => host.plugins.read(args.plugin_id, args.path)),
     define('plugin_inspect', '主 Agent 查看已安装插件的版本、摘要、状态和诊断；更新官方随附包也先读取其当前digest。不会激活插件。', installed, args => host.plugins.inspect(args.plugin_id)),
-    manage('create', '主 Agent 创建标准插件草稿。mcp-python 模板自带波动率工具和测试；随后用 write/edit 修改。', { ...command, name: string('小写插件名称'), description: string('用途与触发条件'), version: optional('SemVer，默认 0.1.0'), template: Type.Optional(Type.Union(['skill', 'mcp-python'].map(Type.Literal))) }),
+    define('plugin_create', '主 Agent 创建插件草稿；先读 develop-plugins skill。native 使用与外部 Agent 相同的公开模板；skill/mcp-python 沿用宿主模板。随后实现业务并 validate/test/install，不覆盖已有目录。', { ...command, name: string('小写插件名称'), description: string('用途与触发条件'), version: optional('SemVer，默认 0.1.0'), template: Type.Optional(Type.Union(['skill', 'mcp-python', 'native'].map(Type.Literal))), publisher: optional('仅 native：发布者 slug，默认 local'), min_host: optional('仅 native：最低 Sesame 版本，默认 0.2.0') }, (args, signal) => {
+      if (args.template === 'native') return createNativeDraft(host, args, signal);
+      if (args.publisher !== undefined || args.min_host !== undefined) throw new Error('publisher/min_host require template:native; standard templates can be edited after creation');
+      return host.plugins.manage('create', args, signal);
+    }),
     manage('validate', '静态验证 sesame-native/apiVersion1、标准MCP、Claude/Codex与独立skill草稿；不执行代码。返回兼容诊断和内容摘要。', path),
     manage('test', '原生API1包仅检查清单、schema和JS语法，不执行工厂或实际工具，不证明行为安全。stdio MCP在本机当前用户权限下检查工具并执行包内断言；远程MCP仅读已授权schema。记录精确摘要与依赖锁。', path),
     manage('install', '安装通过对应检查的精确摘要，默认可发现；原生包实际执行activate。读取runtime_status与diagnostics，成功后plugin_load立即加载本轮工具。依赖下载与环境准备不会由此操作自动授权。', { ...path, ...command, digest: hash }),
