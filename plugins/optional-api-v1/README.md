@@ -1,9 +1,10 @@
 # Optional plugins / Plugin API 1
 
 **Installable entries are identified by the published catalog.** The twenty-three
-optional packages declare their own compatible host ranges: `sesame/manual-trading`
-requires `>=0.2.1`; the others require `>=0.2.0-0` (formal minimum 0.2.0,
-including compatible development builds). Their reviewed
+optional packages declare their own compatible host ranges in `engines.sesame`.
+For example, `sesame/manual-trading` requires 0.2.1 and current MT5 source requires
+0.2.2. Source, published archives and the install catalog may select different
+versions; use the manifest for the version being installed. Their reviewed
 archive identities remain fixed; application installers are listed on the
 [release page](https://github.com/KDZZZZZZ/sesame/releases/latest). They do not
 enter the nine-package default lock or the

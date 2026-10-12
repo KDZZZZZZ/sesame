@@ -1,11 +1,10 @@
 name: Plugin catalog
 on:
   push:
-    branches: [main]
-    paths: ['.github/scripts/historical-plugin-releases.json', 'plugins/**', '.github/scripts/*catalog*', '.github/workflows/plugin-catalog.yml']
+    branches: [main, dev]
   pull_request_target:
-    types: [opened, synchronize, reopened]
-    paths: ['.github/scripts/historical-plugin-releases.json', 'plugins/**', '.github/scripts/*catalog*', '.github/workflows/plugin-catalog.yml', '.github/CODEOWNERS']
+    branches: [main, dev]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
   workflow_dispatch:
 permissions:
   contents: read
@@ -24,6 +23,7 @@ jobs:
       - name: Check out candidate as data only
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           path: candidate
           fetch-depth: 0

@@ -1,5 +1,39 @@
 # Plugin API 1 publication
 
+## Current policy
+
+New GitHub Releases in `KDZZZZZZ/sesame` are reserved for **application versions**
+(`vX.Y.Z`). New `plugins-*` Releases are disabled in both the workflow and the
+publisher. The historical publisher may verify an already-published archive;
+it cannot create or publish another plugin Release, including an existing draft.
+Every main push checks the [application release plan](../../RELEASING.md).
+
+Historical plugin Releases, tags, plans, review records and exact bytes remain
+available. Sesame 0.2.2's plugin manager validates the existing repository/URL
+format, and historical application locks download those archives. Deleting,
+making them private, or replacing their URLs would break that compatibility.
+`RELEASE-ASSETS.json` at the repository root is the historical 0.2.1 record, not
+the plan for the next application version.
+
+Plugin source contributions continue through **fork → dev**, with the owner's
+same-repository work-branch exception, then an owner-merged **dev → main** PR.
+See [CONTRIBUTING.md](../../CONTRIBUTING.md). A source merge does not update an
+installed package or make a new package version available in the catalog.
+The catalog may only select actual immutable publications compatible with its
+client. Do not add a plan expecting the retired workflow to publish it.
+
+Future plugin distribution needs a separately reviewed storage/registry change,
+a new catalog endpoint compatible with that storage, an updated plugin manager,
+and application locks for the new endpoint. Keep the old endpoint and archives
+for existing clients. The [ecosystem policy](../ECOSYSTEM.md) describes the design
+references and review requirements; it does not claim that migration is complete.
+
+## Historical publication protocol
+
+The remainder documents how existing archives were published and how their
+evidence is verified. It is retained for reproducibility, not as instructions to
+create another plugin Release in this repository.
+
 Plugin changes are proposed through a pull request. CI checks the submitted files
 as data with the validator from the trusted base commit; it never imports a
 candidate plugin or runs its setup hooks. New validators must reach the base in a
@@ -62,8 +96,11 @@ last edit must precede the merge. `review.json` preserves its URL, author,
 reviewer, times, scope, findings, and body SHA-256. This authenticates who recorded
 the review; it cannot independently prove the quality of an agent's reasoning.
 
-Before merging, run `Plugin semantic review gate` (automatically on PR comment
-events or with its PR-number workflow input). The trusted main-branch workflow
+Before merging, run `Plugin semantic review gate` (on an owner's completed review
+record, exact `/sesame-review` command, or PR-number workflow input). Ordinary
+comments and bot progress messages do not run the final gate. This historical
+gate accepts same-repository PRs into main; it is not the dev contribution check.
+The trusted main-branch workflow
 stores an artifact identifying the open PR head, actual review, resolved
 discussion IDs, formal review IDs/states/commits/submission times, and GitHub's
 observable dismissal events (review ID, previous state, actor and time). The
@@ -86,13 +123,14 @@ PR instead of retroactively filling in evidence. After publication, the durable
 release review record preserves the gate identity and snapshot; historical
 retries do not depend on the workflow artifact's 90-day retention period.
 
-Merging the PR into main triggers `Plugin API 1 release`. It verifies the merged
+Under the historical workflow, merging the PR into main triggered `Plugin API 1
+release`. It verified the merged
 PR, successful GitHub Actions checks and completed semantic review on its exact
 head before merge, immutable source bytes, and absence of unresolved
-changes-requested reviews or code-review discussions. It creates a draft release,
-uploads the archive, package lock, application pin, checksums and review record,
-then publishes a prerelease. Existing published assets are never overwritten.
-Use a new version and tag for changed packages. Withdrawal remains a catalog
+changes-requested reviews or code-review discussions. It created a draft release,
+uploaded the archive, package lock, application pin, checksums and review record,
+then published a prerelease. That publishing path is now disabled. Existing
+published assets are never overwritten. Withdrawal remains a catalog
 metadata change; it does not erase prior releases or rewrite their bytes.
 
 `review.json` records actual check URLs and review authors/states. Automated
@@ -131,7 +169,8 @@ an `optional` profile for on-demand integrations and methods. `bundle-profile.js
 the immutable source and is validated before archive creation. New plans declare
 `profile: "core"` or `profile: "optional"`; a plan/profile mismatch is rejected.
 Profile-less historical source commits keep their original build behavior.
-Publish both reviewed groups separately, then propose a metadata-only catalog PR
-that selects the actual published source, archive, lock and review hashes. Never
-use the descriptive `inventory.json` as an installation catalog. Application
-release status is checked independently of plugin archive publication.
+Historically, publishing the two reviewed groups separately preceded a
+metadata-only catalog PR selecting their actual published source, archive, lock
+and review hashes. Existing catalog entries retain those identities. Never use
+the descriptive `inventory.json` as an installation catalog. Application release
+status is checked independently of historical plugin archive publication.
