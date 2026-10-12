@@ -844,7 +844,8 @@ export class ReplayService {
     try {
       const taskRootPath = this.host.workspace.taskRoot(runId);
       const result = await this.recorder.protectRun(runId, taskRootPath, { simClockMs: this.simClock() });
-      this.clearArchiveFailed('protectArtifacts:' + runId);
+      // Sealing this role workspace does not repair earlier pending journal or
+      // file writes. Only assertArchiveHealthy may clear that recovery state.
       return { artifacts: [], resources: [{ id: `kurumi-recording-${runId}`, path: `${this.recorder.root}/runs/${runId}/sealed.json`, digest: result.digest, reason: '久留美角色任务临时区完整封存（会话JSONL与runtime.sqlite一致快照），用于忠实还原的宣传素材原始证据' }] };
     } catch (error) {
       // 归档失败：持久标记暂停付费回合，并抛出让宿主保留现场（cleanup_failed 重试）。

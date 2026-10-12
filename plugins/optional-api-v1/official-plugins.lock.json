@@ -767,7 +767,7 @@
       "id": "sesame/kurumi-replay",
       "version": "0.1.3-dev.3.8",
       "directory": "kurumi-replay",
-      "treeDigest": "sha256:f5ecb27fd01307bc589b98d79f2d7b53e1971ddbb36d1a91557bfc75797a5463",
+      "treeDigest": "sha256:731676a1abf4b9171bddb213cf64df8f7ab5a555188b209ba2f54f275638ae21",
       "files": [
         {
           "path": "COMMITTED-PROOF-FIX-HANDOFF.md",
@@ -841,13 +841,13 @@
         },
         {
           "path": "PROVENANCE.md",
-          "sha256": "9d1575f4ab4a09995c4e594332659414b384521b7e2e0c017f38ea88a055716f",
-          "bytes": 1947
+          "sha256": "ffc54ac120062f0985a8629523aab41d4f4f441568644e9b0a14cadc3bd2b858",
+          "bytes": 1954
         },
         {
           "path": "README.md",
-          "sha256": "bf10c1f3d9e6316df87a734c1cc2c672204dee20c441f718b0dc7589e4de0386",
-          "bytes": 21681
+          "sha256": "d7639586f66479dcf0b9e2635183c7493b37c2e5d0425f58111bb5e8d895c3da",
+          "bytes": 21688
         },
         {
           "path": "ROUND2-CORE.md",
@@ -881,8 +881,8 @@
         },
         {
           "path": "VALIDATION.md",
-          "sha256": "e0348dd79f2a9dc512d9e4fe00c0942b67e3d5d077325975f7d6cff7ae32accb",
-          "bytes": 9371
+          "sha256": "474a50d17f5451e12caa5e5fb50aff939d5054ab55d4796d0ff0639297e4d8aa",
+          "bytes": 9577
         },
         {
           "path": "analysis-plan.js",
@@ -1116,13 +1116,18 @@
         },
         {
           "path": "service.js",
-          "sha256": "3bd7bec0443b110f2d3c246fd2b9ad43f99d97ad9e1712fc45926d528ca5ad75",
-          "bytes": 95306
+          "sha256": "3d68625193a60665a1b1bfc30c05c945c19e8d83d8ea6757b08b8a2efd98d97c",
+          "bytes": 95405
         },
         {
           "path": "skills/kurumi-replay/SKILL.md",
           "sha256": "94331970d98acedceff9f4038843c6a14a247dd73dc9002499646312d3e5f72d",
           "bytes": 16415
+        },
+        {
+          "path": "tests/archive-pending-protection.test.mjs",
+          "sha256": "dffe3e7079fb88ffcee7bf9df735253d6af59aab81ac4c223c302fd8091fbf7d",
+          "bytes": 3751
         },
         {
           "path": "tests/cadence-recording.test.mjs",
