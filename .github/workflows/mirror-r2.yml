@@ -1,12 +1,25 @@
 name: Mirror release to R2
 
 on:
+  workflow_call:
+    inputs:
+      tag:
+        description: Published stable application tag
+        required: true
+        type: string
+    secrets:
+      R2_ACCESS_KEY_ID:
+        required: true
+      R2_SECRET_ACCESS_KEY:
+        required: true
+      CLOUDFLARE_ACCOUNT_ID:
+        required: true
   release:
     types: [published]
   workflow_dispatch:
     inputs:
       tag:
-        description: Release tag to mirror (e.g. v0.1.0)
+        description: Stable application release tag to mirror (e.g. v0.2.2)
         required: true
         type: string
 
@@ -15,10 +28,13 @@ permissions:
 
 jobs:
   mirror:
+    if: github.repository == 'KDZZZZZZ/sesame' && (github.event_name != 'release' || (!github.event.release.prerelease && !github.event.release.draft && startsWith(github.event.release.tag_name, 'v')))
     runs-on: ubuntu-latest
     env:
       TAG: ${{ github.event.release.tag_name || inputs.tag }}
     steps:
+      - name: Require a stable application release tag
+        run: node -e 'if (!/^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(process.env.TAG)) throw new Error("Only stable application releases may be mirrored")'
       - name: Download release assets
         run: gh release download "$TAG" --repo ${{ github.repository }} --dir dist --clobber
         env:

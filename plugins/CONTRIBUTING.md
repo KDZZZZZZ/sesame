@@ -1,5 +1,10 @@
 # Submit or update a plugin
 
+All new contributions follow the root [fork → dev → main policy](../CONTRIBUTING.md).
+Only `@KDZZZZZZ` merges. New GitHub Releases here are reserved for the application;
+historical plugin archives remain available, and merging new source does not by
+itself publish a new installable plugin version.
+
 For the current Plugin API 1 ecosystem, start with the [plugin development guide](api-v1/README.md) and [reviewed publication process](api-v1/PUBLISHING.md). It accepts the supported native, Skill and MCP formats; choose the format that matches the capabilities you need. Preserve author attribution, licenses and provenance for every format.
 
 ## Legacy catalog workflow
@@ -28,11 +33,11 @@ The steps below apply to the historical `plugins/catalog.json` catalog and its `
 5. Set minimum app version, user-facing requirements, actual tools, and
    `review: {automated: "catalog-ci", human: "not-recorded"}`. Authors cannot
    grant themselves a review or a safety badge. Keep an existing ID's ownership.
-6. Open a PR with source and isolated-runtime test evidence. CI reads the
+6. Open a fork PR targeting `dev` with source and isolated-runtime test evidence. CI reads the
    candidate as data and uses the validator from the trusted base branch. It
    never runs the PR's plugins, scripts or tests. Maintainers inspect source,
    provenance, permissions, metadata and test evidence before publication.
-7. A maintainer merges with **Create a merge commit**, preserving the source
+7. The owner merges with **Create a merge commit**, preserving the source
    commit referenced by the catalog. Do not squash or rebase away pinned source
    commits. The website syncs the same merged catalog; it has no independent
    editable plugin list.
@@ -40,9 +45,10 @@ The steps below apply to the historical `plugins/catalog.json` catalog and its `
 For a new release, increment the plugin version, commit source, then update its
 catalog record and hashes through a new PR. Never replace bytes under an
 existing version. A runtime or tool-schema change requires new test evidence.
-Previous Git commits remain the publication audit trail. Branch protection
-should require the catalog check and a code-owner review; CODEOWNERS alone
-does not enforce this repository setting.
+Previous Git commits remain the publication audit trail. Repository rules require
+the catalog/routing/static checks and restrict merges to the owner. CODEOWNERS
+identifies responsibility; it is not a substitute for those rules, and the owner
+is not required to approve their own PR.
 
 Run `node .github/scripts/validate-catalog.mjs .` and
 `node --test .github/scripts/catalog.test.mjs` after committing the candidate.

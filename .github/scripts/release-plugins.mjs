@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { buildLock, createArchive, sha256, readProfile } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
-import { readSemanticReview, validateGateSnapshot } from './semantic-review.mjs';
+import { readSemanticReview } from './semantic-review.mjs';
 
 const REPOSITORY = 'KDZZZZZZ/sesame';
 const CHECKS = [{ name: 'package-static-review', path: '.github/workflows/plugin-api-v1.yml' }, { name: 'catalog-static-review', path: '.github/workflows/plugin-catalog.yml' }];
@@ -111,39 +111,11 @@ async function trustedChecks(pr) {
   return checks;
 }
 
-async function preMergeGate(repository, pr, semantic) {
-  const workflow = await api('/actions/workflows/plugin-semantic-review.yml');
-  const { workflow_runs: runs } = await api(`/actions/workflows/${workflow.id}/runs?branch=main&status=success&per_page=100`);
-  for (const run of runs.filter(item => item.workflow_id === workflow.id && item.path === '.github/workflows/plugin-semantic-review.yml' && ['issue_comment', 'workflow_dispatch'].includes(item.event) && Date.parse(item.updated_at) <= Date.parse(pr.merged_at)).sort((a, b) => b.id - a.id)) {
-    const { artifacts } = await api(`/actions/runs/${run.id}/artifacts?per_page=100`);
-    const matches = artifacts.filter(item => item.name === `plugin-semantic-review-${pr.number}`);
-    if (!matches.length) continue;
-    assert(matches.length === 1 && !matches[0].expired && matches[0].size_in_bytes <= 1024 * 1024, 'Invalid or expired semantic gate artifact');
-    const artifact = matches[0];
-    const response = await fetch(`https://api.github.com/repos/${REPOSITORY}/actions/artifacts/${artifact.id}/zip`, { headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}`, Accept: 'application/vnd.github+json' } });
-    assert(response.ok, 'Cannot read semantic gate artifact');
-    const bytes = Buffer.from(await response.arrayBuffer());
-    assert(bytes.length <= 1024 * 1024 && (!artifact.digest || artifact.digest === `sha256:${sha256(bytes)}`), 'Semantic gate artifact digest or size differs');
-    const temporary = mkdtempSync(join(tmpdir(), 'sesame-review-gate-'));
-    let snapshot;
-    try {
-      const archive = join(temporary, 'gate.zip'); writeFileSync(archive, bytes);
-      assert(execFileSync('unzip', ['-Z1', archive], { timeout: 10000, maxBuffer: 4096 }).toString().trim() === 'review-gate.json', 'Unexpected files in semantic gate artifact');
-      snapshot = JSON.parse(execFileSync('unzip', ['-p', archive, 'review-gate.json'], { timeout: 10000, maxBuffer: 1024 * 1024 }));
-    } finally { rmSync(temporary, { recursive: true, force: true }); }
-    if (snapshot.headSha !== pr.head.sha) continue;
-    const evidence = validateGateSnapshot(pr, semantic, snapshot, run, artifact, workflow.id);
-    git(repository, ['merge-base', '--is-ancestor', run.head_sha, pr.merge_commit_sha]);
-    return { ...evidence, artifactSha256: sha256(bytes) };
-  }
-  throw new Error('Missing successful exact-head semantic gate snapshot completed before merge');
-}
-
 async function findRelease(tag) {
   const published = await api(`/releases/tags/${tag}`, { allowMissing: true });
   if (published) return published;
-  // The tag endpoint does not return drafts. Authenticated listing lets retries
-  // continue the same partially uploaded draft without duplicate creation.
+  // Inspect authenticated draft listings as well, so the retirement guard can
+  // explicitly reject every unpublished release without creating anything.
   for (let page = 1; page <= 10; page++) {
     const batch = await api(`/releases?per_page=100&page=${page}`), matching = batch.filter(item => item.tag_name === tag);
     assert(matching.length <= 1, 'More than one release uses the requested tag');
@@ -190,9 +162,15 @@ async function preserveRecordedReview(release, plan, pr, files, releaseCommit) {
   files.set('review.json', bytes);
 }
 
+export function requirePublishedPluginRelease(release) {
+  assert(release?.draft === false, 'New plugin Releases are retired; absent or draft releases cannot be published. Existing published releases may only be verified.');
+  return release;
+}
+
 async function publish(repository, relative, prepared) {
   assert(process.env.GITHUB_REPOSITORY === REPOSITORY && process.env.GITHUB_REF === 'refs/heads/main' && process.env.GITHUB_TOKEN, 'Publication requires the main-branch GitHub workflow');
   const { plan, files } = prepared;
+  const release = requirePublishedPluginRelease(await findRelease(plan.tag));
   const [pr, reviews] = await Promise.all([api(`/pulls/${plan.pullRequest}`), allReviews(plan.pullRequest)]);
   // Required PR checks belong to its exact head, not to the later merge commit.
   const evidence = reviewEvidence(plan, pr, reviews, await trustedChecks(pr));
@@ -201,44 +179,15 @@ async function publish(repository, relative, prepared) {
   assert(git(repository, ['show', `${pr.head.sha}:${relative}`]).equals(readFileSync(join(repository, relative))), 'Release plan changed after its reviewed PR');
   const tag = await api(`/git/ref/tags/${plan.tag}`, { allowMissing: true });
   const object = tag ? (tag.object.type === 'tag' ? (await api(`/git/tags/${tag.object.sha}`)).object : tag.object) : null;
-  let release = await findRelease(plan.tag);
   const head = git(repository, ['rev-parse', 'HEAD']).toString().trim(), releaseCommit = releaseCommitFor(head, object, release);
   git(repository, ['merge-base', '--is-ancestor', pr.merge_commit_sha, releaseCommit]);
   git(repository, ['merge-base', '--is-ancestor', releaseCommit, head]);
   assert(git(repository, ['show', `${releaseCommit}:${relative}`]).equals(readFileSync(join(repository, relative))), 'Publishing revision contains a different release plan');
   evidence.publication = { commit: releaseCommit, workflow: `https://github.com/${REPOSITORY}/blob/${releaseCommit}/.github/workflows/plugin-api1-release.yml`, trigger: 'main branch workflow after merged PR and successful exact-head checks' };
   files.set('review.json', Buffer.from(JSON.stringify(evidence, null, 2) + '\n'));
-  if (release) {
-    await preserveRecordedReview(release, plan, pr, files, releaseCommit);
-  }
-  if (release && !release.draft) {
-    assert(release.prerelease, 'Existing release is not a prerelease'); validateAssets(release, files);
-    console.log(`Already published with the reviewed digests: ${release.html_url}`); return;
-  }
-  // Historical releases retain their original record. Every new publication
-  // now needs a semantic review completed before merge, not a late comment.
-  assert(evidence.automated.every(check => Number.isFinite(Date.parse(check.completedAt)) && Date.parse(check.completedAt) <= Date.parse(pr.merged_at)), 'Required static checks must finish before merge');
-  evidence.semantic = await readSemanticReview(pr, reviews, api, graphql);
-  evidence.semanticGate = await preMergeGate(repository, pr, evidence.semantic);
-  evidence.publication.trigger = 'main branch workflow after merged PR, completed pre-merge exact-head semantic review and static checks';
-  if (release?.assets.some(asset => asset.name === 'review.json')) {
-    const recorded = JSON.parse(files.get('review.json'));
-    assert(JSON.stringify(recorded.semantic) === JSON.stringify(evidence.semantic) && JSON.stringify(recorded.semanticGate) === JSON.stringify(evidence.semanticGate), 'Draft semantic evidence changed; refusing to replace its review record');
-  } else files.set('review.json', Buffer.from(JSON.stringify(evidence, null, 2) + '\n'));
-  if (!release) {
-    if (!tag) assert((await api('/git/ref/heads/main')).object.sha === head, 'Main advanced during publication; rerun at its current revision');
-    release = await api('/releases', { method: 'POST', body: JSON.stringify({ tag_name: plan.tag, target_commitish: releaseCommit, name: plan.title, draft: true, prerelease: true, make_latest: 'false', body: `Development plugin packages for the matching API 1 host.\n\nAutomatically published after [PR #${plan.pullRequest}](${pr.html_url}) completed its exact-head semantic review and static checks before merge. [Semantic review record](${evidence.semantic.url}); decision: ${evidence.semantic.decision}, kind: ${evidence.semantic.kind}. Fixed package source: ${plan.sourceCommit}. Publishing revision/tag: ${releaseCommit}.\n\nSee review.json for actual check URLs, review identities and timestamps; human review: ${evidence.human.status}. Automated review does not certify runtime behavior or safety. Existing stable 0.1.4 catalog metadata is unchanged.\n\nVerify SHA256SUMS and official-plugins.lock.json before installation. application-official-plugins.lock.json pins the archive and every package tree.` }) });
-  }
-  for (const [name, bytes] of files) {
-    const existing = release.assets.find(asset => asset.name === name);
-    if (existing) { assert(existing.digest === `sha256:${sha256(bytes)}`, `Draft asset differs: ${name}; refusing overwrite`); continue; }
-    const upload = new URL(release.upload_url.split('{')[0]); assert(upload.hostname === 'uploads.github.com', 'Unexpected asset upload endpoint'); upload.searchParams.set('name', name);
-    const response = await fetch(upload, { method: 'POST', headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}`, 'Content-Type': 'application/octet-stream' }, body: bytes });
-    assert(response.ok, `Asset upload failed: ${name} (${response.status})`);
-    const asset = await response.json(); assert(asset.digest === `sha256:${sha256(bytes)}`, `Uploaded asset digest differs: ${name}`);
-  }
-  release = await api(`/releases/${release.id}`, { method: 'PATCH', body: JSON.stringify({ draft: false, prerelease: true, make_latest: 'false' }) });
-  console.log(`Published ${release.html_url}`);
+  await preserveRecordedReview(release, plan, pr, files, releaseCommit);
+  assert(release.prerelease, 'Existing release is not a prerelease'); validateAssets(release, files);
+  console.log(`Verified historical publication without changes: ${release.html_url}`);
 }
 
 async function main() {

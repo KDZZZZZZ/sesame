@@ -1,15 +1,15 @@
-# Sesame 0.2.1 安装与开始使用
+# Sesame 0.2.2 安装与开始使用
 
-[下载安装包](https://github.com/KDZZZZZZ/sesame/releases/tag/v0.2.1) · [插件目录](https://sesame.bot/zh/plugins/) · [使用文档](https://sesame.bot/zh/docs/)
+[下载安装包](https://github.com/KDZZZZZZ/sesame/releases/tag/v0.2.2) · [插件目录](https://sesame.bot/zh/plugins/) · [使用文档](https://sesame.bot/zh/docs/)
 
 ## 选择安装包
 
 | 系统 | 文件 | 安装方式 |
 | --- | --- | --- |
-| macOS 13+，Apple Silicon（M 系列） | `Sesame-0.2.1-mac-arm64.dmg` | 打开后拖入 Applications，再从 Applications 启动 |
-| Windows 10/11 x64 | `Sesame-0.2.1-win-x64.exe` | 运行安装器，选择安装目录 |
-| Linux x64，Debian/Ubuntu 系 | `Sesame-0.2.1-linux-x64.deb` | 在文件所在目录运行 `sudo apt install ./Sesame-0.2.1-linux-x64.deb` |
-| Linux x64，其他兼容桌面发行版 | `Sesame-0.2.1-linux-x64.AppImage` | 添加执行权限后运行；依赖发行版的 FUSE 支持，也可使用 `--appimage-extract-and-run` |
+| macOS 13+，Apple Silicon（M 系列） | `Sesame-0.2.2-mac-arm64.dmg` | 打开后拖入 Applications，再从 Applications 启动 |
+| Windows 10/11 x64 | `Sesame-0.2.2-win-x64.exe` | 运行安装器，选择安装目录 |
+| Linux x64，Debian/Ubuntu 系 | `Sesame-0.2.2-linux-x64.deb` | 在文件所在目录运行 `sudo apt install ./Sesame-0.2.2-linux-x64.deb` |
+| Linux x64，其他兼容桌面发行版 | `Sesame-0.2.2-linux-x64.AppImage` | 添加执行权限后运行；依赖发行版的 FUSE 支持，也可使用 `--appimage-extract-and-run` |
 
 下载时可用同一发行页的 `SHA256SUMS.txt` 核对文件。当前 macOS 包是本机签名，未经过 Apple 公证；Windows 包未购买代码签名证书，首次启动可能被系统拦截。确认来源与校验值后，macOS 可在「系统设置 → 隐私与安全性」允许打开，Windows 可在 SmartScreen 中查看「更多信息」。请勿全局关闭系统安全检查。
 
@@ -33,7 +33,7 @@
 | Backtrader 策略回测 | `sesame/backtrader` | Python、Backtrader 和固定历史数据；不提供实盘 |
 | Agent 按明确指令手动交易 | `sesame/manual-trading` | Sesame 0.2.1+，以及已配置的受支持交易后端；插件本身不提供券商连接 |
 
-ICT、Price Action、波浪、威科夫、道氏理论、人文分析、策略研究和因子研究等是独立方法插件。按自己需要安装，不会因选择其中一种方法而自动启用其他方法。完整的 32 个插件（9 个核心、23 个按需包）及各自许可证、能力范围见插件目录。插件目录可独立更新，已发布安装包内的固定插件版本仍以发行记录为准；更新已安装插件时由 Agent 核验当前版本与摘要后执行。
+ICT、Price Action、波浪、威科夫、道氏理论、人文分析、策略研究和因子研究等是独立方法插件。按自己需要安装，不会因选择其中一种方法而自动启用其他方法。完整的 32 个插件（9 个核心、23 个按需包）及各自许可证、能力范围见插件目录。插件目录与本体版本分别维护，已发布安装包内的固定插件版本仍以发行记录为准；更新已安装插件时由 Agent 核验当前版本与摘要后执行。
 
 ## 从 0.1.x 升级
 
@@ -47,7 +47,7 @@ ICT、Price Action、波浪、威科夫、道氏理论、人文分析、策略�
 
 Agent、原生插件和本地 MCP 以当前系统用户权限执行，能够读写工作区外的文件、联网及启动程序。依赖优先复用本机配置；任务结束只清理自己拥有的临时文件和进程，不删除用户外部文件。报告和图表指标仍在隔离的浏览器/Worker 中渲染。
 
-本次验证包括 macOS 应用启动，以及 Windows/Linux 原生构建、安装包提取和后端导入；后两者不等于已验证所有桌面环境或券商。真实模型已完成多后端图表、研究报告和原生回测；MT5 模拟账户已验证交易结果。QMT 真实 Windows 券商连接和 A 股实盘尚未验证。模型请求和上游数据可能需要重试，全部插件也不具有相同的实测范围。
+本版检查覆盖功能回归、报告真实渲染、macOS 应用启动，以及 Windows/Linux 原生构建、安装包提取和后端导入。Windows/Linux 完整桌面交互、真实券商及模拟账户交易没有在本版重新测试；QMT 券商连接和 A 股实盘仍未验证。各插件的环境要求与实测范围见其说明。
 
 ## English quick start
 

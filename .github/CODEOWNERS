@@ -1,10 +1,2 @@
-/plugins/ @KDZZZZZZ
-/.github/scripts/*catalog* @KDZZZZZZ
-/.github/workflows/plugin-catalog.yml @KDZZZZZZ
-/.github/CODEOWNERS @KDZZZZZZ
-/.github/scripts/*api1* @KDZZZZZZ
-/.github/scripts/release-plugins* @KDZZZZZZ
-/.github/plugin-releases/ @KDZZZZZZ
-/.github/workflows/plugin-api*.yml @KDZZZZZZ
-/.github/scripts/semantic-review* @KDZZZZZZ
-/.github/workflows/plugin-semantic-review.yml @KDZZZZZZ
+# Final merge authority is enforced by repository rulesets.
+* @KDZZZZZZ

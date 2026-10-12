@@ -1,0 +1,62 @@
+name: Application release
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: application-release
+  cancel-in-progress: false
+jobs:
+  validate-main:
+    if: github.repository == 'KDZZZZZZ/sesame' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - name: Test application publication and retired plugin publication boundaries
+        run: node --test .github/scripts/release-application.test.mjs .github/scripts/release-plugins.test.mjs .github/scripts/catalog.test.mjs
+      - name: Validate the committed plan and immutable package catalogs
+        run: |
+          node .github/scripts/release-application.mjs --check .
+          node plugins/api-v1/scripts/plugin-lock.mjs --check
+          node plugins/api-v1/scripts/plugin-lock.mjs --check --source plugins/optional-api-v1
+          node plugins/api-v1/scripts/catalog.mjs --check
+  publish:
+    needs: validate-main
+    if: github.repository == 'KDZZZZZZ/sesame' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      published: ${{ steps.release.outputs.published }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - name: Publish the complete verified draft or verify and skip an existing release
+        id: release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node .github/scripts/release-application.mjs --publish .
+  mirror:
+    needs: publish
+    if: needs.publish.outputs.published == 'true'
+    uses: ./.github/workflows/mirror-r2.yml
+    with:
+      tag: ${{ needs.publish.outputs.tag }}
+    secrets: inherit
