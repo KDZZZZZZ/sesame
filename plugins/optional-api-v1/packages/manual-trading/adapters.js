@@ -22,11 +22,16 @@ export function payload(result) {
   }
   return result;
 }
-export function createAdapters(host, {now=Date.now}={}) {
+export function createAdapters(host, {now=Date.now,authorizeRequest}={}) {
+  const background=()=>host.scope?.kind==='subagent' && host.agents?.current()?.pluginId==='sesame/manual-trading';
   async function call(backend,name,args,signal) {
     const pluginId=`sesame/${backend}`;
     check(typeof host.tools.call==='function','PREREQUISITE_REQUIRED','This host needs the public tools.call plugin composition port');
     check(host.plugins.isActive(pluginId),'PREREQUISITE_REQUIRED',`Load ${pluginId} in this conversation first; disabled plugins are not enabled automatically`);
+    if(background() && ['mt5_trading_order','mt5_trading_pause','qmt_trading_order','qmt_trading_cancel'].includes(name)) {
+      check(typeof authorizeRequest==='function','FORBIDDEN','Backend write requires a live portfolio executor intent');
+      args=authorizeRequest(name,args);
+    }
     return payload(await host.tools.call({pluginId,name,arguments:args},signal));
   }
   async function py(method,args,signal,commandId=`manual-read-${randomUUID()}`) {
@@ -35,6 +40,7 @@ export function createAdapters(host, {now=Date.now}={}) {
     return command.result.result;
   }
   async function identity(backend,signal) {
+    if(background()) return (await call(backend,`${backend}_trading_context`,{action:'identity'},signal)).account;
     if(backend==='mt5') {
       const {settings}=await call('mt5','mt5_settings',{},signal);
       check(settings?.account?.login && settings.account.server,'PREREQUISITE_REQUIRED','MT5 account must already be configured');
@@ -50,22 +56,26 @@ export function createAdapters(host, {now=Date.now}={}) {
       const catalog=await call('mt5','mt5_catalog',{server:'python',query:'order_send'},signal);
       const order=catalog.items?.find(x=>x.server==='python')?.tools?.find(x=>x.name==='order_send');
       check(order?.callable && order.inputSchema?.properties?.execution_guard,'PREREQUISITE_REQUIRED','Use sesame/mt5 1.3.0+ with a connected Python SDK and execution_guard; pure MCP quotes do not establish UTC freshness');
-      const [info,terminal,spec,positions]=await Promise.all([py('account_info',{},signal),py('terminal_info',{},signal),py('symbol_info',{symbol},signal),py('positions_get',{symbol},signal)]);
+      const [info,terminal,spec,positions,orders]=await Promise.all([py('account_info',{},signal),py('terminal_info',{},signal),py('symbol_info',{symbol},signal),py('positions_get',{symbol},signal),background()?py('orders_get',{symbol},signal):undefined]);
       check(String(info.login)===account.accountId && info.server===account.server,'ACCOUNT_MISMATCH','MT5 current account differs from configured account');
       check(terminal.connected===true,'SOURCE_UNAVAILABLE','MT5 is not connected to its broker');
-      check(spec.name===symbol && Array.isArray(positions),'SOURCE_DATA_INVALID','Native symbol/positions omitted');
+      check(spec.name===symbol && Array.isArray(positions) && (!background() || Array.isArray(orders)),'SOURCE_DATA_INVALID','Native symbol/positions/orders omitted');
       const quote=await quoteFor(backend,symbol,signal);
-      return {account,symbol,spec,positions,quote,readStartedAt:began,capturedAt:now(),captureMs:now()-began,accountSummary:{balance:info.balance??null,equity:info.equity??null,currency:info.currency??null,tradeAllowed:info.trade_allowed===true && info.trade_expert===true}};
+      return {account,symbol,spec,positions,...(orders ? {orders} : {}),quote,readStartedAt:began,capturedAt:now(),captureMs:now()-began,accountSummary:{balance:info.balance??null,equity:info.equity??null,currency:info.currency??null,tradeAllowed:info.trade_allowed===true && info.trade_expert===true}};
     }
     // Older QMT packages must not silently discard the final-mile guard.
-    const installed=host.plugins.inspect('sesame/qmt');
-    check(/^1\.(?:[2-9]|[1-9]\d)\./.test(installed?.version??''),'PREREQUISITE_REQUIRED','Use sesame/qmt 1.2.0+ with native execution guards');
-    const [specResult,asset,positions]=await Promise.all([call('qmt','qmt_read',{action:'describe',symbols:[symbol]},signal),call('qmt','qmt_read',{action:'asset'},signal),call('qmt','qmt_read',{action:'positions',page:{limit:200}},signal)]);
-    for(const read of [specResult,asset,positions]) check(read.connection?.id===account.connectionId && read.connection.revision===account.revision,'CONNECTION_CHANGED','QMT connection changed during observation');
-    check(specResult.items?.length===1 && specResult.items[0].symbol===symbol && !positions.nextCursor,'SOURCE_DATA_INVALID','Incomplete native symbol/positions snapshot; narrow the account before automated preflight');
+    // Background identity already requires the guarded 1.3+ plan tool. The
+    // public plugin-inspection port is main/service only.
+    if(!background()) {
+      const installed=host.plugins.inspect('sesame/qmt');
+      check(/^1\.(?:[2-9]|[1-9]\d)\./.test(installed?.version??''),'PREREQUISITE_REQUIRED','Use sesame/qmt 1.2.0+ with native execution guards');
+    }
+    const [specResult,asset,positions,orders]=await Promise.all([call('qmt','qmt_read',{action:'describe',symbols:[symbol]},signal),call('qmt','qmt_read',{action:'asset'},signal),call('qmt','qmt_read',{action:'positions',page:{limit:200}},signal),background()?call('qmt','qmt_read',{action:'orders',page:{limit:200}},signal):undefined]);
+    for(const read of [specResult,asset,positions,orders].filter(Boolean)) check(read.connection?.id===account.connectionId && read.connection.revision===account.revision,'CONNECTION_CHANGED','QMT connection changed during observation');
+    check(specResult.items?.length===1 && specResult.items[0].symbol===symbol && !positions.nextCursor && (!background() || Array.isArray(orders?.items) && !orders.nextCursor),'SOURCE_DATA_INVALID','Incomplete native symbol/positions/orders snapshot; narrow the account before automated preflight');
     check(String(asset.asset?.account_id)===account.accountId,'ACCOUNT_MISMATCH','QMT asset belongs to another account');
     const quote=await quoteFor(backend,symbol,signal);
-    return {account,symbol,spec:specResult.items[0].detail,positions:positions.items,quote,readStartedAt:began,capturedAt:now(),captureMs:now()-began,accountSummary:asset.asset};
+    return {account,symbol,spec:specResult.items[0].detail,positions:positions.items,...(orders ? {orders:orders.items} : {}),quote,readStartedAt:began,capturedAt:now(),captureMs:now()-began,accountSummary:asset.asset};
   }
   async function quoteFor(backend,symbol,signal) {
     const startedAt=now();
@@ -74,7 +84,20 @@ export function createAdapters(host, {now=Date.now}={}) {
     check(Number.isSafeInteger(sourceTimeMs) && sourceTimeMs>=1000000000000,'SOURCE_DATA_INVALID','Quote has no verified UTC epoch milliseconds; reception time is not source time');
     return {sourceTimeMs,receivedAt:now(),requestMs:now()-startedAt,bid:decimal(backend==='mt5'?tick?.bid:tick?.bidPrice?.[0]),ask:decimal(backend==='mt5'?tick?.ask:tick?.askPrice?.[0])};
   }
-  const guardFor=(observation,args)=>({observed_at:observation.quote.sourceTimeMs,expires_at:observation.expiresAt,max_quote_age_ms:5000,max_quote_to_send_ms:1000,price_limit:args.price_limit});
+  function expectedPositions(observation) {
+    const rows=observation.positions.filter(row=>(row.symbol??row.stock_code)===observation.symbol);
+    check(rows.length<=1000,'SOURCE_DATA_INVALID','Position guard exceeds its bounded account snapshot');
+    return rows.map(row=>{
+      if(observation.backend==='mt5') {
+        const ticket=nativeId(row.ticket),type=Number(row.type);
+        check(ticket!==null && [0,1].includes(type),'SOURCE_DATA_INVALID','Position guard needs exact MT5 tickets and sides');
+        return {ticket,type,volume:decimal(row.volume)};
+      }
+      check(row.account_id===observation.account.accountId && [row.volume,row.can_use_volume].every(value=>/^(0|[1-9]\d*)$/.test(String(value))),'SOURCE_DATA_INVALID','Position guard needs exact QMT account and share amounts');
+      return {account_id:row.account_id,stock_code:row.stock_code,volume:String(row.volume),can_use_volume:String(row.can_use_volume)};
+    });
+  }
+  const guardFor=(observation,args)=>({observed_at:observation.quote.sourceTimeMs,expires_at:observation.expiresAt,max_quote_age_ms:5000,max_quote_to_send_ms:1000,price_limit:args.price_limit,...(background()?{expected_positions:expectedPositions(observation)}:{})});
   function orderRequest(observation,args) {
     const {spec,symbol}=observation, volume=decimal(args.quantity), limit=decimal(args.price_limit);
     check(['buy','sell'].includes(args.side),'INVALID_ARGUMENT','Choose buy or sell');
@@ -106,14 +129,14 @@ export function createAdapters(host, {now=Date.now}={}) {
   }
   async function submit(observation,args,signal) {
     const request=orderRequest(observation,args);
-    return await call(observation.backend,observation.backend==='mt5'?'mt5_trade':'qmt_order',request,signal);
+    return await call(observation.backend,observation.backend==='mt5'?(background()?'mt5_trading_order':'mt5_trade'):background()?'qmt_trading_order':'qmt_order',request,signal);
   }
   async function status(record,signal,expectedCurrent) {
     const backend=record.backend,current=await identity(backend,signal);
     check(sameAccount(current,record.account),'CONNECTION_CHANGED','Cannot recover against a different account or connection');
     check(!expectedCurrent || canonical(current)===canonical(expectedCurrent),'CONNECTION_CHANGED','Configuration changed before recovery reads');
     const verifyConfiguration=async()=>check(canonical(await identity(backend,signal))===canonical(current),'CONNECTION_CHANGED','Configuration changed during recovery reads');
-    const command=await call(backend,backend==='mt5'?'mt5_command':'qmt_command',backend==='mt5'?{command_id:record.backendCommandId}:{operation_id:record.id},signal);
+    const command=await call(backend,backend==='mt5'?(record.planExecution?'mt5_trading_command':'mt5_command'):background()?'qmt_trading_command':'qmt_command',backend==='mt5'?{command_id:record.backendCommandId}:{operation_id:record.id},signal);
     if(backend==='mt5') {
       const verifyNativeAccount=async()=>{const info=await py('account_info',{},signal);check(String(info.login)===record.account.accountId && info.server===record.account.server,'ACCOUNT_MISMATCH','Do not recover an order against a different logged-in account');};
       await verifyNativeAccount();
@@ -129,14 +152,14 @@ export function createAdapters(host, {now=Date.now}={}) {
     await verifyConfiguration();
     return {command,orders:reads[0].items.filter(x=>qmtOwned(x,record,command.remark) && qmtPending(x)),deals:reads[1].items.filter(x=>qmtOwned(x,record,command.remark) && typeof x.traded_id==='string' && x.traded_id.length>0 && positive(x.traded_volume)),coverage:reads.some(x=>x.nextCursor)?'truncated_current_day':'current_trading_day_only',complete:false};
   }
-  const command=(record,signal)=>call(record.backend,record.backend==='mt5'?'mt5_command':'qmt_command',record.backend==='mt5'?{command_id:record.backendCommandId}:{operation_id:record.id},signal);
+  const command=(record,signal)=>call(record.backend,record.backend==='mt5'?(record.planExecution?'mt5_trading_command':'mt5_command'):background()?'qmt_trading_command':'qmt_command',record.backend==='mt5'?{command_id:record.backendCommandId}:{operation_id:record.id},signal);
   async function cancel(record,operationId,signal) {
     let request;
     try {
     const identityNow=await identity(record.backend,signal);
     check(sameAccount(identityNow,record.account),'CONNECTION_CHANGED','Cancellation account/connection changed');
     check(record.action==='limit','UNCONFIRMED_ORDER','Cancellation requires a pending limit order');
-    const original=await call(record.backend,record.backend==='mt5'?'mt5_command':'qmt_command',record.backend==='mt5'?{command_id:record.backendCommandId}:{operation_id:record.id},signal);
+    const original=await call(record.backend,record.backend==='mt5'?(record.planExecution?'mt5_trading_command':'mt5_command'):background()?'qmt_trading_command':'qmt_command',record.backend==='mt5'?{command_id:record.backendCommandId}:{operation_id:record.id},signal);
     if(record.backend==='qmt') {
       check(original.status==='submitted'||original.status==='outcome_unknown'&&original.intent?.symbol===record.symbol&&original.intent?.side===record.side&&original.intent?.shares===record.quantity,'UNCONFIRMED_ORDER','Stored QMT order intent cannot establish a recoverable cancellation');
       const read=await call('qmt','qmt_read',{action:'orders',page:{limit:200}},signal);
@@ -156,7 +179,7 @@ export function createAdapters(host, {now=Date.now}={}) {
     }
     check(canonical(await identity(record.backend,signal))===canonical(identityNow),'CONNECTION_CHANGED','Configuration changed during cancellation preflight');
     } catch(error) {error.details={...error.details,submission_attempted:false};throw error;}
-    return call(record.backend,record.backend==='mt5'?'mt5_trade':'qmt_cancel',request,signal);
+    return call(record.backend,record.backend==='mt5'?(background()?'mt5_trading_order':'mt5_trade'):background()?'qmt_trading_cancel':'qmt_cancel',request,signal);
   }
   return {snapshot,identity,submit,status,cancel,orderRequest,command};
 }

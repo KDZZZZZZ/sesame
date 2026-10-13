@@ -5,6 +5,7 @@ Times are local UTC epoch milliseconds and MT5's documented UTC tick.time_msc.
 """
 import decimal
 import math
+import re
 import time
 
 
@@ -61,7 +62,8 @@ def guarded_send(mt5, request, guard, clock=lambda: int(time.time() * 1000), mon
         need(now < guard["expires_at"], "SIGNAL_EXPIRED", "Trading decision expired before native submission")
         need((monotonic() - mono_start) * 1000 < guard["expires_at"] - start, "SIGNAL_EXPIRED", "Native preparation exceeded decision lifetime")
         return now
-    need(isinstance(guard, dict) and set(guard) == {"observed_at", "expires_at", "max_quote_age_ms", "max_quote_to_send_ms", "price_limit", "side", "expected_account", "expected_server"}, "INVALID_ARGUMENT", "Invalid execution guard")
+    required = {"observed_at", "expires_at", "max_quote_age_ms", "max_quote_to_send_ms", "price_limit", "side", "expected_account", "expected_server"}
+    need(isinstance(guard, dict) and required <= set(guard) <= required | {"expected_positions"}, "INVALID_ARGUMENT", "Invalid execution guard")
     need(all(type(guard[k]) is int for k in ("observed_at", "expires_at", "max_quote_age_ms", "max_quote_to_send_ms")), "INVALID_ARGUMENT", "Guard times must be integer milliseconds")
     need(0 < guard["expires_at"] - guard["observed_at"] <= 60000 and 0 < guard["max_quote_age_ms"] <= 5000 and 0 < guard["max_quote_to_send_ms"] <= 1000, "INVALID_ARGUMENT", "Guard exceeds supported latency budgets")
     deadline()
@@ -73,6 +75,36 @@ def guarded_send(mt5, request, guard, clock=lambda: int(time.time() * 1000), mon
     verify_account()
     symbol, side = request.get("symbol"), guard["side"]
     need(isinstance(symbol, str) and symbol and side in ("buy", "sell"), "INVALID_ARGUMENT", "Explicit symbol and side required")
+    expected_positions = None
+    if "expected_positions" in guard:
+        expected = guard["expected_positions"]
+        need(isinstance(expected, list) and len(expected) <= 20000, "INVALID_ARGUMENT", "Expected positions must be a bounded array")
+        expected_positions = []
+        for row in expected:
+            need(isinstance(row, dict) and set(row) == {"ticket", "type", "volume"}
+                 and isinstance(row["ticket"], str) and re.fullmatch(r"[1-9]\d*", row["ticket"]) is not None and int(row["ticket"]) < 2**64
+                 and type(row["type"]) is int and row["type"] in (0, 1)
+                 and isinstance(row["volume"], str) and re.fullmatch(r"(0|[1-9]\d*)(\.\d+)?", row["volume"]) is not None,
+                 "INVALID_ARGUMENT", "Malformed expected native position")
+            expected_positions.append((int(row["ticket"]), row["type"], number(row["volume"])))
+        need(len({row[0] for row in expected_positions}) == len(expected_positions), "INVALID_ARGUMENT", "Expected position tickets must be unique")
+        expected_positions.sort()
+    def verify_portfolio():
+        if expected_positions is None:
+            return
+        positions = mt5.positions_get(symbol=symbol)
+        need(isinstance(positions, (list, tuple)), "SOURCE_UNAVAILABLE", "Cannot verify full symbol positions")
+        actual = []
+        for row in positions:
+            ticket = str(getattr(row, "ticket", ""))
+            need(getattr(row, "symbol", None) == symbol and re.fullmatch(r"[1-9]\d*", ticket) is not None
+                 and int(ticket) < 2**64 and type(getattr(row, "type", None)) is int and row.type in (0, 1),
+                 "SOURCE_DATA_INVALID", "Malformed native symbol position")
+            actual.append((int(ticket), row.type, number(getattr(row, "volume", None))))
+        need(sorted(actual) == expected_positions, "POSITION_CHANGED", "Full symbol positions changed after observation")
+        orders = mt5.orders_get(symbol=symbol)
+        need(isinstance(orders, (list, tuple)), "SOURCE_UNAVAILABLE", "Cannot verify symbol working orders")
+        need(not orders, "WORKING_ORDERS", "Symbol has outstanding orders; reconcile before target execution")
     deal, pending = request.get("action") == mt5.TRADE_ACTION_DEAL, request.get("action") == mt5.TRADE_ACTION_PENDING
     expected_type = (mt5.ORDER_TYPE_BUY if side == "buy" else mt5.ORDER_TYPE_SELL) if deal else (mt5.ORDER_TYPE_BUY_LIMIT if side == "buy" else mt5.ORDER_TYPE_SELL_LIMIT)
     need((deal or pending) and request.get("type") == expected_type, "UNSUPPORTED_CAPABILITY", "Guard supports market, limit, and position reduction only")
@@ -107,11 +139,13 @@ def guarded_send(mt5, request, guard, clock=lambda: int(time.time() * 1000), mon
         need(order_price <= limit if side == "buy" else order_price >= limit, "INVALID_ARGUMENT", "Limit order exceeds authorized boundary")
     checked = mt5.order_check(request)
     need(checked is not None and checked.retcode == 0, "ORDER_CHECK_REJECTED", "Native order_check rejected the request")
+    verify_portfolio()
     # order_check may be slow; refresh after it without another model turn.
     tick, received, quote_ms, fresh_price = fresh_quote()
     # A native check can outlive an account switch, permission change or position
     # reduction. These last reads are inside the final quote-to-send budget.
     verify_position()
+    verify_portfolio()
     verify_account()
     # Keep the checked request unchanged; a moved quote is safe only inside both
     # the absolute limit and the explicit broker deviation. The broker is final.

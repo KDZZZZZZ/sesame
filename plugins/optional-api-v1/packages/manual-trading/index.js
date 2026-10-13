@@ -1,9 +1,24 @@
 import { createService } from './service.js';
+import { createAgentTools } from './agent-tools.js';
+import { TradingRuntime } from './runtime.js';
+import { JudgmentService, createJudgmentTools } from './judgment/index.js';
+import { instance, setInstance } from './state.js';
+
+export async function activate(host, options = {}) {
+  const judgment = new JudgmentService(host).init();
+  const runtime = new TradingRuntime(host, options);
+  try { setInstance(host, { runtime, judgment }); await runtime.start(); }
+  catch (error) { await runtime.dispose(); await judgment.close(); setInstance(host, null); throw error; }
+  return { afterTurn: event => judgment.auditTurn(event), async dispose() { await runtime.dispose(); await judgment.close(); setInstance(host, null); } };
+}
+
 export function createTools(host) {
   const {define,Type}=host.tools,service=createService(host);
   const text=description=>Type.String({minLength:1,maxLength:100,description});
   const amount=description=>Type.String({pattern:'^(0|[1-9]\\d*)(\\.\\d+)?$',maxLength:40,description});
+  const judgment = new Proxy({}, { get: (_target, method) => (...args) => instance(host).judgment[method](...args) });
   return [
+    ...createAgentTools(host), ...createJudgmentTools(host, { service: judgment }),
     define('manual_trade_inspect','Inspect supported manual trading channels and enforced latency policy. Does not connect, configure, install, or trade.',{},()=>service.inspect()),
     define('manual_trade_observe','Read current account, symbol conditions, positions and a source-timestamped executable quote from an already loaded MT5/QMT backend. Returns an observation_id that starts the model decision clock; no order is sent.',{backend:Type.Union([Type.Literal('mt5'),Type.Literal('qmt')]),symbol:text('Exact broker symbol')},(args,signal)=>service.observe(args,signal)),
     define('manual_trade_execute','Submit one explicitly user-authorized order from a recent observation. M5+ only. In the native process recheck account, available position/specification, deadline and latest quote, then send once without another model turn. Stable operation_id prevents duplicates; stale/slow preparation rejects. unknown must be queried, never resent.',{

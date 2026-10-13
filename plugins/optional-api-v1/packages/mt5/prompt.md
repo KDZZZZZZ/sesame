@@ -9,3 +9,16 @@ MT5 的全部官方能力由 sesame/mt5 提供，各工具保留自己的 schema
 新策略先用 sesame/strategy-authoring 写 SVL、发布源并由宿主从源生成图，再读取 mt5_target，按目标 profile 翻译原生实现，长源码先在当前工作区写单个 JSON 清单（mt5_translation 参数去掉 operation_id，files 内嵌文本），再用 mt5_translation_file(operation_id, manifest_path) 固定源、文件、source_map、parameter_map 和差异，避免工具调用中全文重发。先读 target/translation-file.md；同 ID/路径重试复用首次快照，即使文件已清理；修改内容用新 ID。小内容也可用 mt5_translation 内联登记。随后显式调用 mt5_compile、mt5_backtest 或 mt5_deployment。原生编译、真实 Tester、实盘运行与宿主 SVL 回放是各自独立的证据；不得把一层通过写成另一层已验证。FIX 为可选目标能力。
 
 已有独立 MQL5/EX5 工程继续由 mt5_project 管理，保留原语言、修订和轨迹。它们没有 SVL 证明，不能用新的图解释旧运行。主 Agent 可管理配置、查看账本和运行状态；只有用户明确要求交易或运行策略，才执行对应原生动作。插件加载、研究或编译成功本身不构成交易指令。
+# 周期手动交易的账户与风险控制
+
+`mt5_trading_context({action:"identity"})` 只返回已配置的 `{accountId,server,revision}`。`action:"snapshot"` 读取全账户资金、持仓、活动订单、指定最近天数的成交及历史订单、同账户原生挂载；不按 magic、comment 或手动/策略来源过滤。`history_days` 默认 7、范围 1–90；broker 保留的数据不代表全部历史，读取失败不能当作空仓。
+
+计划入口可由主会话，或由 `sesame/manual-trading` 提交的正在运行的任务使用。受信任务输入为 `{tradingPlan:{id,backend:"mt5",account,ownerConversationId},runId,role,executionPublicKey}`；账户及配置版本必须与当前连接一致。普通 subagent、其他插件触发和过期身份不能取得这些能力。
+
+`mt5_trading_pause({deployment_id,account,reason,authorization?})` 在事件任务中仅允许 `role:"executor"`，并要求运行时签署的精确意图。它复用真实挂载停止路径：写入停止标记并移除对应图表的 EA，不关闭任何持仓，不承诺保留执行状态或自动恢复。回执明确 `nativeAction:"remove_expert"` 与真实 `status`；`unknown` 必须观察核实，不能改 ID 自动重放。
+
+`mt5_trading_order({server:"python",tool:"order_send",arguments,command_id,authorization?})` 仅提交带原生执行/撤单保护的计划意图。模型只持有 Ed25519 公钥，私钥留在运行时内存；它不能签署新的目标或更改参数。证明为 `{expiresAt,signature}`，消息为 `canonical({version:1,taskId,runId,action:工具名,args:去除authorization的原参数,expiresAt})`，UTF-8 字节以 Ed25519 签署，签名使用标准 base64。有效期必须在当前时间之后且不超过 60 秒。主会话可省略证明；现有普通交易工具不改变。
+
+命令侧表固定账户、主会话拥有者和计划/运行/任务身份；原始回执归主会话持久化。`mt5_trading_command({command_id})` 只读取该拥有者与同一 login/server 的计划回执，允许配置版本更新后核对历史结果，不重新发送。`mt5_python` 的路由不能调用 `order_send` 等 trading 类方法。
+
+计划订单的 `execution_guard.expected_positions` 必须包含观察时本品种全部持仓，数组项为 `{ticket,type,volume}`（ticket 和十进制 volume 为字符串，type 为 0/1）；无持仓也必须传 `[]`。原生 worker 在 order_check 后与最终发送前重新比较完整持仓，并拒绝任何本品种活动订单，防止其他策略改变净仓后仍按旧目标差量下单。旧主会话执行保护可省略此字段。

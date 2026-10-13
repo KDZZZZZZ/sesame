@@ -28,3 +28,14 @@ Rejection before submission is stored as rejected; other unconfirmed failures re
 The manual-trading helper requires Sesame 0.2.1+ and this package 1.2.0+ on the existing authorized Windows session. Its QMT mapping supports limit buy/sell, status and cancellation only. Its query results must retain the exact connection/account/symbol, and cancellation refuses a truncated order page because it cannot prove uniqueness. No attached SL/TP, market order, dedicated close or automatic strategy hosting is added by the helper; native D1 history is not minute history.
 
 Primary reference: [XtQuant trading API](https://dict.thinktrader.net/nativeApi/xttrader.html).
+# 周期计划任务入口
+
+原有 `qmt_order` / `qmt_cancel` / `qmt_command` 的主会话限制保持不变。新 `qmt_trading_context({action:"identity"|"snapshot",history_days?})` 为主会话或正在运行的 `sesame/manual-trading` 计划任务提供账户读取。受信任务输入为 `{tradingPlan:{id,backend:"qmt",account,ownerConversationId},runId,role,executionPublicKey}`；`account` 固定 `{accountId,connectionId,revision}`，与当前配置严格核对。
+
+snapshot 返回全账户持仓，不按来源筛选；分页会完整读取本次保留快照。原生委托及成交仍仅覆盖当前交易日，`historyCoverage` 明确说明此限制，`history_days` 不会制造历史。QMT 不提供本插件管理的 EA 挂载，`deployments` 为 `[]`。
+
+`qmt_trading_order` 和 `qmt_trading_cancel` 参数分别与原下单、撤单相同，并可带 `authorization:{expiresAt,signature}`。主会话可省略证明；计划 `role:"executor"` 必须提供运行时的 Ed25519 签名。消息精确为 `canonical({version:1,taskId,runId,action:工具名,args:去除authorization的原参数,expiresAt})`，UTF-8 签署后以标准 base64 编码，有效期在当前时间之后且不超过 60 秒。公钥取自受信任务输入，私钥不交给模型。证明在配置队列前后核验，然后剥离以保持原始幂等语义与原生接口。
+
+周期订单必须提供 `execution_guard`，继续复用真实账户检查、T+1/可用资金及价格保护、幂等意图持久化和不明结果不重放规则。`qmt_trading_command({operation_id})` 读取同拥有者、同账户和 connectionId 的真实保留回执，允许当前配置版本变化后的恢复；执行仍要求精确版本。订单受理及撤单请求不等于成交、平仓或已撤销。
+
+计划订单还必须提供 `execution_guard.expected_positions`，项为 `{account_id,stock_code,volume,can_use_volume}`，数量为非负整数字符串；空仓必须传 `[]`。买卖均在最新报价前与最终发送前核对本品种全持仓。原生委托只有状态 53/54/56/57 可确认为终态；包括撤单中 51/52、未知 255 和缺失状态的其他情况均阻断，不把撤单请求当作无挂单。旧主会话保护可省略此字段。

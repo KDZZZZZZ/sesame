@@ -1,5 +1,6 @@
 import { createService, descriptors } from './service.js';
 import { configure, environment } from './configuration.js';
+import { createTradingTools } from './trading-context.js';
 
 const services = new Map();
 function service(host) { const key = host.storage.directory; if (!services.has(key)) services.set(key, createService(host)); return services.get(key); }
@@ -10,7 +11,8 @@ export function activate(host) {
 }
 export function createTools(host) {
   const { define, Type, string } = host.tools;
-  const executionGuard = Type.Optional(Type.Object({ observed_at:Type.Integer({minimum:1}), expires_at:Type.Integer({minimum:1}), max_quote_age_ms:Type.Integer({minimum:1,maximum:5000}), max_quote_to_send_ms:Type.Integer({minimum:1,maximum:1000}), price_limit:Type.String({pattern:'^(0|[1-9]\\d*)(\\.\\d+)?$'}) }, {additionalProperties:false,description:'Optional final-mile guard in the native worker: decision deadline, account/available shares/cash, fresh source timestamp and price boundary. No retry; submitted is not filled.'}));
+  const expectedPositions = Type.Optional(Type.Array(Type.Object({ account_id:string('Exact native account ID'), stock_code:Type.String({pattern:'^\\d{6}\\.(SH|SZ|BJ)$'}), volume:Type.String({pattern:'^(0|[1-9]\\d*)$'}), can_use_volume:Type.String({pattern:'^(0|[1-9]\\d*)$'}) }, {additionalProperties:false}), {maxItems:20000,description:'Exact full symbol position expectation; native worker rechecks holdings and no working orders before quote and before send'}));
+  const executionGuard = Type.Optional(Type.Object({ observed_at:Type.Integer({minimum:1}), expires_at:Type.Integer({minimum:1}), max_quote_age_ms:Type.Integer({minimum:1,maximum:5000}), max_quote_to_send_ms:Type.Integer({minimum:1,maximum:1000}), price_limit:Type.String({pattern:'^(0|[1-9]\\d*)(\\.\\d+)?$'}), expected_positions:expectedPositions }, {additionalProperties:false,description:'Optional final-mile guard in the native worker: decision deadline, account/available shares/cash, fresh source timestamp and price boundary. No retry; submitted is not filled.'}));
   const maybePath = Type.Optional(Type.Union([Type.String({ minLength: 1 }), Type.Null()]));
   return [
     define('qmt_environment', 'Inspect existing QMT configuration and Python paths without launching or downloading. verify imports the SDK explicitly; prepare first reuses an importable existing SDK and only then installs pinned wheels in a private Windows CPython 3.12 environment. Requires broker-authorized MiniQMT for later reads.', {
@@ -33,5 +35,6 @@ export function createTools(host) {
       operation_id:Type.String({pattern:'^[A-Za-z0-9_-]{1,100}$'}),user_authorized:Type.Literal(true),account_id:string('Exact authorized account ID'),connection_revision:string('Exact configured connection revision'),original_operation_id:string('Original qmt_order operation ID; unknown results require a retained intent and exact native recovery'),order_id:Type.String({pattern:'^[1-9]\\d*$'}),
     },(args,signal)=>service(host).command('cancel',args,signal,host.scope)),
     define('qmt_command', 'Read a stored QMT order/cancel receipt by operation_id without submitting or replaying it. outcome_unknown is unresolved even if a current-day search returns no match; inspect qmt_read orders/fills. This is not a live broker query.', {operation_id:string('Existing QMT operation ID')}, args=>service(host).commandRecord(args.operation_id,host.scope)),
+    ...createTradingTools(host, service(host), executionGuard),
   ];
 }
