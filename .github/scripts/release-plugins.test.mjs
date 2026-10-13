@@ -1,12 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validatePlan, reviewEvidence, validateAssets, releaseCommitFor } from './release-plugins.mjs';
+import { validatePlan, reviewEvidence, validateAssets, releaseCommitFor, requirePublishedPluginRelease } from './release-plugins.mjs';
 import { sha256 } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
 
 const sha = 'a'.repeat(40);
 const plan = () => ({ schemaVersion: 1, sourceCommit: sha, sourceRoot: 'plugins/api-v1', profile: 'core', tag: 'plugins-api-v1-dev.99', title: 'Development fixture', archive: { name: 'sesame-official-plugins-api-v1-dev.99.tar.gz', sha256: 'b'.repeat(64) }, lockSha256: 'c'.repeat(64), pullRequest: 5 });
 const pr = () => ({ merged: true, merged_at: '2026-10-09T16:00:00Z', base: { ref: 'main' }, head: { sha, repo: { full_name: 'KDZZZZZZ/sesame' } }, user: { id: 1 }, merge_commit_sha: 'd'.repeat(40), merged_by: { login: 'maintainer' } });
 const checks = () => ['package-static-review', 'catalog-static-review'].map((name, id) => ({ id, name, head_sha: sha, workflow: { path: `.github/workflows/${id ? 'plugin-catalog' : 'plugin-api-v1'}.yml`, event: 'pull_request_target' }, status: 'completed', conclusion: 'success' }));
+
+test('retired plugin publication rejects absent and draft releases while keeping historical verification', () => {
+  for (const release of [null, undefined, {}, { draft: true }, { draft: 'false' }]) assert.throws(() => requirePublishedPluginRelease(release), /retired/i);
+  const published = { draft: false, tag_name: 'plugins-api-v1-dev.21' };
+  assert.equal(requirePublishedPluginRelease(published), published);
+});
 
 test('release plans pin only allowed development roots, exact bytes and PRs', () => {
   assert.equal(validatePlan(plan()).tag, 'plugins-api-v1-dev.99');

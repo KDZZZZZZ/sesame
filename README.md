@@ -1,51 +1,85 @@
-<p align="center"><img src="logo.png" width="112" alt="Sesame logo"></p>
+<p align="center"><img src="logo.png" width="112" alt="Sesame"></p>
 
 # Sesame
 
-Open Sesame. 用自然语言研究市场、安排并行研究任务，并把结果直接画到行情图上。
+**让 Agent 在工作台中完成研究，让你看懂、监督并指导整个过程。**
 
-此公开仓库用于分发 Sesame 桌面安装包、安装说明、版本记录与开源插件。应用宿主源码在独立的私有仓库维护。
+Sesame 是面向量化研究与交易的 Agent 工作台。它把对话、行情图表、指标、策略、回测报告、外部工具和并行任务放进同一个工作空间：Agent 能围绕已有数据和工具持续工作，你能查看依据、追踪过程、调整方向，并检验结果。
 
-## 插件库
+我们相信，高集成度的工作台能同时提高 Agent 的执行效率和人的理解、监督与指导效率。实际的量化金融能力由本体接口、官方插件和外部数据及交易后端共同提供；开放的集成方式，让社区可以继续扩展新的市场、研究方法、工具和工作流。
 
-在 **[Sesame 插件库](https://sesame.bot/zh/plugins/)** 浏览插件，将精确名称（例如 `sesame/ict`）发给兼容的 Sesame，Agent 会按固定目录核验并在当前对话中加载。[Plugin API 1 插件目录](plugins/api-v1/CATALOG.md) 包括 32 个插件：9 个默认核心包与 23 个按需包。每个插件声明自己的最低应用版本，安装时会核验兼容性；`sesame/manual-trading` 需要 0.2.1，其余当前包支持 0.2.0。从 0.1.4 升级后，请按名称重新安装所需的 API 1 插件，旧插件不能直接复用。
+[产品网站](https://sesame.bot/zh/) · [下载本体](https://github.com/KDZZZZZZ/sesame/releases/latest) · [插件库](https://sesame.bot/zh/plugins/) · [插件开发](plugins/api-v1/docs/README.md) · [参与贡献](CONTRIBUTING.md)
 
-Sesame 0.1.4 请使用[历史 26 个插件的目录](plugins/)；其版本、来源摘要和安装方式保持不变。作者保留版权，逐包许可证、自动检查、独立 Agent 审阅与人工批准分别记录，见[贡献流程](plugins/CONTRIBUTING.md)。以下下载与上手说明适用于 0.2.1。
+## 在同一个工作台里完成什么
 
-## 下载
+| 能力 | 你可以怎样使用 |
+| --- | --- |
+| 市场与图表 | 接入不同数据源，打开行情、叠加指标，把分析依据直接画到图表上。 |
+| 研究与协作 | 让多个 Agent 分工处理任务，调用工具和模型，再把结果汇总为可检查的报告。 |
+| 策略与回测 | 使用 SVL 描述策略，通过所选引擎回测，查看策略逻辑、参数比较、收益和回撤。 |
+| 账户与交易 | 通过兼容的 MT5、QMT 等插件接入账户与执行能力；具体支持范围由插件和实际环境决定。 |
+| 记忆与复盘 | 保存有来源的研究记录、判断与结果，在后续任务中继续使用并复盘。 |
 
-当前版本 **[Sesame 0.2.1](https://github.com/KDZZZZZZ/sesame/releases/tag/v0.2.1)**：
+例如：
 
-| 设备 | 安装包 | 下载大小 |
-| --- | --- | --- |
-| macOS 13+ · Apple Silicon（M 系列） | [DMG](https://github.com/KDZZZZZZ/sesame/releases/download/v0.2.1/Sesame-0.2.1-mac-arm64.dmg) | 255.0 MB |
-| Windows 10/11 x64 | [安装器](https://github.com/KDZZZZZZ/sesame/releases/download/v0.2.1/Sesame-0.2.1-win-x64.exe) | 224.6 MB |
-| Linux x64 · Debian / Ubuntu 系 | [DEB](https://github.com/KDZZZZZZ/sesame/releases/download/v0.2.1/Sesame-0.2.1-linux-x64.deb) | 204.9 MB |
-| Linux x64 · 其他兼容桌面发行版 | [AppImage](https://github.com/KDZZZZZZ/sesame/releases/download/v0.2.1/Sesame-0.2.1-linux-x64.AppImage) | 236.1 MB |
+> 安装 sesame/mt5 和 sesame/akshare，把黄金和 A 股行情放进同一个工作台。
+>
+> 用 sesame/ict 标注价格结构和流动性，把每个判断的依据画在图上。
+>
+> 用 sesame/backtrader 回测这份策略，比较参数，并解释成本、回撤和还没有验证的假设。
 
-macOS 包为 ad-hoc 签名，未经过 Apple 公证；Windows 安装器未代码签名。系统提示处理见[安装与首次配置](INSTALL.md)。暂不提供 Intel Mac、Windows ARM 或 Linux ARM 包。本版不包含自动更新。
+当前 CCXT 插件提供公开现货行情；vn.py 和 Backtrader 插件用于回测。QMT 需要受支持的 Windows 环境和券商授权。多账户复制交易等组合工作流需要专门实现与验证，不能仅因底层接口可扩展就视为已经具备。
 
-## 四步上手
+## 插件可以扩展到什么程度
 
-1. **安装 Sesame。** 下载对应系统的安装包，核对发行页的 SHA256，再打开应用。
-2. **配置可用模型。** 在设置中配置自己的模型供应商和凭证，先发送一条消息验证连接。
-3. **按需选择插件。** 从[插件库](https://sesame.bot/zh/plugins/)复制精确 ID 发给 Sesame，例如「安装 sesame/akshare，打开 A 股行情」或「安装 sesame/mt5，复用我本机的 MT5」。
-4. **开始研究。** 让 Agent 安排并行任务、调整图表、绘制指标、生成交互报告，或通过所选后端开发与回测策略。
+插件可以是一个专门的研究方法，也可以连接数据源、账户、外部程序或服务，提供工具、图表指标、交互报告、策略引擎和 Agent 工作流。
 
-安装包自带 9 个基础插件。MT5、Python、Wine、QMT、vn.py 等环境不随应用安装；插件优先查找和复用本机软件及配置，确实缺少时再按任务准备依赖。Sesame 本体无需另装 Node.js、Python 或浏览器。Agent 与原生插件使用当前系统用户的本机权限，报告与指标保留浏览器隔离。
+- **Skill**：定义某个市场或研究方法的流程、资料与判断规则。
+- **MCP**：把已有工具和外部服务接进工作台。
+- **Native**：通过公开 HostContext 接口注册工具、市场与账户 provider，使用工作区、存储、模型推理、Agent 任务和生命周期能力。
 
-## 可以怎么用
+插件可以按明确的工具与 provider 身份组合使用，并在自己的工作流中选择依赖的能力。统一接口提供集成基础；多数据源并用、账户选择和跨插件执行的具体行为仍需插件实现，并遵守相应接口约定。
 
-- “安装 sesame/mt5 和 sesame/akshare，把黄金和 A 股放在同一个工作台。”
-- “只用 sesame/ict 标注流动性和价格结构，把判断依据画到图上。”
-- “同时安排三个研究任务，分别分析趋势、波动和新闻，最后汇总成报告。”
-- “用 sesame/backtrader 回测这份策略，说明成本、回撤和哪些假设还未验证。”
-- “安装 sesame/judgment-evolution，把这个未来可验证判断记下来，到期复盘。”
+原生插件是运行在本机的可信代码，具有当前系统用户的权限；报告与指标使用浏览器隔离环境。开发者应说明联网、文件访问、外部依赖、凭证和交易写操作。公开接口、可审查源码和明确的能力说明，是使用与扩展插件的基础。
 
-行情、账户、回测与实盘能力取决于所选插件和实际配置。QMT 需要受支持的 Windows 环境与券商授权，当前 vn.py 和 Backtrader 插件用于回测，CCXT 插件仅提供公开现货行情。
+安装包内置基础插件；市场、交易后端和研究方法按需安装。浏览[当前插件目录](plugins/api-v1/CATALOG.md)，将精确 ID 发给 Sesame 即可请求安装。兼容性以各包声明的最低宿主版本为准；新版开发和 Agent 接口需要 Sesame 0.2.2。
 
-## 从 0.1.x 升级
+## 下载与开始使用
 
-先备份现有用户数据，再退出旧版并替换应用。**旧原生插件不兼容 Plugin API 1，需要安装对应的新版插件。** 会话、报告与原始数据保留，旧 MT5 组已合并为按需安装的 `sesame/mt5`。完整步骤、数据目录与额外依赖见 [INSTALL.md](INSTALL.md)。
+当前本体版本：[Sesame 0.2.2](https://github.com/KDZZZZZZ/sesame/releases/tag/v0.2.2)。
 
-本体回归 345 通过、0 失败，12 项按平台或环境条件跳过。macOS 最终 DMG 已验证原生启动；Windows/Linux 已完成原生构建、安装包解包和包内服务导入检查，完整桌面及实际券商操作仍需对应设备验证。QMT 真实券商连接与 A 股实盘未验证。各插件的真实任务范围见发行说明；[发行文件与摘要](RELEASE-ASSETS.json)记录最终下载字节。
+| 平台 | 安装包 |
+| --- | --- |
+| macOS 13+ · Apple Silicon | [DMG](https://github.com/KDZZZZZZ/sesame/releases/download/v0.2.2/Sesame-0.2.2-mac-arm64.dmg) |
+| Windows 10/11 x64 | [安装器](https://github.com/KDZZZZZZ/sesame/releases/download/v0.2.2/Sesame-0.2.2-win-x64.exe) |
+| Linux x64 · Debian / Ubuntu | [DEB](https://github.com/KDZZZZZZ/sesame/releases/download/v0.2.2/Sesame-0.2.2-linux-x64.deb) |
+| Linux x64 · 其他兼容桌面发行版 | [AppImage](https://github.com/KDZZZZZZ/sesame/releases/download/v0.2.2/Sesame-0.2.2-linux-x64.AppImage) |
+
+1. 下载对应安装包，核对发行页的 SHA256，并按 [安装指南](INSTALL.md) 完成安装。
+2. 在设置中配置模型供应商与凭证，发送一条消息验证连接。
+3. 从插件库选择需要的数据源、交易后端或研究方法，告诉 Sesame 要完成的任务。
+4. 查看图表、报告和工具结果，随时补充约束、调整任务并验证结论。
+
+本体不需要另装 Node.js、Python 或浏览器。MT5、Python、Wine、QMT 等插件依赖按实际任务准备，优先复用本机环境。macOS 安装包尚未公证，Windows 安装包未签名；系统提示、升级备份和故障排查见 [INSTALL.md](INSTALL.md)。0.2.2 尚不包含自动更新。
+
+## 开发自己的插件
+
+公开仓库提供插件源码、接口文档、脚手架和验证工具；编写插件不需要私有宿主源码。先从[开发文档索引](plugins/api-v1/docs/README.md)进入：
+
+| 你要做什么 | 阅读资料 |
+| --- | --- |
+| 让 Sesame 或外部编码 Agent 开发插件 | [开发 Skill](plugins/api-v1/packages/plugin-manager/skills/develop-plugins/SKILL.md) |
+| 了解接口、作用域和能力限制 | [HostContext 与产品接口](plugins/api-v1/packages/plugin-manager/skills/develop-plugins/references/host-api.md) |
+| 创建、测试、安装和恢复插件 | [编写与安装](plugins/api-v1/packages/plugin-manager/skills/develop-plugins/references/authoring.md) · [恢复指南](plugins/api-v1/packages/plugin-manager/skills/develop-plugins/references/recovery.md) |
+| 寻找可复用的实现 | [基础插件](plugins/api-v1/packages/) · [可选插件](plugins/optional-api-v1/packages/) |
+| 提交代码与了解分发规则 | [贡献流程](CONTRIBUTING.md) · [插件发布政策](plugins/api-v1/PUBLISHING.md) |
+
+外部开发环境使用 Node.js 24+，在本仓库中生成一个独立草稿：
+
+```sh
+node plugins/api-v1/packages/plugin-manager/scripts/create-plugin.mjs --name my-research --publisher your-name --description "研究某个市场的方法" --template skill --output ../my-research
+```
+
+原生工具插件可将模板改为 `native`。完成实际功能后，在兼容的 Sesame 中执行 `plugin_validate → plugin_test → plugin_install → plugin_load`，再验证真实任务。脚手架本身不会安装依赖或自动激活插件。
+
+这个仓库维护桌面发行、安装说明与开源插件；应用宿主在独立私有仓库维护。各插件保留自己的许可证、作者和来源。`main` 是稳定分发入口，社区通过 fork 向 `dev` 提交 PR，维护者审核后合入。新的 GitHub Release 仅用于本体版本；历史插件归档继续保留供旧版本下载。详见 [本体发布流程](RELEASING.md)。

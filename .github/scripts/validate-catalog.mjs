@@ -109,10 +109,19 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   try {
     const root = resolve(process.argv[2] || '.');
     const {catalog,summary} = validateRepository(root);
-    if (process.env.CATALOG_BASE_SHA && /^[a-f0-9]{40}$/.test(process.env.CATALOG_BASE_SHA)) {
-      let before;
-      try { before = JSON.parse(git(root,['show',`${process.env.CATALOG_BASE_SHA}:plugins/catalog.json`],'utf8')); } catch { /* Initial catalog bootstrap. */ }
-      for (const old of before?.plugins || []) {
+    const baseSha = process.env.CATALOG_BASE_SHA;
+    // Only an omitted baseline or GitHub's new-branch sentinel starts without history.
+    if (baseSha && baseSha !== '0'.repeat(40)) {
+      assert(/^[a-f0-9]{40}$/.test(baseSha), 'catalog baseline must be an exact commit SHA');
+      try { git(root,['cat-file','-e',`${baseSha}^{commit}`]); }
+      catch { throw new Error(`catalog baseline commit is unavailable: ${baseSha}`); }
+      let source, before;
+      try { source = git(root,['show',`${baseSha}:plugins/catalog.json`],'utf8'); }
+      catch { throw new Error(`catalog baseline is missing plugins/catalog.json: ${baseSha}`); }
+      try { before = JSON.parse(source); }
+      catch { throw new Error(`catalog baseline contains invalid JSON: ${baseSha}`); }
+      assert(before?.schemaVersion === 1 && Array.isArray(before.plugins), 'catalog baseline has an invalid schema');
+      for (const old of before.plugins) {
         const next = catalog.plugins.find(p=>p.id===old.id);
         assert(next, `${old.id}: keep a withdrawn tombstone instead of deleting the entry`);
         assert(next.version !== old.version || next.package.treeDigest === old.package.treeDigest, `${old.id}: changed source requires a new version`);
