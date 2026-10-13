@@ -1,15 +1,74 @@
-# Agent manual trading
+# Agent 手工交易
 
-`sesame/manual-trading` coordinates user-directed manual trading with existing supported backend plugins. It requires Sesame 0.2.1+. Before using a backend, read that plugin's own prompt, skill and declared trading resources. Its tool schemas and documentation define its actual order types, parameters, account configuration, platform requirements and recovery procedure. This package does not redefine them or imply support for every backend.
+`sesame/manual-trading` 2.0 要求 Sesame 0.2.2+。支持周期、事件和按需启动的交易 Agent，单 Agent 或 team 均输出目标仓位。原有 `manual_trade_*` 单次交易工具继续可用；安装本身不会创建计划或发送订单。
 
-Only an explicit trading instruction or a clearly bounded authorized task permits an order. Installation, research, a backtest and account permissions are not trading instructions. Reuse valid authorization for the current task; do not ask again for each necessary check. Keep the selected account, quantity and price bounds aligned with that instruction.
+## 配置和触发
 
-Use M5 or longer. This release refuses M1. A model can take minutes even when an API takes milliseconds. Measure observation-to-decision-to-submission age separately from quote request, quote-to-send and send-to-receipt durations. No real M1 execution benchmark is claimed.
+主会话加载本插件、已配置的 `sesame/mt5` 1.5+ 或 `sesame/qmt` 1.3+，以及独立 `sesame/financial-research`。先调用 `manual_trading_models`，再调用 `manual_trading_plan(action:"save", plan:{...})`：
 
-Decision expiry is 60 seconds from the original quote's source time. A newly read quote may be at most 5 seconds old. Recheck account, order constraints, source time and expiry after any queue or startup delay, immediately before submission; at most 1 second may pass after the final quote. A 10-second wait can expire while the broker processes a send, so timeout becomes unknown, never automatic retry. A quote-price boundary does not guarantee a market fill price.
+```json
+{
+  "title": "账户研究与交易",
+  "backend": "mt5",
+  "mode": "team",
+  "model": {"provider": "已配置供应商ID", "id": "默认模型ID"},
+  "agent_models": {
+    "market": {"provider": "供应商A", "id": "模型A"},
+    "risk": {"provider": "供应商B", "id": "模型B"},
+    "manager": {"provider": "供应商C", "id": "模型C"}
+  },
+  "symbols": ["券商准确品种名"],
+  "interval_minutes": 60,
+  "event_keys": ["important-news"],
+  "account_events": true,
+  "debate_rounds": 1,
+  "slippage_bps": 50,
+  "instructions": "按用户确定的投资目标和风险范围管理账户；证据不足时保持不变。"
+}
+```
 
-Stable operation IDs and durable receipts prevent duplicate submissions through this plugin. One observation supports one order. An unresolved account order blocks replacement IDs; an empty broker query is not proof of rejection. Distinguish dispatch, acceptance, partial fill, completed fill, cancellation request and confirmed cancellation. Recover against the same account using exact native identities and verified records, following the selected backend's own instructions. Preserve uncertainty when the evidence is incomplete.
+示例名称是占位符，必须使用工具返回的真实供应商/模型。每个 Agent 都能独立选模型：`market`、`fundamentals`、`news`、`sentiment`、`bull`、`bear`、`risk`、`manager`、`executor`、`reporter`。省略的角色继承默认模型。计划固定配置摘要，模型配置变化后需重新保存，不静默切换。
 
-State survives reload. This is not a claim of broker-level exactly-once delivery or atomicity against external account changes. No real order, account change or live latency benchmark was used in the controlled validation.
+周期最低 5 分钟，应用必须运行。重启后错过的周期只产生一轮当前决策，不补发历史订单。也可以省略周期，使用 `manual_trading_run(plan_id,request_id)` 或 `manual_trading_event(key,event_id,data,observed_at?)`。重投事件保持 ID/内容一致；快速事件合并为该计划最新待运行事件。同账户的不同计划串行执行。
 
-Report account, instrument, direction, quantity, requested bounds, actual outcome and native IDs. Show source time, model decision age, quote-to-send and send-to-receipt durations separately. State missing evidence plainly. Read the selected backend's declared resources for its concrete API and recovery steps.
+MT5 的 `account_events` 订阅持仓和委托变化，断流后重新绑定。QMT 当前不提供账户订阅，明确显示不可用，仍支持周期和命名事件。用 `manual_trading_plan` 的 pause/resume 暂停或恢复计划；停止计划不撤销已发送的券商指令。
+
+## team、仓位与挂载控制
+
+team 参考 TradingAgents 的显式报告传递：四个分析师并行研究 → 有限轮次多空辩论 → 风控 → 组合经理 → 执行 → 日报。每个角色是宿主真实 Agent 任务，保存模型、状态、报告和数据集引用；后续角色读取已完成报告，不读取私有思维链。单 Agent 模式由 manager 完成研究与决策，再使用相同执行/归档步骤。
+
+最终调用 `manual_trading_decide` 冻结目标：
+
+```json
+{
+  "unchanged": false,
+  "rationale": "证据、风险、异议和失效条件",
+  "targets": [{"symbol": "券商品种", "quantity": "0", "unit": "lots"}],
+  "pause_strategies": [{"deployment_id": "已观察挂载ID", "reason": "继续运行会造成的具体极大风险"}],
+  "evidence_dataset_ids": ["已登记研究证据ID"]
+}
+```
+
+MT5 为有符号 lots，QMT 为非负整数 shares。允许 `unchanged:true, targets:[]`；未列出的品种保持不变，零仓位关闭该品种全部实际持仓（包括对冲两侧），不限制来源。量化策略买入的持仓也能减仓或平仓。QMT 遵循实际可卖数量/T+1。
+
+**没有独立的策略暂停权限开关。** 提示词要求继续挂载有极大风险时停止策略。MT5 核验计划账户、版本和挂载归属后调用真实 `remove_expert`；回执表示停止 EA，不表示已平仓或支持恢复旧运行状态。QMT 没有挂载停止能力，不虚构结果。
+
+目标有效期 5 分钟；执行逐笔读取新账户/报价，用稳定操作 ID 复用原交易服务和原生最终核验。原子订单观察最多 60 秒、报价最多 5 秒、最终报价到发送最多 1 秒。外部策略改变剩余目标差额、未确认停止 EA、工作挂单、部分成交、未知回执或待确认限价单均停止当前批次并要求核对。报价容差不保证市场成交价。
+
+后台写操作由运行时签名绑定到本轮具体指令，模型不能通过直接调用底层工具改写已冻结目标。交易操作和券商回执归主会话保存，可用 `manual_trade_status` 查询、核对未知结果；同账户配置版本变化后仍可恢复查询。
+
+## 用户可见资料、日报与复盘
+
+Agent 与用户读取同一份账户、全来源持仓、委托、成交历史、挂载策略、研究数据集和团队报告。`financial_research_query/read` 提供价格、财务、新闻、SEC 披露、分析师、内幕交易、FRED 宏观和 Reddit 情绪资料；缺源、缺密钥和历史版本缺口明确保留。
+
+`manual_trading_runs` 支持列表、完整读取和取消；`manual_trading_context` 对账户明细、历史和团队报告分页。完整记录持久保存，案例检索另保留有界摘录及原运行 ID，不将截断数据说成完整账户。
+
+每轮完成或失败后，在研究树创建 `手工交易日报/<计划名称-ID>/<时间-运行ID>.html` 和同名 `.json`。旧版共享树使用 `research/` 前缀，新版使用 research space。HTML 展示账户、目标、停止结果、实际回执、团队报告和复盘；JSON 保存完整快照，并冻结为 resource artifact。已有用户文件不覆盖，移动后按稳定文件 ID 定位。
+
+归档 Agent/模型不可用或应用中断时记录 `reportPending`，主 Agent 用 `manual_trading_report(run_id)` 补归档。日报是研究文件，不冒充 `report_publish` 的渲染验证回执。
+
+`judgment-evolution` 的完整判断登记、固定证据核验、归因和规则工具已合入为 `manual_judgment_*`；旧插件及数据保留兼容。交易案例按账户、标的和实际已知时间检索，后续通过 `manual_trading_review` 使用真实外部数据集复盘；不将目标、持有不变或报价变化当作成交收益。[判断与记忆接口](judgment/README.md)说明证据与旧数据迁移。
+
+计划/任务/案例存于插件私有 storage，研究证据存于 datasets，判断数据库/可读导出分别位于 `judgment-state/` 和主工作区 `manual-trading/judgment/`。计划不保存 API 密钥；研究插件仅保存环境变量名。
+
+验证使用虚构账户、来源响应和本地模型协议夹具，不向真实券商发送测试订单。未知发送必须查询原回执；无实盘盈利、零滑点或券商端 exactly-once 保证。

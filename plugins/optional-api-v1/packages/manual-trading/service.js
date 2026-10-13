@@ -20,11 +20,12 @@ export function outcome(backend,receipt) {
   const retcode=Number(native.result.retcode);
   return accepted.has(retcode)?(retcode===10010?'partially_filled':retcode===10009?'execution_reported':'submitted'):rejected.has(retcode)?'rejected':'outcome_unknown';
 }
-export function createService(host,{now=Date.now,adapters=createAdapters(host,{now})}={}) {
+export function createService(host,{now=Date.now,authorizeRequest,adapters=createAdapters(host,{now,authorizeRequest}),authorize,ownerConversationId}={}) {
   const stored=(kind,id)=>host.storage.get(kind,id,true);
-  const main=()=>check(host.scope?.kind==='main','FORBIDDEN','Manual trading belongs to the main user conversation');
+  const ownerId=()=>ownerConversationId??host.scope?.conversationId;
+  const main=()=>authorize ? authorize() : check(host.scope?.kind==='main','FORBIDDEN','Manual trading belongs to the main user conversation');
   const bounded=signal=>AbortSignal.any([AbortSignal.timeout(POLICY.maxReadMs),...(signal?[signal]:[])]);
-  const owner=record=>check(record?.conversationId===host.scope.conversationId,'FORBIDDEN','Record belongs to another conversation');
+  const owner=record=>check(record?.conversationId===ownerId(),'FORBIDDEN','Record belongs to another conversation');
   const fresh=quote=>check(Number.isSafeInteger(quote?.sourceTimeMs) && now()-quote.sourceTimeMs>=0 && now()-quote.sourceTimeMs<=POLICY.maxQuoteAgeMs,'STALE_QUOTE','Source quote is stale or future-dated; wait for a fresh quote, do not replace its timestamp');
   const save=value=>host.storage.put('commands',value);
   function commandId(id){check(typeof id==='string' && /^[A-Za-z0-9_-]{1,100}$/.test(id),'INVALID_ARGUMENT','Use a stable operation ID');return `manual-${digest(id).slice(7,39)}`;}
@@ -36,11 +37,11 @@ export function createService(host,{now=Date.now,adapters=createAdapters(host,{n
       main();check(['mt5','qmt'].includes(args.backend),'UNSUPPORTED_CAPABILITY','Choose an actually supported trading backend');
       check(typeof args.symbol==='string' && args.symbol.length>0 && args.symbol.length<=100,'INVALID_ARGUMENT','Exact backend symbol required');
       const observation=await adapters.snapshot(args.backend,args.symbol,bounded(signal));fresh(observation.quote);
-      const record={...observation,id:randomUUID(),backend:args.backend,conversationId:host.scope.conversationId,expiresAt:observation.quote.sourceTimeMs+POLICY.maxDecisionAgeMs,consumedBy:null};
+      const record={...observation,id:randomUUID(),backend:args.backend,conversationId:ownerId(),expiresAt:observation.quote.sourceTimeMs+POLICY.maxDecisionAgeMs,consumedBy:null};
       // Expired observations are disposable; order receipts are retained for recovery.
       for(const prior of host.storage.list('observations')) if(!prior.consumedBy && prior.expiresAt<now()-86400000) host.storage.delete('observations',prior.id);
       host.storage.put('observations',record);
-      return {observation_id:record.id,backend:record.backend,symbol:record.symbol,account:record.account,accountSummary:record.accountSummary,quote:record.quote,positions:record.positions,spec:record.spec,capturedAt:record.capturedAt,expiresAt:record.expiresAt,observation_request_ms:record.captureMs,policy:POLICY};
+      return {observation_id:record.id,backend:record.backend,symbol:record.symbol,account:record.account,accountSummary:record.accountSummary,quote:record.quote,positions:record.positions,...(record.orders ? {orders:record.orders} : {}),spec:record.spec,capturedAt:record.capturedAt,expiresAt:record.expiresAt,observation_request_ms:record.captureMs,policy:POLICY};
     },
     async execute(args,signal) {
       main();check(args.user_authorized===true,'FORBIDDEN','Use an existing explicit user trading instruction');
@@ -49,6 +50,7 @@ export function createService(host,{now=Date.now,adapters=createAdapters(host,{n
       decimal(args.quantity);decimal(args.price_limit);
       const fingerprint=digest(args);
       return exclusive(host,async()=>{
+        main();
         const previous=stored('commands',args.operation_id);
         if(previous){owner(previous);check(previous.fingerprint===fingerprint,'IDEMPOTENCY_CONFLICT','Operation ID already belongs to different input');return previous;}
         const observation=stored('observations',args.observation_id);check(observation,'NOT_FOUND','Read a fresh manual_trade_observe first');owner(observation);
@@ -60,8 +62,9 @@ export function createService(host,{now=Date.now,adapters=createAdapters(host,{n
         check(!uncertain,'UNRESOLVED_ORDER',`An earlier account order has an unknown result (${uncertain?.id}); query it before new orders`);
         const began=now(), request={...args,backendCommandId:commandId(args.operation_id),remark:`SMan${digest(args.operation_id).slice(7,27)}`};
         adapters.orderRequest(observation,request); // reject invalid intent before consuming it
-        let record={id:args.operation_id,fingerprint,kind:'order',backend:observation.backend,account:observation.account,symbol:observation.symbol,action:args.action,side:args.side,quantity:args.quantity,conversationId:host.scope.conversationId,backendCommandId:request.backendCommandId,remark:request.remark,status:'preparing',createdAt:began,observationId:observation.id,timeframe:args.timeframe??'5m',signalSourceAt:observation.quote.sourceTimeMs,expiresAt:observation.expiresAt,timing:{observation_request_ms:observation.captureMs,model_round_trip_ms:began-observation.capturedAt,signal_age_at_start_ms:began-observation.quote.sourceTimeMs}};
+        let record={id:args.operation_id,fingerprint,kind:'order',backend:observation.backend,account:observation.account,symbol:observation.symbol,action:args.action,side:args.side,quantity:args.quantity,conversationId:ownerId(),backendCommandId:request.backendCommandId,remark:request.remark,status:'preparing',createdAt:began,observationId:observation.id,timeframe:args.timeframe??'5m',signalSourceAt:observation.quote.sourceTimeMs,expiresAt:observation.expiresAt,timing:{observation_request_ms:observation.captureMs,model_round_trip_ms:began-observation.capturedAt,signal_age_at_start_ms:began-observation.quote.sourceTimeMs}};
         record.intent={priceLimit:args.price_limit,limitPrice:args.limit_price??null,positionId:args.position_id??null,stopLoss:args.stop_loss??null,takeProfit:args.take_profit??null};
+        if(authorize)record.planExecution=true;
         host.storage.transaction(()=>{host.storage.put('observations',{...observation,consumedBy:record.id});save(record);});
         try {
           signal?.throwIfAborted();
@@ -70,7 +73,7 @@ export function createService(host,{now=Date.now,adapters=createAdapters(host,{n
           check(now()<record.expiresAt,'SIGNAL_EXPIRED','Decision expired during preparation');
           // Native final-mile guard repeats account/position/spec/quote checks after
           // any process startup or queue wait, immediately before the single send.
-          record=save({...record,status:'submitting',dispatchAt:now()});
+          main();record=save({...record,status:'submitting',dispatchAt:now()});
           const receipt=await adapters.submit(observation,request,bounded(signal));
           const timing=record.backend==='mt5'?receipt?.result?.execution_timing:receipt?.result?.execution_timing;
           record=save({...record,status:outcome(record.backend,receipt),receipt,completedAt:now(),timing:{...record.timing,wrapper_to_receipt_ms:now()-began,...timing},recovery:'manual_trade_status; never resubmit an unknown result under a new ID'});
@@ -114,7 +117,7 @@ export function createService(host,{now=Date.now,adapters=createAdapters(host,{n
         const previous=stored('commands',args.operation_id);if(previous){owner(previous);check(previous.fingerprint===fingerprint,'IDEMPOTENCY_CONFLICT','Cancellation ID already used');return previous;}
         const original=recordFor(args.original_operation_id);requireOpen(original);
         check(!host.storage.list('commands').some(x=>x.kind==='cancel' && x.originalOperationId===original.id && ['submitting','outcome_unknown'].includes(x.status)),'UNRESOLVED_CANCEL','An earlier cancellation result is unknown; query that operation instead of replacing its ID');
-        let record={id:args.operation_id,fingerprint,kind:'cancel',backend:original.backend,account:original.account,symbol:original.symbol,conversationId:host.scope.conversationId,originalOperationId:original.id,backendCommandId,createdAt:now(),status:'submitting'};save(record);
+        let record={id:args.operation_id,fingerprint,kind:'cancel',backend:original.backend,account:original.account,symbol:original.symbol,conversationId:ownerId(),originalOperationId:original.id,backendCommandId,createdAt:now(),status:'submitting'};save(record);
         try {const receipt=await adapters.cancel(original,original.backend==='qmt'?args.operation_id:backendCommandId,bounded(signal));record={...record,receipt,status:outcome(original.backend,receipt),completedAt:now()};if(['execution_reported','submitted'].includes(record.status))record.status='cancel_requested';}
         catch(error){const notSent=error.details?.submission_attempted===false;record={...record,status:notSent?'rejected':'outcome_unknown',error:{code:error.code??'SOURCE_UNAVAILABLE',message:notSent?'Cancellation preflight rejected before native dispatch.':'Cancellation unconfirmed; inspect the original order and fills'},completedAt:now()};}
         return save(record);
