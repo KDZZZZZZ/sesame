@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "dev.2",
-  "sourceCommit": "458ff637dd5c623a21144efc6c3c04c75f89bdb8",
+  "sourceCommit": "f1fac7e37fdec5fc292d984f60e252e2b5563341",
   "pullRequest": 65,
   "title": "Account history, resource cleanup and simpler agent workflows (excluding Kurumi)",
   "profiles": [
@@ -69,8 +69,8 @@
         "sesame/web-sources",
         "sesame/wyckoff"
       ],
-      "archiveSha256": "0ea95ee9de073f5dbfee19de6dd2eaac518679ce3a0512649216cfdb8de4f014",
-      "lockSha256": "4a00bc77e049826158e780f70c549283229d21e3a00bb14b84b4f30cffc55f8b"
+      "archiveSha256": "f24352e213e3fd41c785a3406eadd9f9ca710acec4597ac912f5886bffde1363",
+      "lockSha256": "5b63a03bb34664b4f1f4d1bac2fe83e18fc4c127402832c94820dc778dc42a10"
     }
   ]
 }
