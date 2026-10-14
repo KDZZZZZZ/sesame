@@ -1,6 +1,6 @@
 # Agent 手工交易
 
-`sesame/manual-trading` 2.0 要求 Sesame 0.2.2+。支持周期、事件和按需启动的交易 Agent，单 Agent 或 team 均输出目标仓位。原有 `manual_trade_*` 单次交易工具继续可用；安装本身不会创建计划或发送订单。
+`sesame/manual-trading` 2.1 要求 Sesame 0.2.2+。支持周期、事件和按需启动的交易 Agent，单 Agent 或 team 均输出目标仓位。原有 `manual_trade_*` 单次交易工具继续可用；安装本身不会创建计划或发送订单。
 
 ## 配置和触发
 
@@ -28,6 +28,10 @@
 ```
 
 示例名称是占位符，必须使用工具返回的真实供应商/模型。每个 Agent 都能独立选模型：`market`、`fundamentals`、`news`、`sentiment`、`bull`、`bear`、`risk`、`manager`、`executor`、`reporter`。省略的角色继承默认模型。计划固定配置摘要，模型配置变化后需重新保存，不静默切换。
+
+可选 `research_plugins:["sesame/abu-indicators","sesame/abu-exit-rules"]`，从已安装且可用的 ABU 研究基线中选择本计划需要的方法，最多 18 个。未配置时不加载任何 ABU 插件；更新计划省略此字段保留原选择，传空数组清除。保存时校验安装状态，运行时由宿主固定所用包的摘要；缺包或停用不静默换算法。只有研究/决策角色收到所选分析工具和 `plugin_read`，执行及日报角色不增加研究工具。
+
+每个 ABU 工具保存固定输入与结果数据集，返回 `dataset_id`、有效参数、输入与代码摘要。**这些代码是可改进基线，不是标准答案。** Agent 可在主会话研究工作区保留原版并另写改进版本，记录假设、差异、全部试验与固定样本外对照；后台交易计划使用已选择的版本，代码实验不会自动替换挂载策略。研究结果作为决策证据，不直接作为已成交仓位。
 
 周期最低 5 分钟，应用必须运行。重启后错过的周期只产生一轮当前决策，不补发历史订单。也可以省略周期，使用 `manual_trading_run(plan_id,request_id)` 或 `manual_trading_event(key,event_id,data,observed_at?)`。重投事件保持 ID/内容一致；快速事件合并为该计划最新待运行事件。同账户的不同计划串行执行。
 

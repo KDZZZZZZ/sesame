@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "source": {
+    "id": "synthetic-abu-indicators-demo",
+    "kind": "synthetic"
+  },
+  "as_of": "2026-10-13T16:30:00.000Z",
+  "parameters": {
+    "sma_window": 3,
+    "ema_span": 3,
+    "macd_fast": 3,
+    "macd_slow": 6,
+    "macd_signal": 3,
+    "rsi_window": 3,
+    "bollinger_window": 3,
+    "atr_window": 3
+  },
+  "bars": [
+    { "time": "2026-10-13T13:30:00.000Z", "available_at": "2026-10-13T13:31:00.000Z", "open": 100, "high": 102, "low": 99, "close": 101, "volume": 1000 },
+    { "time": "2026-10-13T14:00:00.000Z", "available_at": "2026-10-13T14:01:00.000Z", "open": 101, "high": 103, "low": 100, "close": 102, "volume": 1200 },
+    { "time": "2026-10-13T14:30:00.000Z", "available_at": "2026-10-13T14:31:00.000Z", "open": 102, "high": 104, "low": 101, "close": 103, "volume": 1300 },
+    { "time": "2026-10-13T15:00:00.000Z", "available_at": "2026-10-13T15:01:00.000Z", "open": 103, "high": 103.5, "low": 100.5, "close": 101.5, "volume": 1500 },
+    { "time": "2026-10-13T15:30:00.000Z", "available_at": "2026-10-13T15:31:00.000Z", "open": 101.5, "high": 105, "low": 101, "close": 104, "volume": 1600 },
+    { "time": "2026-10-13T16:00:00.000Z", "available_at": "2026-10-13T16:01:00.000Z", "open": 104, "high": 106, "low": 103, "close": 105, "volume": 1700 }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-01-09T21:00:00.000Z",
+  "source": { "id": "synthetic-ml-features", "kind": "synthetic" },
+  "parameters": { "window": 3, "atr_window": 3, "rank_window": 3 },
+  "decision_times": ["2026-01-09T21:00:00.000Z"],
+  "bars": [
+    { "time": "2026-01-02T20:00:00.000Z", "available_at": "2026-01-02T20:01:00.000Z", "open": 100, "high": 103, "low": 99, "close": 102, "volume": 1000 },
+    { "time": "2026-01-05T20:00:00.000Z", "available_at": "2026-01-05T20:01:00.000Z", "open": 102, "high": 105, "low": 101, "close": 104, "volume": 1100 },
+    { "time": "2026-01-06T20:00:00.000Z", "available_at": "2026-01-06T20:01:00.000Z", "open": 104, "high": 106, "low": 102, "close": 103, "volume": 900 },
+    { "time": "2026-01-07T20:00:00.000Z", "available_at": "2026-01-07T20:01:00.000Z", "open": 103, "high": 108, "low": 102, "close": 107, "volume": 1300 },
+    { "time": "2026-01-08T20:00:00.000Z", "available_at": "2026-01-08T20:01:00.000Z", "open": 108, "high": 110, "low": 106, "close": 109, "volume": 1250 },
+    { "time": "2026-01-09T20:00:00.000Z", "available_at": "2026-01-09T20:01:00.000Z", "open": 109, "high": 111, "low": 107, "close": 110, "volume": 1200 }
+  ]
+}

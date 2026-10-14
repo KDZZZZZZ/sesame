@@ -88,11 +88,19 @@ test('installed Agent trading plan runs manager, executor and daily reporter thr
         assert.equal(pages[0].value.positions.nextOffset, 1);
         contexts.push(pages[0].value);
         call('manual_trading_context', { section: 'all', offset: 1, limit: 1 });
+      } else if (!names.includes('plugin_read')) {
+        respond(response, null, { name: 'plugin_read', arguments: { plugin_id: 'sesame/abu-indicators', path: 'examples/input.json' } });
+      } else if (!names.includes('abu_indicators_analyze')) {
+        const example = JSON.parse(outputs.find(output => output.name === 'plugin_read').value.content);
+        respond(response, null, { name: 'abu_indicators_analyze', arguments: { input: example } });
       } else if (!names.includes('manual_trading_decide')) {
         contexts.push(pages[1].value);
         const decision = closeQuant
           ? { unchanged: false, targets: [{ symbol: 'QUANT_FIXTURE', quantity: '0', unit: 'lots' }], pause_strategies: [{ deployment_id: 'fixture-ea', reason: '虚构风控事件显示该挂载继续运行会重复增加风险敞口，应先停止再将该量化持仓平仓。' }], rationale: '量化持仓仍属于全账户风险；先停止高风险挂载，再将 QUANT_FIXTURE 目标设为零，未列出的人工持仓保持。', evidence_dataset_ids: [] }
           : { unchanged: true, targets: [], pause_strategies: [], rationale: '已核对量化策略与人工来源的全部持仓。虚构环境无新增证据，本轮目标仓位不变。', evidence_dataset_ids: [] };
+        const analysis = outputs.find(output => output.name === 'abu_indicators_analyze').value;
+        assert.equal(analysis.baseline, true); assert.match(analysis.implementation_sha256, /^sha256:/);
+        decision.evidence_dataset_ids = [analysis.dataset_id];
         call('manual_trading_decide', { decision });
       } else respond(response, closeQuant ? '已保存零目标和极大风险挂载暂停理由，等待实际执行回执。' : '已检查全账户和交易历史，保存目标仓位不变。');
     } else if (input.role === 'executor') {
@@ -107,6 +115,12 @@ test('installed Agent trading plan runs manager, executor and daily reporter thr
     return true;
   } });
   try {
+    const baselineDraft = join(app.runtime.workspaces.root('conv_main'), 'abu-indicators-draft');
+    await cp(fileURLToPath(new URL('../packages/abu-indicators/', import.meta.url)), baselineDraft, { recursive: true });
+    const baselineChecked = await app.runtime.plugins.manager.test('conv_main', { path: baselineDraft });
+    assert.equal(baselineChecked.passed, true, JSON.stringify(baselineChecked.results));
+    const baselineInstalled = await app.runtime.plugins.manager.install('conv_main', { path: baselineDraft, digest: baselineChecked.digest });
+    assert.equal(baselineInstalled.runtime_status, 'ready');
     const backendManifest = JSON.parse(await readFile(new URL('../packages/mt5/plugin.json', import.meta.url)));
     const backendDefinitions = JSON.parse(await readFile(new URL('../packages/mt5/tools.json', import.meta.url)));
     const fixtureTools = ['mt5_trading_context', 'mt5_trading_pause', 'mt5_catalog', 'mt5_python', 'mt5_trading_order', 'mt5_trading_command', 'mt5_settings'];
@@ -198,7 +212,7 @@ test('installed Agent trading plan runs manager, executor and daily reporter thr
     const descriptor = configured.models.find(model => model.provider === 'fixture' && model.id === 'fixture');
     assert.ok(descriptor?.configurationDigest, JSON.stringify(configured));
     const model = { provider: descriptor.provider, id: descriptor.id, configurationDigest: descriptor.configurationDigest };
-    const plan = await main('manual_trading_plan', { action: 'save', plan: { title: '虚构账户日报', backend: 'mt5', model, agent_models: { reporter: model }, mode: 'single', symbols: ['MANUAL_FIXTURE'], interval_minutes: 5, event_keys: ['fixture.change'], enabled: true } });
+    const plan = await main('manual_trading_plan', { action: 'save', plan: { title: '虚构账户日报', backend: 'mt5', model, agent_models: { reporter: model }, research_plugins: ['sesame/abu-indicators'], mode: 'single', symbols: ['MANUAL_FIXTURE'], interval_minutes: 5, event_keys: ['fixture.change'], enabled: true } });
     assert.deepEqual(plan.account, account);
     assert.equal(plan.model.configurationDigest, model.configurationDigest);
     assert.ok(plan.reportFolder.startsWith('手工交易日报/'));
@@ -237,6 +251,9 @@ test('installed Agent trading plan runs manager, executor and daily reporter thr
     assert.equal(raw.id, done.id);
     assert.equal(raw.execution.status, 'unchanged');
     assert.deepEqual(raw.snapshot.positions, positions);
+    assert.equal(raw.evidence.length, 1);
+    assert.equal(raw.evidence[0].dataset.rows[0].baseline, true);
+    assert.equal(raw.evidence[0].dataset.id, raw.decision.evidence_dataset_ids[0]);
     assert.ok(done.report.evidenceRef?.digest, 'The raw run also has an immutable artifact reference.');
 
     const count = modelRequests.length;
@@ -255,6 +272,8 @@ test('installed Agent trading plan runs manager, executor and daily reporter thr
     assert.ok(backendCalls.some(call => call.args.action === 'identity'));
     assert.ok(backendCalls.filter(call => call.args.action === 'snapshot').length >= 6);
     assert.ok(modelRequests.filter(request => request.role === 'manager').every(request => !request.tools.includes('manual_trading_apply')));
+    assert.ok(modelRequests.filter(request => request.role === 'manager').every(request => request.tools.includes('abu_indicators_analyze') && request.tools.includes('plugin_read')));
+    assert.ok(modelRequests.filter(request => request.role === 'executor').every(request => !request.tools.some(name => name.startsWith('abu_'))));
     assert.ok(modelRequests.filter(request => request.role === 'reporter').every(request => request.tools.length === 1 && request.tools[0] === 'manual_trading_report'));
 
     closePhase = true;
