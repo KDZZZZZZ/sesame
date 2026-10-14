@@ -165,6 +165,27 @@ test('team stages give analysts read tools and reserve decision and execution to
   assert.ok(!taskTools(plan, 'manager', false).includes('financial_research_query'));
 });
 
+test('selected research baselines persist and enter only research roles without enabling missing plugins', t => {
+  const f = fixture(t), ids = ['sesame/abu-indicators', 'sesame/abu-exit-rules'];
+  const plan = makePlan(f.main, f.input({ research_plugins: ids }), f.account, null, f.time);
+  ids.push('sesame/abu-trend');
+  assert.deepEqual(plan.researchPlugins, ['sesame/abu-indicators', 'sesame/abu-exit-rules']);
+  for (const role of ['market', 'risk', 'manager']) {
+    const tools = taskTools(plan, role, true);
+    assert.ok(tools.includes('abu_indicators_analyze')); assert.ok(tools.includes('abu_exit_rules_analyze'));
+    assert.ok(tools.includes('plugin_read')); assert.ok(!tools.includes('abu_trend_analyze'));
+  }
+  for (const role of ['executor', 'reporter']) assert.ok(!taskTools(plan, role, true).some(name => name.startsWith('abu_') || name === 'plugin_read'));
+  const preserved = makePlan(f.main, f.input(), f.account, plan, f.time);
+  assert.deepEqual(preserved.researchPlugins, plan.researchPlugins);
+  assert.deepEqual(makePlan(f.main, f.input({ research_plugins: [] }), f.account, plan, f.time).researchPlugins, []);
+  assert.throws(() => makePlan(f.main, f.input({ research_plugins: ['sesame/mt5'] }), f.account), { code: 'INVALID_ARGUMENT' });
+  f.main.plugins.inspect = () => ({ state: 'disabled' });
+  assert.throws(() => makePlan(f.main, f.input({ research_plugins: ['sesame/abu-indicators'] }), f.account), { code: 'PREREQUISITE_REQUIRED' });
+  f.main.plugins.inspect = () => { throw new Error('Not installed'); };
+  assert.throws(() => makePlan(f.main, f.input({ research_plugins: ['sesame/abu-indicators'] }), f.account), { code: 'PREREQUISITE_REQUIRED' });
+});
+
 test('completed stages explicitly share reports with subsequent roles using their actual frozen models', async t => {
   const f = fixture(t);
   const plan = await f.runtime.configure(f.main, f.input({ mode: 'team', debate_rounds: 1, agent_models: { market: alternateModel, manager: alternateModel, executor: alternateModel } }));

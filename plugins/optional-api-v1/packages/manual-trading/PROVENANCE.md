@@ -11,3 +11,5 @@ Architecture references inspected 2026-10-13:
 - judgment/ incorporates Sesame's existing MIT judgment-evolution service with namespaced tools/storage and grounded review. Old user data is not overwritten.
 
 M5 cadence, five-minute portfolio target lifetime, 60-second atomic observation lifetime, five-second quote age and one-second quote-to-send budget are product defaults, not empirical vendor guarantees. Fixtures validate enforcement, not market performance. Unknown broker effects remain unknown and are not automatically replayed.
+
+Version 2.1 adds optional per-plan ABU topic selection. This MIT file contains only plugin/tool identity metadata and public-port composition; the independent GPL-3.0-only ABU algorithm packages retain their own source and license. Selection adds research tools to analyst/manager tasks only, and persists their datasets in the existing decision evidence.

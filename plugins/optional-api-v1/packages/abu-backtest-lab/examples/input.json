@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-01-10T00:00:00.000Z",
+  "source": { "id": "synthetic-backtest-lab", "kind": "synthetic" },
+  "parameters": { "expected_engine": "sesame-native-replay" },
+  "engine": { "name": "sesame-native-replay" },
+  "bars": [
+    { "time": "2026-01-02T20:00:00.000Z", "available_at": "2026-01-02T20:01:00.000Z", "open": 100, "high": 104, "low": 99, "close": 103, "volume": 1000 },
+    { "time": "2026-01-05T20:00:00.000Z", "available_at": "2026-01-05T20:01:00.000Z", "open": 103, "high": 106, "low": 101, "close": 105, "volume": 1100 }
+  ],
+  "orders": [
+    { "id": "o1", "time": "2026-01-02T20:05:00.000Z", "available_at": "2026-01-02T20:05:01.000Z", "symbol": "XYZ", "side": "buy", "quantity": 10, "limit_price": 104 },
+    { "id": "o2", "time": "2026-01-05T20:05:00.000Z", "available_at": "2026-01-05T20:05:01.000Z", "symbol": "XYZ", "side": "sell", "quantity": 10, "limit_price": 105 }
+  ],
+  "trades": [
+    { "id": "f1", "order_id": "o1", "time": "2026-01-02T20:06:00.000Z", "available_at": "2026-01-02T20:06:01.000Z", "symbol": "XYZ", "quantity": 10, "price": 103.5, "cost": 1.2 },
+    { "id": "f2", "order_id": "o2", "time": "2026-01-05T20:06:00.000Z", "available_at": "2026-01-05T20:06:01.000Z", "symbol": "XYZ", "quantity": 10, "price": 105, "cost": 1.2 }
+  ]
+}

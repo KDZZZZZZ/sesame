@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-01-10T00:00:00.000Z",
+  "source": { "id": "synthetic-trade-judges", "kind": "synthetic" },
+  "parameters": { "k": 3 },
+  "feature_names": ["angle", "volatility", "price_rank"],
+  "query": {
+    "time": "2026-01-09T15:00:00.000Z",
+    "available_at": "2026-01-09T14:59:00.000Z",
+    "features": { "angle": 0.8, "volatility": 0.18, "price_rank": 0.75 }
+  },
+  "completed_trades": [
+    { "id": "a", "feature_snapshot_at": "2026-01-01T14:59:00.000Z", "decision_time": "2026-01-01T15:00:00.000Z", "outcome_available_at": "2026-01-02T21:00:00.000Z", "features": { "angle": 0.9, "volatility": 0.2, "price_rank": 0.8 }, "outcome": { "return": 0.12 } },
+    { "id": "b", "feature_snapshot_at": "2026-01-03T14:59:00.000Z", "decision_time": "2026-01-03T15:00:00.000Z", "outcome_available_at": "2026-01-04T21:00:00.000Z", "features": { "angle": -0.5, "volatility": 0.4, "price_rank": 0.2 }, "outcome": { "return": -0.09 } },
+    { "id": "c", "feature_snapshot_at": "2026-01-05T14:59:00.000Z", "decision_time": "2026-01-05T15:00:00.000Z", "outcome_available_at": "2026-01-06T21:00:00.000Z", "features": { "angle": 0.7, "volatility": 0.22, "price_rank": 0.72 }, "outcome": { "return": 0.08 } },
+    { "id": "d", "feature_snapshot_at": "2026-01-06T14:59:00.000Z", "decision_time": "2026-01-06T15:00:00.000Z", "outcome_available_at": "2026-01-07T21:00:00.000Z", "features": { "angle": 0.4, "volatility": 0.25, "price_rank": 0.7 }, "outcome": { "return": 0.04 } }
+  ]
+}

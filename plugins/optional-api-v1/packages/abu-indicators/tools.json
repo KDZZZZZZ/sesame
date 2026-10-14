@@ -1,0 +1,21 @@
+[
+  {
+    "name": "abu_indicators_analyze",
+    "description": "ATR、均线、MACD、RSI、布林带的可修改研究计算。这是可改进基线而非标准答案；输入显式来源和截止时点，输出可复核研究结果。 自动登记输入与结果数据集，用户可复核。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "input"
+      ],
+      "properties": {
+        "input": {
+          "type": "object",
+          "description": "研究输入；先读本包 examples/input.json 与 method.md。schema_version=1，source、as_of、parameters 和主题数据。",
+          "additionalProperties": true,
+          "properties": {}
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]
