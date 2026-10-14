@@ -1,0 +1,20 @@
+{
+  "id": "sesame/factor-evaluator",
+  "apiVersion": "1",
+  "version": "1.0.0-dev.1",
+  "title": "因子数值评估",
+  "description": "可独立选择的确定性因子 AST 评估器，保存输入、候选和冻结选择回执；不编排 Agent、不连接交易账户。",
+  "author": { "name": "Sesame contributors" },
+  "license": "MIT",
+  "default_state": "discoverable",
+  "agent_scope": "all",
+  "entry": "index.js",
+  "tool_definitions": "tools.json",
+  "tool_names": ["factor_evaluate"],
+  "main_tool_names": [],
+  "prompts": ["prompt.md"],
+  "skills": [],
+  "resources": ["README.md", "PROTOCOL.md", "VALIDATION.md", "scripts/reproduce.mjs"],
+  "provides": {},
+  "engines": { "sesame": ">=0.2.3-dev.8" }
+}

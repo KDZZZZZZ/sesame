@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { cp, readFile } from 'node:fs/promises';
+import { cp } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { digest } from '@sesame/plugin-sdk/protocol';
@@ -19,7 +19,7 @@ function fixture(t, options = {}) {
   let now = T0, sequence = 0;
   const records = new Map(), jobs = new Map(), messages = new Map(), files = new Map();
   const account = { accountId: 'activity-fixture', server: 'Fictional', revision: '1' }, model = { provider: 'fixture', id: 'local', configurationDigest: 'fixture-v1' };
-  const plan = { id: 'plan', title: '真实调度观测夹具', ownerConversationId: 'conv_main', backend: 'mt5', account, model, agentModels: {}, mode: 'single', debateRounds: 1,
+  const plan = { id: 'plan', title: '真实调度观测夹具', ownerConversationId: 'conv_main', execution: { pluginId: 'fixture/execution', contextTool: 'fixture_context', applyTool: 'fixture_apply', arguments: {}, account, context: {}, quantityRules: {unit:'units',signed:true,integer:false}, readTools:['fixture_context'], tools:['fixture_context','fixture_apply'], plugins:[], revisions:[] }, research: {plugins:[],tools:[],revisions:[]}, account, model, agentModels: {}, mode: 'single', debateRounds: 1,
     symbols: [], instructions: '', taskTimeoutMs: 30000, enabled: true, reportFolder: '手工交易日报/activity', eventCooldownMs: 5000 };
   const storage = { get: (kind, id) => clone(records.get(`${kind}:${id}`)), list: kind => [...records].filter(([key]) => key.startsWith(`${kind}:`)).map(([, value]) => clone(value)),
     put: (kind, value) => { records.set(`${kind}:${value.id}`, clone(value)); return clone(value); }, transaction: action => action(), directory: 'fictional-activity-fixture' };
@@ -42,7 +42,7 @@ function fixture(t, options = {}) {
     reports: { files: { forSpace: () => filePort } }, artifacts: { blob: value => ({ digest: digest(value), size: Buffer.byteLength(value) }), publish: input => ({ id: 'artifact', revision: 'r1', digest: digest(input.manifest), kind: input.manifest.kind, schemaVersion: '1.0.0' }) },
     events: { emit() {} }, datasets: { read() { throw new Error('No research data was requested'); } },
     tasks: { read: id => { const job = [...jobs.values()].find(value => value.conversationId === id); return { id, stage: '公开工作状态', active_response_message_id: job.messageId ?? null }; } },
-    messages: { read: id => clone(messages.get(id)) }, tools: { call: async request => { assert.equal(request.name, 'mt5_trading_context'); return { details: clone(snapshot) }; } } };
+    messages: { read: id => clone(messages.get(id)) }, tools: { call: async request => { if (request.name === 'fixture_apply') return {details:{status:'unchanged',orders:[],pauses:[],targetReached:null,after:clone(snapshot)}}; assert.equal(request.name, 'fixture_context'); return { details: clone(snapshot) }; } } };
   if (options.inspect === false) delete agents.inspect;
   const runtime = new TradingRuntime(host, { timer: false, now: () => now, activityPollMs: 60000, ...options });
   runtime.memoryFor = () => ({ context: () => ({}), record: () => ({}) });
@@ -280,10 +280,10 @@ test('restart reconciles leftover reporter tasks without replaying a terminal bu
       assert.equal(recovered.activity.events.some(event => event.type === 'task.completed' && event.taskId === reporter.id), false);
     } else assert.equal(task.completedAt, f.jobs.get(reporter.id).completedAt);
     if (scenario.native === 'completed') assert.equal(recovered.reports.find(value => value.taskId === reporter.id).text, '已完成的原生归档回复');
-    const archived = await viewer.archive(f.main, run.id), recording = JSON.parse(f.files.get(archived.dataPath).content);
-    assert.equal(archived.state, 'archived'); assert.equal(recording.tasks.find(value => value.id === reporter.id).status, scenario.expected);
+    const recording = viewer.read(f.main, run.id);
+    assert.equal(recording.tasks.find(value => value.id === reporter.id).status, scenario.expected);
     assert.deepEqual(recording.run.execution, receipt); assert.equal(recording.events.at(-1).type, 'run.finished');
-    const stable = resumed.run(run.id); await resumed.start(); assert.deepEqual(resumed.run(run.id), stable, 'A later start preserves the recovered record and archive.');
+    const stable = resumed.run(run.id); await resumed.start(); assert.deepEqual(resumed.run(run.id), stable, 'A later start preserves the recovered record.');
   });
 });
 
@@ -315,12 +315,11 @@ test('a main event observes public streaming text through the actual service Hos
     response.write(`data: ${JSON.stringify(chunk)}\n\n`); held.push(response); return true;
   } });
   try {
-    const manifest = JSON.parse(await readFile(new URL('../packages/mt5/plugin.json', import.meta.url)));
-    const definitions = JSON.parse(await readFile(new URL('../packages/mt5/tools.json', import.meta.url))).filter(tool => tool.name === 'mt5_trading_context');
-    app.runtime.plugins.register({ id: 'sesame/mt5', version: manifest.version, digest: `sha256:${'c'.repeat(64)}`, title: 'Activity account fixture', description: 'No broker connection',
-      default_state: 'mounted', agent_scope: 'all', execution: 'native', runtime_status: 'ready', tool_names: ['mt5_trading_context'], main_tool_names: [], definitions,
+    const definitions = ['fixture_context','fixture_apply'].map(name => ({name,description:'Synthetic composable execution capability',parameters:{type:'object',properties:{action:{type:'string'}},additionalProperties:false}}));
+    app.runtime.plugins.register({ id: 'fixture/execution', version: '1.0.0', digest: `sha256:${'c'.repeat(64)}`, title: 'Activity account fixture', description: 'No broker connection',
+      default_state: 'mounted', agent_scope: 'all', execution: 'native', runtime_status: 'ready', tool_names: definitions.map(d=>d.name), main_tool_names: [], definitions,
       resources: [], skills: [], diagnostics: [], dependency_lock: [], module: Promise.resolve({ createTools: () => definitions.map(definition => ({ ...definition,
-        execute: async () => ({ details: { account: { accountId: 'activity-only', server: 'Fictional', revision: '1' } }, content: [] }),
+        execute: async () => ({ details: { account: {accountId:'activity-only',revision:'1'}, tools:['fixture_context','fixture_apply'],readTools:['fixture_context'],taskContext:{bindingId:'activity'},quantityRules:{unit:'units',signed:true,integer:false} }, content: [] }),
       })) }) });
     app.runtime.options.plugins['sesame/manual-trading'] = { activityPollMs: 20 };
     const draft = join(app.runtime.workspaces.root('conv_main'), 'activity-stream-fixture');
@@ -335,7 +334,7 @@ test('a main event observes public streaming text through the actual service Hos
     };
     const descriptor = (await main('manual_trading_models')).models.find(value => value.provider === 'fixture' && value.id === 'fixture');
     const model = { provider: descriptor.provider, id: descriptor.id, configurationDigest: descriptor.configurationDigest };
-    const plan = await main('manual_trading_plan', { action: 'save', plan: { title: '公开流观测', backend: 'mt5', mode: 'single', model, event_keys: ['activity.test'], enabled: true } });
+    const plan = await main('manual_trading_plan', { action: 'save', plan: { title: '公开流观测', execution:{plugin_id:'fixture/execution',context_tool:'fixture_context',apply_tool:'fixture_apply'}, mode: 'single', model, event_keys: ['activity.test'], enabled: true } });
     const triggered = await main('manual_trading_event', { key: 'activity.test', event_id: 'actual-main-event' });
     assert.equal(triggered.runs[0].planId, plan.id);
     const id = triggered.runs[0].id, serviceHost = createHostContext(app.runtime, app.runtime.plugins.entry(installed.id));

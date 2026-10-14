@@ -1,16 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { activityHTML } from '../packages/manual-trading/viewer.js';
+import { hasElectron, launchPage } from './helpers/collaboration-electron.mjs';
 
-const hostRoot = process.env.SESAME_HOST_ROOT;
-const playwrightEntry = hostRoot && existsSync(join(hostRoot, 'node_modules/playwright/index.mjs'))
-  ? join(hostRoot, 'node_modules/playwright/index.mjs')
-  : null;
-const browserOptions = { skip: !playwrightEntry, timeout: 60000 };
+const browserOptions = { skip: !hasElectron, timeout: 60000 };
 
 const T0 = Date.parse('2026-10-13T12:00:00Z');
 const roles = ['market', 'fundamentals', 'news', 'sentiment', 'bull', 'bear', 'risk', 'manager', 'executor', 'reporter'];
@@ -64,59 +58,42 @@ function snapshot({ live = false, seq = 12, title = 'Canvas interaction fixture'
 }
 
 async function withPage(t, initial, action, { viewport = { width: 1280, height: 820 }, touch = false } = {}) {
-  const { chromium } = await import(pathToFileURL(playwrightEntry));
   const html = activityHTML(initial);
   const server = createServer((_request, response) => {
     response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
     response.end(html);
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({ viewport, hasTouch: touch, isMobile: touch });
-  const page = await context.newPage();
-  await page.addInitScript(() => {
-    const sources = [];
-    class FixtureEventSource extends EventTarget {
-      static CONNECTING = 0;
-      static OPEN = 1;
-      static CLOSED = 2;
-      constructor(url) {
-        super();
-        this.url = String(url);
-        this.readyState = FixtureEventSource.CONNECTING;
-        sources.push(this);
-        setTimeout(() => {
-          if (this.readyState !== FixtureEventSource.CONNECTING) return;
-          this.readyState = FixtureEventSource.OPEN;
-          const event = new Event('open');
-          this.dispatchEvent(event);
-          this.onopen?.(event);
-        }, 0);
-      }
-      close() { this.readyState = FixtureEventSource.CLOSED; }
+  const { page, close } = await launchPage({ viewport, touch });
+  await page.addInitScript(initial => {
+    const snapshots = new Set(), connections = new Set();
+    window.__liveSnapshotListeners = snapshots;
+    window.__emitFixtureSnapshot = snapshot => { for (const callback of snapshots) callback(snapshot); };
+    window.__emitFixtureConnection = state => { for (const callback of connections) callback(state); };
+    if (initial.feedUrl) {
+      window.reportLive = {
+        subscribeSnapshot: callback => { snapshots.add(callback); return () => snapshots.delete(callback); },
+        subscribeConnection: callback => { connections.add(callback); return () => connections.delete(callback); },
+      };
+      addEventListener('DOMContentLoaded', () => {
+        window.__emitFixtureSnapshot(initial);
+        window.__emitFixtureConnection('connected');
+      }, { once: true });
     }
-    window.EventSource = FixtureEventSource;
-    window.__fixtureEventSources = sources;
-    window.__emitFixtureSnapshot = data => {
-      const event = new MessageEvent('snapshot', { data: JSON.stringify(data) });
-      for (const source of sources) if (source.readyState !== FixtureEventSource.CLOSED) source.dispatchEvent(event);
-    };
-  });
+  }, initial);
   try {
     await page.goto(`http://127.0.0.1:${server.address().port}/`, { waitUntil: 'domcontentloaded' });
     await waitForCanvas(page);
     return await action(page);
   } finally {
-    await page.close().catch(() => {});
-    await context.close().catch(() => {});
-    await browser.close().catch(() => {});
+    await close();
     await new Promise(resolve => server.close(resolve));
   }
 }
 
 async function waitForCanvas(page) {
   await page.waitForSelector('#diagram-viewport');
-  await page.waitForFunction(() => document.querySelectorAll('#diagram .agent-node').length >= 8);
+  await page.waitForFunction(() => document.querySelectorAll('#diagram .agent-node').length > 0);
   await page.waitForFunction(() => getComputedStyle(document.body).backgroundColor === 'rgb(250, 250, 250)');
 }
 
@@ -318,7 +295,7 @@ test('touch pointer events pan, pinch zoom, and release cancelled gestures', bro
 
 test('SVG routes stay attached to node geometry after zoom and snapshot events create pulses', browserOptions, async t => {
   await withPage(t, snapshot({ live: true }), async page => {
-    await page.waitForFunction(() => window.__fixtureEventSources?.length === 1);
+    await page.waitForFunction(() => window.__liveSnapshotListeners?.size === 1);
     const alignmentBefore = await page.evaluate(() => {
       const path = document.querySelector('#flow-lines path');
       const from = document.querySelector('.agent-node[data-role="market"]').getBoundingClientRect();
@@ -386,7 +363,7 @@ test('mobile viewport clips the canvas without page overflow while the report fe
 
 test('live snapshots preserve the current camera across repeated updates', browserOptions, async t => {
   await withPage(t, snapshot({ live: true }), async page => {
-    await page.waitForFunction(() => window.__fixtureEventSources?.length === 1);
+    await page.waitForFunction(() => window.__liveSnapshotListeners?.size === 1);
     await page.locator('#graph-reset').click();
     const point = await centerOf(page, '#diagram-viewport');
     await page.mouse.move(point.x, point.y);
@@ -409,5 +386,80 @@ test('live snapshots preserve the current camera across repeated updates', brows
     approx(afterTwo.x, before.x, 1, 'second snapshot should preserve camera x');
     approx(afterTwo.y, before.y, 1, 'second snapshot should preserve camera y');
     approx(afterTwo.scale, before.scale, 0.005, 'second snapshot should preserve camera scale');
+  });
+});
+
+test('only new successful handoffs animate, and completed work clears every actor', browserOptions, async t => {
+  await withPage(t, snapshot({ live: true }), async page => {
+    await page.waitForFunction(() => document.documentElement.dataset.connected === 'true');
+    assert.equal(await page.locator('.handoff-agent').count(), 0, 'Initial historical reads do not replay');
+    await page.waitForTimeout(150);
+    assert.equal(await page.locator('.handoff-agent').count(), 0, 'Idle time cannot invent communication');
+    const next = snapshot({ live: true, seq: 13, events: [
+      { id: 'actual-read', seq: 14, at: T0 + 14000, type: 'report.read', fromTaskId: 'task-bull', toTaskId: 'task-risk', message: '实际成功读取' },
+    ] });
+    await page.evaluate(value => window.__emitFixtureSnapshot(value), next);
+    const actor = page.locator('[data-event-id="actual-read"] .handoff-agent');
+    await actor.waitFor(); const before = await actor.getAttribute('transform');
+    await page.waitForTimeout(180); assert.notEqual(await actor.getAttribute('transform'), before);
+    assert.equal(await actor.locator('svg').count(), 1, 'The moving actor carries the actual source model icon');
+    next.events.push({ id: 'finish', seq: 15, at: T0 + 15000, type: 'run.finished' });
+    next.run.status = 'completed'; next.tasks.forEach(task => { task.status = 'completed'; });
+    next.run.report = { path: '手工交易日报/one-summary.html', state: 'archived' };
+    await page.evaluate(value => window.__emitFixtureSnapshot(value), next);
+    assert.equal(await page.locator('.handoff-agent, .is-receiving').count(), 0);
+    assert.match(await page.locator('#summary-path').textContent(), /one-summary\.html/);
+    assert.equal(await page.locator('input[type="range"], #player').count(), 0);
+  });
+});
+
+test('disconnect and reconnect suppress accumulated history but preserve subsequent live handoffs', browserOptions, async t => {
+  await withPage(t, snapshot({ live: true }), async page => {
+    await page.waitForFunction(() => document.documentElement.dataset.connected === 'true');
+    await page.evaluate(() => window.__emitFixtureConnection('reconnecting'));
+    assert.equal(await page.locator('#connection-status').textContent(), '正在重连');
+    const recovered = snapshot({ live: true, seq: 20, events: [{ id: 'old-read', seq: 21, at: T0, type: 'report.read', fromTaskId: 'task-bull', toTaskId: 'task-risk' }] });
+    await page.evaluate(value => { window.__emitFixtureSnapshot(value); window.__emitFixtureConnection('connected'); }, recovered);
+    assert.equal(await page.locator('.handoff-agent').count(), 0);
+    recovered.events.push({ id: 'new-read', seq: 22, at: T0, type: 'report.read', fromTaskId: 'task-market', toTaskId: 'task-bull' });
+    await page.evaluate(value => window.__emitFixtureSnapshot(value), recovered);
+    await page.locator('[data-event-id="new-read"] .handoff-agent').waitFor();
+    await page.evaluate(value => window.__emitFixtureSnapshot(value), snapshot({ live: true, seq: 10, title: 'Stale snapshot' }));
+    assert.notEqual(await page.locator('#run-title').textContent(), 'Stale snapshot');
+    await page.evaluate(() => window.__emitFixtureConnection('closed'));
+    assert.equal(await page.locator('.handoff-agent').count(), 0);
+    assert.equal(await page.locator('#connection-status').textContent(), '已断开');
+  });
+});
+
+test('reduced motion highlights an actual handoff without walking or busy-node animation', browserOptions, async t => {
+  await withPage(t, snapshot({ live: true }), async page => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.waitForFunction(() => document.documentElement.dataset.connected === 'true');
+    await page.evaluate(value => window.__emitFixtureSnapshot(value), snapshot({ live: true, seq: 13, events: [
+      { id: 'reduced-read', seq: 14, at: T0, type: 'report.read', fromTaskId: 'task-market', toTaskId: 'task-bull' },
+    ] }));
+    await page.locator('[data-event-id="reduced-read"] .message-route').waitFor();
+    assert.equal(await page.locator('.handoff-agent').count(), 0);
+    assert.equal(await page.locator('.agent-node[data-status="running"] .model-icon').first().evaluate(node => getComputedStyle(node).animationName), 'none');
+  });
+});
+
+test('factor directions have distinct real roles and stream Markdown in the same panel', browserOptions, async t => {
+  const initial = snapshot({ live: true });
+  const stages = [ ['supervisor'], ['researcher:0', 'researcher:1'], ['coder:0', 'coder:1'], ['reviewer:0', 'reviewer:1'], ['reporter'] ];
+  initial.workflow = { mode: 'team', stages: stages.map((roles, index) => ({ index, name: ['计划', '并行假设', '公式实现', '独立评审', '总结'][index], roles })),
+    roles: stages.flat().map(id => ({ id, name: id.includes(':0') ? `动量 · ${id.split(':')[0]}` : id.includes(':1') ? `反转 · ${id.split(':')[0]}` : id === 'supervisor' ? '研究主管' : '总结归档' })) };
+  initial.tasks = stages.flatMap((roles, stageIndex) => roles.map(role => ({ id: 'factor-' + role, role, stageIndex, status: stageIndex === 1 ? 'running' : stageIndex < 1 ? 'completed' : 'queued', provider: 'fixture', model: role.endsWith(':1') ? 'claude-fixture' : 'gpt-fixture' })));
+  initial.events = []; initial.reports = [];
+  await withPage(t, initial, async page => {
+    assert.equal(await page.locator('.agent-node').count(), 8);
+    assert.match(await page.locator('.agent-node[data-role="researcher:0"]').textContent(), /动量/);
+    assert.match(await page.locator('.agent-node[data-role="researcher:1"]').textContent(), /反转/);
+    initial.tasks[1].publicOutput = { text: '## 当前证据\n\n- **动量** 有效\n- 继续核验' };
+    initial.reports = [{ taskId: initial.tasks[1].id, role: initial.tasks[1].role, status: 'running', text: initial.tasks[1].publicOutput.text }];
+    await page.evaluate(value => window.__emitFixtureSnapshot(value), initial);
+    assert.equal(await page.locator('.feed-report h2').textContent(), '当前证据');
+    assert.equal(await page.locator('.feed-report strong').textContent(), '动量');
   });
 });

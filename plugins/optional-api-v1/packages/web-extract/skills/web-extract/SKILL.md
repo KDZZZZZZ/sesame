@@ -1,6 +1,6 @@
 ---
 name: web-extract
-description: "从已抓取的 HTML 中提取正文、标题、链接和元数据。配合 sources_fetch 使用：先抓取公开网页，再把文本传给 extract_webpage。"
+description: "从调用者提供的 HTML 中提取正文、标题、链接和元数据；需要抓取时由调用者选择获取能力。"
 ---
 
 此包为按需安装的标准 MCP，要求 Sesame >=0.2.0-0；不是默认包。服务器使用现有 Python 标准库，不在加载时下载依赖。先核对固定版本与实际工具测试，不能把解析器/参考目录当成行情账户或交易后端。
@@ -17,14 +17,14 @@ description: "从已抓取的 HTML 中提取正文、标题、链接和元数据
 
 ## 工作流
 
-当前工具负责解析文本；MCP 进程可访问公网与内网。获取网页内容可使用 sources_fetch。
+当前工具负责解析调用者提供的 HTML；MCP 进程可访问公网与内网。需要获取新网页时，使用调用者选定的抓取能力；sources_fetch 是可选来源。
 
 stdio MCP 使用本机当前用户权限运行。本服务器的 file_path 参数单独限制为包内文件，不能用该参数读任意工作区路径；这不是 OS 隔离：
 
-先用 `plugin_load` 加载 `sesame/web-sources` 和 `sesame/web-extract`。下文使用 MCP 原始工具名；实际调用使用当前工具列表中的完整 MCP 工具名。
+用 `plugin_load` 加载 `sesame/web-extract`。下文使用 MCP 原始工具名；实际调用使用当前工具列表中的完整 MCP 工具名。
 
-1. 用 `sources_fetch` 抓取公开网页，得到 HTML 文本快照（dataset 自动保存）
-2. 读取快照中的 `text` 字段（大文件用 bash 从 sources_fetch 或 data_read 返回的真实 path 提取）
+1. 复用调用者已有的 HTML 文本与来源；缺少内容时才通过所选抓取能力取得快照。选择 `sources_fetch` 时按需加载 `sesame/web-sources`，其结果会登记 dataset
+2. 从快照取得完整 HTML（例如 `text` 字段；大文件可用 bash 从工具返回的真实 path 提取），保留来源
 3. 调用 `extract_webpage`，把 HTML 文本作为 `html_content` 传入。输入须适配当前模型上下文与工具参数上限；超限时明确说明限制，不把截断文本当作完整网页
 4. `file_path` 参数仅用于插件包内捆绑的样本文件（如 sample.html），不用于宿主任意路径
 

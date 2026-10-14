@@ -1,9 +1,9 @@
 {
   "id": "sesame/manual-trading",
   "apiVersion": "1",
-  "version": "2.3.1",
+  "version": "3.0.0",
   "title": "Agent 手动交易",
-  "description": "周期与事件驱动的 Agent 手工交易：逐角色模型、team 研究辩论、实时工作流与公开交流、目标仓位、全账户减仓平仓、风险停止挂载、证据复盘与研究日报。",
+  "description": "周期与事件驱动的 Agent 手工交易：逐角色模型、team 研究辩论、实时工作流与公开交流、目标仓位、全账户减仓平仓、风险停止挂载、证据复盘与每轮单份总结。",
   "license": "MIT",
   "default_state": "discoverable",
   "entry": "index.js",
@@ -17,6 +17,7 @@
     "manual_trading_context",
     "manual_trading_decide",
     "manual_trading_apply",
+    "manual_trading_execution_export",
     "manual_trading_report",
     "manual_trading_review",
     "manual_judgment_review_queue",
@@ -31,12 +32,7 @@
     "manual_judgment_rules",
     "manual_judgment_retire_rule",
     "manual_judgment_audit_source",
-    "manual_judgment_coverage",
-    "manual_trade_inspect",
-    "manual_trade_observe",
-    "manual_trade_execute",
-    "manual_trade_status",
-    "manual_trade_cancel"
+    "manual_judgment_coverage"
   ],
   "main_tool_names": [
     "manual_trading_models",
@@ -57,11 +53,8 @@
     "manual_judgment_retire_rule",
     "manual_judgment_audit_source",
     "manual_judgment_coverage",
-    "manual_trade_inspect",
-    "manual_trade_observe",
-    "manual_trade_execute",
-    "manual_trade_status",
-    "manual_trade_cancel"
+    "manual_trading_event",
+    "manual_trading_execution_export"
   ],
   "tool_definitions": "tools.json",
   "prompts": [
@@ -73,10 +66,11 @@
   "resources": [
     "README.md",
     "PROVENANCE.md",
-    "MODEL-ICONS.md"
+    "MODEL-ICONS.md",
+    "COMPOSITION.md"
   ],
   "provides": {},
   "engines": {
-    "sesame": ">=0.2.2"
+    "sesame": ">=0.2.3-dev.8"
   }
 }

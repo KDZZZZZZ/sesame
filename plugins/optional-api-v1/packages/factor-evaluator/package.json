@@ -1,0 +1,1 @@
+{"name":"@sesame/factor-evaluator","version":"1.0.0-dev.1","type":"module","license":"MIT","scripts":{"test":"node --test tests/*.test.js"}}

@@ -37,7 +37,7 @@ function fixture(t) {
       provenance: { source_kind: 'external', provider: 'https://prices.example/quotes', as_of: new Date(time).toISOString() }, ...overrides }),
   };
 }
-const run = (extra = {}) => ({ id: 'run-1', planId: 'plan-1', accountId: 'account-1', createdAt: T0,
+const run = (extra = {}) => ({ id: 'run-1', executionSources: [{pluginId:'custom/execution',provider:'arbitrary-native/fill-history'}], planId: 'plan-1', accountId: 'account-1', createdAt: T0,
   snapshot: { symbol: 'EURUSD', capturedAt: T0, quote: { bid: 1.1, ask: 1.101, sourceTimeMs: T0 }, positions: [] },
   decision: { action: 'hold', targets: [{ symbol: 'EURUSD', weight: 0.25 }] },
   reports: [{ role: 'risk', model: 'model-fixture', report: 'Existing target weight remains a proposal, not an executed order.' }], ...extra });
@@ -160,19 +160,51 @@ test('later derived evidence cannot inherit an earlier root source timestamp to 
 test('native fill evidence must identify its account and decision; a fill still does not establish portfolio P&L', t => {
   const f = fixture(t), memory = f.memory(); memory.record(run()); f.setTime(T0 + 1000);
   const rows = [{ symbol: 'EURUSD', account: 'account-1', decisionRun: 'run-1', observedAt: T0 + 1000, ticket: 17, volume: 0.1, price: 1.1 }];
-  f.data('fills', { rows, provenance: { source_kind: 'external', provider: 'mt5/python/history_deals_get', as_of: new Date(T0 + 1000).toISOString() } });
+  f.data('fills', { rows, producer_plugin_id: 'custom/execution', provenance: { source_kind: 'external', provider: 'arbitrary-native/fill-history', as_of: new Date(T0 + 1000).toISOString() } });
   const evidence = ref({ datasetId: 'fills', kind: 'execution', accountIdField: 'account', runIdField: 'decisionRun', executionIdField: 'ticket', quantityField: 'volume', priceField: 'price' });
   const result = memory.review({ runId: 'run-1', evidence: [evidence], reflection: 'The source confirms an opening fill; closing fills and costs remain unreconciled.' });
   assert.equal(result.outcome.executionConfirmed, true); assert.equal(result.outcome.realizedPnl, null);
-  rows[0].decisionRun = 'another-run'; f.data('unrelated-fill', { rows, provenance: { source_kind: 'external', provider: 'mt5/python/history_deals_get', as_of: new Date(T0 + 1000).toISOString() } });
+  f.data('spoofed-producer', { rows, producer_plugin_id: 'custom/research', provenance: { source_kind: 'external', provider: 'arbitrary-native/fill-history', as_of: new Date(T0 + 1000).toISOString() } });
+  assert.throws(() => memory.review({ runId: 'run-1', evidence: [{ ...evidence, datasetId: 'spoofed-producer' }], reflection: 'Matching provider text does not establish the producing capability.' }), { code: 'INVALID_EVIDENCE' });
+  rows[0].decisionRun = 'another-run'; f.data('unrelated-fill', { rows, producer_plugin_id: 'custom/execution', provenance: { source_kind: 'external', provider: 'arbitrary-native/fill-history', as_of: new Date(T0 + 1000).toISOString() } });
   assert.throws(() => memory.review({ runId: 'run-1', evidence: [{ ...evidence, datasetId: 'unrelated-fill' }], reflection: 'unrelated fill' }), { code: 'INVALID_EVIDENCE' });
+});
+
+for (const populated of [false, true]) test(`derived execution rows cannot borrow authority from ${populated ? 'an altered native fill' : 'an empty native source'}`, t => {
+  const f = fixture(t), memory = f.memory();
+  memory.record(run({ executionAccountId: 'native-account-1' })); f.setTime(T0 + 1000);
+  const nativeRow = { symbol: 'EURUSD', account: 'native-account-1', decisionRun: 'run-1', observedAt: f.now(), ticket: 17, volume: 0.1, price: 1.1 };
+  const provenance = { source_kind: 'external', provider: 'arbitrary-native/fill-history', as_of: new Date(f.now()).toISOString() };
+  f.data('native-root', { rows: populated ? [nativeRow] : [], producer_plugin_id: 'custom/execution', provenance });
+  f.data('derived-fill', {
+    input_ids: ['native-root'], rows: [{ ...nativeRow, ticket: 999, volume: 10, price: 123 }],
+    producer_plugin_id: populated ? 'custom/execution' : 'custom/research',
+    provenance: { ...provenance, source_kind: populated ? 'external' : 'derived' },
+  });
+  const evidence = ref({ datasetId: 'derived-fill', kind: 'execution', accountIdField: 'account', runIdField: 'decisionRun', executionIdField: 'ticket', quantityField: 'volume', priceField: 'price' });
+  assert.throws(() => memory.review({ runId: 'run-1', evidence: [evidence], reflection: 'A derived row cannot establish an original fill.' }), { code: 'INVALID_EVIDENCE' });
+  assert.equal(f.host.storage.list('trading_memory_reviews').length, 0);
+});
+
+test('derived market and observation rows remain usable without confirming execution', t => {
+  const f = fixture(t), memory = f.memory(); memory.record(run()); f.setTime(T0 + 1000);
+  const source = f.data('source-quotes');
+  f.data('derived-observation', { input_ids: [source.id], rows: [{ ...source.rows[0], note: 'Research interpretation' }],
+    producer_plugin_id: 'custom/research', provenance: { source_kind: 'derived', as_of: new Date(f.now()).toISOString() } });
+  for (const kind of ['market', 'observation']) {
+    const result = memory.review({ runId: 'run-1', evidence: [ref({ datasetId: 'derived-observation', kind })], reflection: `Derived ${kind} evidence is not a fill.` });
+    assert.equal(result.evidence[0].roots[0].datasetId, source.id);
+    assert.equal(result.evidence[0].row.note, 'Research interpretation');
+    assert.equal(result.outcome.executionConfirmed, false);
+    assert.equal(result.outcome.basis, 'source_observations_only');
+  }
 });
 
 test('decision time admits fills before episode completion without making the episode visible early', t => {
   const f = fixture(t), memory = f.memory();
   f.setTime(T0 + 80000);
-  f.data('during-execution', { rows: [{ symbol: 'EURUSD', account: 'account-1', decisionRun: 'run-1', observedAt: f.now(), ticket: 21, volume: 0.1, price: 1.1 }],
-    provenance: { source_kind: 'external', provider: 'mt5/python/history_deals_get', as_of: new Date(f.now()).toISOString() } });
+  f.data('during-execution', { producer_plugin_id: 'custom/execution', rows: [{ symbol: 'EURUSD', account: 'account-1', decisionRun: 'run-1', observedAt: f.now(), ticket: 21, volume: 0.1, price: 1.1 }],
+    provenance: { source_kind: 'external', provider: 'arbitrary-native/fill-history', as_of: new Date(f.now()).toISOString() } });
   f.setTime(T0 + 120000);
   memory.record(run({ decisionAt: T0 + 60000, createdAt: f.now(), reports: [{ role: 'executor', observedAt: f.now(), report: 'Later execution report was not available at decision time.' }] }));
   assert.equal(memory.context({ accountId: 'account-1', asOf: T0 + 90000 }).cases.length, 0);

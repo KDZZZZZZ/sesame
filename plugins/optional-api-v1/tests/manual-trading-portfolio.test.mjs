@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { Decimal } from '@sesame/plugin-sdk/decimal';
-import { applyPortfolio, targetOrders } from '../packages/manual-trading/portfolio.js';
-import { createService } from '../packages/manual-trading/service.js';
-import { createAdapters } from '../packages/manual-trading/adapters.js';
+import { applyPortfolio, targetOrders } from '../packages/portfolio-execution/portfolio.js';
+import { createService } from '../packages/portfolio-execution/service.js';
+import { createAdapters } from '../packages/portfolio-execution/adapters.js';
 
 const clone = value => value === undefined ? undefined : structuredClone(value);
 const mt5Position = (ticket, type, volume, magic = 0) => ({ ticket, symbol: 'EURUSD', type, volume, magic });

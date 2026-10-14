@@ -1,23 +1,22 @@
 import { canonical, digest } from '@sesame/plugin-sdk/protocol';
 import { AsyncResource } from 'node:async_hooks';
-import { generateKeyPairSync, sign } from 'node:crypto';
-import { check, payload } from './adapters.js';
+import { check } from './shared.js';
+import { bindExecution, executionCall, verifyComposition } from './composition.js';
 import { createTradingMemory } from './memory.js';
 import { accountKey, cleanError, clone, makePlan, TERMINAL, triggerIdentity, validateDecision } from './plans.js';
-import { ROLE_PROMPTS, SYSTEM, stages, taskTools } from './team.js';
+import { ROLE_PROMPTS, SYSTEM, stages, taskTools, taskPlugins } from './team.js';
 import { ensureReportFolder, writeDailyReport } from './reports.js';
-import { applyPortfolio } from './portfolio.js';
 import { ACTIVITY_LIMIT, TASK_TERMINAL, activityChanges, appendActivity, publicOutput, taskStageIndex } from './activity.js';
 
 export class TradingRuntime {
   constructor(host, { now = Date.now, timer = true, activityPollMs = 500, activityLimit = ACTIVITY_LIMIT, mockModelResponses = false } = {}) {
     this.host = host; this.now = now; this.timerEnabled = timer; this.running = new Map(); this.contextReads = new Map(); this.applying = new Map(); this.subscriptions = new Map(); this.closed = false;
     this.memories = new Map();
-    this.executionKeys = new Map();
     check(Number.isInteger(activityLimit) && activityLimit >= 1 && activityLimit <= 10000, 'INVALID_ARGUMENT', 'Activity retention must be 1..10000 events');
     check(Number.isInteger(activityPollMs) && activityPollMs >= 10 && activityPollMs <= 60000, 'INVALID_ARGUMENT', 'Activity polling must be 10..60000 ms');
     this.activityLimit = activityLimit; this.activityPollMs = activityPollMs; this.mockModelResponses = mockModelResponses === true;
     this.activityListeners = new Set(); this.taskPolls = new Map();
+    this.archiving = new Map();
     // Keep public reads in the service's activation context, not the main tool caller's task context.
     this.observationScope = new AsyncResource('sesame.manual-trading.activity', { requireManualDestroy: true });
   }
@@ -102,6 +101,7 @@ export class TradingRuntime {
     return () => { poll.active = false; clearInterval(poll.timer); this.taskPolls.delete(taskId); };
   }
   main(host) { check(host.scope.kind === 'main', 'FORBIDDEN', 'Configure trading plans in the main conversation'); }
+  ownedPlan(host, id) { this.main(host); const plan = this.plan(id); check(plan.ownerConversationId === host.scope.conversationId, 'FORBIDDEN', 'Trading plan belongs to another conversation'); return plan; }
   authorize(host, runId, roles) {
     const run = this.run(runId);
     if (host.scope.kind === 'main') { check(host.scope.conversationId === run.plan.ownerConversationId, 'FORBIDDEN', 'Trading plan belongs to another conversation'); return run; }
@@ -136,7 +136,7 @@ export class TradingRuntime {
     }
   }
   async start() {
-    check(this.host.agents && this.host.inference, 'PREREQUISITE_REQUIRED', 'Manual trading plans require Sesame 0.2.2 Agent/model ports');
+    check(this.host.agents && this.host.inference, 'PREREQUISITE_REQUIRED', 'Manual trading plans require Sesame 0.2.3-dev.8+ Agent/model and composition ports');
     for (const run of this.host.storage.list('runs')) {
       const unfinished = (run.tasks ?? []).filter(task => !TASK_TERMINAL.has(task.status));
       if (TERMINAL.has(run.status) && !unfinished.length) continue;
@@ -148,17 +148,25 @@ export class TradingRuntime {
         this.activity(run.id, 'run.finished', { status: recovered.status, message: '宿主重启，已核验或中断遗留任务；未重放执行。' });
       }
     }
-    for (const plan of this.plans().filter(value => value.enabled && value.accountEvents)) await this.subscribe(plan);
+    for (const plan of this.plans()) {
+      if (!plan.execution) this.host.storage.put('plans', { ...plan, enabled: false, migrationRequired: 'Select an independent execution capability before resuming this legacy plan' });
+      else if (plan.enabled && plan.accountEvents) await this.subscribe(plan);
+    }
     if (this.timerEnabled) { this.timer = setInterval(() => { this.tick().catch(error => this.host.events?.emit('scheduler.failed', cleanError(error))); }, 1000); this.timer.unref?.(); }
     return this;
   }
   async configure(host, input, signal) {
     this.main(host);
-    check(input && ['mt5', 'qmt'].includes(input.backend), 'INVALID_ARGUMENT', 'Plan and backend are required');
+    check(input && typeof input === 'object', 'INVALID_ARGUMENT', 'A workflow plan is required');
     const previous = input.id ? this.host.storage.get('plans', input.id, true) : null;
+    if (previous) this.ownedPlan(host, previous.id);
     check(!previous || !this.host.storage.list('runs').some(run => run.planId === previous.id && !TERMINAL.has(run.status)), 'PLAN_BUSY', 'Stop the active run before changing its frozen plan');
-    const identity = payload(await host.tools.call({ pluginId: `sesame/${input.backend}`, name: `${input.backend}_trading_context`, arguments: { action: 'identity' } }, signal));
-    const plan = makePlan(host, input, identity.account, previous, this.now());
+    const execution = await bindExecution(host, input.execution, signal);
+    const plan = makePlan(host, input, execution, previous, this.now());
+    for (const role of ['market', 'manager', 'executor']) {
+      check(taskTools(plan, role).length <= 64, 'TOOL_BUDGET_EXCEEDED', 'Select a smaller research tool subset; each task supports 64 tools');
+      check(taskPlugins(plan, role).length <= 32, 'PLUGIN_BUDGET_EXCEEDED', 'Select fewer plugins; each task supports 32 research and execution dependencies combined');
+    }
     await ensureReportFolder(host, plan.reportFolder);
     this.host.storage.put('plans', plan);
     await this.unsubscribe(plan.id);
@@ -166,7 +174,9 @@ export class TradingRuntime {
     return this.plan(plan.id);
   }
   async setEnabled(host, id, enabled) {
-    this.main(host); const plan = this.plan(id);
+    const plan = this.ownedPlan(host, id);
+    check(!enabled || plan.execution, 'EXECUTION_REQUIRED', 'Reconfigure the legacy plan with a selected execution capability');
+    if (enabled) { verifyComposition(host, plan.execution); verifyComposition(host, plan.research); }
     this.host.storage.put('plans', { ...plan, enabled, updatedAt: this.now(), nextDueAt: enabled && plan.intervalMinutes ? this.now() + plan.intervalMinutes * 60000 : plan.nextDueAt });
     if (!enabled) {
       await this.unsubscribe(id);
@@ -179,6 +189,7 @@ export class TradingRuntime {
     const plan = this.plan(planId), id = triggerIdentity(plan, trigger), previous = this.host.storage.get('runs', id, true);
     if (previous) { check(canonical(previous.trigger) === canonical(trigger), 'IDEMPOTENCY_CONFLICT', 'Event ID already has different input'); return previous; }
     check(plan.enabled, 'PLAN_PAUSED', 'Trading plan is paused');
+    check(plan.execution, 'EXECUTION_REQUIRED', 'Select an execution capability before starting this workflow');
     check(Buffer.byteLength(JSON.stringify(trigger)) <= 12000, 'INVALID_ARGUMENT', 'Event payload exceeds 12 KB');
     for (const queued of this.host.storage.list('runs').filter(run => run.planId === plan.id && run.status === 'queued')) {
       this.update(queued.id, { status: 'cancelled', completedAt: this.now(), supersededBy: id });
@@ -187,10 +198,10 @@ export class TradingRuntime {
     const run = this.save({ id, planId: plan.id, plan, trigger: clone(trigger), status: 'queued', createdAt: this.now(), tasks: [], reports: [], reportPending: true, mockModelResponses: this.mockModelResponses });
     this.host.storage.put('plans', { ...plan, lastRunId: id }); this.pump(); return run;
   }
-  event(key, eventId, data = {}, at) {
+  event(key, eventId, data = {}, at, ownerConversationId) {
     if (at !== undefined) check(Number.isSafeInteger(at) && at <= this.now() && this.now() - at <= 86400000, 'STALE_EVENT', 'Event must be observed within the last day');
     check(typeof key === 'string' && typeof eventId === 'string' && eventId.length > 0, 'INVALID_ARGUMENT', 'Event key and stable ID are required');
-    return this.plans().filter(plan => plan.enabled && plan.eventKeys.includes(key)).map(plan => this.trigger(plan.id, { kind: 'event', id: `${key}:${eventId}`, key, ...(at === undefined ? {} : { observedAt: at }), data }));
+    return this.plans().filter(plan => plan.enabled && (!ownerConversationId || plan.ownerConversationId === ownerConversationId) && plan.eventKeys.includes(key)).map(plan => this.trigger(plan.id, { kind: 'event', id: `${key}:${eventId}`, key, ...(at === undefined ? {} : { observedAt: at }), data }));
   }
   async tick() {
     if (this.closed || this.ticking) return;
@@ -214,19 +225,22 @@ export class TradingRuntime {
       if (run.trigger.kind === 'event') this.host.storage.put('plans', { ...plan, lastEventAt: this.now() });
       const controller = new AbortController(), entry = { runId: run.id, controller };
       this.running.set(key, entry);
-      entry.promise = this.execute(run.id, controller.signal).catch(error => this.host.events?.emit('run.failed', { runId: run.id, ...cleanError(error) })).finally(() => { this.running.delete(key); this.pump(); });
+      entry.promise = this.observationScope.runInAsyncScope(() => this.execute(run.id, controller.signal))
+        .catch(error => this.host.events?.emit('run.failed', { runId: run.id, ...cleanError(error) })).finally(() => { this.running.delete(key); this.pump(); });
     }
   }
-  researchAvailable() { try { return this.host.plugins.inspect('sesame/financial-research').state !== 'disabled'; } catch { return false; } }
   async task(runId, role, round, signal) {
     signal?.throwIfAborted(); const run = this.run(runId), plan = run.plan;
     const model = plan.agentModels[role] ?? plan.model;
-    if (role === 'executor' && !this.executionKeys.has(runId)) this.executionKeys.set(runId, generateKeyPairSync('ed25519'));
-    const executionPublicKey = role === 'executor' ? this.executionKeys.get(runId).publicKey.export({ type: 'spki', format: 'pem' }) : undefined;
-    const task = this.host.agents.submit({ requestId: `${run.id}:${role}:${round}`, title: `${plan.title.slice(0, 50)} · ${role} ${round}`, kind: 'research',
+    if (role !== 'reporter') { verifyComposition(this.host, plan.execution); verifyComposition(this.host, plan.research); }
+    const tools = taskTools(plan, role), plugins = taskPlugins(plan, role);
+    check(tools.length <= 64, 'TOOL_BUDGET_EXCEEDED', 'Select a smaller research tool subset; each task supports 64 tools');
+    check(plugins.length <= 32, 'PLUGIN_BUDGET_EXCEEDED', 'Select fewer plugins; each task supports 32 research and execution dependencies combined');
+    const task = this.host.agents.submit({ requestId: `${run.id}:${role}:${round}`, title: `${plan.title.slice(0, 50)} · ${role} ${round}`, kind: 'research', output: { type: 'none' },
       instructions: role === 'reporter' ? '只调用 manual_trading_report，为指定运行归档已有真实记录，不作交易、不改决策。' : `${SYSTEM}\n\n本角色：${ROLE_PROMPTS[role]}\n\n计划要求：${plan.instructions}`,
-      input: { tradingPlan: { id: plan.id, backend: plan.backend, account: plan.account, ownerConversationId: plan.ownerConversationId, researchPlugins: plan.researchPlugins ?? [] }, runId, role, round, trigger: run.trigger, ...(executionPublicKey ? { executionPublicKey } : {}) },
-      tools: taskTools(plan, role, this.researchAvailable()), model, lane: `${digest(accountKey(plan)).slice(7, 39)}:${role}`, queue: 'fifo', timeoutMs: plan.taskTimeoutMs,
+      input: { tradingPlan: { id: plan.id, account: plan.account, ownerConversationId: plan.ownerConversationId }, execution: plan.execution, runId, role, round, trigger: run.trigger },
+      tools, plugins,
+      model, lane: `${digest(accountKey(plan)).slice(7, 39)}:${role}`, queue: 'fifo', timeoutMs: plan.taskTimeoutMs,
       maxTurns: role === 'executor' || role === 'reporter' ? 4 : 16, maxToolCalls: role === 'executor' ? 256 : 48 });
     this.update(runId, { tasks: [...this.run(runId).tasks, { id: task.id, role, round, stageIndex: taskStageIndex(plan, role, round), model, status: task.status, createdAt: task.createdAt ?? this.now() }] });
     let result, stopObserving = () => {};
@@ -262,7 +276,6 @@ export class TradingRuntime {
       const run = this.update(id, { status: signal.aborted ? 'cancelled' : 'failed', completedAt: this.now(), error: cleanError(error) });
       if (run.decision) this.recordMemory(run);
     } finally {
-      this.executionKeys.delete(id);
       const run = this.run(id);
       if (!run.report && !this.closed && !signal.aborted) {
         try { await this.task(id, 'reporter', 0, signal); }
@@ -274,6 +287,7 @@ export class TradingRuntime {
   }
   recordMemory(run) {
     try { this.memoryFor(run.plan).record({ id: run.id, planId: run.planId, accountId: accountKey(run.plan),
+      executionAccountId: run.plan.account.accountId, executionSources: run.plan.execution?.fillSources ?? [],
       symbols: [...new Set([...run.plan.symbols, ...(run.snapshot?.positions ?? []).map(row => row.symbol ?? row.stock_code).filter(Boolean)])],
       snapshot: { account: run.snapshot.account, capturedAt: run.snapshot.capturedAt, summary: run.snapshot.summary, positions: run.snapshot.positions.slice(0, 100), positionCount: run.snapshot.positions.length, fullSnapshotRunId: run.id }, decision: run.decision,
       reports: run.reports.filter(report => report.role !== 'reporter').map(report => ({ ...report, text: report.text.slice(0, 4000), fullReportRunId: run.id, excerpt: report.text.length > 4000 })),
@@ -284,8 +298,9 @@ export class TradingRuntime {
     this.authorize(host, id);
     if (!this.run(id).snapshot) {
       if (!this.contextReads.has(id)) this.contextReads.set(id, (async () => {
-        const run = this.run(id), snapshot = payload(await host.tools.call({ pluginId: `sesame/${run.plan.backend}`, name: `${run.plan.backend}_trading_context`, arguments: { action: 'snapshot', history_days: 30 } }, signal));
+        const run = this.run(id), snapshot = await executionCall(host, run.plan.execution, 'context', { action: 'snapshot', history_days: 30 }, signal);
         check(canonical(snapshot.account) === canonical(run.plan.account), 'ACCOUNT_CHANGED', 'Configured account changed after this plan was saved');
+        for (const key of ['positions', 'orders', 'fills', 'historicalOrders', 'deployments']) check(Array.isArray(snapshot[key]), 'SOURCE_DATA_INVALID', `Execution snapshot must include ${key}`);
         check(Array.isArray(snapshot.positions) && Buffer.byteLength(JSON.stringify(snapshot)) <= 1024 * 1024, 'SOURCE_DATA_INVALID', 'Account snapshot missing or exceeds 1 MiB');
         const memoryContext = this.memoryFor(run.plan).context({ planId: run.planId, accountId: accountKey(run.plan), symbols: [...new Set([...run.plan.symbols, ...snapshot.positions.map(row => row.symbol ?? row.stock_code).filter(Boolean)])], asOf: this.now(), limit: 8 });
         this.update(id, { snapshot, memoryContext });
@@ -329,23 +344,27 @@ export class TradingRuntime {
     if (!this.applying.has(id)) this.applying.set(id, (async () => {
       this.update(id, { status: 'executing', executionStartedAt: this.now() });
       const assertActive = () => { this.authorize(host, id, ['executor']); check(this.plan(run.planId).enabled && !TERMINAL.has(this.run(id).status), 'PLAN_PAUSED', 'Trading plan stopped'); signal?.throwIfAborted(); };
-      const authorizeRequest = (action, args) => {
-        assertActive();
-        const task = host.agents.current(), key = this.executionKeys.get(id);
-        check(task?.id && key, 'EXECUTION_KEY_UNAVAILABLE', 'This executor no longer has a live intent-signing key');
-        const expiresAt = this.now() + 30000;
-        const signature = sign(null, Buffer.from(canonical({ version: 1, taskId: task.id, runId: id, action, args, expiresAt })), key.privateKey).toString('base64');
-        return { ...args, authorization: { expiresAt, signature } };
-      };
-      const execution = await applyPortfolio(host, this.run(id), { now: this.now, signal, assertActive, authorizeRequest, checkpoint: changes => this.update(id, changes) });
+      assertActive(); verifyComposition(this.host, run.plan.execution);
+      const execution = await executionCall(host, run.plan.execution, 'apply', { run: { id, plan: { id: run.planId,
+        account: run.plan.account, ownerConversationId: run.plan.ownerConversationId, slippageBps: run.plan.slippageBps }, decision: run.decision, decidedAt: run.decidedAt } }, signal);
+      check(execution && typeof execution.status === 'string' && Array.isArray(execution.orders) && Array.isArray(execution.pauses), 'SOURCE_DATA_INVALID', 'Execution capability must return a durable structured receipt');
       this.update(id, { execution, reportPending: true }); return execution;
     })().finally(() => this.applying.delete(id)));
     return this.applying.get(id);
   }
   async archive(host, id) {
     const run = this.authorize(host, id, ['executor', 'reporter']);
-    check(TERMINAL.has(run.status), 'RUN_NOT_FINISHED', 'Archive after the run has finished so all role reports and receipts are included');
-    const report = await writeDailyReport(host, run); this.update(id, { report, reportPending: false }); return report;
+    check(TERMINAL.has(run.status) && run.tasks.filter(task => task.role !== 'reporter').every(task => TASK_TERMINAL.has(task.status)),
+      'RUN_NOT_FINISHED', 'Archive once the run and all research/execution tasks have finished');
+    if (!this.archiving.has(id)) this.archiving.set(id, Promise.resolve().then(async () => {
+      const report = await writeDailyReport(host, this.run(id), {
+        onSnapshot: reportSnapshot => this.update(id, { reportSnapshot, reportPending: true }),
+        onFile: receipt => this.update(id, { reportFiles: [...(this.run(id).reportFiles ?? []).filter(file => file.suffix !== receipt.suffix), receipt] }),
+      });
+      this.update(id, { report, reportPending: false, reportError: null }); return report;
+    }).catch(error => { this.update(id, { reportPending: true, reportError: cleanError(error) }); throw error; })
+      .finally(() => this.archiving.delete(id)));
+    return this.archiving.get(id);
   }
   review(host, args) {
     const current = this.authorize(host, args.current_run_id), reviewed = this.run(args.run_id);
@@ -364,10 +383,12 @@ export class TradingRuntime {
   async subscribe(plan) {
     await this.unsubscribe(plan.id);
     try {
-      const binding = await this.host.providers.bind({ pluginId: `sesame/${plan.backend}`, providerId: 'account' });
+      check(plan.execution?.accountProvider, 'UNSUPPORTED_CAPABILITY', 'Selected execution capability does not declare account event support');
+      const binding = await this.host.providers.bind(plan.execution.accountProvider);
       this.subscriptions.set(plan.id, { bindingId: binding.bindingId });
       check(!this.closed && this.plan(plan.id).enabled && this.plan(plan.id).revision === plan.revision, 'PLAN_CHANGED', 'Plan stopped or changed while binding account events');
       check(binding.connection?.revision === plan.account.revision, 'ACCOUNT_CHANGED', 'Event binding account revision differs from plan');
+      check(binding.accounts?.length === 1, 'ACCOUNT_MISMATCH', 'Account events require one unambiguous bound account');
       const stream = await this.host.providers.subscribe(binding.bindingId, 'subscribeAccount', { account: binding.accounts[0], topics: ['positions', 'orders'] });
       this.subscriptions.set(plan.id, { bindingId: binding.bindingId, stream });
       check(!this.closed && this.plan(plan.id).enabled && this.plan(plan.id).revision === plan.revision, 'PLAN_CHANGED', 'Plan stopped or changed while subscribing account events');
@@ -406,6 +427,7 @@ export class TradingRuntime {
     }
     await Promise.allSettled([...this.subscriptions.keys()].map(id => this.unsubscribe(id)));
     await Promise.allSettled([...this.running.values()].map(value => value.promise));
+    await Promise.allSettled(this.archiving.values());
     this.activityListeners.clear();
     if (!this.observationScopeDestroyed) { this.observationScope.emitDestroy(); this.observationScopeDestroyed = true; }
   }

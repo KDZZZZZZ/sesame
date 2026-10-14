@@ -1,6 +1,6 @@
 ---
 name: market-data-parser
-description: "解析结构化公开金融数据（exchangerate-api 风格 JSON、TCMB 风格 XML 汇率），支持货币代码过滤。配合 sources_fetch 使用。"
+description: "解析调用者提供的公开金融数据（exchangerate-api 风格 JSON、TCMB 风格 XML 汇率），支持货币代码过滤；需要抓取时由调用者选择获取能力。"
 ---
 
 此包为按需安装的标准 MCP，要求 Sesame >=0.2.0-0；不是默认包。服务器使用现有 Python 标准库，不在加载时下载依赖。先核对固定版本与实际工具测试，不能把解析器/参考目录当成行情账户或交易后端。
@@ -17,14 +17,14 @@ description: "解析结构化公开金融数据（exchangerate-api 风格 JSON�
 
 ## 工作流
 
-当前工具负责解析文本；MCP 进程可访问公网与内网。获取 API 响应可使用 sources_fetch。
+当前工具负责解析调用者提供的文本；MCP 进程可访问公网与内网。需要获取新 API 响应时，使用调用者选定的抓取能力；sources_fetch 是可选来源。
 
-先用 `plugin_load` 加载 `sesame/web-sources` 和 `sesame/market-data-parser`。下文使用 MCP 原始工具名；实际调用使用当前工具列表中的完整 MCP 工具名。
+用 `plugin_load` 加载 `sesame/market-data-parser`。下文使用 MCP 原始工具名；实际调用使用当前工具列表中的完整 MCP 工具名。
 
-1. 用 `sources_fetch` 抓取公开金融数据端点，例如：
+1. 复用调用者已有的 JSON/XML 与来源；缺少内容时才通过所选抓取能力取得快照。选择 `sources_fetch` 时按需加载 `sesame/web-sources`，支持格式的端点示例：
    - `https://api.exchangerate-api.com/v4/latest/USD`（JSON）
    - `https://www.tcmb.gov.tr/kurlar/today.xml`（XML）
-2. 读取快照 `text` 字段
+2. 从快照取得完整文本（例如 `text` 字段），保留来源
 3. 调用 `parse_fx_json` / `parse_fx_xml`，把文本作为 `*_content` 传入
 4. `file_path` 参数仅用于插件包内捆绑样本（sample_fx.json / sample_fx.xml）
 

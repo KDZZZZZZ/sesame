@@ -5,19 +5,34 @@ import { requireValue } from '../backend/support.js';
 export function assertTradingTask(host, account, write = false, identity = false) {
   if (host.scope.kind === 'main') return null;
   const task = host.agents?.current(), input = task?.input, plan = input?.tradingPlan;
-  requireValue(task?.pluginId === 'sesame/manual-trading' && task.status === 'running'
+  const execution = input?.execution;
+  const composed = execution && execution.context?.backend === 'mt5' && typeof execution.pluginId === 'string'
+    && typeof execution.applyTool === 'string' && typeof execution.contextTool === 'string'
+    && sameAccount(execution.account, account) && sameAccount(execution.context.account, account);
+  const legacy = !execution && task?.pluginId === 'sesame/manual-trading' && plan?.backend === 'mt5';
+  requireValue((composed || legacy) && task.status === 'running'
     && task.conversationId === host.scope.conversationId && typeof plan?.id === 'string' && plan.id.length > 0
-    && plan.backend === 'mt5' && typeof input.runId === 'string' && input.runId.length > 0
+    && typeof plan.ownerConversationId === 'string' && plan.ownerConversationId.length > 0
+    && typeof input.runId === 'string' && input.runId.length > 0
     && typeof input.role === 'string' && input.role.length > 0 && (!write || input.role === 'executor'),
-  'Only the main conversation or a matching manual-trading plan task may use this tool', 403, 'FORBIDDEN');
+  'Only the main conversation or an active task with a frozen matching execution contract may use this tool', 403, 'FORBIDDEN');
   if (!identity || plan.account) requireValue(sameAccount(plan.account, account), 'Trading plan account or configuration changed', 409, 'ACCOUNT_MISMATCH');
   return task;
 }
 const sameAccount = (a, b) => a?.accountId === b.accountId && a?.server === b.server && a?.revision === b.revision;
 const sameDomain = (a, b) => a?.accountId === b.accountId && a?.server === b.server;
-export function verifyExecutionAuthorization(task, action, parameters, now = Date.now()) {
+export function verifyExecutionAuthorization(task, action, parameters, now = Date.now(), host) {
   const { authorization, ...args } = parameters;
   if (!task) return args;
+  if (task.input.execution) {
+    const execution = task.input.execution, chain = host?.tools.invocation?.()?.chain;
+    const apply = Array.isArray(chain) ? chain.findIndex(row => row.pluginId === execution.pluginId && row.toolName === execution.applyTool) : -1;
+    requireValue(apply > 0 && apply < chain.length - 1
+      && chain.slice(0, apply).some(row => row.pluginId === task.pluginId)
+      && chain.at(-1).pluginId === 'sesame/mt5' && chain.at(-1).toolName === action,
+    'Execution requires a live workflow-to-execution invocation chain', 403, 'FORBIDDEN');
+    return args;
+  }
   let valid = false;
   try {
     const key = createPublicKey(task.input.executionPublicKey), signature = Buffer.from(authorization.signature, 'base64');
@@ -66,14 +81,14 @@ export function createTradingContext(host, mt5, { now = Date.now } = {}) {
     },
     async pause(args, signal) {
       const account = accountOf(mt5); const task = assertTradingTask(host, account, true);
-      verifyExecutionAuthorization(task, 'mt5_trading_pause', args, now());
+      verifyExecutionAuthorization(task, 'mt5_trading_pause', args, now(), host);
       requireValue(sameAccount(args.account, account), 'Pause account or configuration changed', 409, 'ACCOUNT_MISMATCH');
       requireValue(typeof args.reason === 'string' && args.reason.trim() && args.reason.length <= 2000, 'A bounded risk reason is required');
       const deployment = mt5.deployments.list().find(row => row.id === args.deployment_id);
       requireValue(deployment && String(deployment.login) === account.accountId && deployment.server === account.server,
         'Deployment is not owned by the exact account', 409, 'ACCOUNT_MISMATCH');
       signal?.throwIfAborted();
-      await mt5.market.connected(); assertCurrent(account); verifyExecutionAuthorization(assertTradingTask(host, account, true), 'mt5_trading_pause', args, now());
+      await mt5.market.connected(); assertCurrent(account); verifyExecutionAuthorization(assertTradingTask(host, account, true), 'mt5_trading_pause', args, now(), host);
       signal?.throwIfAborted();
       const receipt = await mt5.deployments.stop(deployment.id);
       return { account, deployment: receipt, run_record: mt5.runObserver?.reference('deployment', receipt.id) ?? null,
@@ -83,7 +98,7 @@ export function createTradingContext(host, mt5, { now = Date.now } = {}) {
     },
     async order(parameters, signal) {
       const account = accountOf(mt5), task = assertTradingTask(host, account, true);
-      const args = verifyExecutionAuthorization(task, 'mt5_trading_order', parameters, now());
+      const args = verifyExecutionAuthorization(task, 'mt5_trading_order', parameters, now(), host);
       requireValue(args.server === 'python' && args.tool === 'order_send', 'Only the guarded Python order_send path is supported');
       requireValue(!task || args.arguments?.execution_guard || args.arguments?.cancellation_guard, 'Plan orders require a native final-mile guard');
       requireValue(!task || args.arguments?.cancellation_guard || Array.isArray(args.arguments?.execution_guard?.expected_positions), 'Plan execution requires a full symbol position expectation');
@@ -92,7 +107,7 @@ export function createTradingContext(host, mt5, { now = Date.now } = {}) {
       requireValue(typeof args.command_id === 'string' && /^[a-zA-Z0-9_-]{16,128}$/.test(args.command_id), 'A stable command ID is required');
       const fingerprint = digest({ args, account, owner }), old = host.storage.get('mt5_trading_commands', args.command_id, true);
       requireValue(!old || old.fingerprint === fingerprint && (!task || old.planId === task.input.tradingPlan.id && old.runId === task.input.runId && old.taskId === task.id), 'Command ID belongs to another signed intent', 409, 'IDEMPOTENCY_CONFLICT');
-      signal?.throwIfAborted(); assertCurrent(account); verifyExecutionAuthorization(assertTradingTask(host, account, true), 'mt5_trading_order', parameters, now());
+      signal?.throwIfAborted(); assertCurrent(account); verifyExecutionAuthorization(assertTradingTask(host, account, true), 'mt5_trading_order', parameters, now(), host);
       if (!old) host.storage.put('mt5_trading_commands', { id: args.command_id, account, owner, fingerprint, planId: task?.input.tradingPlan.id ?? null, runId: task?.input.runId ?? null, taskId: task?.id ?? null, createdAt: now() });
       return mt5.official.call(args, owner, signal);
     },
@@ -109,14 +124,14 @@ export function createTools(host, mt5) {
   const { define, Type, string } = host.tools, service = createTradingContext(host, mt5);
   const authorization = Type.Optional(Type.Object({ expiresAt: Type.Integer({ minimum: 1 }), signature: Type.String({ minLength: 88, maxLength: 88 }) }, { additionalProperties: false }));
   return [
-    define('mt5_trading_context', 'Read exact configured account identity or a full-account native snapshot for the main Agent or a matching manual-trading plan task. Includes all origins and broker-retained history; never trades.', {
+    define('mt5_trading_context', 'Read exact configured account identity or a full-account native snapshot for the main Agent or an active workflow task with a frozen matching execution contract. Includes all origins and broker-retained history; never trades.', {
       action: Type.Union(['identity', 'snapshot'].map(Type.Literal)), history_days: Type.Optional(Type.Integer({ minimum: 1, maximum: 90 })),
     }, (args, signal) => service.context(args, signal)),
     define('mt5_trading_pause', 'Risk executor only: stop one EA belonging to the exact account. Native action removes the expert; no automatic resume, state-preserving pause or position close is implied. Unknown receipts require inspection, not replay.', {
       deployment_id: string('Exact deployment ID from the account snapshot'), account: Type.Object({ accountId: string('Exact login'), server: string('Exact server'), revision: string('Exact configuration revision') }, { additionalProperties: false }),
       reason: Type.String({ minLength: 1, maxLength: 2000 }), authorization,
     }, (args, signal) => service.pause(args, signal)),
-    define('mt5_trading_order', 'Submit one runtime-signed exact-account guarded order intent. Plan tasks cannot invent or alter signed intent; stable command ID retains the parent-owner receipt.', {
+    define('mt5_trading_order', 'Submit one exact-account guarded order from a host-proven workflow-to-execution call chain, or a legacy runtime-signed intent. Direct delegated model calls have no execution authority; stable command ID retains the parent-owner receipt.', {
       server: Type.Literal('python'), tool: Type.Literal('order_send'), arguments: Type.Object({}, { additionalProperties: true }), command_id: Type.String({ pattern: '^[a-zA-Z0-9_-]{16,128}$' }), authorization,
     }, (args, signal) => service.order(args, signal)),
     define('mt5_trading_command', 'Read a retained plan order receipt for its exact owner and account, including after a configuration revision change. Never submits or replays an order.', {

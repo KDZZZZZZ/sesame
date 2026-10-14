@@ -35,6 +35,65 @@ function signed(host, action, args, expiresAt = Date.now() + 50000) {
   const signature = sign(null, Buffer.from(canonical({ version: 1, taskId: host.task.id, runId: host.task.input.runId, action, args, expiresAt })), host.privateKey).toString('base64');
   return { ...args, authorization: { expiresAt, signature } };
 }
+function composed(host, backend, workflow = 'fixture/another-workflow') {
+  host.task.pluginId = workflow;
+  delete host.task.input.executionPublicKey;
+  delete host.task.input.tradingPlan.backend;
+  const account = host.task.input.tradingPlan.account;
+  host.task.input.execution = { pluginId: 'sesame/portfolio-execution', contextTool: 'portfolio_execution_context', applyTool: 'portfolio_execution_apply', arguments: { binding_id: 'binding' }, account,
+    context: { bindingId: 'binding', backend, account } };
+  host.chain = [{ pluginId: workflow, toolName: 'workflow_apply' }, { pluginId: 'sesame/portfolio-execution', toolName: 'portfolio_execution_apply' }, { pluginId: `sesame/${backend}`, toolName: `${backend}_trading_order` }];
+  host.tools.invocation = () => structuredClone({ chain: host.chain });
+}
+
+test('composed workflow identities use the same MT5 exact-account contract without a manual-trading name', async () => {
+  for (const workflow of ['fixture/another-workflow', 'fixture/rebalance']) {
+    const f = mt5Fixture(); composed(f.host, 'mt5', workflow);
+    assert.equal((await f.service.context({ action: 'snapshot' })).account.accountId, account.accountId);
+    assert.equal((await f.service.order(mt5Order)).status, 'returned');
+    assert.equal(f.calls.filter(c => c.tool === 'order_send').length, 1);
+  }
+});
+
+test('MT5 composed execution rejects direct calls, forged ancestors, changed account, role and expired task before sending', async () => {
+  const changes = [
+    h => { h.chain = h.chain.slice(2); },
+    h => { h.chain[0].pluginId = 'fixture/unrelated'; },
+    h => { h.chain[1].toolName = 'portfolio_execution_context'; },
+    h => { h.task.input.role = 'analyst'; },
+    h => { h.task.status = 'cancelled'; },
+    h => { h.task.input.execution.account = { ...account, revision: '2' }; },
+    h => { h.task.input.execution.context.backend = 'qmt'; },
+    h => { h.tools.invocation = () => { throw Object.assign(new Error('Expired invocation'), { code: 'FORBIDDEN' }); }; },
+  ];
+  for (const change of changes) {
+    const f = mt5Fixture(); composed(f.host, 'mt5'); change(f.host);
+    await assert.rejects(f.service.order(mt5Order));
+    assert.equal(f.calls.filter(c => c.tool === 'order_send').length, 0);
+  }
+});
+
+test('composed QMT orders keep guards, idempotence and account checks; JSON authorization cannot replace the invocation chain', async () => {
+  const f = qmtFixture(); composed(f.host, 'qmt');
+  assert.equal((await qmtContext(f.host, f.service)({ action: 'identity' })).account.accountId, '123');
+  const receipt = await f.service.command('order', order, undefined, f.host.scope, f.host);
+  assert.deepEqual(await f.service.command('order', order, undefined, f.host.scope, f.host), receipt);
+  assert.equal(f.calls.length, 1);
+  f.host.chain = f.host.chain.slice(2);
+  await assert.rejects(f.service.command('order', { ...order, operation_id: 'forged', authorization: { chain: ['trusted'] } }, undefined, f.host.scope, f.host), { code: 'FORBIDDEN' });
+  assert.equal(f.calls.length, 1);
+});
+
+test('composed authorization is rechecked after a QMT queue and MT5 asynchronous pause preparation', async () => {
+  const q = qmtFixture(); composed(q.host, 'qmt');
+  q.host.configuration.exclusive = async action => { q.host.chain = q.host.chain.slice(2); return action(); };
+  await assert.rejects(q.service.command('order', order, undefined, q.host.scope, q.host), { code: 'FORBIDDEN' });
+  assert.equal(q.calls.length, 0);
+  const m = mt5Fixture(); composed(m.host, 'mt5'); m.host.chain.at(-1).toolName = 'mt5_trading_pause';
+  m.mt5.market.connected = async () => { m.host.task.status = 'cancelled'; };
+  await assert.rejects(m.service.pause({ deployment_id: 'own', account, reason: 'Risk' }), { code: 'FORBIDDEN' });
+  assert.equal(m.calls.length, 0);
+});
 function mt5Fixture(role) {
   const host = taskHost('mt5', role), calls = [];
   const config = { version: 1, account: { login: '123', server: 'broker' } };

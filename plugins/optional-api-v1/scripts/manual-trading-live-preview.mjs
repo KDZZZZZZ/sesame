@@ -16,7 +16,6 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 
-const packageRoot = fileURLToPath(new URL('../packages/manual-trading/', import.meta.url));
 const packagesRoot = fileURLToPath(new URL('../packages/', import.meta.url));
 const roles = ['market', 'fundamentals', 'news', 'sentiment', 'bull', 'bear', 'risk', 'manager', 'executor', 'reporter'];
 const analysts = roles.slice(0, 4);
@@ -202,13 +201,16 @@ export async function launchPreview({ hostRoot, terminal, python, port = 0, dela
     assert.equal(snapshot.account.server, actual.server);
     assert.ok(Array.isArray(snapshot.positions) && Array.isArray(snapshot.orders));
     app.runtime.options.plugins['sesame/manual-trading'] = { mockModelResponses: true };
-    const draft = join(app.runtime.workspaces.root('conv_main'), 'manual-trading-live-preview');
-    await cp(packageRoot, draft, { recursive: true });
-    const checked = await app.runtime.plugins.manager.test('conv_main', { path: draft });
-    if (!checked.passed) fail('PLUGIN_CHECK_FAILED', 'The current manual-trading package failed the real host preflight.');
-    const installed = await app.runtime.plugins.manager.install('conv_main', { path: draft, digest: checked.digest });
-    if (installed.runtime_status !== 'ready') fail('PLUGIN_INSTALL_FAILED', 'The current manual-trading package is not ready in the real host.');
-    app.runtime.plugins.activate('conv_main', installed.id);
+    for (const name of ['manual-trading', 'portfolio-execution']) {
+      const draft = join(app.runtime.workspaces.root('conv_main'), `${name}-live-preview`);
+      await cp(join(packagesRoot, name), draft, { recursive: true });
+      const checked = await app.runtime.plugins.manager.test('conv_main', { path: draft });
+      if (!checked.passed) fail('PLUGIN_CHECK_FAILED', `The current ${name} package failed the real host preflight.`);
+      const installed = await app.runtime.plugins.manager.install('conv_main', { path: draft, digest: checked.digest });
+      if (installed.runtime_status !== 'ready') fail('PLUGIN_INSTALL_FAILED', `The current ${name} package is not ready in the real host.`);
+      app.runtime.plugins.activate('conv_main', installed.id);
+    }
+    const execution = await main('portfolio_execution_configure', { backend: 'mt5' });
     const configured = await main('manual_trading_models');
     const agentModels = Object.fromEntries(roles.map(role => {
       const descriptor = configured.models.find(value => value.provider === 'local-preview' && value.id === previewModels[role]);
@@ -216,7 +218,7 @@ export async function launchPreview({ hostRoot, terminal, python, port = 0, dela
       return [role, { provider: descriptor.provider, id: descriptor.id, configurationDigest: descriptor.configurationDigest }];
     }));
     const plan = await main('manual_trading_plan', { action: 'save', plan: {
-      title: '真实账户 · Team 协作查看器（模型响应模拟）', backend: 'mt5', model: agentModels.manager, agent_models: agentModels,
+      title: '真实账户 · Team 协作查看器（模型响应模拟）', execution, model: agentModels.manager, agent_models: agentModels,
       mode: 'team', symbols: [], event_keys: ['local.preview.start'], account_events: false, debate_rounds: 1, task_timeout_seconds: 120, enabled: true,
       instructions: '本地查看器：只有模型文本与模型选择的工具调用由 loopback endpoint 模拟。账户、调度、原生 Agent loop、上下文、报告传递、决策保存、执行回执与归档全部真实。仅允许 unchanged:true、targets:[]、pause_strategies:[]。不下单、不停止策略，不编造行情/新闻/收益。',
     } });
@@ -224,7 +226,7 @@ export async function launchPreview({ hostRoot, terminal, python, port = 0, dela
     if (triggered.runs.length !== 1) fail('RUN_NOT_STARTED', 'The real event dispatcher did not create exactly one run.');
     const runId = triggered.runs[0].id;
     const activity = await main('manual_trading_activity', { run_id: runId });
-    if (activity.runId !== runId || activity.mode !== 'live' || !activity.url) fail('ACTIVITY_UNAVAILABLE', 'The activity tool did not return this real run’s live URL.');
+    if (activity.runId !== runId || activity.mode !== 'live' || !activity.viewId || activity.panel !== 'report') fail('ACTIVITY_UNAVAILABLE', 'The activity tool did not register this run’s live report panel.');
     const completed = (async () => {
       const deadline = Date.now() + timeoutMs;
       while (!closed && Date.now() < deadline) {
@@ -253,9 +255,9 @@ export async function launchPreview({ hostRoot, terminal, python, port = 0, dela
       }
       fail(closed ? 'PREVIEW_CLOSED' : 'WORKFLOW_TIMEOUT', closed ? 'Preview stopped.' : 'The real Team workflow exceeded the preview wait deadline.');
     })();
-    // Prevent an unhandled rejection while a caller opens the URL before awaiting.
+    // Prevent an unhandled rejection while a caller opens the host report panel before awaiting.
     completed.catch(() => {});
-    return { url: activity.url, runId, planId: plan.id, completed, close, main, app };
+    return { viewId: activity.viewId, runId, planId: plan.id, completed, close, main, app };
   } catch (error) { await close(); throw error; }
 }
 
@@ -273,7 +275,7 @@ async function cli() {
   let stopping = false;
   const stop = () => { stopping = true; void preview.close().catch(() => { process.exitCode = 1; }); };
   process.once('SIGINT', stop); process.once('SIGTERM', stop);
-  console.log(JSON.stringify({ state: 'ready', url: preview.url, runId: preview.runId, modelResponses: 'mock', accountSource: 'live-mt5', workflowSource: 'native-host' }));
+  console.log(JSON.stringify({ state: 'ready', viewId: preview.viewId, runId: preview.runId, modelResponses: 'mock', accountSource: 'live-mt5', workflowSource: 'native-host' }));
   try { console.log(JSON.stringify({ state: 'completed', ...await preview.completed })); }
   catch (error) { if (!stopping) { await preview.close(); throw error; } }
   if (values.once) await preview.close();

@@ -1931,8 +1931,7 @@
   },
   {
     "name": "mt5_trading_context",
-    "label": "mt5_trading_context",
-    "description": "Read exact configured account identity or a full-account native snapshot for the main Agent or a matching manual-trading plan task. Includes all origins and broker-retained history; never trades.",
+    "description": "Read exact configured account identity or a full-account native snapshot for the main Agent or an active workflow task with a frozen matching execution contract. Includes all origins and broker-retained history; never trades.",
     "parameters": {
       "type": "object",
       "required": [
@@ -1962,7 +1961,6 @@
   },
   {
     "name": "mt5_trading_pause",
-    "label": "mt5_trading_pause",
     "description": "Risk executor only: stop one EA belonging to the exact account. Native action removes the expert; no automatic resume, state-preserving pause or position close is implied. Unknown receipts require inspection, not replay.",
     "parameters": {
       "type": "object",
@@ -2037,8 +2035,7 @@
   },
   {
     "name": "mt5_trading_order",
-    "label": "mt5_trading_order",
-    "description": "Submit one runtime-signed exact-account guarded order intent. Plan tasks cannot invent or alter signed intent; stable command ID retains the parent-owner receipt.",
+    "description": "Submit one exact-account guarded order from a host-proven workflow-to-execution call chain, or a legacy runtime-signed intent. Direct delegated model calls have no execution authority; stable command ID retains the parent-owner receipt.",
     "parameters": {
       "type": "object",
       "required": [
@@ -2090,7 +2087,6 @@
   },
   {
     "name": "mt5_trading_command",
-    "label": "mt5_trading_command",
     "description": "Read a retained plan order receipt for its exact owner and account, including after a configuration revision change. Never submits or replays an order.",
     "parameters": {
       "type": "object",

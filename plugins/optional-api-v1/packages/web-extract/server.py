@@ -1,7 +1,7 @@
 import sys, json, os, re
 from html.parser import HTMLParser
 
-VERSION = "2.0.2"
+VERSION = "2.0.3"
 PLUGIN_ROOT = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
 
 def resolve_path(p):

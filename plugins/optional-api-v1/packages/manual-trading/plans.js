@@ -1,13 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { canonical, digest } from '@sesame/plugin-sdk/protocol';
-import { check } from './adapters.js';
-import { RESEARCH_BASELINES } from './research-baselines.js';
+import { check } from './shared.js';
+import { selectResearch } from './composition.js';
 
 export const ROLES = ['market', 'fundamentals', 'news', 'sentiment', 'bull', 'bear', 'risk', 'manager', 'executor', 'reporter'];
 export const ANALYSTS = ROLES.slice(0, 4);
 export const TERMINAL = new Set(['completed', 'failed', 'interrupted', 'cancelled']);
 export const clone = value => structuredClone(value);
-export const accountKey = plan => canonical([plan.backend, plan.account.accountId, plan.account.server ?? plan.account.connectionId]);
+export const accountKey = plan => canonical([plan.execution?.pluginId ?? 'legacy', Object.fromEntries(Object.entries(plan.account).filter(([key]) => key !== 'revision'))]);
 export const cleanError = error => ({ code: error?.code ?? 'RUN_FAILED', message: String(error?.message ?? error).slice(0, 1000) });
 // eslint-disable-next-line no-control-regex -- Report file names must exclude control characters.
 export const safeName = value => String(value).normalize('NFKC').replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').replace(/[. ]+$/g, '').slice(0, 60) || '计划';
@@ -21,11 +21,12 @@ export function selectModel(host, selection) {
   return clone(model);
 }
 
-export function makePlan(host, input, account, previous, now = Date.now()) {
+export function makePlan(host, input, execution, previous, now = Date.now()) {
   const id = input.id ?? previous?.id ?? randomUUID();
   check(/^[a-zA-Z0-9_-]{1,80}$/.test(id), 'INVALID_ARGUMENT', 'Plan ID must be a safe identifier');
   check(typeof input.title === 'string' && input.title.trim() && input.title.length <= 80, 'INVALID_ARGUMENT', 'Plan title is required (max 80 characters)');
-  check(['mt5', 'qmt'].includes(input.backend), 'INVALID_ARGUMENT', 'Choose mt5 or qmt');
+  check(execution?.account && execution.contextTool && execution.applyTool, 'EXECUTION_REQUIRED', 'Bind a selected execution capability before saving the workflow');
+  check(input.backend === undefined, 'INVALID_ARGUMENT', 'Select an execution capability; configure native backends in that capability plugin');
   const mode = input.mode ?? 'single';
   check(['single', 'team'].includes(mode), 'INVALID_ARGUMENT', 'Choose single or team');
   const model = selectModel(host, input.model), agentModels = {};
@@ -43,16 +44,10 @@ export function makePlan(host, input, account, previous, now = Date.now()) {
   bounded(timeoutSeconds, 30, 1800, 'task_timeout_seconds'); bounded(slippageBps, 0, 500, 'slippage_bps');
   const symbols = input.symbols ?? [];
   check(Array.isArray(symbols) && symbols.length <= 30 && symbols.every(symbol => typeof symbol === 'string' && symbol.length > 0 && symbol.length <= 100), 'INVALID_ARGUMENT', 'Use at most 30 exact broker symbols');
-  const researchPlugins = input.research_plugins ?? previous?.researchPlugins ?? [];
-  check(Array.isArray(researchPlugins) && researchPlugins.length <= 18 && researchPlugins.every(id => Object.hasOwn(RESEARCH_BASELINES, id)), 'INVALID_ARGUMENT', 'Choose supported ABU research baseline plugin IDs');
-  for (const id of researchPlugins) {
-    let entry;
-    try { entry = host.plugins.inspect(id); } catch { /* Uninstalled is a prerequisite error. */ }
-    check(entry && entry.state !== 'disabled' && entry.runtime_status !== 'failed', 'PREREQUISITE_REQUIRED', `Install an available research plugin before selecting it: ${id}`);
-  }
+  const research = selectResearch(host, input.research ?? previous?.research ?? {});
   check(typeof (input.instructions ?? '') === 'string' && (input.instructions ?? '').length <= 6000, 'INVALID_ARGUMENT', 'Instructions exceed 6000 characters');
-  const plan = { id, title: input.title.trim(), backend: input.backend, account: clone(account), mode, model, agentModels,
-    symbols: [...new Set(symbols)], researchPlugins: [...new Set(researchPlugins)], intervalMinutes, eventKeys: [...new Set(eventKeys)], accountEvents: input.account_events ?? false,
+  const plan = { id, title: input.title.trim(), execution: clone(execution), account: clone(execution.account), mode, model, agentModels,
+    symbols: [...new Set(symbols)], research, intervalMinutes, eventKeys: [...new Set(eventKeys)], accountEvents: input.account_events ?? false,
     eventCooldownMs: cooldownSeconds * 1000, debateRounds, taskTimeoutMs: timeoutSeconds * 1000, slippageBps,
     instructions: input.instructions ?? '', enabled: input.enabled ?? true, ownerConversationId: host.scope.conversationId,
     reportFolder: `手工交易日报/${safeName(input.title)}-${id}`, revision: (previous?.revision ?? 0) + 1,
@@ -75,8 +70,10 @@ export function validateDecision(plan, snapshot, decision) {
     check(universe.has(target.symbol) && !seen.has(target.symbol), 'INVALID_DECISION', 'Targets must use unique watched or held symbols');
     seen.add(target.symbol);
     check(typeof target.quantity === 'string' && /^-?(0|[1-9]\d*)(\.\d+)?$/.test(target.quantity) && target.quantity.length <= 40, 'INVALID_DECISION', 'Target quantity must be an exact signed decimal string');
-    check(plan.backend !== 'qmt' || /^(0|[1-9]\d*)$/.test(target.quantity), 'INVALID_DECISION', 'QMT STOCK targets are nonnegative integer shares');
-    check(target.unit === (plan.backend === 'mt5' ? 'lots' : 'shares'), 'INVALID_DECISION', 'Target quantity unit differs from backend');
+    const rules = plan.execution.quantityRules;
+    check(rules.signed || !target.quantity.startsWith('-'), 'INVALID_DECISION', 'Selected capability does not support negative quantities');
+    check(!rules.integer || !target.quantity.includes('.'), 'INVALID_DECISION', 'Selected capability requires integer quantities');
+    check(target.unit === rules.unit, 'INVALID_DECISION', 'Target quantity unit differs from the selected execution capability');
   }
   check(Array.isArray(pauses) && pauses.length <= 30 && new Set(pauses.map(value => value.deployment_id)).size === pauses.length, 'INVALID_DECISION', 'Pause requests must be unique');
   for (const pause of pauses) {

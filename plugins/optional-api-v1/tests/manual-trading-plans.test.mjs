@@ -43,6 +43,9 @@ function fixture(t, { service = true } = {}) {
     },
     read(ref) { const value = [...artifacts.values()].find(item => canonical(item.ref) === canonical(ref)); assert.ok(value, 'Exact artifact revision must exist'); return { ref: copy(ref), manifest: copy(value.input.manifest) }; },
   };
+  const entry = { id: 'fixture/execution', state: 'discoverable', digest: 'fixture-v1', tools: ['fixture_context', 'fixture_apply'], delegatable_tools: ['fixture_context', 'fixture_apply'] };
+  const identity = () => ({ account: copy(account), tools: entry.tools, readTools: ['fixture_context'], taskContext: { bindingId: 'fixture' }, quantityRules: { unit: 'contracts', signed: true, integer: false }, accountProvider: { pluginId: 'fixture/execution', providerId: 'account' } });
+  const execution = () => ({ pluginId: entry.id, contextTool: 'fixture_context', applyTool: 'fixture_apply', arguments: {}, account: copy(account), context: identity().taskContext, tools: entry.tools, readTools: ['fixture_context'], quantityRules: identity().quantityRules, accountProvider: identity().accountProvider, plugins: [entry.id], revisions: [{ id: entry.id, digest: entry.digest }] });
   const terminal = new Set(['completed', 'failed', 'canceled', 'interrupted', 'expired']);
   function view(job) {
     return copy({ id: job.id, pluginId: 'sesame/manual-trading', requestId: job.request.requestId, status: job.status,
@@ -52,7 +55,7 @@ function fixture(t, { service = true } = {}) {
     // Match the host port's declared request and result shape. Completion is
     // controlled by the test, without a model, network, or a hidden task loop.
     submit(request) {
-      const fields = ['requestId', 'title', 'kind', 'instructions', 'input', 'tools', 'model', 'lane', 'queue', 'expiresAt', 'timeoutMs', 'maxTurns', 'maxToolCalls', 'output'];
+      const fields = ['requestId', 'title', 'kind', 'instructions', 'input', 'tools', 'plugins', 'model', 'lane', 'queue', 'expiresAt', 'timeoutMs', 'maxTurns', 'maxToolCalls', 'output'];
       assert.ok(Object.keys(request).every(key => fields.includes(key)), 'Use only public Agent request fields');
       assert.ok(Buffer.byteLength(JSON.stringify(request)) <= 40000);
       const previous = [...jobs.values()].find(job => job.request.requestId === request.requestId);
@@ -83,12 +86,13 @@ function fixture(t, { service = true } = {}) {
     inference: { models: () => copy(models) }, datasets: { read: id => storage.get('datasets', id), list: () => storage.list('datasets') },
     reports: { files: { forSpace: () => reportFiles } },
     artifacts: artifactPort,
-    plugins: { inspect: () => ({ state: 'enabled' }), isActive: () => true },
+    plugins: { inspect: id => id === entry.id ? entry : { id, state: 'discoverable', digest: 'research-v1', tools: ['lookup'], delegatable_tools: ['lookup'] }, discover: () => ({items:[entry]}), isActive: () => true },
     events: { emit: (name, payload) => events.push({ name, payload: copy(payload) }) },
     tools: { call: async (request, signal) => {
       signal?.throwIfAborted(); brokerCalls.push(copy(request));
-      assert.ok(['mt5_trading_context', 'qmt_trading_context'].includes(request.name), `Unexpected side effect: ${request.name}`);
-      return { details: request.arguments.action === 'identity' ? { account: copy(account) } : snapshot() };
+      assert.ok(['fixture_context', 'fixture_apply'].includes(request.name), `Unexpected side effect: ${request.name}`);
+      if (request.name === 'fixture_apply') return { details: { status: 'unchanged', orders: [], pauses: [], targetReached: null, before: snapshot(), after: snapshot(), completedAt: time } };
+      return { details: request.arguments.action === 'identity' ? identity() : snapshot() };
     } },
   };
   const main = { ...host, scope: { kind: 'main', conversationId: 'conv_main' } };
@@ -103,9 +107,9 @@ function fixture(t, { service = true } = {}) {
   const waitFor = async predicate => { for (let i = 0; i < 100; i++) { if (predicate()) return; await new Promise(resolve => setImmediate(resolve)); } assert.fail('Expected observable state was not reached'); };
   return {
     host, main, records, models, jobs, requests, brokerCalls, events, files, storage, waitFor,
-    get runtime() { return runtime; }, get time() { return time; }, get account() { return copy(account); },
+    get runtime() { return runtime; }, get time() { return time; }, get account() { return copy(account); }, get execution() { return execution(); },
     advance: milliseconds => { time += milliseconds; }, setAccount: value => { account = copy(value); },
-    input: (extra = {}) => ({ id: 'plan-1', title: 'Fixture portfolio', backend: 'mt5', mode: 'single', model: copy(baseModel), symbols: ['EURUSD'], ...extra }),
+    input: (extra = {}) => ({ id: 'plan-1', title: 'Fixture portfolio', execution: {plugin_id:'fixture/execution',context_tool:'fixture_context',apply_tool:'fixture_apply'}, mode: 'single', model: copy(baseModel), symbols: ['EURUSD'], ...extra }),
     active: role => [...jobs.values()].filter(job => job.status === 'running' && (!role || job.request.input.role === role)),
     child(id) { const job = jobs.get(id); return { ...host, scope: { kind: 'subagent', conversationId: job.conversationId }, agents: { ...agents, current: () => ({ ...view(job), input: copy(job.request.input) }) } }; },
     finish(id, text = `Report from ${jobs.get(id)?.request.input.role}`) { const job = jobs.get(id); assert.equal(job.status, 'running'); job.status = 'completed'; job.result = { text }; job.finish(); },
@@ -134,13 +138,13 @@ function fixture(t, { service = true } = {}) {
 test('each role may override its model while the frozen default covers omitted roles', t => {
   const f = fixture(t);
   for (const role of ROLES) {
-    const plan = makePlan(f.main, f.input({ mode: 'team', agent_models: { [role]: alternateModel } }), f.account, null, f.time);
+    const plan = makePlan(f.main, f.input({ mode: 'team', agent_models: { [role]: alternateModel } }), f.execution, null, f.time);
     for (const selectedRole of ROLES) assert.equal((plan.agentModels[selectedRole] ?? plan.model).id, selectedRole === role ? 'alternate' : 'primary');
     f.models[0].configurationDigest = 'sha256:mutated-after-save';
     assert.equal(plan.model.configurationDigest, baseModel.configurationDigest, 'saved plans do not share mutable registry descriptors');
     f.models[0] = copy(baseModel);
   }
-  assert.throws(() => makePlan(f.main, f.input({ agent_models: { invented: alternateModel } }), f.account), { code: 'INVALID_ARGUMENT' });
+  assert.throws(() => makePlan(f.main, f.input({ agent_models: { invented: alternateModel } }), f.execution), { code: 'INVALID_ARGUMENT' });
 });
 
 test('unavailable or drifted configurations require an explicit new model selection', t => {
@@ -151,39 +155,39 @@ test('unavailable or drifted configurations require an explicit new model select
   assert.equal(selectModel(f.main, { provider: 'fixture', id: 'primary' }).configurationDigest, 'sha256:new-route');
 });
 
-test('team stages give analysts read tools and reserve decision and execution tools for their roles', () => {
-  const plan = { mode: 'team', debateRounds: 2, backend: 'mt5' };
-  const sequence = stages(plan);
-  assert.equal(sequence[0].length, 4);
-  assert.deepEqual(sequence.slice(1).flat(), ['bull', 'bear', 'bull', 'bear', 'risk', 'manager']);
-  for (const role of ['market', 'fundamentals', 'news', 'sentiment', 'bull', 'bear', 'risk']) {
-    const tools = taskTools(plan, role, true);
-    assert.ok(tools.includes('manual_trading_context')); assert.ok(tools.includes('financial_research_read'));
-    assert.ok(!tools.includes('manual_trading_decide')); assert.ok(!tools.includes('manual_trading_apply')); assert.ok(!tools.includes('mt5_trade'));
+test('team stages preserve task responsibilities and use selected capability tools', t => {
+  const f = fixture(t), plan = makePlan(f.main, f.input({mode:'team',debate_rounds:2,research:{plugins:['custom/research']}}), f.execution);
+  assert.equal(stages(plan)[0].length, 4);
+  for (const role of ['market','risk','manager']) {
+    const tools = taskTools(plan, role);
+    assert.ok(tools.includes('lookup'));
+    assert.ok(tools.includes('fixture_context'));
+    assert.ok(!tools.includes('fixture_apply'));
+    assert.ok(!tools.includes('manual_trading_apply'));
   }
-  assert.ok(taskTools(plan, 'manager', false).includes('manual_trading_decide'));
-  assert.ok(!taskTools(plan, 'manager', false).includes('financial_research_query'));
+  assert.ok(taskTools(plan, 'manager').includes('manual_trading_decide'));
+  assert.deepEqual(taskTools(plan, 'reporter'), ['manual_trading_report']);
+  assert.ok(taskTools(plan, 'executor').includes('fixture_apply'));
+  assert.ok(!taskTools(plan, 'executor').includes('lookup'));
 });
 
-test('selected research baselines persist and enter only research roles without enabling missing plugins', t => {
-  const f = fixture(t), ids = ['sesame/abu-indicators', 'sesame/abu-exit-rules'];
-  const plan = makePlan(f.main, f.input({ research_plugins: ids }), f.account, null, f.time);
-  ids.push('sesame/abu-trend');
-  assert.deepEqual(plan.researchPlugins, ['sesame/abu-indicators', 'sesame/abu-exit-rules']);
-  for (const role of ['market', 'risk', 'manager']) {
-    const tools = taskTools(plan, role, true);
-    assert.ok(tools.includes('abu_indicators_analyze')); assert.ok(tools.includes('abu_exit_rules_analyze'));
-    assert.ok(tools.includes('plugin_read')); assert.ok(!tools.includes('abu_trend_analyze'));
-  }
-  for (const role of ['executor', 'reporter']) assert.ok(!taskTools(plan, role, true).some(name => name.startsWith('abu_') || name === 'plugin_read'));
-  const preserved = makePlan(f.main, f.input(), f.account, plan, f.time);
-  assert.deepEqual(preserved.researchPlugins, plan.researchPlugins);
-  assert.deepEqual(makePlan(f.main, f.input({ research_plugins: [] }), f.account, plan, f.time).researchPlugins, []);
-  assert.throws(() => makePlan(f.main, f.input({ research_plugins: ['sesame/mt5'] }), f.account), { code: 'INVALID_ARGUMENT' });
-  f.main.plugins.inspect = () => ({ state: 'disabled' });
-  assert.throws(() => makePlan(f.main, f.input({ research_plugins: ['sesame/abu-indicators'] }), f.account), { code: 'PREREQUISITE_REQUIRED' });
-  f.main.plugins.inspect = () => { throw new Error('Not installed'); };
-  assert.throws(() => makePlan(f.main, f.input({ research_plugins: ['sesame/abu-indicators'] }), f.account), { code: 'PREREQUISITE_REQUIRED' });
+test('research selection freezes arbitrary plugins and preserves only explicit methods', t => {
+  const f = fixture(t), plan = makePlan(f.main, f.input({research:{plugins:['custom/research']}}), f.execution);
+  assert.deepEqual(plan.research.plugins,['custom/research']);
+  assert.deepEqual(makePlan(f.main, f.input(), f.execution, plan).research,plan.research);
+  assert.deepEqual(makePlan(f.main, f.input({research:{plugins:[]}}), f.execution, plan).research.tools,[]);
+  f.main.plugins.inspect = () => ({state:'disabled'});
+  assert.throws(()=>makePlan(f.main,f.input({research:{plugins:['custom/research']}}),f.execution),{code:'PREREQUISITE_REQUIRED'});
+});
+
+test('saved workflows contain no execution backend and reject foreign-owner configuration', async t => {
+  const f=fixture(t), plan=await f.runtime.configure(f.main,f.input());
+  assert.equal('backend' in plan,false);
+  assert.equal(plan.execution.quantityRules.unit,'contracts');
+  const other={...f.main,scope:{kind:'main',conversationId:'other'}};
+  await assert.rejects(f.runtime.configure(other,f.input()),{code:'FORBIDDEN'});
+  await assert.rejects(f.runtime.setEnabled(other,plan.id,false),{code:'FORBIDDEN'});
+  assert.equal(f.runtime.plan(plan.id).enabled,true);
 });
 
 test('completed stages explicitly share reports with subsequent roles using their actual frozen models', async t => {
@@ -231,7 +235,7 @@ test('daily evidence retains an unexecuted target without turning it into fills 
   await f.waitFor(() => f.active('manager').length === 1);
   const manager = f.active('manager')[0];
   await f.runtime.context(f.child(manager.id), run.id);
-  f.runtime.decide(f.child(manager.id), run.id, { ...unchanged, unchanged: false, targets: [{ symbol: 'EURUSD', quantity: '0.1', unit: 'lots' }] });
+  f.runtime.decide(f.child(manager.id), run.id, { ...unchanged, unchanged: false, targets: [{ symbol: 'EURUSD', quantity: '0.1', unit: 'contracts' }] });
   f.finish(manager.id);
   await f.waitFor(() => f.active('executor').length === 1);
   f.finish(f.active('executor')[0].id, 'Execution was not attempted.');
@@ -339,7 +343,7 @@ test('an account or connection revision changed before observation cannot produc
   const run = f.runtime.trigger('plan-1', { kind: 'manual', id: 'account-change' });
   await f.waitFor(() => f.active('manager').length === 1);
   const manager = f.active('manager')[0], child = f.child(manager.id);
-  f.setAccount({ ...f.account, revision: '2' });
+  f.setAccount({ ...f.execution, revision: '2' });
   await assert.rejects(f.runtime.context(child, run.id), { code: 'ACCOUNT_CHANGED' });
   assert.throws(() => f.runtime.decide(child, run.id, unchanged), { code: 'RUN_NOT_READY' });
   assert.equal(f.runtime.run(run.id).decision, undefined); assert.equal(f.runtime.run(run.id).snapshot, undefined);
@@ -355,8 +359,30 @@ test('a model configuration change after plan creation fails the run before any 
 });
 
 test('decision validation supports unchanged exposure and rejects inconsistent target instructions', () => {
-  const plan = { backend: 'qmt', symbols: ['600000.SH'] }, snapshot = { positions: [], deployments: [] };
+  const plan = { execution: { quantityRules: {unit:'shares',signed:false,integer:true} }, symbols: ['600000.SH'] }, snapshot = { positions: [], deployments: [] };
   assert.equal(validateDecision(plan, snapshot, unchanged).unchanged, true);
   assert.throws(() => validateDecision(plan, snapshot, { ...unchanged, targets: [{ symbol: '600000.SH', quantity: '100', unit: 'shares' }] }), { code: 'INVALID_DECISION' });
   assert.throws(() => validateDecision(plan, snapshot, { ...unchanged, unchanged: false, targets: [{ symbol: '600000.SH', quantity: '-1', unit: 'shares' }] }), { code: 'INVALID_DECISION' });
+});
+
+test('configuration rejects an oversized composed plugin set before saving or scheduling', async t => {
+  const f = fixture(t), original = f.host.plugins.discover('').items;
+  const dependencies = Array.from({ length: 8 }, (_, i) => ({ id: `custom/native-${i}`, state: 'discoverable', digest: `native-${i}`,
+    tools: [`native_read_${i}`], delegatable_tools: [`native_read_${i}`] }));
+  const skills = Array.from({ length: 24 }, (_, i) => ({ id: `custom/skill-${i}`, state: 'discoverable', digest: `skill-${i}`, tools: [], delegatable_tools: [] }));
+  const entries = [...original, ...dependencies, ...skills];
+  f.host.plugins.inspect = id => entries.find(entry => entry.id === id);
+  f.host.plugins.discover = () => ({ items: entries });
+  const call = f.host.tools.call;
+  f.host.tools.call = async (...args) => {
+    const result = await call(...args);
+    if (args[0].arguments.action === 'identity') result.details.tools = [...result.details.tools, ...dependencies.flatMap(entry => entry.tools)];
+    return result;
+  };
+  await assert.rejects(f.runtime.configure(f.main, f.input({ research: { plugins: skills.map(entry => entry.id) } })), { code: 'PLUGIN_BUDGET_EXCEEDED' });
+  assert.equal(f.storage.list('plans').length, 0);
+  assert.equal(f.requests.length, 0);
+  assert.equal(f.files.size, 0);
+  const plan = await f.runtime.configure(f.main, f.input({ research: { plugins: skills.slice(1).map(entry => entry.id) } }));
+  assert.equal(plan.research.plugins.length + plan.execution.plugins.length, 32);
 });

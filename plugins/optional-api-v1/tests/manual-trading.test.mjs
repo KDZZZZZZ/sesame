@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { Type } from '@sesame/plugin-sdk/schema';
 import { Value } from '@sesame/plugin-sdk/schema/value';
-import { createService, outcome } from '../packages/manual-trading/service.js';
-import { createAdapters, payload } from '../packages/manual-trading/adapters.js';
-import { createTools } from '../packages/manual-trading/index.js';
+import { createService, outcome } from '../packages/portfolio-execution/service.js';
+import { createAdapters, payload } from '../packages/portfolio-execution/adapters.js';
+import { createTools } from '../packages/portfolio-execution/index.js';
 import { MT5Official } from '../packages/mt5/backend/official.js';
 import { PYTHON_TOOLS } from '../packages/mt5/backend/python-tools.js';
 
@@ -231,6 +231,21 @@ test('scope, user intent, and record ownership cannot be widened by the helper',
   f.host.scope.kind='subagent';await assert.rejects(f.service.execute(args),{code:'FORBIDDEN'});
   f.host.scope.kind='main';f.host.scope.conversationId='other';await assert.rejects(f.service.execute(args),{code:'FORBIDDEN'});
 });
+
+test('migrated foreign unknown blocks new account orders until its owner obtains positive broker evidence',async()=>{
+  const f=fixture(), original=await prepared(f,'old-owner-order');
+  f.adapter.submit=async()=>({status:'unknown'});
+  const unknown=await f.service.execute(original);
+  f.host.storage.put('legacy_blocks',{id:'legacy-block',originalOperationId:unknown.id,conversationId:unknown.conversationId,backend:unknown.backend,account:unknown.account,kind:'order',status:'outcome_unknown'});
+  const replacement=await prepared(f,'new-after-migration');
+  await assert.rejects(f.service.execute(replacement),{code:'UNRESOLVED_ORDER'});
+  f.adapter.status=async()=>({command:{status:'unknown'},orders:[],deals:[]});
+  assert.equal((await f.service.status({operation_id:unknown.id,refresh:true})).status,'outcome_unknown');
+  assert.equal(f.host.storage.list('legacy_blocks').length,1);
+  f.adapter.status=async()=>({command:{status:'unknown'},orders:[],deals:[{ticket:'123'}]});
+  assert.equal((await f.service.status({operation_id:unknown.id,refresh:true})).status,'execution_observed');
+  assert.equal(f.host.storage.list('legacy_blocks').length,0);
+});
 test('adapter uses standard public ToolResult and refuses errors, truncation or implicit plugin activation',async()=>{
   assert.deepEqual(payload({details:{ok:true},content:[]}),{ok:true});
   assert.throws(()=>payload({isError:true,details:{ok:true}}),{code:'BACKEND_ERROR'});
@@ -251,8 +266,8 @@ test('native intent construction rejects unsupported features and passes final-m
 });
 test('manifest, executable schemas and documented scope agree',async()=>{
   const host={tools:{Type,define:(name,description,properties,execute)=>({name,description,parameters:Type.Object(properties,{additionalProperties:false}),execute})},scope:{kind:'main'}};
-  const tools=createTools(host),root=new URL('../packages/manual-trading/',import.meta.url),manifest=JSON.parse(await readFile(new URL('plugin.json',root))),schemas=JSON.parse(await readFile(new URL('tools.json',root)));
-  assert.deepEqual(tools.map(x=>x.name),manifest.tool_names);assert.ok(manifest.main_tool_names.includes('manual_trade_execute'));assert.ok(manifest.main_tool_names.includes('manual_trading_plan'));assert.ok(!manifest.main_tool_names.includes('manual_trading_apply'));assert.equal(manifest.engines.sesame,'>=0.2.2');
+  const tools=createTools(host),root=new URL('../packages/portfolio-execution/',import.meta.url),manifest=JSON.parse(await readFile(new URL('plugin.json',root))),schemas=JSON.parse(await readFile(new URL('tools.json',root)));
+  assert.deepEqual(tools.map(x=>x.name),manifest.tool_names);assert.ok(manifest.main_tool_names.includes('manual_trade_execute'));assert.ok(manifest.main_tool_names.includes('portfolio_execution_configure'));assert.ok(!manifest.main_tool_names.includes('portfolio_execution_apply'));assert.equal(manifest.engines.sesame,'>=0.2.3-dev.8');
   assert.deepEqual(tools.map(({name,description,parameters})=>JSON.parse(JSON.stringify({name,description,parameters}))),schemas);
   const shape=tools.find(t=>t.name==='manual_trade_execute').parameters;
   assert.equal(Value.Check(shape,{operation_id:'one',observation_id:'fixture',user_authorized:true,action:'market',side:'buy',quantity:'0.1',price_limit:'100'}),true);
