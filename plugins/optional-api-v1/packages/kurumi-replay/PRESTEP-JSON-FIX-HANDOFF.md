@@ -1,0 +1,7 @@
+# dev.3.4: absent first native quote is explicit null
+
+A real restricted task observed and submitted its original decision once. The initial pre-native capture serialized `quoteTimeMs:undefined`; the archived bytes were not JSON and the actual SDK Store rejected the nested undefined with `value must be an object`. No native advance or financial commit was made. Its original task completed and was sealed; one role-budget reservation is retained. No new model retry is authorized by this fix.
+
+The exact absent quote time now remains `null`, not a fabricated cutoff quote timestamp. All financial parameters, amounts, orders, matching, model, role instructions and budgets are unchanged. The fixed capture is archived under `before-native-v2.json` to preserve the original invalid raw bytes and avoid an immutable archive conflict. The logical pre-step identity remains run/version plus exact decision and engine digests; already persisted valid captures remain idempotent. Old raw files are not deleted, rewritten or relabelled as valid JSON.
+
+Regression tests perform strict JSON parse/roundtrip and Store-like nested JSON validation. These are isolated tests, not a real SDK receipt or native-pixel acceptance. Public validate/test/update/load, followed by explicit original-decision recovery, remain separate checks. Do not issue another role task. Recovery must confirm failed_not_committed, original terminal task/model/tool call and exact current state before advancing.

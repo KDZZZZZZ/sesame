@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "source": { "id": "synthetic-abu-price-structure-demo", "kind": "synthetic" },
+  "as_of": "2026-10-13T17:00:00.000Z",
+  "parameters": { "left": 1, "right": 1, "cluster_tolerance_pct": 0.015 },
+  "bars": [
+    { "time": "2026-10-13T13:30:00.000Z", "available_at": "2026-10-13T13:31:00.000Z", "open": 100, "high": 101, "low": 99, "close": 100, "volume": 1000 },
+    { "time": "2026-10-13T14:00:00.000Z", "available_at": "2026-10-13T14:01:00.000Z", "open": 100, "high": 105, "low": 100, "close": 104, "volume": 1200 },
+    { "time": "2026-10-13T14:30:00.000Z", "available_at": "2026-10-13T14:31:00.000Z", "open": 104, "high": 104, "low": 98, "close": 99, "volume": 1300 },
+    { "time": "2026-10-13T15:00:00.000Z", "available_at": "2026-10-13T15:01:00.000Z", "open": 99, "high": 106, "low": 99, "close": 105, "volume": 1500 },
+    { "time": "2026-10-13T15:30:00.000Z", "available_at": "2026-10-13T15:31:00.000Z", "open": 105, "high": 105, "low": 97, "close": 98, "volume": 1600 },
+    { "time": "2026-10-13T16:00:00.000Z", "available_at": "2026-10-13T16:01:00.000Z", "open": 98, "high": 104, "low": 98, "close": 103, "volume": 1700 }
+  ]
+}

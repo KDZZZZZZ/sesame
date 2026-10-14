@@ -1,0 +1,2 @@
+// Shared observation clock; an interrupted bankrupt hour is never a closed H1.
+export function revealedCutoff(state,frame){const end=frame.time+3600000;if(!Number.isSafeInteger(end))throw Object.assign(new Error('Invalid replay clock'),{code:'SOURCE_DATA_INVALID'});if(state.bankrupt===true||(state.outcome==='bankrupt'&&state.rules?.engine==='nautilus-trader')){const t=state.lastQuote?.time;if(!Number.isSafeInteger(t)||t<frame.time||t>end)throw Object.assign(new Error('Bankrupt replay has no consumed quote clock'),{code:'SOURCE_DATA_INVALID'});return t;}return end;}

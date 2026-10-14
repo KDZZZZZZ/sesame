@@ -1922,5 +1922,184 @@
       },
       "additionalProperties": false
     }
+  },
+  {
+    "name": "mt5_trading_context",
+    "label": "mt5_trading_context",
+    "description": "Read exact configured account identity or a full-account native snapshot for the main Agent or a matching manual-trading plan task. Includes all origins and broker-retained history; never trades.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "identity"
+            },
+            {
+              "type": "string",
+              "const": "snapshot"
+            }
+          ]
+        },
+        "history_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 90
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_trading_pause",
+    "label": "mt5_trading_pause",
+    "description": "Risk executor only: stop one EA belonging to the exact account. Native action removes the expert; no automatic resume, state-preserving pause or position close is implied. Unknown receipts require inspection, not replay.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "deployment_id",
+        "account",
+        "reason"
+      ],
+      "properties": {
+        "deployment_id": {
+          "type": "string",
+          "description": "Exact deployment ID from the account snapshot",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "account": {
+          "type": "object",
+          "required": [
+            "accountId",
+            "server",
+            "revision"
+          ],
+          "properties": {
+            "accountId": {
+              "type": "string",
+              "description": "Exact login",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "server": {
+              "type": "string",
+              "description": "Exact server",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "revision": {
+              "type": "string",
+              "description": "Exact configuration revision",
+              "minLength": 1,
+              "maxLength": 20000
+            }
+          },
+          "additionalProperties": false
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "authorization": {
+          "type": "object",
+          "required": [
+            "expiresAt",
+            "signature"
+          ],
+          "properties": {
+            "expiresAt": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "signature": {
+              "type": "string",
+              "minLength": 88,
+              "maxLength": 88
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_trading_order",
+    "label": "mt5_trading_order",
+    "description": "Submit one runtime-signed exact-account guarded order intent. Plan tasks cannot invent or alter signed intent; stable command ID retains the parent-owner receipt.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "server",
+        "tool",
+        "arguments",
+        "command_id"
+      ],
+      "properties": {
+        "server": {
+          "type": "string",
+          "const": "python"
+        },
+        "tool": {
+          "type": "string",
+          "const": "order_send"
+        },
+        "arguments": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true
+        },
+        "command_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{16,128}$"
+        },
+        "authorization": {
+          "type": "object",
+          "required": [
+            "expiresAt",
+            "signature"
+          ],
+          "properties": {
+            "expiresAt": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "signature": {
+              "type": "string",
+              "minLength": 88,
+              "maxLength": 88
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_trading_command",
+    "label": "mt5_trading_command",
+    "description": "Read a retained plan order receipt for its exact owner and account, including after a configuration revision change. Never submits or replays an order.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "command_id"
+      ],
+      "properties": {
+        "command_id": {
+          "type": "string",
+          "description": "Existing signed plan command ID",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
   }
 ]

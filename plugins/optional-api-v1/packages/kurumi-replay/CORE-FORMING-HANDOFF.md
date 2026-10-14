@@ -1,0 +1,12 @@
+# Normal forming bridge extension (CORE→UI)
+CORE正在native-engine.py对**新50x profile**真实消费循环生成最多8个 `lastPresentationTrace`采样点，每点 `{sequence,time,account,position,fillCount,orderCount,ledgerCount,quote,bankrupt}`；所有account是当时真实Nautilus callback后metric，不插值、不从lastQuote重建OHLC。旧legacy不增加此trace。
+
+金融仍整H1原子CAS；展示是提交事实的有界历史回放，不重新撮合。CORE dispatch会按真实journal rows逐个delta调用已有onReplayCommitted：`sequenceStart`=已显示row数量，batchId含point sequence，非final点intervalComplete=false/cutoff=真实point.time，final正常点intervalComplete=true/cutoff=step.to，破产final仍partial。每帧await hook后emit订阅，可在plan持久化的playbackMsPerFrame（默认250ms）节奏播放；周报只在final披露frontier冻结。
+
+新增`service.getSpectatorState()`：返回持久化可见prefix投影（真实trace.balance/position、raw fills/orders/ledger按count截取、真实prefix quote；未完成时不带未来outcome，nativeJournal不跨provider）。正式`getState/observe/player`始终只用金融权威整H1；不会把展示事实/原作结局传入角色。请providers resolver使用getSpectatorState优先，queryHistory/fills/positions/account snapshot与view.cutoff/commitVersion一致。新prefix观众state.version仍是本次金融CAS版本，事实的asOf从consumed view独立标注。
+
+请UI持久化视图也支持restart时已有同batch重复：CORE保存playback cursor点序号，仅显式retry恢复剩余已提交display帧；不重放交易或paid task。章节normal partial点用旧consumedChapter，final再用实际afterEngine。自动marker刷新仍需匹配公开main事件路由，不能借用main host。真实client验收pending，但这条bridge不能再仅bankruptcy才有forming。
+
+另请实现export async onExperiencePartialBoundary(host,service,context,signal)：硬预算/全部gates的安全边界冻partial投资period，队列不请求模型、不能伪造周报；避免把chapter cursor永久closed导致人工pause/resume后周报重复。
+
+已读UI新onConsumedPrefix/spectator checkpoint接口：CORE正常非final实际trace点将调用onConsumedPrefix并传同point真实account和三个digest nativeConsumedProof；final调用onReplayCommitted。章终final后额外保存settled-consumed-chapter-checkpoint以避免native跨章reset让旧章观众账户变成下一章时钟。每帧post-hook持久playbackCursor+emit，重启仅显式retry剩余展示。getState/observe完全不变。请resolve优先支持getSpectatorState以核实cutoff/tag，onReplayCommitted删除checkpoint时也应考虑章终settled可见状态。

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-01-09T01:00:00.000Z",
+  "source": { "id": "synthetic-moving-average-demo", "kind": "synthetic" },
+  "parameters": { "fast_window": 2, "slow_window": 4 },
+  "bars": [
+    { "time": "2026-01-01T00:00:00.000Z", "available_at": "2026-01-01T00:05:00.000Z", "open": 100, "high": 101, "low": 98, "close": 99, "volume": 1000 },
+    { "time": "2026-01-02T00:00:00.000Z", "available_at": "2026-01-02T00:05:00.000Z", "open": 99, "high": 100, "low": 96, "close": 97, "volume": 1000 },
+    { "time": "2026-01-03T00:00:00.000Z", "available_at": "2026-01-03T00:05:00.000Z", "open": 97, "high": 98, "low": 94, "close": 95, "volume": 1000 },
+    { "time": "2026-01-04T00:00:00.000Z", "available_at": "2026-01-04T00:05:00.000Z", "open": 95, "high": 96, "low": 93, "close": 94, "volume": 1000 },
+    { "time": "2026-01-05T00:00:00.000Z", "available_at": "2026-01-05T00:05:00.000Z", "open": 94, "high": 99, "low": 93, "close": 98, "volume": 1000 },
+    { "time": "2026-01-06T00:00:00.000Z", "available_at": "2026-01-06T00:05:00.000Z", "open": 98, "high": 104, "low": 97, "close": 103, "volume": 1000 }
+  ]
+}

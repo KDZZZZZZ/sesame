@@ -1,0 +1,14 @@
+// Actual public message shape: ordered content blocks, ONLY type=text visible.
+// Never stringify tool/thinking/private content. UTF16 offsets refer to exact strings.
+import {sha256} from './experiment-profiles.js';
+const fail=m=>{throw Object.assign(new Error(m),{code:'MESSAGE_SCHEMA_REQUIRED'});};
+function source(message,field){if(!['content','text','body'].includes(field))fail('Explicit public visible-text field required');const v=message?.[field];
+ if(Array.isArray(v)){const blocks=[];for(let index=0;index<v.length;index++){const p=v[index];if(!p||typeof p.type!=='string')fail('Ordered message block needs actual declared type');if(p.type==='text'){if(typeof p.text!=='string')fail('Actual type=text block must contain string text');blocks.push({index,text:p.text});}}return {kind:'ordered_text_blocks',rawCount:v.length,blocks};}
+ if(typeof v!=='string')fail('Public visible-text shape unsupported; no guessed rendering');try{const p=JSON.parse(v);if(p&&typeof p==='object')fail('Serialized tool/message object is not visible prose');}catch(e){if(e.code)throw e;}return {kind:'legacy_plain_text',rawCount:1,blocks:[{index:0,text:v}]};}
+export function snapshotVisibleText(message,field='content'){const s=source(message,field),text=s.blocks.map(p=>p.text).join(''),boundary={schemaVersion:1,kind:s.kind,field,rawBlockCount:s.rawCount,unit:'UTF16 code units',visiblePrefixLengthUTF16:text.length,visiblePrefixDigest:sha256(text),blocks:s.blocks.map(p=>({index:p.index,length:p.text.length,digest:sha256(p.text)}))};return {text,boundary};}
+export function appendedVisibleText(message,boundary){const s=source(message,boundary.field);if(s.kind!==boundary.kind)throw Object.assign(Error('Stored native message shape changed; reconcile rather than duplicate'),{code:'MAIN_CHAT_BOUNDARY_CHANGED'});
+ const original=boundary.blocks??[],indices=new Set(original.map(p=>p.index)),delta=[];let prefix='';const changed=()=>{throw Object.assign(Error('Original ordered visible text boundary changed'),{code:'MAIN_CHAT_BOUNDARY_CHANGED'});};
+ for(let i=0;i<original.length;i++){const p=original[i],actual=s.blocks.find(x=>x.index===p.index);if(!actual||actual.text.length<p.length||sha256(actual.text.slice(0,p.length))!==p.digest)changed();prefix+=actual.text.slice(0,p.length);const suffix=actual.text.slice(p.length);if(suffix){if(i!==original.length-1)changed();delta.push({blockIndex:p.index,fromUTF16:p.length,toUTF16:actual.text.length,text:suffix});}}
+ if(boundary.visiblePrefixDigest&&(sha256(prefix)!==boundary.visiblePrefixDigest||prefix.length!==boundary.visiblePrefixLengthUTF16))changed();
+ for(const p of s.blocks)if(!indices.has(p.index)){if(p.index<boundary.rawBlockCount)changed();delta.push({blockIndex:p.index,fromUTF16:0,toUTF16:p.text.length,text:p.text});}
+ if(s.rawCount<boundary.rawBlockCount)changed();return {text:delta.map(p=>p.text).join(''),segments:delta,boundaryUnit:boundary.unit};}

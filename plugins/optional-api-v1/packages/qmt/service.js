@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { check, canonical, digest } from '@sesame/plugin-sdk/protocol';
 import { configuration, prerequisite } from './configuration.js';
+import { assertTradingTask, tradingAccount, verifyExecutionAuthorization } from './trading-context.js';
 import { accountRef, accountSummary, accountSnapshot, instrumentRef, summary, instrument, quote, position, dailyBar, metadata } from './mapping.js';
 
 const warning = (code, message) => ({ code, message });
@@ -67,7 +68,7 @@ export function createService(host, { platform = process.platform, now = Date.no
       nextCursor = randomUUID(); pages.set(nextCursor, { bindingId:input.bindingId, at: now(), signature, snapshot, offset: offset + limit });
     }
     if(input.bindingId) fixed({bindingId:input.bindingId});
-    return structuredClone({ data: { items: input.direction==='backward' ? snapshot.rows.slice(Math.max(0,snapshot.rows.length-offset-limit),snapshot.rows.length-offset) : snapshot.rows.slice(offset, offset + limit), nextCursor, snapshotId: snapshot.id, consistency: 'snapshot' }, meta: snapshot.meta, ...(snapshot.extra ?? {}) });
+    return structuredClone({ data: { items: input.direction==='backward' ? snapshot.rows.slice(Math.max(0,snapshot.rows.length-offset-limit),snapshot.rows.length-offset) : snapshot.rows.slice(offset, offset + limit), nextCursor, snapshotId: snapshot.id, consistency: 'snapshot' }, meta: snapshot.meta, ...snapshot.extra });
   }
   function rangeDate(time) {
     if(time?.basis === 'utc') { check(Number.isSafeInteger(time.unixMs), 'Invalid UTC bound', 'INVALID_ARGUMENT'); return new Date(time.unixMs+8*3600000).toISOString().slice(0,23); }
@@ -184,27 +185,47 @@ export function createService(host, { platform = process.platform, now = Date.no
   accounts.queryOrders=async()=>check(false,'Native order_time unit is unverified; only raw current-day qmt_read orders is supported','UNSUPPORTED_CAPABILITY');
   accounts.queryFills=async()=>check(false,'Native traded_time unit is unverified; only raw current-day qmt_read fills is supported','UNSUPPORTED_CAPABILITY');
   return { market, account: accounts,
-    commandRecord(id,scope=host.scope){check(scope?.kind==='main','Command receipts are for the main conversation','FORBIDDEN');const record=storedCommand(id);check(record,'QMT command not found','NOT_FOUND');return record;},
+    commandRecord(id,scope=host.scope,taskHost){
+      const scoped = scope?.kind !== 'main';
+      if(scoped) { check(taskHost && taskHost.scope === scope,'Command receipts require a matching plan task','FORBIDDEN'); assertTradingTask(taskHost,tradingAccount(host)); }
+      const record=storedCommand(id);check(record,'QMT command not found','NOT_FOUND');
+      if(taskHost) { const c=current(), owner=scoped?taskHost.agents.current().input.tradingPlan.ownerConversationId:scope.conversationId;
+        check(record.accountId===c.account_id && record.connection?.id===c.connection_id,'Command receipt belongs to another account','ACCOUNT_MISMATCH');
+        check(record.ownerConversationId===undefined ? !scoped : record.ownerConversationId===owner,'Command receipt belongs to another owner','FORBIDDEN'); }
+      return record;
+    },
     async download(args,signal){const c=current();instrumentSymbol(c,instrumentRef(c,args.symbol));check(/^\d{8}$/.test(args.start)&&/^\d{8}$/.test(args.end)&&args.start<=args.end,'Use ordered YYYYMMDD bounds','INVALID_ARGUMENT');const dates=[args.start,args.end].map(x=>x.slice(0,4)+'-'+x.slice(4,6)+'-'+x.slice(6,8));for(const date of dates)check(new Date(date+'T00:00:00Z').toISOString().slice(0,10)===date,'Invalid download date','INVALID_ARGUMENT');check(Date.parse(dates[1])-Date.parse(dates[0])<=3660*86400000,'Download range exceeds ten years','INVALID_ARGUMENT');return read(c,'download_history',{symbols:[args.symbol],start:args.start,end:args.end},signal);},
-    async command(action,args,signal,scope=host.scope){
-      check(scope?.kind==='main','Trading tools are only available in the main user conversation','FORBIDDEN');
+    async command(action,args,signal,scope=host.scope,taskHost){
+      const scoped = scope?.kind !== 'main';
+      const signedParameters = args;
+      const ownerConversationId = scoped ? taskHost?.agents?.current()?.input?.tradingPlan?.ownerConversationId : scope?.conversationId;
+      if(scoped) {
+        check(taskHost && taskHost.scope === scope,'Trading requires a matching plan task','FORBIDDEN');
+        args = verifyExecutionAuthorization(assertTradingTask(taskHost,tradingAccount(host),true), `qmt_trading_${action}`, signedParameters, now());
+        if(action==='order') check(args.execution_guard && typeof args.execution_guard==='object','Plan orders require a native execution guard','INVALID_ARGUMENT');
+        if(action==='order') check(Array.isArray(args.execution_guard.expected_positions),'Plan execution requires a full symbol position expectation','INVALID_ARGUMENT');
+      }
+      else { const { authorization: _authorization, ...nativeArgs } = args; args = nativeArgs; }
       check(args.user_authorized===true,'Require an explicit user trading instruction','FORBIDDEN');
       const c=current();account(c,accountRef(c));check(args.account_id===c.account_id&&args.connection_revision===String(c.version),'Explicit account/revision changed','CONNECTION_CHANGED');
       check(typeof args.operation_id==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(args.operation_id),'Invalid operation ID','INVALID_ARGUMENT');
       if(action==='order'){instrumentSymbol(c,instrumentRef(c,args.symbol));check(['buy','sell'].includes(args.side)&&typeof args.shares==='string'&&/^[1-9]\d*$/.test(args.shares)&&BigInt(args.shares)<=2147483647n,'Use explicit buy/sell and positive integer shares','INVALID_ARGUMENT');check(typeof args.price==='string'&&/^(0|[1-9]\d*)(\.\d+)?$/.test(args.price)&&Number(args.price)>0&&Number.isFinite(Number(args.price)),'Invalid positive limit price','INVALID_ARGUMENT');}
       return host.configuration.exclusive(async()=>{
+        if(scoped) verifyExecutionAuthorization(assertTradingTask(taskHost,tradingAccount(host),true), `qmt_trading_${action}`, signedParameters, now());
         check(canonical(connection(current()))===canonical(connection(c)),'Connection changed before submission','CONNECTION_CHANGED');
         const fingerprint=digest({action,args,connection:connection(c)}),old=storedCommand(args.operation_id);
-        if(old){check(old.fingerprint===fingerprint,'Operation ID already used for different input','IDEMPOTENCY_CONFLICT');return old;}
+        if(old){check(old.fingerprint===fingerprint,'Operation ID already used for different input','IDEMPOTENCY_CONFLICT');check(old.ownerConversationId===undefined ? !scoped : old.ownerConversationId===ownerConversationId,'Operation ID belongs to another owner','FORBIDDEN');return old;}
         let payload={...args,remark:'S'+digest(args.operation_id).slice(7,30)};
         if(action==='cancel'){
           const original=storedCommand(args.original_operation_id),accepted=original?.status==='submitted'&&original.result?.order_id===args.order_id,recoverable=original?.status==='outcome_unknown'&&original.intent;
           const originalAccountMatches=original?.accountId===c.account_id || original?.accountId===undefined && original?.connection?.revision===String(c.version);
           check(original?.action==='order'&&(accepted||recoverable)&&original.connection?.id===c.connection_id&&originalAccountMatches,'Cancel requires an accepted order or a recoverable original intent on this account/connection','INVALID_ARGUMENT');
+          check(original.ownerConversationId===undefined || original.ownerConversationId===ownerConversationId,'Original order belongs to another owner','FORBIDDEN');
           payload.remark=original.remark;
           if(original.intent) payload.original_intent=original.intent;
         }
         let record={id:args.operation_id,action,fingerprint,connection:connection(c),accountId:c.account_id,remark:payload.remark,status:'outcome_unknown',createdAt:now()};
+        if(ownerConversationId!==undefined)record.ownerConversationId=ownerConversationId;
         if(action==='order')record.intent={symbol:args.symbol,side:args.side,shares:args.shares,price:args.price};
         host.storage.put('qmt_commands',record); // durable boundary before native submission; never replay unknown intent.
         try{signal?.throwIfAborted();const r=await read(c,action,payload,signal);check(r.result.status===(action==='order'?'submitted':'cancel_requested')&&/^[1-9]\d*$/.test(r.result.order_id??''),'Native submission receipt is invalid','SOURCE_DATA_INVALID');check(action!=='cancel'||r.result.order_id===args.order_id,'Cancel receipt order ID differs','SOURCE_DATA_INVALID');record={...record,status:r.result.status,result:r.result,meta:metadata(r)};host.storage.put('qmt_commands',record);return record;}

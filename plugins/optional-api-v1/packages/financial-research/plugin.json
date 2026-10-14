@@ -1,0 +1,17 @@
+{
+  "id": "sesame/financial-research",
+  "apiVersion": "1",
+  "version": "1.0.0",
+  "title": "金融研究工具",
+  "description": "供用户和交易 Agent 共同使用的金融研究证据：行情、财报、新闻、SEC 公告、分析师、内部人、宏观和讨论；保留来源、获取时间和可见性边界。",
+  "license": "MIT",
+  "default_state": "discoverable",
+  "entry": "index.js",
+  "tool_names": ["financial_research_status", "financial_research_configure", "financial_research_query", "financial_research_read"],
+  "main_tool_names": ["financial_research_configure"],
+  "tool_definitions": "tools.json",
+  "prompts": ["prompt.md"],
+  "resources": ["README.md", "PROVENANCE.md"],
+  "provides": {},
+  "engines": { "sesame": ">=0.2.2" }
+}

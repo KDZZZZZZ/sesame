@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-01-05T00:00:00.000Z",
+  "source": { "id": "synthetic-parameter-search-development", "kind": "synthetic" },
+  "parameters": { "phase": "development", "objective_metric": "net_return", "direction": "maximize", "max_grid_points": 20 },
+  "grid": {
+    "lookback": [10, 20],
+    "threshold": [0.02, 0.04]
+  },
+  "trials": [
+    { "split": "development", "available_at": "2026-01-04T00:00:00.000Z", "parameters": { "lookback": 10, "threshold": 0.02 }, "metrics": { "net_return": 0.04, "max_drawdown": -0.03 } },
+    { "split": "development", "available_at": "2026-01-04T00:00:00.000Z", "parameters": { "lookback": 20, "threshold": 0.04 }, "metrics": { "net_return": 0.09, "max_drawdown": -0.05 } }
+  ]
+}

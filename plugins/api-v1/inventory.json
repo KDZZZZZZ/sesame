@@ -337,6 +337,40 @@
       "sourcePath": "plugins/optional-api-v1/packages/factor-research"
     },
     {
+      "id": "sesame/financial-research",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.2"
+      },
+      "format": "sesame-native",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors"
+      },
+      "category": "research",
+      "title": {
+        "en": "Financial Research",
+        "zh": "金融研究工具"
+      },
+      "summary": {
+        "en": "Source-backed prices, financials, filings, news, analyst views, insider trades, macro and sentiment, shared by users and Agents.",
+        "zh": "为用户与 Agent 提供同一份带来源与时间边界的行情、财务、披露、新闻、分析师、内幕交易、宏观及情绪资料。"
+      },
+      "dependencies": {
+        "en": "Optional FMP, FRED, SEC and Reddit credentials or identity via environment variables.",
+        "zh": "按来源配置 FMP、FRED、SEC、Reddit 环境变量；缺失来源明确报告不可用。"
+      },
+      "tools": [
+        "financial_research_status",
+        "financial_research_configure",
+        "financial_research_query",
+        "financial_research_read"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/financial-research"
+    },
+    {
       "id": "sesame/ict",
       "version": "1.0.0",
       "distribution": "optional",
@@ -438,12 +472,70 @@
       "sourcePath": "plugins/optional-api-v1/packages/judgment-evolution"
     },
     {
-      "id": "sesame/manual-trading",
-      "version": "1.0.0",
+      "id": "sesame/kurumi-replay",
+      "version": "0.1.3-dev.3.8",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.1"
+        "sesame": ">=0.2.2"
+      },
+      "format": "sesame-native",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors (internal Agent implementation)"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Kurumi replay",
+        "zh": "久留美连续模拟"
+      },
+      "summary": {
+        "en": "Unpublished acceptance snapshot for a bounded native replay with simulated accounts, scoped character decisions and chart annotations.",
+        "zh": "未发布验收快照：原生行情/模拟账户、受限角色决定与简洁双方标注的有界回放。"
+      },
+      "dependencies": {
+        "en": "Sesame 0.2.2+, configured OpenAI gpt-6.1-sol, historical bid/ask data and private Nautilus dependencies. Full fresh installation and weekly report acceptance remain pending; see VALIDATION.md. No real broker.",
+        "zh": "需 Sesame 0.2.2+、OpenAI gpt-6.1-sol、历史 bid/ask 与私有 Nautilus 依赖；完整新安装和周报仍待验，见 VALIDATION.md。不连接真实券商。"
+      },
+      "tools": [
+        "kurumi_prepare",
+        "kurumi_status",
+        "kurumi_configure",
+        "kurumi_start",
+        "kurumi_continue",
+        "kurumi_step",
+        "kurumi_pause",
+        "kurumi_reconcile",
+        "kurumi_display",
+        "kurumi_export",
+        "kurumi_report",
+        "kurumi_observe",
+        "kurumi_decide",
+        "kurumi_recover",
+        "kurumi_repair_checkpoint_text",
+        "kurumi_import_fx_supplement",
+        "kurumi_archive_terminal",
+        "kurumi_new_experiment",
+        "kurumi_experiment_history",
+        "kurumi_retry_committed_hooks",
+        "kurumi_bind_experiment_fx",
+        "kurumi_refresh_presentation",
+        "kurumi_weekly",
+        "kurumi_recording",
+        "kurumi_experience",
+        "kurumi_method_workflow",
+        "kurumi_narration",
+        "kurumi_audience"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/kurumi-replay"
+    },
+    {
+      "id": "sesame/manual-trading",
+      "version": "2.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.2"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -456,14 +548,37 @@
         "zh": "Agent 手动交易"
       },
       "summary": {
-        "en": "Apply authorization, timing, fresh-quote checks, one-time submission and evidence-based receipt recovery to Agent manual trading.",
-        "zh": "规范 Agent 手动交易的授权、时效、报价核验、单次执行和基于证据的回执恢复。"
+        "en": "Scheduled and event-driven Agent trading with per-role models, target portfolios, risk stops, evidence memory and daily reports.",
+        "zh": "周期与事件驱动的 Agent 手工交易：支持逐角色模型配置、team 研究辩论、目标仓位、全账户减仓平仓、风险停止挂载、证据复盘与研究日报。"
       },
       "dependencies": {
         "en": "Sesame 0.2.1+ and an existing supported trading backend. Read that backend's own resources for its account, platform and API requirements; use M5+ decisions.",
         "zh": "需要 Sesame 0.2.1+ 与已有可用交易后端；账户、平台与 API 前提见该后端自身资源，使用 M5+ 决策。"
       },
       "tools": [
+        "manual_trading_models",
+        "manual_trading_plan",
+        "manual_trading_run",
+        "manual_trading_event",
+        "manual_trading_runs",
+        "manual_trading_context",
+        "manual_trading_decide",
+        "manual_trading_apply",
+        "manual_trading_report",
+        "manual_trading_review",
+        "manual_judgment_review_queue",
+        "manual_judgment_review_due",
+        "manual_judgment_record",
+        "manual_judgment_list",
+        "manual_judgment_read",
+        "manual_judgment_resolve",
+        "manual_judgment_defer",
+        "manual_judgment_reflect",
+        "manual_judgment_rule",
+        "manual_judgment_rules",
+        "manual_judgment_retire_rule",
+        "manual_judgment_audit_source",
+        "manual_judgment_coverage",
         "manual_trade_inspect",
         "manual_trade_observe",
         "manual_trade_execute",
@@ -541,7 +656,7 @@
     },
     {
       "id": "sesame/mt5",
-      "version": "1.4.3",
+      "version": "1.5.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -591,7 +706,11 @@
         "mt5_translation",
         "mt5_translation_file",
         "mt5_dependencies",
-        "mt5_conformance"
+        "mt5_conformance",
+        "mt5_trading_context",
+        "mt5_trading_pause",
+        "mt5_trading_order",
+        "mt5_trading_command"
       ],
       "sourcePath": "plugins/optional-api-v1/packages/mt5"
     },
@@ -735,7 +854,7 @@
     },
     {
       "id": "sesame/qmt",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -766,7 +885,11 @@
         "qmt_download_history",
         "qmt_order",
         "qmt_cancel",
-        "qmt_command"
+        "qmt_command",
+        "qmt_trading_context",
+        "qmt_trading_order",
+        "qmt_trading_cancel",
+        "qmt_trading_command"
       ],
       "sourcePath": "plugins/optional-api-v1/packages/qmt"
     },

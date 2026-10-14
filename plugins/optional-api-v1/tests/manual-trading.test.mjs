@@ -252,7 +252,7 @@ test('native intent construction rejects unsupported features and passes final-m
 test('manifest, executable schemas and documented scope agree',async()=>{
   const host={tools:{Type,define:(name,description,properties,execute)=>({name,description,parameters:Type.Object(properties,{additionalProperties:false}),execute})},scope:{kind:'main'}};
   const tools=createTools(host),root=new URL('../packages/manual-trading/',import.meta.url),manifest=JSON.parse(await readFile(new URL('plugin.json',root))),schemas=JSON.parse(await readFile(new URL('tools.json',root)));
-  assert.deepEqual(tools.map(x=>x.name),manifest.tool_names);assert.deepEqual(manifest.main_tool_names,manifest.tool_names);assert.equal(manifest.engines.sesame,'>=0.2.1');
+  assert.deepEqual(tools.map(x=>x.name),manifest.tool_names);assert.ok(manifest.main_tool_names.includes('manual_trade_execute'));assert.ok(manifest.main_tool_names.includes('manual_trading_plan'));assert.ok(!manifest.main_tool_names.includes('manual_trading_apply'));assert.equal(manifest.engines.sesame,'>=0.2.2');
   assert.deepEqual(tools.map(({name,description,parameters})=>JSON.parse(JSON.stringify({name,description,parameters}))),schemas);
   const shape=tools.find(t=>t.name==='manual_trade_execute').parameters;
   assert.equal(Value.Check(shape,{operation_id:'one',observation_id:'fixture',user_authorized:true,action:'market',side:'buy',quantity:'0.1',price_limit:'100'}),true);
