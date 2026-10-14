@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const hostRoot = process.env.SESAME_HOST_ROOT;
@@ -22,7 +22,7 @@ test('pipeline tool resolves real artifacts, preserves demo evidence and rejects
   const producer = { id: 'sesame/strategy-authoring', version: '1.1.0', digest: `sha256:${'a'.repeat(64)}` };
   const string = description => Type.String({ description, minLength: 1, maxLength: 20000 });
   const host = { svl, tools: { Type, string, optional: description => Type.Optional(string(description)), define: (name, description, properties, execute) => ({ name, execute }) },
-    workspace: { file: async (op, path, content) => { const full = join(workspace, path); assert.ok(full.startsWith(workspace + '/')); if (op === 'read') return readFileSync(full); writeFileSync(full, content); return { path }; } },
+    workspace: { file: async (op, path, content) => { const full = join(workspace, path); assert.ok(full.startsWith(workspace + sep)); if (op === 'read') return readFileSync(full); writeFileSync(full, content); return { path }; } },
     artifacts: { read: ref => api.read(ref), blob: bytes => api.blob(bytes), readBlob: blob => api.readBlob(blob), publish: value => api.publish(producer, value) } };
   const tools = new Map(createTools(host).map(tool => [tool.name, tool]));
   const call = (name, args) => tools.get(name).execute(args);

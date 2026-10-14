@@ -17,6 +17,14 @@ global 对各任务可见；project 和 strategy 由运行时分配的任务范�
 
 evidence 使用 explicit（有明确用户消息）、verified（有成果证据）、inferred（推断）、conflicted（冲突）。同一范围与分类下，同标题的不同内容会形成显式冲突。核验后用带 expected_version 的 save 修订、合并；不要用覆盖掩盖分歧。固定用户约束优先于推测，不会自动提高权限。
 
+## 来源与候选的正确形状
+
+`sources` 的每一项都需要 `type`，ArtifactRef 本身没有这个字段。真实用户表达使用 `{type:"user_message",id:"实际用户消息ID"}`。冻结成果使用 `{type:"artifact",id:ref.id,revision:ref.revision,kind:ref.kind,digest:ref.digest,schemaVersion:ref.schemaVersion}`，等价于 `{type:"artifact",...ref}`；`revision` 是原来的字符串，不能改成整数或省略摘要。旧宿主报告的数字 revision 只用于实际返回的旧报告引用，不能拿来代替 ArtifactRef。不要把成果重新标为用户消息以通过校验。
+
+`memory_propose` 返回候选正文以及候选的 `id/version`，它们不是正式记忆 ID/版本。主 Agent 用 `memory_manage {action:"candidates"}` 重新读取候选，核验后调用 `{action:"accept",id:candidate.id,expected_version:candidate.version}`。接纳结果的顶层 `id` 仍指候选；`memory.id` 和 `memory.version` 才是正式记忆，应将 `memory.id` 传给 `memory_read`。子 Agent 保留 propose 回执并通知主 Agent 处理，不能自己管理候选或猜测正式 ID。
+
+遇到 `version_conflict`，按对象重读：候选用 `memory_manage action=candidates`，正式记忆用 `memory_read`。比较最新内容后重新决定操作，使用实际返回的 `version`，不递增猜测、删除 CAS 或自动重放旧写入。候选不在列表可能已接纳、拒绝、过期或随任务清理，不能仅凭相似标题换成另一个来源。过期候选需要重新读最终成果并核验后才提取；来源不可用则保留未确认状态。
+
 ## 每次压缩前的整理
 
 插件已经注册 `host.lifecycle.onBeforeCompact`，覆盖手动压缩、上下文达到阈值和溢出重试。不是靠你记得调用某个命令，也不是向用户聊天插入定时提示。插件复用当前会话已经配置的模型做一次有界整理；来源较长时分块，每次最多处理六块，未完成的下次继续。

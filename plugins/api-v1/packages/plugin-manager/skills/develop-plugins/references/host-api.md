@@ -43,13 +43,13 @@ export function createTools(host) {
 | --- | --- | --- |
 | `dispose()` | 停止服务，关闭自己创建的资源；不得顺便平仓 | AKShare、MT5、strategy-authoring |
 | `beforeDeactivate()` | 更新/停用前检查；未确认的持久运行应阻止切换 | MT5 |
-| `beforeConfiguration({owner})` | 同步检查宿主配置是否可变更 | MT5 |
-| `configurationChanged({})` | 配置流程结束后通知，重新读取实际状态 | MT5 |
+| `beforeConfiguration({owner, pluginId?})` | 同步检查配置是否可变更；全局模型配置可不带 pluginId，插件连接配置只通知该插件 | MT5 |
+| `configurationChanged({pluginId?})` | 配置流程结束后通知，重新读取实际状态；全局模型配置可不带 pluginId，插件连接配置只通知该插件 | MT5 |
 | `beforeMessage({messageId, conversation, parts, source, metadata})` | 同步返回替换后的 `parts` 或不返回；用于明确的配置导入等 | MT5 配置导入 |
 | `protectArtifacts(runId)` | 子任务封存前返回需要保护的插件成果清单 | MT5 |
 | `cleanupRun(runId)` | 子任务封存后清理该 Run 的插件中间状态 | MT5 |
 
-后两项是当前已使用的专门生命周期回调，返回结构参考 [MT5 lifecycle](https://github.com/KDZZZZZZ/sesame/blob/main/plugins/optional-api-v1/packages/mt5/backend/lifecycle.js)，不要凭名字传任意 ArtifactRef。`beforeMessage` 和 `beforeConfiguration` 必须同步。其他回调可异步。不要使用消息回调伪造用户请求来触发 Agent；事件任务用 `host.agents`。
+后两项是当前已使用的专门生命周期回调，返回结构参考 [MT5 lifecycle](https://github.com/KDZZZZZZ/sesame/blob/main/plugins/optional-api-v1/packages/mt5/backend/lifecycle.js)，不要凭名字传任意 ArtifactRef。`beforeMessage` 和 `beforeConfiguration` 必须同步。插件连接配置使用同插件队列和同插件 hooks，不阻塞无关插件；全局模型配置仍保护全会话并可调用全局 hook。其他回调可异步。不要使用消息回调伪造用户请求来触发 Agent；事件任务用 `host.agents`。
 
 ### 压缩前处理
 
@@ -83,7 +83,7 @@ export function createTools(host) {
 | `layout` | `inspect`、`apply`、`script` | 会话中的图表、窗口和指标操作；遵守版本、锁与用户拖动租约 |
 | `tasks` | `list`、`read`、`run`、`delegate`、`inspect`、`stop`、`finish` | 会话中的普通 subagent 管理；主 Agent 也可观察/停止插件触发任务 |
 | `memory` | `tree`、`search/list`、`read/get`、`index`、`propose`、`candidates`、`markUsed`、`save`、`resolveCandidate`、`archive`、`restore`、`forget`、`stats`、`configure` | 子任务按范围读取并提候选；正式记忆写入/治理由主 Agent 处理 |
-| `configuration` | `read`、`update`、`open`、`exclusive`、`assertIdle` | 主 Agent/服务检查；update 还要求会话。只支持打开 settings 对话框 |
+| `configuration` | `read`、`update`、`open`、`exclusive`、`assertIdle` | 主 Agent/服务检查；update 还要求会话。`exclusive(action)` 用于本插件连接/状态写入的串行区，只排队本插件配置并触发本插件 beforeConfiguration/configurationChanged；`assertIdle()` 只检查本插件当前没有工具、后台任务或配置队列。全局模型配置仍由宿主保护所有活跃会话。只支持打开 settings 对话框 |
 | `plugins` | `isActive`、`discover`、`load`、`read`、`inspect`、`manage` | 发现/加载/读资源需要会话；inspect/manage 是主 Agent 管理边界 |
 | `reports` | `list`、`read` | 已保存报告的读取；新成果首选 `artifacts` |
 | `executions` | `read` | 按会话范围读取真实进程记录 |

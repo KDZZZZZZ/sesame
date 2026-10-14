@@ -76,7 +76,6 @@
   "tool_definitions": "tools.json",
   "main_tool_names": [
     "mt5_deployment",
-    "mt5_settings",
     "mt5_update_configuration",
     "mt5_import_configuration",
     "mt5_connect",

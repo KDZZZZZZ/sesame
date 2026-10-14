@@ -2,7 +2,7 @@
   "id": "sesame/plugin-manager",
   "title": "插件管理",
   "description": "发现和管理插件；内外部 Agent 共用开发 Skill 与模板，创建、验证、测试、安装、升级和交付插件。",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "default_state": "mounted",
   "tool_names": [
     "plugin_discover",

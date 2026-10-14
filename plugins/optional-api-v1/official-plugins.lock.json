@@ -1942,7 +1942,7 @@
       "id": "sesame/financial-research",
       "version": "1.0.0",
       "directory": "financial-research",
-      "treeDigest": "sha256:a16faa4b0b8a61f31454a75dcb1db0b80625a32e6a073ba84d87885a93940ab6",
+      "treeDigest": "sha256:7c32101bac4e84570a806ba4cadc6f0a8ea1323931a1c0eee2c6cb4da732ea2a",
       "files": [
         {
           "path": "LICENSE",
@@ -1971,8 +1971,8 @@
         },
         {
           "path": "plugin.json",
-          "sha256": "1a86653316b1fa98564a711680ef4aec89c72a1de5ad191bfa9aeea9fc5e1240",
-          "bytes": 762
+          "sha256": "e31d5b661a8d31857c116659304a50f287cf6ad10a91117c7d886d0f57293ffa",
+          "bytes": 778
         },
         {
           "path": "prompt.md",
@@ -3078,7 +3078,7 @@
       "id": "sesame/mt5",
       "version": "1.5.0",
       "directory": "mt5",
-      "treeDigest": "sha256:c23a07f8d13816a3d7a852a6b4bc0fa7351efb215c2c319d865e1333e4a50431",
+      "treeDigest": "sha256:bf44abf7eadf0f59f9cc8092731be1fe0b9a7126b7b8441dc0b074793848b1b5",
       "files": [
         {
           "path": "LICENSE",
@@ -3092,8 +3092,8 @@
         },
         {
           "path": "backend/README.md",
-          "sha256": "1da9bcff3374b6fb01fd01717bebfe7d08d93a5a0b3b62f6821402eaac159434",
-          "bytes": 4050
+          "sha256": "5d9f31293587f60ffc399a87daaa7208c89316c5889f7acf986ebf19be2c7665",
+          "bytes": 4720
         },
         {
           "path": "backend/auto-connect.js",
@@ -3112,8 +3112,8 @@
         },
         {
           "path": "backend/configuration.js",
-          "sha256": "2eadae33ff44c2068ff51d2436a39905340f501eaa0a78a65e62f0132cdea474",
-          "bytes": 5680
+          "sha256": "5eab3cd0b7bdae22ac9e59ecf051ce8602c6d9215adcbe7df7386d83d568c43f",
+          "bytes": 5836
         },
         {
           "path": "backend/conformance.js",
@@ -3122,8 +3122,8 @@
         },
         {
           "path": "backend/connect.js",
-          "sha256": "1f3b0b68e23fa67d66e0fb3ec48388ee8404cf81547839c4348d95469a85cd3b",
-          "bytes": 14455
+          "sha256": "357cc2a865e86f968d6093b39c48a65f90d40196a4f53462e731d975aee225cb",
+          "bytes": 14779
         },
         {
           "path": "backend/connection.js",
@@ -3172,8 +3172,13 @@
         },
         {
           "path": "backend/frozen-compiler.js",
-          "sha256": "959d250710baf63a1feaba5b5c6ddc0d4ceec5d9cb368af0c6fdbc7c496a9b6c",
-          "bytes": 2631
+          "sha256": "97ef446e8c820f5baf1e1564294e38668e94cf8f25ab085586e71dfaf53a8e96",
+          "bytes": 2692
+        },
+        {
+          "path": "backend/json.js",
+          "sha256": "ee43dd984068937719246c5b432679b5465f66206cf39d52a8546343869f1343",
+          "bytes": 6814
         },
         {
           "path": "backend/lifecycle.js",
@@ -3202,8 +3207,8 @@
         },
         {
           "path": "backend/mcp.js",
-          "sha256": "9b8e4b24b54f51b8a0accb27e9f81324d21cb5d417c803267f887627873ac0f5",
-          "bytes": 6479
+          "sha256": "e18343d44be6386c66f5ddb7c5f8af7bc342844e4336affd7c601e1f0c5be488",
+          "bytes": 6563
         },
         {
           "path": "backend/native-settings.js",
@@ -3217,13 +3222,13 @@
         },
         {
           "path": "backend/official.js",
-          "sha256": "18d48097604fe09ef416fbc10b47c7e3759091b07ebb43fd37964170ce3121fd",
-          "bytes": 27374
+          "sha256": "58a8b366b3fcc8fdbfa6b7edfde06072b5d16b46d738ec016bf22f55904374f9",
+          "bytes": 27490
         },
         {
           "path": "backend/parameters.js",
-          "sha256": "25df67dc19450aa59410e5a345996f192eac5b25e0345f52b9bdce8b53f9c282",
-          "bytes": 6439
+          "sha256": "a0a97da43a06c10b3bac9e88bc9916b07a552a53cb33be940528eb42a7f70730",
+          "bytes": 7472
         },
         {
           "path": "backend/platform.js",
@@ -3402,8 +3407,8 @@
         },
         {
           "path": "backend/tester-process.js",
-          "sha256": "b9b8abd40323e37750e17a2d007ff829268b9fec8e193e3dfe4afbbbf6ca9a6e",
-          "bytes": 3847
+          "sha256": "aae95cc90ab0c3e562259bb507630f07417c9894910e98f97bc286c3fddc4d74",
+          "bytes": 3931
         },
         {
           "path": "backend/tester-process.py",
@@ -3467,13 +3472,13 @@
         },
         {
           "path": "plugin.json",
-          "sha256": "b976510a183f31926966deb46126e492bf00884b4c37b5bbed904ac6488d1f7c",
-          "bytes": 2353
+          "sha256": "d28f5bee64e9831ac1a33c4fe8f2948c60fbd0c0414da9ae0e7725e63274c079",
+          "bytes": 2333
         },
         {
           "path": "prompt.md",
-          "sha256": "8d30fa5dc9eb7d8de9485c2eedc45d51628d4061e0bdca42d75018c7784666b5",
-          "bytes": 5464
+          "sha256": "1d8dd6ccf252d19430fa310c59f540d2d1c39cc98a1ca08668141667255bfe99",
+          "bytes": 5697
         },
         {
           "path": "scripts/README.md",
@@ -3542,8 +3547,8 @@
         },
         {
           "path": "target/conformance.md",
-          "sha256": "87f5804ed1ee8542485203a5df3e4cf0811aed82986df969ebf6a3214998d0a2",
-          "bytes": 10895
+          "sha256": "2b89a5e4e87ad67a7c08c716730f6f3d922ac18a0172c50028c94028c45664bc",
+          "bytes": 11124
         },
         {
           "path": "target/examples/FrozenTimeline.mq5",
@@ -3627,8 +3632,8 @@
         },
         {
           "path": "tools/official/index.js",
-          "sha256": "18107c22308c5337d3d049be95f691fe9e1dafee97f9fd069fdfe30643308680",
-          "bytes": 2272
+          "sha256": "26b6fa59b0b0f182205580df0ddbb56c0a40da0eee3de52d02512667ec1f517a",
+          "bytes": 2672
         },
         {
           "path": "tools/official/prompt.md",
@@ -3687,8 +3692,8 @@
         },
         {
           "path": "tools.json",
-          "sha256": "e24d224c6872eabaf2cd8e8860fea65c2be507371bb970b48bdc6c7c57481ce3",
-          "bytes": 60746
+          "sha256": "e34c2b35cd42034a9e9f7bee645209b390727da11668dfa3715b9545aeb03af9",
+          "bytes": 61253
         }
       ]
     },

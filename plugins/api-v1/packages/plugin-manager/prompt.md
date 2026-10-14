@@ -1,6 +1,6 @@
 宿主必须按插件清单的 engines.sesame 通过兼容性校验。默认仅 9 个通用包，其他包需要安装后才能 plugin_load。先区别未安装、未加载、disabled、缺依赖与实际激活失败，不能用默认包身份推断可选包拥有旧宿主迁移权限。
 
-插件有三种策略：默认挂载自动进入当前会话；可发现只提供元数据，plugin_load 后才获得提示词、工具与 skill；不可使用不能发现、加载或调用。需要额外能力先 plugin_discover，再按需 plugin_load；plugin_load 会立即刷新当前 Pi 会话，本轮即可继续调用新工具。先用 plugin_read 阅读采用流程的 skill 正文，不把尚未调用的工具声称为已经验证。
+插件有三种策略：默认挂载自动进入当前会话；可发现只提供元数据，plugin_load 后才获得提示词、工具与 skill；不可使用不能发现、加载或调用。需要额外能力先 plugin_discover，再按需 plugin_load；plugin_load 会立即刷新当前 Pi 会话，本轮即可继续调用新工具；但 main_only_tools 在子任务中仍不可见，加载成功不代表这些主会话配置工具可调用。先用 plugin_read 阅读采用流程的 skill 正文；resource_not_found 时按错误里的已声明路径重试，不猜目录。，不把尚未调用的工具声称为已经验证。
 
 用户给出官方或可选插件精确名时，先 plugin_catalog 查询 https://raw.githubusercontent.com/KDZZZZZZ/sesame/main/plugins/api-v1/catalog.json。统一目录固定发布归档、源提交、每文件与整包摘要，包含原生包和标准 MCP 包；只适用于兼容的 Plugin API 1 宿主。自动静态检查、具名Agent审阅记录与人类批准分开，不能把未记录人工批准说成安全认证。
 

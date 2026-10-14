@@ -11,6 +11,564 @@
   "notice": "This descriptive inventory is not an installation catalog. It has no source commits or package digests. Installable entries are generated separately only from fixed, actually published releases.",
   "packages": [
     {
+      "id": "sesame/abu-backtest-lab",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "GPL-3.0-only",
+      "author": {
+        "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Backtest audit baseline",
+        "zh": "回测审计基线"
+      },
+      "summary": {
+        "en": "Audit timeline, costs, fills and position constraints before handing work to a native engine.",
+        "zh": "审计时序、成本、成交与持仓约束，再交接给原生引擎。"
+      },
+      "dependencies": {
+        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
+        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+      },
+      "tools": [
+        "abu_backtest_lab_analyze"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/abu-backtest-lab"
+    },
+    {
+      "id": "sesame/abu-breakout",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "GPL-3.0-only",
+      "author": {
+        "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Breakout signal baseline",
+        "zh": "突破信号基线"
+      },
+      "summary": {
+        "en": "Study historical range breakouts with next-period executable constraints.",
+        "zh": "研究历史区间突破，并保留下个时段可执行约束。"
+      },
+      "dependencies": {
+        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
+        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+      },
+      "tools": [
+        "abu_breakout_analyze"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/abu-breakout"
+    },
+    {
+      "id": "sesame/abu-exit-rules",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "GPL-3.0-only",
+      "author": {
+        "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Exit rules baseline",
+        "zh": "退出规则基线"
+      },
+      "summary": {
+        "en": "Compare ATR exits, trailing drawdown and holding-period exits on fixed data.",
+        "zh": "在固定数据上比较 ATR 退出、峰值回撤与持有期退出。"
+      },
+      "dependencies": {
+        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
+        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+      },
+      "tools": [
+        "abu_exit_rules_analyze"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/abu-exit-rules"
+    },
+    {
+      "id": "sesame/abu-indicators",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "GPL-3.0-only",
+      "author": {
+        "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Technical indicator baseline",
+        "zh": "技术指标基线"
+      },
+      "summary": {
+        "en": "Compute ATR, averages, MACD, RSI and Bollinger indicators as reproducible baselines.",
+        "zh": "计算 ATR、均线、MACD、RSI 与布林带作为可复核基线。"
+      },
+      "dependencies": {
+        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
+        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+      },
+      "tools": [
+        "abu_indicators_analyze"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/abu-indicators"
+    },
+    {
+      "id": "sesame/abu-ml-features",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "GPL-3.0-only",
+      "author": {
+        "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Trading feature baseline",
+        "zh": "交易特征基线"
+      },
+      "summary": {
+        "en": "Generate point-in-time regression, quantile, volatility and gap features.",
+        "zh": "按时点生成回归、分位、波动与跳空特征。"
+      },
+      "dependencies": {
+        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
+        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+      },
+      "tools": [
+        "abu_ml_features_analyze"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/abu-ml-features"
+    },
+    {
+      "id": "sesame/abu-model-lab",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "GPL-3.0-only",
+      "author": {
+        "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Lightweight model baseline",
+        "zh": "轻量模型基线"
+      },
+      "summary": {
+        "en": "Run transparent time-split prediction experiments on frozen inputs.",
+        "zh": "在固定输入上运行透明的时间分割预测实验。"
+      },
+      "dependencies": {
+        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
+        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+      },
+      "tools": [
+        "abu_model_lab_analyze"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/abu-model-lab"
+    },
+    {
+      "id": "sesame/abu-moving-average",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "GPL-3.0-only",
+      "author": {
+        "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Moving average baseline",
+        "zh": "均线信号基线"
+      },
+      "summary": {
+        "en": "Study dual-average crossover observations and parameter sensitivity.",
+        "zh": "研究双均线交叉观察与参数敏感性。"
+      },
+      "dependencies": {
+        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
+        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+      },
+      "tools": [
+        "abu_moving_average_analyze"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/abu-moving-average"
+    },
+    {
+      "id": "sesame/abu-parameter-search",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "GPL-3.0-only",
+      "author": {
+        "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Parameter experiment baseline",
+        "zh": "参数实验基线"
+      },
+      "summary": {
+        "en": "Record bounded grids, development rankings and fixed holdout choices.",
+        "zh": "记录有限网格、开发期排名与固定留出选择。"
+      },
+      "dependencies": {
+        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
+        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+      },
+      "tools": [
+        "abu_parameter_search_analyze"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/abu-parameter-search"
+    },
+    {
+      "id": "sesame/abu-position-sizing",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "GPL-3.0-only",
+      "author": {
+        "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Position sizing baseline",
+        "zh": "仓位计算基线"
+      },
+      "summary": {
+        "en": "Compare ATR risk budgets, fractional Kelly and price quantile sizing.",
+        "zh": "比较 ATR 风险预算、分数凯利与价格分位仓位。"
+      },
+      "dependencies": {
+        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
+        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+      },
+      "tools": [
+        "abu_position_sizing_analyze"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/abu-position-sizing"
+    },
+    {
+      "id": "sesame/abu-price-structure",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "GPL-3.0-only",
+      "author": {
+        "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Price structure baseline",
+        "zh": "价格结构基线"
+      },
+      "summary": {
+        "en": "Calculate delayed pivots, support/resistance and Fibonacci observations.",
+        "zh": "计算延迟确认摆点、支撑阻力与黄金分割观察。"
+      },
+      "dependencies": {
+        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
+        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+      },
+      "tools": [
+        "abu_price_structure_analyze"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/abu-price-structure"
+    },
+    {
+      "id": "sesame/abu-seasonality",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "GPL-3.0-only",
+      "author": {
+        "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Seasonality baseline",
+        "zh": "日历效应基线"
+      },
+      "summary": {
+        "en": "Measure weekday effects only over completed historical periods with declared calendars.",
+        "zh": "仅按已结束历史时期和声明日历统计星期效应。"
+      },
+      "dependencies": {
+        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
+        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+      },
+      "tools": [
+        "abu_seasonality_analyze"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/abu-seasonality"
+    },
+    {
+      "id": "sesame/abu-similarity",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "GPL-3.0-only",
+      "author": {
+        "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Market similarity baseline",
+        "zh": "市场相似性基线"
+      },
+      "summary": {
+        "en": "Compare time-aligned return correlation, rank correlation and directional similarity.",
+        "zh": "比较时间对齐的收益相关、秩相关与方向相似性。"
+      },
+      "dependencies": {
+        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
+        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+      },
+      "tools": [
+        "abu_similarity_analyze"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/abu-similarity"
+    },
+    {
+      "id": "sesame/abu-stock-screening",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "GPL-3.0-only",
+      "author": {
+        "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Stock screening baseline",
+        "zh": "股票筛选基线"
+      },
+      "summary": {
+        "en": "Screen bounded universes by momentum, price, trend and path efficiency.",
+        "zh": "按动量、价格、趋势与路径效率筛选有界股票池。"
+      },
+      "dependencies": {
+        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
+        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+      },
+      "tools": [
+        "abu_stock_screening_analyze"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/abu-stock-screening"
+    },
+    {
+      "id": "sesame/abu-trade-judges",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "GPL-3.0-only",
+      "author": {
+        "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Historical trade judge baseline",
+        "zh": "历史交易裁判基线"
+      },
+      "summary": {
+        "en": "Score completed trades with similar historical neighbors and rejection evidence.",
+        "zh": "用相似历史邻居与拒绝证据评分已结束交易。"
+      },
+      "dependencies": {
+        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
+        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+      },
+      "tools": [
+        "abu_trade_judges_analyze"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/abu-trade-judges"
+    },
+    {
+      "id": "sesame/abu-trade-metrics",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "GPL-3.0-only",
+      "author": {
+        "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Trade metrics baseline",
+        "zh": "交易绩效基线"
+      },
+      "summary": {
+        "en": "Compute equity drawdown, attribution, return and risk metrics.",
+        "zh": "计算权益回撤、交易归因、收益与风险指标。"
+      },
+      "dependencies": {
+        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
+        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+      },
+      "tools": [
+        "abu_trade_metrics_analyze"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/abu-trade-metrics"
+    },
+    {
+      "id": "sesame/abu-trend",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "GPL-3.0-only",
+      "author": {
+        "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Trend analysis baseline",
+        "zh": "趋势分析基线"
+      },
+      "summary": {
+        "en": "Calculate regression slope, trend channels and path efficiency.",
+        "zh": "计算回归斜率、趋势通道与路径效率。"
+      },
+      "dependencies": {
+        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
+        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+      },
+      "tools": [
+        "abu_trend_analyze"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/abu-trend"
+    },
+    {
+      "id": "sesame/abu-trend-pullback",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "GPL-3.0-only",
+      "author": {
+        "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Trend pullback baseline",
+        "zh": "趋势回撤基线"
+      },
+      "summary": {
+        "en": "Study long-trend, short-pullback and rebound combinations.",
+        "zh": "研究长趋势、短回撤与反弹组合。"
+      },
+      "dependencies": {
+        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
+        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+      },
+      "tools": [
+        "abu_trend_pullback_analyze"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/abu-trend-pullback"
+    },
+    {
+      "id": "sesame/abu-volatility",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.0-0"
+      },
+      "format": "sesame-native",
+      "license": "GPL-3.0-only",
+      "author": {
+        "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
+      },
+      "category": "strategy",
+      "title": {
+        "en": "Volatility and gap baseline",
+        "zh": "波动与跳空基线"
+      },
+      "summary": {
+        "en": "Calculate return volatility, ATR, volume-price averages and gaps.",
+        "zh": "计算收益波动、ATR、量价均价与跳空。"
+      },
+      "dependencies": {
+        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
+        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+      },
+      "tools": [
+        "abu_volatility_analyze"
+      ],
+      "sourcePath": "plugins/optional-api-v1/packages/abu-volatility"
+    },
+    {
       "id": "sesame/akshare",
       "version": "1.0.7",
       "distribution": "optional",
@@ -111,7 +669,7 @@
     },
     {
       "id": "sesame/canvas-control",
-      "version": "2.1.1",
+      "version": "2.1.2",
       "distribution": "core",
       "state": "discoverable",
       "engines": {
@@ -180,11 +738,11 @@
     },
     {
       "id": "sesame/configuration",
-      "version": "2.0.3",
+      "version": "2.0.4",
       "distribution": "core",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3-dev.5"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -201,8 +759,8 @@
         "zh": "通过带版本核验的操作读取和修改应用设置。"
       },
       "dependencies": {
-        "en": "Application settings only. Backend connections belong to their own plugins.",
-        "zh": "管理应用设置；后端连接由各自插件管理。"
+        "en": "Sesame 0.2.3-dev.5 or newer. Application settings only; backend connections belong to their own plugins.",
+        "zh": "需要 Sesame 0.2.3-dev.5 或更新版本。管理应用设置；后端连接由各自插件管理。"
       },
       "tools": [
         "configuration_read",
@@ -349,18 +907,18 @@
       "author": {
         "name": "Sesame contributors"
       },
-      "category": "research",
+      "category": "data",
       "title": {
-        "en": "Financial Research",
+        "en": "Financial research tools",
         "zh": "金融研究工具"
       },
       "summary": {
-        "en": "Source-backed prices, financials, filings, news, analyst views, insider trades, macro and sentiment, shared by users and Agents.",
-        "zh": "为用户与 Agent 提供同一份带来源与时间边界的行情、财务、披露、新闻、分析师、内幕交易、宏观及情绪资料。"
+        "en": "Collect sourced market, filing, news, macro and discussion evidence for research agents.",
+        "zh": "为研究 Agent 收集有来源的行情、公告、新闻、宏观与讨论证据。"
       },
       "dependencies": {
-        "en": "Optional FMP, FRED, SEC and Reddit credentials or identity via environment variables.",
-        "zh": "按来源配置 FMP、FRED、SEC、Reddit 环境变量；缺失来源明确报告不可用。"
+        "en": "Requires configured provider credentials for non-public sources; each result keeps source and fetch metadata.",
+        "zh": "非公开来源需要配置供应商凭据；结果保留来源与获取元数据。"
       },
       "tools": [
         "financial_research_status",
@@ -531,7 +1089,7 @@
     },
     {
       "id": "sesame/manual-trading",
-      "version": "2.0.0",
+      "version": "2.3.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -548,8 +1106,8 @@
         "zh": "Agent 手动交易"
       },
       "summary": {
-        "en": "Scheduled and event-driven Agent trading with per-role models, target portfolios, risk stops, evidence memory and daily reports.",
-        "zh": "周期与事件驱动的 Agent 手工交易：支持逐角色模型配置、team 研究辩论、目标仓位、全账户减仓平仓、风险停止挂载、证据复盘与研究日报。"
+        "en": "Apply authorization, timing, fresh-quote checks, one-time submission and evidence-based receipt recovery to Agent manual trading.",
+        "zh": "规范 Agent 手动交易的授权、时效、报价核验、单次执行和基于证据的回执恢复。"
       },
       "dependencies": {
         "en": "Sesame 0.2.1+ and an existing supported trading backend. Read that backend's own resources for its account, platform and API requirements; use M5+ decisions.",
@@ -561,6 +1119,7 @@
         "manual_trading_run",
         "manual_trading_event",
         "manual_trading_runs",
+        "manual_trading_activity",
         "manual_trading_context",
         "manual_trading_decide",
         "manual_trading_apply",
@@ -621,7 +1180,7 @@
     },
     {
       "id": "sesame/memory",
-      "version": "2.1.0",
+      "version": "2.1.1",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -745,11 +1304,11 @@
     },
     {
       "id": "sesame/orchestration",
-      "version": "2.2.1",
+      "version": "2.2.2",
       "distribution": "core",
       "state": "mounted",
       "engines": {
-        "sesame": ">=0.2.2"
+        "sesame": ">=0.2.3-dev.5"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -766,8 +1325,8 @@
         "zh": "分派明确任务，并提供通用产品使用指南。"
       },
       "dependencies": {
-        "en": "A configured model is needed to run Agent tasks; no trading backend is required.",
-        "zh": "运行 Agent 任务需要配置模型；无需交易后端。"
+        "en": "Sesame 0.2.3-dev.5 or newer and a configured model for Agent tasks; no trading backend is required.",
+        "zh": "需要 Sesame 0.2.3-dev.5 或更新版本及已配置模型；无需交易后端。"
       },
       "tools": [
         "agent_list",
@@ -780,7 +1339,7 @@
     },
     {
       "id": "sesame/plugin-manager",
-      "version": "2.2.0",
+      "version": "2.3.0",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -1159,7 +1718,7 @@
     },
     {
       "id": "sesame/workspace",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "distribution": "core",
       "state": "mounted",
       "engines": {
