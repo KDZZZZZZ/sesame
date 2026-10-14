@@ -21,6 +21,14 @@
   const svg = (tag, attributes = {}) => { const node = document.createElementNS(svgNS, tag); for (const [key, value] of Object.entries(attributes)) node.setAttribute(key, string(value)); return node; };
   const roleInfo = id => roleLookup.get(id) ?? { id, name: string(id), icon: string(id).slice(0, 1) };
   const modelLabel = task => task ? [task.provider, task.model].filter(Boolean).join(' / ') || '模型未记录' : '待分配模型';
+  function colorize(node, task) {
+    const name = modelLabel(task).toLowerCase();
+    const [color, tint] = name.includes('gpt') || name.includes('openai') ? ['#1aa886', '#eaf7f2']
+      : name.includes('claude') || name.includes('anthropic') ? ['#d88261', '#fcf0e9']
+      : name.includes('gemini') || name.includes('google') ? ['#5e85cf', '#edf3fd']
+      : name.includes('deepseek') ? ['#6276c2', '#eef0fb'] : ['#758397', '#f1f3f7'];
+    node.style.setProperty('--model-color', color); node.style.setProperty('--model-tint', tint);
+  }
   function normalize(data) {
     if (!data || data.schemaVersion !== 1 || !data.run || !['live', 'archive'].includes(data.mode)) throw new Error('协作记录版本或结构不受支持。');
     return { ...data, tasks: Array.isArray(data.tasks) ? data.tasks : [], reports: Array.isArray(data.reports) ? data.reports : [],
@@ -80,6 +88,7 @@
     const entries = [...groups].map(([key, group]) => ({ key, group, signature: JSON.stringify([group.tasks, selectedRole]) }));
     reconcile($('model-summary'), entries, modelNodes, (entry, existing) => {
       const group = entry.group, button = existing ?? element('button', 'model-summary-button'); button.type = 'button'; button.modelGroup = group;
+      colorize(button, group.task);
       button.classList.toggle('is-selected', group.tasks.some(task => task.role === selectedRole));
       if (!button.modelParts) {
         const top = element('span', 'model-summary-top'), name = element('span', 'model-summary-name'), value = element('div', 'model-summary-value'), count = element('span'), unit = element('span', '', '位 Agent'), description = element('div', 'model-summary-description');
@@ -105,6 +114,7 @@
         row.append(element('p', 'feed-reading-title', from && to ? `${roleInfo(to.role).name}读取了${roleInfo(from.role).name}的报告` : '读取了公开报告'), element('time', 'feed-reading-time', time(event.at))); return row;
       }
       const report = entry.report, task = entry.output ?? byId.get(report.taskId), role = roleInfo(task?.role ?? report.role), streaming = Boolean(entry.output), row = existing ?? element('article', 'feed-report');
+      colorize(row, task ?? report);
       row.tabIndex = -1; row.dataset.taskId = task?.id ?? report.taskId; row.dataset.role = role.id; row.classList.toggle('is-streaming', streaming);
       if (!row.publicParts) {
         const author = element('header', 'feed-author'), detail = element('div', 'feed-author-details'), line = element('div', 'feed-author-line');
@@ -128,6 +138,7 @@
     const archiving = latest.run.status === 'completed' && ['queued', 'running'].includes(byRole.get('reporter')?.status);
     $('run-state').textContent = archiving ? '日报归档中' : !terminal.has(latest.run.status) && activeRole ? phaseLabels[activeRole] ?? '进行中' : runLabels[latest.run.status] ?? string(latest.run.status);
     $('run-state').classList.toggle('is-failed', ['failed', 'interrupted'].includes(latest.run.status));
+    $('run-state').classList.toggle('is-cancelled', ['cancelled', 'canceled'].includes(latest.run.status));
     $('mode-badge').textContent = latest.mode === 'archive' ? '运行记录' : (latest.workflow?.mode ?? latest.run.mode) === 'single' ? '单 Agent' : 'Team 协作'; $('mock-label').hidden = latest.run.mockModelResponses !== true;
     const trigger = latest.run.trigger ?? latest.trigger, triggerLabels = { interval: '周期触发', event: '事件触发', manual: '手动触发' };
     $('run-context').textContent = trigger?.kind ? `${triggerLabels[trigger.kind] ?? string(trigger.kind)}${trigger.key ? ` · ${string(trigger.key)}` : ''}` : '';
@@ -136,6 +147,7 @@
     const toolsByTask = new Map(); for (const event of latest.events) if (event.taskId && ['tool.started', 'tool.finished'].includes(event.type)) toolsByTask.set(event.taskId, event);
     for (const ref of nodeRefs.values()) {
       const role = roleInfo(ref.role), task = tasksByRef.get(ref), status = task?.status ?? 'pending'; ref.taskId = task?.id ?? null;
+      colorize(ref.button, task);
       const selected = selectedTaskId ? task?.id === selectedTaskId : selectedRole === role.id;
       ref.button.className = `agent-node${selected ? ' is-selected' : ''}${status === 'running' ? ' is-running' : terminal.has(status) ? status === 'completed' ? ' is-completed' : ' is-failed' : ''}`;
       ref.button.setAttribute('aria-pressed', String(selected)); ref.button.setAttribute('aria-label', `${role.name}，阶段 ${ref.stageIndex + 1}，${statusLabels[status] ?? status}，${modelLabel(task)}，定位公开报告`);
