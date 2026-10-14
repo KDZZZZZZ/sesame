@@ -2830,9 +2830,9 @@
     },
     {
       "id": "sesame/manual-trading",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "directory": "manual-trading",
-      "treeDigest": "sha256:62e29725681545c7689a7554302c536bafd31a297adb952002c22c3fdbc892b5",
+      "treeDigest": "sha256:72f8a330dcaff32faf75ac5d597a55a3240567c75b6e96c5bf24267db91bf4cc",
       "files": [
         {
           "path": "LICENSE",
@@ -2841,13 +2841,18 @@
         },
         {
           "path": "PROVENANCE.md",
-          "sha256": "e2f474cba7e7c173295feb5b6604a5ab504afe293cace3de54764644b45ce7d8",
-          "bytes": 2131
+          "sha256": "5fec310d5a6c9cb80303580b3870f503c956fa5a81279a063df93d948cf4f98b",
+          "bytes": 2513
         },
         {
           "path": "README.md",
-          "sha256": "54ec7432a925182d33782b1921871f89eabf83f99df7fec533c024d6dae5d860",
-          "bytes": 7463
+          "sha256": "6bfb84f8c9d8a9813f6df5d1fbde718d5e2532d80ec047e30bce520febe8976b",
+          "bytes": 9949
+        },
+        {
+          "path": "activity.js",
+          "sha256": "899a6d2eb64e0a5f363bfb9703742acb27537e0b69022fb79281114974c794f0",
+          "bytes": 8752
         },
         {
           "path": "adapters.js",
@@ -2856,13 +2861,28 @@
         },
         {
           "path": "agent-tools.js",
-          "sha256": "eb024d4b6e336a6e1a8336f682577fa8c06c19e38753a5a523a1802adcfc5ce5",
-          "bytes": 9539
+          "sha256": "310f3b66c0f08fb890cc284e374497feaf3aab3e39ecb6617f29c5928eb334ad",
+          "bytes": 10317
+        },
+        {
+          "path": "assets/collaboration.css",
+          "sha256": "a893d1cce0bd4821cd7cfa26ccc10f2c09c61f9322703cec6efacd0b21c356c0",
+          "bytes": 9288
+        },
+        {
+          "path": "assets/collaboration.html",
+          "sha256": "5f6bf7909e238d5a88b0aade686cfe70ce72a07b1d365f40ccea1d43fd1a35a7",
+          "bytes": 2288
+        },
+        {
+          "path": "assets/collaboration.js",
+          "sha256": "c14b7158e5a5526d763d1cda83bef29ee927d295a5c778c17f93eaeee57f4cf1",
+          "bytes": 23376
         },
         {
           "path": "index.js",
-          "sha256": "858ffcd88c73c4f800d035680f08e6c9a41a62a9a543995fad872bbc33a97a33",
-          "bytes": 4012
+          "sha256": "ea15de2a80d626cb2c10708243dfd1acf9dbbfef9f92b6167ed1f65031aaea00",
+          "bytes": 4174
         },
         {
           "path": "judgment/README.md",
@@ -2906,7 +2926,7 @@
         },
         {
           "path": "package.json",
-          "sha256": "9ea86be82bc324d273121200075cedbfbf32868309bd07d063b7dacad10a8d08",
+          "sha256": "46d5dd1669459cafe0615b077f5144184a385b4b2fbc5838814052988b7e3076",
           "bytes": 108
         },
         {
@@ -2916,8 +2936,8 @@
         },
         {
           "path": "plugin.json",
-          "sha256": "40366f2a26cff30b5e53338004a529dfa8eb8d88fd66593e2eb7f6df6051fc6c",
-          "bytes": 2152
+          "sha256": "a629d3ba564ac8ceaf916e066a75d862ca92e42d9a89a375918881d92dc32284",
+          "bytes": 2235
         },
         {
           "path": "portfolio.js",
@@ -2926,8 +2946,8 @@
         },
         {
           "path": "prompt.md",
-          "sha256": "3c5b9a4c2d2ad1dd676e2afc2c6d54cb0fdff7be4853ce312110fa9ac73159fc",
-          "bytes": 1720
+          "sha256": "8eaf7f2193c4234c278e94ada3230510a2143a6c2cd9bbcce214b13fee6f7986",
+          "bytes": 2233
         },
         {
           "path": "reports.js",
@@ -2941,8 +2961,8 @@
         },
         {
           "path": "runtime.js",
-          "sha256": "7f389d250039736761cd3827956140fb9c12ed2ce612ccf98669ddfebb7e51ec",
-          "bytes": 23334
+          "sha256": "1a9b507999cdec6633557f53bc02bb1b6b227b0c1b76e7260fa909df19fb2e12",
+          "bytes": 33108
         },
         {
           "path": "service.js",
@@ -2951,8 +2971,8 @@
         },
         {
           "path": "skills/manual-trading/SKILL.md",
-          "sha256": "e1dce0c1aa12028869298337dce315a8046866e271c4ca725860e8b08263ffd8",
-          "bytes": 3030
+          "sha256": "94eae2924f90c407247842f6fd24eb2c24f2a61444b92ff58fd9bfb74f22e968",
+          "bytes": 3420
         },
         {
           "path": "state.js",
@@ -2966,8 +2986,13 @@
         },
         {
           "path": "tools.json",
-          "sha256": "000e567613801b9986cdb216286f041d95f4feeddb6c843f437799cd26768c51",
-          "bytes": 53667
+          "sha256": "767234b13a50180116e07f8894670bb2b2462fbfbbbe66ba22542feaca8eeee2",
+          "bytes": 54854
+        },
+        {
+          "path": "viewer.js",
+          "sha256": "9ccc4bd1686073c19ea1b63c6cf58f6f1611725b833cd0f7283887e909b4df53",
+          "bytes": 8789
         }
       ]
     },

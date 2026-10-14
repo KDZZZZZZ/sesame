@@ -1,4 +1,5 @@
 import { canonical, digest } from '@sesame/plugin-sdk/protocol';
+import { AsyncResource } from 'node:async_hooks';
 import { generateKeyPairSync, sign } from 'node:crypto';
 import { check, payload } from './adapters.js';
 import { createTradingMemory } from './memory.js';
@@ -6,19 +7,100 @@ import { accountKey, cleanError, clone, makePlan, TERMINAL, triggerIdentity, val
 import { ROLE_PROMPTS, SYSTEM, stages, taskTools } from './team.js';
 import { ensureReportFolder, writeDailyReport } from './reports.js';
 import { applyPortfolio } from './portfolio.js';
+import { ACTIVITY_LIMIT, TASK_TERMINAL, activityChanges, appendActivity, publicOutput, taskStageIndex } from './activity.js';
 
 export class TradingRuntime {
-  constructor(host, { now = Date.now, timer = true } = {}) {
+  constructor(host, { now = Date.now, timer = true, activityPollMs = 500, activityLimit = ACTIVITY_LIMIT, mockModelResponses = false } = {}) {
     this.host = host; this.now = now; this.timerEnabled = timer; this.running = new Map(); this.contextReads = new Map(); this.applying = new Map(); this.subscriptions = new Map(); this.closed = false;
     this.memories = new Map();
     this.executionKeys = new Map();
+    check(Number.isInteger(activityLimit) && activityLimit >= 1 && activityLimit <= 10000, 'INVALID_ARGUMENT', 'Activity retention must be 1..10000 events');
+    check(Number.isInteger(activityPollMs) && activityPollMs >= 10 && activityPollMs <= 60000, 'INVALID_ARGUMENT', 'Activity polling must be 10..60000 ms');
+    this.activityLimit = activityLimit; this.activityPollMs = activityPollMs; this.mockModelResponses = mockModelResponses === true;
+    this.activityListeners = new Set(); this.taskPolls = new Map();
+    // Keep public reads in the service's activation context, not the main tool caller's task context.
+    this.observationScope = new AsyncResource('sesame.manual-trading.activity', { requireManualDestroy: true });
   }
   memoryFor(plan) { if (!this.memories.has(plan.ownerConversationId)) this.memories.set(plan.ownerConversationId, createTradingMemory(this.host, { now: this.now, ownerConversationId: plan.ownerConversationId })); return this.memories.get(plan.ownerConversationId); }
   plans() { return this.host.storage.list('plans'); }
   plan(id) { const plan = this.host.storage.get('plans', id, true); check(plan, 'NOT_FOUND', 'Trading plan not found'); return plan; }
   run(id) { const run = this.host.storage.get('runs', id, true); check(run, 'NOT_FOUND', 'Trading run not found'); return run; }
-  save(run) { return this.host.storage.put('runs', run); }
+  save(run, events = []) {
+    // Host records are JSON. Optional fields from older ports must not make change comparison fail.
+    run = JSON.parse(JSON.stringify(run));
+    const previous = this.host.storage.get('runs', run.id, true), changed = canonical(previous ?? null) !== canonical(run);
+    if (!changed && !events.length) return previous;
+    const at = this.now(), appended = appendActivity(run, [...activityChanges(previous, run, at), ...events], { at, limit: this.activityLimit });
+    if (!changed && !appended.events.length) return previous;
+    const saved = this.host.storage.put('runs', appended.run);
+    for (const listener of this.activityListeners) {
+      try { const result = listener({ runId: run.id, run: clone(saved), events: clone(appended.events) }); result?.catch?.(() => {}); }
+      catch { /* Observers cannot interrupt trading or its durable receipts. */ }
+    }
+    return saved;
+  }
   update(id, changes) { return this.save({ ...this.run(id), ...changes }); }
+  activity(id, type, fields = {}) { return this.save(this.run(id), [{ ...fields, type }]); }
+  onActivity(listener) {
+    check(typeof listener === 'function' && !this.closed, 'RUNTIME_CLOSED', 'A live activity listener is required');
+    this.activityListeners.add(listener); return () => this.activityListeners.delete(listener);
+  }
+  observeTaskView(runId, taskId, observed) {
+    if (!observed || observed.id !== taskId) return;
+    const run = this.run(runId), before = run.tasks.find(task => task.id === taskId);
+    if (!before || TASK_TERMINAL.has(before.status) && !TASK_TERMINAL.has(observed.status)) return;
+    const task = { ...before, status: observed.status, conversationId: observed.conversationId ?? before.conversationId ?? null };
+    if (observed.model) task.model = clone(observed.model);
+    if (observed.status === 'running' && task.startedAt === undefined) {
+      // The public host port has no start timestamp; this is when running was first observed.
+      task.startedAt = this.now(); task.startedAtSource = 'observed';
+    }
+    if (TASK_TERMINAL.has(observed.status) && task.completedAt === undefined) task.completedAt = observed.completedAt ?? this.now();
+    if (Array.isArray(observed.toolCalls)) task.toolCalls = observed.toolCalls.slice(0, 256).map(call => ({ id: call.id, name: call.name, status: call.status,
+      ...(call.startedAt === undefined ? {} : { startedAt: call.startedAt }), ...(call.completedAt === undefined ? {} : { completedAt: call.completedAt }) }));
+    this.update(runId, { tasks: run.tasks.map(value => value.id === taskId ? task : value) });
+  }
+  async observeTask(runId, taskId, isActive = () => !this.closed) {
+    return this.observationScope.runInAsyncScope(async () => {
+      if (!isActive() || typeof this.host.agents.inspect !== 'function') return;
+      try {
+        const observed = await this.host.agents.inspect(taskId);
+        if (!isActive()) return;
+        this.observeTaskView(runId, taskId, observed);
+        if (!observed.conversationId || typeof this.host.tasks?.read !== 'function' || typeof this.host.messages?.read !== 'function') return;
+        const conversation = await this.host.tasks.read(observed.conversationId);
+        if (!isActive()) return;
+        const run = this.run(runId), task = run.tasks.find(value => value.id === taskId);
+        if (!task) return;
+        this.update(runId, { tasks: run.tasks.map(value => value.id === taskId ? { ...value, stage: conversation.stage ?? null } : value) });
+        const messageId = conversation.active_response_message_id ?? task.publicOutput?.messageId;
+        if (!messageId) return;
+        const output = publicOutput(await this.host.messages.read(messageId, true));
+        if (!isActive() || !output) return;
+        const current = this.run(runId), value = current.tasks.find(item => item.id === taskId);
+        if (!value) return;
+        const next = { ...value, publicOutput: output }; delete next.observationError;
+        this.update(runId, { tasks: current.tasks.map(item => item.id === taskId ? next : item) });
+      } catch (error) {
+        if (!isActive()) return;
+        const run = this.run(runId);
+        this.update(runId, { tasks: run.tasks.map(task => task.id === taskId ? { ...task, observationError: cleanError(error) } : task) });
+      }
+    });
+  }
+  watchTask(runId, taskId) {
+    if (typeof this.host.agents.inspect !== 'function') return () => {};
+    const poll = { active: true, busy: false };
+    const sample = async () => {
+      if (!poll.active || poll.busy || this.closed) return;
+      poll.busy = true;
+      try { await this.observeTask(runId, taskId, () => poll.active && !this.closed); }
+      finally { poll.busy = false; }
+    };
+    poll.timer = setInterval(() => { void sample(); }, this.activityPollMs); poll.timer.unref?.();
+    this.taskPolls.set(taskId, poll); void sample();
+    return () => { poll.active = false; clearInterval(poll.timer); this.taskPolls.delete(taskId); };
+  }
   main(host) { check(host.scope.kind === 'main', 'FORBIDDEN', 'Configure trading plans in the main conversation'); }
   authorize(host, runId, roles) {
     const run = this.run(runId);
@@ -29,11 +111,42 @@ export class TradingRuntime {
       run.tasks.some(task => task.id === current.id && task.role === current.input.role) && (!roles || roles.includes(current.input.role)), 'FORBIDDEN', 'Tool requires its current registered trading-plan task');
     return run;
   }
+  async recoverTask(runId, task) {
+    const missing = error => ['not_found', 'NOT_FOUND'].includes(error?.code);
+    const observe = receipt => {
+      check(receipt?.id === task.id && typeof receipt.status === 'string', 'TASK_RECEIPT_INVALID', 'Host did not return the requested task receipt during restart recovery');
+      this.observeTaskView(runId, task.id, receipt); return receipt;
+    };
+    try {
+      let receipt;
+      if (typeof this.host.agents.inspect === 'function') {
+        try { receipt = observe(await this.host.agents.inspect(task.id)); }
+        catch (error) { if (missing(error)) throw error; /* A cancellation receipt can still establish the real state. */ }
+      }
+      if (!receipt || !TASK_TERMINAL.has(receipt.status)) receipt = observe(await this.host.agents.cancel(task.id, 'Trading runtime restarted; do not replay execution'));
+      const run = this.run(runId);
+      if (TASK_TERMINAL.has(receipt.status) && typeof receipt.result?.text === 'string' && !run.reports.some(report => report.taskId === task.id)) {
+        this.update(runId, { reports: [...run.reports, { taskId: task.id, role: task.role, round: task.round, model: receipt.model ?? task.model,
+          status: receipt.status, createdAt: receipt.completedAt ?? this.now(), text: receipt.result.text.slice(0, 16000) }] });
+      }
+    } catch (error) {
+      const run = this.run(runId), at = this.now();
+      this.update(runId, { tasks: run.tasks.map(value => value.id === task.id ? { ...value, observationError: cleanError(error),
+        ...(missing(error) ? { status: 'interrupted', completedAt: at, recovery: { kind: 'host_task_missing', at } } : {}) } : value) });
+    }
+  }
   async start() {
     check(this.host.agents && this.host.inference, 'PREREQUISITE_REQUIRED', 'Manual trading plans require Sesame 0.2.2 Agent/model ports');
-    for (const run of this.host.storage.list('runs')) if (!TERMINAL.has(run.status)) {
-      for (const task of run.tasks ?? []) try { this.host.agents.cancel(task.id, 'Trading runtime restarted; do not replay execution'); } catch { /* Task may already be archived. */ }
-      this.update(run.id, { status: 'interrupted', completedAt: this.now(), reportPending: !run.report, error: { code: 'RESTART_INTERRUPTED', message: 'App restarted; inspect durable receipts before a new decision. This run is not replayed.' } });
+    for (const run of this.host.storage.list('runs')) {
+      const unfinished = (run.tasks ?? []).filter(task => !TASK_TERMINAL.has(task.status));
+      if (TERMINAL.has(run.status) && !unfinished.length) continue;
+      // Business completion precedes the reporter. Recover both lifetimes without replaying either.
+      for (const task of unfinished) await this.recoverTask(run.id, task);
+      const current = this.run(run.id), recovered = this.update(run.id, { reportPending: !current.report,
+        ...(!TERMINAL.has(run.status) ? { status: 'interrupted', completedAt: this.now(), error: { code: 'RESTART_INTERRUPTED', message: 'App restarted; inspect durable receipts before a new decision. This run is not replayed.' } } : {}) });
+      if ((recovered.tasks ?? []).every(task => TASK_TERMINAL.has(task.status))) {
+        this.activity(run.id, 'run.finished', { status: recovered.status, message: '宿主重启，已核验或中断遗留任务；未重放执行。' });
+      }
     }
     for (const plan of this.plans().filter(value => value.enabled && value.accountEvents)) await this.subscribe(plan);
     if (this.timerEnabled) { this.timer = setInterval(() => { this.tick().catch(error => this.host.events?.emit('scheduler.failed', cleanError(error))); }, 1000); this.timer.unref?.(); }
@@ -67,8 +180,11 @@ export class TradingRuntime {
     if (previous) { check(canonical(previous.trigger) === canonical(trigger), 'IDEMPOTENCY_CONFLICT', 'Event ID already has different input'); return previous; }
     check(plan.enabled, 'PLAN_PAUSED', 'Trading plan is paused');
     check(Buffer.byteLength(JSON.stringify(trigger)) <= 12000, 'INVALID_ARGUMENT', 'Event payload exceeds 12 KB');
-    for (const queued of this.host.storage.list('runs').filter(run => run.planId === plan.id && run.status === 'queued')) this.update(queued.id, { status: 'cancelled', completedAt: this.now(), supersededBy: id });
-    const run = this.save({ id, planId: plan.id, plan, trigger: clone(trigger), status: 'queued', createdAt: this.now(), tasks: [], reports: [], reportPending: true });
+    for (const queued of this.host.storage.list('runs').filter(run => run.planId === plan.id && run.status === 'queued')) {
+      this.update(queued.id, { status: 'cancelled', completedAt: this.now(), supersededBy: id });
+      this.activity(queued.id, 'run.finished', { status: 'cancelled', message: '尚未开始的运行已被新事件替换。' });
+    }
+    const run = this.save({ id, planId: plan.id, plan, trigger: clone(trigger), status: 'queued', createdAt: this.now(), tasks: [], reports: [], reportPending: true, mockModelResponses: this.mockModelResponses });
     this.host.storage.put('plans', { ...plan, lastRunId: id }); this.pump(); return run;
   }
   event(key, eventId, data = {}, at) {
@@ -112,10 +228,17 @@ export class TradingRuntime {
       input: { tradingPlan: { id: plan.id, backend: plan.backend, account: plan.account, ownerConversationId: plan.ownerConversationId, researchPlugins: plan.researchPlugins ?? [] }, runId, role, round, trigger: run.trigger, ...(executionPublicKey ? { executionPublicKey } : {}) },
       tools: taskTools(plan, role, this.researchAvailable()), model, lane: `${digest(accountKey(plan)).slice(7, 39)}:${role}`, queue: 'fifo', timeoutMs: plan.taskTimeoutMs,
       maxTurns: role === 'executor' || role === 'reporter' ? 4 : 16, maxToolCalls: role === 'executor' ? 256 : 48 });
-    this.update(runId, { tasks: [...this.run(runId).tasks, { id: task.id, role, round, model, status: task.status }] });
-    let result;
-    try { result = await this.host.agents.wait(task.id, signal); }
-    catch (error) { this.host.agents.cancel(task.id, 'Trading task wait stopped'); throw error; }
+    this.update(runId, { tasks: [...this.run(runId).tasks, { id: task.id, role, round, stageIndex: taskStageIndex(plan, role, round), model, status: task.status, createdAt: task.createdAt ?? this.now() }] });
+    let result, stopObserving = () => {};
+    try {
+      const waiting = this.host.agents.wait(task.id, signal); stopObserving = this.watchTask(runId, task.id);
+      result = await waiting;
+      this.observeTaskView(runId, task.id, result);
+    } catch (error) {
+      try { this.observeTaskView(runId, task.id, await this.host.agents.cancel(task.id, 'Trading task wait stopped')); }
+      catch { /* Keep the original wait error; cancellation may already have completed. */ }
+      throw error;
+    } finally { stopObserving(); }
     const current = this.run(runId);
     this.update(runId, { tasks: current.tasks.map(value => value.id === task.id ? { ...value, status: result.status, conversationId: result.conversationId } : value),
       reports: [...current.reports, { taskId: task.id, role, round, model: result.model ?? model, status: result.status, createdAt: this.now(), text: String(result.result?.text ?? result.error ?? '').slice(0, 16000) }] });
@@ -145,6 +268,7 @@ export class TradingRuntime {
         try { await this.task(id, 'reporter', 0, signal); }
         catch (error) { this.update(id, { reportPending: true, reportError: cleanError(error) }); }
       }
+      this.activity(id, 'run.finished', { status: this.run(id).status, message: `本轮工作流结束：${this.run(id).status}。` });
       this.host.events?.emit('run.finished', { runId: id, planId: run.planId, status: this.run(id).status, reportPending: this.run(id).reportPending });
     }
   }
@@ -170,11 +294,20 @@ export class TradingRuntime {
     }
     const run = this.run(id), snapshot = run.snapshot;
     const page = rows => ({ items: (rows ?? []).slice(offset, offset + limit), total: (rows ?? []).length, nextOffset: offset + limit < (rows ?? []).length ? offset + limit : null });
-    return { runId: id, plan: run.plan, capturedAt: snapshot.capturedAt,
+    const result = { runId: id, plan: run.plan, capturedAt: snapshot.capturedAt,
       ...(['all', 'account'].includes(section) ? { account: snapshot.account, summary: snapshot.summary, positions: page(snapshot.positions), deployments: page(snapshot.deployments), coverage: snapshot.historyCoverage } : {}),
       ...(['all', 'history'].includes(section) ? { orders: page(snapshot.orders), fills: page(snapshot.fills), historicalOrders: page(snapshot.historicalOrders) } : {}),
       ...(['all', 'team'].includes(section) ? { reports: page(run.reports) } : {}),
       ...(['all', 'memory'].includes(section) ? { memory: run.memoryContext } : {}) };
+    if (host.scope.kind === 'subagent' && result.reports) {
+      this.authorize(host, id);
+      const current = host.agents.current();
+      const reads = result.reports.items.filter(report => report.taskId !== current.id && run.tasks.some(task => task.id === report.taskId)).map(report => ({
+        type: 'report.read', fromTaskId: report.taskId, toTaskId: current.id, taskId: current.id, role: current.input.role,
+        message: `${current.input.role} 已读取 ${report.role} 的公开报告。` }));
+      if (reads.length) this.save(this.run(id), reads);
+    }
+    return result;
   }
   decide(host, id, decision) {
     const run = this.authorize(host, id, ['manager']);
@@ -222,8 +355,11 @@ export class TradingRuntime {
   cancel(id, reason) {
     const run = this.run(id); if (TERMINAL.has(run.status)) return run;
     this.update(id, { status: 'cancelled', completedAt: this.now(), error: { code: 'CANCELLED', message: reason } });
-    for (const task of run.tasks) try { this.host.agents.cancel(task.id, reason); } catch { /* Already finished. */ }
-    const active = this.running.get(accountKey(run.plan)); if (active?.runId === id) active.controller.abort(new Error(reason)); return this.run(id);
+    for (const task of run.tasks) try { this.observeTaskView(id, task.id, this.host.agents.cancel(task.id, reason)); } catch { /* Already finished. */ }
+    const active = this.running.get(accountKey(run.plan));
+    if (active?.runId === id) active.controller.abort(new Error(reason));
+    else this.activity(id, 'run.finished', { status: 'cancelled', message: '本轮已取消。' });
+    return this.run(id);
   }
   async subscribe(plan) {
     await this.unsubscribe(plan.id);
@@ -260,6 +396,8 @@ export class TradingRuntime {
   async unsubscribe(id) { const sub = this.subscriptions.get(id); this.subscriptions.delete(id); if (sub) { await sub.stream?.close(); await this.host.providers.unbind(sub.bindingId); } }
   async dispose() {
     this.closed = true; clearInterval(this.timer);
+    for (const poll of this.taskPolls.values()) { poll.active = false; clearInterval(poll.timer); }
+    this.taskPolls.clear();
     for (const value of this.running.values()) {
       this.cancel(value.runId, 'Trading plugin stopped');
       // A terminal business run can still have a reporter in flight.
@@ -268,5 +406,7 @@ export class TradingRuntime {
     }
     await Promise.allSettled([...this.subscriptions.keys()].map(id => this.unsubscribe(id)));
     await Promise.allSettled([...this.running.values()].map(value => value.promise));
+    this.activityListeners.clear();
+    if (!this.observationScopeDestroyed) { this.observationScope.emitDestroy(); this.observationScopeDestroyed = true; }
   }
 }

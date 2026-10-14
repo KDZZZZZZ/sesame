@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><title>Agent 协作 · Sesame</title><style>__SESAME_ACTIVITY_CSS__</style></head>
+<body>
+<div class="workspace">
+ <header class="page-header"><div class="header-title"><h1>Agent 协作</h1><span id="mode-badge" class="mode-badge">实际运行</span><span id="run-state" class="run-state">等待记录</span><strong id="mock-label" class="mock-label" hidden>模型回复为 mock</strong></div><div class="connection"><span id="connection-dot" class="connection-dot" aria-hidden="true"></span><span id="connection-status" role="status">读取记录</span></div></header>
+ <main>
+  <section class="masthead" aria-labelledby="run-title"><h2 id="run-title">读取交易计划</h2><span id="run-context" class="run-context"></span></section>
+  <section class="model-section" aria-label="参与模型与角色"><div id="model-summary" class="model-summary"></div></section>
+  <section class="diagram-panel" aria-labelledby="diagram-title">
+   <header class="panel-header"><h2 id="diagram-title">协作流程</h2><span class="team-count"><strong id="active-count">0</strong> 进行中</span></header>
+   <div class="diagram-scroll" tabindex="0" aria-label="Agent 工作流，选择角色定位公开报告"><div id="diagram" class="diagram"><svg id="flow-lines" class="flow-lines" aria-hidden="true"></svg><svg id="message-lines" class="message-lines" aria-hidden="true"></svg><div id="role-stages" class="role-stages"></div></div></div>
+  </section>
+  <section class="feed-panel" aria-labelledby="reader-title">
+   <div class="feed-heading"><h2 id="reader-title">Agent 交流</h2></div>
+   <p id="history-coverage" class="history-coverage" role="status" hidden></p>
+   <article id="report-waiting" class="feed-waiting" tabindex="-1"><h3 id="waiting-title">等待公开报告</h3><p id="waiting-detail" hidden></p></article>
+   <div id="report-body" class="report-feed"></div>
+  </section>
+  <div id="data-error" class="data-error" role="alert" hidden></div>
+ </main>
+</div>
+<script id="activity-data" type="application/json">__SESAME_ACTIVITY_INITIAL__</script><script>__SESAME_ACTIVITY_SCRIPT__</script>
+</body></html>

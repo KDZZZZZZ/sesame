@@ -1,6 +1,6 @@
 ---
 name: manual-trading
-description: "Scheduled/event-driven trading Agents with per-role models, shared research, target portfolios, risk stops, evidence memory and daily reports; guarded one-off execution remains available."
+description: "Scheduled/event-driven trading Agents with per-role models, real collaboration visualization, shared research, target portfolios, risk stops, evidence memory and daily reports; guarded one-off execution remains available."
 ---
 
 Use the user's existing trading scope and risk requirements. Installation or research alone does not create a live plan. An authorized recurring plan continues without repeated permission questions.
@@ -12,5 +12,6 @@ Use the user's existing trading scope and risk requirements. Installation or res
 5. Executor calls only manual_trading_apply, without bypassing it through underlying broker tools. It stops risky EAs, checks remaining quantities and fresh quotes, then submits once. Targets over five minutes need reassessment; atomic observations expire after 60 seconds, source quotes after five seconds, and final quote-to-send after one second. Unknown/partial/pending outcomes require reconciliation rather than replacement IDs. Market fills can slip.
 6. Reporter calls manual_trading_report after the business run finishes. Research 手工交易日报/<plan>/ contains HTML, JSON and immutable evidence. Main Agent can recover pending archives. A target, accepted order, stop request or missing broker row is not proof of execution.
 7. Merged manual_judgment_* tools provide prospective probability judgments, frozen evidence, reflection and rule evolution. Keep old history until intentionally migrated. Never change verification criteria after the fact or count unexecuted targets as returns.
+8. Main Agent can open manual_trading_activity for an existing run. The localhost page continuously follows real tasks and successful report reads; public messages appear below the workflow for page scrolling. Preserve mock-response/truncation labels. Archive after every task finishes for a self-contained collaboration record alongside the daily report.
 
 For an authorized one-off trade, manual_trade_observe/execute/status/cancel remain main-conversation tools with existing guard/idempotency semantics. A cancel request cannot undo a fill; position reduction is separate. Controlled fixtures do not establish live latency or profitability.

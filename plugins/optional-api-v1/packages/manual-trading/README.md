@@ -1,6 +1,6 @@
 # Agent 手工交易
 
-`sesame/manual-trading` 2.1 要求 Sesame 0.2.2+。支持周期、事件和按需启动的交易 Agent，单 Agent 或 team 均输出目标仓位。原有 `manual_trade_*` 单次交易工具继续可用；安装本身不会创建计划或发送订单。
+`sesame/manual-trading` 2.2 要求 Sesame 0.2.2+。支持周期、事件和按需启动的交易 Agent，单 Agent 或 team 均输出目标仓位。原有 `manual_trade_*` 单次交易工具继续可用；安装本身不会创建计划或发送订单。
 
 ## 配置和触发
 
@@ -67,6 +67,16 @@ Agent 与用户读取同一份账户、全来源持仓、委托、成交历史�
 
 `manual_trading_runs` 支持列表、完整读取和取消；`manual_trading_context` 对账户明细、历史和团队报告分页。完整记录持久保存，案例检索另保留有界摘录及原运行 ID，不将截断数据说成完整账户。
 
+### 实时协作界面
+
+主会话调用 `manual_trading_activity(run_id, action:"open")`，返回本轮协作界面的本地 URL。界面使用真实计划阶段和宿主任务状态；上方展示模型、角色和调度流程，下方按时间展示公开发言、报告和读取记录，直接滚动整页阅读。彩色传递动画仅来自后续 Agent 成功读取前序报告；浅灰连线表示计划顺序。单 Agent、多轮辩论和各角色独立模型均使用实际配置。
+
+界面通过同源 SSE 持续更新，只显示实时工作流和公开交流；发言和完成报告沿整页展开，点击角色可定位其内容。没有暂停画面、时间轴或回放控件。公开内容与工具名称/状态来自宿主公开接口，不展示私有推理、工具参数或原始工具响应。
+
+`action:"read"` 返回同一份结构化快照；`action:"archive"` 在所有任务结束后保存同目录的 `.collaboration.html` 和 `.collaboration.json`，可离线阅读已结束的工作流和交流记录。已打开的运行结束时会自动保存协作记录。活动日志默认保留最近 2000 条事件并明确返回截断标记，序号不重置；原任务报告仍保留在运行记录中。
+
+查看器按需监听 `127.0.0.1` 的随机端口，每轮 URL 带随机访问令牌，仅主会话可创建；拒绝外部 Origin/Host 和写请求，停用插件后关闭。URL 在插件运行期间有效；若宿主消息不能打开 HTTP 本地链接，复制到浏览器即可。打开界面不启动 Agent 或发送订单。该 URL 可读取本轮公开交易报告，应与本地研究文件一样保管。
+
 每轮完成或失败后，在研究树创建 `手工交易日报/<计划名称-ID>/<时间-运行ID>.html` 和同名 `.json`。旧版共享树使用 `research/` 前缀，新版使用 research space。HTML 展示账户、目标、停止结果、实际回执、团队报告和复盘；JSON 保存完整快照，并冻结为 resource artifact。已有用户文件不覆盖，移动后按稳定文件 ID 定位。
 
 归档 Agent/模型不可用或应用中断时记录 `reportPending`，主 Agent 用 `manual_trading_report(run_id)` 补归档。日报是研究文件，不冒充 `report_publish` 的渲染验证回执。
@@ -76,3 +86,9 @@ Agent 与用户读取同一份账户、全来源持仓、委托、成交历史�
 计划/任务/案例存于插件私有 storage，研究证据存于 datasets，判断数据库/可读导出分别位于 `judgment-state/` 和主工作区 `manual-trading/judgment/`。计划不保存 API 密钥；研究插件仅保存环境变量名。
 
 验证使用虚构账户、来源响应和本地模型协议夹具，不向真实券商发送测试订单。未知发送必须查询原回执；无实盘盈利、零滑点或券商端 exactly-once 保证。
+
+另提供 `scripts/manual-trading-live-preview.mjs` 做本机集成验证：独立临时宿主 profile 安装生产插件，读取已经运行并连接的 MT5，仅本地模型接口返回 mock 回复；事件触发、原生 Agent、工具读取、报告传递、目标保存和日报归档全部实际执行。该入口关闭测试 profile 的交易及宿主操作，模型仅提交 `unchanged:true`。它不登录或启动终端；缺少真实连接即停止，不补造账户。运行结束会核验零下单/零挂载操作，默认保留进程供浏览器查看，`--once` 验证后清理 profile。真实账户数据只在临时 profile 中，勿提交到版本库。
+
+```sh
+node plugins/optional-api-v1/scripts/manual-trading-live-preview.mjs --host-root /path/to/mt5agent --terminal /path/to/terminal64.exe --python /path/to/python
+```
