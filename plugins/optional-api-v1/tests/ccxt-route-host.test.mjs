@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, cp, rm } from "node:fs/promises";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
 const hostRoot = process.env.SESAME_HOST_ROOT;
 test(
@@ -14,7 +15,7 @@ test(
       { Runtime } = await import(
         pathToFileURL(join(hostRoot, "modules/agent/runtime.js"))
       );
-    const directory = await mkdtemp("/tmp/sesame-ccxt-route-host-");
+    const directory = await mkdtemp(join(tmpdir(), "sesame-ccxt-route-host-"));
     let store, runtime;
     const requests = [];
     const open = async () => {
