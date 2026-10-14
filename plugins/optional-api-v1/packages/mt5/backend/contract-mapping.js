@@ -37,6 +37,8 @@ export function nativeId(input) {
   return String(input);
 }
 export const accountIdentity = (server, login) => `mt5-${hash([String(server), nativeId(login)]).slice(0, 24)}`;
+export const mt5ConnectionSignature = (server, login, endpoint = null) => hash([String(server), nativeId(login), endpoint ?? null]);
+export const mt5ConnectionRef = (server, login, endpoint = null) => ({ id: 'mt5-terminal', revision: `acct-${mt5ConnectionSignature(server, login, endpoint).slice(0, 24)}` });
 export const sourceIdentity = server => `mt5-${hash(String(server)).slice(0, 24)}`;
 export const instrumentIdentity = (sourceId, symbol) => ({ sourceId, instrumentId: String(symbol) });
 const scopedId = (kind, account, ticket) => `${kind}-${hash([account.connectionId, account.accountId, nativeId(ticket)]).slice(0, 32)}`;
