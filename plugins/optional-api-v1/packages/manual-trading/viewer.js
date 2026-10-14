@@ -9,10 +9,12 @@ import { TERMINAL, cleanError } from './plans.js';
 
 const assets = Object.fromEntries(['html', 'css', 'js'].map(extension => [extension,
   readFileSync(new URL(`./assets/collaboration.${extension}`, import.meta.url), 'utf8')]));
+const helpers = ['canvas', 'icons', 'markdown'].map(name =>
+  readFileSync(new URL(`./assets/collaboration-${name}.js`, import.meta.url), 'utf8')).join('\n');
 const safeJSON = value => JSON.stringify(value).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
 
 export function activityHTML(snapshot) {
-  const values = { CSS: assets.css, INITIAL: safeJSON(snapshot), SCRIPT: assets.js };
+  const values = { CSS: assets.css, INITIAL: safeJSON(snapshot), SCRIPT: `${helpers}\n${assets.js}` };
   return assets.html.replace(/__SESAME_ACTIVITY_(CSS|INITIAL|SCRIPT)__/g, (_match, key) => values[key]);
 }
 

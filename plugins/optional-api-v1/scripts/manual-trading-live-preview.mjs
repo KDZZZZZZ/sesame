@@ -20,6 +20,7 @@ const packageRoot = fileURLToPath(new URL('../packages/manual-trading/', import.
 const packagesRoot = fileURLToPath(new URL('../packages/', import.meta.url));
 const roles = ['market', 'fundamentals', 'news', 'sentiment', 'bull', 'bear', 'risk', 'manager', 'executor', 'reporter'];
 const analysts = roles.slice(0, 4);
+const previewModels = { market: 'gpt-5.4', fundamentals: 'claude-sonnet-4-5', news: 'grok-4', sentiment: 'gemini-2.5-pro', bull: 'deepseek-chat', bear: 'qwen3', risk: 'claude-sonnet-4-5', manager: 'gpt-5.4', executor: 'gpt-5.4', reporter: 'gemini-2.5-pro' };
 const labels = { market: '市场研究', fundamentals: '基本面研究', news: '新闻研究', sentiment: '情绪研究', bull: '多头研究', bear: '空头研究', risk: '风险审阅', manager: '经理', executor: '执行器', reporter: '归档员' };
 const marker = '【本地模拟模型响应；工具上下文与工作流真实】';
 const textOf = content => typeof content === 'string' ? content : (content ?? []).map(part => part.text ?? '').join('');
@@ -58,7 +59,7 @@ function peerReports(context, role) {
 }
 
 function researchText(role, context) {
-  const facts = `账户快照 ${new Date(context.capturedAt).toISOString()}；持仓 ${context.positions.total} 项，未决委托 ${context.orders.total} 项，成交历史 ${context.fills.total} 项；已读取 ${context.reports.total} 份前序报告。`;
+  const facts = `账户快照：${new Date(context.capturedAt).toISOString()}\n\n| 持仓 | 未决委托 | 成交历史 | 前序报告 |\n| ---: | ---: | ---: | ---: |\n| ${context.positions.total} | ${context.orders.total} | ${context.fills.total} | ${context.reports.total} |`;
   const peers = peerReports(context, role);
   const observation = {
     market: '本次预览只读取账户与历史，未请求行情/K线数据，不能据此判断趋势或波动。',
@@ -70,7 +71,7 @@ function researchText(role, context) {
     risk: '已核对真实账户条目及双方报告。本次预览只演示协作读取，不作资产风险评级，不请求停止挂载策略。',
     manager: '已审阅研究、正反观点和风险报告。本地模拟模型仅决定维持当前仓位，目标和策略暂停列表均为空。',
   }[role];
-  return `${marker}\n${labels[role]}\n${facts}\n${observation}${peers ? `\n实际收到的报告摘录：\n${peers}` : ''}`;
+  return `## ${labels[role]}\n\n${observation}\n\n${facts}${peers ? `\n\n### 已读取的报告\n\n${peers.split('\n').map(line => `- ${line}`).join('\n')}` : ''}\n\n> ${marker}`;
 }
 
 /** Stateless response selection from messages actually delivered by the host. */
@@ -88,13 +89,13 @@ export function modelReply(body) {
     const receipt = outputs.find(output => output.name === 'manual_trading_apply')?.value;
     if (!receipt) return call('manual_trading_apply');
     if (receipt.status !== 'unchanged' || receipt.orders?.length !== 0 || receipt.pauses?.length !== 0) fail('UNSAFE_PREVIEW_RECEIPT', 'Preview requires an unchanged execution receipt with zero orders and pauses.');
-    return { text: `${marker}\n真实 manual_trading_apply 回执：${receipt.status}；订单 ${receipt.orders.length}，策略暂停 ${receipt.pauses.length}。没有把目标当作成交或收益。` };
+    return { text: `## 执行核对\n\n真实 \`manual_trading_apply\` 回执：**${receipt.status}**。\n\n- 订单 ${receipt.orders.length}\n- 策略暂停 ${receipt.pauses.length}\n\n> ${marker}` };
   }
   if (input.role === 'reporter') {
     const receipt = outputs.find(output => output.name === 'manual_trading_report')?.value;
     if (!receipt) return call('manual_trading_report');
     if (receipt.state !== 'archived' || !receipt.path || !receipt.evidenceRef) fail('ARCHIVE_UNCONFIRMED', 'The real daily report has not been archived with its evidence resource.');
-    return { text: `${marker}\n真实归档状态：${receipt.state}；研究目录文件：${receipt.path}。` };
+    return { text: `## 日报归档\n\n真实归档状态：**${receipt.state}**\n\n研究目录文件：\n\n\`\`\`text\n${receipt.path}\n\`\`\`\n\n> ${marker}` };
   }
   const context = receivedContext(outputs, input.runId);
   if (!context || context.nextOffset !== null) return call('manual_trading_context', { section: 'all', offset: context?.nextOffset ?? 0, limit: 100 });
@@ -190,6 +191,11 @@ export async function launchPreview({ hostRoot, terminal, python, port = 0, dela
     return result.details;
   };
   try {
+    // Register actual per-role model selections in this disposable host. Every
+    // model uses the same loopback responder; the UI explicitly labels them mock.
+    app.runtime.modelRuntime.registerProvider('local-preview', { baseUrl: app.modelUrl, api: 'openai-completions', apiKey: 'fixture-key',
+      models: [...new Set(Object.values(previewModels))].map(id => ({ id, name: id, reasoning: false, input: ['text'], contextWindow: 100000, maxTokens: 4000, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } })) });
+    await app.runtime.modelRuntime.setRuntimeApiKey('local-preview', 'fixture-key');
     const actual = await attachExistingAccount(app, { terminal });
     const snapshot = await main('mt5_trading_context', { action: 'snapshot', history_days: 1 });
     assert.equal(snapshot.account.accountId, actual.accountId);
@@ -204,11 +210,13 @@ export async function launchPreview({ hostRoot, terminal, python, port = 0, dela
     if (installed.runtime_status !== 'ready') fail('PLUGIN_INSTALL_FAILED', 'The current manual-trading package is not ready in the real host.');
     app.runtime.plugins.activate('conv_main', installed.id);
     const configured = await main('manual_trading_models');
-    const descriptor = configured.models.find(value => value.provider === 'fixture' && value.id === 'fixture');
-    if (!descriptor?.configurationDigest) fail('MODEL_UNAVAILABLE', 'The local model endpoint was not registered by the real host.');
-    const model = { provider: descriptor.provider, id: descriptor.id, configurationDigest: descriptor.configurationDigest };
+    const agentModels = Object.fromEntries(roles.map(role => {
+      const descriptor = configured.models.find(value => value.provider === 'local-preview' && value.id === previewModels[role]);
+      if (!descriptor?.configurationDigest) fail('MODEL_UNAVAILABLE', 'The local model endpoint was not registered by the real host.');
+      return [role, { provider: descriptor.provider, id: descriptor.id, configurationDigest: descriptor.configurationDigest }];
+    }));
     const plan = await main('manual_trading_plan', { action: 'save', plan: {
-      title: '真实账户 · Team 协作查看器（模型响应模拟）', backend: 'mt5', model, agent_models: Object.fromEntries(roles.map(role => [role, model])),
+      title: '真实账户 · Team 协作查看器（模型响应模拟）', backend: 'mt5', model: agentModels.manager, agent_models: agentModels,
       mode: 'team', symbols: [], event_keys: ['local.preview.start'], account_events: false, debate_rounds: 1, task_timeout_seconds: 120, enabled: true,
       instructions: '本地查看器：只有模型文本与模型选择的工具调用由 loopback endpoint 模拟。账户、调度、原生 Agent loop、上下文、报告传递、决策保存、执行回执与归档全部真实。仅允许 unchanged:true、targets:[]、pause_strategies:[]。不下单、不停止策略，不编造行情/新闻/收益。',
     } });

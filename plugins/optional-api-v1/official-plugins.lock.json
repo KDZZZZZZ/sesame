@@ -2830,14 +2830,19 @@
     },
     {
       "id": "sesame/manual-trading",
-      "version": "2.2.1",
+      "version": "2.3.0",
       "directory": "manual-trading",
-      "treeDigest": "sha256:bda3b37f484c072ccc6ac7e15cb871f21ca05783c1c14a8b83b5752b5d615b2e",
+      "treeDigest": "sha256:f83d218d3680f104ae03e082c166afc0835ce81282970220b6a8882f10e6b68d",
       "files": [
         {
           "path": "LICENSE",
           "sha256": "2681aaf69ad3f8a595707e154e1e065a0077db9f1d25f8f5df73c02c5657477a",
           "bytes": 1063
+        },
+        {
+          "path": "MODEL-ICONS.md",
+          "sha256": "01a2d79a14388fb18918ee6df884afd255eddfb73d02543a78b96878f4243100",
+          "bytes": 2168
         },
         {
           "path": "PROVENANCE.md",
@@ -2846,8 +2851,8 @@
         },
         {
           "path": "README.md",
-          "sha256": "6bfb84f8c9d8a9813f6df5d1fbde718d5e2532d80ec047e30bce520febe8976b",
-          "bytes": 9949
+          "sha256": "54db17e96edae0ed2b0e67d12f3a322c6ac77750f72b1a9106f59028898fb6dc",
+          "bytes": 10399
         },
         {
           "path": "activity.js",
@@ -2865,19 +2870,34 @@
           "bytes": 10317
         },
         {
+          "path": "assets/collaboration-canvas.js",
+          "sha256": "88a2e7b4dd3c4e7298fb30eda04d7f70d36bba8d18b4024b273381b0531b18e9",
+          "bytes": 7678
+        },
+        {
+          "path": "assets/collaboration-icons.js",
+          "sha256": "b21c7f200a838a4694bb4cf1096048fb929a45351f9c2cf50f726b5a202d7051",
+          "bytes": 12404
+        },
+        {
+          "path": "assets/collaboration-markdown.js",
+          "sha256": "1db00cc40b42808b978a4e86466777deacd9f98b1dec47a1e12123fed276dca5",
+          "bytes": 12404
+        },
+        {
           "path": "assets/collaboration.css",
-          "sha256": "e96da20caafbd10e98925a470dad9fcc91f78cc9dd1f4c1854b1b0ee8661d3f4",
-          "bytes": 10348
+          "sha256": "a7efa835f5469d3dff6c82de0f8c0d0768d6c82760f8ab518e7b8b5711e47d25",
+          "bytes": 14292
         },
         {
           "path": "assets/collaboration.html",
-          "sha256": "5f6bf7909e238d5a88b0aade686cfe70ce72a07b1d365f40ccea1d43fd1a35a7",
-          "bytes": 2288
+          "sha256": "8987ec48b48a9a6965aa70be905fbeafbf003639b54a6e62abbf57c7f5c5bdb0",
+          "bytes": 2996
         },
         {
           "path": "assets/collaboration.js",
-          "sha256": "15a7a7ec6855e9445a0d5a62e5b5621fc113175d6eadd622336e1de46cdc2224",
-          "bytes": 24131
+          "sha256": "05ec69c81c01a791e1c80cb16a4a64e087d9ad9608f43db11a0c7bee7244aca6",
+          "bytes": 25084
         },
         {
           "path": "index.js",
@@ -2926,7 +2946,7 @@
         },
         {
           "path": "package.json",
-          "sha256": "fe70b648869ba173b4937826e15993237d532afd7cc86434778bbded6f7f666a",
+          "sha256": "af278f2473bc93343d7569e08f5c3804c3d817b774e0b98d58fe6084cadf836e",
           "bytes": 108
         },
         {
@@ -2936,8 +2956,8 @@
         },
         {
           "path": "plugin.json",
-          "sha256": "bdfc09a06cb866962b472ac35cd68504abb855652e06f8cb39e22d2e1815f8e0",
-          "bytes": 2235
+          "sha256": "f6be36ade931ca50e3a507304fa74b5ef96df13bc54d439c4a573eed99bfec36",
+          "bytes": 2257
         },
         {
           "path": "portfolio.js",
@@ -2991,8 +3011,8 @@
         },
         {
           "path": "viewer.js",
-          "sha256": "9ccc4bd1686073c19ea1b63c6cf58f6f1611725b833cd0f7283887e909b4df53",
-          "bytes": 8789
+          "sha256": "2ed15443d74ae278b66bae663d3c9c07eced6da09fcc790bd157825847b1e65c",
+          "bytes": 8965
         }
       ]
     },
