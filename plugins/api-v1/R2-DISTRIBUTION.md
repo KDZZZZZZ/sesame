@@ -1,11 +1,12 @@
 # Sesame plugin distribution
 
-Plugin-manager 2.3.0 reads
+This infrastructure prepares the R2 channel for plugin-manager 2.3.0 or newer at
 [`https://dl.sesame.bot/plugins/api-v1/catalog.json`](https://dl.sesame.bot/plugins/api-v1/catalog.json).
-The domain is served by the Sesame website Worker with the `sesame-releases`
-R2 binding. Package downloads no longer require GitHub; GitHub source URLs in
-the catalog are provenance links. The historical schema 1 catalog and archives
-remain unchanged for older clients.
+The client and first catalog must be separately published before migration is
+usable; continue using the historical GitHub catalog until then. The Sesame
+website Worker serves the domain with its `sesame-releases` R2 binding. Once
+published, packages download from R2 and GitHub source URLs supply provenance.
+The historical schema 1 catalog and archives remain unchanged for older clients.
 
 ## Publication
 
@@ -53,7 +54,8 @@ immutable cache policy on that path would hide new publications.
 
 ## Existing installations and future app bundles
 
-Sesame 0.2.2 already supports updates to its bundled plugin-manager. Follow the
+After the client and first catalog are published, Sesame 0.2.2 supports an explicit
+update to its bundled plugin-manager. Follow the
 [installation guide](https://sesame.bot/plugins/install.md): read the R2 catalog,
 download its pinned core archive, verify the archive SHA-256, and extract it to
 a fresh workspace draft. Inspect the installed manager, test the extracted

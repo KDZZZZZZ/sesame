@@ -1,9 +1,10 @@
 # Plugin catalog / API 1
 
-Plugin-manager 2.3.0 uses the [Sesame R2 directory](https://dl.sesame.bot/plugins/api-v1/catalog.json).
-Its publication and existing-client upgrade path are documented in
-[R2 distribution](R2-DISTRIBUTION.md). New packages appear there only after the
-R2 publication workflow succeeds.
+The [Sesame R2 directory](https://dl.sesame.bot/plugins/api-v1/catalog.json)
+requires a published plugin-manager 2.3.0 or newer and a successful first catalog
+publication. This infrastructure change alone supplies neither. Continue using
+the existing GitHub catalog until both are available. The planned publication
+and upgrade procedure is documented in [R2 distribution](R2-DISTRIBUTION.md).
 
 The historical schema 1 directory below remains unchanged for older managers:
 `https://raw.githubusercontent.com/KDZZZZZZ/sesame/main/plugins/api-v1/catalog.json`.

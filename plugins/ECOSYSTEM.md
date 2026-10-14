@@ -50,11 +50,12 @@ redistributing forks of another author's plugin.
 
 This repository now reserves new GitHub Releases for the desktop application.
 Historical plugin assets and pinned source remain available for old clients.
-New publications use dedicated Cloudflare R2 storage at `dl.sesame.bot` with a
-schema 2 catalog and plugin-manager 2.3.0. Existing Sesame 0.2.2 installations
-can update that manager explicitly through the existing package tools; future
-application bundles select the R2 core pin. The old schema 1 catalog retains its
-original repository and URL format for compatibility.
+The new infrastructure targets dedicated Cloudflare R2 storage at `dl.sesame.bot`
+with a schema 2 catalog and plugin-manager 2.3.0 or newer. Both must be separately
+published before existing Sesame 0.2.2 installations can migrate through their
+existing package tools. Future application bundles can select the published R2
+core pin. The old schema 1 catalog retains its original repository and URL format
+for compatibility; an infrastructure merge does not make the new channel usable.
 
 A source merge remains separate from publication. An explicit package selection,
 immutable source and hashes, completed review, and successful R2 upload precede

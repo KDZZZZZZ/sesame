@@ -77,7 +77,8 @@ assets to make a release pass.
 
 Older plugin managers and application locks require historical plugin URLs and
 fixed source commits. Keep those assets, tags and source identities available.
-Plugin-manager 2.3.0 uses the separate R2 catalog; new application builds can pin
-its published core archive without changing the assembler. See
+The R2-compatible plugin-manager 2.3.0 or newer and first catalog require separate
+publication. After that, new application builds can pin the published core archive
+without changing the assembler. See
 [R2 distribution and migration](plugins/api-v1/R2-DISTRIBUTION.md). A plugin
 publication does not replace existing application installer bytes.
