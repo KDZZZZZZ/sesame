@@ -74,7 +74,7 @@ export class TradingActivityViewer {
       this.byRun.set(runId, entry);
     }
     return { runId, mode: 'live', url: `${this.origin}/${entry.token}/`,
-      recordingUrl: `${this.origin}/${entry.token}/replay.html`,
+      archiveUrl: `${this.origin}/${entry.token}/archive.html`,
       localOnly: true, expires: 'plugin-runtime-lifetime' };
   }
 
@@ -88,7 +88,7 @@ export class TradingActivityViewer {
     const reject = status => { response.writeHead(status, { 'Cache-Control': 'no-store' }); response.end(); };
     if (this.closed || request.method !== 'GET') return reject(405);
     if (request.headers.host !== new URL(this.origin).host || request.headers.origin && request.headers.origin !== this.origin) return reject(403);
-    const match = /^\/([a-f0-9]{64})\/(|events|snapshot\.json|replay\.html)$/.exec(request.url);
+    const match = /^\/([a-f0-9]{64})\/(|events|snapshot\.json|archive\.html)$/.exec(request.url);
     const entry = match && this.entries.get(match[1]);
     if (!entry) return reject(404);
     const headers = {
@@ -112,7 +112,7 @@ export class TradingActivityViewer {
       });
       return;
     }
-    const snapshot = this.snapshot(entry, match[2] === 'replay.html' ? 'replay' : 'live');
+    const snapshot = this.snapshot(entry, match[2] === 'archive.html' ? 'archive' : 'live');
     if (match[2] === 'snapshot.json') {
       response.writeHead(200, { ...headers, 'Content-Type': 'application/json; charset=utf-8' });
       response.end(JSON.stringify(snapshot));
@@ -153,7 +153,7 @@ export class TradingActivityViewer {
       return { ...run.activityReport, path: file?.path ?? run.activityReport.path, state: file ? 'archived' : 'removed_by_user' };
     }
     const path = `${prefix}${reportPath(run).replace(/\.html$/, '.collaboration.html')}`;
-    const snapshot = activitySnapshot(run, { mode: 'replay' });
+    const snapshot = activitySnapshot(run, { mode: 'archive' });
     const html = activityHTML(snapshot), dataPath = path.replace(/\.html$/, '.json');
     let htmlEntry;
     for (const [target, content] of [[dataPath, JSON.stringify(snapshot, null, 2)], [path, html]]) {

@@ -81,9 +81,9 @@ export function publicOutput(message, maxText = 16000) {
   return { messageId: message.id, text, segments, finalSegmentId: message.final_segment_id ?? null, status: message.status, truncated };
 }
 
-/** A pure, serializable projection shared by the live viewer and immutable replay. */
+/** A pure, serializable projection shared by the live viewer and immutable archive. */
 export function activitySnapshot(run, { mode = 'live', feedUrl } = {}) {
-  if (!['live', 'replay'].includes(mode)) throw new Error('Activity mode must be live or replay');
+  if (!['live', 'archive'].includes(mode)) throw new Error('Activity mode must be live or archive');
   const plan = run.plan, activity = run.activity, mockModelResponses = run.mockModelResponses === true;
   return copy({ schemaVersion: 1, mode, ...(feedUrl === undefined ? {} : { feedUrl }),
     generatedAt: activity?.updatedAt ?? run.completedAt ?? run.startedAt ?? run.createdAt ?? null,

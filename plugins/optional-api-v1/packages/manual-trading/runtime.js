@@ -111,12 +111,42 @@ export class TradingRuntime {
       run.tasks.some(task => task.id === current.id && task.role === current.input.role) && (!roles || roles.includes(current.input.role)), 'FORBIDDEN', 'Tool requires its current registered trading-plan task');
     return run;
   }
+  async recoverTask(runId, task) {
+    const missing = error => ['not_found', 'NOT_FOUND'].includes(error?.code);
+    const observe = receipt => {
+      check(receipt?.id === task.id && typeof receipt.status === 'string', 'TASK_RECEIPT_INVALID', 'Host did not return the requested task receipt during restart recovery');
+      this.observeTaskView(runId, task.id, receipt); return receipt;
+    };
+    try {
+      let receipt;
+      if (typeof this.host.agents.inspect === 'function') {
+        try { receipt = observe(await this.host.agents.inspect(task.id)); }
+        catch (error) { if (missing(error)) throw error; /* A cancellation receipt can still establish the real state. */ }
+      }
+      if (!receipt || !TASK_TERMINAL.has(receipt.status)) receipt = observe(await this.host.agents.cancel(task.id, 'Trading runtime restarted; do not replay execution'));
+      const run = this.run(runId);
+      if (TASK_TERMINAL.has(receipt.status) && typeof receipt.result?.text === 'string' && !run.reports.some(report => report.taskId === task.id)) {
+        this.update(runId, { reports: [...run.reports, { taskId: task.id, role: task.role, round: task.round, model: receipt.model ?? task.model,
+          status: receipt.status, createdAt: receipt.completedAt ?? this.now(), text: receipt.result.text.slice(0, 16000) }] });
+      }
+    } catch (error) {
+      const run = this.run(runId), at = this.now();
+      this.update(runId, { tasks: run.tasks.map(value => value.id === task.id ? { ...value, observationError: cleanError(error),
+        ...(missing(error) ? { status: 'interrupted', completedAt: at, recovery: { kind: 'host_task_missing', at } } : {}) } : value) });
+    }
+  }
   async start() {
     check(this.host.agents && this.host.inference, 'PREREQUISITE_REQUIRED', 'Manual trading plans require Sesame 0.2.2 Agent/model ports');
-    for (const run of this.host.storage.list('runs')) if (!TERMINAL.has(run.status)) {
-      for (const task of run.tasks ?? []) try { this.observeTaskView(run.id, task.id, this.host.agents.cancel(task.id, 'Trading runtime restarted; do not replay execution')); } catch { /* Task may already be archived. */ }
-      this.update(run.id, { status: 'interrupted', completedAt: this.now(), reportPending: !run.report, error: { code: 'RESTART_INTERRUPTED', message: 'App restarted; inspect durable receipts before a new decision. This run is not replayed.' } });
-      this.activity(run.id, 'run.finished', { status: 'interrupted', message: '宿主重启，本轮已中断；未重放执行。' });
+    for (const run of this.host.storage.list('runs')) {
+      const unfinished = (run.tasks ?? []).filter(task => !TASK_TERMINAL.has(task.status));
+      if (TERMINAL.has(run.status) && !unfinished.length) continue;
+      // Business completion precedes the reporter. Recover both lifetimes without replaying either.
+      for (const task of unfinished) await this.recoverTask(run.id, task);
+      const current = this.run(run.id), recovered = this.update(run.id, { reportPending: !current.report,
+        ...(!TERMINAL.has(run.status) ? { status: 'interrupted', completedAt: this.now(), error: { code: 'RESTART_INTERRUPTED', message: 'App restarted; inspect durable receipts before a new decision. This run is not replayed.' } } : {}) });
+      if ((recovered.tasks ?? []).every(task => TASK_TERMINAL.has(task.status))) {
+        this.activity(run.id, 'run.finished', { status: recovered.status, message: '宿主重启，已核验或中断遗留任务；未重放执行。' });
+      }
     }
     for (const plan of this.plans().filter(value => value.enabled && value.accountEvents)) await this.subscribe(plan);
     if (this.timerEnabled) { this.timer = setInterval(() => { this.tick().catch(error => this.host.events?.emit('scheduler.failed', cleanError(error))); }, 1000); this.timer.unref?.(); }

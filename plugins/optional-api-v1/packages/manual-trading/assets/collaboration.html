@@ -2,46 +2,23 @@
 <html lang="zh-CN">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><title>Agent 协作 · Sesame</title><style>__SESAME_ACTIVITY_CSS__</style></head>
 <body>
-<aside class="app-rail" aria-label="协作视图导航">
- <div class="rail-brand" title="Sesame"><svg viewBox="0 0 28 28" aria-hidden="true"><path d="M4 8 13 4v8l-9 4zm11 5 9-4v8l-9 4zM4 19l9-4v8l-9 4z" fill="currentColor"/></svg></div>
- <nav class="rail-nav">
-  <button id="nav-graph" class="rail-button is-active" type="button" aria-label="查看协作图" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="6" height="6" rx="1.5"/><rect x="15" y="14" width="6" height="6" rx="1.5"/><path d="M6 10v7h9M9 7h9v7"/></svg><span>协作</span></button>
-  <button id="nav-reports" class="rail-button" type="button" aria-label="阅读公开报告" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7"/></svg><span>报告</span></button>
-  <button id="nav-events" class="rail-button" type="button" aria-label="查看通信事件" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H9l-5 4zM8 8h8M8 12h5"/></svg><span>消息</span></button>
-  <button id="nav-playback" class="rail-button" type="button" aria-label="操作时间回放" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="m10 8 6 4-6 4z"/></svg><span>回放</span></button>
- </nav><div class="rail-footer"><span class="rail-avatar" title="Sesame 协作">S</span></div>
-</aside>
 <div class="workspace">
- <header class="page-header"><div class="header-title"><h1 id="page-title">Agent 协作</h1><span id="mode-badge" class="mode-badge">实际运行</span><span id="run-state" class="run-state">等待记录</span></div><div class="connection"><span id="connection-dot" class="connection-dot" aria-hidden="true"></span><span id="connection-status" role="status">读取记录</span></div></header>
+ <header class="page-header"><div class="header-title"><h1>Agent 协作</h1><span id="mode-badge" class="mode-badge">实际运行</span><span id="run-state" class="run-state">等待记录</span><strong id="mock-label" class="mock-label" hidden>模型回复为 mock</strong></div><div class="connection"><span id="connection-dot" class="connection-dot" aria-hidden="true"></span><span id="connection-status" role="status">读取记录</span></div></header>
  <main>
-  <section class="masthead" aria-labelledby="run-title"><div><h2 id="run-title">读取交易计划</h2><p id="display-mode" class="display-mode">公开报告与任务记录</p></div><div class="run-summary"><span id="run-identity" class="run-identity"></span><span id="run-context" class="run-context">读取运行状态</span></div></section>
-  <div id="mock-banner" class="mock-banner" hidden><strong id="mock-label">模型回复为 mock</strong><span id="mock-description">仅模型回复使用 mock；这里展示实际任务状态与报告读取事件。</span></div>
+  <section class="masthead" aria-labelledby="run-title"><h2 id="run-title">读取交易计划</h2><span id="run-context" class="run-context"></span></section>
   <section class="model-section" aria-label="参与模型与角色"><div id="model-summary" class="model-summary"></div></section>
-  <div class="console-grid">
-   <section class="diagram-panel" aria-labelledby="diagram-title">
-    <header class="panel-header"><div><h2 id="diagram-title">协作流程</h2><span id="summary-count" class="summary-count">读取角色</span></div><div class="diagram-key"><span><i class="legend-message" aria-hidden="true"></i>报告传递</span><span class="team-count"><i class="legend-active" aria-hidden="true"></i><strong id="active-count">0</strong> 进行中</span></div></header>
-    <div class="diagram-scroll" tabindex="0" aria-label="Agent 协作流程图；窄屏可横向滚动"><div id="diagram" class="diagram"><svg id="flow-lines" class="flow-lines" aria-hidden="true"></svg><svg id="message-lines" class="message-lines" aria-hidden="true"></svg><div id="role-stages" class="role-stages"></div></div></div>
-    <div class="diagram-legend"><span><i class="legend-flow" aria-hidden="true"></i>浅灰连线仅表示流程</span><span>彩色脉冲对应已记录的报告读取</span><span class="legend-hint">选择角色查看报告 <span aria-hidden="true">↗</span></span></div>
-   </section>
-  </div>
-  <section class="playback-panel" aria-label="画面播放与时间回放">
-   <div class="playback-controls"><div class="transport"><button id="play-toggle" class="primary-button" type="button" aria-pressed="false"><span id="play-symbol" aria-hidden="true">Ⅱ</span><span id="play-label">暂停画面</span></button><button id="replay-button" type="button"><span aria-hidden="true">↺</span> 从头回放</button><button id="live-button" type="button"><span class="live-marker" aria-hidden="true"></span><span id="live-label">返回实时</span></button></div><div class="motion-controls"><label class="speed-control" for="speed">速度<select id="speed"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select></label><label class="motion-toggle"><input id="reduce-motion" type="checkbox">减少动画</label></div></div>
-   <div class="timeline-heading"><div><span id="timeline-mode" class="timeline-mode">实时画面</span><span id="cursor-time" class="cursor-time">—</span></div><p>暂停画面，不暂停交易计划</p></div>
-   <label class="timeline-label" for="timeline">回放时间</label><input id="timeline" class="timeline" type="range" min="0" max="1000" value="1000" step="1" aria-label="拖动时间线回看公开记录"><div class="timeline-endpoints"><span id="timeline-start">—</span><span id="timeline-end">—</span></div>
-   <div class="decision-strip"><div><span class="small-label">当前目标</span><p id="decision-summary">尚未保存目标仓位</p><p id="strategy-summary" hidden></p></div><div class="execution-note"><span class="small-label">执行核对</span><p id="execution-summary">尚无执行记录</p></div></div>
+  <section class="diagram-panel" aria-labelledby="diagram-title">
+   <header class="panel-header"><h2 id="diagram-title">协作流程</h2><span class="team-count"><strong id="active-count">0</strong> 进行中</span></header>
+   <div class="diagram-scroll" tabindex="0" aria-label="Agent 工作流，选择角色定位公开报告"><div id="diagram" class="diagram"><svg id="flow-lines" class="flow-lines" aria-hidden="true"></svg><svg id="message-lines" class="message-lines" aria-hidden="true"></svg><div id="role-stages" class="role-stages"></div></div></div>
   </section>
-  <section class="reader-panel feed-panel" aria-labelledby="reader-title">
-   <div class="feed-heading"><div><h2 id="reader-title">Agent 公开交流</h2><p>按实际提交时间阅读判断、分歧与报告传递。</p></div><span id="visible-event-count" class="record-count">00</span></div>
-   <div class="reader-tabs" role="tablist" aria-label="阅读内容"><button id="report-tab" type="button" role="tab" aria-selected="true" aria-controls="report-panel" tabindex="0">公开消息与报告</button><button id="event-tab" type="button" role="tab" aria-selected="false" aria-controls="event-panel" tabindex="-1">事件流水</button></div>
+  <section class="feed-panel" aria-labelledby="reader-title">
+   <div class="feed-heading"><h2 id="reader-title">Agent 交流</h2></div>
    <p id="history-coverage" class="history-coverage" role="status" hidden></p>
-   <section id="report-panel" class="reader-content" role="tabpanel" aria-labelledby="report-tab">
-    <article id="report-waiting" class="feed-waiting" tabindex="-1"><h3 id="waiting-title">等待 Agent 提交公开报告</h3><p id="waiting-detail">任务状态以实际运行记录为准。</p></article>
-    <div id="report-body" class="report-feed"></div><p id="report-empty" class="event-empty">当前时间点尚未产出公开报告。</p>
-   </section>
-   <section id="event-panel" class="reader-content" role="tabpanel" aria-labelledby="event-tab" hidden><ol id="event-list" class="event-list"></ol><p id="event-empty" class="event-empty">当前时间点还没有可见事件。</p></section>
+   <article id="report-waiting" class="feed-waiting" tabindex="-1"><h3 id="waiting-title">等待公开报告</h3><p id="waiting-detail" hidden></p></article>
+   <div id="report-body" class="report-feed"></div>
   </section>
   <div id="data-error" class="data-error" role="alert" hidden></div>
- </main><footer class="page-footer"><span>公开记录与事件回放</span><span>目标仓位与订单受理不代表成交</span></footer>
+ </main>
 </div>
 <script id="activity-data" type="application/json">__SESAME_ACTIVITY_INITIAL__</script><script>__SESAME_ACTIVITY_SCRIPT__</script>
 </body></html>

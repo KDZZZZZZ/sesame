@@ -64,7 +64,7 @@ test('viewer is lazy, owner-scoped, and cannot start or change trading', async t
   assert.match(opened.url, /^http:\/\/127\.0\.0\.1:\d+\/[a-f0-9]{64}\/$/);
   assert.equal((await f.viewer.open(f.main, 'run')).url, opened.url);
   const page = await http(opened.url), snapshot = await http(`${opened.url}snapshot.json`);
-  assert.equal(page.status, 200); assert.match(page.text, /Agent 公开交流/);
+  assert.equal(page.status, 200); assert.match(page.text, /id="report-body"/);
   assert.equal(page.headers['cache-control'], 'no-store'); assert.match(page.headers['content-security-policy'], /frame-ancestors 'none'/);
   assert.equal(JSON.parse(snapshot.text).run.status, 'queued');
   assert.equal(f.runtime.run('run').activity.events.length, 1);
@@ -108,7 +108,7 @@ test('embedded reports cannot escape JSON into executable HTML', t => {
   assert.equal((html.match(/__SESAME_ACTIVITY_SCRIPT__/g) ?? []).length, 1, 'Template-like text in a report stays literal');
 });
 
-test('recording requires finished tasks, saves real replay, and follows stable file IDs', async t => {
+test('archiving requires finished tasks, saves the actual record, and follows stable file IDs', async t => {
   const f = fixture(t);
   await assert.rejects(f.viewer.archive(f.main, 'run'), { code: 'RUN_NOT_FINISHED' });
   f.runtime.update('run', { status: 'completed', completedAt: f.advance(), tasks: [{ id: 'reporter', role: 'reporter', round: 0, status: 'running' }] });
@@ -119,7 +119,7 @@ test('recording requires finished tasks, saves real replay, and follows stable f
   assert.deepEqual(one, two); assert.equal(one.space, 'research');
   assert.match(one.path, /^手工交易日报\/test\/.+\.collaboration\.html$/);
   const data = JSON.parse(f.files.get(one.dataPath).content);
-  assert.equal(data.mode, 'replay'); assert.equal(data.feedUrl, undefined);
+  assert.equal(data.mode, 'archive'); assert.equal(data.feedUrl, undefined);
   assert.equal(data.events.at(-1).type, 'run.finished');
   const file = f.files.get(one.path); f.files.delete(one.path); file.path = 'renamed.html'; f.files.set(file.path, file);
   assert.equal((await f.viewer.archive(f.main, 'run')).path, 'renamed.html');

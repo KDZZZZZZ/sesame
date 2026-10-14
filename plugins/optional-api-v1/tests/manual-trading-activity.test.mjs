@@ -7,6 +7,7 @@ import { digest } from '@sesame/plugin-sdk/protocol';
 import { TradingRuntime } from '../packages/manual-trading/runtime.js';
 import { activitySnapshot, appendActivity } from '../packages/manual-trading/activity.js';
 import { stages } from '../packages/manual-trading/team.js';
+import { TradingActivityViewer } from '../packages/manual-trading/viewer.js';
 
 const T0 = Date.parse('2026-10-13T12:00:00Z');
 const clone = value => value === undefined ? undefined : structuredClone(value);
@@ -69,7 +70,8 @@ test('activity snapshots use the actual stages, retain role rounds, and require 
   assert.equal(actual.mockModelResponses, false); assert.equal(actual.run.title, run.plan.title); assert.equal(actual.tasks[0].provider, 'mock-looking-name');
   assert.deepEqual(actual.run.trigger, { kind: 'event', key: 'positions' }); assert.doesNotMatch(JSON.stringify(actual), /PRIVATE_/);
   assert.deepEqual(run, original); actual.events.length = 0; assert.ok(run.activity.events.length);
-  assert.throws(() => activitySnapshot(run, { mode: 'demo' }), /live or replay/);
+  assert.throws(() => activitySnapshot(run, { mode: 'demo' }), /live or archive/);
+  assert.throws(() => activitySnapshot(run, { mode: 'replay' }), /live or archive/);
   const old = { ...run }; delete old.activity;
   assert.equal(activitySnapshot(old).recorded, false); assert.deepEqual(activitySnapshot(old).events, []);
 });
@@ -183,7 +185,7 @@ test('the real single workflow emits decision, execution and archive evidence wi
   const executor = await next('executor'); await f.runtime.apply(f.child(executor.id), run.id); f.finish(executor.id);
   const reporter = await next('reporter'); await f.runtime.archive(f.child(reporter.id), run.id); f.finish(reporter.id);
   await flush(() => f.runtime.running.size === 0);
-  const observed = activitySnapshot(f.runtime.run(run.id), { mode: 'replay' }), types = observed.events.map(event => event.type);
+  const observed = activitySnapshot(f.runtime.run(run.id), { mode: 'archive' }), types = observed.events.map(event => event.type);
   for (const type of ['run.queued', 'run.started', 'task.queued', 'task.running', 'task.completed', 'report.ready', 'decision.saved', 'execution.progress', 'report.archived', 'run.finished']) assert.ok(types.includes(type), type);
   assert.equal(types.at(-1), 'run.finished'); assert.equal(observed.mockModelResponses, true);
   assert.deepEqual(observed.tasks.map(task => task.stageIndex), [0, 1, 2]); assert.equal(observed.tasks[2].round, 0);
@@ -241,6 +243,64 @@ test('wait failures preserve their error while recording a separately confirmed 
   assert.equal(f.runtime.run(run.id).activity.events.filter(event => event.type === 'task.cancelled').length, 1);
   assert.equal(f.runtime.run(run.id).activity.events.some(event => event.type === 'report.ready'), false);
   assert.equal(f.runtime.taskPolls.size, 0);
+});
+
+test('restart reconciles leftover reporter tasks without replaying a terminal business run', async t => {
+  for (const scenario of [
+    { name: 'completed with an archived daily report', status: 'completed', native: 'running', expected: 'canceled', report: true },
+    { name: 'failed before daily report creation and host task missing', status: 'failed', native: 'missing', expected: 'interrupted', report: false },
+    { name: 'completed reporter receipt was not persisted', status: 'completed', native: 'completed', expected: 'completed', report: false },
+  ]) await t.test(scenario.name, async child => {
+    const f = fixture(child), run = f.run(), receipt = { status: 'unchanged', targetReached: true, orders: [], pauses: [] };
+    const reporter = f.host.agents.submit({ model: f.plan.model, input: { role: 'reporter' } }); f.start(reporter.id);
+    const job = f.jobs.get(reporter.id); job.status = scenario.native === 'missing' ? 'running' : scenario.native;
+    if (scenario.native === 'completed') { job.completedAt = f.advance(); job.result = { text: '已完成的原生归档回复' }; }
+    const report = scenario.report ? { fileId: 'saved-daily', path: '手工交易日报/activity/saved.html', state: 'archived' } : undefined;
+    const error = scenario.status === 'failed' ? { code: 'ORIGINAL_FAILURE', message: 'Original business failure' } : undefined;
+    f.runtime.update(run.id, { status: scenario.status, completedAt: T0, execution: receipt, report, reportPending: true, error,
+      tasks: [{ id: 'saved-executor', role: 'executor', round: 1, model: f.plan.model, status: 'completed', completedAt: T0 },
+        { ...reporter, role: 'reporter', round: 0, status: scenario.native === 'missing' ? 'queued' : 'running' }] });
+    const original = f.runtime.run(run.id), inspected = [], canceled = [], nativeInspect = f.host.agents.inspect, nativeCancel = f.host.agents.cancel;
+    f.host.agents.inspect = id => { inspected.push(id); if (scenario.native === 'missing') throw Object.assign(new Error('Host task not found'), { code: 'not_found' }); return nativeInspect(id); };
+    f.host.agents.cancel = async (id, reason) => { canceled.push(id); return nativeCancel(id, reason); };
+    f.host.agents.submit = () => assert.fail('Restart must not submit another Agent or replay execution');
+    f.host.tools.call = async () => assert.fail('Restart must not call a trading backend');
+    const resumed = new TradingRuntime(f.host, { timer: false, now: () => T0 + 1000 }), viewer = new TradingActivityViewer(resumed);
+    child.after(async () => { await viewer.dispose(); await resumed.dispose(); });
+    await assert.rejects(viewer.archive(f.main, run.id), { code: 'RUN_NOT_FINISHED' });
+    await resumed.start();
+    const recovered = resumed.run(run.id), task = recovered.tasks.find(value => value.id === reporter.id);
+    assert.equal(recovered.status, scenario.status); assert.equal(recovered.completedAt, original.completedAt);
+    assert.deepEqual(recovered.execution, receipt); assert.deepEqual(recovered.report, report); assert.deepEqual(recovered.error, error);
+    assert.equal(recovered.reportPending, !scenario.report); assert.equal(task.status, scenario.expected);
+    assert.deepEqual(inspected, [reporter.id]); assert.deepEqual(canceled, scenario.native === 'running' ? [reporter.id] : []);
+    assert.equal(recovered.activity.events.filter(event => event.type === 'run.finished').length, 1);
+    if (scenario.native === 'missing') {
+      assert.equal(task.observationError.code, 'not_found'); assert.equal(task.recovery.kind, 'host_task_missing');
+      assert.equal(recovered.activity.events.some(event => event.type === 'task.completed' && event.taskId === reporter.id), false);
+    } else assert.equal(task.completedAt, f.jobs.get(reporter.id).completedAt);
+    if (scenario.native === 'completed') assert.equal(recovered.reports.find(value => value.taskId === reporter.id).text, '已完成的原生归档回复');
+    const archived = await viewer.archive(f.main, run.id), recording = JSON.parse(f.files.get(archived.dataPath).content);
+    assert.equal(archived.state, 'archived'); assert.equal(recording.tasks.find(value => value.id === reporter.id).status, scenario.expected);
+    assert.deepEqual(recording.run.execution, receipt); assert.equal(recording.events.at(-1).type, 'run.finished');
+    const stable = resumed.run(run.id); await resumed.start(); assert.deepEqual(resumed.run(run.id), stable, 'A later start preserves the recovered record and archive.');
+  });
+});
+
+test('restart does not make an unconfirmed live reporter archivable', async t => {
+  const f = fixture(t), run = f.run(), reporter = f.host.agents.submit({ model: f.plan.model, input: { role: 'reporter' } }); f.start(reporter.id);
+  f.runtime.update(run.id, { status: 'completed', completedAt: T0, tasks: [{ ...reporter, role: 'reporter', round: 0, status: 'running' }] });
+  const cancel = f.host.agents.cancel;
+  f.host.agents.cancel = async () => { throw Object.assign(new Error('Host cancellation unavailable'), { code: 'HOST_UNAVAILABLE' }); };
+  const resumed = new TradingRuntime(f.host, { timer: false }), viewer = new TradingActivityViewer(resumed);
+  t.after(async () => { await viewer.dispose(); await resumed.dispose(); });
+  try {
+    await resumed.start();
+    const recovered = resumed.run(run.id);
+    assert.equal(recovered.tasks[0].status, 'running'); assert.equal(recovered.tasks[0].observationError.code, 'HOST_UNAVAILABLE');
+    assert.equal(recovered.activity.events.some(event => event.type === 'run.finished'), false);
+    await assert.rejects(viewer.archive(f.main, run.id), { code: 'RUN_NOT_FINISHED' });
+  } finally { f.host.agents.cancel = cancel; }
 });
 
 test('a main event observes public streaming text through the actual service HostContext', { skip: !process.env.SESAME_HOST_ROOT, timeout: 45000 }, async () => {

@@ -3,7 +3,7 @@
   "apiVersion": "1",
   "version": "2.2.0",
   "title": "Agent 手动交易",
-  "description": "周期与事件驱动的 Agent 手工交易：逐角色模型、team 研究辩论、真实协作可视化与回放、目标仓位、全账户减仓平仓、风险停止挂载、证据复盘与研究日报。",
+  "description": "周期与事件驱动的 Agent 手工交易：逐角色模型、team 研究辩论、实时工作流与公开交流、目标仓位、全账户减仓平仓、风险停止挂载、证据复盘与研究日报。",
   "license": "MIT",
   "default_state": "discoverable",
   "entry": "index.js",
