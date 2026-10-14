@@ -3078,7 +3078,7 @@
       "id": "sesame/mt5",
       "version": "1.5.1",
       "directory": "mt5",
-      "treeDigest": "sha256:3c213af50ca873b4e9e19aa5b524222fcae5cc5a121a777562d54c477b7ca0ab",
+      "treeDigest": "sha256:1e71f72ae882e45cef1eb940275270172ddfc4d24bc51fb4c0e7424d4bde0ab0",
       "files": [
         {
           "path": "LICENSE",
@@ -3132,8 +3132,8 @@
         },
         {
           "path": "backend/contract-mapping.js",
-          "sha256": "68ee1995f9889a585bdfcf7cc4ba06e1434733465966216d451559399772a304",
-          "bytes": 21672
+          "sha256": "5942d0448766c6dcb53d111df48d19d5626fc323958948a15f4afb3cfe481dc9",
+          "bytes": 21981
         },
         {
           "path": "backend/contracts.js",
@@ -3257,8 +3257,8 @@
         },
         {
           "path": "backend/providers.js",
-          "sha256": "74b678391bda17c58bcc922768f1d63e153f323e33f522263013184760bb416f",
-          "bytes": 30431
+          "sha256": "a7d8b11bf9da3220358703f9d4b5691ea37ff29c113cd326bacd19d4aab72b4b",
+          "bytes": 30415
         },
         {
           "path": "backend/python-tools.js",
@@ -3272,8 +3272,8 @@
         },
         {
           "path": "backend/run-observer.js",
-          "sha256": "a302a1e2232909179110df73755a04e5c1dfd98bd739353bae7eab11b3fdddd4",
-          "bytes": 18490
+          "sha256": "db397eaba299030b7324b2e30806a03143559923147976d3a198a945d79b1819",
+          "bytes": 18507
         },
         {
           "path": "backend/sdk/Conformance.mqh",

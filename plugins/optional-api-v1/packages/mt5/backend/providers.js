@@ -1,5 +1,5 @@
 import { randomUUID, createHash } from 'node:crypto';
-import { accountIdentity, sourceIdentity, instrumentIdentity, mapInstrument, mapBar, mapAccountSummary, mapAccountSnapshot, mapPosition, mapOrder, mapFill, mapLedgerEntry, nativeTimeframe, sourceTime, timeKey, Revisions } from './contract-mapping.js';
+import { accountIdentity, mt5ConnectionRef, mt5ConnectionSignature, sourceIdentity, instrumentIdentity, mapInstrument, mapBar, mapAccountSummary, mapAccountSnapshot, mapPosition, mapOrder, mapFill, mapLedgerEntry, nativeTimeframe, sourceTime, timeKey, Revisions } from './contract-mapping.js';
 import { brokerISO, PERIODS } from './market.js';
 
 const error = (code, message) => { throw Object.assign(new Error(message), { code }); };
@@ -58,8 +58,7 @@ class NativeProvider {
   constructor(mt5) { this.mt5 = mt5; this.bindings = new Map(); this.pages = new SnapshotPages(); this.revisions = new Revisions(); this.reads = new Map(); this.readSequence = 0; this.closed = false; }
   connectionFor(input, config) {
     const server = config.account?.server, login = config.account?.login;
-    const stable = `acct-${fingerprint([server, String(login), config.servers?.terminal?.url ?? null]).slice(0, 24)}`;
-    const connection = { id: 'mt5-terminal', revision: stable };
+    const connection = mt5ConnectionRef(server, login, config.servers?.terminal?.url ?? null), stable = connection.revision;
     if (!input.connection) return connection;
     check(input.connection.id === connection.id, 'CONNECTION_CHANGED', 'The requested MT5 connection is not the current configured terminal');
     check(input.connection.revision === stable || String(input.connection.revision) === String(config.version), 'CONNECTION_CHANGED', 'The requested MT5 connection is not the current configured account');
@@ -68,7 +67,7 @@ class NativeProvider {
     return clone(input.connection);
   }
   connectionSignature(config) {
-    return fingerprint([config.account?.server, String(config.account?.login), config.servers?.terminal?.url ?? null]);
+    return mt5ConnectionSignature(config.account?.server, config.account?.login, config.servers?.terminal?.url ?? null);
   }
   bind(input, context) {
     const config = this.mt5.official.config, server = config.account?.server, login = config.account?.login;
