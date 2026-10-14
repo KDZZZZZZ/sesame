@@ -39,10 +39,12 @@ jobs:
           node trusted/.github/scripts/validate-api1-catalog.mjs candidate --published
       - name: Validate fixed release plans without publishing
         run: node trusted/.github/scripts/release-plugins.mjs --check candidate
+      - name: Validate R2 plans with the trusted fixed-source builder
+        run: node trusted/.github/scripts/plugin-r2.mjs --check candidate
       - name: Validate the application release plan without publishing
         run: node trusted/.github/scripts/release-application.mjs --check candidate
       - name: Test trusted validators, lock and archive code
-        run: node --test trusted/plugins/api-v1/tests/lock.test.mjs trusted/.github/scripts/release-plugins.test.mjs trusted/.github/scripts/release-application.test.mjs trusted/.github/scripts/semantic-review.test.mjs trusted/.github/scripts/api1-required-catalog.test.mjs trusted/.github/scripts/contribution-policy.test.mjs
+        run: node --test trusted/plugins/api-v1/tests/lock.test.mjs trusted/.github/scripts/release-plugins.test.mjs trusted/.github/scripts/release-application.test.mjs trusted/.github/scripts/semantic-review.test.mjs trusted/.github/scripts/api1-required-catalog.test.mjs trusted/.github/scripts/contribution-policy.test.mjs trusted/.github/scripts/plugin-r2.test.mjs trusted/.github/scripts/publish-plugin-r2.test.mjs
       - name: Record scope
         run: |
           echo '### API 1 package identity checks' >> "$GITHUB_STEP_SUMMARY"

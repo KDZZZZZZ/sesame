@@ -50,12 +50,13 @@ redistributing forks of another author's plugin.
 
 This repository now reserves new GitHub Releases for the desktop application.
 Historical plugin assets and pinned source remain available for old clients.
-Future plugin distribution can use independent author repositories or dedicated
-artifact storage, but needs explicit client/catalog support first. Old Sesame
-clients require the existing repository and URL format; simply changing those
-URLs would break compatibility.
+New publications use dedicated Cloudflare R2 storage at `dl.sesame.bot` with a
+schema 2 catalog and plugin-manager 2.3.0. Existing Sesame 0.2.2 installations
+can update that manager explicitly through the existing package tools; future
+application bundles select the R2 core pin. The old schema 1 catalog retains its
+original repository and URL format for compatibility.
 
-Until that migration is reviewed and shipped, new source can be contributed and
-tested locally, while the published catalog continues to identify compatible
-existing artifacts. Do not imply that a source merge is an installation release.
-See the [publication policy](api-v1/PUBLISHING.md).
+A source merge remains separate from publication. An explicit package selection,
+immutable source and hashes, completed review, and successful R2 upload precede
+catalog promotion. See the [publication policy](api-v1/PUBLISHING.md) and
+[R2 distribution](api-v1/R2-DISTRIBUTION.md).

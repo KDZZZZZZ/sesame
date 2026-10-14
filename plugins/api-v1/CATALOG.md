@@ -1,6 +1,11 @@
 # Plugin catalog / API 1
 
-The unified directory is
+Plugin-manager 2.3.0 uses the [Sesame R2 directory](https://dl.sesame.bot/plugins/api-v1/catalog.json).
+Its publication and existing-client upgrade path are documented in
+[R2 distribution](R2-DISTRIBUTION.md). New packages appear there only after the
+R2 publication workflow succeeds.
+
+The historical schema 1 directory below remains unchanged for older managers:
 `https://raw.githubusercontent.com/KDZZZZZZ/sesame/main/plugins/api-v1/catalog.json`.
 It lists 32 plugins: nine default and twenty-three optional, by exact publisher-qualified
 name. Host compatibility is checked against each package's `engines.sesame`
