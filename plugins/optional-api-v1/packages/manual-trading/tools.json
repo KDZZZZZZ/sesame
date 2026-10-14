@@ -384,6 +384,16 @@
               "additionalProperties": false,
               "description": "Each named Agent may select a different configured provider/model; omitted roles inherit model"
             },
+            "research_plugins": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100,
+                "description": "Installed ABU baseline plugin ID, e.g. sesame/abu-indicators; select only methods needed by this plan"
+              },
+              "maxItems": 18
+            },
             "mode": {
               "anyOf": [
                 {

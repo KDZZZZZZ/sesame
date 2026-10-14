@@ -1,0 +1,37 @@
+{
+  "id": "sesame/abu-seasonality",
+  "apiVersion": "1",
+  "version": "1.0.0",
+  "title": "日历效应基线",
+  "description": "按已结束历史时期统计星期效应并声明交易日历。这是可改进基线而非标准答案；输入显式来源和截止时点，输出可复核研究结果。 自动登记输入与结果数据集，用户可复核。",
+  "author": {
+    "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
+  },
+  "license": "GPL-3.0-only",
+  "default_state": "discoverable",
+  "agent_scope": "all",
+  "entry": "index.js",
+  "tool_definitions": "tools.json",
+  "tool_names": [
+    "abu_seasonality_analyze"
+  ],
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "resources": [
+    "LICENSE",
+    "PROVENANCE.md",
+    "README.md",
+    "examples/input.json",
+    "scripts/baseline.mjs",
+    "scripts/runtime.mjs",
+    "skills/abu-seasonality/references/method.md"
+  ],
+  "provides": {},
+  "engines": {
+    "sesame": ">=0.2.0-0"
+  }
+}

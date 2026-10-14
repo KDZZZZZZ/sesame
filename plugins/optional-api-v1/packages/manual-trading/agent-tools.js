@@ -10,6 +10,7 @@ export function createAgentTools(host) {
   const plan = Type.Object({
     id: Type.Optional(text('Existing plan ID for update; omit for a new plan', 80)), title: text('User-visible plan name', 80), backend: choice(['mt5', 'qmt']),
     model, agent_models: Type.Optional(Type.Object(Object.fromEntries(ROLES.map(role => [role, Type.Optional(model)])), { additionalProperties: false, description: 'Each named Agent may select a different configured provider/model; omitted roles inherit model' })),
+    research_plugins: Type.Optional(Type.Array(text('Installed ABU baseline plugin ID, e.g. sesame/abu-indicators; select only methods needed by this plan', 100), { maxItems: 18 })),
     mode: Type.Optional(choice(['single', 'team'])), symbols: Type.Optional(Type.Array(text('Exact broker symbol', 100), { maxItems: 30 })),
     interval_minutes: Type.Optional(Type.Integer({ minimum: 5, maximum: 43200 })), event_keys: Type.Optional(Type.Array(text('Event key configured by the user', 100), { maxItems: 20 })),
     account_events: Type.Optional(Type.Boolean({ description: 'Subscribe to available account position/order events; unsupported providers report unavailable' })), event_cooldown_seconds: Type.Optional(Type.Integer({ minimum: 5, maximum: 86400 })),

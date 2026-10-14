@@ -109,7 +109,7 @@ export class TradingRuntime {
     const executionPublicKey = role === 'executor' ? this.executionKeys.get(runId).publicKey.export({ type: 'spki', format: 'pem' }) : undefined;
     const task = this.host.agents.submit({ requestId: `${run.id}:${role}:${round}`, title: `${plan.title.slice(0, 50)} · ${role} ${round}`, kind: 'research',
       instructions: role === 'reporter' ? '只调用 manual_trading_report，为指定运行归档已有真实记录，不作交易、不改决策。' : `${SYSTEM}\n\n本角色：${ROLE_PROMPTS[role]}\n\n计划要求：${plan.instructions}`,
-      input: { tradingPlan: { id: plan.id, backend: plan.backend, account: plan.account, ownerConversationId: plan.ownerConversationId }, runId, role, round, trigger: run.trigger, ...(executionPublicKey ? { executionPublicKey } : {}) },
+      input: { tradingPlan: { id: plan.id, backend: plan.backend, account: plan.account, ownerConversationId: plan.ownerConversationId, researchPlugins: plan.researchPlugins ?? [] }, runId, role, round, trigger: run.trigger, ...(executionPublicKey ? { executionPublicKey } : {}) },
       tools: taskTools(plan, role, this.researchAvailable()), model, lane: `${digest(accountKey(plan)).slice(7, 39)}:${role}`, queue: 'fifo', timeoutMs: plan.taskTimeoutMs,
       maxTurns: role === 'executor' || role === 'reporter' ? 4 : 16, maxToolCalls: role === 'executor' ? 256 : 48 });
     this.update(runId, { tasks: [...this.run(runId).tasks, { id: task.id, role, round, model, status: task.status }] });

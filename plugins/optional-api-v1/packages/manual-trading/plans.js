@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { canonical, digest } from '@sesame/plugin-sdk/protocol';
 import { check } from './adapters.js';
+import { RESEARCH_BASELINES } from './research-baselines.js';
 
 export const ROLES = ['market', 'fundamentals', 'news', 'sentiment', 'bull', 'bear', 'risk', 'manager', 'executor', 'reporter'];
 export const ANALYSTS = ROLES.slice(0, 4);
@@ -42,9 +43,16 @@ export function makePlan(host, input, account, previous, now = Date.now()) {
   bounded(timeoutSeconds, 30, 1800, 'task_timeout_seconds'); bounded(slippageBps, 0, 500, 'slippage_bps');
   const symbols = input.symbols ?? [];
   check(Array.isArray(symbols) && symbols.length <= 30 && symbols.every(symbol => typeof symbol === 'string' && symbol.length > 0 && symbol.length <= 100), 'INVALID_ARGUMENT', 'Use at most 30 exact broker symbols');
+  const researchPlugins = input.research_plugins ?? previous?.researchPlugins ?? [];
+  check(Array.isArray(researchPlugins) && researchPlugins.length <= 18 && researchPlugins.every(id => Object.hasOwn(RESEARCH_BASELINES, id)), 'INVALID_ARGUMENT', 'Choose supported ABU research baseline plugin IDs');
+  for (const id of researchPlugins) {
+    let entry;
+    try { entry = host.plugins.inspect(id); } catch { /* Uninstalled is a prerequisite error. */ }
+    check(entry && entry.state !== 'disabled' && entry.runtime_status !== 'failed', 'PREREQUISITE_REQUIRED', `Install an available research plugin before selecting it: ${id}`);
+  }
   check(typeof (input.instructions ?? '') === 'string' && (input.instructions ?? '').length <= 6000, 'INVALID_ARGUMENT', 'Instructions exceed 6000 characters');
   const plan = { id, title: input.title.trim(), backend: input.backend, account: clone(account), mode, model, agentModels,
-    symbols: [...new Set(symbols)], intervalMinutes, eventKeys: [...new Set(eventKeys)], accountEvents: input.account_events ?? false,
+    symbols: [...new Set(symbols)], researchPlugins: [...new Set(researchPlugins)], intervalMinutes, eventKeys: [...new Set(eventKeys)], accountEvents: input.account_events ?? false,
     eventCooldownMs: cooldownSeconds * 1000, debateRounds, taskTimeoutMs: timeoutSeconds * 1000, slippageBps,
     instructions: input.instructions ?? '', enabled: input.enabled ?? true, ownerConversationId: host.scope.conversationId,
     reportFolder: `手工交易日报/${safeName(input.title)}-${id}`, revision: (previous?.revision ?? 0) + 1,

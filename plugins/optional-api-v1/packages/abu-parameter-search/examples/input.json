@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-01-10T00:00:00.000Z",
+  "source": { "id": "synthetic-parameter-search", "kind": "synthetic" },
+  "parameters": { "phase": "holdout", "objective_metric": "net_return", "direction": "maximize", "max_grid_points": 20 },
+  "grid": {
+    "lookback": [10, 20],
+    "threshold": [0.02, 0.04]
+  },
+  "frozen_selection": {
+    "selected_at": "2026-01-05T00:00:00.000Z",
+    "parameters": { "lookback": 20, "threshold": 0.04 },
+    "development_sha256": "sha256:402d9290430a080c5ed42681c35bc8b128644958cd255d196e51157871f69610",
+    "grid_sha256": "sha256:de00cca26a92be973a264ea5ba489a7eab3c882311dc68974b088783b0601866",
+    "objective_sha256": "sha256:a4933b40117837c30afe3b999c662a9404f12ba281172bf0b8598b67e3f686a3",
+    "parameter_hash": "sha256:8504c74a369ec825403087d59844a26a975b2c1290e1e323a6df75564d4b0dda",
+    "selection_sha256": "sha256:fc388e709f1053edf172aebb3ec99d5669d44709965e6c545e24da27edc864a2"
+  },
+  "trials": [
+    { "split": "development", "available_at": "2026-01-04T00:00:00.000Z", "parameters": { "lookback": 10, "threshold": 0.02 }, "metrics": { "net_return": 0.04, "max_drawdown": -0.03 } },
+    { "split": "development", "available_at": "2026-01-04T00:00:00.000Z", "parameters": { "lookback": 20, "threshold": 0.04 }, "metrics": { "net_return": 0.09, "max_drawdown": -0.05 } },
+    { "split": "holdout", "available_at": "2026-01-08T00:00:00.000Z", "parameters": { "lookback": 20, "threshold": 0.04 }, "metrics": { "net_return": 0.03, "max_drawdown": -0.02 } }
+  ]
+}
