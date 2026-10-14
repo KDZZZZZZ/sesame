@@ -2,7 +2,7 @@
   "id": "sesame/configuration",
   "title": "配置助手",
   "description": "主 Agent 读取和修改应用模型、提供方与偏好设置；模型认证使用宿主界面，后端配置由对应插件完成。",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "default_state": "discoverable",
   "agent_scope": "main",
   "tool_names": [
@@ -22,6 +22,6 @@
   "provides": {},
   "license": "MIT",
   "engines": {
-    "sesame": ">=0.2.0-0"
+    "sesame": ">=0.2.3-dev.5"
   }
 }

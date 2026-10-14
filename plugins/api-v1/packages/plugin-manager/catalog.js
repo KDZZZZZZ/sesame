@@ -2,13 +2,17 @@ import { createHash } from 'node:crypto';
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 
-export const CATALOG_URL = 'https://raw.githubusercontent.com/KDZZZZZZ/sesame/main/plugins/api-v1/catalog.json';
+export const CATALOG_URL = 'https://dl.sesame.bot/plugins/api-v1/catalog.json';
+const R2_ORIGIN = 'https://dl.sesame.bot';
 const REPOSITORY = 'https://github.com/KDZZZZZZ/sesame';
+const LEGACY_CATALOG_URL = 'https://raw.githubusercontent.com/KDZZZZZZ/sesame/main/plugins/api-v1/catalog.json';
 const hash = bytes => `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
 const check = (value, message, code = 'CATALOG_INVALID') => { if (!value) throw Object.assign(new Error(message), { code }); };
-const safe = path => typeof path === 'string' && path.length > 0 && path.length <= 512 && !/[\\:\x00-\x1f\x7f]/.test(path) && !path.startsWith('/') && path.split('/').every(part => part && part !== '.' && part !== '..' && !/[. ]$/.test(part) && !/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part));
+const validPathChars = path => ![...path].some(char => char === '\\' || char === ':' || char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127);
+const safe = path => typeof path === 'string' && path.length > 0 && path.length <= 512 && validPathChars(path) && !path.startsWith('/') && path.split('/').every(part => part && part !== '.' && part !== '..' && !/[. ]$/.test(part) && !/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part));
 const normalize = value => String(value).startsWith('sha256:') ? value : `sha256:${value}`;
 const hex = (value, length) => typeof value === 'string' && new RegExp(`^[a-f0-9]{${length}}$`).test(value);
+const pathUrl = path => path.split('/').map(encodeURIComponent).join('/');
 export const treeDigest = files => hash(JSON.stringify([...files].sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0).map(file => [file.path, normalize(file.sha256)])));
 
 async function bytes(fetcher, url, limit, signal) {
@@ -19,55 +23,103 @@ async function bytes(fetcher, url, limit, signal) {
   for await (const chunk of response.body) { signal?.throwIfAborted(); length += chunk.length; check(length <= limit, 'Catalog download exceeded its byte budget'); chunks.push(Buffer.from(chunk)); }
   return Buffer.concat(chunks);
 }
+
+function validateFiles(entry) {
+  const files = entry.package?.files;
+  check(Array.isArray(files) && files.length > 0 && files.length <= 1024, 'Missing package file index');
+  const paths = new Set(); let total = 0;
+  for (const file of files) {
+    check(file && safe(file.path) && hex(file.sha256, 64) && Number.isSafeInteger(file.bytes) && file.bytes >= 0 && file.bytes <= 2 * 1024 * 1024, 'Invalid package file');
+    const folded = file.path.normalize('NFD').toLowerCase(); check(!paths.has(folded), 'Package paths collide'); paths.add(folded); total += file.bytes;
+  }
+  check(total <= 16 * 1024 * 1024 && paths.has('plugin.json') && paths.has('license'), 'Package bytes or required identity/license files are invalid');
+  check(normalize(entry.package.treeDigest) === treeDigest(files), 'Catalog tree digest does not match its file index');
+  return files;
+}
+
+function validateLegacyRelease(release, releases) {
+  check(release && typeof release === 'object', 'Invalid release record');
+  if (release.profile !== undefined) check(['core', 'optional'].includes(release.profile) && release.engines?.sesame === '>=0.2.0-0', 'Invalid profiled release compatibility');
+  const optional = release.sourceRoot === 'plugins/optional-api-v1';
+  check(optional || release.sourceRoot === 'plugins/api-v1', 'Unexpected release source root');
+  check(new RegExp(`^plugins-${optional ? 'optional-' : ''}api-v1-dev\\.[1-9][0-9]*$`).test(release.tag) && !releases.has(release.tag) && hex(release.sourceCommit, 40) && hex(release.releaseCommit, 40), 'Release must have immutable source and publication commits');
+  const base = `${REPOSITORY}/releases/download/${release.tag}`, revision = release.tag.split('-').at(-1);
+  check(release.archive?.url === `${base}/sesame-${optional ? 'optional' : 'official'}-plugins-api-v1-${revision}.tar.gz` && hex(release.archive.sha256, 64) && release.lock?.url === `${base}/official-plugins.lock.json` && hex(release.lock.sha256, 64) && release.review?.url === `${base}/review.json` && hex(release.review.sha256, 64), 'Release asset URLs and digests must be fixed');
+  releases.set(release.tag, { ...release, transport: 'github' });
+}
+
+function validateR2Release(release, releases) {
+  check(release && typeof release === 'object', 'Invalid release record');
+  check(release.transport === 'r2' && ['core', 'optional'].includes(release.profile) && release.engines === undefined, 'Invalid R2 release transport or compatibility');
+  const sourceRoot = release.profile === 'core' ? 'plugins/api-v1' : 'plugins/optional-api-v1';
+  const match = new RegExp(`^r2-${release.profile}-api-v1-dev\\.([1-9][0-9]*)$`).exec(release.tag);
+  check(match && !releases.has(release.tag) && release.sourceRoot === sourceRoot && hex(release.sourceCommit, 40) && hex(release.releaseCommit, 40), 'R2 release must have immutable source and publication commits');
+  const releaseBase = `${R2_ORIGIN}/plugins/api-v1/releases/dev.${match[1]}`;
+  const packageBase = `${releaseBase}/${release.profile}`;
+  check(release.archive?.url === `${packageBase}/plugins.tar.gz` && hex(release.archive.sha256, 64), 'R2 archive URL and digest must be fixed');
+  check(release.lock?.url === `${packageBase}/official-plugins.lock.json` && hex(release.lock.sha256, 64), 'R2 lock URL and digest must be fixed');
+  check(release.review?.url === `${releaseBase}/review.json` && hex(release.review.sha256, 64), 'R2 review URL and digest must be fixed');
+  releases.set(release.tag, release);
+}
+
+function validateEntry(entry, releases, schemaVersion) {
+  check(entry && typeof entry === 'object', 'Invalid catalog entry');
+  check(/^sesame\/[a-z][a-z0-9-]*$/.test(entry.id), 'Catalog identity must be unique');
+  check(/^\d+\.\d+\.\d+$/.test(entry.version) && ['active', 'withdrawn'].includes(entry.status) && entry.apiVersion === '1' && ['sesame-native', 'agent-plugins'].includes(entry.format), 'Invalid catalog version, format or status');
+  const slug = entry.id.split('/')[1], release = releases.get(entry.release);
+  check(release && entry.source?.repository === REPOSITORY && entry.source.commit === release.sourceCommit && entry.source.path === `${release.sourceRoot}/packages/${slug}`, 'Source must pin an official package release commit');
+  if (schemaVersion === 1) {
+    if (release.profile) check(entry.distribution === release.profile && entry.engines?.sesame === release.engines?.sesame, 'Package compatibility differs from its released profile');
+    check(entry.package?.baseUrl === undefined, 'Legacy package entries must not declare R2 package URLs');
+  } else {
+    check(entry.distribution === release.profile && typeof entry.engines?.sesame === 'string' && entry.engines.sesame.length > 0, 'R2 package compatibility differs from its released profile');
+    check(entry.package?.baseUrl === `${R2_ORIGIN}/plugins/api-v1/packages/${normalize(entry.package.treeDigest).slice(7)}`, 'R2 package base URL must be content-addressed');
+  }
+  check(entry.review?.automated === 'package-static-review' && entry.review.human === 'not-recorded' && entry.review.record?.url === release.review.url && entry.review.record?.sha256 === release.review.sha256, 'Catalog must link its review record without claiming human approval');
+  validateFiles(entry);
+}
+
+function validateCatalog(catalog) {
+  check(catalog && typeof catalog === 'object' && [1, 2].includes(catalog.schemaVersion) && catalog.apiVersion === '1' && catalog.channel === 'development' && Array.isArray(catalog.plugins) && catalog.plugins.length <= 100, 'Expected the Plugin API 1 development catalog');
+  check(Array.isArray(catalog.releases) && catalog.releases.length > 0 && catalog.releases.length <= 100, 'Catalog requires fixed release identities');
+  const releases = new Map();
+  for (const release of catalog.releases) {
+    if (catalog.schemaVersion === 1) validateLegacyRelease(release, releases);
+    else validateR2Release(release, releases);
+  }
+  const ids = new Set();
+  for (const entry of catalog.plugins) {
+    validateEntry(entry, releases, catalog.schemaVersion);
+    check(!ids.has(entry.id), 'Catalog identity must be unique'); ids.add(entry.id);
+  }
+}
+
 export async function readCatalog(signal, fetcher = globalThis.fetch) {
   const deadline = AbortSignal.any([AbortSignal.timeout(30000), ...(signal ? [signal] : [])]);
   const raw = await bytes(fetcher, CATALOG_URL, 4 * 1024 * 1024, deadline);
   const catalog = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(raw));
-  check(catalog && typeof catalog === 'object' && catalog.schemaVersion === 1 && catalog.apiVersion === '1' && catalog.channel === 'development' && Array.isArray(catalog.plugins) && catalog.plugins.length <= 100, 'Expected the Plugin API 1 development catalog');
-  check(Array.isArray(catalog.releases) && catalog.releases.length > 0 && catalog.releases.length <= 100, 'Catalog requires fixed release identities');
-  const releases = new Map();
-  for (const release of catalog.releases) {
-    check(release && typeof release === 'object', 'Invalid release record');
-    if (release.profile !== undefined) check(['core', 'optional'].includes(release.profile) && release.engines?.sesame === '>=0.2.0-0', 'Invalid profiled release compatibility');
-    const optional = release.sourceRoot === 'plugins/optional-api-v1';
-    check(optional || release.sourceRoot === 'plugins/api-v1', 'Unexpected release source root');
-    check(new RegExp(`^plugins-${optional ? 'optional-' : ''}api-v1-dev\\.[1-9][0-9]*$`).test(release.tag) && !releases.has(release.tag) && hex(release.sourceCommit, 40) && hex(release.releaseCommit, 40), 'Release must have immutable source and publication commits');
-    const base = `${REPOSITORY}/releases/download/${release.tag}`, revision = release.tag.split('-').at(-1);
-    check(release.archive?.url === `${base}/sesame-${optional ? 'optional' : 'official'}-plugins-api-v1-${revision}.tar.gz` && hex(release.archive.sha256, 64) && release.lock?.url === `${base}/official-plugins.lock.json` && hex(release.lock.sha256, 64) && release.review?.url === `${base}/review.json` && hex(release.review.sha256, 64), 'Release asset URLs and digests must be fixed');
-    releases.set(release.tag, release);
-  }
-  const ids = new Set();
-  for (const entry of catalog.plugins) {
-    check(entry && typeof entry === 'object', 'Invalid catalog entry');
-    check(/^sesame\/[a-z][a-z0-9-]*$/.test(entry.id) && !ids.has(entry.id), 'Catalog identity must be unique'); ids.add(entry.id);
-    check(/^\d+\.\d+\.\d+$/.test(entry.version) && ['active', 'withdrawn'].includes(entry.status) && entry.apiVersion === '1' && ['sesame-native', 'agent-plugins'].includes(entry.format), 'Invalid catalog version, format or status');
-    const slug = entry.id.split('/')[1], release = releases.get(entry.release);
-    check(release && entry.source?.repository === REPOSITORY && entry.source.commit === release.sourceCommit && entry.source.path === `${release.sourceRoot}/packages/${slug}`, 'Source must pin an official package release commit');
-    if (release.profile) check(entry.distribution === release.profile && entry.engines?.sesame === release.engines.sesame, 'Package compatibility differs from its released profile');
-    check(entry.review?.automated === 'package-static-review' && entry.review.human === 'not-recorded' && entry.review.record?.url === release.review.url && entry.review.record?.sha256 === release.review.sha256, 'Catalog must link its review record without claiming human approval');
-    const files = entry.package?.files;
-    check(Array.isArray(files) && files.length > 0 && files.length <= 1024, 'Missing package file index');
-    const paths = new Set(); let total = 0;
-    for (const file of files) {
-      check(file && safe(file.path) && hex(file.sha256, 64) && Number.isSafeInteger(file.bytes) && file.bytes >= 0 && file.bytes <= 2 * 1024 * 1024, 'Invalid package file');
-      const folded = file.path.normalize('NFD').toLowerCase(); check(!paths.has(folded), 'Package paths collide'); paths.add(folded); total += file.bytes;
-    }
-    check(total <= 16 * 1024 * 1024 && paths.has('plugin.json') && paths.has('license'), 'Package bytes or required identity/license files are invalid');
-    check(normalize(entry.package.treeDigest) === treeDigest(files), 'Catalog tree digest does not match its file index');
-  }
+  validateCatalog(catalog);
   return { catalog, digest: hash(raw) };
 }
+
 export async function catalogQuery(args, signal, fetcher) {
   const { catalog, digest } = await readCatalog(signal, fetcher), query = (args.query ?? '').toLowerCase();
   const items = catalog.plugins.filter(entry => entry.status === 'active' && (!args.plugin_id || entry.id === args.plugin_id) && `${entry.id} ${entry.title} ${entry.description}`.toLowerCase().includes(query));
-  return { catalog_url: CATALOG_URL, catalog_digest: digest, apiVersion: '1', channel: 'development', releases: catalog.releases,
-    items: items.map(({ package: pkg, ...entry }) => ({ ...entry, package: { treeDigest: normalize(pkg.treeDigest), files: pkg.files.length, bytes: pkg.files.reduce((sum, file) => sum + file.bytes, 0) } })),
+  return { catalog_url: CATALOG_URL, legacy_catalog_url: LEGACY_CATALOG_URL, catalog_digest: digest, schemaVersion: catalog.schemaVersion, apiVersion: '1', channel: 'development', releases: catalog.releases,
+    items: items.map(({ package: pkg, ...entry }) => ({ ...entry, package: { treeDigest: normalize(pkg.treeDigest), files: pkg.files.length, bytes: pkg.files.reduce((sum, file) => sum + file.bytes, 0), ...(pkg.baseUrl ? { baseUrl: pkg.baseUrl } : {}) } })),
     next: 'Use exact plugin_id and catalog_digest with plugin_install_catalog. For a newer catalog version, inspect the installed digest and explicitly choose action:update with expected_digest. Keep a newer installed version or use explicit rollback for an older version. The host enforces update versions and permissions. Identical bytes return already-installed; disabled plugins stay disabled. This API 1 development catalog is separate from stable 0.1.4.' };
 }
+
 function installed(host, id) {
   try { return host.plugins.inspect(id); }
   catch (error) { if (error.status === 404 || error.code === 'plugin_not_found') return null; throw error; }
 }
+
+function packageUrl(entry, file, schemaVersion) {
+  if (schemaVersion === 1) return `https://raw.githubusercontent.com/KDZZZZZZ/sesame/${entry.source.commit}/${entry.source.path}/${pathUrl(file.path)}`;
+  return `${entry.package.baseUrl}/${pathUrl(file.path)}`;
+}
+
 export async function installCatalog(host, args, signal, fetcher = globalThis.fetch) {
   check(host.scope.kind === 'main', 'Catalog installation requires the main Agent', 'FORBIDDEN');
   const action = args.action ?? 'install';
@@ -96,8 +148,7 @@ export async function installCatalog(host, args, signal, fetcher = globalThis.fe
     const worker = async () => {
       while (cursor < entry.package.files.length) {
         const file = entry.package.files[cursor++];
-        const url = `https://raw.githubusercontent.com/KDZZZZZZ/sesame/${entry.source.commit}/${entry.source.path}/${file.path.split('/').map(encodeURIComponent).join('/')}`;
-        const content = await bytes(fetcher, url, file.bytes, deadline);
+        const content = await bytes(fetcher, packageUrl(entry, file, catalog.schemaVersion), file.bytes, deadline);
         check(content.length === file.bytes && hash(content) === normalize(file.sha256), `Downloaded file differs: ${file.path}`, 'PACKAGE_INTEGRITY');
         const path = join(directory, file.path); await mkdir(dirname(path), { recursive: true }); await writeFile(path, content, { flag: 'wx' });
       }

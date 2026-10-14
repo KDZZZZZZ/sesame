@@ -1,5 +1,5 @@
 import { promises as fs } from 'node:fs';
-import { join, posix } from 'node:path';
+import { isAbsolute, join, posix, relative as pathRelative, sep } from 'node:path';
 import { digest, requireValue } from './support.js';
 
 export async function fileManifest(directory, prefix = '', result = {}) {
@@ -31,8 +31,8 @@ export async function stageFrozenBuild(source, manifest_sha256, staging, signal)
     const sourceFile = join(source, name), targetFile = join(staging, name);
     const stat = await fs.lstat(sourceFile);
     requireValue(stat.isFile() && stat.size === expected.bytes && stat.size <= 256 * 1024 * 1024, '冻结构建输入无效');
-    const real = await fs.realpath(sourceFile), relative = posix.relative(realSource, real);
-    requireValue(relative && !relative.startsWith('../') && !posix.isAbsolute(relative), '构建输入越过目录边界');
+    const real = await fs.realpath(sourceFile), relative = pathRelative(realSource, real);
+    requireValue(relative && relative !== '..' && !relative.startsWith(`..${sep}`) && !isAbsolute(relative), '构建输入越过目录边界');
     total += stat.size;
     requireValue(total <= 512 * 1024 * 1024, '冻结构建超过 512 MiB');
     await fs.mkdir(join(targetFile, '..'), { recursive: true });

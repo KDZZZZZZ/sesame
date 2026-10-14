@@ -8,15 +8,25 @@ import { runInNewContext } from 'node:vm';
 import { createTools as reportTools } from '../packages/reports/index.js';
 
 const root = fileURLToPath(new URL('../packages/', import.meta.url));
+function pythonCommand() {
+  const candidates = process.env.PYTHON ? [[process.env.PYTHON, []]] : process.platform === 'win32' ? [['python3', []], ['python', []], ['py', ['-3']]] : [['python3', []], ['python', []]];
+  for (const [program, prefix] of candidates) {
+    const result = spawnSync(program, [...prefix, '--version'], { encoding: 'utf8', windowsHide: true, env: { PATH: process.env.PATH } });
+    if (result.status === 0) return { program, prefix };
+  }
+  return null;
+}
 
-test('standard MCP servers return their declared schemas and ten exact sample results', () => {
+test('standard MCP servers return their declared schemas and ten exact sample results', t => {
+  const python = pythonCommand();
+  if (!python) return t.skip('Python 3 is not available on PATH');
   let samples = 0;
   for (const name of ['web-extract', 'rss-collect', 'market-data-parser', 'quantskills-catalog']) {
     const directory = fileURLToPath(new URL(`../../optional-api-v1/packages/${name}/`, import.meta.url)), manifest = JSON.parse(readFileSync(join(directory, 'plugin.json'))), extension = manifest.extensions['bot.sesame'];
     assert.equal(extension.id, `sesame/${name}`); assert.equal(extension.apiVersion, '1'); assert.equal(manifest.version, JSON.parse(readFileSync(join(directory, 'package.json'))).version);
     const operations = [{ method: 'initialize', params: {} }, { method: 'tools/list' }, ...extension.tests.map(sample => ({ method: 'tools/call', params: { name: sample.tool, arguments: sample.arguments } }))];
     if (name !== 'quantskills-catalog') operations.push({ method: 'tools/call', params: { name: extension.tests[0].tool, arguments: { file_path: '../../package.json' } } });
-    const run = spawnSync('python3', ['-I', join(directory, 'server.py')], { cwd: directory, encoding: 'utf8', env: { PATH: process.env.PATH, LANG: 'en_US.UTF-8' }, timeout: 10000, maxBuffer: 1024 * 1024, input: operations.map((operation, index) => JSON.stringify({ jsonrpc: '2.0', id: index + 1, ...operation })).join('\n') + '\n' });
+    const run = spawnSync(python.program, [...python.prefix, '-X', 'utf8', '-B', '-I', join(directory, 'server.py')], { cwd: directory, encoding: 'utf8', env: { PATH: process.env.PATH, LANG: 'en_US.UTF-8', PYTHONUTF8: '1', PYTHONDONTWRITEBYTECODE: '1' }, timeout: 10000, maxBuffer: 1024 * 1024, input: operations.map((operation, index) => JSON.stringify({ jsonrpc: '2.0', id: index + 1, ...operation })).join('\n') + '\n' });
     assert.equal(run.status, 0, run.stderr); const responses = run.stdout.trim().split('\n').map(line => JSON.parse(line).result);
     assert.equal(responses[0].serverInfo.version, manifest.version);
     assert.deepEqual(responses[1].tools, JSON.parse(readFileSync(join(directory, 'tools.json'))).analysis);

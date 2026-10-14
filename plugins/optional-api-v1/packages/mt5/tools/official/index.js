@@ -5,15 +5,15 @@ export function createTools(host, mt5) {
   const conversationId = host.scope.conversationId;
   const box = host.workspace;
   const official = mt5.official;
-  const server = Type.Union(['terminal', 'metaeditor', 'marketdata', 'python', 'launcher'].map(Type.Literal));
+  const server = Type.Union(['terminal', 'metaeditor', 'marketdata', 'python', 'launcher', 'tester'].map(Type.Literal));
   return [
-    define('mt5_catalog', '读取 MT5 官方能力的当前目录、inputSchema、工作区权限及不可用原因。先发现后调用；query 可过滤方法名。Python 仅提供官方 API，不能执行任意代码。', {
-      server: Type.Optional(server), query: optional('过滤方法名或说明'),
+    define('mt5_catalog', '读取 MT5 官方能力的当前目录、inputSchema、工作区权限及不可用原因。先发现后调用；query 可过滤方法名。server:"tester" 是 terminal Tester 方法的发现别名，实际调用仍使用目录返回的 server。Python 仅提供官方 API，不能执行任意代码。', {
+      server: Type.Optional(server), query: optional('过滤方法名或说明；server="tester" 且省略 query 时自动过滤 Tester 方法'),
     }, (args, signal) => official.catalog(args.server, args.query, signal, conversationId)),
     officialTool(host, mt5, 'official'),
-    define('mt5_cache', '管理与交易面板共用的本地 MT5 行情库。bars/trades 只读本地；sync/sync_trades 从当前已验证账户下载并去重保存；时间是券商墙上时间的秒值，不代表 UTC。大结果使用 save_as。remove 只清理指定品种周期的行情。', {
+    define('mt5_cache', '管理与交易面板共用的本地 MT5 行情库。bars/trades 只读本地；sync/sync_trades 从当前已验证账户下载并去重保存；from/to 是券商服务器墙钟的 Unix 秒范围，左闭右开，不代表 UTC；bars/trades 返回的 time 字段同口径。大结果使用 save_as。remove 只清理指定品种周期的行情。', {
       action: Type.Union(['symbols', 'inventory', 'bars', 'sync', 'trades', 'sync_trades', 'remove'].map(Type.Literal)),
-      symbol: optional('精确品种'), period: optional('MT5 周期，如 H1'), from: Type.Optional(Type.Integer()), to: Type.Optional(Type.Integer()), limit: Type.Optional(Type.Integer({ minimum: 1, maximum: 20000 })), save_as: optional('完整 JSON 的工作区路径'),
+      symbol: optional('精确品种'), period: optional('MT5 周期，如 H1'), from: Type.Optional(Type.Integer({ description: '券商服务器墙钟 Unix 秒，范围起点，包含' })), to: Type.Optional(Type.Integer({ description: '券商服务器墙钟 Unix 秒，范围终点，排除' })), limit: Type.Optional(Type.Integer({ minimum: 1, maximum: 20000 })), save_as: optional('完整 JSON 的工作区路径'),
     }, async ({ action, save_as, ...args }, signal) => {
       const market = mt5.market;
       const result = await (action === 'symbols' ? market.symbols() : action === 'inventory' ? market.inventory() : action === 'sync_trades' ? market.syncTrades(args) : market[action](args));

@@ -18,12 +18,28 @@ function directory({ official = false, format = 'sesame-native' } = {}) {
     package: { files: index, treeDigest: treeDigest(index) }, review: { automated: 'package-static-review', human: 'not-recorded', record: release.review } };
   return { files, entry, catalog: { schemaVersion: 1, apiVersion: '1', channel: 'development', releases: [release], plugins: [entry] } };
 }
+function r2Directory({ profile = 'optional', format = 'sesame-native' } = {}) {
+  const f = directory({ official: profile === 'core', format }), release = f.catalog.releases[0], revision = '17';
+  release.tag = `r2-${profile}-api-v1-dev.${revision}`; release.profile = profile; release.transport = 'r2'; delete release.engines;
+  release.sourceRoot = profile === 'core' ? 'plugins/api-v1' : 'plugins/optional-api-v1';
+  const base = `https://dl.sesame.bot/plugins/api-v1/releases/dev.${revision}`;
+  release.archive = { url: `${base}/${profile}/plugins.tar.gz`, sha256: 'c'.repeat(64) };
+  release.lock = { url: `${base}/${profile}/official-plugins.lock.json`, sha256: 'd'.repeat(64) };
+  release.review = { url: `${base}/review.json`, sha256: 'e'.repeat(64) };
+  f.entry.release = release.tag; f.entry.distribution = profile; f.entry.engines = { sesame: '>=0.2.2' };
+  f.entry.source.path = `${release.sourceRoot}/packages/example`;
+  f.entry.package.baseUrl = `https://dl.sesame.bot/plugins/api-v1/packages/${f.entry.package.treeDigest.slice(7)}`;
+  f.entry.review.record = release.review;
+  f.catalog.schemaVersion = 2;
+  return f;
+}
 function download(f, corrupt = false) {
   const requests = [];
   return { requests, fetcher: async (url, options) => {
     requests.push(url); assert.equal(options.redirect, 'error'); options.signal.throwIfAborted();
     if (url === CATALOG_URL) return new Response(JSON.stringify(f.catalog));
-    assert.ok(url.startsWith(`https://raw.githubusercontent.com/KDZZZZZZ/sesame/${f.entry.source.commit}/${f.entry.source.path}/`));
+    if (f.catalog.schemaVersion === 2) assert.ok(url.startsWith(`${f.entry.package.baseUrl}/`), 'R2 package files must use the content-addressed package base URL');
+    else assert.ok(url.startsWith(`https://raw.githubusercontent.com/KDZZZZZZ/sesame/${f.entry.source.commit}/${f.entry.source.path}/`));
     const file = decodeURIComponent(url.split('/').at(-1)); return new Response(corrupt ? 'changed' : f.files[file]);
   } };
 }
@@ -62,6 +78,38 @@ test('query accepts official native and MCP identities with fixed publication/re
     assert.equal(queried.catalog_digest, hash(JSON.stringify(f.catalog))); assert.equal(queried.items[0].review.human, 'not-recorded'); assert.equal(queried.items[0].format, format); assert.equal(queried.items[0].package.files, 2); assert.equal(net.requests.length, 1);
     f.entry.status = 'withdrawn'; assert.deepEqual((await catalogQuery({}, undefined, net.fetcher)).items, []);
   }
+});
+
+test('R2 catalog query/install/update uses dl.sesame.bot package URLs only', async t => {
+  const f = r2Directory({ profile: 'optional' }), net = download(f), queried = await catalogQuery({ plugin_id: f.entry.id }, undefined, net.fetcher);
+  assert.equal(queried.catalog_url, CATALOG_URL);
+  assert.equal(queried.schemaVersion, 2);
+  assert.equal(queried.items[0].package.baseUrl, f.entry.package.baseUrl);
+  const installFixture = await hostFixture(t, f);
+  assert.equal((await installCatalog(installFixture.host, argsFor(f), undefined, net.fetcher)).status, 'installed');
+  assert.ok(net.requests.every(url => !url.startsWith('https://raw.githubusercontent.com/')));
+  const updateFixture = await hostFixture(t, f, { current: previous() });
+  const update = await installCatalog(updateFixture.host, argsFor(f, { action: 'update', command_id: 'r2-update-fixture-1', expected_digest: updateFixture.current.digest }), undefined, download(f).fetcher);
+  assert.equal(update.status, 'updated');
+});
+
+test('R2 catalogs reject mixed legacy assets, arbitrary hosts and release compatibility shims', async () => {
+  const changes = [
+    f => { f.catalog.releases[0].archive.url = 'https://github.com/KDZZZZZZ/sesame/releases/download/r2-optional-api-v1-dev.17/plugins.tar.gz'; },
+    f => { f.catalog.releases[0].engines = { sesame: '>=0.2.2' }; },
+    f => { f.entry.package.baseUrl = 'https://example.com/plugins/api-v1/packages/' + f.entry.package.treeDigest.slice(7); },
+    f => { f.entry.package.baseUrl = `https://dl.sesame.bot/plugins/api-v1/packages/${'f'.repeat(64)}`; },
+    f => { f.entry.engines = undefined; },
+    f => { f.entry.source.path = 'plugins/api-v1/packages/example'; },
+  ];
+  for (const change of changes) { const f = r2Directory(); change(f); await assert.rejects(catalogQuery({}, undefined, download(f).fetcher), { code: 'CATALOG_INVALID' }); }
+});
+
+test('R2 modified package bytes clean partial downloads before host tests', async t => {
+  const f = r2Directory(), fixture = await hostFixture(t, f);
+  await assert.rejects(installCatalog(fixture.host, argsFor(f), undefined, download(f, true).fetcher), /byte budget|differs/);
+  assert.deepEqual(fixture.calls, []);
+  assert.deepEqual(await readdir(join(fixture.root, 'plugin-drafts')), []);
 });
 
 test('install verifies bytes then formally tests/installs/loads; concurrent same-command retries mutate once', async t => {

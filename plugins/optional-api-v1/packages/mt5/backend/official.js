@@ -1,6 +1,5 @@
 import { promises as fs } from 'node:fs';
 import { join } from 'node:path';
-import { Value } from '@sesame/plugin-sdk/schema/value';
 import { isIP } from 'node:net';
 import { ApiError, digest, now, id as entityId, requireValue, securePath } from './support.js';
 import { stableJSON } from './contracts.js';
@@ -11,6 +10,7 @@ import { proxySettings } from './connection.js';
 import { nativeConnectionSettings } from './native-settings.js';
 import { builtinRoutes, pluginRoute } from './plugin-routing.js';
 import { editorTools } from './editor-connection.js';
+import { nativeValueForLosslessIds } from './json.js';
 
 const defaults = () => ({ version: 1, allow_trading: true, allow_host_operations: true, startup_ini: '', account: {}, tester_agent: {}, servers: {
   terminal: { url: 'http://127.0.0.1:22346/mcp', token: '', enabled: true },
@@ -35,8 +35,8 @@ const groups = {
 const categories = new Map(Object.entries(groups).flatMap(([group, names]) => names.split(' ').map(name => [name, group])));
 const execution = new Set('chart_open chart_close chart_apply_template chart_add_expert chart_add_script chart_remove_expert'.split(' '));
 export const OFFICIAL_SERVERS = ['terminal', 'metaeditor', 'marketdata', 'python', 'launcher'];
+const CATALOG_SERVERS = [...OFFICIAL_SERVERS, 'tester'];
 const object = value => value && typeof value === 'object' && !Array.isArray(value);
-const validate = (schema, args) => requireValue(object(args) && Value.Check(schema, args), '参数不符合工具 inputSchema；请先读取 mt5_catalog 中的定义');
 
 export function connectionURL(server, value) {
   requireValue(typeof value === 'string' && value.length <= 2048, 'MCP 地址无效');
@@ -184,9 +184,11 @@ export class MT5Official {
     return server === 'metaeditor' && startIfNeeded ? editorTools(this, signal) : this.client(server).list(signal);
   }
   async catalog(server, query = '', signal, owner) {
-    requireValue(!server || OFFICIAL_SERVERS.includes(server), '未知 MT5 server');
+    requireValue(!server || CATALOG_SERVERS.includes(server), '未知 MT5 server');
     requireValue(typeof query === 'string' && query.length <= 200, '查询文本过长');
-    const items = await Promise.all((server ? [server] : OFFICIAL_SERVERS).map(async name => {
+    const catalogServer = server === 'tester' ? 'terminal' : server;
+    const catalogQuery = server === 'tester' && !query ? 'tester' : query;
+    const items = await Promise.all((catalogServer ? [catalogServer] : OFFICIAL_SERVERS).map(async name => {
       const empty = (status, reason) => ({ server: name, status, reason, server_info: null, workspace: null, tools: [] });
       const config = this.config.servers[name];
       if (config && !config.enabled) return empty('disabled', name === 'marketdata' ? '此独立数据服务未启用，不影响券商行情。' : '此连接未启用，需要时可在高级设置开启。');
@@ -196,7 +198,7 @@ export class MT5Official {
       try {
         const tools = await this.tools(name, signal, { startIfNeeded: server === 'metaeditor' }), client = this.clients.get(name);
         return { server: name, status: client ? 'connected' : 'installed', reason: client ? null : '已找到运行环境；实际连接与执行结果以调用为准。', server_info: client?.info ?? null, workspace: client?.workspace?.structuredContent ?? null,
-          tools: tools.filter(t => `${t.name} ${t.description}`.toLowerCase().includes(query.toLowerCase())).map(tool => {
+          tools: tools.filter(t => `${t.name} ${t.description}`.toLowerCase().includes(catalogQuery.toLowerCase())).map(tool => {
             return { ...tool, category: categories.get(tool.name) ?? name, permission: this.permission(name, tool.name), ...this.access(name, tool.name, owner) };
           }) };
       } catch (error) {
@@ -227,10 +229,11 @@ export class MT5Official {
       return this.command(id, owner);
     }
     const task = (async () => {
+      let nativeArgs;
       try {
       const definition = (await this.tools(server, signal, { startIfNeeded: !this.access(server, tool, owner).blocked_reason })).find(t => t.name === tool);
       requireValue(definition, '此连接没有提供该工具，请刷新 mt5_catalog', 404, 'mt5_tool_missing');
-      validate(definition.inputSchema, args);
+      nativeArgs = nativeValueForLosslessIds(definition.inputSchema, args);
       const { blocked_reason: blocked } = managed ? this.deploymentAccess() : this.access(server, tool, owner); requireValue(!blocked, blocked, 403, 'mt5_permission_denied');
       if (server === 'python' && tool === 'login') requireValue(this.config.account.login, '尚未绑定账户；先用 mt5_settings 查已有配置，按用户选择由 mt5_update_configuration 保存准确的 login/server，不猜测切换账户', 409);
       if (server === 'launcher' && args.use_startup_config) requireValue(this.config.startup_ini, '未保存原生启动 INI；连接任务优先使用 mt5_connect 复用终端已有配置，不为恢复连接编造 INI', 409);
@@ -252,7 +255,7 @@ export class MT5Official {
           const configFile = join(this.directory, 'startup.ini');
           if (args.use_startup_config) await fs.writeFile(configFile, this.config.startup_ini, { mode: 0o600 });
           result = await launch(this.native, tool, { ...args, configured_login: this.config.account.login }, configFile, this.config.tester_agent, signal);
-        } else result = await this.client(server).call(tool, args, signal);
+        } else result = await this.client(server).call(tool, nativeArgs ?? args, signal);
         command = { ...command, status: result.outcome_unknown ? 'unknown' : result.isError || result.error || (server === 'python' && (result.result === null || result.result === false) && tool !== 'shutdown') ? 'failed' : 'returned', result: this.redact(result) };
       } catch (error) { command = { ...command, status: 'unknown', error: this.redact(`${error.message}；不自动重放，先核对实际状态。`) }; }
       this.storage.transaction(() => {

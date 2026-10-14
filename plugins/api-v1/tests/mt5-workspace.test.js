@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
-import { join, resolve, dirname } from 'node:path';
+import { join, resolve, dirname, sep } from 'node:path';
 import { tmpdir } from 'node:os';
 import { Store, hostForStore } from './mt5-host.js';
 import { MT5 } from '../../optional-api-v1/packages/mt5/backend/service.js';
@@ -19,7 +19,7 @@ test('checkout returns real host paths and save checks writable SDK content', as
     for (const [name, content] of Object.entries(files)) { const target = join(path, name); await mkdir(dirname(target), { recursive: true }); await writeFile(target, content); }
   } };
   const project = mt5.create('Native workspace'), checkout = await mt5.checkout(box, project.id, undefined, 'conv_main');
-  assert.equal(writtenRoot, workspace); assert.ok(checkout.path.startsWith(workspace + '/projects/')); assert.ok(checkout.sdk_path.startsWith(workspace + '/inputs/')); assert.equal(checkout.path.startsWith('/work/'), false);
+  assert.equal(writtenRoot, workspace); assert.ok(checkout.path.startsWith(join(workspace, 'projects') + sep)); assert.ok(checkout.sdk_path.startsWith(join(workspace, 'inputs') + sep)); assert.equal(checkout.path.startsWith('/work/'), false);
   assert.equal((await readFile(join(checkout.path, 'Experts/Strategy.mq5'), 'utf8')), mt5.template.files['Experts/Strategy.mq5']);
   assert.equal((await mt5.save(box, checkout.id, undefined, 'conv_main')).revision, 1);
   await writeFile(join(checkout.sdk_path, 'Include/Product/Fixture.mqh'), '// user can write here\n');
