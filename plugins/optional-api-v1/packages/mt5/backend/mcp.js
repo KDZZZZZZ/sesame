@@ -1,6 +1,7 @@
 import { once } from 'node:events';
 import { createConnection } from 'node:net';
 import { ApiError, requireValue } from './support.js';
+import { parseLosslessJson, stringifyLosslessJson } from './json.js';
 
 export const connectionRefused = error => error?.code === 'ECONNREFUSED' || error?.cause?.code === 'ECONNREFUSED' || Boolean(error?.cause?.errors?.some(cause => cause.code === 'ECONNREFUSED'));
 
@@ -12,7 +13,7 @@ export class MT5MCP {
     const headers = { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream', Authorization: `Bearer ${this.config.token}` };
     if (this.session) headers['Mcp-Session-Id'] = this.session;
     if (this.protocol) headers['Mcp-Protocol-Version'] = this.protocol;
-    const response = await fetch(this.config.url, { method: 'POST', headers, body: JSON.stringify(message), redirect: 'error', signal: combined });
+    const response = await fetch(this.config.url, { method: 'POST', headers, body: stringifyLosslessJson(message), redirect: 'error', signal: combined });
     if (response.status === 404) { this.ready = null; this.session = null; this.protocol = null; }
     if (!response.ok) {
       await response.body?.cancel();
@@ -26,7 +27,7 @@ export class MT5MCP {
     const reader = response.body.getReader(), decoder = new TextDecoder();
     let bytes = 0, buffer = '';
     const decode = text => {
-      const value = JSON.parse(text);
+      const value = parseLosslessJson(text);
       if (value.id !== message.id || value.method) return;
       requireValue(value.jsonrpc === '2.0', 'MT5 MCP 响应版本无效', 502);
       if (value.error) throw new ApiError(502, 'mt5_mcp_error', `MT5 MCP: ${value.error.message}`);

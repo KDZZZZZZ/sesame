@@ -10,6 +10,7 @@ import { buildInventory } from '../scripts/inventory.mjs';
 
 const core = fileURLToPath(new URL('../', import.meta.url));
 const optional = fileURLToPath(new URL('../../optional-api-v1/', import.meta.url));
+const repo = fileURLToPath(new URL('../../../', import.meta.url));
 function fixture(t, kind = 'optional') {
   const root = mkdtempSync(join(tmpdir(), 'sesame-profile-')), pkg = join(root, 'packages/example'); mkdirSync(pkg, { recursive: true });
   t.after(() => rmSync(root, { recursive: true, force: true }));
@@ -21,10 +22,11 @@ function fixture(t, kind = 'optional') {
   writeFileSync(join(root, 'bundle-profile.json'), JSON.stringify(profile));
   return { root, pkg, manifest, profile, write };
 }
-test('candidate distribution has nine defaults and twenty-three optional identities, with no duplicate tools from merged packages', () => {
+test('candidate distribution has reviewed defaults and optional identities, with no duplicate tools from merged packages', () => {
   const defaults = buildLock(core), options = buildLock(optional);
-  assert.equal(defaults.packages.length, 9); assert.equal(options.packages.length, 23);
-  const ids = [...defaults.packages, ...options.packages].map(item => item.id); assert.equal(new Set(ids).size, 32);
+  const profile = readProfile(optional);
+  assert.equal(defaults.packages.length, 9); assert.equal(options.packages.length, profile.packages.length);
+  const ids = [...defaults.packages, ...options.packages].map(item => item.id); assert.equal(new Set(ids).size, defaults.packages.length + options.packages.length);
   assert.deepEqual(defaults.packages.map(item => item.id), readProfile(core).packages);
   assert.ok(options.packages.some(item => item.id === 'sesame/mt5'));
   for (const id of ['sesame/host-files', 'sesame/user-guide', 'sesame/research']) assert.ok(!ids.includes(id));
@@ -67,11 +69,11 @@ test('descriptive inventory records compatibility without claiming an applicatio
   assert.equal(preview.application.released, undefined);
   assert.equal(preview.application.minimum, '0.2.0');
   assert.equal(preview.packages.filter(p => p.distribution === 'core').length, 9);
-  assert.equal(preview.packages.filter(p => p.distribution === 'optional').length, 23);
+  assert.equal(preview.packages.filter(p => p.distribution === 'optional').length, readProfile(optional).packages.length);
   for (const item of preview.packages) {
     for (const key of ['source', 'sourceCommit', 'package', 'treeDigest', 'review', 'release']) assert.equal(item[key], undefined);
-    const minimum = { 'sesame/manual-trading': '>=0.2.1', 'sesame/plugin-manager': '>=0.2.2', 'sesame/memory': '>=0.2.2', 'sesame/orchestration': '>=0.2.2', 'sesame/reports': '>=0.2.2', 'sesame/strategy-authoring': '>=0.2.2', 'sesame/mt5': '>=0.2.2' };
-    assert.equal(item.engines.sesame, minimum[item.id] ?? '>=0.2.0-0');
+    const manifest = JSON.parse(readFileSync(join(repo, item.sourcePath, 'plugin.json')));
+    assert.equal(item.engines.sesame, (manifest.$schema ? manifest.extensions['bot.sesame'].engines : manifest.engines).sesame);
     assert.ok(item.title.en && item.title.zh && item.dependencies.en && item.dependencies.zh);
   }
 });

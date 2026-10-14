@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const root = process.env.SESAME_HOST_ROOT;
@@ -21,7 +21,7 @@ test('decision tools use the real host inference port, persistent namespace and 
     modelRuntime: { getModels: () => [model], getModel: () => model, hasConfiguredAuth: () => true },
     sessionModels: { async completeSimple(selected, context) { calls++; assert.equal(selected.id, 'fixed'); assert.equal(context.messages.length, 2); const input = JSON.parse(context.messages[1].content); assert.equal(input.inputs[0].content.close, '65000');
       return { provider: 'fixture', model: 'fixed', stopReason: 'stop', content: [{ type: 'text', text: JSON.stringify({ direction: 'flat', reason: 'Fictional test observation', evidence: [evidence] }) }], usage: { input: 10, output: 10 } }; } }, plugins: { track() {} } };
-  const host = createHostContext(runtime, entry, 'main', { box: { file: async (op, path, content) => { const full = join(workspace, path); assert.ok(full.startsWith(workspace + '/')); if (op === 'read') return readFileSync(full); writeFileSync(full, content); return { path }; } } });
+  const host = createHostContext(runtime, entry, 'main', { box: { file: async (op, path, content) => { const full = join(workspace, path); assert.ok(full.startsWith(workspace + sep)); if (op === 'read') return readFileSync(full); writeFileSync(full, content); return { path }; } } });
   const lifecycle = activateDecisions(host), tools = new Map(createDecisionTools(host).map(tool => [tool.name, tool]));
   t.after(async () => { await lifecycle.dispose(); store.close(); rmSync(directory, { recursive: true, force: true }); });
   const call = async args => (await tools.get('strategy_decision').execute('fixture-call', args)).details;

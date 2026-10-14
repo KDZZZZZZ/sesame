@@ -11,6 +11,7 @@
   "main_tool_names": ["financial_research_configure"],
   "tool_definitions": "tools.json",
   "prompts": ["prompt.md"],
+  "skills": [],
   "resources": ["README.md", "PROVENANCE.md"],
   "provides": {},
   "engines": { "sesame": ">=0.2.2" }

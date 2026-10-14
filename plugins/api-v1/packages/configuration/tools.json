@@ -2,7 +2,7 @@
   {
     "name": "configuration_read",
     "label": "configuration_read",
-    "description": "读取模型、认证状态、偏好和已安装插件。不会返回秘密或启动程序。连接设置由对应提供方插件管理。",
+    "description": "按 section 读取配置：preferences 返回偏好与版本，model 返回模型与认证状态，all 才包含插件清单。recent_changes 是对应配置的简短状态回执，不含完整历史结果。连接设置由对应提供方插件管理。",
     "parameters": {
       "type": "object",
       "properties": {
@@ -196,6 +196,12 @@
                               "minLength": 1,
                               "maxLength": 512,
                               "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                            },
+                            "accountConnectionId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 512,
+                              "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
                             }
                           },
                           "additionalProperties": false
@@ -262,11 +268,88 @@
                             "minLength": 1,
                             "maxLength": 512,
                             "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                          },
+                          "accountConnectionId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 512,
+                            "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
                           }
                         },
                         "additionalProperties": false
                       },
                       "maxItems": 32
+                    },
+                    "selected": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "provider",
+                          "accountId"
+                        ],
+                        "properties": {
+                          "provider": {
+                            "type": "object",
+                            "required": [
+                              "pluginId",
+                              "providerId"
+                            ],
+                            "properties": {
+                              "pluginId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 512,
+                                "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                              },
+                              "providerId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 512,
+                                "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          "connection": {
+                            "type": "object",
+                            "required": [
+                              "id",
+                              "revision"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 512,
+                                "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                              },
+                              "revision": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 512,
+                                "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          "accountId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 512,
+                            "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                          },
+                          "accountConnectionId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 512,
+                            "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "maxItems": 32,
+                      "description": "当前勾选账户；沿用读取结果的 provider、精确 connection、accountId 与 accountConnectionId。空数组取消全部勾选。"
                     }
                   },
                   "additionalProperties": false,

@@ -1,6 +1,6 @@
 # SVL native conformance
 
-The target accepts Agent-authored translations of the SVL versions explicitly listed in the frozen profile. A `software` operator capability describes an implementation path, not a native MQL5 operator or a certification. Registration always returns `translated_unverified`; the mapping validation stays `partial`. Unsupported events and undeclared operators are rejected before project creation. An external-input fixture does not install a live model/input bridge.
+The target accepts Agent-authored translations of the SVL versions explicitly listed in the frozen profile. A `software` operator capability describes an implementation path, not a native MQL5 operator or a certification. Registration always returns `translated_unverified`; the mapping validation stays `partial`. Unsupported events and undeclared operators are rejected before project creation. Translation manifest adaptations should therefore start as `limited` with evidence and limitations; the registration step rejects premature `equivalent` claims because only native conformance evidence can narrow that limitation. An external-input fixture does not install a live model/input bridge.
 
 ## Freeze the experiment before implementing it
 

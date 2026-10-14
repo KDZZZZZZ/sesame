@@ -38,6 +38,7 @@ export async function updateConfiguration(host, mt5, args) {
   for (const [name, config] of Object.entries(args.changes.servers ?? {})) if (config.url !== undefined) connectionURL(name, config.url);
   const { hash, old } = previous(host, args); if (old) return old;
   return host.configuration.exclusive(async () => {
+    const repeated = previous(host, args).old; if (repeated) return repeated;
     const record = { id: args.command_id, conversation_id: host.scope.conversationId, fingerprint: hash, target: 'mt5', changes: args.changes, status: 'running', created_at: now() };
     recordChange(host, record);
     try { const result = await mt5.official.configure({ expected_version: args.expected_version, ...args.changes }); mt5.monitor?.settingsChanged(); return recordChange(host, { ...record, status: 'applied', result, completed_at: now() }); }
@@ -48,6 +49,7 @@ export async function importConfiguration(host, mt5, imports, args) {
   requireValue(Value.Check(object(importProperties), args), '需要有效配置引用、操作 ID 和版本');
   const { hash, old } = previous(host, args); if (old) return old;
   return host.configuration.exclusive(async () => {
+    const repeated = previous(host, args).old; if (repeated) return repeated;
     requireValue(mt5.official.settings().version === args.expected_version, 'MT5 配置已更新，请重新读取', 409, 'version_conflict');
     const pending = imports.read(args.source_message_id, host.scope.conversationId);
     if (pending.binding) requireValue(pending.binding.login === mt5.official.config.account.login && pending.binding.server === mt5.official.config.account.server,

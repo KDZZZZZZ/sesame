@@ -19,7 +19,7 @@
   {
     "name": "plugin_load",
     "label": "plugin_load",
-    "description": "按需加载当前会话允许的可发现插件并立即刷新本轮工具与提示词。加载不改变全局默认状态。",
+    "description": "按需加载当前会话允许的可发现插件并立即刷新本轮工具与提示词。main_only_tools 在子任务中仍不可见；若返回 plugin_load_failed，先 plugin_inspect 查看 diagnostics，安装修复版本或回滚后再加载。加载不改变全局默认状态。",
     "parameters": {
       "type": "object",
       "required": [
@@ -111,7 +111,7 @@
   {
     "name": "plugin_read",
     "label": "plugin_read",
-    "description": "读取已挂载插件中声明的提示词、skill 或参考资源。传入插件 ID 和目录清单中的相对 path。",
+    "description": "读取已挂载插件中声明的提示词、skill 或参考资源。传入 plugin_discover/plugin_inspect 列出的插件 ID 和相对 path；resource_not_found 会返回该插件已声明路径。",
     "parameters": {
       "type": "object",
       "required": [
@@ -138,7 +138,7 @@
   {
     "name": "plugin_inspect",
     "label": "plugin_inspect",
-    "description": "主 Agent 查看已安装插件的版本、摘要、状态和诊断；更新官方随附包也先读取其当前digest。不会激活插件。",
+    "description": "主 Agent 查看已安装插件的版本、摘要、状态、诊断、可读资源和工具；更新官方随附包也先读取其当前digest。不会激活插件。",
     "parameters": {
       "type": "object",
       "required": [

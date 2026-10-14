@@ -149,7 +149,7 @@
   {
     "name": "canvas_apply",
     "label": "canvas_apply",
-    "description": "原子批量修改工作台。workspace 调整三个水平窗口宽度或定位；其余图表操作仅在最左侧图表区内。用户锁定或正在拖动的图表会返回冲突，须重读后处理。不触发交易。",
+    "description": "原子批量修改工作台。把同一轮相关图表操作放进一个 operations；并行请求不能复用旧 expected_version。version_conflict 后 canvas_inspect，核对后按最新版本重新规划。workspace 调整三个水平窗口，其余操作在图表区；保留用户锁和拖动保护。不触发交易。",
     "parameters": {
       "type": "object",
       "required": [
@@ -160,14 +160,15 @@
       "properties": {
         "command_id": {
           "type": "string",
-          "description": "本次操作唯一 ID，至少 16 字符；重试保持不变",
+          "description": "至少 16 字符；同一请求重试保持 ID 和参数不变，重读后重新规划的请求使用新 ID",
           "minLength": 16,
           "maxLength": 100,
           "pattern": "^[a-zA-Z0-9_-]+$"
         },
         "expected_version": {
           "type": "integer",
-          "minimum": 1
+          "minimum": 1,
+          "description": "canvas_inspect 或最近成功写入返回的工作台 version；同一旧版本不能并行写入，相关操作合成一个批次"
         },
         "operations": {
           "type": "array",
@@ -675,14 +676,15 @@
       "properties": {
         "command_id": {
           "type": "string",
-          "description": "本次操作唯一 ID，至少 16 字符；重试保持不变",
+          "description": "至少 16 字符；同一请求重试保持 ID 和参数不变，重读后重新规划的请求使用新 ID",
           "minLength": 16,
           "maxLength": 100,
           "pattern": "^[a-zA-Z0-9_-]+$"
         },
         "expected_version": {
           "type": "integer",
-          "minimum": 1
+          "minimum": 1,
+          "description": "canvas_inspect 或最近成功写入返回的工作台 version；同一旧版本不能并行写入，相关操作合成一个批次"
         },
         "chart_id": {
           "type": "string",
@@ -738,14 +740,15 @@
         },
         "command_id": {
           "type": "string",
-          "description": "本次操作唯一 ID，至少 16 字符；重试保持不变",
+          "description": "至少 16 字符；同一请求重试保持 ID 和参数不变，重读后重新规划的请求使用新 ID",
           "minLength": 16,
           "maxLength": 100,
           "pattern": "^[a-zA-Z0-9_-]+$"
         },
         "expected_version": {
           "type": "integer",
-          "minimum": 1
+          "minimum": 1,
+          "description": "canvas_inspect 或最近成功写入返回的工作台 version；同一旧版本不能并行写入，相关操作合成一个批次"
         },
         "chart_id": {
           "type": "string",
@@ -813,7 +816,7 @@
   {
     "name": "indicator_publish",
     "label": "indicator_publish",
-    "description": "发布标准 indicator@1 成果。JavaScript 模块须 export compute(input)，输出标准 points/markers；forming 输入、独立 pane 和缺失值由定义明确。固定序列引用已有 DataRef；不将静态数据冒充实时。TypeScript/stream 尚无执行器，不能使用。",
+    "description": "发布标准 indicator@1 成果。files 与 definition 同为顶层字段，不能嵌入 implementation；完整调用见 resources/indicator-publish.json。integer 的 default/min/max 是 JSON 整数，decimal 使用精确字符串。JavaScript 模块须 export compute(input)，输出标准 points/markers；静态序列引用已有 DataRef。TypeScript/stream 尚无执行器。",
     "parameters": {
       "type": "object",
       "required": [
@@ -856,74 +859,213 @@
             "parameters": {
               "type": "array",
               "items": {
-                "type": "object",
-                "required": [
-                  "id",
-                  "type",
-                  "required",
-                  "title"
-                ],
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "description": "参数 ID",
-                    "minLength": 1,
-                    "maxLength": 20000
-                  },
-                  "type": {
-                    "anyOf": [
-                      {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "type",
+                      "required",
+                      "title"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "参数 ID",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "type": {
                         "type": "string",
                         "const": "integer"
                       },
-                      {
+                      "required": {
+                        "type": "boolean"
+                      },
+                      "title": {
+                        "type": "string",
+                        "description": "参数标题",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "default": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "JSON 安全整数，不加引号"
+                      },
+                      "min": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "JSON 安全整数，不加引号"
+                      },
+                      "max": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "JSON 安全整数，不加引号"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "type",
+                      "required",
+                      "title"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "参数 ID",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "type": {
                         "type": "string",
                         "const": "decimal"
                       },
-                      {
+                      "required": {
+                        "type": "boolean"
+                      },
+                      "title": {
+                        "type": "string",
+                        "description": "参数标题",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "default": {
+                        "type": "string",
+                        "pattern": "^-?(0|[1-9]\\d*)(\\.\\d+)?$",
+                        "description": "精确十进制字符串，如 \"0.01\"；不用浮点数或科学计数法"
+                      },
+                      "min": {
+                        "type": "string",
+                        "pattern": "^-?(0|[1-9]\\d*)(\\.\\d+)?$",
+                        "description": "精确十进制字符串，如 \"0.01\"；不用浮点数或科学计数法"
+                      },
+                      "max": {
+                        "type": "string",
+                        "pattern": "^-?(0|[1-9]\\d*)(\\.\\d+)?$",
+                        "description": "精确十进制字符串，如 \"0.01\"；不用浮点数或科学计数法"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "type",
+                      "required",
+                      "title"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "参数 ID",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "type": {
                         "type": "string",
                         "const": "boolean"
                       },
-                      {
+                      "required": {
+                        "type": "boolean"
+                      },
+                      "title": {
+                        "type": "string",
+                        "description": "参数标题",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "default": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "type",
+                      "required",
+                      "title"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "参数 ID",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "type": {
                         "type": "string",
                         "const": "string"
                       },
-                      {
+                      "required": {
+                        "type": "boolean"
+                      },
+                      "title": {
+                        "type": "string",
+                        "description": "参数标题",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "default": {
+                        "type": "string",
+                        "maxLength": 20000
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "type",
+                      "required",
+                      "title",
+                      "choices"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "参数 ID",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "type": {
                         "type": "string",
                         "const": "enum"
+                      },
+                      "required": {
+                        "type": "boolean"
+                      },
+                      "title": {
+                        "type": "string",
+                        "description": "参数标题",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "default": {
+                        "type": "string"
+                      },
+                      "choices": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
                       }
-                    ]
-                  },
-                  "required": {
-                    "type": "boolean"
-                  },
-                  "title": {
-                    "type": "string",
-                    "description": "参数标题",
-                    "minLength": 1,
-                    "maxLength": 20000
-                  },
-                  "default": {},
-                  "min": {
-                    "type": "string",
-                    "description": "十进制下限",
-                    "minLength": 1,
-                    "maxLength": 20000
-                  },
-                  "max": {
-                    "type": "string",
-                    "description": "十进制上限",
-                    "minLength": 1,
-                    "maxLength": 20000
-                  },
-                  "choices": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
+                    },
+                    "additionalProperties": false
                   }
-                },
-                "additionalProperties": false
+                ]
               }
             },
             "inputs": {
@@ -1352,7 +1494,8 @@
               "maxLength": 32768
             }
           },
-          "maxProperties": 16
+          "maxProperties": 16,
+          "description": "顶层文件表：入口相对路径 → 完整 JavaScript 源码；与 definition 并列"
         }
       },
       "additionalProperties": false

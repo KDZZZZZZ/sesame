@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const root = new URL('../packages/quantskills-catalog/', import.meta.url);
 const json = name => JSON.parse(readFileSync(new URL(name, root)));
 function exchange(lines) {
-  const result = spawnSync(process.env.PYTHON || 'python3', [fileURLToPath(new URL('server.py', root))], {
+  const result = spawnSync(process.env.PYTHON || 'python3', ['-B', '-X', 'utf8', fileURLToPath(new URL('server.py', root))], {
     encoding: 'utf8', input: lines.map(line => typeof line === 'string' ? line : JSON.stringify(line)).join('\n') + '\n',
     timeout: 10000,
   });

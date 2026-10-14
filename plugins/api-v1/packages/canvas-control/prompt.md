@@ -16,7 +16,9 @@ canvas_apply 的 workspace 操作用于三个外层窗口，例如 {op:'workspac
 
 layout.tiles 是按比例分割的平铺树，格式为最多 63 个节点的扁平数组。每个节点有 path：根为空字符串，0 是左/上子区，1 是右/下子区。叶子为 {path:'0',chart_id:'A'}，分割为 {path:'',axis:'x',ratio:0.6}，其中 x 调宽、y 调高，ratio 是第一侧占比，必须在 0 与 1 之间。{op:'tile',tiles:[...]} 必须完整包含当前所有图表一次；可与 add/remove 原子提交。先读当前 tiles，保留不需改变的分支与比例。删除时收合空分支，不保留零尺寸叶子。layout.height 保存展开图表区的内容像素高度（不含收起栏），浏览器以视口高度为下限。tile 可传 height；省略保留旧值，null 清除。上下插入时保留原图高度并增加内容高度，超出视口纵向滚动；用户手动调节高度仍修改分割比例。
 
-指标先 indicator_publish 发布标准定义和代码，再 chart_script action:put 挂载完整 ArtifactRef。JavaScript 模块须 export compute(input)，从 input.inputs.<id>.rows 读取声明的 typed Bar，返回 {status,series,diagnostics}；series 使用声明的 seriesId 和标准 points/markers，Decimal 为字符串，time 保留原 SourceTime。完整例子为 resources/close-line.json 与 resources/close-line.js。TypeScript/stream 暂无执行器。实时更新会重新计算有界输入；函数必须确定，不能 fetch、读文件或调用宿主。副指标用独立 pane，波浪/PA/ICT 标注用真实数据和声明图元，不把确认延迟或分析判断伪装成当时已知事实。
+指标先 indicator_publish 发布标准定义和代码，再 chart_script action:put 挂载完整 ArtifactRef。完整调用见 resources/indicator-publish.json：operation_id、definition、files 同为顶层字段；integer 参数的 default/min/max 是整数，decimal 才用精确字符串。JavaScript 模块须 export compute(input)，从 input.inputs.<id>.rows 读取声明的 typed Bar，返回 {status,series,diagnostics}；series 使用声明的 seriesId 和标准 points/markers，Decimal 为字符串，time 保留原 SourceTime。TypeScript/stream 暂无执行器。实时更新会重新计算有界输入；函数必须确定，不能 fetch、读文件或调用宿主。副指标用独立 pane，波浪/PA/ICT 标注用真实数据和声明图元，不把确认延迟或分析判断伪装成当时已知事实。
+
+相关布局操作合成一个 canvas_apply.operations 批次。expected_version 是整个工作台版本，chart_script 挂载也会更新它；不要把同一旧版本分给并行写入。version_conflict 后 canvas_inspect 核对当前状态，再用新 command_id 和最新版本提交剩余操作；未知结果的原请求重试则保持 ID 和全部参数不变，以免重复执行。
 
 Python 研究可将最终序列冻结为 DataRef，以 implementation.kind=series、updateMode=static 发布；保留真实品种/口径和来源，不绑定子任务临时路径。静态曲线不会自动更新，也不替代报告里的不可变证据。
 

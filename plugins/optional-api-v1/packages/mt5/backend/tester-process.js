@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { pythonPath, winePath } from './process.js';
 import { wineCommand, wineEnvironment } from './platform.js';
 import { ApiError } from './support.js';
+import { parseLosslessJson, stringifyLosslessJson } from './json.js';
 
 const worker = fileURLToPath(new URL('./tester-process.py', import.meta.url));
 const cleanupError = message => new ApiError(503, 'runtime_cleanup_failed', message);
@@ -29,7 +30,7 @@ export function runTesterProcess(native, request, { signal, onStarted = () => {}
       while ((newline = buffer.indexOf('\n')) >= 0) {
         const line = buffer.slice(0, newline); buffer = buffer.slice(newline + 1);
         try {
-          const value = JSON.parse(line);
+          const value = parseLosslessJson(line);
           if (value.type === 'started' && Number.isSafeInteger(value.pid) && value.pid > 0 && value.jobOwned === true && nativePid === undefined) { nativePid = value.pid; onStarted(nativePid, child.pid); }
           else if (value.type === 'result' && result === undefined) result = value;
           else throw new Error('Unknown or repeated Tester receipt');
@@ -47,6 +48,6 @@ export function runTesterProcess(native, request, { signal, onStarted = () => {}
       resolve({ nativePid, diagnostics, cleanup: result.cleanup });
     };
     child.once('error', finish); child.once('close', () => finish());
-    child.stdin.write(JSON.stringify(Object.fromEntries(Object.entries(request).map(([key, value]) => [key, key === 'kind' ? value : winePath(value)]))) + '\n');
+    child.stdin.write(stringifyLosslessJson(Object.fromEntries(Object.entries(request).map(([key, value]) => [key, key === 'kind' ? value : winePath(value)]))) + '\n');
   });
 }
