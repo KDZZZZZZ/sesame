@@ -138,6 +138,7 @@
     const archiving = latest.run.status === 'completed' && ['queued', 'running'].includes(byRole.get('reporter')?.status);
     $('run-state').textContent = archiving ? '日报归档中' : !terminal.has(latest.run.status) && activeRole ? phaseLabels[activeRole] ?? '进行中' : runLabels[latest.run.status] ?? string(latest.run.status);
     $('run-state').classList.toggle('is-failed', ['failed', 'interrupted'].includes(latest.run.status));
+    $('run-state').classList.toggle('is-cancelled', ['cancelled', 'canceled'].includes(latest.run.status));
     $('mode-badge').textContent = latest.mode === 'archive' ? '运行记录' : (latest.workflow?.mode ?? latest.run.mode) === 'single' ? '单 Agent' : 'Team 协作'; $('mock-label').hidden = latest.run.mockModelResponses !== true;
     const trigger = latest.run.trigger ?? latest.trigger, triggerLabels = { interval: '周期触发', event: '事件触发', manual: '手动触发' };
     $('run-context').textContent = trigger?.kind ? `${triggerLabels[trigger.kind] ?? string(trigger.kind)}${trigger.key ? ` · ${string(trigger.key)}` : ''}` : '';
