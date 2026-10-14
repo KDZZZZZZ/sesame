@@ -1,0 +1,39 @@
+name: Publish plugins to Sesame R2
+on:
+  push:
+    branches: [main]
+    paths: ['.github/plugin-r2/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+  issues: read
+concurrency:
+  group: sesame-plugin-r2-publication
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'KDZZZZZZ/sesame' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - name: Verify distribution, integrity and review boundaries
+        run: |
+          node --test .github/scripts/plugin-r2.test.mjs .github/scripts/publish-plugin-r2.test.mjs .github/scripts/semantic-review.test.mjs plugins/api-v1/tests/plugin-catalog.test.mjs
+          node .github/scripts/plugin-r2.mjs --check .
+      - name: Publish immutable objects, then promote the verified catalog
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ENDPOINT: https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
+        run: node .github/scripts/publish-plugin-r2.mjs --publish .

@@ -75,8 +75,10 @@ assets to make a release pass.
 
 ## Plugin compatibility
 
-The current plugin manager and old application locks require historical plugin
-URLs and fixed source commits. Keep those assets, tags and source identities
-available. Independent future plugin distribution needs compatible client and
-catalog changes first; see [plugin publication policy](plugins/api-v1/PUBLISHING.md)
-and [ecosystem design references](plugins/ECOSYSTEM.md).
+Older plugin managers and application locks require historical plugin URLs and
+fixed source commits. Keep those assets, tags and source identities available.
+The R2-compatible plugin-manager 2.3.0 or newer and first catalog require separate
+publication. After that, new application builds can pin the published core archive
+without changing the assembler. See
+[R2 distribution and migration](plugins/api-v1/R2-DISTRIBUTION.md). A plugin
+publication does not replace existing application installer bytes.
