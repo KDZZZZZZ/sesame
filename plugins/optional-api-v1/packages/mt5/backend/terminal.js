@@ -48,6 +48,27 @@ async function localPath(path, native) {
   return current;
 }
 
+async function chartContainsExpert(path, limit = 64 * 1024 * 1024) {
+  const handle = await fs.open(path, 'r');
+  try {
+    const stat = await handle.stat();
+    requireValue(stat.isFile(), `图表配置不是普通文件: ${path}`, 409);
+    requireValue(stat.size <= limit, `图表配置过大无法核对 EA: ${path} (${stat.size} bytes)`, 409);
+    let position = 0, tail = '';
+    const buffer = Buffer.alloc(64 * 1024);
+    while (position < stat.size) {
+      const { bytesRead } = await handle.read(buffer, 0, Math.min(buffer.length, stat.size - position), position);
+      if (!bytesRead) break;
+      const chunk = buffer.subarray(0, bytesRead);
+      const text = tail + '\n' + chunk.toString('utf8') + '\n' + chunk.toString('utf16le');
+      if (/<expert\b|\[expert\]/i.test(text)) return true;
+      tail = text.slice(-64);
+      position += bytesRead;
+    }
+    return false;
+  } finally { await handle.close(); }
+}
+
 /** Configure only an idle, precisely identified terminal; never force-kill or place a trade. */
 export async function prepareTerminal(mt5, progress = () => {}, { restart = false, deployment = null, inputs = null } = {}, { control = controlTerminal, start = launch, wait = waitForTradingConnection, resolveNativePath = localPath, temporaryDirectory = tmpdir, platform = process.platform } = {}) {
   const official = mt5.official, config = structuredClone(official.config);
@@ -69,10 +90,7 @@ export async function prepareTerminal(mt5, progress = () => {}, { restart = fals
   // Inspect native chart files as well: older MCP responses may omit attached EA metadata.
   for (const chart of charts.charts) {
     requireValue(!chart.expert && !chart.expert_advisor && !chart.experts?.length && chart.path, '已有 EA 在运行，自动配置暂不重启终端', 409);
-    const bytes = await fs.readFile(await resolveNativePath(chart.path, mt5.native));
-    requireValue(bytes.length <= 1024 * 1024, '图表配置超出读取限制');
-    const text = bytes.toString(bytes[0] === 255 && bytes[1] === 254 ? 'utf16le' : 'utf8');
-    requireValue(!/<expert\b|\[expert\]/i.test(text), '已有 EA 在图表中，自动配置暂不启用全局交易', 409);
+    requireValue(!await chartContainsExpert(await resolveNativePath(chart.path, mt5.native)), '已有 EA 在图表中，自动配置暂不启用全局交易', 409);
   }
   const workspace = nativeData(client.workspace).workspace;
   const dataDirectory = await resolveNativePath(win32.dirname(workspace.mql5_folder), mt5.native);

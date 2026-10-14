@@ -19,41 +19,71 @@
           "maxLength": 20000
         },
         "scope": {
-          "type": "object",
-          "required": [
-            "kind"
-          ],
-          "properties": {
-            "kind": {
-              "anyOf": [
-                {
+          "anyOf": [
+            {
+              "type": "object",
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
                   "type": "string",
                   "const": "global"
-                },
-                {
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "project_id"
+              ],
+              "properties": {
+                "kind": {
                   "type": "string",
                   "const": "project"
                 },
-                {
+                "project_id": {
+                  "type": "string",
+                  "description": "真实项目 ID",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "pattern": "^[\\w.-]+$"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "project_id",
+                "strategy_id"
+              ],
+              "properties": {
+                "kind": {
                   "type": "string",
                   "const": "strategy"
+                },
+                "project_id": {
+                  "type": "string",
+                  "description": "策略所属项目 ID",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "pattern": "^[\\w.-]+$"
+                },
+                "strategy_id": {
+                  "type": "string",
+                  "description": "真实策略 ID",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "pattern": "^[\\w.-]+$"
                 }
-              ]
-            },
-            "project_id": {
-              "type": "string",
-              "description": "项目 ID",
-              "minLength": 1,
-              "maxLength": 20000
-            },
-            "strategy_id": {
-              "type": "string",
-              "description": "策略 ID",
-              "minLength": 1,
-              "maxLength": 20000
+              },
+              "additionalProperties": false
             }
-          },
-          "additionalProperties": false
+          ]
         },
         "include_archived": {
           "type": "boolean"
@@ -127,41 +157,71 @@
           "maxLength": 20000
         },
         "scope": {
-          "type": "object",
-          "required": [
-            "kind"
-          ],
-          "properties": {
-            "kind": {
-              "anyOf": [
-                {
+          "anyOf": [
+            {
+              "type": "object",
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
                   "type": "string",
                   "const": "global"
-                },
-                {
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "project_id"
+              ],
+              "properties": {
+                "kind": {
                   "type": "string",
                   "const": "project"
                 },
-                {
+                "project_id": {
+                  "type": "string",
+                  "description": "真实项目 ID",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "pattern": "^[\\w.-]+$"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "project_id",
+                "strategy_id"
+              ],
+              "properties": {
+                "kind": {
                   "type": "string",
                   "const": "strategy"
+                },
+                "project_id": {
+                  "type": "string",
+                  "description": "策略所属项目 ID",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "pattern": "^[\\w.-]+$"
+                },
+                "strategy_id": {
+                  "type": "string",
+                  "description": "真实策略 ID",
+                  "minLength": 1,
+                  "maxLength": 160,
+                  "pattern": "^[\\w.-]+$"
                 }
-              ]
-            },
-            "project_id": {
-              "type": "string",
-              "description": "项目 ID",
-              "minLength": 1,
-              "maxLength": 20000
-            },
-            "strategy_id": {
-              "type": "string",
-              "description": "策略 ID",
-              "minLength": 1,
-              "maxLength": 20000
+              },
+              "additionalProperties": false
             }
-          },
-          "additionalProperties": false
+          ]
         },
         "sources": {
           "type": "array",
@@ -563,41 +623,71 @@
               "maxLength": 20000
             },
             "scope": {
-              "type": "object",
-              "required": [
-                "kind"
-              ],
-              "properties": {
-                "kind": {
-                  "anyOf": [
-                    {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "required": [
+                    "kind"
+                  ],
+                  "properties": {
+                    "kind": {
                       "type": "string",
                       "const": "global"
-                    },
-                    {
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "project_id"
+                  ],
+                  "properties": {
+                    "kind": {
                       "type": "string",
                       "const": "project"
                     },
-                    {
+                    "project_id": {
+                      "type": "string",
+                      "description": "真实项目 ID",
+                      "minLength": 1,
+                      "maxLength": 160,
+                      "pattern": "^[\\w.-]+$"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "project_id",
+                    "strategy_id"
+                  ],
+                  "properties": {
+                    "kind": {
                       "type": "string",
                       "const": "strategy"
+                    },
+                    "project_id": {
+                      "type": "string",
+                      "description": "策略所属项目 ID",
+                      "minLength": 1,
+                      "maxLength": 160,
+                      "pattern": "^[\\w.-]+$"
+                    },
+                    "strategy_id": {
+                      "type": "string",
+                      "description": "真实策略 ID",
+                      "minLength": 1,
+                      "maxLength": 160,
+                      "pattern": "^[\\w.-]+$"
                     }
-                  ]
-                },
-                "project_id": {
-                  "type": "string",
-                  "description": "项目 ID",
-                  "minLength": 1,
-                  "maxLength": 20000
-                },
-                "strategy_id": {
-                  "type": "string",
-                  "description": "策略 ID",
-                  "minLength": 1,
-                  "maxLength": 20000
+                  },
+                  "additionalProperties": false
                 }
-              },
-              "additionalProperties": false
+              ]
             },
             "sources": {
               "type": "array",

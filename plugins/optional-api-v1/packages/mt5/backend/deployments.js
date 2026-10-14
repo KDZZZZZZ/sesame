@@ -115,6 +115,7 @@ export class Deployments {
   /** Restarts the idle terminal under the same rules as configuration so it re-reads its program list. */
   refreshPrograms(progress) { return prepareTerminal(this.mt5, progress, { restart: true }); }
   async check(passId) {
+    requireValue(typeof passId === 'string' && passId.length, 'check 需要 pass_id');
     const pass = this.storage.get('mt5_pass', passId), build = this.storage.get('mt5_build', pass.build_id), reasons = [];
     if (pass.status !== 'succeeded' || build.status !== 'succeeded') reasons.push('需要已完成回测的冻结构建');
     if (build.translation && build.translation_mode !== 'live') reasons.push('该 SVL 翻译仅面向回测；实盘需针对 live 目标登记并验证新的翻译');
@@ -131,7 +132,7 @@ export class Deployments {
     const artifact = join(this.storage.directory, 'mt5/builds', build.id, 'Experts/Strategy.ex5');
     if (build.status === 'succeeded' && digest(await fs.readFile(artifact)) !== build.ex5_sha256) reasons.push('冻结 EX5 的校验值已变化');
     if (!reasons.length) { const reason = await this.recognitionReason(build); if (reason) reasons.push(reason); }
-    return { ready: reasons.length === 0, reasons, checked_at: now(), pass_id: pass.id, server: scope.server, login: scope.login, account_type: info.account.type ?? null, symbol: pass.config.symbol, period: pass.config.period, parameters: pass.parameters, risk_limits: pass.risk_limits, artifact_digest: build.ex5_sha256 };
+    return { ready: reasons.length === 0, preparable: reasons.length > 0 && reasons.every(reason => preparable.has(reason)), reasons, checked_at: now(), pass_id: pass.id, server: scope.server, login: scope.login, account_type: info.account.type ?? null, symbol: pass.config.symbol, period: pass.config.period, parameters: pass.parameters, risk_limits: pass.risk_limits, artifact_digest: build.ex5_sha256 };
   }
   async track(fn) { const promise = fn(); this.jobs.add(promise); try { return await promise; } finally { this.jobs.delete(promise); } }
   prepare(input, requestKey, configuration, owner = null) {
@@ -207,6 +208,8 @@ export class Deployments {
       const priorPreparation = this.preparations().find(p => p.request_key === requestKey);
       if (!check.ready || priorPreparation) {
         const p = this.prepare({ ...expected, pass_id: passId, authorize_trading: true }, requestKey, configuration, owner);
+        const replayed = !this.preparationJobs.has(p.id);
+        if (replayed && p.status !== 'ready') requireValue(false, `准备请求已回放旧结果，未重新执行原生动作：${p.reason || p.status || p.stage}`, 409, 'deployment_preparation_replay');
         await this.preparationJobs.get(p.id);
         const prepared = this.storage.get('mt5_preparation', p.id);
         requireValue(prepared.status === 'ready', prepared.reason || '挂载准备尚未完成', 409);

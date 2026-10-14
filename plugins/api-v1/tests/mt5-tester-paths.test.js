@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import { join } from 'node:path';
 import { Tester } from '../../optional-api-v1/packages/mt5/backend/tester.js';
+import { copyAvailableTree } from '../../optional-api-v1/packages/mt5/backend/tester.js';
 const harness=()=>{let row={id:'pass_fixture',build_id:'build_fixture'};const storage={directory:'/unused/long/application/workspace',get:()=>structuredClone(row),put:(_kind,value)=>row=structuredClone(value)};return{tester:new Tester({storage}),row:()=>row}};
 test('Tester uses and cleans a private short native runner without touching the application workspace',async()=>{const{tester,row}=harness();let runner;tester.executeInDirectory=async(_pass,_signal,directory)=>{runner=directory;assert.notEqual(directory,tester.storage.directory);await fs.writeFile(join(directory,'owned-file'),'owned');return 'done'};assert.equal(await tester.execute(row(),new AbortController().signal),'done');assert.equal(row().temporary_paths.tester_runner,runner);await assert.rejects(fs.stat(runner),{code:'ENOENT'});});
 test('failed preparation cleans its own temporary native runner',async()=>{const{tester,row}=harness();let runner;tester.executeInDirectory=async(_pass,_signal,directory)=>{runner=directory;throw Error('preflight unavailable')};await assert.rejects(tester.execute(row(),new AbortController().signal),/preflight unavailable/);await assert.rejects(fs.stat(runner),{code:'ENOENT'});});
@@ -21,4 +22,12 @@ test('unconfirmed native cleanup survives diagnostic ENOSPC and keeps the pass/j
   const originalWrite=fs.writeFile;fs.writeFile=async(path,...args)=>{if(String(path).endsWith('native-paths.json'))throw Object.assign(Error('diagnostic disk full'),{code:'ENOSPC'});return originalWrite(path,...args)};
   try{const result=await tester.start('bt_fixture');assert.equal(result.status,'unknown');assert.equal(result.passes[0].status,'unknown');assert.equal(result.passes[0].cleanup_failed,true);assert.equal(cleanupError.details.diagnosticFailure.code,'ENOSPC');assert.ok((await fs.stat(runner)).isDirectory());assert.equal(await fs.readFile(join(runner,'MQL5/Experts/MT5Agent/build_fixture.ex5'),'utf8'),bytes.toString());}
   finally{fs.writeFile=originalWrite;if(runner)await fs.rm(runner,{recursive:true,force:true});}
+});
+
+test('Tester cache copy records bounded counts and skips locked online history files without failing preparation', async t => {
+  const {tmpdir}=await import('node:os'),root=await fs.mkdtemp(join(tmpdir(),'tester-cache-copy-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+  const source=join(root,'source'),dest=join(root,'dest');await fs.mkdir(join(source,'nested'),{recursive:true});await fs.writeFile(join(source,'ok.hst'),'ok');for(let i=0;i<20;i++)await fs.writeFile(join(source,'nested',`locked-${i}.hcc`),'locked');
+  const originalCopy=fs.copyFile;fs.copyFile=async(from,to)=>{if(String(from).endsWith('.hcc'))throw Object.assign(Error('file busy'),{code:'EBUSY'});return originalCopy(from,to);};
+  try{const result=await copyAvailableTree(source,dest);assert.equal(result.copiedCount,1);assert.equal(result.skippedCount,20);assert.equal(result.skipped.length,8);assert.deepEqual(result.skipped[0],{path:'nested/locked-0.hcc',code:'EBUSY'});assert.equal(await fs.readFile(join(dest,'ok.hst'),'utf8'),'ok');await assert.rejects(fs.stat(join(dest,'nested','locked-0.hcc')),{code:'ENOENT'});}
+  finally{fs.copyFile=originalCopy;}
 });

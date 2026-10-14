@@ -9,6 +9,15 @@ const check = (condition, code, message) => { if (!condition) error(code, messag
 const within = (time, range) => timeKey(time) >= timeKey(range.from) && timeKey(time) < timeKey(range.to);
 const meta = (from, warnings = [], freshness = 'live') => ({ observedAt: Date.now(), freshness, origin: 'observed', consistency: 'bounded', samplingWindow: { from, to: Date.now() }, warnings });
 const nativeWarnings = [{ code: 'NATIVE_JSON_PRECISION', message: 'MT5 numeric JSON fields may already contain binary floating-point rounding; textual decimals are preserved.' }, { code: 'BROKER_WALL_TIME', message: 'Broker timestamps without offsets remain wall time; the adapter does not infer UTC.' }];
+const firstPresent = (...inputs) => inputs.find(input => input !== undefined && input !== null && input !== '');
+const brokerNow = (info, server) => {
+  const value = firstPresent(info.server_time, info.serverTime, info.time_server, info.timeServer, info.broker_time, info.brokerTime, info.trade_server_time, info.tradeServerTime, info.time_current, info.timeCurrent, info.terminal_time, info.terminalTime,
+    info.server?.time, info.server?.current_time, info.server?.currentTime,
+    info.terminal?.server_time, info.terminal?.serverTime, info.terminal?.time_server, info.terminal?.timeServer, info.terminal?.broker_time, info.terminal?.brokerTime, info.terminal?.time_current, info.terminal?.timeCurrent, info.terminal?.time,
+    info.account?.server_time, info.account?.serverTime, info.account?.time_server, info.account?.timeServer, info.account?.broker_time, info.account?.brokerTime, info.account?.time_current, info.account?.timeCurrent, info.account?.time);
+  if (value === undefined) return undefined;
+  try { return sourceTime(value, server); } catch { return undefined; }
+};
 
 /** A cursor points into a retained immutable adapter snapshot. It never means an
  * offset into whatever the terminal happens to return on the next request. */
@@ -29,7 +38,7 @@ export class SnapshotPages {
       check(Array.isArray(items) && Buffer.byteLength(JSON.stringify(items)) <= 32 * 1024 * 1024, 'RESOURCE_EXHAUSTED', 'The native snapshot exceeds the adapter memory budget; use a smaller range');
       for (const [id, snapshot] of this.snapshots) if (snapshot.expiresAt <= this.clock()) this.snapshots.delete(id);
       while (this.snapshots.size >= this.maxSnapshots) this.snapshots.delete(this.snapshots.keys().next().value);
-      const snapshot = { id: randomUUID(), key, items: clone(items), extra: clone(extra), expiresAt: this.clock() + this.ttlMs };
+      const snapshot = { id: randomUUID(), bindingId, key, items: clone(items), extra: clone(extra), expiresAt: this.clock() + this.ttlMs };
       this.snapshots.set(snapshot.id, snapshot); return this.page(snapshot, 0, limit);
     });
   }
@@ -37,24 +46,38 @@ export class SnapshotPages {
     const end = Math.min(snapshot.items.length, offset + limit);
     return { ...clone(snapshot.extra), page: { items: clone(snapshot.items.slice(offset, end)), snapshotId: snapshot.id, consistency: 'snapshot', nextCursor: end < snapshot.items.length ? Buffer.from(JSON.stringify({ id: snapshot.id, offset: end })).toString('base64url') : null } };
   }
+  releaseBinding(bindingId) {
+    for (const [id, snapshot] of this.snapshots) if (snapshot.bindingId === bindingId) this.snapshots.delete(id);
+  }
 }
 
 class NativeProvider {
   constructor(mt5) { this.mt5 = mt5; this.bindings = new Map(); this.pages = new SnapshotPages(); this.revisions = new Revisions(); this.reads = new Map(); this.readSequence = 0; this.closed = false; }
+  connectionFor(input, config) {
+    const server = config.account?.server, login = config.account?.login;
+    const stable = `acct-${fingerprint([server, String(login), config.servers?.terminal?.url ?? null]).slice(0, 24)}`;
+    const connection = { id: 'mt5-terminal', revision: stable };
+    if (!input.connection) return connection;
+    check(input.connection.id === connection.id, 'CONNECTION_CHANGED', 'The requested MT5 connection is not the current configured terminal');
+    check(input.connection.revision === stable || String(input.connection.revision) === String(config.version), 'CONNECTION_CHANGED', 'The requested MT5 connection is not the current configured account');
+    return clone(input.connection);
+  }
+  connectionSignature(config) {
+    return fingerprint([config.account?.server, String(config.account?.login), config.servers?.terminal?.url ?? null]);
+  }
   bind(input, context) {
     const config = this.mt5.official.config, server = config.account?.server, login = config.account?.login;
     check(server && login, 'CONNECTION_UNAVAILABLE', 'Configure the MT5 terminal account before binding data');
     context.signal?.throwIfAborted();
-    const connection = { id: 'mt5-terminal', revision: String(config.version) };
-    check(!input.connection || input.connection.id === connection.id && input.connection.revision === connection.revision, 'CONNECTION_CHANGED', 'The requested MT5 connection is not the current configured revision; bind the current connection');
-    const binding = { connection, server, login: String(login), version: config.version, sourceId: sourceIdentity(server), account: { connectionId: connection.id, accountId: accountIdentity(server, login) } };
+    const connection = this.connectionFor(input, config);
+    const binding = { connection, server, login: String(login), signature: this.connectionSignature(config), sourceId: sourceIdentity(server), account: { connectionId: connection.id, accountId: accountIdentity(server, login) } };
     this.bindings.set(context.bindingId, binding);
     return { connection: binding.connection, sourceIds: [binding.sourceId], accounts: [binding.account], health: 'connecting', timeBasis: { kind: 'wall', authority: server } };
   }
   binding(context, account, instrument) {
     context.signal?.throwIfAborted();
     const binding = this.bindings.get(context.bindingId), config = this.mt5.official.config;
-    check(binding && !this.closed && binding.version === config.version && binding.server === config.account?.server && binding.login === String(config.account?.login), 'CONNECTION_CHANGED', 'The MT5 connection changed; create a new binding');
+    check(binding && !this.closed && binding.signature === this.connectionSignature(config), 'CONNECTION_CHANGED', 'The MT5 connection changed; create a new binding');
     if (account) check(account.connectionId === binding.account.connectionId && account.accountId === binding.account.accountId, 'ACCOUNT_MISMATCH', 'The requested account is not bound to this connection');
     if (instrument) check(instrument.sourceId === binding.sourceId, 'INSTRUMENT_MISMATCH', 'The instrument belongs to a different source');
     return binding;
@@ -90,6 +113,21 @@ class NativeProvider {
     check(String(data.account?.login) === binding.login && data.account?.server === binding.server, 'ACCOUNT_MISMATCH', 'The terminal account differs from the bound account');
     return data;
   }
+  async currentBrokerTime(context, binding, info) {
+    const observed = brokerNow(info, binding.server);
+    if (observed) return observed;
+    const data = await this.read('get_time_information', {}, context, 1000);
+    const current = brokerNow(data, binding.server);
+    check(current?.basis === 'wall' && current.authority === binding.server, 'UNSUPPORTED_CAPABILITY', 'MT5 did not report the current broker wall-clock time needed for account history');
+    return current;
+  }
+  async historyRange(input, context, binding, info) {
+    if (input.range) return input.range;
+    const to = await this.currentBrokerTime(context, binding, info), end = new Date(`${to.value}Z`);
+    check(Number.isFinite(end.getTime()), 'INVALID_NATIVE_DATA', 'MT5 returned an invalid broker wall-clock time');
+    const start = new Date(end); start.setUTCDate(start.getUTCDate() - 30);
+    return { from: { basis: 'wall', authority: binding.server, value: start.toISOString().replace(/\.\d{3}Z$/, '') }, to };
+  }
   range(range, binding) {
     check(range?.from?.basis === 'wall' && range?.to?.basis === 'wall' && range.from.authority === binding.server && range.to.authority === binding.server, 'UNSUPPORTED_CAPABILITY', 'MT5 history requires the bound broker wall-clock range');
     const from = timeKey(range.from), to = timeKey(range.to);
@@ -104,6 +142,7 @@ class NativeProvider {
     const binding = this.bindings.get(bindingId); this.bindings.delete(bindingId);
     for (const controller of binding?.readControllers ?? []) controller.abort(Object.assign(new Error('Binding was closed'), { code: 'CONNECTION_CHANGED' }));
     for (const [key, entry] of this.reads) if (entry.bindingId === bindingId) { clearTimeout(entry.timer); this.reads.delete(key); }
+    this.pages.releaseBinding(bindingId);
   }
   dispose() { this.closed = true; for (const bindingId of [...this.bindings.keys()]) this.unbind({ bindingId }); this.pages.snapshots.clear(); }
 }
@@ -224,7 +263,8 @@ export class MT5AccountProvider extends NativeProvider {
   }
   async snapshot(input, context) {
     const from = Date.now(), binding = this.binding(context, input.account), { account, terminal } = await this.accountInfo(context);
-    return { data: mapAccountSnapshot(account, { ...binding, terminal, connectionId: binding.connection.id, observedAt: Date.now(), snapshotId: randomUUID() }), meta: meta(from, nativeWarnings) };
+    const observedAt = Date.now();
+    return { data: mapAccountSnapshot(account, { ...binding, terminal, connectionId: binding.connection.id, observedAt, asOf: brokerNow({ account, terminal }, binding.server), snapshotId: randomUUID() }), meta: meta(from, nativeWarnings) };
   }
   async open(input, context) {
     const binding = this.binding(context, input.account), info = await this.accountInfo(context), data = await this.read('get_trading_open_positions', { include_orders: true }, context, 1000);
@@ -240,7 +280,7 @@ export class MT5AccountProvider extends NativeProvider {
     return { data: result.page, meta: { ...meta(from, nativeWarnings), observedAt: result.observedAt } };
   }
   async nativeHistory(input, context) {
-    const binding = this.binding(context, input.account), { account } = await this.accountInfo(context), range = this.range(input.range, binding);
+    const binding = this.binding(context, input.account), info = await this.accountInfo(context), { account } = info, historyRange = await this.historyRange(input, context, binding, info), range = this.range(historyRange, binding);
     const orders = [], deals = [];
     const read = async (from, to) => {
       const data = await this.read('get_trading_history_orders', { datetime_from: brokerISO(from), datetime_to: brokerISO(to), include_orders: true, include_deals: true, limit: 5000 }, context);
@@ -250,7 +290,7 @@ export class MT5AccountProvider extends NativeProvider {
       check(orders.length + deals.length <= 200000, 'RESOURCE_EXHAUSTED', 'Use a smaller account-history range');
     };
     await read(range.from, range.to); this.binding(context, input.account);
-    return { binding: { ...binding, currency: account.currency, revisions: this.revisions }, orders, deals };
+    return { binding: { ...binding, currency: account.currency, revisions: this.revisions }, orders, deals, range: historyRange };
   }
   async queryOrders(input, context) {
     check(['working', 'history', 'all'].includes(input.scope), 'INVALID_ARGUMENT', 'Order scope must be working, history or all');
@@ -259,7 +299,7 @@ export class MT5AccountProvider extends NativeProvider {
     const result = await this.pages.read(input, context.bindingId, async () => {
       const rows = [];
       if (input.scope !== 'history') { const { data, binding } = await this.open(input, context); rows.push(...data.orders.map(row => mapOrder(row, binding))); }
-      if (input.scope !== 'working') { const { orders, binding } = await this.nativeHistory(input, context); rows.push(...orders.map(row => mapOrder(row, binding)).filter(row => within(row.createdAt, input.range))); }
+      if (input.scope !== 'working') { const { orders, binding, range } = await this.nativeHistory(input, context); rows.push(...orders.map(row => mapOrder(row, binding)).filter(row => within(row.createdAt, range))); }
       const items = [...new Map(rows.map(row => [row.id, row])).values()].filter(row => !input.instruments?.length || input.instruments.some(ref => ref.sourceId === row.instrument.sourceId && ref.instrumentId === row.instrument.instrumentId)).sort((a, b) => timeKey(a.createdAt) - timeKey(b.createdAt) || a.id.localeCompare(b.id));
       return { items, ...(input.range ? { coverage: this.coverage(input.range, items, row => row.createdAt) } : {}), observedAt: Date.now() };
     });
@@ -268,11 +308,11 @@ export class MT5AccountProvider extends NativeProvider {
   async history(input, context, ledger) {
     const from = Date.now(); this.binding(context, input.account);
     const result = await this.pages.read(input, context.bindingId, async () => {
-      const { deals, binding } = await this.nativeHistory(input, context);
+      const { deals, binding, range } = await this.nativeHistory(input, context);
       const traded = row => ['buy', 'sell', '0', '1', 'deal_type_buy', 'deal_type_sell'].includes(String(row.action ?? row.type).toLowerCase());
-      const mapped = deals.filter(row => ledger ? !traded(row) : traded(row)).map(row => ledger ? mapLedgerEntry(row, binding) : mapFill(row, binding)).filter(Boolean).filter(row => within(row.time, input.range));
+      const mapped = deals.filter(row => ledger ? !traded(row) : traded(row)).map(row => ledger ? mapLedgerEntry(row, binding) : mapFill(row, binding)).filter(Boolean).filter(row => within(row.time, range));
       const items = [...new Map(mapped.map(row => [row.id, row])).values()].filter(row => ledger ? !input.kinds?.length || input.kinds.includes(row.kind) : (!input.instruments?.length || input.instruments.some(ref => ref.sourceId === row.instrument.sourceId && ref.instrumentId === row.instrument.instrumentId)) && (!input.orderIds?.length || row.orderId.status === 'value' && input.orderIds.includes(row.orderId.value))).sort((a, b) => timeKey(a.time) - timeKey(b.time) || a.id.localeCompare(b.id));
-      return { items, coverage: this.coverage(input.range, items, row => row.time), observedAt: Date.now() };
+      return { items, coverage: this.coverage(range, items, row => row.time), observedAt: Date.now() };
     });
     const { observedAt, ...data } = result; return { data, meta: { ...meta(from, [...nativeWarnings, { code: 'NATIVE_RETENTION_UNKNOWN', message: 'The terminal returned this bounded history; broker retention and internal gaps cannot be certified.' }]), observedAt } };
   }

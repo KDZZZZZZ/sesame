@@ -67,6 +67,33 @@ async function boundedFile(path, limit = 32 * 1024 * 1024) {
   return fs.readFile(path);
 }
 
+export async function copyAvailableTree(source, destination, prefix = '', summary = { copiedCount: 0, skippedCount: 0, skipped: [] }, sampleLimit = 8) {
+  await fs.mkdir(destination, { recursive: true });
+  for (const entry of await fs.readdir(source, { withFileTypes: true }).catch(error => {
+    if (['ENOENT', 'EBUSY', 'EPERM', 'EACCES'].includes(error.code)) {
+      summary.skippedCount++;
+      if (summary.skipped.length < sampleLimit) summary.skipped.push({ path: prefix || '.', code: error.code });
+      return [];
+    }
+    throw error;
+  })) {
+    const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
+    const from = join(source, entry.name), to = join(destination, entry.name);
+    if (entry.isDirectory()) await copyAvailableTree(from, to, relative, summary, sampleLimit);
+    else if (entry.isFile()) {
+      try { await fs.copyFile(from, to); summary.copiedCount++; }
+      catch (error) {
+        if (['EBUSY', 'EPERM', 'EACCES'].includes(error.code)) {
+          summary.skippedCount++;
+          if (summary.skipped.length < sampleLimit) summary.skipped.push({ path: relative, code: error.code });
+        }
+        else throw error;
+      }
+    }
+  }
+  return summary;
+}
+
 export function parseTesterResult(pass, resultBytes, equityBytes, traceBytes) {
   let result, equity, trace;
   try {
@@ -208,10 +235,11 @@ export class Tester {
     requireValue(!history.isError, '原生历史数据预热失败');
     await fs.writeFile(join(archive, 'history-preflight.json'), JSON.stringify(history));
     const bases = ['Bases', 'bases'].map(name => join(dataDirectory, name)).find(existsSync);
+    const cacheCopy = { copiedCount: 0, skippedCount: 0, skipped: [] };
     if (bases && (await fs.readdir(bases)).includes(account.server)) {
       for (const relative of ['symbols', `history/${pass.config.symbol}`, `ticks/${pass.config.symbol}`]) {
         const source = join(bases, account.server, relative);
-        if (existsSync(source)) await fs.cp(source, join(runner, 'bases', account.server, relative), { recursive: true });
+        if (existsSync(source)) await copyAvailableTree(source, join(runner, 'bases', account.server, relative), relative, cacheCopy);
       }
     }
     const source = join(this.storage.directory, 'mt5/builds', pass.build_id, 'Experts/Strategy.ex5');
@@ -222,7 +250,9 @@ export class Tester {
     await fs.mkdir(join(expert, '..'), { recursive: true }); await fs.mkdir(profiles, { recursive: true }); await fs.writeFile(expert, bytes);
     const staged = await boundedFile(expert);
     requireValue(digest(staged) === pass.artifact_digest, 'Tester staged EX5 checksum differs from frozen build');
-    const nativePaths = { portable: true, runner: windowsPath(runner), expert: windowsPath(expert), expertPathLength: windowsPath(expert).length, cache: { sourceDirectory: windowsPath(dataDirectory), copied: ['symbols', `history/${pass.config.symbol}`, `ticks/${pass.config.symbol}`].filter(relative => existsSync(join(bases ?? '', account.server, relative))) }, before: { exists: true, bytes: staged.length, digest: digest(staged) } };
+    const nativePaths = { portable: true, runner: windowsPath(runner), expert: windowsPath(expert), expertPathLength: windowsPath(expert).length,
+      cache: { sourceDirectory: windowsPath(dataDirectory), copiedRoots: ['symbols', `history/${pass.config.symbol}`, `ticks/${pass.config.symbol}`].filter(relative => existsSync(join(bases ?? '', account.server, relative))), copiedCount: cacheCopy.copiedCount, skippedCount: cacheCopy.skippedCount, skipped: cacheCopy.skipped },
+      before: { exists: true, bytes: staged.length, digest: digest(staged) } };
     this.storage.put('mt5_pass', { ...this.storage.get('mt5_pass', pass.id), native_paths: nativePaths });
     const ini = join(runner, `${pass.id}.ini`);
     await fs.writeFile(ini, Buffer.from('\uFEFF' + files.ini, 'utf16le'), { mode: 0o600 });

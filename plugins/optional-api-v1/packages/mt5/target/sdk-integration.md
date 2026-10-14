@@ -16,7 +16,7 @@ Read `target/examples/Strategy.mq5` with `plugin_read`. It is a complete MQL5 li
 | --- | --- |
 | `OnInit` | Check `ProductExecutionAllowed()`, open trace, start the timer, then emit `lifecycle/platform.expert/"initialized"` only after successful initialization. Clean up on failure. |
 | `OnTick` | Check `ProductTestCanceled()` and authorization; call `ProductEquity()` and `ProductRisk.Refresh()`. Evaluate only observed and ready inputs. |
-| `OnTimer` | Check cancellation and authorization. Emit a bounded heartbeat while alive so the observer can distinguish current evidence from stale state. A timer firing does not imply a bar closed. |
+| `OnTimer` | Check cancellation and authorization. Emit a bounded heartbeat while alive; the observer accepts a 300 second heartbeat plus 60 seconds grace before marking a previously verified run unknown. A timer firing does not imply a bar closed. |
 | Strategy decision | Set a stable `ProductDecisionId`, then call `ProductEmit(kind, exactSourceNodeId, validJsonValue)` for the branch actually taken. Preserve pending intent and native ticket ownership for later callbacks. |
 | Order request | Use `CProductTrade::OrderSend(request,result)` so platform authorization, limits and request-result telemetry apply. Supply a valid protective stop for a new position. Inspect the real retcode and tickets; a sent request is not a confirmed fill. Do not automatically repeat timeout, partial or unknown requests. |
 | `OnTradeTransaction` | Call `ProductTransaction(tx,request,result)` and reconcile real order/deal/position identifiers with owned intents. Transactions from another EA or a manual order are not proof of this strategy's decision. |
