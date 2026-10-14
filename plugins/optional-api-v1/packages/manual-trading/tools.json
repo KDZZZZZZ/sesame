@@ -578,6 +578,41 @@
     }
   },
   {
+    "name": "manual_trading_activity",
+    "description": "Open the real run collaboration interface on a read-only localhost URL, read its actual activity snapshot, or archive a finished run as a self-contained HTML recording in research/手工交易日报. The workflow comes from the saved plan; animated handoffs are actual successful report reads. Opening never starts a run or sends orders. Copy the localhost URL into a browser if the host chat does not support local links.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "run_id"
+      ],
+      "properties": {
+        "run_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Persisted manual trading run ID from this task input"
+        },
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "open"
+            },
+            {
+              "type": "string",
+              "const": "read"
+            },
+            {
+              "type": "string",
+              "const": "archive"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
     "name": "manual_trading_context",
     "description": "Read this run’s frozen full-account snapshot and paginated positions, orders, fills, mounted strategies, completed peer reports, and prior decisions/reflections. Includes all position origins. Continue pages when nextOffset is present; no data is fabricated.",
     "parameters": {

@@ -44,6 +44,12 @@ export function createAgentTools(host) {
       const rows = host.storage.list('runs').filter(run => !args.plan_id || run.planId === args.plan_id).sort((a, b) => b.createdAt - a.createdAt), offset = args.offset ?? 0, limit = args.limit ?? 20;
       return { items: rows.slice(offset, offset + limit).map(run => ({ id: run.id, planId: run.planId, status: run.status, createdAt: run.createdAt, completedAt: run.completedAt, error: run.error, report: run.report, reportPending: run.reportPending })), total: rows.length, nextOffset: offset + limit < rows.length ? offset + limit : null };
     }),
+    define('manual_trading_activity', 'Open the real run collaboration interface on a read-only localhost URL, read its actual activity snapshot, or archive a finished run as a self-contained HTML recording in research/手工交易日报. The workflow comes from the saved plan; animated handoffs are actual successful report reads. Opening never starts a run or sends orders. Copy the localhost URL into a browser if the host chat does not support local links.', {
+      ...runId, action: Type.Optional(choice(['open', 'read', 'archive'])),
+    }, args => {
+      const viewer = instance(host).viewer;
+      return args.action === 'read' ? viewer.read(host, args.run_id) : args.action === 'archive' ? viewer.archive(host, args.run_id) : viewer.open(host, args.run_id);
+    }),
     define('manual_trading_context', 'Read this run’s frozen full-account snapshot and paginated positions, orders, fills, mounted strategies, completed peer reports, and prior decisions/reflections. Includes all position origins. Continue pages when nextOffset is present; no data is fabricated.', {
       ...runId, section: Type.Optional(choice(['all', 'account', 'history', 'team', 'memory'])), offset: Type.Optional(Type.Integer({ minimum: 0 })), limit: Type.Optional(Type.Integer({ minimum: 1, maximum: 100 })),
     }, (args, signal) => runtime().context(host, args.run_id, args.section, args.offset, args.limit, signal)),
