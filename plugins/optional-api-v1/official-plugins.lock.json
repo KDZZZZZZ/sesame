@@ -2830,9 +2830,9 @@
     },
     {
       "id": "sesame/manual-trading",
-      "version": "2.2.0",
+      "version": "2.2.1",
       "directory": "manual-trading",
-      "treeDigest": "sha256:72f8a330dcaff32faf75ac5d597a55a3240567c75b6e96c5bf24267db91bf4cc",
+      "treeDigest": "sha256:512161d8206d7f85d3c9ddd6dfa153a6177736f20bd34cae48680a92a20f1e60",
       "files": [
         {
           "path": "LICENSE",
@@ -2841,8 +2841,8 @@
         },
         {
           "path": "PROVENANCE.md",
-          "sha256": "5fec310d5a6c9cb80303580b3870f503c956fa5a81279a063df93d948cf4f98b",
-          "bytes": 2513
+          "sha256": "ebb000fb1e0f68f1cb2cc9e367e90f64bf3fec04236c7cf6e9315f37d54d7292",
+          "bytes": 2557
         },
         {
           "path": "README.md",
@@ -2866,8 +2866,8 @@
         },
         {
           "path": "assets/collaboration.css",
-          "sha256": "a893d1cce0bd4821cd7cfa26ccc10f2c09c61f9322703cec6efacd0b21c356c0",
-          "bytes": 9288
+          "sha256": "264d4ec58846552eda5e09b01c8c85e17950a9697fb2e976f0fdaeaffad7f7f7",
+          "bytes": 10305
         },
         {
           "path": "assets/collaboration.html",
@@ -2876,8 +2876,8 @@
         },
         {
           "path": "assets/collaboration.js",
-          "sha256": "c14b7158e5a5526d763d1cda83bef29ee927d295a5c778c17f93eaeee57f4cf1",
-          "bytes": 23376
+          "sha256": "f893c2efd95aca4b92122e1e5b0cd6106e11cfa4a300f5ef00eac0c9b218f882",
+          "bytes": 24023
         },
         {
           "path": "index.js",
@@ -2926,7 +2926,7 @@
         },
         {
           "path": "package.json",
-          "sha256": "46d5dd1669459cafe0615b077f5144184a385b4b2fbc5838814052988b7e3076",
+          "sha256": "fe70b648869ba173b4937826e15993237d532afd7cc86434778bbded6f7f666a",
           "bytes": 108
         },
         {
@@ -2936,7 +2936,7 @@
         },
         {
           "path": "plugin.json",
-          "sha256": "a629d3ba564ac8ceaf916e066a75d862ca92e42d9a89a375918881d92dc32284",
+          "sha256": "bdfc09a06cb866962b472ac35cd68504abb855652e06f8cb39e22d2e1815f8e0",
           "bytes": 2235
         },
         {
