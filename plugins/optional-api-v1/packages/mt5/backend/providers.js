@@ -9,14 +9,17 @@ const check = (condition, code, message) => { if (!condition) error(code, messag
 const within = (time, range) => timeKey(time) >= timeKey(range.from) && timeKey(time) < timeKey(range.to);
 const meta = (from, warnings = [], freshness = 'live') => ({ observedAt: Date.now(), freshness, origin: 'observed', consistency: 'bounded', samplingWindow: { from, to: Date.now() }, warnings });
 const nativeWarnings = [{ code: 'NATIVE_JSON_PRECISION', message: 'MT5 numeric JSON fields may already contain binary floating-point rounding; textual decimals are preserved.' }, { code: 'BROKER_WALL_TIME', message: 'Broker timestamps without offsets remain wall time; the adapter does not infer UTC.' }];
-const firstPresent = (...inputs) => inputs.find(input => input !== undefined && input !== null && input !== '');
-const brokerNow = (info, server) => {
-  const value = firstPresent(info.server_time, info.serverTime, info.time_server, info.timeServer, info.broker_time, info.brokerTime, info.trade_server_time, info.tradeServerTime, info.time_current, info.timeCurrent, info.terminal_time, info.terminalTime,
-    info.server?.time, info.server?.current_time, info.server?.currentTime,
-    info.terminal?.server_time, info.terminal?.serverTime, info.terminal?.time_server, info.terminal?.timeServer, info.terminal?.broker_time, info.terminal?.brokerTime, info.terminal?.time_current, info.terminal?.timeCurrent, info.terminal?.time,
-    info.account?.server_time, info.account?.serverTime, info.account?.time_server, info.account?.timeServer, info.account?.broker_time, info.account?.brokerTime, info.account?.time_current, info.account?.timeCurrent, info.account?.time);
-  if (value === undefined) return undefined;
-  try { return sourceTime(value, server); } catch { return undefined; }
+const present = input => input !== undefined && input !== null && input !== '';
+// Real local evidence from MetaTrader 5 MCP 1.0 on 2026-10-14:
+// The read-only get_time_information response (fixture: mt5-account-mcp.test.js)
+// reported structuredContent
+// with utc_time, local_time, local_utc_offset_minutes, daylight_saving_time and
+// trade_server_last_known_time. Only the trade server field is broker wall time;
+// utc/local fields are not converted into broker time.
+const tradeServerTime = (info, server) => {
+  const value = info?.trade_server_last_known_time;
+  if (!present(value)) return undefined;
+  try { const time = sourceTime(value, server); return time.basis === 'wall' ? time : undefined; } catch { return undefined; }
 };
 
 /** A cursor points into a retained immutable adapter snapshot. It never means an
@@ -113,17 +116,15 @@ class NativeProvider {
     check(String(data.account?.login) === binding.login && data.account?.server === binding.server, 'ACCOUNT_MISMATCH', 'The terminal account differs from the bound account');
     return data;
   }
-  async currentBrokerTime(context, binding, info) {
-    const observed = brokerNow(info, binding.server);
-    if (observed) return observed;
+  async currentBrokerTime(context, binding) {
     const data = await this.read('get_time_information', {}, context, 1000);
-    const current = brokerNow(data, binding.server);
-    check(current?.basis === 'wall' && current.authority === binding.server, 'UNSUPPORTED_CAPABILITY', 'MT5 did not report the current broker wall-clock time needed for account history');
+    const current = tradeServerTime(data, binding.server);
+    check(current?.basis === 'wall' && current.authority === binding.server, 'UNSUPPORTED_CAPABILITY', 'MT5 did not report trade_server_last_known_time for account history');
     return current;
   }
-  async historyRange(input, context, binding, info) {
+  async historyRange(input, context, binding) {
     if (input.range) return input.range;
-    const to = await this.currentBrokerTime(context, binding, info), end = new Date(`${to.value}Z`);
+    const to = await this.currentBrokerTime(context, binding), end = new Date(`${to.value}Z`);
     check(Number.isFinite(end.getTime()), 'INVALID_NATIVE_DATA', 'MT5 returned an invalid broker wall-clock time');
     const start = new Date(end); start.setUTCDate(start.getUTCDate() - 30);
     return { from: { basis: 'wall', authority: binding.server, value: start.toISOString().replace(/\.\d{3}Z$/, '') }, to };
@@ -264,7 +265,7 @@ export class MT5AccountProvider extends NativeProvider {
   async snapshot(input, context) {
     const from = Date.now(), binding = this.binding(context, input.account), { account, terminal } = await this.accountInfo(context);
     const observedAt = Date.now();
-    return { data: mapAccountSnapshot(account, { ...binding, terminal, connectionId: binding.connection.id, observedAt, asOf: brokerNow({ account, terminal }, binding.server), snapshotId: randomUUID() }), meta: meta(from, nativeWarnings) };
+    return { data: mapAccountSnapshot(account, { ...binding, terminal, connectionId: binding.connection.id, observedAt, snapshotId: randomUUID() }), meta: meta(from, nativeWarnings) };
   }
   async open(input, context) {
     const binding = this.binding(context, input.account), info = await this.accountInfo(context), data = await this.read('get_trading_open_positions', { include_orders: true }, context, 1000);
@@ -280,7 +281,7 @@ export class MT5AccountProvider extends NativeProvider {
     return { data: result.page, meta: { ...meta(from, nativeWarnings), observedAt: result.observedAt } };
   }
   async nativeHistory(input, context) {
-    const binding = this.binding(context, input.account), info = await this.accountInfo(context), { account } = info, historyRange = await this.historyRange(input, context, binding, info), range = this.range(historyRange, binding);
+    const binding = this.binding(context, input.account), info = await this.accountInfo(context), { account } = info, historyRange = await this.historyRange(input, context, binding), range = this.range(historyRange, binding);
     const orders = [], deals = [];
     const read = async (from, to) => {
       const data = await this.read('get_trading_history_orders', { datetime_from: brokerISO(from), datetime_to: brokerISO(to), include_orders: true, include_deals: true, limit: 5000 }, context);
