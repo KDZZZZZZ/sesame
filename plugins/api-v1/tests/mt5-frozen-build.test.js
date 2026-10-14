@@ -64,3 +64,26 @@ test('saved native run definitions are returned without rewriting legacy numeric
   const body=new NativeRunObserver({plugin:{id:'sesame/mt5'},records:{list:()=>[]}}, {storage}).definition('deployment',{id:'old'});
   assert.deepEqual(body,legacy);
 });
+
+test('tester run definitions keep numeric connection_version without requiring live account identity', async()=>{
+  const directory=await mkdtemp(join(tmpdir(),'mt5-tester-connection-'));
+  try{
+    const source=JSON.parse(readFileSync(new URL('../packages/strategy-authoring/examples/close-threshold.svl.json',import.meta.url))),checked=validateSource(source),sourceBytes=Buffer.from(JSON.stringify(source));
+    const ex5=Buffer.from('tester run connection ex5'),build={id:'build-tester-connection',project_id:'project',revision:1,ex5_sha256:digest(ex5),manifest_digest:digest('manifest')},manifest={compiler_sha256:digest('compiler'),files:{}};
+    await mkdir(join(directory,'mt5/builds',build.id,'Experts'),{recursive:true});
+    await writeFile(join(directory,'mt5/builds',build.id,'Experts/Strategy.ex5'),ex5);
+    await writeFile(join(directory,'mt5/builds',build.id,'manifest.json'),JSON.stringify(manifest));
+    const ref=(id,kind)=>({id,kind,revision:'1',schemaVersion:'1.0.0',digest:digest(id)}),sourceRef=ref('source','strategy.source'),targetRef=ref('target','strategy.target'),translationRef=ref('translation','strategy.translation');
+    const artifacts=new Map([
+      [sourceRef.id,{ref:sourceRef,producer:{id:'sesame/mt5'},manifest:{content:{sourcePath:'strategy.svl.json',sourceDigest:checked.sourceDigest},blobs:[{path:'strategy.svl.json',digest:digest(sourceBytes),size:sourceBytes.length}]}}],
+      [targetRef.id,{ref:targetRef,producer:{id:'sesame/mt5'},manifest:{content:{id:'sesame.mt5.mql5',svl:{versions:['1.0.0'],events:['bar.closed']}}}}],
+      [translationRef.id,{ref:translationRef,producer:{id:'sesame/mt5'},manifest:{content:{source:sourceRef,target:targetRef,nativeParameterMap:{instrument:{binding:'instrument'},threshold:{nativeInput:'Threshold'}},environment:{}}}}],
+    ]),blobs=new Map([[digest(sourceBytes),sourceBytes]]),records=new Map([['mt5_build/'+build.id,build],['mt5_revision/project:1',{translation:translationRef}]]);
+    const storage={directory,get:(kind,id,optional=false)=>{const row=records.get(`${kind}/${id}`);assert.ok(optional||row,`missing ${kind}/${id}`);return row&&structuredClone(row);},put:(kind,row)=>{records.set(`${kind}/${row.id}`,structuredClone(row));return row;},idempotent:(_id,_fingerprint,action)=>action()};
+    const host={plugin:{id:'sesame/mt5',version:'fixture',digest:digest('plugin')},records:{list:()=>[]},artifacts:{blob:b=>{const buf=Buffer.isBuffer(b)?b:Buffer.from(b),out={digest:digest(buf),size:buf.length};blobs.set(out.digest,buf);return out;},readBlob:blob=>blobs.get(blob.digest),read:ref=>structuredClone(artifacts.get(ref.id)),list:()=>({items:[],hasMore:false}),publish:input=>{const out=ref('artifact-'+artifacts.size,input.manifest.kind);artifacts.set(out.id,{ref:out,producer:{id:'sesame/mt5'},manifest:structuredClone(input.manifest)});return out;}}};
+    const mt5={storage,official:{config:{version:99,servers:{terminal:{url:'http://127.0.0.1:22346/mcp'}},account:{server:'Current-Demo',login:'9999'}}}};
+    const body=new NativeRunObserver(host,mt5).definition('tester',{id:'pass-tester-connection',build_id:build.id,connection_version:7,config:{symbol:'EURUSD',period:'M1',parameters:{Threshold:'101.25'}},conversation_id:'conv',owner_run_id:'run'});
+    assert.deepEqual(body.accounts,[]);
+    assert.deepEqual(host.artifacts.read(body.environment).manifest.content.connection,{id:'mt5-terminal',revision:'7'});
+  }finally{await rm(directory,{recursive:true,force:true});}
+});
