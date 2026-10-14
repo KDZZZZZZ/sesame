@@ -13,6 +13,7 @@
   const terminal = new Set(['completed', 'failed', 'cancelled', 'canceled', 'interrupted']);
   const roleLookup = new Map(roles.map(role => [role.id, role])), nodeRefs = new Map(), reportNodes = new Map(), modelNodes = new Map();
   const svgNS = 'http://www.w3.org/2000/svg', pulses = [], motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const graph = new window.SesameGraphCanvas($('diagram-viewport'), $('diagram'));
   const string = value => value === null || value === undefined ? '' : String(value);
   const stamp = value => value === null || value === undefined || value === '' ? null : Number.isFinite(Number(value)) ? Number(value) : null;
   const time = value => stamp(value) === null ? '—' : new Date(Number(value)).toLocaleTimeString('zh-CN', { hour12: false });
@@ -22,12 +23,17 @@
   const roleInfo = id => roleLookup.get(id) ?? { id, name: string(id), icon: string(id).slice(0, 1) };
   const modelLabel = task => task ? [task.provider, task.model].filter(Boolean).join(' / ') || '模型未记录' : '待分配模型';
   function colorize(node, task) {
-    const name = modelLabel(task).toLowerCase();
-    const [color, tint] = name.includes('gpt') || name.includes('openai') ? ['#1aa886', '#eaf7f2']
-      : name.includes('claude') || name.includes('anthropic') ? ['#d88261', '#fcf0e9']
-      : name.includes('gemini') || name.includes('google') ? ['#5e85cf', '#edf3fd']
-      : name.includes('deepseek') ? ['#6276c2', '#eef0fb'] : ['#758397', '#f1f3f7'];
+    const [color, tint] = ({
+      openai: ['#1aa886', '#eaf7f2'], claude: ['#d88261', '#fcf0e9'],
+      gemini: ['#5e85cf', '#edf3fd'], deepseek: ['#6276c2', '#eef0fb'],
+      grok: ['#151515', '#f0f0f0'], qwen: ['#7b69c4', '#f1eefb'],
+    })[window.SesameModelIcons.resolve(task ?? {})] ?? ['#758397', '#f1f3f7'];
     node.style.setProperty('--model-color', color); node.style.setProperty('--model-tint', tint);
+  }
+  function modelIcon(container, task) {
+    const identity = window.SesameModelIcons.resolve(task ?? {});
+    if (container.dataset.iconIdentity === identity) return;
+    window.SesameModelIcons.update(container, task ?? {}); container.dataset.iconIdentity = identity;
   }
   function normalize(data) {
     if (!data || data.schemaVersion !== 1 || !data.run || !['live', 'archive'].includes(data.mode)) throw new Error('协作记录版本或结构不受支持。');
@@ -48,7 +54,7 @@
     workflowSignature = signature; nodeRefs.clear(); $('role-stages').replaceChildren();
     workflowStages = (Array.isArray(latest.workflow?.stages) ? latest.workflow.stages : []).filter(stage => Number.isSafeInteger(stage.index) && Array.isArray(stage.roles)).map(stage => ({ ...stage, roles: [...new Set(stage.roles.filter(role => typeof role === 'string' && role))] })).sort((a, b) => a.index - b.index);
     $('role-stages').style.gridTemplateColumns = workflowStages.length ? `repeat(${workflowStages.length}, minmax(115px, 1fr))` : '1fr';
-    $('diagram').style.minWidth = `${Math.max(640, workflowStages.length * 145 + Math.max(0, workflowStages.length - 1) * 27 + 44)}px`;
+    $('diagram').style.width = `${Math.max(640, workflowStages.length * 145 + Math.max(0, workflowStages.length - 1) * 27 + 44)}px`;
     if (!workflowStages.length) $('role-stages').append(element('p', 'workflow-empty', '等待工作流'));
     for (const stage of workflowStages) {
       const section = element('div', 'stage'), label = element('p', 'stage-label');
@@ -56,10 +62,10 @@
       const list = element('div', 'stage-nodes');
       for (const roleId of stage.roles) {
         const role = roleInfo(roleId), button = element('button', 'agent-node'); button.type = 'button'; button.dataset.role = role.id; button.dataset.stageIndex = String(stage.index);
-        const top = element('span', 'node-top'), icon = element('span', 'node-icon', role.icon), name = element('span', 'node-name', role.name); icon.setAttribute('aria-hidden', 'true'); top.append(icon, name);
+        const top = element('span', 'node-top'), icon = element('span', 'node-icon'), name = element('span', 'node-name', role.name); icon.setAttribute('aria-hidden', 'true'); top.append(icon, name);
         const model = element('span', 'node-model', '待分配模型'), footer = element('span', 'node-footer'), status = element('span', 'node-status');
         const dot = element('span', 'node-status-dot'), statusText = element('span', '', '待开始'), tool = element('span', 'node-tool'); dot.setAttribute('aria-hidden', 'true'); status.append(dot, statusText); footer.append(status); button.append(top, model, footer, tool);
-        const ref = { button, model, statusText, tool, role: role.id, stageIndex: stage.index, taskId: null };
+        const ref = { button, icon, model, statusText, tool, role: role.id, stageIndex: stage.index, taskId: null };
         button.addEventListener('click', () => jumpToReport(role.id, ref.taskId)); list.append(button); nodeRefs.set(`${stage.index}:${role.id}`, ref);
       }
       section.append(label, list); $('role-stages').append(section);
@@ -91,10 +97,11 @@
       colorize(button, group.task);
       button.classList.toggle('is-selected', group.tasks.some(task => task.role === selectedRole));
       if (!button.modelParts) {
-        const top = element('span', 'model-summary-top'), name = element('span', 'model-summary-name'), value = element('div', 'model-summary-value'), count = element('span'), unit = element('span', '', '位 Agent'), description = element('div', 'model-summary-description');
-        top.append(name); value.append(count, unit); button.append(top, value, description); button.modelParts = { name, count, description };
+        const top = element('span', 'model-summary-top'), icon = element('span', 'model-summary-icon'), name = element('span', 'model-summary-name'), value = element('div', 'model-summary-value'), count = element('span'), unit = element('span', '', '位 Agent'), description = element('div', 'model-summary-description');
+        top.append(icon, name); value.append(count, unit); button.append(top, value, description); button.modelParts = { icon, name, count, description };
         button.addEventListener('click', () => { const current = button.modelGroup, published = [...latest.reports].sort((a, b) => Number(b.createdAt) - Number(a.createdAt)).find(report => current.tasks.some(task => task.id === report.taskId)); const task = current.tasks.find(item => item.id === published?.taskId) ?? current.tasks.find(item => item.status === 'running') ?? current.tasks[0]; jumpToReport(task.role, task.id); });
       }
+      modelIcon(button.modelParts.icon, group.task);
       button.modelParts.name.textContent = string(group.task.model) || '模型未记录'; button.modelParts.count.textContent = String(group.tasks.length); button.modelParts.description.textContent = group.tasks.map(task => roleInfo(task.role).name).join(' · ');
       button.title = modelLabel(group.task); button.setAttribute('aria-label', `${modelLabel(group.task)}，${group.tasks.length} 个角色，定位公开报告`); return button;
     });
@@ -117,13 +124,16 @@
       colorize(row, task ?? report);
       row.tabIndex = -1; row.dataset.taskId = task?.id ?? report.taskId; row.dataset.role = role.id; row.classList.toggle('is-streaming', streaming);
       if (!row.publicParts) {
-        const author = element('header', 'feed-author'), detail = element('div', 'feed-author-details'), line = element('div', 'feed-author-line');
-        const name = element('h3'), model = element('span', 'feed-model'), state = element('span', 'feed-output-state'), clock = element('time', 'feed-time'), copy = element('p', 'feed-copy');
-        line.append(name, model, state); detail.append(line, clock); author.append(detail); row.append(author, copy); row.publicParts = { name, model, state, clock, copy };
+        const author = element('header', 'feed-author'), icon = element('span', 'feed-model-icon'), detail = element('div', 'feed-author-details'), line = element('div', 'feed-author-line');
+        const name = element('h3'), model = element('span', 'feed-model'), state = element('span', 'feed-output-state'), clock = element('time', 'feed-time'), copy = element('div', 'feed-copy');
+        line.append(name, model, state); detail.append(line, clock); author.append(icon, detail); row.append(author, copy); row.publicParts = { icon, name, model, state, clock, copy };
       }
       const parts = row.publicParts; parts.name.textContent = role.name; parts.model.textContent = modelLabel(task ?? report); parts.state.hidden = !streaming; parts.state.textContent = task?.status === 'running' ? '正在输出' : '公开输出';
+      modelIcon(parts.icon, task ?? report);
       parts.clock.textContent = streaming ? stamp(task.startedAt) !== null ? `任务开始 ${dateTime(task.startedAt)}` : '输出时间未记录' : dateTime(report.createdAt);
-      const text = streaming ? task.publicOutput.text : string(report.text); if (parts.copy.textContent !== text) parts.copy.textContent = text; return row;
+      const text = streaming ? task.publicOutput.text : string(report.text);
+      if (parts.renderedText !== text) { window.SesameMarkdown.render(parts.copy, text); parts.renderedText = text; }
+      return row;
     });
     for (const article of $('report-body').children) if (article.classList.contains('feed-report')) article.classList.toggle('is-selected', selectedRole !== null && (selectedTaskId ? article.dataset.taskId === selectedTaskId : article.dataset.role === selectedRole));
     const selectedTask = selectedTaskId ? byId.get(selectedTaskId) : byRole.get(selectedRole), published = entries.some(entry => entry.report || entry.output ? selectedTaskId ? (entry.report?.taskId ?? entry.output.id) === selectedTaskId : (entry.report?.role ?? entry.output.role) === selectedRole : false);
@@ -147,16 +157,16 @@
     const toolsByTask = new Map(); for (const event of latest.events) if (event.taskId && ['tool.started', 'tool.finished'].includes(event.type)) toolsByTask.set(event.taskId, event);
     for (const ref of nodeRefs.values()) {
       const role = roleInfo(ref.role), task = tasksByRef.get(ref), status = task?.status ?? 'pending'; ref.taskId = task?.id ?? null;
-      colorize(ref.button, task);
+      colorize(ref.button, task); modelIcon(ref.icon, task);
       const selected = selectedTaskId ? task?.id === selectedTaskId : selectedRole === role.id;
-      ref.button.className = `agent-node${selected ? ' is-selected' : ''}${status === 'running' ? ' is-running' : terminal.has(status) ? status === 'completed' ? ' is-completed' : ' is-failed' : ''}`;
+      ref.button.className = `agent-node${selected ? ' is-selected' : ''}${status === 'running' ? ' is-running' : status === 'completed' ? ' is-completed' : ['failed', 'interrupted'].includes(status) ? ' is-failed' : ''}`;
       ref.button.setAttribute('aria-pressed', String(selected)); ref.button.setAttribute('aria-label', `${role.name}，阶段 ${ref.stageIndex + 1}，${statusLabels[status] ?? status}，${modelLabel(task)}，定位公开报告`);
       ref.model.textContent = task ? string(task.model) || '模型未记录' : '待分配模型'; ref.model.title = modelLabel(task); ref.statusText.textContent = statusLabels[status] ?? string(status);
       const tool = toolsByTask.get(task?.id), toolActive = status === 'running' && tool?.type === 'tool.started'; ref.tool.hidden = !toolActive; ref.tool.textContent = toolActive ? string(tool.message) : ''; ref.tool.title = ref.tool.textContent;
     }
     const dropped = Number.isSafeInteger(latest.droppedEvents) && latest.droppedEvents > 0 ? latest.droppedEvents : 0, truncated = latest.truncated === true || dropped > 0;
     $('history-coverage').hidden = !truncated; $('history-coverage').textContent = truncated ? `早期事件已截断${dropped ? `（${dropped} 条）` : ''}` : '';
-    renderModels(byRole); renderFeed(byRole); if (workflowChanged) drawFlows();
+    renderModels(byRole); renderFeed(byRole); if (workflowChanged) { drawFlows(); graph.refresh(); }
   }
   function jumpToReport(role, taskId) {
     selectedRole = role; selectedTaskId = taskId ?? null; render();
@@ -165,10 +175,14 @@
   }
   function pathFor(fromRef, toRef) {
     const from = fromRef?.button, to = toRef?.button; if (!from || !to) return null;
-    const box = $('diagram').getBoundingClientRect(), a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
-    if (from === to) { const x = a.right - box.left, y = a.top - box.top + a.height / 2; return `M ${x} ${y - 10} C ${x + 34} ${y - 42}, ${x + 34} ${y + 42}, ${x} ${y + 10}`; }
-    if (Math.abs(a.left - b.left) < 20) { const down = a.top < b.top, x = a.left - box.left + a.width / 2, y1 = (down ? a.bottom : a.top) - box.top, y2 = (down ? b.top : b.bottom) - box.top; return `M ${x} ${y1} C ${x + 12} ${y1}, ${x + 12} ${y2}, ${x} ${y2}`; }
-    const forward = a.left < b.left, x1 = (forward ? a.right : a.left) - box.left, x2 = (forward ? b.left : b.right) - box.left, y1 = a.top - box.top + a.height / 2, y2 = b.top - box.top + b.height / 2, bend = Math.max(18, Math.abs(x2 - x1) * .45) * (forward ? 1 : -1);
+    const box = $('diagram').getBoundingClientRect(), local = node => {
+      const rect = node.getBoundingClientRect(), scale = graph.scale;
+      return { left: (rect.left - box.left) / scale, right: (rect.right - box.left) / scale, top: (rect.top - box.top) / scale, bottom: (rect.bottom - box.top) / scale, width: rect.width / scale, height: rect.height / scale };
+    };
+    const a = local(from), b = local(to);
+    if (from === to) { const x = a.right, y = a.top + a.height / 2; return `M ${x} ${y - 10} C ${x + 34} ${y - 42}, ${x + 34} ${y + 42}, ${x} ${y + 10}`; }
+    if (Math.abs(a.left - b.left) < 20) { const down = a.top < b.top, x = a.left + a.width / 2, y1 = down ? a.bottom : a.top, y2 = down ? b.top : b.bottom; return `M ${x} ${y1} C ${x + 12} ${y1}, ${x + 12} ${y2}, ${x} ${y2}`; }
+    const forward = a.left < b.left, x1 = forward ? a.right : a.left, x2 = forward ? b.left : b.right, y1 = a.top + a.height / 2, y2 = b.top + b.height / 2, bend = Math.max(18, Math.abs(x2 - x1) * .45) * (forward ? 1 : -1);
     return `M ${x1} ${y1} C ${x1 + bend} ${y1}, ${x2 - bend} ${y2}, ${x2} ${y2}`;
   }
   function clearPulses() { pulses.splice(0); $('message-lines').replaceChildren(); }
@@ -211,7 +225,9 @@
     }
     requestAnimationFrame(frame);
   }
-  render(); drawFlows(); connect(); requestAnimationFrame(frame);
-  if (typeof ResizeObserver === 'function') new ResizeObserver(drawFlows).observe($('diagram')); else window.addEventListener('resize', drawFlows);
+  render(); drawFlows(); graph.refresh(); connect(); requestAnimationFrame(frame);
+  const resizeGraph = () => { drawFlows(); graph.refresh(); };
+  if (typeof ResizeObserver === 'function') { const observer = new ResizeObserver(resizeGraph); observer.observe($('diagram')); observer.observe($('diagram-viewport')); }
+  else window.addEventListener('resize', resizeGraph);
   motion.addEventListener?.('change', clearPulses); window.addEventListener('pagehide', () => source?.close());
 })();
