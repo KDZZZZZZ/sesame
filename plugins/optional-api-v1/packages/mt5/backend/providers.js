@@ -63,6 +63,8 @@ class NativeProvider {
     if (!input.connection) return connection;
     check(input.connection.id === connection.id, 'CONNECTION_CHANGED', 'The requested MT5 connection is not the current configured terminal');
     check(input.connection.revision === stable || String(input.connection.revision) === String(config.version), 'CONNECTION_CHANGED', 'The requested MT5 connection is not the current configured account');
+    // Explicit refs must round-trip exactly through the host contract. Legacy
+    // clients discover the stable ref by rebinding without a connection first.
     return clone(input.connection);
   }
   connectionSignature(config) {

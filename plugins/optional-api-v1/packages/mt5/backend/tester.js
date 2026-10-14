@@ -83,7 +83,7 @@ export async function copyAvailableTree(source, destination, prefix = '', summar
     else if (entry.isFile()) {
       try { await fs.copyFile(from, to); summary.copiedCount++; }
       catch (error) {
-        if (['EBUSY', 'EPERM', 'EACCES'].includes(error.code)) {
+        if (['ENOENT', 'EBUSY', 'EPERM', 'EACCES'].includes(error.code)) {
           summary.skippedCount++;
           if (summary.skipped.length < sampleLimit) summary.skipped.push({ path: relative, code: error.code });
         }

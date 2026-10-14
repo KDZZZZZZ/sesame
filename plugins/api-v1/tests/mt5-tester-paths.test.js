@@ -31,3 +31,11 @@ test('Tester cache copy records bounded counts and skips locked online history f
   try{const result=await copyAvailableTree(source,dest);assert.equal(result.copiedCount,1);assert.equal(result.skippedCount,20);assert.equal(result.skipped.length,8);assert.deepEqual(result.skipped[0],{path:'nested/locked-0.hcc',code:'EBUSY'});assert.equal(await fs.readFile(join(dest,'ok.hst'),'utf8'),'ok');await assert.rejects(fs.stat(join(dest,'nested','locked-0.hcc')),{code:'ENOENT'});}
   finally{fs.copyFile=originalCopy;}
 });
+
+test('Tester cache copy tolerates files disappearing after directory scan', async t => {
+  const {tmpdir}=await import('node:os'),root=await fs.mkdtemp(join(tmpdir(),'tester-cache-race-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+  const source=join(root,'source'),dest=join(root,'dest');await fs.mkdir(source);await fs.writeFile(join(source,'vanished.hcc'),'gone');
+  const originalCopy=fs.copyFile;fs.copyFile=async()=>{throw Object.assign(Error('cache rotated'),{code:'ENOENT'});};
+  try{const result=await copyAvailableTree(source,dest);assert.equal(result.copiedCount,0);assert.equal(result.skippedCount,1);assert.deepEqual(result.skipped,[{path:'vanished.hcc',code:'ENOENT'}]);}
+  finally{fs.copyFile=originalCopy;}
+});

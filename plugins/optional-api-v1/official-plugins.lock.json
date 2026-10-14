@@ -3078,7 +3078,7 @@
       "id": "sesame/mt5",
       "version": "1.5.1",
       "directory": "mt5",
-      "treeDigest": "sha256:9bc79e6f4ecf2f22a8a4bc00f9ea1ffd8ed0de71673e4d81a63816eb6f98a07a",
+      "treeDigest": "sha256:3c213af50ca873b4e9e19aa5b524222fcae5cc5a121a777562d54c477b7ca0ab",
       "files": [
         {
           "path": "LICENSE",
@@ -3257,8 +3257,8 @@
         },
         {
           "path": "backend/providers.js",
-          "sha256": "6d2caf6bf5327200d2708e606a7f48bc9c225b1f9844cb2610507c0c9278e37d",
-          "bytes": 30272
+          "sha256": "74b678391bda17c58bcc922768f1d63e153f323e33f522263013184760bb416f",
+          "bytes": 30431
         },
         {
           "path": "backend/python-tools.js",
@@ -3402,8 +3402,8 @@
         },
         {
           "path": "backend/terminal.js",
-          "sha256": "bdf36d9fd02970ebb89856f617625cd8989829377a55533324e8564e932a4ef2",
-          "bytes": 11472
+          "sha256": "611d5ae6b7b70c38eb398eb3e269bf3c9423b5018cf7504882b310f144f3dbe0",
+          "bytes": 12073
         },
         {
           "path": "backend/tester-process.js",
@@ -3417,8 +3417,8 @@
         },
         {
           "path": "backend/tester.js",
-          "sha256": "31bd335e95d26ca3e148c3fea70d4fb56e683b3346b05f0f502a85ed966e6c42",
-          "bytes": 30586
+          "sha256": "c118c8a72b74140a60d1330f19bd4b9cec2bbd011c20a220988e1d57f6b15165",
+          "bytes": 30596
         },
         {
           "path": "backend/tool-groups.json",

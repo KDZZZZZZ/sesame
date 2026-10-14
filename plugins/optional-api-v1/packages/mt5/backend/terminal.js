@@ -1,6 +1,7 @@
 import { promises as fs } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve, win32 } from 'node:path';
+import { StringDecoder } from 'node:string_decoder';
 import { winePrefix } from './platform.js';
 import { requireValue, securePath } from './support.js';
 import { testerProxyLines, waitForTradingConnection } from './connection.js';
@@ -48,24 +49,37 @@ async function localPath(path, native) {
   return current;
 }
 
+const chartExpertPattern = /<expert\b|\[expert\]/i;
+const scanChartText = (tail, text) => {
+  const combined = tail + text;
+  return { found: chartExpertPattern.test(combined), tail: combined.slice(-64) };
+};
+
 async function chartContainsExpert(path, limit = 64 * 1024 * 1024) {
   const handle = await fs.open(path, 'r');
   try {
     const stat = await handle.stat();
     requireValue(stat.isFile(), `图表配置不是普通文件: ${path}`, 409);
     requireValue(stat.size <= limit, `图表配置过大无法核对 EA: ${path} (${stat.size} bytes)`, 409);
-    let position = 0, tail = '';
+    let position = 0, utf8Tail = '', utf16Tail = '';
+    const utf8 = new StringDecoder('utf8'), utf16 = new StringDecoder('utf16le');
     const buffer = Buffer.alloc(64 * 1024);
     while (position < stat.size) {
       const { bytesRead } = await handle.read(buffer, 0, Math.min(buffer.length, stat.size - position), position);
       if (!bytesRead) break;
       const chunk = buffer.subarray(0, bytesRead);
-      const text = tail + '\n' + chunk.toString('utf8') + '\n' + chunk.toString('utf16le');
-      if (/<expert\b|\[expert\]/i.test(text)) return true;
-      tail = text.slice(-64);
+      let scanned = scanChartText(utf8Tail, utf8.write(chunk));
+      if (scanned.found) return true;
+      utf8Tail = scanned.tail;
+      scanned = scanChartText(utf16Tail, utf16.write(chunk));
+      if (scanned.found) return true;
+      utf16Tail = scanned.tail;
       position += bytesRead;
     }
-    return false;
+    let scanned = scanChartText(utf8Tail, utf8.end());
+    if (scanned.found) return true;
+    scanned = scanChartText(utf16Tail, utf16.end());
+    return scanned.found;
   } finally { await handle.close(); }
 }
 
