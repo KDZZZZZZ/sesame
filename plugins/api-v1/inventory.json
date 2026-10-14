@@ -1089,7 +1089,7 @@
     },
     {
       "id": "sesame/manual-trading",
-      "version": "2.3.0",
+      "version": "2.3.1",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -1180,7 +1180,7 @@
     },
     {
       "id": "sesame/memory",
-      "version": "2.1.1",
+      "version": "2.1.2",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -1215,7 +1215,7 @@
     },
     {
       "id": "sesame/mt5",
-      "version": "1.5.0",
+      "version": "1.5.1",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -1304,7 +1304,7 @@
     },
     {
       "id": "sesame/orchestration",
-      "version": "2.2.2",
+      "version": "2.2.3",
       "distribution": "core",
       "state": "mounted",
       "engines": {

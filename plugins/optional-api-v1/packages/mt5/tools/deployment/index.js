@@ -1,3 +1,5 @@
+import { requireValue } from '../../backend/support.js';
+
 export function createTools(host, mt5) {
   const { define, Type, string, optional } = host.tools;
   const conversationId = host.scope.conversationId;
@@ -9,7 +11,10 @@ export function createTools(host, mt5) {
   }, async args => {
     const service = mt5.deployments;
     if (args.action === 'list') return { items: service.list().map(view), candidates: service.candidates(), preparations: service.preparations() };
-    if (args.action === 'check') return { ...await service.check(args.pass_id), run_record: mt5.runObserver?.reference('tester', args.pass_id) ?? null };
+    if (args.action === 'check') {
+      requireValue(typeof args.pass_id === 'string' && args.pass_id.length, 'check 需要 pass_id');
+      return { ...await service.check(args.pass_id), run_record: mt5.runObserver?.reference('tester', args.pass_id) ?? null };
+    }
     return view(await (args.action === 'stop' ? service.stop(args.deployment_id) : service.requestMount(args.pass_id, args.request_id, args, host.configuration, conversationId)));
   })];
 }

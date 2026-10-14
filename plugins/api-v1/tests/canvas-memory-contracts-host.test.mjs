@@ -27,7 +27,7 @@ async function fixture(t) {
   runtime.memory = new MemoryService(runtime, { clock: () => time }).init();
   runtime.canvas = new CanvasService(runtime);
   const definitions = [], groups = {};
-  for (const name of ['canvas-control', 'memory']) {
+  for (const name of ['canvas-control', 'memory', 'orchestration']) {
     const root = join(packages, name), manifest = await json(join(root, 'plugin.json'));
     const { createTools } = await import(pathToFileURL(join(root, 'index.js')));
     const host = createHostContext(runtime, { ...manifest, root, digest: `sha256:${'a'.repeat(64)}` }, 'conv_main');
@@ -145,6 +145,19 @@ integration('candidate IDs stay distinct from accepted memory IDs and stale cand
   assert.deepEqual((await f.call('memory_read', { id: accepted.memory.id })).sources, candidate.sources);
 });
 
+integration('memory scopes require the project and strategy identities before dispatch', async t => {
+  const f = await fixture(t), schema = f.tool('memory_propose').parameters;
+  const entry = memoryEntry([{ type: 'user_message', id: 'msg_user' }]);
+  for (const scope of [{ kind: 'project' }, { kind: 'strategy', strategy_id: 'sweep' }, { kind: 'strategy', project_id: 'project_a' }, { kind: 'global', project_id: 'project_a' }]) {
+    assert.equal(f.Check(schema, { ...entry, scope }), false, JSON.stringify(scope));
+  }
+  for (const scope of [{ kind: 'global' }, { kind: 'project', project_id: 'project_a' }, { kind: 'strategy', project_id: 'project_a', strategy_id: 'sweep' }]) {
+    assert.equal(f.Check(schema, { ...entry, scope }), true, JSON.stringify(scope));
+    assert.equal(f.Check(f.tool('memory_manage').parameters, { action: 'save', entry: { ...entry, scope } }), true);
+  }
+  assert.equal(f.Check(f.tool('memory_manage').parameters, { action: 'save', id: 'mem_existing', expected_version: 1, entry: { summary: '只修订摘要。' } }), true);
+});
+
 integration('saved-memory version conflicts and expired candidates give accurate recovery without automatic writes', async t => {
   const f = await fixture(t), entry = memoryEntry([{ type: 'artifact', ...f.ref }]);
   const saved = await f.call('memory_manage', { action: 'save', entry });
@@ -161,7 +174,17 @@ integration('saved-memory version conflicts and expired candidates give accurate
   assert.equal(f.runtime.memory.rows().length, 1);
 });
 
-integration('published tool metadata matches the executing canvas and memory contracts', async t => {
+integration('delegation schema declares report output for new tasks and permits inherited follow-ups', async t => {
+  const f = await fixture(t), schema = f.tool('agent_delegate').parameters;
+  const task = { kind: 'research', title: 'Fixture', task: 'Read fixture inputs' };
+  assert.equal(f.Check(schema, { ...task, output: { type: 'none' } }), true);
+  assert.equal(f.Check(schema, { ...task, output: { type: 'report', space: 'strategy', path: 'signals.html' } }), true);
+  assert.equal(f.Check(schema, task), false);
+  assert.equal(f.Check(schema, { ...task, conversation_id: 'existing' }), true);
+  assert.equal(f.Check(schema, { ...task, output: { type: 'report', space: 'research' } }), false);
+});
+
+integration('published tool metadata matches the executing canvas, memory and orchestration contracts', async t => {
   const f = await fixture(t);
   for (const name of Object.keys(f.groups)) {
     const live = f.groups[name].map(({ name, label, description, parameters }) => ({ name, label, description, parameters }));

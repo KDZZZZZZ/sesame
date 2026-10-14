@@ -2830,9 +2830,9 @@
     },
     {
       "id": "sesame/manual-trading",
-      "version": "2.3.0",
+      "version": "2.3.1",
       "directory": "manual-trading",
-      "treeDigest": "sha256:f83d218d3680f104ae03e082c166afc0835ce81282970220b6a8882f10e6b68d",
+      "treeDigest": "sha256:028b66925fa83e69a68dc94595946a4af829177cd3e2b1d38f04150b0396c5cc",
       "files": [
         {
           "path": "LICENSE",
@@ -2851,8 +2851,8 @@
         },
         {
           "path": "README.md",
-          "sha256": "54db17e96edae0ed2b0e67d12f3a322c6ac77750f72b1a9106f59028898fb6dc",
-          "bytes": 10399
+          "sha256": "246aa61803c667327cc883ba62b7a75697b9c5745f83e737c6139c9792c038bf",
+          "bytes": 10599
         },
         {
           "path": "activity.js",
@@ -2946,7 +2946,7 @@
         },
         {
           "path": "package.json",
-          "sha256": "af278f2473bc93343d7569e08f5c3804c3d817b774e0b98d58fe6084cadf836e",
+          "sha256": "8666ee95f5620ce45d9d991e4ccdf8c1af9de812e24d7ce6f8eb8b077c242806",
           "bytes": 108
         },
         {
@@ -2956,7 +2956,7 @@
         },
         {
           "path": "plugin.json",
-          "sha256": "f6be36ade931ca50e3a507304fa74b5ef96df13bc54d439c4a573eed99bfec36",
+          "sha256": "7fd55b50c27e9faac5b4bca573e886db42a2ee0d6c211f57b1ec3525c0bcfe05",
           "bytes": 2257
         },
         {
@@ -3076,9 +3076,9 @@
     },
     {
       "id": "sesame/mt5",
-      "version": "1.5.0",
+      "version": "1.5.1",
       "directory": "mt5",
-      "treeDigest": "sha256:bf44abf7eadf0f59f9cc8092731be1fe0b9a7126b7b8441dc0b074793848b1b5",
+      "treeDigest": "sha256:3c213af50ca873b4e9e19aa5b524222fcae5cc5a121a777562d54c477b7ca0ab",
       "files": [
         {
           "path": "LICENSE",
@@ -3147,8 +3147,8 @@
         },
         {
           "path": "backend/deployments.js",
-          "sha256": "99c09060d750cd7793c837479be98bfce260543702495b8d07376e6c12bdbdb4",
-          "bytes": 25934
+          "sha256": "a7bab273cf2693aa9455ab78fb953337c1f4a94c474f145dbb8afd4d672c92b2",
+          "bytes": 26368
         },
         {
           "path": "backend/diagnostics.js",
@@ -3257,8 +3257,8 @@
         },
         {
           "path": "backend/providers.js",
-          "sha256": "64cb94635188cd0cb8868cfd98a9c7a0b59bb2a58c63a4ee652c3f89b347a606",
-          "bytes": 27769
+          "sha256": "74b678391bda17c58bcc922768f1d63e153f323e33f522263013184760bb416f",
+          "bytes": 30431
         },
         {
           "path": "backend/python-tools.js",
@@ -3272,8 +3272,8 @@
         },
         {
           "path": "backend/run-observer.js",
-          "sha256": "a4113a8c9b81d61bab511aa2d70fd52bfe67ba5198a90518b271e0fe4f13ed4a",
-          "bytes": 18045
+          "sha256": "a302a1e2232909179110df73755a04e5c1dfd98bd739353bae7eab11b3fdddd4",
+          "bytes": 18490
         },
         {
           "path": "backend/sdk/Conformance.mqh",
@@ -3402,8 +3402,8 @@
         },
         {
           "path": "backend/terminal.js",
-          "sha256": "7e4e671ecd3b8027120291767ce0765f1d23fd0aec9b7d8472c948374f697b9c",
-          "bytes": 10760
+          "sha256": "611d5ae6b7b70c38eb398eb3e269bf3c9423b5018cf7504882b310f144f3dbe0",
+          "bytes": 12073
         },
         {
           "path": "backend/tester-process.js",
@@ -3417,8 +3417,8 @@
         },
         {
           "path": "backend/tester.js",
-          "sha256": "d37cd0ebf7ab07bb062987113604c4426e634dc7a7104fb100878bb674e4534a",
-          "bytes": 29177
+          "sha256": "c118c8a72b74140a60d1330f19bd4b9cec2bbd011c20a220988e1d57f6b15165",
+          "bytes": 30596
         },
         {
           "path": "backend/tool-groups.json",
@@ -3467,12 +3467,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "dbf5d1fd8c1b738a0799091dc950916990e273f91d85950e1aeabfb9466acc62",
+          "sha256": "d93ea9ce7c5864a43909cf1c5cdc522c2c57156120bb50e32c9dc556353c5e1c",
           "bytes": 97
         },
         {
           "path": "plugin.json",
-          "sha256": "d28f5bee64e9831ac1a33c4fe8f2948c60fbd0c0414da9ae0e7725e63274c079",
+          "sha256": "f3058e6ee51e90fb30d61779a085d07999f7128b9946ead8dde4e2de91d1ce0e",
           "bytes": 2333
         },
         {
@@ -3562,8 +3562,8 @@
         },
         {
           "path": "target/sdk-integration.md",
-          "sha256": "ad4a00810a15583ded816bf2d852e71865e6019191ac6c6725780119a587422c",
-          "bytes": 7271
+          "sha256": "2aa47864391fe3464d0b3525f47ae9e07877e755bc24ecb9b27d731f897ad011",
+          "bytes": 7321
         },
         {
           "path": "target/tester-validation.md",
@@ -3607,8 +3607,8 @@
         },
         {
           "path": "tools/deployment/index.js",
-          "sha256": "3f86cab530547d33521a39ed08caacf45b21be4d812b1e0c36b987d57d2aad50",
-          "bytes": 1766
+          "sha256": "9a0b45c6f488f93546796dba7a38176680cc8a69a23d7fbc23e8de592151a399",
+          "bytes": 1939
         },
         {
           "path": "tools/deployment/prompt.md",

@@ -1,10 +1,10 @@
 # Agent 手工交易
 
-`sesame/manual-trading` 2.2 要求 Sesame 0.2.2+。支持周期、事件和按需启动的交易 Agent，单 Agent 或 team 均输出目标仓位。原有 `manual_trade_*` 单次交易工具继续可用；安装本身不会创建计划或发送订单。
+`sesame/manual-trading` 要求 Sesame 0.2.2+。支持周期、事件和按需启动的交易 Agent，单 Agent 或 team 均输出目标仓位。原有 `manual_trade_*` 单次交易工具继续可用；安装本身不会创建计划或发送订单。
 
 ## 配置和触发
 
-主会话加载本插件、已配置的 `sesame/mt5` 1.5+ 或 `sesame/qmt` 1.3+，以及独立 `sesame/financial-research`。先调用 `manual_trading_models`，再调用 `manual_trading_plan(action:"save", plan:{...})`：
+主会话加载本插件、已配置的交易后端与独立 `sesame/financial-research`。MT5 通道要求带 `execution_guard` 的 Python SDK（1.3.0+）；QMT 单次交易要求 1.2.0+，后台计划要求带签名授权的 1.3.0+ 工具。`manual_trade_inspect` 给出单次交易能力，保存计划时核验后台通道。先调用 `manual_trading_models`，再调用 `manual_trading_plan(action:"save", plan:{...})`：
 
 ```json
 {

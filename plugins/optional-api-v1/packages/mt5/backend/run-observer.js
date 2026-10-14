@@ -9,6 +9,12 @@ import { initialized } from './deployments.js';
 
 const completed = new Set(['stopped', 'completed', 'failed']);
 const unknown = reason => ({ status: 'unknown', reason });
+const LIVE_HEARTBEAT_MS = 360000;
+const stableObservation = native => {
+  const { updated_at, observer_error, native_evidence, diagnostics, temporary_paths, ...body } = native;
+  if (native_evidence) body.native_evidence = { verified: native_evidence.verified === true, sequence: native_evidence.sequence ?? null };
+  return body;
+};
 
 /** Record actual native evidence; never launch, resume, detach or stop an EA. */
 export class NativeRunObserver {
@@ -98,14 +104,14 @@ export class NativeRunObserver {
       dependencies: [{ name: 'MetaEditor', version: 'not_observed', digest: manifest.compiler_sha256 ? { status: 'value', value: manifest.compiler_sha256 } : unknown('Compiler identity absent') }], connection, capabilities: [], evidence: [frozen] }, [binding.target, frozen]);
     const validations = binding.validation ? [binding.validation] : [];
     const body = { schemaVersion: '1.0.0', runId: recordId, operationId: native.request_key ?? native.id, mode: kind === 'tester' ? 'backtest' : 'live', source: binding.source, translation: binding.translation, validations, parameters, dataBindings: [input],
-      accounts: kind === 'tester' ? [] : [{ binding: 'executionAccount', account: { connectionId: connection.id, accountId: accountIdentity(native.server, native.login) }, connection }],
+      accounts: kind === 'tester' ? [] : [{ binding: 'executionAccount', provider: { pluginId: this.host.plugin.id, providerId: 'account' }, account: { connectionId: connection.id, accountId: accountIdentity(native.server, native.login) }, connection }],
       plugin: this.host.plugin, environment, owner: { kind: kind === 'tester' ? 'task' : 'persistent', id: kind === 'tester' ? native.owner_run_id ?? native.conversation_id : recordId }, authorizationRef: native.authorization_ref ?? `conversation:${native.conversation_id}`,
       observer: { plugin: this.host.plugin, publisherId: 'native-observer', sessionId: this.sessionId }, nativeInstance: unknown('No verified native execution evidence yet'), status: 'starting', checkpoint: unknown('No native recoverable state checkpoint was supplied'), observation: null,
       dependencies: [binding.source, binding.translation, ...validations, parameters, input, environment, frozen] };
     this.mt5.storage.put('native_run_inputs', { id: recordId, body }); return body;
   }
   observe(kind, native, status, { nativeInstanceId, recovery = false } = {}) {
-    const recordId = `mt5-${kind}-${native.id}`, fingerprint = digest([native, recovery]);
+    const recordId = `mt5-${kind}-${native.id}`, fingerprint = digest([stableObservation(native), recovery]);
     const previous = this.mt5.storage.get('native_observation_head', recordId, true);
     if (previous?.fingerprint === fingerprint && previous.confirmed) return this.current.get(recordId) ?? previous;
     const remember = () => this.mt5.storage.put('native_observation_head', { id: recordId, fingerprint, native, recovery, observedAt: Date.now(), confirmed: true });
@@ -128,7 +134,7 @@ export class NativeRunObserver {
     const append = (state, suffix, instance) => {
       const observedAt = Date.now();
       this.host.records.append({ operationId: `observe-${digest([recordId, record.version, fingerprint, suffix]).slice(7)}`, recordId, expectedVersion: record.version, event: { type: 'native.observation', status: state, evidence: [evidence], observedAt,
-        observation: { observedAt, validUntil: observedAt + 30000, evidence: [evidence] },
+        observation: { observedAt, validUntil: observedAt + LIVE_HEARTBEAT_MS, evidence: [evidence] },
         ...(instance ? { nativeInstanceId: instance, nativeInstance: { status: 'value', value: { id: instance, startedAt: Date.parse(native.created_at), evidence: [evidence] } } } : {}),
         ...(recovery ? { reason: 'Application resumed observation; native state has not yet been reverified.' } : {}) } });
       record = this.host.records.read(recordId); this.current.set(recordId, record);
@@ -186,7 +192,7 @@ export class NativeRunObserver {
         verified = sequence !== null && (events.at(-1)?.seq ?? 0) > sequence && initialized(events);
       } catch { /* Persist unknown; never infer a stop or replay the native start. */ }
       const last = events.at(-1)?.seq ?? sequence;
-      if (!verified && native.status === 'running' && Date.now() - (native.native_evidence?.observedAt ?? 0) < 30000) continue;
+      if (!verified && native.status === 'running' && Date.now() - (native.native_evidence?.observedAt ?? 0) < LIVE_HEARTBEAT_MS) continue;
       this.mt5.deployments.save({ ...native, status: verified ? 'running' : 'unknown', native_evidence: { verified, sequence: last, observedAt: Date.now(), trace: verified ? events.slice(-32) : [] } });
     }
   }

@@ -26,7 +26,12 @@ async function memoryCall(host, action, args, execute) {
 export function createTools(host) {
   const { define, Type, string, optional } = host.tools;
   const conversationId = host.scope.conversationId;
-  const scope = Type.Object({ kind: Type.Union(['global', 'project', 'strategy'].map(Type.Literal)), project_id: optional('项目 ID'), strategy_id: optional('策略 ID') }, { additionalProperties: false });
+  const identifier = description => Type.String({ description, minLength: 1, maxLength: 160, pattern: '^[\\w.-]+$' });
+  const scope = Type.Union([
+    Type.Object({ kind: Type.Literal('global') }, { additionalProperties: false }),
+    Type.Object({ kind: Type.Literal('project'), project_id: identifier('真实项目 ID') }, { additionalProperties: false }),
+    Type.Object({ kind: Type.Literal('strategy'), project_id: identifier('策略所属项目 ID'), strategy_id: identifier('真实策略 ID') }, { additionalProperties: false }),
+  ]);
   const source = Type.Union([
     Type.Object({ type: Type.Literal('user_message'), id: string('真实用户消息 ID；不能使用委派消息或成果 ID') }, { additionalProperties: false }),
     Type.Object({ type: Type.Literal('artifact'), id: string('原 ArtifactRef.id'), revision: string('原 ArtifactRef.revision 字符串，不转成整数'), kind: string('原 ArtifactRef.kind'),
