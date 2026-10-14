@@ -89,7 +89,7 @@ export function activitySnapshot(run, { mode = 'live', feedUrl } = {}) {
     generatedAt: activity?.updatedAt ?? run.completedAt ?? run.startedAt ?? run.createdAt ?? null,
     mockModelResponses, recorded: Boolean(activity), truncated: activity?.truncated ?? false, droppedEvents: activity?.dropped ?? 0,
     firstSeq: activity?.events?.[0]?.seq ?? null, lastSeq: activity?.seq ?? 0,
-    run: { id: run.id, planId: run.planId, title: plan.title, mode: plan.mode, backend: plan.backend, status: run.status,
+    run: { id: run.id, planId: run.planId, title: plan.title, mode: plan.mode, executionPluginId: plan.execution?.pluginId ?? null, status: run.status,
       trigger: run.trigger ? { kind: run.trigger.kind, ...(run.trigger.key === undefined ? {} : { key: run.trigger.key }) } : null,
       createdAt: run.createdAt, startedAt: run.startedAt ?? null, completedAt: run.completedAt ?? null, mockModelResponses,
       decision: run.decision ?? null, execution: run.execution ?? null, executionProgress: run.executionProgress ?? null,

@@ -23,7 +23,7 @@ export function payload(result) {
   return result;
 }
 export function createAdapters(host, {now=Date.now,authorizeRequest}={}) {
-  const background=()=>host.scope?.kind==='subagent' && host.agents?.current()?.pluginId==='sesame/manual-trading';
+  const background=()=>host.scope?.kind==='subagent';
   async function call(backend,name,args,signal) {
     const pluginId=`sesame/${backend}`;
     check(typeof host.tools.call==='function','PREREQUISITE_REQUIRED','This host needs the public tools.call plugin composition port');

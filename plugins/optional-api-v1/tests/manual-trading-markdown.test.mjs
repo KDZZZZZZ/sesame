@@ -1,24 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { pathToFileURL, fileURLToPath } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { hasElectron, launchPage } from './helpers/collaboration-electron.mjs';
 
-const hostRoot = process.env.SESAME_HOST_ROOT;
-const playwrightEntry = hostRoot ? join(hostRoot, 'node_modules/playwright/index.mjs') : null;
-const hasPlaywright = Boolean(playwrightEntry && existsSync(playwrightEntry));
+const hasPlaywright = hasElectron;
 const assetPath = fileURLToPath(new URL('../packages/manual-trading/assets/collaboration-markdown.js', import.meta.url));
 
 async function withPage(run) {
-  const { chromium } = await import(pathToFileURL(playwrightEntry));
-  const browser = await chromium.launch();
+  const { page, close } = await launchPage();
   try {
-    const page = await browser.newPage();
     await page.setContent('<!doctype html><main id="root"></main>');
     await page.addScriptTag({ path: assetPath });
     await run(page);
   } finally {
-    await browser.close();
+    await close();
   }
 }
 

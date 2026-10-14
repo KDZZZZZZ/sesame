@@ -8,9 +8,18 @@ export const tradingAccount = host => {
   return { accountId: c.account_id, connectionId: c.connection_id, revision: String(c.version) };
 };
 const sameAccount = (a, b) => a?.accountId === b.accountId && a?.connectionId === b.connectionId && a?.revision === b.revision;
-export function verifyExecutionAuthorization(task, action, parameters, now = Date.now()) {
+export function verifyExecutionAuthorization(task, action, parameters, now = Date.now(), host) {
   const { authorization, ...args } = parameters;
   if (!task) return args;
+  if (task.input.execution) {
+    const execution = task.input.execution, chain = host?.tools.invocation?.()?.chain;
+    const apply = Array.isArray(chain) ? chain.findIndex(row => row.pluginId === execution.pluginId && row.toolName === execution.applyTool) : -1;
+    check(apply > 0 && apply < chain.length - 1
+      && chain.slice(0, apply).some(row => row.pluginId === task.pluginId)
+      && chain.at(-1).pluginId === 'sesame/qmt' && chain.at(-1).toolName === action,
+    'Execution requires a live workflow-to-execution invocation chain', 'FORBIDDEN');
+    return args;
+  }
   let valid = false;
   try {
     const key = createPublicKey(task.input.executionPublicKey), signature = Buffer.from(authorization.signature, 'base64');
@@ -24,10 +33,16 @@ export function verifyExecutionAuthorization(task, action, parameters, now = Dat
 export function assertTradingTask(host, account, write = false, identity = false) {
   if (host.scope.kind === 'main') return null;
   const task = host.agents?.current(), input = task?.input, plan = input?.tradingPlan;
-  check(task?.pluginId === 'sesame/manual-trading' && task.status === 'running' && task.conversationId === host.scope.conversationId
-    && typeof plan?.id === 'string' && plan.id.length > 0 && plan.backend === 'qmt'
+  const execution = input?.execution;
+  const composed = execution && execution.context?.backend === 'qmt' && typeof execution.pluginId === 'string'
+    && typeof execution.applyTool === 'string' && typeof execution.contextTool === 'string'
+    && sameAccount(execution.account, account) && sameAccount(execution.context.account, account);
+  const legacy = !execution && task?.pluginId === 'sesame/manual-trading' && plan?.backend === 'qmt';
+  check((composed || legacy) && task.status === 'running' && task.conversationId === host.scope.conversationId
+    && typeof plan?.id === 'string' && plan.id.length > 0
+    && typeof plan.ownerConversationId === 'string' && plan.ownerConversationId.length > 0
     && typeof input.runId === 'string' && input.runId.length > 0 && typeof input.role === 'string' && input.role.length > 0
-    && (!write || input.role === 'executor'), 'Only a matching manual-trading plan task may use this tool', 'FORBIDDEN');
+    && (!write || input.role === 'executor'), 'Only an active task with a frozen matching execution contract may use this tool', 'FORBIDDEN');
   if (write) check(typeof plan.ownerConversationId === 'string' && plan.ownerConversationId.length > 0, 'Trading plan owner is required', 'FORBIDDEN');
   if (!identity || plan.account) check(sameAccount(plan.account, account), 'Trading plan account or configuration changed', 'ACCOUNT_MISMATCH');
   return task;
@@ -64,17 +79,17 @@ export function createTradingTools(host, service, executionGuard) {
   const authorization = Type.Optional(Type.Object({ expiresAt: Type.Integer({ minimum: 1 }), signature: Type.String({ minLength: 88, maxLength: 88 }) }, { additionalProperties: false }));
   const common = { operation_id: operation, user_authorized: Type.Literal(true), account_id: string('Exact authorized account ID'), connection_revision: string('Exact configured connection revision'), authorization };
   return [
-    define('qmt_trading_context', 'Read configured identity or complete full-account raw positions/current-day orders and fills for a matching manual-trading plan task. No origin filter, terminal launch or trade.', {
+    define('qmt_trading_context', 'Read configured identity or complete full-account raw positions/current-day orders and fills for an active workflow task with a frozen matching execution contract. No origin filter, terminal launch or trade.', {
       action: Type.Union(['identity', 'snapshot'].map(Type.Literal)), history_days: Type.Optional(Type.Integer({ minimum: 1, maximum: 90 })),
     }, context),
-    define('qmt_trading_order', 'Main Agent or runtime-signed manual-trading executor intent: submit one guarded exact-account limit order through the existing idempotent native path. Unknown receipts are not retried.', {
+    define('qmt_trading_order', 'Main Agent, host-proven workflow-to-execution call chain, or legacy runtime-signed executor intent: submit one guarded exact-account limit order through the existing idempotent native path. Unknown receipts are not retried.', {
       ...common, symbol: Type.String({ pattern: '^\\d{6}\\.(SH|SZ|BJ)$' }), side: Type.Union([Type.Literal('buy'), Type.Literal('sell')]),
       shares: Type.String({ pattern: '^[1-9]\\d*$' }), price: Type.String({ pattern: '^(0|[1-9]\\d*)(\\.\\d+)?$' }), execution_guard: executionGuard,
     }, (args, signal) => service.command('order', args, signal, host.scope, host)),
-    define('qmt_trading_cancel', 'Main Agent or runtime-signed manual-trading executor intent: cancel only an existing exact-account original order through the native ownership and idempotence checks. Inspect native status after unknown results.', {
+    define('qmt_trading_cancel', 'Main Agent, host-proven workflow-to-execution call chain, or legacy runtime-signed executor intent: cancel only an existing exact-account original order through the native ownership and idempotence checks. Inspect native status after unknown results.', {
       ...common, original_operation_id: string('Original qmt_order operation ID'), order_id: Type.String({ pattern: '^[1-9]\\d*$' }),
     }, (args, signal) => service.command('cancel', args, signal, host.scope, host)),
-    define('qmt_trading_command', 'Read one exact-account retained order/cancel receipt for a matching manual-trading plan task without submitting or replaying it.', {
+    define('qmt_trading_command', 'Read one exact-account retained order/cancel receipt for an active workflow task with a frozen matching execution contract without submitting or replaying it.', {
       operation_id: string('Existing operation ID'),
     }, args => service.commandRecord(args.operation_id, host.scope, host)),
   ];

@@ -2,7 +2,7 @@ import { Decimal } from '@sesame/plugin-sdk/decimal';
 import { canonical, digest } from '@sesame/plugin-sdk/protocol';
 import { check, payload } from './adapters.js';
 import { createService } from './service.js';
-import { cleanError } from './plans.js';
+const cleanError = error => ({ code: error?.code ?? 'EXECUTION_FAILED', message: String(error?.message ?? error).slice(0, 1000) });
 
 const dec = value => { const text = String(value); check(/^(0|[1-9]\d*)(\.\d+)?$/.test(text), 'SOURCE_DATA_INVALID', 'Native quantity is not a nonnegative decimal'); return text; };
 const min = (a, b) => Decimal.compare(a, b) <= 0 ? a : b;
@@ -55,8 +55,10 @@ export async function applyPortfolio(host, run, { now = Date.now, signal, assert
     execution.before = before; persist();
     for (const pause of run.decision.pause_strategies) {
       assertActive(); check(plan.backend === 'mt5', 'UNSUPPORTED_CAPABILITY', 'This backend has no mounted-strategy stop implementation');
+      const pendingPause = { deployment_id: pause.deployment_id, reason: pause.reason, status: 'preparing' };
+      execution.pauses.push(pendingPause); persist();
       const result = await call('mt5_trading_pause', authorizeRequest('mt5_trading_pause', { deployment_id: pause.deployment_id, account: plan.account, reason: pause.reason }));
-      execution.pauses.push(result); persist();
+      Object.assign(pendingPause, result); persist();
       check(result.status === 'stopped' || result.deployment?.status === 'stopped', 'PAUSE_UNCONFIRMED', 'EA stop is not confirmed; do not proceed with competing orders');
     }
     for (const target of run.decision.targets) {
@@ -79,9 +81,11 @@ export async function applyPortfolio(host, run, { now = Date.now, signal, assert
         }
         const limit = priceLimit(observation, order.side, plan.slippageBps);
         const operationId = `target_${digest([run.id, target.symbol, index]).slice(7, 47)}`;
+        const pendingOrder = { symbol: target.symbol, target: target.quantity, operationId, receipt: { status: 'preparing' } };
+        execution.orders.push(pendingOrder); persist();
         const receipt = await trader.execute({ ...order, operation_id: operationId, observation_id: observation.observation_id, user_authorized: true, timeframe: '5m', price_limit: limit,
           ...(order.action === 'limit' ? { limit_price: limit } : {}) }, signal);
-        execution.orders.push({ symbol: target.symbol, target: target.quantity, operationId, receipt }); persist();
+        pendingOrder.receipt = receipt; persist();
         check(['execution_reported', 'execution_observed'].includes(receipt.status), 'EXECUTION_INCOMPLETE', 'Order is not fully confirmed; stop this target batch and inspect receipts before any new decision');
       }
     }

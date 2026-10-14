@@ -450,8 +450,7 @@
   },
   {
     "name": "qmt_trading_context",
-    "label": "qmt_trading_context",
-    "description": "Read configured identity or complete full-account raw positions/current-day orders and fills for a matching manual-trading plan task. No origin filter, terminal launch or trade.",
+    "description": "Read configured identity or complete full-account raw positions/current-day orders and fills for an active workflow task with a frozen matching execution contract. No origin filter, terminal launch or trade.",
     "parameters": {
       "type": "object",
       "required": [
@@ -481,8 +480,7 @@
   },
   {
     "name": "qmt_trading_order",
-    "label": "qmt_trading_order",
-    "description": "Main Agent or runtime-signed manual-trading executor intent: submit one guarded exact-account limit order through the existing idempotent native path. Unknown receipts are not retried.",
+    "description": "Main Agent, host-proven workflow-to-execution call chain, or legacy runtime-signed executor intent: submit one guarded exact-account limit order through the existing idempotent native path. Unknown receipts are not retried.",
     "parameters": {
       "type": "object",
       "required": [
@@ -636,8 +634,7 @@
   },
   {
     "name": "qmt_trading_cancel",
-    "label": "qmt_trading_cancel",
-    "description": "Main Agent or runtime-signed manual-trading executor intent: cancel only an existing exact-account original order through the native ownership and idempotence checks. Inspect native status after unknown results.",
+    "description": "Main Agent, host-proven workflow-to-execution call chain, or legacy runtime-signed executor intent: cancel only an existing exact-account original order through the native ownership and idempotence checks. Inspect native status after unknown results.",
     "parameters": {
       "type": "object",
       "required": [
@@ -704,8 +701,7 @@
   },
   {
     "name": "qmt_trading_command",
-    "label": "qmt_trading_command",
-    "description": "Read one exact-account retained order/cancel receipt for a matching manual-trading plan task without submitting or replaying it.",
+    "description": "Read one exact-account retained order/cancel receipt for an active workflow task with a frozen matching execution contract without submitting or replaying it.",
     "parameters": {
       "type": "object",
       "required": [

@@ -3,7 +3,7 @@ name: native-ea
 description: 使用有明确修改范围的空模板编写独立 MQL5 EA，声明各模块与状态机，实现原生逻辑并验证真实回测。
 ---
 
-新策略先读 svl-mql5 skill；本技能维护独立原生模板工程。编写前调用 mt5_inspect；create / checkout 后先读取工程 README.md、strategy.json 和六个 Include/Strategy 模块。平台 SDK 在返回的 sdk_path 下，save 会核对其字节未变；这些是普通本机文件，不由操作系统设为只读。新工程是不可执行的空骨架，不能假设已经实现突破、固定风险或退出策略。不要修改终端标准库，也不要用 Python/Rust 策略循环冒充 MT5。
+本技能用于调用者选择的独立原生模板工程；选择 SVL→MQL5 翻译时另读 svl-mql5 skill。编写前调用 mt5_inspect；create / checkout 后先读取工程 README.md、strategy.json 和六个 Include/Strategy 模块。平台 SDK 在返回的 sdk_path 下，save 会核对其字节未变；这些是普通本机文件，不由操作系统设为只读。新工程是不可执行的空骨架，不能假设已经实现突破、固定风险或退出策略。不要修改终端标准库，也不要用 Python/Rust 策略循环冒充 MT5。
 
 **先按版本分流。** 新工程模板 3.x 使用 `visual-mql-v1`：必须读取 visual-state-machines skill 及其 `references/language.md`，由解析后的受限源码生成原生类、图和埋点；不写 class/include、辅助文件或 rules.json。本节后续关于手写原生类、规则声明、disabled 和观测归属的细节仅适用于保留的 2.x 工程。不能删除 language 或降低模板版本绕过校验。
 

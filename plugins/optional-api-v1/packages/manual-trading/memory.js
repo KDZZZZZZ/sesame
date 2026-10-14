@@ -93,7 +93,7 @@ export function createTradingMemory(host, { now = Date.now, ownerConversationId 
     check(provenance?.source_kind === 'external' && typeof provenance.provider === 'string' && provenance.provider.trim(), 'INVALID_EVIDENCE', 'Evidence requires a registered external source');
     const asOf = timestamp(provenance.as_of, 'source.as_of');
     check(asOf <= cutoff, 'FUTURE_EVIDENCE', 'Evidence was obtained after the review time');
-    return [{ datasetId: dataset.id, provider: provenance.provider, asOf, sourceKind: provenance.source_kind }];
+    return [{ datasetId: dataset.id, provider: provenance.provider, producerPluginId: dataset.producer_plugin_id ?? null, asOf, sourceKind: provenance.source_kind }];
   }
   function evidenceFor(ref, run, cutoff) {
     check(ref && typeof ref === 'object' && !Array.isArray(ref), 'INVALID_ARGUMENT', 'Evidence must reference a registered dataset row');
@@ -109,9 +109,10 @@ export function createTradingMemory(host, { now = Date.now, ownerConversationId 
     check(observedAt >= (run.decisionAt ?? run.createdAt) && observedAt <= cutoff && roots.every(root => root.asOf >= observedAt), 'FUTURE_EVIDENCE', 'Outcome must occur after the decision and be observed before its source was obtained');
     const symbol = ref.symbolField ? text(dot(row, ref.symbolField), 'evidence symbol', 100) : typeof row.symbol === 'string' ? row.symbol : null;
     check(!symbol || !run.symbols.length || run.symbols.includes(symbol), 'INVALID_EVIDENCE', 'Evidence concerns an unrelated symbol');
-    if (ref.accountIdField) check(String(dot(row, ref.accountIdField)) === run.accountId, 'ACCOUNT_MISMATCH', 'Evidence belongs to another account');
+    if (ref.accountIdField) check(String(dot(row, ref.accountIdField)) === (run.executionAccountId ?? run.accountId), 'ACCOUNT_MISMATCH', 'Evidence belongs to another account');
     if (kind === 'execution') {
-      check(roots.some(root => /^(?:mt5\/[^/]+\/history_deals_get|qmt\/[^/]+\/query_stock_trades)$/.test(root.provider)), 'INVALID_EVIDENCE', 'Execution requires a native trade-history source, not a target or quote');
+      check(!dataset.input_ids?.length, 'INVALID_EVIDENCE', 'Execution requires an original registered fill row; derived datasets may provide observations but cannot confirm fills');
+      check(roots.some(root => run.executionSources?.some(source => source.pluginId === root.producerPluginId && source.provider === root.provider)), 'INVALID_EVIDENCE', 'Execution requires a fill source frozen by the selected execution capability and its registered producer; targets and quotes are not fills');
       check(ref.accountIdField && ref.executionIdField && ref.quantityField && ref.priceField && ref.runIdField && symbol, 'INVALID_EVIDENCE', 'Execution evidence requires source fields binding the account, run, symbol, fill ID, quantity and price');
       check(String(dot(row, ref.runIdField)) === run.id, 'INVALID_EVIDENCE', 'Execution evidence is not correlated with this decision');
       const executionId = dot(row, ref.executionIdField), quantity = Number(dot(row, ref.quantityField)), price = Number(dot(row, ref.priceField));

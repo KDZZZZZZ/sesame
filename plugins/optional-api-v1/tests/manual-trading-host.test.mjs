@@ -1,20 +1,29 @@
 /** Formal package installation + actual host composition, fictional backend only. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,cp,rm} from 'node:fs/promises';
+import {mkdtemp,cp,rm,readFile} from 'node:fs/promises';
+import {createRequire} from 'node:module';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {pathToFileURL,fileURLToPath} from 'node:url';
 import {Type} from '@sesame/plugin-sdk/schema';
 const root=process.env.SESAME_HOST_ROOT;
-test('formal manual package composes current-session tools and a receipt through the actual host without broker I/O',{skip:!root,timeout:60000},async()=>{
+test('workflow packages require the host with active invocation ancestry checks',{skip:!root},async()=>{
+  const semver=createRequire(join(root,'package.json'))('semver');
+  for(const name of ['manual-trading','portfolio-execution']){
+    const manifest=JSON.parse(await readFile(new URL(`../packages/${name}/plugin.json`,import.meta.url),'utf8'));
+    for(const version of ['0.2.2','0.2.3-dev.6','0.2.3-dev.7']) assert.equal(semver.satisfies(version,manifest.engines.sesame,{includePrerelease:true}),false,`${name} rejects ${version}`);
+    for(const version of ['0.2.3-dev.8','0.2.3','0.2.4']) assert.equal(semver.satisfies(version,manifest.engines.sesame,{includePrerelease:true}),true,`${name} accepts ${version}`);
+  }
+});
+test('formal portfolio execution package composes current-session tools and a receipt through the actual host without broker I/O',{skip:!root,timeout:60000},async()=>{
   const {Store}=await import(pathToFileURL(join(root,'modules/agent/store.js'))),{Runtime}=await import(pathToFileURL(join(root,'modules/agent/runtime.js'))),{createTools}=await import(pathToFileURL(join(root,'modules/agent/tools.js')));
   const directory=await mkdtemp(join(tmpdir(),'manual-trading-host-'));let store,runtime,sends=0,blockQuote=false,quoteStarted;
   try{
     store=new Store(join(directory,'app'));runtime=new Runtime(store,{piDir:join(directory,'pi'),officialPluginsDirectory:join(directory,'empty')});await runtime.init();
-    const draft=join(runtime.workspaces.root('conv_main'),'manual-draft');await cp(fileURLToPath(new URL('../packages/manual-trading',import.meta.url)),draft,{recursive:true});
+    const draft=join(runtime.workspaces.root('conv_main'),'execution-draft');await cp(fileURLToPath(new URL('../packages/portfolio-execution',import.meta.url)),draft,{recursive:true});
     const checked=await runtime.plugins.manager.test('conv_main',{path:draft});assert.equal(checked.passed,true,JSON.stringify(checked));
-    const installed=await runtime.plugins.manager.install('conv_main',{path:draft,digest:checked.digest});assert.equal(installed.runtime_status,'ready');runtime.plugins.activate('conv_main',installed.id);
+    const installed=await runtime.plugins.manager.install('conv_main',{path:draft,digest:checked.digest});assert.equal(installed.runtime_status,'ready');assert.equal(installed.id,'sesame/portfolio-execution');assert.equal(installed.version,'1.0.0');runtime.plugins.activate('conv_main',installed.id);
     const definitions=['mt5_settings','mt5_catalog','mt5_python','mt5_trade','mt5_command'].map(name=>({name,label:name,description:'Controlled fictional backend fixture',parameters:Type.Object({},{additionalProperties:true})}));
     const commands=new Map();
     const fake=async(name,args,signal)=>{

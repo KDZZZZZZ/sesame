@@ -201,7 +201,7 @@ export function createService(host, { platform = process.platform, now = Date.no
       const ownerConversationId = scoped ? taskHost?.agents?.current()?.input?.tradingPlan?.ownerConversationId : scope?.conversationId;
       if(scoped) {
         check(taskHost && taskHost.scope === scope,'Trading requires a matching plan task','FORBIDDEN');
-        args = verifyExecutionAuthorization(assertTradingTask(taskHost,tradingAccount(host),true), `qmt_trading_${action}`, signedParameters, now());
+        args = verifyExecutionAuthorization(assertTradingTask(taskHost,tradingAccount(host),true), `qmt_trading_${action}`, signedParameters, now(), taskHost);
         if(action==='order') check(args.execution_guard && typeof args.execution_guard==='object','Plan orders require a native execution guard','INVALID_ARGUMENT');
         if(action==='order') check(Array.isArray(args.execution_guard.expected_positions),'Plan execution requires a full symbol position expectation','INVALID_ARGUMENT');
       }
@@ -211,7 +211,7 @@ export function createService(host, { platform = process.platform, now = Date.no
       check(typeof args.operation_id==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(args.operation_id),'Invalid operation ID','INVALID_ARGUMENT');
       if(action==='order'){instrumentSymbol(c,instrumentRef(c,args.symbol));check(['buy','sell'].includes(args.side)&&typeof args.shares==='string'&&/^[1-9]\d*$/.test(args.shares)&&BigInt(args.shares)<=2147483647n,'Use explicit buy/sell and positive integer shares','INVALID_ARGUMENT');check(typeof args.price==='string'&&/^(0|[1-9]\d*)(\.\d+)?$/.test(args.price)&&Number(args.price)>0&&Number.isFinite(Number(args.price)),'Invalid positive limit price','INVALID_ARGUMENT');}
       return host.configuration.exclusive(async()=>{
-        if(scoped) verifyExecutionAuthorization(assertTradingTask(taskHost,tradingAccount(host),true), `qmt_trading_${action}`, signedParameters, now());
+        if(scoped) verifyExecutionAuthorization(assertTradingTask(taskHost,tradingAccount(host),true), `qmt_trading_${action}`, signedParameters, now(), taskHost);
         check(canonical(connection(current()))===canonical(connection(c)),'Connection changed before submission','CONNECTION_CHANGED');
         const fingerprint=digest({action,args,connection:connection(c)}),old=storedCommand(args.operation_id);
         if(old){check(old.fingerprint===fingerprint,'Operation ID already used for different input','IDEMPOTENCY_CONFLICT');check(old.ownerConversationId===undefined ? !scoped : old.ownerConversationId===ownerConversationId,'Operation ID belongs to another owner','FORBIDDEN');return old;}

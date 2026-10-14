@@ -1,0 +1,480 @@
+[
+  {
+    "name": "portfolio_execution_configure",
+    "description": "Bind an already configured execution adapter to its exact account and revision. Returns the execution capability reference for any workflow. Does not load, configure or connect a backend, or place an order. Imports legacy receipts when the old manual-trading package is installed.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "backend"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,100}$"
+        },
+        "backend": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "mt5"
+            },
+            {
+              "type": "string",
+              "const": "qmt"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "portfolio_execution_context",
+    "description": "Read the bound account identity/capability contract, or its full account snapshot including strategy positions, retained history and mounted strategies. Delegated reads require the frozen execution binding.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "binding_id",
+        "action"
+      ],
+      "properties": {
+        "binding_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Immutable binding from portfolio_execution_configure"
+        },
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "identity"
+            },
+            {
+              "type": "string",
+              "const": "snapshot"
+            }
+          ]
+        },
+        "history_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 90
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "portfolio_execution_status",
+    "description": "Read this main owner's retained workflow execution applications and their operation IDs, including interrupted runs. Does not submit, resume or replay execution. Query individual order receipts with manual_trade_status.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "binding_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Immutable binding from portfolio_execution_configure"
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Saved workflow run ID"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "portfolio_execution_apply",
+    "description": "Apply one saved target portfolio through the bound execution adapter. Requires a live workflow tool calling for its matching executor task; direct model calls fail. Exact native units, all-origin close/reduction, guarded strategy stops and durable no-replay receipts are preserved.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "binding_id",
+        "run"
+      ],
+      "properties": {
+        "binding_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Immutable binding from portfolio_execution_configure"
+        },
+        "run": {
+          "type": "object",
+          "required": [
+            "id",
+            "decidedAt",
+            "plan",
+            "decision"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "description": "Saved workflow run ID"
+            },
+            "decidedAt": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "plan": {
+              "type": "object",
+              "required": [
+                "id",
+                "account",
+                "ownerConversationId",
+                "slippageBps"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100,
+                  "description": "Frozen workflow plan ID"
+                },
+                "account": {
+                  "type": "object",
+                  "properties": {},
+                  "additionalProperties": true
+                },
+                "ownerConversationId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100,
+                  "description": "Frozen parent conversation"
+                },
+                "slippageBps": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 500
+                }
+              },
+              "additionalProperties": false
+            },
+            "decision": {
+              "type": "object",
+              "required": [
+                "unchanged",
+                "targets",
+                "pause_strategies"
+              ],
+              "properties": {
+                "unchanged": {
+                  "type": "boolean"
+                },
+                "targets": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "symbol",
+                      "quantity",
+                      "unit"
+                    ],
+                    "properties": {
+                      "symbol": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100,
+                        "description": "Exact native symbol"
+                      },
+                      "quantity": {
+                        "type": "string",
+                        "pattern": "^-?(0|[1-9]\\d*)(\\.\\d+)?$",
+                        "maxLength": 40
+                      },
+                      "unit": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "const": "lots"
+                          },
+                          {
+                            "type": "string",
+                            "const": "shares"
+                          }
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "maxItems": 100
+                },
+                "pause_strategies": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "deployment_id",
+                      "reason"
+                    ],
+                    "properties": {
+                      "deployment_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100,
+                        "description": "Observed deployment ID"
+                      },
+                      "reason": {
+                        "type": "string",
+                        "minLength": 10,
+                        "maxLength": 2000
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "maxItems": 30
+                },
+                "rationale": {
+                  "type": "string",
+                  "maxLength": 8000
+                },
+                "evidence_dataset_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "maxItems": 30
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "manual_trade_inspect",
+    "description": "Inspect supported direct execution channels and enforced latency policy. Does not connect, configure, install, or trade.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "manual_trade_observe",
+    "description": "Read current account, symbol conditions, positions and a source-timestamped executable quote from an already loaded MT5/QMT backend. Returns an observation_id that starts the model decision clock; no order is sent.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "backend",
+        "symbol"
+      ],
+      "properties": {
+        "backend": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "mt5"
+            },
+            {
+              "type": "string",
+              "const": "qmt"
+            }
+          ]
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Exact broker symbol"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "manual_trade_execute",
+    "description": "Submit one explicitly user-authorized order from a recent observation. M5+ only. In the native process recheck account, available position/specification, deadline and latest quote, then send once without another model turn. Stable operation_id prevents duplicates; stale/slow preparation rejects. unknown must be queried, never resent.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "operation_id",
+        "observation_id",
+        "user_authorized",
+        "action",
+        "side",
+        "quantity",
+        "price_limit"
+      ],
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,100}$"
+        },
+        "observation_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "ID from manual_trade_observe; one intent per observation"
+        },
+        "user_authorized": {
+          "type": "boolean",
+          "const": true
+        },
+        "timeframe": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "5m"
+            },
+            {
+              "type": "string",
+              "const": "15m"
+            },
+            {
+              "type": "string",
+              "const": "30m"
+            },
+            {
+              "type": "string",
+              "const": "1h"
+            },
+            {
+              "type": "string",
+              "const": "4h"
+            },
+            {
+              "type": "string",
+              "const": "1d"
+            }
+          ]
+        },
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "market"
+            },
+            {
+              "type": "string",
+              "const": "limit"
+            },
+            {
+              "type": "string",
+              "const": "close"
+            }
+          ]
+        },
+        "side": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "buy"
+            },
+            {
+              "type": "string",
+              "const": "sell"
+            }
+          ]
+        },
+        "quantity": {
+          "type": "string",
+          "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+          "maxLength": 40,
+          "description": "MT5 lots or QMT integer shares, based on the user intent"
+        },
+        "price_limit": {
+          "type": "string",
+          "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+          "maxLength": 40,
+          "description": "Maximum buy/minimum sell executable quote. A market fill can still slip; use a limit order for a hard order-price limit"
+        },
+        "limit_price": {
+          "type": "string",
+          "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+          "maxLength": 40,
+          "description": "Required only for limit orders"
+        },
+        "position_id": {
+          "type": "string",
+          "pattern": "^[1-9]\\d*$",
+          "description": "Required MT5 position ticket for close"
+        },
+        "stop_loss": {
+          "type": "string",
+          "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+          "maxLength": 40,
+          "description": "Optional MT5 stop loss"
+        },
+        "take_profit": {
+          "type": "string",
+          "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+          "maxLength": 40,
+          "description": "Optional MT5 take profit"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "manual_trade_status",
+    "description": "Read a durable receipt; refresh reads the backend command and actual orders/fills for recovery. No matching record never proves a timed-out send failed. Does not replay or place orders.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "operation_id"
+      ],
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Existing operation ID"
+        },
+        "refresh": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "manual_trade_cancel",
+    "description": "Request cancellation of a confirmed pending order created through this plugin, using a separate stable operation ID. Does not close a filled position. Query afterwards; cancel_requested is not confirmed cancellation.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "operation_id",
+        "original_operation_id",
+        "user_authorized"
+      ],
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,100}$"
+        },
+        "original_operation_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Original manual_trade_execute operation"
+        },
+        "user_authorized": {
+          "type": "boolean",
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]
