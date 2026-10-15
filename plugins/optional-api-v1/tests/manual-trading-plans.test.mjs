@@ -135,6 +135,17 @@ function fixture(t, { service = true } = {}) {
   };
 }
 
+test('account binding is released even when closing its event stream fails', async t => {
+  const f = fixture(t), released = [], failure = new Error('Event stream close failed');
+  f.host.providers = { unbind: async id => { released.push(id); } };
+  f.runtime.subscriptions.set('plan-1', { bindingId: 'account-binding', stream: { close: async () => { throw failure; } } });
+  await assert.rejects(f.runtime.unsubscribe('plan-1'), error => error === failure);
+  assert.deepEqual(released, ['account-binding']);
+  assert.equal(f.runtime.subscriptions.size, 0);
+  await f.runtime.unsubscribe('plan-1');
+  assert.deepEqual(released, ['account-binding'], 'repeated cleanup does not release twice');
+});
+
 test('each role may override its model while the frozen default covers omitted roles', t => {
   const f = fixture(t);
   for (const role of ROLES) {

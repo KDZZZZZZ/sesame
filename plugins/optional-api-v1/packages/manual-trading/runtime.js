@@ -414,7 +414,14 @@ export class TradingRuntime {
       this.host.storage.put('plans', { ...this.plan(plan.id), eventStatus: 'unavailable', eventError: cleanError(error), eventRetryAt: error.code === 'UNSUPPORTED_CAPABILITY' ? null : this.now() + 60000 });
     }
   }
-  async unsubscribe(id) { const sub = this.subscriptions.get(id); this.subscriptions.delete(id); if (sub) { await sub.stream?.close(); await this.host.providers.unbind(sub.bindingId); } }
+  async unsubscribe(id) {
+    const sub = this.subscriptions.get(id);
+    this.subscriptions.delete(id);
+    if (sub) {
+      try { await sub.stream?.close(); }
+      finally { await this.host.providers.unbind(sub.bindingId); }
+    }
+  }
   async dispose() {
     this.closed = true; clearInterval(this.timer);
     for (const poll of this.taskPolls.values()) { poll.active = false; clearInterval(poll.timer); }
