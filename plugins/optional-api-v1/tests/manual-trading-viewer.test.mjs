@@ -70,6 +70,24 @@ test('host panel subscriptions carry actual persisted state and release on close
   assert.deepEqual(snapshot.events, f.runtime.run('run').activity.events);
   await f.host.reports.live.close(viewId);
   assert.equal(f.runtime.activityListeners.size, 0);
+  assert.equal(f.viewer.views.size, 0);
+});
+
+test('closed and capacity-evicted views do not accumulate plugin-side references', async t => {
+  const f = fixture(t), base = f.runtime.run('run');
+  for (let i = 0; i < 100; i++) {
+    const id = `run-${i}`;
+    f.runtime.save({ ...base, id });
+    const opened = await f.viewer.open(f.main, id);
+    await f.viewer.open(f.main, id);
+    if (f.views.size > 2) await f.host.reports.live.close(f.views.keys().next().value);
+    assert.ok(f.viewer.views.has(opened.viewId));
+    assert.equal(f.viewer.views.size, f.views.size);
+    assert.equal(f.runtime.activityListeners.size, f.views.size);
+  }
+  await f.viewer.dispose();
+  assert.equal(f.viewer.views.size, 0);
+  assert.equal(f.runtime.activityListeners.size, 0);
 });
 
 test('older hosts report the required panel capability instead of opening an external browser', async t => {

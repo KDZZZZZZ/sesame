@@ -1497,9 +1497,9 @@
     },
     {
       "id": "sesame/auto-factor-mining",
-      "version": "1.0.0-dev.2",
+      "version": "1.0.1-dev.1",
       "directory": "auto-factor-mining",
-      "treeDigest": "sha256:3dc857046221e3b243dd70d441ac0ada18bfaf5edfebe7ec5a4ba35e5c0b5d78",
+      "treeDigest": "sha256:558f9b99d61946882dd1badba803751c669599b4c8ef7f92b3169ded677ed358",
       "files": [
         {
           "path": "LICENSE",
@@ -1593,17 +1593,17 @@
         },
         {
           "path": "live-viewer.js",
-          "sha256": "5d9dcf164e89719edb05ccd2ae55079089c856ebf902c2ef2cd057cca55381fb",
-          "bytes": 2631
+          "sha256": "495e6f0c876e4fd42e1c93e79d74e7684f7e99d376dd36f04e9e34002f4e924d",
+          "bytes": 2950
         },
         {
           "path": "package.json",
-          "sha256": "768ea6eb65d0b581edddcc1eb45cbb3b3edc6f030f9fb7a1aed15266743247e0",
+          "sha256": "e3c47669f26c74d8a8bad804439f82b43a33eee502f9a7ea112d8311d5977050",
           "bytes": 200
         },
         {
           "path": "plugin.json",
-          "sha256": "fc9a1ff971af2ffc55cbe517f7c5100fb923b16b57c155ca3f4d203253736178",
+          "sha256": "84fb8cd73f0a52d3ef3d80ae63015f4307a93dd13b64d9f5182a9fc8820476cd",
           "bytes": 1166
         },
         {
@@ -3086,9 +3086,9 @@
     },
     {
       "id": "sesame/manual-trading",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "directory": "manual-trading",
-      "treeDigest": "sha256:db5d447c593784c699f0aedc63f41f342d53e7c39d0d05756919e0b2d7a55339",
+      "treeDigest": "sha256:c5537b051e3d593f44da69894a93894f0bc35fac7ff2d585f4253abbce2340b5",
       "files": [
         {
           "path": "COMPOSITION.md",
@@ -3202,8 +3202,8 @@
         },
         {
           "path": "live-viewer.js",
-          "sha256": "5d9dcf164e89719edb05ccd2ae55079089c856ebf902c2ef2cd057cca55381fb",
-          "bytes": 2631
+          "sha256": "495e6f0c876e4fd42e1c93e79d74e7684f7e99d376dd36f04e9e34002f4e924d",
+          "bytes": 2950
         },
         {
           "path": "memory.js",
@@ -3212,7 +3212,7 @@
         },
         {
           "path": "package.json",
-          "sha256": "4ea5837e4b8e8c3c3353a759e5b6d34538d5769040c0856a9924bdd861ff235a",
+          "sha256": "a439749686bab788e5bea2c98769171332ceb0bbbf3bcebcf494078935bf412b",
           "bytes": 108
         },
         {
@@ -3222,7 +3222,7 @@
         },
         {
           "path": "plugin.json",
-          "sha256": "d9933493d4812cc42f94d4f0ef20d5c0e2913fe0c2bbb16fcd94ab4beb9d0f06",
+          "sha256": "4ebfb74cfdfbab334f124a4b96186eb756c988b00e7b96947ce64628703e72ab",
           "bytes": 2121
         },
         {
@@ -3237,8 +3237,8 @@
         },
         {
           "path": "runtime.js",
-          "sha256": "4a11de237c496ecd9f66effc6c887977ba7980b289fbb20a857289b7d305374f",
-          "bytes": 35290
+          "sha256": "0353f77293983a5f5fb6c376f40536613590926eeaebab5ff5b24864599b6165",
+          "bytes": 35340
         },
         {
           "path": "shared.js",

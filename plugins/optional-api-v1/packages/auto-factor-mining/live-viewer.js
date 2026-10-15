@@ -25,18 +25,26 @@ export class LiveActivityViewer {
     const initial = this.read(host, runId);
     check(host.reports?.live?.open && this.runtime.host.reports?.live?.close,
       'HOST_UPGRADE_REQUIRED', 'Update Sesame to a version with live HTML report panels');
+    let viewId, subscribed = false;
     const opening = Promise.resolve().then(() => host.reports.live.open({
       key: runId, title: initial.run.title, html: activityHTML(initial),
     }, {
       // These callbacks use only the durable plugin service, never a retained tool host.
       read: () => this.projection.snapshot(runId),
-      subscribe: callback => this.runtime.onActivity(notice => { if (notice.runId === runId) callback(); }),
+      subscribe: callback => {
+        const unsubscribe = this.runtime.onActivity(notice => { if (notice.runId === runId) callback(); });
+        subscribed = true;
+        return () => { subscribed = false; this.views.delete(viewId); unsubscribe(); };
+      },
     })).then(async view => {
+      viewId = view.viewId;
       if (this.closed) {
         await this.runtime.host.reports.live.close(view.viewId);
         check(false, 'RUNTIME_CLOSED', 'Activity viewer is closed');
       }
-      this.views.add(view.viewId); return { ...view, runId };
+      // Reused views already have an owning subscription; evicted views have none.
+      if (subscribed) this.views.add(viewId);
+      return { ...view, runId };
     });
     this.opening.add(opening);
     try { return await opening; } finally { this.opening.delete(opening); }
