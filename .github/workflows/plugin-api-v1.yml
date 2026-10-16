@@ -1,4 +1,5 @@
-name: Plugin API 2 sources and historical publications
+# Preserve the required-check workflow identity until API 2 validation reaches main.
+name: Plugin API 1 sources
 on:
   push:
     # One reviewed release branch bootstraps the API 2 validator on main.
