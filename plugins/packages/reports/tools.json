@@ -1,0 +1,81 @@
+[
+  {
+    "name": "report_read",
+    "label": "report_read",
+    "description": "列出报告或读取指定报告的元数据与数据源。固定 revision；不按名称猜测报告身份。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "report_id": {
+          "type": "string",
+          "description": "报告 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "report_publish",
+    "label": "report_publish",
+    "description": "发布 Agent 编写的 Research 或 Strategy HTML。Research 绑定 research_register 的 dataset_ids；Strategy 传已完成的真实 backtest_ids，自动绑定热图、参数、权益、统计和成交组件。在 HTML 放置 <section data-report-component=\"backtest\"></section> 决定位置，省略时自动追加。数据只通过 reportData.query 加载，发布后不可变。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "title",
+        "html_path"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "报告标题",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "html_path": {
+          "type": "string",
+          "description": "工作区 HTML 文件",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "dataset_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "research_register 返回的 ID",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "maxItems": 20
+        },
+        "backtest_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "mt5_backtest 返回的任务 ID",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "report_id": {
+          "type": "string",
+          "description": "更新已有报告",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "expected_revision": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]

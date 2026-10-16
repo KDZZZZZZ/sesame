@@ -1,0 +1,23 @@
+{
+  "ref": null,
+  "instrument": {
+    "sourceId": "demo-fiction",
+    "instrumentId": "DEMO"
+  },
+  "spec": {
+    "timeframe": "1m",
+    "priceBasis": "last",
+    "adjustment": "none",
+    "session": "fictional",
+    "calendarRevision": {
+      "status": "unknown",
+      "reason": "Invented teaching data, no exchange calendar"
+    }
+  },
+  "provenance_kind": "demo",
+  "coverage": {
+    "complete": false,
+    "reason": "Invented observations, not market coverage"
+  },
+  "snapshot_observed_at": null
+}

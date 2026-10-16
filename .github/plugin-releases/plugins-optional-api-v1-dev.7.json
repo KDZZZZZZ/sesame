@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "tag": "plugins-optional-api-v1-dev.7",
+  "title": "Sesame API 1 optional development plugins 7 — independent research methods",
+  "sourceCommit": "1033980403590600b04e7cbb3ab7d4bbcc3d5ce8",
+  "sourceRoot": "plugins/optional-api-v1",
+  "profile": "optional",
+  "archive": {
+    "name": "sesame-optional-plugins-api-v1-dev.7.tar.gz",
+    "sha256": "f83bcfe48310f91ac5c277bd4ccfa3a9b10a246ee63af80b96b34762303a03f4"
+  },
+  "lockSha256": "2e831901e986e81d359d99bea254ec640c4f33c286d15e5377755cfe50830a0d",
+  "pullRequest": 29
+}

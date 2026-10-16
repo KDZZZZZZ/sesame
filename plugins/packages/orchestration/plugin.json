@@ -1,0 +1,18 @@
+{
+  "id": "orchestration",
+  "title": "会话与委派",
+  "description": "主子 Agent 的协作规则、任务委派与结果检查。",
+  "version": "1.0.0",
+  "default_state": "mounted",
+  "tool_names": [
+    "agent_delegate",
+    "agent_inspect",
+    "agent_finish"
+  ],
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [],
+  "entry": "tools.js",
+  "tool_definitions": "tools.json"
+}

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "tag": "plugins-api-v1-dev.12",
+  "title": "Sesame official API 1 development plugins 12",
+  "sourceCommit": "d3e4b3f15d0f0a1432c5e6d8b2bf5a30fb04c770",
+  "sourceRoot": "plugins/api-v1",
+  "archive": {
+    "name": "sesame-official-plugins-api-v1-dev.12.tar.gz",
+    "sha256": "03a25eed1bb65a57c2c4d13c9109a8bbb59d708d715ba5ffa3623e3a3a713126"
+  },
+  "lockSha256": "1eac31369ae9cfa99790bd7e238eee5b903aa6e04f2e5e39dd7171ad49687156",
+  "pullRequest": 21
+}

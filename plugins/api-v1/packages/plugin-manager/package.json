@@ -1,0 +1,6 @@
+{
+  "name": "@sesame-plugin/plugin-manager",
+  "version": "2.2.0",
+  "type": "module",
+  "license": "MIT"
+}

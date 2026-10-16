@@ -1,0 +1,695 @@
+[
+  {
+    "name": "canvas_inspect",
+    "label": "canvas_inspect",
+    "description": "查看水平工作台的版本、三个窗口宽度、图表 ID、布局、脚本与前端渲染回执。修改前先读取；没有近期客户端回执表示尚未确认渲染。",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "canvas_apply",
+    "label": "canvas_apply",
+    "description": "原子批量修改工作台。workspace 调整三个水平窗口宽度或定位；其余图表操作仅在最左侧图表区内。用户锁定或正在拖动的图表会返回冲突，须重读后处理。不触发交易。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "command_id",
+        "expected_version",
+        "operations"
+      ],
+      "properties": {
+        "command_id": {
+          "type": "string",
+          "description": "本次操作唯一 ID，至少 16 字符；重试保持不变",
+          "minLength": 16,
+          "maxLength": 100,
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "op"
+            ],
+            "properties": {
+              "op": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "const": "add"
+                  },
+                  {
+                    "type": "string",
+                    "const": "update"
+                  },
+                  {
+                    "type": "string",
+                    "const": "remove"
+                  },
+                  {
+                    "type": "string",
+                    "const": "panels"
+                  },
+                  {
+                    "type": "string",
+                    "const": "focus"
+                  },
+                  {
+                    "type": "string",
+                    "const": "arrange"
+                  },
+                  {
+                    "type": "string",
+                    "const": "workspace"
+                  },
+                  {
+                    "type": "string",
+                    "const": "reorder"
+                  },
+                  {
+                    "type": "string",
+                    "const": "dock"
+                  },
+                  {
+                    "type": "string",
+                    "const": "tile"
+                  }
+                ]
+              },
+              "id": {
+                "type": "string",
+                "description": "目标图表 ID；add 可省略",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "target_id": {
+                "type": "string",
+                "description": "reorder 的交换目标或 dock 的插入参照图表",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "side": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "const": "left"
+                  },
+                  {
+                    "type": "string",
+                    "const": "right"
+                  },
+                  {
+                    "type": "string",
+                    "const": "top"
+                  },
+                  {
+                    "type": "string",
+                    "const": "bottom"
+                  }
+                ]
+              },
+              "tiles": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "path",
+                        "chart_id"
+                      ],
+                      "properties": {
+                        "path": {
+                          "type": "string",
+                          "pattern": "^[01]{0,31}$",
+                          "description": "根路径为空字符串；0 是左/上子区，1 是右/下子区"
+                        },
+                        "chart_id": {
+                          "type": "string",
+                          "description": "图表 ID",
+                          "minLength": 1,
+                          "maxLength": 100
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "path",
+                        "axis",
+                        "ratio"
+                      ],
+                      "properties": {
+                        "path": {
+                          "type": "string",
+                          "pattern": "^[01]{0,31}$",
+                          "description": "根路径为空字符串；0 是左/上子区，1 是右/下子区"
+                        },
+                        "axis": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "const": "x"
+                            },
+                            {
+                              "type": "string",
+                              "const": "y"
+                            }
+                          ]
+                        },
+                        "ratio": {
+                          "type": "number",
+                          "exclusiveMinimum": 0,
+                          "exclusiveMaximum": 1,
+                          "description": "左侧或上侧区域所占比例"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                "maxItems": 63,
+                "description": "完整的比例平铺树，必须包含所有图表且不重复；空图表场景使用空数组"
+              },
+              "groups": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "图表 ID",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "minItems": 1,
+                  "maxItems": 32
+                },
+                "minItems": 1,
+                "maxItems": 32
+              },
+              "chart": {
+                "type": "object",
+                "properties": {
+                  "symbol": {
+                    "type": "string",
+                    "description": "精确券商品种",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "period": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "const": "M1"
+                      },
+                      {
+                        "type": "string",
+                        "const": "M2"
+                      },
+                      {
+                        "type": "string",
+                        "const": "M3"
+                      },
+                      {
+                        "type": "string",
+                        "const": "M4"
+                      },
+                      {
+                        "type": "string",
+                        "const": "M5"
+                      },
+                      {
+                        "type": "string",
+                        "const": "M6"
+                      },
+                      {
+                        "type": "string",
+                        "const": "M10"
+                      },
+                      {
+                        "type": "string",
+                        "const": "M12"
+                      },
+                      {
+                        "type": "string",
+                        "const": "M15"
+                      },
+                      {
+                        "type": "string",
+                        "const": "M20"
+                      },
+                      {
+                        "type": "string",
+                        "const": "M30"
+                      },
+                      {
+                        "type": "string",
+                        "const": "H1"
+                      },
+                      {
+                        "type": "string",
+                        "const": "H2"
+                      },
+                      {
+                        "type": "string",
+                        "const": "H3"
+                      },
+                      {
+                        "type": "string",
+                        "const": "H4"
+                      },
+                      {
+                        "type": "string",
+                        "const": "H6"
+                      },
+                      {
+                        "type": "string",
+                        "const": "H8"
+                      },
+                      {
+                        "type": "string",
+                        "const": "H12"
+                      },
+                      {
+                        "type": "string",
+                        "const": "D1"
+                      },
+                      {
+                        "type": "string",
+                        "const": "W1"
+                      },
+                      {
+                        "type": "string",
+                        "const": "MN1"
+                      }
+                    ]
+                  },
+                  "style": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "const": "candles"
+                      },
+                      {
+                        "type": "string",
+                        "const": "bars"
+                      },
+                      {
+                        "type": "string",
+                        "const": "line"
+                      },
+                      {
+                        "type": "string",
+                        "const": "area"
+                      }
+                    ]
+                  },
+                  "x": {
+                    "type": "number",
+                    "minimum": -20000,
+                    "maximum": 20000
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -20000,
+                    "maximum": 20000
+                  },
+                  "width": {
+                    "type": "number",
+                    "minimum": 360,
+                    "maximum": 5000
+                  },
+                  "height": {
+                    "type": "number",
+                    "minimum": 240,
+                    "maximum": 5000
+                  },
+                  "volume": {
+                    "type": "boolean"
+                  },
+                  "averages": {
+                    "type": "boolean"
+                  },
+                  "markers": {
+                    "type": "boolean"
+                  },
+                  "logarithmic": {
+                    "type": "boolean"
+                  },
+                  "collapsed": {
+                    "type": "boolean"
+                  },
+                  "locked": {
+                    "type": "boolean"
+                  },
+                  "sync_group": {
+                    "type": "string",
+                    "description": "默认独立；仅用户明确要求联动拖动/缩放时设置相同非空分组；空字符串取消联动",
+                    "maxLength": 32
+                  }
+                },
+                "additionalProperties": false
+              },
+              "workspace": {
+                "type": "object",
+                "properties": {
+                  "column": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "const": "charts"
+                      },
+                      {
+                        "type": "string",
+                        "const": "agents"
+                      },
+                      {
+                        "type": "string",
+                        "const": "research"
+                      }
+                    ]
+                  },
+                  "widths": {
+                    "type": "object",
+                    "properties": {
+                      "charts": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 320,
+                            "maximum": 3000
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "agents": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 320,
+                            "maximum": 3000
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "research": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 320,
+                            "maximum": 3000
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": false
+              },
+              "panels": {
+                "type": "object",
+                "properties": {
+                  "agents": {
+                    "type": "boolean"
+                  },
+                  "account": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "mode": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "const": "center"
+                  },
+                  {
+                    "type": "string",
+                    "const": "maximize"
+                  },
+                  {
+                    "type": "string",
+                    "const": "restore"
+                  },
+                  {
+                    "type": "string",
+                    "const": "auto"
+                  }
+                ]
+              },
+              "columns": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 4
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "height": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 1000000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "仅 tile：展开图表区的内容高度（像素），超出视口允许纵向滚动；省略保留，null 恢复自适应"
+              }
+            },
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 64
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "canvas_focus",
+    "label": "canvas_focus",
+    "description": "先定位最左侧图表窗口，再定位其中的指定图表；最大化仅填满图表窗口，不覆盖 Agents 或研究窗口。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "command_id",
+        "expected_version",
+        "chart_id"
+      ],
+      "properties": {
+        "command_id": {
+          "type": "string",
+          "description": "本次操作唯一 ID，至少 16 字符；重试保持不变",
+          "minLength": 16,
+          "maxLength": 100,
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "chart_id": {
+          "type": "string",
+          "description": "图表 ID",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "mode": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "center"
+            },
+            {
+              "type": "string",
+              "const": "maximize"
+            },
+            {
+              "type": "string",
+              "const": "restore"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "chart_script",
+    "label": "chart_script",
+    "description": "发布、读取或移除图表代码曲线。JavaScript/TypeScript 源码是 indicator(bars, parameters) 函数体，return 曲线数组；每组含 title、type(line/area/histogram)、color、pane(0主图/1–4副图)、data[{time,value}]。bars 使用券商时间 Unix 秒及 OHLCV。代码在无网络隔离 Worker 运行，不访问宿主。Python 等研究结果使用 language=series 绑定最终数值；发布到主工作区，子任务清理不影响它。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "read"
+            },
+            {
+              "type": "string",
+              "const": "put"
+            },
+            {
+              "type": "string",
+              "const": "remove"
+            }
+          ]
+        },
+        "command_id": {
+          "type": "string",
+          "description": "本次操作唯一 ID，至少 16 字符；重试保持不变",
+          "minLength": 16,
+          "maxLength": 100,
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "expected_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "chart_id": {
+          "type": "string",
+          "description": "目标图表 ID",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "script_id": {
+          "type": "string",
+          "description": "读取、替换或移除的脚本 ID",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "title": {
+          "type": "string",
+          "description": "曲线名称",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "language": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "javascript"
+            },
+            {
+              "type": "string",
+              "const": "typescript"
+            },
+            {
+              "type": "string",
+              "const": "series"
+            }
+          ]
+        },
+        "source": {
+          "type": "string",
+          "description": "函数体源码，最多 32 KiB",
+          "minLength": 1,
+          "maxLength": 32768
+        },
+        "parameters": {
+          "type": "object",
+          "patternProperties": {
+            "^.*$": {}
+          }
+        },
+        "series": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "title",
+              "data"
+            ],
+            "properties": {
+              "title": {
+                "type": "string",
+                "maxLength": 100
+              },
+              "type": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "const": "line"
+                  },
+                  {
+                    "type": "string",
+                    "const": "area"
+                  },
+                  {
+                    "type": "string",
+                    "const": "histogram"
+                  }
+                ]
+              },
+              "color": {
+                "type": "string",
+                "description": "#RRGGBB",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "pane": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "time",
+                    "value"
+                  ],
+                  "properties": {
+                    "time": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "value": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "maxItems": 50000
+              }
+            },
+            "additionalProperties": false
+          },
+          "maxItems": 12
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]

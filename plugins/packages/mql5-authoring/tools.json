@@ -1,0 +1,109 @@
+[
+  {
+    "name": "mt5_project",
+    "label": "mt5_project",
+    "description": "管理独立 MQL5 工程。create 创建 visual-mql-v1 空骨架；先读 visual-state-machines skill 和语言参考。save 严格解析、检查类型/效果/预算，并从同一 IR 生成原生代码与图；源码诊断是可恢复工具错误。旧工程继续按原模板编辑。草稿不能回测。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "list"
+            },
+            {
+              "type": "string",
+              "const": "create"
+            },
+            {
+              "type": "string",
+              "const": "checkout"
+            },
+            {
+              "type": "string",
+              "const": "save"
+            }
+          ]
+        },
+        "title": {
+          "type": "string",
+          "description": "新工程名称",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "project_id": {
+          "type": "string",
+          "description": "工程 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "checkout_id": {
+          "type": "string",
+          "description": "当前会话 checkout ID",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_inspect",
+    "label": "mt5_inspect",
+    "description": "查看本机能力、工程源码及生成逻辑摘要、冻结构建诊断。engine_node_id 可按源节点下钻到输入、调用目标和源码。checked 表示严格源码已校验；declared 只是旧工程手写声明；均不代表 Tester 已通过。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "type": "string",
+          "description": "工程 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "build_id": {
+          "type": "string",
+          "description": "构建 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "engine_node_id": {
+          "type": "string",
+          "description": "严格工程中需要展开的节点 ID；必须同时给出 project_id 或 build_id",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mt5_compile",
+    "label": "mt5_compile",
+    "description": "冻结已保存 revision、平台 SDK 和本机标准库，在隔离 Wine 环境调用 MetaEditor。成功返回 EX5 摘要；失败作为可恢复工具错误返回构建 ID、诊断与修复指引，修改 checkout 并 save 新 revision 后重试。不执行 EA。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "revision"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string",
+          "description": "工程 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "明确指定已保存的源码版本"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]

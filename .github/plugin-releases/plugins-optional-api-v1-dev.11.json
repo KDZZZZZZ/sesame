@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "tag": "plugins-optional-api-v1-dev.11",
+  "title": "Sesame optional plugins — manual trading and environment discovery",
+  "sourceCommit": "131541e1477dd6645aaa3ee625318640902ed11c",
+  "sourceRoot": "plugins/optional-api-v1",
+  "profile": "optional",
+  "archive": {
+    "name": "sesame-optional-plugins-api-v1-dev.11.tar.gz",
+    "sha256": "0858ce28bcb48d2ea8be77380f9443c81648549c0d08a76b0766d7337d1bbe0e"
+  },
+  "lockSha256": "df117c79c7776a4f46dedc3f50b032bcb07b94051b4600bbd3e246c16f7e344b",
+  "pullRequest": 38
+}

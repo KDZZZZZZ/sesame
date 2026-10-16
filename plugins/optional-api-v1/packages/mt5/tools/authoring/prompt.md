@@ -1,0 +1,3 @@
+新策略先按 svl-mql5 skill 完成 SVL 源、源图和目标翻译。以下 mt5_project 流程适用于维护已有原生 MQL5/visual-mql-v1 工程，或用户明确要求独立原生源码工程时；不将其作为 SVL 翻译证明。
+
+维护前阅读 native-ea 和 visual-state-machines 两个 skill；模板 3.x 还必须读取 skills/visual-state-machines/references/language.md。可用 plugin_read 读取这些声明资源。先 mt5_inspect 获取本机能力；checkout 后读取 README.md 与 strategy.json，再通过工作区文件工具修改六个策略模块。信号、数量、持仓管理、移动保护、策略风控和原生调度扩展由你明确设计并声明；空骨架没有默认可执行策略。EA 入口、平台 SDK 和用户限额不可覆盖。visual-mql-v1 工程由受限源码生成原生类、图和埋点；不要手写图或添加任意原生接口。save 返回的语义错误同样需要修复。save 后用明确 revision 调用 mt5_compile；compile_failed 是可恢复工具结果，按文件行号修复、保存新 revision 后继续编译。草稿允许语法编译，完成模块代码及声明后才能回测。checked 表示受限源码校验通过，不能声称策略行为已验证；declared 仅用于旧工程手写声明。生成报告默认委派 subagent，主 Agent 保留相同工具权限。

@@ -1,0 +1,28 @@
+{
+  "id": "mql5-authoring",
+  "title": "MQL5 原生策略",
+  "description": "按原生接口和可视化状态机 skill 编写独立 CExpert 工程，保存版本、隔离编译，并根据可恢复诊断修复源码。",
+  "version": "1.3.0",
+  "default_state": "discoverable",
+  "tool_names": [
+    "mt5_project",
+    "mt5_inspect",
+    "mt5_compile"
+  ],
+  "entry": "tools.js",
+  "resources": [
+    "skills/visual-state-machines/references/language.md"
+  ],
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "tool_definitions": "tools.json",
+  "mcp_export": [
+    "mt5_inspect",
+    "mt5_project",
+    "mt5_compile"
+  ]
+}

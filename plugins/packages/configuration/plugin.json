@@ -1,0 +1,23 @@
+{
+  "id": "configuration",
+  "title": "配置助手",
+  "description": "主 Agent 导入 MT5 MCP 配置、自动恢复连接、调整交易与宿主权限、读取脱敏设置并指导补齐认证。",
+  "version": "1.3.0",
+  "default_state": "mounted",
+  "agent_scope": "main",
+  "tool_names": [
+    "configuration_import_mt5",
+    "mt5_connect",
+    "configuration_read",
+    "configuration_update",
+    "configuration_open"
+  ],
+  "entry": "tools.js",
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "tool_definitions": "tools.json"
+}

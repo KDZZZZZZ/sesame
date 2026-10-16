@@ -1,0 +1,202 @@
+{
+  "author": {
+    "name": "Sesame"
+  },
+  "name": "quantskills-catalog",
+  "version": "1.0.0",
+  "description": "提供 QuantSkills 社区目录的按需查询能力，支持按分类、工作流阶段、资产类型和验证程度筛选。",
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "extensions": {
+    "io.github.kdzzzzzz.mt5agent": {
+      "dependencies": [],
+      "tests": [
+        {
+          "server": "analysis",
+          "tool": "catalog_list_categories",
+          "arguments": {},
+          "expected": {
+            "categories": [
+              {
+                "id": "01",
+                "name": "01 数据接口与数据仓库",
+                "count": 7
+              },
+              {
+                "id": "02",
+                "name": "02 因子研发工具箱",
+                "count": 44
+              },
+              {
+                "id": "03",
+                "name": "03 市场与标的分析",
+                "count": 44
+              },
+              {
+                "id": "04",
+                "name": "04 风险监控与预警",
+                "count": 22
+              },
+              {
+                "id": "05",
+                "name": "05 策略回测与交易工具",
+                "count": 25
+              },
+              {
+                "id": "06",
+                "name": "06 投研模型与研究复现",
+                "count": 30
+              },
+              {
+                "id": "07",
+                "name": "07 研究验证与质量工具",
+                "count": 12
+              },
+              {
+                "id": "08",
+                "name": "08 资讯搜索与知识分析",
+                "count": 10
+              },
+              {
+                "id": "09",
+                "name": "09 量化智能体与自动化",
+                "count": 14
+              },
+              {
+                "id": "10",
+                "name": "10 基础设施与模板",
+                "count": 6
+              }
+            ],
+            "total_items": 214,
+            "version": "1.0.0"
+          }
+        },
+        {
+          "server": "analysis",
+          "tool": "catalog_search",
+          "arguments": {
+            "query": "alpha191",
+            "limit": 10
+          },
+          "expected": {
+            "results": [
+              {
+                "name": "skill-factor-alpha191-alpha101",
+                "repo_url": "https://github.com/quantskills/skill-factor-alpha191-alpha101",
+                "category": "02 因子研发工具箱",
+                "subcategory": "因子生成（26）",
+                "stage": "factor-generation",
+                "asset_type": "skill",
+                "verification_level": "pending_review"
+              }
+            ],
+            "count": 1,
+            "query": "alpha191",
+            "version": "1.0.0"
+          }
+        },
+        {
+          "server": "analysis",
+          "tool": "catalog_filter",
+          "arguments": {
+            "category": "02 因子研发工具箱",
+            "limit": 5
+          },
+          "expected": {
+            "results": [
+              {
+                "name": "skill-factor-idea-generation",
+                "repo_url": "https://github.com/quantskills/skill-factor-idea-generation",
+                "category": "02 因子研发工具箱",
+                "subcategory": "因子创意（2）",
+                "stage": "factor-generation",
+                "asset_type": "skill",
+                "verification_level": "pending_review"
+              },
+              {
+                "name": "skill-factormad-debate-factor-mining",
+                "repo_url": "https://github.com/quantskills/skill-factormad-debate-factor-mining",
+                "category": "02 因子研发工具箱",
+                "subcategory": "因子创意（2）",
+                "stage": "factor-generation",
+                "asset_type": "skill",
+                "verification_level": "pending_review"
+              },
+              {
+                "name": "skill-a1-lhb-tracking",
+                "repo_url": "https://github.com/quantskills/skill-a1-lhb-tracking",
+                "category": "02 因子研发工具箱",
+                "subcategory": "因子生成（26）",
+                "stage": "factor-generation",
+                "asset_type": "skill",
+                "verification_level": "pending_review"
+              },
+              {
+                "name": "skill-alpha-a06-hotmoney-reversal",
+                "repo_url": "https://github.com/quantskills/skill-alpha-a06-hotmoney-reversal",
+                "category": "02 因子研发工具箱",
+                "subcategory": "因子生成（26）",
+                "stage": "factor-generation",
+                "asset_type": "skill",
+                "verification_level": "pending_review"
+              },
+              {
+                "name": "skill-alpha-a3-streak-leader-relay",
+                "repo_url": "https://github.com/quantskills/skill-alpha-a3-streak-leader-relay",
+                "category": "02 因子研发工具箱",
+                "subcategory": "因子生成（26）",
+                "stage": "evaluation",
+                "asset_type": "skill",
+                "verification_level": "pending_review"
+              }
+            ],
+            "count": 5,
+            "filters": {
+              "category": "02 因子研发工具箱",
+              "limit": 5
+            },
+            "version": "1.0.0"
+          }
+        },
+        {
+          "server": "analysis",
+          "tool": "catalog_get_item",
+          "arguments": {
+            "name": "skill-factor-alpha191-alpha101"
+          },
+          "expected": {
+            "found": true,
+            "item": {
+              "name": "skill-factor-alpha191-alpha101",
+              "repo_url": "https://github.com/quantskills/skill-factor-alpha191-alpha101",
+              "category": "02 因子研发工具箱",
+              "subcategory": "因子生成（26）",
+              "description": "从长表OHLCV CSV批量计算Alpha101和Alpha191因子并输出宽表CSV。",
+              "stage": "factor-generation",
+              "input": "—",
+              "output": "—",
+              "interface_status": "待维护者审核 / 无公开端点",
+              "screenshot": "",
+              "fetched_at": "2026-10-03T14:34:06.311Z",
+              "source": "https://raw.githubusercontent.com/quantskills/quantskills/main/README.md",
+              "asset_type": "skill",
+              "data_dependencies": [
+                "OHLCV/CSV data"
+              ],
+              "mt5agent_integration": "file_import",
+              "verification_level": "pending_review",
+              "workflow_stage": "研究信号 / Research signal"
+            },
+            "version": "1.0.0"
+          }
+        }
+      ],
+      "builtin": {
+        "title": "QuantSkills 目录",
+        "default_state": "discoverable",
+        "tool_definitions": "tools.json"
+      }
+    }
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,35 @@
+{
+  "id": "sesame/narrative-analysis",
+  "apiVersion": "1",
+  "version": "1.0.0",
+  "title": "市场叙事研究",
+  "description": "独立叙事分析：原始命题、传播与来源簇、反叙事和条件情景；不把故事热度当因果或价格预测。",
+  "author": {
+    "name": "Sesame contributors"
+  },
+  "license": "MIT",
+  "default_state": "discoverable",
+  "agent_scope": "all",
+  "entry": "index.js",
+  "tool_definitions": "tools.json",
+  "tool_names": [],
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "resources": [
+    "LICENSE",
+    "PROVENANCE.md",
+    "README.md",
+    "examples/case.json",
+    "examples/expected.md",
+    "skills/narrative-analysis/references/evidence.md",
+    "skills/narrative-analysis/references/method.md"
+  ],
+  "provides": {},
+  "engines": {
+    "sesame": ">=0.2.0-0"
+  }
+}

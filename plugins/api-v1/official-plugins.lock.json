@@ -1,0 +1,849 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "1",
+  "channel": "development",
+  "packages": [
+    {
+      "id": "sesame/canvas-control",
+      "version": "2.1.1",
+      "directory": "canvas-control",
+      "treeDigest": "sha256:9aba85bb25c50dabed717a260e85dd8d2ca4aa379e46d39e53c90cd54e2ef3f4",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "2681aaf69ad3f8a595707e154e1e065a0077db9f1d25f8f5df73c02c5657477a",
+          "bytes": 1063
+        },
+        {
+          "path": "index.js",
+          "sha256": "b201e9ffdb3337da815d3b652d75098eac8767fb080ad7bb40713dffc4939419",
+          "bytes": 42
+        },
+        {
+          "path": "indicator.js",
+          "sha256": "8874a94b04b7d0ecf1a642cef8ce928faed3da0c50bb5d14ee442f7e3d72db58",
+          "bytes": 4747
+        },
+        {
+          "path": "market-binding.js",
+          "sha256": "02a1c179304a1e8781e0664c6028c9bd870fefee138375ae5136a403ad00e0f4",
+          "bytes": 5264
+        },
+        {
+          "path": "package.json",
+          "sha256": "454ff8579e462aef25d3a08562c37a6b9ba956098a690e250a5a5e3b892e0811",
+          "bytes": 108
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "fba73e17e9407627905da9d961166c5ad498b3bf94d5437b05ae011b2d790b95",
+          "bytes": 934
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "48ab82b5beea63305748399c69fb4fa718f0403d6fb8e7398f6bc0c5687f25a4",
+          "bytes": 6784
+        },
+        {
+          "path": "resources/close-line.js",
+          "sha256": "46ee968c375357932eb3207f7fd46c8b5e9f6b5ec72b3fe5580a7ee22f7cfaa2",
+          "bytes": 401
+        },
+        {
+          "path": "resources/close-line.json",
+          "sha256": "9e7ceff9aa9fbc5aafab8ccd8668338737a919497183d14f9b2cddfb697e9b04",
+          "bytes": 717
+        },
+        {
+          "path": "skills/market-chart/SKILL.md",
+          "sha256": "94f8dc6b0f3d6729ae0cac2d0c572b0103c1be267890e5976b75f1cfa4f76dbd",
+          "bytes": 4852
+        },
+        {
+          "path": "tools.js",
+          "sha256": "dfd581bf71cb2be49266787f8a173384dea21aced2b32e2067cbc585ac8b7c9d",
+          "bytes": 6608
+        },
+        {
+          "path": "tools.json",
+          "sha256": "bada9d7132adc1a8a077f449a658f9b7ba5f7c43a1f03f203af2fc81a381caae",
+          "bytes": 44653
+        }
+      ]
+    },
+    {
+      "id": "sesame/configuration",
+      "version": "2.0.3",
+      "directory": "configuration",
+      "treeDigest": "sha256:00648e79430f9cbd8f9d5ab5ab1f839c37c9d9cf53b7c39afe66abbdcb8b219b",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "2681aaf69ad3f8a595707e154e1e065a0077db9f1d25f8f5df73c02c5657477a",
+          "bytes": 1063
+        },
+        {
+          "path": "index.js",
+          "sha256": "b201e9ffdb3337da815d3b652d75098eac8767fb080ad7bb40713dffc4939419",
+          "bytes": 42
+        },
+        {
+          "path": "package.json",
+          "sha256": "c3dd7a7fbf5d4f1d4112ff4f964e055a467005e307aecacc9479a24923eb5a0f",
+          "bytes": 107
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "e30dc88f8dffa3cf90d6f265f25f5c0617ed5e314b3102f912b2ab9ccf5a79fb",
+          "bytes": 635
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "a24b5fb2ce55b06b0d89b7557f649f73c15ff97a26cfdd3a4da4ec71381a1c53",
+          "bytes": 872
+        },
+        {
+          "path": "skills/configure-application/SKILL.md",
+          "sha256": "ae0fd22bd2f7c9dc4faf4924384623726a5d1b6425173b37f688c51864e2e218",
+          "bytes": 2315
+        },
+        {
+          "path": "support.js",
+          "sha256": "cc471c0ce6b82d9ce56a0b1f3bae0bdf416d4e4ab952801f27dc573cba52a509",
+          "bytes": 546
+        },
+        {
+          "path": "tools.js",
+          "sha256": "6ae3e7bde4ed657468f664e4147c1b5acdeb95fa3959a65ac78ce978c80c0ab9",
+          "bytes": 2473
+        },
+        {
+          "path": "tools.json",
+          "sha256": "63a0b83e09af768a254abff7c680854688d8f8b4563ebc0095fe7a5186b0db82",
+          "bytes": 10477
+        }
+      ]
+    },
+    {
+      "id": "sesame/data-access",
+      "version": "2.3.1",
+      "directory": "data-access",
+      "treeDigest": "sha256:02cca002efb1e827d388b15c547a294b2bbc2d20d5dfd7789ea6ad2df6365ab2",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "2681aaf69ad3f8a595707e154e1e065a0077db9f1d25f8f5df73c02c5657477a",
+          "bytes": 1063
+        },
+        {
+          "path": "data.js",
+          "sha256": "46c978a0767efaf12347d410f8dca4dcf0b7d512a7fdb98c06c71a62963234f0",
+          "bytes": 2328
+        },
+        {
+          "path": "index.js",
+          "sha256": "abd21af1bd163674a9beb12a979662cf3d370fc9791de91315dc2ec73bcb63bc",
+          "bytes": 198
+        },
+        {
+          "path": "market-read.js",
+          "sha256": "8dc6a41b317e61586912c68f76a2316fd0fac8bb61734a44d2edadbb249fbc64",
+          "bytes": 18227
+        },
+        {
+          "path": "market.js",
+          "sha256": "0d8895fa7cefa49c38deef5e24580265a5035451dd047b58039b0bdffbb0a56f",
+          "bytes": 5569
+        },
+        {
+          "path": "package.json",
+          "sha256": "8dd548e248e498e66bfae05add601af69c13ea6b021cfd955088a0fb494a023e",
+          "bytes": 105
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "c788dac0323b3a8bb72c9c59d1184b0cfc8ec4b6b2abae7fa2b1826b259b0037",
+          "bytes": 822
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "0b6caf1100c1a4c2ef8207260be301e6e6227afc0a012f5e9394803bc3d71c7f",
+          "bytes": 4073
+        },
+        {
+          "path": "research-tools.js",
+          "sha256": "41ba6460bfb26e3a34617a263624a0cf6b901e09360517d569be905453d596a2",
+          "bytes": 4117
+        },
+        {
+          "path": "skills/analyze-data/SKILL.md",
+          "sha256": "169356d4c8c47f983f57dbd17739d2c2c915f16cc8dd5f3c642660f7687364d0",
+          "bytes": 1909
+        },
+        {
+          "path": "skills/market-discovery/SKILL.md",
+          "sha256": "bf870d66a10279e24885293ae2fa57304475b87d090ad8e73c35be84a1743ae0",
+          "bytes": 7239
+        },
+        {
+          "path": "support.js",
+          "sha256": "cc471c0ce6b82d9ce56a0b1f3bae0bdf416d4e4ab952801f27dc573cba52a509",
+          "bytes": 546
+        },
+        {
+          "path": "tools.js",
+          "sha256": "4ce80fe59868fac70b514d4a127cec18b94a4413454109badf56b17d8d1b8a1f",
+          "bytes": 2211
+        },
+        {
+          "path": "tools.json",
+          "sha256": "68f11cd96fdf3f86d718ee076d744cda108f955cc6df74a2235bd6cb9c194c91",
+          "bytes": 23370
+        }
+      ]
+    },
+    {
+      "id": "sesame/memory",
+      "version": "2.1.0",
+      "directory": "memory",
+      "treeDigest": "sha256:87ecd3a156efae734060f4455ecf202301a88e3aeffc9b17221fddbb587ffa9e",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "2681aaf69ad3f8a595707e154e1e065a0077db9f1d25f8f5df73c02c5657477a",
+          "bytes": 1063
+        },
+        {
+          "path": "compaction.js",
+          "sha256": "9710d8e16d30385dacad2d5e9284063fd83aeb8e3d44235bdd77e4cc3170c547",
+          "bytes": 20524
+        },
+        {
+          "path": "curation.md",
+          "sha256": "793e047af5ff5e5282d16a82b9d38c21cb51f39f4e9d6b2d5ed72dc858844a04",
+          "bytes": 2812
+        },
+        {
+          "path": "index.js",
+          "sha256": "52fd1ef8b3f8eef29a64afba2493a9304082d0f768540d514d2eb397e04d3c5b",
+          "bytes": 86
+        },
+        {
+          "path": "package.json",
+          "sha256": "d1a67bf769e734ae1a1ec0800839a6eea17c8d082e5117aa6d5c6867335833d2",
+          "bytes": 100
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "7c829e6ae1456be152db8a25d83851fdb7650b7be956de345d6fb9f3f21d062f",
+          "bytes": 674
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "4f68878d69e274d464ae1ba20d394f797952c5f2c7299a365d6552ad29bfa7bf",
+          "bytes": 2823
+        },
+        {
+          "path": "skills/manage-memory/SKILL.md",
+          "sha256": "cac8382d865f54e17c5021976a60595ad062478367284d9d113c1dc569149c05",
+          "bytes": 5389
+        },
+        {
+          "path": "support.js",
+          "sha256": "cc471c0ce6b82d9ce56a0b1f3bae0bdf416d4e4ab952801f27dc573cba52a509",
+          "bytes": 546
+        },
+        {
+          "path": "tools.js",
+          "sha256": "f1e6ef21bb1d2c455dabdae84c917a4c1493d7a196a78a6294a03e0b5359d6e9",
+          "bytes": 4776
+        },
+        {
+          "path": "tools.json",
+          "sha256": "56a7d045b176c7f1cac661dbe334fef5dca1929978857b045539e25e414f69cb",
+          "bytes": 18480
+        }
+      ]
+    },
+    {
+      "id": "sesame/orchestration",
+      "version": "2.2.1",
+      "directory": "orchestration",
+      "treeDigest": "sha256:8f05fabdbee659fb414c8ce82d6849713a1c7e738df7c06dd1b5b411714b3bfa",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "2681aaf69ad3f8a595707e154e1e065a0077db9f1d25f8f5df73c02c5657477a",
+          "bytes": 1063
+        },
+        {
+          "path": "index.js",
+          "sha256": "b201e9ffdb3337da815d3b652d75098eac8767fb080ad7bb40713dffc4939419",
+          "bytes": 42
+        },
+        {
+          "path": "package.json",
+          "sha256": "f8ea5f54a5325020d2d6380722d88e72ea83eb6f31322241fbf9c5fe7b3e1ec0",
+          "bytes": 107
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "0a41be4791d39f98d0529ed947829cfd1e216162fb36f2b6741ecdc434b5d327",
+          "bytes": 1022
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "c1fbe5f1c4d5bd2d41a7a1a5180fb2e9c56f7487a742796db3c91b4b31bdb988",
+          "bytes": 7671
+        },
+        {
+          "path": "skills/sesame-user-guide/SKILL.md",
+          "sha256": "d7fd3585de3086e33a6dc7300e128227df7e6574a7fbbae2a1212e5ad66c34a3",
+          "bytes": 4106
+        },
+        {
+          "path": "skills/sesame-user-guide/references/chat-and-commands.md",
+          "sha256": "43a9bafaaaed64f2b1a4e2a7ea1c04192cc04091b97e27a2e6e4fcfe472c5726",
+          "bytes": 5703
+        },
+        {
+          "path": "skills/sesame-user-guide/references/dashboard.md",
+          "sha256": "43a014a55b7c30cabb4645c1b2fead8cd8237edf0909beaf7ec4b16d803d1174",
+          "bytes": 6703
+        },
+        {
+          "path": "skills/sesame-user-guide/references/installation.md",
+          "sha256": "bf7072ff91b880a994a23c57d22f64cee2564786caf6118173896b2874063842",
+          "bytes": 1568
+        },
+        {
+          "path": "skills/sesame-user-guide/references/settings.md",
+          "sha256": "4e729730f1dc940df26e62f8efffb74d7335344db4d8634acfed6da5bae0622a",
+          "bytes": 1466
+        },
+        {
+          "path": "skills/sesame-user-guide/references/troubleshooting.md",
+          "sha256": "59c4a21293ca92c4b6b08436bb078837ca41460164c007f6a44dd6a686376534",
+          "bytes": 3541
+        },
+        {
+          "path": "skills/sesame-user-guide/references/website-docs.md",
+          "sha256": "45bab3b614f63d84d2ab1f423c6d49762754b38288be1833194fbf558e0e9418",
+          "bytes": 1080
+        },
+        {
+          "path": "skills/sesame-user-guide/references/workflows.md",
+          "sha256": "bee08dfba065a335c3cc29d4472ddbaa5c59cb8e4d141e929fdc10ef2bbe5ef7",
+          "bytes": 6240
+        },
+        {
+          "path": "support.js",
+          "sha256": "cc471c0ce6b82d9ce56a0b1f3bae0bdf416d4e4ab952801f27dc573cba52a509",
+          "bytes": 546
+        },
+        {
+          "path": "tools.js",
+          "sha256": "545a61e8ad729143354e768eeac7879b66d42e2b2c15860b4bf6b5e981f424d5",
+          "bytes": 2704
+        },
+        {
+          "path": "tools.json",
+          "sha256": "44118aecfb849efd9ea99bc15d0c627507c17eb4524f8d88548a41cdada8fc8f",
+          "bytes": 5832
+        }
+      ]
+    },
+    {
+      "id": "sesame/plugin-manager",
+      "version": "2.2.0",
+      "directory": "plugin-manager",
+      "treeDigest": "sha256:ed3766fd8751cd162092ec534511d42483d27fd6c7347f3b4f8c9db0eab10d4d",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "2681aaf69ad3f8a595707e154e1e065a0077db9f1d25f8f5df73c02c5657477a",
+          "bytes": 1063
+        },
+        {
+          "path": "README.md",
+          "sha256": "0403e3e4d990374600353570071b057a9a80673094571283e6f8ef3a2dff9f38",
+          "bytes": 1109
+        },
+        {
+          "path": "catalog.js",
+          "sha256": "c98534d0251f148bea315505646f942a525024d191d852fca4f3da2e1a866a6e",
+          "bytes": 13010
+        },
+        {
+          "path": "index.js",
+          "sha256": "b201e9ffdb3337da815d3b652d75098eac8767fb080ad7bb40713dffc4939419",
+          "bytes": 42
+        },
+        {
+          "path": "package.json",
+          "sha256": "9badcbb5ed4d3adca8a06da527ffce099e95ec20dc6d9f404325b9f542db247f",
+          "bytes": 108
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "07a92827976af3ae8a946604a6a9cf4a0745400065de84979ece96bc0a2143da",
+          "bytes": 1195
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "236863d0054c5a6b099c092558f07ffe0751bad7f6cc4455334b961dc4a41f48",
+          "bytes": 5135
+        },
+        {
+          "path": "scaffold.js",
+          "sha256": "359960ea1b3cd1ecb5ffbbf6ffd53c9a1d5fdc23df2a0b2a89d0d29a68a0c00d",
+          "bytes": 6712
+        },
+        {
+          "path": "scripts/create-plugin.mjs",
+          "sha256": "a36f5ac9decb583fd13afa7b433ee96ba0053866d49e3c47a6591b9dee7cac37",
+          "bytes": 1924
+        },
+        {
+          "path": "skills/develop-plugins/SKILL.md",
+          "sha256": "ec922f66fa1214bbb6d8ae51802f0c420dccf789863c591058125718fe4afe20",
+          "bytes": 6543
+        },
+        {
+          "path": "skills/develop-plugins/references/authoring.md",
+          "sha256": "080543da3c0d0ad2bb9bc474a97ba8780ccd623b5c2589e34f4a1bcb078ac628",
+          "bytes": 13024
+        },
+        {
+          "path": "skills/develop-plugins/references/host-api.md",
+          "sha256": "6467196fcd53d18b9bddf5a9adabb3b265694e6acb7f0c0011b347ab912760af",
+          "bytes": 30576
+        },
+        {
+          "path": "skills/develop-plugins/references/recovery.md",
+          "sha256": "c7d7fc254465103ba8ee7f59bb5ffca852a2682633ead4f19ac75f5d06b67780",
+          "bytes": 7477
+        },
+        {
+          "path": "tools.js",
+          "sha256": "1f20d35cffe6b82dd3340840243c446daad246da94071f581a72d85d9a883d3d",
+          "bytes": 6034
+        },
+        {
+          "path": "tools.json",
+          "sha256": "0332149b1d3068815533a3f14e79c20173230c3ef3c7fb61315e93fa9d1c3e34",
+          "bytes": 15037
+        }
+      ]
+    },
+    {
+      "id": "sesame/reports",
+      "version": "2.2.0",
+      "directory": "reports",
+      "treeDigest": "sha256:5f5f51dddcc1d05a82b81adcb885a84eee8c36dad69811757674d7e45d7ef0d7",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+          "bytes": 1076
+        },
+        {
+          "path": "PROVENANCE.md",
+          "sha256": "6a30a5c2ee4a92725ec8d7840619883e30c4bde8f37d2643ed4ccc5647c1765a",
+          "bytes": 3358
+        },
+        {
+          "path": "assets/backtest-explorer.js",
+          "sha256": "66ae41fd3b7ca3b4bca41b7f20a63f10b83d7450d7741b80d940557a08d0617e",
+          "bytes": 19074
+        },
+        {
+          "path": "assets/backtest.css",
+          "sha256": "1faed91a2ba5ae177743139a76c1753eea44c037e23d8e74425806cdb023ea78",
+          "bytes": 2081
+        },
+        {
+          "path": "assets/charts-statistics.js",
+          "sha256": "8e19242c4583c872927a7ceea9a410eec98ca4b14e0875e2bf2d6d62b7774f80",
+          "bytes": 24587
+        },
+        {
+          "path": "assets/charts-structure.js",
+          "sha256": "4a0d908f4845aac9c51d4c54f4daeef0b5ec7762098bb1d4f82e1b0d4b0461f2",
+          "bytes": 29095
+        },
+        {
+          "path": "assets/charts-temporal.js",
+          "sha256": "5ae9f7b255253cbc53d8574f175016f5fd77714d9d23c9e3a929c73e6528cf45",
+          "bytes": 36369
+        },
+        {
+          "path": "assets/editorial-charts.js",
+          "sha256": "88e20e0a9df2e9ee86bde19ac896e6c54a6dcf98e17c7974706151ea1ab6d919",
+          "bytes": 16816
+        },
+        {
+          "path": "assets/editorial.css",
+          "sha256": "b721786c083704044382f5950c5825f4e5e18c451d18f8bdae01168a68b33b24",
+          "bytes": 30653
+        },
+        {
+          "path": "assets/report-kit.js",
+          "sha256": "2e6fe859d25270c2cdd16d2ada799d18ce389be2c4a9127fa070490c11d35769",
+          "bytes": 45095
+        },
+        {
+          "path": "backtest-template.js",
+          "sha256": "99b67cbfd2763084f8564eb638f693fdb82ae4073548d0b3122c3c1a82e296cd",
+          "bytes": 4111
+        },
+        {
+          "path": "examples/chart-gallery.html",
+          "sha256": "df87a6ede9671860d9f1b1513ca5578a5632bc1ad1595a2122bc1b3add2cc378",
+          "bytes": 200867
+        },
+        {
+          "path": "examples/chart-gallery.md",
+          "sha256": "faf63d421bdfa4b3876772388ae3a0856a1b48321f88b1ed40e60a3656fda29a",
+          "bytes": 1820
+        },
+        {
+          "path": "examples/demo-data.json",
+          "sha256": "86be86ed3c7beca0929c11a50a70bef2acb7b2c01c69806d546aa71932045418",
+          "bytes": 1090
+        },
+        {
+          "path": "examples/editorial-demo.html",
+          "sha256": "909f8ee6af0814d3d408acf655e35c3dbe4b32eb0b298a1edfc90341490ea373",
+          "bytes": 99099
+        },
+        {
+          "path": "examples/statistical-fixtures.json",
+          "sha256": "396689015733faa3404a3104a0b554dbb073538064707eba55442a9889c6b56d",
+          "bytes": 5242
+        },
+        {
+          "path": "examples/structural-fixtures.json",
+          "sha256": "f2961cb14aff19203ee27ecbcca1f051cbb08999a4d422d765bea072cb29687a",
+          "bytes": 8191
+        },
+        {
+          "path": "examples/temporal-fixtures.json",
+          "sha256": "5245daa0c485a5a4787d90967f848fa2aaa5f1fbd1ae2f4d8f28c09d4fb46581",
+          "bytes": 6032
+        },
+        {
+          "path": "index.js",
+          "sha256": "78722c22998ee958b3b7d78d4e628fd49601837d0c8999f5bfa784e1cd4fa847",
+          "bytes": 18216
+        },
+        {
+          "path": "package.json",
+          "sha256": "5106fe0e835d82cab9d5113fdf39ceed759d7176104dfd635020507cbe190cf5",
+          "bytes": 120
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "9e27e22493715158957abdade764752a9dc6aa99390dee468f73ba4c39615b54",
+          "bytes": 1606
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "7fe7055bc8399ef2c9cbc70d3a0504cb9a4088463198a949ba22437d099a73ec",
+          "bytes": 3135
+        },
+        {
+          "path": "repair.md",
+          "sha256": "467fefc41e41e3cb2ab7c35f15756b569493dba516994bddfd216ec2df2a75ba",
+          "bytes": 1354
+        },
+        {
+          "path": "scripts/build-chart-gallery.mjs",
+          "sha256": "fcb6f52d9aed4306db976c465c5096a60ecff55674b34679ae57b2dfef8c1891",
+          "bytes": 5583
+        },
+        {
+          "path": "scripts/build-demo.mjs",
+          "sha256": "2d46f02ea6426db7531ccf39ab62e3fc2e90a36ccd6f53d2e2f261d3d6647397",
+          "bytes": 6103
+        },
+        {
+          "path": "skills/interactive-report/SKILL.md",
+          "sha256": "65da9d5f670df3576bd7a321f2e0d6359796de49f02b2186cb563e0c35ed9688",
+          "bytes": 3946
+        },
+        {
+          "path": "skills/report-design/SKILL.md",
+          "sha256": "5449e868a486ffccfb3c3490967e847cc3a4b607177fec078f52611c576058e5",
+          "bytes": 10692
+        },
+        {
+          "path": "skills/report-design/statistical-charts.md",
+          "sha256": "d2194da71c5c66cc9a71b2b104cb9d4fb925bfa816da1c215ea6f51e5c71c6b8",
+          "bytes": 6813
+        },
+        {
+          "path": "skills/report-design/structural-charts.md",
+          "sha256": "1ac639d41ea5b1203aad305c8b4833a5c1b798ab5e2fd2e84d9590b8dfdf6b16",
+          "bytes": 6583
+        },
+        {
+          "path": "skills/report-design/temporal-charts.md",
+          "sha256": "62877f3f7760e733fcc95454a64e5b0b3adfee7f25a4a4cd859e7a7c20fe9388",
+          "bytes": 9953
+        },
+        {
+          "path": "skills/report-writing/SKILL.md",
+          "sha256": "4aac4b91c6487c6af4f7ec04c9511f66cfd9f8819804df7c67a290743e59b04d",
+          "bytes": 5300
+        },
+        {
+          "path": "skills/report-writing/backtest.md",
+          "sha256": "2865e67935c59efb7bf1776ea7540aca6d62c089f0c93f9d3584dc666049addd",
+          "bytes": 5417
+        },
+        {
+          "path": "templates/backtest.html",
+          "sha256": "1b448e02026d4ca8087e724f7052523822e468b273c9d975f61696ec75948197",
+          "bytes": 1023
+        },
+        {
+          "path": "templates/research-brief.html",
+          "sha256": "3f79a1b7cecb12a357f107f43338ef7cc61afa15578e771a752d06bba380ebee",
+          "bytes": 3959
+        },
+        {
+          "path": "tools.json",
+          "sha256": "77cd507a07c7a5694498faf3c13b0931a57e104f57f4119da89e10c0906b9ddf",
+          "bytes": 24705
+        }
+      ]
+    },
+    {
+      "id": "sesame/strategy-authoring",
+      "version": "1.2.0",
+      "directory": "strategy-authoring",
+      "treeDigest": "sha256:aac7f8e3b5f49cec522dbf5088fb38fd9f7e90263e7b8021efdaeafaed91cbba",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+          "bytes": 1076
+        },
+        {
+          "path": "examples/close-threshold.replay.json",
+          "sha256": "df0a71d17d755a6da1629cfd7376a7a1a4fcdacafc53af15a7e9ec2379c8af1d",
+          "bytes": 694
+        },
+        {
+          "path": "examples/close-threshold.svl.json",
+          "sha256": "d46dc54ca9443fa45a4b1b95a2acbc0411a9339ad78699c208905ff9c42aae2b",
+          "bytes": 1826
+        },
+        {
+          "path": "examples/crossover.replay.json",
+          "sha256": "4ce78d472550817e40c59663a08d6d7e2c463198aa3abed7b65fb9bed6d3b3a6",
+          "bytes": 819
+        },
+        {
+          "path": "examples/crossover.svl.json",
+          "sha256": "e613e37ff4fba6f8de3a56183574d9ea9f24701aaa9f4f20d5cc9de6d2b49d13",
+          "bytes": 3346
+        },
+        {
+          "path": "examples/function-threshold.replay.json",
+          "sha256": "df0a71d17d755a6da1629cfd7376a7a1a4fcdacafc53af15a7e9ec2379c8af1d",
+          "bytes": 694
+        },
+        {
+          "path": "examples/function-threshold.svl.json",
+          "sha256": "662517e63e50cfa352c115526730ee32e27afa3c54e77e10948d77027d698169",
+          "bytes": 3119
+        },
+        {
+          "path": "examples/method-workflow.js",
+          "sha256": "b39e1a70b54b8cd425c7fe7315f4dc6a5b4864163bad87987e28255efd674a00",
+          "bytes": 2737
+        },
+        {
+          "path": "examples/pipeline-fixture.js",
+          "sha256": "41b88bb552e4cb660ab10f10d014b9a0056dfa997374daa2054d2bea7ac6194a",
+          "bytes": 2869
+        },
+        {
+          "path": "index.js",
+          "sha256": "48633238e8e2de4869bfdd5223e1d066e68090b53444dbf885f8ded991247b56",
+          "bytes": 10408
+        },
+        {
+          "path": "lib/agent-decision-tools.js",
+          "sha256": "a15eea0e91e7a80b73bde718a09ef84a7bf0ccf2402fb9f568e30ab2f16f5003",
+          "bytes": 6720
+        },
+        {
+          "path": "lib/agent-decisions.js",
+          "sha256": "7545547a0d0ebe6473d0d08612124e974346f2777d20dffc3b1cda04153fdc6d",
+          "bytes": 32103
+        },
+        {
+          "path": "lib/decision-bridge.js",
+          "sha256": "100e1a63b4957966393cfa5f3d7520606714e480398e1c44f595e55bfb462b31",
+          "bytes": 4006
+        },
+        {
+          "path": "lib/execution.js",
+          "sha256": "95f32dc8e5016146a149a09b291555755c0de3b9232edd06d0eb7167b2c92377",
+          "bytes": 35452
+        },
+        {
+          "path": "lib/method-support.js",
+          "sha256": "ab406bbbdeb216dc67b31b5048eec0cef46d07d863ed6323be6e7aa0c5e2198f",
+          "bytes": 7638
+        },
+        {
+          "path": "lib/pipeline.js",
+          "sha256": "cbe63ef7a1e7114e08d6695b6c0103586e774b10d7e243d804f0766df87f9246",
+          "bytes": 33231
+        },
+        {
+          "path": "lib/portfolio-risk.js",
+          "sha256": "21b4b650da2e40fa70436bbbe157abcf2d32728c76b40c02cef4dfcee105a1d4",
+          "bytes": 9277
+        },
+        {
+          "path": "lib/portfolio.js",
+          "sha256": "15445c1748c29b605bc34bff27d659cd87b65305a8508c1e48536ccf3dbcc996",
+          "bytes": 9963
+        },
+        {
+          "path": "lib/quant-functions.js",
+          "sha256": "fba82b87c06d027b1db0477ed34389aa25d3d2167d42aa90e73a886f0d85b147",
+          "bytes": 8802
+        },
+        {
+          "path": "lib/universe.js",
+          "sha256": "731c044bbb3a1df2d283964ff3db40cec4443ad3bedc984a2f2478aa60418589",
+          "bytes": 5731
+        },
+        {
+          "path": "lib/workflow.js",
+          "sha256": "9dfa06771428a9093a94b06faef0550f952f75b97045f7db5267ff85d5573ad4",
+          "bytes": 3363
+        },
+        {
+          "path": "package.json",
+          "sha256": "0ea7eea46ab006b5895e457d1ad16b58ab5b6e814fe2b0555257659c298d713b",
+          "bytes": 131
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "4875a5a3d6671857d4b7de332d071ff68f58c6a2550d1775b68bf4769cac339e",
+          "bytes": 1646
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "eb9d89a4ac7dc7be1e319c3e69f0d7d4c5cea94fa71844493f80d8b6688dc5c9",
+          "bytes": 2154
+        },
+        {
+          "path": "skills/strategy-authoring/SKILL.md",
+          "sha256": "0257d26719e48e452a0523a3f5d20d284956a8bae2966a4a721b6fec4ddb9ee9",
+          "bytes": 6321
+        },
+        {
+          "path": "skills/strategy-authoring/references/agent-inputs.md",
+          "sha256": "6ee7c754e74c15e703beb614d0a211052cb8ac6dc2c992316a736036ba6e64ac",
+          "bytes": 13156
+        },
+        {
+          "path": "skills/strategy-authoring/references/architecture.md",
+          "sha256": "9b674f6495d9eb72560dca2772df448f3f43a18ab3edf1f55227fa25a76e789a",
+          "bytes": 7929
+        },
+        {
+          "path": "skills/strategy-authoring/references/execution.md",
+          "sha256": "99f29b88f12eb8e1b2afd5b1e08a096715ef2d312170bcabf4b45f206c1909a6",
+          "bytes": 8782
+        },
+        {
+          "path": "skills/strategy-authoring/references/language.md",
+          "sha256": "30ff73f7c12bfb66119aadad658da7dd64db19e3d185b5df3d53b89230a84ab1",
+          "bytes": 36603
+        },
+        {
+          "path": "skills/strategy-authoring/references/methods.md",
+          "sha256": "27a4c5d7064385988eab8e9b8d12e22fdb863af29b28a3321e33526a5dcde906",
+          "bytes": 10730
+        },
+        {
+          "path": "skills/strategy-authoring/references/pipeline.md",
+          "sha256": "c84c34a658adb936af2ed8f099710dae914afbdf39178359cc2beaf86683fcd0",
+          "bytes": 18112
+        },
+        {
+          "path": "skills/strategy-authoring/references/quant-functions.md",
+          "sha256": "50eba836ce61deb9e96bb553d0b03de15014aaffcc00e27e1abef5a80261a76e",
+          "bytes": 3230
+        },
+        {
+          "path": "tools.json",
+          "sha256": "23b1c88d81a3bd091def35301f7fdf87305afc9818682fa238338a6bb0910f3f",
+          "bytes": 11842
+        }
+      ]
+    },
+    {
+      "id": "sesame/workspace",
+      "version": "1.1.1",
+      "directory": "workspace",
+      "treeDigest": "sha256:d834a378d002176db27c4a96642e122fa55758cbec3817fadc6d5fbf8354142a",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "2681aaf69ad3f8a595707e154e1e065a0077db9f1d25f8f5df73c02c5657477a",
+          "bytes": 1063
+        },
+        {
+          "path": "host-files.js",
+          "sha256": "10a5d1828ee7f3812b0203783e08105c7eed99ad35354a69c3ff849f7153cc67",
+          "bytes": 3540
+        },
+        {
+          "path": "index.js",
+          "sha256": "12213f5616a5899ce7d98cc4fd93285e703463827e7feda2e3a52db6abe77ddd",
+          "bytes": 202
+        },
+        {
+          "path": "package.json",
+          "sha256": "91f29efed2fec98e0967d6e0d41572f9eb7f97cf3628d0fdea32f52f14801c15",
+          "bytes": 103
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "f14da18db113651661cc71121b17187fcb523ca81c17adf3834ea026e9008572",
+          "bytes": 797
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "3788713ec49ac3a649cf3bb0ad93564093b25b38bccaf6456bafe9b79e9db36e",
+          "bytes": 5396
+        },
+        {
+          "path": "skills/prepare-environment/SKILL.md",
+          "sha256": "ca8907e587d59e100e0b2a101b2ef18e86dd687c9decab8ad28056be994ab3c3",
+          "bytes": 1779
+        },
+        {
+          "path": "tools.js",
+          "sha256": "efaff74324227d39ef4218689a39711910a8303d15d2dcc8589c1234af0b125a",
+          "bytes": 9093
+        },
+        {
+          "path": "tools.json",
+          "sha256": "570333207e01781607727fd69c5f5b77afc7caa25552d82397301f63562b9108",
+          "bytes": 11235
+        }
+      ]
+    }
+  ]
+}

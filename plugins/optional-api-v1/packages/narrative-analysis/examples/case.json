@@ -1,0 +1,31 @@
+{
+  "provenance_kind": "demo",
+  "as_of": "2026-01-01T12:00:00Z",
+  "claims": [
+    {
+      "id": "original",
+      "source_cluster": "wire-a",
+      "available_at": "2026-01-01T10:00:00Z",
+      "claim": "input costs will fall"
+    },
+    {
+      "id": "reprint-1",
+      "source_cluster": "wire-a",
+      "available_at": "2026-01-01T10:05:00Z",
+      "claim": "input costs will fall"
+    },
+    {
+      "id": "reprint-2",
+      "source_cluster": "wire-a",
+      "available_at": "2026-01-01T10:06:00Z",
+      "claim": "input costs will fall"
+    },
+    {
+      "id": "revision",
+      "source_cluster": "agency-b",
+      "available_at": "2026-01-01T13:00:00Z",
+      "claim": "input costs rose"
+    }
+  ],
+  "measured_costs_at_cutoff": "unknown"
+}

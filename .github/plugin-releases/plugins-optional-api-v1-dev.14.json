@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "tag": "plugins-optional-api-v1-dev.14",
+  "title": "Sesame optional plugins — MT5 credential import and native Windows paths",
+  "sourceCommit": "13e81a709c3b3736fdeb43b23ec925bc6219fd37",
+  "sourceRoot": "plugins/optional-api-v1",
+  "profile": "optional",
+  "archive": {
+    "name": "sesame-optional-plugins-api-v1-dev.14.tar.gz",
+    "sha256": "f621f9895869d32a47b742f3a7822f0c2e4a89bbac5ef870af4d66c8e30252e2"
+  },
+  "lockSha256": "1c8af541c3101fe3ca7effd3273aa8c8c5afe7012373dcda190e59cfc69b664f",
+  "pullRequest": 45
+}

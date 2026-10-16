@@ -1,0 +1,167 @@
+import importlib.util
+import math
+from pathlib import Path
+import tempfile
+import types
+import sys
+from unittest.mock import patch
+import unittest
+
+spec = importlib.util.spec_from_file_location("qmt_bridge", Path(__file__).parents[1] / "packages/qmt/bridge.py")
+b = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(b)
+
+
+class Data:
+    enable_hello = True
+    def __init__(self): self.disconnected = False
+    def connect(self, ip, port):
+        assert ip == "127.0.0.1" and port == 58610
+        return types.SimpleNamespace(is_connected=lambda: True, get_data_dir=lambda: "fixture-data")
+    def disconnect(self): self.disconnected = True
+    def get_instrument_type(self, symbol): return {"stock": not symbol.startswith("fund")}
+    def get_instrument_detail(self, symbol, complete): return {"InstrumentName": "Fixture stock", "PriceTick": 0.01}
+    def get_sector_list(self): return ["stocks"]
+    def get_stock_list_in_sector(self, name): return ["600000.SH", "000001.SZ"]
+    def get_full_tick(self, symbols): return {s: {"time": 1700000000000, "lastPrice": 10.125, "bidVol": [25]} for s in symbols}
+
+
+class Trader:
+    result = []
+    def __init__(self, directory, session): self.stopped = False; self.subscribed = None; self.session = session; Trader.last = self
+    def start(self): pass
+    def connect(self): return 0
+    def subscribe(self, account): self.subscribed = account; return 0
+    def stop(self): self.stopped = True
+    def query_stock_asset(self, account): return Trader.result
+    def query_stock_positions(self, account): return Trader.result
+    def query_stock_orders(self, account): return Trader.result
+    def query_stock_trades(self, account): return Trader.result
+
+
+class Tests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.config = {"account_id": "00123", "userdata_directory": self.temp.name, "market_port": 58610, "sector": "stocks"}
+    def request(self, action, **kwargs): return {"action": action, "config": self.config, **kwargs}
+    def query(self, request, data=None): return b.query(request, data or Data(), Trader, lambda account, kind: (account, kind))
+    def test_decimal_and_int64_source_serialization(self):
+        self.assertEqual(b.scalar(9007199254740993), "9007199254740993")
+        self.assertEqual(b.scalar(1e-8), "0.00000001")
+        with self.assertRaises(b.Failure): b.scalar(math.nan)
+    def test_fixed_market_reads_and_connection_cleanup(self):
+        data = Data(); result = self.query(self.request("quotes", symbols=["600000.SH"]), data)
+        self.assertEqual(result["items"][0]["tick"]["time"], "1700000000000")
+        self.assertTrue(data.disconnected)
+    def test_search_covers_native_sector_and_failure_is_not_empty(self):
+        result = self.query(self.request("search", query="fixture"))
+        self.assertEqual(len(result["items"]), 2)
+        self.config["sector"] = "absent"
+        with self.assertRaises(b.Failure): self.query(self.request("search"))
+    def test_no_none_to_empty_list_and_session_stopped(self):
+        for action in ["positions", "orders", "fills"]:
+            Trader.result = None
+            with self.assertRaises(b.Failure) as error: self.query(self.request(action))
+            self.assertEqual(error.exception.code, "AMBIGUOUS_SOURCE_RESULT")
+            self.assertTrue(Trader.last.stopped)
+            Trader.result = []
+            self.assertEqual(self.query(self.request(action))["items"], [])
+    def test_asset_account_mismatch_rejected_and_threads_stopped(self):
+        Trader.result = types.SimpleNamespace(account_id="other", cash=0.0)
+        with self.assertRaises(b.Failure) as error: self.query(self.request("asset"))
+        self.assertEqual(error.exception.code, "CONNECTION_CHANGED")
+        self.assertTrue(Trader.last.stopped)
+    def test_current_day_order_ids_and_time_are_not_reinterpreted(self):
+        Trader.result = [types.SimpleNamespace(account_id="00123", order_id=9007199254740993, stock_code="600000.SH", order_time=93001, price_type=999)]
+        result = self.query(self.request("orders"))
+        self.assertEqual(result["items"][0]["order_id"], "9007199254740993")
+        self.assertEqual(result["items"][0]["order_time"], "93001")
+        self.assertFalse(result["coverage"]["complete_history"])
+        self.assertTrue(Trader.last.stopped)
+    def test_daily_native_read_is_cached_and_download_is_explicit(self):
+        class Daily(Data):
+            def __init__(self): super().__init__(); self.downloads = []
+            def download_history_data(self, symbol, **kwargs): self.downloads.append((symbol, kwargs))
+            def get_market_data_ex(self, fields, symbols, **kwargs):
+                self.kwargs = kwargs
+                return {symbols[0]: types.SimpleNamespace(to_dict=lambda orientation: [{"time": 1791475200000, "open": 9.0, "high": 11.0, "low": 8.0, "close": 10.0, "volume": 100}])}
+        data = Daily()
+        result = self.query(self.request("bars", symbols=["600000.SH"], start="20261008", end="20261009", forming=True), data)
+        self.assertEqual(result["items"][0]["close"], "10.0")
+        self.assertEqual(data.kwargs["period"], "1d")
+        self.assertFalse(data.kwargs["fill_data"])
+        self.assertEqual(data.downloads, [])
+        self.assertTrue(data.disconnected)
+        data = Daily()
+        result = self.query(self.request("download_history", symbols=["600000.SH"], start="20261008", end="20261009"), data)
+        self.assertEqual(len(data.downloads), 1)
+        self.assertTrue(result["coverage"]["download_requested"])
+    def test_explicit_limit_stock_order_and_owned_cancel_fixed_native_calls(self):
+        class Trading(Trader):
+            def order_stock(self, *args): self.order_args = args; return 123
+            def cancel_order_stock(self, *args): self.cancel_args = args; return 0
+        constants = types.SimpleNamespace(STOCK_BUY=23, STOCK_SELL=24, FIX_PRICE=11)
+        module = types.ModuleType("xtquant"); module.xtconstant = constants
+        with patch.dict(sys.modules, {"xtquant": module}):
+            request = self.request("order", account_id="00123", symbol="600000.SH", side="sell", shares="100", price="10.125", remark="Sfixed")
+            result = b.query(request, Data(), Trading, lambda a, k: (a, k))
+            self.assertEqual(result["order_id"], "123")
+            self.assertFalse(result["execution_confirmed"])
+            self.assertEqual(Trader.last.order_args[2:6], (24, 100, 11, 10.125))
+            self.assertTrue(Trader.last.stopped)
+            for changes in ({"shares":"1.5"}, {"shares":"0"}, {"shares":"2147483648"}, {"side":"short"}, {"account_id":"other"}, {"price":"NaN"}):
+                with self.assertRaises(b.Failure): b.query({**request, **changes}, Data(), Trading, lambda a,k:(a,k))
+                self.assertTrue(Trader.last.stopped)
+            Trader.result = [types.SimpleNamespace(account_id="00123", order_id=123, order_remark="Sfixed")]
+            result = b.query(self.request("cancel", account_id="00123", order_id="123", remark="Sfixed"), Data(), Trading, lambda a,k:(a,k))
+            self.assertEqual(result["status"], "cancel_requested")
+            self.assertFalse(result["cancellation_confirmed"])
+            with self.assertRaises(b.Failure): b.query(self.request("cancel", account_id="00123", order_id="123", remark="foreign"), Data(), Trading, lambda a,k:(a,k))
+            self.assertTrue(Trader.last.stopped)
+    def test_trading_actions_and_nonstock_positions_rejected(self):
+        with self.assertRaises(b.Failure) as error: self.query(self.request("order_stock"))
+        self.assertEqual(error.exception.code, "UNSUPPORTED_CAPABILITY")
+        Trader.result = [types.SimpleNamespace(account_id="00123", stock_code="fund.SH", volume=100)]
+        with self.assertRaises(b.Failure): self.query(self.request("positions"))
+        self.assertTrue(Trader.last.stopped)
+
+    def test_recovered_cancel_rechecks_unique_native_ownership_and_pending_state(self):
+        class Trading(Trader):
+            cancels = 0
+            def cancel_order_stock(self, *args): Trading.cancels += 1; return 0
+        module = types.ModuleType("xtquant"); module.xtconstant = types.SimpleNamespace(STOCK_BUY=23, STOCK_SELL=24, FIX_PRICE=11)
+        row = dict(account_id="00123", order_id=123, stock_code="600000.SH", order_remark="Sfixed", order_type=23, order_volume=100, traded_volume=0, order_status=50)
+        request = self.request("cancel", account_id="00123", order_id="123", remark="Sfixed", original_intent={"symbol":"600000.SH","side":"buy","shares":"100","price":"10"})
+        with patch.dict(sys.modules, {"xtquant":module}):
+            for bad in ({"account_id":"other"}, {"order_id":0}, {"stock_code":"000001.SZ"}, {"order_remark":"foreign"}, {"order_type":24}, {"order_volume":200}, {"order_status":56}, {"traded_volume":100}):
+                Trader.result = [types.SimpleNamespace(**{**row, **bad})]
+                with self.assertRaises(b.Failure) as caught: b.query(request, Data(), Trading, lambda a,k:(a,k))
+                self.assertEqual(caught.exception.details, {"submission_attempted":False}); self.assertEqual(Trading.cancels, 0)
+            Trader.result = [types.SimpleNamespace(**row), types.SimpleNamespace(**{**row,"order_id":124})]
+            with self.assertRaises(b.Failure): b.query(request, Data(), Trading, lambda a,k:(a,k))
+            self.assertEqual(Trading.cancels, 0)
+            Trader.result = [types.SimpleNamespace(**{**row,"order_status":55,"traded_volume":20})]
+            self.assertEqual(b.query(request, Data(), Trading, lambda a,k:(a,k))["status"],"cancel_requested"); self.assertEqual(Trading.cancels, 1)
+
+    def test_guarded_order_runs_inside_actual_bridge_and_expired_intent_never_sends(self):
+        class Quotes(Data):
+            def get_full_tick(self, symbols):
+                return {s:{"time":int(b.time.time()*1000),"askPrice":[10.1],"bidPrice":[10]} for s in symbols}
+        class Trading(Trader):
+            sends = 0
+            def query_stock_asset(self, account): return types.SimpleNamespace(account_id="00123",cash=100000)
+            def order_stock(self, *args): Trading.sends += 1; return 123
+        module=types.ModuleType("xtquant");module.xtconstant=types.SimpleNamespace(STOCK_BUY=23,STOCK_SELL=24,FIX_PRICE=11)
+        now=int(b.time.time()*1000)
+        guard={"observed_at":now,"expires_at":now+60000,"max_quote_age_ms":5000,"max_quote_to_send_ms":1000,"price_limit":"10.2"}
+        request=self.request("order",account_id="00123",symbol="600000.SH",side="buy",shares="100",price="10",remark="Sguard",execution_guard=guard)
+        with patch.dict(sys.modules,{"xtquant":module}):
+            data=Quotes();result=b.query(request,data,Trading,lambda a,k:(a,k))
+            self.assertEqual(result["order_id"],"123");self.assertIn("execution_timing",result);self.assertEqual(Trading.sends,1);self.assertTrue(data.disconnected);self.assertTrue(Trader.last.stopped)
+            request["execution_guard"]={**guard,"observed_at":now-60001,"expires_at":now-1}
+            with self.assertRaises(b._guard.GuardRejected) as caught:b.query(request,Quotes(),Trading,lambda a,k:(a,k))
+            self.assertEqual(caught.exception.details,{"submission_attempted":False});self.assertEqual(Trading.sends,1);self.assertTrue(Trader.last.stopped)
+
+
+if __name__ == "__main__": unittest.main()
