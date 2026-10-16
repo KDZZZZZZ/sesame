@@ -1,0 +1,35 @@
+{
+  "id": "sesame/orchestration",
+  "title": "会话协作与使用规范",
+  "description": "主子Agent协作、成果交付和Sesame通用使用指南；按需安装具体后端。",
+  "version": "2.1.2",
+  "default_state": "mounted",
+  "tool_names": [
+    "agent_delegate",
+    "agent_inspect",
+    "agent_finish"
+  ],
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "entry": "index.js",
+  "tool_definitions": "tools.json",
+  "apiVersion": "1",
+  "provides": {},
+  "license": "MIT",
+  "resources": [
+    "skills/sesame-user-guide/references/installation.md",
+    "skills/sesame-user-guide/references/dashboard.md",
+    "skills/sesame-user-guide/references/chat-and-commands.md",
+    "skills/sesame-user-guide/references/settings.md",
+    "skills/sesame-user-guide/references/workflows.md",
+    "skills/sesame-user-guide/references/troubleshooting.md",
+    "skills/sesame-user-guide/references/website-docs.md"
+  ],
+  "engines": {
+    "sesame": ">=0.2.0-0"
+  }
+}

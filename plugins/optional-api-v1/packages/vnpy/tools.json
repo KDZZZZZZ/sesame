@@ -1,0 +1,265 @@
+[
+  {
+    "name": "vnpy_environment",
+    "label": "vnpy_environment",
+    "description": "Inspect existing native Python/VeighNa environments; prepare first reuses a compatible environment and installs pinned dependencies in private plugin data only when needed. No download occurs on plugin load or inspect. Runs managed host processes, not an OS sandbox.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "inspect"
+            },
+            {
+              "type": "string",
+              "const": "prepare"
+            }
+          ]
+        },
+        "python_path": {
+          "type": "string",
+          "description": "Existing native Python executable to inspect or use for a private environment",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "vnpy_backtest",
+    "label": "vnpy_backtest",
+    "description": "Run actual VeighNa CTA BacktestingEngine on a fixed DataRef and one authored CtaTemplate Python file. Executes managed current-user host Python; preserves code, environment, parameters, matching assumptions and results. This is a bar backtest, not a live broker or SVL equivalence check.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "operation_id",
+        "title",
+        "data",
+        "strategy_path",
+        "class_name",
+        "config"
+      ],
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "description": "Idempotency key for this exact backtest",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "title": {
+          "type": "string",
+          "description": "Result title",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "id",
+            "revision",
+            "digest",
+            "kind",
+            "schemaVersion"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "kind": {
+              "type": "string",
+              "const": "data"
+            },
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0.0"
+            }
+          },
+          "additionalProperties": false
+        },
+        "strategy_path": {
+          "type": "string",
+          "description": "Workspace Python source file",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "class_name": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "config": {
+          "type": "object",
+          "required": [
+            "vt_symbol",
+            "interval",
+            "rate",
+            "slippage",
+            "size",
+            "pricetick",
+            "capital"
+          ],
+          "properties": {
+            "vt_symbol": {
+              "type": "string",
+              "description": "symbol.Exchange, using a VeighNa Exchange enum",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "interval": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "1m"
+                },
+                {
+                  "type": "string",
+                  "const": "1h"
+                },
+                {
+                  "type": "string",
+                  "const": "d"
+                },
+                {
+                  "type": "string",
+                  "const": "w"
+                }
+              ]
+            },
+            "rate": {
+              "type": "string",
+              "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+            },
+            "slippage": {
+              "type": "string",
+              "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+            },
+            "size": {
+              "type": "string",
+              "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+            },
+            "pricetick": {
+              "type": "string",
+              "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+            },
+            "capital": {
+              "type": "string",
+              "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+            },
+            "start": {
+              "type": "string"
+            },
+            "end": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "columns": {
+          "type": "object",
+          "properties": {
+            "datetime": {
+              "type": "string",
+              "minLength": 1
+            },
+            "open": {
+              "type": "string",
+              "minLength": 1
+            },
+            "high": {
+              "type": "string",
+              "minLength": 1
+            },
+            "low": {
+              "type": "string",
+              "minLength": 1
+            },
+            "close": {
+              "type": "string",
+              "minLength": 1
+            },
+            "volume": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "wall_time_authority": {
+          "type": "string",
+          "description": "Required for offset-free timestamps; preserves their original authority without guessing UTC",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "parameters": {
+          "type": "object",
+          "patternProperties": {
+            "^.*$": {}
+          }
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 600
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "vnpy_result",
+    "label": "vnpy_result",
+    "description": "Read one fixed VeighNa result manifest and the references needed for a report. Reading does not rerun strategies or place orders.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "ref"
+      ],
+      "properties": {
+        "ref": {
+          "type": "object",
+          "required": [
+            "id",
+            "revision",
+            "digest",
+            "kind",
+            "schemaVersion"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "kind": {
+              "type": "string",
+              "const": "strategy.result"
+            },
+            "schemaVersion": {
+              "type": "string",
+              "const": "1.0.0"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]

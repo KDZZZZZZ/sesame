@@ -1,0 +1,8 @@
+# MT5 dependency commands
+
+The plugin ships tools and adapters, not MetaTrader, Wine, Windows Python or VM images. Start with `mt5_dependencies inspect` to reuse an existing installation and configuration. Follow `skills/dependencies/SKILL.md` only for missing components. Agent host file/command tools can perform explicit installation work outside its workspace; downloads and installation records belong in the plugin's reported private directory.
+
+- `install-mt5-python.py --directory /absolute/private/dependencies/python` downloads a pinned Windows x64 Python/NumPy/MetaTrader5 combination. It checks fixed SHA256/size values, validates archive paths and atomically installs a new directory. It never runs the downloaded interpreter, edits a Wine prefix or installs globally. A matching existing tree is verified and reused; a changed tree is preserved and rejected. Run it with an existing host Python 3.9+.
+- `install-mt5-macos.sh --directory /absolute/private/dependencies/downloads` downloads the official MetaQuotes PKG, verifies its Developer ID signature and Gatekeeper assessment, records its SHA256, and prints the file path. It never launches an installer, terminal or editor, initializes a prefix, installs Rosetta, or replaces an existing app.
+
+`mt5.mjs doctor` is an optional maintainer CLI. Run it using Node 24 and the matching installed public SDK loader, for example `node --import "$SESAME_PLUGIN_SDK_LOADER" scripts/mt5.mjs doctor`. It does not assume application source paths. Its `terminal` and `editor` commands explicitly launch the chosen native program; discovery does not.

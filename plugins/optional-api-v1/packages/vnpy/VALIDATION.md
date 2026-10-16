@@ -1,0 +1,13 @@
+# VeighNa validation
+
+Tested on macOS arm64 with native Python 3.13.12 and actual PyPI packages `vnpy==4.5.0`, `vnpy_ctastrategy==1.4.1`. Forty-two dependencies were installed from official wheels in a temporary development venv; the pip report retained all versions, URLs and hashes. Qt was present rather than stubbed. No package files or large environments are bundled here.
+
+The real CTA engine test suite passed six tests (including multiple rejected-input subcases): fictional two-fill matching with net P&L `4.791`; nested daily TradeData serialization; engine exceptions reported as failed; completed zero-trade runs; duplicate/missing/inconsistent bars refused; missing warmup refused and supplied warmup accepted; undeclared strategy parameters refused. Native output `0.20900000000000002` for commission remains visible as binary floating-point evidence, not rounded into a false precision claim.
+
+Five JavaScript contract checks passed: actual tool schemas, exact frozen row strings/provenance, explicit SourceTime mapping, and no-interpreter inspection/prepare failures without downloads. Additional dependency-inventory tests use explicit controlled process-port fixtures and do not claim installation.
+
+The matching application's real PluginManager performed static test, immutable install and immediate activation on the actual package. The real HostContext then inspected/reused the existing compatible environment, ran the two-fill example, published immutable data/source/environment/result artifacts, preserved idempotency, rejected a changed source with the same operation ID, retained a failed strategy result, removed job scratch, and reopened the original result after the authored file was deleted. AKShare, QMT and vn.py combined application integration: three passed. No fake engine or trading account was used.
+
+The Python installation command was exercised in the development environment; the plugin's full private-new-venv preparation path is not separately claimed as natively tested. Its existing-environment reuse path was tested through the real host. Windows/Linux engine execution and all broker/live trading behavior are unverified. The example is four deliberately fictional bars for matching/serialization checks, not performance or investment evidence.
+
+To repeat source tests, use the matching public SDK loader for `tests/vnpy.test.js`. Set `SESAME_VNPY_PYTHON` to the actual native compatible interpreter before running `python3 -I -B tests/vnpy-engine.test.py`; without it, six native tests are explicitly gated. Dependencies are never downloaded by the tests automatically.

@@ -1,0 +1,130 @@
+[
+  {
+    "name": "data_sources",
+    "label": "data_sources",
+    "description": "列出统一数据服务已接入的数据源。缓存、权限和证据由宿主管理。",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "data_query",
+    "label": "data_query",
+    "description": "按需获取数据并返回有界预览与短期 query_id。MT5 自动补齐缓存，网页支持 HTTP/HTTPS 公网与内网来源。需要分析或引用时立即 data_snapshot，再 data_read；has_more=true 表示范围未完整返回。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "source"
+      ],
+      "properties": {
+        "source": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "dataset"
+            },
+            {
+              "type": "string",
+              "const": "mt5"
+            },
+            {
+              "type": "string",
+              "const": "web"
+            }
+          ]
+        },
+        "dataset_id": {
+          "type": "string",
+          "description": "已有数据 ID",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "url": {
+          "type": "string",
+          "description": "网页或数据文件 URL",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "symbol": {
+          "type": "string",
+          "description": "精确 MT5 品种",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "period": {
+          "type": "string",
+          "description": "MT5 周期，如 H1",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "time_field": {
+          "type": "string",
+          "description": "已有数据的时间列；数值为秒，字符串按明确时区解析",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "maxItems": 128
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "freshness_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "data_snapshot",
+    "label": "data_snapshot",
+    "description": "冻结本会话 data_query 的完整结果，返回可供 data_read、研究报告与判断复盘引用的 dataset_id；不会重新获取或替换当时的数据。",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "query_id",
+        "title"
+      ],
+      "properties": {
+        "query_id": {
+          "type": "string",
+          "description": "刚才查询返回的 query_id",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "title": {
+          "type": "string",
+          "description": "数据快照名称",
+          "minLength": 1,
+          "maxLength": 20000
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]

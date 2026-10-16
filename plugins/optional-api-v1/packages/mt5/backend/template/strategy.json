@@ -1,0 +1,41 @@
+{
+  "template_version": "2.0.0",
+  "modules": {
+    "signal": {
+      "mode": "unimplemented",
+      "description": "",
+      "node_ids": [],
+      "state_machine_ids": []
+    },
+    "money": {
+      "mode": "unimplemented",
+      "description": "",
+      "node_ids": [],
+      "state_machine_ids": []
+    },
+    "position": {
+      "mode": "unimplemented",
+      "description": "",
+      "node_ids": [],
+      "state_machine_ids": []
+    },
+    "trailing": {
+      "mode": "unimplemented",
+      "description": "",
+      "node_ids": [],
+      "state_machine_ids": []
+    },
+    "risk": {
+      "mode": "unimplemented",
+      "description": "",
+      "node_ids": [],
+      "state_machine_ids": []
+    },
+    "expert": {
+      "mode": "unimplemented",
+      "description": "",
+      "node_ids": [],
+      "state_machine_ids": []
+    }
+  }
+}

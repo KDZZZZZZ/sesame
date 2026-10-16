@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "tag": "plugins-api-v1-dev.5",
+  "title": "Sesame API 1 development bundle 5",
+  "sourceCommit": "3f3c422fe3dd3bfe7ff780f4d593f6cf2d7ef9c8",
+  "sourceRoot": "plugins/api-v1",
+  "archive": {
+    "name": "sesame-official-plugins-api-v1-dev.5.tar.gz",
+    "sha256": "5efc0809d1f8096148f818c65fa8857875704bb3a79107e5468c1f1b10726df2"
+  },
+  "lockSha256": "637351a7c3f4caac49c8d84a5ebdb545d4bbdf71af05914e0af14ab22f2beb49",
+  "pullRequest": 9
+}

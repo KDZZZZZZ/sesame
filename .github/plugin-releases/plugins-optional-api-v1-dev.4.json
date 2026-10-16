@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "tag": "plugins-optional-api-v1-dev.4",
+  "title": "Sesame optional API 1 development plugins 4",
+  "sourceCommit": "1f380819fa4e7a50198ebdf2e596295bf223795b",
+  "sourceRoot": "plugins/optional-api-v1",
+  "archive": {
+    "name": "sesame-optional-plugins-api-v1-dev.4.tar.gz",
+    "sha256": "068b9b6f8923ad8c5f9fe646d3a95a88d41d11594df688d558436b30c93549b3"
+  },
+  "lockSha256": "e9caeb9feadd95b45bc7b59ddf0fbedf9f7e28f3310315aca1baf9dcfeca6e19",
+  "pullRequest": 15
+}

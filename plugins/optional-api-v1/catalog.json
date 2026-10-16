@@ -1,0 +1,355 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "1",
+  "channel": "development",
+  "sourceCommit": "373bb390c8903688105a88f51b33960f8665187a",
+  "plugins": [
+    {
+      "id": "sesame/akshare",
+      "name": "akshare",
+      "version": "1.0.2",
+      "apiVersion": "1",
+      "format": "sesame-native",
+      "title": "AKShare A股研究数据",
+      "description": "可选只读AKShare：A股品种搜索、历史日线、报价及真实日线60秒轮询订阅；复用已有依赖，不提供交易所tick流或交易。",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors",
+        "url": "https://github.com/KDZZZZZZ/sesame"
+      },
+      "status": "active",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "373bb390c8903688105a88f51b33960f8665187a",
+        "path": "plugins/optional-api-v1/packages/akshare"
+      },
+      "package": {
+        "treeDigest": "sha256:296539a63112b222d4f7572199dfb1992370f838c0daa52ee65fc8c0170c323d",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "README.md",
+            "sha256": "323e4e8cd39fd016f640c95f1844ec1ce4cf8070b96d5bc942b015c026b3b979",
+            "bytes": 2153
+          },
+          {
+            "path": "VALIDATION.md",
+            "sha256": "1d648fa02c93afa83988181f32c9baa3aca5afd4ff022f6e001eab7ff5e13e1b",
+            "bytes": 3653
+          },
+          {
+            "path": "bridge.py",
+            "sha256": "c6fddb9ed2a192a02bdfc8d041969b724f0c0a02570999f50fcd13a13aeecb9c",
+            "bytes": 3426
+          },
+          {
+            "path": "index.js",
+            "sha256": "7c9c5ec9eee9e4de35a0ffc793c808556f21a646f08a7ba978f53cfc4ba7289e",
+            "bytes": 4519
+          },
+          {
+            "path": "package.json",
+            "sha256": "006f1bdf4cab463550f574b466d3f56e9b5f75496abe616e1a656ba0d8cb9e07",
+            "bytes": 120
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "73b16c2c7121e37d36e71f5914c8767300b78394e159ef3add6a3cae329308ff",
+            "bytes": 762
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "8d49e7afb7f6b7305757f32b1d3ad106ab27c3b531c52da49aa6f930f70a8916",
+            "bytes": 859
+          },
+          {
+            "path": "provider.js",
+            "sha256": "911dbd5f14c351da732c0e25f6e8e4c4bff651ef9d56930810e15130e76b90fb",
+            "bytes": 15711
+          },
+          {
+            "path": "skills/akshare-research/SKILL.md",
+            "sha256": "e900f6a9f1158accfd906095e5eab8e7badb2ba42a9222d641055297dfe8376e",
+            "bytes": 2635
+          },
+          {
+            "path": "tests/environment.test.js",
+            "sha256": "05ed97c7a2751b4bc1254ca8b2282bb29e0395429d9e21e5cb0c9b9cce316bbb",
+            "bytes": 3838
+          },
+          {
+            "path": "tests/live.mjs",
+            "sha256": "8c25bfbeb2daac0307c25a32bac42ce259ed8745e816f99857ebefcd640c0dc8",
+            "bytes": 1553
+          },
+          {
+            "path": "tests/provider.test.js",
+            "sha256": "1a859777e9c76a44f63935f2a189436bb66f20aa3f51f94d443e6c7b417e73b1",
+            "bytes": 7297
+          },
+          {
+            "path": "tools.json",
+            "sha256": "02474a4b712b66aeab66ee1671dc35877a80860ff3833be586f88ccb84685314",
+            "bytes": 3929
+          },
+          {
+            "path": "worker.js",
+            "sha256": "c21ae7621f7ca63808f44ae5d7eb6d051dad572f478a27b0bbd3d258bfd36db7",
+            "bytes": 9203
+          }
+        ]
+      },
+      "review": {
+        "automated": "package-static-review",
+        "human": "not-recorded",
+        "notes": "Static identity, file and import-boundary checks are separate from behavior/environment tests. See package validation; this is not a safety certification."
+      },
+      "tools": [
+        "akshare_discover",
+        "akshare_status",
+        "akshare_prepare",
+        "akshare_catalog",
+        "akshare_query",
+        "akshare_quote"
+      ],
+      "requirements": "Existing compatible native Python/AKShare is reused; explicit preparation can install a private dependency environment. Read-only quotes and daily bars are polled no faster than 60 seconds, not an exchange tick feed. Observed quotes may have unknown freshness; upstream failures remain explicit. No trading.",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/373bb390c8903688105a88f51b33960f8665187a/plugins/optional-api-v1/packages/akshare/README.md",
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
+    },
+    {
+      "id": "sesame/qmt",
+      "name": "qmt",
+      "version": "1.0.0",
+      "apiVersion": "1",
+      "format": "sesame-native",
+      "title": "QMT 只读行情与账户",
+      "description": "可选 Windows MiniQMT 适配：A股品种/报价、现金账户/股票持仓，以及原生当日委托成交查询。复用现有券商授权与 Python，缺失依赖显式准备。",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors",
+        "url": "https://github.com/KDZZZZZZ/sesame"
+      },
+      "status": "active",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "373bb390c8903688105a88f51b33960f8665187a",
+        "path": "plugins/optional-api-v1/packages/qmt"
+      },
+      "package": {
+        "treeDigest": "sha256:209b1a6ed09c3deae79f533a5b12ff1e02001db02585f9b8efbfc04dace7f0be",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "2681aaf69ad3f8a595707e154e1e065a0077db9f1d25f8f5df73c02c5657477a",
+            "bytes": 1063
+          },
+          {
+            "path": "README.md",
+            "sha256": "974ee14b45f7253b0c67a6b4a62af920cf81996d28c312b433646eedd051ef7c",
+            "bytes": 3366
+          },
+          {
+            "path": "bridge.py",
+            "sha256": "25a46b933e586df53a2ff4526ed6c48c4d54439786e5f6638f55a3d1b5e43fcd",
+            "bytes": 10736
+          },
+          {
+            "path": "configuration.js",
+            "sha256": "997bc56403f0ec5a05488191e743955b3be5edf0541f7a016b8c99d13b288c1e",
+            "bytes": 5230
+          },
+          {
+            "path": "index.js",
+            "sha256": "3b19aa1c168eb4d62dc1173e0eb1d1d410070b4300d1810e4fa6e1855ac7d737",
+            "bytes": 3562
+          },
+          {
+            "path": "mapping.js",
+            "sha256": "73888268e3d00d233ebc152ae621b94b244afabe9a222c17a7877fd082db4960",
+            "bytes": 5406
+          },
+          {
+            "path": "package.json",
+            "sha256": "145a91f3b1ee7bca2bd509120cdfce9db007af43248d5634a344acee81b27060",
+            "bytes": 129
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "fc5f3e973d844d0c282842a397c564b24e206ff90cafd3dfe32d159d8eacaf56",
+            "bytes": 742
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "3f5a360fa3f5a98ba4844dbf40b8275e96abe8f6521dadcec69053e533908404",
+            "bytes": 915
+          },
+          {
+            "path": "requirements.txt",
+            "sha256": "d6832c62d81f1241975bc20e0bf328c0a5e5fb16beb27497271b2ccc0fced986",
+            "bytes": 1708
+          },
+          {
+            "path": "service.js",
+            "sha256": "53d4bb854a7feeb6300650a6ee4f537810a8024d62388e17ddf42ac7cedd41b6",
+            "bytes": 12398
+          },
+          {
+            "path": "skills/qmt-readonly/SKILL.md",
+            "sha256": "8e4e9ea49c68fdb4da25974306fd38d7201bf82409f674996e62950fe0c05ddf",
+            "bytes": 3251
+          },
+          {
+            "path": "tools.json",
+            "sha256": "8fd2f1f1cfede4cec306b6d0e8be71b5dd4ae2aaa487bcc4677de855994bfd91",
+            "bytes": 6141
+          },
+          {
+            "path": "worker.js",
+            "sha256": "02c79759c9a82739b42e388b0819d1656ae1ea3544bbb86b2ae75643a569c559",
+            "bytes": 3261
+          }
+        ]
+      },
+      "review": {
+        "automated": "package-static-review",
+        "human": "not-recorded",
+        "notes": "Static identity, file and import-boundary checks are separate from behavior/environment tests. See package validation; this is not a safety certification."
+      },
+      "tools": [
+        "qmt_environment",
+        "qmt_configure",
+        "qmt_read"
+      ],
+      "requirements": "Native Windows x64, compatible Python/XtQuant and an existing broker-authorized MiniQMT are required. No terminal download/start or trade action occurs on load. macOS/Linux are not QMT execution hosts.",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/373bb390c8903688105a88f51b33960f8665187a/plugins/optional-api-v1/packages/qmt/README.md",
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
+    },
+    {
+      "id": "sesame/vnpy",
+      "name": "vnpy",
+      "version": "1.0.1",
+      "apiVersion": "1",
+      "format": "sesame-native",
+      "title": "VeighNa CTA 回测",
+      "description": "按需复用或安装本机 VeighNa 环境，以固定数据和 Agent 编写的 Python 策略运行真实 CTA 回测引擎并保存结果。",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors",
+        "url": "https://github.com/KDZZZZZZ/sesame"
+      },
+      "status": "active",
+      "source": {
+        "repository": "https://github.com/KDZZZZZZ/sesame",
+        "commit": "373bb390c8903688105a88f51b33960f8665187a",
+        "path": "plugins/optional-api-v1/packages/vnpy"
+      },
+      "package": {
+        "treeDigest": "sha256:0a7a028c9cccaaff2790e911809ae96fb6c8b001b5219a6eb1407bec07d4983e",
+        "files": [
+          {
+            "path": "LICENSE",
+            "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+            "bytes": 1076
+          },
+          {
+            "path": "PREPARATION-VALIDATION.md",
+            "sha256": "6751a5a9a482b8e3deb40f13544209bb87d2eade972ac834a1bb9ac200a2a6c1",
+            "bytes": 3195
+          },
+          {
+            "path": "PROVENANCE.md",
+            "sha256": "10b9d55ee8e2500fe0c366698c66e2f175cc51258a999b07d9f0a083f12aa2eb",
+            "bytes": 1920
+          },
+          {
+            "path": "README.md",
+            "sha256": "b2be5f42c6fbdf62b5183e0f97471ff55c3f8e5a817e43bdd8a6d53462b04c3a",
+            "bytes": 5528
+          },
+          {
+            "path": "VALIDATION.md",
+            "sha256": "3a9d67822f4b2f12900622b9278ce63ab96747fd0afce44f8e00a75bf135fd9e",
+            "bytes": 2619
+          },
+          {
+            "path": "download-wheels.py",
+            "sha256": "aaa8d350d561b1955cb1dd3ad4ae5f9fb4c82e6635e4d67ca28f4d1b8278128b",
+            "bytes": 6812
+          },
+          {
+            "path": "environment.js",
+            "sha256": "88b9539aba630385c50e9f294acade7e380084ea4934946249aef75ea1f632fc",
+            "bytes": 13611
+          },
+          {
+            "path": "examples/bars.json",
+            "sha256": "99fed4e89ed4ee5bf084d5186ed71b3ca2e04d5e880daa2fcadcca11ac183c0f",
+            "bytes": 773
+          },
+          {
+            "path": "examples/strategy.py",
+            "sha256": "1853915ad5f0bae0c9a5da17028c35f05344e0c1ac24a8df1e14767e9b13f65c",
+            "bytes": 512
+          },
+          {
+            "path": "index.js",
+            "sha256": "6b674418528fc8c15c94fd05f38baecb3ba76af2ba36f525575a4b22881c4919",
+            "bytes": 11072
+          },
+          {
+            "path": "package.json",
+            "sha256": "d6c6578007778f3144a449fe9e0f16d7d692ea8144fb73ea28d77ff8faf220d6",
+            "bytes": 98
+          },
+          {
+            "path": "plugin.json",
+            "sha256": "15e379f5de7114fc52325c6a51299f93c34e5e9650886bee25c2d0c00a945424",
+            "bytes": 667
+          },
+          {
+            "path": "prompt.md",
+            "sha256": "51ca8e5140142ed990c9e3ce1cee780b0c0412fa04674161d26377ce4e6c422c",
+            "bytes": 1358
+          },
+          {
+            "path": "requirements.txt",
+            "sha256": "102a07a46979c8192cd82eb1980f1137226b68a1a72b23df8401c822146474f6",
+            "bytes": 36
+          },
+          {
+            "path": "runner.py",
+            "sha256": "71b0b4431271e227b994c28f0212affefbf1bdb56ed4fe01317fce73a1415ee3",
+            "bytes": 9227
+          },
+          {
+            "path": "skills/vnpy-backtest/SKILL.md",
+            "sha256": "81d1da2f991f337ff93ed3049fd3733f09a1849d8bc99564c2b82f324ca93033",
+            "bytes": 3388
+          },
+          {
+            "path": "tools.json",
+            "sha256": "e6b7a90be6a33ce7befe85c1a05417585f9859e149a3c5d700302a66060ef50e",
+            "bytes": 7222
+          }
+        ]
+      },
+      "review": {
+        "automated": "package-static-review",
+        "human": "not-recorded",
+        "notes": "Static identity, file and import-boundary checks are separate from behavior/environment tests. See package validation; this is not a safety certification."
+      },
+      "tools": [
+        "vnpy_environment",
+        "vnpy_backtest",
+        "vnpy_result"
+      ],
+      "requirements": "Native 64-bit Python 3.10–3.13 with vnpy 4.5.0 and vnpy_ctastrategy 1.4.1; inspect/reuse before explicit preparation. Fixed bars and authored Python run as the current user. Backtesting only; no gateway/account trading.",
+      "documentationUrl": "https://github.com/KDZZZZZZ/sesame/blob/373bb390c8903688105a88f51b33960f8665187a/plugins/optional-api-v1/packages/vnpy/README.md",
+      "feedbackUrl": "https://github.com/KDZZZZZZ/sesame/issues"
+    }
+  ]
+}
