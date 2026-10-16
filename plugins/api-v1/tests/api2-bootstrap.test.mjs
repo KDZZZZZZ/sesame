@@ -23,7 +23,7 @@ function fixture(t) {
     schemaVersion: 1, apiVersion: '2', ...Object.fromEntries(declarations.map(key => [key, []])),
     capabilities: [{ id: 'fixture.read', inputSchema: { type: 'object' }, outputSchema: { type: 'object' },
       usage: { purpose: 'Read the fixture value.', inputs: 'An empty object.', outputs: 'A value object.', prerequisites: [], limitations: [] },
-      consumers: ['agent', 'host'], binding: { type: 'native', export: 'read' } }],
+      consumers: ['agent', 'host'], binding: { type: 'native', name: 'read' } }],
     knowledge: [{ path: 'README.md' }],
   };
   save(join(path, 'plugin.json'), manifest);
