@@ -1,0 +1,25 @@
+{
+  "id": "mt5-trading",
+  "title": "MT5 交易与程序运行",
+  "description": "订单、EA/脚本、模板与图表开关，以及终端启动、Python 初始化/登录；默认可发现，按用户要求加载并执行。",
+  "version": "1.1.0",
+  "default_state": "discoverable",
+  "tool_names": [
+    "mt5_trade"
+  ],
+  "entry": "tools.js",
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [],
+  "tool_definitions": "tools.json",
+  "mt5_agent_tool": "mt5_trade",
+  "mt5_routes": [
+    {
+      "priority": 100,
+      "permissions": [
+        "trading"
+      ]
+    }
+  ]
+}

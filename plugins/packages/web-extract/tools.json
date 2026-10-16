@@ -1,0 +1,21 @@
+{
+  "analysis": [
+    {
+      "name": "extract_webpage",
+      "description": "Extract title, text, links and metadata from HTML content (inline or bundled file path)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "html_content": {
+            "type": "string",
+            "description": "Raw HTML string"
+          },
+          "file_path": {
+            "type": "string",
+            "description": "Relative path to a bundled HTML file; cannot access conversation or host files"
+          }
+        }
+      }
+    }
+  ]
+}

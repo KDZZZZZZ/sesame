@@ -1,0 +1,28 @@
+{
+  "id": "reports",
+  "title": "交互报告",
+  "description": "查询、编写与发布绑定后端数据的 HTML 报告。",
+  "version": "1.0.0",
+  "default_state": "mounted",
+  "tool_names": [
+    "report_read",
+    "report_publish"
+  ],
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "entry": "tools.js",
+  "tool_definitions": "tools.json",
+  "mcp_export": [
+    "report_read"
+  ],
+  "resources": [
+    "repair.md"
+  ],
+  "templates": {
+    "report_repair": "repair.md"
+  }
+}
