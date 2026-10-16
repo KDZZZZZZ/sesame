@@ -1,0 +1,33 @@
+{
+  "id": "sesame/qmt",
+  "title": "QMT 行情与股票账户",
+  "description": "可选 Windows MiniQMT：A股日线、报价、股票账户、当日委托成交，以及显式授权的限价下单和撤单。既有配置优先；缺失依赖按需准备。",
+  "apiVersion": "2",
+  "version": "2.0.0",
+  "license": "MIT",
+  "default_state": "discoverable",
+  "entry": "index.js",
+  "main_tool_names": [
+    "qmt_environment",
+    "qmt_configure",
+    "qmt_download_history",
+    "qmt_order",
+    "qmt_cancel",
+    "qmt_command"
+  ],
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "resources": [
+    "README.md",
+    "requirements.txt",
+    "TRADING.md"
+  ],
+  "engines": {
+    "sesame": ">=0.2.3"
+  },
+  "capability_manifest": "capabilities.json"
+}

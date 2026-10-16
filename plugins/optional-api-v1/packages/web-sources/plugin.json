@@ -1,0 +1,18 @@
+{
+  "id": "sesame/web-sources",
+  "title": "公开来源",
+  "description": "抓取 HTTP/HTTPS 资料，支持公网与内网，保存来源和输入快照。",
+  "version": "3.0.0",
+  "default_state": "discoverable",
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [],
+  "entry": "index.js",
+  "apiVersion": "2",
+  "license": "MIT",
+  "engines": {
+    "sesame": ">=0.2.3"
+  },
+  "capability_manifest": "capabilities.json"
+}

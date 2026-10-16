@@ -1,0 +1,7 @@
+# dev.3.7: real milliseconds retained, H1 display anchors
+
+Actual market_read accepted21 disclosed bars after the unsigned revision correction. The actual frontend then reported Unsupported plot time precision for a fill at2014-05-14T01:00:01.615Z. The plot adapter now maps an evidenced fill to its containing disclosed H1 open, keeps exact price/quantity and frozen raw milliseconds unchanged, and labels both true fill time and geometric H1 anchor in the marker text. No rounding/replacing source data, future/undisclosed forming price, or moving across gaps. Existing raw source and past artifacts remain immutable; bundleDigest already creates a distinct indicator publication for changed code.
+
+Latest per-client native order lifecycle rows are projected into separately identified native-order-state events, not inferred from target orders or fills. A working reduce-only stop gets a blue state circle at its actual reported stop price; other lifecycle states are explicitly not additional fills. Its actual event time stays in frozen evidence and text, with a containing disclosed H1 plot anchor. Legacy missing trace remains missing, not manufactured. Account, native matching, roles, prices, budgets, model and future cursor are untouched.
+
+Original delivered candidate is untouched. Local tests are not SDK/pixel proof; require actual publication/mount/current client receipt. Current engine2/one H1 already committed; do not recover/replay its decision. Resume only saved3-hour continuation after display verification and explicit arm.

@@ -1,0 +1,34 @@
+{
+  "id": "sesame/abu-breakout",
+  "apiVersion": "2",
+  "version": "2.0.0",
+  "title": "突破信号基线",
+  "description": "历史窗口高低点突破观察及次时段可执行约束。这是可改进基线而非标准答案；输入显式来源和截止时点，输出可复核研究结果。 自动冻结输入与结果数据工件，用户可复核。",
+  "author": {
+    "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
+  },
+  "license": "GPL-3.0-only",
+  "default_state": "discoverable",
+  "agent_scope": "all",
+  "entry": "index.js",
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "resources": [
+    "LICENSE",
+    "PROVENANCE.md",
+    "README.md",
+    "examples/input.json",
+    "scripts/baseline.mjs",
+    "scripts/runtime.mjs",
+    "skills/abu-breakout/references/method.md"
+  ],
+  "provides": {},
+  "engines": {
+    "sesame": ">=0.2.3"
+  },
+  "capability_manifest": "capabilities.json"
+}

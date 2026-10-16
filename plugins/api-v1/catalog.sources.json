@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "releases": [
+    {
+      "tag": "plugins-api-v1-dev.21",
+      "releaseCommit": "8c1a50c56e43b3ed29df30289085b0d68e9e4b1d",
+      "reviewSha256": "056bb8a81c352b18d311a118608cdc23a406824197b604d4e8141c26503d0421"
+    },
+    {
+      "tag": "plugins-optional-api-v1-dev.14",
+      "releaseCommit": "822fd09f13077f830b56101e11e83d7f8e3ffd57",
+      "reviewSha256": "d5a082a42e2d1d63c631f7dbffab1db943e5afe219add2337e6229d97bbfb2c7"
+    }
+  ],
+  "withdrawn": []
+}

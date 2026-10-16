@@ -1,0 +1,25 @@
+{
+  "id": "mt5-python",
+  "title": "MT5 官方 Python",
+  "description": "官方 Python 账户、行情、盘口与交易计算 API；默认可发现，实际连接按当前平台核验。初始化、登录和订单发送归交易插件。",
+  "version": "1.1.0",
+  "default_state": "discoverable",
+  "tool_names": [
+    "mt5_python"
+  ],
+  "entry": "tools.js",
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [],
+  "tool_definitions": "tools.json",
+  "mt5_agent_tool": "mt5_python",
+  "mt5_routes": [
+    {
+      "priority": 60,
+      "servers": [
+        "python"
+      ]
+    }
+  ]
+}

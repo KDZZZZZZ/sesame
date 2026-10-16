@@ -1,0 +1,9 @@
+# dev.3.5: committed spectator digest
+
+The exact saved original decision was explicitly recovered with zero additional role calls. The first real H1 was financially committed once: 35000 AUDJPY bought at 95.792, initial commission105JPY, balance299895JPY, last-consumed bid95.837, committed equity301470JPY. Do not recover/replay that decision again. Three same-block continuation H1 remain unsubmitted.
+
+Its viewer hook then failed strict SDK storage because the proof read a nonexistent `nativeJournal.ticksDigest`; actual native entries use immutable `ticksRef.digest`. Use the full `batch.sourceDigest` only after batchFromCommittedJournal has checked the actual immutable bytes, length and rows. Both prefix and settled-chapter proof branches now use this validated digest and fail if it is absent/malformed, rather than storing undefined or manufacturing a digest. No financial, role, matching, budget, model or cutoff behavior changes.
+
+Strengthened CORE clock Store fixture rejects non-JSON nested values. A protocol fixture checks native ticksRef shape, and source wiring verifies both branches. Isolated tests are not actual SDK or pixel proof. Only explicit kurumi_retry_committed_hooks may consume pending display hooks; it must not replay financial matching or call another role. Preserve the completed task, original failure, original raw capture and immutable pre-native-v2 capture.
+
+Strict Store normalization also reproduced an immutable raw-receipt archive collision: canonical object digest named the file but order-sensitive JSON.stringify wrote its bytes. The canonical receipt is now serialized by the same canonical function and saved under chart-runtime-canonical-*; old raw files are never rewritten or removed. This affects archive bytes/key order only, not raw values or receipt status.

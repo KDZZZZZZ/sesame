@@ -1,0 +1,27 @@
+{
+  "id": "sesame/backtrader",
+  "title": "BACKTRADER optional backend",
+  "description": "Native fixed-data Cerebro backtests; no live broker",
+  "version": "2.0.0",
+  "apiVersion": "2",
+  "engines": {
+    "sesame": ">=0.2.3"
+  },
+  "default_state": "discoverable",
+  "entry": "index.js",
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "license": "GPL-3.0-or-later",
+  "author": {
+    "name": "Sesame contributors",
+    "url": "https://github.com/KDZZZZZZ/sesame"
+  },
+  "resources": [
+    "PROVENANCE.md"
+  ],
+  "capability_manifest": "capabilities.json"
+}

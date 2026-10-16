@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sesame API 1 reviewed distribution profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "engines", "packages"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "kind": {"enum": ["core", "optional"]},
+    "engines": {"$ref": "#/$defs/engines"},
+    "packages": {"type": "array", "minItems": 1, "maxItems": 100, "uniqueItems": true, "items": {"type": "string", "pattern": "^sesame/[a-z][a-z0-9-]*$"}}
+  },
+  "$defs": {
+    "engines": {
+      "description": "Required in native plugin.json, or extensions['bot.sesame'] for standard MCP packages. Formal minimum is Sesame 0.2.0; the prerelease comparator permits its development previews.",
+      "type": "object", "additionalProperties": false,
+      "required": ["sesame"], "properties": {"sesame": {"const": ">=0.2.0-0"}}
+    }
+  }
+}

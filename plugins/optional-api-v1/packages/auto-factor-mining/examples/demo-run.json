@@ -1,0 +1,82 @@
+{
+  "id": "demo-factor-2026-10-14",
+  "title": "从市场直觉，到可检验的因子。",
+  "goal": "演示任务：在固定样本中研究动量、反转与流动性因子。比较成本后的验证表现，保留失败分支，并在选择冻结后检验留出集。以下数据、模型任务与评审均为虚构。",
+  "status": "completed",
+  "createdAt": "2026-10-14T09:00:00Z",
+  "updatedAt": "2026-10-14T09:38:00Z",
+  "config": {
+    "directions": ["中期动量", "短期反转", "流动性"],
+    "rounds": 2,
+    "maxTrials": 6,
+    "parallelism": 3,
+    "model": {"provider": "示例供应商", "id": "example-model"},
+    "agentModels": {
+      "supervisor": {"provider": "示例供应商 A", "id": "reasoning-model"},
+      "researcher": {"provider": "示例供应商 B", "id": "research-model"},
+      "coder": {"provider": "示例供应商 A", "id": "coding-model"},
+      "reviewer": {"provider": "示例供应商 C", "id": "review-model"},
+      "reflector": {"provider": "示例供应商 B", "id": "reflection-model"}
+    },
+    "dataset": {"trainEnd": "2023-12-29", "validationEnd": "2024-12-31", "holdoutEnd": "2025-12-31", "horizon": 5, "costBps": 8, "quantile": 0.2},
+    "reportFolder": "research/auto-factor-mining/demo-factor-2026-10-14"
+  },
+  "data": {"digest": "demo:synthetic-data-not-market-evidence", "rowCount": 42000, "symbolCount": 60, "fields": ["date", "symbol", "open", "high", "low", "close", "volume"], "range": {"start": "2021-01-04", "end": "2025-12-31"}},
+  "round": 2,
+  "phase": "研究完成",
+  "tasks": [
+    {"id":"demo-task-01","role":"supervisor","round":1,"status":"completed","model":{"provider":"示例供应商 A","id":"reasoning-model"},"startedAt":"2026-10-14T09:00:00Z","finishedAt":"2026-10-14T09:02:00Z","output":{"directions":["中期动量","短期反转","流动性"],"stoppingRule":"最多两轮、六个试验"}},
+    {"id":"demo-task-02","role":"researcher","direction":"中期动量","round":1,"trialId":"F-001","status":"completed","model":{"provider":"示例供应商 B","id":"research-model"},"startedAt":"2026-10-14T09:02:00Z","finishedAt":"2026-10-14T09:04:00Z"},
+    {"id":"demo-task-03","role":"researcher","direction":"短期反转","round":1,"trialId":"F-002","status":"completed","model":{"provider":"示例供应商 B","id":"research-model"},"startedAt":"2026-10-14T09:02:00Z","finishedAt":"2026-10-14T09:04:30Z"},
+    {"id":"demo-task-04","role":"researcher","direction":"流动性","round":1,"trialId":"F-003","status":"completed","model":{"provider":"示例供应商 B","id":"research-model"},"startedAt":"2026-10-14T09:02:00Z","finishedAt":"2026-10-14T09:05:00Z"},
+    {"id":"demo-task-05","role":"coder","direction":"中期动量","round":1,"trialId":"F-001","status":"completed","model":{"provider":"示例供应商 A","id":"coding-model"},"startedAt":"2026-10-14T09:05:00Z","finishedAt":"2026-10-14T09:08:00Z","output":{"expression":"close / lag(close, 20) - 1","checks":["仅引用当期及历史价格","未读取留出集指标"]}},
+    {"id":"demo-task-06","role":"coder","direction":"短期反转","round":1,"trialId":"F-002","status":"completed","startedAt":"2026-10-14T09:05:00Z","finishedAt":"2026-10-14T09:08:30Z"},
+    {"id":"demo-task-07","role":"coder","direction":"流动性","round":1,"trialId":"F-003","status":"failed","startedAt":"2026-10-14T09:05:00Z","finishedAt":"2026-10-14T09:08:00Z","error":"示例失败：窗口内零成交量导致覆盖率不足"},
+    {"id":"demo-task-08","role":"reviewer","round":1,"trialId":"F-001","status":"completed","model":{"provider":"示例供应商 C","id":"review-model"},"startedAt":"2026-10-14T09:10:00Z","finishedAt":"2026-10-14T09:12:00Z"},
+    {"id":"demo-task-09","role":"reviewer","round":1,"trialId":"F-002","status":"completed","startedAt":"2026-10-14T09:10:00Z","finishedAt":"2026-10-14T09:12:30Z"},
+    {"id":"demo-task-10","role":"reflector","round":1,"status":"completed","model":{"provider":"示例供应商 B","id":"reflection-model"},"startedAt":"2026-10-14T09:13:00Z","finishedAt":"2026-10-14T09:15:00Z"},
+    {"id":"demo-task-11","role":"researcher","direction":"中期动量","round":2,"trialId":"F-004","status":"completed","startedAt":"2026-10-14T09:16:00Z","finishedAt":"2026-10-14T09:18:00Z"},
+    {"id":"demo-task-12","role":"coder","direction":"中期动量","round":2,"trialId":"F-004","status":"completed","model":{"provider":"示例供应商 A","id":"coding-model"},"startedAt":"2026-10-14T09:18:00Z","finishedAt":"2026-10-14T09:22:00Z"},
+    {"id":"demo-task-13","role":"coder","direction":"流动性","round":2,"trialId":"F-005","status":"completed","startedAt":"2026-10-14T09:18:00Z","finishedAt":"2026-10-14T09:23:00Z"},
+    {"id":"demo-task-14","role":"coder","direction":"短期反转","round":2,"trialId":"F-006","status":"completed","startedAt":"2026-10-14T09:18:00Z","finishedAt":"2026-10-14T09:24:00Z"},
+    {"id":"demo-task-15","role":"reviewer","round":2,"trialId":"F-004","status":"completed","model":{"provider":"示例供应商 C","id":"review-model"},"startedAt":"2026-10-14T09:25:00Z","finishedAt":"2026-10-14T09:27:00Z","output":{"verdict":"accept","reason":"示例验证集表现改善；在相同成本下保留，待冻结后验证"}},
+    {"id":"demo-task-16","role":"reviewer","round":2,"trialId":"F-005","status":"completed","startedAt":"2026-10-14T09:25:00Z","finishedAt":"2026-10-14T09:27:30Z"},
+    {"id":"demo-task-17","role":"reviewer","round":2,"trialId":"F-006","status":"completed","startedAt":"2026-10-14T09:25:00Z","finishedAt":"2026-10-14T09:28:00Z"},
+    {"id":"demo-task-18","role":"reflector","round":2,"status":"completed","startedAt":"2026-10-14T09:29:00Z","finishedAt":"2026-10-14T09:31:00Z"},
+    {"id":"demo-task-19","role":"supervisor","round":2,"status":"completed","model":{"provider":"示例供应商 A","id":"reasoning-model"},"startedAt":"2026-10-14T09:32:00Z","finishedAt":"2026-10-14T09:33:00Z","output":{"trialIds":["F-004"],"reason":"演示选择：只冻结一个候选，保留其余失败和淘汰证据"}}
+  ],
+  "trials": [
+    {"id":"F-001","round":1,"direction":"中期动量","hypothesis":"20 期价格动量具有延续性","rationale":"演示假设：信息扩散缓慢，可能带来中期收益延续。所有数值为虚构。","status":"accepted","expression":{"op":"sub","args":[{"op":"div","args":[{"field":"close"},{"op":"lag","window":20,"args":[{"field":"close"}]}]},1]},"expressionDigest":"demo:expression-f001","metrics":{"train":{"rankIC":0.041,"rankICIR":0.32,"coverage":0.97,"netReturn":0.083,"maxDrawdown":-0.112,"turnover":0.18},"validation":{"rankIC":0.028,"rankICIR":0.19,"coverage":0.98,"netReturn":0.039,"maxDrawdown":-0.097,"turnover":0.21}},"review":{"verdict":"accept","reason":"演示评审：方向一致，但高波动期回撤偏大；保留为改进基线。"}},
+    {"id":"F-002","round":1,"direction":"短期反转","hypothesis":"单期价格反转可捕捉过度反应","rationale":"演示假设：短期流动性冲击带来的价格偏离可能均值回归。","status":"rejected","expression":"-(close / lag(close, 1) - 1)","expressionDigest":"demo:expression-f002","metrics":{"train":{"rankIC":0.052,"rankICIR":0.37,"coverage":0.99,"netReturn":0.018,"maxDrawdown":-0.14,"turnover":0.72},"validation":{"rankIC":0.019,"rankICIR":0.11,"coverage":0.99,"netReturn":-0.026,"maxDrawdown":-0.168,"turnover":0.76}},"review":{"verdict":"reject","reason":"演示评审：扣除相同交易成本后验证净收益为负，高换手侵蚀收益。"}},
+    {"id":"F-003","round":1,"direction":"流动性","hypothesis":"低流动性溢价可以独立解释收益","rationale":"演示假设：较低的交易活跃度可能对应流动性补偿。","status":"failed","expression":"-mean(abs(return(close)) / volume, 10)","expressionDigest":"demo:expression-f003","error":"示例执行失败：零成交量样本未正确处理。保留失败记录，在下一轮修复可用性。"},
+    {"id":"F-004","parentId":"F-001","round":2,"direction":"中期动量","hypothesis":"用历史波动率调整动量强度","rationale":"承接 F-001。演示改进：降低极端波动样本对排序的影响，在相同样本划分与交易成本下重新计算。","status":"accepted","expression":"(close / lag(close, 20) - 1) / max(std(return(close), 20), 0.001)","expressionDigest":"demo:expression-f004","metrics":{"train":{"rankIC":0.045,"rankICIR":0.39,"coverage":0.96,"netReturn":0.097,"maxDrawdown":-0.084,"turnover":0.16},"validation":{"rankIC":0.036,"rankICIR":0.27,"coverage":0.97,"netReturn":0.061,"maxDrawdown":-0.071,"turnover":0.18}},"review":{"verdict":"accept","reason":"演示评审：相对父试验，验证 IC、净收益与回撤同时改善。冻结后仍须独立留出检验。"}},
+    {"id":"F-005","parentId":"F-003","round":2,"direction":"流动性","hypothesis":"修复零成交量，检查溢价稳定性","rationale":"承接 F-003 的失败；将分母限制为正并检查有效样本。修复运行不代表假设成立。","status":"rejected","expression":"-mean(abs(return(close)) / max(volume, 1), 10)","expressionDigest":"demo:expression-f005","metrics":{"train":{"rankIC":0.019,"rankICIR":0.15,"coverage":0.96,"netReturn":0.034,"maxDrawdown":-0.093,"turnover":0.12},"validation":{"rankIC":-0.006,"rankICIR":-0.04,"coverage":0.96,"netReturn":-0.011,"maxDrawdown":-0.109,"turnover":0.13}},"review":{"verdict":"reject","reason":"演示评审：计算已修复，但验证方向反转；保留负结果，不纳入候选。"}},
+    {"id":"F-006","parentId":"F-002","round":2,"direction":"短期反转","hypothesis":"平滑反转信号以降低换手","rationale":"承接 F-002。演示改进：聚合短期信号，测试降低换手能否弥补有效性衰减。","status":"rejected","expression":"-mean(close / lag(close, 1) - 1, 3)","expressionDigest":"demo:expression-f006","metrics":{"train":{"rankIC":0.031,"rankICIR":0.22,"coverage":0.98,"netReturn":0.028,"maxDrawdown":-0.103,"turnover":0.39},"validation":{"rankIC":0.008,"rankICIR":0.06,"coverage":0.98,"netReturn":0.002,"maxDrawdown":-0.121,"turnover":0.42}},"review":{"verdict":"reject","reason":"演示评审：换手下降但验证信号很弱，没有足够增量证据支持入选。"}}
+  ],
+  "events": [
+    {"at":"2026-10-14T09:00:00Z","type":"run.created","role":"supervisor","message":"示例：锁定研究目标、三条方向与六个试验预算。"},
+    {"at":"2026-10-14T09:02:00Z","type":"round.started","role":"supervisor","message":"第 1 轮开始，三名研究员并行提出假设。"},
+    {"at":"2026-10-14T09:04:00Z","type":"hypothesis.proposed","role":"researcher","trialId":"F-001","message":"提出中期动量假设，并解释可能的经济机制。"},
+    {"at":"2026-10-14T09:04:30Z","type":"hypothesis.proposed","role":"researcher","trialId":"F-002","message":"提出短期反转假设，标注成本与换手风险。"},
+    {"at":"2026-10-14T09:05:00Z","type":"hypothesis.proposed","role":"researcher","trialId":"F-003","message":"提出流动性因子，移交实现与数据检查。"},
+    {"at":"2026-10-14T09:08:00Z","type":"trial.failed","role":"coder","trialId":"F-003","message":"记录零成交量处理失败；该失败不会从试验账本中删除。"},
+    {"at":"2026-10-14T09:10:00Z","type":"evaluation.completed","trialId":"F-001","message":"示例计算器已返回训练、验证指标；评审开始读取结果。"},
+    {"at":"2026-10-14T09:12:00Z","type":"review.accepted","role":"reviewer","trialId":"F-001","message":"保留动量基线；建议进一步检查高波动样本。"},
+    {"at":"2026-10-14T09:12:30Z","type":"review.rejected","role":"reviewer","trialId":"F-002","message":"短期反转的示例验证净收益为负，淘汰当前版本。"},
+    {"at":"2026-10-14T09:15:00Z","type":"reflection.completed","role":"reflector","message":"把高波动、交易成本与零成交量三项反馈转成下一轮任务。"},
+    {"at":"2026-10-14T09:16:00Z","type":"round.started","role":"supervisor","message":"第 2 轮继续三个父试验，保留完整谱系。"},
+    {"at":"2026-10-14T09:22:00Z","type":"expression.implemented","role":"coder","trialId":"F-004","message":"完成波动率调整版本，在相同样本和成本下重新评估。"},
+    {"at":"2026-10-14T09:27:00Z","type":"review.accepted","role":"reviewer","trialId":"F-004","message":"验证表现较父试验改善，进入候选列表。"},
+    {"at":"2026-10-14T09:28:00Z","type":"review.rejected","role":"reviewer","trialId":"F-006","message":"平滑反转降低了换手，但尚无足够增量证据。"},
+    {"at":"2026-10-14T09:31:00Z","type":"reflection.completed","role":"reflector","message":"预算已达到。归档正反结果，不继续追逐最优样本分数。"},
+    {"at":"2026-10-14T09:33:00Z","type":"selection.frozen","role":"supervisor","trialId":"F-004","message":"冻结候选 F-004 与选择指纹，随后才进行留出检验。"},
+    {"at":"2026-10-14T09:37:00Z","type":"holdout.completed","trialId":"F-004","message":"独立保存示例留出指标；不回写此前研究与选优依据。"},
+    {"at":"2026-10-14T09:38:00Z","type":"run.completed","role":"supervisor","message":"输出完整研究快照、因子定义、失败试验与复现信息。"}
+  ],
+  "reflections": [
+    {"round":1,"summary":"动量方向出现正向证据；反转被交易成本侵蚀；流动性分支存在计算失败。下一轮分别改进波动控制、信号平滑与样本可用性。","nextDirections":["动量 / 波动率调整","反转 / 降低换手","流动性 / 修复零成交量"]},
+    {"round":2,"summary":"波动率调整动量表现改善；另外两个分支未提供足够验证证据。保留所有失败与淘汰试验，达到预算后停止搜索。","nextDirections":[]}
+  ],
+  "selection": {"trialIds":["F-004"],"reason":"示例选择：在固定验证集上比较相同成本后的指标，选取有经济解释且相对基线改善的候选。","frozenAt":"2026-10-14T09:33:00Z","digest":"demo:frozen-selection-not-production-evidence"},
+  "holdout": {"F-004":{"rankIC":0.024,"rankICIR":0.18,"coverage":0.97,"netReturn":0.037,"maxDrawdown":-0.089,"turnover":0.19}}
+}

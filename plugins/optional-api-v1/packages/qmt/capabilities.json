@@ -1,0 +1,2893 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "capabilities": [
+    {
+      "id": "qmt_environment",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Inspect existing QMT configuration and Python paths without launching or downloading. verify imports the SDK explicitly; prepare first reuses an importable existing SDK and only then installs pinned wheels in a private Windows CPython 3.12 environment. Requires broker-authorized MiniQMT for later reads.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "inspect"
+              },
+              {
+                "type": "string",
+                "const": "verify"
+              },
+              {
+                "type": "string",
+                "const": "prepare"
+              }
+            ]
+          },
+          "python_path": {
+            "type": "string",
+            "description": "Existing absolute Windows Python executable; prepare requires x64 CPython 3.12 if SDK is missing",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "operation_id": {
+            "type": "string",
+            "description": "Required for explicit preparation; retry the same request with the same key",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [
+        "process-on-verify-or-prepare",
+        "private-filesystem-on-prepare",
+        "network-on-prepare"
+      ],
+      "usage": {
+        "purpose": "检查已知 QMT 配置，验证或显式准备 SDK 依赖。",
+        "inputs": "{action:\"inspect\"} 无需SDK；{action:\"verify\",python_path:<现有绝对exe路径>} 真实导入验证；{action:\"prepare\",python_path:<现有x64 CPython3.12>,operation_id:<稳定ID>} 复用/私有安装。",
+        "outputs": "inspect:{platform,supported_platform,configuration,python_candidates,suggested_userdata_directory,private_directory,sdk_verified:false,terminal_started:false,missing,next}；verify 返回原生 {ok,result,sample}；prepare 返回 {reused?,python,...SDK安装/核验结果}。",
+        "prerequisites": [
+          "真实账户依赖券商已授权/登录的 MiniQMT；inspect 能在缺SDK时工作。"
+        ],
+        "limitations": [
+          "inspect 只列候选，verify 只证明SDK可导入，均不证明账户可读。prepare不下载MiniQMT、不启动终端、不自动登录；无Windows x64或必要路径时说明缺项。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "qmt_environment"
+      }
+    },
+    {
+      "id": "qmt_configure",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Save exact existing QMT connection paths and the authorized mainland STOCK account. Uses revision and operation ID; does not launch, log in to or change the broker terminal. Obtain the actual localhost market port from the existing MiniQMT settings.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "operation_id",
+          "expected_version",
+          "changes"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "description": "Idempotency key",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "changes": {
+            "type": "object",
+            "properties": {
+              "python_path": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "userdata_directory": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "account_id": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "broker": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "market_port": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 65535
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "sector": {
+                "type": "string",
+                "description": "Existing native stock catalog sector; default 沪深京A股",
+                "minLength": 1,
+                "maxLength": 20000
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "保存明确的本机QMT连接配置。",
+        "inputs": "{operation_id,expected_version,changes}；version来自 qmt_environment.inspect.configuration.version；changes 支持 python_path、userdata_directory、account_id、broker、market_port、sector。例 {operation_id:\"configure-qmt-1\",expected_version:1,changes:{market_port:58610}}，端口必须为已知真实配置。",
+        "outputs": "保存后的 {id:\"local\",version,connection_id,python_path,userdata_directory,account_id,broker,market_port,sector}；version递增，同一operation_id与输入不会重复修改。",
+        "prerequisites": [
+          "路径必须已存在；账户/端口来自已有配置或用户提供的券商信息。"
+        ],
+        "limitations": [
+          "只保存配置，不验证SDK/账户连通；STALE_REVISION时读取现version再决定修改。配置不构成交易授权。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "qmt_configure"
+      }
+    },
+    {
+      "id": "qmt_read",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Perform fixed read-only XtQuant calls on the configured Windows MiniQMT. search/describe/quotes map mainland stocks; asset/positions query the configured STOCK account. orders/fills preserve native fields and cover only the current trading day. None is ambiguous and raises an error. This tool never submits or cancels orders; explicit main-conversation trading tools are separate. No transfer, script execution or terminal launch exists.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "search"
+              },
+              {
+                "type": "string",
+                "const": "describe"
+              },
+              {
+                "type": "string",
+                "const": "quotes"
+              },
+              {
+                "type": "string",
+                "const": "asset"
+              },
+              {
+                "type": "string",
+                "const": "positions"
+              },
+              {
+                "type": "string",
+                "const": "orders"
+              },
+              {
+                "type": "string",
+                "const": "fills"
+              }
+            ]
+          },
+          "query": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "symbols": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^\\d{6}\\.(SH|SZ|BJ)$"
+            },
+            "minItems": 1,
+            "maxItems": 50,
+            "uniqueItems": true
+          },
+          "page": {
+            "type": "object",
+            "required": [
+              "limit"
+            ],
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 200
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              }
+            },
+            "additionalProperties": false,
+            "description": "search/positions/orders/fills use a frozen 60-second snapshot; default 200 rows, repeat unchanged filters with nextCursor"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "读取明确连接的原生股票行情和当日账户回报。",
+        "inputs": "{action:\"search\",query:\"000001\",page:{limit:20}}；describe/quotes 用 symbols:[\"000001.SZ\"]（1–50）；asset无附加参数；positions/orders/fills 可带 page:{limit:1..200,cursor?}，其他过滤条件保持不变。",
+        "outputs": "search/positions/orders/fills:{items,nextCursor,snapshotId,consistency,meta,coverage,connection,nativeFieldPolicy}；describe/quotes:{items,connection,meta,nativeFieldPolicy}；asset:{asset,connection,meta,nativeFieldPolicy}。",
+        "prerequisites": [
+          "qmt_environment/ qmt_configure 的现有Windows原生环境、实际行情端口；账户类读取额外需要授权STOCK账号和userdata_mini。"
+        ],
+        "limitations": [
+          "orders/fills 仅原生当日回报，时间单位/price_type保留原值；None/SDK错误不等于空账户。冻结快照cursor约60秒有效，过期可重新获取首个快照。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "qmt_read"
+      }
+    },
+    {
+      "id": "qmt_download_history",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Explicitly download a requested unadjusted daily stock range into the already configured MiniQMT data cache. This is a user-requested data preparation action, not an automatic startup download. Reuse local history first.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "symbol",
+          "start",
+          "end"
+        ],
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "pattern": "^\\d{6}\\.(SH|SZ|BJ)$"
+          },
+          "start": {
+            "type": "string",
+            "pattern": "^\\d{8}$"
+          },
+          "end": {
+            "type": "string",
+            "pattern": "^\\d{8}$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [
+        "process",
+        "network",
+        "external-cache.write"
+      ],
+      "usage": {
+        "purpose": "显式下载缺失的本地D1历史。",
+        "inputs": "{symbol:\"000001.SZ\",start:\"20260101\",end:\"20261015\"}；日期为有效有序YYYYMMDD，最长10年。",
+        "outputs": "{ok:true,result:<原生下载回执>,sample:{from,to}}；随后历史读取的实际行与coverage才证明取得了哪些数据。",
+        "prerequisites": [
+          "已配置可读 MiniQMT 行情连接；任务确需补充历史。"
+        ],
+        "limitations": [
+          "写入MiniQMT本地行情缓存；普通market_read不会自动下载。下载回执不是全区间完整性证明。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "qmt_download_history"
+      }
+    },
+    {
+      "id": "qmt_order",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Only after an explicit user instruction: submit a limit buy or sell for integer STOCK shares on the exact configured account/revision. Broker permission, T+1 available shares, lot rules, price limits and session rules govern acceptance; submitted does not mean filled. No automatic retry after an unknown outcome. Reuse operation_id for the exact same intent, inspect orders/fills first on failure.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "operation_id",
+          "user_authorized",
+          "account_id",
+          "connection_revision",
+          "symbol",
+          "side",
+          "shares",
+          "price"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,100}$"
+          },
+          "user_authorized": {
+            "type": "boolean",
+            "const": true
+          },
+          "account_id": {
+            "type": "string",
+            "description": "Exact authorized account ID",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "connection_revision": {
+            "type": "string",
+            "description": "Exact configured connection revision",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "symbol": {
+            "type": "string",
+            "pattern": "^\\d{6}\\.(SH|SZ|BJ)$"
+          },
+          "side": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "buy"
+              },
+              {
+                "type": "string",
+                "const": "sell"
+              }
+            ]
+          },
+          "shares": {
+            "type": "string",
+            "pattern": "^[1-9]\\d*$"
+          },
+          "price": {
+            "type": "string",
+            "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$"
+          },
+          "execution_guard": {
+            "type": "object",
+            "required": [
+              "observed_at",
+              "expires_at",
+              "max_quote_age_ms",
+              "max_quote_to_send_ms",
+              "price_limit"
+            ],
+            "properties": {
+              "observed_at": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "expires_at": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "max_quote_age_ms": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5000
+              },
+              "max_quote_to_send_ms": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "price_limit": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$"
+              },
+              "expected_positions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "account_id",
+                    "stock_code",
+                    "volume",
+                    "can_use_volume"
+                  ],
+                  "properties": {
+                    "account_id": {
+                      "type": "string",
+                      "description": "Exact native account ID",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "stock_code": {
+                      "type": "string",
+                      "pattern": "^\\d{6}\\.(SH|SZ|BJ)$"
+                    },
+                    "volume": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9]\\d*)$"
+                    },
+                    "can_use_volume": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9]\\d*)$"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "maxItems": 20000,
+                "description": "Exact full symbol position expectation; native worker rechecks holdings and no working orders before quote and before send"
+              }
+            },
+            "additionalProperties": false,
+            "description": "Optional final-mile guard in the native worker: decision deadline, account/available shares/cash, fresh source timestamp and price boundary. No retry; submitted is not filled."
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [
+        "external-trading",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "在明确授权账户上提交一次有限价的股票意图。",
+        "inputs": "{operation_id:<稳定1–100字符ID>,user_authorized:true,account_id:<配置实际账号>,connection_revision:<配置version字符串>,symbol:\"000001.SZ\",side:\"buy\"|\"sell\",shares:\"100\",price:\"10.20\",execution_guard?}；股份为正整数字符串、price为正限价；guard含 observed_at/expires_at/max_quote_age_ms/max_quote_to_send_ms/price_limit，可附原生 expected_positions。示例数值仅解释形状，实际来自用户意图和真实观察。",
+        "outputs": "{id,action,fingerprint,connection,accountId,remark,status,createdAt,result?,meta?,error?}；status=submitted|cancel_requested 只表示原生受理，rejected证明拒绝，outcome_unknown保留不确定；result.order_id 是后续核对凭据。",
+        "prerequisites": [
+          "主会话须有对应用户明确交易指令。委派执行仅允许 portfolio/workflow 已冻结且由宿主证明的实时调用链；普通Agent不构造authorization签名。"
+        ],
+        "limitations": [
+          "会提交真实限价单/撤单。T+1、可卖股数、价格/数量规则由券商决定；受理不是成交/撤成。未知或超时用原operation_id读 qmt_command/qmt_trading_command 和当日orders/fills，不换ID重报。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "qmt_order"
+      }
+    },
+    {
+      "id": "qmt_cancel",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Only after an explicit user instruction: cancel a previously accepted Sesame order, or an unknown original intent recovered as one exact active native order. Reuse the exact account/revision; the native process verifies ID, account and original remark, and for retained intents also unique ownership, symbol, side, quantity and active status before cancellation. Unknown original orders are never resubmitted. A cancel request is not confirmation; query orders/fills.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "operation_id",
+          "user_authorized",
+          "account_id",
+          "connection_revision",
+          "original_operation_id",
+          "order_id"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,100}$"
+          },
+          "user_authorized": {
+            "type": "boolean",
+            "const": true
+          },
+          "account_id": {
+            "type": "string",
+            "description": "Exact authorized account ID",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "connection_revision": {
+            "type": "string",
+            "description": "Exact configured connection revision",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "original_operation_id": {
+            "type": "string",
+            "description": "Original qmt_order operation ID; unknown results require a retained intent and exact native recovery",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "order_id": {
+            "type": "string",
+            "pattern": "^[1-9]\\d*$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [
+        "external-trading",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "针对原始下单意图提交撤单请求。",
+        "inputs": "{operation_id:<本次撤单稳定ID>,user_authorized:true,account_id,connection_revision,original_operation_id:<原order键>,order_id:<原生正整数文本>}；只引用本连接原请求及唯一匹配订单。",
+        "outputs": "{id,action,fingerprint,connection,accountId,remark,status,createdAt,result?,meta?,error?}；status=submitted|cancel_requested 只表示原生受理，rejected证明拒绝，outcome_unknown保留不确定；result.order_id 是后续核对凭据。",
+        "prerequisites": [
+          "主会话须有对应用户明确交易指令。委派执行仅允许 portfolio/workflow 已冻结且由宿主证明的实时调用链；普通Agent不构造authorization签名。"
+        ],
+        "limitations": [
+          "会提交真实限价单/撤单。T+1、可卖股数、价格/数量规则由券商决定；受理不是成交/撤成。未知或超时用原operation_id读 qmt_command/qmt_trading_command 和当日orders/fills，不换ID重报。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "qmt_cancel"
+      }
+    },
+    {
+      "id": "qmt_command",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Read a stored QMT order/cancel receipt by operation_id without submitting or replaying it. outcome_unknown is unresolved even if a current-day search returns no match; inspect qmt_read orders/fills. This is not a live broker query.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "operation_id"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "description": "Existing QMT operation ID",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "读取已保留的QMT命令回执，不重新提交。",
+        "inputs": "{operation_id:<已有下单/撤单键>}；例 {operation_id:\"user-intent-1\"}。",
+        "outputs": "{id,action,fingerprint,connection,accountId,remark,status,createdAt,result?,meta?,error?}；status=submitted|cancel_requested 只表示原生受理，rejected证明拒绝，outcome_unknown保留不确定；result.order_id 是后续核对凭据。",
+        "prerequisites": [
+          "已存在同账户命令；trading版本在委派任务中核对宿主执行上下文。"
+        ],
+        "limitations": [
+          "只读保留回执，不自动刷新或重发原单。未知状态可用当前原生orders/fills核对；不能凭持仓变动臆测该订单成交。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "qmt_command"
+      }
+    },
+    {
+      "id": "qmt_trading_context",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Read configured identity or complete full-account raw positions/current-day orders and fills for an active workflow task with a frozen matching execution contract. No origin filter, terminal launch or trade.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "identity"
+              },
+              {
+                "type": "string",
+                "const": "snapshot"
+              }
+            ]
+          },
+          "history_days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 90
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "为公开portfolio执行组合提供精确账户身份与当前原生快照。",
+        "inputs": "{action:\"identity\"} 或 {action:\"snapshot\",history_days:7}。",
+        "outputs": "identity:{account:{accountId,connectionId,revision}}；snapshot:{account,summary,positions,orders,fills,deployments:[],capturedAt,historyCoverage:{scope:\"current_native_trading_day\",complete:false,requestedDays,limitations}}。",
+        "prerequisites": [
+          "配置已授权STOCK账户；委派任务需宿主绑定的同账户执行上下文。"
+        ],
+        "limitations": [
+          "history_days记录请求意图，不扩展SDK当日历史；不得说读到了7天完整成交。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "qmt_trading_context"
+      }
+    },
+    {
+      "id": "qmt_trading_order",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Main Agent, host-proven workflow-to-execution call chain, or legacy runtime-signed executor intent: submit one guarded exact-account limit order through the existing idempotent native path. Unknown receipts are not retried.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "operation_id",
+          "user_authorized",
+          "account_id",
+          "connection_revision",
+          "symbol",
+          "side",
+          "shares",
+          "price"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,100}$"
+          },
+          "user_authorized": {
+            "type": "boolean",
+            "const": true
+          },
+          "account_id": {
+            "type": "string",
+            "description": "Exact authorized account ID",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "connection_revision": {
+            "type": "string",
+            "description": "Exact configured connection revision",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "authorization": {
+            "type": "object",
+            "required": [
+              "expiresAt",
+              "signature"
+            ],
+            "properties": {
+              "expiresAt": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "signature": {
+                "type": "string",
+                "minLength": 88,
+                "maxLength": 88
+              }
+            },
+            "additionalProperties": false
+          },
+          "symbol": {
+            "type": "string",
+            "pattern": "^\\d{6}\\.(SH|SZ|BJ)$"
+          },
+          "side": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "buy"
+              },
+              {
+                "type": "string",
+                "const": "sell"
+              }
+            ]
+          },
+          "shares": {
+            "type": "string",
+            "pattern": "^[1-9]\\d*$"
+          },
+          "price": {
+            "type": "string",
+            "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$"
+          },
+          "execution_guard": {
+            "type": "object",
+            "required": [
+              "observed_at",
+              "expires_at",
+              "max_quote_age_ms",
+              "max_quote_to_send_ms",
+              "price_limit"
+            ],
+            "properties": {
+              "observed_at": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "expires_at": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "max_quote_age_ms": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5000
+              },
+              "max_quote_to_send_ms": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "price_limit": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$"
+              },
+              "expected_positions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "account_id",
+                    "stock_code",
+                    "volume",
+                    "can_use_volume"
+                  ],
+                  "properties": {
+                    "account_id": {
+                      "type": "string",
+                      "description": "Exact native account ID",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "stock_code": {
+                      "type": "string",
+                      "pattern": "^\\d{6}\\.(SH|SZ|BJ)$"
+                    },
+                    "volume": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9]\\d*)$"
+                    },
+                    "can_use_volume": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9]\\d*)$"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "maxItems": 20000,
+                "description": "Exact full symbol position expectation; native worker rechecks holdings and no working orders before quote and before send"
+              }
+            },
+            "additionalProperties": false,
+            "description": "Optional final-mile guard in the native worker: decision deadline, account/available shares/cash, fresh source timestamp and price boundary. No retry; submitted is not filled."
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [
+        "external-trading",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "在明确授权账户上提交一次有限价的股票意图。",
+        "inputs": "{operation_id:<稳定1–100字符ID>,user_authorized:true,account_id:<配置实际账号>,connection_revision:<配置version字符串>,symbol:\"000001.SZ\",side:\"buy\"|\"sell\",shares:\"100\",price:\"10.20\",execution_guard?}；股份为正整数字符串、price为正限价；guard含 observed_at/expires_at/max_quote_age_ms/max_quote_to_send_ms/price_limit，可附原生 expected_positions。示例数值仅解释形状，实际来自用户意图和真实观察。",
+        "outputs": "{id,action,fingerprint,connection,accountId,remark,status,createdAt,result?,meta?,error?}；status=submitted|cancel_requested 只表示原生受理，rejected证明拒绝，outcome_unknown保留不确定；result.order_id 是后续核对凭据。",
+        "prerequisites": [
+          "主会话须有对应用户明确交易指令。委派执行仅允许 portfolio/workflow 已冻结且由宿主证明的实时调用链；普通Agent不构造authorization签名。"
+        ],
+        "limitations": [
+          "会提交真实限价单/撤单。T+1、可卖股数、价格/数量规则由券商决定；受理不是成交/撤成。未知或超时用原operation_id读 qmt_command/qmt_trading_command 和当日orders/fills，不换ID重报。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "qmt_trading_order"
+      }
+    },
+    {
+      "id": "qmt_trading_cancel",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Main Agent, host-proven workflow-to-execution call chain, or legacy runtime-signed executor intent: cancel only an existing exact-account original order through the native ownership and idempotence checks. Inspect native status after unknown results.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "operation_id",
+          "user_authorized",
+          "account_id",
+          "connection_revision",
+          "original_operation_id",
+          "order_id"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,100}$"
+          },
+          "user_authorized": {
+            "type": "boolean",
+            "const": true
+          },
+          "account_id": {
+            "type": "string",
+            "description": "Exact authorized account ID",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "connection_revision": {
+            "type": "string",
+            "description": "Exact configured connection revision",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "authorization": {
+            "type": "object",
+            "required": [
+              "expiresAt",
+              "signature"
+            ],
+            "properties": {
+              "expiresAt": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "signature": {
+                "type": "string",
+                "minLength": 88,
+                "maxLength": 88
+              }
+            },
+            "additionalProperties": false
+          },
+          "original_operation_id": {
+            "type": "string",
+            "description": "Original qmt_order operation ID",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "order_id": {
+            "type": "string",
+            "pattern": "^[1-9]\\d*$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [
+        "external-trading",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "针对原始下单意图提交撤单请求。",
+        "inputs": "{operation_id:<本次撤单稳定ID>,user_authorized:true,account_id,connection_revision,original_operation_id:<原order键>,order_id:<原生正整数文本>}；只引用本连接原请求及唯一匹配订单。",
+        "outputs": "{id,action,fingerprint,connection,accountId,remark,status,createdAt,result?,meta?,error?}；status=submitted|cancel_requested 只表示原生受理，rejected证明拒绝，outcome_unknown保留不确定；result.order_id 是后续核对凭据。",
+        "prerequisites": [
+          "主会话须有对应用户明确交易指令。委派执行仅允许 portfolio/workflow 已冻结且由宿主证明的实时调用链；普通Agent不构造authorization签名。"
+        ],
+        "limitations": [
+          "会提交真实限价单/撤单。T+1、可卖股数、价格/数量规则由券商决定；受理不是成交/撤成。未知或超时用原operation_id读 qmt_command/qmt_trading_command 和当日orders/fills，不换ID重报。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "qmt_trading_cancel"
+      }
+    },
+    {
+      "id": "qmt_trading_command",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Read one exact-account retained order/cancel receipt for an active workflow task with a frozen matching execution contract without submitting or replaying it.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "operation_id"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "description": "Existing operation ID",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "读取已保留的QMT命令回执，不重新提交。",
+        "inputs": "{operation_id:<已有下单/撤单键>}；例 {operation_id:\"user-intent-1\"}。",
+        "outputs": "{id,action,fingerprint,connection,accountId,remark,status,createdAt,result?,meta?,error?}；status=submitted|cancel_requested 只表示原生受理，rejected证明拒绝，outcome_unknown保留不确定；result.order_id 是后续核对凭据。",
+        "prerequisites": [
+          "已存在同账户命令；trading版本在委派任务中核对宿主执行上下文。"
+        ],
+        "limitations": [
+          "只读保留回执，不自动刷新或重发原单。未知状态可用当前原生orders/fills核对；不能凭持仓变动臆测该订单成交。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "qmt_trading_command"
+      }
+    },
+    {
+      "id": "market_bind",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "QMT market bind from the configured native broker source.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "id",
+                  "revision"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.session.write"
+      ],
+      "usage": {
+        "purpose": "为宿主建立精确行情来源会话；不代表已取得报价。",
+        "inputs": "{binding:{}} 使用已保存 QMT 配置；也可带 inspect/公开查询返回的精确 connection:{id,revision}，不会枚举或切换另一账户。",
+        "outputs": "{bindingId,connection:{id,revision},sourceId,health:\"configured\",limitations}；实际数据可用性以原生读取为准，不启动终端。",
+        "prerequisites": [
+          "Agent 使用 data_providers({contract:\"sesame.market/1\"}) 返回的 sesame/qmt#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。",
+          "qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。"
+        ],
+        "limitations": [
+          "connection.id/revision 来自当前绑定或公开查询的 metadata.connection，不等于插件 source.revision。STALE_REVISION/CONNECTION_CHANGED 时重新取得当前身份；不能猜账号、版本或静默切换来源。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_bind"
+      }
+    },
+    {
+      "id": "market_unbind",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "QMT market unbind from the configured native broker source.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "binding"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.session.write"
+      ],
+      "usage": {
+        "purpose": "释放宿主创建的行情绑定。",
+        "inputs": "{binding:<bind返回的含bindingId对象>}；例 {binding:{bindingId:\"host-owned-id\"}}。",
+        "outputs": "{closed:true}；释放该绑定与其分页状态。",
+        "prerequisites": [
+          "Agent 使用 data_providers({contract:\"sesame.market/1\"}) 返回的 sesame/qmt#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。",
+          "qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。"
+        ],
+        "limitations": [
+          "仅释放本次来源会话，不是平仓或停终端。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_unbind"
+      }
+    },
+    {
+      "id": "market_searchInstruments",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "QMT market searchInstruments from the configured native broker source.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string"
+              },
+              "assetClasses": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "venues": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "检索该明确来源的真实品种；返回 ref 是后续 instrument 的来源。",
+        "inputs": "{binding:<bind结果>,query:{query:\"000001\",assetClasses?,venues?},page:{limit:20,cursor?}}；limit≤200，cursor 仅沿用同一来源/过滤条件。",
+        "outputs": "{items:[{ref:{sourceId,instrumentId},symbol,name,assetClass,venue?}],nextCursor?,metadata:{snapshotId?,consistency?,meta,connection?}}；空 items 仅是该次检索无匹配。",
+        "prerequisites": [
+          "Agent 使用 data_providers({contract:\"sesame.market/1\"}) 返回的 sesame/qmt#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。",
+          "qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。"
+        ],
+        "limitations": [
+          "connection.id/revision 来自当前绑定或公开查询的 metadata.connection，不等于插件 source.revision。STALE_REVISION/CONNECTION_CHANGED 时重新取得当前身份；不能猜账号、版本或静默切换来源。",
+          "本地未复权D1历史；历史缺口可通过明确 qmt_download_history 补充。原生成交量单位不猜测；没有账户订阅/标准委托成交历史能力。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_searchInstruments"
+      }
+    },
+    {
+      "id": "market_describeInstrument",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "QMT market describeInstrument from the configured native broker source.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "instrument": {
+                "type": "object",
+                "properties": {
+                  "sourceId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "instrumentId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "sourceId",
+                  "instrumentId"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "instrument"
+            ],
+            "additionalProperties": false
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "读取具体品种的价格/数量单位、时间基准和支持周期。",
+        "inputs": "{binding:<bind结果>,query:{instrument:{sourceId:\"qmt:<configured connection_id>\",instrumentId:\"000001.SZ\"}}}；实际 instrument 用 search 返回 ref。",
+        "outputs": "{items:[{ref,symbol,name,assetClass,price,quantity,volume,timeBasis,calendar,features,native}],metadata:{meta,connection?}}；unknown/unsupported 字段保留，features 决定支持的 spec。",
+        "prerequisites": [
+          "Agent 使用 data_providers({contract:\"sesame.market/1\"}) 返回的 sesame/qmt#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。",
+          "qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。"
+        ],
+        "limitations": [
+          "本地未复权D1历史；历史缺口可通过明确 qmt_download_history 补充。原生成交量单位不猜测；没有账户订阅/标准委托成交历史能力。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_describeInstrument"
+      }
+    },
+    {
+      "id": "market_queryBars",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "QMT market queryBars from the configured native broker source.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "instrument": {
+                "type": "object",
+                "properties": {
+                  "sourceId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "instrumentId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "sourceId",
+                  "instrumentId"
+                ],
+                "additionalProperties": false
+              },
+              "spec": {
+                "type": "object",
+                "properties": {
+                  "timeframe": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "priceBasis": {
+                    "enum": [
+                      "bid",
+                      "ask",
+                      "mid",
+                      "last"
+                    ]
+                  },
+                  "adjustment": {
+                    "enum": [
+                      "none",
+                      "forward",
+                      "backward"
+                    ]
+                  },
+                  "session": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "calendarRevision": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                },
+                "required": [
+                  "timeframe",
+                  "priceBasis",
+                  "adjustment",
+                  "session",
+                  "calendarRevision"
+                ],
+                "additionalProperties": false
+              },
+              "range": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "basis": {
+                            "const": "utc"
+                          },
+                          "unixMs": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "basis",
+                          "unixMs"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "basis": {
+                            "const": "wall"
+                          },
+                          "authority": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "zone": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "value": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "fold": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "basis",
+                          "authority",
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "to": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "basis": {
+                            "const": "utc"
+                          },
+                          "unixMs": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "basis",
+                          "unixMs"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "basis": {
+                            "const": "wall"
+                          },
+                          "authority": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "zone": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "value": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "fold": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "basis",
+                          "authority",
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "from",
+                  "to"
+                ],
+                "additionalProperties": false
+              },
+              "includeForming": {
+                "type": "boolean"
+              },
+              "direction": {
+                "enum": [
+                  "forward",
+                  "backward"
+                ]
+              }
+            },
+            "required": [
+              "instrument",
+              "spec",
+              "range"
+            ],
+            "additionalProperties": false
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "读取有界历史柱和真实覆盖证据，供宿主查询/冻结。",
+        "inputs": "{binding:<bind结果>,query:{instrument:<search.ref>,spec:<describe支持的spec>,range:{from:<SourceTime>,to:<SourceTime>},includeForming:false,direction:\"forward\"},page:{limit:100,cursor?}}。仅 timeframe=1d、priceBasis=last、adjustment=none、session=regular|default、calendarRevision:{status:\"unknown\"}。range 为 UTC 或 Asia/Shanghai wall SourceTime，最多10年；只读本地历史。",
+        "outputs": "{items:[{id,revision,openTime,endTime,open,high,low,close,volume,isClosed,closure}],nextCursor?,metadata:{seriesId,instrument,spec,coverage,snapshotId,consistency,meta,connection?}}；OHLC 是十进制字符串，volume 自带单位/未知状态；无 nextCursor 只说明本次快照分页结束。",
+        "prerequisites": [
+          "Agent 使用 data_providers({contract:\"sesame.market/1\"}) 返回的 sesame/qmt#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。",
+          "qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。"
+        ],
+        "limitations": [
+          "coverage.complete:false 表示覆盖未获证明，可使用已返回的真实行并保留限制，不能改成 true 或当作空数据/请求失败。历史查询成功不证明实时订阅或图表渲染成功。",
+          "本地未复权D1历史；历史缺口可通过明确 qmt_download_history 补充。原生成交量单位不猜测；没有账户订阅/标准委托成交历史能力。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_queryBars"
+      }
+    },
+    {
+      "id": "market_subscribeBars",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "QMT market subscribeBars from the configured native broker source.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "instrument": {
+                "type": "object",
+                "properties": {
+                  "sourceId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "instrumentId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "sourceId",
+                  "instrumentId"
+                ],
+                "additionalProperties": false
+              },
+              "spec": {
+                "type": "object",
+                "properties": {
+                  "timeframe": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "priceBasis": {
+                    "enum": [
+                      "bid",
+                      "ask",
+                      "mid",
+                      "last"
+                    ]
+                  },
+                  "adjustment": {
+                    "enum": [
+                      "none",
+                      "forward",
+                      "backward"
+                    ]
+                  },
+                  "session": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "calendarRevision": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                },
+                "required": [
+                  "timeframe",
+                  "priceBasis",
+                  "adjustment",
+                  "session",
+                  "calendarRevision"
+                ],
+                "additionalProperties": false
+              },
+              "tailLimit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 2000
+              },
+              "includeForming": {
+                "type": "boolean"
+              },
+              "resumeToken": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "instrument",
+              "spec",
+              "tailLimit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network",
+        "plugin.session.write"
+      ],
+      "usage": {
+        "purpose": "为宿主持续提供初始行情快照及增量。",
+        "inputs": "{binding:<bind结果>,query:{instrument:<search.ref>,spec:<describe支持的spec>,tailLimit:100,includeForming:true}}；不传历史range或复用分页cursor，tailLimit正整数≤2000；恢复使用新快照。仅 timeframe=1d、priceBasis=last、adjustment=none、session=regular|default、calendarRevision:{status:\"unknown\"}。",
+        "outputs": "{id,events:AsyncIterable,close}；首帧 {type:\"snapshot\",snapshot:{seriesId,instrument,spec,bars,coverage,meta?},position:{streamId,epoch,seq},consistency,recovery:\"snapshot\"}；后续 {streamId,epoch,seq,eventId,schemaVersion,observedAt,type,payload}，type 为 bars.upsert/bars.closed（按源能力）或 stream.gap。position/consistency/recovery 平铺在首帧，不嵌入 metadata。",
+        "prerequisites": [
+          "Agent 使用 data_providers({contract:\"sesame.market/1\"}) 返回的 sesame/qmt#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。",
+          "qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。"
+        ],
+        "limitations": [
+          "1秒目标轮询，受原生请求耗时影响；日柱不是分钟柱，报价保留原生时间。",
+          "订阅由宿主绑定、取消和释放，Agent 不持有 bindingId。stream.gap/RESYNC_REQUIRED 可按同一来源重新取得快照；具体 SCHEMA_MISMATCH 或首帧 position 缺失是协议问题，反复重绑、新建图或启用无关服务不能修复。",
+          "coverage.complete:false 表示覆盖未获证明，可使用已返回的真实行并保留限制，不能改成 true 或当作空数据/请求失败。历史查询成功不证明实时订阅或图表渲染成功。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_subscribeBars"
+      },
+      "transport": "subscription"
+    },
+    {
+      "id": "market_subscribeQuotes",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "QMT market subscribeQuotes from the configured native broker source.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "instruments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "instrumentId": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "sourceId",
+                    "instrumentId"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 5
+              },
+              "resumeToken": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "instruments"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network",
+        "plugin.session.write"
+      ],
+      "usage": {
+        "purpose": "给宿主提供有来源时间和新鲜度边界的报价快照轮询。",
+        "inputs": "{binding:<bind结果>,query:{instruments:[{sourceId:\"qmt:<configured connection_id>\",instrumentId:\"000001.SZ\"}]}}；数量限制 1–50，不支持 resumeToken；实际引用来自 search。",
+        "outputs": "{id,events:AsyncIterable,close}；首帧 {type:\"snapshot\",snapshot:{quotes,meta},position:{streamId,epoch,seq},consistency,recovery:\"snapshot\"}，随后 quotes.upsert 或 stream.gap；报价字段用 value/unknown 状态表达。",
+        "prerequisites": [
+          "Agent 使用 data_providers({contract:\"sesame.market/1\"}) 返回的 sesame/qmt#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。",
+          "qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。"
+        ],
+        "limitations": [
+          "1秒目标轮询，受原生请求耗时影响；日柱不是分钟柱，报价保留原生时间。",
+          "订阅由宿主绑定、取消和释放，Agent 不持有 bindingId。stream.gap/RESYNC_REQUIRED 可按同一来源重新取得快照；具体 SCHEMA_MISMATCH 或首帧 position 缺失是协议问题，反复重绑、新建图或启用无关服务不能修复。",
+          "本地未复权D1历史；历史缺口可通过明确 qmt_download_history 补充。原生成交量单位不猜测；没有账户订阅/标准委托成交历史能力。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_subscribeQuotes"
+      },
+      "transport": "subscription"
+    },
+    {
+      "id": "account_bind",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "QMT account bind from the configured native broker source.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "id",
+                  "revision"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.session.write"
+      ],
+      "usage": {
+        "purpose": "为宿主建立精确账户数据绑定。",
+        "inputs": "{binding:{}} 使用已保存 QMT 配置；也可带 inspect/公开查询返回的精确 connection:{id,revision}，不会枚举或切换另一账户。",
+        "outputs": "{bindingId,connection:{id,revision},sourceId,health:\"configured\",limitations}；实际数据可用性以原生读取为准，不启动终端。",
+        "prerequisites": [
+          "宿主 sesame/qmt#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 qmt_trading_context，原生查询使用该包公开工具。",
+          "qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。"
+        ],
+        "limitations": [
+          "connection.id/revision 来自当前绑定或公开查询的 metadata.connection，不等于插件 source.revision。STALE_REVISION/CONNECTION_CHANGED 时重新取得当前身份；不能猜账号、版本或静默切换来源。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account_bind"
+      }
+    },
+    {
+      "id": "account_unbind",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "QMT account unbind from the configured native broker source.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "binding"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.session.write"
+      ],
+      "usage": {
+        "purpose": "释放账户查询/订阅绑定。",
+        "inputs": "{binding:<bind返回的含bindingId对象>}。",
+        "outputs": "{closed:true}。",
+        "prerequisites": [
+          "宿主 sesame/qmt#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 qmt_trading_context，原生查询使用该包公开工具。",
+          "qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。"
+        ],
+        "limitations": [
+          "不撤单、不平仓、不停止交易终端。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account_unbind"
+      }
+    },
+    {
+      "id": "account_listAccounts",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "QMT account listAccounts from the configured native broker source.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "读取绑定范围内的账户身份。",
+        "inputs": "{binding:<bind结果>,query:{},page:{limit:20,cursor?}}。",
+        "outputs": "{items:[{ref:{connectionId,accountId},label?,currency,...}],nextCursor?,metadata:{snapshotId,consistency,meta,connection?}}；仅当前配置账户，不代表全机登录账户。",
+        "prerequisites": [
+          "宿主 sesame/qmt#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 qmt_trading_context，原生查询使用该包公开工具。",
+          "qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。"
+        ],
+        "limitations": [
+          "无账户或读取失败不等于空账户；实际账号身份沿用返回ref。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account_listAccounts"
+      }
+    },
+    {
+      "id": "account_snapshot",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "QMT account snapshot from the configured native broker source.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "account": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "required": [
+              "account"
+            ],
+            "additionalProperties": false
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "读取一个明确账户的资产快照。",
+        "inputs": "{binding:<bind结果>,query:{account:<listAccounts返回ref>}}。",
+        "outputs": "{items:[<账户资产快照>],metadata:{meta,connection?,...}}；快照包含精确account、asOf/观察时间与各资产字段的value/unknown状态，不能把未知资金当0。",
+        "prerequisites": [
+          "宿主 sesame/qmt#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 qmt_trading_context，原生查询使用该包公开工具。",
+          "qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。"
+        ],
+        "limitations": [
+          "只证明当前快照；不是全部历史账本，也不改变交易权限。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account_snapshot"
+      }
+    },
+    {
+      "id": "account_queryPositions",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "QMT account queryPositions from the configured native broker source.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "account": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "instruments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            },
+            "required": [
+              "account"
+            ],
+            "additionalProperties": false
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "读取当前真实持仓的统一字段。",
+        "inputs": "{binding:<bind结果>,query:{account:<listAccounts.ref>,instruments?:[<search.ref>]},page:{limit:200,cursor?}}。",
+        "outputs": "{items:[{id,revision,account,instrument,side,quantity,...}],nextCursor?,metadata:{snapshotId,consistency,meta,connection?}}；quantity保留单位，未知数量不归零。",
+        "prerequisites": [
+          "宿主 sesame/qmt#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 qmt_trading_context，原生查询使用该包公开工具。",
+          "qmt_environment inspect/verify 与 qmt_configure 提供现有 Windows x64 MiniQMT、Python、实际 market_port；股票账户读取还需已授权 account_id/userdata_mini。"
+        ],
+        "limitations": [
+          "只支持大陆STOCK账户股票持仓；可卖量与总量不同，T+1/原生单位不推测。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account_queryPositions"
+      }
+    },
+    {
+      "id": "qmt_dispose",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Close private plugin storage and owned resources.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "closed": {
+            "const": true
+          }
+        },
+        "required": [
+          "closed"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.session.close"
+      ],
+      "usage": {
+        "purpose": "关闭插件自有资源。",
+        "inputs": "宿主生命周期输入 {}。",
+        "outputs": "{closed:true}。",
+        "prerequisites": [
+          "仅宿主卸载/关闭时调用。"
+        ],
+        "limitations": [
+          "释放插件存储和自有会话/订阅；不删除已发布证据，不结束用户交易终端。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "qmt_dispose"
+      }
+    },
+    {
+      "id": "positions_close",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Close confirmed native STOCK shares using a fresh best-bid limit and the native account/position/quote guard. Retain uncertain receipts before dispatch; never resend them.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  }
+                },
+                "required": [
+                  "id",
+                  "revision"
+                ],
+                "additionalProperties": false
+              },
+              "account": {
+                "type": "object",
+                "properties": {
+                  "connectionId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  },
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  }
+                },
+                "required": [
+                  "connectionId",
+                  "accountId"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "connection",
+              "account"
+            ],
+            "additionalProperties": false
+          },
+          "positionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "quantity": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                "maxLength": 100
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            },
+            "required": [
+              "value",
+              "unit"
+            ],
+            "additionalProperties": false
+          },
+          "operationId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,100}$"
+          },
+          "expected": {
+            "type": "object",
+            "properties": {
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              "instrument": {
+                "type": "object",
+                "properties": {
+                  "sourceId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  },
+                  "instrumentId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  }
+                },
+                "required": [
+                  "sourceId",
+                  "instrumentId"
+                ],
+                "additionalProperties": false
+              },
+              "side": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              "quantity": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                    "maxLength": 100
+                  },
+                  "unit": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "revision",
+              "instrument",
+              "side",
+              "quantity"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "positionId",
+          "operationId",
+          "expected"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,100}$"
+          },
+          "positionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "status": {
+            "enum": [
+              "submitted",
+              "partially_filled",
+              "filled",
+              "closed",
+              "rejected",
+              "outcome_unknown"
+            ]
+          },
+          "requestedQuantity": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                "maxLength": 100
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            },
+            "required": [
+              "value",
+              "unit"
+            ],
+            "additionalProperties": false
+          },
+          "filledQuantity": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                "maxLength": 100
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            },
+            "required": [
+              "value",
+              "unit"
+            ],
+            "additionalProperties": false
+          },
+          "remainingPositionQuantity": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                "maxLength": 100
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            },
+            "required": [
+              "value",
+              "unit"
+            ],
+            "additionalProperties": false
+          },
+          "orderIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            "maxItems": 100
+          },
+          "observedAt": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "operationId",
+          "positionId",
+          "status",
+          "requestedQuantity",
+          "observedAt"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "external-trading",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "执行账户页确认的手动平仓。",
+        "inputs": "{binding:{connection:{id,revision},account:{connectionId,accountId}},positionId,operationId,expected:{revision,instrument:{sourceId,instrumentId},side,quantity:{value,unit}},quantity?}；expected来自用户确认的账户页持仓，quantity省略表示确认数量。",
+        "outputs": "{operationId,positionId,status,requestedQuantity,observedAt,filledQuantity?,remainingPositionQuantity?,orderIds?,dealIds?,error?}；status=closed|filled|partially_filled|submitted|rejected|outcome_unknown；closed确认持仓已全平，filled仅确认本次数量已完成。",
+        "prerequisites": [
+          "仅宿主已确认的主会话账户UI可调用；普通Agent使用公开portfolio能力，不能自行伪造UI provenance。"
+        ],
+        "limitations": [
+          "提交真实减仓意图；同ID同输入仅取原回执，账户/数量变化会拒绝。",
+          "submitted/unknown不表示平仓完成；有未确认操作时先核对原回执，不能换ID重复。",
+          "只卖可卖股票，受T+1及新鲜bid限制；没有原生order_id不按持仓变化猜成交。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "positions_close"
+      }
+    },
+    {
+      "id": "positions_read_receipt",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read the retained close and exact current-day native order ID; verify fills and actual remaining positions without sending an order.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  }
+                },
+                "required": [
+                  "id",
+                  "revision"
+                ],
+                "additionalProperties": false
+              },
+              "account": {
+                "type": "object",
+                "properties": {
+                  "connectionId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  },
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  }
+                },
+                "required": [
+                  "connectionId",
+                  "accountId"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "connection",
+              "account"
+            ],
+            "additionalProperties": false
+          },
+          "operationId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,100}$"
+          }
+        },
+        "required": [
+          "binding",
+          "operationId"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,100}$"
+          },
+          "positionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "status": {
+            "enum": [
+              "submitted",
+              "partially_filled",
+              "filled",
+              "closed",
+              "rejected",
+              "outcome_unknown"
+            ]
+          },
+          "requestedQuantity": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                "maxLength": 100
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            },
+            "required": [
+              "value",
+              "unit"
+            ],
+            "additionalProperties": false
+          },
+          "filledQuantity": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                "maxLength": 100
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            },
+            "required": [
+              "value",
+              "unit"
+            ],
+            "additionalProperties": false
+          },
+          "remainingPositionQuantity": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                "maxLength": 100
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            },
+            "required": [
+              "value",
+              "unit"
+            ],
+            "additionalProperties": false
+          },
+          "orderIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            "maxItems": 100
+          },
+          "observedAt": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "operationId",
+          "positionId",
+          "status",
+          "requestedQuantity",
+          "observedAt"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "network",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "核对账户页平仓的已保留回执。",
+        "inputs": "{binding:{connection:{id,revision},account:{connectionId,accountId}},operationId:<已有平仓键>}。",
+        "outputs": "{operationId,positionId,status,requestedQuantity,observedAt,filledQuantity?,remainingPositionQuantity?,orderIds?,dealIds?,error?}；status=closed|filled|partially_filled|submitted|rejected|outcome_unknown；closed确认持仓已全平，filled仅确认本次数量已完成。",
+        "prerequisites": [
+          "仅宿主已确认的主会话账户UI可调用；普通Agent使用公开portfolio能力，不能自行伪造UI provenance。"
+        ],
+        "limitations": [
+          "读取可刷新原生证据，不发补单。",
+          "submitted/unknown不表示平仓完成；有未确认操作时先核对原回执，不能换ID重复。",
+          "只卖可卖股票，受T+1及新鲜bid限制；没有原生order_id不按持仓变化猜成交。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "positions_read_receipt"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "id": "market",
+      "contract": "sesame.market/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "connection": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "id",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "presentation": {
+        "limits": {
+          "minPollIntervalMs": 1000,
+          "maxPageSize": 200
+        }
+      },
+      "operations": {
+        "bind": "market_bind",
+        "unbind": "market_unbind",
+        "searchInstruments": "market_searchInstruments",
+        "describeInstrument": "market_describeInstrument",
+        "queryBars": "market_queryBars",
+        "subscribeBars": "market_subscribeBars",
+        "subscribeQuotes": "market_subscribeQuotes"
+      }
+    },
+    {
+      "id": "account",
+      "contract": "sesame.account/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "connection": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "id",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "presentation": {
+        "limits": {
+          "minPollIntervalMs": 1000,
+          "maxPageSize": 200
+        }
+      },
+      "operations": {
+        "bind": "account_bind",
+        "unbind": "account_unbind",
+        "listAccounts": "account_listAccounts",
+        "snapshot": "account_snapshot",
+        "queryPositions": "account_queryPositions"
+      }
+    }
+  ],
+  "views": [],
+  "services": [
+    {
+      "id": "positions",
+      "contract": "sesame.positions/1",
+      "consumer": "host",
+      "sourceId": "account",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "operations": {
+        "close": "positions_close",
+        "readReceipt": "positions_read_receipt"
+      }
+    }
+  ],
+  "knowledge": [
+    {
+      "id": "documentation-0",
+      "path": "prompt.md",
+      "description": "Documentation: prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "documentation-1",
+      "path": "README.md",
+      "description": "Documentation: README.md",
+      "kind": "reference"
+    },
+    {
+      "id": "documentation-2",
+      "path": "TRADING.md",
+      "description": "Documentation: TRADING.md",
+      "kind": "reference"
+    },
+    {
+      "id": "documentation-3",
+      "path": "VALIDATION.md",
+      "description": "Documentation: VALIDATION.md",
+      "kind": "reference"
+    },
+    {
+      "id": "documentation-4",
+      "path": "skills/qmt-readonly/SKILL.md",
+      "description": "Documentation: skills\\qmt-readonly\\SKILL.md",
+      "kind": "skill"
+    },
+    {
+      "id": "public-interface-contract",
+      "path": "INTERFACES.md",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Every declared capability: concrete inputs/outputs, dependency entrypoints, effects, completion evidence and recovery boundaries.",
+      "kind": "reference"
+    }
+  ],
+  "hooks": [
+    {
+      "id": "dispose",
+      "event": "lifecycle.dispose",
+      "contract": "sesame.lifecycle/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "operations": {
+        "handle": "qmt_dispose"
+      }
+    }
+  ],
+  "stateCollections": [],
+  "artifactSchemas": []
+}

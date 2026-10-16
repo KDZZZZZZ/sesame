@@ -1,0 +1,28 @@
+{
+  "label": "策略骨架 · 待实现",
+  "nodes": [
+    {
+      "id": "platform.risk",
+      "kind": "condition",
+      "label": "平台交易准入",
+      "operator": "product.risk.v1",
+      "config": {}
+    },
+    {
+      "id": "platform.trade",
+      "kind": "action",
+      "label": "原生交易请求与事务",
+      "operator": "native.trade.v1",
+      "config": {}
+    },
+    {
+      "id": "platform.expert",
+      "kind": "action",
+      "label": "原生 EA 生命周期",
+      "operator": "native.expert.v1",
+      "config": {}
+    }
+  ],
+  "edges": [],
+  "state_machines": []
+}

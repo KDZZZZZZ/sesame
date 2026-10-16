@@ -1,0 +1,21 @@
+{
+  "id": "sesame/workspace",
+  "title": "工作区、文件与执行",
+  "description": "插件本地文件业务与宿主管理的进程Run；路径保护、原子写入、冲突检查和精确编辑。",
+  "version": "3.0.0",
+  "default_state": "mounted",
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills/prepare-environment"
+  ],
+  "entry": "index.js",
+  "apiVersion": "2",
+  "license": "MIT",
+  "engines": {
+    "sesame": ">=0.2.3"
+  },
+  "execution": "native",
+  "capability_manifest": "capabilities.json"
+}

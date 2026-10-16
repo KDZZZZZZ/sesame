@@ -1,0 +1,76 @@
+{
+  "id": "sesame/kurumi-replay",
+  "apiVersion": "2",
+  "version": "0.1.3-dev.3.8",
+  "title": "久留美 · 三章连续挑战",
+  "description": "非官方久留美三章连续模拟挑战，真实历史、真实角色Agent、只读行情与模拟账户观战；4小时决策与完整素材归档模式。",
+  "default_state": "discoverable",
+  "agent_scope": "all",
+  "main_tool_names": [
+    "kurumi_prepare",
+    "kurumi_status",
+    "kurumi_configure",
+    "kurumi_start",
+    "kurumi_continue",
+    "kurumi_step",
+    "kurumi_pause",
+    "kurumi_reconcile",
+    "kurumi_display",
+    "kurumi_export",
+    "kurumi_report",
+    "kurumi_recover",
+    "kurumi_repair_checkpoint_text",
+    "kurumi_import_fx_supplement",
+    "kurumi_archive_terminal",
+    "kurumi_new_experiment",
+    "kurumi_experiment_history",
+    "kurumi_retry_committed_hooks",
+    "kurumi_bind_experiment_fx",
+    "kurumi_refresh_presentation",
+    "kurumi_weekly",
+    "kurumi_recording",
+    "kurumi_experience",
+    "kurumi_method_workflow",
+    "kurumi_narration",
+    "kurumi_audience"
+  ],
+  "entry": "index.js",
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "resources": [
+    "README.md",
+    "RULES.md",
+    "DATA.md",
+    "PROVENANCE.md",
+    "data-windows.json",
+    "native-dependencies.json",
+    "CORE-HANDOFF.md",
+    "CORE-HANDOFF-INTEGRATION.md",
+    "ROUND2-CORE.md",
+    "ROUND2-PRESENTATION.md",
+    "CORE-BOUNDED-HANDOFF.md",
+    "PORTABLE-EXPERIENCE.md",
+    "CORE-FORMING-HANDOFF.md",
+    "CORE-CLOCK-HANDOFF.md",
+    "CORE-ORDER-CHAT-HANDOFF.md",
+    "FORMING-FIX-HANDOFF.md",
+    "PRESTEP-JSON-FIX-HANDOFF.md",
+    "COMMITTED-PROOF-FIX-HANDOFF.md",
+    "UNSIGNED-REVISION-FIX-HANDOFF.md",
+    "PLOT-TIME-FIX-HANDOFF.md",
+    "COMPACT-LABELS-HANDOFF.md",
+    "VALIDATION.md"
+  ],
+  "engines": {
+    "sesame": ">=0.2.2"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Sesame contributors (internal Agent implementation)"
+  },
+  "capability_manifest": "capabilities.json"
+}

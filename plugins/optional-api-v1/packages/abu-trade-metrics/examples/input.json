@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-01-10T00:00:00.000Z",
+  "source": { "id": "synthetic-trade-metrics", "kind": "synthetic" },
+  "parameters": { "periods_per_year": 252, "risk_free_rate": 0 },
+  "portfolio": { "currency": "USD", "basis": "adjusted_equity", "no_external_flows": true },
+  "equity_curve": [
+    { "time": "2026-01-01T00:00:00.000Z", "available_at": "2026-01-01T00:01:00.000Z", "equity": 100000 },
+    { "time": "2026-01-02T00:00:00.000Z", "available_at": "2026-01-02T00:01:00.000Z", "equity": 101000 },
+    { "time": "2026-01-05T00:00:00.000Z", "available_at": "2026-01-05T00:01:00.000Z", "equity": 99000 },
+    { "time": "2026-01-06T00:00:00.000Z", "available_at": "2026-01-06T00:01:00.000Z", "equity": 104000 }
+  ],
+  "closed_trades": [
+    { "id": "t1", "strategy": "breakout", "entry_time": "2026-01-01T14:30:00.000Z", "exit_time": "2026-01-02T20:00:00.000Z", "available_at": "2026-01-02T20:01:00.000Z", "gross_pnl": 1300, "net_pnl": 1200, "cost": 100 },
+    { "id": "t2", "strategy": "pullback", "entry_time": "2026-01-05T14:30:00.000Z", "exit_time": "2026-01-05T20:00:00.000Z", "available_at": "2026-01-05T20:01:00.000Z", "gross_pnl": -700, "net_pnl": -760, "cost": 60 }
+  ]
+}

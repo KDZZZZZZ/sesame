@@ -1,0 +1,57 @@
+{
+  "id": "mt5-official",
+  "title": "MT5 官方查询",
+  "description": "发现官方工具目录与权限，读取终端环境、行情、账户、图表、程序参数、经济日历与日志。编辑、回测、交易等由独立插件提供。",
+  "version": "1.0.0",
+  "default_state": "mounted",
+  "tool_names": [
+    "mt5_catalog",
+    "mt5_call",
+    "mt5_command",
+    "mt5_cache"
+  ],
+  "entry": "tools.js",
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "tool_definitions": "tools.json",
+  "mt5_agent_tool": "mt5_call",
+  "mt5_routes": [
+    {
+      "priority": 0,
+      "servers": [
+        "terminal",
+        "metaeditor",
+        "marketdata"
+      ],
+      "categories": [
+        "workspace",
+        "charts",
+        "programs",
+        "account",
+        "quotes",
+        "journals",
+        "calendar",
+        "marketdata"
+      ],
+      "permissions": [
+        "standard"
+      ],
+      "exclude_methods": [
+        "chart_add_indicator",
+        "chart_remove_indicator",
+        "add_marketwatch_symbol",
+        "remove_marketwatch_symbol"
+      ]
+    }
+  ],
+  "mcp_export": [
+    "mt5_catalog",
+    "mt5_call",
+    "mt5_command",
+    "mt5_cache"
+  ]
+}

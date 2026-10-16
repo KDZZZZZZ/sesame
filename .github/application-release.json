@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "repository": "KDZZZZZZ/sesame",
+  "tag": "v0.2.2",
+  "releaseId": 409453634,
+  "assets": [
+    {
+      "name": "INSTALL.md",
+      "size": 6177,
+      "sha256": "b8ad81d9b53bd86432b97090cf5a0d183a72d833e5c3fe72dedd587659cc56c1"
+    },
+    {
+      "name": "Sesame-0.2.2-linux-x64.AppImage",
+      "size": 236373813,
+      "sha256": "b7eb630534d10413fadf2b44af41891dd1f7e031b48e1bb02bbbbaac87a70b13"
+    },
+    {
+      "name": "Sesame-0.2.2-linux-x64.deb",
+      "size": 205045048,
+      "sha256": "498949c8f80c427075aa556abcada70d335d06df4a6b3a460c5e55cb4e96c7e2"
+    },
+    {
+      "name": "Sesame-0.2.2-mac-arm64.dmg",
+      "size": 255403357,
+      "sha256": "fee377c5c4310abe1b7961c9eed237990d09cddb786ed54c020b13f3f67604ed"
+    },
+    {
+      "name": "Sesame-0.2.2-win-x64.exe",
+      "size": 224862354,
+      "sha256": "2ff8dffdb9e7e1cf5c4fc6ede299f0251d321d773d404da76faeccf9eef997b9"
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "size": 452,
+      "sha256": "4901c3738596aab1cc92dd8ad22a47290292798cbbef509cf6b4a0a474f25fc0"
+    }
+  ]
+}

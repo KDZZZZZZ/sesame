@@ -1,0 +1,5 @@
+SVL 指导与验证默认随附，不要求安装执行后端。只使用本插件当前 language.md 与匹配宿主实际支持的语义；新增函数、指标、时间或订单原语需独立规范审查，不能由目标翻译或猜测补成语言能力。
+
+通用语言语义由公开 SDK 验证和重放，指标算法、组合分配与风险方法在插件或已声明的纯函数里表达。1.0、1.1、1.2 源明确区分，禁止只改版本号绕过目标能力。SVL1.2 支持固定内容和摘要的纯函数扩展；strategy_functions 提供 RSI、ATR、MACD、Bollinger、Donchian、z-score、波动率公式，先读 references/quant-functions.md。组合策略先读 references/pipeline.md 和 methods.md；strategy_workflow 实际计算动态品种池、组合数量、预算与风险，按 execution.md 重放执行账本，产出提议命令而不下单。Agent 参与策略先读 references/agent-inputs.md，strategy_decision 已提供异步隔离模型判断、持久化时间线、取消/失效及本机桥；回测重放固定判断，实盘由目标适配器核对账户、硬规则和账本后消费。风险退出要保存 guards，未知请求不得当作零。
+
+strategy-authoring skill 是能力和资料索引；新写语法时用 plugin_read 读取 skills/strategy-authoring/references/language.md，对应合法示例在 examples/close-threshold.svl.json，固定事件格式在 examples/close-threshold.replay.json。已有完整源文件可以直接验证、发布或使用，不必为每次操作重读全部资料。parameters/inputs/state 是具名对象，参数 type 是字符串，state 的 type 是 {kind:...} 对象。strategy_validate 提供结构、引用和预算诊断；strategy_publish 内部也执行同一验证并冻结源，不要求重复验证。逻辑图从该源生成。strategy_replay 检查固定输入上的动态类型与求值，不是报价采集、撮合器、原生回测或实盘验证。需要原生执行时读取目标插件的 TargetProfile，使用其明确支持的翻译、编译和验证能力；把源、目标、翻译与验证固定到各自 ArtifactRef。不得把编译通过或演示事件求值成功当成目标数值语义等价。

@@ -1,0 +1,42 @@
+{
+  "id": "sesame/strategy-authoring",
+  "apiVersion": "2",
+  "version": "3.0.0",
+  "title": "SVL 策略创作",
+  "description": "编写、可视化与重放 SVL 策略；提供指标函数、动态品种池、组合分配、风险与执行账本，以及隔离的 Agent 判断和冻结时间线。原生回测与交易由目标插件提供。",
+  "author": {
+    "name": "Sesame"
+  },
+  "license": "MIT",
+  "default_state": "mounted",
+  "agent_scope": "all",
+  "entry": "index.js",
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "resources": [
+    "skills/strategy-authoring/references/language.md",
+    "skills/strategy-authoring/references/architecture.md",
+    "examples/close-threshold.svl.json",
+    "examples/close-threshold.replay.json",
+    "examples/crossover.svl.json",
+    "examples/crossover.replay.json",
+    "skills/strategy-authoring/references/pipeline.md",
+    "skills/strategy-authoring/references/agent-inputs.md",
+    "examples/function-threshold.svl.json",
+    "examples/function-threshold.replay.json",
+    "examples/pipeline-fixture.js",
+    "skills/strategy-authoring/references/methods.md",
+    "skills/strategy-authoring/references/execution.md",
+    "skills/strategy-authoring/references/quant-functions.md",
+    "examples/method-workflow.js"
+  ],
+  "engines": {
+    "sesame": ">=0.2.3"
+  },
+  "execution": "native",
+  "capability_manifest": "capabilities.json"
+}

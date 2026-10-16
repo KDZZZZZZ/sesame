@@ -1,0 +1,6086 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "disabled": {
+        "type": "boolean"
+      },
+      "autoConnect": {
+        "type": "boolean"
+      },
+      "directory": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  },
+  "capabilities": [
+    {
+      "id": "mt5_catalog",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "读取 MT5 官方能力的当前目录、inputSchema、工作区权限及不可用原因。先发现后调用；query 可过滤方法名。Python 仅提供官方 API，不能执行任意代码。 server:\"tester\" 是 terminal Tester 方法的发现别名，实际调用使用返回的 server。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "server": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "terminal"
+              },
+              {
+                "type": "string",
+                "const": "metaeditor"
+              },
+              {
+                "type": "string",
+                "const": "marketdata"
+              },
+              {
+                "type": "string",
+                "const": "python"
+              },
+              {
+                "type": "string",
+                "const": "launcher"
+              },
+              {
+                "type": "string",
+                "const": "tester"
+              }
+            ]
+          },
+          "query": {
+            "type": "string",
+            "description": "过滤方法名或说明",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "native-discovery",
+        "may-start-metaeditor"
+      ],
+      "usage": {
+        "purpose": "取得当前原生方法定义、归属工具及不可用原因。",
+        "inputs": "{server?:\"terminal\"|\"metaeditor\"|\"marketdata\"|\"python\"|\"launcher\"|\"tester\",query?:<≤200字符方法名或说明>}；例 {server:\"python\",query:\"version\"}。server:\"tester\" 映射至 terminal，省略 query 时过滤 Tester 方法；实际调用使用返回的 server。",
+        "outputs": "{checked_at,items:[{server,status,reason,server_info,workspace,tools:[{name,description,inputSchema,agent_tool,permission,callable,blocked_reason,...}],prerequisite?}]}；目录就是当前版本声明，不需试猜方法。",
+        "prerequisites": [
+          "原生接口需要时使用；Sesame行情有已声明 data-access/canvas 入口，不以catalog作为必经流程。"
+        ],
+        "limitations": [
+          "指定metaeditor可能按需启动编辑器；installed不等于已连接。marketdata是独立可选服务，disabled不影响terminal券商行情。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_catalog"
+      }
+    },
+    {
+      "id": "mt5_call",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "调用 official 所属的官方能力。先从 mt5_catalog 获取精确 tool / inputSchema；其他插件的方法不能从此入口调用。command_id 沿用同一动作的稳定 ID；结果 unknown 时先核对真实状态。save_as 可保存大 JSON。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "server",
+          "tool",
+          "arguments",
+          "command_id"
+        ],
+        "properties": {
+          "server": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "terminal"
+              },
+              {
+                "type": "string",
+                "const": "metaeditor"
+              },
+              {
+                "type": "string",
+                "const": "marketdata"
+              },
+              {
+                "type": "string",
+                "const": "python"
+              },
+              {
+                "type": "string",
+                "const": "launcher"
+              }
+            ]
+          },
+          "tool": {
+            "type": "string",
+            "description": "目录返回的精确方法名",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "arguments": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "command_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]{16,128}$",
+            "description": "唯一稳定 ID，推荐 UUID；同一动作重试必须沿用"
+          },
+          "save_as": {
+            "type": "string",
+            "description": "完整结果的工作区 JSON 文件路径",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "native-call",
+        "plugin.state.write",
+        "filesystem-on-save_as"
+      ],
+      "usage": {
+        "purpose": "调用目录已声明的official一般读取方法，并保留原生回执。",
+        "inputs": "{server,tool,arguments,command_id,save_as?}；从 mt5_catalog.items[].tools 取 agent_tool=\"mt5_call\" 且 callable:true 的具体方法。最小调用形状：{server:item.server,tool:method.name,arguments:<该方法声明的业务参数>,command_id:\"native-operation-unique-01\"}；server 取包含该方法的目录项，arguments 按该方法 inputSchema 与说明填写，不把其他组的方法当例子重试。command_id 稳定16–128字符；save_as 为工作区JSON路径。",
+        "outputs": "{id,conversation_id,server,tool,operation_class,status,result,dataset_id,error,created_at,completed_at}；status=returned|failed|unknown（运行中可为running）。returned只说明收到响应，实际操作还要读result.isError/error/retcode或业务status；dataset_id是本插件保存证据。save_as时省略result并返回saved_to。",
+        "prerequisites": [
+          "仅处理 official一般读取；catalog给出参数与callable/blocked_reason，跨组方法按agent_tool调用。"
+        ],
+        "limitations": [
+          "同一ID、同请求、同配置版本返回原回执；unknown保持原ID用mt5_command核对，不自动重放。调用前的明确submission_attempted:false才证明未发送。",
+          "副作用取决于catalog所声明的方法；只读目标不能用写入/启动方法冒充检查。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_call"
+      }
+    },
+    {
+      "id": "mt5_cache",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "管理与交易面板共用的本地 MT5 行情库。bars/trades 只读本地；sync/sync_trades 从当前已验证账户下载并去重保存；时间是券商墙上时间的秒值，不代表 UTC。大结果使用 save_as。remove 只清理指定品种周期的行情。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "symbols"
+              },
+              {
+                "type": "string",
+                "const": "inventory"
+              },
+              {
+                "type": "string",
+                "const": "bars"
+              },
+              {
+                "type": "string",
+                "const": "sync"
+              },
+              {
+                "type": "string",
+                "const": "trades"
+              },
+              {
+                "type": "string",
+                "const": "sync_trades"
+              },
+              {
+                "type": "string",
+                "const": "remove"
+              }
+            ]
+          },
+          "symbol": {
+            "type": "string",
+            "description": "精确品种",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "period": {
+            "type": "string",
+            "description": "MT5 周期，如 H1",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "from": {
+            "type": "integer",
+            "description": "券商服务器墙钟 Unix 秒，范围起点，包含；不是 UTC epoch"
+          },
+          "to": {
+            "type": "integer",
+            "description": "券商服务器墙钟 Unix 秒，范围终点，排除；不是 UTC epoch"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20000
+          },
+          "save_as": {
+            "type": "string",
+            "description": "完整 JSON 的工作区路径",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "cache.write-on-symbol-refresh-or-sync-or-remove",
+        "network-on-symbol-refresh-or-sync",
+        "filesystem-on-save_as"
+      ],
+      "usage": {
+        "purpose": "查询或显式同步本地MT5历史缓存。",
+        "inputs": "symbols/inventory 用 {action}；bars/sync 用 {action,symbol,period,from,to}，范围为券商墙时秒整数[from,to)，bars可加limit(1–20000)；trades用symbol/from/to；sync_trades用from/to。remove只用symbol/period并删除当前服务器该整条序列，不按from/to范围删除。save_as可保存完整JSON到工作区。例{action:\"inventory\"}；bars返回next_before时，可令下一页to=next_before继续向历史读取。",
+        "outputs": "symbols:{server,items:[{symbol,description,digits,point,selected,currency}],updated_at,cached,warning?}；inventory/remove:{items:[{server,symbol,period,bar_count,first_time,last_time,updated_at}],bytes,max_bytes,typed_cache:{bar_count,payload_bytes},time_basis}；bars:{server,symbol,period,bars:[{time,open,high,low,close,volume}],has_more,next_before,updated_at,time_basis}；sync:{server,symbol,period,downloaded,reused_chunks,updated_at,time_basis}；trades:{items:[原生成交记录],sync:{updated_at,start,end}|null,time_basis}；sync_trades:{downloaded,updated_at}。save_as分支仅返回{saved_to}。",
+        "prerequisites": [
+          "inventory可读所有本地缓存；其他分支需要已配置账户范围。bars/trades不依赖实时连接；symbols优先使用24小时目录缓存，未命中/过期会访问当前终端并可在失败时返回旧缓存和warning。sync/sync_trades需要终端与券商账户核验。统一研究历史入口是market_read。"
+        ],
+        "limitations": [
+          "本地bars/trades和symbols.cached:true不能证明实时行情；time_basis保留券商墙时，不当UTC epoch。sync每次最多200000根。",
+          "remove删除精确server/symbol/period的全部行情缓存与覆盖记录；from/to不缩小删除范围。成交与冻结研究证据不受影响；不能把清理缓存描述为清理日报。",
+          "symbols的warning说明本次刷新失败；cached:true与updated_at是旧数据证据。sync.downloaded只说明写入数量，不能替代标准coverage证据。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_cache"
+      }
+    },
+    {
+      "id": "mt5_command",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "读取本会话已有调用的结果；不会重发终端操作。returned 只表示收到官方响应，仍需检查 isError、retcode、Tester 状态。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "command_id"
+        ],
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "description": "已有 command_id",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "读取已有原生命令记录。",
+        "inputs": "{command_id:<已有同会话命令键>}；例 {command_id:\"read-version-unique-01\"}。",
+        "outputs": "{id,conversation_id,server,tool,operation_class,status,result,dataset_id,error,created_at,completed_at}；status=returned|failed|unknown（运行中可为running）。returned只说明收到响应，实际操作还要读result.isError/error/retcode或业务status；dataset_id是本插件保存证据。save_as时省略result并返回saved_to。",
+        "prerequisites": [
+          "命令属于当前会话；不需要重发原生操作。"
+        ],
+        "limitations": [
+          "只是保留结果，returned/unknown不能自动变成成交或完成。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_command"
+      }
+    },
+    {
+      "id": "mt5_chart",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "调用 charts 所属的官方能力。先从 mt5_catalog 获取精确 tool / inputSchema；其他插件的方法不能从此入口调用。command_id 沿用同一动作的稳定 ID；结果 unknown 时先核对真实状态。save_as 可保存大 JSON。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "server",
+          "tool",
+          "arguments",
+          "command_id"
+        ],
+        "properties": {
+          "server": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "terminal"
+              },
+              {
+                "type": "string",
+                "const": "metaeditor"
+              },
+              {
+                "type": "string",
+                "const": "marketdata"
+              },
+              {
+                "type": "string",
+                "const": "python"
+              },
+              {
+                "type": "string",
+                "const": "launcher"
+              }
+            ]
+          },
+          "tool": {
+            "type": "string",
+            "description": "目录返回的精确方法名",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "arguments": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "command_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]{16,128}$",
+            "description": "唯一稳定 ID，推荐 UUID；同一动作重试必须沿用"
+          },
+          "save_as": {
+            "type": "string",
+            "description": "完整结果的工作区 JSON 文件路径",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "native-call",
+        "plugin.state.write",
+        "filesystem-on-save_as"
+      ],
+      "usage": {
+        "purpose": "调用目录已声明的charts终端原生图表方法，并保留原生回执。",
+        "inputs": "{server,tool,arguments,command_id,save_as?}；从 mt5_catalog.items[].tools 取 agent_tool=\"mt5_chart\" 且 callable:true 的具体方法。最小调用形状：{server:item.server,tool:method.name,arguments:<该方法声明的业务参数>,command_id:\"native-operation-unique-01\"}；server 取包含该方法的目录项，arguments 按该方法 inputSchema 与说明填写，不把其他组的方法当例子重试。command_id 稳定16–128字符；save_as 为工作区JSON路径。",
+        "outputs": "{id,conversation_id,server,tool,operation_class,status,result,dataset_id,error,created_at,completed_at}；status=returned|failed|unknown（运行中可为running）。returned只说明收到响应，实际操作还要读result.isError/error/retcode或业务status；dataset_id是本插件保存证据。save_as时省略result并返回saved_to。",
+        "prerequisites": [
+          "仅处理 charts终端原生图表；catalog给出参数与callable/blocked_reason，跨组方法按agent_tool调用。"
+        ],
+        "limitations": [
+          "同一ID、同请求、同配置版本返回原回执；unknown保持原ID用mt5_command核对，不自动重放。调用前的明确submission_attempted:false才证明未发送。",
+          "管理MT5终端原生图表，不是Sesame画布；工作台显示用canvas_*。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_chart"
+      }
+    },
+    {
+      "id": "mt5_edit",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "调用 editor 所属的官方能力。先从 mt5_catalog 获取精确 tool / inputSchema；其他插件的方法不能从此入口调用。command_id 沿用同一动作的稳定 ID；结果 unknown 时先核对真实状态。save_as 可保存大 JSON。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "server",
+          "tool",
+          "arguments",
+          "command_id"
+        ],
+        "properties": {
+          "server": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "terminal"
+              },
+              {
+                "type": "string",
+                "const": "metaeditor"
+              },
+              {
+                "type": "string",
+                "const": "marketdata"
+              },
+              {
+                "type": "string",
+                "const": "python"
+              },
+              {
+                "type": "string",
+                "const": "launcher"
+              }
+            ]
+          },
+          "tool": {
+            "type": "string",
+            "description": "目录返回的精确方法名",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "arguments": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "command_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]{16,128}$",
+            "description": "唯一稳定 ID，推荐 UUID；同一动作重试必须沿用"
+          },
+          "save_as": {
+            "type": "string",
+            "description": "完整结果的工作区 JSON 文件路径",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "native-call",
+        "plugin.state.write",
+        "filesystem-on-save_as"
+      ],
+      "usage": {
+        "purpose": "调用目录已声明的editor文件编辑/编译方法，并保留原生回执。",
+        "inputs": "{server,tool,arguments,command_id,save_as?}；从 mt5_catalog.items[].tools 取 agent_tool=\"mt5_edit\" 且 callable:true 的具体方法。最小调用形状：{server:item.server,tool:method.name,arguments:<该方法声明的业务参数>,command_id:\"native-operation-unique-01\"}；server 取包含该方法的目录项，arguments 按该方法 inputSchema 与说明填写，不把其他组的方法当例子重试。command_id 稳定16–128字符；save_as 为工作区JSON路径。",
+        "outputs": "{id,conversation_id,server,tool,operation_class,status,result,dataset_id,error,created_at,completed_at}；status=returned|failed|unknown（运行中可为running）。returned只说明收到响应，实际操作还要读result.isError/error/retcode或业务status；dataset_id是本插件保存证据。save_as时省略result并返回saved_to。",
+        "prerequisites": [
+          "仅处理 editor文件编辑/编译；catalog给出参数与callable/blocked_reason，跨组方法按agent_tool调用。"
+        ],
+        "limitations": [
+          "同一ID、同请求、同配置版本返回原回执；unknown保持原ID用mt5_command核对，不自动重放。调用前的明确submission_attempted:false才证明未发送。",
+          "副作用取决于catalog所声明的方法；只读目标不能用写入/启动方法冒充检查。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_edit"
+      }
+    },
+    {
+      "id": "mt5_python",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "调用 python 所属的官方能力。先从 mt5_catalog 获取精确 tool / inputSchema；其他插件的方法不能从此入口调用。command_id 沿用同一动作的稳定 ID；结果 unknown 时先核对真实状态。save_as 可保存大 JSON。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "server",
+          "tool",
+          "arguments",
+          "command_id"
+        ],
+        "properties": {
+          "server": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "terminal"
+              },
+              {
+                "type": "string",
+                "const": "metaeditor"
+              },
+              {
+                "type": "string",
+                "const": "marketdata"
+              },
+              {
+                "type": "string",
+                "const": "python"
+              },
+              {
+                "type": "string",
+                "const": "launcher"
+              }
+            ]
+          },
+          "tool": {
+            "type": "string",
+            "description": "目录返回的精确方法名",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "arguments": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "command_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]{16,128}$",
+            "description": "唯一稳定 ID，推荐 UUID；同一动作重试必须沿用"
+          },
+          "save_as": {
+            "type": "string",
+            "description": "完整结果的工作区 JSON 文件路径",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "native-call",
+        "plugin.state.write",
+        "filesystem-on-save_as"
+      ],
+      "usage": {
+        "purpose": "调用目录已声明的python官方只读API方法，并保留原生回执。",
+        "inputs": "{server,tool,arguments,command_id,save_as?}；从 mt5_catalog.items[].tools 取 agent_tool=\"mt5_python\" 且 callable:true 的具体方法。最小调用形状：{server:item.server,tool:method.name,arguments:<该方法声明的业务参数>,command_id:\"native-operation-unique-01\"}；server 取包含该方法的目录项，arguments 按该方法 inputSchema 与说明填写，不把其他组的方法当例子重试。command_id 稳定16–128字符；save_as 为工作区JSON路径。",
+        "outputs": "{id,conversation_id,server,tool,operation_class,status,result,dataset_id,error,created_at,completed_at}；status=returned|failed|unknown（运行中可为running）。returned只说明收到响应，实际操作还要读result.isError/error/retcode或业务status；dataset_id是本插件保存证据。save_as时省略result并返回saved_to。",
+        "prerequisites": [
+          "仅处理 python官方只读API；catalog给出参数与callable/blocked_reason，跨组方法按agent_tool调用。"
+        ],
+        "limitations": [
+          "同一ID、同请求、同配置版本返回原回执；unknown保持原ID用mt5_command核对，不自动重放。调用前的明确submission_attempted:false才证明未发送。",
+          "不执行任意Python；order_send/login等交易类方法路由到交易能力。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_python"
+      }
+    },
+    {
+      "id": "mt5_system",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "调用 system 所属的官方能力。先从 mt5_catalog 获取精确 tool / inputSchema；其他插件的方法不能从此入口调用。command_id 沿用同一动作的稳定 ID；结果 unknown 时先核对真实状态。save_as 可保存大 JSON。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "server",
+          "tool",
+          "arguments",
+          "command_id"
+        ],
+        "properties": {
+          "server": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "terminal"
+              },
+              {
+                "type": "string",
+                "const": "metaeditor"
+              },
+              {
+                "type": "string",
+                "const": "marketdata"
+              },
+              {
+                "type": "string",
+                "const": "python"
+              },
+              {
+                "type": "string",
+                "const": "launcher"
+              }
+            ]
+          },
+          "tool": {
+            "type": "string",
+            "description": "目录返回的精确方法名",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "arguments": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "command_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]{16,128}$",
+            "description": "唯一稳定 ID，推荐 UUID；同一动作重试必须沿用"
+          },
+          "save_as": {
+            "type": "string",
+            "description": "完整结果的工作区 JSON 文件路径",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "native-call",
+        "plugin.state.write",
+        "filesystem-on-save_as"
+      ],
+      "usage": {
+        "purpose": "调用目录已声明的system本机/网络操作方法，并保留原生回执。",
+        "inputs": "{server,tool,arguments,command_id,save_as?}；从 mt5_catalog.items[].tools 取 agent_tool=\"mt5_system\" 且 callable:true 的具体方法。最小调用形状：{server:item.server,tool:method.name,arguments:<该方法声明的业务参数>,command_id:\"native-operation-unique-01\"}；server 取包含该方法的目录项，arguments 按该方法 inputSchema 与说明填写，不把其他组的方法当例子重试。command_id 稳定16–128字符；save_as 为工作区JSON路径。",
+        "outputs": "{id,conversation_id,server,tool,operation_class,status,result,dataset_id,error,created_at,completed_at}；status=returned|failed|unknown（运行中可为running）。returned只说明收到响应，实际操作还要读result.isError/error/retcode或业务status；dataset_id是本插件保存证据。save_as时省略result并返回saved_to。",
+        "prerequisites": [
+          "仅处理 system本机/网络操作；catalog给出参数与callable/blocked_reason，跨组方法按agent_tool调用。"
+        ],
+        "limitations": [
+          "同一ID、同请求、同配置版本返回原回执；unknown保持原ID用mt5_command核对，不自动重放。调用前的明确submission_attempted:false才证明未发送。",
+          "副作用取决于catalog所声明的方法；只读目标不能用写入/启动方法冒充检查。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_system"
+      }
+    },
+    {
+      "id": "mt5_test",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "调用 tester 所属的官方能力。先从 mt5_catalog 获取精确 tool / inputSchema；其他插件的方法不能从此入口调用。command_id 沿用同一动作的稳定 ID；结果 unknown 时先核对真实状态。save_as 可保存大 JSON。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "server",
+          "tool",
+          "arguments",
+          "command_id"
+        ],
+        "properties": {
+          "server": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "terminal"
+              },
+              {
+                "type": "string",
+                "const": "metaeditor"
+              },
+              {
+                "type": "string",
+                "const": "marketdata"
+              },
+              {
+                "type": "string",
+                "const": "python"
+              },
+              {
+                "type": "string",
+                "const": "launcher"
+              }
+            ]
+          },
+          "tool": {
+            "type": "string",
+            "description": "目录返回的精确方法名",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "arguments": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "command_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]{16,128}$",
+            "description": "唯一稳定 ID，推荐 UUID；同一动作重试必须沿用"
+          },
+          "save_as": {
+            "type": "string",
+            "description": "完整结果的工作区 JSON 文件路径",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "native-call",
+        "plugin.state.write",
+        "filesystem-on-save_as"
+      ],
+      "usage": {
+        "purpose": "调用目录已声明的tester原生Tester方法，并保留原生回执。",
+        "inputs": "{server,tool,arguments,command_id,save_as?}；从 mt5_catalog.items[].tools 取 agent_tool=\"mt5_test\" 且 callable:true 的具体方法。最小调用形状：{server:item.server,tool:method.name,arguments:<该方法声明的业务参数>,command_id:\"native-operation-unique-01\"}；server 取包含该方法的目录项，arguments 按该方法 inputSchema 与说明填写，不把其他组的方法当例子重试。command_id 稳定16–128字符；save_as 为工作区JSON路径。",
+        "outputs": "{id,conversation_id,server,tool,operation_class,status,result,dataset_id,error,created_at,completed_at}；status=returned|failed|unknown（运行中可为running）。returned只说明收到响应，实际操作还要读result.isError/error/retcode或业务status；dataset_id是本插件保存证据。save_as时省略result并返回saved_to。",
+        "prerequisites": [
+          "仅处理 tester原生Tester；catalog给出参数与callable/blocked_reason，跨组方法按agent_tool调用。"
+        ],
+        "limitations": [
+          "同一ID、同请求、同配置版本返回原回执；unknown保持原ID用mt5_command核对，不自动重放。调用前的明确submission_attempted:false才证明未发送。",
+          "副作用取决于catalog所声明的方法；只读目标不能用写入/启动方法冒充检查。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_test"
+      }
+    },
+    {
+      "id": "mt5_backtest",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "受管理的真实 MT5 Tester。start 用冻结 build_id 和明确 config 创建任务；可用 parameter_space 穷举最多 64 组。get/list 查看，wait 最多等待 20 秒，stop 显式停止。SVL pass 返回固定版本 run_record，可绑定报告 related.run；旧原生工程为 null。结果自动登记后端数据；完成不等于策略有效。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "start"
+              },
+              {
+                "type": "string",
+                "const": "get"
+              },
+              {
+                "type": "string",
+                "const": "list"
+              },
+              {
+                "type": "string",
+                "const": "wait"
+              },
+              {
+                "type": "string",
+                "const": "stop"
+              }
+            ]
+          },
+          "build_id": {
+            "type": "string",
+            "description": "编译成功的构建 ID",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "backtest_id": {
+            "type": "string",
+            "description": "回测任务 ID",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "project_id": {
+            "type": "string",
+            "description": "list 可按工程过滤",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "command_id": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "start 必填的稳定任务请求 ID；重试同一请求不会重复启动 Tester"
+          },
+          "config": {
+            "type": "object",
+            "required": [
+              "symbol",
+              "period",
+              "from_date",
+              "to_date",
+              "deposit",
+              "currency",
+              "leverage",
+              "model",
+              "parameters"
+            ],
+            "properties": {
+              "symbol": {
+                "type": "string",
+                "description": "券商精确品种名",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "period": {
+                "type": "string",
+                "description": "M1/H1 等原生周期",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "from_date": {
+                "type": "string",
+                "description": "YYYY-MM-DD，券商服务器日期",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "to_date": {
+                "type": "string",
+                "description": "YYYY-MM-DD，排除终止日",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "deposit": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "currency": {
+                "type": "string",
+                "description": "USD 等货币",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "leverage": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "model": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "const": 0
+                  },
+                  {
+                    "type": "number",
+                    "const": 1
+                  },
+                  {
+                    "type": "number",
+                    "const": 2
+                  },
+                  {
+                    "type": "number",
+                    "const": 4
+                  }
+                ]
+              },
+              "parameters": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "parameter_space": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              },
+              "minItems": 1
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "plugin.state.write",
+        "resources.publish"
+      ],
+      "usage": {
+        "purpose": "运行或观察管理中的真实MT5 Tester任务。",
+        "inputs": "start:{action:\"start\",command_id,build_id,config:{symbol,period,from_date,to_date,deposit,currency,leverage,model,parameters},parameter_space?}；model=0|1|2|4，日期为券商日期，终止日排除；参数网格最多64组。其他：{action:\"list\",project_id?} 或 {action:\"get\"|\"wait\"|\"stop\",backtest_id}。",
+        "outputs": "start/get/wait/stop返回job及passes[{id,status,metrics?,error?,run_record}]；list为任务数组并附run_records。queued/running/canceling不是完成；终态succeeded/failed/canceled/unknown按原生证据，SVL pass可有固定run_record，旧工程可为null。",
+        "prerequisites": [
+          "成功固定build；真实Tester所需终端/账户由 mt5_dependencies/mt5_settings 明确。"
+        ],
+        "limitations": [
+          "wait最多20秒只等待，不自动停止；stop显式终止Tester，不撤实盘单。稳定command_id不重复启动。引擎成功不证明策略有效，unknown不能换ID自动重跑。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_backtest"
+      }
+    },
+    {
+      "id": "mt5_trade",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "调用 trading 所属的官方能力。先从 mt5_catalog 获取精确 tool / inputSchema；其他插件的方法不能从此入口调用。command_id 沿用同一动作的稳定 ID；结果 unknown 时先核对真实状态。save_as 可保存大 JSON。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "server",
+          "tool",
+          "arguments",
+          "command_id"
+        ],
+        "properties": {
+          "server": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "terminal"
+              },
+              {
+                "type": "string",
+                "const": "metaeditor"
+              },
+              {
+                "type": "string",
+                "const": "marketdata"
+              },
+              {
+                "type": "string",
+                "const": "python"
+              },
+              {
+                "type": "string",
+                "const": "launcher"
+              }
+            ]
+          },
+          "tool": {
+            "type": "string",
+            "description": "目录返回的精确方法名",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "arguments": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "command_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]{16,128}$",
+            "description": "唯一稳定 ID，推荐 UUID；同一动作重试必须沿用"
+          },
+          "save_as": {
+            "type": "string",
+            "description": "完整结果的工作区 JSON 文件路径",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "native-call",
+        "plugin.state.write",
+        "filesystem-on-save_as"
+      ],
+      "usage": {
+        "purpose": "调用目录已声明的trading原生交易方法，并保留原生回执。",
+        "inputs": "{server,tool,arguments,command_id,save_as?}；从 mt5_catalog.items[].tools 取 agent_tool=\"mt5_trade\" 且 callable:true 的具体方法。最小调用形状：{server:item.server,tool:method.name,arguments:<该方法声明的业务参数>,command_id:\"native-operation-unique-01\"}；server 取包含该方法的目录项，arguments 按该方法 inputSchema 与说明填写，不把其他组的方法当例子重试。command_id 稳定16–128字符；save_as 为工作区JSON路径。",
+        "outputs": "{id,conversation_id,server,tool,operation_class,status,result,dataset_id,error,created_at,completed_at}；status=returned|failed|unknown（运行中可为running）。returned只说明收到响应，实际操作还要读result.isError/error/retcode或业务status；dataset_id是本插件保存证据。save_as时省略result并返回saved_to。",
+        "prerequisites": [
+          "仅处理 trading原生交易；catalog给出参数与callable/blocked_reason，跨组方法按agent_tool调用。"
+        ],
+        "limitations": [
+          "同一ID、同请求、同配置版本返回原回执；unknown保持原ID用mt5_command核对，不自动重放。调用前的明确submission_attempted:false才证明未发送。",
+          "会发生真实订单/EA等副作用，须对应用户交易指令；配置/编译请求不等于交易授权。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_trade"
+      }
+    },
+    {
+      "id": "mt5_deployment",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "受管理的原生挂载。先 list/check，用户要求挂载时才用 mount；必须传入检查返回的账户、构建校验值与稳定 request_id。check 的 ready:false 若 preparable:true，授权 mount 会自动处理算法交易启用/构建准备并再次核验；不要猜测或调用 MCP 开关。仅支持已回测冻结 EX5。SVL 运行返回固定版本 run_record，可绑定报告 related.run；旧原生工程为 null。unknown 不换 ID 重试；stop 停止 EA，不平仓。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "list"
+              },
+              {
+                "type": "string",
+                "const": "check"
+              },
+              {
+                "type": "string",
+                "const": "mount"
+              },
+              {
+                "type": "string",
+                "const": "stop"
+              }
+            ]
+          },
+          "pass_id": {
+            "type": "string",
+            "description": "已成功回测的 pass_id",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "deployment_id": {
+            "type": "string",
+            "description": "挂载 ID",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "request_id": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 128
+          },
+          "login": {
+            "type": "string",
+            "description": "检查返回的账户",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "server": {
+            "type": "string",
+            "description": "检查返回的服务器",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "artifact_digest": {
+            "type": "string",
+            "description": "检查返回的冻结 EX5 摘要",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "external-strategy-operation",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "检查、显式挂载或停止原生EA。",
+        "inputs": "{action:\"list\"}；{action:\"check\",pass_id:<成功Tester pass>}；mount:{action:\"mount\",pass_id,request_id,login,server,artifact_digest} 用check真实返回值；{action:\"stop\",deployment_id}。",
+        "outputs": "list:{items,candidates,preparations}；check含ready/preparable、账户及artifact_digest、原因、run_record；mount/stop返回真实部署记录含id/status/run_record。running需原生挂载确认，unknown保留不确定。",
+        "prerequisites": [
+          "主会话，且用户明确要求运行/停止策略；只能挂载已回测冻结EX5。"
+        ],
+        "limitations": [
+          "check.preparable:true表示已授权mount可完成准备并复核，不需要猜MCP开关。stop移除EA但不平仓；unknown不换request_id重复。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_deployment"
+      }
+    },
+    {
+      "id": "mt5_project",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "管理独立 MQL5 工程。create({title}) 创建空骨架；checkout({project_id}) 返回当前会话 checkout；save 仅传 {action:\"save\",checkout_id}，从该 checkout 读取源码并校验，原样保存保持 revision。configure_risk 才使用 expected_version。源码诊断可修复；草稿不能回测。",
+      "inputSchema": {
+        "type": "object",
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "const": "list"
+              }
+            },
+            "required": [
+              "action"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "const": "create"
+              },
+              "title": {
+                "type": "string",
+                "description": "新工程名称",
+                "minLength": 1,
+                "maxLength": 120
+              }
+            },
+            "required": [
+              "action",
+              "title"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "const": "checkout"
+              },
+              "project_id": {
+                "type": "string",
+                "description": "checkout / configure_risk 的工程 ID；save 不传此字段。",
+                "minLength": 1,
+                "maxLength": 20000
+              }
+            },
+            "required": [
+              "action",
+              "project_id"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "const": "save"
+              },
+              "checkout_id": {
+                "type": "string",
+                "description": "save 必填：当前会话 checkout 返回的 id。save 只传 action 和 checkout_id。",
+                "minLength": 1,
+                "maxLength": 20000
+              }
+            },
+            "required": [
+              "action",
+              "checkout_id"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "const": "configure_risk"
+              },
+              "project_id": {
+                "type": "string",
+                "description": "checkout / configure_risk 的工程 ID；save 不传此字段。",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "expected_version": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "仅 configure_risk：读取的工程 version；save 使用 checkout 已冻结的 revision，不传 expected_version。"
+              },
+              "test_risk_limits": {
+                "type": "object",
+                "required": [
+                  "max_risk_per_trade_pct",
+                  "max_daily_loss_pct",
+                  "max_open_positions",
+                  "max_lots"
+                ],
+                "properties": {
+                  "max_risk_per_trade_pct": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "max_daily_loss_pct": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "max_open_positions": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "max_lots": {
+                    "type": "string",
+                    "maxLength": 24
+                  }
+                },
+                "additionalProperties": false,
+                "description": "configure_risk 由主 Agent 按用户任务修改；仅影响随后创建的测试，既有构建和任务保留冻结参数"
+              }
+            },
+            "required": [
+              "action",
+              "project_id",
+              "expected_version",
+              "test_risk_limits"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.state.write",
+        "workspace.write"
+      ],
+      "usage": {
+        "purpose": "创建、签出、保存或查看独立MQL5工程。",
+        "inputs": "分支互斥：{action:\"list\"}；{action:\"create\",title:\"研究草稿\"}；{action:\"checkout\",project_id}；{action:\"save\",checkout_id}；{action:\"configure_risk\",project_id,expected_version,test_risk_limits:{max_risk_per_trade_pct,max_daily_loss_pct,max_open_positions,max_lots}}。save不传project_id/expected_version。",
+        "outputs": "list为工程数组；create/save/configure_risk 返回{id,version,title,revision,source_digest,...}；checkout:{id,project_id,conversation_id,revision,path,sdk_path,...}，id即checkout_id。原样save保持revision，内容改变生成新revision。",
+        "prerequisites": [
+          "本地工程操作不需终端；checkout是当前会话真实工作副本；configure_risk仅主会话。源码契约见声明的native-ea/visual-state-machines skills。"
+        ],
+        "limitations": [
+          "create只是可编辑草稿，不表示已实现/编译/回测。SDK/平台入口不能改；revision冲突需新checkout合并。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_project"
+      }
+    },
+    {
+      "id": "mt5_inspect",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "查看本机能力、工程源码及生成逻辑摘要、冻结构建诊断。engine_node_id 可按源节点下钻到输入、调用目标和源码。checked 表示严格源码已校验；declared 只是旧工程手写声明；均不代表 Tester 已通过。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "description": "工程 ID",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "build_id": {
+            "type": "string",
+            "description": "构建 ID",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "engine_node_id": {
+            "type": "string",
+            "description": "严格工程中需要展开的节点 ID；必须同时给出 project_id 或 build_id",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "读取能力、工程实现状态或构建证据。",
+        "inputs": "{} 看本机能力；{project_id} 或 {build_id} 二选一；可附 engine_node_id 下钻实际节点。例 {project_id:\"<create返回id>\"}。",
+        "outputs": "无ID:{installed,compile,tester,deploy,sdk_version,reason,dependencies}；project返回工程、files、implementation、builds、backtests、engine摘要；build返回固定构建及diagnostics；节点返回{revision,engine_digest,node,edges,source}。",
+        "prerequisites": [],
+        "limitations": [
+          "compile可用不是编译完成；checked仅源码校验，declared只是旧声明；均不代表Tester/实盘成功。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_inspect"
+      }
+    },
+    {
+      "id": "mt5_compile",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "冻结已保存 revision、平台 SDK 和本机标准库，按已配置引擎调用本机 MetaEditor；默认无需虚拟机，原生进程按本次任务管理与清理。成功返回 EX5 摘要；失败作为可恢复工具错误返回构建 ID、诊断与修复指引，修改 checkout 并 save 新 revision 后重试。不执行 EA。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "project_id",
+          "revision"
+        ],
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "description": "工程 ID",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "明确指定已保存的源码版本"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "plugin.state.write",
+        "private-filesystem"
+      ],
+      "usage": {
+        "purpose": "编译指定冻结源码并保存真实构建结果。",
+        "inputs": "{project_id:<已保存工程ID>,revision:<正整数源码版本>}。",
+        "outputs": "固定build记录含id/project_id/revision/status、诊断/产物摘要；成功status=succeeded、EX5摘要存在。失败以compile_failed工具错误返回build ID与diagnostics/recovery，完整构建仍可mt5_inspect读取。",
+        "prerequisites": [
+          "mt5_project.save或translation已保存固定revision；mt5_dependencies inspect/probe说明本机MetaEditor/Windows Python/Wine前提。"
+        ],
+        "limitations": [
+          "冻结SDK/本机标准库后运行真实编译器，可能启动原生进程；不执行EA。诊断可指导修改checkout并save新revision，不能改旧构建冒充成功。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_compile"
+      }
+    },
+    {
+      "id": "mt5_settings",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "读取 MT5 脱敏连接、账户绑定、环境与待导入凭据引用。不会登录、启动终端或交易。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "读取脱敏配置、待导入引用和连接观察。",
+        "inputs": "{}。",
+        "outputs": "{settings:{version,account,servers,allow_trading,allow_host_operations,...},pendingImports,environment,connection}；敏感值脱敏，pendingImports提供可导入引用。",
+        "prerequisites": [
+          "只读能力对有该能力授权的 Agent 开放，不要求主会话；修改、导入和连接仍沿用各自权限。"
+        ],
+        "limitations": [
+          "配置存在、python_installed或文件存在不证明Python IPC或券商账户连接成功；Terminal MCP与Python是独立通道。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_settings"
+      }
+    },
+    {
+      "id": "mt5_update_configuration",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "按用户任务修改 MT5 连接、原生设置或普通运行选项。先读取版本；密钥通过 mt5_import_configuration 的安全引用导入。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "command_id",
+          "expected_version",
+          "changes"
+        ],
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "changes": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "import_native"
+                ],
+                "properties": {
+                  "import_native": {
+                    "type": "boolean",
+                    "const": true
+                  }
+                },
+                "additionalProperties": false,
+                "minProperties": 1
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "allow_trading": {
+                    "type": "boolean"
+                  },
+                  "allow_host_operations": {
+                    "type": "boolean"
+                  },
+                  "servers": {
+                    "type": "object",
+                    "properties": {
+                      "terminal": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string",
+                            "maxLength": 2048,
+                            "pattern": "^[^\\r\\n\\u0000]*$"
+                          },
+                          "enabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "minProperties": 1
+                      },
+                      "metaeditor": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string",
+                            "maxLength": 2048,
+                            "pattern": "^[^\\r\\n\\u0000]*$"
+                          },
+                          "enabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "minProperties": 1
+                      },
+                      "marketdata": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string",
+                            "maxLength": 2048,
+                            "pattern": "^[^\\r\\n\\u0000]*$"
+                          },
+                          "enabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "minProperties": 1
+                      }
+                    },
+                    "additionalProperties": false,
+                    "minProperties": 1
+                  },
+                  "account": {
+                    "type": "object",
+                    "properties": {
+                      "login": {
+                        "type": "string",
+                        "pattern": "^(|[1-9][0-9]{0,19})$"
+                      },
+                      "server": {
+                        "type": "string",
+                        "maxLength": 200,
+                        "pattern": "^[^\\r\\n\\u0000]*$"
+                      }
+                    },
+                    "additionalProperties": false,
+                    "minProperties": 1
+                  },
+                  "tester_agent": {
+                    "type": "object",
+                    "properties": {
+                      "address": {
+                        "type": "string",
+                        "maxLength": 15,
+                        "pattern": "^[^\\r\\n\\u0000]*$"
+                      },
+                      "port": {
+                        "type": "integer",
+                        "minimum": 1024,
+                        "maximum": 65535
+                      }
+                    },
+                    "additionalProperties": false,
+                    "minProperties": 1
+                  }
+                },
+                "additionalProperties": false,
+                "minProperties": 1
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "更新明确连接/权限配置并保留幂等回执。",
+        "inputs": "{command_id:<稳定16–128字符>,expected_version:<settings.version>,changes}；changes为 {import_native:true} 或 account:{login,server}/servers:{terminal|metaeditor|marketdata:{url?,enabled?}}/allow_trading/allow_host_operations/tester_agent。例仅导入已知原生配置 {command_id:\"import-native-config-01\",expected_version:1,changes:{import_native:true}}。",
+        "outputs": "{id,conversation_id,target,status,changes,result?,error?,created_at,completed_at}；applied只证明配置已保存；连接结果由mt5_connect核验。",
+        "prerequisites": [
+          "主会话；读取mt5_settings获得版本，实际连接/账号来自已知配置。"
+        ],
+        "limitations": [
+          "不接受密钥值。版本冲突刷新settings；配置任务不自动授权下单/EA运行。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_update_configuration"
+      }
+    },
+    {
+      "id": "mt5_import_configuration",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "导入主会话用户直接提供的 MT5 MCP 或账户凭据引用；凭据仅在插件后台传递，保存后立即生效，不登录、不启动终端。随后 mt5_connect 核验账户；MetaEditor、Python 与 Tester 分别验证。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "command_id",
+          "source_message_id",
+          "expected_version"
+        ],
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "source_message_id": {
+            "type": "string",
+            "pattern": "^msg_[A-Za-z0-9_-]{1,100}$"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "按安全消息引用导入已有原生配置。",
+        "inputs": "{command_id,source_message_id:<settings.pendingImports中的msg_ID>,expected_version:<settings.version>}；没有secret/token/password参数。",
+        "outputs": "{id,conversation_id,target,status,changes,result?,error?,created_at,completed_at}；applied只证明配置已保存；连接结果由mt5_connect核验。",
+        "prerequisites": [
+          "主会话，已有被宿主接收并脱敏的用户配置引用。"
+        ],
+        "limitations": [
+          "引用限原会话/绑定账户；账户变更或引用失效不能凭猜测重建。敏感配置原文不读回工具参数。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_import_configuration"
+      }
+    },
+    {
+      "id": "mt5_connect",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "验证并恢复已配置的 MT5 Terminal 连接。connected 只证明终端及绑定账户通过核验；不切换账户、不重放交易。不读取或返回秘密。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "command_id"
+        ],
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "start_if_needed": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "native-connection",
+        "may-start-terminal",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "复用现有MT5配置并核验终端、券商和账户身份。",
+        "inputs": "{command_id:<稳定ID>,start_if_needed?:boolean}；例 {command_id:\"connect-existing-01\",start_if_needed:false} 只恢复/验证现有连接。",
+        "outputs": "命令回执status=applied|failed，result:{server:\"terminal\",status:\"connected\"或不可用状态,code,reason,mcp_connected?,broker_connected?,account?,settings_version?,started,steps}；connected需MCP和券商及账户一致。",
+        "prerequisites": [
+          "主会话；mt5_settings/mt5_dependencies说明已有配置。start_if_needed允许按现有配置启动终端。"
+        ],
+        "limitations": [
+          "保存配置不等于connected；connected仅证明Terminal MCP和券商身份，不建立或证明Python IPC。独立marketdata disabled不是券商行情故障；身份不符不自动切换账号；超时/失败保留code和实际已验证环节。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_connect"
+      }
+    },
+    {
+      "id": "mt5_report_data",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "从实际已结束的 MT5 Tester 任务发布可供通用报告引用的数据集。保留失败/取消状态、券商时间、费用和原生 trace 局限；不会启动回测。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "backtest_ids"
+        ],
+        "properties": {
+          "backtest_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "真实回测任务 ID",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "minItems": 1,
+            "maxItems": 32
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "构建真实Tester报告的数据源与组件绑定。",
+        "inputs": "{backtest_ids:[<真实任务id>]}，1–32唯一ID。",
+        "outputs": "{sources:[{id,sourceRef:{providerId:\"sesame/mt5#datasets\",revision},query:{datasetId},title,description,parameters_schema,row_schema,provenance}],component:{id:\"backtest\",type:\"strategy_backtest\",bindings}}；角色grid/optimization/passes/pass/trades。",
+        "prerequisites": [
+          "任务均已终止且至少一个pass真正succeeded；来源查询/冻结经data-access，报告由reports能力发布。"
+        ],
+        "limitations": [
+          "只建立基于真实Tester的报告数据，不直接发布/渲染报告；失败/取消任务不伪造最佳参数，equity采样和截断保留。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_report_data"
+      }
+    },
+    {
+      "id": "mt5_trade_detail",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "读取原生历史回测的成交与真实票据关联 trace。旧 visual-mql-v1 图保留原身份；没有真实映射时明确返回 unavailable，不将其标为 SVL 验证。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "trade_id"
+        ],
+        "properties": {
+          "trade_id": {
+            "type": "string",
+            "description": "回测数据集中的成交 ID",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "展开一个真实回测成交及可关联的原生轨迹。",
+        "inputs": "{trade_id:<mt5_report_data trades行中的id>}，形如pass_<UUID>_deal_<ticket>。",
+        "outputs": "{origin:{mode:\"backtest\",backtest_id,pass_id,report_id,report_revision},trade,fills,engine,rule_graph,trace_status:\"partial\"|\"unavailable\",trace_reason,trace:{items,snapshot_sequence,truncated,time_basis}}。",
+        "prerequisites": [
+          "已有真实Tester成交ID。"
+        ],
+        "limitations": [
+          "只关联实际订单/成交票据；无埋点或券商自动退出不能推断策略决策。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_trade_detail"
+      }
+    },
+    {
+      "id": "mt5_target",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "读取并冻结 MQL5 目标 profile、数值/事件/恢复限制及包内翻译说明。先保存 SVL 并由宿主从源生成图，再依目标翻译；本工具不编译、不回测、不交易。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "resources.publish"
+      ],
+      "usage": {
+        "purpose": "发布当前MQL5目标能力说明及SDK参考。",
+        "inputs": "{}。",
+        "outputs": "直接返回固定 ArtifactRef {id,revision,digest,kind:\"strategy.target\",schemaVersion:\"1.0.0\"}；资源manifest含modes、language、svl/execution、semantics、verification、resources和工具入口。",
+        "prerequisites": [
+          "目标信息可通过宿主resources.read或已声明公开资源读取，无需运行终端。"
+        ],
+        "limitations": [
+          "这是支持范围/限制声明，不是某次翻译的等价证据。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_target"
+      }
+    },
+    {
+      "id": "mt5_translation",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "将 Agent 按冻结 SVL 源编写的 MQL5 文件、逐节点 source_map 与适配说明登记为翻译成果和独立 MT5 工程。较长源码请在工作区写 JSON 清单后用 mt5_translation_file，避免全文重发。只检查身份与映射结构；结果 partial，不证明原生语义等价。逻辑变化先修 SVL，再创建新翻译。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "operation_id",
+          "title",
+          "source",
+          "target",
+          "mode",
+          "parameter_map",
+          "files",
+          "source_map",
+          "adaptations"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{16,128}$",
+            "minLength": 16,
+            "maxLength": 128
+          },
+          "title": {
+            "type": "string",
+            "description": "工程名称",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "source": {
+            "type": "object",
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "成果 ID",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "revision": {
+                "type": "string",
+                "description": "固定修订",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "digest": {
+                "type": "string",
+                "description": "sha256 摘要",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "kind": {
+                "type": "string",
+                "description": "成果类型",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              }
+            },
+            "additionalProperties": false
+          },
+          "target": {
+            "type": "object",
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "成果 ID",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "revision": {
+                "type": "string",
+                "description": "固定修订",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "digest": {
+                "type": "string",
+                "description": "sha256 摘要",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "kind": {
+                "type": "string",
+                "description": "成果类型",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              }
+            },
+            "additionalProperties": false
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "backtest"
+              },
+              {
+                "type": "string",
+                "const": "live"
+              }
+            ]
+          },
+          "parameter_map": {
+            "type": "object",
+            "patternProperties": {
+              "^.*$": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "nativeInput"
+                    ],
+                    "properties": {
+                      "nativeInput": {
+                        "type": "string",
+                        "description": "实际 MQL5 input 参数名",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "encoding": {
+                        "type": "string",
+                        "const": "json"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "binding"
+                    ],
+                    "properties": {
+                      "binding": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "const": "instrument"
+                          },
+                          {
+                            "type": "string",
+                            "const": "account"
+                          }
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            }
+          },
+          "files": {
+            "type": "object",
+            "patternProperties": {
+              "^.*$": {
+                "type": "string",
+                "maxLength": 1048576
+              }
+            },
+            "minProperties": 1,
+            "maxProperties": 128
+          },
+          "source_map": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "nodeId",
+                "generated",
+                "instrumentation"
+              ],
+              "properties": {
+                "nodeId": {
+                  "type": "string",
+                  "description": "实际 SVL 节点 ID",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "functionId": {
+                  "type": "string",
+                  "description": "函数节点的完整 functionId；主节点省略。扩展模块使用展开后的完整 ID",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "generated": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "path",
+                      "startLine",
+                      "endLine"
+                    ],
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "description": "实际相对路径",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "startLine": {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      "endLine": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "instrumentation": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "direct"
+                    },
+                    {
+                      "type": "string",
+                      "const": "inlined"
+                    },
+                    {
+                      "type": "string",
+                      "const": "boundary"
+                    },
+                    {
+                      "type": "string",
+                      "const": "unobservable"
+                    }
+                  ]
+                },
+                "reason": {
+                  "type": "string",
+                  "description": "不可观测原因",
+                  "minLength": 1,
+                  "maxLength": 20000
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 1000
+          },
+          "adaptations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "code",
+                "nodes",
+                "status",
+                "description",
+                "evidence"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "适配代码",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "nodes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "实际源节点 ID",
+                    "minLength": 1,
+                    "maxLength": 20000
+                  }
+                },
+                "status": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "equivalent"
+                    },
+                    {
+                      "type": "string",
+                      "const": "limited"
+                    },
+                    {
+                      "type": "string",
+                      "const": "unsupported"
+                    }
+                  ]
+                },
+                "description": {
+                  "type": "string",
+                  "description": "具体语义差异及限制",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "evidence": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "revision",
+                      "digest",
+                      "kind",
+                      "schemaVersion"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "成果 ID",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "revision": {
+                        "type": "string",
+                        "description": "固定修订",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "digest": {
+                        "type": "string",
+                        "description": "sha256 摘要",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "kind": {
+                        "type": "string",
+                        "description": "成果类型",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "schemaVersion": {
+                        "type": "string",
+                        "const": "1.0.0"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 1000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.state.write",
+        "resources.publish"
+      ],
+      "usage": {
+        "purpose": "登记Agent已编写的MQL5翻译和明确差异。",
+        "inputs": "{operation_id,title,source:<固定strategy.source>,target:<mt5_target固定Ref>,mode:\"backtest\"|\"live\",parameter_map,files,source_map,adaptations}；files映射真实相对路径到源码文本，如 {\"Experts/Strategy.mq5\":\"<本任务编写源码>\"}；source_map每项含源node与实际文件/行范围/instrumentation；parameter_map映射nativeInput或instrument/account绑定，adaptations列语义差异和已有证据。",
+        "outputs": "{project_id,revision:1,source,translation:<strategy.translation Ref>,validation:<strategy.validation Ref>,implementation:\"translated_unverified\",limitations}；validation为partial，尚无原生语义证明。",
+        "prerequisites": [
+          "SVL源由strategy-authoring公开能力发布；目标profile/SDK用mt5_target及target/README.md、sdk-integration.md、translation-file.md。"
+        ],
+        "limitations": [
+          "只注册源码/映射，不生成源码、不编译、不运行交易；相同operation_id绑定同一输入，修改内容用新研究操作。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_translation"
+      }
+    },
+    {
+      "id": "mt5_translation_file",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "以短参数登记当前工作区内的 UTF-8 JSON 清单（≤8 MiB）：结构与 mt5_translation 相同，但不含 operation_id；files 内嵌源码文本，不扫描目录。同样严格校验源、目标、参数和映射。首次读取后固定输入；相同操作 ID/路径重试直接复用快照，不重读文件，即使文件已删除。修改内容需新操作 ID。返回成果引用/摘要，不回全文；不编译、不启动终端、不交易。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "operation_id",
+          "manifest_path"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{16,128}$",
+            "minLength": 16,
+            "maxLength": 128
+          },
+          "manifest_path": {
+            "type": "string",
+            "description": "当前工作区内的 JSON 清单路径；重试使用相同操作 ID 和路径，读取已固定快照",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "workspace.read",
+        "plugin.state.write",
+        "resources.publish"
+      ],
+      "usage": {
+        "purpose": "从单文件冻结长翻译输入，避免重复传输长程序。",
+        "inputs": "{operation_id,manifest_path:\"translation.json\"}；工作区UTF8 JSON包含mt5_translation所有字段但去掉operation_id，files内嵌文本，不扫描目录/跟随JSON文件引用。",
+        "outputs": "{project_id,revision:1,source,translation:<strategy.translation Ref>,validation:<strategy.validation Ref>,implementation:\"translated_unverified\",limitations}；validation为partial，尚无原生语义证明。 另有manifest:{digest,source:{sha256,...},reused,...}解释已固定输入。",
+        "prerequisites": [
+          "同内联translation；长源码可用workspace能力写清单。输入规则和完整形状在公开target/translation-file.md。"
+        ],
+        "limitations": [
+          "同ID/同路径复用首次固定字节，不重读已修改文件；验证失败后修内容用新ID。≤8MiB清单，项目≤4MiB/128文件，单源≤1MiB；不产生原生执行证明。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_translation_file"
+      }
+    },
+    {
+      "id": "mt5_dependencies",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "先检查已安装的 MT5、Windows Python、Wine 与编译引擎；缺项返回插件私有目录和安装 skill。configure 只保存明确路径，不下载、不启动或替换终端。本机编译无需虚拟机；probe 核对本机依赖。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "inspect"
+              },
+              {
+                "type": "string",
+                "const": "configure"
+              }
+            ]
+          },
+          "probe": {
+            "type": "boolean"
+          },
+          "command_id": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "changes": {
+            "type": "object",
+            "properties": {
+              "terminal_directory": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096,
+                    "pattern": "^[^\\r\\n\\u0000]*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "data_directory": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096,
+                    "pattern": "^[^\\r\\n\\u0000]*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "python": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096,
+                    "pattern": "^[^\\r\\n\\u0000]*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "wine": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096,
+                    "pattern": "^[^\\r\\n\\u0000]*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "wine_prefix": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096,
+                    "pattern": "^[^\\r\\n\\u0000]*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false,
+            "minProperties": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.state.write-on-configure",
+        "process-on-probe"
+      ],
+      "usage": {
+        "purpose": "读取或配置明确本机原生依赖。",
+        "inputs": "{action:\"inspect\",probe?:boolean}；probe:true检查编译依赖；configure:{action:\"configure\",command_id,expected_version,changes:{terminal_directory?,data_directory?,python?,wine?,wine_prefix?}}，路径可null清除。inspect不带配置字段，configure不带probe。",
+        "outputs": "{version,settings,platform,private_directory,discovered,compiler:{available,checked,backend},python:{installed,sdk_verified:false,next},connections,missing:[{id,required_for,reason,configure?}],next,scripts}；configure保存后返回新依赖状态。",
+        "prerequisites": [
+          "主会话；缺依赖时公开 skills/dependencies/SKILL.md 和 scripts/README.md 给出获取入口。"
+        ],
+        "limitations": [
+          "发现文件≠SDK导入/券商已登录；无本机终端不影响已有远程MCP读取。只按实际missing处理，不将安装发现失败等同未安装。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_dependencies"
+      }
+    },
+    {
+      "id": "mt5_conformance",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "prepare 固定SVL输入序列和数值公差，产生参考结果及可选MQL标识头；verify只读取真实成功Tester结果与原生逐输入/事件/函数trace，核对冻结代码、参数和参考重放。不能用编译成功、手填JSON或普通市场回测代替。仅证明所测fixture，不发送订单或启动终端。先读target/conformance.md。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "action",
+          "operation_id"
+        ],
+        "properties": {
+          "action": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "prepare"
+              },
+              {
+                "type": "string",
+                "const": "verify"
+              }
+            ]
+          },
+          "operation_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{16,128}$",
+            "minLength": 16,
+            "maxLength": 128
+          },
+          "source": {
+            "type": "object",
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              }
+            },
+            "additionalProperties": false
+          },
+          "fixture_path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "timeline_path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "header_path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "tolerances": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "path",
+                "absolute",
+                "relative"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "absolute": {
+                  "type": "string"
+                },
+                "relative": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 256
+          },
+          "fixture": {
+            "type": "object",
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              }
+            },
+            "additionalProperties": false
+          },
+          "translation": {
+            "type": "object",
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              }
+            },
+            "additionalProperties": false
+          },
+          "result": {
+            "type": "object",
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "workspace.read",
+        "resources.publish",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "准备或比较有界SVL与原生MT5执行证据。",
+        "inputs": "prepare:{action:\"prepare\",operation_id,source:<固定SVL>,fixture_path:<工作区JSON>,timeline_path?,header_path?,tolerances?}；verify:{action:\"verify\",operation_id,fixture:<prepare返回Ref>,translation:<固定翻译>,result:<真实Tester结果Ref>}，两个分支字段互斥。",
+        "outputs": "prepare:{fixture,fixtureDigest,referenceDigest,events,status,validationScope:\"reference-only\",nativeEngineExecuted:false,bridgeConfiguration?,timelineDigest?,header_path?}；verify:{validation,outcome,validationScope,nativeEngineExecuted:true,generalEquivalence:\"not_proven\",differences,covered,uncovered,limitations}。",
+        "prerequisites": [
+          "公开 target/conformance.md 说明夹具、时间线与容差；verify需要实际带埋点的Tester证据。"
+        ],
+        "limitations": [
+          "prepare不执行MT5；verify只证明已覆盖夹具范围，不是普遍等价；uncovered/差异必须保留，不调大容差掩盖不匹配。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_conformance"
+      }
+    },
+    {
+      "id": "mt5_trading_context",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Read exact configured account identity or a full-account native snapshot for the main Agent or an active workflow task with a frozen matching execution contract. Includes all origins and broker-retained history; never trades.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "identity"
+              },
+              {
+                "type": "string",
+                "const": "snapshot"
+              }
+            ]
+          },
+          "history_days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 90
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "network",
+        "process",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "提供公开执行组合所需的配置账户身份与全账户原生Python风险快照；首次失败即停止追加查询。",
+        "inputs": "{action:\"identity\"} 或 {action:\"snapshot\",history_days:7}（默认7天，整数1–90）。identity只读当前配置，无账户查询。",
+        "outputs": "identity:{account:{accountId,server,revision}}；snapshot:{account,summary,positions,orders,fills,historicalOrders,deployments,historyCoverage:{requestedFrom,requestedTo,scope:\"native_requested_range\",complete:false,limitations},capturedAt}。summary和四个账户数组保留Python原生字段，时间范围是UTC毫秒；成功的空数组才表示本次未见记录。原生调用失败抛{code,message,details:{transport:\"python\",requiredTransport:\"python\",method,commandId,commandStatus?,nativeCode?,nativeMessage?,retryable?,recovery?}}；身份/连接/数据形状核验失败保留各自code和message。失败不返回部分或伪造空仓快照。",
+        "prerequisites": [
+          "主会话或宿主证明的匹配工作流上下文；账户和配置revision来自identity/mt5_settings，不猜账号。identity不要求原生通道在线；snapshot需要同一已配置账户的Python IPC和券商连接。",
+          "mt5_settings说明已有配置；mt5_catalog({server:\"python\"})提供Python可用方法、参数及调用路由。mt5_connect核验的是Terminal MCP，不能作为Python已连接的证据。initialize/login沿用mt5_trade的现有权限，不是snapshot自动执行的恢复动作。"
+        ],
+        "limitations": [
+          "snapshot先核验原生账户与连接，再读取全账户当前仓位、订单和请求范围内历史；每次读取核对配置revision，失败或取消立即停止，不按magic/comment隐藏全账户风险。Terminal MCP的字段和券商墙时不替代这里的Python/UTC契约。",
+          "确认原生last_error=[-10004,\"No IPC connection\"]时code=MT5_PYTHON_UNAVAILABLE，details保留nativeCode/nativeMessage、method和commandId，并给retryable:false。恢复条件是重新连接已配置的Python终端、核验同一账户后启动新工作流；环境未变时重复快照或仅重连Terminal MCP不会恢复Python IPC。其他错误保留实际code/原生证据，不一概判为不可重试。",
+          "historyCoverage.complete:false表示券商保留历史的请求范围不代表完整历史；失败不能当空仓，身份不符不能自动切换账号。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_trading_context"
+      }
+    },
+    {
+      "id": "mt5_trading_pause",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Risk executor only: stop one EA belonging to the exact account. Native action removes the expert; no automatic resume, state-preserving pause or position close is implied. Unknown receipts require inspection, not replay.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "deployment_id",
+          "account",
+          "reason"
+        ],
+        "properties": {
+          "deployment_id": {
+            "type": "string",
+            "description": "Exact deployment ID from the account snapshot",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "account": {
+            "type": "object",
+            "required": [
+              "accountId",
+              "server",
+              "revision"
+            ],
+            "properties": {
+              "accountId": {
+                "type": "string",
+                "description": "Exact login",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "server": {
+                "type": "string",
+                "description": "Exact server",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "revision": {
+                "type": "string",
+                "description": "Exact configuration revision",
+                "minLength": 1,
+                "maxLength": 20000
+              }
+            },
+            "additionalProperties": false
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "authorization": {
+            "type": "object",
+            "required": [
+              "expiresAt",
+              "signature"
+            ],
+            "properties": {
+              "expiresAt": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "signature": {
+                "type": "string",
+                "minLength": 88,
+                "maxLength": 88
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "external-strategy-operation",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "停止精确账户的一项受管理EA挂载。",
+        "inputs": "{deployment_id:<snapshot真实挂载id>,account:{accountId,server,revision},reason:<具体原因>}；示例reason:\"用户要求停止此EA\"。",
+        "outputs": "{account,deployment,run_record,requestedAction:\"pause\",nativeAction:\"remove_expert\",status,reason,planId,runId,capturedAt,limitation}。",
+        "prerequisites": [
+          "主会话明确停止指令或宿主已证明的工作流executor→执行能力→MT5调用链；Agent不生成authorization签名。"
+        ],
+        "limitations": [
+          "实际移除EA，不平仓、不保证保留运行状态/自动恢复；unknown核对部署回执，不冒称停止完成。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_trading_pause"
+      }
+    },
+    {
+      "id": "mt5_trading_order",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Submit one exact-account guarded order from a host-proven workflow-to-execution call chain, or a legacy runtime-signed intent. Direct delegated model calls have no execution authority; stable command ID retains the parent-owner receipt.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "server",
+          "tool",
+          "arguments",
+          "command_id"
+        ],
+        "properties": {
+          "server": {
+            "type": "string",
+            "const": "python"
+          },
+          "tool": {
+            "type": "string",
+            "const": "order_send"
+          },
+          "arguments": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "command_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]{16,128}$"
+          },
+          "authorization": {
+            "type": "object",
+            "required": [
+              "expiresAt",
+              "signature"
+            ],
+            "properties": {
+              "expiresAt": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "signature": {
+                "type": "string",
+                "minLength": 88,
+                "maxLength": 88
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "external-trading",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "执行宿主可证明来源的单次原生交易意图。",
+        "inputs": "{server:\"python\",tool:\"order_send\",arguments:<原生request与execution_guard或cancellation_guard>,command_id:<稳定16–128字符>}；request参数来自已声明TRADING.md和catalog；工作流执行guard.expected_positions包含该品种全部{ticket,type,volume}，空仓为[]。",
+        "outputs": "{id,conversation_id,server,tool,operation_class,status,result,dataset_id,error,created_at,completed_at}；status=returned|failed|unknown（运行中可为running）。returned只说明收到响应，实际操作还要读result.isError/error/retcode或业务status；dataset_id是本插件保存证据。save_as时省略result并返回saved_to。",
+        "prerequisites": [
+          "主会话明确用户交易意图；委派由portfolio/workflow公开入口建立宿主实时调用链，不能靠填写authorization或任务字段取得权限。"
+        ],
+        "limitations": [
+          "会发生真实交易；returned还须读retcode/真实订单成交。unknown用mt5_trading_command和原生订单核对，不能换ID重报。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_trading_order"
+      }
+    },
+    {
+      "id": "mt5_trading_command",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Read a retained plan order receipt for its exact owner and account, including after a configuration revision change. Never submits or replays an order.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "command_id"
+        ],
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "description": "Existing signed plan command ID",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+        "type": [
+          "object",
+          "array"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "读取执行组合原生交易命令的保留回执。",
+        "inputs": "{command_id:<已保留计划命令ID>}。",
+        "outputs": "{id,conversation_id,server,tool,operation_class,status,result,dataset_id,error,created_at,completed_at}；status=returned|failed|unknown（运行中可为running）。returned只说明收到响应，实际操作还要读result.isError/error/retcode或业务status；dataset_id是本插件保存证据。save_as时省略result并返回saved_to。",
+        "prerequisites": [
+          "当前主拥有者、同login/server，或宿主匹配工作流；配置版本变化后仍可核对原记录。"
+        ],
+        "limitations": [
+          "只读取，不发送、不自动补偿；未知结果保持未知直到原生证据确认。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_trading_command"
+      }
+    },
+    {
+      "id": "activate",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 lifecycle activate: preserve credentials, native state and cleanup evidence.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "config": {
+            "type": "object",
+            "properties": {
+              "disabled": {
+                "type": "boolean"
+              },
+              "autoConnect": {
+                "type": "boolean"
+              },
+              "directory": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "config"
+        ],
+        "additionalProperties": true
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.state.write",
+        "native-observation"
+      ],
+      "usage": {
+        "purpose": "执行MT5 activate 生命周期职责。",
+        "inputs": "{config:{disabled?,autoConnect?,directory?}}；例{config:{autoConnect:false}}。",
+        "outputs": "{ready:true}；初始化私有存储、providers、观察器，默认可启动连接监视。",
+        "prerequisites": [
+          "仅宿主生命周期调用；Agent无需按步骤调用这些钩子。"
+        ],
+        "limitations": [
+          "disabled/autoConnect:false可用于隔离；激活不证明券商可用。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "activate"
+      }
+    },
+    {
+      "id": "dispose",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 lifecycle dispose: preserve credentials, native state and cleanup evidence.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.session.close"
+      ],
+      "usage": {
+        "purpose": "执行MT5 dispose 生命周期职责。",
+        "inputs": "{}。",
+        "outputs": "{closed:true}；关闭监视器、数据provider、自有进程与存储。",
+        "prerequisites": [
+          "仅宿主生命周期调用；Agent无需按步骤调用这些钩子。"
+        ],
+        "limitations": [
+          "不是平仓操作。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "dispose"
+      }
+    },
+    {
+      "id": "beforeAgentTurn",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 lifecycle beforeAgentTurn: preserve credentials, native state and cleanup evidence.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "string"
+          },
+          "conversation": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "source": {},
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "messageId",
+          "conversation",
+          "parts"
+        ],
+        "additionalProperties": true
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "parts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        },
+        "required": [
+          "parts"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "执行MT5 beforeAgentTurn 生命周期职责。",
+        "inputs": "{messageId,conversation,parts,source?,metadata?}。",
+        "outputs": "{parts:<处理后消息部分>}；原生配置敏感内容转换为安全待导入引用。",
+        "prerequisites": [
+          "仅宿主生命周期调用；Agent无需按步骤调用这些钩子。"
+        ],
+        "limitations": [
+          "仅宿主入站钩子；Agent使用mt5_settings/pendingImports，不读取原密钥。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "beforeAgentTurn"
+      }
+    },
+    {
+      "id": "beforeConfigChange",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 lifecycle beforeConfiguration: preserve credentials, native state and cleanup evidence.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "执行MT5 beforeConfigChange 生命周期职责。",
+        "inputs": "{}。",
+        "outputs": "{}；Tester在途时抛mt5_busy。",
+        "prerequisites": [
+          "仅宿主生命周期调用；Agent无需按步骤调用这些钩子。"
+        ],
+        "limitations": [
+          "等待实际任务结束，不用改ID/关插件绕过。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "beforeConfigChange"
+      }
+    },
+    {
+      "id": "beforeDeactivate",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 lifecycle beforeDeactivate: preserve credentials, native state and cleanup evidence.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "执行MT5 beforeDeactivate 生命周期职责。",
+        "inputs": "{}。",
+        "outputs": "{}；仍有preparing/attaching/running/unknown挂载时抛ACTIVE_RUNS。",
+        "prerequisites": [
+          "仅宿主生命周期调用；Agent无需按步骤调用这些钩子。"
+        ],
+        "limitations": [
+          "保留原生运行观察通道；不可将卸载当停止EA。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "beforeDeactivate"
+      }
+    },
+    {
+      "id": "configChanged",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 lifecycle configurationChanged: preserve credentials, native state and cleanup evidence.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.session.write"
+      ],
+      "usage": {
+        "purpose": "执行MT5 configChanged 生命周期职责。",
+        "inputs": "{}。",
+        "outputs": "{}；通知连接监视器settingsChanged。",
+        "prerequisites": [
+          "仅宿主生命周期调用；Agent无需按步骤调用这些钩子。"
+        ],
+        "limitations": [
+          "不表示重连已成功。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "configChanged"
+      }
+    },
+    {
+      "id": "beforeRunRelease",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 lifecycle protectArtifacts: preserve credentials, native state and cleanup evidence.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "runId"
+        ],
+        "additionalProperties": true
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "process.cancel",
+        "resources.publish",
+        "private-filesystem"
+      ],
+      "usage": {
+        "purpose": "执行MT5 beforeRunRelease 生命周期职责。",
+        "inputs": "{runId:<宿主运行ID>}。",
+        "outputs": "{artifacts:[<封存成果Ref>],resources:[{id,path,digest,reason}]}；取消/等待自有编译Tester、封存证据、清理安全的任务暂存。",
+        "prerequisites": [
+          "仅宿主生命周期调用；Agent无需按步骤调用这些钩子。"
+        ],
+        "limitations": [
+          "原生进程清理不确定则抛runtime_cleanup_failed并保留现场；不停止独立实盘挂载。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "beforeRunRelease"
+      }
+    },
+    {
+      "id": "market.bind",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 market bind; typed native data retains exact account binding, broker wall time, coverage and actual availability.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "binding"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.session.write"
+      ],
+      "usage": {
+        "purpose": "为宿主建立精确行情来源会话；不代表已取得报价。",
+        "inputs": "{binding:{}} 使用插件当前终端连接；也可带公开查询返回的精确 connection:{id:\"mt5-terminal\",revision:<当前配置版本字符串>}。不接受猜测的端口/登录身份。",
+        "outputs": "{bindingId,connection,sourceIds,accounts,health,timeBasis}；MT5 broker 时间保留其 wall authority，未提供时区就不转换 UTC。",
+        "prerequisites": [
+          "Agent 使用 data_providers({contract:\"sesame.market/1\"}) 返回的 sesame/mt5#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。",
+          "mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。"
+        ],
+        "limitations": [
+          "connection.id/revision 来自当前绑定或公开查询的 metadata.connection，不等于插件 source.revision。STALE_REVISION/CONNECTION_CHANGED 时重新取得当前身份；不能猜账号、版本或静默切换来源。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market.bind"
+      }
+    },
+    {
+      "id": "market.unbind",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 market unbind; typed native data retains exact account binding, broker wall time, coverage and actual availability.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "binding"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.session.write"
+      ],
+      "usage": {
+        "purpose": "释放宿主创建的行情绑定。",
+        "inputs": "{binding:<bind返回的含bindingId对象>}；例 {binding:{bindingId:\"host-owned-id\"}}。",
+        "outputs": "{closed:true}；释放该绑定与其分页状态。",
+        "prerequisites": [
+          "Agent 使用 data_providers({contract:\"sesame.market/1\"}) 返回的 sesame/mt5#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。",
+          "mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。"
+        ],
+        "limitations": [
+          "仅释放本次来源会话，不是平仓或停终端。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market.unbind"
+      }
+    },
+    {
+      "id": "market.searchInstruments",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 market searchInstruments; typed native data retains exact account binding, broker wall time, coverage and actual availability.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "cursor": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {}
+          },
+          "nextCursor": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "检索该明确来源的真实品种；返回 ref 是后续 instrument 的来源。",
+        "inputs": "{binding:<bind结果>,query:{query:\"EURUSD\",assetClasses?,venues?},page:{limit:20,cursor?}}；limit≤1000，cursor 仅沿用同一来源/过滤条件。",
+        "outputs": "{items:[{ref:{sourceId,instrumentId},symbol,name,assetClass,venue?}],nextCursor?,metadata:{snapshotId?,consistency?,meta,connection?}}；空 items 仅是该次检索无匹配。",
+        "prerequisites": [
+          "Agent 使用 data_providers({contract:\"sesame.market/1\"}) 返回的 sesame/mt5#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。",
+          "mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。"
+        ],
+        "limitations": [
+          "connection.id/revision 来自当前绑定或公开查询的 metadata.connection，不等于插件 source.revision。STALE_REVISION/CONNECTION_CHANGED 时重新取得当前身份；不能猜账号、版本或静默切换来源。",
+          "历史缓存仅是历史；coverage 与时区不补猜。取消宿主订阅不停止EA/交易，也不关闭终端。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market.searchInstruments"
+      }
+    },
+    {
+      "id": "market.describeInstrument",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 market describeInstrument; typed native data retains exact account binding, broker wall time, coverage and actual availability.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "cursor": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {}
+          },
+          "nextCursor": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "读取具体品种的价格/数量单位、时间基准和支持周期。",
+        "inputs": "{binding:<bind结果>,query:{instrument:{sourceId:<search返回的sourceId>,instrumentId:<券商精确symbol>}}}；实际 instrument 用 search 返回 ref。",
+        "outputs": "{items:[{ref,symbol,name,assetClass,price,quantity,volume,timeBasis,calendar,features,native}],metadata:{meta,connection?}}；unknown/unsupported 字段保留，features 决定支持的 spec。",
+        "prerequisites": [
+          "Agent 使用 data_providers({contract:\"sesame.market/1\"}) 返回的 sesame/mt5#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。",
+          "mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。"
+        ],
+        "limitations": [
+          "历史缓存仅是历史；coverage 与时区不补猜。取消宿主订阅不停止EA/交易，也不关闭终端。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market.describeInstrument"
+      }
+    },
+    {
+      "id": "market.queryBars",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 market queryBars; typed native data retains exact account binding, broker wall time, coverage and actual availability.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "cursor": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {}
+          },
+          "nextCursor": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "读取有界历史柱和真实覆盖证据，供宿主查询/冻结。",
+        "inputs": "{binding:<bind结果>,query:{instrument:<search.ref>,spec:<describe支持的spec>,range:{from:<SourceTime>,to:<SourceTime>},includeForming:false,direction:\"forward\"},page:{limit:100,cursor?}}。timeframe 使用 describeInstrument.features.timeframes 的值（如15m），priceBasis=bid、adjustment=none、session=all，calendarRevision:{status:\"unknown\"}。range 保留源 SourceTime，区间 [from,to)。",
+        "outputs": "{items:[{id,revision,openTime,endTime,open,high,low,close,volume,isClosed,closure}],nextCursor?,metadata:{seriesId,instrument,spec,coverage,snapshotId,consistency,meta,connection?}}；OHLC 是十进制字符串，volume 自带单位/未知状态；无 nextCursor 只说明本次快照分页结束。",
+        "prerequisites": [
+          "Agent 使用 data_providers({contract:\"sesame.market/1\"}) 返回的 sesame/mt5#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。",
+          "mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。"
+        ],
+        "limitations": [
+          "coverage.complete:false 表示覆盖未获证明，可使用已返回的真实行并保留限制，不能改成 true 或当作空数据/请求失败。历史查询成功不证明实时订阅或图表渲染成功。",
+          "历史缓存仅是历史；coverage 与时区不补猜。取消宿主订阅不停止EA/交易，也不关闭终端。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market.queryBars"
+      }
+    },
+    {
+      "id": "market.subscribeBars",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 market subscribeBars; typed native data retains exact account binding, broker wall time, coverage and actual availability.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "cursor": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "transport": "subscription",
+      "effects": [
+        "process",
+        "network",
+        "plugin.session.write"
+      ],
+      "usage": {
+        "purpose": "为宿主持续提供初始行情快照及增量。",
+        "inputs": "{binding:<bind结果>,query:{instrument:<search.ref>,spec:<describe支持的spec>,tailLimit:100,includeForming:true}}；不传历史range或复用分页cursor，tailLimit正整数≤2000；恢复使用新快照。timeframe 使用 describeInstrument.features.timeframes 的值（如15m），priceBasis=bid、adjustment=none、session=all，calendarRevision:{status:\"unknown\"}。",
+        "outputs": "{id,events:AsyncIterable,close}；首帧 {type:\"snapshot\",snapshot:{seriesId,instrument,spec,bars,coverage,meta?},position:{streamId,epoch,seq},consistency,recovery:\"snapshot\"}；后续 {streamId,epoch,seq,eventId,schemaVersion,observedAt,type,payload}，type 为 bars.upsert/bars.closed（按源能力）或 stream.gap。position/consistency/recovery 平铺在首帧，不嵌入 metadata。",
+        "prerequisites": [
+          "Agent 使用 data_providers({contract:\"sesame.market/1\"}) 返回的 sesame/mt5#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。",
+          "mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。"
+        ],
+        "limitations": [
+          "终端约1秒目标轮询；实时尾部读取失败会传播，不用旧缓存伪造实时。",
+          "订阅由宿主绑定、取消和释放，Agent 不持有 bindingId。stream.gap/RESYNC_REQUIRED 可按同一来源重新取得快照；具体 SCHEMA_MISMATCH 或首帧 position 缺失是协议问题，反复重绑、新建图或启用无关服务不能修复。",
+          "coverage.complete:false 表示覆盖未获证明，可使用已返回的真实行并保留限制，不能改成 true 或当作空数据/请求失败。历史查询成功不证明实时订阅或图表渲染成功。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market.subscribeBars"
+      }
+    },
+    {
+      "id": "account.bind",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 account bind; typed native data retains exact account binding, broker wall time, coverage and actual availability.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "binding"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.session.write"
+      ],
+      "usage": {
+        "purpose": "为宿主建立精确账户数据绑定。",
+        "inputs": "{binding:{}} 使用插件当前终端连接；也可带公开查询返回的精确 connection:{id:\"mt5-terminal\",revision:<当前配置版本字符串>}。不接受猜测的端口/登录身份。",
+        "outputs": "{bindingId,connection,sourceIds,accounts,health,timeBasis}；MT5 broker 时间保留其 wall authority，未提供时区就不转换 UTC。",
+        "prerequisites": [
+          "宿主 sesame/mt5#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 mt5_trading_context，原生查询使用该包公开工具。",
+          "mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。"
+        ],
+        "limitations": [
+          "connection.id/revision 来自当前绑定或公开查询的 metadata.connection，不等于插件 source.revision。STALE_REVISION/CONNECTION_CHANGED 时重新取得当前身份；不能猜账号、版本或静默切换来源。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account.bind"
+      }
+    },
+    {
+      "id": "account.unbind",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 account unbind; typed native data retains exact account binding, broker wall time, coverage and actual availability.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "binding"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.session.write"
+      ],
+      "usage": {
+        "purpose": "释放账户查询/订阅绑定。",
+        "inputs": "{binding:<bind返回的含bindingId对象>}。",
+        "outputs": "{closed:true}。",
+        "prerequisites": [
+          "宿主 sesame/mt5#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 mt5_trading_context，原生查询使用该包公开工具。",
+          "mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。"
+        ],
+        "limitations": [
+          "不撤单、不平仓、不停止交易终端。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account.unbind"
+      }
+    },
+    {
+      "id": "account.listAccounts",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 account listAccounts; typed native data retains exact account binding, broker wall time, coverage and actual availability.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "cursor": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {}
+          },
+          "nextCursor": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "读取绑定范围内的账户身份。",
+        "inputs": "{binding:<bind结果>,query:{},page:{limit:20,cursor?}}。",
+        "outputs": "{items:[{ref:{connectionId,accountId},label?,currency,...}],nextCursor?,metadata:{snapshotId,consistency,meta,connection?}}；仅当前配置账户，不代表全机登录账户。",
+        "prerequisites": [
+          "宿主 sesame/mt5#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 mt5_trading_context，原生查询使用该包公开工具。",
+          "mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。"
+        ],
+        "limitations": [
+          "无账户或读取失败不等于空账户；实际账号身份沿用返回ref。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account.listAccounts"
+      }
+    },
+    {
+      "id": "account.snapshot",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 account snapshot; typed native data retains exact account binding, broker wall time, coverage and actual availability.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "cursor": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {}
+          },
+          "nextCursor": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "读取一个明确账户的资产快照。",
+        "inputs": "{binding:<bind结果>,query:{account:<listAccounts返回ref>}}。",
+        "outputs": "{items:[<账户资产快照>],metadata:{meta,connection?,...}}；快照包含精确account、asOf/观察时间与各资产字段的value/unknown状态，不能把未知资金当0。",
+        "prerequisites": [
+          "宿主 sesame/mt5#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 mt5_trading_context，原生查询使用该包公开工具。",
+          "mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。"
+        ],
+        "limitations": [
+          "只证明当前快照；不是全部历史账本，也不改变交易权限。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account.snapshot"
+      }
+    },
+    {
+      "id": "account.queryPositions",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 account queryPositions; typed native data retains exact account binding, broker wall time, coverage and actual availability.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "cursor": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {}
+          },
+          "nextCursor": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "读取当前真实持仓的统一字段。",
+        "inputs": "{binding:<bind结果>,query:{account:<listAccounts.ref>,instruments?:[<search.ref>]},page:{limit:100,cursor?}}。",
+        "outputs": "{items:[{id,revision,account,instrument,side,quantity,...}],nextCursor?,metadata:{snapshotId,consistency,meta,connection?}}；quantity保留单位，未知数量不归零。",
+        "prerequisites": [
+          "宿主 sesame/mt5#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 mt5_trading_context，原生查询使用该包公开工具。",
+          "mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。"
+        ],
+        "limitations": [
+          "持仓票据和策略归属按原生证据；不按magic/comment隐藏全账户风险。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account.queryPositions"
+      }
+    },
+    {
+      "id": "account.queryOrders",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 account queryOrders; typed native data retains exact account binding, broker wall time, coverage and actual availability.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "cursor": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {}
+          },
+          "nextCursor": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "读取明确scope的活动/历史订单。",
+        "inputs": "{binding:<bind结果>,query:{account:<账户ref>,scope:\"working\"|\"history\"|\"all\",range?:{from:<SourceTime>,to:<SourceTime>},instruments?},page:{limit:100,cursor?}}；history/all需要明确历史范围。",
+        "outputs": "{items:[<原生映射订单>],nextCursor?,metadata:{snapshotId,consistency,meta,coverage?}}；working活动订单与历史订单按scope区分。",
+        "prerequisites": [
+          "宿主 sesame/mt5#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 mt5_trading_context，原生查询使用该包公开工具。",
+          "mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。"
+        ],
+        "limitations": [
+          "coverage不证明全历史；来源时间保留券商authority。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account.queryOrders"
+      }
+    },
+    {
+      "id": "account.queryFills",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 account queryFills; typed native data retains exact account binding, broker wall time, coverage and actual availability.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "cursor": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {}
+          },
+          "nextCursor": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "读取有界原生成交。",
+        "inputs": "{binding:<bind结果>,query:{account:<账户ref>,range:{from:<SourceTime>,to:<SourceTime>},instruments?},page:{limit:100,cursor?}}。",
+        "outputs": "{items:[统一成交记录],nextCursor?,metadata:{snapshotId,consistency,meta,coverage}}；从券商保留历史映射，不捏造缺失关系/字段。",
+        "prerequisites": [
+          "宿主 sesame/mt5#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 mt5_trading_context，原生查询使用该包公开工具。",
+          "mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。"
+        ],
+        "limitations": [
+          "只有请求范围内可见数据；分页完成不代表完整历史，保留coverage与unknown状态。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account.queryFills"
+      }
+    },
+    {
+      "id": "account.queryHistory",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 account queryHistory; typed native data retains exact account binding, broker wall time, coverage and actual availability.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "cursor": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {}
+          },
+          "nextCursor": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "读取有界账户历史事件。",
+        "inputs": "{binding:<bind结果>,query:{account:<账户ref>,range:{from:<SourceTime>,to:<SourceTime>},instruments?},page:{limit:100,cursor?}}。",
+        "outputs": "{items:[账户历史事件记录],nextCursor?,metadata:{snapshotId,consistency,meta,coverage}}；从券商保留历史映射，不捏造缺失关系/字段。",
+        "prerequisites": [
+          "宿主 sesame/mt5#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 mt5_trading_context，原生查询使用该包公开工具。",
+          "mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。"
+        ],
+        "limitations": [
+          "只有请求范围内可见数据；分页完成不代表完整历史，保留coverage与unknown状态。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account.queryHistory"
+      }
+    },
+    {
+      "id": "account.subscribeAccount",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "MT5 account subscribeAccount; typed native data retains exact account binding, broker wall time, coverage and actual availability.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "cursor": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "transport": "subscription",
+      "effects": [
+        "process",
+        "network",
+        "plugin.session.write"
+      ],
+      "usage": {
+        "purpose": "向宿主提供账户观察快照与增量。",
+        "inputs": "{binding:<bind结果>,query:{account:<账户ref>,topics:[\"snapshot\",\"positions\",\"orders\"]}}；可选非空子集，不支持fills/history订阅或resumeToken。",
+        "outputs": "{id,events:AsyncIterable,close}；首帧 {type:\"snapshot\",snapshot:{account,coverage,snapshot?,positions?,orders?},position:{streamId,epoch,seq},consistency,recovery:\"snapshot\"}；后续 account.snapshot、positions.upsert、orders.upsert 或 stream.gap。position等字段平铺。",
+        "prerequisites": [
+          "宿主 sesame/mt5#account 数据源专用；普通Agent读取账户使用已声明 portfolio_execution_context 或 mt5_trading_context，原生查询使用该包公开工具。",
+          "mt5_settings 给出当前配置/连接；mt5_connect 用已有配置核验终端和券商。原生行情依赖 terminal，不依赖可选 marketdata 服务。"
+        ],
+        "limitations": [
+          "订阅由宿主绑定、取消和释放，Agent 不持有 bindingId。stream.gap/RESYNC_REQUIRED 可按同一来源重新取得快照；具体 SCHEMA_MISMATCH 或首帧 position 缺失是协议问题，反复重绑、新建图或启用无关服务不能修复。",
+          "持仓/订单消失需新快照，不能仅凭upsert推断删除。约1秒轮询不等于交易所事件流。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account.subscribeAccount"
+      }
+    },
+    {
+      "id": "datasets.query",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read MT5 datasets through explicit query; input query filters by datasetId/parameters, native bars query, or native run id/status.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "cursor": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {}
+          },
+          "nextCursor": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "读取MT5私有已保存证据的公开数据出口。",
+        "inputs": "宿主 {binding:{},query:{datasetId?,parameters?},page:{limit:100,cursor?}}；省略datasetId列目录；ID来自mt5_report_data.sources或原生命令dataset_id，parameters按该source返回的参数名。",
+        "outputs": "{items,nextCursor?,metadata?}；目录行无rows但有rowCount；指定datasetId返回原固定行与其metadata/provenance。",
+        "prerequisites": [
+          "宿主 sesame/mt5#datasets 专用；Agent通过data_query({source,input:query})读取，source用公开data_providers返回ref。"
+        ],
+        "limitations": [
+          "普通datasetId不等于host数据集；strategy角色过滤只接受原声明optimization_id/pass_id。",
+          "明确datasetId不存在时返回NOT_FOUND，不改为目录或空数据；使用mt5_report_data或无datasetId目录返回的真实ID。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "datasets.query"
+      }
+    },
+    {
+      "id": "bars.query",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read MT5 bars through explicit query; input query filters by datasetId/parameters, native bars query, or native run id/status.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "cursor": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {}
+          },
+          "nextCursor": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "cache.read",
+        "network-when-history-required"
+      ],
+      "usage": {
+        "purpose": "向宿主提供MT5历史缓存行查询。",
+        "inputs": "宿主 {binding:{},query:{symbol,period,from,to,...},page:{limit:100,cursor?}}；query沿用mt5本地历史接口，来源时间是券商墙时。",
+        "outputs": "{items:<历史bars>,nextCursor?,metadata:<缓存查询的来源/覆盖>}。",
+        "prerequisites": [
+          "宿主 sesame/mt5#bars；Agent优先 market_read 统一市场接口，不自行组装私有来源。"
+        ],
+        "limitations": [
+          "不是实时订阅；分页使用返回cursor，不证明历史完整。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "bars.query"
+      }
+    },
+    {
+      "id": "runs.query",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read MT5 runs through explicit query; input query filters by datasetId/parameters, native bars query, or native run id/status.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "cursor": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {}
+          },
+          "nextCursor": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "查询已保存的原生运行观察记录。",
+        "inputs": "宿主 {binding:{},query:{id?,status?},page:{limit:100,cursor?}}。",
+        "outputs": "{items:[<native_run_record记录，含body.status和固定引用>],nextCursor?}。",
+        "prerequisites": [
+          "宿主 sesame/mt5#runs；Agent观察具体任务用mt5_backtest/mt5_deployment公开工具。"
+        ],
+        "limitations": [
+          "是原生运行观察记录，不是启动Agent，也不自动执行/停止原生程序。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "runs.query"
+      }
+    },
+    {
+      "id": "runs.watch",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read MT5 runs through explicit watch; input query filters by datasetId/parameters, native bars query, or native run id/status.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "cursor": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "snapshot"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "nextCursor": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "items"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "transport": "subscription",
+      "effects": [
+        "plugin.session.write"
+      ],
+      "usage": {
+        "purpose": "观察原生运行记录的已知变化。",
+        "inputs": "宿主 {binding:{},query:{id?,status?}}。",
+        "outputs": "{id,events:AsyncIterable,close}；约1秒检查，变化时事件为{type:\"snapshot\",items,nextCursor?}，最多1000条；这是rows源快照，不是market/account的position流协议。",
+        "prerequisites": [
+          "宿主 sesame/mt5#runs watch调用。"
+        ],
+        "limitations": [
+          "关闭仅停止观察，不停止EA/Tester；原生记录未知状态不自动转成功。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "runs.watch"
+      }
+    },
+    {
+      "id": "positions_close",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Close the confirmed MT5 position ticket through the existing guarded Python order_send and durable native command journal. Retain uncertain outcomes; never resend.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  }
+                },
+                "required": [
+                  "id",
+                  "revision"
+                ],
+                "additionalProperties": false
+              },
+              "account": {
+                "type": "object",
+                "properties": {
+                  "connectionId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  },
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  }
+                },
+                "required": [
+                  "connectionId",
+                  "accountId"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "connection",
+              "account"
+            ],
+            "additionalProperties": false
+          },
+          "positionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "quantity": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                "maxLength": 100
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            },
+            "required": [
+              "value",
+              "unit"
+            ],
+            "additionalProperties": false
+          },
+          "operationId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,100}$"
+          },
+          "expected": {
+            "type": "object",
+            "properties": {
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              "instrument": {
+                "type": "object",
+                "properties": {
+                  "sourceId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  },
+                  "instrumentId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  }
+                },
+                "required": [
+                  "sourceId",
+                  "instrumentId"
+                ],
+                "additionalProperties": false
+              },
+              "side": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              "quantity": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                    "maxLength": 100
+                  },
+                  "unit": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "revision",
+              "instrument",
+              "side",
+              "quantity"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "positionId",
+          "operationId",
+          "expected"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,100}$"
+          },
+          "positionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "status": {
+            "enum": [
+              "submitted",
+              "partially_filled",
+              "filled",
+              "closed",
+              "rejected",
+              "outcome_unknown"
+            ]
+          },
+          "requestedQuantity": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                "maxLength": 100
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            },
+            "required": [
+              "value",
+              "unit"
+            ],
+            "additionalProperties": false
+          },
+          "filledQuantity": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                "maxLength": 100
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            },
+            "required": [
+              "value",
+              "unit"
+            ],
+            "additionalProperties": false
+          },
+          "remainingPositionQuantity": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                "maxLength": 100
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            },
+            "required": [
+              "value",
+              "unit"
+            ],
+            "additionalProperties": false
+          },
+          "orderIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            "maxItems": 100
+          },
+          "observedAt": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "operationId",
+          "positionId",
+          "status",
+          "requestedQuantity",
+          "observedAt"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "external-trading",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "执行账户页确认的手动平仓。",
+        "inputs": "{binding:{connection:{id,revision},account:{connectionId,accountId}},positionId,operationId,expected:{revision,instrument:{sourceId,instrumentId},side,quantity:{value,unit}},quantity?}；expected来自用户确认的账户页持仓，quantity省略表示确认数量。",
+        "outputs": "{operationId,positionId,status,requestedQuantity,observedAt,filledQuantity?,remainingPositionQuantity?,orderIds?,dealIds?,error?}；status=closed|filled|partially_filled|submitted|rejected|outcome_unknown；closed确认持仓已全平，filled仅确认本次数量已完成。",
+        "prerequisites": [
+          "仅宿主已确认的主会话账户UI可调用；普通Agent使用公开portfolio能力，不能自行伪造UI provenance。"
+        ],
+        "limitations": [
+          "提交真实减仓意图；同ID同输入仅取原回执，账户/数量变化会拒绝。",
+          "submitted/unknown不表示平仓完成；有未确认操作时先核对原回执，不能换ID重复。",
+          "对精确票据执行对应方向平仓，保留券商真实retcode与成交证据。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "positions_close"
+      }
+    },
+    {
+      "id": "positions_read_receipt",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read a retained close using exact native order/deal IDs and current positions; never dispatch or infer fills from a missing position.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  }
+                },
+                "required": [
+                  "id",
+                  "revision"
+                ],
+                "additionalProperties": false
+              },
+              "account": {
+                "type": "object",
+                "properties": {
+                  "connectionId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  },
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  }
+                },
+                "required": [
+                  "connectionId",
+                  "accountId"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "connection",
+              "account"
+            ],
+            "additionalProperties": false
+          },
+          "operationId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,100}$"
+          }
+        },
+        "required": [
+          "binding",
+          "operationId"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,100}$"
+          },
+          "positionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "status": {
+            "enum": [
+              "submitted",
+              "partially_filled",
+              "filled",
+              "closed",
+              "rejected",
+              "outcome_unknown"
+            ]
+          },
+          "requestedQuantity": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                "maxLength": 100
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            },
+            "required": [
+              "value",
+              "unit"
+            ],
+            "additionalProperties": false
+          },
+          "filledQuantity": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                "maxLength": 100
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            },
+            "required": [
+              "value",
+              "unit"
+            ],
+            "additionalProperties": false
+          },
+          "remainingPositionQuantity": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+                "maxLength": 100
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            },
+            "required": [
+              "value",
+              "unit"
+            ],
+            "additionalProperties": false
+          },
+          "orderIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            "maxItems": 100
+          },
+          "observedAt": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "operationId",
+          "positionId",
+          "status",
+          "requestedQuantity",
+          "observedAt"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "network",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "核对账户页平仓的已保留回执。",
+        "inputs": "{binding:{connection:{id,revision},account:{connectionId,accountId}},operationId:<已有平仓键>}。",
+        "outputs": "{operationId,positionId,status,requestedQuantity,observedAt,filledQuantity?,remainingPositionQuantity?,orderIds?,dealIds?,error?}；status=closed|filled|partially_filled|submitted|rejected|outcome_unknown；closed确认持仓已全平，filled仅确认本次数量已完成。",
+        "prerequisites": [
+          "仅宿主已确认的主会话账户UI可调用；普通Agent使用公开portfolio能力，不能自行伪造UI provenance。"
+        ],
+        "limitations": [
+          "读取可刷新原生证据，不发补单。",
+          "submitted/unknown不表示平仓完成；有未确认操作时先核对原回执，不能换ID重复。",
+          "对精确票据执行对应方向平仓，保留券商真实retcode与成交证据。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "positions_read_receipt"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "id": "market",
+      "contract": "sesame.market/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "connection": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "operations": {
+        "bind": "market.bind",
+        "unbind": "market.unbind",
+        "searchInstruments": "market.searchInstruments",
+        "describeInstrument": "market.describeInstrument",
+        "queryBars": "market.queryBars",
+        "subscribeBars": "market.subscribeBars"
+      },
+      "presentation": {
+        "transportMode": "poll",
+        "minPollIntervalMs": 1000,
+        "priceBases": [
+          "bid"
+        ],
+        "adjustments": [
+          "none"
+        ],
+        "sessions": [
+          "all"
+        ],
+        "capabilities": [
+          "instruments.search",
+          "instruments.describe",
+          "bars.history",
+          "bars.subscribe"
+        ]
+      }
+    },
+    {
+      "id": "account",
+      "contract": "sesame.account/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "connection": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "operations": {
+        "bind": "account.bind",
+        "unbind": "account.unbind",
+        "listAccounts": "account.listAccounts",
+        "snapshot": "account.snapshot",
+        "queryPositions": "account.queryPositions",
+        "queryOrders": "account.queryOrders",
+        "queryFills": "account.queryFills",
+        "queryHistory": "account.queryHistory",
+        "subscribeAccount": "account.subscribeAccount"
+      },
+      "presentation": {
+        "transportMode": "poll",
+        "minPollIntervalMs": 2000,
+        "liveTopics": [
+          "snapshot",
+          "positions",
+          "orders"
+        ],
+        "capabilities": [
+          "accounts.list",
+          "account.snapshot",
+          "positions.query",
+          "orders.query",
+          "fills.query",
+          "history.query",
+          "account.subscribe"
+        ]
+      }
+    },
+    {
+      "id": "datasets",
+      "contract": "sesame.datasets/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "operations": {
+        "query": "datasets.query"
+      }
+    },
+    {
+      "id": "bars",
+      "contract": "sesame.native-bars/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "operations": {
+        "query": "bars.query"
+      }
+    },
+    {
+      "id": "runs",
+      "contract": "sesame.strategy-run/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "operations": {
+        "query": "runs.query",
+        "watch": "runs.watch"
+      }
+    }
+  ],
+  "views": [],
+  "services": [
+    {
+      "id": "positions",
+      "contract": "sesame.positions/1",
+      "consumer": "host",
+      "sourceId": "account",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "operations": {
+        "close": "positions_close",
+        "readReceipt": "positions_read_receipt"
+      }
+    }
+  ],
+  "knowledge": [
+    {
+      "id": "reference-0",
+      "path": "prompt.md",
+      "description": "MT5 domain reference: prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "reference-1",
+      "path": "tools/official/prompt.md",
+      "description": "MT5 domain reference: tools/official/prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "reference-2",
+      "path": "tools/charts/prompt.md",
+      "description": "MT5 domain reference: tools/charts/prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "reference-3",
+      "path": "tools/editor/prompt.md",
+      "description": "MT5 domain reference: tools/editor/prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "reference-4",
+      "path": "tools/python/prompt.md",
+      "description": "MT5 domain reference: tools/python/prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "reference-5",
+      "path": "tools/system/prompt.md",
+      "description": "MT5 domain reference: tools/system/prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "reference-6",
+      "path": "tools/tester/prompt.md",
+      "description": "MT5 domain reference: tools/tester/prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "reference-7",
+      "path": "tools/trading/prompt.md",
+      "description": "MT5 domain reference: tools/trading/prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "reference-8",
+      "path": "tools/deployment/prompt.md",
+      "description": "MT5 domain reference: tools/deployment/prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "reference-9",
+      "path": "tools/authoring/prompt.md",
+      "description": "MT5 domain reference: tools/authoring/prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "reference-10",
+      "path": "skills/visual-state-machines/references/language.md",
+      "description": "MT5 domain reference: skills/visual-state-machines/references/language.md",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-11",
+      "path": "target/README.md",
+      "description": "MT5 domain reference: target/README.md",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-12",
+      "path": "target/translation-file.md",
+      "description": "MT5 domain reference: target/translation-file.md",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-13",
+      "path": "target/sdk-integration.md",
+      "description": "MT5 domain reference: target/sdk-integration.md",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-14",
+      "path": "target/examples/Strategy.mq5",
+      "description": "MT5 domain reference: target/examples/Strategy.mq5",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-15",
+      "path": "backend/sdk/Expert.mqh",
+      "description": "MT5 domain reference: backend/sdk/Expert.mqh",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-16",
+      "path": "backend/sdk/Results.mqh",
+      "description": "MT5 domain reference: backend/sdk/Results.mqh",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-17",
+      "path": "backend/sdk/Risk.mqh",
+      "description": "MT5 domain reference: backend/sdk/Risk.mqh",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-18",
+      "path": "backend/sdk/Telemetry.mqh",
+      "description": "MT5 domain reference: backend/sdk/Telemetry.mqh",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-19",
+      "path": "backend/sdk/Trade.mqh",
+      "description": "MT5 domain reference: backend/sdk/Trade.mqh",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-20",
+      "path": "backend/sdk/Visual.mqh",
+      "description": "MT5 domain reference: backend/sdk/Visual.mqh",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-21",
+      "path": "scripts/install-mt5-python.py",
+      "description": "MT5 domain reference: scripts/install-mt5-python.py",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-22",
+      "path": "scripts/install-mt5-macos.sh",
+      "description": "MT5 domain reference: scripts/install-mt5-macos.sh",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-23",
+      "path": "scripts/README.md",
+      "description": "MT5 domain reference: scripts/README.md",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-24",
+      "path": "TRADING.md",
+      "description": "MT5 domain reference: TRADING.md",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-25",
+      "path": "target/conformance.md",
+      "description": "MT5 domain reference: target/conformance.md",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-26",
+      "path": "backend/sdk/Conformance.mqh",
+      "description": "MT5 domain reference: backend/sdk/Conformance.mqh",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-27",
+      "path": "backend/sdk/FrozenInputs.mqh",
+      "description": "MT5 domain reference: backend/sdk/FrozenInputs.mqh",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-28",
+      "path": "target/examples/FrozenTimeline.mq5",
+      "description": "MT5 domain reference: target/examples/FrozenTimeline.mq5",
+      "kind": "reference"
+    },
+    {
+      "id": "skill-connection",
+      "path": "skills/connection/SKILL.md",
+      "description": "MT5 domain capability reference skills/connection/SKILL.md",
+      "kind": "skill"
+    },
+    {
+      "id": "skill-dependencies",
+      "path": "skills/dependencies/SKILL.md",
+      "description": "MT5 domain capability reference skills/dependencies/SKILL.md",
+      "kind": "skill"
+    },
+    {
+      "id": "skill-mt5-official",
+      "path": "skills/mt5-official/SKILL.md",
+      "description": "MT5 domain capability reference skills/mt5-official/SKILL.md",
+      "kind": "skill"
+    },
+    {
+      "id": "skill-native-ea",
+      "path": "skills/native-ea/SKILL.md",
+      "description": "MT5 domain capability reference skills/native-ea/SKILL.md",
+      "kind": "skill"
+    },
+    {
+      "id": "skill-svl-mql5",
+      "path": "skills/svl-mql5/SKILL.md",
+      "description": "MT5 domain capability reference skills/svl-mql5/SKILL.md",
+      "kind": "skill"
+    },
+    {
+      "id": "skill-visual-state-machines",
+      "path": "skills/visual-state-machines/SKILL.md",
+      "description": "MT5 domain capability reference skills/visual-state-machines/SKILL.md",
+      "kind": "skill"
+    },
+    {
+      "id": "public-interface-contract",
+      "path": "INTERFACES.md",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Every declared capability: concrete inputs/outputs, dependency entrypoints, effects, completion evidence and recovery boundaries.",
+      "kind": "reference"
+    }
+  ],
+  "hooks": [
+    {
+      "id": "activate",
+      "event": "lifecycle.activate",
+      "contract": "sesame.lifecycle/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "operations": {
+        "handle": "activate"
+      }
+    },
+    {
+      "id": "dispose",
+      "event": "lifecycle.dispose",
+      "contract": "sesame.lifecycle/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "operations": {
+        "handle": "dispose"
+      }
+    },
+    {
+      "id": "beforeAgentTurn",
+      "event": "lifecycle.beforeAgentTurn",
+      "contract": "sesame.lifecycle/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "operations": {
+        "handle": "beforeAgentTurn"
+      }
+    },
+    {
+      "id": "beforeConfigChange",
+      "event": "lifecycle.beforeConfigChange",
+      "contract": "sesame.lifecycle/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "operations": {
+        "handle": "beforeConfigChange"
+      }
+    },
+    {
+      "id": "beforeDeactivate",
+      "event": "lifecycle.beforeDeactivate",
+      "contract": "sesame.lifecycle/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "operations": {
+        "handle": "beforeDeactivate"
+      }
+    },
+    {
+      "id": "configChanged",
+      "event": "lifecycle.configChanged",
+      "contract": "sesame.lifecycle/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "operations": {
+        "handle": "configChanged"
+      }
+    },
+    {
+      "id": "beforeRunRelease",
+      "event": "lifecycle.beforeRunRelease",
+      "contract": "sesame.lifecycle/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "operations": {
+        "handle": "beforeRunRelease"
+      }
+    }
+  ],
+  "stateCollections": [],
+  "artifactSchemas": [
+    {
+      "id": "resource",
+      "kind": "resource",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "format": {}
+        },
+        "required": [
+          "format"
+        ],
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "strategy.target",
+      "kind": "strategy.target",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "schemaVersion": {},
+          "id": {},
+          "version": {},
+          "runtime": {},
+          "semantics": {}
+        },
+        "required": [
+          "schemaVersion",
+          "id",
+          "version",
+          "runtime",
+          "semantics"
+        ],
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "strategy.translation",
+      "kind": "strategy.translation",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "schemaVersion": {},
+          "source": {},
+          "target": {},
+          "sourceMap": {},
+          "codeDigest": {}
+        },
+        "required": [
+          "schemaVersion",
+          "source",
+          "target",
+          "sourceMap",
+          "codeDigest"
+        ],
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "strategy.validation",
+      "kind": "strategy.validation",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "schemaVersion": {},
+          "source": {},
+          "outcome": {},
+          "cases": {}
+        },
+        "required": [
+          "schemaVersion",
+          "source",
+          "outcome",
+          "cases"
+        ],
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "environment",
+      "kind": "environment",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "profile": {},
+          "plugin": {},
+          "observedAt": {}
+        },
+        "required": [
+          "profile",
+          "plugin",
+          "observedAt"
+        ],
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "parameters",
+      "kind": "parameters",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "source": {},
+          "values": {}
+        },
+        "required": [
+          "source",
+          "values"
+        ],
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "dependency-lock",
+      "kind": "dependency-lock",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "plugin": {},
+          "sdkVersion": {}
+        },
+        "required": [
+          "plugin",
+          "sdkVersion"
+        ],
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "data",
+      "kind": "data",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "format": {},
+          "path": {},
+          "rowCount": {},
+          "provenance": {}
+        },
+        "required": [
+          "format",
+          "path",
+          "rowCount",
+          "provenance"
+        ],
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "strategy.result",
+      "kind": "strategy.result",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "schemaVersion": {},
+          "runId": {},
+          "source": {},
+          "translation": {},
+          "status": {},
+          "data": {}
+        },
+        "required": [
+          "schemaVersion",
+          "runId",
+          "source",
+          "translation",
+          "status",
+          "data"
+        ],
+        "additionalProperties": true
+      }
+    }
+  ]
+}

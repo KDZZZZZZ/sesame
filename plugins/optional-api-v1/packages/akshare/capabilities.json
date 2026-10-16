@@ -1,0 +1,1335 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "capabilities": [
+    {
+      "id": "akshare_discover",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Find and verify a configured/native Python with compatible existing AKShare; readonly reuse first, never download or upgrade shared environments.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "python_path": {
+            "type": "string",
+            "description": "Configured existing native Python/venv executable"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [
+        "process",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "验证并选择实际可导入固定版本 AKShare 的现有 Python。",
+        "inputs": "{python_path?}；例 {python_path:\"C:/known-venv/Scripts/python.exe\"} 仅在已有该真实路径时使用；{} 使用保存/私有/宿主/PATH候选。",
+        "outputs": "ready:true 返回 python、akshareVersion:\"1.19.1\"、pythonInfo、reused:true、mode、provenance；ready:false 返回 required、failures[{python,reason}]。成功会保存私有选择记录，查询可立即使用。",
+        "prerequisites": [
+          "本机64位 Python>=3.11；无需券商账户或API Key。"
+        ],
+        "limitations": [
+          "不下载、不升级现有环境；一个失败候选不代表全机无依赖。有已知其他路径可显式 discover；确需安装用 akshare_prepare。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "akshare_discover"
+      }
+    },
+    {
+      "id": "akshare_status",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Inspect optional AKShare environment. Never installs or downloads anything.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "核验当前候选 AKShare 环境，返回就绪或具体缺项。",
+        "inputs": "{}；使用已有选择及本机候选。",
+        "outputs": "ready:true 返回 python、akshareVersion:\"1.19.1\"、pythonInfo、reused:true、mode、provenance；ready:false 返回 required、failures[{python,reason}]。成功会保存私有选择记录，查询可立即使用。",
+        "prerequisites": [
+          "本机64位 Python>=3.11；无需券商账户或API Key。"
+        ],
+        "limitations": [
+          "不下载、不升级现有环境；一个失败候选不代表全机无依赖。有已知其他路径可显式 discover；确需安装用 akshare_prepare。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "akshare_status"
+      }
+    },
+    {
+      "id": "akshare_prepare",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "First verify/reuse compatible existing AKShare. If missing, explicitly create a private plugin-data Python venv and download pinned AKShare 1.19.1 packages from official PyPI. No global/system package install.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "python_path": {
+            "type": "string",
+            "description": "Optional native 64-bit Python >=3.11 executable compatible with this host OS"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [
+        "process",
+        "network",
+        "private-filesystem",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "准备缺失的私有 AKShare 依赖并保留来源收据。",
+        "inputs": "{python_path?}；可指定已存在的本机64位Python>=3.11，例 {python_path:\"C:/Python312/python.exe\"}。",
+        "outputs": "{ready:true,reused,python,mode?,receipt?}；新安装 receipt 含 index、akshareVersion、Python信息和 packages[{name,version,url,hashes.sha256}]；缺解释器/源失败抛明确错误。",
+        "prerequisites": [
+          "akshare_discover/status 可发现现有环境；prepare 仍会先复用兼容环境。"
+        ],
+        "limitations": [
+          "只在插件私有目录建 venv、下载 AKShare 1.19.1 并 pip check；不下载Python，不升级共享环境。安装成功不证明某上游网络可访问。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "akshare_prepare"
+      }
+    },
+    {
+      "id": "akshare_catalog",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Discover read-only whitelisted AKShare interfaces and their source/units. No arbitrary Python.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "列出实际支持的只读 AKShare 接口、参数和数据来源。",
+        "inputs": "{}。",
+        "outputs": "{interfaces:[{name,arguments,source,volumeUnit?}],streaming:false,subscriptions,provider,connections:[{id,revision}],documentation}；接口名/字符串参数可直接用于 akshare_query。",
+        "prerequisites": [],
+        "limitations": [
+          "此包不提供账户、下单或实盘成交能力；公开数据可用不代表可交易。",
+          "目录是实现白名单，不表示上游可访问；实时图表从 data-access/canvas 公开入口创建。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "akshare_catalog"
+      }
+    },
+    {
+      "id": "akshare_query",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Call a read-only whitelisted research interface; returns actual source rows or a clear network error. Financial numbers are decimal strings, never synthetic fallback.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "interface"
+        ],
+        "properties": {
+          "interface": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "stock_info_a_code_name"
+              },
+              {
+                "type": "string",
+                "const": "stock_zh_a_spot_em"
+              },
+              {
+                "type": "string",
+                "const": "stock_zh_a_hist"
+              },
+              {
+                "type": "string",
+                "const": "stock_zh_a_daily"
+              },
+              {
+                "type": "string",
+                "const": "stock_bid_ask_em"
+              },
+              {
+                "type": "string",
+                "const": "stock_zh_a_spot_tx"
+              },
+              {
+                "type": "string",
+                "const": "stock_zh_a_hist_tx"
+              }
+            ]
+          },
+          "arguments": {
+            "type": "object",
+            "patternProperties": {
+              "^.*$": {
+                "type": "string"
+              }
+            }
+          },
+          "max_rows": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "default": 100
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "执行白名单上游接口，保留实际字段和预览截断信息。",
+        "inputs": "{interface,arguments?,max_rows?}；arguments 的值均为字符串。例 {interface:\"stock_zh_a_hist_tx\",arguments:{symbol:\"sz000001\",start_date:\"20260101\",end_date:\"20261015\",adjust:\"\"},max_rows:100}。stock_info_a_code_name/stock_zh_a_spot_em/stock_zh_a_spot_tx 无参数；stock_bid_ask_em 用 symbol 六位代码；stock_zh_a_hist 用六位symbol、period:\"daily\"；stock_zh_a_daily 用 sh/sz 前缀。",
+        "outputs": "{ok,interface,akshareVersion,observedAt,rows,totalRows,truncated}；max_rows默认100、最多1000，只裁剪预览，totalRows 是原生返回行数。",
+        "prerequisites": [
+          "akshare_discover/status 或 prepare 的 ready:true；允许的接口完整列于 akshare_catalog。"
+        ],
+        "limitations": [
+          "这是上游字段结果，不是统一Bar，也不自动发布DataRef。网络/接口错误是失败，不以空数组替代；需要完整统一历史/冻结证据用 market_read。",
+          "此包不提供账户、下单或实盘成交能力；公开数据可用不代表可交易。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "akshare_query"
+      }
+    },
+    {
+      "id": "akshare_quote",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Read actual explicitly selected Eastmoney or Tencent single-stock quote snapshot; polling observation, not an exchange tick stream.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "eastmoney"
+              },
+              {
+                "type": "string",
+                "const": "tencent"
+              }
+            ]
+          }
+        },
+        "required": [
+          "symbol"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "读取一个A股公开报价快照。",
+        "inputs": "{symbol:\"000001\",source:\"tencent\"}；symbol六位代码，source=eastmoney（默认）|tencent。",
+        "outputs": "{...原生查询回执,rows,source,exchangeTimeAvailable:false}；Tencent 从全市场快照筛选该代码；Eastmoney 返回报价项目行。",
+        "prerequisites": [
+          "已有 ready:true 的 AKShare 环境。"
+        ],
+        "limitations": [
+          "observedAt 是本次HTTP观察时间；不宣称交易所逐笔或freshness live。无匹配行不证明零价格。",
+          "此包不提供账户、下单或实盘成交能力；公开数据可用不代表可交易。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "akshare_quote"
+      }
+    },
+    {
+      "id": "market_bind",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Bind the declared market source to explicit connection configuration.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "id",
+                  "revision"
+                ],
+                "additionalProperties": false
+              },
+              "configuration": {
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "eastmoney",
+                      "sina",
+                      "tencent"
+                    ]
+                  }
+                },
+                "required": [
+                  "source"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.session.write"
+      ],
+      "usage": {
+        "purpose": "为宿主建立精确行情来源会话；不代表已取得报价。",
+        "inputs": "{binding:{configuration:{source:\"tencent\"}}}；source=eastmoney|sina|tencent，缺省 eastmoney；也可传精确 connection:{id:\"akshare:tencent\",revision:\"1.19.1\"}。",
+        "outputs": "{bindingId,connection:{id:\"akshare:<source>\",revision:\"1.19.1\"},sourceIds:[\"akshare:<source>:a-share\"],health:\"ready\",timeBasis}；ready 只描述绑定，尚未验证网络/环境。",
+        "prerequisites": [
+          "Agent 使用 data_providers({contract:\"sesame.market/1\"}) 返回的 sesame/akshare#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。",
+          "akshare_discover 或 akshare_status 返回 ready:true 后已选定可用 Python；akshare_prepare 可创建私有 AKShare 1.19.1 环境。不需要券商账户/API Key。"
+        ],
+        "limitations": [
+          "connection.id/revision 来自当前绑定或公开查询的 metadata.connection，不等于插件 source.revision。STALE_REVISION/CONNECTION_CHANGED 时重新取得当前身份；不能猜账号、版本或静默切换来源。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_bind"
+      }
+    },
+    {
+      "id": "market_unbind",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Release this source binding and its snapshots.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "binding"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "closed": {
+            "const": true
+          }
+        },
+        "required": [
+          "closed"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.session.write"
+      ],
+      "usage": {
+        "purpose": "释放宿主创建的行情绑定。",
+        "inputs": "{binding:<bind返回的含bindingId对象>}；例 {binding:{bindingId:\"host-owned-id\"}}。",
+        "outputs": "{closed:true}；释放该绑定与其分页状态。",
+        "prerequisites": [
+          "Agent 使用 data_providers({contract:\"sesame.market/1\"}) 返回的 sesame/akshare#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。",
+          "akshare_discover 或 akshare_status 返回 ready:true 后已选定可用 Python；akshare_prepare 可创建私有 AKShare 1.19.1 环境。不需要券商账户/API Key。"
+        ],
+        "limitations": [
+          "仅释放本次来源会话，不是平仓或停终端。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_unbind"
+      }
+    },
+    {
+      "id": "market_searchInstruments",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read actual source searchInstruments; source metadata includes coverage and time/precision limitations.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string"
+              },
+              "assetClasses": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "venues": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array"
+          },
+          "nextCursor": {
+            "type": "string",
+            "minLength": 1
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items",
+          "metadata"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "检索该明确来源的真实品种；返回 ref 是后续 instrument 的来源。",
+        "inputs": "{binding:<bind结果>,query:{query:\"000001\",assetClasses?,venues?},page:{limit:20,cursor?}}；limit≤1000，cursor 仅沿用同一来源/过滤条件。",
+        "outputs": "{items:[{ref:{sourceId,instrumentId},symbol,name,assetClass,venue?}],nextCursor?,metadata:{snapshotId?,consistency?,meta,connection?}}；空 items 仅是该次检索无匹配。",
+        "prerequisites": [
+          "Agent 使用 data_providers({contract:\"sesame.market/1\"}) 返回的 sesame/akshare#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。",
+          "akshare_discover 或 akshare_status 返回 ready:true 后已选定可用 Python；akshare_prepare 可创建私有 AKShare 1.19.1 环境。不需要券商账户/API Key。"
+        ],
+        "limitations": [
+          "connection.id/revision 来自当前绑定或公开查询的 metadata.connection，不等于插件 source.revision。STALE_REVISION/CONNECTION_CHANGED 时重新取得当前身份；不能猜账号、版本或静默切换来源。",
+          "只支持A股日线；Sina限沪深，报价仅Eastmoney/Tencent。Eastmoney volume 单位 lot（100股），Sina/Tencent 为 share；不得补造分钟柱或未知量。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_searchInstruments"
+      }
+    },
+    {
+      "id": "market_describeInstrument",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read actual source describeInstrument; source metadata includes coverage and time/precision limitations.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "instrument": {
+                "type": "object",
+                "properties": {
+                  "sourceId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "instrumentId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "sourceId",
+                  "instrumentId"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "instrument"
+            ],
+            "additionalProperties": false
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array"
+          },
+          "nextCursor": {
+            "type": "string",
+            "minLength": 1
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items",
+          "metadata"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "读取具体品种的价格/数量单位、时间基准和支持周期。",
+        "inputs": "{binding:<bind结果>,query:{instrument:{sourceId:\"akshare:tencent:a-share\",instrumentId:\"000001\"}}}；实际 instrument 用 search 返回 ref。",
+        "outputs": "{items:[{ref,symbol,name,assetClass,price,quantity,volume,timeBasis,calendar,features,native}],metadata:{meta,connection?}}；unknown/unsupported 字段保留，features 决定支持的 spec。",
+        "prerequisites": [
+          "Agent 使用 data_providers({contract:\"sesame.market/1\"}) 返回的 sesame/akshare#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。",
+          "akshare_discover 或 akshare_status 返回 ready:true 后已选定可用 Python；akshare_prepare 可创建私有 AKShare 1.19.1 环境。不需要券商账户/API Key。"
+        ],
+        "limitations": [
+          "只支持A股日线；Sina限沪深，报价仅Eastmoney/Tencent。Eastmoney volume 单位 lot（100股），Sina/Tencent 为 share；不得补造分钟柱或未知量。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_describeInstrument"
+      }
+    },
+    {
+      "id": "market_queryBars",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read actual source queryBars; source metadata includes coverage and time/precision limitations.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "instrument": {
+                "type": "object",
+                "properties": {
+                  "sourceId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "instrumentId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "sourceId",
+                  "instrumentId"
+                ],
+                "additionalProperties": false
+              },
+              "spec": {
+                "type": "object",
+                "properties": {
+                  "timeframe": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "priceBasis": {
+                    "enum": [
+                      "bid",
+                      "ask",
+                      "mid",
+                      "last"
+                    ]
+                  },
+                  "adjustment": {
+                    "enum": [
+                      "none",
+                      "forward",
+                      "backward"
+                    ]
+                  },
+                  "session": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "calendarRevision": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                },
+                "required": [
+                  "timeframe",
+                  "priceBasis",
+                  "adjustment",
+                  "session",
+                  "calendarRevision"
+                ],
+                "additionalProperties": false
+              },
+              "range": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "basis": {
+                            "const": "utc"
+                          },
+                          "unixMs": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "basis",
+                          "unixMs"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "basis": {
+                            "const": "wall"
+                          },
+                          "authority": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "zone": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "value": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "fold": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "basis",
+                          "authority",
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "to": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "basis": {
+                            "const": "utc"
+                          },
+                          "unixMs": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "basis",
+                          "unixMs"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "basis": {
+                            "const": "wall"
+                          },
+                          "authority": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "zone": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "value": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "fold": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "basis",
+                          "authority",
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "from",
+                  "to"
+                ],
+                "additionalProperties": false
+              },
+              "includeForming": {
+                "type": "boolean"
+              },
+              "direction": {
+                "enum": [
+                  "forward",
+                  "backward"
+                ]
+              }
+            },
+            "required": [
+              "instrument",
+              "spec",
+              "range"
+            ],
+            "additionalProperties": false
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array"
+          },
+          "nextCursor": {
+            "type": "string",
+            "minLength": 1
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items",
+          "metadata"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network"
+      ],
+      "usage": {
+        "purpose": "读取有界历史柱和真实覆盖证据，供宿主查询/冻结。",
+        "inputs": "{binding:<bind结果>,query:{instrument:<search.ref>,spec:<describe支持的spec>,range:{from:<SourceTime>,to:<SourceTime>},includeForming:false,direction:\"forward\"},page:{limit:100,cursor?}}。仅 timeframe=1d、priceBasis=last、adjustment=none|forward|backward、session=regular|all、calendarRevision:{status:\"unknown\"}。range 为 UTC 或 Asia/Shanghai wall SourceTime，区间 [from,to)，最多30年。",
+        "outputs": "{items:[{id,revision,openTime,endTime,open,high,low,close,volume,isClosed,closure}],nextCursor?,metadata:{seriesId,instrument,spec,coverage,snapshotId,consistency,meta,connection?}}；OHLC 是十进制字符串，volume 自带单位/未知状态；无 nextCursor 只说明本次快照分页结束。",
+        "prerequisites": [
+          "Agent 使用 data_providers({contract:\"sesame.market/1\"}) 返回的 sesame/akshare#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。",
+          "akshare_discover 或 akshare_status 返回 ready:true 后已选定可用 Python；akshare_prepare 可创建私有 AKShare 1.19.1 环境。不需要券商账户/API Key。"
+        ],
+        "limitations": [
+          "coverage.complete:false 表示覆盖未获证明，可使用已返回的真实行并保留限制，不能改成 true 或当作空数据/请求失败。历史查询成功不证明实时订阅或图表渲染成功。",
+          "只支持A股日线；Sina限沪深，报价仅Eastmoney/Tencent。Eastmoney volume 单位 lot（100股），Sina/Tencent 为 share；不得补造分钟柱或未知量。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_queryBars"
+      }
+    },
+    {
+      "id": "market_subscribeBars",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read actual source subscribeBars; source metadata includes coverage and time/precision limitations.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "instrument": {
+                "type": "object",
+                "properties": {
+                  "sourceId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "instrumentId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "sourceId",
+                  "instrumentId"
+                ],
+                "additionalProperties": false
+              },
+              "spec": {
+                "type": "object",
+                "properties": {
+                  "timeframe": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "priceBasis": {
+                    "enum": [
+                      "bid",
+                      "ask",
+                      "mid",
+                      "last"
+                    ]
+                  },
+                  "adjustment": {
+                    "enum": [
+                      "none",
+                      "forward",
+                      "backward"
+                    ]
+                  },
+                  "session": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "calendarRevision": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                },
+                "required": [
+                  "timeframe",
+                  "priceBasis",
+                  "adjustment",
+                  "session",
+                  "calendarRevision"
+                ],
+                "additionalProperties": false
+              },
+              "tailLimit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 2000
+              },
+              "includeForming": {
+                "type": "boolean"
+              },
+              "resumeToken": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "instrument",
+              "spec",
+              "tailLimit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network",
+        "plugin.session.write"
+      ],
+      "usage": {
+        "purpose": "为宿主持续提供初始行情快照及增量。",
+        "inputs": "{binding:<bind结果>,query:{instrument:<search.ref>,spec:<describe支持的spec>,tailLimit:100,includeForming:true}}；不传历史range或复用分页cursor，tailLimit正整数≤2000；恢复使用新快照。仅 timeframe=1d、priceBasis=last、adjustment=none|forward|backward、session=regular|all、calendarRevision:{status:\"unknown\"}。",
+        "outputs": "{id,events:AsyncIterable,close}；首帧 {type:\"snapshot\",snapshot:{seriesId,instrument,spec,bars,coverage,meta?},position:{streamId,epoch,seq},consistency,recovery:\"snapshot\"}；后续 {streamId,epoch,seq,eventId,schemaVersion,observedAt,type,payload}，type 为 bars.upsert/bars.closed（按源能力）或 stream.gap。position/consistency/recovery 平铺在首帧，不嵌入 metadata。",
+        "prerequisites": [
+          "Agent 使用 data_providers({contract:\"sesame.market/1\"}) 返回的 sesame/akshare#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。",
+          "akshare_discover 或 akshare_status 返回 ready:true 后已选定可用 Python；akshare_prepare 可创建私有 AKShare 1.19.1 环境。不需要券商账户/API Key。"
+        ],
+        "limitations": [
+          "60秒真实日线/报价快照轮询；报价 time 是 HTTP 观察时间且 freshness=unknown，不是交易所 tick 时间。",
+          "订阅由宿主绑定、取消和释放，Agent 不持有 bindingId。stream.gap/RESYNC_REQUIRED 可按同一来源重新取得快照；具体 SCHEMA_MISMATCH 或首帧 position 缺失是协议问题，反复重绑、新建图或启用无关服务不能修复。",
+          "coverage.complete:false 表示覆盖未获证明，可使用已返回的真实行并保留限制，不能改成 true 或当作空数据/请求失败。历史查询成功不证明实时订阅或图表渲染成功。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_subscribeBars"
+      },
+      "transport": "subscription"
+    },
+    {
+      "id": "market_subscribeQuotes",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read actual source subscribeQuotes; source metadata includes coverage and time/precision limitations.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "instruments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "instrumentId": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "sourceId",
+                    "instrumentId"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 5
+              },
+              "resumeToken": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "instruments"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "process",
+        "network",
+        "plugin.session.write"
+      ],
+      "usage": {
+        "purpose": "给宿主提供有来源时间和新鲜度边界的报价快照轮询。",
+        "inputs": "{binding:<bind结果>,query:{instruments:[{sourceId:\"akshare:tencent:a-share\",instrumentId:\"000001\"}]}}；数量限制 1–5，不支持 resumeToken；实际引用来自 search。",
+        "outputs": "{id,events:AsyncIterable,close}；首帧 {type:\"snapshot\",snapshot:{quotes,meta},position:{streamId,epoch,seq},consistency,recovery:\"snapshot\"}，随后 quotes.upsert 或 stream.gap；报价字段用 value/unknown 状态表达。",
+        "prerequisites": [
+          "Agent 使用 data_providers({contract:\"sesame.market/1\"}) 返回的 sesame/akshare#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。",
+          "akshare_discover 或 akshare_status 返回 ready:true 后已选定可用 Python；akshare_prepare 可创建私有 AKShare 1.19.1 环境。不需要券商账户/API Key。"
+        ],
+        "limitations": [
+          "60秒真实日线/报价快照轮询；报价 time 是 HTTP 观察时间且 freshness=unknown，不是交易所 tick 时间。",
+          "订阅由宿主绑定、取消和释放，Agent 不持有 bindingId。stream.gap/RESYNC_REQUIRED 可按同一来源重新取得快照；具体 SCHEMA_MISMATCH 或首帧 position 缺失是协议问题，反复重绑、新建图或启用无关服务不能修复。",
+          "只支持A股日线；Sina限沪深，报价仅Eastmoney/Tencent。Eastmoney volume 单位 lot（100股），Sina/Tencent 为 share；不得补造分钟柱或未知量。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_subscribeQuotes"
+      },
+      "transport": "subscription"
+    },
+    {
+      "id": "akshare_dispose",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Release this plugin source sessions and processes.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "closed": {
+            "const": true
+          }
+        },
+        "required": [
+          "closed"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.session.close"
+      ],
+      "usage": {
+        "purpose": "关闭插件自有资源。",
+        "inputs": "宿主生命周期输入 {}。",
+        "outputs": "{closed:true}。",
+        "prerequisites": [
+          "仅宿主卸载/关闭时调用。"
+        ],
+        "limitations": [
+          "释放插件存储和自有会话/订阅；不删除已发布证据，不结束用户交易终端。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "akshare_dispose"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "id": "market",
+      "contract": "sesame.market/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "connection": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "id",
+              "revision"
+            ],
+            "additionalProperties": false
+          },
+          "configuration": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "enum": [
+                  "eastmoney",
+                  "sina",
+                  "tencent"
+                ]
+              }
+            },
+            "required": [
+              "source"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "operations": {
+        "bind": "market_bind",
+        "unbind": "market_unbind",
+        "searchInstruments": "market_searchInstruments",
+        "describeInstrument": "market_describeInstrument",
+        "queryBars": "market_queryBars",
+        "subscribeBars": "market_subscribeBars",
+        "subscribeQuotes": "market_subscribeQuotes"
+      }
+    }
+  ],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "documentation-0",
+      "path": "prompt.md",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "akshare documentation: prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "documentation-1",
+      "path": "README.md",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "akshare documentation: README.md",
+      "kind": "reference"
+    },
+    {
+      "id": "documentation-2",
+      "path": "VALIDATION.md",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "akshare documentation: VALIDATION.md",
+      "kind": "reference"
+    },
+    {
+      "id": "documentation-3",
+      "path": "skills/akshare-research/SKILL.md",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "akshare documentation: skills\\akshare-research\\SKILL.md",
+      "kind": "skill"
+    },
+    {
+      "id": "public-interface-contract",
+      "path": "INTERFACES.md",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Every declared capability: concrete inputs/outputs, dependency entrypoints, effects, completion evidence and recovery boundaries.",
+      "kind": "reference"
+    }
+  ],
+  "hooks": [
+    {
+      "id": "dispose",
+      "event": "lifecycle.dispose",
+      "contract": "sesame.lifecycle/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "operations": {
+        "handle": "akshare_dispose"
+      }
+    }
+  ],
+  "stateCollections": [],
+  "artifactSchemas": []
+}

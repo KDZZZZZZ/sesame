@@ -1,0 +1,21 @@
+{
+  "provenance": {"kind":"demo","description":"Manually authored fictional observations for chart and interaction testing. Not historical market data, forecasts, backtests or account results."},
+  "monthly": [
+    {"month":"Jan","change":"1.25","risk":"2.4","observations":"12"},
+    {"month":"Feb","change":"-0.85","risk":"3.1","observations":"8"},
+    {"month":"Mar","change":null,"risk":null,"observations":"0"},
+    {"month":"Apr","change":"2.40","risk":"2.8","observations":"16"},
+    {"month":"May","change":"1.10","risk":"1.9","observations":"10"},
+    {"month":"Jun","change":"-1.60","risk":"4.2","observations":"14"},
+    {"month":"Jul","change":"0.90","risk":"2.1","observations":"6"},
+    {"month":"Aug","change":"1.75","risk":"2.7","observations":"14"}
+  ],
+  "matrix": [
+    {"period":"A","group":"North","score":"2.4"},
+    {"period":"B","group":"North","score":"-1.2"},
+    {"period":"C","group":"North","score":null},
+    {"period":"A","group":"South","score":"0.8"},
+    {"period":"B","group":"South","score":"2.1"},
+    {"period":"C","group":"South","score":"1.6"}
+  ]
+}

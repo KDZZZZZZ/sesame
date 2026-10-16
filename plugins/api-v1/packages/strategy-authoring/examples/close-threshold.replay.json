@@ -1,0 +1,10 @@
+{
+  "runId": "demo-close-threshold",
+  "parameters": { "instrument": { "sourceId": "demo", "instrumentId": "EXAMPLE" } },
+  "events": [
+    { "eventId": "demo-warmup", "sequence": "1", "type": "bar.closed", "input": "bars", "inputs": { "bars": [] } },
+    { "eventId": "demo-below", "sequence": "2", "type": "bar.closed", "input": "bars", "inputs": { "bars": [{ "close": "99" }] } },
+    { "eventId": "demo-above", "sequence": "3", "type": "bar.closed", "input": "bars", "inputs": { "bars": [{ "close": "99" }, { "close": "101" }] } },
+    { "eventId": "demo-equal", "sequence": "4", "type": "bar.closed", "input": "bars", "inputs": { "bars": [{ "close": "101" }, { "close": "100" }] } }
+  ]
+}

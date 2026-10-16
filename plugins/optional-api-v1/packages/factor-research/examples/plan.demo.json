@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "experimentId": "demo-factor-workflow-only",
+  "data": {
+    "developmentSha256": "sha256:d2a27cffd87889b52bde17f2214c7554c59713cdce738d1976e3885be88eb64b",
+    "holdoutSha256": "sha256:19813672a64b27426ec97b5fefee17f35635ebb9abb4d22055e1ed514ca6f7f8",
+    "provenance": "demo",
+    "description": "Fictional 8-instrument panel with one explicit synthetic delisting; deterministic software fixture, not market data.",
+    "universe": "point-in-time",
+    "adjustment": "total-return",
+    "delistings": "included",
+    "availability": "timestamped",
+    "evidence": [
+      "Invented availability and universe timestamps belong to this software fixture only; they are not vendor PIT verification."
+    ]
+  },
+  "factors": [
+    {
+      "id": "rank_signal",
+      "direction": 1,
+      "definition": "Fictional asset-number rank, deliberately not an economic factor."
+    },
+    {
+      "id": "rotation",
+      "direction": 1,
+      "definition": "Fictional deterministic rotating rank; no model training."
+    },
+    {
+      "id": "constant",
+      "direction": 1,
+      "definition": "Constant factor demonstrates undefined rank correlation and tied tails."
+    }
+  ],
+  "splits": [
+    {
+      "name": "train",
+      "start": "2024-02-01T00:00:00.000Z",
+      "end": "2024-02-06T00:00:00.000Z"
+    },
+    {
+      "name": "validation",
+      "start": "2024-02-07T00:00:00.000Z",
+      "end": "2024-02-12T00:00:00.000Z"
+    },
+    {
+      "name": "holdout",
+      "start": "2024-02-13T00:00:00.000Z",
+      "end": "2024-02-18T00:00:00.000Z"
+    }
+  ],
+  "embargoMs": 86400000,
+  "portfolio": {
+    "tailFraction": 0.25,
+    "minAssets": 4,
+    "oneWayCostBps": "10",
+    "borrowBpsPerPeriod": "1",
+    "returnDefinition": "simple-total-return-fraction"
+  },
+  "trialBudget": 3,
+  "selectionRule": "For this software demonstration, preselect rank_signal regardless of ranking; do not choose using holdout outcomes."
+}

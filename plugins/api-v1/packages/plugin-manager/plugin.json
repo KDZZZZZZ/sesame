@@ -1,0 +1,36 @@
+{
+  "id": "sesame/plugin-manager",
+  "title": "插件管理",
+  "description": "发现、检查安装和管理显式声明的 API 2 插件，生成可独立开发的完整草稿。",
+  "version": "3.0.0",
+  "default_state": "mounted",
+  "execution": "native",
+  "entry": "index.js",
+  "apiVersion": "2",
+  "capability_manifest": "capabilities.json",
+  "main_tool_names": [
+    "plugin_create",
+    "plugin_install",
+    "plugin_install_catalog",
+    "plugin_update",
+    "plugin_uninstall"
+  ],
+  "prompts": [
+    "prompt.md"
+  ],
+  "skills": [
+    "skills"
+  ],
+  "resources": [
+    "README.md",
+    "scaffold.js",
+    "scripts/create-plugin.mjs",
+    "skills/develop-plugins/references/authoring.md",
+    "skills/develop-plugins/references/host-api.md",
+    "skills/develop-plugins/references/recovery.md"
+  ],
+  "license": "MIT",
+  "engines": {
+    "sesame": ">=0.2.3"
+  }
+}

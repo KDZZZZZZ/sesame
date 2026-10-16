@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "capabilities": [],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "resource.1",
+      "path": "prompt.md",
+      "description": "随包资源 prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "resource.2",
+      "path": "skills/sesame-user-guide/SKILL.md",
+      "description": "随包资源 skills/sesame-user-guide/SKILL.md",
+      "kind": "skill"
+    },
+    {
+      "id": "resource.3",
+      "path": "skills/sesame-user-guide/references/installation.md",
+      "description": "随包资源 skills/sesame-user-guide/references/installation.md",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.4",
+      "path": "skills/sesame-user-guide/references/dashboard.md",
+      "description": "随包资源 skills/sesame-user-guide/references/dashboard.md",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.5",
+      "path": "skills/sesame-user-guide/references/chat-and-commands.md",
+      "description": "随包资源 skills/sesame-user-guide/references/chat-and-commands.md",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.6",
+      "path": "skills/sesame-user-guide/references/settings.md",
+      "description": "随包资源 skills/sesame-user-guide/references/settings.md",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.7",
+      "path": "skills/sesame-user-guide/references/workflows.md",
+      "description": "随包资源 skills/sesame-user-guide/references/workflows.md",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.8",
+      "path": "skills/sesame-user-guide/references/troubleshooting.md",
+      "description": "随包资源 skills/sesame-user-guide/references/troubleshooting.md",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.9",
+      "path": "skills/sesame-user-guide/references/website-docs.md",
+      "description": "随包资源 skills/sesame-user-guide/references/website-docs.md",
+      "kind": "reference"
+    }
+  ],
+  "hooks": [],
+  "stateCollections": [],
+  "artifactSchemas": []
+}
