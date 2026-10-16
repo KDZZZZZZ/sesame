@@ -15,6 +15,7 @@ const normalize = value => String(value).startsWith('sha256:') ? value : `sha256
 const hex = (value, length) => typeof value === 'string' && new RegExp(`^[a-f0-9]{${length}}$`).test(value);
 const pathUrl = path => path.split('/').map(encodeURIComponent).join('/');
 export const treeDigest = files => hash(JSON.stringify([...files].sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0).map(file => [file.path, normalize(file.sha256)])));
+const capabilitySummaries = capabilities => capabilities.map(({ id, kind, description, consumers, execution, effects, binding }) => ({ id, kind, description, consumers, execution, effects, binding }));
 
 async function bytes(fetcher, url, limit, signal) {
   signal?.throwIfAborted();
@@ -78,6 +79,16 @@ function validateEntry(entry, releases, schemaVersion) {
   }
   check(entry.review?.automated === 'package-static-review' && entry.review.human === 'not-recorded' && entry.review.record?.url === release.review.url && entry.review.record?.sha256 === release.review.sha256, 'Catalog must link its review record without claiming human approval');
   validateFiles(entry);
+  check(entry.capabilityManifest === 'capabilities.json' && entry.package.files.some(file => file.path === entry.capabilityManifest), 'Catalog must index its pinned capability declaration');
+  check(Array.isArray(entry.capabilities) && entry.capabilities.length <= 1024, 'Catalog requires explicit capability metadata');
+  const ids = new Set();
+  for (const capability of entry.capabilities) {
+    check(capability && /^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/.test(capability.id) && !ids.has(capability.id), 'Catalog capability identity must be unique');
+    ids.add(capability.id);
+    check(['function', 'agent', 'workflow'].includes(capability.kind) && typeof capability.description === 'string' && capability.description.length > 0, 'Catalog capability kind and description are required');
+    check(Array.isArray(capability.consumers) && capability.consumers.length > 0 && capability.consumers.every(value => ['agent', 'host'].includes(value)), 'Catalog capability consumers must be explicit');
+  }
+  check(JSON.stringify(entry.tools) === JSON.stringify(entry.capabilities.filter(capability => capability.consumers.includes('agent')).map(capability => capability.id)), 'Catalog tools must equal the declared agent capabilities');
 }
 
 function validateCatalog(catalog) {
@@ -158,8 +169,13 @@ export async function installCatalog(host, args, signal, fetcher = globalThis.fe
     const downloaded = await Promise.allSettled(Array.from({ length: Math.min(4, entry.package.files.length) }, () => worker().catch(error => { controller.abort(error); throw error; })));
     const failed = downloaded.find(item => item.status === 'rejected');
     if (failed) { await rm(directory, { recursive: true, force: true }); throw failed.reason; }
-    const manifest = JSON.parse(await readFile(join(directory, 'plugin.json'), 'utf8'));
-    check(manifest.id === entry.id && manifest.version === entry.version && manifest.apiVersion === '2', 'Downloaded identity differs from the catalog', 'PACKAGE_INTEGRITY');
+    try {
+      const manifest = JSON.parse(await readFile(join(directory, 'plugin.json'), 'utf8'));
+      check(manifest.id === entry.id && manifest.version === entry.version && manifest.apiVersion === '2' && manifest.capability_manifest === entry.capabilityManifest, 'Downloaded identity differs from the catalog', 'PACKAGE_INTEGRITY');
+      const declaration = JSON.parse(await readFile(join(directory, entry.capabilityManifest), 'utf8'));
+      check(declaration.schemaVersion === 1 && declaration.apiVersion === '2' && Array.isArray(declaration.capabilities)
+        && JSON.stringify(capabilitySummaries(declaration.capabilities)) === JSON.stringify(capabilitySummaries(entry.capabilities)), 'Downloaded capability metadata differs from the catalog', 'PACKAGE_INTEGRITY');
+    } catch (error) { await rm(directory, { recursive: true, force: true }); throw error; }
     const source = { path: directory, digest: expected }, options = { operationId: `catalog-${hash(args.command_id).slice(7)}`, signal };
     const next = action === 'update'
       ? await host.plugins.update(entry.id, source, { ...options, expectedRevision: args.expected_digest })

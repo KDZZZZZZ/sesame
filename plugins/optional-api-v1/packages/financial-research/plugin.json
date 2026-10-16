@@ -1,7 +1,7 @@
 {
   "id": "sesame/financial-research",
   "apiVersion": "2",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "title": "金融研究工具",
   "description": "供用户和交易 Agent 共同使用的金融研究证据：行情、财报、新闻、SEC 公告、分析师、内部人、宏观和讨论；保留来源、获取时间和可见性边界。",
   "license": "MIT",
@@ -18,7 +18,7 @@
     "PROVENANCE.md"
   ],
   "engines": {
-    "sesame": ">=0.2.2"
+    "sesame": ">=0.2.3"
   },
   "capability_manifest": "capabilities.json"
 }

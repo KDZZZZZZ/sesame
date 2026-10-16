@@ -51,8 +51,8 @@
       "zh": "记忆"
     },
     "summary": {
-      "en": "Keep explicit working notes and reusable preferences across conversations.",
-      "zh": "保留明确的工作笔记和可复用偏好。"
+      "en": "Retain sourced preferences and knowledge, including trading style, confirmed risk rules and strategy understanding.",
+      "zh": "保存有来源的偏好与知识，区分个人交易风格、已确认风险红线和策略认知。"
     },
     "dependencies": {
       "en": "No external runtime or market connection.",
@@ -62,16 +62,16 @@
   "orchestration": {
     "category": "workspace",
     "title": {
-      "en": "Agent collaboration",
-      "zh": "Agent 协作"
+      "en": "Sesame user guide",
+      "zh": "Sesame 使用指南"
     },
     "summary": {
-      "en": "Delegate focused work and use the built-in product guidance.",
-      "zh": "分派明确任务，并提供通用产品使用指南。"
+      "en": "Read product guidance and the host's unified Agent and Run capabilities; this package registers no execution tools.",
+      "zh": "查阅产品用法与宿主统一的 Agent、Run 能力；本包不注册执行工具。"
     },
     "dependencies": {
-      "en": "A configured model is needed to run Agent tasks; no trading backend is required.",
-      "zh": "运行 Agent 任务需要配置模型；无需交易后端。"
+      "en": "Reading the guide needs no model or trading backend. Agent execution is provided by the host.",
+      "zh": "读取指南无需模型或交易后端；Agent 执行由宿主提供。"
     }
   },
   "plugin-manager": {
@@ -475,8 +475,8 @@
       "zh": "在原生运行图中组织行情分析、组合决策与获授权执行，统一产出一份报告。"
     },
     "dependencies": {
-      "en": "Sesame 0.2.1+ and an existing supported trading backend. Read that backend's own resources for its account, platform and API requirements; use M5+ decisions.",
-      "zh": "需要 Sesame 0.2.1+ 与已有可用交易后端；账户、平台与 API 前提见该后端自身资源，使用 M5+ 决策。"
+      "en": "Sesame 0.2.1+ and an existing supported trading backend. Read that backend's own account, platform and API requirements; use M5+ decisions. Prediction tracking and criteria use the separately enabled judgment-evolution plugin.",
+      "zh": "需要 Sesame 0.2.1+ 与已有可用交易后端；账户、平台与 API 前提见该后端自身资源，使用 M5+ 决策。预测跟踪和判断准则由另行启用的 judgment-evolution 提供。"
     }
   },
   "kurumi-replay": {

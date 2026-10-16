@@ -1,7 +1,7 @@
 {
   "id": "sesame/market-data-parser",
   "apiVersion": "2",
-  "version": "2.0.3",
+  "version": "3.0.0",
   "title": "公开汇率解析",
   "description": "基于公开金融数据接口思路新写的结构化市场数据解析 skill（新写适配层，非上游现成 skill）。解析 exchangerate-api 风格 JSON 与 TCMB 风格 XML 汇率数据；解析失败时 isError=true。",
   "license": "MIT",
@@ -18,7 +18,7 @@
   ],
   "resources": [],
   "engines": {
-    "sesame": ">=0.2.0-0"
+    "sesame": ">=0.2.3"
   },
   "tests": [
     {
@@ -47,7 +47,7 @@
           "CNY": 6.71
         },
         "source": "sample_fx.json",
-        "version": "2.0.3"
+        "version": "3.0.0"
       }
     },
     {
@@ -83,7 +83,7 @@
           }
         ],
         "source": "sample_fx.xml",
-        "version": "2.0.3"
+        "version": "3.0.0"
       }
     }
   ]

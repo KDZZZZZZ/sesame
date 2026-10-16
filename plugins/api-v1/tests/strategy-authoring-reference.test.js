@@ -24,8 +24,8 @@ async function validateTool(path, source = bytes(path)) {
 test('the skill exposes a declared self-contained language reference and every supported operator', () => {
   const manifest = json('plugin.json'), reference = bytes(languagePath).toString(), skill = bytes('skills/strategy-authoring/SKILL.md').toString();
   assert.ok(manifest.resources.includes(languagePath));
-  assert.match(skill, /先读再写/);
-  assert.ok(skill.includes(`plugin_id:"${manifest.id}"`));
+  assert.match(skill, /plugin_read/);
+  assert.ok(skill.includes(`pluginId:"${manifest.id}"`));
   assert.ok(skill.includes(`path:"${languagePath}"`));
   for (const path of manifest.resources) assert.ok(bytes(path).length > 0, path);
   for (const name of ['close-threshold', 'crossover']) for (const suffix of ['svl', 'replay']) {

@@ -117,7 +117,7 @@ async function applyEntry(services, { candidate, target, memory }, batchId) {
   target ??= unseenTarget;
   const protectedTarget = target && (unseenTarget || target.pinned || target.category === 'user/constraints' || target.status === 'conflict' || target.status === 'expired' || target.content.length > 1500 || redact(target.content) !== target.content);
   const changesEvidence = target && target.evidence !== memory.evidence;
-  const propose = services.context.kind !== 'main' || memory.evidence === 'inferred' || protectedTarget || changesEvidence;
+  const propose = services.context.kind !== 'main' || memory.category === 'trading/risk-rules' || memory.evidence === 'inferred' || protectedTarget || changesEvidence;
   const duplicate = [...current, ...(propose ? services.memory.candidates().items : [])]
     .find(value => value.category === memory.category && same(value.scope, memory.scope) && value.content.normalize('NFKC').trim() === memory.content.normalize('NFKC').trim());
   if (duplicate && (!candidate || duplicate.id !== candidate.id)) {

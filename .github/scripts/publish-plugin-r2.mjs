@@ -7,7 +7,7 @@ import { pathToFileURL } from 'node:url';
 import { createHash } from 'node:crypto';
 import { api } from './release-plugins.mjs';
 import { publicationReview } from './plugin-r2-review.mjs';
-import { buildR2Publication, validateR2Plan } from './plugin-r2.mjs';
+import { API2_PLAN_DIRECTORY, buildR2Publication, validateR2Plan } from './plugin-r2.mjs';
 
 const exec = promisify(execFile);
 const check = (value, message) => { if (!value) throw new Error(message); };
@@ -72,6 +72,7 @@ function catalogSequence(catalog) {
 
 export async function publishObjects(store, publication, { verifyPublic = async () => {}, beforePromote = async () => {}, onProgress = () => {} } = {}) {
   const { objects, catalog } = publication;
+  check(catalog?.apiVersion === '2', 'New R2 publications require API 2');
   const nextBytes = Buffer.from(JSON.stringify(catalog, null, 2) + '\n');
   const previous = await store.get(CATALOG_KEY);
   const nextSequence = catalogSequence(catalog);
@@ -125,10 +126,10 @@ async function main() {
     check(head === process.env.GITHUB_SHA && remote.object.sha === head, 'A stale workflow cannot publish after main moves');
   };
   await current();
-  const names = await readdir(join(root, '.github/plugin-r2')).catch(error => { if (error.code === 'ENOENT') return []; throw error; });
+  const names = await readdir(join(root, API2_PLAN_DIRECTORY)).catch(error => { if (error.code === 'ENOENT') return []; throw error; });
   const plans = names.filter(name => /^dev\.[1-9][0-9]*\.json$/.test(name)).sort((a, b) => Number(a.split('.')[1]) - Number(b.split('.')[1]));
-  if (!plans.length) { console.log('No R2 plugin publication plan'); return; }
-  const planPath = `.github/plugin-r2/${plans.at(-1)}`, plan = JSON.parse(await readFile(join(root, planPath), 'utf8'));
+  if (!plans.length) { console.log('No API 2 R2 plugin publication plan'); return; }
+  const planPath = `${API2_PLAN_DIRECTORY}/${plans.at(-1)}`, plan = JSON.parse(await readFile(join(root, planPath), 'utf8'));
   validateR2Plan(plan);
   check(plans.at(-1) === `${plan.id}.json`, 'Publication filename differs from its plan identity');
   const store = r2Store(process.env.R2_ENDPOINT);

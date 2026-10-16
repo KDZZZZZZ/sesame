@@ -7,9 +7,12 @@ import { TradingRuntime } from '../packages/manual-trading/runtime.js';
 import { records, closeRecords } from '../packages/manual-trading/records.js';
 import { resourceFixture } from '../../api-v1/tests/mt5-resource-fixture.js';
 
+const memoryCapabilities = ['memory_trading_context', 'memory_read'].map(localId => ({ pluginId: 'sesame/memory', localId, consumers: ['agent'] }));
+
 async function fixture(t) {
   const root = await mkdtemp(join(tmpdir(), 'manual-unified-'));
   const host = { context: { pluginId: 'sesame/manual-trading', pluginVersion: 'test', pluginRevision: 'sha256:test', storageRoot: root, sessionId: 'workflow-session', runId: 'workflow-run', kind: 'subagent' }, events: { emit: async () => {} } };
+  host.plugins = { read: async id => id === 'sesame/memory' ? { id, state: 'discoverable', digest: 'memory-fixture' } : null };
   const resources = resourceFixture(host), emitted = [];
   const execution = { run: { id: 'workflow-run' }, attempt: 1, checkpoint: async state => { execution.checkpointState = structuredClone(state); }, interrupt: async value => { execution.checkpointState=value.state; throw Object.assign(new Error(value.reason), { code: 'RUN_INTERRUPTED', details: value }); }, provenance: { caller: { pluginId: 'sesame/manual-trading' }, workflow: { runId: 'workflow-run', sessionId: 'workflow-session', ownerSessionId: 'main' } },
     emit: (type, data) => emitted.push({ type, data }), progress: data => emitted.push({ type: 'progress', data }) };
@@ -103,7 +106,7 @@ test('an interrupted accepted role reuses its Run identity and creates only one 
   f.runtime.update('business-run', { plan });
   let invokes = 0, cancels = 0, state = 'interrupted';
   f.host.capabilities = {
-    list: async () => ({ items: ['manual_trading_context', 'manual_trading_review', 'manual_trading_decide'].map(localId => ({ pluginId: 'sesame/manual-trading', localId, consumers: ['agent'] })) }),
+    list: async () => ({ items: [...memoryCapabilities, ...['manual_trading_context', 'manual_trading_review', 'manual_trading_decide'].map(localId => ({ pluginId: 'sesame/manual-trading', localId, consumers: ['agent'] }))] }),
     invoke: async () => { invokes++; return { type: 'run', run: { id: 'retained-agent' } }; },
   };
   f.host.runs = { read: async () => ({ run: { id: 'retained-agent', status: state, output: state === 'completed' ? { text: 'Saved observed result', sessionId: 'retained-session' } : null } }),
@@ -124,7 +127,7 @@ test('preflight reads the actual selected transport and reports unavailable with
   f.host.context.models = [model]; records(f.host).put('plans', plan); f.runtime.update('business-run', { plan });
   const before = f.runtime.run('business-run'), calls = [];
   f.host.capabilities = {
-    list: async () => ({ items: ['manual_trading_context', 'manual_trading_review', 'manual_trading_decide', 'manual_trading_apply'].map(localId => ({ pluginId: 'sesame/manual-trading', localId, consumers: ['agent'] })) }),
+    list: async () => ({ items: [...memoryCapabilities, ...['manual_trading_context', 'manual_trading_review', 'manual_trading_decide', 'manual_trading_apply'].map(localId => ({ pluginId: 'sesame/manual-trading', localId, consumers: ['agent'] }))] }),
     invoke: async (id, input) => { calls.push({ id, input }); throw Object.assign(new Error('No IPC connection'), { code: 'MT5_PYTHON_UNAVAILABLE', details: { retryable: false, nativeCode: -10004 } }); },
   };
   const result = await f.runtime.dependencies(f.host, 'business-run', new AbortController().signal);

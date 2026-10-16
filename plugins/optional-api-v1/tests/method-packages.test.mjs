@@ -17,7 +17,7 @@ test('eight independent zero-tool packages have complete resources, licenses and
     for (const name of names) {
       const path = join(packages, name), manifest = await json(join(path, 'plugin.json'));
       assert.equal(manifest.id, `sesame/${name}`); assert.equal(manifest.default_state, 'discoverable');
-      assert.equal(manifest.engines.sesame, '>=0.2.0-0'); assert.equal(manifest.apiVersion, '2'); assert.equal(manifest.tool_names, undefined);
+      assert.equal(manifest.engines.sesame, '>=0.2.3'); assert.equal(manifest.apiVersion, '2'); assert.equal(manifest.tool_names, undefined);
       assert.deepEqual(manifest.provides, {}); assert.equal(manifest.migration, undefined); assert.equal(manifest.dependencies, undefined);
       const module = await import(new URL(`../packages/${name}/index.js`, import.meta.url));
       assert.deepEqual(module.createCapabilities(), []); assert.equal(module.activate, undefined);

@@ -1,7 +1,7 @@
 {
   "id": "sesame/web-extract",
   "apiVersion": "2",
-  "version": "2.0.3",
+  "version": "3.0.0",
   "title": "网页正文提取",
   "description": "基于 trafilatura 思路新写的轻量网页正文与链接提取 skill（新写适配层，非上游现成 skill）。输入已抓取的 HTML 内容或包内文件路径，输出标题、正文、预览、链接和元数据；解析失败时 isError=true。",
   "license": "MIT",
@@ -18,7 +18,7 @@
   ],
   "resources": [],
   "engines": {
-    "sesame": ">=0.2.0-0"
+    "sesame": ">=0.2.3"
   },
   "tests": [
     {
@@ -36,7 +36,7 @@
         "meta_description": "",
         "word_count": 605,
         "link_count": 0,
-        "version": "2.0.3",
+        "version": "3.0.0",
         "source": "sample.html"
       }
     },
@@ -58,7 +58,7 @@
         "meta_description": "A test",
         "word_count": 8,
         "link_count": 2,
-        "version": "2.0.3",
+        "version": "3.0.0",
         "source": "inline"
       }
     }

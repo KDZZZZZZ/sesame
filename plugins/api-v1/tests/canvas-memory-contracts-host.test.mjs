@@ -181,14 +181,62 @@ integration('saved-memory version conflicts and expired candidates give accurate
   assert.equal((await f.call('memory_search', {})).total, 1);
 });
 
-integration('delegation uses the unified Agent Run input and optional explicit report output', async t => {
-  const f = await fixture(t), schema = f.tool('agent_delegate').parameters;
+integration('personal trading memory is declared, confirmed and fully readable through real host tool rendering', async t => {
+  const f = await fixture(t), source = { type: 'user_message', id: 'risk_confirm' };
+  f.store.put('message', { id: source.id, role: 'user', status: 'accepted', created_at: new Date().toISOString(), conversation_id: 'conv_main', content: [{ type: 'text', text: '确认指定账户的这组风险规则，单笔计划损失预算600，修改前重新核算并由我确认。' }] });
+  assert.ok(f.runtime.plugins.loader('conv_main').getSkills().skills.some(item => item.name === 'personal-trading-memory'));
+  const contextTool = f.tool('memory_trading_context'), readTool = f.tool('memory_read');
+  assert.equal(f.Check(contextTool.parameters, {}), true);
+  assert.equal(f.Check(contextTool.parameters, { limit: 21 }), false);
+  assert.equal(f.Check(readTool.parameters, { id: 'memory', offset: 0, length: 4001 }), false);
+  assert.equal((await f.call('memory_trading_context', {})).risk_state, 'missing');
+  const content = '适用账户：fixture。' + '这是一条完整保留条件与单位的风险约束。'.repeat(750) + '\n最后红线：单笔计划损失600账户币种，超限不得增加风险。';
+  const entry = { category: 'trading/risk-rules', title: '账户风险边界', summary: '指定账户的计划损失预算600；保留完整条件。', content, scope: { kind: 'global' }, evidence: 'explicit', sources: [source] };
+  await assert.rejects(f.call('memory_manage', { action: 'save', entry }), { code: 'memory_risk_confirmation_required' });
+  const input = { action: 'save', entry, confirmation_source: source };
+  assert.equal(f.Check(f.tool('memory_manage').parameters, input), true);
+  const saved = await f.call('memory_manage', input);
+  assert.deepEqual(saved.confirmed_by, source); assert.equal(saved.pinned, true);
+  const context = JSON.parse((await contextTool.execute(crypto.randomUUID(), {})).content[0].text);
+  assert.equal(context._tool_output_truncated, undefined, 'host must not replace risk bodies or remaining IDs with a short preview');
+  assert.equal(context.complete, false); assert.equal(context.risk_state, 'needs_review');
+  assert.deepEqual(context.unread_risk_rule_ids, [saved.id]);
+  let offset = 0, combined = '';
+  do {
+    const args = { id: saved.id, offset, length: 4000 };
+    assert.equal(f.Check(readTool.parameters, args), true);
+    const page = JSON.parse((await readTool.execute(crypto.randomUUID(), args)).content[0].text);
+    assert.equal(page._tool_output_truncated, undefined); assert.equal(page.version, saved.version);
+    combined += page.content; offset = page.next_offset;
+  } while (offset !== null);
+  assert.equal(combined, content, 'all risk conditions, including the final numeric limit, survive host presentation');
+  assert.equal((await f.runtime.memory.call('trading_context', {})).totals.risk_rules, 1, 'declared host service uses the same private memory');
+});
+
+integration('delegation uses the host Agent Run input and optional explicit report output', async t => {
+  const f = await fixture(t), schema = f.tool('host_agent_run').parameters;
   const task = { title: 'Fixture', instructions: 'Read fixture inputs', objective: 'Return their count', input: {}, allowedCalls: [], budget: { maxTurns: 1, maxToolCalls: 0, timeoutMs: 1000 } };
   assert.equal(f.Check(schema, { ...task, output: { type: 'none' } }), true);
   assert.equal(f.Check(schema, { ...task, output: { type: 'report', space: 'strategy', path: 'signals.html' } }), true);
   assert.equal(f.Check(schema, task), true, 'an ordinary Run does not require a report destination');
   assert.equal(f.Check(schema, { ...task, conversation_id: 'existing' }), false, 'legacy task controls are not reintroduced');
   assert.equal(f.Check(schema, { ...task, output: { type: 'report', space: 'research' } }), false);
+});
+
+integration('the knowledge-only guide loads without aliases and host Run tools survive disabling it', async t => {
+  const f = await fixture(t), registry = f.runtime.plugins, entry = registry.entry('sesame/orchestration');
+  assert.equal(f.declarations.orchestration.capabilities.length, 0);
+  assert.deepEqual(entry.tool_names, []);
+  assert.equal(Boolean(entry.entryPath), false);
+  assert.deepEqual(f.groups.orchestration, []);
+  for (const name of ['agent_list', 'agent_delegate', 'agent_inspect', 'agent_stop']) assert.equal(f.tool(name), undefined);
+  assert.ok(registry.loader('conv_main').getSkills().skills.some(item => item.name === 'sesame-user-guide'));
+  assert.match(registry.read('conv_main', entry.id, 'skills/sesame-user-guide/references/workflows.md').content, /host\.agent\.run/);
+  const hostTools = ['host_agent_run', ...['list', 'read', 'wait', 'interrupt', 'resume', 'message', 'cancel'].map(action => `host_runs_${action}`)];
+  for (const name of hostTools) assert.ok(registry.hostTools('conv_main').includes(name), name);
+  await registry.configure(entry.id, 'disabled', registry.policy().version);
+  assert.ok(!registry.loader('conv_main').getSkills().skills.some(item => item.name === 'sesame-user-guide'));
+  for (const name of hostTools) assert.ok(registry.activeTools('conv_main').includes(name), name);
 });
 
 integration('published capability declarations match installed Agent tool schemas without legacy tools.json', async t => {

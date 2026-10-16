@@ -5,11 +5,13 @@ import { basename, dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { buildLock, createArchive, readProfile, sha256 } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
 import { materializeSource } from './release-plugins.mjs';
+import { catalogPackage } from '../../plugins/api-v1/scripts/catalog.mjs';
 
-const REPOSITORY = 'KDZZZZZZ/sesame';
 const RELEASE_BASE = 'https://dl.sesame.bot/plugins/api-v1/releases';
 const PACKAGE_BASE = 'https://dl.sesame.bot/plugins/api-v1/packages';
 const SOURCE_ROOTS = { core: 'plugins/api-v1', optional: 'plugins/optional-api-v1' };
+// API 1 plans remain immutable and use the separately pinned historical validator.
+export const API2_PLAN_DIRECTORY = '.github/plugin-r2-api2';
 const assert = (value, message) => { if (!value) throw new Error(message); };
 const object = value => value && typeof value === 'object' && !Array.isArray(value);
 const hex = (value, length) => typeof value === 'string' && new RegExp(`^[a-f0-9]{${length}}$`).test(value);
@@ -106,19 +108,9 @@ function buildSubsetSource(source, profilePlan, fullLock) {
 function readManifestEntry(repository, sourceCommit, profilePlan, release, pkg) {
   const path = `${profilePlan.sourceRoot}/packages/${pkg.directory}`;
   const manifest = JSON.parse(git(repository, ['show', `${sourceCommit}:${path}/plugin.json`]));
-  const extension = manifest.extensions?.['bot.sesame'], standard = Boolean(manifest.$schema);
-  const definitionsPath = standard ? extension.builtin.tool_definitions : manifest.tool_definitions;
-  const definitions = JSON.parse(git(repository, ['show', `${sourceCommit}:${path}/${definitionsPath}`]));
-  const tools = standard ? Object.entries(definitions).flatMap(([server, items]) => items.map(tool => ({ server, name: tool.name }))) : manifest.tool_names;
-  return { id: pkg.id, name: pkg.directory, version: pkg.version, apiVersion: '1', format: standard ? 'agent-plugins' : 'sesame-native',
-    engines: extension?.engines ?? manifest.engines, distribution: profilePlan.profile, title: standard ? extension.builtin.title : manifest.title,
-    description: manifest.description, license: manifest.license, author: manifest.author ?? { name: 'Sesame contributors', url: `https://github.com/${REPOSITORY}` },
-    status: 'active', release: release.tag, source: { repository: `https://github.com/${REPOSITORY}`, commit: sourceCommit, path },
-    package: { treeDigest: pkg.treeDigest, files: pkg.files, baseUrl: `${PACKAGE_BASE}/${pkg.treeDigest.slice(7)}` }, tools,
-    review: { automated: 'package-static-review', human: 'not-recorded', record: release.review,
-      notes: 'The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety.' },
-    requirements: standard ? 'Plugin API 1 host. Declared stdio tests and servers execute locally as the current user; inspect and reuse an existing compatible runtime. No dependency installer is executed by the catalog downloader.' : 'Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately.',
-    documentationUrl: `https://github.com/${REPOSITORY}/tree/${sourceCommit}/${path}`, feedbackUrl: `https://github.com/${REPOSITORY}/issues` };
+  const declaration = JSON.parse(git(repository, ['show', `${sourceCommit}:${path}/capabilities.json`]));
+  const entry = catalogPackage(pkg, manifest, declaration, release);
+  return { ...entry, package: { ...entry.package, baseUrl: `${PACKAGE_BASE}/${pkg.treeDigest.slice(7)}` } };
 }
 
 export function buildR2Profile(repository, input, { verifyDigests = true } = {}) {
@@ -129,12 +121,13 @@ export function buildR2Profile(repository, input, { verifyDigests = true } = {})
   let subset;
   try {
     subset = buildSubsetSource(source, profilePlan, fullLock);
+    assert(subset.lock.apiVersion === '2', 'New R2 publications require API 2; use the fixed historical validator for API 1 plans');
     const archiveSha256 = sha256(subset.archive), lockSha256 = sha256(subset.lockBytes);
     if (verifyDigests) {
       assert(archiveSha256 === profilePlan.archiveSha256, `${profilePlan.profile}: archive digest differs: ${archiveSha256}`);
       assert(lockSha256 === profilePlan.lockSha256, `${profilePlan.profile}: lock digest differs: ${lockSha256}`);
     }
-    const pin = { schemaVersion: 1, apiVersion: '1', sourceCommit, archive: { url: `${RELEASE_BASE}/${input.id}/${profilePlan.profile}/plugins.tar.gz`, sha256: archiveSha256 },
+    const pin = { schemaVersion: 1, apiVersion: '2', sourceCommit, archive: { url: `${RELEASE_BASE}/${input.id}/${profilePlan.profile}/plugins.tar.gz`, sha256: archiveSha256 },
       lockSha256, packages: subset.lock.packages.map(({ id, version, treeDigest }) => ({ id, version, treeDigest })) };
     const fileBytes = new Map();
     for (const pkg of subset.lock.packages) for (const file of pkg.files) fileBytes.set(`${pkg.treeDigest.slice(7)}/${file.path}`, readFileSync(join(subset.directory, 'packages', pkg.directory, file.path)));
@@ -180,7 +173,7 @@ export function buildR2Publication(repository, input, { releaseCommit, review })
   }
   plugins.sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
   releases.sort((a, b) => a.profile < b.profile ? -1 : a.profile > b.profile ? 1 : 0);
-  const catalog = { schemaVersion: 2, apiVersion: '1', channel: 'development', releases, plugins };
+  const catalog = { schemaVersion: 2, apiVersion: '2', channel: 'development', releases, plugins };
   addObject(objects, `${root}/review.json`, review);
   addObject(objects, `${root}/plan.json`, jsonBytes(prepared.plan));
   addObject(objects, `${root}/catalog.json`, jsonBytes(catalog));
@@ -188,7 +181,7 @@ export function buildR2Publication(repository, input, { releaseCommit, review })
 }
 
 function listPlans(root) {
-  const directory = join(root, '.github/plugin-r2');
+  const directory = join(root, API2_PLAN_DIRECTORY);
   if (!existsSync(directory)) return [];
   return readdirSync(directory).sort().filter(name => name.endsWith('.json')).map(name => join(directory, name));
 }

@@ -1,7 +1,7 @@
 {
   "id": "sesame/institutional-analysis",
   "apiVersion": "2",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "title": "制度与经济历史研究",
   "description": "独立制度分析：正式规则、执行与资金约束，借助经济史比较机制与差异，不把类比当重复周期预测。",
   "author": {
@@ -28,7 +28,7 @@
   ],
   "provides": {},
   "engines": {
-    "sesame": ">=0.2.0-0"
+    "sesame": ">=0.2.3"
   },
   "capability_manifest": "capabilities.json"
 }

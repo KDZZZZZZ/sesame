@@ -22,6 +22,9 @@ async function memoryCall(host, memory, action, args, execute) {
     } else if (error.code === 'memory_candidate_expired') {
       error.details = { ...error.details, next_action: next };
       error.message += '；不要改版本强行接纳。重新读取最终成果并核验后才重新提取候选，来源不可用则保留未确认状态。';
+    } else if (error.code === 'memory_risk_confirmation_required') {
+      error.details = { ...error.details, next_action: { tool: 'memory_manage', action, required: 'confirmation_source',
+        source_type: 'user_message', fresh_user_message_required: true } };
     }
     throw error;
   }
@@ -31,16 +34,28 @@ async function manage(services, args) {
   const memory = services.memory;
   if (args.action === 'candidates') return memory.candidates();
   if (args.action === 'stats') return { ...memory.stats(), compaction: services.journal.list('compaction_receipts').filter(item => item.conversationId === services.context.id).sort((a, b) => b.updatedAt - a.updatedAt)[0] ?? null };
-  if (args.action === 'save') return memory.save({ ...args.entry, ...(args.id ? { id: args.id } : {}), expected_version: args.expected_version });
-  if (['accept', 'reject'].includes(args.action)) return memory.resolveCandidate({ ...args.entry, id: args.id, expected_version: args.expected_version, action: args.action });
+  if (args.action === 'save') return memory.save({ ...args.entry, ...(args.id ? { id: args.id } : {}), expected_version: args.expected_version, confirmation_source: args.confirmation_source });
+  if (['accept', 'reject'].includes(args.action)) return memory.resolveCandidate({ ...args.entry, id: args.id, expected_version: args.expected_version, action: args.action, confirmation_source: args.confirmation_source });
   requireValue(['archive', 'restore', 'forget'].includes(args.action), 'Unknown memory action');
-  return memory[args.action](args.id, args.expected_version);
+  return memory[args.action](args.id, args.expected_version, args.confirmation_source);
+}
+
+function readMemory(memory, args) {
+  const value = memory.read(args.id);
+  if (args.offset === undefined && args.length === undefined) return value;
+  const offset = args.offset ?? 0, length = args.length ?? 4000;
+  requireValue(Number.isSafeInteger(offset) && offset >= 0 && offset <= value.content.length, 'offset 必须是正文范围内的非负整数');
+  requireValue(Number.isInteger(length) && length >= 1 && length <= 4000, 'length 应为 1–4000');
+  const end = Math.min(value.content.length, offset + length);
+  return { ...value, content: value.content.slice(offset, end), offset, next_offset: end < value.content.length ? end : null,
+    total_content_length: value.content.length, content_complete: offset === 0 && end === value.content.length };
 }
 
 export function createCapabilities(host) {
   return [
     { name: 'memory_search', execute: args => withMemory(host, s => s.memory.search(args)) },
-    { name: 'memory_read', execute: args => withMemory(host, s => memoryCall(host, s.memory, 'read', args, () => s.memory.read(args.id))) },
+    { name: 'memory_trading_context', execute: args => withMemory(host, s => s.memory.tradingContext(args)) },
+    { name: 'memory_read', execute: args => withMemory(host, s => memoryCall(host, s.memory, 'read', args, () => readMemory(s.memory, args))) },
     { name: 'memory_propose', execute: args => withMemory(host, s => s.memory.propose(args)) },
     { name: 'memory_mark_used', execute: args => withMemory(host, s => s.memory.markUsed(args)) },
     { name: 'memory_manage', execute: args => withMemory(host, s => memoryCall(host, s.memory, args.action, args, () => manage(s, args))) },

@@ -64,7 +64,8 @@ test('real package admission enforces the declared host minimum for current API 
   const f = candidate('manual-trading', true);
   const files = Object.fromEntries(f.pkg.files.map(file => [file.path, readFileSync(join(root, f.entry.source.path, file.path))]));
   assert.throws(() => inspectPackage(files, { applicationVersion: '0.2.0' }), { code: 'plugin_host_incompatible' });
-  const inspected = inspectPackage(files, { applicationVersion: '0.2.2' });
+  assert.throws(() => inspectPackage(files, { applicationVersion: '0.2.2' }), { code: 'plugin_host_incompatible' });
+  const inspected = inspectPackage(files, { applicationVersion: '0.2.3' });
   assert.equal(inspected.apiVersion, '2'); assert.equal(inspected.id, f.pkg.id); assert.equal(inspected.digest, f.pkg.treeDigest);
   assert.deepEqual(inspected.engines, f.manifest.engines);
 });

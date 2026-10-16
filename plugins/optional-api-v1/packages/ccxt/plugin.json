@@ -2,10 +2,10 @@
   "id": "sesame/ccxt",
   "title": "CCXT optional backend",
   "description": "Public spot market data only",
-  "version": "1.0.4",
+  "version": "2.0.0",
   "apiVersion": "2",
   "engines": {
-    "sesame": ">=0.2.0-0"
+    "sesame": ">=0.2.3"
   },
   "default_state": "discoverable",
   "entry": "index.js",

@@ -15,7 +15,7 @@ function memoryStore() {
   };
 }
 function publication(n = 1) {
-  return { catalog: { schemaVersion: 2, apiVersion: '1', channel: 'development', releases: ['core', 'optional'].map(profile => ({ tag: `r2-${profile}-api-v1-dev.${n}` })), plugins: [{ id: 'sesame/example' }] },
+  return { catalog: { schemaVersion: 2, apiVersion: '2', channel: 'development', releases: ['core', 'optional'].map(profile => ({ tag: `r2-${profile}-api-v1-dev.${n}` })), plugins: [{ id: 'sesame/example' }] },
     objects: new Map([[`plugins/api-v1/releases/dev.${n}/core/plugins.tar.gz`, Buffer.from('archive')], [`plugins/api-v1/releases/dev.${n}/review.json`, Buffer.from('review')]]) };
 }
 test('immutable uploads preserve existing bytes and reject changed retries', async () => {
@@ -55,6 +55,19 @@ test('catalog revisions cannot go backwards or replace same revision bytes', asy
   await assert.rejects(publishObjects(store, altered), /cannot change/);
   await publishObjects(store, publication(3));
   assert.equal(JSON.parse(store.data.get(CATALOG_KEY).bytes).releases[0].tag, 'r2-core-api-v1-dev.3');
+});
+
+test('API 2 promotes after API 1 without rewriting historical objects or allowing a new API 1 publication', async () => {
+  const store = memoryStore(), historical = publication(3);
+  historical.catalog.apiVersion = '1';
+  for (const [key, bytes] of historical.objects) store.data.set(key, { bytes: Buffer.from(bytes), etag: 'historical' });
+  store.data.set(CATALOG_KEY, { bytes: Buffer.from(JSON.stringify(historical.catalog, null, 2) + '\n'), etag: 'legacy-catalog' });
+  await assert.rejects(publishObjects(store, historical), /require API 2/);
+  assert.equal(store.calls.length, 0);
+  await publishObjects(store, publication(4));
+  assert.equal(JSON.parse(store.data.get(CATALOG_KEY).bytes).apiVersion, '2');
+  for (const [key, bytes] of historical.objects) assert.deepEqual(store.data.get(key).bytes, bytes);
+  assert.ok(store.calls.every(call => !historical.objects.has(call.key)));
 });
 test('a concurrent catalog change rejects compare-and-swap without overwriting it', async () => {
   const store = memoryStore(); await publishObjects(store, publication(1));

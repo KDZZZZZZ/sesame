@@ -22,14 +22,25 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
+      - name: Check out the fixed historical API 1 validator
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: KDZZZZZZ/sesame
+          ref: 2aeb09c9d5d4a8e78572e1d7e23afe574570597e
+          path: historical
+          persist-credentials: false
       - name: Test application publication and retired plugin publication boundaries
         run: node --test .github/scripts/release-application.test.mjs .github/scripts/release-plugins.test.mjs .github/scripts/catalog.test.mjs
       - name: Validate the committed plan and immutable package catalogs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           node .github/scripts/release-application.mjs --check .
           node plugins/api-v1/scripts/plugin-lock.mjs --check
           node plugins/api-v1/scripts/plugin-lock.mjs --check --source plugins/optional-api-v1
-          node plugins/api-v1/scripts/catalog.mjs --check
+          node historical/.github/scripts/validate-api1-catalog.mjs . --published
+          node historical/.github/scripts/plugin-r2.mjs --check .
+          node .github/scripts/plugin-r2.mjs --check .
   publish:
     needs: validate-main
     if: github.repository == 'KDZZZZZZ/sesame' && github.ref == 'refs/heads/main'

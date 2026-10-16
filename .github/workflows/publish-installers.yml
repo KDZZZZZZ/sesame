@@ -12,6 +12,16 @@ on:
       source_revision:
         description: Verified private source revision
         required: true
+      plugins_repository:
+        description: Reviewed plugin source repository used by every build
+        required: true
+        default: KDZZZZZZ/sesame
+      plugins_commit:
+        description: Exact 40-character plugin source commit used by every build
+        required: true
+      plugin_lock_sha256:
+        description: SHA256 of the reviewed committed core source lock
+        required: true
       linux_url:
         description: Temporary download URL for the verified Linux artifact
         required: true
@@ -23,6 +33,12 @@ on:
         required: true
       windows_sha256:
         description: GitHub SHA256 of the Windows artifact archive
+        required: true
+      macos_url:
+        description: Temporary download URL for the verified native macOS arm64 artifact
+        required: true
+      macos_sha256:
+        description: GitHub SHA256 of the macOS artifact archive
         required: true
 
 permissions:
@@ -38,6 +54,10 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Test installer verification and draft-only uploads
+        run: python3 .github/scripts/test_publish_installers.py
       - name: Verify artifacts and upload installers to draft
         env:
           GH_TOKEN: ${{ github.token }}

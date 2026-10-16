@@ -1,11 +1,9 @@
 {
   "id": "sesame/orchestration",
-  "title": "Agent 编排与使用指南",
-  "description": "显式预算与能力白名单的 Agent Run 编排，以及 Sesame 使用参考。",
-  "version": "3.0.0",
+  "title": "Sesame 使用与编排指南",
+  "description": "纯知识指南：介绍 Sesame 工作台与宿主统一 Agent/Run 接口，不注册运行工具。",
+  "version": "3.1.0",
   "default_state": "mounted",
-  "execution": "native",
-  "entry": "index.js",
   "apiVersion": "2",
   "capability_manifest": "capabilities.json",
   "prompts": [
@@ -25,6 +23,6 @@
   ],
   "license": "MIT",
   "engines": {
-    "sesame": ">=0.2.2"
+    "sesame": ">=0.2.3"
   }
 }

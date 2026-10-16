@@ -1,7 +1,7 @@
 {
   "id": "sesame/behavioral-finance",
   "apiVersion": "2",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "title": "行为金融研究",
   "description": "独立行为金融：参照点、注意力与预期偏差的可检验假设；区分心理解释、可观测代理与因果证据。",
   "author": {
@@ -28,7 +28,7 @@
   ],
   "provides": {},
   "engines": {
-    "sesame": ">=0.2.0-0"
+    "sesame": ">=0.2.3"
   },
   "capability_manifest": "capabilities.json"
 }

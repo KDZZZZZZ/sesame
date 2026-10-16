@@ -4,26 +4,8 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
-import { createCapabilities as orchestration } from '../packages/orchestration/index.js';
 import { createCapabilities as management } from '../packages/plugin-manager/index.js';
 import { scaffold, writeDraft } from '../packages/plugin-manager/scaffold.js';
-
-test('orchestration delegates explicit limits and uses actual Run wait/read/cancel', async () => {
-  const calls = [], host = { capabilities: { invoke: (...args) => { calls.push(['invoke', ...args]); return { type: 'run', run: { id: 'run_1' } }; } }, runs: {
-    list: input => ({ items: [input] }), wait: async (...args) => { calls.push(['wait', ...args]); return { reason: 'settled' }; },
-    read: (...args) => { calls.push(['read', ...args]); return { run: { id: args[0], status: 'completed' } }; },
-    cancel: (...args) => { calls.push(['cancel', ...args]); return { run: { id: args[0], status: 'cancelled' } }; },
-  } };
-  const tools = new Map(orchestration(host).map(item => [item.name, item.execute]));
-  assert.equal(tools.has('agent_finish'), false);
-  const input = { title: 'Check', instructions: 'Calculate only.', objective: 'A result', input: {}, allowedCalls: [], budget: { maxTurns: 1, maxToolCalls: 0, timeoutMs: 5000 } };
-  const signal = new AbortController().signal;
-  assert.equal((await tools.get('agent_delegate')(input, signal)).run.id, 'run_1');
-  assert.equal(calls[0][1], 'host.agent.run'); assert.deepEqual(calls[0][2], input); assert.equal(calls[0][3].signal, signal);
-  const result = await tools.get('agent_inspect')({ runId: 'run_1', wait: 'settled', includeHistory: true }, signal);
-  assert.equal(result.waitReason, 'settled'); assert.deepEqual(calls[2][2].include, ['messages', 'calls', 'events', 'outputs', 'resources']);
-  await tools.get('agent_stop')({ runId: 'run_1', reason: 'done' }); assert.deepEqual(calls.at(-1), ['cancel', 'run_1', { reason: 'done' }]);
-});
 
 test('management exposes one install operation with digest and cancellation intact', async () => {
   const calls = [], host = { plugins: { install: (...args) => { calls.push(args); return { plugin: { id: 'example/p' }, receipt: {} }; } } };
@@ -52,7 +34,7 @@ test('portable native and knowledge templates declare complete API 2 shapes and 
 });
 
 test('migrated declarations exactly match the production native factory identities', async () => {
-  for (const name of ['orchestration', 'plugin-manager', 'workspace']) {
+  for (const name of ['plugin-manager', 'workspace']) {
     const root = new URL(`../packages/${name}/`, import.meta.url);
     const descriptor = JSON.parse(await readFile(new URL('capabilities.json', root), 'utf8'));
     const implementation = await import(new URL('index.js', root).href);

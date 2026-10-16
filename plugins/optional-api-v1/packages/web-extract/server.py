@@ -1,8 +1,9 @@
 import sys, json, os, re
 from html.parser import HTMLParser
 
-VERSION = "2.0.3"
 PLUGIN_ROOT = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
+with open(os.path.join(PLUGIN_ROOT, "plugin.json"), encoding="utf-8") as manifest:
+    VERSION = json.load(manifest)["version"]
 
 def resolve_path(p):
     target = os.path.realpath(os.path.join(PLUGIN_ROOT, p))

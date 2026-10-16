@@ -3,15 +3,15 @@ import { canonical, digest } from '@sesame/plugin-sdk/protocol';
 import { AsyncResource, AsyncLocalStorage } from 'node:async_hooks';
 import { datasetSnapshot } from './data.js';
 import { check } from './shared.js';
-import { bindExecution, executionCall, verifyComposition, declaredCalls } from './composition.js';
+import { bindExecution, executionCall, verifyComposition, declaredCalls, selectResearch } from './composition.js';
 import { createTradingMemory } from './memory.js';
 import { accountKey, cleanError, clone, makePlan, selectModel, TERMINAL, triggerIdentity, validateDecision } from './plans.js';
-import { ROLE_PROMPTS, SYSTEM, stages, taskTools, taskPlugins } from './team.js';
+import { ROLE_PROMPTS, SYSTEM, TRADING_MEMORY, usesTradingMemory, stages, taskTools, taskPlugins } from './team.js';
 import { reportPath, writeDailyReport } from './reports.js';
 const TASK_TERMINAL = new Set(['completed', 'failed', 'canceled', 'cancelled', 'expired', 'unknown', 'superseded']);
 const interruption = (error, signal) => ['RUN_INTERRUPTED', 'DEPENDENCY_UNAVAILABLE'].includes(error?.code) ? error
   : ['RUN_INTERRUPTED', 'DEPENDENCY_UNAVAILABLE'].includes(signal?.reason?.code) ? signal.reason : null;
-const dependencyCodes = new Set(['DEPENDENCY_UNAVAILABLE', 'MODEL_UNAVAILABLE', 'MODEL_CHANGED', 'PLUGIN_CHANGED', 'PREREQUISITE_REQUIRED', 'MT5_PYTHON_UNAVAILABLE', 'SOURCE_UNAVAILABLE', 'PROVIDER_UNAVAILABLE']);
+const dependencyCodes = new Set(['DEPENDENCY_UNAVAILABLE', 'MODEL_UNAVAILABLE', 'MODEL_CHANGED', 'PLUGIN_CHANGED', 'PREREQUISITE_REQUIRED', 'TOOL_NOT_DELEGATABLE', 'MT5_PYTHON_UNAVAILABLE', 'SOURCE_UNAVAILABLE', 'PROVIDER_UNAVAILABLE']);
 const requirement = id => ({ id: 'trading-dependencies', capability: 'sesame/manual-trading#workflow_dependencies', input: { runId: id }, reason: 'The frozen trading plan requires its selected configuration and live execution context.' });
 const dependencyError = (id, error) => Object.assign(new Error(error.message), { code: 'DEPENDENCY_UNAVAILABLE', details: { requirements: [requirement(id)], cause: cleanError(error), ...error.details } });
 
@@ -63,8 +63,10 @@ export class TradingRuntime {
         await verifyComposition(host, plan.execution);
         const pending = stages(plan).slice(run.stageIndex ?? 0).flat();
         if (pending.length) await verifyComposition(host, plan.research);
-        for (const role of new Set([...pending, 'executor'])) selectModel(host, plan.agentModels[role] ?? plan.model);
-        await declaredCalls(host, [...new Set(['manual_trading_apply', ...(pending.length ? taskTools(plan, pending[0]) : [])])], ['sesame/manual-trading', ...plan.execution.plugins, ...plan.research.plugins]);
+        const roles = [...new Set([...pending, 'executor'])];
+        for (const role of roles) selectModel(host, plan.agentModels[role] ?? plan.model);
+        if (roles.some(usesTradingMemory)) await selectResearch(host, { plugins: [TRADING_MEMORY.pluginId], tools: [] });
+        await declaredCalls(host, [...new Set(roles.flatMap(role => taskTools(plan, role)))], ['sesame/manual-trading', ...new Set(roles.flatMap(role => taskPlugins(plan, role)))]);
         const snapshot = await executionCall(host, plan.execution, 'context', { action: 'snapshot', history_days: 30 }, signal);
         check(canonical(snapshot.account) === canonical(plan.account), 'ACCOUNT_CHANGED', 'Selected execution account differs from the frozen plan.');
         for (const key of ['positions', 'orders', 'fills', 'historicalOrders', 'deployments']) check(Array.isArray(snapshot[key]), 'SOURCE_DATA_INVALID', `Execution snapshot must include ${key}`);
@@ -240,12 +242,16 @@ export class TradingRuntime {
     const savedReport = previous && run.reports.find(report => report.taskId === previous.id && report.status === 'completed');
     if (previous?.status === 'completed' && savedReport) return { id: previous.id, status: 'completed', result: { text: savedReport.text }, conversationId: previous.conversationId };
     const model = plan.agentModels[role] ?? plan.model;
-    try { await verifyComposition(host, plan.execution); if (role !== 'executor') await verifyComposition(host, plan.research); }
-    catch (error) { if (dependencyCodes.has(error.code)) throw dependencyError(runId, error); throw error; }
     const tools = taskTools(plan, role), plugins = taskPlugins(plan, role);
     check(tools.length <= 64, 'TOOL_BUDGET_EXCEEDED', 'Select a smaller research tool subset; each task supports 64 tools');
     check(plugins.length <= 32, 'PLUGIN_BUDGET_EXCEEDED', 'Select fewer plugins; each task supports 32 research and execution dependencies combined');
-    const allowedCalls = await declaredCalls(host, tools, ['sesame/manual-trading', ...plugins]);
+    let allowedCalls;
+    try {
+      await verifyComposition(host, plan.execution);
+      if (role !== 'executor') await verifyComposition(host, plan.research);
+      if (usesTradingMemory(role)) await selectResearch(host, { plugins: [TRADING_MEMORY.pluginId], tools: [] });
+      allowedCalls = await declaredCalls(host, tools, ['sesame/manual-trading', ...plugins]);
+    } catch (error) { if (dependencyCodes.has(error.code)) throw dependencyError(runId, error); throw error; }
     const request = run.taskRequests?.[key] ?? {
       title: `${plan.title.slice(0, 50)} · ${role} ${round}`,
       instructions: `${SYSTEM}\n\n本角色：${ROLE_PROMPTS[role]}\n\n计划要求：${plan.instructions}`,

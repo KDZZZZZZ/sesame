@@ -13,8 +13,21 @@ memory/candidate's own description. A truncated document is only partial evidenc
 Preserve what will help a future task: stable user preferences and corrections,
 project decisions and constraints, reusable verified lessons, environment facts
 with their applicable backend, and references to published final artifacts.
+For personal trading use trading/style for market, horizon, manual/algorithmic
+and risk-tolerance preferences; trading/risk-rules for proposed mandatory risk
+boundaries; trading/strategy-knowledge for the user's market, algorithm and
+indicator understanding with conditions, evidence and counterexamples.
+Preference is not a risk allowance. A user's strategy belief is explicit only as
+their belief, not verified as a profitable or general market fact. A failed or
+successful trade alone does not establish an enduring rule or trading style.
+New or changed trading/risk-rules always remain candidates, even with a direct
+human statement. Only the main agent may activate a rule against the user's
+specific confirmation after explaining its calculated risk. Never relabel a
+risk rule as style or strategy to evade this review. Retain conflicting evidence.
 Omit temporary task progress, raw chat/logs, news/quotes/positions/balances that
 will go stale, credentials, personal secrets, unfinished speculation and trivia.
+For a risk proposal, a dated calculation's essential inputs and source references
+may be retained as justification; never present them as the current balance or quote.
 Omit temporary deployment state and incident workarounds. Reusable fault lessons
 need an applicable version and invalidation condition; a workaround is not the
 normal workflow, and evidence of a fix supersedes instructions to keep using it.

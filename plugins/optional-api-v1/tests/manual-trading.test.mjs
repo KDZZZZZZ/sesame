@@ -281,7 +281,7 @@ test('manifest, executable schemas and documented scope agree',async()=>{
   const tools=createCapabilities({}),root=new URL('../packages/portfolio-execution/',import.meta.url),manifest=JSON.parse(await readFile(new URL('plugin.json',root)));
   const declared=JSON.parse(await readFile(new URL(manifest.capability_manifest,root)));
   assert.equal(manifest.apiVersion,'2');assert.equal(manifest.capability_manifest,'capabilities.json');
-  assert.deepEqual(tools.map(x=>x.name).sort(),declared.capabilities.map(cap=>cap.binding.name).sort());assert.ok(manifest.main_tool_names.includes('manual_trade_execute'));assert.ok(manifest.main_tool_names.includes('portfolio_execution_configure'));assert.ok(!manifest.main_tool_names.includes('portfolio_execution_apply'));assert.equal(manifest.engines.sesame,'>=0.2.2');
+  assert.deepEqual(tools.map(x=>x.name).sort(),declared.capabilities.map(cap=>cap.binding.name).sort());assert.ok(manifest.main_tool_names.includes('manual_trade_execute'));assert.ok(manifest.main_tool_names.includes('portfolio_execution_configure'));assert.ok(!manifest.main_tool_names.includes('portfolio_execution_apply'));assert.equal(manifest.engines.sesame,'>=0.2.3');
   assert.deepEqual(declared.capabilities.find(cap=>cap.id==='dispose').consumers,['host']);
   const shape=declared.capabilities.find(cap=>cap.id==='manual_trade_execute').inputSchema;
   assert.equal(Value.Check(shape,{operation_id:'one',observation_id:'fixture',user_authorized:true,action:'market',side:'buy',quantity:'0.1',price_limit:'100'}),true);
