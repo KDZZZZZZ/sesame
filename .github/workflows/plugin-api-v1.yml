@@ -15,6 +15,8 @@ jobs:
   package-static-review:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # The separately named check provides auditable evidence for the migration.
+    name: ${{ github.event_name == 'push' && github.ref != 'refs/heads/main' && 'package-bootstrap-review' || 'package-static-review' }}
     steps:
       - name: Use the supported source tool runtime
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
