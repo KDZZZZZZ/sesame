@@ -1,7 +1,9 @@
 name: Plugin API 2 sources and historical publications
 on:
   push:
-    branches: [main, dev]
+    # One reviewed release branch bootstraps the API 2 validator on main.
+    # workflow_dispatch checks cannot satisfy GitHub's required PR checks.
+    branches: [main, dev, release/api2-plugins-0.2.3]
   pull_request_target:
     branches: [main, dev]
     types: [opened, synchronize, reopened, edited, ready_for_review]
