@@ -1,10 +1,7 @@
-# Preserve the required-check workflow identity until API 2 validation reaches main.
-name: Plugin API 1 sources
+name: Plugin API 2 sources and historical publications
 on:
   push:
-    # One reviewed release branch bootstraps the API 2 validator on main.
-    # workflow_dispatch checks cannot satisfy GitHub's required PR checks.
-    branches: [main, dev, release/api2-plugins-0.2.3]
+    branches: [main, dev]
   pull_request_target:
     branches: [main, dev]
     types: [opened, synchronize, reopened, edited, ready_for_review]
@@ -15,8 +12,6 @@ jobs:
   package-static-review:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # The separately named check provides auditable evidence for the migration.
-    name: ${{ github.event_name == 'push' && github.ref != 'refs/heads/main' && 'package-bootstrap-review' || 'package-static-review' }}
     steps:
       - name: Use the supported source tool runtime
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
