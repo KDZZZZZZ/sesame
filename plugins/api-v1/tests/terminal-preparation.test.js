@@ -2,11 +2,12 @@ import { mt5Import } from './mt5-path.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 const { prepareTerminal, terminalStartupDiagnostic } = await mt5Import('terminal.js');
-import { mkdtemp, mkdir, readFile, readdir, rm, stat, access } from 'node:fs/promises';
+const { winePath } = await mt5Import('process.js');
+import { mkdtemp, mkdir, readFile, readdir, rm, stat, access, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { EventEmitter } from 'node:events';
-const { launch, winePath } = await mt5Import('process.js');
+const { launch } = await mt5Import('process.js');
 
 async function fixture(t) {
   const directory = await mkdtemp(join(tmpdir(), 'mt5 preparation with spaces-'));
@@ -153,6 +154,30 @@ test('automatic mounting preserves occupied terminals and native permission boun
   await assert.rejects(prepareTerminal(mt5, undefined, { restart: true }), /已有 EA/);
   assert.ok(calls.every(tool => tool.startsWith('get_') || tool === 'list_open_charts'));
   await assert.rejects(prepareTerminal(mt5, undefined, { deployment: { status: 'preparing', ...scope, id: 'deploy_ok', build_id: '../other' }, inputs: { Product_RunId: 'deploy_ok', Product_EnableLive: true } }), /受管理挂载配置无效/);
+});
+
+test('large native chart files are scanned in bounded chunks without treating size as an EA', async t => {
+  const f = await fixture(t), chart = join(f.directory, 'large-chart.chr');
+  f.mt5.official.client = () => ({ workspace: { structuredContent: { workspace: { mql5_folder: 'C:\\Fixture\\MQL5', common_folder: 'C:\\Common' } } },
+    call: async tool => ({ structuredContent: tool === 'get_trading_open_positions' ? { positions: [], orders: [] } : { charts: [{ chart_id: '7', path: 'C:\\Fixture\\large-chart.chr' }] } }), close() {} });
+  await writeFile(chart, Buffer.concat([Buffer.alloc(2 * 1024 * 1024, 65), Buffer.from('[expert]\n')]));
+  let resolved = 0;
+  f.ports.resolveNativePath = async () => { resolved++; return chart; };
+  await assert.rejects(prepareTerminal(f.mt5, undefined, {}, f.ports), /已有 EA/);
+  assert.equal(resolved, 1);
+  await writeFile(chart, Buffer.alloc(2 * 1024 * 1024, 65));
+  assert.equal((await prepareTerminal(f.mt5, undefined, {}, f.ports)).verified, true);
+});
+
+test('native chart EA markers split across chunk boundaries still block restart', async t => {
+  const f = await fixture(t), chart = join(f.directory, 'split-chart.chr');
+  f.mt5.official.client = () => ({ workspace: { structuredContent: { workspace: { mql5_folder: 'C:\\Fixture\\MQL5', common_folder: 'C:\\Common' } } },
+    call: async tool => ({ structuredContent: tool === 'get_trading_open_positions' ? { positions: [], orders: [] } : { charts: [{ chart_id: '8', path: 'C:\\Fixture\\split-chart.chr' }] } }), close() {} });
+  f.ports.resolveNativePath = async () => chart;
+  await writeFile(chart, Buffer.concat([Buffer.alloc(64 * 1024 - 3, 65), Buffer.from('<expert name="EA">')]));
+  await assert.rejects(prepareTerminal(f.mt5, undefined, {}, f.ports), /已有 EA/);
+  await writeFile(chart, Buffer.concat([Buffer.alloc(64 * 1024 - 2, 65), Buffer.from('[expert]', 'utf16le')]));
+  await assert.rejects(prepareTerminal(f.mt5, undefined, {}, f.ports), /已有 EA/);
 });
 
 test('startup diagnostics expose only permission-relevant evidence, never log credentials',()=>{const file=join(tmpdir(),'managed-terminal.ini'),expected=winePath(file);const clean=terminalStartupDiagnostic('Startup successfully initialized from start config "'+expected+'"',file);assert.equal(clean.managedConfigInitialized,true);assert.equal(clean.competingStartupObserved,false);assert.deepEqual(terminalStartupDiagnostic('Terminal terminal process already started\nTerminal cannot load config "Z:\\other\\connect_fixture.ini" Login=secret Password=secret',file),{managedConfigInitialized:false,competingStartupObserved:true});assert.equal(terminalStartupDiagnostic('Terminal cannot load config "'+expected+'"',file).competingStartupObserved,false);});

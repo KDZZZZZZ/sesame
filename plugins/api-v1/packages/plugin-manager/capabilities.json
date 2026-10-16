@@ -107,7 +107,8 @@
           "插件已安装，工作区策略允许启用。"
         ],
         "limitations": [
-          "不会安装依赖或修改连接；失败用 plugin_inspect 看 runtime_status/diagnostics，不反复加载。"
+          "不会安装依赖或修改连接；失败用 plugin_inspect 看 runtime_status/diagnostics，不反复加载。",
+          "plugin_load_failed 时用 plugin_inspect 的 diagnostics 定位装载失败；公开资源路径使用 plugin_read(manifest) 返回的声明，不猜测未公开文件。"
         ]
       },
       "binding": {
@@ -152,7 +153,7 @@
       "usage": {
         "purpose": "查询固定发布目录中 API 2 包的精确摘要与发布证据。",
         "inputs": "plugin_id 精确查一个官方包，或 query 搜索发布名称/描述。",
-        "outputs": "{catalog_url,catalog_digest,apiVersion,channel,releases,items}；items 含固定包摘要、版本与发布/审核证据。",
+        "outputs": "固定 catalog_digest、schemaVersion、包身份/版本/兼容范围、treeDigest、文件数和发布来源；schema2 包另含 R2 内容寻址 baseUrl。只接受 API2 声明，尚未安装或验证业务环境。",
         "prerequisites": [
           "可访问官方发布目录。"
         ],

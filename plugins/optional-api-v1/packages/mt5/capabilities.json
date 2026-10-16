@@ -24,7 +24,7 @@
         "agent",
         "host"
       ],
-      "description": "读取 MT5 官方能力的当前目录、inputSchema、工作区权限及不可用原因。先发现后调用；query 可过滤方法名。Python 仅提供官方 API，不能执行任意代码。",
+      "description": "读取 MT5 官方能力的当前目录、inputSchema、工作区权限及不可用原因。先发现后调用；query 可过滤方法名。Python 仅提供官方 API，不能执行任意代码。 server:\"tester\" 是 terminal Tester 方法的发现别名，实际调用使用返回的 server。",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -49,6 +49,10 @@
               {
                 "type": "string",
                 "const": "launcher"
+              },
+              {
+                "type": "string",
+                "const": "tester"
               }
             ]
           },
@@ -56,7 +60,7 @@
             "type": "string",
             "description": "过滤方法名或说明",
             "minLength": 1,
-            "maxLength": 20000
+            "maxLength": 200
           }
         },
         "additionalProperties": false
@@ -76,7 +80,7 @@
       ],
       "usage": {
         "purpose": "取得当前原生方法定义、归属工具及不可用原因。",
-        "inputs": "{server?:\"terminal\"|\"metaeditor\"|\"marketdata\"|\"python\"|\"launcher\",query?:<≤200字符方法名或说明>}；例 {server:\"python\",query:\"version\"}。",
+        "inputs": "{server?:\"terminal\"|\"metaeditor\"|\"marketdata\"|\"python\"|\"launcher\"|\"tester\",query?:<≤200字符方法名或说明>}；例 {server:\"python\",query:\"version\"}。server:\"tester\" 映射至 terminal，省略 query 时过滤 Tester 方法；实际调用使用返回的 server。",
         "outputs": "{checked_at,items:[{server,status,reason,server_info,workspace,tools:[{name,description,inputSchema,agent_tool,permission,callable,blocked_reason,...}],prerequisite?}]}；目录就是当前版本声明，不需试猜方法。",
         "prerequisites": [
           "原生接口需要时使用；Sesame行情有已声明 data-access/canvas 入口，不以catalog作为必经流程。"
@@ -246,10 +250,12 @@
             "maxLength": 20000
           },
           "from": {
-            "type": "integer"
+            "type": "integer",
+            "description": "券商服务器墙钟 Unix 秒，范围起点，包含；不是 UTC epoch"
           },
           "to": {
-            "type": "integer"
+            "type": "integer",
+            "description": "券商服务器墙钟 Unix 秒，范围终点，排除；不是 UTC epoch"
           },
           "limit": {
             "type": "integer",
@@ -1553,7 +1559,7 @@
         "inputs": "{}。",
         "outputs": "{settings:{version,account,servers,allow_trading,allow_host_operations,...},pendingImports,environment,connection}；敏感值脱敏，pendingImports提供可导入引用。",
         "prerequisites": [
-          "主会话。"
+          "只读能力对有该能力授权的 Agent 开放，不要求主会话；修改、导入和连接仍沿用各自权限。"
         ],
         "limitations": [
           "配置存在、python_installed或文件存在不证明Python IPC或券商账户连接成功；Terminal MCP与Python是独立通道。"

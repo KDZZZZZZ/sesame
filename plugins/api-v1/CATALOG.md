@@ -1,6 +1,18 @@
-# Plugin catalog / API 1
+# Historical plugin catalog / API 1
 
-The unified directory is
+Current development packages use API 2. This document and the committed catalog
+describe the immutable API 1 publication history, not the current development
+capability inventory. Development builds use a fixed API 2 source commit until
+an API 2 catalog is separately published. CI validates this historical catalog
+with the fixed validator documented in [PUBLISHING.md](PUBLISHING.md).
+
+The [Sesame R2 directory](https://dl.sesame.bot/plugins/api-v1/catalog.json)
+requires a published plugin-manager 2.3.0 or newer and a successful first catalog
+publication. This infrastructure change alone supplies neither. Continue using
+the existing GitHub catalog until both are available. The planned publication
+and upgrade procedure is documented in [R2 distribution](R2-DISTRIBUTION.md).
+
+The historical schema 1 directory below remains unchanged for older managers:
 `https://raw.githubusercontent.com/KDZZZZZZ/sesame/main/plugins/api-v1/catalog.json`.
 It lists 32 plugins: nine default and twenty-three optional, by exact publisher-qualified
 name. Host compatibility is checked against each package's `engines.sesame`

@@ -53,3 +53,27 @@ test('published tool descriptions and schemas match the report-reference tools',
   const f = await fixture(t), definitions = JSON.parse(await readFile(new URL('../../optional-api-v1/packages/mt5/capabilities.json', import.meta.url))).capabilities;
   for (const capability of f.tools) { const entry = definitions.find(item => item.binding.name === capability.name); assert.ok(entry); assert.ok(entry.inputSchema); assert.equal(typeof capability.execute, 'function'); }
 });
+
+test('live observer keeps a running deployment through the native heartbeat window without republishing unchanged traces', async () => {
+  const host = { context: { pluginId: 'sesame/mt5' } };
+  const native = { id: 'deploy', status: 'running', chart_id: '42', output_path: '/fixture', server: 'Demo', login: '7001', symbol: 'EURUSD', build_id: 'build', native_evidence: { verified: true, sequence: 2, observedAt: 1000 } };
+  const saves = [], events = [{ seq: 2, build_id: 'build', node_id: 'platform.permissions', value: { trade_allowed: true, dll_allowed: false } }];
+  const mt5 = { storage: { list: () => [] }, market: { connected: async () => ({ scope: { login: '7001', server: 'Demo' } }), read: async () => ({ charts: [{ chart_id: '42', symbol: 'EURUSD' }] }) },
+    deployments: { flushObservations() {}, list: () => [structuredClone(native)], readTrace: async () => events, save: value => saves.push(structuredClone(value)) } };
+  const observer = new NativeRunObserver(host, mt5), realNow = Date.now;
+  try {
+    Date.now = () => 1000 + 359000;
+    await observer.refresh();
+    assert.equal(saves.length, 0);
+    Date.now = () => 1000 + 361000;
+    await observer.refresh();
+    assert.equal(saves.length, 1);
+    assert.equal(saves[0].status, 'unknown');
+    saves.length = 0; events.push({ seq: 3, build_id: 'build', kind: 'lifecycle', value: 'initialized' });
+    Date.now = () => 1000 + 362000;
+    await observer.refresh();
+    assert.equal(saves.length, 1);
+    assert.equal(saves[0].status, 'running');
+    assert.equal(saves[0].native_evidence.sequence, 3);
+  } finally { Date.now = realNow; }
+});

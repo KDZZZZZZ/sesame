@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { MT5MarketProvider, MT5AccountProvider } from '../backend/providers.js';
+import { mt5ConnectionRef } from '../backend/contract-mapping.js';
 import { datasetQuery, providerCall } from '../backend/sources.js';
 
 function fixture() {
@@ -22,7 +23,7 @@ test('dataset queries distinguish an explicit unknown ID from the dataset direct
 });
 test('declared market source keeps one exact binding and snapshot across pages and releases it', async () => {
   const service = fixture(), binding = await providerCall(service, 'market', 'bind', { binding: {} });
-  assert.deepEqual(binding.connection, { id: 'mt5-terminal', revision: '1' });
+  assert.deepEqual(binding.connection, mt5ConnectionRef('Fixture', '123'));
   assert.equal(binding.timeBasis.kind, 'wall');
   const first = await providerCall(service, 'market', 'searchInstruments', { binding, query: {}, page: { limit: 1 } });
   assert.equal(first.items.length, 1); assert.ok(first.nextCursor); assert.equal(first.metadata.consistency, 'snapshot');
@@ -32,11 +33,16 @@ test('declared market source keeps one exact binding and snapshot across pages a
   assert.equal(service.calls.filter(call => call.tool === 'get_marketwatch_symbols').length, 1);
   await providerCall(service, 'market', 'unbind', { binding });
   assert.equal(service.providers.market.bindings.size, 0);
+  assert.equal(service.providers.market.pages.snapshots.size, 0);
+  assert.equal(service.providers.market.reads.size, 0);
   await assert.rejects(providerCall(service, 'market', 'searchInstruments', { binding, query: {}, page: { limit: 1 } }), { code: 'CONNECTION_CHANGED' });
 });
-test('a source binding cannot silently cross configured account revisions', async () => {
+test('a source binding survives unrelated config versions but cannot cross account identity', async () => {
   const service = fixture(), binding = await providerCall(service, 'account', 'bind', { binding: {} });
   service.mt5.official.config.version = 2;
+  assert.equal((await providerCall(service, 'account', 'listAccounts', { binding, query: {}, page: { limit: 1 } })).items.length, 1);
+  service.calls.length = 0;
+  service.mt5.official.config.account.login = '456';
   await assert.rejects(providerCall(service, 'account', 'listAccounts', { binding, query: {}, page: { limit: 1 } }), { code: 'CONNECTION_CHANGED' });
   assert.equal(service.calls.length, 0);
   service.providers.account.dispose();

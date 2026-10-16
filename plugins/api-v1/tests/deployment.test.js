@@ -55,14 +55,18 @@ test('deployments freeze tested parameters, bind accounts, verify initialization
   try {
     const expected = { ...scope, artifact_digest: build.ex5_sha256 };
     // A frozen build is mountable only once it is staged and the running terminal lists it.
-    assert.deepEqual((await deploy.check(pass.id)).reasons, ['终端尚未识别冻结构建，需要自动准备']);
+    const missingRecognition = await deploy.check(pass.id);
+    assert.deepEqual(missingRecognition.reasons, ['终端尚未识别冻结构建，需要自动准备']);
+    assert.equal(missingRecognition.preparable, true);
     const expert = await deploy.stage(build); assert.ok(expert.endsWith(`MT5Agent\\${build.id}.ex5`));
     assert.equal((await deploy.check(pass.id)).ready, false, 'a staged file the terminal has not indexed is not enough');
     indexed = [expert.toUpperCase()]; assert.equal(await deploy.stage(build), expert, 'staging is idempotent');
     assert.equal((await deploy.check(pass.id)).ready, true);
     const stagedFile = deploy.staged(build).dest;
     await writeFile(stagedFile, 'modified-ex5');
-    assert.deepEqual((await deploy.check(pass.id)).reasons, ['终端目录中的冻结 EX5 已被改动']);
+    const tampered = await deploy.check(pass.id);
+    assert.deepEqual(tampered.reasons, ['终端目录中的冻结 EX5 已被改动']);
+    assert.equal(tampered.preparable, false);
     await assert.rejects(deploy.stage(build), /终端目录中的冻结 EX5 已被改动/);
     await assert.rejects(deploy.mount(pass.id, 'tampered-request-0001', expected), /终端目录中的冻结 EX5 已被改动/);
     assert.equal(await readFile(stagedFile, 'utf8'), 'modified-ex5', 'preparation never overwrites a changed terminal artifact');

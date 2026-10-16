@@ -5,12 +5,22 @@ import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { digest, canonical } from '@sesame/plugin-sdk/protocol';
 import { translationBinding } from './parameters.js';
-import { accountIdentity } from './contract-mapping.js';
+import { accountIdentity, mt5ConnectionRef } from './contract-mapping.js';
 import { requireValue } from './support.js';
 import { initialized } from './deployments.js';
 
 const completed = new Set(['stopped', 'completed', 'failed']);
 const unknown = reason => ({ status: 'unknown', reason });
+const LIVE_HEARTBEAT_MS = 360000;
+const stableObservation = native => {
+  const { updated_at, observer_error, native_evidence, diagnostics, temporary_paths, ...body } = native;
+  if (native_evidence) body.native_evidence = { verified: native_evidence.verified === true, sequence: native_evidence.sequence ?? null };
+  return body;
+};
+const testerConnectionRef = revision => {
+  requireValue(revision !== undefined && revision !== null && revision !== '', 'Tester run is missing its frozen MT5 connection version');
+  return { id: 'mt5-terminal', revision: String(revision) };
+};
 
 /** Record actual native evidence; never launch, resume, detach or stop an EA. */
 export class NativeRunObserver {
@@ -66,14 +76,14 @@ export class NativeRunObserver {
     const frozen = await this.frozenBuild(build, manifest, binding.translation, bytes);
     const parameters = await this.artifact(`${recordId}-parameters`, 'parameters', { source: binding.source, values: binding.parameters, nativeInputs: binding.native, defaultsExpanded: true }, [binding.source]);
     const input = await this.artifact(`${recordId}-inputs`, 'resource', { format: 'sesame.mt5.binding/1', source: binding.source, instrument: binding.instrument, sourceInputs: binding.inputs, nativeConfig: config, timeBasis: 'broker_server_unspecified', limitations: ['One native symbol/timeframe; broker history and calendar are not a frozen semantic replay fixture.'] }, [binding.source]);
-    const connection = { id: 'mt5-terminal', revision: String(native.connection_version ?? this.mt5.official.config.version) };
+    const connection = kind === 'tester' ? testerConnectionRef(native.connection_version) : mt5ConnectionRef(native.server, native.login, this.mt5.official.config.servers?.terminal?.url ?? null);
     const started = this.mt5.storage.idempotent(`observe-start-${recordId}`, digest([native.id, native.build_id]), () => Date.now());
     const environment = await this.artifact(`${recordId}-environment`, 'environment', { profile: binding.target, plugin: pluginIdentity(this.host), observedAt: started, platform: process.platform,
       runtime: { name: 'MetaTrader 5', version: 'not_observed', digest: this.mt5.native?.terminal && existsSync(this.mt5.native.terminal) ? { status: 'value', value: digest(readFileSync(this.mt5.native.terminal)) } : unknown('Native terminal executable has not been observed') },
       dependencies: [{ name: 'MetaEditor', version: 'not_observed', digest: manifest.compiler_sha256 ? { status: 'value', value: manifest.compiler_sha256 } : unknown('Compiler identity absent') }], connection, capabilities: [], evidence: [frozen] }, [binding.target, frozen]);
     const validations = binding.validation ? [binding.validation] : [];
     const body = { schemaVersion: '1.0.0', runId: recordId, operationId: native.request_key ?? native.id, mode: kind === 'tester' ? 'backtest' : 'live', source: binding.source, translation: binding.translation, validations, parameters, dataBindings: [input],
-      accounts: kind === 'tester' ? [] : [{ binding: 'executionAccount', account: { connectionId: connection.id, accountId: accountIdentity(native.server, native.login) }, connection }],
+      accounts: kind === 'tester' ? [] : [{ binding: 'executionAccount', provider: { pluginId: pluginIdentity(this.host).id, providerId: 'account' }, account: { connectionId: connection.id, accountId: accountIdentity(native.server, native.login) }, connection }],
       plugin: pluginIdentity(this.host), environment, owner: { kind: kind === 'tester' ? 'task' : 'persistent', id: kind === 'tester' ? native.owner_run_id ?? native.conversation_id : recordId }, authorizationRef: native.authorization_ref ?? `conversation:${native.conversation_id}`,
       observer: { plugin: pluginIdentity(this.host), publisherId: 'native-observer', sessionId: this.sessionId }, nativeInstance: unknown('No verified native execution evidence yet'), status: 'starting', checkpoint: unknown('No native recoverable state checkpoint was supplied'), observation: null,
       dependencies: [binding.source, binding.translation, ...validations, parameters, input, environment, frozen] };
@@ -86,7 +96,7 @@ export class NativeRunObserver {
   }
   async flush() { await this.tail; }
   async observeOnce(kind, native, status, { nativeInstanceId, recovery = false } = {}) {
-    const recordId = `mt5-${kind}-${native.id}`, fingerprint = digest([native, recovery]);
+    const recordId = `mt5-${kind}-${native.id}`, fingerprint = digest([stableObservation(native), recovery]);
     const previous = this.mt5.storage.get('native_observation_head', recordId, true);
     if (previous?.fingerprint === fingerprint && previous.confirmed) return this.current.get(recordId) ?? previous;
     const remember = () => this.mt5.storage.put('native_observation_head', { id: recordId, fingerprint, native, recovery, observedAt: Date.now(), confirmed: true });
@@ -110,7 +120,7 @@ export class NativeRunObserver {
     const append = (state, suffix, instance) => {
       const observedAt = Date.now();
       this.appendRecord({ operationId: `observe-${digest([recordId, record.version, fingerprint, suffix]).slice(7)}`, recordId, expectedVersion: record.version, event: { type: 'native.observation', status: state, evidence: [evidence], observedAt,
-        observation: { observedAt, validUntil: observedAt + 30000, evidence: [evidence] },
+        observation: { observedAt, validUntil: observedAt + LIVE_HEARTBEAT_MS, evidence: [evidence] },
         ...(instance ? { nativeInstanceId: instance, nativeInstance: { status: 'value', value: { id: instance, startedAt: Date.parse(native.created_at), evidence: [evidence] } } } : {}),
         ...(recovery ? { reason: 'Application resumed observation; native state has not yet been reverified.' } : {}) } });
       record = this.mt5.storage.get('native_run_record', recordId); this.current.set(recordId, record);
@@ -177,7 +187,7 @@ export class NativeRunObserver {
         verified = sequence !== null && (events.at(-1)?.seq ?? 0) > sequence && initialized(events);
       } catch { /* Persist unknown; never infer a stop or replay the native start. */ }
       const last = events.at(-1)?.seq ?? sequence;
-      if (!verified && native.status === 'running' && Date.now() - (native.native_evidence?.observedAt ?? 0) < 30000) continue;
+      if (!verified && native.status === 'running' && Date.now() - (native.native_evidence?.observedAt ?? 0) < LIVE_HEARTBEAT_MS) continue;
       await this.mt5.deployments.save({ ...native, status: verified ? 'running' : 'unknown', native_evidence: { verified, sequence: last, observedAt: Date.now(), trace: verified ? events.slice(-32) : [] } });
     }
   }

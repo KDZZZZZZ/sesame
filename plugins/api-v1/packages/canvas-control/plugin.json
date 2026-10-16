@@ -13,11 +13,19 @@
     "skills"
   ],
   "apiVersion": "2",
-  "mcp_export": ["canvas_inspect", "canvas_binding", "canvas_apply", "canvas_focus", "chart_script", "indicator_publish"],
+  "mcp_export": [
+    "canvas_inspect",
+    "canvas_binding",
+    "canvas_apply",
+    "canvas_focus",
+    "chart_script",
+    "indicator_publish"
+  ],
   "license": "MIT",
   "resources": [
     "resources/close-line.json",
-    "resources/close-line.js"
+    "resources/close-line.js",
+    "resources/indicator-publish.json"
   ],
   "engines": {
     "sesame": ">=0.2.0-0"

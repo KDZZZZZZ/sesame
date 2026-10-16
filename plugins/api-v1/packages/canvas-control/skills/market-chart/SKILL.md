@@ -5,6 +5,10 @@ description: Bind charts from fixed SourceRefs, publish typed indicators and ins
 
 公开能力覆盖来源、绑定、显示与诊断，不需要反向工程宿主或安装包。按任务所需选用能力，已有的精确身份与成果可以直接复用。
 
+`resources/indicator-publish.json` 是完整的 `indicator_publish` 调用示例：`files` 与 `definition` 并列，不放进 `implementation`。integer 参数的 default/min/max 是 JSON 安全整数，decimal 参数用精确十进制字符串，boolean/string/enum 保留各自类型；enum 声明 choices。发布结果为 `{ref,receipt}`，挂载时把其中完整 `ref` 传入 chart_script.artifact。
+
+同一轮布局变更可合并到一个 operations。重试同一请求保留 command_id 和参数；版本冲突后读取 canvas_inspect，核对最新布局并使用新 command_id 与当前 expected_version 提交剩余变更，不能并行复用旧版本覆盖用户操作。
+
 | 能力 | 输入与实际结果 | 能证明什么 |
 | --- | --- | --- |
 | `canvas_inspect` | `{}` → `{version,charts,layout,workspace,scripts,market_sources,render_status,rendering,...}`。charts 含 id、binding、locked、script_ids；market_sources 项含 ref、contract、operations、configSchema、available。 | 当前画布与公开来源声明；available 不证明连接或行情成功。 |

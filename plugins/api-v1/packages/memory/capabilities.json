@@ -32,41 +32,71 @@
             "maxLength": 20000
           },
           "scope": {
-            "type": "object",
-            "required": [
-              "kind"
-            ],
-            "properties": {
-              "kind": {
-                "anyOf": [
-                  {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
                     "type": "string",
                     "const": "global"
-                  },
-                  {
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
                     "type": "string",
                     "const": "project"
                   },
-                  {
+                  "project_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160,
+                    "pattern": "^[\\w.-]+$",
+                    "description": "真实项目 ID"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "project_id"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
                     "type": "string",
                     "const": "strategy"
+                  },
+                  "project_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160,
+                    "pattern": "^[\\w.-]+$",
+                    "description": "策略所属项目 ID"
+                  },
+                  "strategy_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160,
+                    "pattern": "^[\\w.-]+$",
+                    "description": "真实策略 ID"
                   }
-                ]
-              },
-              "project_id": {
-                "type": "string",
-                "description": "项目 ID",
-                "minLength": 1,
-                "maxLength": 20000
-              },
-              "strategy_id": {
-                "type": "string",
-                "description": "策略 ID",
-                "minLength": 1,
-                "maxLength": 20000
+                },
+                "required": [
+                  "kind",
+                  "project_id",
+                  "strategy_id"
+                ],
+                "additionalProperties": false
               }
-            },
-            "additionalProperties": false
+            ]
           },
           "include_archived": {
             "type": "boolean"
@@ -131,7 +161,7 @@
         "agent",
         "host"
       ],
-      "description": "读取记忆正文、来源、版本和生命周期。归档可按需读取；expired/conflict 不能作为已确认事实采用。",
+      "description": "读取正式记忆正文、来源、版本和生命周期。id 来自 memory_search、save 或 accept 的 memory.id，不能使用候选 ID。expired/conflict 不能作为已确认事实。",
       "inputSchema": {
         "type": "object",
         "required": [
@@ -140,7 +170,7 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "记忆 ID",
+            "description": "正式记忆 ID；accept 返回 memory.id，顶层 id 仍属候选",
             "minLength": 1,
             "maxLength": 20000
           }
@@ -157,7 +187,7 @@
       "resultRetention": "summary",
       "usage": {
         "purpose": "读取记忆正文、来源、版本和生命周期。归档可按需读取；expired/conflict 不能作为已确认事实采用。",
-        "inputs": "id 来自 memory_search/items、memory_manage 或候选处理结果。",
+        "inputs": "正式记忆 id 来自 memory_search.items、memory_manage action=save 或 action=accept 的 memory.id；accept 顶层 id 仍是候选，不可用于 memory_read。",
         "outputs": "完整正文、sources、scope、version、status、review_due、reference_count 等真实记忆记录。",
         "prerequisites": [],
         "limitations": [
@@ -213,102 +243,145 @@
             "maxLength": 20000
           },
           "scope": {
-            "type": "object",
-            "required": [
-              "kind"
-            ],
-            "properties": {
-              "kind": {
-                "anyOf": [
-                  {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
                     "type": "string",
                     "const": "global"
-                  },
-                  {
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
                     "type": "string",
                     "const": "project"
                   },
-                  {
+                  "project_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160,
+                    "pattern": "^[\\w.-]+$",
+                    "description": "真实项目 ID"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "project_id"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
                     "type": "string",
                     "const": "strategy"
+                  },
+                  "project_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160,
+                    "pattern": "^[\\w.-]+$",
+                    "description": "策略所属项目 ID"
+                  },
+                  "strategy_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160,
+                    "pattern": "^[\\w.-]+$",
+                    "description": "真实策略 ID"
                   }
-                ]
-              },
-              "project_id": {
-                "type": "string",
-                "description": "项目 ID",
-                "minLength": 1,
-                "maxLength": 20000
-              },
-              "strategy_id": {
-                "type": "string",
-                "description": "策略 ID",
-                "minLength": 1,
-                "maxLength": 20000
+                },
+                "required": [
+                  "kind",
+                  "project_id",
+                  "strategy_id"
+                ],
+                "additionalProperties": false
               }
-            },
-            "additionalProperties": false
+            ]
           },
           "sources": {
             "type": "array",
             "items": {
-              "type": "object",
-              "required": [
-                "type",
-                "id"
-              ],
-              "properties": {
-                "type": {
-                  "anyOf": [
-                    {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
                       "type": "string",
                       "const": "user_message"
                     },
-                    {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 20000,
+                      "description": "真实用户消息 ID；不能使用委派消息或成果 ID"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "id"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
                       "type": "string",
                       "const": "artifact"
-                    }
-                  ]
-                },
-                "id": {
-                  "type": "string",
-                  "description": "真实用户消息或最终成果 ID",
-                  "minLength": 1,
-                  "maxLength": 20000
-                },
-                "revision": {
-                  "anyOf": [
-                    {
-                      "type": "integer",
-                      "minimum": 1
                     },
-                    {
+                    "id": {
                       "type": "string",
-                      "description": "冻结成果版本",
                       "minLength": 1,
-                      "maxLength": 20000
+                      "maxLength": 20000,
+                      "description": "原 ArtifactRef.id"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 20000,
+                      "description": "原 ArtifactRef.revision 字符串"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 20000,
+                      "description": "原 ArtifactRef.kind"
+                    },
+                    "digest": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$",
+                      "description": "原 ArtifactRef.digest"
+                    },
+                    "schemaVersion": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 20000,
+                      "description": "原 ArtifactRef.schemaVersion"
                     }
-                  ]
-                },
-                "kind": {
-                  "type": "string",
-                  "description": "成果种类，如 report 或 strategy.source",
-                  "minLength": 1,
-                  "maxLength": 20000
-                },
-                "digest": {
-                  "type": "string",
-                  "pattern": "^sha256:[a-f0-9]{64}$",
-                  "description": "冻结成果摘要，按原始 ArtifactRef 传入"
-                },
-                "schemaVersion": {
-                  "type": "string",
-                  "description": "冻结成果 schemaVersion，按原始 ArtifactRef 传入",
-                  "minLength": 1,
-                  "maxLength": 20000
+                  },
+                  "required": [
+                    "type",
+                    "id",
+                    "revision",
+                    "kind",
+                    "digest",
+                    "schemaVersion"
+                  ],
+                  "additionalProperties": false
                 }
-              },
-              "additionalProperties": false
+              ],
+              "description": "来源必须有 type。冻结成果使用 {type:\"artifact\",...完整 ArtifactRef}；用户表达使用 {type:\"user_message\",id:\"真实消息ID\"}。不省略 type，不改写来源类别或成果版本。"
             },
             "minItems": 1,
             "maxItems": 20
@@ -401,7 +474,7 @@
       "usage": {
         "purpose": "提交待主 Agent 核验的记忆候选，必须引用真实用户消息或已发布成果。候选不会自动成为长期事实；任务结束后未合并候选销毁。",
         "inputs": "category/title/summary/content/scope/sources 必填；用户偏好用 user/workflow 或 user/communication 与 {kind:\"global\"}。sources 用 {type:\"user_message\",id} 或 {type:\"artifact\",...完整ref}；evidence 区分 explicit/verified/inferred/conflicted。",
-        "outputs": "候选 id、版本、所有者、来源及到期信息；还不是正式长期记忆。",
+        "outputs": "候选 id/version、所有者、来源、正文及到期信息；候选不能用 memory_read 读取。主 Agent 用 memory_manage action=candidates 查看，用候选原始 id/version 接纳；仍不等于正式长期记忆。",
         "prerequisites": [
           "真实用户消息可从 host#messages 数据源读取；成果来源必须已发布。分类表见 manage-memory。"
         ],
@@ -443,63 +516,76 @@
             "maxLength": 20000
           },
           "source": {
-            "type": "object",
-            "required": [
-              "type",
-              "id"
-            ],
-            "properties": {
-              "type": {
-                "anyOf": [
-                  {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
                     "type": "string",
                     "const": "user_message"
                   },
-                  {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 20000,
+                    "description": "真实用户消息 ID；不能使用委派消息或成果 ID"
+                  }
+                },
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
                     "type": "string",
                     "const": "artifact"
-                  }
-                ]
-              },
-              "id": {
-                "type": "string",
-                "description": "真实用户消息或最终成果 ID",
-                "minLength": 1,
-                "maxLength": 20000
-              },
-              "revision": {
-                "anyOf": [
-                  {
-                    "type": "integer",
-                    "minimum": 1
                   },
-                  {
+                  "id": {
                     "type": "string",
-                    "description": "冻结成果版本",
                     "minLength": 1,
-                    "maxLength": 20000
+                    "maxLength": 20000,
+                    "description": "原 ArtifactRef.id"
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 20000,
+                    "description": "原 ArtifactRef.revision 字符串"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 20000,
+                    "description": "原 ArtifactRef.kind"
+                  },
+                  "digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[a-f0-9]{64}$",
+                    "description": "原 ArtifactRef.digest"
+                  },
+                  "schemaVersion": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 20000,
+                    "description": "原 ArtifactRef.schemaVersion"
                   }
-                ]
-              },
-              "kind": {
-                "type": "string",
-                "description": "成果种类，如 report 或 strategy.source",
-                "minLength": 1,
-                "maxLength": 20000
-              },
-              "digest": {
-                "type": "string",
-                "pattern": "^sha256:[a-f0-9]{64}$",
-                "description": "冻结成果摘要，按原始 ArtifactRef 传入"
-              },
-              "schemaVersion": {
-                "type": "string",
-                "description": "冻结成果 schemaVersion，按原始 ArtifactRef 传入",
-                "minLength": 1,
-                "maxLength": 20000
+                },
+                "required": [
+                  "type",
+                  "id",
+                  "revision",
+                  "kind",
+                  "digest",
+                  "schemaVersion"
+                ],
+                "additionalProperties": false
               }
-            },
-            "additionalProperties": false
+            ],
+            "description": "来源必须有 type。冻结成果使用 {type:\"artifact\",...完整 ArtifactRef}；用户表达使用 {type:\"user_message\",id:\"真实消息ID\"}。不省略 type，不改写来源类别或成果版本。"
           }
         },
         "additionalProperties": false
@@ -580,13 +666,14 @@
           },
           "id": {
             "type": "string",
-            "description": "记忆或候选 ID",
+            "description": "accept/reject 使用候选 ID；其余写操作使用正式记忆 ID",
             "minLength": 1,
             "maxLength": 20000
           },
           "expected_version": {
             "type": "integer",
-            "minimum": 1
+            "minimum": 1,
+            "description": "对应对象最新 version：候选来自 candidates，正式记忆来自 memory_read；不是成果 revision"
           },
           "entry": {
             "type": "object",
@@ -616,102 +703,145 @@
                 "maxLength": 20000
               },
               "scope": {
-                "type": "object",
-                "required": [
-                  "kind"
-                ],
-                "properties": {
-                  "kind": {
-                    "anyOf": [
-                      {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
                         "type": "string",
                         "const": "global"
-                      },
-                      {
+                      }
+                    },
+                    "required": [
+                      "kind"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
                         "type": "string",
                         "const": "project"
                       },
-                      {
+                      "project_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 160,
+                        "pattern": "^[\\w.-]+$",
+                        "description": "真实项目 ID"
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "project_id"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
                         "type": "string",
                         "const": "strategy"
+                      },
+                      "project_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 160,
+                        "pattern": "^[\\w.-]+$",
+                        "description": "策略所属项目 ID"
+                      },
+                      "strategy_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 160,
+                        "pattern": "^[\\w.-]+$",
+                        "description": "真实策略 ID"
                       }
-                    ]
-                  },
-                  "project_id": {
-                    "type": "string",
-                    "description": "项目 ID",
-                    "minLength": 1,
-                    "maxLength": 20000
-                  },
-                  "strategy_id": {
-                    "type": "string",
-                    "description": "策略 ID",
-                    "minLength": 1,
-                    "maxLength": 20000
+                    },
+                    "required": [
+                      "kind",
+                      "project_id",
+                      "strategy_id"
+                    ],
+                    "additionalProperties": false
                   }
-                },
-                "additionalProperties": false
+                ]
               },
               "sources": {
                 "type": "array",
                 "items": {
-                  "type": "object",
-                  "required": [
-                    "type",
-                    "id"
-                  ],
-                  "properties": {
-                    "type": {
-                      "anyOf": [
-                        {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
                           "type": "string",
                           "const": "user_message"
                         },
-                        {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 20000,
+                          "description": "真实用户消息 ID；不能使用委派消息或成果 ID"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "id"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
                           "type": "string",
                           "const": "artifact"
-                        }
-                      ]
-                    },
-                    "id": {
-                      "type": "string",
-                      "description": "真实用户消息或最终成果 ID",
-                      "minLength": 1,
-                      "maxLength": 20000
-                    },
-                    "revision": {
-                      "anyOf": [
-                        {
-                          "type": "integer",
-                          "minimum": 1
                         },
-                        {
+                        "id": {
                           "type": "string",
-                          "description": "冻结成果版本",
                           "minLength": 1,
-                          "maxLength": 20000
+                          "maxLength": 20000,
+                          "description": "原 ArtifactRef.id"
+                        },
+                        "revision": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 20000,
+                          "description": "原 ArtifactRef.revision 字符串"
+                        },
+                        "kind": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 20000,
+                          "description": "原 ArtifactRef.kind"
+                        },
+                        "digest": {
+                          "type": "string",
+                          "pattern": "^sha256:[a-f0-9]{64}$",
+                          "description": "原 ArtifactRef.digest"
+                        },
+                        "schemaVersion": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 20000,
+                          "description": "原 ArtifactRef.schemaVersion"
                         }
-                      ]
-                    },
-                    "kind": {
-                      "type": "string",
-                      "description": "成果种类，如 report 或 strategy.source",
-                      "minLength": 1,
-                      "maxLength": 20000
-                    },
-                    "digest": {
-                      "type": "string",
-                      "pattern": "^sha256:[a-f0-9]{64}$",
-                      "description": "冻结成果摘要，按原始 ArtifactRef 传入"
-                    },
-                    "schemaVersion": {
-                      "type": "string",
-                      "description": "冻结成果 schemaVersion，按原始 ArtifactRef 传入",
-                      "minLength": 1,
-                      "maxLength": 20000
+                      },
+                      "required": [
+                        "type",
+                        "id",
+                        "revision",
+                        "kind",
+                        "digest",
+                        "schemaVersion"
+                      ],
+                      "additionalProperties": false
                     }
-                  },
-                  "additionalProperties": false
+                  ],
+                  "description": "来源必须有 type。冻结成果使用 {type:\"artifact\",...完整 ArtifactRef}；用户表达使用 {type:\"user_message\",id:\"真实消息ID\"}。不省略 type，不改写来源类别或成果版本。"
                 },
                 "minItems": 1,
                 "maxItems": 20
@@ -807,12 +937,12 @@
       "usage": {
         "purpose": "主 Agent 管理正式记忆：save 创建或修订；candidates 查看候选；accept/reject 合并或丢弃；archive/restore 手动归档或恢复；forget 清除正文、历史和派生索引。更新和删除先读取 expected_version。保存的内容不能修改应用权限。",
         "inputs": "save 使用 entry={category,title,summary,content,scope,sources,...}；新建不传 id，修订传 id/expected_version。candidates 列候选；accept/reject 用候选 id/version；archive/restore/forget 用记忆 id/version；stats 读统计。",
-        "outputs": "save/archive/restore 返回实际记忆/version；accept/reject 返回 {id,status,memory?}；candidates 为 items；forget 为遗忘回执；stats 含 policy 和 compaction。",
+        "outputs": "save/archive/restore 返回正式记忆/version；accept/reject 返回 {id,status,memory?}，顶层 id 是候选，accept 的正式记忆在 memory 字段；candidates 返回 items；forget 为遗忘回执；stats 含 policy 和 compaction。",
         "prerequisites": [
           "主 Agent；sources 采用真实用户消息或完整已发布 ArtifactRef。"
         ],
         "limitations": [
-          "version_conflict 重读该记录后合并意图；来源无效查 host#messages/固定成果。forget 清除库内正文/历史/索引，不能声称原聊天、报告或外部副本已消失。"
+          "version_conflict 重读对应对象：候选用 candidates，正式记忆用 memory_read，再核验并合并意图。过期候选从真实最终成果重新核验提取，不能修改版本强行接纳。来源无效查 host#messages/固定成果。forget 清除库内正文/历史/索引，不能声称原聊天、报告或外部副本已消失。"
         ]
       },
       "binding": {

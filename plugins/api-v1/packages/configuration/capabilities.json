@@ -53,7 +53,7 @@
       "usage": {
         "purpose": "读取模型、认证状态、偏好和已安装插件。不会返回秘密或启动程序。连接设置由对应提供方插件管理。",
         "inputs": "section 默认 all；model 返回模型/认证可用性，preferences 返回偏好；provider 可筛选供应商并展开其模型。例：{section:\"model\",provider:\"openai\"}。",
-        "outputs": "recent_changes 加所选的 model/providers/available_models/preferences；all 另含 network/plugins。preferences.version 是偏好修改前提，认证只有状态。",
+        "outputs": "preferences 返回偏好与版本，model 返回模型与认证状态，all 才含插件清单；recent_changes 是对应配置的简短状态回执，不含完整历史结果。秘密值不返回。",
         "prerequisites": [
           "主 Agent 会话。"
         ],
@@ -234,6 +234,12 @@
                                 "minLength": 1,
                                 "maxLength": 512,
                                 "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                              },
+                              "accountConnectionId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 512,
+                                "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
                               }
                             },
                             "additionalProperties": false
@@ -300,11 +306,88 @@
                               "minLength": 1,
                               "maxLength": 512,
                               "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                            },
+                            "accountConnectionId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 512,
+                              "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
                             }
                           },
                           "additionalProperties": false
                         },
                         "maxItems": 32
+                      },
+                      "selected": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "provider",
+                            "accountId"
+                          ],
+                          "properties": {
+                            "provider": {
+                              "type": "object",
+                              "required": [
+                                "pluginId",
+                                "providerId"
+                              ],
+                              "properties": {
+                                "pluginId": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 512,
+                                  "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                                },
+                                "providerId": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 512,
+                                  "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                                }
+                              },
+                              "additionalProperties": false
+                            },
+                            "connection": {
+                              "type": "object",
+                              "required": [
+                                "id",
+                                "revision"
+                              ],
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 512,
+                                  "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                                },
+                                "revision": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 512,
+                                  "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                                }
+                              },
+                              "additionalProperties": false
+                            },
+                            "accountId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 512,
+                              "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                            },
+                            "accountConnectionId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 512,
+                              "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        "maxItems": 32,
+                        "description": "当前勾选账户；沿用读取结果的 provider、精确 connection、accountId 与 accountConnectionId。空数组取消全部勾选。"
                       }
                     },
                     "additionalProperties": false,
@@ -329,7 +412,7 @@
       ],
       "usage": {
         "purpose": "按用户要求修改回复语言、账户视图的精确连接/账户选择或已认证模型。偏好修改使用 configuration_read 返回的 preferences.version 作为 expected_version；不传凭据。模型切换不传 expected_version，queued 后等待本轮结束再确认。",
-        "inputs": "target=preferences：changes 放最小偏好补丁，expected_version 来自 configuration_read.preferences.version；target=model：changes={provider,model,thinking?}，不传 expected_version。command_id 为该次修改的稳定 ID。",
+        "inputs": "target=preferences：changes 放最小偏好补丁，expected_version 来自 configuration_read.preferences.version；target=model：changes={provider,model,thinking?}，不传 expected_version。command_id 为该次修改的稳定 ID。 account_view.selected 是当前勾选账户数组，保留读取结果的精确身份；空数组取消全部勾选。",
         "outputs": "{id,target,status,changes,result?,error?}；preferences 的 applied 表示已持久化，model 可先 queued，当前回复结束后处理。",
         "prerequisites": [
           "主 Agent；模型必须在 configuration_read 中可用且已认证。"

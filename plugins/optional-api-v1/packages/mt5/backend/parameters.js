@@ -23,21 +23,32 @@ export function parameterMapping(source, mapping) {
   return structuredClone(mapping);
 }
 
-export function nativeParameterValue(declaration, value) {
+const decimalText = /^-?(?:0|[1-9]\d*)(?:\.\d+)?$/;
+const toExactDecimal = (scalar, label) => {
+  if (typeof scalar === 'string') { requireValue(decimalText.test(scalar), `${label} 必须是精确十进制字符串`); return scalar; }
+  requireValue(typeof scalar === 'number' && Number.isFinite(scalar) && Math.abs(scalar) <= Number.MAX_SAFE_INTEGER, `${label} 必须是精确十进制字符串或有限安全数字`);
+  // String(number) uses negative exponents for small finite values. Expand its
+  // shortest round-tripping digits; fixed precision would round tiny values away.
+  const text = String(scalar).replace(/^(-?)(\d)(?:\.(\d+))?e-(\d+)$/, (_match, sign, whole, part = '', exponent) => `${sign}0.${'0'.repeat(Number(exponent) - 1)}${whole}${part}`);
+  requireValue(decimalText.test(text), `${label} 数字不能转换为十进制字符串`); return text;
+};
+
+export function nativeParameterValue(declaration, value, name = '参数') {
   if (value && typeof value === 'object') {
     requireValue(!Array.isArray(value) && ['quantity', 'money'].includes(declaration.type) && Object.hasOwn(value, 'value'), '原生参数包装类型无效');
     requireValue(declaration.type === 'quantity' ? value.unit === declaration.unit : value.currency === declaration.currency, '原生参数单位或货币与 SVL 声明不一致');
   }
   const scalar = value && typeof value === 'object' ? value.value : value;
   if (['integer', 'duration'].includes(declaration.type)) {
-    requireValue(typeof scalar === 'number' || typeof scalar === 'string' && /^[+-]?\d+$/.test(scalar), '原生 integer 参数必须是整数');
+    requireValue(typeof scalar === 'number' || typeof scalar === 'string' && /^[+-]?\d+$/.test(scalar), `${name} 原生 integer 参数必须是整数`);
     const integer = typeof scalar === 'string' ? Number(scalar) : scalar;
-    requireValue(Number.isSafeInteger(integer) && (declaration.type !== 'duration' || integer >= 0), '原生 integer/duration 参数超出安全整数范围'); return integer;
+    requireValue(Number.isSafeInteger(integer) && (declaration.type !== 'duration' || integer >= 0), `${name} 原生 integer/duration 参数超出安全整数范围`); return integer;
   }
+  if (['decimal', 'price', 'quantity', 'money'].includes(declaration.type)) return toExactDecimal(scalar, name);
   if (declaration.type === 'boolean') {
     if (scalar === true || scalar === 'true' || scalar === 1 || scalar === '1') return true;
     if (scalar === false || scalar === 'false' || scalar === 0 || scalar === '0') return false;
-    requireValue(false, '原生 boolean 参数必须是 true/false 或 1/0');
+    requireValue(false, `${name} 原生 boolean 参数必须是 true/false 或 1/0`);
   }
   return scalar;
 }
@@ -63,7 +74,7 @@ export async function translationBinding(host, mt5, buildId, config) {
         if (Object.hasOwn(native, entry.nativeInput)) { requireValue(typeof value === 'string' && Buffer.byteLength(value) <= 1048576, '原生 JSON 参数必须是有限 JSON 字符串'); try { structured = JSON.parse(value); } catch { requireValue(false, `MQL5 JSON 参数 ${entry.nativeInput} 无效`); } }
         parameters[name] = structured; native[entry.nativeInput] = canonical(structured); continue;
       }
-      const scalar = nativeParameterValue(declaration, value);
+      const scalar = nativeParameterValue(declaration, value, name);
       native[entry.nativeInput] = scalar;
       parameters[name] = declaration.type === 'quantity' ? { value: String(scalar), unit: declaration.unit } : declaration.type === 'money' ? { value: String(scalar), currency: declaration.currency } : scalar;
     }

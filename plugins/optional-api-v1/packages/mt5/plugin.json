@@ -44,12 +44,11 @@
   "apiVersion": "2",
   "license": "MIT",
   "engines": {
-    "sesame": ">=0.2.2"
+    "sesame": ">=0.2.3-dev.8"
   },
   "capability_manifest": "capabilities.json",
   "main_tool_names": [
     "mt5_deployment",
-    "mt5_settings",
     "mt5_update_configuration",
     "mt5_import_configuration",
     "mt5_connect",

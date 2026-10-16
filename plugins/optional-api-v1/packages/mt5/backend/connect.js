@@ -171,6 +171,11 @@ export async function connectMT5(host, mt5, args, signal) {
     return publicRecord(previous);
   }
   return records(host).exclusive(async () => {
+    const repeated = records(host).get('configuration_change', args.command_id, true);
+    if (repeated) {
+      requireValue(repeated.fingerprint === fingerprint && repeated.conversation_id === conversationId, '连接命令 ID 已用于其他请求', 409, 'idempotency_conflict');
+      return publicRecord(repeated);
+    }
     const record = { id: args.command_id, fingerprint, conversation_id: conversationId, target: 'mt5', changes: { connect: true, start_if_needed: args.start_if_needed ?? true }, status: 'running', created_at: now() };
     records(host).put('configuration_change', record);
     const finish = changes => {

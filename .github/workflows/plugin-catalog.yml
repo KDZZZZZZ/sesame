@@ -1,4 +1,4 @@
-name: Plugin catalog
+name: Historical plugin catalog
 on:
   push:
     branches: [main, dev]
@@ -16,10 +16,11 @@ jobs:
     env:
       CATALOG_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
     steps:
-      - name: Check out trusted validator
+      - name: Check out the fixed historical catalog validator
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          repository: KDZZZZZZ/sesame
+          ref: e91f45bdaaf1e0b02304f590656878ae8d23254f
           path: trusted
           persist-credentials: false
       - name: Check out candidate as data only
@@ -50,4 +51,4 @@ jobs:
       - name: Publish validation scope
         run: |
           echo '### Plugin catalog static checks' >> "$GITHUB_STEP_SUMMARY"
-          echo 'Validated exact Git source, files, hashes, identity, license/provenance presence, compatibility metadata and review references. No candidate plugin code, setup hook or test was executed. A green check is not a safety certification; human review is separate.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Validated the historical catalog with fixed validator e91f45bdaaf1e0b02304f590656878ae8d23254f: exact Git source, files, hashes, identity, license/provenance presence, compatibility metadata and review references. Current API 2 source capabilities are checked separately by package-static-review. No candidate plugin code, setup hook or test was executed. A green check is not a safety certification; human review is separate.' >> "$GITHUB_STEP_SUMMARY"

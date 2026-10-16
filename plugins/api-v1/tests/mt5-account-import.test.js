@@ -98,6 +98,33 @@ test('version conflict preserves the reference for a fresh version retry', async
   assert.equal(f.official.settings().account.password_configured, true);
 });
 
+function queuedExclusive() {
+  let chain = Promise.resolve();
+  return action => { const next = chain.then(action, action); chain = next.catch(() => {}); return next; };
+}
+
+test('same configuration command queued by plugin lock reuses the committed receipt once', async t => {
+  const f = await setup(t); f.store.exclusive = queuedExclusive();
+  let configureCalls = 0; const configure = f.official.configure.bind(f.official);
+  f.official.configure = async value => { configureCalls++; await Promise.resolve(); return configure(value); };
+  const args = { command_id: 'same_update_command', expected_version: f.official.config.version, changes: { allow_trading: false } };
+  const [first, second] = await Promise.all([updateConfiguration(f.host, f.mt5, args), updateConfiguration(f.host, f.mt5, args)]);
+  assert.deepEqual(second, first); assert.equal(first.status, 'applied'); assert.equal(configureCalls, 1);
+  assert.equal(f.store.list('configuration_change').length, 1); assert.equal(f.store.events.filter(event => event.type === 'workspace.mt5.configuration' && event.data.id === args.command_id).length, 2);
+  await assert.rejects(updateConfiguration(f.host, f.mt5, { ...args, changes: { allow_trading: true } }), { code: 'idempotency_conflict' });
+});
+
+test('same import command queued by plugin lock reuses receipt after reference removal', async t => {
+  const f = await setup(t); f.store.exclusive = queuedExclusive();
+  f.prepare('msg_parallel_import', [JSON.stringify({ mt5Account: { login: '700123', server: 'Fixture-Demo', password: 'parallel-private' } })]);
+  let configureCalls = 0; const configure = f.official.configure.bind(f.official);
+  f.official.configure = async value => { configureCalls++; await Promise.resolve(); return configure(value); };
+  const args = f.request('msg_parallel_import');
+  const [first, second] = await Promise.all([importConfiguration(f.host, f.mt5, f.imports, args), importConfiguration(f.host, f.mt5, f.imports, args)]);
+  assert.deepEqual(second, first); assert.equal(first.status, 'applied'); assert.equal(configureCalls, 1);
+  assert.deepEqual(f.imports.pending(), []); assert.equal(f.store.list('configuration_change').length, 1);
+});
+
 test('conflicting multipart credentials fail before persistence and tool metadata remains credential-free', async t => {
   const f = await setup(t), config = password => JSON.stringify({ mt5Account: { login: '700123', server: 'Fixture-Demo', password } });
   assert.throws(() => f.prepare('msg_conflict', [config('first-private'), config('second-private')]), error => error.code === 'mt5_account_import_invalid' && !/first-private|second-private/.test(error.message));

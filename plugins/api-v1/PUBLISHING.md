@@ -1,4 +1,19 @@
-# Plugin API 1 publication
+# Plugin publication and API 2 development
+
+## Current development sources
+
+The packages under `plugins/api-v1/packages` and
+`plugins/optional-api-v1/packages` now declare **API 2**. The directory names are
+retained, but the declarations, source locks and host interface are API 2.
+Development builds select an exact source commit and verify its two committed
+locks. A source push does not publish packages or rewrite a catalog.
+
+Existing API 1 catalogs, release plans, R2 plans and archives retain their exact
+historical identities. CI checks them with the fixed historical validator at
+`e91f45bdaaf1e0b02304f590656878ae8d23254f`; the current validator checks API 2
+sources. The publication and compatibility procedures below describe those
+historical API 1 clients and artifacts. API 2 distribution requires a separate
+reviewed publication; do not relabel an API 1 archive as API 2.
 
 ## Current policy
 
@@ -22,11 +37,17 @@ installed package or make a new package version available in the catalog.
 The catalog may only select actual immutable publications compatible with its
 client. Do not add a plan expecting the retired workflow to publish it.
 
-Future plugin distribution needs a separately reviewed storage/registry change,
-a new catalog endpoint compatible with that storage, an updated plugin manager,
-and application locks for the new endpoint. Keep the old endpoint and archives
-for existing clients. The [ecosystem policy](../ECOSYSTEM.md) describes the design
-references and review requirements; it does not claim that migration is complete.
+The new distribution infrastructure targets Cloudflare R2 through
+`https://dl.sesame.bot/plugins/api-v1/catalog.json` (catalog schema 2).
+Migration requires a separately published R2-compatible plugin-manager 2.3.0 or
+newer and the first catalog. Until both exist, existing clients keep the GitHub
+endpoint and archives. After publication, Sesame 0.2.2 installations can explicitly
+update the manager using their existing plugin tools; future app builds can select
+the R2 application pin. See [R2 distribution](R2-DISTRIBUTION.md) for publication
+and migration, and the [ecosystem policy](../ECOSYSTEM.md) for scope.
+
+Adding source or infrastructure alone does not publish an R2 catalog. The
+reviewed plan and successful R2 workflow are the publication record.
 
 ## Historical publication protocol
 

@@ -74,14 +74,14 @@ export function reviewEvidence(plan, pr, reviews, checks) {
   return { schemaVersion: 1, tag: plan.tag, sourceCommit: plan.sourceCommit, pullRequest: { number: plan.pullRequest, url: pr.html_url, headSha: pr.head.sha, mergeCommit: pr.merge_commit_sha, mergedAt: pr.merged_at, mergedBy: pr.merged_by?.login }, automated: successful, human: { status: approvals.length ? 'approved' : 'not-recorded', approvals: approvals.map(review => ({ author: review.user.login, commit: review.commit_id, url: review.html_url })) }, reviews: reviews.map(review => ({ author: review.user.login, authorType: review.user.type, state: review.state, commit: review.commit_id, url: review.html_url })), scope: 'Static identity, immutable source and file checks. Candidate plugin factories and tools were not executed by CI. Automated checks and repository merge permission do not constitute human approval or a safety certification.' };
 }
 
-async function api(path, options = {}) {
+export async function api(path, options = {}) {
   const response = await fetch(`https://api.github.com/repos/${REPOSITORY}${path}`, { ...options, headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', ...options.headers } });
   if (response.status === 404 && options.allowMissing) return null;
   if (!response.ok) throw new Error(`GitHub API ${path}: ${response.status} ${await response.text()}`);
   return response.status === 204 ? null : response.json();
 }
 
-async function allReviews(number) {
+export async function allReviews(number) {
   const reviews = [];
   for (let page = 1; page <= 10; page++) {
     const batch = await api(`/pulls/${number}/reviews?per_page=100&page=${page}`); reviews.push(...batch);
@@ -90,13 +90,13 @@ async function allReviews(number) {
   throw new Error('Review pagination exceeded publication budget');
 }
 
-async function graphql(body) {
+export async function graphql(body) {
   const response = await fetch('https://api.github.com/graphql', { method: 'POST', headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   assert(response.ok, `Cannot read GitHub review discussions (${response.status})`);
   return response.json();
 }
 
-async function trustedChecks(pr) {
+export async function trustedChecks(pr) {
   const checks = [];
   for (const required of CHECKS) {
     const workflow = await api(`/actions/workflows/${basename(required.path)}`);

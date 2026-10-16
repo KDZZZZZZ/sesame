@@ -28,7 +28,7 @@ It supports market/limit and targeted position reduction. Inside the serialized 
 
 Broker wall time or reception time cannot replace a verified UTC source time. The independent portfolio-execution plugin measures the model round trip and defaults to M5+; M1 has not been benchmarked.
 
-This package requires Sesame 0.2.2+. The portfolio-execution helper needs an already configured official Python SDK channel. Its MT5 mapping covers market buy/sell, limit pending orders, exact-position close, pending cancellation and status. It does not install, enable or log in to a terminal. Pure MCP remains available through this package's native tools, but its broker wall timestamps do not establish UTC freshness for the helper. Advanced types and amendments remain the native tools' responsibility.
+This package requires Sesame 0.2.3-dev.8+ with live invocation-chain validation. The portfolio-execution helper needs an already configured official Python SDK channel. Its MT5 mapping covers market buy/sell, limit pending orders, exact-position close, pending cancellation and status. It does not install, enable or log in to a terminal. Pure MCP remains available through this package's native tools, but its broker wall timestamps do not establish UTC freshness for the helper. Advanced types and amendments remain the native tools' responsibility.
 
 ## Composed workflow execution (1.6.0)
 

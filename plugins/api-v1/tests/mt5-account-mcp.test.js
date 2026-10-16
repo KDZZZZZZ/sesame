@@ -64,3 +64,42 @@ test('account list, snapshot and subscription all consume the real official resp
   await subscription.close(); provider.unbind(context);
   assert.ok(calls.every(([method]) => ['get_trading_account_info', 'get_trading_open_positions'].includes(method)));
 });
+
+
+test('account history uses the real get_time_information trade server field for broker wall ranges', async t => {
+  const calls = [];
+  const provider = new MT5AccountProvider({ official: { config: { version: 9, account: { server: official.account.server, login: String(official.account.login) } } }, options: {}, market: { read: async (tool, args) => {
+    calls.push([tool, args]);
+    if (tool === 'get_trading_account_info') return structuredClone(official);
+    if (tool === 'get_time_information') return { utc_time: '2026-10-14T20:28:57Z', local_time: '2026-10-14T16:28:57', local_utc_offset_minutes: -240, daylight_saving_time: true, trade_server_last_known_time: '2026-10-14T16:28:57' };
+    if (tool === 'get_trading_history_orders') return { orders: [], deals: [{ ticket: '1', order: '2', symbol: 'EURUSD', type: 'buy', time: '2026-10-14T16:00:00', volume: '0.1', price: '1.2', profit: '0', commission: '0', swap: '0', fee: '0' }] };
+    throw new Error('Unexpected native call ' + tool);
+  } } });
+  t.after(() => provider.dispose());
+  const context = { bindingId: 'fixture-history', signal: new AbortController().signal };
+  provider.bind({}, context);
+  const account = (await provider.listAccounts({ page: { limit: 10 } }, context)).data.items[0].ref;
+  const fills = await provider.queryFills({ account }, context);
+  assert.equal(fills.data.page.items.length, 1);
+  assert.equal(fills.data.coverage.requested.to.value, '2026-10-14T16:28:57');
+  assert.equal(calls.find(([tool]) => tool === 'get_trading_history_orders')[1].datetime_to, '2026-10-14T16:28:57');
+  provider.unbind(context);
+});
+
+test('account history rejects UTC-only time information instead of guessing broker wall time', async t => {
+  const calls = [];
+  const provider = new MT5AccountProvider({ official: { config: { version: 9, account: { server: official.account.server, login: String(official.account.login) } } }, options: {}, market: { read: async (tool, args) => {
+    calls.push([tool, args]);
+    if (tool === 'get_trading_account_info') return structuredClone(official);
+    if (tool === 'get_time_information') return { utc_time: '2026-10-14T20:28:57Z', local_time: '2026-10-14T16:28:57', local_utc_offset_minutes: -240, daylight_saving_time: true };
+    if (tool === 'get_trading_history_orders') return { orders: [], deals: [] };
+    throw new Error('Unexpected native call ' + tool);
+  } } });
+  t.after(() => provider.dispose());
+  const context = { bindingId: 'fixture-history-utc-only', signal: new AbortController().signal };
+  provider.bind({}, context);
+  const account = (await provider.listAccounts({ page: { limit: 10 } }, context)).data.items[0].ref;
+  await assert.rejects(provider.queryFills({ account }, context), { code: 'UNSUPPORTED_CAPABILITY' });
+  assert.equal(calls.some(([tool]) => tool === 'get_trading_history_orders'), false);
+  provider.unbind(context);
+});

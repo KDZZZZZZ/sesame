@@ -27,7 +27,7 @@ runpy.run_path(sys.argv[1], run_name='__main__')
 
 function call(tool, account) {
   const python = process.platform === 'win32' ? process.env.MT5AGENT_PYTHON || 'python' : 'python3';
-  const output = spawnSync(python, ['-c', broker, worker], { encoding: 'utf8', timeout: 10000, windowsHide: true,
+  const output = spawnSync(python, ['-B', '-c', broker, worker], { encoding: 'utf8', timeout: 10000, windowsHide: true,
     input: JSON.stringify({ tool, account, arguments: {}, terminal: 'fixture-terminal.exe' }) + '\n' });
   assert.equal(output.status, 0, output.stderr || output.error?.message);
   assert.doesNotMatch(output.stdout, /fixture-password/);

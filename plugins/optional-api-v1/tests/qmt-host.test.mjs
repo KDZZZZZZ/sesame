@@ -1,13 +1,13 @@
 /** Opt-in actual Sesame API1 installation/storage test; never uses native QMT. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,cp,rm} from 'node:fs/promises';
+import {mkdtemp,cp,readFile,rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {pathToFileURL,fileURLToPath} from 'node:url';
 import {createService} from '../packages/qmt/service.js';
 const root=process.env.SESAME_HOST_ROOT;
-test('actual HostContext installs seven QMT tools and preserves unknown trade intent across Runtime restart without replay', {skip:!root,timeout:60000},async()=>{
+test('actual HostContext installs all QMT tools and preserves unknown trade intent across Runtime restart without replay', {skip:!root,timeout:60000},async()=>{
   const {Store}=await import(pathToFileURL(join(root,'modules/agent/store.js')));
   const {Runtime}=await import(pathToFileURL(join(root,'modules/agent/runtime.js')));
   const {createHostContext}=await import(pathToFileURL(join(root,'modules/plugins/context.js')));
@@ -19,7 +19,10 @@ test('actual HostContext installs seven QMT tools and preserves unknown trade in
     const checked=await runtime.plugins.manager.test('conv_main',{path:draft});assert.equal(checked.passed,true,JSON.stringify(checked));
     const installed=await runtime.plugins.manager.install('conv_main',{path:draft,digest:checked.digest});assert.equal(installed.runtime_status,'ready');runtime.plugins.activate('conv_main',installed.id);
     const host=createHostContext(runtime,runtime.plugins.entry('sesame/qmt'),'conv_main');assert.equal(host.scope.kind,'main');
-    assert.equal(runtime.plugins.definitions({conversationId:'conv_main'}).filter(x=>x.name.startsWith('qmt_')).length,7);
+    const declared=JSON.parse(await readFile(new URL('../packages/qmt/tools.json',import.meta.url),'utf8')).map(tool=>tool.name).filter(name=>name.startsWith('qmt_')).sort();
+    const registered=runtime.plugins.definitions({conversationId:'conv_main'}).map(tool=>tool.name).filter(name=>name.startsWith('qmt_')).sort();
+    assert.deepEqual(registered,declared);
+    for(const name of ['qmt_trading_context','qmt_trading_order','qmt_trading_cancel','qmt_trading_command'])assert.ok(registered.includes(name),name);
     host.storage.put('configuration',{id:'local',version:2,connection_id:'fixture',python_path:join(dir,'nonexecuted-python'),account_id:'00123',userdata_directory:dir});
     const args={operation_id:'durable-unknown',user_authorized:true,account_id:'00123',connection_revision:'2',symbol:'600000.SH',side:'buy',shares:'100',price:'10'};let calls=0;
     service=createService(host,{platform:'win32',request:async()=>{calls++;throw Object.assign(Error('Injected transport outcome unknown'),{code:'SOURCE_UNAVAILABLE'})}});

@@ -1180,6 +1180,14 @@
             "host"
           ],
           "execution": "immediate"
+        },
+        {
+          "id": "auto_factor_dependencies",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
         }
       ],
       "hostContributions": {
@@ -1523,14 +1531,6 @@
           "execution": "immediate"
         },
         {
-          "id": "market_subscribeQuotes",
-          "kind": "function",
-          "consumers": [
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
           "id": "ccxt_dispose",
           "kind": "function",
           "consumers": [
@@ -1550,8 +1550,7 @@
               "searchInstruments": "market_searchInstruments",
               "describeInstrument": "market_describeInstrument",
               "queryBars": "market_queryBars",
-              "subscribeBars": "market_subscribeBars",
-              "subscribeQuotes": "market_subscribeQuotes"
+              "subscribeBars": "market_subscribeBars"
             }
           }
         ],
@@ -1571,7 +1570,7 @@
     },
     {
       "id": "sesame/configuration",
-      "version": "2.0.3",
+      "version": "2.0.4",
       "distribution": "core",
       "state": "discoverable",
       "engines": {
@@ -3152,6 +3151,14 @@
             "host"
           ],
           "execution": "run"
+        },
+        {
+          "id": "workflow_dependencies",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
         }
       ],
       "hostContributions": {
@@ -3443,7 +3450,7 @@
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.2"
+        "sesame": ">=0.2.3-dev.8"
       },
       "format": "sesame-native",
       "license": "MIT",

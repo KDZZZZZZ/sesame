@@ -1,0 +1,15 @@
+{
+  "operation_id": "publish-observed-closes-example-01",
+  "definition": {
+    "schemaVersion": "1.0.0",
+    "title": "Recent observed closes",
+    "parameters": [{ "id": "length", "type": "integer", "required": false, "title": "Visible bars", "default": 20, "min": 1, "max": 500 }],
+    "inputs": [{ "id": "price", "kind": "bars", "binding": "chart", "lookback": 500, "forming": "include" }],
+    "panes": [{ "id": "price", "placement": "main" }],
+    "series": [{ "id": "close", "title": "Observed close", "paneId": "price", "type": "line", "unit": "price", "scale": { "mode": "price", "scaleId": "price" }, "style": { "color": "#c28b45", "width": 2 } }],
+    "implementation": { "kind": "code", "entry": "close-line.js", "language": "javascript", "runtime": "sesame-indicator/1", "dependencies": [] }
+  },
+  "files": {
+    "close-line.js": "export function compute(input) {\n  const rows = input.inputs.price.rows.slice(-input.parameters.length);\n  return { status: rows.length ? 'ready' : 'not_ready', series: [{ seriesId: 'close', points: rows.map(bar => ({ key: bar.id, time: bar.openTime, value: { status: 'value', value: bar.close } })) }], diagnostics: [] };\n}\n"
+  }
+}

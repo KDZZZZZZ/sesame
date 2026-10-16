@@ -1,4 +1,4 @@
-name: Plugin API 1 sources
+name: Plugin API 2 sources and historical publications
 on:
   push:
     branches: [main, dev]
@@ -11,7 +11,7 @@ permissions:
 jobs:
   package-static-review:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     steps:
       - name: Use the supported source tool runtime
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -23,6 +23,13 @@ jobs:
           ref: ${{ github.event.pull_request.base.sha || github.sha }}
           path: trusted
           persist-credentials: false
+      - name: Check out the fixed historical API 1 validator
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: KDZZZZZZ/sesame
+          ref: e91f45bdaaf1e0b02304f590656878ae8d23254f
+          path: historical
+          persist-credentials: false
       - name: Check out candidate as data only
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -31,19 +38,23 @@ jobs:
           path: candidate
           fetch-depth: 0
           persist-credentials: false
-      - name: Validate package boundaries, metadata and every locked byte
+      - name: Validate API 2 package boundaries, metadata and every locked byte
         run: node trusted/plugins/api-v1/scripts/plugin-lock.mjs --check --source candidate/plugins/api-v1
-      - name: Validate optional package data with the trusted base validator
-        run: |
-          node trusted/plugins/api-v1/scripts/plugin-lock.mjs --check --source candidate/plugins/optional-api-v1
-          node trusted/.github/scripts/validate-api1-catalog.mjs candidate --published
-      - name: Validate fixed release plans without publishing
-        run: node trusted/.github/scripts/release-plugins.mjs --check candidate
+      - name: Validate API 2 optional package data with the trusted base validator
+        run: node trusted/plugins/api-v1/scripts/plugin-lock.mjs --check --source candidate/plugins/optional-api-v1
+      - name: Validate historical API 1 catalogs with their fixed validator
+        run: node historical/.github/scripts/validate-api1-catalog.mjs candidate --published
+      - name: Validate historical release plans without publishing
+        run: node historical/.github/scripts/release-plugins.mjs --check candidate
+      - name: Validate historical R2 plans without publishing
+        run: node historical/.github/scripts/plugin-r2.mjs --check candidate
       - name: Validate the application release plan without publishing
         run: node trusted/.github/scripts/release-application.mjs --check candidate
-      - name: Test trusted validators, lock and archive code
-        run: node --test trusted/plugins/api-v1/tests/lock.test.mjs trusted/.github/scripts/release-plugins.test.mjs trusted/.github/scripts/release-application.test.mjs trusted/.github/scripts/semantic-review.test.mjs trusted/.github/scripts/api1-required-catalog.test.mjs trusted/.github/scripts/contribution-policy.test.mjs
+      - name: Test current source validation and shared publication boundaries
+        run: node --test trusted/plugins/api-v1/tests/lock.test.mjs trusted/plugins/api-v1/tests/host-engine-range.test.mjs trusted/.github/scripts/release-plugins.test.mjs trusted/.github/scripts/release-application.test.mjs trusted/.github/scripts/semantic-review.test.mjs trusted/.github/scripts/api1-required-catalog.test.mjs trusted/.github/scripts/contribution-policy.test.mjs trusted/.github/scripts/publish-plugin-r2.test.mjs trusted/.github/scripts/dev-source-ci.test.mjs
+      - name: Test the fixed historical catalog and R2 validators
+        run: node --test historical/.github/scripts/api1-catalog.test.mjs historical/.github/scripts/plugin-r2.test.mjs
       - name: Record scope
         run: |
-          echo '### API 1 package identity checks' >> "$GITHUB_STEP_SUMMARY"
-          echo 'Checked identities, versions, local module scope, license presence, package paths, tool metadata, static import boundaries and every locked byte. Candidate plugin code was not imported or executed. Native behavior, SDK compatibility, browser rendering and target execution require separate maintainer checks.' >> "$GITHUB_STEP_SUMMARY"
+          echo '### API 2 source and historical API 1 publication checks' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Checked current source identities, explicit capabilities, versions, module scope, licenses, package paths, static imports and locked bytes with the trusted current validator. Historical API 1 catalogs, release plans and R2 plans were checked with the fixed e91f45bdaaf1e0b02304f590656878ae8d23254f validator, without relabeling or publishing their bytes. Candidate plugin code was not imported or executed. Native behavior, SDK compatibility, browser rendering and target execution require separate maintainer checks.' >> "$GITHUB_STEP_SUMMARY"
