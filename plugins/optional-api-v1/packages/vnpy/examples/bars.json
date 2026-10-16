@@ -1,0 +1,10 @@
+{
+  "provenance": {"kind": "demo", "description": "Four fictional daily bars used only to test actual engine matching."},
+  "config": {"vt_symbol": "DEMO.LOCAL", "interval": "d", "rate": "0.001", "slippage": "0", "size": "1", "pricetick": "1", "capital": "10000"},
+  "rows": [
+    {"datetime": "2024-01-01T00:00:00+00:00", "open": "100", "high": "102", "low": "99", "close": "101", "volume": "10"},
+    {"datetime": "2024-01-02T00:00:00+00:00", "open": "102", "high": "104", "low": "100", "close": "103", "volume": "12"},
+    {"datetime": "2024-01-03T00:00:00+00:00", "open": "105", "high": "107", "low": "103", "close": "106", "volume": "14"},
+    {"datetime": "2024-01-04T00:00:00+00:00", "open": "107", "high": "109", "low": "105", "close": "108", "volume": "16"}
+  ]
+}

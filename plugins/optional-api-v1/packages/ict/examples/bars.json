@@ -1,0 +1,332 @@
+[
+  {
+    "id": "demo-00",
+    "revision": "1",
+    "datetime": {
+      "basis": "utc",
+      "unixMs": 1800000000000
+    },
+    "end_time": {
+      "basis": "utc",
+      "unixMs": 1800000060000
+    },
+    "open": "10",
+    "high": "11",
+    "low": "9",
+    "close": "10",
+    "volume": null,
+    "volume_unit": null,
+    "volume_kind": "none",
+    "volume_status": "not_requested",
+    "is_closed": true,
+    "closure": "source"
+  },
+  {
+    "id": "demo-01",
+    "revision": "1",
+    "datetime": {
+      "basis": "utc",
+      "unixMs": 1800000060000
+    },
+    "end_time": {
+      "basis": "utc",
+      "unixMs": 1800000120000
+    },
+    "open": "10",
+    "high": "12",
+    "low": "10",
+    "close": "11",
+    "volume": null,
+    "volume_unit": null,
+    "volume_kind": "none",
+    "volume_status": "not_requested",
+    "is_closed": true,
+    "closure": "source"
+  },
+  {
+    "id": "demo-02",
+    "revision": "1",
+    "datetime": {
+      "basis": "utc",
+      "unixMs": 1800000120000
+    },
+    "end_time": {
+      "basis": "utc",
+      "unixMs": 1800000180000
+    },
+    "open": "11",
+    "high": "15",
+    "low": "11",
+    "close": "14",
+    "volume": null,
+    "volume_unit": null,
+    "volume_kind": "none",
+    "volume_status": "not_requested",
+    "is_closed": true,
+    "closure": "source"
+  },
+  {
+    "id": "demo-03",
+    "revision": "1",
+    "datetime": {
+      "basis": "utc",
+      "unixMs": 1800000180000
+    },
+    "end_time": {
+      "basis": "utc",
+      "unixMs": 1800000240000
+    },
+    "open": "12",
+    "high": "13",
+    "low": "10",
+    "close": "11",
+    "volume": null,
+    "volume_unit": null,
+    "volume_kind": "none",
+    "volume_status": "not_requested",
+    "is_closed": true,
+    "closure": "source"
+  },
+  {
+    "id": "demo-04",
+    "revision": "1",
+    "datetime": {
+      "basis": "utc",
+      "unixMs": 1800000240000
+    },
+    "end_time": {
+      "basis": "utc",
+      "unixMs": 1800000300000
+    },
+    "open": "11",
+    "high": "12",
+    "low": "8",
+    "close": "9",
+    "volume": null,
+    "volume_unit": null,
+    "volume_kind": "none",
+    "volume_status": "not_requested",
+    "is_closed": true,
+    "closure": "source"
+  },
+  {
+    "id": "demo-05",
+    "revision": "1",
+    "datetime": {
+      "basis": "utc",
+      "unixMs": 1800000300000
+    },
+    "end_time": {
+      "basis": "utc",
+      "unixMs": 1800000360000
+    },
+    "open": "10",
+    "high": "13",
+    "low": "9",
+    "close": "12",
+    "volume": null,
+    "volume_unit": null,
+    "volume_kind": "none",
+    "volume_status": "not_requested",
+    "is_closed": true,
+    "closure": "source"
+  },
+  {
+    "id": "demo-06",
+    "revision": "1",
+    "datetime": {
+      "basis": "utc",
+      "unixMs": 1800000360000
+    },
+    "end_time": {
+      "basis": "utc",
+      "unixMs": 1800000420000
+    },
+    "open": "12",
+    "high": "14",
+    "low": "11",
+    "close": "13",
+    "volume": null,
+    "volume_unit": null,
+    "volume_kind": "none",
+    "volume_status": "not_requested",
+    "is_closed": true,
+    "closure": "source"
+  },
+  {
+    "id": "demo-07",
+    "revision": "1",
+    "datetime": {
+      "basis": "utc",
+      "unixMs": 1800000420000
+    },
+    "end_time": {
+      "basis": "utc",
+      "unixMs": 1800000480000
+    },
+    "open": "14",
+    "high": "17",
+    "low": "13",
+    "close": "16",
+    "volume": null,
+    "volume_unit": null,
+    "volume_kind": "none",
+    "volume_status": "not_requested",
+    "is_closed": true,
+    "closure": "source"
+  },
+  {
+    "id": "demo-08",
+    "revision": "1",
+    "datetime": {
+      "basis": "utc",
+      "unixMs": 1800000480000
+    },
+    "end_time": {
+      "basis": "utc",
+      "unixMs": 1800000540000
+    },
+    "open": "18",
+    "high": "20",
+    "low": "18",
+    "close": "19",
+    "volume": null,
+    "volume_unit": null,
+    "volume_kind": "none",
+    "volume_status": "not_requested",
+    "is_closed": true,
+    "closure": "source"
+  },
+  {
+    "id": "demo-09",
+    "revision": "1",
+    "datetime": {
+      "basis": "utc",
+      "unixMs": 1800000540000
+    },
+    "end_time": {
+      "basis": "utc",
+      "unixMs": 1800000600000
+    },
+    "open": "17",
+    "high": "18",
+    "low": "16",
+    "close": "17",
+    "volume": null,
+    "volume_unit": null,
+    "volume_kind": "none",
+    "volume_status": "not_requested",
+    "is_closed": true,
+    "closure": "source"
+  },
+  {
+    "id": "demo-10",
+    "revision": "1",
+    "datetime": {
+      "basis": "utc",
+      "unixMs": 1800000600000
+    },
+    "end_time": {
+      "basis": "utc",
+      "unixMs": 1800000660000
+    },
+    "open": "15",
+    "high": "16",
+    "low": "14",
+    "close": "15",
+    "volume": null,
+    "volume_unit": null,
+    "volume_kind": "none",
+    "volume_status": "not_requested",
+    "is_closed": true,
+    "closure": "source"
+  },
+  {
+    "id": "demo-11",
+    "revision": "1",
+    "datetime": {
+      "basis": "utc",
+      "unixMs": 1800000660000
+    },
+    "end_time": {
+      "basis": "utc",
+      "unixMs": 1800000720000
+    },
+    "open": "13",
+    "high": "14",
+    "low": "12",
+    "close": "13",
+    "volume": null,
+    "volume_unit": null,
+    "volume_kind": "none",
+    "volume_status": "not_requested",
+    "is_closed": true,
+    "closure": "source"
+  },
+  {
+    "id": "demo-12",
+    "revision": "1",
+    "datetime": {
+      "basis": "utc",
+      "unixMs": 1800000720000
+    },
+    "end_time": {
+      "basis": "utc",
+      "unixMs": 1800000780000
+    },
+    "open": "8",
+    "high": "10",
+    "low": "7",
+    "close": "7.5",
+    "volume": null,
+    "volume_unit": null,
+    "volume_kind": "none",
+    "volume_status": "not_requested",
+    "is_closed": true,
+    "closure": "source"
+  },
+  {
+    "id": "demo-13",
+    "revision": "1",
+    "datetime": {
+      "basis": "utc",
+      "unixMs": 1800000780000
+    },
+    "end_time": {
+      "basis": "utc",
+      "unixMs": 1800000840000
+    },
+    "open": "8",
+    "high": "11",
+    "low": "8",
+    "close": "10",
+    "volume": null,
+    "volume_unit": null,
+    "volume_kind": "none",
+    "volume_status": "not_requested",
+    "is_closed": true,
+    "closure": "source"
+  },
+  {
+    "id": "demo-14",
+    "revision": "1",
+    "datetime": {
+      "basis": "utc",
+      "unixMs": 1800000840000
+    },
+    "end_time": {
+      "basis": "utc",
+      "unixMs": 1800000900000
+    },
+    "open": "11",
+    "high": "12",
+    "low": "9",
+    "close": "11",
+    "volume": null,
+    "volume_unit": null,
+    "volume_kind": "none",
+    "volume_status": "not_requested",
+    "is_closed": true,
+    "closure": "source"
+  }
+]

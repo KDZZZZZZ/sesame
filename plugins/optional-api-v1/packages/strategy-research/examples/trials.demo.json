@@ -1,0 +1,58 @@
+[
+  {
+    "id": "demo-1",
+    "phase": "train",
+    "status": "aborted",
+    "planDigest": "sha256:d9223c5e4b6e5e2178457619caeb252644d67fc77872d2575350692b5b361d02",
+    "sourceDigest": "sha256:3c8132482dfbedc8e6e7cf3154ba2056d103440dadb4d5f92999620ed2b8ee09",
+    "dataDigest": "sha256:4b5f7f37113fec6e01e7d32355bab67522ffa5951157179baa1fdcdc22edb95e",
+    "parameters": {
+      "example": 1
+    },
+    "engine": "sesame/backtrader@1.0.0",
+    "result": null,
+    "note": "Fictional bookkeeping entry: no engine execution. Aborted attempts still consume budget."
+  },
+  {
+    "id": "demo-2",
+    "phase": "train",
+    "status": "aborted",
+    "planDigest": "sha256:d9223c5e4b6e5e2178457619caeb252644d67fc77872d2575350692b5b361d02",
+    "sourceDigest": "sha256:3c8132482dfbedc8e6e7cf3154ba2056d103440dadb4d5f92999620ed2b8ee09",
+    "dataDigest": "sha256:4b5f7f37113fec6e01e7d32355bab67522ffa5951157179baa1fdcdc22edb95e",
+    "parameters": {
+      "example": 2
+    },
+    "engine": "sesame/backtrader@1.0.0",
+    "result": null,
+    "note": "Fictional bookkeeping entry: no engine execution. Aborted attempts still consume budget."
+  },
+  {
+    "id": "demo-3",
+    "phase": "validation",
+    "status": "aborted",
+    "planDigest": "sha256:d9223c5e4b6e5e2178457619caeb252644d67fc77872d2575350692b5b361d02",
+    "sourceDigest": "sha256:3c8132482dfbedc8e6e7cf3154ba2056d103440dadb4d5f92999620ed2b8ee09",
+    "dataDigest": "sha256:4b5f7f37113fec6e01e7d32355bab67522ffa5951157179baa1fdcdc22edb95e",
+    "parameters": {
+      "example": 3
+    },
+    "engine": "sesame/backtrader@1.0.0",
+    "result": null,
+    "note": "Fictional bookkeeping entry: no engine execution. Aborted attempts still consume budget."
+  },
+  {
+    "id": "demo-4",
+    "phase": "holdout",
+    "status": "aborted",
+    "planDigest": "sha256:d9223c5e4b6e5e2178457619caeb252644d67fc77872d2575350692b5b361d02",
+    "sourceDigest": "sha256:3c8132482dfbedc8e6e7cf3154ba2056d103440dadb4d5f92999620ed2b8ee09",
+    "dataDigest": "sha256:4b5f7f37113fec6e01e7d32355bab67522ffa5951157179baa1fdcdc22edb95e",
+    "parameters": {
+      "example": 4
+    },
+    "engine": "sesame/backtrader@1.0.0",
+    "result": null,
+    "note": "Fictional bookkeeping entry: no engine execution. Aborted attempts still consume budget."
+  }
+]

@@ -1,0 +1,41 @@
+[
+  {
+    "name": "ccxt_environment",
+    "description": "Inspect and select existing pinned CCXT Python first; explicit prepare creates private dependencies only if unavailable. No startup downloads or API keys.",
+    "parameters": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "inspect"
+            },
+            {
+              "type": "string",
+              "const": "prepare"
+            }
+          ]
+        },
+        "python_path": {
+          "type": "string",
+          "description": "Existing native Python executable",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "ccxt_catalog",
+    "description": "Describe the supported public-only exchanges and provider limitations; never starts requests or trades.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  }
+]

@@ -1,0 +1,45 @@
+{
+  "runId": "demo-crossover",
+  "parameters": {
+    "instrument": {
+      "sourceId": "demo",
+      "instrumentId": "EXAMPLE"
+    },
+    "fastPeriod": 2,
+    "slowPeriod": 3
+  },
+  "events": [
+    {
+      "eventId": "demo-closed-4",
+      "sequence": "1",
+      "type": "bar.closed",
+      "input": "bars",
+      "inputs": {
+        "bars": [
+          {
+            "close": "3"
+          },
+          {
+            "close": "2"
+          },
+          {
+            "close": "1"
+          },
+          {
+            "close": "4"
+          }
+        ],
+        "account": {
+          "complete": true,
+          "account": {
+            "connectionId": "demo",
+            "accountId": "demo"
+          },
+          "positions": [],
+          "orders": [],
+          "pendingIntents": []
+        }
+      }
+    }
+  ]
+}
