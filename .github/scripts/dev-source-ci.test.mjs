@@ -5,7 +5,7 @@ import * as publication from './release-plugins.mjs';
 import { publicationReview } from './plugin-r2-review.mjs';
 import { publishObjects } from './publish-plugin-r2.mjs';
 
-const historicalCommit = 'e91f45bdaaf1e0b02304f590656878ae8d23254f';
+const historicalCommit = '2aeb09c9d5d4a8e78572e1d7e23afe574570597e';
 const workflow = name => readFileSync(new URL(`../workflows/${name}`, import.meta.url), 'utf8');
 
 test('current API 2 source and historical API 1 publication checks use separate trusted validators', () => {

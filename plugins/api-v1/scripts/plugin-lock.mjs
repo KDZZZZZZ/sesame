@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const fail = (condition, message) => { if (!condition) throw new Error(message); };
+const bindingId = value => typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/.test(value);
 export const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 export const treeDigest = files => `sha256:${sha256(JSON.stringify([...files].sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0).map(file => [file.path, `sha256:${file.sha256}`])))}`;
 const safePath = path => typeof path === 'string' && path.length > 0 && path.length <= 512 && !/[\x00-\x1f\\:]/.test(path) && !path.startsWith('/') && path.split('/').every(part => part && part !== '.' && part !== '..' && !/[. ]$/.test(part) && !/^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part));
@@ -120,8 +121,13 @@ export function buildLock(source = root) {
     for (const cap of declared.capabilities) {
       fail(typeof cap.id === 'string' && cap.inputSchema && cap.outputSchema && cap.usage && ['purpose', 'inputs', 'outputs'].every(key => typeof cap.usage[key] === 'string' && cap.usage[key].trim()) && ['prerequisites', 'limitations'].every(key => Array.isArray(cap.usage[key])), `${id}: incomplete capability declaration ${cap.id}`);
       fail(Array.isArray(cap.consumers) && cap.consumers.length && cap.consumers.every(value => ['agent', 'host'].includes(value)), `${id}: capability consumers must be explicit`);
+      const binding = cap.binding;
+      fail(binding !== null && typeof binding === 'object' && !Array.isArray(binding), `${id}: capability binding must be an object: ${cap.id}`);
+      fail(['native', 'mcp', 'agent', 'graph'].includes(binding.type), `${id}: unsupported binding type: ${cap.id}`);
+      if (binding.type === 'native' || binding.type === 'mcp') fail(bindingId(binding.name), `${id}: binding name must be a valid local ID: ${cap.id}`);
+      if (binding.type === 'mcp') fail(bindingId(binding.server), `${id}: binding server must be a valid local ID: ${cap.id}`);
       if (cap.binding?.type === 'native') fail(safePath(manifest.entry) && names.has(manifest.entry), `${id}: native entry is missing`);
-      if (cap.binding?.type === 'mcp') fail(servers?.[cap.binding.server] && typeof cap.binding.name === 'string', `${id}: undeclared MCP server binding`);
+      if (binding.type === 'mcp') fail(servers && Object.hasOwn(servers, binding.server) && servers[binding.server], `${id}: undeclared MCP server binding`);
     }
     for (const resource of [...manifest.prompts ?? [], ...manifest.resources ?? [], ...declared.knowledge.map(item => item.path)]) fail(safePath(resource) && names.has(resource), `${id}: missing resource ${resource}`);
     for (const file of files.filter(file => /\.(?:m?js|cjs)$/.test(file.path))) {

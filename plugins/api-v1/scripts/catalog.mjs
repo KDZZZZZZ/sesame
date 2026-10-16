@@ -81,9 +81,9 @@ export function validatePublishedRelease(release, actual) {
     require(matches?.length === 1 && matches[0].digest === `sha256:${asset.sha256}` && Number.isSafeInteger(matches[0].size) && matches[0].size > 0, `Published asset differs: ${asset.url}`);
   }
 }
-export async function checkPublished(catalog, fetcher = globalThis.fetch) {
+export async function checkPublished(catalog, fetcher = globalThis.fetch, { token = process.env.GITHUB_TOKEN } = {}) {
   for (const release of catalog.releases) {
-    const response = await fetcher(`https://api.github.com/repos/${REPOSITORY}/releases/tags/${release.tag}`, { redirect: 'error', signal: AbortSignal.timeout(30000), headers: { Accept: 'application/vnd.github+json' } });
+    const response = await fetcher(`https://api.github.com/repos/${REPOSITORY}/releases/tags/${encodeURIComponent(release.tag)}`, { redirect: 'error', signal: AbortSignal.timeout(30000), headers: { Accept: 'application/vnd.github+json', ...(token ? { Authorization: `Bearer ${token}` } : {}) } });
     require(response.ok, `Cannot confirm published release ${release.tag}: HTTP ${response.status}`);
     validatePublishedRelease(release, await response.json());
   }
