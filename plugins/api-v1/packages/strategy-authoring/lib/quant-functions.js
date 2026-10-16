@@ -1,3 +1,4 @@
+import { writeWorkspace } from '../artifact-io.js';
 import { clone, digest } from '@sesame/plugin-sdk/protocol';
 
 // These formulas are ordinary frozen SVL functions. The host does not know RSI,
@@ -77,14 +78,11 @@ const functions = [
 const module = { schemaVersion: '1.0.0', language: 'svl/1', languageVersion: '1.2.0', functions };
 export const quantFunctions = () => clone({ id: 'sesame/quant', version: '1.0.0', digest: digest(module), module });
 
-export function createQuantTools(host) {
-  const { define, string } = host.tools;
-  return [define('strategy_functions', 'Write the versioned declarative SVL quant function module (RSI, ATR, MACD, Bollinger, Donchian, z-score and realized volatility) to the workspace. Embed the whole frozen extension in an SVL 1.2 source; formulas expand into the same graph and replay.', {
-    output_path: string('Workspace JSON path for the complete frozen extension object'),
-  }, async (args, signal) => {
+export function createQuantCapabilities(host) {
+  return [{ name: 'strategy_functions', execute: async (args, signal) => {
     const extension = quantFunctions();
-    await host.workspace.file('write', args.output_path, JSON.stringify(extension, null, 2) + '\n', signal);
+    await writeWorkspace(host, args.output_path, JSON.stringify(extension, null, 2) + '\n', signal);
     return { id: extension.id, version: extension.version, digest: extension.digest, languageVersion: '1.2.0', path: args.output_path,
-      functions: extension.module.functions.filter(fn => !fn.id.endsWith('Step')).map(fn => ({ id: `${extension.id}/${fn.id}`, parameters: fn.parameters, output: fn.output })), reference: 'skills/strategy-authoring/references/quant-functions.md' };
-  })];
+      functions: extension.module.functions.filter(fn => !fn.id.endsWith('Step')).map(fn => ({ id: extension.id + '/' + fn.id, parameters: fn.parameters, output: fn.output })), reference: 'skills/strategy-authoring/references/quant-functions.md' };
+  } }];
 }

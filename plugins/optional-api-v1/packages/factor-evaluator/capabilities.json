@@ -1,0 +1,358 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "capabilities": [
+    {
+      "id": "factor_evaluate",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "确定性因子评估：冻结数据、计算实测候选指标、冻结选择并仅对该选择评估留出集。仅接受可信工作流嵌套调用。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "protocol": {
+            "type": "string",
+            "const": "sesame.factor-evaluator/v1"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "prepare",
+              "candidate",
+              "select",
+              "finalize"
+            ]
+          },
+          "run_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "dataset_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "session_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "access": {
+            "type": "string",
+            "enum": [
+              "restricted",
+              "development-only"
+            ]
+          },
+          "options": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "trial_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "candidate": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "accepted_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "maxItems": 40,
+            "uniqueItems": true,
+            "description": "Explicit previously measured candidate IDs for training-only redundancy comparison. Workflows normally supply already accepted candidates, or [] when none has been accepted. Every referenced ID must have an existing candidate receipt."
+          },
+          "trial_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "maxItems": 20,
+            "uniqueItems": true,
+            "description": "Frozen shortlist for select: include only IDs whose actual candidate receipt has eligible:true. Retained rejected/failed trials are audit evidence, not selection members. [] is valid if none qualifies."
+          },
+          "selection_digest": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Exact selectionDigest returned by the immutable select receipt. Never calculate or invent a substitute."
+          }
+        },
+        "required": [
+          "protocol",
+          "action",
+          "run_id"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": [
+          "protocol",
+          "action",
+          "runId",
+          "sessionId",
+          "receiptDigest"
+        ],
+        "properties": {
+          "protocol": {
+            "const": "sesame.factor-evaluator/v1"
+          },
+          "action": {
+            "enum": [
+              "prepare",
+              "candidate",
+              "select",
+              "finalize"
+            ]
+          },
+          "runId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sessionId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "receiptDigest": {
+            "type": "string",
+            "minLength": 1
+          },
+          "eligible": {
+            "type": "boolean",
+            "description": "For candidate receipts: whether observed development metrics satisfy the frozen thresholds; only eligible:true candidates may be selected."
+          }
+        },
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [
+        "read:saved-datasets",
+        "write:private-state",
+        "write:durable-resources"
+      ],
+      "binding": {
+        "type": "native",
+        "name": "factor_evaluate"
+      },
+      "usage": {
+        "purpose": "确定性因子评估：冻结数据、计算实测候选指标、冻结选择并仅对该选择评估留出集。仅接受可信工作流嵌套调用。",
+        "inputs": "Every nested call uses {protocol:\"sesame.factor-evaluator/v1\",action,run_id}. prepare adds dataset_id,access and options; candidate adds session_id,trial_id,candidate,accepted_ids; select adds session_id,trial_ids; finalize adds session_id,selection_digest. Built-in candidate example: {op:\"field\",name:\"signal\"}; exact candidateExample and dataset contract are returned by prepare.",
+        "outputs": "Host Run output always has protocol/action/runId/sessionId/receiptDigest. prepare => inputDigest,data,development.rows,contract; candidate => trialId,candidate,candidateDigest,metrics,eligible,gate,redundancy; select => exact trialIds,selectionDigest; finalize => holdout,holdoutStatus,archive.",
+        "prerequisites": [
+          "Trusted workflow nested invocation only; a direct Agent call is rejected. Public workflow entry: auto_factor_start with evaluator:{plugin_id:\"sesame/factor-evaluator\",tool:\"factor_evaluate\",arguments:<README dataset/gate options>}; another implementation of the same protocol is also valid.",
+          "Registered numeric dataset with {time,symbol,availableAt,fields:{close,...}}, no duplicate time/symbol, availableAt<=time, at most20000 rows/4MiB; at least4 aligned symbols for cross-sectional metrics."
+        ],
+        "limitations": [
+          "Only eligible measured trial IDs can be selected; selection_digest is the exact select receipt, not a guessed hash. Same run/session/trial inputs are immutable and idempotent.",
+          "restricted isolates workflow holdout until selection; development-only rejects post-validation rows and returns holdoutStatus=not-requested. Built-in AST computation is not arbitrary code or broker backtesting."
+        ]
+      }
+    }
+  ],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "hooks": [],
+  "knowledge": [
+    {
+      "id": "evaluator-guide",
+      "path": "prompt.md",
+      "description": "因子评估口径和限制。",
+      "kind": "prompt"
+    },
+    {
+      "id": "protocol",
+      "path": "PROTOCOL.md",
+      "description": "冻结输入、候选及选择回执协议。",
+      "kind": "reference"
+    },
+    {
+      "id": "readme",
+      "path": "README.md",
+      "description": "评估器使用说明。",
+      "kind": "reference"
+    }
+  ],
+  "stateCollections": [
+    {
+      "name": "sessions",
+      "schemaVersion": "1",
+      "schema": {
+        "type": "object",
+        "required": [
+          "id",
+          "runId",
+          "workflowPluginId",
+          "ownerConversationId",
+          "fingerprint",
+          "config",
+          "refs"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "runId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "workflowPluginId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ownerConversationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fingerprint": {
+            "type": "string",
+            "minLength": 1
+          },
+          "config": {
+            "type": "object"
+          },
+          "selection": {
+            "type": "object"
+          },
+          "refs": {
+            "type": "object",
+            "required": [
+              "dataset",
+              "prepared",
+              "candidates"
+            ],
+            "properties": {
+              "dataset": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "kind",
+                  "version"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "kind": {
+                    "enum": [
+                      "file",
+                      "blob"
+                    ]
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "additionalProperties": false
+              },
+              "prepared": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "kind",
+                  "version"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "kind": {
+                    "enum": [
+                      "file",
+                      "blob"
+                    ]
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "additionalProperties": false
+              },
+              "final": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "kind",
+                  "version"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "kind": {
+                    "enum": [
+                      "file",
+                      "blob"
+                    ]
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "additionalProperties": false
+              },
+              "candidates": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "kind",
+                    "version"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "kind": {
+                      "enum": [
+                        "file",
+                        "blob"
+                      ]
+                    },
+                    "version": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "mode": "document",
+      "access": "private"
+    }
+  ],
+  "artifactSchemas": []
+}

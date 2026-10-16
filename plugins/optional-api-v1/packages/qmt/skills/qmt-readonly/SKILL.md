@@ -1,28 +1,25 @@
 ---
 name: qmt-readonly
-description: Discover and reuse authorized Windows MiniQMT configuration, prepare missing SDK dependencies explicitly, and read mainland stock market/account data; submit limit orders only after an explicit user trading request.
+description: Inspect configured Windows MiniQMT prerequisites and read actual stock/account observations; preserve current-day limits and explicit trade receipt states.
 ---
 
-# QMT 只读工作流
+公开资源定位：本包路径以插件根目录为准；[完整接口契约](../../INTERFACES.md) 可由 plugin_read({pluginId:"sesame/qmt",part:"resource",path:"INTERFACES.md"}) 读取。此引用给出位置，无需每次调用前重复读取。
 
-1. 先 `qmt_environment {action:"inspect"}`，读取已保存配置、`QMT_PYTHON`、PATH 上的 Python 和私有环境、`QMT_USERDATA` 提示。inspect 不自动扫描运行进程或发现账户/端口；缺项继续用 `host_files_list/search/read/run` 检查已有 MiniQMT 安装与进程可执行路径、对应 `userdata_mini` 和配置。可在 Windows 用只读进程/监听端口查询核对所属进程；只输出必要字段，不输出全部环境变量或进程命令行。不要猜账号/覆盖配置，也不要为发现路径另开一个交易终端。
-2. 前提是 Windows x64、券商提供且已授权/登录的 MiniQMT，以及兼容的 x64 Python。macOS/Linux 本机不能靠 pip 获得 Windows 原生 QMT。券商的终端程序与授权应按该券商官方渠道取得；本包不携带终端、凭据或下载链接替代券商授权。
-3. 对已有 Python 显式 `qmt_environment {action:"verify",python_path:"C:\\...\\python.exe"}`。这一步只验证真实 SDK 导入，不证明终端连接或账户权限。若已有兼容环境，直接复用；不要为了版本一致升级或降级用户环境。
-4. 仅确认 SDK 缺失后，显式 `prepare` 并给稳定 `operation_id` 与现有 Windows CPython 3.12 x64 路径。它再次尝试复用，然后只在插件数据目录创建 venv，以固定 PyPI HTTPS wheel、版本和 SHA-256 安装。不会改全局 Python、启动终端或自动登录。失败/取消可能留下未完成的专有目录；inspect 给出私有根，在确认无执行进程后只移除那次未完成目录即可。
-5. 由 Agent 调 `qmt_configure`，使用稳定 operation_id 和 inspect 返回的配置 version 作为 `expected_version`，保存实际 `python_path`、`userdata_directory`（现有 `userdata_mini`）、`account_id`、券商名、实际 `market_port`，然后做第 6 步验证。不要调用 configuration_open 或让用户逐项填 Sesame 设置。仅在本机与已保存配置均无法确定字段时，请用户从券商 MiniQMT GUI 复制缺少的路径/账号/端口发来；登录或券商授权确实缺失才请用户在供应商原生界面完成，该插件不接收登录密码。行情限定 localhost 固定端口，不自动跳到另一终端。`sector` 是已有 MiniQMT 本地板块名，默认沪深京A股；只有终端真实存在的股票目录可用。需要更新板块数据时明确使用现有终端的补充功能，不在普通读取中暗中下载。
-6. `qmt_read search/describe/quotes` 验证行情；`asset/positions` 验证该 STOCK 账户只读访问。失败时报告连接/授权/SDK原始错误，不能输出空数组冒充成功。只支持大陆股票持仓；遇到债券、基金、港股或其他品种，provider 明确不支持，勿按股数/CNY强制转换。
-7. `qmt_read orders/fills` 保留原生当日记录。整数单号和浮点数用文本保存，时间单位与回报 `price_type` 不猜测；不要当成多日历史、完整事件账本或可解释 SVL 运行。标准 orders/fills 因原生时间单位未核实而不声明/明确不支持；原生查询只覆盖当日，历史range不支持；不支持完整账本或账户事件流。
+QMT提供Windows x64券商MiniQMT的本地股票行情和账户观察，及明确授权的股票限价单/撤单。qmt_environment({action:"inspect"})给出已保存configuration、Python候选、sdk_verified:false与missing；verify只验证真实SDK导入，不证明终端或账户可读。prepare使用已知现有Python复用/创建私有SDK，不安装MiniQMT、不启动终端或登录。
 
-工具准备环境与查询是固定的可信 SDK 适配器，执行于当前用户本机，具有进程树取消。它不接受任意 Python 代码，也不充当策略沙箱。会话结束只停止这次 API/Python 进程，保留 MiniQMT 应用与用户交易。
+qmt_configure保存实际python_path、userdata_directory、account_id、market_port与sector，expected_version来自inspect。端口/账号以已有配置或用户提供的券商信息为准；缺值不猜，不强制扫描磁盘。券商登录授权在原生终端完成，本插件不收密码。公开能力逐项形状及示例在INTERFACES.md，交易回执语义在TRADING.md。
 
-官方依据：[快速开始](https://dict.thinktrader.net/nativeApi/start_now.html)、[行情](https://dict.thinktrader.net/nativeApi/xtdata.html)、[账户与查询](https://dict.thinktrader.net/nativeApi/xttrader.html)、[XtQuant PyPI](https://pypi.org/project/xtquant/250807.1.2/)。目录/SDK导入可验证与真实券商 Windows 集成成功是不同的验证范围。
+行情与画布的公开入口是 data_providers({contract:"sesame.market/1"})、market_instruments、market_read、canvas_binding/canvas_apply。来源采用发现返回的完整 {providerId,revision}，可按 configSchema 附 binding；品种采用搜索结果 ref，连接身份来自 metadata.connection。source.revision 是插件声明摘要，connection.revision 是来源配置身份，两者不可互换。host 专用 bind/query/subscribe 的完整形状在本包 INTERFACES.md，Agent 无需持有 bindingId。
 
-## 日线与明确授权的股票操作
+market_read 返回固定数据、rowCount 和覆盖证据。coverage.complete:false 保留已取得的真实行，同时说明范围尚未获完整证明；不能改写为true。历史成功不证明实时订阅成功；canvas_apply 保存配置不证明用户已看到图。canvas_inspect 的当前版本 rendering[].charts[] 提供 status/error/bar_count/feed_status；无当前回执只表示未确认。明确源协议错误（如首帧position缺失）不能通过重复绑定/新建探针图修复；连接或声明版本已变才有刷新身份的依据。宿主管理持续订阅，退出Agent调用不应把已配置图表断开。
 
-手动交易接口逐项见 TRADING.md。qmt_command 只读取已有下单/撤单回执；不重放请求。qmt_order 的 execution_guard 在原生进程启动后、报单前复核源报价、账户、可用持仓与决策时效；配合独立 manual-trading 插件记录模型决策延迟，默认 M5+。只有日线行情不代表提供分钟历史，本插件也不提供改单/市价单/自动挂载。
+sesame/qmt#market只有未复权D1、last、regular/default；普通历史只读本地缓存，qmt_download_history({symbol,start,end})显式下载缺口。1秒目标报价/日柱轮询不等于分钟K线。sesame/qmt#account仅listAccounts/snapshot/queryPositions。qmt_read可读原生当日orders/fills，单位未核实的原生时间和price_type不转译；没有标准订单历史、账户事件流或多日完整账本。
 
-优先通过 market provider `bars.history`/`bars.subscribe` 使用已有未复权D1数据（session regular、priceBasis last、adjustment none）。若缺本地历史，向用户说明后显式 `qmt_download_history {symbol,start:YYYYMMDD,end:YYYYMMDD}`；普通查询不会下载。当前日使用原生时间/OHLC形成中柱，1秒是目标轮询间隔，不是1秒K线。分钟周期与未验证volume单位不猜测。
+账户任务经portfolio公开能力或qmt_trading_context取得身份/全账户快照。普通Agent不调用host专用positions_close；账户页由宿主收集确认。交易请求使用稳定operation_id；submitted/cancel_requested只是原生受理，unknown读取原命令与原生当日回报，不换ID重报。工作流执行权限由宿主实时调用链提供，不由Agent编造authorization签名或任务身份。
 
-仅主Agent收到明确用户交易请求后使用 `qmt_order`：user_authorized=true、精确account_id/connection_revision、symbol、buy或sell、正整数shares与正Decimal限价。先读账户、持仓availableQuantity、报价与品种实际规则；可卖量不等于允许当天新买卖出，T+1/涨跌停/数量步长/时段/权限由券商真实检查。不要保证成交。调用结果submitted只表示订单编号已返回。unknown或取消/超时可能已送达，保持原operation_id读取既有记录，不自动重报，也不要换ID规避。对照原生当日orders/fills和remark人工确定后才能做新的用户意图。
 
-撤单使用独立operation_id并引用原qmt_order的original_operation_id/order_id，精确账户/版本不变；native记录remark必须匹配。原请求超时也可按 TRADING.md 用保留的原始意图恢复，但只能撤唯一且精确匹配的活动订单，原生进程会再次核对账户、品种、方向、数量、标记和单号。旧unknown记录缺少原始意图时留给终端核对，不绕过检查。cancel_requested仅表示请求已受理，随后查询确认；不能当已撤或零成交。不得调用任意交易脚本或资金划拨，不对回测/安装请求隐含交易授权。
+qmt_read例：{action:"search",query:"000001",page:{limit:20}}；{action:"quotes",symbols:["000001.SZ"]}；{action:"positions",page:{limit:200}}。后页使用nextCursor并保持过滤条件，冻结快照60秒过期。SDK返回None/错误不可当空账户。
+
+依赖入口：券商提供的已授权MiniQMT、官方 [快速开始](https://dict.thinktrader.net/nativeApi/start_now.html)、[行情接口](https://dict.thinktrader.net/nativeApi/xtdata.html)、[账户接口](https://dict.thinktrader.net/nativeApi/xttrader.html)。prepare需要已有x64 CPython3.12，仅安装插件私有XtQuant；macOS/Linux不能靠pip获得Windows原生终端。
+
+原生account/position观察不等于可卖许可；T+1、涨跌停、实际数量规则、市场时段仍由券商决定。研究/配置请求不授权交易。TRADING.md与INTERFACES.md解释稳定命令、最终执行保护、撤单恢复和未知结果，运行时拒绝不能靠换传输绕过。

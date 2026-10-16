@@ -13,24 +13,24 @@ const optional = fileURLToPath(new URL('../../optional-api-v1/', import.meta.url
 function fixture(t, kind = 'optional') {
   const root = mkdtempSync(join(tmpdir(), 'sesame-profile-')), pkg = join(root, 'packages/example'); mkdirSync(pkg, { recursive: true });
   t.after(() => rmSync(root, { recursive: true, force: true }));
-  const manifest = { id: 'sesame/example', apiVersion: '1', version: '1.0.0', license: 'MIT', default_state: 'discoverable', tool_names: [], tool_definitions: 'tools.json', engines: { sesame: '>=0.2.0-0' } };
+  const manifest = { id: 'sesame/example', apiVersion: '2', version: '1.0.0', license: 'MIT', default_state: 'discoverable', capability_manifest: 'capabilities.json', engines: { sesame: '>=0.2.0-0' } };
   const write = value => writeFileSync(join(pkg, 'plugin.json'), JSON.stringify(value));
   write(manifest); writeFileSync(join(pkg, 'package.json'), JSON.stringify({ version: '1.0.0', type: 'module', license: 'MIT' }));
-  writeFileSync(join(pkg, 'LICENSE'), 'MIT fixture'); writeFileSync(join(pkg, 'tools.json'), '[]');
+  writeFileSync(join(pkg, 'LICENSE'), 'MIT fixture'); writeFileSync(join(pkg, 'capabilities.json'), JSON.stringify({schemaVersion:1,apiVersion:'2',capabilities:[],sources:[],views:[],services:[],knowledge:[],hooks:[],stateCollections:[],artifactSchemas:[]}));
   const profile = { schemaVersion: 1, kind, engines: manifest.engines, packages: [manifest.id] };
   writeFileSync(join(root, 'bundle-profile.json'), JSON.stringify(profile));
   return { root, pkg, manifest, profile, write };
 }
-test('candidate distribution has nine defaults and twenty-three optional identities, with no duplicate tools from merged packages', () => {
+test('candidate distribution has nine defaults and forty-six optional identities, with no duplicate tools from merged packages', () => {
   const defaults = buildLock(core), options = buildLock(optional);
-  assert.equal(defaults.packages.length, 9); assert.equal(options.packages.length, 23);
-  const ids = [...defaults.packages, ...options.packages].map(item => item.id); assert.equal(new Set(ids).size, 32);
+  assert.equal(defaults.packages.length, 9); assert.equal(options.packages.length, 46);
+  const ids = [...defaults.packages, ...options.packages].map(item => item.id); assert.equal(new Set(ids).size, 55);
   assert.deepEqual(defaults.packages.map(item => item.id), readProfile(core).packages);
   assert.ok(options.packages.some(item => item.id === 'sesame/mt5'));
   for (const id of ['sesame/host-files', 'sesame/user-guide', 'sesame/research']) assert.ok(!ids.includes(id));
-  const names = defaults.packages.flatMap(pkg => JSON.parse(readFileSync(join(core, 'packages', pkg.directory, 'plugin.json'))).tool_names);
+  const names = defaults.packages.flatMap(pkg => JSON.parse(readFileSync(join(core, 'packages', pkg.directory, 'capabilities.json'))).capabilities.filter(cap => cap.consumers.includes('agent')).map(cap => cap.id));
   assert.equal(new Set(names).size, names.length);
-  for (const name of ['read', 'host_files_run', 'data_read', 'research_register', 'market_read', 'agent_delegate', 'report_publish', 'strategy_validate']) assert.ok(names.includes(name), name);
+  for (const name of ['read', 'host_files_run', 'data_read', 'research_register', 'market_read', 'report_publish', 'strategy_validate']) assert.ok(names.includes(name), name);
 });
 test('the actual default archive contains only the nine reviewed packages and their exact file list', () => {
   const lock = buildLock(core), bytes = gunzipSync(createArchive(core, lock)), names = [];
@@ -55,10 +55,11 @@ test('profile enforcement rejects omitted or old engines, implicit mounting, leg
   writeFileSync(join(f.root, 'bundle-profile.json'), JSON.stringify({ ...f.profile, packages: ['sesame/other'] })); assert.throws(() => buildLock(f.root), /Package set/);
   writeFileSync(join(f.root, 'bundle-profile.json'), JSON.stringify({ ...f.profile, packages: ['sesame/example', 'sesame/example'] })); assert.throws(() => buildLock(f.root), /unique/);
 });
-test('historical source trees without profiles retain their exact legacy build semantics', t => {
+test('source trees without distribution profiles still require API 2 declarations', t => {
   const f = fixture(t); rmSync(join(f.root, 'bundle-profile.json'));
   f.write({ ...f.manifest, engines: undefined, migration: { collections: ['old'] } });
   assert.equal(readProfile(f.root), null); assert.equal(buildLock(f.root).packages.length, 1);
+  f.write({ ...f.manifest, apiVersion: '1' }); assert.throws(() => buildLock(f.root), /API version must be 2/);
 });
 test('descriptive inventory records compatibility without claiming an application release', () => {
   const preview = buildInventory(core);
@@ -67,11 +68,10 @@ test('descriptive inventory records compatibility without claiming an applicatio
   assert.equal(preview.application.released, undefined);
   assert.equal(preview.application.minimum, '0.2.0');
   assert.equal(preview.packages.filter(p => p.distribution === 'core').length, 9);
-  assert.equal(preview.packages.filter(p => p.distribution === 'optional').length, 23);
+  assert.equal(preview.packages.filter(p => p.distribution === 'optional').length, 46);
   for (const item of preview.packages) {
     for (const key of ['source', 'sourceCommit', 'package', 'treeDigest', 'review', 'release']) assert.equal(item[key], undefined);
-    const minimum = { 'sesame/manual-trading': '>=0.2.1', 'sesame/plugin-manager': '>=0.2.2', 'sesame/memory': '>=0.2.2', 'sesame/orchestration': '>=0.2.2', 'sesame/reports': '>=0.2.2', 'sesame/strategy-authoring': '>=0.2.2', 'sesame/mt5': '>=0.2.2' };
-    assert.equal(item.engines.sesame, minimum[item.id] ?? '>=0.2.0-0');
+    assert.equal(item.engines.sesame, JSON.parse(readFileSync(join(core, '../..', item.sourcePath, 'plugin.json'))).engines.sesame);
     assert.ok(item.title.en && item.title.zh && item.dependencies.en && item.dependencies.zh);
   }
 });

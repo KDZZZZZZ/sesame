@@ -1,0 +1,305 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "capabilities": [
+    {
+      "id": "abu_price_structure_analyze",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "寻找已确认的摆动高低点、聚类支撑阻力与黄金分割参考水平，保留确认时间避免未来信息泄露。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "schema_version": {
+                "const": 1
+              },
+              "source": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "kind": {
+                    "enum": [
+                      "synthetic",
+                      "historical",
+                      "live"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "kind"
+                ],
+                "additionalProperties": true,
+                "description": "Caller-declared provenance; synthetic remains synthetic in output artifacts."
+              },
+              "as_of": {
+                "type": "string",
+                "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+              },
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "left": {
+                    "type": "integer",
+                    "default": 2,
+                    "minimum": 1,
+                    "maximum": 20,
+                    "description": "左侧确认根数"
+                  },
+                  "right": {
+                    "type": "integer",
+                    "default": 2,
+                    "minimum": 1,
+                    "maximum": 20,
+                    "description": "右侧确认根数"
+                  },
+                  "cluster_tolerance_pct": {
+                    "type": "number",
+                    "default": 0.02,
+                    "minimum": 0.0001,
+                    "maximum": 0.2,
+                    "description": "水平聚类相对容差"
+                  },
+                  "max_bars": {
+                    "type": "integer",
+                    "default": 5000,
+                    "minimum": 10,
+                    "maximum": 10000,
+                    "description": "输入根数上限"
+                  },
+                  "max_pivots": {
+                    "type": "integer",
+                    "default": 100,
+                    "minimum": 1,
+                    "maximum": 1000,
+                    "description": "确认拐点数量上限"
+                  }
+                },
+                "additionalProperties": false,
+                "description": "Optional overrides. Defaults and limits match the existing calculation."
+              },
+              "bars": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "time": {
+                      "type": "string",
+                      "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+                    },
+                    "available_at": {
+                      "type": "string",
+                      "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+                    },
+                    "open": {
+                      "type": "number"
+                    },
+                    "high": {
+                      "type": "number"
+                    },
+                    "low": {
+                      "type": "number"
+                    },
+                    "close": {
+                      "type": "number"
+                    },
+                    "volume": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": true,
+                  "required": [
+                    "time",
+                    "available_at",
+                    "open",
+                    "high",
+                    "low",
+                    "close",
+                    "volume"
+                  ]
+                },
+                "maxItems": 10000,
+                "minItems": 1,
+                "description": "bars 是 1..10000 条已知 OHLCV，按收盘 time 严格递增且不重复；每行含 time、available_at、open/high/low/close、volume。time <= available_at <= as_of，价格为正且 high/low 覆盖 open/close，volume >= 0。"
+              }
+            },
+            "additionalProperties": true,
+            "required": [
+              "schema_version",
+              "source",
+              "as_of",
+              "bars"
+            ],
+            "description": "完整的固定输入对象；examples/input.json 仅为合成格式示例，不是实盘证据。"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "schema_version": {
+            "const": 1
+          },
+          "baseline": {
+            "const": true
+          },
+          "status": {
+            "const": "research_baseline"
+          },
+          "parameters": {
+            "type": "object"
+          },
+          "observations": {
+            "description": "observations.pivots 含拐点及确认信息，levels 是聚类水平，golden_levels 来自最近确认的高低点，rows/baseline_note 描述覆盖与方法。"
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "input_artifact": {
+            "type": "object",
+            "description": "立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。"
+          },
+          "result_artifact": {
+            "type": "object",
+            "description": "立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。"
+          }
+        },
+        "required": [
+          "schema_version",
+          "baseline",
+          "status",
+          "parameters",
+          "observations",
+          "limitations",
+          "input_artifact",
+          "result_artifact"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "resources.create",
+        "resources.publish"
+      ],
+      "binding": {
+        "type": "native",
+        "name": "abu_price_structure_analyze"
+      },
+      "usage": {
+        "purpose": "寻找已确认的摆动高低点、聚类支撑阻力与黄金分割参考水平，保留确认时间避免未来信息泄露。",
+        "inputs": "调用形状为 {input:{schema_version:1,source:{id,kind},as_of,parameters?,...}}，不是文件路径或数据 ID。source.id 为 1..500 字符，kind 为 synthetic/historical/live；as_of 及全部时间字段使用真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒）。输入限 2MiB 有限 JSON，不接收代码。parameters 只支持列出的字段。 bars 是 1..10000 条已知 OHLCV，按收盘 time 严格递增且不重复；每行含 time、available_at、open/high/low/close、volume。time <= available_at <= as_of，价格为正且 high/low 覆盖 open/close，volume >= 0。 left/right 是摆动点左右所需根数；bars.length <= max_bars，产生的 pivot 数量 <= max_pivots。",
+        "outputs": "observations.pivots 含拐点及确认信息，levels 是聚类水平，golden_levels 来自最近确认的高低点，rows/baseline_note 描述覆盖与方法。 立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。",
+        "prerequisites": [
+          "提供与任务相符的已知输入；本能力不联网取数，不需要 Python、ABU 安装或券商账户。"
+        ],
+        "limitations": [
+          "拐点要到右侧 right 根 K 线出现才确认，使用 confirmed_at 而不是 pivot_time 作为可知时点。聚类和黄金分割是启发式参考，不是未来价格保证。",
+          "来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。"
+        ]
+      }
+    }
+  ],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "knowledge-0",
+      "path": "examples/input.json",
+      "description": "价格结构基线 — examples/input.json",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-1",
+      "path": "prompt.md",
+      "description": "价格结构基线 — prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "knowledge-2",
+      "path": "PROVENANCE.md",
+      "description": "价格结构基线 — PROVENANCE.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-3",
+      "path": "README.md",
+      "description": "价格结构基线 — README.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-4",
+      "path": "skills/abu-price-structure/references/method.md",
+      "description": "价格结构基线 — skills/abu-price-structure/references/method.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-5",
+      "path": "skills/abu-price-structure/SKILL.md",
+      "description": "价格结构基线 — skills/abu-price-structure/SKILL.md",
+      "kind": "skill"
+    }
+  ],
+  "hooks": [],
+  "stateCollections": [],
+  "artifactSchemas": [
+    {
+      "id": "data",
+      "kind": "data",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "const": "json-rows"
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rowCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "columns": {
+            "type": "array"
+          },
+          "provenance": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "format",
+          "path",
+          "rowCount",
+          "columns",
+          "provenance"
+        ],
+        "additionalProperties": true
+      }
+    }
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

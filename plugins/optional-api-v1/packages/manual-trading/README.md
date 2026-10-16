@@ -1,78 +1,63 @@
-# Agent 手工交易
+# Agent 手工交易工作流
 
-`sesame/manual-trading` 2.1 要求 Sesame 0.2.2+。支持周期、事件和按需启动的交易 Agent，单 Agent 或 team 均输出目标仓位。原有 `manual_trade_*` 单次交易工具继续可用；安装本身不会创建计划或发送订单。
+`sesame/manual-trading` 3.0 只负责周期/事件调度、逐角色模型、协作、目标仓位、证据复盘与每轮汇总。账户、下单、策略挂载控制由明确选择的执行能力提供；研究和数据工具由所选插件提供。使用 Host API 2 的完整能力声明、可信调用来源和统一 Run。安装不创建交易计划。
 
-## 配置和触发
+## 配置
 
-主会话加载本插件、已配置的 `sesame/mt5` 1.5+ 或 `sesame/qmt` 1.3+，以及独立 `sesame/financial-research`。先调用 `manual_trading_models`，再调用 `manual_trading_plan(action:"save", plan:{...})`：
+先在选中的执行插件中配置连接和账户，取得其通用绑定，再调用 `manual_trading_models` 选择已配置的供应商/模型。工作流不接受 `backend` 字段，也不默认加载研究来源。
 
 ```json
 {
   "title": "账户研究与交易",
-  "backend": "mt5",
+  "execution": {
+    "plugin_id": "用户选定的执行插件ID",
+    "context_tool": "该能力的账户上下文工具",
+    "apply_tool": "该能力的目标执行工具",
+    "arguments": {"binding_id": "该能力返回的绑定ID"}
+  },
+  "research": {"plugins": ["用户选定的研究插件ID"]},
   "mode": "team",
   "model": {"provider": "已配置供应商ID", "id": "默认模型ID"},
-  "agent_models": {
-    "market": {"provider": "供应商A", "id": "模型A"},
-    "risk": {"provider": "供应商B", "id": "模型B"},
-    "manager": {"provider": "供应商C", "id": "模型C"}
-  },
-  "symbols": ["券商准确品种名"],
+  "agent_models": {"market": {"provider": "供应商A", "id": "模型A"}},
+  "symbols": ["准确品种名"],
   "interval_minutes": 60,
   "event_keys": ["important-news"],
-  "account_events": true,
-  "debate_rounds": 1,
-  "slippage_bps": 50,
-  "instructions": "按用户确定的投资目标和风险范围管理账户；证据不足时保持不变。"
+  "instructions": "证据不足时保持不变。"
 }
 ```
 
-示例名称是占位符，必须使用工具返回的真实供应商/模型。每个 Agent 都能独立选模型：`market`、`fundamentals`、`news`、`sentiment`、`bull`、`bear`、`risk`、`manager`、`executor`、`reporter`。省略的角色继承默认模型。计划固定配置摘要，模型配置变化后需重新保存，不静默切换。
+示例是占位符，使用工具实际返回的名称。内置独立实现 `sesame/portfolio-execution` 的 `portfolio_execution_configure` 可返回上述 execution 对象；这只是一个实现，工作流也接受其他满足相同工具协议的插件。协议见 [COMPOSITION.md](COMPOSITION.md)。
 
-可选 `research_plugins:["sesame/abu-indicators","sesame/abu-exit-rules"]`，从已安装且可用的 ABU 研究基线中选择本计划需要的方法，最多 18 个。未配置时不加载任何 ABU 插件；更新计划省略此字段保留原选择，传空数组清除。保存时校验安装状态，运行时由宿主固定所用包的摘要；缺包或停用不静默换算法。只有研究/决策角色收到所选分析工具和 `plugin_read`，执行及日报角色不增加研究工具。
+`research.plugins` 可以选择任意已安装、可委派的工具或技能插件；`research.tools` 可缩小工具范围。默认只使用所选插件的可委派工具，不授予 main-only 管理入口，也不自动启用禁用插件。省略 research 保留更新前的选择，`{"plugins":[]}` 清除选择。执行角色不附加研究工具。插件摘要在保存时冻结；变更后需要重新保存计划。
 
-每个 ABU 工具保存固定输入与结果数据集，返回 `dataset_id`、有效参数、输入与代码摘要。**这些代码是可改进基线，不是标准答案。** Agent 可在主会话研究工作区保留原版并另写改进版本，记录假设、差异、全部试验与固定样本外对照；后台交易计划使用已选择的版本，代码实验不会自动替换挂载策略。研究结果作为决策证据，不直接作为已成交仓位。
+每个 Agent 都可独立选模型：market、fundamentals、news、sentiment、bull、bear、risk、manager、executor；省略继承默认。team 顺序为四个研究角色并行 → 多空辩论 → 风控 → 经理 → 执行；程序随后归档总结。周期至少五分钟，事件使用稳定 ID 去重。同账户的目标执行仍有顺序，研究角色在本轮并行；重启不会补发旧订单。
 
-周期最低 5 分钟，应用必须运行。重启后错过的周期只产生一轮当前决策，不补发历史订单。也可以省略周期，使用 `manual_trading_run(plan_id,request_id)` 或 `manual_trading_event(key,event_id,data,observed_at?)`。重投事件保持 ID/内容一致；快速事件合并为该计划最新待运行事件。同账户的不同计划串行执行。
+目标用准确十进制字符串、执行能力声明的单位；`unchanged:true, targets:[]` 有效。未列出的品种保持不变，明确零仓位可以关闭量化策略买入的持仓。继续挂载有极大风险时在 pause_strategies 填观察到的挂载 ID 和具体理由，没有额外权限开关。执行插件负责真实支持范围、账户核验、原生数量规则、最终报价和幂等；工作流保留其真实回执，未知结果不能当作成交。
 
-MT5 的 `account_events` 订阅持仓和委托变化，断流后重新绑定。QMT 当前不提供账户订阅，明确显示不可用，仍支持周期和命名事件。用 `manual_trading_plan` 的 pause/resume 暂停或恢复计划；停止计划不撤销已发送的券商指令。
+`workflow_execute` 声明 `resumable:true` 和 `requires`。宿主先调用只读 `workflow_dependencies({runId})`，核验冻结计划的剩余角色模型、选中能力修订，并通过该计划的 context 能力读取实际账户快照以检查连接。检查失败返回 `{available:false,reason,details}`，不启动角色 Agent 或交易；已保存完整执行回执、仅待报告收尾时不再要求账户在线。
 
-## team、仓位与挂载控制
+中断保留原业务 ID、宿主 Run/会话、角色 RunRef、已完成阶段和 SQLite 决策/执行回执，不记为失败，不发布终态报告。`manual_trading_runs(action=read)` 返回 `workflow`；`runs.read(workflow)` 给出中断 ID、原因与依赖。主 Agent 获得中断后的用户回复并处理对应事项后，可调用 `runs.resume(workflow,{interruptIds:["已处理的ID"],response:{resolution:"实际处理结果"}})`；剩余中断继续等待，全部解决才重新预检并恢复同一次执行。用户也可以从宿主界面明确恢复。计划启停控制调度，不能替代这个运行级中断/恢复接口。
 
-team 参考 TradingAgents 的显式报告传递：四个分析师并行研究 → 有限轮次多空辩论 → 风控 → 组合经理 → 执行 → 日报。每个角色是宿主真实 Agent 任务，保存模型、状态、报告和数据集引用；后续角色读取已完成报告，不读取私有思维链。单 Agent 模式由 manager 完成研究与决策，再使用相同执行/归档步骤。
+原生工作流在安全阶段使用 `await execution.checkpoint({runId,stageIndex})`；`execution.checkpointState` 指向同一个业务运行，`execution.attempt` 变化时清除本轮不可用上下文缓存，只允许重新进行只读检查。角色以固定 role/round 请求及 operationId 接受并保存 RunRef，恢复不重新派发已接受任务。已保存 decision 和 execution 直接复用；执行已经送出而回执尚未保存时，必须先核验原 operation IDs，不能自动重放或创建新决策。`RUN_INTERRUPTED` / `DEPENDENCY_UNAVAILABLE` 向宿主传播，取消仍不代表撤销已成交订单。
 
-最终调用 `manual_trading_decide` 冻结目标：
+## 数据边界
 
-```json
-{
-  "unchanged": false,
-  "rationale": "证据、风险、异议和失效条件",
-  "targets": [{"symbol": "券商品种", "quantity": "0", "unit": "lots"}],
-  "pause_strategies": [{"deployment_id": "已观察挂载ID", "reason": "继续运行会造成的具体极大风险"}],
-  "evidence_dataset_ids": ["已登记研究证据ID"]
-}
-```
+旧插件私有业务历史不会自动导入，也不会物理删除旧库。新的计划和运行只使用本插件明确保存的记录；不读取宿主私库。执行确认只接受冻结 fillSources 与原始 producer 登记的成交行，目标和派生数据不能代替实际成交。
 
-MT5 为有符号 lots，QMT 为非负整数 shares。允许 `unchanged:true, targets:[]`；未列出的品种保持不变，零仓位关闭该品种全部实际持仓（包括对冲两侧），不限制来源。量化策略买入的持仓也能减仓或平仓。QMT 遵循实际可卖数量/T+1。
+## 用户可见资料
 
-**没有独立的策略暂停权限开关。** 提示词要求继续挂载有极大风险时停止策略。MT5 核验计划账户、版本和挂载归属后调用真实 `remove_expert`；回执表示停止 EA，不表示已平仓或支持恢复旧运行状态。QMT 没有挂载停止能力，不虚构结果。
+账户、全来源持仓、委托与成交历史、挂载、团队结论和研究数据集均可复核。`manual_trading_context` 分页返回，`manual_trading_runs` 查看和取消所属计划；团队公开结论不包含私有推理。研究数据缺口保留在结果中，不从目标推算成交或收益。
 
-目标有效期 5 分钟；执行逐笔读取新账户/报价，用稳定操作 ID 复用原交易服务和原生最终核验。原子订单观察最多 60 秒、报价最多 5 秒、最终报价到发送最多 1 秒。外部策略改变剩余目标差额、未确认停止 EA、工作挂单、部分成交、未知回执或待确认限价单均停止当前批次并要求核对。报价容差不保证市场成交价。
+### 原生任务与报告
 
-后台写操作由运行时签名绑定到本轮具体指令，模型不能通过直接调用底层工具改写已冻结目标。交易操作和券商回执归主会话保存，可用 `manual_trade_status` 查询、核对未知结果；同账户配置版本变化后仍可恢复查询。
+`manual_trading_activity({run_id})` 打开宿主原生 Run 界面。每轮工作流拥有普通子任务会话，实际研究、经理和执行 Agent 是其子 Run；界面统一展示进度、公开输出、工具回执、实际结果交接和报告。插件不再提供临时 HTML 监控或复制公开任务消息。
 
-## 用户可见资料、日报与复盘
+每轮绑定 `research/手工交易日报/<计划名称-ID>/<时间-运行ID>.html`，父目录由宿主准备。角色使用 output:none，整轮结束后由代码发布一个 report artifact，包含 `report.html` 和冻结的 `run.json` 附件。失败同样保留已有证据，并让实际工作流 Run 失败；不派机械总结 Agent。`manual_trading_report` 读取同一报告引用，不重新发布或覆盖用户移动、编辑、删除的绑定文件。
 
-Agent 与用户读取同一份账户、全来源持仓、委托、成交历史、挂载策略、研究数据集和团队报告。`financial_research_query/read` 提供价格、财务、新闻、SEC 披露、分析师、内幕交易、FRED 宏观和 Reddit 情绪资料；缺源、缺密钥和历史版本缺口明确保留。
+取消结束当前父 Run 及其活动子 Run，同时保留目标与真实执行回执。取消不能撤销已经发生的成交；应用重启也不会重放不确定的外部执行。
 
-`manual_trading_runs` 支持列表、完整读取和取消；`manual_trading_context` 对账户明细、历史和团队报告分页。完整记录持久保存，案例检索另保留有界摘录及原运行 ID，不将截断数据说成完整账户。
+`judgment-evolution` 的完整判断登记、固定证据核验、归因和规则工具已合入为 `manual_judgment_*`；旧数据保留原位。交易案例按账户、标的和实际已知时间检索，后续通过 `manual_trading_review` 使用真实外部数据集复盘；不将目标、持有不变或报价变化当作成交收益。[判断与记忆接口](judgment/README.md)说明证据与证据约束。
 
-每轮完成或失败后，在研究树创建 `手工交易日报/<计划名称-ID>/<时间-运行ID>.html` 和同名 `.json`。旧版共享树使用 `research/` 前缀，新版使用 research space。HTML 展示账户、目标、停止结果、实际回执、团队报告和复盘；JSON 保存完整快照，并冻结为 resource artifact。已有用户文件不覆盖，移动后按稳定文件 ID 定位。
-
-归档 Agent/模型不可用或应用中断时记录 `reportPending`，主 Agent 用 `manual_trading_report(run_id)` 补归档。日报是研究文件，不冒充 `report_publish` 的渲染验证回执。
-
-`judgment-evolution` 的完整判断登记、固定证据核验、归因和规则工具已合入为 `manual_judgment_*`；旧插件及数据保留兼容。交易案例按账户、标的和实际已知时间检索，后续通过 `manual_trading_review` 使用真实外部数据集复盘；不将目标、持有不变或报价变化当作成交收益。[判断与记忆接口](judgment/README.md)说明证据与旧数据迁移。
-
-计划/任务/案例存于插件私有 storage，研究证据存于 datasets，判断数据库/可读导出分别位于 `judgment-state/` 和主工作区 `manual-trading/judgment/`。计划不保存 API 密钥；研究插件仅保存环境变量名。
+计划/任务/案例存于插件私有 SQLite，研究证据存于 datasets，判断数据库/可读导出分别位于 `judgment-state/` 和主工作区 `manual-trading/judgment/`。计划不保存 API 密钥；研究插件仅保存环境变量名。
 
 验证使用虚构账户、来源响应和本地模型协议夹具，不向真实券商发送测试订单。未知发送必须查询原回执；无实盘盈利、零滑点或券商端 exactly-once 保证。

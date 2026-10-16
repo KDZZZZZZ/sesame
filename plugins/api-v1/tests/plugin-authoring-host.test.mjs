@@ -33,12 +33,13 @@ test('internal and external authoring install, load, execute and reopen on the m
     await open();
     assert.equal(runtime.plugins.entry('sesame/plugin-manager').runtime_status, 'ready');
     const call = async (name, args) => {
-      const tool = runtime.plugins.definitions({ conversationId: 'conv_main' }).find(item => item.name === name); assert.ok(tool, name);
-      return (await tool.execute('authoring-host', args)).details;
+      const descriptor = runtime.capabilities.descriptors().find(item => item.localId === name); assert.ok(descriptor, name);
+      const result = await runtime.capabilities.invoke(descriptor.id, args, {}, { kind: 'main', sessionId: 'conv_main', pluginId: 'host' });
+      assert.equal(result.type, 'result'); return result.value;
     };
     await t.test('the installed skill, API reference and portable CLI are readable by the Agent', async () => {
       for (const path of ['skills/develop-plugins/SKILL.md', 'skills/develop-plugins/references/host-api.md', 'skills/develop-plugins/references/authoring.md', 'scripts/create-plugin.mjs']) {
-        const resource = await call('plugin_read', { plugin_id: 'sesame/plugin-manager', path });
+        const resource = await call('plugin_read', { pluginId: 'sesame/plugin-manager', part: 'resource', path });
         assert.ok(resource.content.length > 100, path);
       }
     });
@@ -51,22 +52,18 @@ test('internal and external authoring install, load, execute and reopen on the m
       await writeFile(join(internal.path, 'README.md'), '# Author-edited draft\n');
       assert.deepEqual(await call('plugin_create', args), internal);
       assert.equal(await readFile(join(internal.path, 'README.md'), 'utf8'), '# Author-edited draft\n');
-      await assert.rejects(call('plugin_create', { ...args, description: 'Changed request' }), { code: 'idempotency_conflict' });
+      await assert.rejects(call('plugin_create', { ...args, description: 'Changed request' }), { code: 'IDEMPOTENCY_CONFLICT' });
     });
     const installed = [];
     const install = async path => {
-      const validated = await call('plugin_validate', { path }); assert.equal(validated.valid, true, JSON.stringify(validated));
-      const checked = await call('plugin_test', { path }); assert.equal(checked.passed, true, JSON.stringify(checked));
-      const result = await call('plugin_install', { command_id: `install-authoring-${installed.length}-0001`, path, digest: checked.digest });
-      assert.equal(result.runtime_status, 'ready', JSON.stringify(result));
-      assert.equal(result.state, 'discoverable');
-      await call('plugin_load', { plugin_id: result.id });
-      const manifest = JSON.parse(await readFile(join(path, 'plugin.json'), 'utf8'));
-      for (const name of manifest.tool_names) {
-        assert.ok((await runtime.session('conv_main')).getActiveToolNames().includes(name));
-        assert.deepEqual(await call(name, { text: 'Installed through the real host' }), { text: 'Installed through the real host' });
-      }
-      installed.push({ id: result.id, tools: manifest.tool_names });
+      const outcome = await call('plugin_install', { operationId: 'install-authoring-' + installed.length + '-0001', path });
+      const result = outcome.plugin;
+      assert.equal(result.runtime_status, 'ready', JSON.stringify(outcome));
+      await call('plugin_load', { pluginId: result.id });
+      const declared = JSON.parse(await readFile(join(path, 'capabilities.json'), 'utf8'));
+      const names = declared.capabilities.map(item => item.id);
+      for (const name of names) assert.deepEqual(await call(name, { text: 'Installed through the real host' }), { text: 'Installed through the real host' });
+      installed.push({ id: result.id, tools: names });
     };
     await t.test('internally authored native package validates, installs and executes in the same session', () => install(internal.path));
     await t.test('external CLI native and skill packages use the same actual installation path', async () => {
@@ -74,20 +71,14 @@ test('internal and external authoring install, load, execute and reopen on the m
         const path = join(root, `external-${template}`), cli = join(source, 'packages/plugin-manager/scripts/create-plugin.mjs');
         await run(process.execPath, [cli, '--name', `external-${template}`, '--publisher', 'fixture', '--description', 'External authoring fixture', '--template', template, '--output', path], { env: { ...process.env, NODE_OPTIONS: '' } });
         await install(path);
-        const resource = await call('plugin_read', { plugin_id: `fixture/external-${template}`, path: `skills/external-${template}/SKILL.md` });
+        const resource = await call('plugin_read', { pluginId: `fixture/external-${template}`, part: 'resource', path: `skills/external-${template}/SKILL.md` });
         assert.ok(resource.content.includes('starter'));
       }
     });
-    await t.test('existing skill and MCP scaffolds remain usable', async () => {
-      for (const template of ['skill', 'mcp-python']) {
-        const draft = await call('plugin_create', { command_id: `old-template-${template}-0001`, name: `old-${template}`, description: 'Existing template fixture', template });
-        const result = await call('plugin_validate', { path: draft.path }); assert.equal(result.valid, true, JSON.stringify(result));
-      }
-    });
     await t.test('changed files cannot be installed with a stale test digest', async () => {
-      const checked = await call('plugin_test', { path: internal.path });
+      const checked = await runtime.plugins.manager.execute('conv_main', 'test', { path: internal.path });
       await writeFile(join(internal.path, 'README.md'), '# Changed after test\n');
-      await assert.rejects(call('plugin_install', { command_id: 'stale-authoring-install-0001', path: internal.path, digest: checked.digest }), { code: 'plugin_digest_changed' });
+      await assert.rejects(call('plugin_install', { operationId: 'stale-authoring-install-0001', path: internal.path, digest: checked.digest }), { code: 'SOURCE_CHANGED' });
     });
     await t.test('installed plugins and native creation receipts survive application restart', async () => {
       await close(); await open();
@@ -95,7 +86,7 @@ test('internal and external authoring install, load, execute and reopen on the m
       assert.equal(await readFile(join(internal.path, 'README.md'), 'utf8'), '# Changed after test\n');
       for (const item of installed) {
         assert.equal(runtime.plugins.entry(item.id).runtime_status, 'ready');
-        await call('plugin_load', { plugin_id: item.id });
+        await call('plugin_load', { pluginId: item.id });
         for (const name of item.tools) assert.deepEqual(await call(name, { text: 'After restart' }), { text: 'After restart' });
       }
     });

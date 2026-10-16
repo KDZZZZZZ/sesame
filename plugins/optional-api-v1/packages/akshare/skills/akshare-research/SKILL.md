@@ -1,10 +1,23 @@
 ---
 name: akshare-research
-description: Prepare optional AKShare and obtain source-labelled A-share research data through tools or generic market history.
+description: Query declared A-share public research interfaces and daily market sources, preserving source, volume units, coverage and observation-only quotes.
 ---
-1. Discover/mount exact plugin id `sesame/akshare`. `akshare_discover` verifies a supplied `python_path`, or checks the saved selection, private venv, host Python and native PATH candidates with real AKShare import/version. `akshare_status` is offline. Discovery is bounded, not a complete disk scan: use `host_files_list/search/run` to locate other task-related Conda/venv executables if necessary, then pass the exact `python_path` to discover. Reuse a compatible existing environment readonly; only the plugin's selection receipt is saved, never upgrade or write the existing environment. Only if no compatible existing AKShare is available, call `akshare_prepare` explicitly as part of the user's task; it creates a persistent plugin-data venv, pins AKShare 1.19.1, records resolved package URLs/SHA256/version receipts and runs pip check. Requires native 64-bit Python >=3.11; reuse only an executable compatible with the native platform. No Sesame Settings form, broker credentials or API key are needed.
-2. `akshare_catalog` discovers supported read-only interfaces. `akshare_query` accepts only stock_zh_a_spot_em, stock_info_a_code_name, stock_zh_a_hist and stock_zh_a_daily, with declared string arguments. Additional whitelist: stock_bid_ask_em, stock_zh_a_spot_tx, stock_zh_a_hist_tx. No arbitrary code, authentication secrets or trade/order APIs.
-3. Bind generic market provider `{pluginId:'sesame/akshare',providerId:'market'}` with configuration `{source:'eastmoney'}` or `{source:'sina'}` or `{source:'tencent'}`. Persist returned exact connection id/revision. Search instruments and use their actual sourceId/instrumentId; never infer an exchange for an unsupported code.
-4. `queryBars` supports spec `{timeframe:'1d',priceBasis:'last',adjustment:'none'|'forward'|'backward',session:'regular'|'all',calendarRevision:{status:'unknown'}}`. Give explicit Asia/Shanghai wall SourceTime or UTC range. Daily bars represent aggregate 09:30–15:00 exchange sessions; pinned calendars and gap completeness are unavailable. Eastmoney quantity unit is lot (100 shares), Sina is share. Do not call tick volume real volume or multiply without an explicit unit conversion.
-5. Drain `page:{limit,cursor}` using returned opaque cursor under the same binding/filter snapshot; cursors expire in 5 minutes. Keep source metadata, adjustment and observedAt. Upstream float values converted to decimal strings preserve supplied numeric values, not lost source precision.
-6. Network/blocked-source errors are not empty datasets or fake quotes. If selecting another upstream, state the change and create its distinct binding. Use quotes.subscribe and bars.subscribe for 60-second polling on explicitly selected sources. Preserve observation-only quote time/unknown freshness and stream gaps; no exchange-tick or minute-bar claim. Research data use remains subject to upstream terms.
+
+公开资源定位：本包路径以插件根目录为准；[完整接口契约](../../INTERFACES.md) 可由 plugin_read({pluginId:"sesame/akshare",part:"resource",path:"INTERFACES.md"}) 读取。此引用给出位置，无需每次调用前重复读取。
+
+AKShare是A股公开研究数据适配。akshare_discover({python_path?})/akshare_status({})核验本机64位Python>=3.11和AKShare1.19.1；ready:true会保存选择。akshare_prepare可复用已有环境或安装私有依赖。无需券商登录/API Key；环境检查未覆盖的已知Python可显式传入，不把扫描目录设为前置仪式。
+
+akshare_catalog列出全部白名单：stock_info_a_code_name、stock_zh_a_spot_em、stock_zh_a_hist、stock_zh_a_daily、stock_bid_ask_em、stock_zh_a_spot_tx、stock_zh_a_hist_tx。akshare_query使用原生字符串参数并返回rows/totalRows/truncated；quote为单品种快照。目录可读不代表上游可达，截断预览不冒充全量。
+
+来源 sesame/akshare#market 用 binding:{configuration:{source:"eastmoney"|"sina"|"tencent"}}；保留实际 connection.id/revision，不混用来源。默认Eastmoney不是自动故障转移。
+
+行情与画布的公开入口是 data_providers({contract:"sesame.market/1"})、market_instruments、market_read、canvas_binding/canvas_apply。来源采用发现返回的完整 {providerId,revision}，可按 configSchema 附 binding；品种采用搜索结果 ref，连接身份来自 metadata.connection。source.revision 是插件声明摘要，connection.revision 是来源配置身份，两者不可互换。host 专用 bind/query/subscribe 的完整形状在本包 INTERFACES.md，Agent 无需持有 bindingId。
+
+market_read 返回固定数据、rowCount 和覆盖证据。coverage.complete:false 保留已取得的真实行，同时说明范围尚未获完整证明；不能改写为true。历史成功不证明实时订阅成功；canvas_apply 保存配置不证明用户已看到图。canvas_inspect 的当前版本 rendering[].charts[] 提供 status/error/bar_count/feed_status；无当前回执只表示未确认。明确源协议错误（如首帧position缺失）不能通过重复绑定/新建探针图修复；连接或声明版本已变才有刷新身份的依据。宿主管理持续订阅，退出Agent调用不应把已配置图表断开。
+
+统一接口只有1d日线，last、none/forward/backward、regular/all、未知calendarRevision。Asia/Shanghai wall时间或明确UTC范围均可；报价仅Eastmoney/Tencent，60秒轮询且时间为HTTP观察时间、新鲜度未知。Eastmoney volume单位lot（100股），Sina/Tencent为share；不补造分钟柱/逐笔/未知成交量。
+
+
+上游历史例：akshare_query({interface:"stock_zh_a_hist_tx",arguments:{symbol:"sz000001",start_date:"20260101",end_date:"20261015",adjust:""},max_rows:100})。Eastmoney stock_zh_a_hist使用六位symbol与period:"daily"；Sina stock_zh_a_daily和Tencent历史使用市场前缀。统一market_instruments返回的instrumentId仍是六位代码，不需要Agent自行猜市场映射。
+
+逐项宿主query/subscribe形状、限额、结果与恢复入口在INTERFACES.md；官方接口说明在 https://akshare.akfamily.xyz/data/stock/stock.html 。上游网络阻断是具体来源失败，不等于零行情。若任务允许替换来源，记录新来源身份与单位，不能将换源后数据标作旧源。

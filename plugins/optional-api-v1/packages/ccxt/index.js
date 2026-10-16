@@ -1,27 +1,12 @@
+import { capability } from '@sesame/plugin-sdk/capabilities';
+import { sourceCapabilities } from './source.js';
 import { environment } from "./environment.js";
-import { CCXTProvider, descriptor } from "./provider.js";
-export async function activate(host) {
-  const provider = new CCXTProvider(host),
-    dispose = host.providers.register(descriptor, provider);
-  return { dispose };
-}
-export function createTools(host) {
-  const { define, Type, string } = host.tools;
+
+export function createCapabilities(host) {
   return [
-    define(
-      "ccxt_environment",
-      "Inspect and select existing pinned CCXT Python first; explicit prepare creates private dependencies only if unavailable. No startup downloads or API keys.",
-      {
-        action: Type.Union(["inspect", "prepare"].map(Type.Literal)),
-        python_path: Type.Optional(string("Existing native Python executable")),
-      },
-      (args, signal) => environment(host, args, signal),
-    ),
-    define(
-      "ccxt_catalog",
-      "Describe the supported public-only exchanges and provider limitations; never starts requests or trades.",
-      {},
-      () => ({
+...sourceCapabilities(host),
+capability("ccxt_environment", (args, signal) => environment(host, args, signal)),
+    capability("ccxt_catalog", () => ({
         exchanges: ["kraken", "coinbase", "okx"],
         library: "4.5.85",
         market: "public spot",
@@ -31,7 +16,6 @@ export function createTools(host) {
         apiKeys: false,
         coverage: "partial/unknown",
         closed: "later source candle only",
-      }),
-    ),
+      })),
   ];
 }

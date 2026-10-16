@@ -1,87 +1,205 @@
+import { records } from './records.js';
 import { canonical, digest } from '@sesame/plugin-sdk/protocol';
-import { generateKeyPairSync, sign } from 'node:crypto';
-import { check, payload } from './adapters.js';
+import { AsyncResource, AsyncLocalStorage } from 'node:async_hooks';
+import { datasetSnapshot } from './data.js';
+import { check } from './shared.js';
+import { bindExecution, executionCall, verifyComposition, declaredCalls } from './composition.js';
 import { createTradingMemory } from './memory.js';
-import { accountKey, cleanError, clone, makePlan, TERMINAL, triggerIdentity, validateDecision } from './plans.js';
-import { ROLE_PROMPTS, SYSTEM, stages, taskTools } from './team.js';
-import { ensureReportFolder, writeDailyReport } from './reports.js';
-import { applyPortfolio } from './portfolio.js';
+import { accountKey, cleanError, clone, makePlan, selectModel, TERMINAL, triggerIdentity, validateDecision } from './plans.js';
+import { ROLE_PROMPTS, SYSTEM, stages, taskTools, taskPlugins } from './team.js';
+import { reportPath, writeDailyReport } from './reports.js';
+const TASK_TERMINAL = new Set(['completed', 'failed', 'canceled', 'cancelled', 'expired', 'unknown', 'superseded']);
+const interruption = (error, signal) => ['RUN_INTERRUPTED', 'DEPENDENCY_UNAVAILABLE'].includes(error?.code) ? error
+  : ['RUN_INTERRUPTED', 'DEPENDENCY_UNAVAILABLE'].includes(signal?.reason?.code) ? signal.reason : null;
+const dependencyCodes = new Set(['DEPENDENCY_UNAVAILABLE', 'MODEL_UNAVAILABLE', 'MODEL_CHANGED', 'PLUGIN_CHANGED', 'PREREQUISITE_REQUIRED', 'MT5_PYTHON_UNAVAILABLE', 'SOURCE_UNAVAILABLE', 'PROVIDER_UNAVAILABLE']);
+const requirement = id => ({ id: 'trading-dependencies', capability: 'sesame/manual-trading#workflow_dependencies', input: { runId: id }, reason: 'The frozen trading plan requires its selected configuration and live execution context.' });
+const dependencyError = (id, error) => Object.assign(new Error(error.message), { code: 'DEPENDENCY_UNAVAILABLE', details: { requirements: [requirement(id)], cause: cleanError(error), ...error.details } });
 
 export class TradingRuntime {
-  constructor(host, { now = Date.now, timer = true } = {}) {
-    this.host = host; this.now = now; this.timerEnabled = timer; this.running = new Map(); this.contextReads = new Map(); this.applying = new Map(); this.subscriptions = new Map(); this.closed = false;
+  constructor(host, { now = Date.now, timer = true, mockModelResponses = false } = {}) {
+    this.host = host; this.invocation = new AsyncLocalStorage(); this.now = now; this.timerEnabled = timer; this.running = new Map(); this.contextReads = new Map(); this.applying = new Map(); this.subscriptions = new Map(); this.closed = false;
     this.memories = new Map();
-    this.executionKeys = new Map();
+    this.mockModelResponses = mockModelResponses === true;
+    this.archiving = new Map(); this.cancelling = new Set(); this.executions = new Map(); this.workHosts = new Map();
+    this.executionScope = new AsyncResource('sesame.manual-trading.scheduler', { requireManualDestroy: true });
+  }
+  currentAgent() { const call = this.invocation.getStore(); call?.signal?.throwIfAborted(); return call?.provenance?.agent; }
+  notify(topic, payload) { try { Promise.resolve(this.host.events.emit({ topic: `workspace.manual-trading.${topic}`, payload })).catch(() => {}); } catch { /* Diagnostics do not change execution receipts. */ } }
+  taskView(run) { return { id: run.id, status: run.status, conversationId: run.executionSessionId ?? run.output?.sessionId ?? run.progress?.sessionId ?? null,
+    createdAt: run.createdAt, completedAt: run.completedAt, model: run.output?.model, result: run.output ?? null, error: run.error,
+    ...(Array.isArray(run.output?.toolCalls) ? { toolCalls: run.output.toolCalls } : {}) }; }
+  async waitTask(id, signal, observe = () => {}, host = this.host) {
+    let run = (await host.runs.read({ id })).run;
+    for (;;) {
+      const view = this.taskView(run); observe(view);
+      if (run.status === 'interrupted') throw Object.assign(new Error(run.interrupts?.find(item => !item.resolvedAt)?.reason ?? 'Child Agent is interrupted'), { code: 'RUN_INTERRUPTED', details: { childRunId: run.id, interrupts: run.interrupts } });
+      if (TASK_TERMINAL.has(run.status)) return view;
+      run = (await host.runs.wait({ id }, { until: 'changed', afterVersion: run.revision, timeoutMs: 60000, signal })).run;
+    }
   }
   memoryFor(plan) { if (!this.memories.has(plan.ownerConversationId)) this.memories.set(plan.ownerConversationId, createTradingMemory(this.host, { now: this.now, ownerConversationId: plan.ownerConversationId })); return this.memories.get(plan.ownerConversationId); }
-  plans() { return this.host.storage.list('plans'); }
-  plan(id) { const plan = this.host.storage.get('plans', id, true); check(plan, 'NOT_FOUND', 'Trading plan not found'); return plan; }
-  run(id) { const run = this.host.storage.get('runs', id, true); check(run, 'NOT_FOUND', 'Trading run not found'); return run; }
-  save(run) { return this.host.storage.put('runs', run); }
+  plans() { return records(this.host).list('plans'); }
+  plan(id) { const plan = records(this.host).get('plans', id, true); check(plan, 'NOT_FOUND', 'Trading plan not found'); return plan; }
+  run(id) { const run = records(this.host).get('runs', id, true); check(run, 'NOT_FOUND', 'Trading run not found'); return run; }
+  save(run, events = []) {
+    run = JSON.parse(JSON.stringify(run));
+    const previous = records(this.host).get('runs', run.id, true);
+    if (canonical(previous ?? null) === canonical(run) && !events.length) return previous;
+    const saved = records(this.host).put('runs', { ...run, events: [...(run.events ?? []), ...events].slice(-2000) });
+    if (previous?.status !== saved.status) this.executions.get(run.id)?.progress({ phase: saved.status, summary: saved.status });
+    return saved;
+  }
   update(id, changes) { return this.save({ ...this.run(id), ...changes }); }
-  main(host) { check(host.scope.kind === 'main', 'FORBIDDEN', 'Configure trading plans in the main conversation'); }
+  async checkpoint(id) {
+    const execution = this.executions.get(id), run = this.run(id);
+    if (execution) await execution.checkpoint({ runId: id, stageIndex: run.stageIndex ?? 0 });
+  }
+  async dependencies(host, id, signal) {
+    const run = this.run(id), plan = run.plan;
+    try {
+      check(this.plan(run.planId).enabled, 'PLAN_PAUSED', 'The frozen trading plan is paused; resume the plan before its workflow.');
+      check(!run.executionStartedAt || run.execution, 'EXECUTION_OUTCOME_UNKNOWN', 'An execution was already sent without a saved receipt. Reconcile that original run; no action will be resent.');
+      if (!run.execution) {
+        await verifyComposition(host, plan.execution);
+        const pending = stages(plan).slice(run.stageIndex ?? 0).flat();
+        if (pending.length) await verifyComposition(host, plan.research);
+        for (const role of new Set([...pending, 'executor'])) selectModel(host, plan.agentModels[role] ?? plan.model);
+        await declaredCalls(host, [...new Set(['manual_trading_apply', ...(pending.length ? taskTools(plan, pending[0]) : [])])], ['sesame/manual-trading', ...plan.execution.plugins, ...plan.research.plugins]);
+        const snapshot = await executionCall(host, plan.execution, 'context', { action: 'snapshot', history_days: 30 }, signal);
+        check(canonical(snapshot.account) === canonical(plan.account), 'ACCOUNT_CHANGED', 'Selected execution account differs from the frozen plan.');
+        for (const key of ['positions', 'orders', 'fills', 'historicalOrders', 'deployments']) check(Array.isArray(snapshot[key]), 'SOURCE_DATA_INVALID', `Execution snapshot must include ${key}`);
+      }
+      return { available: true, details: { runId: id, stageIndex: run.stageIndex ?? 0, executionRetained: Boolean(run.execution) } };
+    } catch (error) {
+      signal?.throwIfAborted();
+      return { available: false, reason: error.message, details: { runId: id, cause: cleanError(error), ...(error.details ? { causeDetails: clone(error.details) } : {}) } };
+    }
+  }
+  activity(id, type, data) { return this.save(this.run(id), [{ type, at: this.now(), ...data }]); }
+  executor(host, run, execution) {
+    const proof = execution?.provenance?.workflow;
+    check(host.context.kind === 'subagent' && proof?.runId === host.context.runId && proof.sessionId === host.context.sessionId && proof.ownerSessionId === run.plan.ownerConversationId && execution.provenance.caller.pluginId === 'sesame/manual-trading',
+      'FORBIDDEN', 'Requires the trusted workflow execution for this plan owner');
+  }
+  observeTaskView(runId, taskId, observed) {
+    if (!observed || observed.id !== taskId) return;
+    const run = this.run(runId), before = run.tasks.find(task => task.id === taskId);
+    if (!before || TASK_TERMINAL.has(before.status) && !TASK_TERMINAL.has(observed.status)) return;
+    const task = { ...before, status: observed.status, conversationId: observed.conversationId ?? before.conversationId ?? null };
+    if (observed.model) task.model = clone(observed.model);
+    if (observed.status === 'running' && task.startedAt === undefined) {
+      // The public host port has no start timestamp; this is when running was first observed.
+      task.startedAt = this.now(); task.startedAtSource = 'observed';
+    }
+    if (TASK_TERMINAL.has(observed.status) && task.completedAt === undefined) task.completedAt = observed.completedAt ?? this.now();
+    if (Array.isArray(observed.toolCalls)) task.toolCalls = observed.toolCalls.slice(0, 256).map(call => ({ id: call.id, name: call.name, status: call.status,
+      ...(call.startedAt === undefined ? {} : { startedAt: call.startedAt }), ...(call.completedAt === undefined ? {} : { completedAt: call.completedAt }) }));
+    this.update(runId, { tasks: run.tasks.map(value => value.id === taskId ? task : value) });
+  }
+  main(host) { check(host.context.kind === 'main', 'FORBIDDEN', 'Configure trading plans in the main conversation'); }
+  ownedPlan(host, id) { this.main(host); const plan = this.plan(id); check(plan.ownerConversationId === host.context.sessionId, 'FORBIDDEN', 'Trading plan belongs to another conversation'); return plan; }
   authorize(host, runId, roles) {
     const run = this.run(runId);
-    if (host.scope.kind === 'main') { check(host.scope.conversationId === run.plan.ownerConversationId, 'FORBIDDEN', 'Trading plan belongs to another conversation'); return run; }
-    const current = host.agents.current();
-    check(current?.pluginId === 'sesame/manual-trading' && current.status === 'running' && current.conversationId === host.scope.conversationId && current.input?.runId === run.id &&
+    if (host.context.kind === 'main') { check(host.context.sessionId === run.plan.ownerConversationId, 'FORBIDDEN', 'Trading plan belongs to another conversation'); return run; }
+    const current = this.currentAgent();
+    check(current?.pluginId === 'sesame/manual-trading' && current.sessionId === host.context.sessionId && current.input?.runId === run.id &&
       current.input.tradingPlan?.id === run.planId && canonical(current.input.tradingPlan.account) === canonical(run.plan.account) &&
-      run.tasks.some(task => task.id === current.id && task.role === current.input.role) && (!roles || roles.includes(current.input.role)), 'FORBIDDEN', 'Tool requires its current registered trading-plan task');
+      run.tasks.some(task => task.id === current.runId && task.role === current.input.role) && (!roles || roles.includes(current.input.role)), 'FORBIDDEN', 'Tool requires its current registered trading-plan task');
     return run;
   }
-  async start() {
-    check(this.host.agents && this.host.inference, 'PREREQUISITE_REQUIRED', 'Manual trading plans require Sesame 0.2.2 Agent/model ports');
-    for (const run of this.host.storage.list('runs')) if (!TERMINAL.has(run.status)) {
-      for (const task of run.tasks ?? []) try { this.host.agents.cancel(task.id, 'Trading runtime restarted; do not replay execution'); } catch { /* Task may already be archived. */ }
-      this.update(run.id, { status: 'interrupted', completedAt: this.now(), reportPending: !run.report, error: { code: 'RESTART_INTERRUPTED', message: 'App restarted; inspect durable receipts before a new decision. This run is not replayed.' } });
+  async recoverTask(runId, task) {
+    try {
+      let run = (await this.host.runs.read({ id: task.id })).run;
+      if (!TASK_TERMINAL.has(run.status)) { await this.host.runs.cancel({ id: task.id }, { reason: 'Trading runtime restarted; do not replay execution' }); run = (await this.host.runs.wait({ id: task.id }, { until: 'settled', timeoutMs: 60000 })).run; }
+      const receipt = this.taskView(run); this.observeTaskView(runId, task.id, receipt);
+      const current = this.run(runId);
+      if (TASK_TERMINAL.has(receipt.status) && typeof receipt.result?.text === 'string' && !current.reports.some(report => report.taskId === task.id)) this.update(runId, { reports: [...current.reports, { taskId: task.id, role: task.role, round: task.round, model: receipt.model ?? task.model, status: receipt.status, createdAt: receipt.completedAt ?? this.now(), text: receipt.result.text.slice(0, 16000) }] });
+    } catch (error) {
+      const current = this.run(runId), at = this.now();
+      this.update(runId, { tasks: current.tasks.map(value => value.id === task.id ? { ...value, observationError: cleanError(error),
+        ...(['not_found', 'NOT_FOUND'].includes(error.code) ? { status: 'interrupted', completedAt: at, recovery: { kind: 'host_run_missing', at } } : {}) } : value) });
     }
-    for (const plan of this.plans().filter(value => value.enabled && value.accountEvents)) await this.subscribe(plan);
-    if (this.timerEnabled) { this.timer = setInterval(() => { this.tick().catch(error => this.host.events?.emit('scheduler.failed', cleanError(error))); }, 1000); this.timer.unref?.(); }
+  }
+  async start() {
+    check(this.host.capabilities && this.host.runs, 'PREREQUISITE_REQUIRED', 'Manual trading requires declared Agent capabilities and Runs');
+    for (const run of records(this.host).list('runs')) {
+      if (run.workflow && !TERMINAL.has(run.status)) {
+        // The host owns recovery of accepted Runs. Keep their identities and
+        // receipts; never cancel/recreate them during plugin activation.
+        this.update(run.id, { status: 'interrupted', reportPending: Boolean(run.reportPending), error: { code: 'RUN_INTERRUPTED', message: 'Saved workflow retained; resume its host Run after checking dependencies.' } });
+        continue;
+      }
+      const unfinished = (run.tasks ?? []).filter(task => !TASK_TERMINAL.has(task.status));
+      if (TERMINAL.has(run.status) && !unfinished.length) continue;
+      // Recover observed child executions without replaying uncertain external effects.
+      for (const task of unfinished) await this.recoverTask(run.id, task);
+      const current = this.run(run.id), recovered = this.update(run.id, { reportPending: !current.report,
+        ...(!TERMINAL.has(run.status) ? { status: 'interrupted', completedAt: this.now(), error: { code: 'RESTART_INTERRUPTED', message: 'App restarted; inspect durable receipts before a new decision. This run is not replayed.' } } : {}) });
+      if ((recovered.tasks ?? []).every(task => TASK_TERMINAL.has(task.status))) {
+        this.activity(run.id, 'run.finished', { status: recovered.status, message: '宿主重启，已核验或中断遗留任务；未重放执行。' });
+      }
+    }
+    for (const plan of this.plans()) {
+      if (!plan.execution) records(this.host).put('plans', { ...plan, enabled: false, migrationRequired: 'Select an independent execution capability before resuming this legacy plan' });
+      else if (plan.enabled && plan.accountEvents) await this.subscribe(plan);
+    }
+    if (this.timerEnabled) { this.timer = setInterval(() => { this.tick().catch(error => this.notify('scheduler.failed', cleanError(error))); }, 1000); this.timer.unref?.(); }
     return this;
   }
   async configure(host, input, signal) {
     this.main(host);
-    check(input && ['mt5', 'qmt'].includes(input.backend), 'INVALID_ARGUMENT', 'Plan and backend are required');
-    const previous = input.id ? this.host.storage.get('plans', input.id, true) : null;
-    check(!previous || !this.host.storage.list('runs').some(run => run.planId === previous.id && !TERMINAL.has(run.status)), 'PLAN_BUSY', 'Stop the active run before changing its frozen plan');
-    const identity = payload(await host.tools.call({ pluginId: `sesame/${input.backend}`, name: `${input.backend}_trading_context`, arguments: { action: 'identity' } }, signal));
-    const plan = makePlan(host, input, identity.account, previous, this.now());
-    await ensureReportFolder(host, plan.reportFolder);
-    this.host.storage.put('plans', plan);
+    check(input && typeof input === 'object', 'INVALID_ARGUMENT', 'A workflow plan is required');
+    const previous = input.id ? records(this.host).get('plans', input.id, true) : null;
+    if (previous) this.ownedPlan(host, previous.id);
+    check(!previous || !records(this.host).list('runs').some(run => run.planId === previous.id && !TERMINAL.has(run.status)), 'PLAN_BUSY', 'Stop the active run before changing its frozen plan');
+    const execution = await bindExecution(host, input.execution, signal);
+    const plan = await makePlan(host, input, execution, previous, this.now());
+    for (const role of ['market', 'manager', 'executor']) {
+      check(taskTools(plan, role).length <= 64, 'TOOL_BUDGET_EXCEEDED', 'Select a smaller research tool subset; each task supports 64 tools');
+      check(taskPlugins(plan, role).length <= 32, 'PLUGIN_BUDGET_EXCEEDED', 'Select fewer plugins; each task supports 32 research and execution dependencies combined');
+    }
+    records(this.host).put('plans', plan);
     await this.unsubscribe(plan.id);
     if (plan.enabled && plan.accountEvents) await this.subscribe(plan);
     return this.plan(plan.id);
   }
   async setEnabled(host, id, enabled) {
-    this.main(host); const plan = this.plan(id);
-    this.host.storage.put('plans', { ...plan, enabled, updatedAt: this.now(), nextDueAt: enabled && plan.intervalMinutes ? this.now() + plan.intervalMinutes * 60000 : plan.nextDueAt });
+    const plan = this.ownedPlan(host, id);
+    check(!enabled || plan.execution, 'EXECUTION_REQUIRED', 'Reconfigure the legacy plan with a selected execution capability');
+    if (enabled) { await verifyComposition(host, plan.execution); await verifyComposition(host, plan.research); }
+    records(this.host).put('plans', { ...plan, enabled, updatedAt: this.now(), nextDueAt: enabled && plan.intervalMinutes ? this.now() + plan.intervalMinutes * 60000 : plan.nextDueAt });
     if (!enabled) {
       await this.unsubscribe(id);
-      for (const run of this.host.storage.list('runs').filter(value => value.planId === id && !TERMINAL.has(value.status))) this.cancel(run.id, 'Trading plan paused');
+      for (const run of records(this.host).list('runs').filter(value => value.planId === id && !TERMINAL.has(value.status))) this.cancel(run.id, 'Trading plan paused');
     } else if (plan.accountEvents) await this.subscribe(this.plan(id));
     return this.plan(id);
   }
-  trigger(planId, trigger) {
+  trigger(planId, trigger, host) {
     check(!this.closed, 'RUNTIME_CLOSED', 'Trading runtime is stopped');
-    const plan = this.plan(planId), id = triggerIdentity(plan, trigger), previous = this.host.storage.get('runs', id, true);
+    const plan = this.plan(planId), id = triggerIdentity(plan, trigger), previous = records(this.host).get('runs', id, true);
     if (previous) { check(canonical(previous.trigger) === canonical(trigger), 'IDEMPOTENCY_CONFLICT', 'Event ID already has different input'); return previous; }
     check(plan.enabled, 'PLAN_PAUSED', 'Trading plan is paused');
+    check(plan.execution, 'EXECUTION_REQUIRED', 'Select an execution capability before starting this workflow');
     check(Buffer.byteLength(JSON.stringify(trigger)) <= 12000, 'INVALID_ARGUMENT', 'Event payload exceeds 12 KB');
-    for (const queued of this.host.storage.list('runs').filter(run => run.planId === plan.id && run.status === 'queued')) this.update(queued.id, { status: 'cancelled', completedAt: this.now(), supersededBy: id });
-    const run = this.save({ id, planId: plan.id, plan, trigger: clone(trigger), status: 'queued', createdAt: this.now(), tasks: [], reports: [], reportPending: true });
-    this.host.storage.put('plans', { ...plan, lastRunId: id }); this.pump(); return run;
+    for (const queued of records(this.host).list('runs').filter(run => run.planId === plan.id && run.status === 'queued')) {
+      this.update(queued.id, { status: 'cancelled', completedAt: this.now(), supersededBy: id });
+      this.activity(queued.id, 'run.finished', { status: 'cancelled', message: '尚未开始的运行已被新事件替换。' });
+    }
+    const run = this.save({ id, planId: plan.id, plan, trigger: clone(trigger), status: 'queued', createdAt: this.now(), tasks: [], reports: [], reportPending: true, mockModelResponses: this.mockModelResponses });
+    if (host) this.workHosts.set(id, host);
+    records(this.host).put('plans', { ...plan, lastRunId: id }); this.pump(); return run;
   }
-  event(key, eventId, data = {}, at) {
+  event(key, eventId, data = {}, at, ownerConversationId, host) {
     if (at !== undefined) check(Number.isSafeInteger(at) && at <= this.now() && this.now() - at <= 86400000, 'STALE_EVENT', 'Event must be observed within the last day');
     check(typeof key === 'string' && typeof eventId === 'string' && eventId.length > 0, 'INVALID_ARGUMENT', 'Event key and stable ID are required');
-    return this.plans().filter(plan => plan.enabled && plan.eventKeys.includes(key)).map(plan => this.trigger(plan.id, { kind: 'event', id: `${key}:${eventId}`, key, ...(at === undefined ? {} : { observedAt: at }), data }));
+    return this.plans().filter(plan => plan.enabled && (!ownerConversationId || plan.ownerConversationId === ownerConversationId) && plan.eventKeys.includes(key)).map(plan => this.trigger(plan.id, { kind: 'event', id: `${key}:${eventId}`, key, ...(at === undefined ? {} : { observedAt: at }), data }, host));
   }
   async tick() {
     if (this.closed || this.ticking) return;
     this.ticking = true;
     try {
       for (const plan of this.plans().filter(value => value.enabled && value.intervalMinutes && value.nextDueAt <= this.now())) {
-        this.host.storage.put('plans', { ...plan, nextDueAt: this.now() + plan.intervalMinutes * 60000 });
+        records(this.host).put('plans', { ...plan, nextDueAt: this.now() + plan.intervalMinutes * 60000 });
         this.trigger(plan.id, { kind: 'interval', id: String(plan.nextDueAt), observedAt: this.now() });
       }
       for (const plan of this.plans().filter(value => value.enabled && value.accountEvents && value.eventRetryAt && value.eventRetryAt <= this.now())) await this.subscribe(plan);
@@ -90,103 +208,198 @@ export class TradingRuntime {
   }
   pump() {
     if (this.closed) return;
-    for (const run of this.host.storage.list('runs').filter(value => value.status === 'queued').sort((a, b) => a.createdAt - b.createdAt)) {
+    for (const run of records(this.host).list('runs').filter(value => value.status === 'queued').sort((a, b) => a.createdAt - b.createdAt)) {
       const key = accountKey(run.plan), plan = this.plan(run.planId);
-      if (!plan.enabled || this.running.has(key)) continue;
+      if (!plan.enabled || this.running.has(key) || records(this.host).list('runs').some(other => other.id !== run.id && accountKey(other.plan) === key && other.status !== 'queued' && !TERMINAL.has(other.status))) continue;
       const last = plan.lastEventAt ?? 0;
       if (run.trigger.kind === 'event' && this.now() - last < plan.eventCooldownMs) continue;
-      if (run.trigger.kind === 'event') this.host.storage.put('plans', { ...plan, lastEventAt: this.now() });
+      if (run.trigger.kind === 'event') records(this.host).put('plans', { ...plan, lastEventAt: this.now() });
       const controller = new AbortController(), entry = { runId: run.id, controller };
       this.running.set(key, entry);
-      entry.promise = this.execute(run.id, controller.signal).catch(error => this.host.events?.emit('run.failed', { runId: run.id, ...cleanError(error) })).finally(() => { this.running.delete(key); this.pump(); });
+      const host = this.workHosts.get(run.id) ?? this.host;
+      entry.promise = this.executionScope.runInAsyncScope(async () => {
+        const accepted = await host.capabilities.invoke('sesame/manual-trading#workflow_execute', { runId: run.id }, { signal: controller.signal, operationId: 'workflow:' + run.id,
+          task: { ...(host.context.kind === 'service' ? { sessionId: run.plan.ownerConversationId } : {}), title: run.plan.title,
+            output: { type: 'report', space: 'research', path: reportPath(run) } } });
+        check(accepted.type === 'run', 'TASK_RECEIPT_INVALID', 'Workflow requires a real Run'); this.update(run.id, { workflow: accepted.run });
+        let settled; do { settled = await host.runs.wait(accepted.run, { until: 'settled', timeoutMs: 30000 }); } while (settled.reason === 'timeout');
+        if (settled.reason === 'interrupted' || settled.run.status === 'interrupted') this.update(run.id, { status: 'interrupted', error: { code: 'RUN_INTERRUPTED', message: settled.run.interrupts?.find(item => !item.resolvedAt)?.reason ?? 'Workflow dependency or input is unavailable' } });
+        else if (!TERMINAL.has(this.run(run.id).status) && ['failed', 'cancelled', 'unknown'].includes(settled.run.status)) this.update(run.id, { status: settled.run.status === 'cancelled' ? 'cancelled' : 'failed', completedAt: this.now(), error: cleanError(settled.run.error ?? new Error(`Host workflow ${settled.run.status}`)) });
+        return settled.run;
+      }).catch(error => {
+        if (interruption(error, controller.signal)) { this.update(run.id, { status: 'interrupted', error: cleanError(interruption(error, controller.signal)) }); return; }
+        if (!TERMINAL.has(this.run(run.id).status)) this.update(run.id, { status: controller.signal.aborted ? 'cancelled' : 'failed', error: cleanError(error), completedAt: this.now() });
+        this.notify('run.failed', { runId: run.id, ...cleanError(error) });
+      }).finally(() => { this.running.delete(key); this.workHosts.delete(run.id); this.pump(); });
     }
   }
-  researchAvailable() { try { return this.host.plugins.inspect('sesame/financial-research').state !== 'disabled'; } catch { return false; } }
   async task(runId, role, round, signal) {
-    signal?.throwIfAborted(); const run = this.run(runId), plan = run.plan;
+    signal?.throwIfAborted(); const run = this.run(runId), plan = run.plan, host = this.workHosts.get(runId);
+    check(host, 'NO_ACTIVE_WORKFLOW', 'Agent dispatch requires its active workflow Run');
+    const key = `${role}:${round}`, previous = run.tasks.find(task => task.role === role && task.round === round);
+    const savedReport = previous && run.reports.find(report => report.taskId === previous.id && report.status === 'completed');
+    if (previous?.status === 'completed' && savedReport) return { id: previous.id, status: 'completed', result: { text: savedReport.text }, conversationId: previous.conversationId };
     const model = plan.agentModels[role] ?? plan.model;
-    if (role === 'executor' && !this.executionKeys.has(runId)) this.executionKeys.set(runId, generateKeyPairSync('ed25519'));
-    const executionPublicKey = role === 'executor' ? this.executionKeys.get(runId).publicKey.export({ type: 'spki', format: 'pem' }) : undefined;
-    const task = this.host.agents.submit({ requestId: `${run.id}:${role}:${round}`, title: `${plan.title.slice(0, 50)} · ${role} ${round}`, kind: 'research',
-      instructions: role === 'reporter' ? '只调用 manual_trading_report，为指定运行归档已有真实记录，不作交易、不改决策。' : `${SYSTEM}\n\n本角色：${ROLE_PROMPTS[role]}\n\n计划要求：${plan.instructions}`,
-      input: { tradingPlan: { id: plan.id, backend: plan.backend, account: plan.account, ownerConversationId: plan.ownerConversationId, researchPlugins: plan.researchPlugins ?? [] }, runId, role, round, trigger: run.trigger, ...(executionPublicKey ? { executionPublicKey } : {}) },
-      tools: taskTools(plan, role, this.researchAvailable()), model, lane: `${digest(accountKey(plan)).slice(7, 39)}:${role}`, queue: 'fifo', timeoutMs: plan.taskTimeoutMs,
-      maxTurns: role === 'executor' || role === 'reporter' ? 4 : 16, maxToolCalls: role === 'executor' ? 256 : 48 });
-    this.update(runId, { tasks: [...this.run(runId).tasks, { id: task.id, role, round, model, status: task.status }] });
+    try { await verifyComposition(host, plan.execution); if (role !== 'executor') await verifyComposition(host, plan.research); }
+    catch (error) { if (dependencyCodes.has(error.code)) throw dependencyError(runId, error); throw error; }
+    const tools = taskTools(plan, role), plugins = taskPlugins(plan, role);
+    check(tools.length <= 64, 'TOOL_BUDGET_EXCEEDED', 'Select a smaller research tool subset; each task supports 64 tools');
+    check(plugins.length <= 32, 'PLUGIN_BUDGET_EXCEEDED', 'Select fewer plugins; each task supports 32 research and execution dependencies combined');
+    const allowedCalls = await declaredCalls(host, tools, ['sesame/manual-trading', ...plugins]);
+    const request = run.taskRequests?.[key] ?? {
+      title: `${plan.title.slice(0, 50)} · ${role} ${round}`,
+      instructions: `${SYSTEM}\n\n本角色：${ROLE_PROMPTS[role]}\n\n计划要求：${plan.instructions}`,
+      objective: `以符合 ${role} 角色目标的实际证据或保存的执行回执形成可共享成果；必要依赖缺失则暂停并说明恢复条件，不能替换目标后宣告完成。`,
+      input: { tradingPlan: { id: plan.id, account: plan.account, ownerConversationId: plan.ownerConversationId }, execution: plan.execution, runId, role, round, trigger: run.trigger },
+      allowedCalls, model, budget: { timeoutMs: plan.taskTimeoutMs, maxTurns: role === 'executor' ? 4 : 16, maxToolCalls: role === 'executor' ? 256 : 48 },
+    };
+    if (!run.taskRequests?.[key]) this.update(runId, { taskRequests: { ...this.run(runId).taskRequests, [key]: request } });
+    let accepted;
+    try { accepted = previous ? { type: 'run', run: { id: previous.id } } : await host.capabilities.invoke('host.agent.run', request,
+      { signal, operationId: `${run.id}:${role}:${round}`, task: { title: `${plan.title.slice(0, 50)} · ${role}`, role, stage: role, iteration: round, output: { type: 'none' } } }); }
+    catch (error) { if (dependencyCodes.has(error.code)) throw dependencyError(runId, error); throw error; }
+    check(accepted.type === 'run', 'TASK_RECEIPT_INVALID', 'Agent execution must return a Run');
+    const task = accepted.run;
+    if (!previous) this.update(runId, { tasks: [...this.run(runId).tasks, { id: task.id, role, round, model, status: 'queued', createdAt: this.now() }] });
+    await this.checkpoint(runId);
     let result;
-    try { result = await this.host.agents.wait(task.id, signal); }
-    catch (error) { this.host.agents.cancel(task.id, 'Trading task wait stopped'); throw error; }
+    try { result = await this.waitTask(task.id, signal, view => this.observeTaskView(runId, task.id, view), host); }
+    catch (error) {
+      if (interruption(error, signal)) throw interruption(error, signal);
+      try { this.observeTaskView(runId, task.id, this.taskView((await this.host.runs.cancel(task, { reason: 'Trading task wait stopped' })).run)); }
+      catch { /* Keep the original wait failure. */ }
+      throw error;
+    }
     const current = this.run(runId);
+    const errorText = result.error?.message ?? result.error ?? '';
     this.update(runId, { tasks: current.tasks.map(value => value.id === task.id ? { ...value, status: result.status, conversationId: result.conversationId } : value),
-      reports: [...current.reports, { taskId: task.id, role, round, model: result.model ?? model, status: result.status, createdAt: this.now(), text: String(result.result?.text ?? result.error ?? '').slice(0, 16000) }] });
-    check(result.status === 'completed', 'AGENT_FAILED', `${role} task ${result.status}: ${String(result.error ?? '').slice(0, 300)}`);
+      reports: [...current.reports.filter(report => report.taskId !== task.id), { taskId: task.id, role, round, model: result.model ?? model, status: result.status, createdAt: this.now(), text: String(result.result?.text ?? errorText).slice(0, 16000), ...(result.error ? { error: cleanError(result.error) } : {}) }] });
+    if (result.status !== 'completed' && dependencyCodes.has(result.error?.code)) throw dependencyError(runId, result.error);
+    check(result.status === 'completed', result.error?.code ?? 'AGENT_FAILED', `${role} task ${result.status}: ${String(errorText).slice(0, 300)}`);
+    await this.checkpoint(runId);
     return result;
   }
-  async execute(id, signal) {
-    this.update(id, { status: 'researching', startedAt: this.now() });
+  async execute(host, id, signal, execution) {
+    this.executor(host, this.run(id), execution);
+    this.workHosts.set(id, host); this.executions.set(id, execution);
+    check(!execution.checkpointState || execution.checkpointState.runId === id, 'CHECKPOINT_MISMATCH', 'Checkpoint belongs to another trading run');
+    const before = this.run(id), attempt = execution.attempt;
+    this.update(id, { workflow: execution.run, status: 'researching', startedAt: before.startedAt ?? this.now(), executionAttempt: attempt,
+      ...(before.executionAttempt !== attempt ? { contextError: null } : {}), error: null });
+    let failure, interrupted = false, stageTasks = [];
     try {
-      let round = 0;
-      for (const stage of stages(this.run(id).plan)) {
-        const results = await Promise.allSettled(stage.map(role => this.task(id, role, round, signal))); round++;
-        const failure = results.find(result => result.status === 'rejected'); if (failure) throw failure.reason;
+      const steps = stages(this.run(id).plan);
+      for (let round = this.run(id).stageIndex ?? 0; round < steps.length && !this.run(id).execution; round++) {
+        await this.checkpoint(id);
+        stageTasks = steps[round].map(role => this.task(id, role, round, signal));
+        await Promise.all(stageTasks);
+        this.update(id, { stageIndex: round + 1 }); await this.checkpoint(id);
       }
       check(this.run(id).decision, 'NO_DECISION', 'Manager did not save a valid target portfolio'); signal.throwIfAborted();
-      await this.task(id, 'executor', round, signal);
+      if (!this.run(id).execution) await this.task(id, 'executor', steps.length, signal);
       check(this.run(id).execution, 'NOT_EXECUTED', 'Executor did not return a durable execution result');
-      const run = this.update(id, { status: 'completed', completedAt: this.now() });
-      this.recordMemory(run);
+      this.recordMemory(this.update(id, { status: 'completed', completedAt: this.now() }));
     } catch (error) {
+      const control = interruption(error, signal);
+      if (control) {
+        interrupted = true; this.update(id, { status: 'interrupted', error: cleanError(control) });
+        if (control.code === 'DEPENDENCY_UNAVAILABLE') await execution.interrupt({ reason: control.message, requirements: control.details?.requirements, state: { runId: id, stageIndex: this.run(id).stageIndex ?? 0 } });
+        throw control;
+      }
+      await Promise.allSettled(stageTasks);
+      failure = error;
       const run = this.update(id, { status: signal.aborted ? 'cancelled' : 'failed', completedAt: this.now(), error: cleanError(error) });
       if (run.decision) this.recordMemory(run);
     } finally {
-      this.executionKeys.delete(id);
-      const run = this.run(id);
-      if (!run.report && !this.closed && !signal.aborted) {
-        try { await this.task(id, 'reporter', 0, signal); }
-        catch (error) { this.update(id, { reportPending: true, reportError: cleanError(error) }); }
+      if (!interrupted && !this.run(id).report && !this.closed && !signal.aborted) {
+        try { await this.archive(host, id); }
+        catch (error) { failure = interruption(error, signal) ?? failure ?? error; this.update(id, { reportPending: true, reportError: cleanError(error) }); }
       }
-      this.host.events?.emit('run.finished', { runId: id, planId: run.planId, status: this.run(id).status, reportPending: this.run(id).reportPending });
+      const control = interruption(failure, signal);
+      if (control) {
+        interrupted = true; failure = control;
+        this.update(id, { status: 'interrupted', completedAt: null, reportPending: false, error: cleanError(control) });
+      }
+      if (!interrupted) this.notify('run.finished', { runId: id, planId: this.run(id).planId, status: this.run(id).status, reportPending: this.run(id).reportPending });
+      this.executions.delete(id);
+      this.workHosts.delete(id);
     }
+    if (interruption(failure, signal)) throw interruption(failure, signal);
+    signal.throwIfAborted();
+    if (failure) throw Object.assign(new Error(failure.message), { code: failure.code ?? 'WORKFLOW_FAILED', details: { runId: id, report: this.run(id).report ?? null } });
+    return { runId: id, status: this.run(id).status, report: this.run(id).report };
   }
   recordMemory(run) {
     try { this.memoryFor(run.plan).record({ id: run.id, planId: run.planId, accountId: accountKey(run.plan),
+      executionAccountId: run.plan.account.accountId, executionSources: run.plan.execution?.fillSources ?? [],
       symbols: [...new Set([...run.plan.symbols, ...(run.snapshot?.positions ?? []).map(row => row.symbol ?? row.stock_code).filter(Boolean)])],
       snapshot: { account: run.snapshot.account, capturedAt: run.snapshot.capturedAt, summary: run.snapshot.summary, positions: run.snapshot.positions.slice(0, 100), positionCount: run.snapshot.positions.length, fullSnapshotRunId: run.id }, decision: run.decision,
-      reports: run.reports.filter(report => report.role !== 'reporter').map(report => ({ ...report, text: report.text.slice(0, 4000), fullReportRunId: run.id, excerpt: report.text.length > 4000 })),
+      reports: run.reports.map(report => ({ ...report, text: report.text.slice(0, 4000), fullReportRunId: run.id, excerpt: report.text.length > 4000 })),
       execution: run.execution ? { status: run.execution.status, targetReached: run.execution.targetReached, operationIds: run.execution.orders.map(order => order.operationId), fullReceiptRunId: run.id } : null, decisionAt: run.decidedAt, createdAt: this.now() }); }
     catch (error) { this.update(run.id, { memoryError: cleanError(error) }); }
   }
   async context(host, id, section = 'all', offset = 0, limit = 50, signal) {
     this.authorize(host, id);
-    if (!this.run(id).snapshot) {
+    signal?.throwIfAborted();
+    if (section !== 'team' && !this.run(id).snapshot) {
+      const blocked = this.run(id).contextError;
+      if (blocked) {
+        const error = Object.assign(new Error(blocked.message), { code: blocked.code, details: clone(blocked.details) });
+        throw dependencyCodes.has(error.code) ? dependencyError(id, error) : error;
+      }
       if (!this.contextReads.has(id)) this.contextReads.set(id, (async () => {
-        const run = this.run(id), snapshot = payload(await host.tools.call({ pluginId: `sesame/${run.plan.backend}`, name: `${run.plan.backend}_trading_context`, arguments: { action: 'snapshot', history_days: 30 } }, signal));
+        const run = this.run(id), snapshot = await executionCall(host, run.plan.execution, 'context', { action: 'snapshot', history_days: 30 }, signal);
         check(canonical(snapshot.account) === canonical(run.plan.account), 'ACCOUNT_CHANGED', 'Configured account changed after this plan was saved');
+        for (const key of ['positions', 'orders', 'fills', 'historicalOrders', 'deployments']) check(Array.isArray(snapshot[key]), 'SOURCE_DATA_INVALID', `Execution snapshot must include ${key}`);
         check(Array.isArray(snapshot.positions) && Buffer.byteLength(JSON.stringify(snapshot)) <= 1024 * 1024, 'SOURCE_DATA_INVALID', 'Account snapshot missing or exceeds 1 MiB');
         const memoryContext = this.memoryFor(run.plan).context({ planId: run.planId, accountId: accountKey(run.plan), symbols: [...new Set([...run.plan.symbols, ...snapshot.positions.map(row => row.symbol ?? row.stock_code).filter(Boolean)])], asOf: this.now(), limit: 8 });
         this.update(id, { snapshot, memoryContext });
-      })().finally(() => this.contextReads.delete(id)));
+      })().catch(error => {
+        if (error.details?.retryable === false) this.update(id, { contextError: { ...cleanError(error), details: clone(error.details) } });
+        if (dependencyCodes.has(error.code)) throw dependencyError(id, error);
+        throw error;
+      }).finally(() => this.contextReads.delete(id)));
       await this.contextReads.get(id);
     }
     const run = this.run(id), snapshot = run.snapshot;
     const page = rows => ({ items: (rows ?? []).slice(offset, offset + limit), total: (rows ?? []).length, nextOffset: offset + limit < (rows ?? []).length ? offset + limit : null });
-    return { runId: id, plan: run.plan, capturedAt: snapshot.capturedAt,
+    const result = { runId: id, plan: run.plan, ...(snapshot ? { capturedAt: snapshot.capturedAt } : {}),
       ...(['all', 'account'].includes(section) ? { account: snapshot.account, summary: snapshot.summary, positions: page(snapshot.positions), deployments: page(snapshot.deployments), coverage: snapshot.historyCoverage } : {}),
       ...(['all', 'history'].includes(section) ? { orders: page(snapshot.orders), fills: page(snapshot.fills), historicalOrders: page(snapshot.historicalOrders) } : {}),
       ...(['all', 'team'].includes(section) ? { reports: page(run.reports) } : {}),
       ...(['all', 'memory'].includes(section) ? { memory: run.memoryContext } : {}) };
+    if (host.context.kind === 'subagent' && result.reports) {
+      this.authorize(host, id);
+      const current = this.currentAgent();
+      const consumed = new Set(this.run(id).consumedOutputs ?? []);
+      for (const report of result.reports.items) {
+        const key = `${report.taskId}:${current.runId}`;
+        if (report.taskId === current.runId || consumed.has(key) || !run.tasks.some(task => task.id === report.taskId)) continue;
+        this.executions.get(id)?.emit('handoff', { fromRunId: report.taskId, toRunId: current.runId });
+        consumed.add(key);
+      }
+      this.update(id, { consumedOutputs: [...consumed] });
+    }
+    return result;
   }
-  decide(host, id, decision) {
+  async decide(host, id, decision, signal) {
     const run = this.authorize(host, id, ['manager']);
     check(this.plan(run.planId).enabled && !TERMINAL.has(run.status) && run.snapshot, 'RUN_NOT_READY', 'Read this active run account context before deciding');
     const value = validateDecision(run.plan, run.snapshot, decision);
     if (run.decision) { check(canonical(run.decision) === canonical(value), 'DECISION_FROZEN', 'This run already has a different frozen target'); return run.decision; }
-    const evidence = value.evidence_dataset_ids.map(datasetId => {
-      const dataset = host.datasets.read(datasetId);
+    const references = [...value.evidence_dataset_ids, ...value.evidence_sources, ...value.evidence_artifacts];
+    const snapshots = await datasetSnapshot(host, references, signal);
+    const evidence = [...new Set(references.map(ref => typeof ref === 'string' ? ref : ref.datasetId ?? ref.id))].map(datasetId => {
+      const dataset = snapshots.get(datasetId);
       check(Buffer.byteLength(JSON.stringify(dataset)) <= 256000, 'EVIDENCE_TOO_LARGE', 'Select bounded research datasets');
-      return { datasetId, capturedAt: this.now(), digest: digest(dataset), dataset };
+      return { datasetId, capturedAt: this.now(), digest: digest(dataset), ...(dataset.artifact ? { artifact: dataset.artifact } : {}), dataset };
     });
     check(Buffer.byteLength(JSON.stringify(evidence)) <= 512000, 'EVIDENCE_TOO_LARGE', 'Combined decision evidence exceeds 512 KB; select bounded datasets');
+    signal?.throwIfAborted();
+    const current=this.authorize(host,id,['manager']);
+    check(this.plan(current.planId).enabled&&!TERMINAL.has(current.status),'RUN_NOT_READY','Run stopped while reading decision evidence');
+    if(current.decision){check(canonical(current.decision)===canonical(value),'DECISION_FROZEN','This run already has a different frozen target');return current.decision;}
+    check(canonical(current.snapshot)===canonical(run.snapshot),'SNAPSHOT_CHANGED','Account snapshot changed while reading evidence');
     this.update(id, { decision: value, decidedAt: this.now(), evidence, status: 'decided' }); return value;
   }
   async apply(host, id, signal) {
@@ -194,79 +407,96 @@ export class TradingRuntime {
     if (run.execution) return run.execution;
     check(this.plan(run.planId).enabled && run.decision && !TERMINAL.has(run.status), 'RUN_NOT_READY', 'Run is not active with a saved decision');
     if (!this.applying.has(id)) this.applying.set(id, (async () => {
-      this.update(id, { status: 'executing', executionStartedAt: this.now() });
+      if (run.executionStartedAt) throw dependencyError(id, Object.assign(new Error('An execution was already sent without a saved receipt; reconcile the original run and operation IDs. No action is resent.'), { code: 'EXECUTION_OUTCOME_UNKNOWN' }));
       const assertActive = () => { this.authorize(host, id, ['executor']); check(this.plan(run.planId).enabled && !TERMINAL.has(this.run(id).status), 'PLAN_PAUSED', 'Trading plan stopped'); signal?.throwIfAborted(); };
-      const authorizeRequest = (action, args) => {
-        assertActive();
-        const task = host.agents.current(), key = this.executionKeys.get(id);
-        check(task?.id && key, 'EXECUTION_KEY_UNAVAILABLE', 'This executor no longer has a live intent-signing key');
-        const expiresAt = this.now() + 30000;
-        const signature = sign(null, Buffer.from(canonical({ version: 1, taskId: task.id, runId: id, action, args, expiresAt })), key.privateKey).toString('base64');
-        return { ...args, authorization: { expiresAt, signature } };
-      };
-      const execution = await applyPortfolio(host, this.run(id), { now: this.now, signal, assertActive, authorizeRequest, checkpoint: changes => this.update(id, changes) });
+      assertActive(); await verifyComposition(this.host, run.plan.execution); assertActive();
+      const { unchanged, targets, pause_strategies, rationale } = run.decision;
+      this.update(id, { status: 'executing', executionStartedAt: this.now() });
+      const execution = await executionCall(host, run.plan.execution, 'apply', { run: { id, plan: { id: run.planId,
+        account: run.plan.account, ownerConversationId: run.plan.ownerConversationId, slippageBps: run.plan.slippageBps }, decision: { unchanged, targets, pause_strategies, rationale }, decidedAt: run.decidedAt } }, signal);
+      check(execution && typeof execution.status === 'string' && Array.isArray(execution.orders) && Array.isArray(execution.pauses), 'SOURCE_DATA_INVALID', 'Execution capability must return a durable structured receipt');
       this.update(id, { execution, reportPending: true }); return execution;
     })().finally(() => this.applying.delete(id)));
     return this.applying.get(id);
   }
   async archive(host, id) {
-    const run = this.authorize(host, id, ['executor', 'reporter']);
-    check(TERMINAL.has(run.status), 'RUN_NOT_FINISHED', 'Archive after the run has finished so all role reports and receipts are included');
-    const report = await writeDailyReport(host, run); this.update(id, { report, reportPending: false }); return report;
+    const run = this.run(id);
+    if (host.context.kind === 'main') { this.authorize(host, id); check(run.report, 'REPORT_UNAVAILABLE', 'This execution has no published report; inspect its retained receipts'); return run.report; }
+    this.executor(host, run, this.executions.get(id));
+    check(TERMINAL.has(run.status) && run.tasks.every(task => TASK_TERMINAL.has(task.status)), 'RUN_NOT_FINISHED', 'Publish after all actual Agent runs settle');
+    if (!this.archiving.has(id)) this.archiving.set(id, Promise.resolve().then(async () => {
+      const report = await writeDailyReport(host, this.run(id), { onSnapshot: reportSnapshot => this.update(id, { reportSnapshot, reportPending: true }) });
+      this.executions.get(id).emit('artifact', { ref: report.ref, label: run.plan.title });
+      this.update(id, { report, reportPending: false, reportError: null }); return report;
+    }).catch(error => { this.update(id, { reportPending: true, reportError: cleanError(error) }); throw error; }).finally(() => this.archiving.delete(id)));
+    return this.archiving.get(id);
   }
-  review(host, args) {
+  async review(host, args, signal) {
     const current = this.authorize(host, args.current_run_id), reviewed = this.run(args.run_id);
     check(accountKey(current.plan) === accountKey(reviewed.plan) && current.plan.ownerConversationId === reviewed.plan.ownerConversationId, 'FORBIDDEN', 'Review belongs to another account');
-    return this.memoryFor(current.plan).review({ runId: reviewed.id, asOf: this.now(), evidence: args.evidence, reflection: args.reflection });
+    const datasets = await datasetSnapshot(host, args.evidence, signal);
+    return this.memoryFor(current.plan).review({ runId: reviewed.id, asOf: this.now(), evidence: args.evidence, reflection: args.reflection }, datasets);
   }
   cancel(id, reason) {
     const run = this.run(id); if (TERMINAL.has(run.status)) return run;
     this.update(id, { status: 'cancelled', completedAt: this.now(), error: { code: 'CANCELLED', message: reason } });
-    for (const task of run.tasks) try { this.host.agents.cancel(task.id, reason); } catch { /* Already finished. */ }
-    const active = this.running.get(accountKey(run.plan)); if (active?.runId === id) active.controller.abort(new Error(reason)); return this.run(id);
+    if (run.workflow) {
+      const work = Promise.resolve().then(() => this.host.runs.cancel(run.workflow, { reason }))
+        .catch(error => this.notify('cancel.failed', { runId: id, workflowId: run.workflow.id, ...cleanError(error) })).finally(() => this.cancelling.delete(work));
+      this.cancelling.add(work);
+    }
+    for (const task of run.tasks) {
+      const work = Promise.resolve().then(() => this.host.runs.cancel({ id: task.id }, { reason }))
+        .then(({ run: receipt }) => this.observeTaskView(id, task.id, this.taskView(receipt)))
+        .catch(error => this.notify('cancel.failed', { runId: id, taskId: task.id, ...cleanError(error) })).finally(() => this.cancelling.delete(work));
+      this.cancelling.add(work);
+    }
+    const active = this.running.get(accountKey(run.plan));
+    if (active?.runId === id) active.controller.abort(new Error(reason));
+    else this.activity(id, 'run.finished', { status: 'cancelled', message: '本轮已取消。' });
+    return this.run(id);
   }
   async subscribe(plan) {
     await this.unsubscribe(plan.id);
     try {
-      const binding = await this.host.providers.bind({ pluginId: `sesame/${plan.backend}`, providerId: 'account' });
-      this.subscriptions.set(plan.id, { bindingId: binding.bindingId });
-      check(!this.closed && this.plan(plan.id).enabled && this.plan(plan.id).revision === plan.revision, 'PLAN_CHANGED', 'Plan stopped or changed while binding account events');
-      check(binding.connection?.revision === plan.account.revision, 'ACCOUNT_CHANGED', 'Event binding account revision differs from plan');
-      const stream = await this.host.providers.subscribe(binding.bindingId, 'subscribeAccount', { account: binding.accounts[0], topics: ['positions', 'orders'] });
-      this.subscriptions.set(plan.id, { bindingId: binding.bindingId, stream });
-      check(!this.closed && this.plan(plan.id).enabled && this.plan(plan.id).revision === plan.revision, 'PLAN_CHANGED', 'Plan stopped or changed while subscribing account events');
+      check(plan.execution?.accountProvider, 'UNSUPPORTED_CAPABILITY', 'Selected execution capability does not declare account events');
+      const selected = plan.execution.accountProvider, providerId = `${selected.pluginId}#${selected.providerId}`;
+      const source = (await this.host.data.sources({ providerId })).items.find(item => item.available !== false);
+      check(source && source.operations.watch, 'UNSUPPORTED_CAPABILITY', 'Selected account source has no declared watch operation');
+      const identity = await executionCall(this.host, plan.execution, 'context', { action: 'identity' });
+      check(canonical(identity.account) === canonical(plan.account), 'ACCOUNT_CHANGED', 'Event source account differs from the frozen plan');
+      const controller = new AbortController();
+      const stream = await this.host.data.watch({ source: source.ref, operation: 'watch', input: { account: plan.account, topics: ['positions', 'orders'] } }, { signal: controller.signal });
+      const subscription = { controller, stream }; this.subscriptions.set(plan.id, subscription);
+      check(!this.closed && this.plan(plan.id).enabled && this.plan(plan.id).revision === plan.revision, 'PLAN_CHANGED', 'Plan stopped or changed while subscribing');
       const previous = new Map();
-      const content = value => value && typeof value === 'object' ? Array.isArray(value) ? value.map(content) : Object.fromEntries(Object.entries(value).filter(([key]) => !['observedAt', 'updatedAt', 'revision', 'snapshotId'].includes(key)).map(([key, item]) => [key, content(item)])) : value;
-      stream.ready(event => {
-        if (this.closed || !this.plan(plan.id).enabled) return;
-        if (event.type === 'stream.gap') {
-          this.host.storage.put('plans', { ...this.plan(plan.id), eventStatus: 'reconnecting', eventError: event.reason, eventRetryAt: this.now() + 10000 });
-          this.unsubscribe(plan.id).catch(error => this.host.events?.emit('event.failed', cleanError(error)));
-          try { this.trigger(plan.id, { kind: 'event', id: `gap:${binding.bindingId}`, data: { type: 'stream.gap', reason: event.reason } }); } catch (error) { this.host.events?.emit('event.failed', cleanError(error)); }
-          return;
+      subscription.promise = (async () => {
+        for await (const event of stream.events) {
+          if (this.closed || !this.plan(plan.id).enabled) break;
+          if (event.type === 'stream.gap') throw Object.assign(new Error(event.reason ?? 'Account stream gap'), { code: 'STREAM_GAP' });
+          if (!['positions.upsert', 'orders.upsert'].includes(event.type)) continue;
+          const key = digest(event.payload);
+          if (previous.get(event.type) === key) continue; previous.set(event.type, key);
+          this.trigger(plan.id, { kind: 'event', id: `account:${digest([providerId, event.eventId ?? null, event.epoch ?? null, event.seq ?? null, key]).slice(7)}`, observedAt: event.observedAt, data: { type: event.type, message: 'Account state changed; read a fresh snapshot' } });
         }
-        if (event.type === 'positions.upsert' || event.type === 'orders.upsert') {
-          const key = digest(content(event.payload)); if (key === previous.get(event.type)) return; previous.set(event.type, key);
-          try { this.trigger(plan.id, { kind: 'event', id: `account:${digest([binding.bindingId, event.eventId, event.epoch, event.seq]).slice(7)}`, observedAt: event.observedAt, data: { type: event.type, message: 'Account state changed; read a fresh full snapshot before deciding' } }); }
-          catch (error) { this.host.events?.emit('event.failed', { planId: plan.id, ...cleanError(error) }); }
-        }
-      });
-      this.host.storage.put('plans', { ...this.plan(plan.id), eventStatus: 'subscribed', eventError: null, eventRetryAt: null });
+      })().catch(error => { if (!controller.signal.aborted && !this.closed) { records(this.host).put('plans', { ...this.plan(plan.id), eventStatus: 'unavailable', eventError: cleanError(error), eventRetryAt: this.now() + 60000 }); this.notify('event.failed', cleanError(error)); } });
+      records(this.host).put('plans', { ...this.plan(plan.id), eventStatus: 'subscribed', eventError: null, eventRetryAt: null });
     } catch (error) {
       await this.unsubscribe(plan.id);
-      this.host.storage.put('plans', { ...this.plan(plan.id), eventStatus: 'unavailable', eventError: cleanError(error), eventRetryAt: error.code === 'UNSUPPORTED_CAPABILITY' ? null : this.now() + 60000 });
+      records(this.host).put('plans', { ...this.plan(plan.id), eventStatus: 'unavailable', eventError: cleanError(error), eventRetryAt: error.code === 'UNSUPPORTED_CAPABILITY' ? null : this.now() + 60000 });
     }
   }
-  async unsubscribe(id) { const sub = this.subscriptions.get(id); this.subscriptions.delete(id); if (sub) { await sub.stream?.close(); await this.host.providers.unbind(sub.bindingId); } }
-  async dispose() {
-    this.closed = true; clearInterval(this.timer);
+  async unsubscribe(id) { const sub = this.subscriptions.get(id); this.subscriptions.delete(id); if (sub) { sub.controller.abort(); try { await sub.stream.close(); } finally { await sub.promise; } } }
+  async dispose(host = this.host) {
+    this.host = host; this.closed = true; clearInterval(this.timer);
     for (const value of this.running.values()) {
-      this.cancel(value.runId, 'Trading plugin stopped');
-      // A terminal business run can still have a reporter in flight.
-      value.controller.abort(new Error('Trading plugin stopped'));
-      for (const task of this.run(value.runId).tasks) try { this.host.agents.cancel(task.id, 'Trading plugin stopped'); } catch { /* Already finished. */ }
+      this.update(value.runId, { status: 'interrupted', error: { code: 'RUN_INTERRUPTED', message: 'Plugin stopped; resume the retained host Run.' } });
+      value.controller.abort(Object.assign(new Error('Trading plugin stopped; retain accepted Run identities'), { code: 'RUN_INTERRUPTED' }));
     }
     await Promise.allSettled([...this.subscriptions.keys()].map(id => this.unsubscribe(id)));
     await Promise.allSettled([...this.running.values()].map(value => value.promise));
+    await Promise.allSettled(this.cancelling);
+    await Promise.allSettled(this.archiving.values());
+    if (!this.executionScopeDestroyed) { this.executionScope.emitDestroy(); this.executionScopeDestroyed = true; }
   }
 }

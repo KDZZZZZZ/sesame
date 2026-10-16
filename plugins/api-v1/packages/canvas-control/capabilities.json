@@ -1,0 +1,2236 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "capabilities": [
+    {
+      "id": "canvas_inspect",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "读取当前画布、公开 market_sources 与最近 30 秒渲染回执。rendering[].charts[] 提供目标图表的 status/error/warning?/bar_count?/feed_status?；回执 version 必须匹配当前 version，reported 仅表示收到回执。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "description": "当前画布版本，供 expected_version 与渲染回执匹配。"
+          },
+          "charts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "symbol": {
+                  "type": "string",
+                  "description": "显示标签；数据身份由 binding 决定。"
+                },
+                "binding": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "description": "{source:{providerId,revision,binding?},instrument:{sourceId,instrumentId},spec}；null 表示未绑定。"
+                },
+                "locked": {
+                  "type": "boolean"
+                },
+                "script_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "id"
+              ],
+              "additionalProperties": true
+            }
+          },
+          "layout": {
+            "type": "object"
+          },
+          "workspace": {
+            "type": "object"
+          },
+          "scripts": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "description": "当前图表挂载的固定指标成果及实例参数。"
+          },
+          "render_status": {
+            "type": "string",
+            "enum": [
+              "reported",
+              "pending"
+            ],
+            "description": "reported 仅表示至少一个近期客户端回执的 version 等于当前 version，不保证所有图表成功。"
+          },
+          "rendering": {
+            "type": "array",
+            "description": "最近 30 秒客户端回执；空数组或只有旧版本表示尚无当前显示证据。",
+            "items": {
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer",
+                  "description": "客户端回执所对应的画布版本。"
+                },
+                "at": {
+                  "type": "number",
+                  "description": "宿主收到此回执的 Unix 毫秒时间，不是行情观察时间。"
+                },
+                "viewport": {
+                  "type": "object",
+                  "description": "图表区的 width/height/x/y/zoom。"
+                },
+                "charts": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "与顶层 charts[].id 对应。"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "rendered",
+                          "loading",
+                          "offline",
+                          "error",
+                          "hidden"
+                        ]
+                      },
+                      "error": {
+                        "type": "string",
+                        "description": "实际失败文本，优先保留底层数据订阅错误；若包含错误码则一并保留。"
+                      },
+                      "bar_count": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "description": "当前图表可绘制的 K 线数量；不可见或尚在初始化时可省略。"
+                      },
+                      "feed_status": {
+                        "type": "string",
+                        "description": "数据通道状态，如 live/connecting/stale/paused；与渲染状态独立，可省略。"
+                      },
+                      "warning": {
+                        "type": "string",
+                        "description": "不阻止渲染的数据限制，例如来源未证明历史区间完整；不等于断线、读取失败或所有行无效。"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "status"
+                    ],
+                    "additionalProperties": true
+                  }
+                }
+              },
+              "required": [
+                "client_id",
+                "version",
+                "at",
+                "charts"
+              ],
+              "additionalProperties": true
+            }
+          },
+          "market_sources": {
+            "type": "array",
+            "description": "静态行情来源声明；列出来源不建立连接或订阅。",
+            "items": {
+              "type": "object",
+              "properties": {
+                "ref": {
+                  "type": "object",
+                  "properties": {
+                    "providerId": {
+                      "type": "string",
+                      "description": "完整 pluginId#sourceId。"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "description": "来源当前声明修订。"
+                    }
+                  },
+                  "required": [
+                    "providerId",
+                    "revision"
+                  ],
+                  "additionalProperties": true
+                },
+                "contract": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "operations": {
+                  "type": "object",
+                  "description": "公开操作名到能力名的映射，如 searchInstruments/describeInstrument/queryBars/subscribeBars。",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "configSchema": {
+                  "type": "object",
+                  "description": "SourceRef.binding 可使用的公开配置字段。"
+                },
+                "available": {
+                  "type": "boolean",
+                  "description": "插件当前可用，不证明连接成功或行情实时。"
+                }
+              },
+              "required": [
+                "ref",
+                "contract",
+                "operations",
+                "configSchema",
+                "available"
+              ],
+              "additionalProperties": true
+            }
+          }
+        },
+        "required": [
+          "version",
+          "charts",
+          "scripts",
+          "render_status",
+          "rendering",
+          "market_sources"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "read"
+      ],
+      "usage": {
+        "purpose": "读取画布、明确声明的行情来源及逐图显示/订阅证据，不建立连接或修改图表。",
+        "inputs": "空对象 {}；同时读取画布和静态行情来源，不连接新数据源。",
+        "outputs": "返回 {version,charts,layout,workspace,scripts,market_sources,render_status,rendering,...}。rendering[] 含 client_id/version/at/viewport/charts；每图为 {id,status,error?,warning?,bar_count?,feed_status?}。market_sources 项含 ref/contract/operations/configSchema/available。",
+        "prerequisites": [],
+        "limitations": [
+          "render_status=reported 只表示有当前版本回执；按 rendering[].version 匹配当前 version，并核对目标图表 status 与 bar_count。",
+          "回执保留 30 秒；缺少当前回执表示尚不可确认。feed_status 独立于渲染状态，历史查询成功不证明实时订阅。明确的来源协议错误应依据 error 定位，重复绑定相同身份不会修复协议。",
+          "warning 表示非阻断的数据限制，例如历史覆盖未经证明；bar_count>0 且 rendered 可以同时有 warning，不应误判为断流。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "canvas_inspect"
+      }
+    },
+    {
+      "id": "canvas_binding",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "从声明的行情 SourceRef 描述精确品种，固定可复用的连接修订、周期、价格与时段口径，生成 canvas_apply 的 source 绑定。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "source",
+          "instrument",
+          "timeframe"
+        ],
+        "properties": {
+          "instrument": {
+            "type": "object",
+            "required": [
+              "sourceId",
+              "instrumentId"
+            ],
+            "properties": {
+              "sourceId": {
+                "type": "string",
+                "description": "market_instruments 搜索返回的来源 ID",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "instrumentId": {
+                "type": "string",
+                "description": "来源内品种 ID",
+                "minLength": 1,
+                "maxLength": 20000
+              }
+            },
+            "additionalProperties": false
+          },
+          "timeframe": {
+            "type": "string",
+            "description": "品种声明的标准周期，如 1h/15m；不要传 MT5 H1/M15",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "price_basis": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "bid"
+              },
+              {
+                "type": "string",
+                "const": "ask"
+              },
+              {
+                "type": "string",
+                "const": "mid"
+              },
+              {
+                "type": "string",
+                "const": "last"
+              }
+            ]
+          },
+          "adjustment": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "none"
+              },
+              {
+                "type": "string",
+                "const": "forward"
+              },
+              {
+                "type": "string",
+                "const": "backward"
+              }
+            ]
+          },
+          "session": {
+            "type": "string",
+            "description": "提供方的交易时段 ID；有多个或未声明时需明确指定",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "source": {
+            "type": "object",
+            "properties": {
+              "providerId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "description": "data_sources 返回的完整来源ID"
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "description": "精确声明版本"
+              },
+              "binding": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "providerId",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "read"
+      ],
+      "usage": {
+        "purpose": "从声明的行情 SourceRef 描述精确品种，固定可复用的连接修订、周期、价格与时段口径，生成 canvas_apply 的 source 绑定。",
+        "inputs": "source 来自 canvas_inspect.market_sources/data_providers；instrument 用 market_instruments 返回的 ref；timeframe 用 instrument.features.timeframes。price_basis/adjustment/session 只有唯一支持值时可省略。",
+        "outputs": "返回 {binding:{source,instrument,spec},chart:{symbol,binding,volume:true},instrument,metadata,validation,operations}。实际连接若存在则固定到 binding.source.binding.connection。validation={scope:'source_description',marketDataRead:false,rendered:false}，未读取 K 线或证明渲染。",
+        "prerequisites": [
+          "来源插件可用，且提供 describeInstrument 和 K 线查询/订阅。"
+        ],
+        "limitations": [
+          "不会修改画布或读取 K 线。STALE_REVISION 重新发现；CONNECTION_CHANGED 核对真实连接；多选口径按目标明确选择，不反复试值。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "canvas_binding"
+      }
+    },
+    {
+      "id": "canvas_apply",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "原子批量修改工作台。workspace 调整三个水平窗口宽度或定位；其余图表操作仅在最左侧图表区内。用户锁定或正在拖动的图表会返回冲突，须重读后处理。不触发交易。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "command_id",
+          "expected_version",
+          "operations"
+        ],
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "description": "本次操作唯一 ID，至少 16 字符；重试保持不变",
+            "minLength": 16,
+            "maxLength": 100,
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "operations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "op"
+              ],
+              "properties": {
+                "op": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "add"
+                    },
+                    {
+                      "type": "string",
+                      "const": "update"
+                    },
+                    {
+                      "type": "string",
+                      "const": "remove"
+                    },
+                    {
+                      "type": "string",
+                      "const": "panels"
+                    },
+                    {
+                      "type": "string",
+                      "const": "focus"
+                    },
+                    {
+                      "type": "string",
+                      "const": "arrange"
+                    },
+                    {
+                      "type": "string",
+                      "const": "workspace"
+                    },
+                    {
+                      "type": "string",
+                      "const": "reorder"
+                    },
+                    {
+                      "type": "string",
+                      "const": "dock"
+                    },
+                    {
+                      "type": "string",
+                      "const": "tile"
+                    }
+                  ]
+                },
+                "id": {
+                  "type": "string",
+                  "description": "目标图表 ID；add 可省略",
+                  "minLength": 1,
+                  "maxLength": 100
+                },
+                "target_id": {
+                  "type": "string",
+                  "description": "reorder 的交换目标或 dock 的插入参照图表",
+                  "minLength": 1,
+                  "maxLength": 100
+                },
+                "side": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "left"
+                    },
+                    {
+                      "type": "string",
+                      "const": "right"
+                    },
+                    {
+                      "type": "string",
+                      "const": "top"
+                    },
+                    {
+                      "type": "string",
+                      "const": "bottom"
+                    }
+                  ]
+                },
+                "tiles": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "required": [
+                          "path",
+                          "chart_id"
+                        ],
+                        "properties": {
+                          "path": {
+                            "type": "string",
+                            "pattern": "^[01]{0,31}$",
+                            "description": "根路径为空字符串；0 是左/上子区，1 是右/下子区"
+                          },
+                          "chart_id": {
+                            "type": "string",
+                            "description": "图表 ID",
+                            "minLength": 1,
+                            "maxLength": 100
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "path",
+                          "axis",
+                          "ratio"
+                        ],
+                        "properties": {
+                          "path": {
+                            "type": "string",
+                            "pattern": "^[01]{0,31}$",
+                            "description": "根路径为空字符串；0 是左/上子区，1 是右/下子区"
+                          },
+                          "axis": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "const": "x"
+                              },
+                              {
+                                "type": "string",
+                                "const": "y"
+                              }
+                            ]
+                          },
+                          "ratio": {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "exclusiveMaximum": 1,
+                            "description": "左侧或上侧区域所占比例"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "maxItems": 63,
+                  "description": "完整的比例平铺树，必须包含所有图表且不重复；空图表场景使用空数组"
+                },
+                "groups": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "description": "图表 ID",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "minItems": 1,
+                    "maxItems": 32
+                  },
+                  "minItems": 1,
+                  "maxItems": 32
+                },
+                "chart": {
+                  "type": "object",
+                  "properties": {
+                    "binding": {
+                      "anyOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "source",
+                            "instrument",
+                            "spec"
+                          ],
+                          "properties": {
+                            "instrument": {
+                              "type": "object",
+                              "required": [
+                                "sourceId",
+                                "instrumentId"
+                              ],
+                              "properties": {
+                                "sourceId": {
+                                  "type": "string",
+                                  "description": "来源 ID",
+                                  "minLength": 1,
+                                  "maxLength": 100
+                                },
+                                "instrumentId": {
+                                  "type": "string",
+                                  "description": "来源内品种 ID",
+                                  "minLength": 1,
+                                  "maxLength": 100
+                                }
+                              },
+                              "additionalProperties": false
+                            },
+                            "spec": {
+                              "type": "object",
+                              "required": [
+                                "timeframe",
+                                "priceBasis",
+                                "adjustment",
+                                "session",
+                                "calendarRevision"
+                              ],
+                              "properties": {
+                                "timeframe": {
+                                  "type": "string",
+                                  "description": "提供方声明的周期，如 1m/1h/1d/1mo",
+                                  "minLength": 1,
+                                  "maxLength": 100
+                                },
+                                "priceBasis": {
+                                  "type": "string",
+                                  "description": "提供方声明的价格口径",
+                                  "minLength": 1,
+                                  "maxLength": 100
+                                },
+                                "adjustment": {
+                                  "type": "string",
+                                  "description": "复权口径",
+                                  "minLength": 1,
+                                  "maxLength": 100
+                                },
+                                "session": {
+                                  "type": "string",
+                                  "description": "交易时段口径",
+                                  "minLength": 1,
+                                  "maxLength": 100
+                                },
+                                "calendarRevision": {}
+                              },
+                              "additionalProperties": false
+                            },
+                            "source": {
+                              "type": "object",
+                              "properties": {
+                                "providerId": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 4096,
+                                  "description": "data_sources 返回的完整来源ID"
+                                },
+                                "revision": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 4096,
+                                  "description": "精确声明版本"
+                                },
+                                "binding": {
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "providerId",
+                                "revision"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "symbol": {
+                      "type": "string",
+                      "description": "仅显示标签；数据身份由 binding 决定",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "style": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "const": "candles"
+                        },
+                        {
+                          "type": "string",
+                          "const": "bars"
+                        },
+                        {
+                          "type": "string",
+                          "const": "line"
+                        },
+                        {
+                          "type": "string",
+                          "const": "area"
+                        }
+                      ]
+                    },
+                    "x": {
+                      "type": "number",
+                      "minimum": -20000,
+                      "maximum": 20000
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": -20000,
+                      "maximum": 20000
+                    },
+                    "width": {
+                      "type": "number",
+                      "minimum": 360,
+                      "maximum": 5000
+                    },
+                    "height": {
+                      "type": "number",
+                      "minimum": 240,
+                      "maximum": 5000
+                    },
+                    "volume": {
+                      "type": "boolean"
+                    },
+                    "averages": {
+                      "type": "boolean"
+                    },
+                    "markers": {
+                      "type": "boolean"
+                    },
+                    "logarithmic": {
+                      "type": "boolean"
+                    },
+                    "collapsed": {
+                      "type": "boolean"
+                    },
+                    "locked": {
+                      "type": "boolean"
+                    },
+                    "sync_group": {
+                      "type": "string",
+                      "description": "默认独立；仅用户明确要求联动拖动/缩放时设置相同非空分组；空字符串取消联动",
+                      "maxLength": 32
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "workspace": {
+                  "type": "object",
+                  "properties": {
+                    "column": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "const": "charts"
+                        },
+                        {
+                          "type": "string",
+                          "const": "agents"
+                        },
+                        {
+                          "type": "string",
+                          "const": "research"
+                        }
+                      ]
+                    },
+                    "widths": {
+                      "type": "object",
+                      "properties": {
+                        "charts": {
+                          "anyOf": [
+                            {
+                              "type": "number",
+                              "minimum": 320,
+                              "maximum": 3000
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "agents": {
+                          "anyOf": [
+                            {
+                              "type": "number",
+                              "minimum": 320,
+                              "maximum": 3000
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "research": {
+                          "anyOf": [
+                            {
+                              "type": "number",
+                              "minimum": 320,
+                              "maximum": 3000
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "panels": {
+                  "type": "object",
+                  "properties": {
+                    "agents": {
+                      "type": "boolean"
+                    },
+                    "account": {
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "mode": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "center"
+                    },
+                    {
+                      "type": "string",
+                      "const": "maximize"
+                    },
+                    {
+                      "type": "string",
+                      "const": "restore"
+                    },
+                    {
+                      "type": "string",
+                      "const": "auto"
+                    }
+                  ]
+                },
+                "columns": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 4
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "height": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 1,
+                      "maximum": 1000000
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "仅 tile：展开图表区的内容高度（像素），超出视口允许纵向滚动；省略保留，null 恢复自适应"
+                }
+              },
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 64
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "view.write"
+      ],
+      "usage": {
+        "purpose": "原子批量修改工作台。workspace 调整三个水平窗口宽度或定位；其余图表操作仅在最左侧图表区内。用户锁定或正在拖动的图表会返回冲突，须重读后处理。不触发交易。",
+        "inputs": "command_id 为16–100字符稳定ID；expected_version 用 canvas_inspect.version；operations 批量表达 add/update/remove/focus/arrange 等。绑定时将 canvas_binding.chart 放入 add/update 的 chart；仅改需要的字段。",
+        "outputs": "宿主画布修改回执，包含更新后的画布/版本；表示布局与绑定被接受。当前显示结果仍见 canvas_inspect.rendering。",
+        "prerequisites": [],
+        "limitations": [
+          "版本冲突重读画布后重新规划补丁并用新 command_id；用户锁/拖动冲突保留用户操作。历史覆盖 warning 不阻断渲染；不要因 warning 重绑相同数据。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "canvas_apply"
+      }
+    },
+    {
+      "id": "canvas_focus",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "先定位最左侧图表窗口，再定位其中的指定图表；最大化仅填满图表窗口，不覆盖 Agents 或研究窗口。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "command_id",
+          "expected_version",
+          "chart_id"
+        ],
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "description": "本次操作唯一 ID，至少 16 字符；重试保持不变",
+            "minLength": 16,
+            "maxLength": 100,
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "chart_id": {
+            "type": "string",
+            "description": "图表 ID",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "center"
+              },
+              {
+                "type": "string",
+                "const": "maximize"
+              },
+              {
+                "type": "string",
+                "const": "restore"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "view.write"
+      ],
+      "usage": {
+        "purpose": "先定位最左侧图表窗口，再定位其中的指定图表；最大化仅填满图表窗口，不覆盖 Agents 或研究窗口。",
+        "inputs": "chart_id 来自 canvas_inspect.charts；expected_version 同当前画布；command_id 标识本次操作；mode 默认为 center，可按需 maximize。",
+        "outputs": "修改后的画布定位回执与版本；最大化只占图表区。",
+        "prerequisites": [],
+        "limitations": [
+          "目标不存在或版本变化时重读；不改变行情绑定、脚本与交易状态。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "canvas_focus"
+      }
+    },
+    {
+      "id": "chart_script",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "读取、挂载或移除不可变指标成果。每张图保留独立实例和参数；仅支持宿主声明的代码语言及静态序列。先用 indicator_publish 交付标准成果，再指定 ArtifactRef 挂载。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "read"
+              },
+              {
+                "type": "string",
+                "const": "put"
+              },
+              {
+                "type": "string",
+                "const": "remove"
+              }
+            ]
+          },
+          "command_id": {
+            "type": "string",
+            "description": "本次操作唯一 ID，至少 16 字符；重试保持不变",
+            "minLength": 16,
+            "maxLength": 100,
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "chart_id": {
+            "type": "string",
+            "description": "目标图表 ID",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "script_id": {
+            "type": "string",
+            "description": "读取、替换或移除的指标实例 ID",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "artifact": {
+            "type": "object",
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "成果 ID",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "revision": {
+                "type": "string",
+                "description": "固定修订",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "digest": {
+                "type": "string",
+                "description": "SHA-256 摘要",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "kind": {
+                "type": "string",
+                "description": "成果类别",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              }
+            },
+            "additionalProperties": false
+          },
+          "parameters": {
+            "type": "object",
+            "patternProperties": {
+              "^.*$": {}
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "view.write"
+      ],
+      "usage": {
+        "purpose": "读取、挂载或移除不可变指标成果。每张图保留独立实例和参数；仅支持宿主声明的代码语言及静态序列。先用 indicator_publish 交付标准成果，再指定 ArtifactRef 挂载。",
+        "inputs": "action=read 可用 script_id 读取实例；action=put 要 command_id/expected_version/chart_id/artifact，可带实例 parameters；remove 指定 script_id。artifact 使用 indicator_publish 的完整引用。",
+        "outputs": "read 返回脚本与宿主支持的语言/参数信息；put/remove 返回画布状态及版本，绘制结果见当前渲染回执。",
+        "prerequisites": [
+          "挂载前已有固定 indicator 成果；配置格式示例在 resources/close-line.json 和 close-line.js。"
+        ],
+        "limitations": [
+          "实例参数属于单张图，不能改写已发布指标。遇到计算错误读脚本诊断；输入为空时先看图表底层 feed/error。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "chart_script"
+      }
+    },
+    {
+      "id": "indicator_publish",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "发布标准 indicator@1 成果。JavaScript 模块须 export compute(input)，输出标准 points/markers；forming 输入、独立 pane 和缺失值由定义明确。固定序列引用已有 DataRef；不将静态数据冒充实时。TypeScript/stream 尚无执行器，不能使用。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "operation_id",
+          "definition"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{16,128}$"
+          },
+          "definition": {
+            "type": "object",
+            "required": [
+              "schemaVersion",
+              "title",
+              "parameters",
+              "inputs",
+              "panes",
+              "series",
+              "implementation"
+            ],
+            "properties": {
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              },
+              "title": {
+                "type": "string",
+                "description": "指标名称",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "description": {
+                "type": "string",
+                "description": "说明",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "parameters": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "type",
+                    "required",
+                    "title"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "参数 ID",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "type": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "const": "integer"
+                        },
+                        {
+                          "type": "string",
+                          "const": "decimal"
+                        },
+                        {
+                          "type": "string",
+                          "const": "boolean"
+                        },
+                        {
+                          "type": "string",
+                          "const": "string"
+                        },
+                        {
+                          "type": "string",
+                          "const": "enum"
+                        }
+                      ]
+                    },
+                    "required": {
+                      "type": "boolean"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "参数标题",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "default": {},
+                    "min": {
+                      "type": "string",
+                      "description": "十进制下限",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "max": {
+                      "type": "string",
+                      "description": "十进制上限",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "choices": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "inputs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "kind",
+                    "binding",
+                    "lookback",
+                    "forming"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "输入 ID",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "kind": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "const": "bars"
+                        },
+                        {
+                          "type": "string",
+                          "const": "quotes"
+                        },
+                        {
+                          "type": "string",
+                          "const": "data"
+                        }
+                      ]
+                    },
+                    "binding": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "const": "chart"
+                        },
+                        {
+                          "type": "string",
+                          "const": "fixed"
+                        }
+                      ]
+                    },
+                    "series": {
+                      "type": "object",
+                      "properties": {},
+                      "additionalProperties": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "revision",
+                        "digest",
+                        "kind",
+                        "schemaVersion"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "成果 ID",
+                          "minLength": 1,
+                          "maxLength": 20000
+                        },
+                        "revision": {
+                          "type": "string",
+                          "description": "固定修订",
+                          "minLength": 1,
+                          "maxLength": 20000
+                        },
+                        "digest": {
+                          "type": "string",
+                          "description": "SHA-256 摘要",
+                          "minLength": 1,
+                          "maxLength": 20000
+                        },
+                        "kind": {
+                          "type": "string",
+                          "description": "成果类别",
+                          "minLength": 1,
+                          "maxLength": 20000
+                        },
+                        "schemaVersion": {
+                          "type": "string",
+                          "const": "1.0.0"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "lookback": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 50000
+                    },
+                    "forming": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "const": "include"
+                        },
+                        {
+                          "type": "string",
+                          "const": "closed_only"
+                        }
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "panes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "placement"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "视区 ID",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "placement": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "const": "main"
+                        },
+                        {
+                          "type": "string",
+                          "const": "separate"
+                        }
+                      ]
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "视区名称",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "maxItems": 5
+              },
+              "series": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "title",
+                    "paneId",
+                    "type",
+                    "unit",
+                    "scale",
+                    "style"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "序列 ID",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "序列名称",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "paneId": {
+                      "type": "string",
+                      "description": "实际视区 ID",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "type": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "const": "line"
+                        },
+                        {
+                          "type": "string",
+                          "const": "area"
+                        },
+                        {
+                          "type": "string",
+                          "const": "histogram"
+                        },
+                        {
+                          "type": "string",
+                          "const": "markers"
+                        }
+                      ]
+                    },
+                    "unit": {
+                      "type": "string",
+                      "description": "单位",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "scale": {
+                      "type": "object",
+                      "required": [
+                        "mode",
+                        "scaleId"
+                      ],
+                      "properties": {
+                        "mode": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "const": "price"
+                            },
+                            {
+                              "type": "string",
+                              "const": "independent"
+                            }
+                          ]
+                        },
+                        "scaleId": {
+                          "type": "string",
+                          "description": "刻度 ID",
+                          "minLength": 1,
+                          "maxLength": 20000
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "style": {
+                      "type": "object",
+                      "required": [
+                        "color"
+                      ],
+                      "properties": {
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$"
+                        },
+                        "width": {
+                          "type": "number",
+                          "minimum": 1,
+                          "maximum": 8
+                        },
+                        "lineStyle": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "const": "solid"
+                            },
+                            {
+                              "type": "string",
+                              "const": "dashed"
+                            },
+                            {
+                              "type": "string",
+                              "const": "dotted"
+                            }
+                          ]
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "maxItems": 12
+              },
+              "implementation": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind",
+                      "entry",
+                      "language",
+                      "runtime",
+                      "dependencies"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "code"
+                      },
+                      "entry": {
+                        "type": "string",
+                        "description": "files中的入口相对路径",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "language": {
+                        "type": "string",
+                        "const": "javascript"
+                      },
+                      "runtime": {
+                        "type": "string",
+                        "const": "sesame-indicator/1"
+                      },
+                      "dependencies": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "revision",
+                            "digest",
+                            "kind",
+                            "schemaVersion"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "description": "成果 ID",
+                              "minLength": 1,
+                              "maxLength": 20000
+                            },
+                            "revision": {
+                              "type": "string",
+                              "description": "固定修订",
+                              "minLength": 1,
+                              "maxLength": 20000
+                            },
+                            "digest": {
+                              "type": "string",
+                              "description": "SHA-256 摘要",
+                              "minLength": 1,
+                              "maxLength": 20000
+                            },
+                            "kind": {
+                              "type": "string",
+                              "description": "成果类别",
+                              "minLength": 1,
+                              "maxLength": 20000
+                            },
+                            "schemaVersion": {
+                              "type": "string",
+                              "const": "1.0.0"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind",
+                      "initial",
+                      "updateMode"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "series"
+                      },
+                      "initial": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "revision",
+                          "digest",
+                          "kind",
+                          "schemaVersion"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "成果 ID",
+                            "minLength": 1,
+                            "maxLength": 20000
+                          },
+                          "revision": {
+                            "type": "string",
+                            "description": "固定修订",
+                            "minLength": 1,
+                            "maxLength": 20000
+                          },
+                          "digest": {
+                            "type": "string",
+                            "description": "SHA-256 摘要",
+                            "minLength": 1,
+                            "maxLength": 20000
+                          },
+                          "kind": {
+                            "type": "string",
+                            "description": "成果类别",
+                            "minLength": 1,
+                            "maxLength": 20000
+                          },
+                          "schemaVersion": {
+                            "type": "string",
+                            "const": "1.0.0"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "updateMode": {
+                        "type": "string",
+                        "const": "static"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "files": {
+            "type": "object",
+            "patternProperties": {
+              "^.*$": {
+                "type": "string",
+                "maxLength": 32768
+              }
+            },
+            "maxProperties": 16
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "resource.publish",
+        "resource.write",
+        "state.write"
+      ],
+      "usage": {
+        "purpose": "发布标准 indicator@1 成果。JavaScript 模块须 export compute(input)，输出标准 points/markers；forming 输入、独立 pane 和缺失值由定义明确。固定序列引用已有 DataRef；不将静态数据冒充实时。TypeScript/stream 尚无执行器，不能使用。",
+        "inputs": "operation_id 固定此次发布；definition 描述 inputs/parameters/panes/series 与 implementation。代码实现选 javascript，files[implementation.entry] 为 export compute(input) 的模块；静态 series 引用 initial DataRef。",
+        "outputs": "已冻结 indicator 的完整 ArtifactRef 与发布回执；后续 chart_script 用该 ref 挂载。",
+        "prerequisites": [
+          "公开定义与模块示例：plugin_read sesame/canvas-control 的 resources/close-line.json / close-line.js；依赖是已有固定成果。"
+        ],
+        "limitations": [
+          "发布不执行或验证图表绘制；TypeScript、stream 尚无执行器。修代码要重新发布新成果，静态序列不能宣称实时。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "indicator_publish"
+      }
+    }
+  ],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "resource.1",
+      "path": "prompt.md",
+      "description": "随包资源 prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "resource.2",
+      "path": "resources/close-line.json",
+      "description": "随包资源 resources/close-line.json",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.3",
+      "path": "skills/market-chart/SKILL.md",
+      "description": "随包资源 skills/market-chart/SKILL.md",
+      "kind": "skill"
+    }
+  ],
+  "hooks": [],
+  "stateCollections": [],
+  "artifactSchemas": [
+    {
+      "id": "indicator",
+      "kind": "indicator",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "required": [
+          "schemaVersion",
+          "title",
+          "parameters",
+          "inputs",
+          "panes",
+          "series",
+          "implementation"
+        ],
+        "properties": {
+          "schemaVersion": {
+            "type": "string",
+            "const": "1.0.0"
+          },
+          "title": {
+            "type": "string",
+            "description": "指标名称",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "description": {
+            "type": "string",
+            "description": "说明",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "parameters": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "type",
+                "required",
+                "title"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "参数 ID",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "type": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "integer"
+                    },
+                    {
+                      "type": "string",
+                      "const": "decimal"
+                    },
+                    {
+                      "type": "string",
+                      "const": "boolean"
+                    },
+                    {
+                      "type": "string",
+                      "const": "string"
+                    },
+                    {
+                      "type": "string",
+                      "const": "enum"
+                    }
+                  ]
+                },
+                "required": {
+                  "type": "boolean"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "参数标题",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "default": {},
+                "min": {
+                  "type": "string",
+                  "description": "十进制下限",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "max": {
+                  "type": "string",
+                  "description": "十进制上限",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "choices": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "kind",
+                "binding",
+                "lookback",
+                "forming"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "输入 ID",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "kind": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "bars"
+                    },
+                    {
+                      "type": "string",
+                      "const": "quotes"
+                    },
+                    {
+                      "type": "string",
+                      "const": "data"
+                    }
+                  ]
+                },
+                "binding": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "chart"
+                    },
+                    {
+                      "type": "string",
+                      "const": "fixed"
+                    }
+                  ]
+                },
+                "series": {
+                  "type": "object",
+                  "properties": {},
+                  "additionalProperties": true
+                },
+                "data": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "revision",
+                    "digest",
+                    "kind",
+                    "schemaVersion"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "成果 ID",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "revision": {
+                      "type": "string",
+                      "description": "固定修订",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "digest": {
+                      "type": "string",
+                      "description": "SHA-256 摘要",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "kind": {
+                      "type": "string",
+                      "description": "成果类别",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "schemaVersion": {
+                      "type": "string",
+                      "const": "1.0.0"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "lookback": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 50000
+                },
+                "forming": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "include"
+                    },
+                    {
+                      "type": "string",
+                      "const": "closed_only"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "panes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "placement"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "视区 ID",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "placement": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "main"
+                    },
+                    {
+                      "type": "string",
+                      "const": "separate"
+                    }
+                  ]
+                },
+                "title": {
+                  "type": "string",
+                  "description": "视区名称",
+                  "minLength": 1,
+                  "maxLength": 20000
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 5
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "title",
+                "paneId",
+                "type",
+                "unit",
+                "scale",
+                "style"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "序列 ID",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "title": {
+                  "type": "string",
+                  "description": "序列名称",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "paneId": {
+                  "type": "string",
+                  "description": "实际视区 ID",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "type": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "line"
+                    },
+                    {
+                      "type": "string",
+                      "const": "area"
+                    },
+                    {
+                      "type": "string",
+                      "const": "histogram"
+                    },
+                    {
+                      "type": "string",
+                      "const": "markers"
+                    }
+                  ]
+                },
+                "unit": {
+                  "type": "string",
+                  "description": "单位",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "scale": {
+                  "type": "object",
+                  "required": [
+                    "mode",
+                    "scaleId"
+                  ],
+                  "properties": {
+                    "mode": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "const": "price"
+                        },
+                        {
+                          "type": "string",
+                          "const": "independent"
+                        }
+                      ]
+                    },
+                    "scaleId": {
+                      "type": "string",
+                      "description": "刻度 ID",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "style": {
+                  "type": "object",
+                  "required": [
+                    "color"
+                  ],
+                  "properties": {
+                    "color": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "width": {
+                      "type": "number",
+                      "minimum": 1,
+                      "maximum": 8
+                    },
+                    "lineStyle": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "const": "solid"
+                        },
+                        {
+                          "type": "string",
+                          "const": "dashed"
+                        },
+                        {
+                          "type": "string",
+                          "const": "dotted"
+                        }
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 12
+          },
+          "implementation": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "kind",
+                  "entry",
+                  "language",
+                  "runtime",
+                  "dependencies"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "code"
+                  },
+                  "entry": {
+                    "type": "string",
+                    "description": "files中的入口相对路径",
+                    "minLength": 1,
+                    "maxLength": 20000
+                  },
+                  "language": {
+                    "type": "string",
+                    "const": "javascript"
+                  },
+                  "runtime": {
+                    "type": "string",
+                    "const": "sesame-indicator/1"
+                  },
+                  "dependencies": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "revision",
+                        "digest",
+                        "kind",
+                        "schemaVersion"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "成果 ID",
+                          "minLength": 1,
+                          "maxLength": 20000
+                        },
+                        "revision": {
+                          "type": "string",
+                          "description": "固定修订",
+                          "minLength": 1,
+                          "maxLength": 20000
+                        },
+                        "digest": {
+                          "type": "string",
+                          "description": "SHA-256 摘要",
+                          "minLength": 1,
+                          "maxLength": 20000
+                        },
+                        "kind": {
+                          "type": "string",
+                          "description": "成果类别",
+                          "minLength": 1,
+                          "maxLength": 20000
+                        },
+                        "schemaVersion": {
+                          "type": "string",
+                          "const": "1.0.0"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "kind",
+                  "initial",
+                  "updateMode"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "series"
+                  },
+                  "initial": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "revision",
+                      "digest",
+                      "kind",
+                      "schemaVersion"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "成果 ID",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "revision": {
+                        "type": "string",
+                        "description": "固定修订",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "digest": {
+                        "type": "string",
+                        "description": "SHA-256 摘要",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "kind": {
+                        "type": "string",
+                        "description": "成果类别",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "schemaVersion": {
+                        "type": "string",
+                        "const": "1.0.0"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "updateMode": {
+                    "type": "string",
+                    "const": "static"
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  ]
+}

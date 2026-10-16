@@ -1,3 +1,4 @@
+import { ownership } from './records.js';
 import { promises as fs, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve, win32 } from 'node:path';
@@ -105,30 +106,30 @@ export class Tester {
   }
   get(key) { return { ...this.storage.get('mt5_backtest', key), passes: this.storage.list('mt5_pass').filter(p => p.backtest_id === key) }; }
   list(projectId) { return this.storage.list('mt5_backtest').filter(j => !projectId || j.project_id === projectId); }
-  update(key, changes) { const value = this.storage.update('mt5_backtest', key, changes); this.mt5.runObserver?.backtest(this.get(key)); return value; }
-  queue(buildId, config, parameterSpace = {}, owner = null, frozenRiskLimits = null) {
+  update(key, changes) { const value = this.storage.update('mt5_backtest', key, changes); this.mt5.runObserver?.backtest(this.get(key)).catch(() => {}); return value; }
+  async queue(buildId, config, parameterSpace = {}, owner = null, frozenRiskLimits = null, host = this.mt5.host) {
     this.authorize(owner); requireValue(!this.closing, 'Tester 正在关闭', 503, 'tester_unavailable');
     if (!this.available()) throw dependencyError('tester', this.storage.directory, ['MT5 Tester', 'Windows Python native process controller', ...(process.platform === 'win32' ? [] : ['Wine'])]);
     requireValue(!this.storage.list('mt5_pass').some(p => p.status === 'unknown' && (p.process_id || p.cleanup_failed)), '先前 Tester 的原生清理状态未确认；请先核对该回测实例，再创建新任务', 409, 'tester_recovery_required');
     const build = this.storage.get('mt5_build', buildId);
     requireValue(build.status === 'succeeded' && build.ex5_sha256 && build.sdk_version === SDK_VERSION, '需要使用当前 SDK 编译成功的冻结构建');
-    const project = this.storage.get('mt5_project', build.project_id), variants = testVariants(config, parameterSpace).map(parameters => translationBinding(this.mt5.host, this.mt5, buildId, { ...config, parameters })?.native ?? parameters);
+    const project = this.storage.get('mt5_project', build.project_id), variants = await Promise.all(testVariants(config, parameterSpace).map(async parameters => (await translationBinding(host, this.mt5, buildId, { ...config, parameters }))?.native ?? parameters));
     const source = this.storage.get('mt5_revision', `${build.project_id}:${build.revision}`);
     const checked = projectFiles(source.files), implementation = this.mt5.validateSource(project, checked);
     if (checked.engine) requireValue(build.engine_digest === checked.engine.digest && build.generated_digest === checked.engine.generated_digest, '构建与已校验源码身份不一致，请重新编译', 409, 'engine_mismatch');
     requireValue(implementation.status !== 'draft', `此构建的策略模块待实现：${implementation.pending_modules.join(', ')}。请完成模块代码和 strategy.json 声明后保存、重新编译。`, 409, 'strategy_incomplete');
     const account = this.mt5.official.config.account;
     requireValue(account.login && account.server && account.password, '真实 Tester 需要已绑定账户的登录密码；先读取 connection skill，通过 mt5_import_configuration 导入账户凭据引用。', 409, 'mt5_account_required');
-    const ownership = owner ? this.mt5.host.workspace.owner(owner) ?? {} : {};
-    const job = { ...ownership, id: id('bt'), version: 1, conversation_id: owner, project_id: build.project_id, build_id: buildId, revision: build.revision,
+    const owned = owner ? ownership(host) : {};
+    const job = { ...owned, id: id('bt'), version: 1, conversation_id: owner, project_id: build.project_id, build_id: buildId, revision: build.revision,
       artifact_digest: build.ex5_sha256, connection_version: this.mt5.official.config.version, config: testerConfig(config), parameter_space: structuredClone(parameterSpace), risk_limits: riskLimits(frozenRiskLimits ?? project.test_risk_limits),
       status: 'queued', pass_count: variants.length, completed_pass_count: 0, best_pass_id: null, error: null, created_at: now(), updated_at: now(), completed_at: null };
     return this.storage.transaction(() => {
       this.storage.put('mt5_backtest', job, 'mt5.backtest.updated');
-      variants.forEach((parameters, index) => this.storage.put('mt5_pass', { ...ownership, id: id('pass'), backtest_id: job.id, build_id: buildId, label: `P${String(index + 1).padStart(3, '0')}`,
+      variants.forEach((parameters, index) => this.storage.put('mt5_pass', { ...owned, id: id('pass'), backtest_id: job.id, build_id: buildId, label: `P${String(index + 1).padStart(3, '0')}`,
         status: 'queued', connection_version: job.connection_version, config: { ...job.config, parameters }, risk_limits: job.risk_limits, artifact_digest: build.ex5_sha256,
         parameters, metrics: null, dataset_ids: [], error: null, diagnostics: '', created_at: now(), completed_at: null }));
-      const result = this.get(job.id); this.mt5.runObserver?.backtest(result); return result;
+      const result = this.get(job.id); this.mt5.runObserver?.backtest(result).catch(() => {}); return result;
     });
   }
   start(key) {
@@ -257,7 +258,7 @@ export class Tester {
       try {
         const receipt = await this.runProcess(this.mt5.native, { terminal: join(runner, 'terminal64.exe'), ini, directory: runner }, { signal, onStarted: (pid, controllerPid) => {
           this.storage.put('mt5_pass', { ...this.storage.get('mt5_pass', pass.id), status: 'running', process_id: pid, controller_pid: controllerPid });
-          this.mt5.runObserver?.backtest(this.get(pass.backtest_id));
+          this.mt5.runObserver?.backtest(this.get(pass.backtest_id)).catch(() => {});
         } });
         logs = receipt.diagnostics; cleanupConfirmed = true;
         this.storage.put('mt5_pass', { ...this.storage.get('mt5_pass', pass.id), process_cleanup: receipt.cleanup });
@@ -276,7 +277,7 @@ export class Tester {
       if (existsSync(nativeReport)) await fs.copyFile(nativeReport, join(archive, 'native-report.htm'));
       await fs.writeFile(join(archive, 'actual-inputs.json'), JSON.stringify(actualInputs, null, 2));
       this.register(pass, parsed, actualInputs);
-      this.mt5.runObserver?.result(pass, parsed);
+      await this.mt5.runObserver?.result(pass, parsed);
     } catch (error) {
       if (error.code === 'ENOENT') throw new Error('MT5 未生成本次回测的完成结果；请查看实际 Tester 日志、历史数据及 SDK 接入');
       throw error;
@@ -336,7 +337,7 @@ export class Tester {
         provenance: { kind: 'observed', dataset_id: key, source_kind: 'external', provider: 'mt5/strategy-tester', as_of: now(), data_hash: digest(JSON.stringify(rows)), engine_version: `mt5-${result.terminal_build}/sdk-${result.sdk_version}`, time_range: null } };
     });
     this.storage.transaction(() => {
-      datasets.forEach(data => this.mt5.host.datasets.register(data));
+      datasets.forEach(data => this.storage.put('dataset', data));
       this.storage.put('mt5_pass', { ...this.storage.get('mt5_pass', pass.id), status: 'succeeded', parameters: Object.keys(actualInputs).length ? Object.fromEntries(Object.entries(actualInputs).filter(([key]) => !key.startsWith('Product_'))) : pass.parameters, actual_inputs: actualInputs, metrics: result.metrics, dataset_ids: datasets.map(d => d.id),
         engine_version: `mt5-${result.terminal_build}/sdk-${result.sdk_version}`, trace_truncated: result.trace_truncated, equity_truncated: result.equity_truncated, completed_at: now() });
     });

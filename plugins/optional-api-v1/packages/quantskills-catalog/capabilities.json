@@ -1,0 +1,728 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "capabilities": [
+    {
+      "id": "catalog_search",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Search QuantSkills catalog by keyword in name or description",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Keyword to search",
+            "maxLength": 2000,
+            "minLength": 1
+          },
+          "limit": {
+            "type": "integer",
+            "default": 20,
+            "maximum": 100,
+            "minimum": 1
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "repo_url": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "subcategory": {
+                  "type": "string"
+                },
+                "stage": {
+                  "type": "string"
+                },
+                "asset_type": {
+                  "type": "string"
+                },
+                "verification_level": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "count": {
+            "type": "number"
+          },
+          "query": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "binding": {
+        "type": "mcp",
+        "server": "analysis",
+        "name": "catalog_search"
+      },
+      "usage": {
+        "purpose": "Search QuantSkills catalog by keyword in name or description",
+        "inputs": "Use the catalog query fields; omitted optional filters mean no restriction.",
+        "outputs": "Structured JSON fields follow outputSchema; original source and version are preserved.",
+        "prerequisites": [
+          "Python 3 available to the host MCP transport."
+        ],
+        "limitations": [
+          "Results describe supplied content or the bundled snapshot, not live network observations."
+        ],
+        "examples": [
+          {
+            "input": {
+              "query": "alpha191",
+              "limit": 10
+            },
+            "output": {
+              "results": [
+                {
+                  "name": "skill-factor-alpha191-alpha101",
+                  "repo_url": "https://github.com/quantskills/skill-factor-alpha191-alpha101",
+                  "category": "02 因子研发工具箱",
+                  "subcategory": "因子生成（26）",
+                  "stage": "factor-generation",
+                  "asset_type": "skill",
+                  "verification_level": "pending_review"
+                }
+              ],
+              "count": 1,
+              "query": "alpha191",
+              "version": "2.1.0"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "catalog_filter",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Filter catalog by category, workflow stage, asset type, or verification level",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "description": "Category name (e.g. '02 因子研发工具箱')",
+            "maxLength": 2000
+          },
+          "stage": {
+            "type": "string",
+            "description": "Workflow stage (e.g. 'data-ingestion')",
+            "maxLength": 2000
+          },
+          "asset_type": {
+            "type": "string",
+            "description": "Asset type: skill, agent, template, infrastructure",
+            "maxLength": 2000
+          },
+          "verification_level": {
+            "type": "string",
+            "description": "Verification level: published_endpoint, pending_review, unknown",
+            "maxLength": 2000
+          },
+          "limit": {
+            "type": "integer",
+            "default": 50,
+            "maximum": 1000,
+            "minimum": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "repo_url": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "subcategory": {
+                  "type": "string"
+                },
+                "stage": {
+                  "type": "string"
+                },
+                "asset_type": {
+                  "type": "string"
+                },
+                "verification_level": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "count": {
+            "type": "number"
+          },
+          "filters": {
+            "type": "object",
+            "properties": {
+              "category": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": true
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "binding": {
+        "type": "mcp",
+        "server": "analysis",
+        "name": "catalog_filter"
+      },
+      "usage": {
+        "purpose": "Filter catalog by category, workflow stage, asset type, or verification level",
+        "inputs": "Use the catalog query fields; omitted optional filters mean no restriction.",
+        "outputs": "Structured JSON fields follow outputSchema; original source and version are preserved.",
+        "prerequisites": [
+          "Python 3 available to the host MCP transport."
+        ],
+        "limitations": [
+          "Results describe supplied content or the bundled snapshot, not live network observations."
+        ],
+        "examples": [
+          {
+            "input": {
+              "category": "02 因子研发工具箱",
+              "limit": 5
+            },
+            "output": {
+              "results": [
+                {
+                  "name": "skill-factor-idea-generation",
+                  "repo_url": "https://github.com/quantskills/skill-factor-idea-generation",
+                  "category": "02 因子研发工具箱",
+                  "subcategory": "因子创意（2）",
+                  "stage": "factor-generation",
+                  "asset_type": "skill",
+                  "verification_level": "pending_review"
+                },
+                {
+                  "name": "skill-factormad-debate-factor-mining",
+                  "repo_url": "https://github.com/quantskills/skill-factormad-debate-factor-mining",
+                  "category": "02 因子研发工具箱",
+                  "subcategory": "因子创意（2）",
+                  "stage": "factor-generation",
+                  "asset_type": "skill",
+                  "verification_level": "pending_review"
+                },
+                {
+                  "name": "skill-a1-lhb-tracking",
+                  "repo_url": "https://github.com/quantskills/skill-a1-lhb-tracking",
+                  "category": "02 因子研发工具箱",
+                  "subcategory": "因子生成（26）",
+                  "stage": "factor-generation",
+                  "asset_type": "skill",
+                  "verification_level": "pending_review"
+                },
+                {
+                  "name": "skill-alpha-a06-hotmoney-reversal",
+                  "repo_url": "https://github.com/quantskills/skill-alpha-a06-hotmoney-reversal",
+                  "category": "02 因子研发工具箱",
+                  "subcategory": "因子生成（26）",
+                  "stage": "factor-generation",
+                  "asset_type": "skill",
+                  "verification_level": "pending_review"
+                },
+                {
+                  "name": "skill-alpha-a3-streak-leader-relay",
+                  "repo_url": "https://github.com/quantskills/skill-alpha-a3-streak-leader-relay",
+                  "category": "02 因子研发工具箱",
+                  "subcategory": "因子生成（26）",
+                  "stage": "evaluation",
+                  "asset_type": "skill",
+                  "verification_level": "pending_review"
+                }
+              ],
+              "count": 5,
+              "filters": {
+                "category": "02 因子研发工具箱",
+                "limit": 5
+              },
+              "version": "2.1.0"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "catalog_list_categories",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "List all categories with counts",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "categories": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "number"
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "total_items": {
+            "type": "number"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "binding": {
+        "type": "mcp",
+        "server": "analysis",
+        "name": "catalog_list_categories"
+      },
+      "usage": {
+        "purpose": "List all categories with counts",
+        "inputs": "Use the catalog query fields; omitted optional filters mean no restriction.",
+        "outputs": "Structured JSON fields follow outputSchema; original source and version are preserved.",
+        "prerequisites": [
+          "Python 3 available to the host MCP transport."
+        ],
+        "limitations": [
+          "Results describe supplied content or the bundled snapshot, not live network observations."
+        ],
+        "examples": [
+          {
+            "input": {},
+            "output": {
+              "categories": [
+                {
+                  "id": "01",
+                  "name": "01 数据接口与数据仓库",
+                  "count": 7
+                },
+                {
+                  "id": "02",
+                  "name": "02 因子研发工具箱",
+                  "count": 44
+                },
+                {
+                  "id": "03",
+                  "name": "03 市场与标的分析",
+                  "count": 44
+                },
+                {
+                  "id": "04",
+                  "name": "04 风险监控与预警",
+                  "count": 22
+                },
+                {
+                  "id": "05",
+                  "name": "05 策略回测与交易工具",
+                  "count": 25
+                },
+                {
+                  "id": "06",
+                  "name": "06 投研模型与研究复现",
+                  "count": 30
+                },
+                {
+                  "id": "07",
+                  "name": "07 研究验证与质量工具",
+                  "count": 12
+                },
+                {
+                  "id": "08",
+                  "name": "08 资讯搜索与知识分析",
+                  "count": 10
+                },
+                {
+                  "id": "09",
+                  "name": "09 量化智能体与自动化",
+                  "count": 14
+                },
+                {
+                  "id": "10",
+                  "name": "10 基础设施与模板",
+                  "count": 6
+                }
+              ],
+              "total_items": 214,
+              "version": "2.1.0"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "catalog_get_item",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Get full details of a catalog item by name",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Exact item name (repo name)",
+            "maxLength": 2000,
+            "minLength": 1
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "found": {
+            "type": "boolean"
+          },
+          "item": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "repo_url": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "subcategory": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "stage": {
+                "type": "string"
+              },
+              "input": {
+                "type": "string"
+              },
+              "output": {
+                "type": "string"
+              },
+              "interface_status": {
+                "type": "string"
+              },
+              "screenshot": {
+                "type": "string"
+              },
+              "fetched_at": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "asset_type": {
+                "type": "string"
+              },
+              "data_dependencies": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "mt5agent_integration": {
+                "type": "string"
+              },
+              "verification_level": {
+                "type": "string"
+              },
+              "workflow_stage": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "binding": {
+        "type": "mcp",
+        "server": "analysis",
+        "name": "catalog_get_item"
+      },
+      "usage": {
+        "purpose": "Get full details of a catalog item by name",
+        "inputs": "Use the catalog query fields; omitted optional filters mean no restriction.",
+        "outputs": "Structured JSON fields follow outputSchema; original source and version are preserved.",
+        "prerequisites": [
+          "Python 3 available to the host MCP transport."
+        ],
+        "limitations": [
+          "Results describe supplied content or the bundled snapshot, not live network observations."
+        ],
+        "examples": [
+          {
+            "input": {
+              "name": "skill-factor-alpha191-alpha101"
+            },
+            "output": {
+              "found": true,
+              "item": {
+                "name": "skill-factor-alpha191-alpha101",
+                "repo_url": "https://github.com/quantskills/skill-factor-alpha191-alpha101",
+                "category": "02 因子研发工具箱",
+                "subcategory": "因子生成（26）",
+                "description": "从长表OHLCV CSV批量计算Alpha101和Alpha191因子并输出宽表CSV。",
+                "stage": "factor-generation",
+                "input": "—",
+                "output": "—",
+                "interface_status": "待维护者审核 / 无公开端点",
+                "screenshot": "",
+                "fetched_at": "2026-10-03T14:34:06.311Z",
+                "source": "https://raw.githubusercontent.com/quantskills/quantskills/main/README.md",
+                "asset_type": "skill",
+                "data_dependencies": [
+                  "OHLCV/CSV data"
+                ],
+                "mt5agent_integration": "file_import",
+                "verification_level": "pending_review",
+                "workflow_stage": "研究信号 / Research signal"
+              },
+              "version": "2.1.0"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "catalog_recommend",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Route a user need to independently selectable methods and backend choices. Consolidate only sources of the same method. Does not install plugins or check availability.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "need": {
+            "type": "string",
+            "enum": [
+              "market-data",
+              "market-explanation",
+              "technical-analysis",
+              "strategy-research",
+              "factor-research",
+              "native-backtest",
+              "report",
+              "judgment-review"
+            ]
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "ict",
+              "price-action",
+              "elliott-wave",
+              "wyckoff",
+              "dow-theory",
+              "behavioral-finance",
+              "institutional-analysis",
+              "narrative-analysis"
+            ],
+            "description": "Optional explicit method for technical-analysis or market-explanation. Without it return choices only; do not automatically load all methods."
+          }
+        },
+        "required": [
+          "need"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "binding": {
+        "type": "mcp",
+        "server": "analysis",
+        "name": "catalog_recommend"
+      },
+      "usage": {
+        "purpose": "Route a user need to independently selectable methods and backend choices. Consolidate only sources of the same method. Does not install plugins or check availability.",
+        "inputs": "Use the catalog query fields; omitted optional filters mean no restriction.",
+        "outputs": "Structured catalog entries from the bundled snapshot.",
+        "prerequisites": [
+          "Python 3 available to the host MCP transport."
+        ],
+        "limitations": [
+          "Results describe supplied content or the bundled snapshot, not live network observations."
+        ],
+        "examples": [
+          {
+            "input": {
+              "need": "native-backtest"
+            },
+            "output": {
+              "need": "native-backtest",
+              "method": null,
+              "workflow": {
+                "purpose": "在选定的成熟引擎上运行固定策略与数据，保存真实结果。",
+                "primary_plugins": [],
+                "shared_plugins": [
+                  "sesame/data-access",
+                  "sesame/reports"
+                ],
+                "backend_choices": [
+                  "sesame/mt5",
+                  "sesame/vnpy",
+                  "sesame/backtrader"
+                ],
+                "selection": "MQL5 用 MT5 Tester、兼容 CTA Python 用 vn.py、Backtrader Strategy 用 Cerebro。撮合假设不可互换；对比结果须统一日期、成本、复权、数量与期末仓位处理。",
+                "reference_names": [
+                  "skill-backtest",
+                  "skill-factor-backtest",
+                  "skill-backtest-assumption-check"
+                ]
+              },
+              "selection_required": false,
+              "references": [
+                {
+                  "name": "skill-backtest",
+                  "repo_url": "https://github.com/quantskills/skill-backtest",
+                  "category": "05 策略回测与交易工具",
+                  "subcategory": "回测引擎（2）",
+                  "stage": "backtesting",
+                  "asset_type": "skill",
+                  "verification_level": "pending_review"
+                },
+                {
+                  "name": "skill-factor-backtest",
+                  "repo_url": "https://github.com/quantskills/skill-factor-backtest",
+                  "category": "05 策略回测与交易工具",
+                  "subcategory": "回测引擎（2）",
+                  "stage": "backtesting",
+                  "asset_type": "skill",
+                  "verification_level": "pending_review"
+                },
+                {
+                  "name": "skill-backtest-assumption-check",
+                  "repo_url": "https://github.com/quantskills/skill-backtest-assumption-check",
+                  "category": "07 研究验证与质量工具",
+                  "subcategory": "工作流审计（2）",
+                  "stage": "reporting",
+                  "asset_type": "skill",
+                  "verification_level": "pending_review"
+                }
+              ],
+              "availability": "not_checked",
+              "next_steps": [
+                "Use the declared plugin catalog capability to inspect exact published IDs and versions.",
+                "Choose capabilities that meet the task objective; installation includes prerequisite checks.",
+                "Read the selected SKILL and retain its sources; directory references are not imported implementations or proof of trading performance."
+              ],
+              "snapshot_date": "2026-10-03T14:34:06.311Z",
+              "version": "2.1.0"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "knowledge-0",
+      "path": "skills/quantskills-catalog/PROVENANCE.md",
+      "description": "QuantSkills 目录 — skills/quantskills-catalog/PROVENANCE.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-1",
+      "path": "skills/quantskills-catalog/SKILL.md",
+      "description": "QuantSkills 目录 — skills/quantskills-catalog/SKILL.md",
+      "kind": "skill"
+    }
+  ],
+  "hooks": [],
+  "stateCollections": [],
+  "artifactSchemas": []
+}

@@ -1,3 +1,4 @@
+import { runWorker } from './worker-call.js';
 import { Decimal } from '@sesame/plugin-sdk/decimal';
 import { check, digest, canonical, decimal } from '@sesame/plugin-sdk/protocol';
 import { randomUUID } from 'node:crypto';
@@ -28,7 +29,7 @@ export class AKShareProvider {
     bound(context, instrument) { check(this.bindings.has(context.bindingId), 'Binding no longer exists', 'CONNECTION_CHANGED'); const value = this.bindings.get(context.bindingId); if (instrument) {
         check(instrument.sourceId === value.sourceId && /^\d{6}$/.test(instrument.instrumentId), 'Wrong source or A-share code', 'INSTRUMENT_MISMATCH');
     } return value; }
-    async fetch(name, args, context) { return this.host.environment.executeWorker('worker.js', { operation: 'query', interface: name, arguments: args }, { signal: context.signal, timeoutMs: 120000 }); }
+    async fetch(name, args, context) { return runWorker(this.host, { operation: 'query', interface: name, arguments: args }, { signal: context.signal, timeoutMs: 120000 }); }
     async page(input, context, load) {
         const { page = {}, ...filters } = input, limit = page.limit ?? 100;
         check(Number.isInteger(limit) && limit > 0 && limit <= 2000, 'page.limit must be 1..2000');

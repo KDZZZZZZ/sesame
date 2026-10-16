@@ -1,3 +1,5 @@
+import { readArtifact, readBytes, publishArtifact as publish } from './resource-io.js';
+import { records, pluginIdentity } from './records.js';
 import { promises as fs } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
@@ -17,33 +19,32 @@ const limitations = [
   'Run ownership, pending intents, partial fills and restart reconciliation require native instrumentation. Manual or external trades have unknown strategy correlation.',
   'Native Tester evidence requires the packaged Product telemetry/result SDK. A compile receipt alone proves no backtest or live behavior.',
 ];
-const resources = ['tools.json', 'target/README.md', 'target/translation-file.md', 'target/conformance.md', 'target/sdk-integration.md', 'target/examples/Strategy.mq5', 'skills/svl-mql5/SKILL.md', 'backend/sdk/Expert.mqh', 'backend/sdk/Telemetry.mqh', 'backend/sdk/Conformance.mqh', 'backend/sdk/FrozenInputs.mqh', 'target/examples/FrozenTimeline.mq5', 'backend/sdk/Trade.mqh', 'backend/sdk/Results.mqh', 'backend/sdk/Risk.mqh', 'backend/sdk/Visual.mqh'];
+const resources = ['capabilities.json', 'target/README.md', 'target/translation-file.md', 'target/conformance.md', 'target/sdk-integration.md', 'target/examples/Strategy.mq5', 'skills/svl-mql5/SKILL.md', 'backend/sdk/Expert.mqh', 'backend/sdk/Telemetry.mqh', 'backend/sdk/Conformance.mqh', 'backend/sdk/FrozenInputs.mqh', 'target/examples/FrozenTimeline.mq5', 'backend/sdk/Trade.mqh', 'backend/sdk/Results.mqh', 'backend/sdk/Risk.mqh', 'backend/sdk/Visual.mqh'];
 const root = fileURLToPath(new URL('../', import.meta.url));
 const unknown = reason => ({ status: 'unknown', reason });
 const value = value => ({ status: 'value', value });
-const publish = (host, operationId, kind, content, dependencies = [], blobs = []) => host.artifacts.publish({ operationId, manifest: { kind, schemaVersion: '1.0.0', content, dependencies, blobs } });
 
 export async function targetProfile(host) {
-  const blobs = [];
-  for (const path of resources) blobs.push({ path, mediaType: path.endsWith('.md') ? 'text/markdown' : 'text/plain', ...host.artifacts.blob(await fs.readFile(join(root, path))) });
-  const tools = JSON.parse(await fs.readFile(join(root, 'tools.json'), 'utf8')).filter(tool => ['mt5_translation', 'mt5_translation_file', 'mt5_conformance', 'mt5_compile', 'mt5_backtest', 'mt5_deployment'].includes(tool.name)).map(tool => ({ pluginId: host.plugin.id, toolId: tool.name, schemaDigest: valueDigest(tool.parameters) }));
+  const files = {};
+  for (const path of resources) files[path] = await fs.readFile(join(root, path));
+  const tools = JSON.parse(await fs.readFile(join(root, 'capabilities.json'), 'utf8')).capabilities.filter(tool => ['mt5_translation', 'mt5_translation_file', 'mt5_conformance', 'mt5_compile', 'mt5_backtest', 'mt5_deployment'].includes(tool.id)).map(tool => ({ pluginId: pluginIdentity(host).id, toolId: tool.id, schemaDigest: valueDigest(tool.inputSchema) }));
   const content = { schemaVersion: '1.0.0', id: 'sesame.mt5.mql5', version: '1.1.0', modes: ['backtest', 'live'], language: { name: 'MQL5', versions: ['5'] }, platforms: ['win32', 'darwin', 'linux'],
     runtime: { engine: 'MetaTrader 5', versions: ['observed at execution'], entryDescription: 'Experts/Strategy.mq5, compiled by the frozen installed MetaEditor; the Agent supplies the SVL translation.', resources },
     svl: svlCapabilities(), execution: executionCapabilities(),
     semantics: { dataGranularity: ['tick', 'forming_bar', 'closed_bar'], timeBases: ['wall'], positionModes: ['netting', 'hedging'], quantityUnits: ['lot'], orderTypes: ['market', 'limit', 'stop', 'stop_limit'], timeInForce: ['gtc', 'day', 'ioc', 'fok'], numericalPolicy: 'target/README.md#numerical-policy', recoveryPolicy: 'target/README.md#recovery' },
     resources: resources.map(path => ({ role: path.endsWith('.mqh') ? 'sdk' : 'guide', path })), workflows: [{ purpose: 'Translate a frozen SVL source into native MQL5', skill: 'skills/svl-mql5/SKILL.md', tools }],
-    verification: { driver: { pluginId: host.plugin.id, toolId: 'mt5_conformance' }, supportsEventReplay: 'instrumented-fixture-only', supportsInjectedResponses: false, traceLevel: 'function-node-and-event', nativeSupport: 'per-translation-evidence-required', limitations },
-    translation: { method: 'agent-authored', automaticOperators: [], numericalEquivalence: 'requires_target_evidence' }, plugin: host.plugin };
-  return publish(host, `target-${valueDigest({ content, blobs })}`, 'strategy.target', content, [], blobs);
+    verification: { driver: { pluginId: pluginIdentity(host).id, toolId: 'mt5_conformance' }, supportsEventReplay: 'instrumented-fixture-only', supportsInjectedResponses: false, traceLevel: 'function-node-and-event', nativeSupport: 'per-translation-evidence-required', limitations },
+    translation: { method: 'agent-authored', automaticOperators: [], numericalEquivalence: 'requires_target_evidence' }, plugin: pluginIdentity(host) };
+  return publish(host, `target-${valueDigest({ content, files: Object.entries(files).map(([path, bytes]) => [path, valueDigest(bytes)]) })}`, 'strategy.target', content, [], files);
 }
 
-export function readSource(host, ref) {
-  const artifact = host.artifacts.read(ref);
+export async function readSource(host, ref) {
+  const artifact = await readArtifact(host, ref);
   requireValue(ref.kind === 'strategy.source', '需要冻结的 SVL 源成果');
   const path = artifact.manifest.content.sourcePath;
   const blob = artifact.manifest.blobs.find(blob => blob.path === path);
   requireValue(blob, '源成果缺少声明的 SVL 文件');
-  const checked = validateSource(host.artifacts.readBlob(blob).toString('utf8'));
+  const checked = validateSource((await readBytes(host, ref, blob.path)).toString('utf8'));
   requireValue(checked.sourceDigest === artifact.manifest.content.sourceDigest, 'SVL 源语义摘要与成果不一致');
   return checked;
 }
@@ -65,14 +66,14 @@ export function validateMapping(source, files, sourceMap) {
 export async function registerTranslation(host, mt5, args) {
   args = normalizeTranslation(args);
   const operation = valueDigest(args.operation_id).slice(7), fingerprint = valueDigest(args);
-  return host.storage.idempotentAsync(`translation-${operation}`, fingerprint, async () => {
-    const receipt = host.storage.get('mt5_translation_receipt', operation, true);
+  return records(host).idempotentAsync(`translation-${operation}`, fingerprint, async () => {
+    const receipt = records(host).get('mt5_translation_receipt', operation, true);
     if (receipt) {
       requireValue(receipt.fingerprint === fingerprint, '翻译操作 ID 已用于不同内容', 409, 'idempotency_conflict');
       return receipt.result;
     }
-    const checked = readSource(host, args.source), target = host.artifacts.read(args.target);
-    requireValue(args.target.kind === 'strategy.target' && target.producer.id === host.plugin.id && target.manifest.content.id === 'sesame.mt5.mql5', '需要 MT5 插件发布的固定目标 profile');
+    const checked = await readSource(host, args.source), target = await readArtifact(host, args.target);
+    requireValue(args.target.kind === 'strategy.target' && target.producer.id === pluginIdentity(host).id && target.manifest.content.id === 'sesame.mt5.mql5', '需要 MT5 插件发布的固定目标 profile');
     const admission = assertTargetCapabilities(checked.source, target.manifest.content);
     requireValue(['backtest', 'live'].includes(args.mode), 'MT5 翻译模式为 backtest 或 live');
     requireValue(typeof args.title === 'string' && args.title.trim() && args.title.length <= 120, '需要 1–120 字符工程名称');
@@ -88,34 +89,34 @@ export async function registerTranslation(host, mt5, args) {
     for (const item of adaptations) {
       requireValue(typeof item.code === 'string' && typeof item.description === 'string' && item.description.trim() && ['equivalent', 'limited', 'unsupported'].includes(item.status) && Array.isArray(item.nodes) && item.nodes.every(id => nodes.some(node => sourceRuleId(node) === id)) && Array.isArray(item.evidence), '翻译适配声明无效');
       requireValue(item.status !== 'equivalent', '登记源码不能声明原生语义等价；先标 limited，再用 mt5_conformance 固定实际执行证据。单个 fixture 通过也不是普遍等价证明。');
-      for (const ref of item.evidence) host.artifacts.read(ref);
+      for (const ref of item.evidence) await readArtifact(host, ref);
     }
     requireValue(!adaptations.some(item => item.status === 'unsupported'), '翻译含无法实现的节点；先修订源，不能忽略规则');
-    const externalInputs = externalInputAdaptation(host, checked.source, args.mode, source.files, adaptations);
+    const externalInputs = await externalInputAdaptation(host, checked.source, args.mode, source.files, adaptations);
     if (externalInputs) admission.externalInputs = externalInputs;
     const numericNodes = nodes.filter(node => /^(math|series|compare|order)\./.test(node.op)).map(sourceRuleId);
     const declared = [...adaptations, ...(numericNodes.length ? [{ code: 'MQL5_BINARY64', nodes: numericNodes, status: 'limited', description: limitations[0], evidence: [] }] : [])];
-    const start = host.storage.idempotent(`translation-start-${operation}`, fingerprint, () => ({ timestamp: Date.now(), projectId: id('project'), created: now(), compileAvailable: Boolean(mt5.status().compile) }));
-    const timestamp = start.timestamp, environment = publish(host, `${operation}-environment`, 'environment', { profile: args.target, plugin: host.plugin, observedAt: timestamp, platform: process.platform,
+    const start = records(host).idempotent(`translation-start-${operation}`, fingerprint, () => ({ timestamp: Date.now(), projectId: id('project'), created: now(), compileAvailable: Boolean(mt5.status().compile) }));
+    const timestamp = start.timestamp, environment = await publish(host, `${operation}-environment`, 'environment', { profile: args.target, plugin: pluginIdentity(host), observedAt: timestamp, platform: process.platform,
       runtime: { name: 'MetaTrader 5', version: 'not_observed', digest: unknown('Native execution version is verified by the actual compiler/tester, not assumed at translation time') }, dependencies: [], capabilities: (start.compileAvailable ?? Boolean(mt5.status().compile)) ? ['native.compile.available'] : [], evidence: [] }, [args.target]);
-    const lock = publish(host, `${operation}-lock`, 'dependency-lock', { plugin: host.plugin, sdkVersion: SDK_VERSION, target: args.target, nativeStandardLibrary: unknown('Frozen by mt5_compile for each build') }, [args.target]);
-    const blobs = Object.entries(source.files).map(([path, content]) => ({ path, mediaType: path.endsWith('.json') ? 'application/json' : 'text/plain', ...host.artifacts.blob(content) }));
+    const lock = await publish(host, `${operation}-lock`, 'dependency-lock', { plugin: pluginIdentity(host), sdkVersion: SDK_VERSION, target: args.target, nativeStandardLibrary: unknown('Frozen by mt5_compile for each build') }, [args.target]);
+    const blobs = Object.entries(source.files).map(([path, content]) => ({ path, digest: valueDigest(content), size: Buffer.byteLength(content) }));
     const codeDigest = valueDigest(blobs.map(({ path, digest, size }) => ({ path, digest, size })).sort((a, b) => a.path.localeCompare(b.path)));
-    const translation = publish(host, `${operation}-translation`, 'strategy.translation', { schemaVersion: '1.0.0', source: args.source, sourceDigest: checked.sourceDigest, target: args.target, plugin: host.plugin, environment,
-      mode: args.mode, entryPath: 'Experts/Strategy.mq5', codeDigest, dependencyLock: lock, build: unknown('Not compiled'), sourceMap: mapping, nativeParameterMap: parameterMap, admission, adaptations: declared, producer: { kind: 'agent', reference: host.scope.conversationId }, limitations }, [args.source, args.target, environment, lock], blobs);
-    const validation = publish(host, `${operation}-validation`, 'strategy.validation', { schemaVersion: '1.0.0', source: args.source, translation, layer: 'target', validator: { id: 'sesame.mt5.mapping', version: '1.0.0', digest: host.plugin.digest ? value(host.plugin.digest) : unknown('Package digest unavailable') }, issuer: 'plugin', fixtures: [], parameters: null, environment, startedAt: timestamp, finishedAt: timestamp, outcome: 'partial',
+    const translation = await publish(host, `${operation}-translation`, 'strategy.translation', { schemaVersion: '1.0.0', source: args.source, sourceDigest: checked.sourceDigest, target: args.target, plugin: pluginIdentity(host), environment,
+      mode: args.mode, entryPath: 'Experts/Strategy.mq5', codeDigest, dependencyLock: lock, build: unknown('Not compiled'), sourceMap: mapping, nativeParameterMap: parameterMap, admission, adaptations: declared, producer: { kind: 'agent', reference: host.context.sessionId }, limitations }, [args.source, args.target, environment, lock], source.files);
+    const validation = await publish(host, `${operation}-validation`, 'strategy.validation', { schemaVersion: '1.0.0', source: args.source, translation, layer: 'target', validator: { id: 'sesame.mt5.mapping', version: '1.0.0', digest: pluginIdentity(host).digest ? value(pluginIdentity(host).digest) : unknown('Package digest unavailable') }, issuer: 'plugin', fixtures: [], parameters: null, environment, startedAt: timestamp, finishedAt: timestamp, outcome: 'partial',
       cases: [{ id: 'source-identity-and-map-bounds', outcome: 'passed', evidence: [translation], diagnostics: [] }, { id: 'native-semantic-equivalence', outcome: 'not_run', evidence: [], diagnostics: [] }], coverage: { nodes: mapping.map(sourceRuleId), events: [], scenarios: ['artifact identity and source map structure'] }, tolerancePolicy: null, limitations }, [args.source, translation, environment]);
     const key = start.projectId, created = start.created;
     const result = { project_id: key, revision: 1, source: args.source, translation, validation, implementation: 'translated_unverified', limitations };
-    return host.storage.transaction(() => {
-      const committed = host.storage.get('mt5_translation_receipt', operation, true);
+    return records(host).transaction(() => {
+      const committed = records(host).get('mt5_translation_receipt', operation, true);
       if (committed) {
         requireValue(committed.fingerprint === fingerprint, '翻译操作 ID 已用于不同内容', 409, 'idempotency_conflict');
         return committed.result;
       }
-      host.storage.put('mt5_revision', { id: `${key}:1`, project_id: key, revision: 1, ...source, svl_source: args.source, source_semantic_digest: checked.sourceDigest, translation, translation_validation: validation, created_at: created });
-      host.storage.put('mt5_project', { id: key, version: 1, title: args.title.trim(), revision: 1, source_digest: source.source_digest, sdk_version: SDK_VERSION, translation, translation_mode: args.mode, test_risk_limits: { ...DEFAULT_RISK_LIMITS }, created_at: created, updated_at: created });
-      host.storage.put('mt5_translation_receipt', { id: operation, fingerprint, result });
+      records(host).put('mt5_revision', { id: `${key}:1`, project_id: key, revision: 1, ...source, svl_source: args.source, source_semantic_digest: checked.sourceDigest, translation, translation_validation: validation, created_at: created });
+      records(host).put('mt5_project', { id: key, version: 1, title: args.title.trim(), revision: 1, source_digest: source.source_digest, sdk_version: SDK_VERSION, translation, translation_mode: args.mode, test_risk_limits: { ...DEFAULT_RISK_LIMITS }, created_at: created, updated_at: created });
+      records(host).put('mt5_translation_receipt', { id: operation, fingerprint, result });
       return result;
     });
   });

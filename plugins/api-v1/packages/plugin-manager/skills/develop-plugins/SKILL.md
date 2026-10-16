@@ -1,51 +1,14 @@
 ---
 name: develop-plugins
-description: Create, extend, validate and package Sesame plugins from actual public HostContext and existing examples. Use for new skills/tools, market or account backends, reports, indicators, strategy integrations and event-triggered Agents, inside Sesame or from an external coding Agent.
+description: 实现、声明、安装和验证 Sesame API 2 原生、Agent 或 MCP 插件。
 ---
 
-# Develop Sesame plugins
+# 插件开发
 
-Use the smallest plugin form that implements the requested behavior. This is the shared development entry for Sesame's own Agents and external coding Agents. It does not require private application source, model credentials or an active broker account to author a package.
+先读 references/host-api.md，再按 references/authoring.md 定义业务边界。所有对 Agent 或宿主提供的能力都要显式声明；配置后的 source、view、service、hook 不得隐式注册。
 
-## Read only the relevant references
+plugin_create 可生成 native 或 skill 草稿；纯知识包 capabilities 为空，knowledge 列出全部资源。原生工厂 createCapabilities(host) 同步返回与 binding.name 一一对应的 {name,execute(input,signal,executionContext)}，返回普通 JSON。MCP 声明 type:mcp 的 server/name，安装比对真实工具清单。
 
-- [Authoring, testing, installation and delivery](references/authoring.md): start here.
-- [Reliable development and recovery](references/recovery.md): read before implementing tools, Agent tasks, chart attachment or a package update. Preserve a working repair path.
-- [Open HostContext and product contracts](references/host-api.md): exact ports, signatures, scopes and current limits. Do not invent methods from a design draft.
-- [Public scaffold CLI](../../scripts/create-plugin.mjs): generates a native or instruction-only package using the same recipe as Sesame's native `plugin_create`.
-- [Publication protocol](https://github.com/KDZZZZZZ/sesame/blob/main/plugins/api-v1/PUBLISHING.md): use when preparing a public release.
+插件一次完成准备、检查、执行和结果回读；需要长期执行时使用 Run。先验证业务测试，再调用 plugin_install（宿主自动检查并安装）。更新先读取当前摘要，使用 plugin_update(expectedRevision)。失败读取合并诊断，不添加兼容旧接口的包装层。
 
-## Workflow
-
-1. Identify the behavior, inputs, final output, required host version and an existing plugin example. Distinguish a research method from a market provider or a trading backend. Tools/skills may declare `provides:{}`.
-2. Inside Sesame, use `plugin_create` with `template:"native"`, `"skill"` or `"mcp-python"`. Native supports `publisher` and `min_host`. Ordinary subagents may author files with workspace tools; ask their parent to perform main-only plugin management. Outside Sesame, clone the public repository and run the packaged CLI, or author the same files directly.
-3. Replace the starter behavior with the actual feature in a separate draft, never in the running application or installed digest directory. A generated echo or a placeholder method is not the user's completed plugin. Keep `tool_names`, `tools.json` and the complete factory consistent in main and subagent scopes; control visibility with manifest/task allowlists. Preserve package-local imports, use HostContext/public SDK, and declare only implemented capabilities.
-4. Write a concise prompt plus a focused Skill. Keep long API references out of the always-loaded prompt. Specify inputs, procedure, outputs, verification and failure handling. Use actual provider identities and immutable artifacts rather than guessed method names, ticker strings or temporary paths.
-5. Test meaningful behavior and failure cases. External Agents may test portable logic and MCP without Sesame; SDK and actual host activation require a matching host. Clearly report those checks as pending when unavailable; never invent a host receipt.
-6. In Sesame, run `plugin_validate → plugin_test → plugin_install` using the exact returned digest, inspect runtime diagnostics, then `plugin_load` and a real feature check. For an installed ID, use explicit update with expected_digest and a higher version. The CLI does not generate installation authority, hashes accepted as test receipts, or automatic user consent.
-7. Deliver source, test evidence, compatibility, license/source attribution and remaining limitations. Public PR/release only when requested; follow the repository's independent review and immutable publication process. Installing a package does not automatically place a trade or authorize dependency downloads unrelated to the task.
-
-## Patterns to reuse
-
-| Requirement | Actual example to inspect |
-| --- | --- |
-| Independent method Skill | [ICT](https://github.com/KDZZZZZZ/sesame/tree/main/plugins/optional-api-v1/packages/ict) |
-| Native tools and process diagnostics | [workspace](https://github.com/KDZZZZZZ/sesame/tree/main/plugins/api-v1/packages/workspace) |
-| MCP tool/server tests | [web-extract](https://github.com/KDZZZZZZ/sesame/tree/main/plugins/optional-api-v1/packages/web-extract) |
-| Market read/subscribe provider | [AKShare](https://github.com/KDZZZZZZ/sesame/tree/main/plugins/optional-api-v1/packages/akshare), [CCXT](https://github.com/KDZZZZZZ/sesame/tree/main/plugins/optional-api-v1/packages/ccxt) |
-| Account data and persistent execution | [MT5](https://github.com/KDZZZZZZ/sesame/tree/main/plugins/optional-api-v1/packages/mt5) |
-| Immutable indicator and chart binding | [canvas-control](https://github.com/KDZZZZZZ/sesame/tree/main/plugins/api-v1/packages/canvas-control) |
-| Report style, frozen data and render checks | [reports](https://github.com/KDZZZZZZ/sesame/tree/main/plugins/api-v1/packages/reports) |
-| SVL, methods, risk/execution and model decisions | [strategy-authoring](https://github.com/KDZZZZZZ/sesame/tree/main/plugins/api-v1/packages/strategy-authoring) |
-| Cross-plugin tool composition | [manual-trading](https://github.com/KDZZZZZZ/sesame/tree/main/plugins/optional-api-v1/packages/manual-trading) |
-| Native backtest adapters | [vn.py](https://github.com/KDZZZZZZ/sesame/tree/main/plugins/optional-api-v1/packages/vnpy), [Backtrader](https://github.com/KDZZZZZZ/sesame/tree/main/plugins/optional-api-v1/packages/backtrader) |
-
-Use examples for their interface pattern, not as proof every platform or broker is ready. Do not access private Runtime/Store/Pi objects or copy credentials. Discover existing dependencies before preparing a private missing environment. Preserve authors' licenses and attribution; do not relabel all third-party work as MIT.
-
-## 版本依据
-
-This plugin-manager package requires Sesame ≥0.2.2. The portable scaffold itself has no host dependency; generated packages declare the minimum version required by their own feature set.
-
-Interface audit: application `dev` at `5ca4695` (0.2.2); relevant ports match `6767ab6`. Application `main` at audit was `295b0a1` (0.2.1). Base API 1 is available since 0.2.0; cross-plugin `tools.call` since 0.2.1; `inference`, `agents` and the new SVL functionality require 0.2.2.
-
-Examples were checked against public plugin commit `24e70b9a26ce69e0b289e5aa30e415475f21054a`: strategy-authoring 1.2.0, orchestration 2.2.0 and MT5 1.4.0 require ≥0.2.2. Always re-read the target package's manifest. A source branch, published archive and current install catalog may select different versions; none proves what is installed on the user's device.
+用户沟通提示词由宿主管理。插件定义可用能力、可量化领域目标、输入输出、调用权限和因果明确的原则；只说明真实依赖顺序，不把固定操作清单当作完成目标的唯一方式。usage 会进入 Agent 工具描述，应写清实际参数入口、返回状态/成功证据、外部副作用与针对具体错误的恢复，不使用“按 schema”或“按声明结果”等占位。

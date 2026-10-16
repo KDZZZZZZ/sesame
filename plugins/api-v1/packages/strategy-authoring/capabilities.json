@@ -1,0 +1,867 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "configSchema": {
+    "type": "object"
+  },
+  "capabilities": [
+    {
+      "id": "strategy_validate",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Validate an authored SVL/1 JSON file and return its actual semantic digest, operators and graph. This does not run a native engine or place orders.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "source_path"
+        ],
+        "properties": {
+          "source_path": {
+            "type": "string",
+            "description": "Workspace path to the authored SVL JSON file",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "read:resource"
+      ],
+      "usage": {
+        "purpose": "Validate an authored SVL/1 JSON file and return its actual semantic digest, operators and graph. This does not run a native engine or place orders.",
+        "inputs": "source_path 是工作区 SVL JSON。语言与合法示例从本插件 skills/strategy-authoring/references/language.md、examples/close-threshold.svl.json 读取。",
+        "outputs": "{sourceDigest,operators,diagnostics,graph,validationScope:\"svl-source-only\"}，对应实际解析与静态语义。",
+        "prerequisites": [
+          "sesame/workspace 可读；源≤1MiB。"
+        ],
+        "limitations": [
+          "字段/引用错误按 diagnostics 修源；不猜原语或仅改版本号。通过不代表原生回测或交易正确。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "strategy_validate"
+      }
+    },
+    {
+      "id": "strategy_publish",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Publish a validated SVL source as an immutable strategy.source artifact. Preserve this exact reference for target translation and future trade evidence.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "operation_id",
+          "source_path",
+          "title",
+          "change_summary"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "description": "Unique idempotency key for this exact publication",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "source_path": {
+            "type": "string",
+            "description": "Workspace SVL JSON path",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "title": {
+            "type": "string",
+            "description": "Strategy title",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "change_summary": {
+            "type": "string",
+            "description": "What this source revision changes",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "parent": {
+            "type": "object",
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string",
+                "const": "strategy.source"
+              },
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              }
+            },
+            "additionalProperties": false
+          },
+          "artifact_id": {
+            "type": "string",
+            "description": "Existing artifact ID when publishing a new revision",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "expected_revision": {
+            "type": "string",
+            "description": "Exact current revision when updating an existing artifact",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "write:resource",
+        "publish:artifact"
+      ],
+      "usage": {
+        "purpose": "Publish a validated SVL source as an immutable strategy.source artifact. Preserve this exact reference for target translation and future trade evidence.",
+        "inputs": "operation_id/source_path/title/change_summary 必填；parent 可保存来源关系；更新已有成果使用 artifact_id+expected_revision。",
+        "outputs": "{ref,sourceDigest,graph,validationScope:\"svl-source-only\"}；ref 是后续 replay/graph/目标适配的固定 strategy.source。",
+        "prerequisites": [
+          "可读取 SVL；发布内部会重新验证，无需为发布机械重复单独校验。"
+        ],
+        "limitations": [
+          "同一操作 ID 仅重试相同内容；内容变化用新 ID。发布不执行或交易。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "strategy_publish"
+      }
+    },
+    {
+      "id": "strategy_graph",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Read a fixed SVL source artifact and derive its graph from the same validated AST. No layout or explanation is treated as execution evidence.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "source"
+        ],
+        "properties": {
+          "source": {
+            "type": "object",
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string",
+                "const": "strategy.source"
+              },
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "read:resource"
+      ],
+      "usage": {
+        "purpose": "Read a fixed SVL source artifact and derive its graph from the same validated AST. No layout or explanation is treated as execution evidence.",
+        "inputs": "source 是 strategy_publish 的完整 strategy.source 引用。",
+        "outputs": "从固定源同一 AST 派生的图节点与连线。",
+        "prerequisites": [],
+        "limitations": [
+          "不能把手画说明图当执行证据；摘要不符时重新读取正确成果，勿改引用字段。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "strategy_graph"
+      }
+    },
+    {
+      "id": "strategy_replay",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Evaluate fixed ordered input events against a saved SVL source. Produces state, intents and actual evaluator traces; it is not a broker simulator, native backtest or translation-equivalence receipt.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "source",
+          "fixture_path"
+        ],
+        "properties": {
+          "source": {
+            "type": "object",
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string",
+                "const": "strategy.source"
+              },
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              }
+            },
+            "additionalProperties": false
+          },
+          "fixture_path": {
+            "type": "string",
+            "description": "Workspace JSON with runId, parameters, initialState and ordered events",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "output_path": {
+            "type": "string",
+            "description": "Optional workspace path for the complete evaluation result",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "operation_id": {
+            "type": "string",
+            "description": "If provided, preserve this replay as a generic resource artifact",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "write:resource",
+        "publish:artifact",
+        "workspace.write"
+      ],
+      "usage": {
+        "purpose": "Evaluate fixed ordered input events against a saved SVL source. Produces state, intents and actual evaluator traces; it is not a broker simulator, native backtest or translation-equivalence receipt.",
+        "inputs": "source 为固定 SVL；fixture_path 为有序事件 JSON，格式与该源匹配；output_path 可落盘，operation_id 可发布输入/结果证据。参考 examples/close-threshold.replay.json。",
+        "outputs": "求值 status、状态/意图/轨迹及 validationScope=fixed-input-svl-evaluation、nativeEngineExecuted=false；请求发布时另含 evidence。",
+        "prerequisites": [
+          "workspace 可读写，源已发布。"
+        ],
+        "limitations": [
+          "固定事件求值不做撮合、费用或券商执行；遇动态类型错误修事件或策略，不用编译成功替代本次结果。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "strategy_replay"
+      }
+    },
+    {
+      "id": "strategy_pipeline",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Check and evaluate a frozen signal → target portfolio → risk → execution fixture. Reads exact artifact references and preserves optional evidence. No model, broker, matching engine or native strategy is executed.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "fixture_path"
+        ],
+        "properties": {
+          "fixture_path": {
+            "type": "string",
+            "description": "Workspace JSON conforming to the plugin pipeline.md fixture contract",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "output_path": {
+            "type": "string",
+            "description": "Optional workspace path for the complete evaluation result",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "operation_id": {
+            "type": "string",
+            "description": "If provided, preserve the fixture and result as a resource artifact",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "write:resource",
+        "publish:artifact",
+        "workspace.write"
+      ],
+      "usage": {
+        "purpose": "Check and evaluate a frozen signal → target portfolio → risk → execution fixture. Reads exact artifact references and preserves optional evidence. No model, broker, matching engine or native strategy is executed.",
+        "inputs": "fixture_path 是 references/pipeline.md 的固定信号→目标→风险→执行输入，嵌入完整成果引用；output_path/operation_id 可保存结果与证据。",
+        "outputs": "实际阶段求值、validationScope 与可选 evidence；验证输入所属策略，保留 nativeEngineExecuted=false。",
+        "prerequisites": [
+          "已有固定 strategy.source 与输入引用；输入≤4MiB。"
+        ],
+        "limitations": [
+          "不调用模型/经纪商；无效或过期引用修具体输入，不将提议指令当已执行订单。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "strategy_pipeline"
+      }
+    },
+    {
+      "id": "strategy_workflow",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Run frozen dynamic-universe selection, actual equal/confidence/inverse-volatility portfolio sizing, hard portfolio risk and a replayable execution ledger. Returns quantities, cash, risk evidence, linked order definitions and proposed commands; never sends orders or invokes a model.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "fixture_path"
+        ],
+        "properties": {
+          "fixture_path": {
+            "type": "string",
+            "description": "Workspace JSON conforming to methods.md workflow schema 1.1",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "output_path": {
+            "type": "string",
+            "description": "Optional workspace path for the complete workflow and execution checkpoint",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "operation_id": {
+            "type": "string",
+            "description": "If provided, preserve the frozen input and full result as a resource artifact",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "write:resource",
+        "publish:artifact",
+        "workspace.write"
+      ],
+      "usage": {
+        "purpose": "Run frozen dynamic-universe selection, actual equal/confidence/inverse-volatility portfolio sizing, hard portfolio risk and a replayable execution ledger. Returns quantities, cash, risk evidence, linked order definitions and proposed commands; never sends orders or invokes a model.",
+        "inputs": "fixture_path 使用 methods.md 的 schemaVersion=1.1.0；scope.strategyId 与 strategySource 一致。output_path/operation_id 可保存完整工作流与账本证据。",
+        "outputs": "实际品种选择、持仓数量、现金预算、风险结论、订单定义与提议命令/执行检查点，可含 evidence。",
+        "prerequisites": [
+          "固定策略/数据；数量分配规则和执行事件见 methods.md、execution.md，样例见 examples/method-workflow.js。"
+        ],
+        "limitations": [
+          "只重放输入账本，不发送订单或调用模型；未知请求不能当零持仓/零风险。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "strategy_workflow"
+      }
+    },
+    {
+      "id": "strategy_decision",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Run an isolated versioned Agent signal or risk decision with the configured model and frozen artifact inputs. Submit is asynchronous; status waits optionally, cancel/invalidate retire requests, timeline exports actual saved outputs without new model calls. Never places orders.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "models"
+              },
+              {
+                "type": "string",
+                "const": "submit"
+              },
+              {
+                "type": "string",
+                "const": "status"
+              },
+              {
+                "type": "string",
+                "const": "cancel"
+              },
+              {
+                "type": "string",
+                "const": "invalidate"
+              },
+              {
+                "type": "string",
+                "const": "timeline"
+              },
+              {
+                "type": "string",
+                "const": "bridge_start"
+              },
+              {
+                "type": "string",
+                "const": "bridge_stop"
+              }
+            ]
+          },
+          "request_path": {
+            "type": "string",
+            "description": "Workspace JSON decision request conforming to references/agent-inputs.md",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "job_id": {
+            "type": "string",
+            "description": "Job ID returned by submit; selects its portfolio run for invalidate/timeline",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "wait": {
+            "type": "boolean",
+            "description": "Wait for this one job to finish; cancellation of the tool wait does not cancel the job"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Reason for cancel or invalidation",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "as_of_ms": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "UTC time for timeline replay or cancel/invalidate; required for historical invalidation"
+          },
+          "output_path": {
+            "type": "string",
+            "description": "Workspace JSON path for the saved immutable decision timeline",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "operation_id": {
+            "type": "string",
+            "description": "Idempotency key to publish a saved timeline as an evidence resource",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "model:complete",
+        "write:private-records",
+        "network:local-bridge",
+        "publish:artifact",
+        "workspace.write"
+      ],
+      "resultRetention": "summary",
+      "usage": {
+        "purpose": "Run an isolated versioned Agent signal or risk decision with the configured model and frozen artifact inputs. Submit is asynchronous; status waits optionally, cancel/invalidate retire requests, timeline exports actual saved outputs without new model calls. Never places orders.",
+        "inputs": "models 列模型；submit 用 request_path，格式见 agent-inputs.md；返回 job.id 后 status/cancel/invalidate/timeline 使用 job_id。wait=true 等该作业，历史 timeline/invalidate 指定 as_of_ms；timeline 可 output_path/operation_id 保存。bridge_start/stop 管理本机适配桥。",
+        "outputs": "submit/status 返回 id/status/output/decision/error/attempts；timeline 返回已保存判断；models 返回可用模型；bridge_start 返回临时 endpoint/token，bridge_stop 不取消模型作业。",
+        "prerequisites": [
+          "服务已激活；submit 需要已配置模型与固定输入引用；无对话记忆或工具权限。"
+        ],
+        "limitations": [
+          "不下单。等待取消不取消作业，须 cancel；失败按 error 和 failurePolicy 处理，不能把未完成判断当有效信号。桥 token 仅给本机适配器，不写报告/成果。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "strategy_decision"
+      }
+    },
+    {
+      "id": "strategy_functions",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Write the versioned declarative SVL quant function module (RSI, ATR, MACD, Bollinger, Donchian, z-score and realized volatility) to the workspace. Embed the whole frozen extension in an SVL 1.2 source; formulas expand into the same graph and replay.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "output_path"
+        ],
+        "properties": {
+          "output_path": {
+            "type": "string",
+            "description": "Workspace JSON path for the complete frozen extension object",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "workspace.write"
+      ],
+      "usage": {
+        "purpose": "Write the versioned declarative SVL quant function module (RSI, ATR, MACD, Bollinger, Donchian, z-score and realized volatility) to the workspace. Embed the whole frozen extension in an SVL 1.2 source; formulas expand into the same graph and replay.",
+        "inputs": "output_path 指向工作区 JSON；生成固定版本的完整纯函数 extension，可嵌入 SVL1.2。用法见 references/quant-functions.md。",
+        "outputs": "实际落盘路径、扩展身份/摘要及可用函数；公式仍由同一 SVL 图展开求值。",
+        "prerequisites": [
+          "sesame/workspace 可写。"
+        ],
+        "limitations": [
+          "仅写函数模块，不发布 Artifact、不执行行情或原生指标；保留整个扩展及摘要，不手改单个函数后沿用旧摘要。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "strategy_functions"
+      }
+    },
+    {
+      "id": "strategy_activate",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "启动私有决策记录库并标记重启中断的作业。",
+      "inputSchema": {
+        "type": "object"
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "write:private-records"
+      ],
+      "usage": {
+        "purpose": "启动私有决策记录库并标记重启中断的作业。",
+        "inputs": "宿主 lifecycle.activate 事件；实现使用注入的 storageRoot 与数据/模型端口，不消费业务输入。",
+        "outputs": "{ready:true,storage?:\"plugin-private-sqlite\"}；打开私有判断库并恢复重启状态。",
+        "prerequisites": [
+          "由宿主加载插件时调用。"
+        ],
+        "limitations": [
+          "不自动重放中断的模型请求。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "strategy_activate"
+      }
+    },
+    {
+      "id": "strategy_dispose",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "关闭本地决策桥、取消模型作业并关闭私有记录库。",
+      "inputSchema": {
+        "type": "object"
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "write:private-records"
+      ],
+      "usage": {
+        "purpose": "关闭本地决策桥、取消模型作业并关闭私有记录库。",
+        "inputs": "宿主 lifecycle.dispose 事件；无业务参数。",
+        "outputs": "{closed:true}；等待本地桥关闭、作业取消和私有记录库释放。",
+        "prerequisites": [
+          "由宿主管理生命周期。"
+        ],
+        "limitations": [
+          "关闭不删除已保存判断，也不撤回外部交易。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "strategy_dispose"
+      }
+    }
+  ],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "strategy-guide",
+      "path": "prompt.md",
+      "description": "SVL策略创作、验证与判断资料。",
+      "kind": "prompt"
+    },
+    {
+      "id": "reference-0",
+      "path": "skills/strategy-authoring/references/language.md",
+      "description": "策略语言、方法或可重放示例。",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-1",
+      "path": "skills/strategy-authoring/references/architecture.md",
+      "description": "策略语言、方法或可重放示例。",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-2",
+      "path": "examples/close-threshold.svl.json",
+      "description": "策略语言、方法或可重放示例。",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-3",
+      "path": "examples/close-threshold.replay.json",
+      "description": "策略语言、方法或可重放示例。",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-4",
+      "path": "examples/crossover.svl.json",
+      "description": "策略语言、方法或可重放示例。",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-5",
+      "path": "examples/crossover.replay.json",
+      "description": "策略语言、方法或可重放示例。",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-6",
+      "path": "skills/strategy-authoring/references/pipeline.md",
+      "description": "策略语言、方法或可重放示例。",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-7",
+      "path": "skills/strategy-authoring/references/agent-inputs.md",
+      "description": "策略语言、方法或可重放示例。",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-8",
+      "path": "examples/function-threshold.svl.json",
+      "description": "策略语言、方法或可重放示例。",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-9",
+      "path": "examples/function-threshold.replay.json",
+      "description": "策略语言、方法或可重放示例。",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-10",
+      "path": "examples/pipeline-fixture.js",
+      "description": "策略语言、方法或可重放示例。",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-11",
+      "path": "skills/strategy-authoring/references/methods.md",
+      "description": "策略语言、方法或可重放示例。",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-12",
+      "path": "skills/strategy-authoring/references/execution.md",
+      "description": "策略语言、方法或可重放示例。",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-13",
+      "path": "skills/strategy-authoring/references/quant-functions.md",
+      "description": "策略语言、方法或可重放示例。",
+      "kind": "reference"
+    },
+    {
+      "id": "reference-14",
+      "path": "examples/method-workflow.js",
+      "description": "策略语言、方法或可重放示例。",
+      "kind": "reference"
+    },
+    {
+      "id": "strategy-authoring",
+      "path": "skills/strategy-authoring/SKILL.md",
+      "description": "SVL策略创作方法。",
+      "kind": "skill"
+    }
+  ],
+  "hooks": [
+    {
+      "id": "activate",
+      "contract": "sesame.lifecycle/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object"
+      },
+      "event": "lifecycle.activate",
+      "operations": {
+        "handle": "strategy_activate"
+      }
+    },
+    {
+      "id": "dispose",
+      "contract": "sesame.lifecycle/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object"
+      },
+      "event": "lifecycle.dispose",
+      "operations": {
+        "handle": "strategy_dispose"
+      }
+    }
+  ],
+  "stateCollections": [],
+  "artifactSchemas": [
+    {
+      "id": "strategy-source",
+      "kind": "strategy.source",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "required": [
+          "strategyId",
+          "sourcePath",
+          "sourceDigest",
+          "language",
+          "languageVersion"
+        ],
+        "properties": {
+          "strategyId": {
+            "type": "string"
+          },
+          "sourcePath": {
+            "type": "string"
+          },
+          "sourceDigest": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "languageVersion": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "id": "evaluation-resource",
+      "kind": "resource",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "svl-evaluation",
+              "strategy-pipeline-evaluation",
+              "strategy-agent-timeline"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

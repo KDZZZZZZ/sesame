@@ -447,11 +447,3 @@ export class ReplayAccountProvider extends ReplayProvider {
     }, context);
   }
 }
-
-export function registerProviders(host, service) {
-  const market = new ReplayMarketProvider(host, service), account = new ReplayAccountProvider(host, service), disposers = [];
-  try { disposers.push(host.providers.register(marketDescriptor, market)); disposers.push(host.providers.register(accountDescriptor, account)); }
-  catch (error) { for (const dispose of disposers.reverse()) dispose(); market.dispose(); account.dispose(); throw error; }
-  let disposed = false;
-  return () => { if (disposed) return; disposed = true; market.dispose(); account.dispose(); for (const dispose of disposers.reverse()) dispose(); };
-}

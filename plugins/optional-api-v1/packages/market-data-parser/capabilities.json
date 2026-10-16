@@ -1,0 +1,319 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "capabilities": [
+    {
+      "id": "parse_fx_json",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Parse exchangerate-api style JSON (base, date, rates) with optional currency filter",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "json_content": {
+            "type": "string",
+            "description": "Raw JSON string",
+            "minLength": 1
+          },
+          "file_path": {
+            "type": "string",
+            "description": "Relative path to a bundled JSON file; cannot access conversation or host files",
+            "minLength": 1
+          },
+          "codes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional currency code filter, e.g. [\"EUR\",\"JPY\"]"
+          }
+        },
+        "anyOf": [
+          {
+            "required": [
+              "json_content"
+            ]
+          },
+          {
+            "required": [
+              "file_path"
+            ]
+          }
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "base": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "total_currencies": {
+            "type": "number"
+          },
+          "returned_currencies": {
+            "type": "number"
+          },
+          "rates": {
+            "type": "object",
+            "properties": {
+              "EUR": {
+                "type": "number"
+              },
+              "JPY": {
+                "type": "number"
+              },
+              "GBP": {
+                "type": "number"
+              },
+              "CNY": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": true
+          },
+          "source": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "binding": {
+        "type": "mcp",
+        "server": "analysis",
+        "name": "parse_fx_json"
+      },
+      "usage": {
+        "purpose": "Parse exchangerate-api style JSON (base, date, rates) with optional currency filter",
+        "inputs": "Provide json_content or a bundled relative file_path. This parser does not fetch URLs.",
+        "outputs": "Structured JSON fields follow outputSchema; original source and version are preserved.",
+        "prerequisites": [
+          "Python 3 available to the host MCP transport."
+        ],
+        "limitations": [
+          "Results describe supplied content or the bundled snapshot, not live network observations."
+        ],
+        "examples": [
+          {
+            "input": {
+              "file_path": "sample_fx.json",
+              "codes": [
+                "EUR",
+                "JPY",
+                "GBP",
+                "CNY"
+              ]
+            },
+            "output": {
+              "format": "exchangerate-json",
+              "provider": "https://www.exchangerate-api.com",
+              "base": "USD",
+              "date": "2026-10-03",
+              "total_currencies": 166,
+              "returned_currencies": 4,
+              "rates": {
+                "EUR": 0.889,
+                "JPY": 157.82,
+                "GBP": 0.756,
+                "CNY": 6.71
+              },
+              "source": "sample_fx.json",
+              "version": "2.0.3"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "parse_fx_xml",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Parse TCMB style daily FX XML (date, bulletin, currencies) with optional code filter",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "xml_content": {
+            "type": "string",
+            "description": "Raw XML string",
+            "minLength": 1
+          },
+          "file_path": {
+            "type": "string",
+            "description": "Relative path to a bundled XML file; cannot access conversation or host files",
+            "minLength": 1
+          },
+          "codes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional currency code filter, e.g. [\"USD\",\"EUR\"]"
+          }
+        },
+        "anyOf": [
+          {
+            "required": [
+              "xml_content"
+            ]
+          },
+          {
+            "required": [
+              "file_path"
+            ]
+          }
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "bulletin_no": {
+            "type": "string"
+          },
+          "total_currencies": {
+            "type": "number"
+          },
+          "returned_currencies": {
+            "type": "number"
+          },
+          "currencies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "forex_buying": {
+                  "type": "string"
+                },
+                "forex_selling": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "source": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "binding": {
+        "type": "mcp",
+        "server": "analysis",
+        "name": "parse_fx_xml"
+      },
+      "usage": {
+        "purpose": "Parse TCMB style daily FX XML (date, bulletin, currencies) with optional code filter",
+        "inputs": "Provide xml_content or a bundled relative file_path. This parser does not fetch URLs.",
+        "outputs": "Structured JSON fields follow outputSchema; original source and version are preserved.",
+        "prerequisites": [
+          "Python 3 available to the host MCP transport."
+        ],
+        "limitations": [
+          "Results describe supplied content or the bundled snapshot, not live network observations."
+        ],
+        "examples": [
+          {
+            "input": {
+              "file_path": "sample_fx.xml",
+              "codes": [
+                "USD",
+                "EUR"
+              ]
+            },
+            "output": {
+              "format": "tcmb-xml",
+              "date": "10/02/2026",
+              "bulletin_no": "2026/186",
+              "total_currencies": 22,
+              "returned_currencies": 2,
+              "currencies": [
+                {
+                  "code": "USD",
+                  "name": "US DOLLAR",
+                  "unit": "1",
+                  "forex_buying": "48.9699",
+                  "forex_selling": "49.0582"
+                },
+                {
+                  "code": "EUR",
+                  "name": "EURO",
+                  "unit": "1",
+                  "forex_buying": "55.0826",
+                  "forex_selling": "55.1819"
+                }
+              ],
+              "source": "sample_fx.xml",
+              "version": "2.0.3"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "knowledge-0",
+      "path": "skills/market-data-parser/PROVENANCE.md",
+      "description": "公开汇率解析 — skills/market-data-parser/PROVENANCE.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-1",
+      "path": "skills/market-data-parser/SKILL.md",
+      "description": "公开汇率解析 — skills/market-data-parser/SKILL.md",
+      "kind": "skill"
+    }
+  ],
+  "hooks": [],
+  "stateCollections": [],
+  "artifactSchemas": []
+}

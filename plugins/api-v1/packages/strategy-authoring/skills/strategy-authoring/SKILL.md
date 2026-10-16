@@ -6,13 +6,21 @@ license: MIT
 
 # SVL strategy authoring
 
-1. **先读再写**：用 `plugin_read` 的 `{plugin_id:"sesame/strategy-authoring",path:"skills/strategy-authoring/references/language.md"}` 读取本插件的 [SVL/1 完整创作参考](references/language.md)。该资源含源结构、类型、全部当前原语、控制流、回放格式、预算和错误定位，不依赖本体源码或私有文档。
-2. 接着读取 `{plugin_id:"sesame/strategy-authoring",path:"skills/strategy-authoring/references/architecture.md"}`，按需求、数据时间、信号、数量分配、风险、执行账本和恢复逐项定义策略。它是架构检查表，不是新增 schema。再读取 `examples/close-threshold.svl.json` 及 `examples/close-threshold.replay.json`，先掌握合法的状态声明与条件步骤。需要交易意图语法时读取 `examples/crossover.svl.json` 和 `examples/crossover.replay.json`。它们都是教学数据；前者仅更新状态，后者仅演示交叉入场意图，均不是可直接实盘部署的完整策略。
-3. 确定用户策略的输入、时间口径、入场/退出、仓位、风险和缺数政策，按目标插件的能力与品种元数据绑定。通过工作区工具写 `.svl.json`。`parameters`、`inputs`、`state` 是具名对象；参数的 `type` 是字符串，但状态必须写成 `{"type":{"kind":"decimal"},"initial":"0"}`。不要发明字符串表达式、自由文本节点或未支持的原语。Decimal 用字符串，JSON number 仅安全整数。旧 `schemaVersion:"1.0.0"` 的 `functions` 必须为空；`1.1.0` 增加类型化纯函数、窗口组合与时间原语；`1.2.0` 可使用匹配宿主支持的集合变换、统计能力和冻结纯函数扩展。先读 language reference，不能只改版本来获得后端支持。需要 RSI、ATR、MACD、Bollinger、Donchian、z-score 或波动率时，读取 `references/quant-functions.md` 并调用 `strategy_functions`，把返回的完整固定扩展嵌入 SVL 1.2 源；这些公式可展开为同一逻辑图，不是宿主隐藏指标函数。
-4. 调用 `strategy_validate({source_path:"strategies/example.svl.json"})` 修复结构、引用、预算与原语错误。动态类型和实际分支仍须用固定回放验证。`strategy_graph` 从发布的同一源 AST 生成图；不能单独编辑图的判断后仍保留旧摘要。遇到 `value must be an object`，按 reference 的错误定位表检查具名集合、状态 `type` 和节点 `inputs`，不要通过读宿主代码来猜语法。
-5. 调用 `strategy_publish`，保存返回的完整 `ref`（id/revision/digest/kind/schemaVersion）。更新需要真实 parent 和乐观锁，不能用“最新”解释历史。
-6. `strategy_replay` 读取固定的 JSON 事件序列，文件顶层为 `{runId,parameters,initialState?,events}`，源单独通过发布的 `source` ArtifactRef 传入工具。事件、参数和初始状态来自明确记录；没有数据就指出缺口。示例 replay 只用教学价格，不是回测。核对 reference 中手工给出的预期，不用待测翻译代码生成预期。可用 operation_id 保留输入与结果的 resource artifact。
-7. 需要原生回测或运行时，通过插件目录发现目标，再读取目标插件返回的固定 TargetProfile，核对事件、单位、数值、保护、精确归属和恢复支持。目标包按需安装，不能因创作策略自动下载后端。只有支持的范围才进入目标自己的翻译/编译/验证流程；无法无损表达保护、精确平仓或分配时明确 unsupported/limited，禁止静默加原生外挂语义后宣称全可视化。
+目标是得到与声明规则一致、能追溯版本的策略源及实际验证证据。按已有输入选择能力；已有源文件或固定成果可以直接使用，无需每次重复读取全部资料或重新验证同一版本。
+
+| 能力 | 入口与产物 | 证据边界 |
+| --- | --- | --- |
+| `strategy_validate` | `{source_path}` → `sourceDigest/operators/diagnostics/graph` | 源结构、引用、预算和原语检查；不运行事件。 |
+| `strategy_publish` | `{operation_id,source_path,title,change_summary,...}` → 完整 `ref/sourceDigest/graph` | 内部执行同一静态验证后冻结源；不要求预先调用 validate。更新用真实 parent、artifact_id 和 expected_revision。 |
+| `strategy_graph` | `{source:完整ArtifactRef}` → 同一源的逻辑图 | 图从固定 AST 派生，不能单独修改判断后仍使用旧摘要。 |
+| `strategy_replay` | `{source,fixture_path,output_path?,operation_id?}` → 实际事件求值、`validationScope/nativeEngineExecuted`，可选固定 evidence | 检查固定事件上的分支、类型与状态；不接行情、不撮合。 |
+| `strategy_functions` | `{output_path}` → 扩展身份、digest、函数名和保存路径 | 写出 RSI、ATR、MACD、Bollinger、Donchian、z-score、波动率纯函数；并未发布或执行策略。 |
+
+语法入口是 `plugin_read({pluginId:"sesame/strategy-authoring",part:"resource",path:"skills/strategy-authoring/references/language.md"})`，完整参考包含结构、类型、当前原语、控制流、回放格式、预算和错误定位。新建或修改源时按需读取；需要理解设计取舍时读 `references/architecture.md`，它说明需求、时间、信号、分配、风险、执行与恢复，不新增语法。合法示例为 `examples/close-threshold.svl.json` 与 `.replay.json`；交易意图示例为 `examples/crossover.svl.json` 与 `.replay.json`。这些教学数据分别演示状态更新、交叉入场意图，不能证明实盘策略完整。
+
+源中的 `parameters/inputs/state` 是具名对象。参数 `type` 是字符串，状态为 `{"type":{"kind":"decimal"},"initial":"0"}`；Decimal 用字符串，JSON number 仅安全整数。遇到对象形状错误，依错误路径核对具名集合、状态 type 与节点 inputs。不要发明自由文本表达式或未声明原语。1.0 的 functions 必须为空，1.1 增加类型化纯函数、窗口与时间原语，1.2 支持声明的集合、统计和冻结扩展。需要指标函数时读 `references/quant-functions.md`，将 strategy_functions 返回的完整扩展嵌入匹配的 1.2 源；只改版本号不能获得目标支持。
+
+重放文件为 `{runId,parameters,initialState?,events}`，source 单独使用发布的完整引用。参数、状态和事件来自明确记录；预期结果依据规则独立给出，不能由待测翻译代码生成。operation_id 可保存输入与结果的固定 evidence。原生执行另由目标插件的 TargetProfile 和已声明能力决定；只有事件、单位、数值、保护、归属及恢复均可表达的范围才能进入其翻译、编译和验证。缺失能力保留 unsupported/limited，不因写策略自动安装后端，也不补隐藏原生逻辑后宣称全部可视化。
 
 ## 信号、组合、风险与执行
 
@@ -28,4 +36,4 @@ Agent 作为信号或非技术风险来源时，再读 `skills/strategy-authorin
 - 原生 double 与 decimal34 的差异必须在目标翻译与验证记录中说明，不能自动宣称等价。
 - 只有真实运行采集的 DecisionTrace 才能解释成交路径。教学 replay、图布局和报告解说不得冒充原生交易证据。
 
-本插件通过公开的 `host.svl`、`host.workspace`、`host.artifacts`、`host.storage` 和隔离的 `host.inference` 工作，不读取私有 Store、Runtime 或 MT5 模块。
+语言验证与固定重放使用公开 `@sesame/plugin-sdk/svl`；文件、固定成果、私有状态、事件和隔离模型任务通过 API 2 的 `host.resources`、`host.state`、`host.events`、`host.capabilities`、`host.runs` 处理。插件不需要读取私有 Store、Runtime 或 MT5 模块。

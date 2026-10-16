@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { Store, judgmentHost } from './judgment-host.js';
+import { Store, judgmentHost, judgmentSnapshot } from './judgment-host.js';
 import { JudgmentService } from '../../optional-api-v1/packages/judgment-evolution/service.js';
 
 function fixture(t) {
@@ -11,7 +11,7 @@ function fixture(t) {
   store.put('conversation', { id: 'conv_main', scope: 'main', active_response_message_id: null });
   let time = new Date('2026-01-01T00:00:00Z');
   const host = judgmentHost(store);
-  const service = new JudgmentService(host, { clock: () => time }).init();
+  const service = new JudgmentService(host, { clock: () => time, snapshot: judgmentSnapshot(host) }).init();
   const args = { command_id: 'prediction-A', claim: 'Asset A exceeds 10 at the registered observation', topic: 'asset-price', regime: 'trend', rationale: 'Source validation regression fixture', probability: 0.8,
     due_at: '2026-01-02T00:00:00Z', verification: { provider: 'https://quotes.example/prices?symbol=A', metric: 'value', observed_at_field: 'observed', op: 'gt', target: 10 } };
   const data = (key, value, { provider = args.verification.provider, observed = args.due_at, as_of = time.toISOString() } = {}) => store.put('dataset', { id: key, rows: [{ value, observed }], provenance: { source_kind: 'external', provider, as_of } });

@@ -1,3 +1,7 @@
+import { workspacePath, writeWorkspace, snapshotWorkspace } from './files.js';
+import { ownership } from './records.js';
+import { readArtifact } from './resource-io.js';
+import { records } from './records.js';
 import { promises as fs } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,7 +23,7 @@ const texts = files => Object.fromEntries(Object.entries(files).map(([name, byte
 const buildHeader = key => `#define PRODUCT_BUILD_ID "${key}"\n#define PRODUCT_SDK_VERSION "${SDK_VERSION}"\n`;
 
 export class MT5 {
-  constructor(host, options = {}) { this.host = host; this.storage = host.storage; this.options = options; this.jobs = new Map(); this.tail = Promise.resolve(); }
+  constructor(host, options = {}) { this.host = host; this.storage = records(host); this.options = options; this.jobs = new Map(); this.tail = Promise.resolve(); }
   async init() {
     this.legacyTemplate = projectFiles(texts(await readTree(join(here, 'template'))));
     this.template = projectFiles(visualTemplate());
@@ -81,26 +85,26 @@ export class MT5 {
     }
     return strategyImplementation(source);
   }
-  async checkout(box, key, signal, conversationId) {
+  async checkout(host, key, signal, conversationId) {
     const project = this.project(key), checkoutId = id('checkout');
     const relativePath = `projects/${key}/${checkoutId}`, relativeSdk = `inputs/mt5-sdk/${SDK_VERSION}`;
-    const path = box.path(relativePath), sdkPath = box.path(relativeSdk);
+    const path = workspacePath(host,relativePath), sdkPath = workspacePath(host,relativeSdk);
     const files = Object.fromEntries(Object.entries(project.files).map(([name, content]) => [`${relativePath}/${name}`, content]));
     for (const [name, content] of Object.entries({ ...this.sdk, 'Build.mqh': buildHeader('unbuilt') })) files[`${relativeSdk}/Include/Product/${name}`] = content;
     // These are ordinary host files. Save checks the SDK against its package source.
-    await box.file('write_tree', box.path('.'), files, signal);
+    for (const [name, content] of Object.entries(files)) await writeWorkspace(host, name, content, signal);
     requireValue(typeof conversationId === 'string' && conversationId, 'Checkout 需要会话身份');
-    const checkout = { ...this.host.workspace.owner(conversationId), id: checkoutId, project_id: key, conversation_id: conversationId, revision: project.revision, path, sdk_path: sdkPath };
+    const checkout = { ...ownership(host), id: checkoutId, project_id: key, conversation_id: conversationId, revision: project.revision, path, sdk_path: sdkPath };
     this.storage.put('mt5_checkout', checkout);
     return checkout;
   }
-  async save(box, checkoutId, signal, conversationId) {
+  async save(host, checkoutId, signal, conversationId) {
     const checkout = this.storage.get('mt5_checkout', checkoutId);
     requireValue(conversationId && checkout.conversation_id === conversationId, '只能保存当前会话的 checkout', 403);
     const expectedSdk = Object.fromEntries(Object.entries({ ...this.sdk, 'Build.mqh': buildHeader('unbuilt') }).map(([name, content]) => [`Include/Product/${name}`, content]));
-    const actualSdk = texts(await box.snapshot(checkout.sdk_path));
+    const actualSdk = texts(await snapshotWorkspace(host,checkout.sdk_path));
     requireValue(stableJSON(actualSdk) === stableJSON(expectedSdk), '工作区 SDK 已修改；请重新 checkout 恢复 SDK，再保存策略源码', 409, 'sdk_changed');
-    const validated = projectFiles(texts(await box.snapshot(checkout.path)));
+    const validated = projectFiles(texts(await snapshotWorkspace(host,checkout.path)));
     signal?.throwIfAborted();
     return this.storage.transaction(() => {
       const project = this.storage.get('mt5_project', checkout.project_id);
@@ -114,7 +118,7 @@ export class MT5 {
       return this.storage.put('mt5_project', { ...project, version: project.version + 1, revision, source_digest: validated.source_digest, updated_at: timestamp });
     });
   }
-  queueBuild(key, revision, conversationId = null) {
+  queueBuild(key, revision, conversationId = null, host = this.host) {
     requireValue(!this.closing, 'MT5 模块正在关闭', 503);
     const dependencies = discoverDependencies(this.host, this.options);
     this.native = dependencies.native; this.compilerEnvironment = dependencies.environment;
@@ -125,8 +129,8 @@ export class MT5 {
     const source = this.storage.get('mt5_revision', `${key}:${revision}`);
     const validated = projectFiles(source.files), implementation = this.validateSource(project, validated);
     if (validated.engine) requireValue(source.engine?.digest === validated.engine.digest && source.generated_source === validated.generated_source, '冻结源码与生成物身份不一致，请重新保存源码', 409, 'engine_mismatch');
-    const ownership = conversationId ? this.host.workspace.owner(conversationId) ?? {} : {};
-    return this.storage.put('mt5_build', { ...ownership, conversation_id: conversationId, id: id('build'), project_id: project.id, revision, source_digest: source.source_digest, sdk_version: SDK_VERSION,
+    const owner = conversationId ? ownership(host) : {};
+    return this.storage.put('mt5_build', { ...owner, conversation_id: conversationId, id: id('build'), project_id: project.id, revision, source_digest: source.source_digest, sdk_version: SDK_VERSION,
       implementation, translation: project.translation ?? null, translation_mode: project.translation_mode ?? null, engine_digest: validated.engine?.digest ?? null, generated_digest: validated.engine?.generated_digest ?? null, status: 'queued', manifest_digest: null, ex5_sha256: null, diagnostics: '', created_at: now(), completed_at: null });
   }
   startBuild(buildId, signal) {
@@ -156,7 +160,7 @@ export class MT5 {
       if (build.engine_digest) requireValue(checked.engine?.digest === build.engine_digest && checked.generated_source === revision.generated_source, '编译前源码与 IR 身份不一致', 409, 'engine_mismatch');
       const files = { ...revision.files, ...Object.fromEntries(Object.entries({ ...this.sdk, 'Build.mqh': buildHeader(build.id) }).map(([name, content]) => [`Include/Product/${name}`, content])) };
       if (revision.translation) {
-        const translation = this.host.artifacts.read(revision.translation).manifest.content;
+        const translation = (await readArtifact(this.host, revision.translation)).manifest.content;
         // Agent translations are immutable. Lifecycle adaptation must be visible
         // in a new translation, never an implicit compiler source rewrite.
         build.live_capable = translation.mode === 'live' && files['Experts/Strategy.mq5'].includes('ProductExecutionAllowed()');

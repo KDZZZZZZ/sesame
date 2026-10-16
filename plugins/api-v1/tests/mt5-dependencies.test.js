@@ -11,14 +11,15 @@ import { digest } from '../../optional-api-v1/packages/mt5/backend/support.js';
 import { wineCommand, wineEnvironment } from '../../optional-api-v1/packages/mt5/backend/platform.js';
 
 async function fixture(t) {
-  const root = await mkdtemp(join(tmpdir(), 'sesame-dependencies-')); t.after(() => rm(root, { recursive: true, force: true }));
+  const root = await mkdtemp(join(tmpdir(), 'sesame-dependencies-'));
   const program = join(root, 'terminal'), data = join(root, 'data'), python = join(root, 'python.exe'), wine = join(root, 'wine');
   await mkdir(program); await mkdir(join(data, 'MQL5/Include'), { recursive: true });
   for (const p of [join(program, 'terminal64.exe'), join(program, 'MetaEditor64.exe'), python, wine]) await writeFile(p, 'MZ controlled fixture');
-  const host = { ...hostForStore(new Store(join(root, 'private'))), scope: { kind: 'main', conversationId: 'conv_main' }, configuration: { exclusive: fn => fn() }, environment: { runtime: { platform: process.platform, paths: { qemu: '/research-only' } }, pythonPath: '/never-use-host-python' } };
+  const store = new Store(join(root, 'private')), host = hostForStore(store, { sessionId: 'conv_main' });
+  t.after(async () => { store.close(); await rm(root, { recursive: true, force: true }); });
   const mt5 = { host, options: {}, jobs: new Map(), tester: { pending: new Map() }, deployments: { list: () => [] }, official: { jobs: new Map(), python: { close: async () => {} }, settings: () => ({ existing: true }) } };
   const changes = { terminal_directory: program, data_directory: data, python, ...(process.platform !== 'win32' ? { wine, wine_prefix: data } : {}) };
-  return { root, host, mt5, program, data, python, wine, changes };
+  return { root, host, store, mt5, program, data, python, wine, changes };
 }
 
 test('dependency configuration persists explicit paths, preserves account settings, and is idempotent', async t => {
@@ -40,7 +41,7 @@ test('dependency configure refuses active native runs and host Python executable
   const f = await fixture(t); f.mt5.deployments.list = () => [{ status: 'running' }];
   const args = { command_id: 'configure_dependency_refused', expected_version: 1, changes: f.changes };
   await assert.rejects(configureDependencies(f.host, f.mt5, args), { code: 'mt5_busy' });
-  assert.equal(f.host.storage.get('mt5_dependencies', 'local', true), undefined);
+  assert.equal(f.store.get('mt5_dependencies', 'local', true), undefined);
   f.mt5.deployments.list = () => []; await writeFile(f.python, '#!/bin/sh');
   await assert.rejects(configureDependencies(f.host, f.mt5, args), /Windows Python/);
 });
@@ -50,7 +51,7 @@ test('missing terminal reports installation prerequisites without a mandatory ru
   const report = inspectDependencies(f.mt5, { probe: true });
   assert.equal(report.compiler.available, false); assert.equal(report.discovered.terminal, null);
   assert.ok(report.missing.find(x => x.id === 'terminal'));
-  assert.ok(report.missing.find(x => x.id === 'python').install_directory.startsWith(f.host.storage.directory));
+  assert.ok(report.missing.find(x => x.id === 'python').install_directory.startsWith(f.host.context.storageRoot));
 });
 
 async function frozen(f) {
@@ -63,7 +64,7 @@ async function frozen(f) {
 
 test('research-only host runtime falls through to native worker and retains its execution evidence', async t => {
   const f = await fixture(t), b = await frozen(f); let request;
-  const result = await compileNative(b.native, b.source, undefined, b.hash, undefined, { ...f.host.environment, compiler: { backend: 'auto' }, executeWorker: async (_entry, payload) => { request = payload; return { success: false, diagnostics: 'Result: 1 errors, 0 warnings', ex5_sha256: null, execution: { backend: 'native' } }; } });
+  const result = await compileNative(b.native, b.source, undefined, b.hash, undefined, { runtime: { platform: process.platform, paths: { qemu: '/research-only' } }, compiler: { backend: 'auto' }, executeWorker: async (_entry, payload) => { request = payload; return { success: false, diagnostics: 'Result: 1 errors, 0 warnings', ex5_sha256: null, execution: { backend: 'native' } }; } });
   assert.equal(request.runtime, undefined); assert.equal(request.compiler, undefined); assert.equal(request.native.python, f.python);
   assert.deepEqual(result.execution, { backend: 'native' });
 });
@@ -103,6 +104,6 @@ test('official catalog reports an actionable prerequisite when native dependenci
   const catalog = await official.catalog('python');
   assert.equal(catalog.items[0].status, 'not_installed');
   assert.equal(catalog.items[0].prerequisite.code, 'PREREQUISITE_REQUIRED');
-  assert.equal(catalog.items[0].prerequisite.private_directory, join(f.host.storage.directory, 'dependencies'));
+  assert.equal(catalog.items[0].prerequisite.private_directory, join(f.host.context.storageRoot, 'dependencies'));
   await assert.rejects(official.tools('launcher'), error => error.code === 'PREREQUISITE_REQUIRED' && JSON.parse(error.message).next.tool === 'mt5_dependencies');
 });

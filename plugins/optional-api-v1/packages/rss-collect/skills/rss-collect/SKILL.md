@@ -1,6 +1,6 @@
 ---
 name: rss-collect
-description: "解析 RSS 2.0 / Atom 订阅源为结构化条目。配合 sources_fetch 使用：先抓取 feed URL，再把 XML 文本传给 parse_feed。"
+description: "将调用者提供的 RSS 2.0 / Atom XML 解析为结构化条目；需要抓取时由调用者选择获取能力。"
 ---
 
 此包为按需安装的标准 MCP，要求 Sesame >=0.2.0-0；不是默认包。服务器使用现有 Python 标准库，不在加载时下载依赖。先核对固定版本与实际工具测试，不能把解析器/参考目录当成行情账户或交易后端。
@@ -17,14 +17,14 @@ description: "解析 RSS 2.0 / Atom 订阅源为结构化条目。配合 sources
 
 ## 工作流
 
-当前工具负责解析文本；MCP 进程可访问公网与内网。获取订阅内容可使用 sources_fetch。
+当前工具负责解析调用者提供的 XML；MCP 进程可访问公网与内网。需要获取新订阅内容时，使用调用者选定的抓取能力；sources_fetch 是可选来源。
 
 stdio MCP 使用本机当前用户权限运行。本服务器的 file_path 参数单独限制为包内文件，不能用该参数读任意工作区路径；这不是 OS 隔离：
 
-先用 `plugin_load` 加载 `sesame/web-sources` 和 `sesame/rss-collect`。下文使用 MCP 原始工具名；实际调用使用当前工具列表中的完整 MCP 工具名。
+用 `plugin_load` 加载 `sesame/rss-collect`。下文使用 MCP 原始工具名；实际调用使用当前工具列表中的完整 MCP 工具名。
 
-1. 用 `sources_fetch` 抓取 feed URL（RSS/Atom），得到 XML 文本快照
-2. 读取快照 `text` 字段。输入须适配当前模型上下文与工具参数上限；不可截断 XML 后声称已完整解析。大 feed 可在研究工作区处理，本工具不能直接读取该工作区文件
+1. 复用调用者已有的 RSS/Atom XML 与来源；缺少内容时才通过所选抓取能力取得快照。选择 `sources_fetch` 时按需加载 `sesame/web-sources`
+2. 从快照取得完整 XML（例如 `text` 字段）。输入须适配当前模型上下文与工具参数上限；不可截断 XML 后声称已完整解析。大 feed 可在研究工作区处理，本工具不能直接读取该工作区文件
 3. 调用 `parse_feed`，把 XML 作为 `xml_content` 传入
 4. `file_path` 参数仅用于插件包内捆绑样本（如 sample.atom）
 

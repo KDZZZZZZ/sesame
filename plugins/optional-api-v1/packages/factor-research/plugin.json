@@ -1,6 +1,6 @@
 {
   "id": "sesame/factor-research",
-  "apiVersion": "1",
+  "apiVersion": "2",
   "version": "1.0.0",
   "title": "因子研究",
   "description": "按需评估选定因子列的可得时点、秩相关、冗余与固定样本外，不强制挖掘模型。",
@@ -11,8 +11,6 @@
   "default_state": "discoverable",
   "agent_scope": "all",
   "entry": "index.js",
-  "tool_definitions": "tools.json",
-  "tool_names": [],
   "prompts": [
     "prompt.md"
   ],
@@ -32,5 +30,6 @@
   "provides": {},
   "engines": {
     "sesame": ">=0.2.0-0"
-  }
+  },
+  "capability_manifest": "capabilities.json"
 }

@@ -2,16 +2,8 @@
   "id": "sesame/reports",
   "title": "交互报告",
   "description": "统一风格的交互研究与策略报告，含 SVL 逻辑图、回测选优热力图、全部参数组与敏感性分析。",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "default_state": "mounted",
-  "tool_names": [
-    "report_data",
-    "report_template",
-    "report_backtest_template",
-    "report_read",
-    "report_check",
-    "report_publish"
-  ],
   "prompts": [
     "prompt.md"
   ],
@@ -19,7 +11,6 @@
     "skills"
   ],
   "entry": "index.js",
-  "tool_definitions": "tools.json",
   "resources": [
     "repair.md",
     "PROVENANCE.md",
@@ -48,16 +39,25 @@
   "templates": {
     "report_repair": "repair.md"
   },
-  "apiVersion": "1",
+  "apiVersion": "2",
   "author": {
     "name": "Sesame"
   },
   "license": "MIT",
-  "provides": {
-    "sesame.report": "1"
-  },
   "agent_scope": "all",
   "engines": {
     "sesame": ">=0.2.2"
-  }
+  },
+  "dependencies": [
+    {
+      "name": "sesame/data-access",
+      "version": ">=3.0.0"
+    },
+    {
+      "name": "sesame/workspace",
+      "version": ">=3.0.0"
+    }
+  ],
+  "execution": "native",
+  "capability_manifest": "capabilities.json"
 }

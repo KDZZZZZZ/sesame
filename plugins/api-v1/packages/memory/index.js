@@ -1,2 +1,1 @@
-export { createTools } from './tools.js';
-export { activate } from './compaction.js';
+export { createCapabilities } from './tools.js';

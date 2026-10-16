@@ -1,0 +1,1240 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "capabilities": [
+    {
+      "id": "memory_search",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "检索长期记忆摘要，可按主题和资料范围筛选。默认包含归档，排除过期事实；检索不会刷新采用时间，也不授予权限。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "中文或其他语言关键词",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "category": {
+            "type": "string",
+            "description": "分类路径前缀",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "scope": {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "const": "global"
+                  },
+                  {
+                    "type": "string",
+                    "const": "project"
+                  },
+                  {
+                    "type": "string",
+                    "const": "strategy"
+                  }
+                ]
+              },
+              "project_id": {
+                "type": "string",
+                "description": "项目 ID",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "strategy_id": {
+                "type": "string",
+                "description": "策略 ID",
+                "minLength": 1,
+                "maxLength": 20000
+              }
+            },
+            "additionalProperties": false
+          },
+          "include_archived": {
+            "type": "boolean"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "q": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "hot",
+              "warm",
+              "archived",
+              "expired",
+              "conflict"
+            ]
+          },
+          "project_id": {
+            "type": "string"
+          },
+          "strategy_id": {
+            "type": "string"
+          },
+          "include_expired": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "read:memory"
+      ],
+      "resultRetention": "summary",
+      "usage": {
+        "purpose": "检索当前会话有权读取的长期记忆摘要。默认包含归档记忆，可按需召回；过期事实默认不返回。检索与读取不会刷新采用时间，不把记忆当作权限来源。",
+        "inputs": "query（或q）为关键词；可按 category/scope/status 筛选；默认含 archived，不含 expired；limit 默认50、最大200。",
+        "outputs": "{items,total}；items 是摘要/状态/版本/source_count，正文和来源用 memory_read(id)。",
+        "prerequisites": [
+          "有当前会话；插件私有库由宿主激活。"
+        ],
+        "limitations": [
+          "搜索不刷新采用时间；归档可用，expired/conflict 必须重新核实。scope 是资料分类，不授予权限。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "memory_search"
+      }
+    },
+    {
+      "id": "memory_read",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "读取记忆正文、来源、版本和生命周期。归档可按需读取；expired/conflict 不能作为已确认事实采用。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "记忆 ID",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "read:memory"
+      ],
+      "resultRetention": "summary",
+      "usage": {
+        "purpose": "读取记忆正文、来源、版本和生命周期。归档可按需读取；expired/conflict 不能作为已确认事实采用。",
+        "inputs": "id 来自 memory_search/items、memory_manage 或候选处理结果。",
+        "outputs": "完整正文、sources、scope、version、status、review_due、reference_count 等真实记忆记录。",
+        "prerequisites": [],
+        "limitations": [
+          "读取不算采用；更新所需 expected_version 来自 version，不从时间或标题推测。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "memory_read"
+      }
+    },
+    {
+      "id": "memory_propose",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "提交待主 Agent 核验的记忆候选，必须引用真实用户消息或已发布成果。候选不会自动成为长期事实；任务结束后未合并候选销毁。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "category",
+          "title",
+          "summary",
+          "content",
+          "scope",
+          "sources"
+        ],
+        "properties": {
+          "category": {
+            "type": "string",
+            "description": "分类路径，阅读 manage-memory skill 获取完整分类树",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "title": {
+            "type": "string",
+            "description": "稳定的事实或偏好名称",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "summary": {
+            "type": "string",
+            "description": "用于检索的简短摘要",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "content": {
+            "type": "string",
+            "description": "完整结论、依据与适用条件，不保存原始日志",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "scope": {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "const": "global"
+                  },
+                  {
+                    "type": "string",
+                    "const": "project"
+                  },
+                  {
+                    "type": "string",
+                    "const": "strategy"
+                  }
+                ]
+              },
+              "project_id": {
+                "type": "string",
+                "description": "项目 ID",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "strategy_id": {
+                "type": "string",
+                "description": "策略 ID",
+                "minLength": 1,
+                "maxLength": 20000
+              }
+            },
+            "additionalProperties": false
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "type",
+                "id"
+              ],
+              "properties": {
+                "type": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "user_message"
+                    },
+                    {
+                      "type": "string",
+                      "const": "artifact"
+                    }
+                  ]
+                },
+                "id": {
+                  "type": "string",
+                  "description": "真实用户消息或最终成果 ID",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "revision": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    {
+                      "type": "string",
+                      "description": "冻结成果版本",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    }
+                  ]
+                },
+                "kind": {
+                  "type": "string",
+                  "description": "成果种类，如 report 或 strategy.source",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^sha256:[a-f0-9]{64}$",
+                  "description": "冻结成果摘要，按原始 ArtifactRef 传入"
+                },
+                "schemaVersion": {
+                  "type": "string",
+                  "description": "冻结成果 schemaVersion，按原始 ArtifactRef 传入",
+                  "minLength": 1,
+                  "maxLength": 20000
+                }
+              },
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 20
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 64
+            },
+            "maxItems": 20
+          },
+          "evidence": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "explicit"
+              },
+              {
+                "type": "string",
+                "const": "verified"
+              },
+              {
+                "type": "string",
+                "const": "inferred"
+              },
+              {
+                "type": "string",
+                "const": "conflicted"
+              }
+            ]
+          },
+          "pinned": {
+            "type": "boolean"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "low"
+              },
+              {
+                "type": "string",
+                "const": "normal"
+              },
+              {
+                "type": "string",
+                "const": "high"
+              }
+            ]
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "review_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "conflicts_with": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "write:memory"
+      ],
+      "resultRetention": "summary",
+      "usage": {
+        "purpose": "提交待主 Agent 核验的记忆候选，必须引用真实用户消息或已发布成果。候选不会自动成为长期事实；任务结束后未合并候选销毁。",
+        "inputs": "category/title/summary/content/scope/sources 必填；用户偏好用 user/workflow 或 user/communication 与 {kind:\"global\"}。sources 用 {type:\"user_message\",id} 或 {type:\"artifact\",...完整ref}；evidence 区分 explicit/verified/inferred/conflicted。",
+        "outputs": "候选 id、版本、所有者、来源及到期信息；还不是正式长期记忆。",
+        "prerequisites": [
+          "真实用户消息可从 host#messages 数据源读取；成果来源必须已发布。分类表见 manage-memory。"
+        ],
+        "limitations": [
+          "子 Agent 使用候选；重要结论需主 Agent accept。无效来源应查真实消息/成果，不能引用助手自述或委派消息。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "memory_propose"
+      }
+    },
+    {
+      "id": "memory_mark_used",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "仅在记忆实际用于一个已发布成果或明确用户决策后记录采用，附具体原因和持久来源。相同来源重复调用不刷新闲置时间；搜索曝光和读取不算采用。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "id",
+          "reason",
+          "source"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "已实际采用的记忆 ID",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "reason": {
+            "type": "string",
+            "description": "说明它如何影响该成果或决策",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "source": {
+            "type": "object",
+            "required": [
+              "type",
+              "id"
+            ],
+            "properties": {
+              "type": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "const": "user_message"
+                  },
+                  {
+                    "type": "string",
+                    "const": "artifact"
+                  }
+                ]
+              },
+              "id": {
+                "type": "string",
+                "description": "真实用户消息或最终成果 ID",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "revision": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  {
+                    "type": "string",
+                    "description": "冻结成果版本",
+                    "minLength": 1,
+                    "maxLength": 20000
+                  }
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "description": "成果种类，如 report 或 strategy.source",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$",
+                "description": "冻结成果摘要，按原始 ArtifactRef 传入"
+              },
+              "schemaVersion": {
+                "type": "string",
+                "description": "冻结成果 schemaVersion，按原始 ArtifactRef 传入",
+                "minLength": 1,
+                "maxLength": 20000
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "write:memory"
+      ],
+      "resultRetention": "summary",
+      "usage": {
+        "purpose": "仅在记忆实际用于一个已发布成果或明确用户决策后记录采用，附具体原因和持久来源。相同来源重复调用不刷新闲置时间；搜索曝光和读取不算采用。",
+        "inputs": "id 是已实际用于结论的记忆；reason 说明影响；source 是该已发布成果或明确用户决策消息。",
+        "outputs": "更新后的采用记录/记忆状态；同一来源重复调用幂等。",
+        "prerequisites": [
+          "记忆确实影响了这份成果/决策。"
+        ],
+        "limitations": [
+          "曝光、搜索、读取不算采用，不能用假引用刷新生命周期。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "memory_mark_used"
+      }
+    },
+    {
+      "id": "memory_manage",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "主 Agent 管理正式记忆：save 创建或修订；candidates 查看候选；accept/reject 合并或丢弃；archive/restore 手动归档或恢复；forget 清除正文、历史和派生索引。更新和删除先读取 expected_version。保存的内容不能修改应用权限。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "save"
+              },
+              {
+                "type": "string",
+                "const": "candidates"
+              },
+              {
+                "type": "string",
+                "const": "accept"
+              },
+              {
+                "type": "string",
+                "const": "reject"
+              },
+              {
+                "type": "string",
+                "const": "archive"
+              },
+              {
+                "type": "string",
+                "const": "restore"
+              },
+              {
+                "type": "string",
+                "const": "forget"
+              },
+              {
+                "type": "string",
+                "const": "stats"
+              }
+            ]
+          },
+          "id": {
+            "type": "string",
+            "description": "记忆或候选 ID",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "entry": {
+            "type": "object",
+            "properties": {
+              "category": {
+                "type": "string",
+                "description": "分类路径，阅读 manage-memory skill 获取完整分类树",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "title": {
+                "type": "string",
+                "description": "稳定的事实或偏好名称",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "summary": {
+                "type": "string",
+                "description": "用于检索的简短摘要",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "content": {
+                "type": "string",
+                "description": "完整结论、依据与适用条件，不保存原始日志",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "scope": {
+                "type": "object",
+                "required": [
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "const": "global"
+                      },
+                      {
+                        "type": "string",
+                        "const": "project"
+                      },
+                      {
+                        "type": "string",
+                        "const": "strategy"
+                      }
+                    ]
+                  },
+                  "project_id": {
+                    "type": "string",
+                    "description": "项目 ID",
+                    "minLength": 1,
+                    "maxLength": 20000
+                  },
+                  "strategy_id": {
+                    "type": "string",
+                    "description": "策略 ID",
+                    "minLength": 1,
+                    "maxLength": 20000
+                  }
+                },
+                "additionalProperties": false
+              },
+              "sources": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "type",
+                    "id"
+                  ],
+                  "properties": {
+                    "type": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "const": "user_message"
+                        },
+                        {
+                          "type": "string",
+                          "const": "artifact"
+                        }
+                      ]
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "真实用户消息或最终成果 ID",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "revision": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        {
+                          "type": "string",
+                          "description": "冻结成果版本",
+                          "minLength": 1,
+                          "maxLength": 20000
+                        }
+                      ]
+                    },
+                    "kind": {
+                      "type": "string",
+                      "description": "成果种类，如 report 或 strategy.source",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "digest": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$",
+                      "description": "冻结成果摘要，按原始 ArtifactRef 传入"
+                    },
+                    "schemaVersion": {
+                      "type": "string",
+                      "description": "冻结成果 schemaVersion，按原始 ArtifactRef 传入",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 20
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                "maxItems": 20
+              },
+              "evidence": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "const": "explicit"
+                  },
+                  {
+                    "type": "string",
+                    "const": "verified"
+                  },
+                  {
+                    "type": "string",
+                    "const": "inferred"
+                  },
+                  {
+                    "type": "string",
+                    "const": "conflicted"
+                  }
+                ]
+              },
+              "pinned": {
+                "type": "boolean"
+              },
+              "value": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "const": "low"
+                  },
+                  {
+                    "type": "string",
+                    "const": "normal"
+                  },
+                  {
+                    "type": "string",
+                    "const": "high"
+                  }
+                ]
+              },
+              "expires_at": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "review_at": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "conflicts_with": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "write:memory"
+      ],
+      "resultRetention": "summary",
+      "usage": {
+        "purpose": "主 Agent 管理正式记忆：save 创建或修订；candidates 查看候选；accept/reject 合并或丢弃；archive/restore 手动归档或恢复；forget 清除正文、历史和派生索引。更新和删除先读取 expected_version。保存的内容不能修改应用权限。",
+        "inputs": "save 使用 entry={category,title,summary,content,scope,sources,...}；新建不传 id，修订传 id/expected_version。candidates 列候选；accept/reject 用候选 id/version；archive/restore/forget 用记忆 id/version；stats 读统计。",
+        "outputs": "save/archive/restore 返回实际记忆/version；accept/reject 返回 {id,status,memory?}；candidates 为 items；forget 为遗忘回执；stats 含 policy 和 compaction。",
+        "prerequisites": [
+          "主 Agent；sources 采用真实用户消息或完整已发布 ArtifactRef。"
+        ],
+        "limitations": [
+          "version_conflict 重读该记录后合并意图；来源无效查 host#messages/固定成果。forget 清除库内正文/历史/索引，不能声称原聊天、报告或外部副本已消失。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "memory_manage"
+      }
+    },
+    {
+      "id": "memory_tree",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "读取长期记忆分类树。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "read:memory"
+      ],
+      "resultRetention": "summary",
+      "usage": {
+        "purpose": "读取长期记忆分类树。",
+        "inputs": "空对象；宿主记忆界面读取。",
+        "outputs": "{items,categories} 分类树，节点含 path/count/children。",
+        "prerequisites": [
+          "有效宿主会话。"
+        ],
+        "limitations": [
+          "只读，不创建分类或改变记忆。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "memory_tree"
+      }
+    },
+    {
+      "id": "memory_index",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "读取启动用的有界记忆摘要索引。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "read:memory"
+      ],
+      "resultRetention": "summary",
+      "usage": {
+        "purpose": "读取启动用的有界记忆摘要索引。",
+        "inputs": "limit 默认20；宿主启动上下文使用有界摘要。",
+        "outputs": "{items,total}；仅当前 hot/warm 记忆的启动摘要。",
+        "prerequisites": [
+          "有效宿主会话。"
+        ],
+        "limitations": [
+          "归档和过期记录不进入索引；需召回时另用 search，不刷新采用时间。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "memory_index"
+      }
+    },
+    {
+      "id": "memory_stats",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "读取维护策略与实际整理回执。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "read:memory"
+      ],
+      "resultRetention": "summary",
+      "usage": {
+        "purpose": "读取维护策略与实际整理回执。",
+        "inputs": "空对象；宿主设置/维护界面读取。",
+        "outputs": "{total,states,policy,last_maintenance,maintenance_error,compaction}；policy.version 用于配置修改，compaction 可能为 null。",
+        "prerequisites": [
+          "有效宿主会话。"
+        ],
+        "limitations": [
+          "partial/failed 整理回执不表示全部来源处理完成。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "memory_stats"
+      }
+    },
+    {
+      "id": "memory_configure",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "按版本更新记忆保留策略。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "hot_days": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "archive_days": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "candidate_days": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "inferred_low_value_days": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "maintenance_interval_ms": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "expected_version"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "write:memory"
+      ],
+      "resultRetention": "summary",
+      "usage": {
+        "purpose": "按版本更新记忆保留策略。",
+        "inputs": "expected_version 来自 stats.policy.version；只补丁 hot_days/archive_days/candidate_days/inferred_low_value_days/maintenance_interval_ms。",
+        "outputs": "持久化后的 policy 与新 version，并运行维护。",
+        "prerequisites": [
+          "主会话宿主调用；archive_days>hot_days，inferred_low_value_days=0 关闭自动清理。"
+        ],
+        "limitations": [
+          "可能按新策略归档/清理已有记录；版本冲突读取新 policy 后重算补丁。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "memory_configure"
+      }
+    },
+    {
+      "id": "memory_activate",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "打开插件私有记忆库并恢复遗忘清理通知。",
+      "inputSchema": {
+        "type": "object"
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "write:memory"
+      ],
+      "resultRetention": "summary",
+      "usage": {
+        "purpose": "打开插件私有记忆库并恢复遗忘清理通知。",
+        "inputs": "宿主 lifecycle.activate；实现使用 storageRoot，不消费业务字段。",
+        "outputs": "{ready:true,storage:\"plugin-private-sqlite\"}，恢复遗忘通知并启动维护定时器。",
+        "prerequisites": [],
+        "limitations": [
+          "激活不会发模型请求；维护清理按保存的策略执行。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "memory_activate"
+      }
+    },
+    {
+      "id": "memory_before_compact",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "从真实用户消息与固定成果中自动整理记忆。",
+      "inputSchema": {
+        "type": "object"
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "model:complete",
+        "write:memory"
+      ],
+      "resultRetention": "summary",
+      "usage": {
+        "purpose": "从真实用户消息与固定成果中自动整理记忆。",
+        "inputs": "宿主 lifecycle.beforeCompact 提供 model、准备压缩的分支/消息和原因，signal 由宿主注入。",
+        "outputs": "持久整理回执含 status/counts/processedChunks/pendingSources；失败保留进度，宿主仍能继续压缩。",
+        "prerequisites": [
+          "宿主会话、当前可用模型、真实用户消息/已发布成果。"
+        ],
+        "limitations": [
+          "最多六块；不把工具日志或助手摘要当事实，不自动遗忘、不刷新采用时间；下次压缩接续未完成来源。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "memory_before_compact"
+      }
+    },
+    {
+      "id": "memory_before_run_release",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "清理任务尚未合并的候选记忆。",
+      "inputSchema": {
+        "type": "object"
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "write:memory"
+      ],
+      "resultRetention": "summary",
+      "usage": {
+        "purpose": "清理任务尚未合并的候选记忆。",
+        "inputs": "宿主 lifecycle.beforeRunRelease；runId 或 workspaceRunId 标识要终结的任务。",
+        "outputs": "该任务未合并候选的真实清理结果。",
+        "prerequisites": [
+          "宿主当前会话上下文。"
+        ],
+        "limitations": [
+          "正式记忆与已发布成果保留；清理后可从成果重新提取候选。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "memory_before_run_release"
+      }
+    },
+    {
+      "id": "memory_dispose",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "停止维护并关闭插件私有记忆库。",
+      "inputSchema": {
+        "type": "object"
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "write:memory"
+      ],
+      "resultRetention": "summary",
+      "usage": {
+        "purpose": "停止维护并关闭插件私有记忆库。",
+        "inputs": "宿主 lifecycle.dispose；无业务输入。",
+        "outputs": "{closed:true}；停止维护，等待私有库操作并关闭 SQLite。",
+        "prerequisites": [],
+        "limitations": [
+          "不删除持久记忆；无需 Agent 手动调用。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "memory_dispose"
+      }
+    }
+  ],
+  "sources": [],
+  "views": [],
+  "services": [
+    {
+      "id": "memory",
+      "contract": "sesame.memory/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "operations": {
+        "search": "memory_search",
+        "read": "memory_read",
+        "tree": "memory_tree",
+        "index": "memory_index",
+        "manage": "memory_manage",
+        "stats": "memory_stats",
+        "configure": "memory_configure"
+      }
+    }
+  ],
+  "knowledge": [
+    {
+      "id": "memory-guide",
+      "path": "prompt.md",
+      "description": "长期记忆的资料、候选、来源与生命周期。",
+      "kind": "prompt"
+    },
+    {
+      "id": "manage-memory",
+      "path": "skills/manage-memory/SKILL.md",
+      "description": "记忆分类与管理方法。",
+      "kind": "skill"
+    }
+  ],
+  "hooks": [
+    {
+      "id": "activate",
+      "contract": "sesame.lifecycle/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "event": "lifecycle.activate",
+      "operations": {
+        "handle": "memory_activate"
+      }
+    },
+    {
+      "id": "beforeCompact",
+      "contract": "sesame.lifecycle/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "event": "lifecycle.beforeCompact",
+      "operations": {
+        "handle": "memory_before_compact"
+      }
+    },
+    {
+      "id": "beforeRunRelease",
+      "contract": "sesame.lifecycle/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "event": "lifecycle.beforeRunRelease",
+      "operations": {
+        "handle": "memory_before_run_release"
+      }
+    },
+    {
+      "id": "dispose",
+      "contract": "sesame.lifecycle/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "event": "lifecycle.dispose",
+      "operations": {
+        "handle": "memory_dispose"
+      }
+    }
+  ],
+  "stateCollections": [],
+  "artifactSchemas": []
+}

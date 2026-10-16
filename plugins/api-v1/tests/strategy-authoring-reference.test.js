@@ -1,22 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { resourceHost } from './core-v2-fixture.mjs';
 import { Type } from '@sesame/plugin-sdk/schema';
 import * as svl from '@sesame/plugin-sdk/svl';
-import { createTools } from '../packages/strategy-authoring/index.js';
+import { createCapabilities } from '../packages/strategy-authoring/index.js';
 
 const root = new URL('../packages/strategy-authoring/', import.meta.url);
 const bytes = path => readFileSync(new URL(path, root));
 const json = path => JSON.parse(bytes(path));
 const languagePath = 'skills/strategy-authoring/references/language.md';
-const string = description => Type.String({ description, minLength: 1, maxLength: 20000 });
-const helpers = { Type, string, optional: description => Type.Optional(string(description)), define: (name, description, properties, execute) => ({ name, label: name, description, parameters: Type.Object(properties, { additionalProperties: false }), execute }) };
-
-function validateTool(path, source = bytes(path)) {
-  // The plugin receives the actual public SDK, not a replacement validator.
-  // Only its file-read port is supplied by this fixture; no native engine runs.
-  const host = { tools: helpers, svl, workspace: { file: async (operation, requested) => { assert.equal(operation, 'read'); assert.equal(requested, path); return source; } } };
-  return createTools(host).find(tool => tool.name === 'strategy_validate').execute({ source_path: path });
+async function validateTool(path, source = bytes(path)) {
+  const directory = mkdtempSync(join(tmpdir(), 'strategy-reference-'));
+  try {
+    writeFileSync(join(directory, 'source.json'), source);
+    const { host } = resourceHost({ workspaceRoot: directory });
+    return await createCapabilities(host).find(tool => tool.name === 'strategy_validate').execute({ source_path: 'source.json' });
+  } finally { rmSync(directory, { recursive: true, force: true }); }
 }
 
 test('the skill exposes a declared self-contained language reference and every supported operator', () => {
@@ -32,7 +34,7 @@ test('the skill exposes a declared self-contained language reference and every s
   }
   // Versioned additions have their own tables after the original time notes.
   for (const id of Object.keys(svl.OPERATORS)) assert.ok(reference.includes('`' + id + '`'), `Documented operator: ${id}`);
-  assert.deepEqual(json('tools.json'), JSON.parse(JSON.stringify(createTools({ tools: helpers }).map(({ execute, ...definition }) => definition))));
+  assert.deepEqual(json('capabilities.json').capabilities.map(item => item.binding.name).sort(), createCapabilities({}).map(item => item.name).sort());
 });
 
 test('the stateful reference validates through the public tool and executes its stated four outcomes', async () => {

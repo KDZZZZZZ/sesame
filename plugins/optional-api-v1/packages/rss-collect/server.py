@@ -1,7 +1,7 @@
 import sys, json, os, re
 import xml.etree.ElementTree as ET
 
-VERSION = "2.0.2"
+VERSION = "2.0.3"
 PLUGIN_ROOT = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
 
 def resolve_path(p):
@@ -96,20 +96,9 @@ def parse_feed(args):
         "version": VERSION
     }
 
-TOOLS = [
-    {
-        "name": "parse_feed",
-        "description": "Parse RSS 2.0 or Atom XML feed (inline content or bundled file path) into entries",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "xml_content": {"type": "string", "description": "Raw RSS/Atom XML string"},
-                "file_path": {"type": "string", "description": "Relative path to a bundled XML file; cannot access conversation or host files"},
-                "max_entries": {"type": "integer", "default": 10, "minimum": 1, "maximum": 100}
-            }
-        }
-    }
-]
+with open(os.path.join(str(PLUGIN_ROOT), "capabilities.json"), encoding="utf-8") as declaration_file:
+    DECLARED_CAPABILITIES = json.load(declaration_file)["capabilities"]
+TOOLS = [{"name": c["binding"]["name"], "description": c["description"], "inputSchema": c["inputSchema"], "outputSchema": c["outputSchema"]} for c in DECLARED_CAPABILITIES if c["binding"]["type"] == "mcp"]
 
 for line in sys.stdin:
     try:

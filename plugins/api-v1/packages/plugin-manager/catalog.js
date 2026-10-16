@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
-import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
+import { operation } from './operations.js';
 
 export const CATALOG_URL = 'https://raw.githubusercontent.com/KDZZZZZZ/sesame/main/plugins/api-v1/catalog.json';
 const REPOSITORY = 'https://github.com/KDZZZZZZ/sesame';
@@ -23,7 +24,7 @@ export async function readCatalog(signal, fetcher = globalThis.fetch) {
   const deadline = AbortSignal.any([AbortSignal.timeout(30000), ...(signal ? [signal] : [])]);
   const raw = await bytes(fetcher, CATALOG_URL, 4 * 1024 * 1024, deadline);
   const catalog = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(raw));
-  check(catalog && typeof catalog === 'object' && catalog.schemaVersion === 1 && catalog.apiVersion === '1' && catalog.channel === 'development' && Array.isArray(catalog.plugins) && catalog.plugins.length <= 100, 'Expected the Plugin API 1 development catalog');
+  check(catalog && typeof catalog === 'object' && catalog.schemaVersion === 1 && catalog.apiVersion === '2' && catalog.channel === 'development' && Array.isArray(catalog.plugins) && catalog.plugins.length <= 100, 'Expected the Plugin API 2 development catalog');
   check(Array.isArray(catalog.releases) && catalog.releases.length > 0 && catalog.releases.length <= 100, 'Catalog requires fixed release identities');
   const releases = new Map();
   for (const release of catalog.releases) {
@@ -40,7 +41,7 @@ export async function readCatalog(signal, fetcher = globalThis.fetch) {
   for (const entry of catalog.plugins) {
     check(entry && typeof entry === 'object', 'Invalid catalog entry');
     check(/^sesame\/[a-z][a-z0-9-]*$/.test(entry.id) && !ids.has(entry.id), 'Catalog identity must be unique'); ids.add(entry.id);
-    check(/^\d+\.\d+\.\d+$/.test(entry.version) && ['active', 'withdrawn'].includes(entry.status) && entry.apiVersion === '1' && ['sesame-native', 'agent-plugins'].includes(entry.format), 'Invalid catalog version, format or status');
+    check(/^\d+\.\d+\.\d+$/.test(entry.version) && ['active', 'withdrawn'].includes(entry.status) && entry.apiVersion === '2' && ['sesame-native', 'sesame-mcp'].includes(entry.format), 'Invalid catalog version, format or status');
     const slug = entry.id.split('/')[1], release = releases.get(entry.release);
     check(release && entry.source?.repository === REPOSITORY && entry.source.commit === release.sourceCommit && entry.source.path === `${release.sourceRoot}/packages/${slug}`, 'Source must pin an official package release commit');
     if (release.profile) check(entry.distribution === release.profile && entry.engines?.sesame === release.engines.sesame, 'Package compatibility differs from its released profile');
@@ -60,34 +61,35 @@ export async function readCatalog(signal, fetcher = globalThis.fetch) {
 export async function catalogQuery(args, signal, fetcher) {
   const { catalog, digest } = await readCatalog(signal, fetcher), query = (args.query ?? '').toLowerCase();
   const items = catalog.plugins.filter(entry => entry.status === 'active' && (!args.plugin_id || entry.id === args.plugin_id) && `${entry.id} ${entry.title} ${entry.description}`.toLowerCase().includes(query));
-  return { catalog_url: CATALOG_URL, catalog_digest: digest, apiVersion: '1', channel: 'development', releases: catalog.releases,
+  return { catalog_url: CATALOG_URL, catalog_digest: digest, apiVersion: '2', channel: 'development', releases: catalog.releases,
     items: items.map(({ package: pkg, ...entry }) => ({ ...entry, package: { treeDigest: normalize(pkg.treeDigest), files: pkg.files.length, bytes: pkg.files.reduce((sum, file) => sum + file.bytes, 0) } })),
-    next: 'Use exact plugin_id and catalog_digest with plugin_install_catalog. For a newer catalog version, inspect the installed digest and explicitly choose action:update with expected_digest. Keep a newer installed version or use explicit rollback for an older version. The host enforces update versions and permissions. Identical bytes return already-installed; disabled plugins stay disabled. This API 1 development catalog is separate from stable 0.1.4.' };
+    next: 'Use exact plugin_id and catalog_digest with plugin_install_catalog. Updates require explicit action:update and expected_digest. The host checks and installs the fixed package in one operation. Disabled plugins stay disabled. Only API 2 packages are accepted.' };
 }
-function installed(host, id) {
-  try { return host.plugins.inspect(id); }
-  catch (error) { if (error.status === 404 || error.code === 'plugin_not_found') return null; throw error; }
+async function installed(host, id) {
+  try { return await host.plugins.read(id, { part: 'status' }); }
+  catch (error) { if (error.status === 404 || ['plugin_not_found', 'NOT_FOUND'].includes(error.code)) return null; throw error; }
 }
 export async function installCatalog(host, args, signal, fetcher = globalThis.fetch) {
-  check(host.scope.kind === 'main', 'Catalog installation requires the main Agent', 'FORBIDDEN');
+  check(host.context.kind === 'main', 'Catalog installation requires the main Agent', 'FORBIDDEN');
   const action = args.action ?? 'install';
   check(['install', 'update'].includes(action), 'Choose install or explicit update');
   check(/^sesame\/[a-z][a-z0-9-]*$/.test(args.plugin_id) && /^sha256:[a-f0-9]{64}$/.test(args.catalog_digest) && /^[A-Za-z0-9_-]{16,128}$/.test(args.command_id), 'Invalid catalog operation identity');
   check(action === 'update' ? /^sha256:[a-f0-9]{64}$/.test(args.expected_digest) : args.expected_digest === undefined, 'Explicit update requires expected_digest; install must omit it', 'CATALOG_UPDATE_REQUIRED');
-  const fingerprint = hash(JSON.stringify([host.scope.conversationId ?? null, args.plugin_id, args.catalog_digest, action, args.expected_digest ?? null]));
-  const result = await host.storage.idempotentAsync(`catalog:${args.command_id}`, fingerprint, async () => {
+  const fingerprint = hash(JSON.stringify([host.context.sessionId ?? null, args.plugin_id, args.catalog_digest, action, args.expected_digest ?? null]));
+  const result = await operation(host, `catalog:${args.command_id}`, fingerprint, async () => {
     const { catalog, digest } = await readCatalog(signal, fetcher);
     check(digest === args.catalog_digest, 'Catalog changed; inspect the current entry again', 'CATALOG_CHANGED');
     const entry = catalog.plugins.find(entry => entry.id === args.plugin_id);
     check(entry?.status === 'active', 'Exact plugin is absent or withdrawn', 'CATALOG_UNAVAILABLE');
-    const present = installed(host, entry.id), expected = normalize(entry.package.treeDigest);
+    const present = await installed(host, entry.id), expected = normalize(entry.package.treeDigest);
     if (present?.version === entry.version) {
       check(present.digest === expected, 'The same version has different bytes; refusing replacement', 'CATALOG_VERSION_CONFLICT');
       return { installed: present, status: 'already-installed', reused: true, catalog_digest: digest };
     }
     if (action === 'install') check(!present, 'A different version is installed; inspect it. Only a newer catalog version can use action:update with expected_digest; older versions require explicit rollback', 'CATALOG_UPDATE_REQUIRED');
     else check(present && present.digest === args.expected_digest, 'Installed digest changed or the plugin is absent; inspect it again', 'CATALOG_INSTALLED_CHANGED');
-    const parent = host.workspace.path('plugin-drafts'); await mkdir(parent, { recursive: true });
+    check(host.context.workspaceRoot, 'A workspace is required');
+    const parent = join(host.context.workspaceRoot, 'plugin-drafts'); await mkdir(parent, { recursive: true });
     const directory = await mkdtemp(join(parent, 'catalog-'));
     const controller = new AbortController(), deadline = AbortSignal.any([AbortSignal.timeout(120000), controller.signal, ...(signal ? [signal] : [])]);
     let cursor = 0;
@@ -105,17 +107,20 @@ export async function installCatalog(host, args, signal, fetcher = globalThis.fe
     const downloaded = await Promise.allSettled(Array.from({ length: Math.min(4, entry.package.files.length) }, () => worker().catch(error => { controller.abort(error); throw error; })));
     const failed = downloaded.find(item => item.status === 'rejected');
     if (failed) { await rm(directory, { recursive: true, force: true }); throw failed.reason; }
-    const tested = await host.plugins.manage('test', { path: directory }, signal);
-    check(tested.passed, `Package tests failed; no installation was attempted. ${JSON.stringify(tested.results ?? []).slice(0, 6000)}`, 'PACKAGE_TEST_FAILED');
-    check(tested.id === entry.id && tested.version === entry.version && tested.format === entry.format && tested.digest === expected, 'Tested identity or actual bytes differ from the catalog', 'PACKAGE_TEST_FAILED');
-    const next = await host.plugins.manage(action, { path: directory, digest: tested.digest, command_id: `catalog-${hash(args.command_id).slice(7)}`, ...(action === 'update' ? { expected_digest: args.expected_digest } : {}) }, signal);
-    return { installed: next, status: action === 'update' ? 'updated' : 'installed', reused: false, catalog_digest: digest, test_results: tested.results, draft_path: directory };
+    const manifest = JSON.parse(await readFile(join(directory, 'plugin.json'), 'utf8'));
+    check(manifest.id === entry.id && manifest.version === entry.version && manifest.apiVersion === '2', 'Downloaded identity differs from the catalog', 'PACKAGE_INTEGRITY');
+    const source = { path: directory, digest: expected }, options = { operationId: `catalog-${hash(args.command_id).slice(7)}`, signal };
+    const next = action === 'update'
+      ? await host.plugins.update(entry.id, source, { ...options, expectedRevision: args.expected_digest })
+      : await host.plugins.install(source, options);
+    check(next.plugin.id === entry.id && next.plugin.version === entry.version && next.plugin.digest === expected, 'Installed identity differs from the fixed catalog', 'PACKAGE_INTEGRITY');
+    return { installed: next.plugin, receipt: next.receipt, status: action === 'update' ? 'updated' : 'installed', reused: false, catalog_digest: digest, draft_path: directory };
   });
   // A replayed receipt is not authority over the current installation. Re-read
   // it before refreshing tools, including after an unknown post-commit outcome.
-  const current = installed(host, args.plugin_id);
+  const current = await installed(host, args.plugin_id);
   check(current && current.digest === result.installed.digest && current.version === result.installed.version, 'Installation changed after this operation; inspect the current plugin', 'CATALOG_INSTALLED_CHANGED');
   if (current.state === 'disabled' || ['failed', 'degraded'].includes(current.runtime_status)) return { ...result, installed: current, loaded: false, next: 'The existing disabled policy or activation diagnostic was preserved. Inspect state, runtime_status and diagnostics; catalog installation does not enable a disabled plugin.' };
-  const loaded = await host.plugins.load(args.plugin_id);
+  const loaded = await host.plugins.setEnabled(args.plugin_id, true, { scope: 'session' });
   return { ...result, installed: current, loaded: true, plugin: loaded, next: 'The current session tools and resources were refreshed. Read the plugin skill and reuse existing dependencies/configuration. Preparation is a separate explicit operation; static native checks do not certify behavior.' };
 }

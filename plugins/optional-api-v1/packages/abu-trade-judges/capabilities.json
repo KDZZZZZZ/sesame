@@ -1,0 +1,322 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "capabilities": [
+    {
+      "id": "abu_trade_judges_analyze",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "从查询时点前已结束的历史交易中寻找特征近邻，给出可解释的相似样本评分。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "schema_version": {
+                "const": 1
+              },
+              "as_of": {
+                "type": "string",
+                "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+              },
+              "source": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "kind": {
+                    "enum": [
+                      "synthetic",
+                      "historical",
+                      "live"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "kind"
+                ],
+                "additionalProperties": true,
+                "description": "Caller-declared provenance; synthetic remains synthetic in output artifacts."
+              },
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "k": {
+                    "type": "integer",
+                    "default": 3,
+                    "minimum": 1,
+                    "maximum": 100,
+                    "description": "最多近邻数"
+                  },
+                  "distance_floor": {
+                    "type": "number",
+                    "default": 1e-9,
+                    "minimum": 5e-324,
+                    "maximum": 1,
+                    "description": "距离权重分母下限"
+                  }
+                },
+                "additionalProperties": false,
+                "description": "Optional overrides. Defaults and limits match the existing calculation."
+              },
+              "feature_names": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 100,
+                "minItems": 1,
+                "uniqueItems": true
+              },
+              "query": {
+                "type": "object",
+                "properties": {
+                  "time": {
+                    "type": "string",
+                    "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+                  },
+                  "available_at": {
+                    "type": "string",
+                    "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+                  },
+                  "features": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Each selected feature_names key must contain a finite number. Unselected metadata is allowed; names are not restricted to the example."
+                  }
+                },
+                "additionalProperties": true,
+                "required": [
+                  "time",
+                  "available_at",
+                  "features"
+                ]
+              },
+              "completed_trades": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "feature_snapshot_at": {
+                      "type": "string",
+                      "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+                    },
+                    "decision_time": {
+                      "type": "string",
+                      "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+                    },
+                    "outcome_available_at": {
+                      "type": "string",
+                      "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+                    },
+                    "features": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "description": "Each selected feature_names key must contain a finite number. Unselected metadata is allowed; names are not restricted to the example."
+                    },
+                    "outcome": {
+                      "type": "object",
+                      "properties": {
+                        "return": {
+                          "type": "number"
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true,
+                  "required": [
+                    "feature_snapshot_at",
+                    "decision_time",
+                    "outcome_available_at",
+                    "features",
+                    "outcome"
+                  ]
+                },
+                "maxItems": 10000,
+                "minItems": 1
+              }
+            },
+            "additionalProperties": true,
+            "required": [
+              "schema_version",
+              "source",
+              "as_of",
+              "feature_names",
+              "query",
+              "completed_trades"
+            ],
+            "description": "完整的固定输入对象；examples/input.json 仅为合成格式示例，不是实盘证据。"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "schema_version": {
+            "const": 1
+          },
+          "baseline": {
+            "const": true
+          },
+          "status": {
+            "const": "research_baseline"
+          },
+          "parameters": {
+            "type": "object"
+          },
+          "observations": {
+            "description": "observations.query_time、neighbors、weighted_neighbor_return、score、decision_hint 分别给出查询时点、近邻证据、加权历史收益、评分和研究提示。"
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "input_artifact": {
+            "type": "object",
+            "description": "立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。"
+          },
+          "result_artifact": {
+            "type": "object",
+            "description": "立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。"
+          }
+        },
+        "required": [
+          "schema_version",
+          "baseline",
+          "status",
+          "parameters",
+          "observations",
+          "limitations",
+          "input_artifact",
+          "result_artifact"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "resources.create",
+        "resources.publish"
+      ],
+      "binding": {
+        "type": "native",
+        "name": "abu_trade_judges_analyze"
+      },
+      "usage": {
+        "purpose": "从查询时点前已结束的历史交易中寻找特征近邻，给出可解释的相似样本评分。",
+        "inputs": "调用形状为 {input:{schema_version:1,source:{id,kind},as_of,parameters?,...}}，不是文件路径或数据 ID。source.id 为 1..500 字符，kind 为 synthetic/historical/live；as_of 及全部时间字段使用真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒）。输入限 2MiB 有限 JSON，不接收代码。parameters 只支持列出的字段。 feature_names 为 1..100 个唯一名称；query:{time,available_at,features}，available_at <= time <= as_of。completed_trades 每项含 id?、feature_snapshot_at、decision_time、outcome_available_at、features、outcome:{return}；feature_snapshot_at <= decision_time <= outcome_available_at < query.time。所有 features 按 feature_names 提供有限数，return 在 [-1,10]，交易 id 唯一。",
+        "outputs": "observations.query_time、neighbors、weighted_neighbor_return、score、decision_hint 分别给出查询时点、近邻证据、加权历史收益、评分和研究提示。 立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。",
+        "prerequisites": [
+          "提供与任务相符的已知输入；本能力不联网取数，不需要 Python、ABU 安装或券商账户。"
+        ],
+        "limitations": [
+          "这是缩放后的近邻基线，不是 ABU UMP/GMM 等价实现。加权历史收益不是校准后的预期收益，decision_hint 不等于下单批准。",
+          "来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。"
+        ]
+      }
+    }
+  ],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "knowledge-0",
+      "path": "examples/input.json",
+      "description": "历史交易裁判基线 — examples/input.json",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-1",
+      "path": "prompt.md",
+      "description": "历史交易裁判基线 — prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "knowledge-2",
+      "path": "PROVENANCE.md",
+      "description": "历史交易裁判基线 — PROVENANCE.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-3",
+      "path": "README.md",
+      "description": "历史交易裁判基线 — README.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-4",
+      "path": "skills/abu-trade-judges/references/method.md",
+      "description": "历史交易裁判基线 — skills/abu-trade-judges/references/method.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-5",
+      "path": "skills/abu-trade-judges/SKILL.md",
+      "description": "历史交易裁判基线 — skills/abu-trade-judges/SKILL.md",
+      "kind": "skill"
+    }
+  ],
+  "hooks": [],
+  "stateCollections": [],
+  "artifactSchemas": [
+    {
+      "id": "data",
+      "kind": "data",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "const": "json-rows"
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rowCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "columns": {
+            "type": "array"
+          },
+          "provenance": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "format",
+          "path",
+          "rowCount",
+          "columns",
+          "provenance"
+        ],
+        "additionalProperties": true
+      }
+    }
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

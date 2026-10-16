@@ -1,3 +1,3 @@
-import { createTools as workspace } from './tools.js';
-import { createTools as hostFiles } from './host-files.js';
-export function createTools(host) { return [...workspace(host), ...hostFiles(host)]; }
+import { createCapabilities as workspace } from './tools.js';
+import { createCapabilities as external } from './host-files.js';
+export const createCapabilities = host => [...workspace(host), ...external(host)];

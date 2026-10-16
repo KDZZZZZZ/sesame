@@ -1,122 +1,96 @@
+import { validateSource, graph, evaluateReplay } from '@sesame/plugin-sdk/svl';
 import { evaluatePipeline } from './lib/pipeline.js';
-import { createDecisionTools, activateDecisions } from './lib/agent-decision-tools.js';
-import { createQuantTools } from './lib/quant-functions.js';
-
-export function activate(host) { return activateDecisions(host); }
+import { createDecisionCapabilities } from './lib/agent-decision-tools.js';
+import { createQuantCapabilities } from './lib/quant-functions.js';
+import { activateDecisions, disposeDecisions } from './lib/decision-service.js';
+import { readBytes, readWorkspace, writeWorkspace, publishFiles } from './artifact-io.js';
 
 const fail = (condition, message) => { if (!condition) throw new Error(message); };
 const json = bytes => JSON.parse(Buffer.from(bytes).toString('utf8'));
-const refSchema = Type => Type.Object({ id: Type.String(), revision: Type.String(), digest: Type.String({ pattern: '^sha256:[a-f0-9]{64}$' }), kind: Type.Literal('strategy.source'), schemaVersion: Type.Literal('1.0.0') }, { additionalProperties: false });
+const file = (path, bytes) => ({ path, bytes, mediaType: 'application/json' });
 
-function readSource(host, ref) {
+async function readSource(host, ref, signal) {
   fail(ref?.kind === 'strategy.source', 'A fixed strategy.source reference is required');
-  const artifact = host.artifacts.read(ref), content = artifact.manifest.content;
-  const blob = artifact.manifest.blobs.find(b => b.path === content.sourcePath);
-  fail(blob, 'Strategy source blob is missing');
-  const validated = host.svl.validateSource(host.artifacts.readBlob(blob).toString('utf8'));
-  fail(validated.sourceDigest === content.sourceDigest, 'SVL semantic digest does not match the published source');
-  return validated;
+  const manifest = await host.resources.read(ref, { part: 'manifest' }), content = manifest.content;
+  const blob = manifest.blobs.find(value => value.path === content.sourcePath);
+  fail(blob && blob.size <= 1048576, 'Strategy source blob is missing or exceeds 1 MiB');
+  const validated = validateSource((await readBytes(host, ref, blob.path, signal)).toString('utf8'));
+  fail(validated.sourceDigest === content.sourceDigest, 'SVL semantic digest does not match the published source'); return validated;
 }
 
-function pinnedInputs(host, fixture) {
+async function pinnedInputs(host, fixture, signal) {
   const refs = new Map(), pending = [fixture]; let budget = 100000;
   while (pending.length) {
     fail(--budget >= 0, 'Pipeline fixture exceeds its structural budget');
-    const value = pending.pop();
-    if (!value || typeof value !== 'object') continue;
+    const value = pending.pop(); if (!value || typeof value !== 'object') continue;
     if (['id', 'revision', 'digest', 'kind', 'schemaVersion'].every(key => Object.hasOwn(value, key))) {
-      host.artifacts.read(value);
-      if (value.kind === 'strategy.source') readSource(host, value);
-      refs.set(JSON.stringify([value.id, value.revision, value.digest, value.kind, value.schemaVersion]), value);
-      fail(refs.size <= 256, 'Pipeline fixture has too many pinned inputs');
+      const key = JSON.stringify([value.id, value.revision, value.digest, value.kind, value.schemaVersion]);
+      if (refs.has(key)) continue;
+      await host.resources.read(value, { part: 'manifest' });
+      if (value.kind === 'strategy.source') await readSource(host, value, signal);
+      refs.set(key, value); fail(refs.size <= 256, 'Pipeline fixture has too many pinned inputs');
     } else for (const child of Object.values(value)) pending.push(child);
   }
-  fail(refs.size <= 256, 'Pipeline fixture has too many pinned inputs');
   return [...refs.values()];
 }
 
-export function createTools(host) {
-  const { define, Type, string, optional } = host.tools;
-  const ref = refSchema(Type);
+export async function provenance(host, dependencies) {
+  for (const ref of dependencies) {
+    const manifest = await host.resources.read(ref, { part: 'manifest' });
+    if (manifest.provenance?.kind === 'demo' || manifest.content.provenance?.kind === 'demo') return { kind: 'demo', references: dependencies };
+  }
+  return { kind: 'derived', references: dependencies };
+}
+
+export function createCapabilities(host) {
   const load = async (path, signal) => {
-    const bytes = await host.workspace.file('read', path, undefined, signal);
-    fail(bytes.length <= 1024 * 1024, 'SVL source exceeds 1 MiB');
-    return { bytes, ...host.svl.validateSource(bytes.toString('utf8')) };
+    const bytes = await readWorkspace(host, path, signal); fail(bytes.length <= 1048576, 'SVL source exceeds 1 MiB');
+    return { bytes, ...validateSource(bytes.toString('utf8')) };
   };
   const evaluateFixture = async (args, signal, methodOnly = false) => {
-    const bytes = await host.workspace.file('read', args.fixture_path, undefined, signal);
-    fail(bytes.length <= 4 * 1024 * 1024, 'Pipeline fixture exceeds 4 MiB');
-    const fixture = json(bytes), dependencies = pinnedInputs(host, fixture);
+    const bytes = await readWorkspace(host, args.fixture_path, signal); fail(bytes.length <= 4194304, 'Pipeline fixture exceeds 4 MiB');
+    const fixture = json(bytes), dependencies = await pinnedInputs(host, fixture, signal);
     if (methodOnly) fail(fixture.schemaVersion === '1.1.0', 'strategy_workflow requires the method workflow 1.1 fixture');
-    const declared = readSource(host, fixture.schemaVersion === '1.1.0' ? fixture.strategySource : fixture.target?.strategySource);
+    const declared = await readSource(host, fixture.schemaVersion === '1.1.0' ? fixture.strategySource : fixture.target?.strategySource, signal);
     fail(declared.source.strategyId === fixture.scope?.strategyId, 'Pipeline ownership differs from the frozen strategy source');
-    const result = evaluatePipeline(fixture);
-    signal?.throwIfAborted();
+    const result = evaluatePipeline(fixture); signal?.throwIfAborted();
     const output = JSON.stringify(result, null, 2) + '\n';
-    if (args.output_path) await host.workspace.file('write', args.output_path, output, signal);
+    if (args.output_path) await writeWorkspace(host, args.output_path, output, signal);
     let evidence;
-    if (args.operation_id) {
-      const inputBlob = host.artifacts.blob(bytes), outputBlob = host.artifacts.blob(output);
-      evidence = host.artifacts.publish({ operationId: args.operation_id, manifest: {
-        kind: 'resource', schemaVersion: '1.0.0',
-        content: { type: 'strategy-pipeline-evaluation', inputPath: 'input.json', resultPath: 'pipeline.json', validationScope: result.validationScope, nativeEngineExecuted: false },
-        dependencies, blobs: [{ ...inputBlob, path: 'input.json', mediaType: 'application/json' }, { ...outputBlob, path: 'pipeline.json', mediaType: 'application/json' }],
-        provenance: { kind: dependencies.some(ref => { const manifest = host.artifacts.read(ref).manifest; return manifest.provenance?.kind === 'demo' || manifest.content.provenance?.kind === 'demo'; }) ? 'demo' : 'derived', references: dependencies },
-      } });
-    }
+    if (args.operation_id) evidence = (await publishFiles(host, args.operation_id, { kind: 'resource', schemaVersion: '1.0.0',
+      content: { type: 'strategy-pipeline-evaluation', inputPath: 'input.json', resultPath: 'pipeline.json', validationScope: result.validationScope, nativeEngineExecuted: false },
+      dependencies, provenance: await provenance(host, dependencies) }, [file('input.json', bytes), file('pipeline.json', output)], {}, signal)).ref;
     return { ...result, ...(evidence ? { evidence } : {}) };
   };
   return [
-    define('strategy_validate', 'Validate an authored SVL/1 JSON file and return its actual semantic digest, operators and graph. This does not run a native engine or place orders.', {
-      source_path: string('Workspace path to the authored SVL JSON file'),
-    }, async (args, signal) => {
+    { name: 'strategy_validate', execute: async (args, signal) => {
       const { source, sourceDigest, operators, diagnostics } = await load(args.source_path, signal);
-      return { sourceDigest, operators, diagnostics, graph: host.svl.graph(source), validationScope: 'svl-source-only' };
-    }),
-    define('strategy_publish', 'Publish a validated SVL source as an immutable strategy.source artifact. Preserve this exact reference for target translation and future trade evidence.', {
-      operation_id: string('Unique idempotency key for this exact publication'), source_path: string('Workspace SVL JSON path'), title: string('Strategy title'), change_summary: string('What this source revision changes'),
-      parent: Type.Optional(ref), artifact_id: optional('Existing artifact ID when publishing a new revision'), expected_revision: optional('Exact current revision when updating an existing artifact'),
-    }, async (args, signal) => {
-      const validated = await load(args.source_path, signal);
-      if (args.parent) readSource(host, args.parent);
-      const blob = host.artifacts.blob(validated.bytes);
-      signal?.throwIfAborted();
-      const published = host.artifacts.publish({ operationId: args.operation_id, ...(args.artifact_id ? { artifactId: args.artifact_id, expectedRevision: args.expected_revision ?? null } : {}), manifest: {
-        kind: 'strategy.source', schemaVersion: '1.0.0', content: { schemaVersion: '1.0.0', strategyId: validated.source.strategyId, title: args.title, language: validated.source.language, languageVersion: validated.source.schemaVersion, sourcePath: 'strategy.svl.json', sourceDigest: validated.sourceDigest, extensions: validated.source.extensions ?? [], parent: args.parent ?? null, changeSummary: args.change_summary },
-        blobs: [{ ...blob, path: 'strategy.svl.json', mediaType: 'application/json' }], dependencies: args.parent ? [args.parent] : [], provenance: { kind: 'user_input', references: args.parent ? [args.parent] : [] },
-      } });
-      return { ref: published, sourceDigest: validated.sourceDigest, graph: host.svl.graph(validated.source), validationScope: 'svl-source-only' };
-    }),
-    define('strategy_graph', 'Read a fixed SVL source artifact and derive its graph from the same validated AST. No layout or explanation is treated as execution evidence.', {
-      source: ref,
-    }, args => host.svl.graph(readSource(host, args.source).source)),
-    define('strategy_replay', 'Evaluate fixed ordered input events against a saved SVL source. Produces state, intents and actual evaluator traces; it is not a broker simulator, native backtest or translation-equivalence receipt.', {
-      source: ref, fixture_path: string('Workspace JSON with runId, parameters, initialState and ordered events'), output_path: optional('Optional workspace path for the complete evaluation result'), operation_id: optional('If provided, preserve this replay as a generic resource artifact'),
-    }, async (args, signal) => {
-      const validated = readSource(host, args.source), bytes = await host.workspace.file('read', args.fixture_path, undefined, signal);
-      fail(bytes.length <= 4 * 1024 * 1024, 'Replay input exceeds 4 MiB');
-      const fixture = json(bytes), result = host.svl.evaluateReplay(validated.source, fixture);
-      signal?.throwIfAborted();
-      const output = JSON.stringify(result, null, 2) + '\n';
-      if (args.output_path) await host.workspace.file('write', args.output_path, output, signal);
+      return { sourceDigest, operators, diagnostics, graph: graph(source), validationScope: 'svl-source-only' };
+    } },
+    { name: 'strategy_publish', execute: async (args, signal) => {
+      const validated = await load(args.source_path, signal); if (args.parent) await readSource(host, args.parent, signal);
+      const refs = args.parent ? [args.parent] : [];
+      const result = await publishFiles(host, args.operation_id, { kind: 'strategy.source', schemaVersion: '1.0.0',
+        content: { schemaVersion: '1.0.0', strategyId: validated.source.strategyId, title: args.title, language: validated.source.language, languageVersion: validated.source.schemaVersion, sourcePath: 'strategy.svl.json', sourceDigest: validated.sourceDigest, extensions: validated.source.extensions ?? [], parent: args.parent ?? null, changeSummary: args.change_summary },
+        dependencies: refs, provenance: { kind: 'user_input', references: refs } }, [file('strategy.svl.json', validated.bytes)],
+      args.artifact_id ? { artifactId: args.artifact_id, expectedRevision: args.expected_revision ?? null } : {}, signal);
+      return { ref: result.ref, sourceDigest: validated.sourceDigest, graph: graph(validated.source), validationScope: 'svl-source-only' };
+    } },
+    { name: 'strategy_graph', execute: async (args, signal) => graph((await readSource(host, args.source, signal)).source) },
+    { name: 'strategy_replay', execute: async (args, signal) => {
+      const validated = await readSource(host, args.source, signal), bytes = await readWorkspace(host, args.fixture_path, signal); fail(bytes.length <= 4194304, 'Replay input exceeds 4 MiB');
+      const result = evaluateReplay(validated.source, json(bytes)); signal?.throwIfAborted();
+      const output = JSON.stringify(result, null, 2) + '\n'; if (args.output_path) await writeWorkspace(host, args.output_path, output, signal);
       let evidence;
-      if (args.operation_id) {
-        const inputBlob = host.artifacts.blob(bytes), outputBlob = host.artifacts.blob(output);
-        evidence = host.artifacts.publish({ operationId: args.operation_id, manifest: { kind: 'resource', schemaVersion: '1.0.0', content: { type: 'svl-evaluation', source: args.source, sourceDigest: validated.sourceDigest, inputPath: 'input.json', resultPath: 'replay.json', status: result.status, validationScope: 'fixed-input-svl-evaluation' }, dependencies: [args.source], blobs: [{ ...inputBlob, path: 'input.json', mediaType: 'application/json' }, { ...outputBlob, path: 'replay.json', mediaType: 'application/json' }], provenance: { kind: 'derived', references: [args.source] } } });
-      }
+      if (args.operation_id) evidence = (await publishFiles(host, args.operation_id, { kind: 'resource', schemaVersion: '1.0.0',
+        content: { type: 'svl-evaluation', source: args.source, sourceDigest: validated.sourceDigest, inputPath: 'input.json', resultPath: 'replay.json', status: result.status, validationScope: 'fixed-input-svl-evaluation' },
+        dependencies: [args.source], provenance: await provenance(host, [args.source]) }, [file('input.json', bytes), file('replay.json', output)], {}, signal)).ref;
       return { ...result, ...(evidence ? { evidence } : {}), validationScope: 'fixed-input-svl-evaluation', nativeEngineExecuted: false };
-    }),
-    define('strategy_pipeline', 'Check and evaluate a frozen signal → target portfolio → risk → execution fixture. Reads exact artifact references and preserves optional evidence. No model, broker, matching engine or native strategy is executed.', {
-      fixture_path: string('Workspace JSON conforming to the plugin pipeline.md fixture contract'),
-      output_path: optional('Optional workspace path for the complete evaluation result'),
-      operation_id: optional('If provided, preserve the fixture and result as a resource artifact'),
-    }, (args, signal) => evaluateFixture(args, signal)),
-    define('strategy_workflow', 'Run frozen dynamic-universe selection, actual equal/confidence/inverse-volatility portfolio sizing, hard portfolio risk and a replayable execution ledger. Returns quantities, cash, risk evidence, linked order definitions and proposed commands; never sends orders or invokes a model.', {
-      fixture_path: string('Workspace JSON conforming to methods.md workflow schema 1.1'),
-      output_path: optional('Optional workspace path for the complete workflow and execution checkpoint'),
-      operation_id: optional('If provided, preserve the frozen input and full result as a resource artifact'),
-    }, (args, signal) => evaluateFixture(args, signal, true)),
-    ...createDecisionTools(host),
-    ...createQuantTools(host),
+    } },
+    { name: 'strategy_pipeline', execute: (args, signal) => evaluateFixture(args, signal) },
+    { name: 'strategy_workflow', execute: (args, signal) => evaluateFixture(args, signal, true) },
+    ...createDecisionCapabilities(host), ...createQuantCapabilities(host),
+    { name: 'strategy_activate', execute: () => activateDecisions(host) },
+    { name: 'strategy_dispose', execute: () => disposeDecisions(host) },
   ];
 }

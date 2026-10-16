@@ -1,29 +1,33 @@
-import test from 'node:test';
+import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
-import { randomUUID } from 'node:crypto';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import { tmpdir } from 'node:os';
 import { Decimal } from '@sesame/plugin-sdk/decimal';
-import { applyPortfolio, targetOrders } from '../packages/manual-trading/portfolio.js';
-import { createService } from '../packages/manual-trading/service.js';
-import { createAdapters } from '../packages/manual-trading/adapters.js';
+import { applyPortfolio, targetOrders } from '../packages/portfolio-execution/portfolio.js';
+import { createService } from '../packages/portfolio-execution/service.js';
+import { createAdapters } from '../packages/portfolio-execution/adapters.js';
+import { records, closeRecords } from '../packages/portfolio-execution/records.js';
+
+const fixtures = [];
+after(() => { for (const host of fixtures) { closeRecords(host); assert.ok(resolve(host.context.storageRoot).startsWith(resolve(tmpdir(), 'portfolio-targets-'))); rmSync(host.context.storageRoot, { recursive: true, force: true }); } });
 
 const clone = value => value === undefined ? undefined : structuredClone(value);
 const mt5Position = (ticket, type, volume, magic = 0) => ({ ticket, symbol: 'EURUSD', type, volume, magic });
 function fixture({ backend = 'mt5', positions = [], orders = [], nativeResult = 10009, quoteAge = 0, pauseStatus = 'stopped', onObservation } = {}) {
   let time = 1800000000000, observations = 0;
-  const rows = new Map(), nativeSends = [], reads = [], pauses = [], checkpoints = [];
+  const nativeSends = [], reads = [], pauses = [], checkpoints = [];
   const state = { positions: clone(positions), orders: clone(orders), account: backend === 'mt5'
     ? { accountId: 'fixture', server: 'Broker', revision: '1' } : { accountId: 'fixture', connectionId: 'QMT', revision: '1' } };
-  const host = { scope: { kind: 'main', conversationId: 'conv_test' },
-    storage: { directory: `virtual-portfolio-${randomUUID()}`, get: (kind, id) => clone(rows.get(`${kind}:${id}`)),
-      put(kind, value) { rows.set(`${kind}:${value.id}`, clone(value)); return clone(value); },
-      list: kind => [...rows.entries()].filter(([key]) => key.startsWith(`${kind}:`)).map(([, value]) => clone(value)),
-      delete: (kind, id) => rows.delete(`${kind}:${id}`), transaction: action => action() },
-    tools: { async call(request) {
+  const host = { context: { kind: 'main', sessionId: 'conv_test', storageRoot: mkdtempSync(join(tmpdir(), 'portfolio-targets-')) },
+    capabilities: { async invoke(id, input) {
+      const request = { name: id.split('#')[1], arguments: input };
       reads.push(clone(request));
-      if (request.name.endsWith('_trading_context')) return { account: clone(state.account), positions: clone(state.positions), orders: clone(state.orders), summary: {}, fills: [], deployments: [], capturedAt: time };
+      if (request.name.endsWith('_trading_context')) return { type: 'result', value: { account: clone(state.account), positions: clone(state.positions), orders: clone(state.orders), summary: {}, fills: [], deployments: [], capturedAt: time } };
       assert.equal(request.name, 'mt5_trading_pause'); pauses.push(clone(request.arguments));
-      return { status: pauseStatus, deployment: { id: request.arguments.deployment_id, status: pauseStatus }, nativeAction: 'remove_expert' };
+      return { type: 'result', value: { status: pauseStatus, deployment: { id: request.arguments.deployment_id, status: pauseStatus }, nativeAction: 'remove_expert' } };
     } }, plugins: {} };
+  fixtures.push(host);
   const orderRequest = createAdapters(host).orderRequest;
   const adapter = {
     async snapshot(selected, symbol) {
@@ -117,7 +121,7 @@ test('unknown, partial and accepted pending native receipts stop a multi-order h
     const first = await f.apply(); assert.equal(first.status, 'blocked'); assert.equal(first.error.code, 'EXECUTION_INCOMPLETE');
     assert.equal(f.nativeSends.length, 1); assert.equal(first.orders.length, 1);
     const second = await f.apply(); assert.equal(second.status, 'blocked'); assert.equal(f.nativeSends.length, 1);
-    assert.equal(f.host.storage.list('commands').length, 1);
+    assert.equal(records(f.host).list('commands').length, 1);
   }
 });
 test('an unresolved previous-account send blocks a new run operation ID', async () => {
@@ -196,8 +200,8 @@ test('QMT cancellation-in-progress and unknown order states cannot authorize a r
 });
 
 test('scheduled native intents bind empty or all-origin positions while ordinary manual intents stay compatible', () => {
-  const taskHost = { scope: { kind: 'subagent' }, agents: { current: () => ({ pluginId: 'sesame/manual-trading' }) } };
-  const background = createAdapters(taskHost), ordinary = createAdapters({ scope: { kind: 'main' } });
+  const taskHost = { context: { kind: 'subagent' } };
+  const background = createAdapters(taskHost), ordinary = createAdapters({ context: { kind: 'main' } });
   const observation = { backend: 'mt5', symbol: 'EURUSD', account: { accountId: 'fixture', server: 'Broker' }, positions: [], quote: { sourceTimeMs: 1800000000000 }, expiresAt: 1800000060000,
     spec: { volume_min: '0.1', volume_max: '100', volume_step: '0.1', filling_mode: 2 } };
   const args = { action: 'market', side: 'buy', quantity: '0.2', price_limit: '101', backendCommandId: 'test', operation_id: 'test', remark: 'fixture' };

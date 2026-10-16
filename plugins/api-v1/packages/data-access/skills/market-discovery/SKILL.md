@@ -1,39 +1,23 @@
 ---
 name: market-discovery
-description: Discover active market providers, actual connection revisions and instrument identities through public read-only tools before querying or binding charts.
+description: Discover declared market sources and exact instruments, then freeze actual paged history or bind a chart.
 ---
 
-1. Call `data_providers` with `contract:"sesame.market"`. Use the returned `provider:{pluginId,providerId}` exactly. An empty list means no provider is loaded; use plugin discovery/load and its setup guidance. This tool does not install dependencies or connect an account.
-2. Call `market_instruments` with `action:"search"`, that provider and the requested code/name. The tool binds the provider's existing configuration, reads a bounded real catalog page, then closes its temporary binding. It returns the actual `connection:{id,revision}`, instrument `ref`, source identity and read metadata. Do not calculate a source ID from a symbol or read application files to find one.
-3. Inspect `items`. Names are not globally unique. Select the exact requested source/instrument; when `has_more:true`, refine the query or increase `limit` up to 200. This tool deliberately returns no cursor from a binding it has closed. It does not claim the bounded results are the complete catalog.
-4. `action:"describe"` with the returned `instrument` and `connection` gives the actual `features`, time basis, volume units, calendar status and `series_options`. Retain explicit unknown/unsupported fields. Standard periods are `1h` and `15m`, for example, rather than a platform's `H1` or `M15`. Only select values the provider declares or its documentation supports.
-5. For a chart, call `canvas_binding` with the chosen provider/instrument/timeframe and current connection. It returns `binding` and a ready-to-copy `chart` patch; then use `canvas_apply` with the current layout version. Provider binding and layout acceptance do not prove rendering; inspect the current chart receipt afterwards.
+已知有效的 SourceRef 和 InstrumentRef 可直接复用，无需重复发现。缺少来源时 data_providers({contract:"sesame.market/1"}) 返回 ref={providerId,revision}；available=false 表示所属插件需加载。binding 的可用字段来自 configSchema。
 
-## Read and freeze historical prices
+缺少精确品种身份时 market_instruments({action:"search",source,query}) 返回真实分页与 InstrumentRef；需要周期、价格、复权、时段或时间口径时 describe 提供相应声明。metadata.connection 的实际 {id,revision} 可固定到 source.binding.connection。游标续页保持同一查询与 limit。
 
-Use `market_read` after discovery when analysis, a report, or a native bar backtest needs actual prices. This is the public bridge from a typed market provider to durable data; do not copy its bridge scripts, inspect application source, or invent private HTTP routes to obtain the same data.
+显示任务可用 canvas_binding 生成 chart，再让 canvas_apply 接受它；已有匹配绑定不必重建。成功证据来自 canvas_inspect 当前版本的目标图表 rendered 与实际 bar_count，feed_status 独立反映实时流。warning 是历史覆盖等非阻断限制，不等于 error；无回执只能说明尚无显示证据。明确协议错误应保留来源和操作信息，重复重绑相同身份不能修复协议。
 
-Pass `operation_id`, `title`, the discovered `provider`, `connection`, `instrument`, full `spec`, an explicit `range:{from:SourceTime,to:SourceTime}` (inclusive/exclusive), `include_forming`, and `volume_kind:"real"|"tick"|"none"`. `max_rows` defaults to 10000, at most 100000. The `spec` has `timeframe`, `priceBasis`, `adjustment`, `session`, and `calendarRevision`; retain a returned unknown calendar rather than inventing one. Bounds must share a time basis: UTC is `{basis:"utc",unixMs:...}`; wall time is `{basis:"wall",authority:"the returned source clock",value:"2026-09-01T00:00:00"}`. Never add `Z` to an unknown broker clock. The provider must actually support the range and specification.
+历史数据调用 market_read：
+- operation_id、title 是此次精确快照的稳定身份。
+- source 为固定 SourceRef；instrument 为发现得到的精确标识。
+- spec={timeframe,priceBasis,adjustment,session,calendarRevision}，只选真实声明值；唯一选项可由 canvas_binding 选择。
+- range={from:SourceTime,to:SourceTime} 是含头不含尾范围；UTC 使用 {basis:"utc",unixMs}，wall 使用 {basis:"wall",authority,value}，不向未知时区添加 Z。
+- include_forming 明确是否包含形成中 K 线，volume_kind 必须为 real、tick 或 none；max_rows 默认 10000，上限 100000。
 
-The tool reads forward pages within one temporary binding, checks a stable snapshot/series identity, and closes it on success or failure. It returns:
+返回 ref 是固定行 DataRef，evidence 是公开原始 Bar 页、来源元数据和覆盖证据；rowCount、columns、sample 是实际投影摘要。data_read({ref}) 可将这些行写入执行目录。没有短期 query_id 或新注册 dataset_id。配置和凭据不会写入市场快照；临时 host cursor 也不作为证据。
 
-- `ref`: fixed `data` ArtifactRef with `json-rows`, directly usable in `report_publish.data[].ref` or a DataRef-consuming engine.
-- `dataset_id`: the same projected rows registered for `data_read({dataset_id:...})`; keep `ref` for durable citation.
-- `raw`: a fixed resource containing the original public Bar pages, provider metadata and coverage. It excludes the supplied binding configuration.
-- `sample`, `columns`, `volume`, `coverage`, and `status`: bounded preview and actual limitations, not a complete-data or runtime-validation certificate.
+Decimal 和 SourceTime 原样保留。unknown 或 none 的 volume 为 null，real 的单位和 tick 计数不同。status:partial 或 coverage.complete:false 不证明完整市场历史，即使分页已结束。demo 输入始终保留 demo。DST fold 无内置解歧义能力，遇到显式 fold 报错，不能移除字段强行通过。
 
-Rows have `datetime` (the unchanged Bar openTime SourceTime), `end_time`, exact Decimal `open/high/low/close`, selected `volume`, `volume_unit`, `volume_kind`, `volume_status`, `is_closed`, `closure`, `id`, and `revision`. Real volume retains its source unit, including share versus lot. Tick volume is an integer quote count labelled `tick`, never traded volume. Choosing `none` or receiving unknown/unsupported volume gives `null`, not zero. Original values/statuses remain in `raw`. Projection is labelled derived with `raw` as its dependency; demo sources stay demo.
-
-This version does not resolve daylight-saving `fold` values into chronological instants. An explicit `fold:0` or `fold:1` in a requested wall-time bound or returned Bar produces `UNSUPPORTED_CAPABILITY` with no new artifact; the temporary binding is still closed. Use UTC SourceTime only when the provider actually supports it, or choose an unambiguous range. Do not remove `fold`, guess an offset, or sort a repeated clock hour as ordinary wall text.
-
-For `vnpy_backtest`, pass this `ref` as `data`; default columns already match `datetime/open/high/low/close/volume`. For wall timestamps pass the exact returned `wall_time_authority`. Check volume units and engine assumptions first. The engine rejects missing volume; do not silently fill it or convert lots into shares. Actual engine execution, matching assumptions and result artifacts remain that plugin's responsibility.
-
-`status:"partial"` or `coverage.complete:false` means the fixed returned rows do not establish gap-free history. Completing every cursor is not proof of an authoritative exchange calendar. Read warnings and the raw provider coverage before drawing conclusions. Forming rows are explicitly identified; a closed-bar strategy usually requests `include_forming:false`.
-
-The same `operation_id` with the same arguments returns the successful frozen snapshot without a new provider read, including after restart. A conflicting request is rejected. To fetch newer observations use a new ID. If publication fails after the read completed, retry the same request to resume the retained bytes. A mid-read failure or over-budget result publishes nothing; do not treat an error as a partial success. Limits are 200 pages and 16 MiB each for raw responses and projected rows. Narrow the range or explicitly raise `max_rows` within its supported bound; no rows are silently dropped to fit.
-
-When there is one declared price basis, adjustment or session, `canvas_binding` chooses it. With multiple values, select the intended one explicitly. If no session is declared, read that provider's plugin guidance and specify it. Do not invent a pinned calendar: keep `calendarRevision:{status:"unknown",...}` if that is what the source reports. Rebind after `CONNECTION_CHANGED`; do not overwrite the old revision to force stale source identities through.
-
-Provider `configuration` contains only documented public binding options, such as a data source name. Passwords/tokens belong in that provider's configuration flow. A provider requiring a connection must supply its ID/revision through its own documented setup; there is no universal account-discovery side channel.
-
-`data_sources`/`data_query` serve registered datasets and plugin-specific research sources. They are distinct from typed market providers. For those sources use `data_query` → `data_snapshot` → `data_read`; for typed price history use `market_read` directly. Query previews and market catalog metadata alone are not frozen price evidence. Live chart subscriptions are owned by the frontend, not a model polling loop.
+同一 operation_id 重试读取已冻结结果；新观察使用新 ID。失败发生在完整读取之后时复用保存的字节。中途网络错误、快照漂移、max_rows/200 页/16 MiB 超限都不发布截断结果。数据源自己的缺口声明与宿主分页完成是两个独立事实。

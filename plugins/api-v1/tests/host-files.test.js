@@ -1,42 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { Type } from '@sesame/plugin-sdk/schema';
+import { mkdtemp, writeFile, rm, readFile, realpath } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { Check } from '@sesame/plugin-sdk/schema/value';
-import { createTools } from '../packages/workspace/host-files.js';
+import { createCapabilities } from '../packages/workspace/host-files.js';
+import { resourceHost } from './core-v2-fixture.mjs';
 
-function fixture() {
-  const calls = [];
-  const externalFiles = Object.fromEntries(['list', 'search', 'read', 'import', 'write', 'mkdir', 'move', 'remove', 'run'].map(method => [method, async (args, signal) => { calls.push({ method, args, signal }); return { method, completed: true }; }]));
-  const tools = createTools({ tools: { Type, define: (name, description, properties, execute) => ({ name, label: name, description, parameters: Type.Object(properties, { additionalProperties: false }), execute }) }, externalFiles });
-  return { calls, tools, byName: new Map(tools.map(tool => [tool.name, tool])) };
-}
-
-test('declared host file schemas match nine concrete SDK ports', () => {
-  const f = fixture();
-  const declared = JSON.parse(readFileSync(new URL('../packages/workspace/tools.json', import.meta.url))).filter(tool => tool.name.startsWith('host_files_'));
-  const manifest = JSON.parse(readFileSync(new URL('../packages/workspace/plugin.json', import.meta.url)));
-  assert.deepEqual(f.tools.map(({ execute, ...tool }) => tool), declared);
-  assert.deepEqual(f.tools.map(tool => tool.name), manifest.tool_names.filter(name => name.startsWith('host_files_')));
-  assert.equal(f.tools.length, 9);
+test('host file capabilities are explicitly declared and import immutable actual bytes', async t => {
+ const root=await mkdtemp(join(tmpdir(),'host-file-v2-'));t.after(()=>rm(root,{recursive:true,force:true}));
+ const f=resourceHost({workspaceRoot:root,filePolicy:{protectedRoots:[],readRoots:[root],writeRoots:[root]}}), tools=createCapabilities(f.host);
+ const declarations=JSON.parse(await readFile(new URL('../packages/workspace/capabilities.json',import.meta.url),'utf8')).capabilities.filter(c=>c.id.startsWith('host_files_'));
+ assert.deepEqual(tools.map(t=>t.name).sort(),declarations.map(c=>c.id).sort());assert.equal(tools.length,9);
+ const source=join(root,'source.txt');await writeFile(source,'actual imported bytes');
+ const result=await tools.find(t=>t.name==='host_files_import').execute({path:source});await writeFile(source,'changed later');
+ assert.equal((await f.host.resources.read(result.ref,{part:'content'})).content,'actual imported bytes');assert.equal(result.provenance.bytes,21);
+ const remove=declarations.find(c=>c.id==='host_files_remove').inputSchema;assert.equal(Check(remove,{path:source,recursive:true}),false);
 });
-
-test('writes, moves and removal preserve explicit overwrite and whole-file expectations', async () => {
-  const f = fixture(), signal = new AbortController().signal;
-  const write = { path: '/existing/config.json', content: '{}', overwrite: true, expected_sha256: `sha256:${'a'.repeat(64)}` };
-  await f.byName.get('host_files_write').execute(write, signal);
-  await f.byName.get('host_files_move').execute({ path: '/existing/config.json', destination: '/existing/config.old.json' }, signal);
-  await f.byName.get('host_files_remove').execute({ path: '/existing/config.old.json', expected_sha256: 'b'.repeat(64) }, signal);
-  assert.equal(f.calls[0].args, write); assert.equal(f.calls[0].signal, signal);
-  assert.deepEqual(f.calls.map(call => call.method), ['write', 'move', 'remove']);
-  assert.equal(Check(f.byName.get('host_files_remove').parameters, { path: '/directory', recursive: true }), false);
-});
-
-test('host commands preserve argv, empty arguments, explicit cwd, env and cancellation', async () => {
-  const f = fixture(), tool = f.byName.get('host_files_run'), signal = new AbortController().signal;
-  const args = { argv: ['/existing/python', '-c', 'print("literal $value")', ''], cwd: '/existing/project', timeout: 600, env: { DEMO_SETTING: 'value' } };
-  assert.equal(Check(tool.parameters, args), true);
-  assert.equal(Check(tool.parameters, { ...args, timeout: 601 }), false);
-  assert.equal(Check(tool.parameters, { ...args, argv: [] }), false);
-  await tool.execute(args, signal); assert.deepEqual(f.calls[0], { method: 'run', args, signal });
+test('argv including empty arguments, cwd, environment and cancellation route through process Run',async()=>{
+ const calls=[],signal=new AbortController().signal,host={context:{filePolicy:{protectedRoots:[],readRoots:[],writeRoots:[tmpdir()]}},capabilities:{invoke:async(...args)=>{calls.push(args);return{type:'run',run:{id:'run-1'}};}},runs:{wait:async()=>({reason:'settled',run:{id:'run-1',status:'completed',output:{exitCode:0,output:'actual'}}})}};
+ const argv=['python','-c','print("literal $value")',''], input={argv,cwd:tmpdir(),timeout:3,env:{FIXTURE:'value'}};
+ const result=await createCapabilities(host).find(t=>t.name==='host_files_run').execute(input,signal);
+ assert.deepEqual(calls[0][1],{argv,cwd:await realpath(tmpdir()),timeoutMs:3000,env:input.env});assert.equal(calls[0][2].signal,signal);assert.equal(result.run.id,'run-1');
 });

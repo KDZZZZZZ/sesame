@@ -3,16 +3,15 @@ import assert from 'node:assert/strict';
 import { readFile, mkdir } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { createTools } from '../packages/reports/index.js';
+import { createCapabilities } from '../packages/reports/index.js';
 
 const host = process.env.SESAME_HOST_ROOT;
 const root = new URL('../packages/reports/', import.meta.url);
 const collections = await Promise.all(['statistical', 'temporal', 'structural'].map(async family => JSON.parse(await readFile(new URL(`examples/${family}-fixtures.json`, root), 'utf8'))));
 const examples = collections.flatMap(collection => collection.charts);
-const Type = new Proxy({}, { get: () => () => ({}) });
 async function template(input) {
   let html;
-  const tool = createTools({ tools: { Type, string: () => ({}), optional: () => ({}), define: (name, description, schema, execute) => ({ name, execute }) }, workspace: { file: async (_op, _path, bytes) => { html = bytes; } } }).find(tool => tool.name === 'report_template');
+  const tool = createCapabilities({ capabilities: { invoke: async (id, input) => { assert.equal(id, 'sesame/workspace#write'); html = input.content; return { type: 'result', value: { path: input.path } }; } } }).find(tool => tool.name === 'report_template');
   await tool.execute(input);
   return html;
 }

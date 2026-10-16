@@ -1,3 +1,4 @@
+import { readArtifact, publishArtifact } from './resource-io.js';
 import { promises as fs } from 'node:fs';
 import { join, relative, isAbsolute } from 'node:path';
 import { digest, requireValue, taskRunId } from './support.js';
@@ -32,7 +33,7 @@ export async function protectRun(host, mt5, runId) {
   const deployments = mt5.deployments.list().filter(active);
   const commands = mt5.storage.list('mt5_command').filter(row => row.owner_run_id === runId);
   const blobs = [], resources = [];
-  const blob = (path, bytes, mediaType = 'application/json') => blobs.push({ path, mediaType, ...host.artifacts.blob(bytes) });
+  const blob = (path, bytes) => blobs.push({ path, bytes });
   const json = (path, value) => blob(path, JSON.stringify(value));
   for (const build of builds) {
     json(`builds/${build.id}.json`, build);
@@ -49,7 +50,7 @@ export async function protectRun(host, mt5, runId) {
   for (const pass of passes) {
     json(`passes/${pass.id}.json`, pass);
     for (const datasetId of pass.dataset_ids ?? []) {
-      const dataset = host.datasets.read(datasetId), { rows, ...metadata } = dataset;
+      const dataset = mt5.storage.get('dataset', datasetId), { rows, ...metadata } = dataset;
       json(`datasets/${datasetId}/metadata.json`, metadata);
       // Independent chunks keep both the artifact and each blob bounded.
       for (let i = 0; i < rows.length; i += 10000) json(`datasets/${datasetId}/${i}.json`, rows.slice(i, i + 10000));
@@ -59,8 +60,8 @@ export async function protectRun(host, mt5, runId) {
   requireValue(blobs.length <= 256, 'MT5 任务成果超过单次清理预算；保留现场以便分批归档');
   // Multiple builds of one revision share the exact same source bytes.
   const uniqueBlobs = [...new Map(blobs.map(item => [item.path, item])).values()];
-  const artifacts = uniqueBlobs.length ? [host.artifacts.publish({ operationId: `seal-${runId}`, manifest: { kind: 'resource', schemaVersion: '1.0.0',
-    content: { format: 'sesame.mt5.native-task/1', runId, description: 'Frozen native MT5 records and evidence; original language and validation scopes retained.' }, blobs: uniqueBlobs, dependencies: [] } })] : [];
+  const artifacts = uniqueBlobs.length ? [await publishArtifact(host, `seal-${runId}`, 'resource',
+    { format: 'sesame.mt5.native-task/1', runId, description: 'Frozen native MT5 records and evidence; original language and validation scopes retained.' }, [], Object.fromEntries(uniqueBlobs.map(item => [item.path, item.bytes])))] : [];
   const protection = { artifacts, resources };
   mt5.storage.put('sealed_run', { id: runId, protection, sealedAt: new Date().toISOString() });
   return protection;
@@ -80,7 +81,7 @@ export async function cleanupRun(host, mt5, runId, protection) {
   const sealed = mt5.storage.get('sealed_run', runId, true);
   protection ??= sealed?.protection;
   requireValue(sealed && JSON.stringify(sealed.protection) === JSON.stringify(protection), '需要已封存的 MT5 成果才能清理任务');
-  for (const ref of protection.artifacts) host.artifacts.read(ref);
+  for (const ref of protection.artifacts) await readArtifact(host, ref);
   for (const resource of protection.resources) await file(resource.path, resource.digest);
   const root = mt5.storage.directory;
   for (const build of mt5.storage.list('mt5_build').filter(row => row.owner_run_id === runId)) {

@@ -1,17 +1,15 @@
-本插件统一数据访问与原 research 登记工具，默认可用；数据提供方另行按需安装。支持用户文件和已发布 DataRef，即使未安装任何市场后端也可研究。来源身份、connection revision、时间基准和单位必须沿全链保留，不把不同后端同名品种自动合并。
+本插件通过 API 2 静态数据源声明、真实分页和固定成果提供分析输入。`data_sources` 返回 `{items,nextCursor?}`，每项为 `{ref:{providerId,revision},contract,operations,configSchema,available}`，可另有 description。`data_providers` 使用同一形状，仅返回市场与账户来源；`contract:"sesame.market/1"` 选择行情来源。available 表示插件可用，不证明数据连接成功。SourceRef 的可选 binding 仅容纳 configSchema 明示配置，声明已给出可调用操作，不需要从宿主代码或安装包猜接口。
 
-需要查找行情提供方或打开市场图表时先读 market-discovery skill。data_providers 列出实际 provider 身份与能力，market_instruments 搜索/描述真实品种并返回当前 connection revision、InstrumentRef、周期/价格/复权/日历口径。然后 canvas_binding 生成可交给 canvas_apply 的完整绑定。不猜 sourceId，不读应用私有代码或配置找绑定字段。
+`data_query({source,operation,input,limit?,cursor?})` 返回实际 `{items,nextCursor?,metadata?,...}`；metadata 是来源声明的领域元数据。延续请求保持来源、查询和 limit 不变，使用 nextCursor；游标是 60 秒的短期绑定，不是长期证据。宿主管理真实运行时绑定与释放，不手填临时 bindingId。
 
-要取得可分析/回测/报告引用的K线，直接 market_read，传发现得到的provider/connection/instrument、精确spec、带来源时钟的range、include_forming和显式volume_kind。返回固定DataRef ref、dataset_id和原始公开queryBars证据raw；ref直接交report_publish或支持DataRef的回测工具，dataset_id交data_read。无需复制提供方bridge、拼私有HTTP或重新抓网页来登记同一行情。Decimal和SourceTime原样保留，real/tick不可混称，none/unknown的volume为null不能补0；原生回测若要求volume，应明确处理缺口或拒绝。coverage.complete=false和status:partial表示这份固定返回数据未证明范围无缺口，不是原生回测结果。
+data_snapshot 接收 source、operation、input、operationId、title 和可选 maxRows，自动读取每页，固定完整实际行与来源证据。来源未声明 provenance 时必须明确 provenanceKind；来源已有标记不可改写，demo 不得升级。返回 ref、evidence、rowCount、columns、sample。成功快照重试不重新查询；读取完成后发布失败也复用已冻结字节。预算超限或中途失败不会发布截断结果。
 
-同一operation_id绑定这次精确请求的成功快照，重试不会重新查询；要观察更新的数据使用新ID。max_rows或16MiB/200页预算超限、中途网络失败、快照变化都会报错，不发布半份新结果；缩小范围或确认预算后以明确请求重试。configuration仅发送给提供方绑定，不放入冻结证据，不在此传凭据。raw记录完整公开Bar页/meta/coverage；投影ref明确为derived（demo仍demo），可追溯到raw。
+`market_instruments({action:"search",source,query,...})` 返回 `{items,nextCursor?,metadata}`，搜索项的 ref 是精确 InstrumentRef；`action:"describe"` 接收此 instrument 并返回 `{source,instrument,metadata}`。描述中的 instrument 含 ref、symbol、timeBasis、calendar、features，支持的周期来自 features.timeframes。连接身份来自 `metadata.connection={id,revision}`，可供 `canvas_binding` 固定到 `source.binding.connection`。来源 revision、连接 revision、SourceTime、单位和显式未知状态具有不同意义，不以标签替代身份。
 
-当前market_read不解析wall时间的夏令时fold；请求范围或返回K线带fold时明确报UNSUPPORTED_CAPABILITY。只能改用提供方实际支持的UTC源时间或无歧义范围，不能删除fold、猜offset后继续。
+`market_read({operation_id,title,source,instrument,spec,range,include_forming,volume_kind,max_rows?})` 自动分页，返回 `{ref,evidence,rowCount,columns,sample,provenance,receipt,coverage,volume,status}`；ref 为固定 DataRef，evidence 保留原始页与覆盖证据，没有 dataset_id/raw 兼容字段。显示行情使用 canvas_binding 与 canvas_apply，实时订阅由宿主管理；显示任务不要求额外生成历史快照或研究报告。queryBars/market_read 成功只能证明该次历史读取，不能证明订阅或浏览器已显示。显示证据来自 canvas_inspect 的当前版本 `rendering[].charts[]`，含 id、status、error、bar_count、feed_status；没有回执意味着尚不可确认。
 
-需要注册数据源的行情或外部资料时使用 data_sources → data_query。只声明实际需要的来源、时间范围和字段，宿主按来源查询并复用缓存；是否完整以实际返回为准。query_id 是有容量限制的短期引用；在分析前调用 data_snapshot 固定实际读取的结果，再 data_read 写入工作区输入并执行研究。不要把预览当作完整数据；只有 complete=true 才能冻结为完整证据。以下 offset 规则仅适用于已安装 MT5 插件注册的 MT5 数据源：has_more=true 或 offset>0 时缩小时间范围并从 offset=0 重新查询；offset 分页用于浏览，各页不会自动合并，按由新到旧的页返回且页内时间升序，也可把 next_before 作为下一次查询的 to 边界。其他来源按它自己的分页与覆盖声明处理，不套用 MT5 规则。
+失败判断依赖具体错误与来源身份。STALE_REVISION、CONNECTION_CHANGED 指向修订变化；SCHEMA_MISMATCH 等来源协议错误不因重复绑定相同身份或新建探针图而消失。保留原始错误码与消息，订阅失败时以画布回执中的底层错误为准，不把指标缺少输入当作新的数据来源问题。
 
-Dashboard 的实时更新由宿主订阅服务负责，不要通过模型循环调用行情工具。未收盘 K 线可能变化；as_of 是获取时间，行情时间及 broker_server_unspecified 必须独立说明，不得冒充 UTC。复盘和报告引用固定 dataset_id，不能把旧结论绑定到后来重新下载的数据。任务结束会释放未冻结查询和未被最终成果引用的过程输入；需要长期保存的证据必须绑定到最终报告、策略或判断。
+market_read 保留 Decimal 字符串和 SourceTime；real/tick 不做暗中换算，none/unknown 的 volume 为 null。coverage.complete=false 或 status=partial 只表示已冻结的返回行未证明无缺口。wall 时间带 DST fold 时明确不支持；使用来源实际支持的 UTC 或无歧义区间，不猜偏移。max_rows 默认 10000、上限 100000，另有 200 页及 16 MiB 限制。
 
-已上传数据用 data_read 读取。研究流程：读取真实输入 → 编写分析代码 → bash 执行 → research_register 登记 JSON 对象数组。
-开始分析前阅读本插件的 analyze-data skill。输入保留原始来源；结果登记必须提供成功 execution ID、输出路径、实际 input_ids 和统计口径，不能手填结果或虚构数据。
-数据目录可以包含用户导入、公开资料和已计算结果，需辨别来源类型。执行成功不自动证明统计结论正确。
+data_read({datasetId}) 读取登记输入，data_read({ref}) 读取固定 DataRef；都将完整行写入执行目录 inputs，返回实际 path、rowCount、sample 和 provenance。research_register 将宿主记录的成功执行与冻结输入/输出/配方关联，参数为 operationId、executionId、path、title、description、inputIds 或 inputRefs。它保留可复查的计算证据，不接受当前可变文件或手填执行状态作为替代；仅在任务需要计算成果时使用。具体参数与限制见 analyze-data、market-discovery。

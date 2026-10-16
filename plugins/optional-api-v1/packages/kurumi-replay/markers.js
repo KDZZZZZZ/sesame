@@ -1,3 +1,4 @@
+import { publicationFile, publishFiles } from './publications.js';
 import { revealedCutoff } from './reveal-cutoff.js';
 import { createHash } from 'node:crypto';
 
@@ -260,16 +261,16 @@ export function createMarkerIndicator(service, options = {}) {
 }
 
 /** Public HostContext publication helper for main-Agent display(). No layout is
- * changed here. Mount ref with host.layout.script({action:'put',chart_id,...}). */
+ * changed here. Mount ref with host.views.apply({surface:'indicator',action:'put',chart_id,...}). */
 export async function publishMarkers(host, service, options) {
-  check(host.scope?.kind === 'main', 'Audience marker publication is main-Agent only', 'SCOPE_DENIED');
+  check(host.context?.kind === 'main', 'Audience marker publication is main-Agent only', 'SCOPE_DENIED');
   check(/^[A-Za-z0-9_-]{16,128}$/.test(options?.operationId ?? ''), 'Provide a stable indicator publication operationId');
   const bundle = createMarkerIndicator(service, options);
-  const blobs = Object.entries(bundle.files).map(([path, content]) => ({ ...host.artifacts.blob(content), path, mediaType: 'text/javascript' }));
+  const blobs = Object.entries(bundle.files).map(([path, content]) => ({ ...publicationFile(content), path, mediaType: 'text/javascript' }));
   // The frozen audience DTO is packaged as provenance/evidence, not passed to
   // compute or role tools. It contains only the revealed projection, no ledger
   // balance, raw story attachment, future resource, model or credentials.
-  blobs.push({ ...host.artifacts.blob(JSON.stringify(bundle.snapshot)), path: 'revealed-markers.json', mediaType: 'application/json' });
-  const ref = await host.artifacts.publish({ operationId: options.operationId, manifest: { kind: 'indicator', schemaVersion: '1.0.0', content: bundle.definition, dependencies: [], blobs, provenance: { kind: 'demo', references: [] } } });
+  blobs.push({ ...publicationFile(JSON.stringify(bundle.snapshot)), path: 'revealed-markers.json', mediaType: 'application/json' });
+  const ref = await publishFiles(host, { operationId: options.operationId, manifest: { kind: 'indicator', schemaVersion: '1.0.0', content: bundle.definition, dependencies: [], blobs, provenance: { kind: 'demo', references: [] } } });
   return { ref, instrument: bundle.snapshot.instrument, asOf: bundle.snapshot.asOf, range: bundle.snapshot.range, static: true, audienceOnly: true, markerCount: bundle.snapshot.rows.length, bundle: { definition: bundle.definition, files: bundle.files, snapshot: bundle.snapshot, snapshotDigest: bundle.snapshotDigest }, note: '仅已揭示范围的静态指标；挂载后须检查真实前端回执。推进后用新operationId重发；不可加入角色snapshot/工具allowlist。原剧情未知时点只用区间文本，不提供矩形阴影或精确成交声称。' };
 }

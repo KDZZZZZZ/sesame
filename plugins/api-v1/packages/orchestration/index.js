@@ -1,1 +1,1 @@
-export { createTools } from './tools.js';
+export { createCapabilities } from './tools.js';

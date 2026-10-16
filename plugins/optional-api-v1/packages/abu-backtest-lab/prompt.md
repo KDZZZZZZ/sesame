@@ -1,9 +1,7 @@
 # 回测审计基线
 
-按 abu-backtest-lab skill 工作，先读取 skills/abu-backtest-lab/SKILL.md、references/method.md 和 examples/input.json。
+用 `abu_backtest_lab_analyze` 审计已提供的订单和成交证据，定位时序、数量、成本与限价异常，说明还缺哪些原生引擎证据。
 
-**本包代码是可修改、可验证的基线，不是标准答案。Agent 可以根据用户需求改进算法、参数、特征和验证方法。**
-保留原版，说明为什么修改和可能失败的条件；把改进代码复制到研究工作区，记录代码/输入/参数摘要、全部试验与固定样本外对照。不得因为默认参数存在就把它当最优参数。
+K 线是可选证据，只有订单和成交时无需补造。审计失败项是发现的异常，不是调用失败；不同标的数量不能相加当作统一仓位。审计不会运行回测，也不能证明策略生成过程或券商可成交性。
 
-只按任务需要加载本包。复用 data-access / financial-research 获取固定数据，abu_backtest_lab_analyze 或本包 CLI 计算；用户与 Agent 查看同一已登记结果。
-研究观察不等于成交；如用于 manual-trading，只作为决策证据，目标仓位仍由其现有账户与执行流程形成，允许不变。
+这是可修改的研究基线。改进时保留假设、原结果与同一输入上的对照；合成数据保持演示标记。需要核对公式或设计改进时，可读 `skills/abu-backtest-lab/references/method.md`；参数、返回值与错误恢复由工具说明直接提供。

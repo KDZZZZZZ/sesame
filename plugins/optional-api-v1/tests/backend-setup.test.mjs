@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, writeFile, readdir, rm } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve, sep } from 'node:path';
 import { tmpdir } from 'node:os';
 import { environment as ccxtEnvironment, selected as ccxtSelected } from '../packages/ccxt/environment.js';
 import { environment as backtraderEnvironment, selected as backtraderSelected } from '../packages/backtrader/environment.js';
@@ -10,10 +10,11 @@ import { MT5Official } from '../packages/mt5/backend/official.js';
 import { MT5ConfigImports } from '../packages/mt5/backend/config-import.js';
 import { importConfiguration } from '../packages/mt5/backend/configuration.js';
 import { Store, hostForStore } from '../../api-v1/tests/mt5-host.js';
+import { processHost } from './backend-process-fixture.mjs';
 
 async function directory(t) {
   const root = await mkdtemp(join(tmpdir(), 'sesame-backend-setup-'));
-  t.after(() => rm(root, { recursive: true, force: true }));
+  t.after(() => { assert.ok(resolve(root).startsWith(resolve(tmpdir()) + sep)); return rm(root, { recursive: true, force: true }); });
   return root;
 }
 
@@ -24,19 +25,19 @@ for (const [name, version, environment, selected] of [
   const root = await directory(t), python = join(root, 'existing-python'), calls = [];
   // A controlled interpreter port models a real successful import. Any install,
   // download or unexpected command fails; no user environment is inspected.
-  const host = { storage: { directory: root }, environment: { pythonPath: null }, workspace: { run: async (argv, options) => {
+  const host = processHost({ storageRoot: root }, async ({ argv, cwd }) => {
     calls.push(argv);
     assert.equal(argv[0], python);
     assert.deepEqual(argv.slice(1, 4), ['-I', '-B', '-c']);
     assert.match(argv[4], new RegExp(`import_module\\('${name}'\\)`));
-    assert.equal(options.cwd, root);
+    assert.equal(cwd, root);
     await writeFile(argv.at(-1), JSON.stringify({ python, version: [3, 13, 0], platform: process.platform, bits: 64, library: version, packages: { [name]: version } }));
     return { exitCode: 0 };
-  } } };
+  });
   const found = await environment(host, { action: 'inspect', python_path: python });
   assert.equal(found.ready, true); assert.equal(found.reused, true);
   assert.equal(JSON.parse(await readFile(join(root, 'selection.json'))).python, python);
-  const reopened = { ...host, storage: { directory: root } };
+  const reopened = { ...host, context: { ...host.context, storageRoot: root } };
   assert.equal((await selected(reopened)).python, python);
   assert.equal((await environment(reopened, { action: 'prepare' })).reused, true);
   assert.equal(calls.length, 3);
@@ -45,27 +46,27 @@ for (const [name, version, environment, selected] of [
 
 test('vn.py: inspection alone does not select an environment; prepare on the verified path saves it without installing', async t => {
   const root = await directory(t), python = join(root, 'existing-python');
-  const host = { storage: { directory: root }, environment: { pythonPath: null, capabilities: { platform: process.platform } }, workspace: { root: () => root, run: async argv => {
+  const host = processHost({ storageRoot: root }, async ({ argv }) => {
     assert.equal(argv[0], python); assert.deepEqual(argv.slice(1, 4), ['-I', '-B', '-c']);
     assert.match(argv[4], /from vnpy_ctastrategy.backtesting import BacktestingEngine/);
     await writeFile(argv.at(-1), JSON.stringify({ python, version: [3, 13, 0], platform: process.platform, arch: process.arch, bits: 64, engineImport: 'BacktestingEngine', packages: { vnpy: '4.5.0', 'vnpy-ctastrategy': '1.4.1' } }));
     return { exitCode: 0 };
-  } } };
+  });
   const found = await vnpyEnvironment(host, { action: 'inspect', python_path: python });
   assert.equal(found.ready, true); assert.equal(found.configured, false);
   await assert.rejects(vnpyConfigured(host), { code: 'ENVIRONMENT_UNAVAILABLE' });
   assert.deepEqual(await readdir(root), []);
   const saved = await vnpyEnvironment(host, { action: 'prepare', python_path: python });
   assert.equal(saved.ready, true); assert.equal(saved.reused, true); assert.equal(saved.configured, true);
-  assert.equal((await vnpyConfigured({ ...host, storage: { directory: root } })).python, python);
+  assert.equal((await vnpyConfigured({ ...host, context: { ...host.context, storageRoot: root } })).python, python);
   assert.deepEqual(await readdir(root), ['environment.json']);
 });
 
 test('MT5: pasted GUI export is imported by reference, survives reopening, and never requests a settings window', async t => {
-  const root = await directory(t), store = new Store(root);
-  const host = { ...hostForStore(store), scope: { kind: 'main', conversationId: 'conv_main' }, messages: { read: (id, optional) => store.get('message', id, optional) }, configuration: { exclusive: action => action() } };
+  const root = await mkdtemp(join(tmpdir(), 'sesame-backend-setup-')), store = new Store(root);
+  const host = hostForStore(store, { sessionId: 'conv_main' });
   const official = await new MT5Official(host, null).init();
-  t.after(() => official.close());
+  t.after(async () => { await official.close(); store.close(); assert.ok(resolve(root).startsWith(resolve(tmpdir()) + sep)); await rm(root, { recursive: true, force: true }); });
   const imports = new MT5ConfigImports(host), messageId = 'msg_setup_fixture';
   const parts = imports.prepare(messageId, { scope: 'main', id: 'conv_main' }, [{ type: 'text', text: JSON.stringify({ mcpServers: { terminal: { type: 'http', url: 'http://127.0.0.1:22346/mcp', headers: { Authorization: 'Bearer setup-fixture-only' } } } }) }], null, {});
   store.put('message', { id: messageId, role: 'user', conversation_id: 'conv_main', content: parts });

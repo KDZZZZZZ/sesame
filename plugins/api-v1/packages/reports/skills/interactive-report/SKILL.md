@@ -38,4 +38,4 @@ Strategy 报告将真实策略、翻译、run、result 放入 report_publish.rel
 
 用文件工具保存完整 HTML，资源本地打包，然后调用 report_publish（HTML ≤ 1 MiB，合计资源 ≤ 16 MiB），绑定 data 与 related。更新提供 artifact_id、expected_revision 和新 operation_id。只读桥可读取声明的数据/成果，不能访问 parent DOM、Node、磁盘、凭据或交易接口。
 
-发布只固定内容。之后以返回完整 ref 调用 report_check，查看桌面/窄屏、数据请求、脚本和交互的实际 receipt。failed 时保留绑定、修 HTML 并发布新 revision，再检查；rendered 才是该版本通过渲染的依据。report_read.include_checks 可以核对历史，但旧 receipt 不能证明新版本成功。
+发布只固定内容。需要交付可浏览报告时，以返回完整 ref 调用 report_check，查看桌面/窄屏、数据请求、脚本和交互的实际 receipt。failed 时保留绑定、修 HTML 并发布新 revision，再检查；rendered 才是该版本通过渲染的依据。用户只要求发布或没有可用验收环境时，保留发布成功与渲染尚未验收这两个状态。report_read.include_checks 可以核对历史，但旧 receipt 不能证明新版本成功。

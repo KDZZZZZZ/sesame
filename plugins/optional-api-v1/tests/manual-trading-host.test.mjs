@@ -7,14 +7,14 @@ import {tmpdir} from 'node:os';
 import {pathToFileURL,fileURLToPath} from 'node:url';
 import {Type} from '@sesame/plugin-sdk/schema';
 const root=process.env.SESAME_HOST_ROOT;
-test('formal manual package composes current-session tools and a receipt through the actual host without broker I/O',{skip:!root,timeout:60000},async()=>{
+test('formal portfolio execution package composes current-session tools and a receipt through the actual host without broker I/O',{skip:!root,timeout:60000},async()=>{
   const {Store}=await import(pathToFileURL(join(root,'modules/agent/store.js'))),{Runtime}=await import(pathToFileURL(join(root,'modules/agent/runtime.js'))),{createTools}=await import(pathToFileURL(join(root,'modules/agent/tools.js')));
   const directory=await mkdtemp(join(tmpdir(),'manual-trading-host-'));let store,runtime,sends=0,blockQuote=false,quoteStarted;
   try{
     store=new Store(join(directory,'app'));runtime=new Runtime(store,{piDir:join(directory,'pi'),officialPluginsDirectory:join(directory,'empty')});await runtime.init();
-    const draft=join(runtime.workspaces.root('conv_main'),'manual-draft');await cp(fileURLToPath(new URL('../packages/manual-trading',import.meta.url)),draft,{recursive:true});
+    const draft=join(runtime.workspaces.root('conv_main'),'execution-draft');await cp(fileURLToPath(new URL('../packages/portfolio-execution',import.meta.url)),draft,{recursive:true});
     const checked=await runtime.plugins.manager.test('conv_main',{path:draft});assert.equal(checked.passed,true,JSON.stringify(checked));
-    const installed=await runtime.plugins.manager.install('conv_main',{path:draft,digest:checked.digest});assert.equal(installed.runtime_status,'ready');runtime.plugins.activate('conv_main',installed.id);
+    const installed=await runtime.plugins.manager.install('conv_main',{path:draft,digest:checked.digest});assert.equal(installed.runtime_status,'ready');assert.equal(installed.id,'sesame/portfolio-execution');assert.equal(installed.version,'1.0.0');runtime.plugins.activate('conv_main',installed.id);
     const definitions=['mt5_settings','mt5_catalog','mt5_python','mt5_trade','mt5_command'].map(name=>({name,label:name,description:'Controlled fictional backend fixture',parameters:Type.Object({},{additionalProperties:true})}));
     const commands=new Map();
     const fake=async(name,args,signal)=>{

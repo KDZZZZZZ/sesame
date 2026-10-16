@@ -1,3 +1,7 @@
+import { invokeValue } from '@sesame/plugin-sdk/capabilities';
+import { roleTask, submitRole, waitRole } from './role-runs.js';
+import { publicationFile, publishFiles } from './publications.js';
+import { records } from './records.js';
 import { nativeReportReceipt } from './presentation-receipts.js';
 import { canonical, digest, check, readConsumedView, observedH1Limitations } from './replay-presentation.js';
 import { publishWeeklyReport } from './report.js';
@@ -12,10 +16,10 @@ const cmp=(a,b)=>n(add(a,b,true)).n;
 const ratio=(a,b)=>{const x=n(a),y=n(b);check(y.n!==0n,'Zero ratio denominator');return text({n:x.n*10n**BigInt(y.s+8)*100n/(y.n*10n**BigInt(x.s)),s:8});};
 const unknown=reason=>({status:'unknown',reason});
 const queues=new WeakMap();
-function serial(host,fn){const prev=queues.get(host.storage)??Promise.resolve();const work=prev.catch(()=>{}).then(fn);queues.set(host.storage,work);return work.finally(()=>{if(queues.get(host.storage)===work)queues.delete(host.storage);});}
-const get=(host,id)=>host.storage.get(COLLECTION,id,true);
-function cas(host,id,expected,changes){let out;host.storage.transaction(()=>{const old=get(host,id);check(old&&old.revision===expected,'Weekly record CAS conflict','VERSION_CONFLICT');out={...old,...copy(changes),id,revision:old.revision+1};host.storage.put(COLLECTION,out);});return out;}
-function create(host,row){host.storage.transaction(()=>{const old=get(host,row.id);check(!old||old.inputDigest===row.inputDigest,'Weekly idempotency conflict','IDEMPOTENCY_CONFLICT');if(!old)host.storage.put(COLLECTION,row);});return get(host,row.id);}
+function serial(host,fn){const prev=queues.get(records(host))??Promise.resolve();const work=prev.catch(()=>{}).then(fn);queues.set(records(host),work);return work.finally(()=>{if(queues.get(records(host))===work)queues.delete(records(host));});}
+const get=(host,id)=>records(host).get(COLLECTION,id,true);
+function cas(host,id,expected,changes){let out;records(host).transaction(()=>{const old=get(host,id);check(old&&old.revision===expected,'Weekly record CAS conflict','VERSION_CONFLICT');out={...old,...copy(changes),id,revision:old.revision+1};records(host).put(COLLECTION,out);});return out;}
+function create(host,row){records(host).transaction(()=>{const old=get(host,row.id);check(!old||old.inputDigest===row.inputDigest,'Weekly idempotency conflict','IDEMPOTENCY_CONFLICT');if(!old)records(host).put(COLLECTION,row);});return get(host,row.id);}
 
 /** Frozen chronological account/data frame. Never observes a later service.
  * Account is the actual CORE snapshot marked at this commit; asOfMs is the
@@ -39,7 +43,7 @@ export function freezeWeeklyFrame(host,service,context){
   const methods=copy(context.methods??[]);for(const m of methods){check(m.status!=='adopted'||(m.pluginId&&m.version&&m.method&&m.inputRefs?.length&&m.outputRef),'Adoption requires actual method input/output evidence','METHOD_EVIDENCE_REQUIRED');if(m.asOfMs!==undefined)check(m.asOfMs<=cutoff,'Future method evidence','FUTURE_DATA_FORBIDDEN');}
   const sourceProvenance=freezeSourceClassification(service.getData()?.provenance);
   const frame={schemaVersion:'1.0.0',runId:context.runId,chapter:context.chapter??engine.chapter,cutoffMs:cutoff,engineVersion:engine.version,account,sourceProvenance,market:{runId:view.runId,cutoffMs:view.cutoffMs,bars:copy(view.bars),sources:copy(view.sources??[])},positions:copy(engine.position),orders:copy(engine.orders),fills:copy(engine.fills),costs:copy(engine.ledger),equity:copy(engine.equity),decisions:copy(engine.decisions),methods,
-    plugin:copy(host.plugin),methodVersions:methods.map(m=>({pluginId:m.pluginId,version:m.version,method:m.method,status:m.status})),profile:copy(engine.experimentProfile??engine.profile??engine.rules??null),sourceDigests:copy(engine.dataDigests??null),sourceCoverage:copy(context.sourceCoverage??{complete:false,unresolvedEarlyCHFJPYEvents:327,policy:'strict missing-data pause; no old-run bound supplement reuse'}),originalComparison:copy(context.originalComparison??[]),roleEvidence:copy(context.roleEvidence??[]),restrictions:['同一历史的知情重放，非独立样本外；无通过前瞻验证的专属规则','模型预训练可能记得历史；仅限制可显式访问的输入','原作区间/反算/拟合只供观众，不构建原作总资产/账本','缺失CHFJPY保持原60秒政策暂停，不插值/偷看未来']};
+    plugin:copy({id:host.context.pluginId,version:host.context.pluginVersion,revision:host.context.pluginRevision}),methodVersions:methods.map(m=>({pluginId:m.pluginId,version:m.version,method:m.method,status:m.status})),profile:copy(engine.experimentProfile??engine.profile??engine.rules??null),sourceDigests:copy(engine.dataDigests??null),sourceCoverage:copy(context.sourceCoverage??{complete:false,unresolvedEarlyCHFJPYEvents:327,policy:'strict missing-data pause; no old-run bound supplement reuse'}),originalComparison:copy(context.originalComparison??[]),roleEvidence:copy(context.roleEvidence??[]),restrictions:['同一历史的知情重放，非独立样本外；无通过前瞻验证的专属规则','模型预训练可能记得历史；仅限制可显式访问的输入','原作区间/反算/拟合只供观众，不构建原作总资产/账本','缺失CHFJPY保持原60秒政策暂停，不插值/偷看未来']};
   for(const row of frame.originalComparison)check((row.knownAt?.unixMs??row.time?.unixMs??Infinity)<=cutoff,'Unrevealed original story','FUTURE_DATA_FORBIDDEN');
   // Original attachment is not a role input. Reporting generation is isolated
   // with no player tools and no access to a current mutable service.
@@ -61,11 +65,11 @@ export function weeklyFinancials(open,close){
 async function archive(host,service,job){
   const receipt=await service.archiveFileSafe(`weekly/${job.id}/input.json`,JSON.stringify(job.input));check(receipt,'Weekly archive unavailable; output must not be silently dropped','ARCHIVE_UNAVAILABLE');
   const kind=weeklyProvenanceKind(job.input),references=weeklySourceReferences(job.input),origin={kind,references};
-  const sourceBlob=await host.artifacts.blob(JSON.stringify(weeklySourceEvidence(job.input)));
-  const sourceRef=await host.artifacts.publish({operationId:`${job.id}_source`,manifest:{kind:'resource',schemaVersion:'1.0.0',content:{type:'kurumi-frozen-weekly-sources',path:'source.json',provenance:origin},dependencies:references,blobs:[{...sourceBlob,path:'source.json',mediaType:'application/json'}],provenance:origin}});
+  const sourceBlob=await publicationFile(JSON.stringify(weeklySourceEvidence(job.input)));
+  const sourceRef=await publishFiles(host, {operationId:`${job.id}_source`,manifest:{kind:'resource',schemaVersion:'1.0.0',content:{type:'kurumi-frozen-weekly-sources',path:'source.json',provenance:origin},dependencies:references,blobs:[{...sourceBlob,path:'source.json',mediaType:'application/json'}],provenance:origin}});
   const provenance={kind,references:[sourceRef]};
-  const rows=[{type:'weekly-input',...job.input}],blob=await host.artifacts.blob(JSON.stringify(rows));
-  const ref=await host.artifacts.publish({operationId:`${job.id}_data`,manifest:{kind:'data',schemaVersion:'1.0.0',content:{format:'json-rows',path:'rows.json',rowCount:rows.length,columns:Object.keys(rows[0]),provenance},dependencies:[sourceRef],blobs:[{...blob,path:'rows.json',mediaType:'application/json'}],provenance}});
+  const rows=[{type:'weekly-input',...job.input}],blob=await publicationFile(JSON.stringify(rows));
+  const ref=await publishFiles(host, {operationId:`${job.id}_data`,manifest:{kind:'data',schemaVersion:'1.0.0',content:{format:'json-rows',path:'rows.json',rowCount:rows.length,columns:Object.keys(rows[0]),provenance},dependencies:[sourceRef],blobs:[{...blob,path:'rows.json',mediaType:'application/json'}],provenance}});
   return cas(host,job.id,job.revision,{status:'queued',inputRef:ref,sourceRef,inputArchive:receipt,error:null});
 }
 async function queuePeriod(host,service,open,close,reason,signal,extra={}){
@@ -98,7 +102,7 @@ export async function onWeeklyBoundary(host,service,context,signal){return seria
   return {status:'frozen',cursorRevision:cursor.revision,jobs,generationSubmitted:false};
 });}
 
-export function listWeeklyJobs(host){return host.storage.list(COLLECTION).filter(x=>x.id.startsWith('weekly_'));}
+export function listWeeklyJobs(host){return records(host).list(COLLECTION).filter(x=>x.id.startsWith('weekly_'));}
 const instructions='用中文自由撰写投资周报，可表达观点、情景、解释与反思，不限定段落、图形或长度。只能根据固定截止输入；这是原作久留美与Sesame实际模拟动作的观众对照，不是第二交易角色。报告财务基线及决定/订单/成交证据由固定数据提供。说明市场解读、风险和下周条件计划；未知保持未知，不补造原作总资产或精确成交时间。不得使用当前行情、修改交易或访问下一周输入。同历史知情重放不是样本外；模型预训练历史记忆无法排除。';
 
 /** Explicit future-authorized worker, never invoked by queue hook. Unknown
@@ -114,7 +118,7 @@ export async function drainWeeklyQueue(host,service,options={},signal){
       if(job.status==='submitting'){job=cas(host,job.id,job.revision,{status:'unknown',error:{code:'SUBMISSION_UNKNOWN',message:'Restart/lost reply; reconcile existing request; never auto-resubmit inference'}});results.push({id:job.id,status:job.status});continue;}
       if(job.status==='queued'){
         weeklyProvenanceKind(job.input); // Missing legacy provenance needs explicit evidence repair before any generation.
-        const model=options.model,configured=await host.inference.models();check(configured.some(m=>canonical(m)===canonical(model)),'Exact configured model descriptor required','MODEL_UNAVAILABLE');
+        const model=options.model,configured=host.context.models;check(configured.some(m=>canonical(m)===canonical(model)),'Exact configured model descriptor required','MODEL_UNAVAILABLE');
         const transport=options.transport??'inference';check(['inference','agents'].includes(transport),'Unsupported transport');
         if(transport==='agents')check(typeof options.collectFullAgentOutput==='function','Public complete final-output collector required','FULL_AGENT_OUTPUT_REQUIRED');
         const requestId=job.id+'_generation',request=transport==='inference'?{requestId,model,systemPrompt:instructions,input:weeklyGenerationInput(job),maxTokens:options.maxTokens??32768,timeoutMs:options.timeoutMs??900000}:{requestId,model,title:'模拟UTC投资周报',kind:'research',instructions,input:weeklyGenerationInput(job),tools:[],lane:`weekly:${job.input.opening.runId}`,queue:'fifo',maxTurns:12,maxToolCalls:32};
@@ -138,16 +142,16 @@ export async function drainWeeklyQueue(host,service,options={},signal){
         job=cas(host,job.id,job.revision,{status:'submitting',requestArchive:inputReceipt,error:null});
         try{
           if(transport==='inference'){
-            const output=await host.inference.complete(request,signal);check(output?.requestId===requestId&&typeof output.text==='string','Unknown/incomplete inference output','MODEL_OUTPUT_UNKNOWN');
+            const {requestId:_id,...modelInput}=request;const output=await invokeValue(host,'host.model.complete',modelInput,{operationId:requestId,signal});check(typeof output.text==='string','Unknown/incomplete inference output','MODEL_OUTPUT_UNKNOWN');
             job=cas(host,job.id,job.revision,{status:'output_saved',output:copy(output),model:copy(model)});
-          }else{const task=await host.agents.submit(request);check(task?.id,'Unknown Agent submit receipt','MODEL_OUTPUT_UNKNOWN');job=cas(host,job.id,job.revision,{status:'submitted',taskId:task.id,taskReceipt:copy(task),model:copy(model)});}
+          }else{const task=await submitRole(host,request,signal);check(task?.id,'Unknown Agent submit receipt','MODEL_OUTPUT_UNKNOWN');job=cas(host,job.id,job.revision,{status:'submitted',taskId:task.id,taskReceipt:copy(task),model:copy(model)});}
         }catch(e){const status=signal?.aborted?'cancelled':e.code==='MODEL_REJECTED'?'failed':'unknown';job=cas(host,job.id,job.revision,{status,error:{code:e.code??'SUBMISSION_UNKNOWN',message:e.message}});results.push({id:job.id,status});continue;}
       }
       if(job.status==='submitted'){
-        try{const inspected=await host.agents.inspect(job.taskId);if(['failed','interrupted','cancelled'].includes(inspected.status)){job=cas(host,job.id,job.revision,{status:inspected.status,taskReceipt:copy(inspected)});results.push({id:job.id,status:job.status});continue;}
-          const result=await host.agents.wait(job.taskId,signal),full=await options.collectFullAgentOutput(job.taskId,result,signal);
+        try{const inspected=roleTask(host,job.taskId);if(['failed','interrupted','cancelled'].includes(inspected.status)){job=cas(host,job.id,job.revision,{status:inspected.status,taskReceipt:copy(inspected)});results.push({id:job.id,status:job.status});continue;}
+          const result=await waitRole(host,job.taskId,signal),full=await options.collectFullAgentOutput(job.taskId,result,signal);
           check(full?.complete===true&&full.output!==undefined&&Array.isArray(full.artifactRefs),'Task summary is not full Agent output','FULL_AGENT_OUTPUT_REQUIRED');job=cas(host,job.id,job.revision,{status:'output_saved',output:copy(full),taskReceipt:copy(result)});
-        }catch(e){if(signal?.aborted){await host.agents.cancel(job.taskId,'Weekly worker cancelled');job=cas(host,job.id,job.revision,{status:'cancelled',error:{message:e.message}});}else job=cas(host,job.id,job.revision,{status:'unknown',error:{code:e.code??'WAIT_UNKNOWN',message:e.message}});results.push({id:job.id,status:job.status});continue;}
+        }catch(e){if(signal?.aborted){await host.runs.cancel({id:job.taskId},{reason:'Weekly worker cancelled'});job=cas(host,job.id,job.revision,{status:'cancelled',error:{message:e.message}});}else job=cas(host,job.id,job.revision,{status:'unknown',error:{code:e.code??'WAIT_UNKNOWN',message:e.message}});results.push({id:job.id,status:job.status});continue;}
       }
       if(['output_saved','output_archive_failed','publishing','publish_failed'].includes(job.status)){
         try{signal?.throwIfAborted();const outputArchive=await service.archiveFileSafe(`weekly/${job.id}/full-output.json`,JSON.stringify(job.output));check(outputArchive,'Full output archive unavailable','ARCHIVE_UNAVAILABLE');
@@ -188,14 +192,13 @@ async function saveNativeWeeklyReceipt(host,service,job,proof){
  return cas(host,job.id,job.revision,{nativeUiStatus:'opened',nativeUiReceipt:copy(proof),nativeUiRawArchive:rawArchive,nativeUiBindingArchive:bindingArchive,nativeUiError:null});
 }
 export async function consumeNativeWeeklyReports(host,service,options={},signal){
- check(host.scope?.kind==='main','Native report confirmation is main-only','SCOPE_DENIED');const engine=service.getSpectatorState?.()??service.getState(),view=readConsumedView(host,engine.id),items=[];
+ check(host.context?.kind==='main','Native report confirmation is main-only','SCOPE_DENIED');const engine=service.getSpectatorState?.()??service.getState(),view=readConsumedView(host,engine.id),items=[];
  for(let job of listWeeklyJobs(host).filter(j=>j.status==='sealed'&&j.input.opening.runId===engine.id)){
   signal?.throwIfAborted();const expected=weeklyReceiptExpected(job),synchronized=view?.cutoffMs===job.input.period.toMs;
   // Re-read the public receipts even for a formerly unknown/opening job: this is
   // a safe read, never a repeat open/model and never edits the frozen financials.
   if(job.nativeUiStatus==='opened'&&job.nativeUiRawArchive&&job.nativeUiReceipt?.availableLevel==='native_page_rendered_pixel_unverified') {items.push({id:job.id,status:'opened',ref:job.reportRef,receipt:copy(job.nativeUiReceipt),synchronized});continue;}
-  if(typeof host.artifacts?.receipts!=='function'){items.push({id:job.id,status:'pending',diagnostic:'Public artifacts.receipts unavailable; no opener prerequisite and no guessed API',expected,synchronized});continue;}
-  const raw=await host.artifacts.receipts(job.reportRef),proof=nativeReportReceipt(raw,expected);
+  const raw=await host.resources.read(job.reportRef,{part:'receipts'}),proof=nativeReportReceipt(raw,expected);
   if(proof.status!=='opened'){
    const archived=await service.archiveFileSafe(`weekly/${job.id}/native-receipts-${digest(raw).slice(7)}.json`,JSON.stringify(raw));check(archived,'Pending raw receipt archive unavailable','ARCHIVE_UNAVAILABLE');
    items.push({id:job.id,status:'pending',ref:job.reportRef,diagnostic:proof.reason,expected,raw:copy(raw),synchronized,next:'Open the normal native report card/page, then pump the read-only receiver'});continue;
@@ -207,7 +210,7 @@ export async function consumeNativeWeeklyReports(host,service,options={},signal)
 /** Evidence-only reconcile; ignores obsolete operationId/asOf/evidence selectors.
  * Caller may pass raw actual receipts; no opener retry and no new inference. */
 export async function reconcileNativeWeeklyUI(host,id,revision,raw,verify,signal){
- signal?.throwIfAborted();check(host.scope?.kind==='main','Main-only native report reconciliation','SCOPE_DENIED');const j=get(host,id);check(j?.status==='sealed'&&j.revision===revision,'Current sealed job required','RECONCILIATION_REQUIRED');
+ signal?.throwIfAborted();check(host.context?.kind==='main','Main-only native report reconciliation','SCOPE_DENIED');const j=get(host,id);check(j?.status==='sealed'&&j.revision===revision,'Current sealed job required','RECONCILIATION_REQUIRED');
  const proof=nativeReportReceipt(raw,weeklyReceiptExpected(j));check(proof.status==='opened','Actual exact native sesame-report rendered receipt required','RECONCILIATION_REQUIRED');
  return cas(host,id,revision,{nativeUiStatus:'receipt_observed_archive_pending',nativeUiReceipt:copy(proof),nativeUiRawArchive:null,diagnostic:'Evidence stored in own job; consumer archives full original rawreceipt before runtime release'});
 }

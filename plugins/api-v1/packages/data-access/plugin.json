@@ -2,18 +2,8 @@
   "id": "sesame/data-access",
   "title": "数据与研究证据",
   "description": "发现提供方、查询与冻结数据、读取输入和登记可追溯代码计算结果。",
-  "version": "2.3.1",
+  "version": "3.0.0",
   "default_state": "mounted",
-  "tool_names": [
-    "market_read",
-    "data_providers",
-    "market_instruments",
-    "data_sources",
-    "data_query",
-    "data_snapshot",
-    "data_read",
-    "research_register"
-  ],
   "prompts": [
     "prompt.md"
   ],
@@ -21,20 +11,20 @@
     "skills"
   ],
   "entry": "index.js",
-  "tool_definitions": "tools.json",
-  "mcp_export": [
-    "market_read",
-    "data_providers",
-    "market_instruments",
-    "data_sources",
-    "data_query",
-    "data_snapshot",
-    "data_read"
-  ],
-  "apiVersion": "1",
-  "provides": {},
+  "apiVersion": "2",
   "license": "MIT",
   "engines": {
     "sesame": ">=0.2.0-0"
-  }
+  },
+  "execution": "native",
+  "capability_manifest": "capabilities.json",
+  "mcp_export": [
+    "data_read"
+  ],
+  "dependencies": [
+    {
+      "name": "sesame/workspace",
+      "version": ">=3.0.0"
+    }
+  ]
 }

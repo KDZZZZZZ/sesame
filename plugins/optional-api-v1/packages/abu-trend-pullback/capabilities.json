@@ -1,0 +1,312 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "capabilities": [
+    {
+      "id": "abu_trend_pullback_analyze",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "组合长趋势、短回撤及反弹条件，输出趋势中回撤的研究观察。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "schema_version": {
+                "const": 1
+              },
+              "as_of": {
+                "type": "string",
+                "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+              },
+              "source": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "kind": {
+                    "enum": [
+                      "synthetic",
+                      "historical",
+                      "live"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "kind"
+                ],
+                "additionalProperties": true,
+                "description": "Caller-declared provenance; synthetic remains synthetic in output artifacts."
+              },
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "trend_window": {
+                    "type": "integer",
+                    "default": 20,
+                    "minimum": 4,
+                    "maximum": 500,
+                    "description": "长趋势窗口"
+                  },
+                  "pullback_window": {
+                    "type": "integer",
+                    "default": 5,
+                    "minimum": 2,
+                    "maximum": 100,
+                    "description": "短回撤窗口"
+                  },
+                  "min_trend_return": {
+                    "type": "number",
+                    "default": 0.05,
+                    "minimum": 0,
+                    "maximum": 5,
+                    "description": "最小趋势收益比例"
+                  },
+                  "min_pullback": {
+                    "type": "number",
+                    "default": 0.02,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "最小回撤比例"
+                  },
+                  "max_pullback": {
+                    "type": "number",
+                    "default": 0.25,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "最大回撤比例"
+                  },
+                  "golden_tolerance": {
+                    "type": "number",
+                    "default": 0.08,
+                    "minimum": 0,
+                    "maximum": 0.5,
+                    "description": "黄金分割参考容差"
+                  }
+                },
+                "additionalProperties": false,
+                "description": "Optional overrides. Defaults and limits match the existing calculation."
+              },
+              "bars": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "time": {
+                      "type": "string",
+                      "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+                    },
+                    "available_at": {
+                      "type": "string",
+                      "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+                    },
+                    "open": {
+                      "type": "number"
+                    },
+                    "high": {
+                      "type": "number"
+                    },
+                    "low": {
+                      "type": "number"
+                    },
+                    "close": {
+                      "type": "number"
+                    },
+                    "volume": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": true,
+                  "required": [
+                    "time",
+                    "available_at",
+                    "open",
+                    "high",
+                    "low",
+                    "close",
+                    "volume"
+                  ]
+                },
+                "maxItems": 10000,
+                "minItems": 1,
+                "description": "bars 是 1..10000 条已知 OHLCV，按收盘 time 严格递增且不重复；每行含 time、available_at、open/high/low/close、volume。time <= available_at <= as_of，价格为正且 high/low 覆盖 open/close，volume >= 0。"
+              }
+            },
+            "additionalProperties": true,
+            "required": [
+              "schema_version",
+              "source",
+              "as_of",
+              "bars"
+            ],
+            "description": "完整的固定输入对象；examples/input.json 仅为合成格式示例，不是实盘证据。"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "schema_version": {
+            "const": 1
+          },
+          "baseline": {
+            "const": true
+          },
+          "status": {
+            "const": "research_baseline"
+          },
+          "parameters": {
+            "type": "object"
+          },
+          "observations": {
+            "description": "observations.latest/series 为条件和触发观察，decision_available_at 为最新证据可用时点。"
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "input_artifact": {
+            "type": "object",
+            "description": "立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。"
+          },
+          "result_artifact": {
+            "type": "object",
+            "description": "立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。"
+          }
+        },
+        "required": [
+          "schema_version",
+          "baseline",
+          "status",
+          "parameters",
+          "observations",
+          "limitations",
+          "input_artifact",
+          "result_artifact"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "resources.create",
+        "resources.publish"
+      ],
+      "binding": {
+        "type": "native",
+        "name": "abu_trend_pullback_analyze"
+      },
+      "usage": {
+        "purpose": "组合长趋势、短回撤及反弹条件，输出趋势中回撤的研究观察。",
+        "inputs": "调用形状为 {input:{schema_version:1,source:{id,kind},as_of,parameters?,...}}，不是文件路径或数据 ID。source.id 为 1..500 字符，kind 为 synthetic/historical/live；as_of 及全部时间字段使用真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒）。输入限 2MiB 有限 JSON，不接收代码。parameters 只支持列出的字段。 bars 是 1..10000 条已知 OHLCV，按收盘 time 严格递增且不重复；每行含 time、available_at、open/high/low/close、volume。time <= available_at <= as_of，价格为正且 high/low 覆盖 open/close，volume >= 0。 pullback_window < trend_window，min_pullback <= max_pullback；比例使用小数，例如 0.05 表示 5%。",
+        "outputs": "observations.latest/series 为条件和触发观察，decision_available_at 为最新证据可用时点。 立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。",
+        "prerequisites": [
+          "提供与任务相符的已知输入；本能力不联网取数，不需要 Python、ABU 安装或券商账户。"
+        ],
+        "limitations": [
+          "这是历史形态启发式，不识别市场状态、流动性或订单可执行性，不证明后续反弹。",
+          "来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。"
+        ]
+      }
+    }
+  ],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "knowledge-0",
+      "path": "examples/input.json",
+      "description": "趋势回撤基线 — examples/input.json",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-1",
+      "path": "prompt.md",
+      "description": "趋势回撤基线 — prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "knowledge-2",
+      "path": "PROVENANCE.md",
+      "description": "趋势回撤基线 — PROVENANCE.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-3",
+      "path": "README.md",
+      "description": "趋势回撤基线 — README.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-4",
+      "path": "skills/abu-trend-pullback/references/method.md",
+      "description": "趋势回撤基线 — skills/abu-trend-pullback/references/method.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-5",
+      "path": "skills/abu-trend-pullback/SKILL.md",
+      "description": "趋势回撤基线 — skills/abu-trend-pullback/SKILL.md",
+      "kind": "skill"
+    }
+  ],
+  "hooks": [],
+  "stateCollections": [],
+  "artifactSchemas": [
+    {
+      "id": "data",
+      "kind": "data",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "const": "json-rows"
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rowCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "columns": {
+            "type": "array"
+          },
+          "provenance": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "format",
+          "path",
+          "rowCount",
+          "columns",
+          "provenance"
+        ],
+        "additionalProperties": true
+      }
+    }
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

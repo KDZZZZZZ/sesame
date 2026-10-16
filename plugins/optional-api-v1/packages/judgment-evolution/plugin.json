@@ -5,36 +5,11 @@
   "version": "2.1.0",
   "default_state": "discoverable",
   "agent_scope": "main",
-  "tool_names": [
-    "judgment_review_queue",
-    "judgment_review_due",
-    "judgment_record",
-    "judgment_list",
-    "judgment_read",
-    "judgment_resolve",
-    "judgment_defer",
-    "judgment_reflect",
-    "judgment_rule",
-    "judgment_rules",
-    "judgment_retire_rule",
-    "judgment_audit_source",
-    "judgment_coverage"
-  ],
   "entry": "index.js",
-  "tool_definitions": "tools.json",
-  "prompts": [
-    "prompt.md"
-  ],
-  "resources": [
-    "references.md"
-  ],
-  "skills": [
-    "skills"
-  ],
-  "apiVersion": "1",
-  "provides": {},
+  "apiVersion": "2",
   "license": "MIT",
   "engines": {
     "sesame": ">=0.2.0-0"
-  }
+  },
+  "capability_manifest": "capabilities.json"
 }

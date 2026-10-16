@@ -1,0 +1,503 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "capabilities": [
+    {
+      "id": "backtrader_environment",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Inspect and select existing pinned Backtrader/Python first; explicit prepare installs private PyPI dependencies only if missing. No startup downloads.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "inspect"
+              },
+              {
+                "type": "string",
+                "const": "prepare"
+              }
+            ]
+          },
+          "python_path": {
+            "type": "string",
+            "description": "Existing native Python executable",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [
+        "process",
+        "plugin.state.write",
+        "private-filesystem",
+        "network-on-prepare"
+      ],
+      "usage": {
+        "purpose": "核验并选择现有依赖；仅显式 prepare 可能安装私有依赖。",
+        "inputs": "{action:\"inspect\",python_path?} 检查给定/已选/私有/宿主/PATH Python；{action:\"prepare\",python_path?} 在无兼容环境时创建私有 venv。最小例 {action:\"inspect\"}。",
+        "outputs": "ready:true 返回 python、实际 Python/库版本、reused、origin、downloads/audit；inspect 成功会保存私有 selection，随即可用。ready:false 返回 required 和 failures[{python,code}]。",
+        "prerequisites": [
+          "本机64位 Python>=3.11；库固定 backtrader 1.9.78.123。已有路径可直接传 python_path，不必先扫描磁盘。"
+        ],
+        "limitations": [
+          "inspect 不下载；prepare 从官方 PyPI 安装到插件私有目录，不安装解释器、不改共享环境。失败根据缺失解释器、导入版本或具体网络错误选择现有路径/准备；重复同一失败不产生新证据。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "backtrader_environment"
+      }
+    },
+    {
+      "id": "backtrader_backtest",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Run real Cerebro on one fixed UTC/offset DataRef and authored backtrader.Strategy file. Managed host execution, stocklike cash simulation, never connects a broker; no SVL equivalence. Frozen operation never replays an interrupted run.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "operation_id",
+          "title",
+          "data",
+          "strategy_path",
+          "class_name",
+          "config"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "description": "Immutable operation key",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string",
+            "description": "Result title",
+            "minLength": 1
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string",
+                "const": "data"
+              },
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              }
+            },
+            "additionalProperties": false
+          },
+          "strategy_path": {
+            "type": "string",
+            "description": "Authored workspace Python file",
+            "minLength": 1
+          },
+          "class_name": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "config": {
+            "type": "object",
+            "required": [
+              "capital",
+              "commission",
+              "slippage",
+              "feed"
+            ],
+            "properties": {
+              "capital": {
+                "type": "string",
+                "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+              },
+              "commission": {
+                "type": "string",
+                "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+              },
+              "slippage": {
+                "type": "string",
+                "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+              },
+              "feed": {
+                "type": "object",
+                "required": [
+                  "timeframe",
+                  "compression"
+                ],
+                "properties": {
+                  "timeframe": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "const": "minutes"
+                      },
+                      {
+                        "type": "string",
+                        "const": "days"
+                      },
+                      {
+                        "type": "string",
+                        "const": "weeks"
+                      },
+                      {
+                        "type": "string",
+                        "const": "months"
+                      }
+                    ]
+                  },
+                  "compression": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100000
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "parameters": {
+            "type": "object",
+            "patternProperties": {
+              "^.*$": {}
+            }
+          },
+          "columns": {
+            "type": "object",
+            "properties": {
+              "datetime": {
+                "type": "string"
+              },
+              "open": {
+                "type": "string"
+              },
+              "high": {
+                "type": "string"
+              },
+              "low": {
+                "type": "string"
+              },
+              "close": {
+                "type": "string"
+              },
+              "volume": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "timeout": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 600
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [
+        "process",
+        "private-filesystem",
+        "resources.publish",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "运行固定输入的Backtrader Cerebro原生回测并冻结证据。",
+        "inputs": "{operation_id,title,data,strategy_path,class_name,config,parameters?,columns?,timeout?}。data 为 data_snapshot 等公开数据工具返回的固定 {id,revision,digest,kind:\"data\",schemaVersion:\"1.0.0\"}，内容为 json-rows；禁止猜引用/用可变datasetId代替。 strategy_path 是工作区真实单文件（≤512KiB），class_name 为已编写的backtrader.Strategy类名；输入2–100000行、≤16MiB，列默认datetime/open/high/low/close/volume，columns可改名，未知量不填0。config最小例 {capital:\"100000\",commission:\"0.001\",slippage:\"0\",feed:{timeframe:\"days\",compression:1}}；费率/滑点是比例，小时柱用minutes/60；时间必须明确UTC/offset或UTC SourceTime，严格递增。",
+        "outputs": "{ref:<固定strategy.result>,status:\"completed\"|\"failed\",data:[{id:\"equity\"|\"trades\"|\"orders\",ref}],statistics,diagnostics,executionRunId,nativeSource,environment}；failed没有成功表；中断保留unknown/运行操作记录，不自动重放。",
+        "prerequisites": [
+          "backtrader_environment inspect/prepare ready:true；固定数据和工作区代码来自本任务。公开 skill 给出原生接口/单位，无须阅读安装源码。"
+        ],
+        "limitations": [
+          "执行当前用户权限的真实Python，宿主可取消但不是OS沙箱；引擎本身只使用固定数据，不连接实盘broker。",
+          "operation_id绑定代码、数据、参数和撮合配置；相同输入重试读原结果，改变输入须新研究意图。失败读diagnostics；未知不声称完成。",
+          "demo来源保持demo；completed只表示引擎完成，不证明盈利、SVL等价或实盘有效。原生浮点不具decimal34等价。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "backtrader_backtest"
+      }
+    },
+    {
+      "id": "backtrader_result",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Read fixed result and report DataRefs without rerunning native code.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "ref"
+        ],
+        "properties": {
+          "ref": {
+            "type": "object",
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string",
+                "const": "strategy.result"
+              },
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "读取固定原生回测成果与其可追溯证据。",
+        "inputs": "{ref:<backtest返回的完整strategy.result引用>}；不传operation_id或工作区文件路径。",
+        "outputs": "{ref,manifest}；manifest.content 含 status,title,engine,environment,assumptions,inputs,nativeSource,rawResult,data,statistics,limitations,provenance；表中ref可交data_read。",
+        "prerequisites": [
+          "已有固定strategy.result；此读取不需要Python/终端。"
+        ],
+        "limitations": [
+          "读取不重跑回测；统计与输入范围、成本和demo标签一同解释。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "backtrader_result"
+      }
+    },
+    {
+      "id": "backtrader_dispose",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Close private plugin storage and owned resources.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "closed": {
+            "const": true
+          }
+        },
+        "required": [
+          "closed"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.session.close"
+      ],
+      "usage": {
+        "purpose": "关闭插件自有资源。",
+        "inputs": "宿主生命周期输入 {}。",
+        "outputs": "{closed:true}。",
+        "prerequisites": [
+          "仅宿主卸载/关闭时调用。"
+        ],
+        "limitations": [
+          "释放插件存储和自有会话/订阅；不删除已发布证据，不结束用户交易终端。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "backtrader_dispose"
+      }
+    }
+  ],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "documentation-0",
+      "path": "prompt.md",
+      "description": "Documentation: prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "documentation-1",
+      "path": "PROVENANCE.md",
+      "description": "Documentation: PROVENANCE.md",
+      "kind": "reference"
+    },
+    {
+      "id": "documentation-2",
+      "path": "README.md",
+      "description": "Documentation: README.md",
+      "kind": "reference"
+    },
+    {
+      "id": "documentation-3",
+      "path": "skills/backtrader-fixed-research/SKILL.md",
+      "description": "Documentation: skills\\backtrader-fixed-research\\SKILL.md",
+      "kind": "skill"
+    },
+    {
+      "id": "public-interface-contract",
+      "path": "INTERFACES.md",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Every declared capability: concrete inputs/outputs, dependency entrypoints, effects, completion evidence and recovery boundaries.",
+      "kind": "reference"
+    }
+  ],
+  "hooks": [
+    {
+      "id": "dispose",
+      "event": "lifecycle.dispose",
+      "contract": "sesame.lifecycle/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "operations": {
+        "handle": "backtrader_dispose"
+      }
+    }
+  ],
+  "stateCollections": [],
+  "artifactSchemas": [
+    {
+      "id": "data",
+      "kind": "data",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "const": "json-rows"
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rowCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "columns": {
+            "type": "array"
+          },
+          "provenance": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "format",
+          "path",
+          "rowCount",
+          "columns",
+          "provenance"
+        ],
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "environment",
+      "kind": "environment",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "resource",
+      "kind": "resource",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "strategy.result",
+      "kind": "strategy.result",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  ]
+}

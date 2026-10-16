@@ -1,4 +1,8 @@
 import test from "node:test";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve, sep } from "node:path";
+import { closeRecords } from "../packages/ccxt/records.js";
 import assert from "node:assert/strict";
 import { setImmediate } from "node:timers/promises";
 import { CCXTProvider, displayDecimals } from "../packages/ccxt/provider.js";
@@ -14,33 +18,31 @@ const instrument = { sourceId: "ccxt:kraken:spot", instrumentId: "BTC/USD" },
     from: { basis: "utc", unixMs: 0 },
     to: { basis: "utc", unixMs: 180000 },
   };
-function fixture() {
+// Unit tests replace only the provider's native read boundary. Connection
+// persistence, binding, pagination, precision and streaming remain production code.
+function providerFixture(t, read) {
+  const directory = mkdtempSync(join(tmpdir(), 'ccxt-provider-'));
+  const host = { context: { storageRoot: directory } }, provider = new CCXTProvider(host), f = { provider, read };
+  provider.call = (context, action, args = {}) => {
+    const binding = provider.bound(context);
+    return f.read({ exchange: binding.exchange, publicProxy: binding.proxy, action, ...args });
+  };
+  t.after(async () => { await provider.dispose(); closeRecords(host); assert.ok(resolve(directory).startsWith(resolve(tmpdir()) + sep)); rmSync(directory, { recursive: true, force: true }); });
+  return f;
+}
+function fixture(t) {
   let rows = [
     [0, "10", "11", "9", "10", "1"],
     [60000, "10", "12", "9", "11", "2"],
     [120000, "11", "12", "10", "11.5", "3"],
   ];
-  const records = new Map();
-  const provider = new CCXTProvider({
-      storage: {
-        get: (_name, id) => records.get(id),
-        put: (_name, row) => records.set(row.id, structuredClone(row)),
-      },
-      environment: {
-        executeWorker: async () => ({
-          library: "4.5.85",
-          exchange: "kraken",
-          observedAt: Date.now(),
-          rows,
-        }),
-      },
-    }),
-    context = { bindingId: "a" };
+  const f = providerFixture(t, async () => ({ library: "4.5.85", exchange: "kraken", observedAt: Date.now(), rows }));
+  const { provider } = f, context = { bindingId: "a" };
   provider.bind({ configuration: { exchange: "kraken" } }, context);
-  return { provider, context, set: (value) => (rows = value) };
+  return { ...f, context, set: (value) => (rows = value) };
 }
-test("Backward immutable cursor uses most recent candles then older ascending page", async () => {
-  const f = fixture(),
+test("Backward immutable cursor uses most recent candles then older ascending page", async t => {
+  const f = fixture(t),
     input = {
       instrument,
       spec,
@@ -75,8 +77,8 @@ test("Backward immutable cursor uses most recent candles then older ascending pa
     { code: "INVALID_CURSOR" },
   );
 });
-test("Receipt clock never closes latest candle; source successor survives narrow history and exact UTC boundary", async () => {
-  const f = fixture(),
+test("Receipt clock never closes latest candle; source successor survives narrow history and exact UTC boundary", async t => {
+  const f = fixture(t),
     input = {
       instrument,
       spec,
@@ -109,8 +111,8 @@ test("Receipt clock never closes latest candle; source successor survives narrow
       BigInt(first.data.page.items[1].revision),
   );
 });
-test("Source malformed OHLC/negative volume and cross-exchange binding reject", async () => {
-  const f = fixture(),
+test("Source malformed OHLC/negative volume and cross-exchange binding reject", async t => {
+  const f = fixture(t),
     input = { instrument, spec, range, page: { limit: 10 } };
   f.set([[0, "10", "9", "8", "10", "1"]]);
   await assert.rejects(f.provider.queryBars(input, f.context), {
@@ -161,33 +163,26 @@ test("Display decimals use exact source precision, never a blanket eight", () =>
   );
 });
 
-function cappedPublicExchange(now, exchange = "coinbase", availableFrom = -Infinity) {
-  const requests = [], records = new Map();
-  const provider = new CCXTProvider({
-    storage: {
-      get: (_name, id) => records.get(id),
-      put: (_name, row) => records.set(row.id, structuredClone(row)),
-    },
-    environment: {
-      executeWorker: async (_path, payload) => {
-        requests.push(payload);
-        const duration = 3600000, cap = exchange === "kraken" ? 500 : 300;
-        const rows = Array.from({ length: Math.min(payload.limit ?? 500, cap) }, (_, i) => [
-          Math.max(Math.ceil(payload.since / duration) * duration, availableFrom) + i * duration,
-          "10", "12", "9", "11", "2",
-        ]).filter(row => row[0] <= Math.floor(now() / duration) * duration);
-        return { library: "4.5.85", exchange, observedAt: now(), rows };
-      },
-    },
+function cappedPublicExchange(t, now, exchange = "coinbase", availableFrom = -Infinity) {
+  const requests = [];
+  const f = providerFixture(t, async payload => {
+    requests.push(payload);
+    const duration = 3600000, cap = exchange === "kraken" ? 500 : 300;
+    const rows = Array.from({ length: Math.min(payload.limit ?? 500, cap) }, (_, i) => [
+      Math.max(Math.ceil(payload.since / duration) * duration, availableFrom) + i * duration,
+      "10", "12", "9", "11", "2",
+    ]).filter(row => row[0] <= Math.floor(now() / duration) * duration);
+    return { library: "4.5.85", exchange, observedAt: now(), rows };
   });
+  const { provider } = f;
   const context = { bindingId: exchange };
   provider.bind({ configuration: { exchange } }, context);
-  return { provider, context, requests };
+  return Object.assign(f, { context, requests });
 }
 
-test("Backward Coinbase window honors its native 300 candle cap and reaches the forming candle", async () => {
+test("Backward Coinbase window honors its native 300 candle cap and reaches the forming candle", async t => {
   const now = Date.UTC(2026, 9, 10, 8, 23), duration = 3600000;
-  const f = cappedPublicExchange(() => now);
+  const f = cappedPublicExchange(t, () => now);
   const result = await f.provider.queryBars({
     instrument: { sourceId: "ccxt:coinbase:spot", instrumentId: "BTC/USD" },
     spec: { ...spec, timeframe: "1h" },
@@ -205,7 +200,7 @@ test("Backward Coinbase window honors its native 300 candle cap and reaches the 
 test("Live initial tail reaches now and one-second refresh queries only the recent window", async t => {
   const now = Date.UTC(2026, 9, 10, 8, 23), duration = 3600000;
   t.mock.timers.enable({ apis: ["Date", "setTimeout"], now });
-  const f = cappedPublicExchange(() => Date.now());
+  const f = cappedPublicExchange(t, () => Date.now());
   const handle = await f.provider.subscribeBars({
     instrument: { sourceId: "ccxt:coinbase:spot", instrumentId: "BTC/USD" },
     spec: { ...spec, timeframe: "1h" }, includeForming: true, tailLimit: 500,
@@ -229,7 +224,7 @@ test("Live initial tail reaches now and one-second refresh queries only the rece
 test("A completed-bar tail includes a real source successor even for tailLimit one", async t => {
   const now = Date.UTC(2026, 9, 10, 8, 23), duration = 3600000;
   t.mock.timers.enable({ apis: ["Date"], now });
-  const f = cappedPublicExchange(() => Date.now());
+  const f = cappedPublicExchange(t, () => Date.now());
   const stream = await f.provider.subscribeBars({
     instrument: { sourceId: "ccxt:coinbase:spot", instrumentId: "BTC/USD" },
     spec: { ...spec, timeframe: "1h" }, includeForming: false, tailLimit: 1,
@@ -247,7 +242,7 @@ for (const exchange of ["kraken", "coinbase", "okx"]) {
       test(`${exchange} supplies ${tailLimit} ${includeForming ? "forming-inclusive" : "completed"} initial candles within two native reads`, async t => {
         const now = Date.UTC(2026, 9, 10, 8, 23), duration = 3600000;
         t.mock.timers.enable({ apis: ["Date", "setTimeout"], now });
-        const f = cappedPublicExchange(() => Date.now(), exchange);
+        const f = cappedPublicExchange(t, () => Date.now(), exchange);
         t.after(() => f.provider.dispose());
         const stream = await f.provider.subscribeBars({
           instrument: { sourceId: `ccxt:${exchange}:spot`, instrumentId: "BTC/USD" },
@@ -291,10 +286,10 @@ for (const exchange of ["kraken", "coinbase", "okx"]) {
 test("Initial backfill only prepends older rows and preserves the latest window and revisions", async t => {
   const now = Date.UTC(2026, 9, 10, 8, 23), duration = 3600000;
   t.mock.timers.enable({ apis: ["Date"], now });
-  const f = cappedPublicExchange(() => Date.now(), "kraken");
+  const f = cappedPublicExchange(t, () => Date.now(), "kraken");
   t.after(() => f.provider.dispose());
-  const execute = f.provider.host.environment.executeWorker;
-  f.provider.host.environment.executeWorker = async (...args) => {
+  const execute = f.read;
+  f.read = async (...args) => {
     const receipt = await execute(...args);
     return f.requests.length === 2 ? {
       ...receipt, observedAt: now + 1,
@@ -337,7 +332,7 @@ for (const available of [0, 3, 400]) {
       const now = Date.UTC(2026, 9, 10, 8, 23), duration = 3600000,
         currentOpen = Math.floor(now / duration) * duration;
       t.mock.timers.enable({ apis: ["Date", "setTimeout"], now });
-      const f = cappedPublicExchange(() => Date.now(), "coinbase", currentOpen - (available - 1) * duration);
+      const f = cappedPublicExchange(t, () => Date.now(), "coinbase", currentOpen - (available - 1) * duration);
       t.after(() => f.provider.dispose());
       const stream = await f.provider.subscribeBars({
         instrument: { sourceId: "ccxt:coinbase:spot", instrumentId: "BTC/USD" },
@@ -365,13 +360,13 @@ for (const available of [0, 3, 400]) {
 
 test("A transient read reports a recoverable gap and the same binding can immediately resnapshot", async t => {
   t.mock.timers.enable({ apis: ["Date", "setTimeout"], now: Date.UTC(2026, 9, 10, 8, 23) });
-  const f = cappedPublicExchange(() => Date.now()), input = {
+  const f = cappedPublicExchange(t, () => Date.now()), input = {
     instrument: { sourceId: "ccxt:coinbase:spot", instrumentId: "BTC/USD" },
     spec: { ...spec, timeframe: "1h" }, includeForming: true, tailLimit: 500,
   };
   const first = await f.provider.subscribeBars(input, f.context), events = [];
-  const original = f.provider.host.environment.executeWorker;
-  f.provider.host.environment.executeWorker = async () => { throw Object.assign(Error("temporary network failure"), { code: "SOURCE_UNAVAILABLE" }); };
+  const original = f.read;
+  f.read = async () => { throw Object.assign(Error("temporary network failure"), { code: "SOURCE_UNAVAILABLE" }); };
   first.ready(event => events.push(event));
   t.mock.timers.tick(1000);
   await setImmediate();
@@ -379,7 +374,7 @@ test("A transient read reports a recoverable gap and the same binding can immedi
   assert.equal(events[0].payload.recovery, "snapshot");
   assert.equal(events[0].payload.reason.code, "SOURCE_UNAVAILABLE");
   await first.close();
-  f.provider.host.environment.executeWorker = original;
+  f.read = original;
   const recovered = await f.provider.subscribeBars(input, f.context);
   assert.equal(recovered.snapshot.instrument.sourceId, first.snapshot.instrument.sourceId);
   assert.equal(recovered.snapshot.bars.at(-1).openTime.unixMs, first.snapshot.bars.at(-1).openTime.unixMs);
@@ -388,7 +383,7 @@ test("A transient read reports a recoverable gap and the same binding can immedi
 
 test("A suspended process requires a fresh snapshot instead of silently skipping elapsed candles", async t => {
   t.mock.timers.enable({ apis: ["Date", "setTimeout"], now: Date.UTC(2026, 9, 10, 8, 23) });
-  const f = cappedPublicExchange(() => Date.now());
+  const f = cappedPublicExchange(t, () => Date.now());
   const handle = await f.provider.subscribeBars({
     instrument: { sourceId: "ccxt:coinbase:spot", instrumentId: "BTC/USD" },
     spec: { ...spec, timeframe: "1h" }, includeForming: true, tailLimit: 500,
@@ -405,16 +400,16 @@ test("A suspended process requires a fresh snapshot instead of silently skipping
 for (const elapsed of [1000, 5 * 3600000]) {
   test(`Empty public windows preserve the last observation when recovering after ${elapsed}ms`, async t => {
     t.mock.timers.enable({ apis: ["Date", "setTimeout"], now: Date.UTC(2026, 9, 10, 8, 23) });
-    const f = cappedPublicExchange(() => Date.now()), input = {
+    const f = cappedPublicExchange(t, () => Date.now()), input = {
       instrument: { sourceId: "ccxt:coinbase:spot", instrumentId: "BTC/USD" },
       spec: { ...spec, timeframe: "1h" }, includeForming: true, tailLimit: 20,
     };
     t.after(() => f.provider.dispose());
     const handle = await f.provider.subscribeBars(input, f.context), events = [];
     const snapshot = structuredClone(handle.snapshot);
-    const original = f.provider.host.environment.executeWorker;
+    const original = f.read;
     let empty = true;
-    f.provider.host.environment.executeWorker = async (...args) => {
+    f.read = async (...args) => {
       const receipt = await original(...args);
       return {
         ...receipt,

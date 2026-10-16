@@ -2,10 +2,10 @@
 import {mkdtemp, mkdir, writeFile, readFile, rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
-import {pathToFileURL} from 'node:url';
+import {fileURLToPath,pathToFileURL} from 'node:url';
 import {createHash} from 'node:crypto';
 import {DatabaseSync} from 'node:sqlite';
-const source=process.argv[2]??new URL('../recording.js',import.meta.url).pathname;
+const source=process.argv[2]??fileURLToPath(new URL('../recording.js',import.meta.url));
 const {Recorder}=await import(pathToFileURL(source));
 const root=await mkdtemp(join(tmpdir(),'sesame-recording-acceptance-'));
 const outcomes=[];

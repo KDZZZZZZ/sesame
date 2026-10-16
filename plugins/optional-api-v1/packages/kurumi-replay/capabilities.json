@@ -1,0 +1,2945 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "capabilities": [
+    {
+      "id": "kurumi_prepare",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "主Agent显式准备固定Dukascopy H1观看/真实bidask细数据与私有成熟撮合依赖，或清除无挑战的缓存；不得填造缺失报价。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "prepare",
+              "clear"
+            ]
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "主Agent显式准备固定Dukascopy H1观看/真实bidask细数据与私有成熟撮合依赖，或清除无挑战的缓存；不得填造缺失报价。",
+        "inputs": "{action:\"prepare\"|\"clear\"}; prepare is explicit acquisition/probe of the private fixed dependencies and historical inputs; clear only when no challenge depends on the cache.",
+        "outputs": "Preparation result/native environment diagnostics; kurumi_status.prepared and nativeEnvironment distinguish data availability from a usable matching backend.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Main conversation; explicit preparation intent."
+        ],
+        "limitations": [
+          "Unsupported platform, failed dependency probe or missing real quotes pauses preparation; no synthetic fallback. clear does not erase an existing challenge."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_prepare"
+      }
+    },
+    {
+      "id": "kurumi_status",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "读取真实模拟账本、版本、当前角色Agent任务与模型，不推进历史。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "读取真实模拟账本、版本、当前角色Agent任务与模型，不推进历史。",
+        "inputs": "{}.",
+        "outputs": "Current simulation status with revision, runId, state:{chapter,index,status,balance,position,decisions,fills}, control, settings, archive, task, recovery/reconciliation and error; control acceptance is not a completed simulation step.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task."
+        ],
+        "limitations": [
+          "Read only. revision is the control CAS version; account values are simulated and do not establish broker performance."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_status"
+      }
+    },
+    {
+      "id": "kurumi_configure",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "主Agent调整角色决策间隔：1或4个交易小时（新挑战默认4）；无任务在跑（含未核对角色任务/恢复/自动延续）时才可改，幂等与版本不丢。4h表示每4根可交易H1一次真实角色决定，末章不足4根提前结算；只改图表周期不算完成。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "description": "精确操作幂等ID；重试保持同ID与参数",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]{16,128}$"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "kurumi_status返回的控制revision"
+          },
+          "decision_interval_hours": {
+            "type": "integer",
+            "enum": [
+              1,
+              4
+            ],
+            "description": "1=每根H1一次角色决定；4=每4根可交易H1一次角色决定"
+          }
+        },
+        "required": [
+          "command_id",
+          "expected_version",
+          "decision_interval_hours"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "主Agent调整角色决策间隔：1或4个交易小时（新挑战默认4）；无任务在跑（含未核对角色任务/恢复/自动延续）时才可改，幂等与版本不丢。4h表示每4根可交易H1一次真实角色决定，末章不足4根提前结算；只改图表周期不算完成。",
+        "inputs": "{command_id,expected_version,decision_interval_hours:1|4}; 1 means one decision per tradable H1, 4 means up to four tradable H1 per decision.",
+        "outputs": "Current simulation status with revision, runId, state:{chapter,index,status,balance,position,decisions,fills}, control, settings, archive, task, recovery/reconciliation and error; control acceptance is not a completed simulation step.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Paused with no active/unreconciled role, recovery or unfinished continuation."
+        ],
+        "limitations": [
+          "command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.",
+          "Changes role decision cadence, not chart timeframe. No history is advanced."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_configure"
+      }
+    },
+    {
+      "id": "kurumi_start",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "只在首次从300000JPY开始挑战；已有挑战只延续实际资金。选已配置openai/gpt-6.1-sol，真实受限子Agent决定后才推进。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "description": "精确操作幂等ID；重试保持同ID与参数",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]{16,128}$"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "kurumi_status返回的控制revision，新挑战用0"
+          },
+          "max_steps": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5000,
+            "description": "本次最多付费角色决定数，省略1；多步需要用户已授权"
+          }
+        },
+        "required": [
+          "command_id",
+          "expected_version"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "只在首次从300000JPY开始挑战；已有挑战只延续实际资金。选已配置openai/gpt-6.1-sol，真实受限子Agent决定后才推进。",
+        "inputs": "{command_id,expected_version,max_steps?:1}; first challenge uses expected_version:0. max_steps bounds requested decision work; later calls retain actual account capital.",
+        "outputs": "Current simulation status with revision, runId, state:{chapter,index,status,balance,position,decisions,fills}, control, settings, archive, task, recovery/reconciliation and error; control acceptance is not a completed simulation step.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Prepared/probed native matching environment, fixed real data, configured openai/gpt-6.1-sol and archive availability."
+        ],
+        "limitations": [
+          "command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.",
+          "Creates real paid restricted role tasks. Missing configured model does not switch to another model. Accepted control can still pause before a step commits."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_start"
+      }
+    },
+    {
+      "id": "kurumi_continue",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "主Agent继续已存在连续挑战，不充值、不改余额、不改变未来游标；restart必须先核对未知任务。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "description": "精确操作幂等ID；重试保持同ID与参数",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]{16,128}$"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "kurumi_status返回的控制revision，新挑战用0"
+          },
+          "max_steps": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5000
+          }
+        },
+        "required": [
+          "command_id",
+          "expected_version"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "主Agent继续已存在连续挑战，不充值、不改余额、不改变未来游标；restart必须先核对未知任务。",
+        "inputs": "{command_id,expected_version,max_steps?:1}; continues the existing run; a pending four-H1 continuation uses its original saved decision.",
+        "outputs": "Current simulation status with revision, runId, state:{chapter,index,status,balance,position,decisions,fills}, control, settings, archive, task, recovery/reconciliation and error; control acceptance is not a completed simulation step.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Existing prepared challenge; any unknown prior role/recovery reconciled."
+        ],
+        "limitations": [
+          "command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.",
+          "Does not reset capital or replace the prior intent. Automatic within-block continuation does not ask the model again or reopen a position."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_continue"
+      }
+    },
+    {
+      "id": "kurumi_step",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "主Agent仅允许一个真实角色决定，提交后推进下一根；没有决定暂停。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "description": "精确操作幂等ID；重试保持同ID与参数",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]{16,128}$"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "kurumi_status返回的控制revision，新挑战用0"
+          }
+        },
+        "required": [
+          "command_id",
+          "expected_version"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "主Agent仅允许一个真实角色决定，提交后推进下一根；没有决定暂停。",
+        "inputs": "{command_id,expected_version}; requests exactly one decision unit under the current 1H/4H cadence.",
+        "outputs": "Current simulation status with revision, runId, state:{chapter,index,status,balance,position,decisions,fills}, control, settings, archive, task, recovery/reconciliation and error; control acceptance is not a completed simulation step.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Same prerequisites as continue/start."
+        ],
+        "limitations": [
+          "command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.",
+          "One decision unit may cover up to four tradable H1 at cadence4; it is not a chart zoom operation."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_step"
+      }
+    },
+    {
+      "id": "kurumi_pause",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "停止后续决定并取消当前角色任务；已经原子提交的决定与成交不撤销。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "description": "精确操作幂等ID；重试保持同ID与参数",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]{16,128}$"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "kurumi_status返回的控制revision，新挑战用0"
+          }
+        },
+        "required": [
+          "command_id",
+          "expected_version"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "停止后续决定并取消当前角色任务；已经原子提交的决定与成交不撤销。",
+        "inputs": "{command_id,expected_version}.",
+        "outputs": "Current simulation status with revision, runId, state:{chapter,index,status,balance,position,decisions,fills}, control, settings, archive, task, recovery/reconciliation and error; control acceptance is not a completed simulation step.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "An existing challenge."
+        ],
+        "limitations": [
+          "command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.",
+          "Stops future role requests/continuation and cancels the active role; committed simulation fills remain. Inspect/reconcile an uncertain current task before resuming."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_pause"
+      }
+    },
+    {
+      "id": "kurumi_reconcile",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "重启/取消后显式核对原任务及恢复预约与真实账本；未提交允许新ID显式recover，已提交不再推进，不确定保留阻塞。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "description": "精确操作幂等ID；重试保持同ID与参数",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]{16,128}$"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "kurumi_status返回的控制revision，新挑战用0"
+          }
+        },
+        "required": [
+          "command_id",
+          "expected_version"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "重启/取消后显式核对原任务及恢复预约与真实账本；未提交允许新ID显式recover，已提交不再推进，不确定保留阻塞。",
+        "inputs": "{command_id,expected_version}; use current revision and the retained role/recovery identity in status.",
+        "outputs": "Current status with reconciliation facts: committed means the original decision already exists; not_committed permits explicit recovery of the original; unknown remains blocked.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Prior task/recovery has an observable terminal host state."
+        ],
+        "limitations": [
+          "command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.",
+          "Reads actual host task and persistent ledger evidence; it does not manufacture a decision or replay a committed step."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_reconcile"
+      }
+    },
+    {
+      "id": "kurumi_display",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "显示原生当前章H1行情与模拟账户/Agent面板，不改账户资金；尊重图表锁，查看真实客户端回执。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "显示原生当前章H1行情与模拟账户/Agent面板，不改账户资金；尊重图表锁，查看真实客户端回执。",
+        "inputs": "{}.",
+        "outputs": "{layout,overlay,instanceId,audience,binding,account,simulated:true,note,...}; exact native chart/indicator bindings and simulated account identity.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Prepared challenge with a revealed current chapter and available declared market/account sources."
+        ],
+        "limitations": [
+          "Saved layout/instance is not pixels. A current client rendered receipt must support a display claim; no future history is exposed to the player."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_display"
+      }
+    },
+    {
+      "id": "kurumi_export",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "主Agent冻结并导出已揭示行情、账户/账本、真实角色与成熟引擎证据为固定data/resource成果，不推进；可直接用于现有reports插件。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "这次精确已揭示快照的稳定操作ID；推进后用新ID"
+          }
+        },
+        "required": [
+          "operation_id"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "主Agent冻结并导出已揭示行情、账户/账本、真实角色与成熟引擎证据为固定data/resource成果，不推进；可直接用于现有reports插件。",
+        "inputs": "{operation_id:<stable publication ID>}.",
+        "outputs": "Published immutable data and resource references for revealed rows, current ledger/checkpoint and retained role evidence; inspect the returned ArtifactRefs with host.resources.read.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Existing challenge and readable fixed evidence."
+        ],
+        "limitations": [
+          "Does not advance, expose complete future-price arrays or publish credentials. Evidence remains marked simulated/demo as applicable."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_export"
+      }
+    },
+    {
+      "id": "kurumi_report",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "固定当前已揭示行情、三章连续资金、成交/成本/权益/回撤/角色决定与模型证据，发布只读阶段/最终交互报告并真实检查渲染。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "description": "固定本次报告版本的幂等ID",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "operation_id"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "固定当前已揭示行情、三章连续资金、成交/成本/权益/回撤/角色决定与模型证据，发布只读阶段/最终交互报告并真实检查渲染。",
+        "inputs": "{operation_id:<stable publication ID>}.",
+        "outputs": "{ref:<report ArtifactRef>,data:<data ArtifactRef>,receipt,...}; report/data freeze the actually revealed history, decisions, fills, costs and model provenance.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Existing challenge/evidence."
+        ],
+        "limitations": [
+          "Read actual manifest and rows.json via host.resources.read. A published artifact and a rendered client receipt prove different things; synthetic fixture data stays demo."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_report"
+      }
+    },
+    {
+      "id": "kurumi_observe",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "角色专用：核对当前受宿主绑定的run/step已收盘H1和模拟账户，无未来窗口、网络或文件。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "角色专用：核对当前受宿主绑定的run/step已收盘H1和模拟账户，无未来窗口、网络或文件。",
+        "inputs": "{}; the host identifies the current registered player task.",
+        "outputs": "{runId,stepId,expectedVersion,chapter,symbol,asOf,account,position,balance,bars,recentDecisions,recentFills,rules}; only revealed evidence reaches the role.",
+        "prerequisites": [
+          "Only the active registered role task before its decision; other subagents/main cannot impersonate it."
+        ],
+        "limitations": [
+          "expectedVersion here is the engine decision version, not main-control revision. Role has only observe/decide, no file/network/package/history access."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_observe"
+      }
+    },
+    {
+      "id": "kurumi_decide",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "角色专用：本步一次目标仓位（基础货币整数，1000倍数；负空、正多、0平仓）或明确hold。提交后下一根真实bid/ask开盘执行，不保证止损成交价。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "description": "observe返回runId",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "step_id": {
+            "type": "string",
+            "description": "observe返回stepId",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "target": {
+            "type": "string",
+            "pattern": "^(0|-?[1-9][0-9]{0,7})$",
+            "description": "带符号基础货币整数，1000倍数，最大绝对值10000000"
+          },
+          "stop": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9]+(\\.[0-9]+)?$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "description": "只基于当前证据的交易理由",
+            "minLength": 1,
+            "maxLength": 1500
+          },
+          "utterance": {
+            "type": "string",
+            "description": "简短原创角色短句",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "run_id",
+          "step_id",
+          "expected_version",
+          "target",
+          "stop",
+          "reason",
+          "utterance"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "角色专用：本步一次目标仓位（基础货币整数，1000倍数；负空、正多、0平仓）或明确hold。提交后下一根真实bid/ask开盘执行，不保证止损成交价。",
+        "inputs": "{run_id,step_id,expected_version,target,stop,reason,utterance}; use exact stepId/expectedVersion from observe. target is signed integer base-currency quantity, multiple1000, maxabs10000000; zero means flat, unchanged target means hold. stop is an exact positive decimal price string or null.",
+        "outputs": "Actual native decision/commit receipt for this step/block, including paused/failed evidence when matching could not commit; retained IDs support main-side reconciliation.",
+        "prerequisites": [
+          "The matching active role task with a current observed step."
+        ],
+        "limitations": [
+          "A prose answer is not a decision. Same step/input is idempotent; a claimed target is not an observed fill. Role never fabricates missing prices or acts through spectator tools."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_decide"
+      }
+    },
+    {
+      "id": "kurumi_recover",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "主Agent核对真实旧任务终态及本步未提交后，用已保存的原决定执行一个真实H1；不请求模型、不伪造角色身份。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "description": "精确操作幂等ID；重试保持同ID与参数",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]{16,128}$"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "kurumi_status返回的控制revision，新挑战用0"
+          },
+          "decision_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "description": "failed_not_committed证据中的原decision.id"
+          }
+        },
+        "required": [
+          "command_id",
+          "expected_version",
+          "decision_id"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "主Agent核对真实旧任务终态及本步未提交后，用已保存的原决定执行一个真实H1；不请求模型、不伪造角色身份。",
+        "inputs": "{command_id,expected_version,decision_id:<saved original failed_not_committed or paused_without_fill decision>}.",
+        "outputs": "Current status and separate recovery evidence after attempting only the uncommitted original decision; no new role model call.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Main has verified the old task terminal state, the actual saved decision and absence of a committed ledger step."
+        ],
+        "limitations": [
+          "command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.",
+          "Unknown recovery must reconcile; committed decisions cannot be replayed. Recovery retains pending continuation."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_recover"
+      }
+    },
+    {
+      "id": "kurumi_repair_checkpoint_text",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "仅主Agent显式修复：在暂停且角色全部终态时，依据已封存原始角色JSONL和摘要恢复nativeJournal中UTF-8分块损坏的reason/utterance；非文本、价格、仓位、金额或未能证明的差异一律拒绝。完整备份前后检查点并追加修复证据，不改原始归档、不撮合、不请求模型，保留未完成自动延续。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "description": "精确操作幂等ID；重试保持同ID与参数",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]{16,128}$"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "kurumi_status返回的控制revision，新挑战用0"
+          }
+        },
+        "required": [
+          "command_id",
+          "expected_version"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "仅主Agent显式修复：在暂停且角色全部终态时，依据已封存原始角色JSONL和摘要恢复nativeJournal中UTF-8分块损坏的reason/utterance；非文本、价格、仓位、金额或未能证明的差异一律拒绝。完整备份前后检查点并追加修复证据，不改原始归档、不撮合、不请求模型，保留未完成自动延续。",
+        "inputs": "{command_id,expected_version}; only the narrowly diagnosed UTF-8 reason/utterance corruption case.",
+        "outputs": "Repair receipt plus status; archived before/after checkpoints and exact original role text evidence, with financial/decision state unchanged.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Paused, all roles terminal, sealed original role JSONL and ledger prove the text."
+        ],
+        "limitations": [
+          "command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.",
+          "Cannot repair prices, amounts, positions, cursor or unproved differences; refusal preserves evidence."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_repair_checkpoint_text"
+      }
+    },
+    {
+      "id": "kurumi_import_fx_supplement",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "主Agent显式导入已独立核验的 HistData 真实 CHFJPY 逐笔报价补充包；仅缺数暂停、无活跃任务时，绑定当前run及原快照、仅未提交时段；原报价优先、60秒限制不变，先双副本归档，不推进账户。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command_id": {
+            "type": "string"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bundle_directory": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "command_id",
+          "expected_version",
+          "bundle_directory"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "主Agent显式导入已独立核验的 HistData 真实 CHFJPY 逐笔报价补充包；仅缺数暂停、无活跃任务时，绑定当前run及原快照、仅未提交时段；原报价优先、60秒限制不变，先双副本归档，不推进账户。",
+        "inputs": "{command_id,expected_version,bundle_directory:<absolute verified HistData CHFJPY tick bundle>}.",
+        "outputs": "{installed,reused,rowCount,engineUnchanged,engineVersion,revision,index}; supplemental source archives are retained.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Missing-data pause, no active task/recovery, bundle bound to current run/original snapshot and only uncommitted times."
+        ],
+        "limitations": [
+          "command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.",
+          "Original valid quotes win; max60s FX age remains, no interpolation or historical rewrite. Import does not advance."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_import_fx_supplement"
+      }
+    },
+    {
+      "id": "kurumi_archive_terminal",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "显式完整封存终态旧实验到双副本与不可变history；活跃/未知/未归档/待办阻塞，不重置旧账户。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "run_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "command_id",
+          "expected_version",
+          "run_id"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "显式完整封存终态旧实验到双副本与不可变history；活跃/未知/未归档/待办阻塞，不重置旧账户。",
+        "inputs": "{command_id,expected_version,run_id:<current exact run>}.",
+        "outputs": "{sealed:true,runId,documentDigest,manifestDigest,manifestFile,historyCollection,oldDocumentUnchanged:true}; only after all source/role copies validate.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Terminal complete flat experiment with no active/unknown tasks, recoveries, hooks or unfinished weekly archives."
+        ],
+        "limitations": [
+          "command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.",
+          "Failure leaves an explicit archive transaction; do not reset or hide the original run to bypass it."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_archive_terminal"
+      }
+    },
+    {
+      "id": "kurumi_new_experiment",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "只在终态旧实验完整封存后CAS创建独立300000JPY/目标20000000JPY/全部50x新Run；同ID返回同新Run，不调用模型，不称样本外。 Fresh truly empty private state may create directly with expected_version=0/omit previous_run_id; existing run still must seal terminal first.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "previous_run_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "profile_id": {
+            "type": "string",
+            "enum": [
+              "informed-replay-50x-v1"
+            ]
+          }
+        },
+        "required": [
+          "command_id",
+          "expected_version",
+          "profile_id"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "只在终态旧实验完整封存后CAS创建独立300000JPY/目标20000000JPY/全部50x新Run；同ID返回同新Run，不调用模型，不称样本外。 Fresh truly empty private state may create directly with expected_version=0/omit previous_run_id; existing run still must seal terminal first.",
+        "inputs": "{command_id,expected_version,previous_run_id?,profile_id:\"informed-replay-50x-v1\"}; genuinely empty install uses version0 without previous_run_id.",
+        "outputs": "{created,runId,previousRunId,freshPortableInstall,revision,initialBalanceJPY:\"300000\",goalJPY:\"20000000\",initialArchive,modelRequested:false,independentCapital:true}.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Prepared sources/recorder; existing run must be terminal and completely sealed by archive_terminal."
+        ],
+        "limitations": [
+          "command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.",
+          "Creates an independent paused simulation, not a refill/revival. Same historical data is informed replay, never independent out-of-sample evidence."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_new_experiment"
+      }
+    },
+    {
+      "id": "kurumi_experiment_history",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "只读封存历史摘要与未知lifecycle事务，不推进。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "只读封存历史摘要与未知lifecycle事务，不推进。",
+        "inputs": "{}.",
+        "outputs": "{currentRunId,history:[{runId,status,documentDigest,manifestDigest,engineVersion,outcome}],pendingTransactions:[{commandId,status,input,error}]}.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task."
+        ],
+        "limitations": [
+          "Read only; a pending archive/create transaction is not silently completed or deleted."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_experiment_history"
+      }
+    },
+    {
+      "id": "kurumi_retry_committed_hooks",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "已提交H1的展示/周报冻结钩子显式恢复；不重放交易，模块自身幂等，不在重启自动发付费任务。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "command_id",
+          "expected_version"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "已提交H1的展示/周报冻结钩子显式恢复；不重放交易，模块自身幂等，不在重启自动发付费任务。",
+        "inputs": "{command_id,expected_version}.",
+        "outputs": "Retained hook-processing result/status for already committed H1 presentation and report-freeze work.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Existing committed ledger and pending hook records."
+        ],
+        "limitations": [
+          "command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.",
+          "Retries derived presentation/freezing only; no new simulation fill or implicit paid weekly generation."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_retry_committed_hooks"
+      }
+    },
+    {
+      "id": "kurumi_bind_experiment_fx",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "显式绑定新Run全章合法窗口真实FX补充；新manifest精确runId，不复制旧24H指针，不宣称60s缺口已解决。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "run_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "bundle_directory": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "command_id",
+          "expected_version",
+          "run_id",
+          "bundle_directory"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "显式绑定新Run全章合法窗口真实FX补充；新manifest精确runId，不复制旧24H指针，不宣称60s缺口已解决。",
+        "inputs": "{command_id,expected_version,run_id,bundle_directory:<verified explicit FX bundle>}.",
+        "outputs": "Actual new-run supplement binding/archive receipt, retaining run identity and source manifest.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Matching new experiment, legal chapter windows, no concurrent work."
+        ],
+        "limitations": [
+          "command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.",
+          "Does not copy an old run pointer or certify all60s quote gaps solved."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_bind_experiment_fx"
+      }
+    },
+    {
+      "id": "kurumi_refresh_presentation",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "主会话显式刷新已消费行情的原作/实际成交标记和指标，尊重锁；真实客户端回执未核验时pending，不把工厂/fixture当屏幕通过。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "chart_id": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "chart_id"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "主会话显式刷新已消费行情的原作/实际成交标记和指标，尊重锁；真实客户端回执未核验时pending，不把工厂/fixture当屏幕通过。",
+        "inputs": "{chart_id:<existing native chart ID>}.",
+        "outputs": "Presentation result with actual chart/marker/indicator references and available host/client receipts for the consumed-data frontier.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Current experiment presentation state and a real matching chart."
+        ],
+        "limitations": [
+          "Respect layout locks. pending or runtime calculation success is not native pixels; no private UI ports or guessed selectors."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_refresh_presentation"
+      }
+    },
+    {
+      "id": "kurumi_weekly",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "独立周报队列status/enable/disable/drain。启用或drain须显式authorize_generation；创建实验和重启不请求模型；未知请求不自动重付费。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "status",
+              "enable",
+              "disable",
+              "drain"
+            ]
+          },
+          "command_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "authorize_generation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "独立周报队列status/enable/disable/drain。启用或drain须显式authorize_generation；创建实验和重启不请求模型；未知请求不自动重付费。",
+        "inputs": "action=status; enable/disable/drain use command_id and current expected_version; enable/drain also require authorize_generation:true when generation is intended.",
+        "outputs": "status => {jobs,generation}; controls/drain return retained generation/queue/publication state with exact input/report references and error if unresolved.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Existing experiment and explicit paid generation intent for enable/drain; configured model/budget."
+        ],
+        "limitations": [
+          "command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.",
+          "Creating/restarting an experiment does not request reports. Unknown paid requests retain identity and do not auto-retry under new IDs."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_weekly"
+      }
+    },
+    {
+      "id": "kurumi_recording",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "每安装持久化归档mirror选择；新玩家默认插件私有路径，旧档须显式pin并验证，不猜作者目录、不移动旧档。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "status",
+              "pin"
+            ]
+          },
+          "command_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "mirror_root": {
+            "type": "string",
+            "minLength": 1
+          },
+          "acknowledge_existing": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "每安装持久化归档mirror选择；新玩家默认插件私有路径，旧档须显式pin并验证，不猜作者目录、不移动旧档。",
+        "inputs": "{action:\"status\"} or {action:\"pin\",command_id,mirror_root?,acknowledge_existing?}; omitted mirror uses plugin-private default, explicit old archive needs acknowledgement.",
+        "outputs": "status => {selection,error,default}; pin => {pinned,selection,root,mirror,engineUnchanged:true}.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Pin only with no active role/recovery/preparation."
+        ],
+        "limitations": [
+          "No guessed author directory, moving old archive or financial reset. Stable pin ID prevents conflicting repeated intent."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_recording"
+      }
+    },
+    {
+      "id": "kurumi_experience",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "有界首章原生体验计划/status/configure/arm/record_gate；冻结预算拒绝5000，manual pause必须显式arm；记录真实native证据后决定边界暂停。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "status",
+              "configure",
+              "arm",
+              "record_gate",
+              "wait_boundary"
+            ]
+          },
+          "command_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limits": {
+            "type": "object",
+            "properties": {
+              "maxPaidRoleDecisions": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "maxCommittedHours": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "maxStepsPerCommand": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "maxWeeklyGenerations": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "maxNarrationEvents": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "maxNarrationGenerations": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          "gate": {
+            "type": "string",
+            "enum": [
+              "portable_install",
+              "native_account",
+              "native_forming_indicators",
+              "native_comparison",
+              "weekly_report",
+              "native_chat",
+              "resume_idempotency"
+            ]
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "revision": {
+                  "type": "string"
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^sha256:[a-f0-9]{64}$"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "schemaVersion": {
+                  "type": "string",
+                  "enum": [
+                    "1.0.0"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "revision",
+                "digest",
+                "kind",
+                "schemaVersion"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 16
+          },
+          "verified_by_main": {
+            "type": "boolean"
+          },
+          "timeout_ms": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 120000
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "有界首章原生体验计划/status/configure/arm/record_gate；冻结预算拒绝5000，manual pause必须显式arm；记录真实native证据后决定边界暂停。",
+        "inputs": "action=status or wait_boundary(timeout_ms?); configure/arm/record_gate require command_id/current expected_version; configure takes limits, record_gate takes declared gate, evidence_refs and verified_by_main:true.",
+        "outputs": "status => {plan,usage}; controls return durable bounded-experience state; wait_boundary returns actual boundary/timeout evidence without advancing history.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "New informed-replay-50x-v1 experiment; changes require paused/reconciled state; configure only before consumption."
+        ],
+        "limitations": [
+          "command_id is stable for identical retries; expected_version is the latest kurumi_status.revision, not engine version. VERSION_CONFLICT requires reading current state before deciding a new operation.",
+          "Manual pause requires explicit arm for continuation. A gate requires actual fixed native evidence; a fixture cannot certify native UI. timeout ends waiting, not the experiment."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_experience"
+      }
+    },
+    {
+      "id": "kurumi_method_workflow",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "可重放main-only方法catalog/discover/inspect/显式install/load/adopt诊断；无隐含包或启动自动安装。采用须真实固定输入输出与成功receipt，只给角色一般风险假设。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "status",
+              "catalog",
+              "discover",
+              "inspect",
+              "install",
+              "load",
+              "adopt"
+            ]
+          },
+          "command_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "plugin_id": {
+            "type": "string"
+          },
+          "authorize_install": {
+            "type": "boolean"
+          },
+          "record": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "package_path": {
+            "type": "string",
+            "description": "Explicit absolute API 2 plugin package path for install."
+          },
+          "package_digest": {
+            "type": "string",
+            "description": "Optional exact tested source digest."
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "可重放main-only方法catalog/discover/inspect/显式install/load/adopt诊断；无隐含包或启动自动安装。采用须真实固定输入输出与成功receipt，只给角色一般风险假设。",
+        "inputs": "action=status; other actions use command_id and a declared plan plugin_id. catalog/discover/inspect read public status; install additionally requires authorize_install:true and absolute package_path, optional package_digest; adopt takes record with actual fixed input/output and successful capability receipt.",
+        "outputs": "status => {plan,records}; dependency action => {action,pluginId,result,adopted:false,diagnostic}; adopt => {adopted,roleBrief,predictiveValidity:\"unverified\"}.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Main only; allowed method IDs come from status.plan. Adopt only before new-run consumption."
+        ],
+        "limitations": [
+          "Current catalog/discover inspect installed plugins via host.plugins.search; external optional packages use plugin_catalog. Installed/loaded is not applied or predictive validation. Unknown install/load retains its command identity."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_method_workflow"
+      }
+    },
+    {
+      "id": "kurumi_narration",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "main-only公开tasks.read/messages.read的claim→主Agent普通native-chat正文→ack/reconcile；只读验证真实message及追加边界，完整封存，不需注入写API/第二旁白模型。实际SDK/client显示仍须验收。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "status",
+              "claim",
+              "ack",
+              "reconcile",
+              "diagnose"
+            ]
+          },
+          "event_id": {
+            "type": "string"
+          },
+          "text_field": {
+            "type": "string",
+            "enum": [
+              "content",
+              "text",
+              "body"
+            ]
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "main-only公开tasks.read/messages.read的claim→主Agent普通native-chat正文→ack/reconcile；只读验证真实message及追加边界，完整封存，不需注入写API/第二旁白模型。实际SDK/client显示仍须验收。",
+        "inputs": "action=status/diagnose/claim/ack/reconcile; event_id from the actual pending event; text_field is the documented public message text field if required.",
+        "outputs": "Durable narration claim/message identity and acknowledgement/reconciliation state; only visible appended text in the claimed real main response can become sealed evidence.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Main conversation and actual public current-message/read contract."
+        ],
+        "limitations": [
+          "The main Agent authors normal chat; no secondary narrator, private writer or fabricated user message. doNotRewrite/unknown means reconcile the saved response rather than repeating prose."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_narration"
+      }
+    },
+    {
+      "id": "kurumi_audience",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "main-only持久真实H1源bootstrap、绑定configure、pump/resume刷新markers并消费report/PK待办，UTC native opened+normal main ack后release；无猜测UI/private端口，明确public契约。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "status",
+              "bootstrap",
+              "configure",
+              "pump",
+              "resume",
+              "release"
+            ]
+          },
+          "chart_id": {
+            "type": "string"
+          },
+          "native_report_bridge": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "client_receipt_contract": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "main-only持久真实H1源bootstrap、绑定configure、pump/resume刷新markers并消费report/PK待办，UTC native opened+normal main ack后release；无猜测UI/private端口，明确public契约。",
+        "inputs": "action=status/bootstrap/configure/pump/resume/release; configure uses chart_id for an existing native chart. Public native_report_bridge/client_receipt_contract fields are optional legacy input; actual receipt contracts govern visibility.",
+        "outputs": "Audience checkpoint/control result with pending work, native chart/report receipts and main-narration state for the current consumed cutoff.",
+        "prerequisites": [
+          "Only the main conversation can use spectator/control capabilities. The two player capabilities require the registered current role task.",
+          "Current bounded experiment, prepared real preheat and declared native chart/source interfaces."
+        ],
+        "limitations": [
+          "Pump does not create trading authority; release a hold only when exact report/client and main-chat evidence meet it. Missing public receipt is pending, not inferred from fixture or private UI."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "kurumi_audience"
+      }
+    },
+    {
+      "id": "market_bind",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read revealed simulation market bind",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "binding"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "Host-only market source adapter: bind.",
+        "inputs": "{binding:<host source connection/configuration>}; the host creates and owns this binding.",
+        "outputs": "{bindingId,...source capabilities}; opaque binding retained by host.",
+        "prerequisites": [
+          "Host source dispatch and an initialized replay service; query/subscribe requires its existing binding."
+        ],
+        "limitations": [
+          "Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_bind"
+      }
+    },
+    {
+      "id": "market_unbind",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read revealed simulation market unbind",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "binding"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "Host-only market source adapter: unbind.",
+        "inputs": "{binding:<the retained host binding including bindingId>}.",
+        "outputs": "{released:true}.",
+        "prerequisites": [
+          "Host source dispatch and an initialized replay service; query/subscribe requires its existing binding."
+        ],
+        "limitations": [
+          "Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_unbind"
+      }
+    },
+    {
+      "id": "market_searchInstruments",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read revealed simulation market searchInstruments",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "Host-only market source adapter: searchInstruments.",
+        "inputs": "{binding:<retained host binding>,query:<market operation fields>,page:<cursor/limit context>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly.",
+        "outputs": "{items,nextCursor?,metadata}; Instrument descriptors for revealed replay symbols; items carry exact instrument references for describe/query.",
+        "prerequisites": [
+          "Host source dispatch and an initialized replay service; query/subscribe requires its existing binding."
+        ],
+        "limitations": [
+          "Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_searchInstruments"
+      }
+    },
+    {
+      "id": "market_describeInstrument",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read revealed simulation market describeInstrument",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "Host-only market source adapter: describeInstrument.",
+        "inputs": "{binding:<retained host binding>,query:<market operation fields>,page:<cursor/limit context>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly.",
+        "outputs": "{items,nextCursor?,metadata}; One instrument descriptor with exact symbol/ref/calendar, tick/quantity units and supported replay bar specifications.",
+        "prerequisites": [
+          "Host source dispatch and an initialized replay service; query/subscribe requires its existing binding."
+        ],
+        "limitations": [
+          "Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_describeInstrument"
+      }
+    },
+    {
+      "id": "market_queryBars",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read revealed simulation market queryBars",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "Host-only market source adapter: queryBars.",
+        "inputs": "{binding:<retained host binding>,query:<market operation fields>,page:<cursor/limit context>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly.",
+        "outputs": "{items,nextCursor?,metadata}; Only revealed simulation bars in items; metadata carries source, snapshot/consistency and coverage; nextCursor continues the same query snapshot.",
+        "prerequisites": [
+          "Host source dispatch and an initialized replay service; query/subscribe requires its existing binding."
+        ],
+        "limitations": [
+          "Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_queryBars"
+      }
+    },
+    {
+      "id": "market_subscribeBars",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read revealed simulation market subscribeBars",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "Host-only market source adapter: subscribeBars.",
+        "inputs": "{binding:<retained host binding>,query:<market operation fields>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly.",
+        "outputs": "Host stream handle {id,events,close}; first snapshot and subsequent ordered updates include position/consistency. On RESYNC_REQUIRED close and obtain a new snapshot.",
+        "prerequisites": [
+          "Host source dispatch and an initialized replay service; query/subscribe requires its existing binding."
+        ],
+        "limitations": [
+          "Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_subscribeBars"
+      },
+      "transport": "subscription"
+    },
+    {
+      "id": "account_bind",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read revealed simulation account bind",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "binding"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "Host-only account source adapter: bind.",
+        "inputs": "{binding:<host source connection/configuration>}; the host creates and owns this binding.",
+        "outputs": "{bindingId,...source capabilities}; opaque binding retained by host.",
+        "prerequisites": [
+          "Host source dispatch and an initialized replay service; query/subscribe requires its existing binding."
+        ],
+        "limitations": [
+          "Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account_bind"
+      }
+    },
+    {
+      "id": "account_unbind",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read revealed simulation account unbind",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "binding"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "Host-only account source adapter: unbind.",
+        "inputs": "{binding:<the retained host binding including bindingId>}.",
+        "outputs": "{released:true}.",
+        "prerequisites": [
+          "Host source dispatch and an initialized replay service; query/subscribe requires its existing binding."
+        ],
+        "limitations": [
+          "Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account_unbind"
+      }
+    },
+    {
+      "id": "account_listAccounts",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read revealed simulation account listAccounts",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "Host-only account source adapter: listAccounts.",
+        "inputs": "{binding:<retained host binding>,query:<account operation fields>,page:<cursor/limit context>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly.",
+        "outputs": "{items,nextCursor?,metadata}; Simulated account descriptors in items, with the actual current replay run as accountId.",
+        "prerequisites": [
+          "Host source dispatch and an initialized replay service; query/subscribe requires its existing binding."
+        ],
+        "limitations": [
+          "Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account_listAccounts"
+      }
+    },
+    {
+      "id": "account_snapshot",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read revealed simulation account snapshot",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "Host-only account source adapter: snapshot.",
+        "inputs": "{binding:<retained host binding>,query:<account operation fields>,page:<cursor/limit context>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly.",
+        "outputs": "{items,nextCursor?,metadata}; One current simulation account snapshot in items, including balance/equity and source metadata.",
+        "prerequisites": [
+          "Host source dispatch and an initialized replay service; query/subscribe requires its existing binding."
+        ],
+        "limitations": [
+          "Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account_snapshot"
+      }
+    },
+    {
+      "id": "account_queryPositions",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read revealed simulation account queryPositions",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "Host-only account source adapter: queryPositions.",
+        "inputs": "{binding:<retained host binding>,query:<account operation fields>,page:<cursor/limit context>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly.",
+        "outputs": "{items,nextCursor?,metadata}; Current simulated positions in items; flat state legitimately returns an empty list.",
+        "prerequisites": [
+          "Host source dispatch and an initialized replay service; query/subscribe requires its existing binding."
+        ],
+        "limitations": [
+          "Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account_queryPositions"
+      }
+    },
+    {
+      "id": "account_queryOrders",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read revealed simulation account queryOrders",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "Host-only account source adapter: queryOrders.",
+        "inputs": "{binding:<retained host binding>,query:<account operation fields>,page:<cursor/limit context>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly.",
+        "outputs": "{items,nextCursor?,metadata}; Retained simulation order evidence in items; legacy unknown order coverage is explicit, not inferred from fills.",
+        "prerequisites": [
+          "Host source dispatch and an initialized replay service; query/subscribe requires its existing binding."
+        ],
+        "limitations": [
+          "Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account_queryOrders"
+      }
+    },
+    {
+      "id": "account_queryFills",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read revealed simulation account queryFills",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "Host-only account source adapter: queryFills.",
+        "inputs": "{binding:<retained host binding>,query:<account operation fields>,page:<cursor/limit context>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly.",
+        "outputs": "{items,nextCursor?,metadata}; Actual committed simulated fills in items with native time/quantity/price/cost fields; no target-derived fills.",
+        "prerequisites": [
+          "Host source dispatch and an initialized replay service; query/subscribe requires its existing binding."
+        ],
+        "limitations": [
+          "Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account_queryFills"
+      }
+    },
+    {
+      "id": "account_queryHistory",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read revealed simulation account queryHistory",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "Host-only account source adapter: queryHistory.",
+        "inputs": "{binding:<retained host binding>,query:<account operation fields>,page:<cursor/limit context>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly.",
+        "outputs": "{items,nextCursor?,metadata}; Retained account history in items with point times, snapshot and coverage metadata.",
+        "prerequisites": [
+          "Host source dispatch and an initialized replay service; query/subscribe requires its existing binding."
+        ],
+        "limitations": [
+          "Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account_queryHistory"
+      }
+    },
+    {
+      "id": "account_subscribeAccount",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read revealed simulation account subscribeAccount",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "Host-only account source adapter: subscribeAccount.",
+        "inputs": "{binding:<retained host binding>,query:<account operation fields>}; public callers use host.data.sources and host.data.query/subscribe, not this adapter directly.",
+        "outputs": "Host stream handle {id,events,close}; first snapshot and subsequent ordered updates include position/consistency. On RESYNC_REQUIRED close and obtain a new snapshot.",
+        "prerequisites": [
+          "Host source dispatch and an initialized replay service; query/subscribe requires its existing binding."
+        ],
+        "limitations": [
+          "Only revealed simulation evidence; no history advance or broker call. Snapshot pagination consistency does not imply unrestricted future coverage."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account_subscribeAccount"
+      },
+      "transport": "subscription"
+    },
+    {
+      "id": "activate",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Replay lifecycle activate",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "Replay lifecycle activate",
+        "inputs": "Host lifecycle activation payload.",
+        "outputs": "{active:true}; reload service and register declared sources.",
+        "prerequisites": [
+          "Host lifecycle or owning-plugin native dispatch only; never a direct Agent tool."
+        ],
+        "limitations": [
+          "Activation does not start a paid role."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "activate"
+      }
+    },
+    {
+      "id": "before_deactivate",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Replay lifecycle beforeDeactivate",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "Replay lifecycle beforeDeactivate",
+        "inputs": "Host lifecycle before-deactivation payload.",
+        "outputs": "{accepted:true} only when no active role reservation blocks safe unload.",
+        "prerequisites": [
+          "Host lifecycle or owning-plugin native dispatch only; never a direct Agent tool."
+        ],
+        "limitations": [
+          "RUN_ACTIVE requires pause/reconciliation; disabling is not permission to lose role evidence."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "before_deactivate"
+      }
+    },
+    {
+      "id": "before_run_release",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Replay lifecycle beforeRunRelease",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "Replay lifecycle beforeRunRelease",
+        "inputs": "{runId:<host role Run being released>}.",
+        "outputs": "Protected artifact/resource references after full role evidence sealing and cleanup checks.",
+        "prerequisites": [
+          "Host lifecycle or owning-plugin native dispatch only; never a direct Agent tool."
+        ],
+        "limitations": [
+          "Archive failure blocks cleanup; it does not discard the only task evidence."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "before_run_release"
+      }
+    },
+    {
+      "id": "dispose",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Replay lifecycle dispose",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "Replay lifecycle dispose",
+        "inputs": "Host lifecycle disposal payload.",
+        "outputs": "{disposed:true}; service/source/native worker cleanup.",
+        "prerequisites": [
+          "Host lifecycle or owning-plugin native dispatch only; never a direct Agent tool."
+        ],
+        "limitations": [
+          "Does not erase durable ledger or reverse a committed simulation fill."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "dispose"
+      }
+    },
+    {
+      "id": "native_run",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Run the explicitly requested fixed native replay operation.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "enum": [
+              "status",
+              "prepare",
+              "advance"
+            ]
+          },
+          "state": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "decision": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [],
+      "usage": {
+        "purpose": "Run the explicitly requested fixed native replay operation.",
+        "inputs": "{action:\"status\"|\"prepare\"|\"advance\",state?,decision?,data?}; owned plugin supplies fixed data/state.",
+        "outputs": "Actual isolated native environment/prepare/advance result with execution evidence or a diagnostic failure.",
+        "prerequisites": [
+          "Host lifecycle or owning-plugin native dispatch only; never a direct Agent tool."
+        ],
+        "limitations": [
+          "Only nested calls from this owning plugin; no arbitrary shell/code or model-authored source substitution."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "native_run"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "id": "market",
+      "contract": "sesame.market/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "connection": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "id",
+              "revision"
+            ],
+            "additionalProperties": false
+          },
+          "configuration": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "operations": {
+        "bind": "market_bind",
+        "unbind": "market_unbind",
+        "searchInstruments": "market_searchInstruments",
+        "describeInstrument": "market_describeInstrument",
+        "queryBars": "market_queryBars",
+        "subscribeBars": "market_subscribeBars"
+      },
+      "presentation": {
+        "connection": {
+          "required": false
+        }
+      }
+    },
+    {
+      "id": "account",
+      "contract": "sesame.account/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "connection": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "id",
+              "revision"
+            ],
+            "additionalProperties": false
+          },
+          "configuration": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "operations": {
+        "bind": "account_bind",
+        "unbind": "account_unbind",
+        "listAccounts": "account_listAccounts",
+        "snapshot": "account_snapshot",
+        "queryPositions": "account_queryPositions",
+        "queryOrders": "account_queryOrders",
+        "queryFills": "account_queryFills",
+        "queryHistory": "account_queryHistory",
+        "subscribeAccount": "account_subscribeAccount"
+      },
+      "presentation": {
+        "connection": {
+          "required": false
+        },
+        "liveTopics": [
+          "snapshot",
+          "positions",
+          "orders",
+          "fills",
+          "history"
+        ]
+      }
+    }
+  ],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "replay-guide",
+      "path": "prompt.md",
+      "description": "真实历史模拟的操作边界、Agent 决策与归档证据规则。",
+      "kind": "prompt"
+    },
+    {
+      "id": "replay-public-guide",
+      "path": "skills/kurumi-replay/SKILL.md",
+      "kind": "skill",
+      "description": "Public replay controls, role boundaries, recovery and evidence interpretation."
+    }
+  ],
+  "hooks": [
+    {
+      "id": "activate",
+      "contract": "sesame.lifecycle/1",
+      "event": "lifecycle.activate",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "operations": {
+        "handle": "activate"
+      }
+    },
+    {
+      "id": "before_deactivate",
+      "contract": "sesame.lifecycle/1",
+      "event": "lifecycle.beforeDeactivate",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "operations": {
+        "handle": "before_deactivate"
+      }
+    },
+    {
+      "id": "before_run_release",
+      "contract": "sesame.lifecycle/1",
+      "event": "lifecycle.beforeRunRelease",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "operations": {
+        "handle": "before_run_release"
+      }
+    },
+    {
+      "id": "dispose",
+      "contract": "sesame.lifecycle/1",
+      "event": "lifecycle.dispose",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "operations": {
+        "handle": "dispose"
+      }
+    }
+  ],
+  "stateCollections": [],
+  "artifactSchemas": [
+    {
+      "id": "replay-resource",
+      "kind": "resource",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "replay-data",
+      "kind": "data",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "required": [
+          "format",
+          "path",
+          "rowCount",
+          "columns"
+        ],
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "replay-indicator",
+      "kind": "indicator",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "required": [
+          "schemaVersion",
+          "title",
+          "parameters",
+          "inputs",
+          "panes",
+          "series",
+          "implementation"
+        ],
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "replay-report",
+      "kind": "report",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "required": [
+          "title",
+          "entry",
+          "runtime",
+          "data"
+        ],
+        "additionalProperties": true
+      }
+    }
+  ]
+}

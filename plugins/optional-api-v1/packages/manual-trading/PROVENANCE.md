@@ -12,3 +12,9 @@ Architecture references inspected 2026-10-13:
 M5 cadence, five-minute portfolio target lifetime, 60-second atomic observation lifetime, five-second quote age and one-second quote-to-send budget are product defaults, not empirical vendor guarantees. Fixtures validate enforcement, not market performance. Unknown broker effects remain unknown and are not automatically replayed.
 
 Version 2.1 adds optional per-plan ABU topic selection. This MIT file contains only plugin/tool identity metadata and public-port composition; the independent GPL-3.0-only ABU algorithm packages retain their own source and license. Selection adds research tools to analyst/manager tasks only, and persists their datasets in the existing decision evidence.
+
+## 3.0 组合边界
+
+调度和研究工具选择不再依赖后端品牌或 ABU 名称白名单。原生适配、目标差额和下单保护移入独立 portfolio-execution；工作流只接受能力工具引用与真实回执。宿主调用链证明替代新路径对特定工作流名称的反向依赖，原生工作流归属来自宿主验证的实际 Run 父链。没有新增第三方运行依赖。
+
+统一工作流采用宿主原生 Run 视图；本插件不再包含协作 HTML、动画资产、消息轮询或第二套 SSE 协议。最终静态 HTML 是普通 report artifact 的入口文件，与冻结 JSON 附件一起发布。

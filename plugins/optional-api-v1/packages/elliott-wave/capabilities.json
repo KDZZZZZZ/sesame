@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "capabilities": [],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "knowledge-0",
+      "path": "examples/expected.md",
+      "description": "Elliott 波浪候选 — examples/expected.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-1",
+      "path": "prompt.md",
+      "description": "Elliott 波浪候选 — prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "knowledge-2",
+      "path": "PROVENANCE.md",
+      "description": "Elliott 波浪候选 — PROVENANCE.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-3",
+      "path": "README.md",
+      "description": "Elliott 波浪候选 — README.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-4",
+      "path": "skills/elliott-wave/references/method.md",
+      "description": "Elliott 波浪候选 — skills/elliott-wave/references/method.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-5",
+      "path": "skills/elliott-wave/references/validation.md",
+      "description": "Elliott 波浪候选 — skills/elliott-wave/references/validation.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-6",
+      "path": "skills/elliott-wave/SKILL.md",
+      "description": "Elliott 波浪候选 — skills/elliott-wave/SKILL.md",
+      "kind": "skill"
+    }
+  ],
+  "hooks": [],
+  "stateCollections": [],
+  "artifactSchemas": [],
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

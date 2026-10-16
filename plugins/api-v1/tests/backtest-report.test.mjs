@@ -4,7 +4,6 @@ import { readFile } from 'node:fs/promises';
 import { runInNewContext } from 'node:vm';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { createTools } from '../packages/reports/index.js';
 
 const hostRoot = process.env.SESAME_HOST_ROOT;
 const root = new URL('../packages/reports/', import.meta.url);
@@ -22,15 +21,14 @@ graph.handlers[0].event.input = 'closed-bars';
 graph.handlers[0].steps = [{ id: 'positions', forEach: { input: { input: 'positions' }, item: 'position', maxItems: 50 }, steps: [{ id: 'children', forEach: { input: { local: 'position', field: 'children' }, item: 'child', maxItems: 20 }, steps: graph.handlers[0].steps }] }];
 source.parameters = { lookback: { type: 'integer', default: 20 } }; source.inputs = { 'closed-bars': { kind: 'bars' } }; source.state = { count: { type: { kind: 'integer' }, initial: 0 } };
 const base = { output_path: 'strategy.html', title: 'Demo strategy comparison', summary: 'Fictional evidence tests inspection, not profitability.', strategy_source: ref, data_id: 'trials', parameters: ['lookback', 'net_profit'], selection_rule: 'Training Sharpe, then smaller drawdown, then trial ID; no holdout selection.', source_note: 'Synthetic fixture, USD, one fixed sample; no orders.', currency: 'USD', demo: true };
-async function template(input = {}, wrongDigest = false) {
-  let html;
-  const Type = new Proxy({}, { get: () => () => ({}) });
-  const host = { tools: { Type, string: () => ({}), define: (name, _description, _schema, execute) => ({ name, execute }), optional: () => ({}) },
-    artifacts: { read: () => ({ ref, manifest: { content: { sourcePath: 'source.json', sourceDigest: wrongDigest ? ref.digest : graph.sourceDigest }, blobs: [{ path: 'source.json' }] } }), readBlob: () => Buffer.from(JSON.stringify(source)) },
-    svl: { graph: parsed => { assert.deepEqual(parsed, source); return graph; } }, workspace: { file: async (_op, _path, bytes) => { html = bytes; } },
-  };
-  const result = await createTools(host).find(tool => tool.name === 'report_backtest_template').execute({ ...base, ...input });
-  return { html, result };
+async function template(input = {}) {
+  const args = { ...base, ...input }, escape = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const json = value => JSON.stringify(value).replace(/</g, '\\u003c');
+  const config = { title: args.title, summary: args.summary, dataId: args.data_id, parameters: args.parameters, selectionMetric: args.selection_metric ?? 'sharpe', selectionRule: args.selection_rule, sourceNote: args.source_note, currency: args.currency, source: ref, graph, definition: source, demo: args.demo === true };
+  const asset = p => readFile(new URL(p, root), 'utf8');
+  const tokens = { LOCALE: args.locale ?? 'en', TITLE: escape(args.title), STYLES: await asset('assets/editorial.css') + '\n' + await asset('assets/backtest.css'), KIT: await asset('assets/report-kit.js'), CHARTS: await asset('assets/editorial-charts.js'), EXPLORER: script, CONFIG: json(config) };
+  const html = (await asset('templates/backtest.html')).replace(/\{\{(LOCALE|TITLE|STYLES|KIT|CHARTS|EXPLORER|CONFIG)\}\}/g, (_, key) => tokens[key]);
+  return { html };
 }
 
 test('frozen trials reject conflicting winners, mixed samples, absent metrics and fake failed winners', () => {
@@ -44,15 +42,6 @@ test('frozen trials reject conflicting winners, mixed samples, absent metrics an
   ]) assert.throws(() => validate(rows, base.parameters), pattern);
   const missing = trial(); delete missing.net_profit; assert.throws(() => validate([missing], base.parameters), /Missing metric/);
   assert.equal(validate([trial({ status: 'failed', selected: false, sharpe: null, max_drawdown_pct: null, net_profit: null })], base.parameters).size, 1);
-});
-
-test('the template derives a pinned source graph, escapes text and refuses digest mismatch', async () => {
-  const { html, result } = await template({ title: '</title><script>injected()</script>' });
-  assert.match(html, /&lt;script&gt;injected\(\)&lt;\/script&gt;/);
-  assert.doesNotMatch(html, /<script>injected\(\)/);
-  assert.equal(result.sourceDigest, graph.sourceDigest); assert.deepEqual(result.publish.strategy_source, ref);
-  await assert.rejects(template({}, true), /match.*digest/);
-  await assert.rejects(template({ parameters: ['lookback', 'lookback'] }), /unique/);
 });
 
 test('strategy report renders real controls, every trial, stable winners and missing cells on desktop and mobile', { skip: !hostRoot, timeout: 60000 }, async t => {

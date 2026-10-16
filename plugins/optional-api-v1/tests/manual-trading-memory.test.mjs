@@ -1,49 +1,45 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DatabaseSync } from 'node:sqlite';
 import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createTradingMemory, MEMORY_LIMITS } from '../packages/manual-trading/memory.js';
 import { JudgmentService } from '../packages/manual-trading/judgment/service.js';
-import { createJudgmentTools, definitions } from '../packages/manual-trading/judgment/tools.js';
+import { createJudgmentCapabilities } from '../packages/manual-trading/judgment/tools.js';
 import { createService as createResearchService } from '../packages/financial-research/service.js';
+import { records, closeRecords } from '../packages/manual-trading/records.js';
+import { records as researchRecords, closeRecords as closeResearchRecords } from '../packages/financial-research/records.js';
+import { createCapabilities as createResearchCapabilities } from '../packages/financial-research/index.js';
+import { publishRows } from '../packages/financial-research/resource-files.js';
+import { datasetSnapshot } from '../packages/manual-trading/data.js';
+import { JudgmentService as StandaloneJudgmentService } from '../packages/judgment-evolution/service.js';
+import { createCapabilities as createStandaloneJudgmentCapabilities } from '../packages/judgment-evolution/tools.js';
+import { setInstance as setJudgmentInstance } from '../packages/judgment-evolution/state.js';
+
+import { hostRoot, nativeHost } from './host-v2-fixture.mjs';
 
 const T0 = Date.parse('2026-10-13T12:00:00Z');
 function fixture(t) {
   const directory = mkdtempSync(join(tmpdir(), 'sesame-memory-'));
-  let db, time = T0; const disposers = [];
-  const open = () => { db = new DatabaseSync(join(directory, 'host.sqlite')); db.exec('CREATE TABLE IF NOT EXISTS records(kind TEXT,id TEXT,body TEXT,PRIMARY KEY(kind,id))'); };
-  open();
-  const storage = {
-    directory,
-    get(kind, id) { const row = db.prepare('SELECT body FROM records WHERE kind=? AND id=?').get(kind, id); return row ? JSON.parse(row.body) : undefined; },
-    put(kind, value) { db.prepare('INSERT INTO records VALUES(?,?,?) ON CONFLICT(kind,id) DO UPDATE SET body=excluded.body').run(kind, value.id, JSON.stringify(value)); return structuredClone(value); },
-    list(kind) { return db.prepare('SELECT body FROM records WHERE kind=? ORDER BY rowid').all(kind).map(row => JSON.parse(row.body)); },
-  };
-  const checkedPlugins = [];
-  const host = { storage, scope: { kind: 'main', conversationId: 'conv_main' },
-    datasets: { register: value => storage.put('datasets', { ...value, producer_plugin_id: 'sesame/financial-research' }), read: id => storage.get('datasets', id), list: () => storage.list('datasets') },
-    tasks: { read: id => ({ scope: id === 'conv_main' ? 'main' : 'subagent', active_response_message_id: null }) },
-    workspace: { root: () => join(directory, 'workspace') },
-    plugins: { isActive: id => { checkedPlugins.push(id); return true; } },
-    tools: { define: (name, description, properties, execute) => ({ name, description, properties, execute }) },
-  };
-  t.after(async () => { for (const dispose of disposers) await dispose(); db.close(); assert.ok(resolve(directory).startsWith(resolve(join(tmpdir(), 'sesame-memory-')))); rmSync(directory, { recursive: true, force: true }); });
-  return { host, checkedPlugins, directory, now: () => time, setTime: value => { time = value; },
-    memory: () => createTradingMemory(host, { now: () => time }), reopen: () => { db.close(); open(); }, onDispose: fn => disposers.push(fn),
-    data: (id = 'quotes', overrides = {}) => storage.put('datasets', { id,
+  let time = T0; const disposers = [], datasets = new Map();
+  const host = { context: { kind: 'main', sessionId: 'conv_main', pluginId: 'sesame/manual-trading', storageRoot: join(directory, 'private') } };
+  const readDataset = id => structuredClone(datasets.get(id));
+  t.after(async () => { for (const dispose of disposers) await dispose(); closeRecords(host); assert.ok(resolve(directory).startsWith(resolve(join(tmpdir(), 'sesame-memory-')))); rmSync(directory, { recursive: true, force: true }); });
+  return { host, directory, datasets, now: () => time, setTime: value => { time = value; },
+    memory: () => createTradingMemory(host, { now: () => time, datasetReader: readDataset }), reopen: () => { closeRecords(host); records(host); }, onDispose: fn => disposers.push(fn),
+    snapshot: () => ({ sessions: new Map([['conv_main', { kind: 'main', activeResponseId: null }], ['child', { kind: 'subagent' }]]), messages: new Map(), datasets: new Map([...datasets].map(([id, value]) => [id, structuredClone(value)])), enabled: true }),
+    data: (id = 'quotes', overrides = {}) => { const data = { id,
       rows: [{ symbol: 'EURUSD', observedAt: time, close: 1.11 }],
-      provenance: { source_kind: 'external', provider: 'https://prices.example/quotes', as_of: new Date(time).toISOString() }, ...overrides }),
+      provenance: { source_kind: 'external', provider: 'https://prices.example/quotes', as_of: new Date(time).toISOString() }, ...overrides }; datasets.set(id, structuredClone(data)); return structuredClone(data); },
   };
 }
-const run = (extra = {}) => ({ id: 'run-1', planId: 'plan-1', accountId: 'account-1', createdAt: T0,
+const run = (extra = {}) => ({ id: 'run-1', executionSources: [{pluginId:'custom/execution',provider:'arbitrary-native/fill-history'}], planId: 'plan-1', accountId: 'account-1', createdAt: T0,
   snapshot: { symbol: 'EURUSD', capturedAt: T0, quote: { bid: 1.1, ask: 1.101, sourceTimeMs: T0 }, positions: [] },
   decision: { action: 'hold', targets: [{ symbol: 'EURUSD', weight: 0.25 }] },
   reports: [{ role: 'risk', model: 'model-fixture', report: 'Existing target weight remains a proposal, not an executed order.' }], ...extra });
 const ref = (extra = {}) => ({ datasetId: 'quotes', kind: 'market', observedAtField: 'observedAt', symbolField: 'symbol', ...extra });
 
-test('decision snapshots, team/model reports and reviews survive real host storage reopen', t => {
+test('decision snapshots, team/model reports and reviews survive private plugin database reopen', t => {
   const f = fixture(t), memory = f.memory(), original = run();
   const saved = memory.record(original);
   original.snapshot.quote.bid = 900;
@@ -77,12 +73,12 @@ test('account, conversation and symbol isolation survive relevant cross-plan ret
   memory.record(run()); memory.record(run({ id: 'other-account', accountId: 'account-2' }));
   memory.record(run({ id: 'other-plan', planId: 'plan-2' }));
   memory.record(run({ id: 'other-symbol', snapshot: { symbol: 'GBPUSD', capturedAt: T0 }, decision: { action: 'hold' } }));
-  f.host.scope.conversationId = 'conv_other'; memory.record(run({ id: 'other-conversation' }));
-  f.host.scope.conversationId = 'conv_main';
+  f.host.context.sessionId = 'conv_other'; memory.record(run({ id: 'other-conversation' }));
+  f.host.context.sessionId = 'conv_main';
   const context = memory.context({ planId: 'plan-1', accountId: 'account-1', symbols: ['EURUSD'] });
   assert.deepEqual(context.cases.map(item => item.id), ['run-1', 'other-plan']);
   assert.throws(() => memory.review({ runId: 'other-conversation', evidence: [ref()], reflection: 'foreign' }), { code: 'FORBIDDEN' });
-  f.host.scope.kind = 'subagent';
+  f.host.context.kind = 'subagent';
   assert.throws(() => memory.context({ accountId: 'account-1' }), { code: 'FORBIDDEN' });
 });
 
@@ -94,13 +90,13 @@ test('repeated decisions and evidence reviews are idempotent without overwriting
   f.data(); const args = { runId: 'run-1', evidence: [ref(), ref()], reflection: 'Repeated evidence is one observation.' };
   const review = memory.review(args); f.setTime(T0 + 2000);
   assert.equal(memory.review({ ...args, evidence: [ref()] }).id, review.id);
-  assert.equal(review.evidence.length, 1); assert.equal(f.host.storage.list('trading_memory_reviews').length, 1);
+  assert.equal(review.evidence.length, 1); assert.equal(records(f.host).list('trading_memory_reviews').length, 1);
   assert.equal(memory.context({ accountId: 'account-1' }).lessons.length, 1);
 });
 
 test('service memory binds its trusted owner once and rejects subagent owner spoofing', t => {
   const f = fixture(t);
-  f.host.scope.kind = 'service';
+  f.host.context.kind = 'service';
   const own = createTradingMemory(f.host, { now: f.now, ownerConversationId: 'conv_main' });
   const other = createTradingMemory(f.host, { now: f.now, ownerConversationId: 'conv_other' });
   own.record(run({ conversationId: 'conv_other' }));
@@ -109,7 +105,7 @@ test('service memory binds its trusted owner once and rejects subagent owner spo
   assert.equal(own.context({ accountId: 'account-1' }).cases[0].conversationId, 'conv_main');
   assert.throws(() => own.review({ runId: 'other-service-run', evidence: [ref()], reflection: 'foreign' }), { code: 'FORBIDDEN' });
   assert.throws(() => createTradingMemory(f.host, { now: f.now }).context({ accountId: 'account-1' }), { code: 'FORBIDDEN' });
-  f.host.scope.kind = 'subagent';
+  f.host.context.kind = 'subagent';
   assert.throws(() => createTradingMemory(f.host, { now: f.now, ownerConversationId: 'conv_main' }), { code: 'FORBIDDEN' });
   assert.throws(() => createTradingMemory(f.host, { now: f.now }).context({ accountId: 'account-1', ownerConversationId: 'conv_main' }), { code: 'FORBIDDEN' });
 });
@@ -138,7 +134,7 @@ test('reviews reject future, synthetic, wrong-symbol and wrong-account evidence'
   assert.throws(() => review(ref({ datasetId: 'wrong-symbol' })), { code: 'INVALID_EVIDENCE' });
   f.data('wrong-account', { rows: [{ symbol: 'EURUSD', account: 'account-2', observedAt: T0 + 1000 }] });
   assert.throws(() => review(ref({ datasetId: 'wrong-account', accountIdField: 'account' })), { code: 'ACCOUNT_MISMATCH' });
-  assert.equal(f.host.storage.list('trading_memory_reviews').length, 0);
+  assert.equal(records(f.host).list('trading_memory_reviews').length, 0);
 });
 
 test('later derived evidence cannot inherit an earlier root source timestamp to enter a past review', t => {
@@ -160,19 +156,51 @@ test('later derived evidence cannot inherit an earlier root source timestamp to 
 test('native fill evidence must identify its account and decision; a fill still does not establish portfolio P&L', t => {
   const f = fixture(t), memory = f.memory(); memory.record(run()); f.setTime(T0 + 1000);
   const rows = [{ symbol: 'EURUSD', account: 'account-1', decisionRun: 'run-1', observedAt: T0 + 1000, ticket: 17, volume: 0.1, price: 1.1 }];
-  f.data('fills', { rows, provenance: { source_kind: 'external', provider: 'mt5/python/history_deals_get', as_of: new Date(T0 + 1000).toISOString() } });
+  f.data('fills', { rows, producer_plugin_id: 'custom/execution', provenance: { source_kind: 'external', provider: 'arbitrary-native/fill-history', as_of: new Date(T0 + 1000).toISOString() } });
   const evidence = ref({ datasetId: 'fills', kind: 'execution', accountIdField: 'account', runIdField: 'decisionRun', executionIdField: 'ticket', quantityField: 'volume', priceField: 'price' });
   const result = memory.review({ runId: 'run-1', evidence: [evidence], reflection: 'The source confirms an opening fill; closing fills and costs remain unreconciled.' });
   assert.equal(result.outcome.executionConfirmed, true); assert.equal(result.outcome.realizedPnl, null);
-  rows[0].decisionRun = 'another-run'; f.data('unrelated-fill', { rows, provenance: { source_kind: 'external', provider: 'mt5/python/history_deals_get', as_of: new Date(T0 + 1000).toISOString() } });
+  f.data('spoofed-producer', { rows, producer_plugin_id: 'custom/research', provenance: { source_kind: 'external', provider: 'arbitrary-native/fill-history', as_of: new Date(T0 + 1000).toISOString() } });
+  assert.throws(() => memory.review({ runId: 'run-1', evidence: [{ ...evidence, datasetId: 'spoofed-producer' }], reflection: 'Matching provider text does not establish the producing capability.' }), { code: 'INVALID_EVIDENCE' });
+  rows[0].decisionRun = 'another-run'; f.data('unrelated-fill', { rows, producer_plugin_id: 'custom/execution', provenance: { source_kind: 'external', provider: 'arbitrary-native/fill-history', as_of: new Date(T0 + 1000).toISOString() } });
   assert.throws(() => memory.review({ runId: 'run-1', evidence: [{ ...evidence, datasetId: 'unrelated-fill' }], reflection: 'unrelated fill' }), { code: 'INVALID_EVIDENCE' });
+});
+
+for (const populated of [false, true]) test(`derived execution rows cannot borrow authority from ${populated ? 'an altered native fill' : 'an empty native source'}`, t => {
+  const f = fixture(t), memory = f.memory();
+  memory.record(run({ executionAccountId: 'native-account-1' })); f.setTime(T0 + 1000);
+  const nativeRow = { symbol: 'EURUSD', account: 'native-account-1', decisionRun: 'run-1', observedAt: f.now(), ticket: 17, volume: 0.1, price: 1.1 };
+  const provenance = { source_kind: 'external', provider: 'arbitrary-native/fill-history', as_of: new Date(f.now()).toISOString() };
+  f.data('native-root', { rows: populated ? [nativeRow] : [], producer_plugin_id: 'custom/execution', provenance });
+  f.data('derived-fill', {
+    input_ids: ['native-root'], rows: [{ ...nativeRow, ticket: 999, volume: 10, price: 123 }],
+    producer_plugin_id: populated ? 'custom/execution' : 'custom/research',
+    provenance: { ...provenance, source_kind: populated ? 'external' : 'derived' },
+  });
+  const evidence = ref({ datasetId: 'derived-fill', kind: 'execution', accountIdField: 'account', runIdField: 'decisionRun', executionIdField: 'ticket', quantityField: 'volume', priceField: 'price' });
+  assert.throws(() => memory.review({ runId: 'run-1', evidence: [evidence], reflection: 'A derived row cannot establish an original fill.' }), { code: 'INVALID_EVIDENCE' });
+  assert.equal(records(f.host).list('trading_memory_reviews').length, 0);
+});
+
+test('derived market and observation rows remain usable without confirming execution', t => {
+  const f = fixture(t), memory = f.memory(); memory.record(run()); f.setTime(T0 + 1000);
+  const source = f.data('source-quotes');
+  f.data('derived-observation', { input_ids: [source.id], rows: [{ ...source.rows[0], note: 'Research interpretation' }],
+    producer_plugin_id: 'custom/research', provenance: { source_kind: 'derived', as_of: new Date(f.now()).toISOString() } });
+  for (const kind of ['market', 'observation']) {
+    const result = memory.review({ runId: 'run-1', evidence: [ref({ datasetId: 'derived-observation', kind })], reflection: `Derived ${kind} evidence is not a fill.` });
+    assert.equal(result.evidence[0].roots[0].datasetId, source.id);
+    assert.equal(result.evidence[0].row.note, 'Research interpretation');
+    assert.equal(result.outcome.executionConfirmed, false);
+    assert.equal(result.outcome.basis, 'source_observations_only');
+  }
 });
 
 test('decision time admits fills before episode completion without making the episode visible early', t => {
   const f = fixture(t), memory = f.memory();
   f.setTime(T0 + 80000);
-  f.data('during-execution', { rows: [{ symbol: 'EURUSD', account: 'account-1', decisionRun: 'run-1', observedAt: f.now(), ticket: 21, volume: 0.1, price: 1.1 }],
-    provenance: { source_kind: 'external', provider: 'mt5/python/history_deals_get', as_of: new Date(f.now()).toISOString() } });
+  f.data('during-execution', { producer_plugin_id: 'custom/execution', rows: [{ symbol: 'EURUSD', account: 'account-1', decisionRun: 'run-1', observedAt: f.now(), ticket: 21, volume: 0.1, price: 1.1 }],
+    provenance: { source_kind: 'external', provider: 'arbitrary-native/fill-history', as_of: new Date(f.now()).toISOString() } });
   f.setTime(T0 + 120000);
   memory.record(run({ decisionAt: T0 + 60000, createdAt: f.now(), reports: [{ role: 'executor', observedAt: f.now(), report: 'Later execution report was not available at decision time.' }] }));
   assert.equal(memory.context({ accountId: 'account-1', asOf: T0 + 90000 }).cases.length, 0);
@@ -187,22 +215,34 @@ test('decision time admits fills before episode completion without making the ep
   assert.throws(() => memory.record(run({ id: 'future-snapshot', createdAt: f.now(), decisionAt: T0 + 60000, snapshot: { symbol: 'EURUSD', capturedAt: T0 + 70000 } })), { code: 'FUTURE_EVIDENCE' });
 });
 
-test('financial research registered source ancestry supports time-bounded memory review without claiming execution', async t => {
+test('financial research source ancestry supports time-bounded memory review through actual data.query', { skip: !hostRoot }, async t => {
   const f = fixture(t), memory = f.memory(); memory.record(run());
+  const native = await nativeHost(t), host = native.attach('financial-research', createResearchCapabilities);
+  native.onDispose(() => closeResearchRecords(host));
   f.setTime(T0 + 120000);
   const published = new Date(T0 + 60000).toISOString(), acquired = new Date(f.now()).toISOString();
-  const research = createResearchService(f.host, { now: f.now, env: { FMP_API_KEY: 'fixture-only-no-network' }, fetch: async address => {
+  const research = createResearchService(host, { now: f.now, env: { FMP_API_KEY: 'fixture-only-no-network' }, fetch: async address => {
     assert.equal(new URL(address).pathname, '/stable/news/stock');
-    return new Response(JSON.stringify([{ symbol: 'EURUSD', publishedDate: published, title: 'Source observation after the saved decision', url: 'https://news.example/observed-event' }]));
+    return new Response(JSON.stringify(Array.from({ length: 3 }, (_, index) => ({ symbol: 'EURUSD', publishedDate: published, title: `Source observation after the saved decision ${index}`, body: 'x'.repeat(30000), url: 'https://news.example/observed-event' }))));
   } });
-  const evidence = await research.query({ kind: 'news', symbol: 'EURUSD', limit: 1 });
+  const evidence = await research.query({ kind: 'news', symbol: 'EURUSD', limit: 3 });
   assert.ok(evidence.dataset_id); assert.ok(evidence.raw_dataset_id);
-  const saved = f.host.datasets.read(evidence.dataset_id);
+  const saved = researchRecords(host).get('datasets', evidence.dataset_id);
   assert.deepEqual(saved.input_ids, [evidence.raw_dataset_id]);
   assert.equal(saved.provenance.source_kind, 'external'); assert.equal(saved.provenance.as_of, acquired);
-  const reference = { datasetId: evidence.dataset_id, kind: 'observation', observedAtField: 'observed_at', symbolField: 'data.symbol' };
-  assert.throws(() => memory.review({ runId: 'run-1', asOf: T0 + 90000, evidence: [reference], reflection: 'Cannot use an earlier publication date to backdate our knowledge.' }), { code: 'FUTURE_EVIDENCE' });
-  const reviewed = memory.review({ runId: 'run-1', evidence: [reference], reflection: 'This later news is a source observation; the target remains unexecuted.' });
+  const reference = { ...evidence.evidence, kind: 'observation', observedAtField: 'observed_at', symbolField: 'data.symbol' };
+  assert.equal(reference.source.providerId, 'sesame/financial-research#evidence');
+  const snapshot = await datasetSnapshot(host, [reference]);
+  assert.equal(snapshot.get(evidence.dataset_id).rows.length, 3);
+  assert.equal(snapshot.get(evidence.dataset_id).rows[0].data.body.length, 30000, 'the source returns full frozen rows, not the shortened Agent preview');
+  const first = await host.data.query({ source: reference.source, input: reference.query, limit: 1 });
+  assert.equal(first.items.length, 1); assert.ok(first.nextCursor);
+  assert.deepEqual(await host.data.query({ source: reference.source, input: reference.query, limit: 1, cursor: first.nextCursor }), await host.data.query({ source: reference.source, input: reference.query, limit: 1, cursor: first.nextCursor }));
+  await assert.rejects(datasetSnapshot(host, [{ ...reference, source: { ...reference.source, revision: 'stale' } }]), { code: 'STALE_REVISION' });
+  assert.deepEqual(native.store.list('dataset'), [], 'evidence remains in the producer private store; no host dataset registration');
+  assert.equal(snapshot.get(evidence.raw_dataset_id).producer_plugin_id, 'sesame/financial-research');
+  assert.throws(() => memory.review({ runId: 'run-1', asOf: T0 + 90000, evidence: [reference], reflection: 'Cannot use an earlier publication date to backdate our knowledge.' }, snapshot), { code: 'FUTURE_EVIDENCE' });
+  const reviewed = memory.review({ runId: 'run-1', evidence: [reference], reflection: 'This later news is a source observation; the target remains unexecuted.' }, snapshot);
   assert.equal(reviewed.evidence[0].roots[0].datasetId, evidence.raw_dataset_id);
   assert.equal(reviewed.evidence[0].roots[0].provider, 'fmp'); assert.equal(reviewed.evidence[0].row.data.title, saved.rows[0].data.title);
   assert.equal(reviewed.outcome.executionConfirmed, false); assert.equal(reviewed.outcome.realizedPnl, null);
@@ -224,9 +264,9 @@ const prediction = { command_id: 'forecast-1', claim: 'EURUSD closes above 1.1',
   due_at: new Date(T0 + 3600000).toISOString(), verification: { provider: 'https://prices.example/quotes', metric: 'close', observed_at_field: 'observedAt', op: 'gt', target: 1.1, selector: { symbol: 'EURUSD' } } };
 
 test('migrated judgment service keeps frozen verification, reflection, candidate rules and its own durable state', async t => {
-  const f = fixture(t), options = { clock: () => new Date(f.now()) };
+  const f = fixture(t), options = { clock: () => new Date(f.now()), snapshot: f.snapshot };
   let service = new JudgmentService(f.host, options).init(); f.onDispose(() => service.close());
-  assert.equal(service.directory, join(f.directory, 'workspace', 'manual-trading', 'judgment'));
+  assert.equal(service.directory, join(f.host.context.storageRoot, 'judgment-state', 'exports'));
   const item = service.record('conv_main', prediction);
   assert.throws(() => service.record('conv_main', { ...prediction, probability: 0.9 }), /command_id/);
   assert.throws(() => service.record('child', { ...prediction, command_id: 'child' }), /仅供主/);
@@ -237,19 +277,61 @@ test('migrated judgment service keeps frozen verification, reflection, candidate
   service.reflect('conv_main', { judgment_id: item.id, analysis: 'The frozen threshold failed. One event cannot establish a robust trading rule.', no_change_reason: 'Maintain existing policy pending prospective independent samples.' });
   const rule = service.proposeRule('conv_main', { command_id: 'rule-1', title: 'A tentative range filter', guideline: 'Check the range boundary before forecasting a breakout.', topic: 'price', regime: 'range', limitations: 'Only a hypothesis from one case.', evidence_ids: [item.id] });
   assert.equal(rule.status, 'candidate');
-  service.reviewQueue('conv_main'); assert.ok(f.checkedPlugins.includes('sesame/manual-trading'));
+  assert.equal(service.reviewQueue('conv_main').statistics.registered, 1);
   await service.close(); service = new JudgmentService(f.host, options).init();
   assert.equal(service.read('conv_main', item.id).review.semantic.no_change_reason, 'Maintain existing policy pending prospective independent samples.');
   assert.equal(service.rules('conv_main').items[0].status, 'candidate');
   assert.match(readFileSync(join(service.directory, 'CRITERIA.md'), 'utf8'), /尚无通过/);
 });
 
-test('judgment tool factory takes the explicit service and publishes only manual names', () => {
-  const calls = [], service = { rules: conversation => { calls.push(conversation); return { items: [] }; } };
-  const tools = createJudgmentTools({ scope: { conversationId: 'conv_main' }, tools: { define: (name, description, properties, execute) => ({ name, description, properties, execute }) } }, { service });
+test('judgment capability factory takes the explicit service and publishes only manual names', async () => {
+  const calls = [], host = { context: { sessionId: 'conv_main' } }, service = { invoke: (context, method, args) => { calls.push([context, method, args]); return { items: [] }; } };
+  const tools = createJudgmentCapabilities(host, () => service);
   assert.equal(tools.length, 13); assert.ok(tools.every(tool => tool.name.startsWith('manual_judgment_')));
-  assert.ok(definitions.every(([name]) => name.startsWith('manual_judgment_')));
-  assert.deepEqual(tools.find(tool => tool.name === 'manual_judgment_rules').execute({}), { items: [] });
-  assert.deepEqual(calls, ['conv_main']);
-  assert.throws(() => new JudgmentService({}, { workspaceSubpath: '../escape' }), /相对路径/);
+  assert.deepEqual(await tools.find(tool => tool.name === 'manual_judgment_rules').execute({}), { items: [] });
+  assert.deepEqual(calls, [[host, 'rules', ['conv_main', {}]]]);
+});
+
+test('manual judgment publishes fixed criteria readable through the Agent resource capability', { skip: !hostRoot }, async t => {
+  const native = await nativeHost(t); let service;
+  const host = native.attach('manual-trading', context => createJudgmentCapabilities(context, () => service), cap => cap.id.startsWith('manual_judgment_'));
+  service = new JudgmentService(host).init(); native.onDispose(() => service.close());
+  const result = await native.call('sesame/manual-trading#manual_judgment_rules', {});
+  assert.equal(result.criteria.kind, 'resource'); assert.equal(result.criteria.schemaVersion, '1.0.0');
+  assert.equal(result.path, undefined); assert.equal(result.criteria_path, undefined);
+  const text = await native.call('host.resources.read', { ref: result.criteria, part: 'content', entry: 'CRITERIA.md' });
+  assert.match(text.content, /尚无通过/);
+  assert.deepEqual((await native.call('sesame/manual-trading#manual_judgment_rules', {})).criteria, result.criteria);
+  const draft = await host.resources.create({ kind: 'blob', lifetime: 'durable', name: 'private.md', source: { content: 'Private draft' } });
+  await assert.rejects(native.call('host.resources.read', { ref: draft, part: 'content' }), { code: 'FORBIDDEN' });
+});
+
+for (const standalone of [false, true]) test(`${standalone ? 'standalone' : 'manual'} judgment resolves actual financial source evidence and published artifact ancestry`, { skip: !hostRoot }, async t => {
+  const native = await nativeHost(t), researchHost = native.attach('financial-research', createResearchCapabilities); let service, time = T0;
+  native.onDispose(() => closeResearchRecords(researchHost));
+  const plugin = standalone ? 'judgment-evolution' : 'manual-trading', prefix = standalone ? 'judgment_' : 'manual_judgment_';
+  const host = native.attach(plugin, standalone ? createStandaloneJudgmentCapabilities : context => createJudgmentCapabilities(context, () => service), cap => standalone || cap.id.startsWith(prefix));
+  service = new (standalone ? StandaloneJudgmentService : JudgmentService)(host, { clock: () => new Date(time) }).init();
+  if (standalone) setJudgmentInstance(host, service);
+  native.onDispose(async () => { await service.close(); if (standalone) setJudgmentInstance(host, null); });
+  const call = (name, input) => native.call(`sesame/${plugin}#${prefix}${name}`, input);
+  const forecast = { ...prediction, verification: { provider: 'fmp', metric: 'data.title', observed_at_field: 'observed_at', op: 'eq', target: 'Confirmed source publication', selector: { 'data.symbol': 'EURUSD' } } };
+  const sourceCase = await call('record', forecast), artifactCase = await call('record', { ...forecast, command_id: 'forecast-artifact' });
+  time = T0 + 3660000;
+  const research = createResearchService(researchHost, { now: () => time, env: { FMP_API_KEY: 'fixture-only-no-network' }, fetch: async () => new Response(JSON.stringify([{ symbol: 'EURUSD', publishedDate: forecast.due_at, title: 'Confirmed source publication', url: 'https://news.example/fixed' }])) });
+  const evidence = await research.query({ kind: 'news', symbol: 'EURUSD', limit: 1 });
+  const resolved = await call('resolve', { judgment_id: sourceCase.id, dataset_id: evidence.dataset_id, source: evidence.evidence.source, query: evidence.evidence.query });
+  assert.equal(resolved.review.evidence.outcome, 1); assert.equal(resolved.review.evidence.roots[0].dataset_id, evidence.raw_dataset_id);
+  const entered = await publishRows(researchHost, { title: 'User-entered claim', rows: researchRecords(researchHost).get('datasets', evidence.dataset_id).rows,
+    provenance: { kind: 'user_input', source_kind: 'user_input', provider: 'fmp', as_of: new Date(time).toISOString() } });
+  await assert.rejects(call('resolve', { judgment_id: artifactCase.id, dataset_id: entered.id, artifact: entered }), /手工|合成|来源/);
+  const reviewed = await call('review_due', { evidence: [{ datasetId: evidence.ref.id, artifact: evidence.ref }] });
+  assert.equal(reviewed.statistics.resolved, 2);
+  const second = await call('read', { judgment_id: artifactCase.id });
+  assert.equal(second.review.evidence.dataset_id, evidence.ref.id); assert.equal(second.review.evidence.roots[0].dataset_id, evidence.raw_ref.id);
+  assert.deepEqual(native.store.list('dataset'), [], 'only explicit data ports and immutable artifacts bridge plugin-owned evidence');
+  const frozen = await datasetSnapshot(host, [evidence.ref]);
+  assert.equal(frozen.get(evidence.ref.id).producer_plugin_id, 'sesame/financial-research');
+  assert.equal(frozen.get(evidence.raw_ref.id).provenance.source_kind, 'external');
+  await assert.rejects(datasetSnapshot(host, [{ ...evidence.ref, digest: `sha256:${'0'.repeat(64)}` }]), { code: 'NOT_FOUND' });
 });

@@ -1,0 +1,1277 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "capabilities": [
+    {
+      "id": "market_read",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "一次获取并冻结真实市场历史K线，保留Decimal、SourceTime、显式成交量单位、覆盖范围和固定证据。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "operation_id",
+          "title",
+          "instrument",
+          "spec",
+          "range",
+          "include_forming",
+          "volume_kind",
+          "source"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "本会话此精确查询的幂等ID；重新采集使用新ID"
+          },
+          "title": {
+            "type": "string",
+            "description": "固定数据名称",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "instrument": {
+            "type": "object",
+            "required": [
+              "sourceId",
+              "instrumentId"
+            ],
+            "properties": {
+              "sourceId": {
+                "type": "string",
+                "description": "market_instruments返回的来源ID",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "instrumentId": {
+                "type": "string",
+                "description": "准确品种ID",
+                "minLength": 1,
+                "maxLength": 20000
+              }
+            },
+            "additionalProperties": false
+          },
+          "spec": {
+            "type": "object",
+            "required": [
+              "timeframe",
+              "priceBasis",
+              "adjustment",
+              "session",
+              "calendarRevision"
+            ],
+            "properties": {
+              "timeframe": {
+                "type": "string",
+                "description": "提供方声明的周期，如1d/1h",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "priceBasis": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "const": "bid"
+                  },
+                  {
+                    "type": "string",
+                    "const": "ask"
+                  },
+                  {
+                    "type": "string",
+                    "const": "mid"
+                  },
+                  {
+                    "type": "string",
+                    "const": "last"
+                  }
+                ]
+              },
+              "adjustment": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "const": "none"
+                  },
+                  {
+                    "type": "string",
+                    "const": "forward"
+                  },
+                  {
+                    "type": "string",
+                    "const": "backward"
+                  }
+                ]
+              },
+              "session": {
+                "type": "string",
+                "description": "提供方声明的时段",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              "calendarRevision": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "status",
+                      "value"
+                    ],
+                    "properties": {
+                      "status": {
+                        "type": "string",
+                        "const": "value"
+                      },
+                      "value": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "revision",
+                          "digest",
+                          "kind",
+                          "schemaVersion"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "revision": {
+                            "type": "string"
+                          },
+                          "digest": {
+                            "type": "string",
+                            "pattern": "^sha256:[a-f0-9]{64}$"
+                          },
+                          "kind": {
+                            "type": "string"
+                          },
+                          "schemaVersion": {
+                            "type": "string",
+                            "const": "1.0.0"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "status"
+                    ],
+                    "properties": {
+                      "status": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "const": "unknown"
+                          },
+                          {
+                            "type": "string",
+                            "const": "unsupported"
+                          },
+                          {
+                            "type": "string",
+                            "const": "not_applicable"
+                          }
+                        ]
+                      },
+                      "reason": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "range": {
+            "type": "object",
+            "required": [
+              "from",
+              "to"
+            ],
+            "properties": {
+              "from": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "basis",
+                      "unixMs"
+                    ],
+                    "properties": {
+                      "basis": {
+                        "type": "string",
+                        "const": "utc"
+                      },
+                      "unixMs": {
+                        "type": "integer"
+                      },
+                      "raw": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "basis",
+                      "authority",
+                      "value"
+                    ],
+                    "properties": {
+                      "basis": {
+                        "type": "string",
+                        "const": "wall"
+                      },
+                      "authority": {
+                        "type": "string",
+                        "description": "来源时钟身份，不能猜测UTC",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "value": {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d+)?$"
+                      },
+                      "zone": {
+                        "type": "string"
+                      },
+                      "fold": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "const": 0
+                          },
+                          {
+                            "type": "number",
+                            "const": 1
+                          }
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "to": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "basis",
+                      "unixMs"
+                    ],
+                    "properties": {
+                      "basis": {
+                        "type": "string",
+                        "const": "utc"
+                      },
+                      "unixMs": {
+                        "type": "integer"
+                      },
+                      "raw": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "basis",
+                      "authority",
+                      "value"
+                    ],
+                    "properties": {
+                      "basis": {
+                        "type": "string",
+                        "const": "wall"
+                      },
+                      "authority": {
+                        "type": "string",
+                        "description": "来源时钟身份，不能猜测UTC",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "value": {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d+)?$"
+                      },
+                      "zone": {
+                        "type": "string"
+                      },
+                      "fold": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "const": 0
+                          },
+                          {
+                            "type": "number",
+                            "const": 1
+                          }
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "include_forming": {
+            "type": "boolean",
+            "description": "是否明确包含形成中K线；回测通常选false"
+          },
+          "volume_kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "real"
+              },
+              {
+                "type": "string",
+                "const": "tick"
+              },
+              {
+                "type": "string",
+                "const": "none"
+              }
+            ]
+          },
+          "max_rows": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000,
+            "description": "总行数预算，默认10000；不会截断后冒充完整数据"
+          },
+          "source": {
+            "type": "object",
+            "properties": {
+              "providerId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "description": "data_sources 返回的完整来源ID"
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "description": "精确声明版本"
+              },
+              "binding": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "providerId",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "data.query",
+        "resource.create",
+        "artifact.publish",
+        "state.write"
+      ],
+      "usage": {
+        "purpose": "一次获取并冻结真实市场历史K线，保留Decimal、SourceTime、显式成交量单位、覆盖范围和固定证据。",
+        "inputs": "source 为完整 SourceRef，instrument 为搜索返回的 ref；spec={timeframe,priceBasis,adjustment,session,calendarRevision}；range={from,to} 使用实际 SourceTime。operation_id/title 固定本次观察；include_forming 和 volume_kind(real/tick/none) 必填；max_rows 默认10000。",
+        "outputs": "{ref,evidence,rowCount,columns,sample,provenance,receipt,coverage,volume,status}；status=partial/coverage.complete=false 表示已返回行未证明无缺口，不表示所有行无效。",
+        "prerequisites": [
+          "来源可 queryBars；精确品种与支持口径可由 market_instruments describe 或 canvas_binding 获取。"
+        ],
+        "limitations": [
+          "历史读取不证明图表实时订阅。保留 Decimal/时区/量单位；DST fold 不支持时换实际支持的无歧义区间。超出行数/200页/16MiB预算不冒充完整结果。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_read"
+      }
+    },
+    {
+      "id": "data_sources",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "分页发现静态声明的真实来源和固定SourceRef。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "契约，如sesame.market/1"
+          },
+          "providerId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "精确来源ID"
+          },
+          "cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "宿主页游标"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "分页发现静态声明的真实来源和固定SourceRef。",
+        "inputs": "contract 可精确筛选，例如 sesame.market/1；providerId 为 pluginId#sourceId；limit 默认 50、1–200，cursor 延续上一页。",
+        "outputs": "{items,nextCursor?}；每项有 ref={providerId,revision}、contract、operations、configSchema、available。",
+        "prerequisites": [],
+        "limitations": [
+          "available 仅表示来源插件可用；不可用时用 plugin_load 加载其所属插件，不猜连接 ID。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "data_sources"
+      }
+    },
+    {
+      "id": "data_query",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "读取实际请求页；绑定与续页游标由宿主管理。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "object",
+            "properties": {
+              "providerId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "description": "data_sources 返回的完整来源ID"
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "description": "精确声明版本"
+              },
+              "binding": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "providerId",
+              "revision"
+            ],
+            "additionalProperties": false
+          },
+          "operation": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "来源operation"
+          },
+          "input": {
+            "type": "object"
+          },
+          "cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "上一页宿主游标"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          }
+        },
+        "required": [
+          "source",
+          "input"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "data.query"
+      ],
+      "usage": {
+        "purpose": "读取实际请求页；绑定与续页游标由宿主管理。",
+        "inputs": "source 采用发现得到的完整 ref，可附 configSchema 支持的 binding；operation 选 operations 中的键，省略为 query；input 是该操作的业务输入。limit 默认 100、1–1000；延续用 nextCursor。",
+        "outputs": "{items,nextCursor?,metadata?,...} 是实际请求页，metadata 保留来源的观察、连接、覆盖等信息。",
+        "prerequisites": [
+          "来源插件已可用；公开操作输入在其能力声明/资源中。"
+        ],
+        "limitations": [
+          "游标 60 秒有效；续页保持 source、input、operation、limit 不变。过期重开查询；STALE_REVISION 重新发现来源；来源协议错误需修复来源，重复绑定无效。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "data_query"
+      }
+    },
+    {
+      "id": "data_snapshot",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "一次完成真实来源分页、预算检查、冻结证据和DataRef发布。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "object",
+            "properties": {
+              "providerId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "description": "data_sources 返回的完整来源ID"
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "description": "精确声明版本"
+              },
+              "binding": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "providerId",
+              "revision"
+            ],
+            "additionalProperties": false
+          },
+          "operation": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "静态声明的查询operation"
+          },
+          "input": {
+            "type": "object"
+          },
+          "operationId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "稳定操作ID"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "description": "数据标题"
+          },
+          "provenanceKind": {
+            "enum": [
+              "observed",
+              "derived",
+              "user_input",
+              "demo"
+            ]
+          },
+          "maxRows": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096,
+                  "description": "成果ID"
+                },
+                "revision": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096,
+                  "description": "精确修订"
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^sha256:[a-f0-9]{64}$"
+                },
+                "kind": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096,
+                  "description": "成果类型"
+                },
+                "schemaVersion": {
+                  "const": "1.0.0"
+                }
+              },
+              "required": [
+                "id",
+                "revision",
+                "digest",
+                "kind",
+                "schemaVersion"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 64
+          }
+        },
+        "required": [
+          "source",
+          "input",
+          "operationId",
+          "title"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "data.query",
+        "resource.create",
+        "artifact.publish",
+        "state.write"
+      ],
+      "usage": {
+        "purpose": "一次完成真实来源分页、预算检查、冻结证据和DataRef发布。",
+        "inputs": "source/operation/input 选真实来源；operationId 标识此次固定查询，title 命名成果；maxRows 默认 100000。来源无 provenance 时显式 provenanceKind；dependencies 为已发布固定引用。",
+        "outputs": "{ref,evidence,rowCount,columns,sample,provenance,receipt}；ref 是完整固定 DataRef，evidence 保存真实页与采集依据。",
+        "prerequisites": [
+          "来源插件可用；有可分页的 JSON 查询操作。"
+        ],
+        "limitations": [
+          "完整采集成功才发布；预算超限不发布截断结果。同一 operationId 复用冻结字节，新观察用新 ID；demo 标记不得升级。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "data_snapshot"
+      }
+    },
+    {
+      "id": "data_read",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "将固定DataRef或宿主登记数据的完整JSON复制到执行目录inputs，或分页列出登记数据。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "datasetId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "宿主数据ID"
+          },
+          "ref": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "description": "成果ID"
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "description": "精确修订"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "description": "成果类型"
+              },
+              "schemaVersion": {
+                "const": "1.0.0"
+              }
+            },
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "additionalProperties": false
+          },
+          "directory": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "工作区执行目录，默认当前目录"
+          },
+          "cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "宿主页游标"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "data.query",
+        "resource.read",
+        "filesystem.write"
+      ],
+      "usage": {
+        "purpose": "将固定DataRef或宿主登记数据的完整JSON复制到执行目录inputs，或分页列出登记数据。",
+        "inputs": "无 datasetId/ref 时列出登记数据；二者选一时读取全部行并写入 directory/inputs，directory 默认当前工作区且自身不能是 inputs。ref 来自 data_snapshot/market_read/report_data。",
+        "outputs": "列表为 {items,nextCursor?}；读取为 {datasetId或ref,path,rowCount,sample,provenance}，path 是实际落盘位置。",
+        "prerequisites": [
+          "读取并落盘需要 sesame/workspace 的 write 能力；最多 8MiB。"
+        ],
+        "limitations": [
+          "文件复制不改变来源或证明计算。datasetId 是登记数据 ID，ArtifactRef 是固定成果，两者不能混用。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "data_read"
+      }
+    },
+    {
+      "id": "research_register",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "核对宿主成功执行的冻结输出与精确输入哈希，发布可追溯DataRef。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "稳定操作ID"
+          },
+          "executionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "宿主真实执行证据ID"
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "冻结输出路径"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "description": "结果名"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "口径、单位和局限"
+          },
+          "inputIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096,
+              "description": "登记输入数据ID"
+            },
+            "minItems": 1,
+            "maxItems": 20
+          },
+          "recipePaths": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096,
+              "description": "冻结配方文件相对路径"
+            },
+            "maxItems": 128
+          },
+          "inputRefs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096,
+                  "description": "成果ID"
+                },
+                "revision": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096,
+                  "description": "精确修订"
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^sha256:[a-f0-9]{64}$"
+                },
+                "kind": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096,
+                  "description": "成果类型"
+                },
+                "schemaVersion": {
+                  "const": "1.0.0"
+                }
+              },
+              "required": [
+                "id",
+                "revision",
+                "digest",
+                "kind",
+                "schemaVersion"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 20
+          }
+        },
+        "required": [
+          "operationId",
+          "executionId",
+          "path",
+          "title",
+          "description"
+        ],
+        "additionalProperties": false,
+        "anyOf": [
+          {
+            "required": [
+              "inputIds"
+            ]
+          },
+          {
+            "required": [
+              "inputRefs"
+            ]
+          }
+        ]
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "data.query",
+        "resource.create",
+        "artifact.publish",
+        "state.write"
+      ],
+      "usage": {
+        "purpose": "核对宿主成功执行的冻结输出与精确输入哈希，发布可追溯DataRef。",
+        "inputs": "executionId 使用 workspace bash 成功结果的 executionId；path 是该次执行冻结的输出。operationId/title/description 描述计算；inputIds 或 inputRefs 至少一种，recipePaths 为相对执行目录的配方路径。",
+        "outputs": "固定计算 DataRef、evidence、行列/样本与 provenance；证据绑定执行状态和输入/输出哈希。",
+        "prerequisites": [
+          "同会话的成功执行已冻结输出与 inputs；data_read.directory 和 bash.cwd 指向同一工作区计算目录。"
+        ],
+        "limitations": [
+          "Run ID 不能替代 executionId。snapshotErrors 表示文件证据缺失；文件过多时把输入、脚本和输出放入独立计算子目录重算，不编造执行记录。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "research_register"
+      }
+    },
+    {
+      "id": "data_providers",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "分页列出市场和账户SourceRef及声明操作。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "契约，如sesame.market/1"
+          },
+          "providerId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "精确来源ID"
+          },
+          "cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "宿主页游标"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "分页列出市场和账户SourceRef及声明操作。",
+        "inputs": "与 data_sources 相同过滤和分页；仅保留市场/账户来源。例：{contract:\"sesame.market/1\"}。",
+        "outputs": "{items,nextCursor?}，来源 ref、operations 与 binding 配置入口同 data_sources。",
+        "prerequisites": [],
+        "limitations": [
+          "nextCursor 是上游页游标；某页筛选后为空仍可能有下一页。列表不证明连接正常。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "data_providers"
+      }
+    },
+    {
+      "id": "market_instruments",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "通过固定市场来源搜索或描述真实品种。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "object",
+            "properties": {
+              "providerId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "description": "data_sources 返回的完整来源ID"
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "description": "精确声明版本"
+              },
+              "binding": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "providerId",
+              "revision"
+            ],
+            "additionalProperties": false
+          },
+          "action": {
+            "enum": [
+              "search",
+              "describe"
+            ]
+          },
+          "query": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "instrument": {
+            "type": "object",
+            "properties": {
+              "sourceId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "description": "来源ID"
+              },
+              "instrumentId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "description": "来源内品种ID"
+              }
+            },
+            "required": [
+              "sourceId",
+              "instrumentId"
+            ],
+            "additionalProperties": false
+          },
+          "assetClasses": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "equity",
+                "future",
+                "option",
+                "fx",
+                "crypto",
+                "index",
+                "fund",
+                "other"
+              ]
+            },
+            "maxItems": 8
+          },
+          "venues": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096,
+              "description": "场所ID"
+            },
+            "maxItems": 16
+          },
+          "cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "宿主页游标"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          }
+        },
+        "required": [
+          "source",
+          "action"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "data.query"
+      ],
+      "usage": {
+        "purpose": "通过固定市场来源搜索或描述真实品种。",
+        "inputs": "action=search 使用 source/query，可加 assetClasses/venues/limit/cursor；action=describe 使用搜索项 ref 作为 instrument。source 来自 data_sources/data_providers。",
+        "outputs": "search 返回 {items,nextCursor?,metadata?}；describe 返回 {source,instrument,metadata}，含精确 ref、symbol、features、timeBasis、calendar。metadata.connection 是可复用连接修订。",
+        "prerequisites": [
+          "来源声明 searchInstruments/describeInstrument 且插件可用。"
+        ],
+        "limitations": [
+          "名称相似时依据返回 ref 选择；不把展示 symbol 当 instrumentId。周期取 features.timeframes，如 15m 而非 MT5 M15。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_instruments"
+      }
+    }
+  ],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "resource.1",
+      "path": "prompt.md",
+      "description": "随包资源 prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "resource.2",
+      "path": "skills/analyze-data/SKILL.md",
+      "description": "随包资源 skills/analyze-data/SKILL.md",
+      "kind": "skill"
+    },
+    {
+      "id": "resource.3",
+      "path": "skills/market-discovery/SKILL.md",
+      "description": "随包资源 skills/market-discovery/SKILL.md",
+      "kind": "skill"
+    }
+  ],
+  "hooks": [],
+  "stateCollections": [
+    {
+      "name": "captures",
+      "schemaVersion": "1",
+      "mode": "document",
+      "access": "private",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "fingerprint": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "查询摘要"
+          },
+          "capture": {
+            "type": "object"
+          },
+          "result": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "fingerprint",
+          "capture"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ],
+  "artifactSchemas": [
+    {
+      "id": "capture-evidence",
+      "kind": "resource",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "captured-data-evidence"
+          },
+          "path": {
+            "const": "evidence.json"
+          },
+          "provenance": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "type",
+          "path",
+          "provenance"
+        ],
+        "additionalProperties": true
+      }
+    },
+    {
+      "id": "captured-data",
+      "kind": "data",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "const": "json-rows"
+          },
+          "path": {
+            "const": "rows.json"
+          },
+          "rowCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 256
+          },
+          "provenance": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "format",
+          "path",
+          "rowCount",
+          "columns",
+          "provenance"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

@@ -3,10 +3,9 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Store, judgmentHost } from './judgment-host.js';
+import { Store, judgmentHost, judgmentSnapshot } from './judgment-host.js';
 import { JudgmentService, independentBlocks } from '../../optional-api-v1/packages/judgment-evolution/service.js';
-import { definitions } from '../../optional-api-v1/packages/judgment-evolution/tools.js';
-import { Type } from '@sesame/plugin-sdk/schema';
+import { createCapabilities } from '../../optional-api-v1/packages/judgment-evolution/tools.js';
 
 function fixture() {
   const directory = mkdtempSync(join(tmpdir(), 'mt5agent-judgment-test-'));
@@ -16,11 +15,11 @@ function fixture() {
   let now = new Date('2026-01-01T00:00:00Z'), enabled = true;
   const calls = [];
   const host = judgmentHost(store, { isActive: () => enabled }), clock = () => now;
-  const state = { service: new JudgmentService(host, { clock }).init() };
+  const state = { service: new JudgmentService(host, { clock, snapshot: judgmentSnapshot(host) }).init() };
   const setTime = value => { now = new Date(value); };
   const data = (value, observed = now.toISOString(), extra = {}) => store.put('dataset', { id: `data_${Math.random().toString(36).slice(2)}`, rows: [{ symbol: 'TEST', value, observed, irrelevant: 'not retained as evidence' }],
     provenance: { source_kind: 'external', provider: 'https://quotes.example/prices', as_of: now.toISOString() }, ...extra });
-  return { directory, store, calls, clock, setTime, data, get service() { return state.service; }, reopen: () => { state.service = new JudgmentService(host, { clock }).init(); }, enable: value => { enabled = value; }, dispose: async () => { await state.service.close(); store.close(); rmSync(directory, { recursive: true, force: true }); } };
+  return { directory, store, calls, clock, setTime, data, get service() { return state.service; }, reopen: () => { state.service = new JudgmentService(host, { clock, snapshot: judgmentSnapshot(host) }).init(); }, enable: value => { enabled = value; }, dispose: async () => { await state.service.close(); store.close(); rmSync(directory, { recursive: true, force: true }); } };
 }
 const prediction = (overrides = {}) => ({ command_id: 'prediction-one', claim: 'TEST 在指定时刻的 value 大于 10', topic: 'price', regime: 'trend', rationale: '明确的测试数据判断，不代表真实市场预测。', probability: 0.8,
   due_at: '2026-01-02T00:00:00Z', verification: { provider: 'https://quotes.example/prices', metric: 'value', observed_at_field: 'observed', op: 'gt', target: 10, selector: { symbol: 'TEST' } }, ...overrides });
@@ -167,15 +166,11 @@ test('coverage requires full-source semantic review, including responses without
   } finally { await app.dispose(); }
 });
 
-test('official judgment declarations match runtime schemas and declare main-only scope', () => {
+test('judgment declarations are the single source of capability schemas and hook bindings', () => {
   const manifest = JSON.parse(readFileSync(new URL('../../optional-api-v1/packages/judgment-evolution/plugin.json', import.meta.url)));
-  const tools = JSON.parse(readFileSync(new URL('../../optional-api-v1/packages/judgment-evolution/tools.json', import.meta.url)));
-  assert.equal(manifest.id, 'sesame/judgment-evolution'); assert.equal(manifest.agent_scope, 'main');
-  assert.equal(manifest.default_state, 'discoverable');
-  assert.deepEqual(manifest.tool_names.toSorted(), definitions.map(([name]) => name).toSorted());
-  for (const [name, description, properties] of definitions) {
-    const declaration = tools.find(tool => tool.name === name);
-    assert.equal(declaration.description, description);
-    assert.deepEqual(declaration.parameters, JSON.parse(JSON.stringify(Type.Object(properties, { additionalProperties: false }))));
-  }
+  const declarations = JSON.parse(readFileSync(new URL('../../optional-api-v1/packages/judgment-evolution/capabilities.json', import.meta.url)));
+  assert.equal(manifest.apiVersion, '2'); assert.equal(manifest.agent_scope, 'main');
+  assert.equal(manifest.capability_manifest, 'capabilities.json'); assert.equal(manifest.tool_definitions, undefined);
+  assert.deepEqual(createCapabilities({ context: {} }).map(value => value.name).sort(), declarations.capabilities.map(value => value.binding.name).sort());
+  assert.deepEqual(declarations.hooks.map(value => value.event).sort(), ['lifecycle.activate', 'lifecycle.afterAgentTurn', 'lifecycle.dispose']);
 });

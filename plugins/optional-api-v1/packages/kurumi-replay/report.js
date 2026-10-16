@@ -1,3 +1,4 @@
+import { publicationFile, publishFiles } from './publications.js';
 import { readFileSync } from 'node:fs';
 const assert=(ok,message,code='INVALID_ARGUMENT')=>{if(!ok)throw Object.assign(new Error(message),{code});};
 const read = p => readFileSync(new URL(p,import.meta.url),'utf8');
@@ -23,8 +24,8 @@ export function reportHTML() {
  return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>久留美 · 连续挑战</title><style>${css}</style></head><body><main id="report"></main><script>${kit}</script><script>
  async function initialize(){
  const rows=await reportKit.rows('replay'),s=rows.find(r=>r.type==='summary'),of=type=>rows.filter(r=>r.type===type),chapters=of('chapter'),source=of('source')[0];
- const complete=s.status==='complete';
- reportKit.render('#report',{title:'久留美 · 三章连续挑战',eyebrow:'Research · 非官方二创 · 模拟账户',subtitle:'真实历史行情、真实角色 Agent；不是漫画逐笔记录，也不是券商成交',meta:[{label:'已揭示至',value:s.asOf},{label:'模型',value:s.model?s.model.provider+'/'+s.model.id:'尚未选择模型'}],
+ const complete=s.status==='complete',demo=source.provenance?.kind==='demo';
+ reportKit.render('#report',{title:'久留美 · 三章连续挑战',eyebrow:'Research · 非官方二创 · 模拟账户',subtitle:demo?'演示合成行情与模拟账户；不代表历史行情或券商成交':'已记录行情与角色证据；不是漫画逐笔记录，也不是券商成交',meta:[{label:'已揭示至',value:s.asOf},{label:'模型',value:s.model?s.model.provider+'/'+s.model.id:'尚未选择模型'}],
  verdict:{tone:s.outcome==='victory'?'positive':'caution',headline:complete?(s.outcome==='victory'?'空仓结算达成目标。':'三章结算尚未达成目标。'):'挑战仍在进行，当前不能判定胜利。',detail:'当前仅为小步功能验收，不能评价交易能力；资金不补款，历史可成交深度未重建。'},
  metrics:[{label:'已结算余额',value:s.balance,unit:'JPY'},{label:'当前可结算估值',value:s.markedEquity,unit:'JPY'},{label:'胜利目标',value:s.goalJPY,unit:'JPY'},{label:'最大观测回撤',value:s.maxDrawdownPct,unit:'%'},{label:'角色决定',value:s.decisionCount},{label:'成交笔数',value:s.fillCount}],
  sections:[{title:'三个副本，一条资金线',takeaway:'每章结束空仓结算，下一章只继承实际余额。',blocks:[{type:'table',columns:[{key:'chapter',label:'章'},{key:'symbol',label:'品种'},{key:'status',label:'状态'},{key:'startBalance',label:'起始余额 JPY'},{key:'endBalance',label:'结算余额 JPY'},{key:'revealedCount',label:'已揭示H1'}],rows:chapters},{type:'findings',items:[{claim:'禁止外部补款；跳过的月份不产生收益。',evidence:[{label:'初始资金',value:s.initialJPY,unit:'JPY'},{label:'外部入金',value:s.externalFunding,unit:'JPY'},{label:'目标资产倍数',value:s.targetFactor,unit:'倍'}]}]}]},
@@ -33,13 +34,13 @@ export function reportHTML() {
  {title:'角色请求与有效决定',takeaway:'任务完成不等于已经提交决定；失败请求也保留核对证据。',blocks:[{type:'table',columns:[{key:'createdAt',label:'请求时间 UTC'},{key:'status',label:'任务终态'},{key:'decided',label:'已提交有效决定'},{key:'turns',label:'实际轮次'}],rows:of('agentTask'),limit:8}]},
  {title:'保存决定的显式恢复',takeaway:'只重放已保存的真实角色决定，不重新请求模型；原失败工具与恢复记录分别保留。',blocks:[{type:'table',columns:[{key:'originalTaskId',label:'原角色任务'},{key:'decisionId',label:'原决定ID'},{key:'status',label:'恢复状态'},{key:'balance',label:'恢复后余额 JPY'}],rows:of('recoveryEvidence')}]},
  {title:'成交与成本对账',takeaway:'余额由每笔已实现损益减手续费和模拟融资精确得到，负余额不被归零。',blocks:[{type:'metrics',items:[{label:'已实现损益',value:s.realized,unit:'JPY'},{label:'手续费',value:s.commission,unit:'JPY'},{label:'模拟融资',value:s.financing,unit:'JPY'},{label:'净结算损益',value:s.netProfit,unit:'JPY'}]},{type:'table',columns:[{key:'time',label:'UTC'},{key:'instrument',label:'品种'},{key:'signedQuantity',label:'买正卖负·基础币'},{key:'price',label:'模拟成交价'},{key:'reason',label:'原因'},{key:'realizedJpy',label:'已实现JPY'},{key:'commission',label:'手续费JPY'},{key:'balanceAfter',label:'成交后余额JPY'}],rows:of('fill'),limit:8},{type:'table',columns:[{key:'ledgerType',label:'账本类型'},{key:'time',label:'UTC'},{key:'realizedJpy',label:'已实现JPY'},{key:'commission',label:'手续费JPY'},{key:'financing',label:'融资JPY'},{key:'balanceAfter',label:'余额JPY'}],rows:of('ledger'),limit:8}]}],
- method:{steps:['角色仅看已收盘H1；下一个H1区间首个真实细报价才可执行，买ask卖bid；不重复扣点差。实际撮合版本和成本以冻结规则与引擎验收为准。','正式撮合由成熟引擎处理真实bid/ask细数据；缺失依赖/报价/同步CHFJPY则暂停，不回退H1极值。CHF损益按本步已知换汇，正收益bid、负收益ask。','杠杆/强平以本轮冻结profile和规则为准；新实验全章50x与旧500x/25x/25x分开。每侧手续费及融资保留冻结挑战假设，不是历史券商条款。','账本逐行精确核对；显示比率截断到8位小数，图形坐标可用Number但不参与结算。'],limits:['模型预训练可能记得历史；同历史第二轮是知情重放，不是样本外证据。尚无通过前瞻验证的专属规则。','真实quote tick仍不能重建当时券商可成交深度、网络延迟和订单簿；如果数据明确为M1，则不能当作真实逐tick路径。','原剧情余额、补款与反算价只供开发者理解，不参与挑战资金或行情。'],sources:[{label:'真实数据与哈希',value:JSON.stringify(source.provenance)+' '+JSON.stringify(source.digests)},{label:'模拟规则与正式执行',value:JSON.stringify(source.rules)+' '+JSON.stringify(source.execution)+' '+JSON.stringify(source.nativeEnvironment)},{label:'模型配置描述符（非权重版本认证）',value:JSON.stringify(s.model)},{label:'角色任务证据',value:JSON.stringify({tasks:of('agentTask'),decisions:of('agentEvidence'),recoveries:of('recoveryEvidence')})}]}});
+ method:{steps:['角色仅看已收盘H1；下一个H1区间首个真实细报价才可执行，买ask卖bid；不重复扣点差。实际撮合版本和成本以冻结规则与引擎验收为准。','正式撮合由成熟引擎处理真实bid/ask细数据；缺失依赖/报价/同步CHFJPY则暂停，不回退H1极值。CHF损益按本步已知换汇，正收益bid、负收益ask。','杠杆/强平以本轮冻结profile和规则为准；新实验全章50x与旧500x/25x/25x分开。每侧手续费及融资保留冻结挑战假设，不是历史券商条款。','账本逐行精确核对；显示比率截断到8位小数，图形坐标可用Number但不参与结算。'],limits:['模型预训练可能记得历史；同历史第二轮是知情重放，不是样本外证据。尚无通过前瞻验证的专属规则。','真实quote tick仍不能重建当时券商可成交深度、网络延迟和订单簿；如果数据明确为M1，则不能当作真实逐tick路径。','原剧情余额、补款与反算价只供开发者理解，不参与挑战资金或行情。'],sources:[{label:demo?'演示数据与哈希':'数据来源与哈希',value:JSON.stringify(source.provenance)+' '+JSON.stringify(source.digests)},{label:'模拟规则与正式执行',value:JSON.stringify(source.rules)+' '+JSON.stringify(source.execution)+' '+JSON.stringify(source.nativeEnvironment)},{label:'模型配置描述符（非权重版本认证）',value:JSON.stringify(s.model)},{label:'角色任务证据',value:JSON.stringify({tasks:of('agentTask'),decisions:of('agentEvidence'),recoveries:of('recoveryEvidence')})}]}});
  }
  window.report.track(initialize()).catch(error=>{document.getElementById('report').textContent=error.message;});
  </script></body></html>`;
 }
 export async function exportReplay(host,service,operationId,signal) {
- signal?.throwIfAborted(); assert(host.scope?.kind==='main','观众数据导出仅主Agent可用','SCOPE_DENIED');
+ signal?.throwIfAborted(); assert(host.context?.kind==='main','观众数据导出仅主Agent可用','SCOPE_DENIED');
  const state=service.getState(),prepared=service.getData(),doc=service.getDocument(),view=service.observe(),consumed=service.getReplayPresentation?.(),nativeEnvironment=service.nativeEnvironment??null;
  const rows=reportRows({getState:()=>state,getData:()=>prepared,getDocument:()=>doc,observe:()=>view,getReplayPresentation:()=>consumed,nativeEnvironment}),summary=rows[0];
  // Persist matching/role evidence and all committed state, never the internal
@@ -50,10 +51,10 @@ export async function exportReplay(host,service,operationId,signal) {
  // during artifact publication; archives and report metadata must not follow it.
  const sourceText=JSON.stringify({provenance:prepared.provenance,digests:prepared.digests,checkpoint}),rowsText=JSON.stringify(rows);
  const descriptor={rowCount:rows.length,runId:summary.runId,engineVersion:summary.version,asOf:Date.parse(summary.asOf),status:summary.status,outcome:summary.outcome??null};
- const sourceBlob=await host.artifacts.blob(sourceText);
- const source=await host.artifacts.publish({operationId:operationId+':source',manifest:{kind:'resource',schemaVersion:'1.0.0',content:{type:'kurumi-revealed-simulation-checkpoint',path:'source.json',provenance:origin},dependencies:[],blobs:[{...sourceBlob,path:'source.json',mediaType:'application/json'}],provenance:origin}});
- const provenance={kind:origin.kind,references:[source]},blob=await host.artifacts.blob(rowsText);
- const data=await host.artifacts.publish({operationId:operationId+':data',manifest:{kind:'data',schemaVersion:'1.0.0',content:{format:'json-rows',path:'rows.json',rowCount:rows.length,columns:[...new Set(rows.flatMap(r=>Object.keys(r)))],provenance},dependencies:[source],blobs:[{...blob,path:'rows.json',mediaType:'application/json'}],provenance}});
+ const sourceBlob=await publicationFile(sourceText);
+ const source=await publishFiles(host, {operationId:operationId+':source',manifest:{kind:'resource',schemaVersion:'1.0.0',content:{type:'kurumi-revealed-simulation-checkpoint',path:'source.json',provenance:origin},dependencies:[],blobs:[{...sourceBlob,path:'source.json',mediaType:'application/json'}],provenance:origin}});
+ const provenance={kind:origin.kind,references:[source]},blob=await publicationFile(rowsText);
+ const data=await publishFiles(host, {operationId:operationId+':data',manifest:{kind:'data',schemaVersion:'1.0.0',content:{format:'json-rows',path:'rows.json',rowCount:rows.length,columns:[...new Set(rows.flatMap(r=>Object.keys(r)))],provenance},dependencies:[source],blobs:[{...blob,path:'rows.json',mediaType:'application/json'}],provenance}});
  await service.archiveFileSafe(`exports/export-${operationId}-rows.json`,rowsText);
  await service.archiveFileSafe(`exports/export-${operationId}-checkpoint.json`,sourceText);
  await service.archiveSafe('export_replay',{operationId,data,source,rowCount:rows.length,note:'已揭示行情/账户/账本/角色证据固定导出归档'});
@@ -62,9 +63,9 @@ export async function exportReplay(host,service,operationId,signal) {
 export async function publishReport(host,service,operationId,signal) {
  const frozen=await exportReplay(host,service,operationId,signal),{data,source}=frozen;
  const provenance={kind:frozen.provenanceKind,references:[data,source]};
- const htmlText=reportHTML(),html=await host.artifacts.blob(htmlText),title='久留美 · 三章连续挑战',summary=frozen.status==='complete'?(frozen.outcome==='victory'?'空仓结算达成目标。':'三章结算未达成目标。'):'真实角色模拟挑战进行中；当前尚不能判定胜利。';
- const ref=await host.artifacts.publish({operationId,manifest:{kind:'report',schemaVersion:'1.0.0',content:{schemaVersion:'1.0.0',title,summary,entry:'index.html',runtime:'sesame-report/1',runtimeRevision:'1.0.0',data:[{id:'replay',ref:data,usage:'已揭示行情、精确模拟成交/费用/权益、角色提交与模型任务证据'}],related:[{role:'source',artifact:source}],features:['interactive','trade_details'],locale:'zh-CN',provenance},dependencies:provenance.references,blobs:[{...html,path:'index.html',mediaType:'text/html'}],provenance}});
- const receipt=await host.artifacts.inspect(ref,signal);
+ const htmlText=reportHTML(),html=await publicationFile(htmlText),title='久留美 · 三章连续挑战',summary=(frozen.provenanceKind==='demo'?'演示数据 · ':'')+(frozen.status==='complete'?(frozen.outcome==='victory'?'空仓结算达成目标。':'三章结算未达成目标。'):'模拟挑战进行中；当前尚不能判定胜利。');
+ const ref=await publishFiles(host, {operationId,manifest:{kind:'report',schemaVersion:'1.0.0',content:{schemaVersion:'1.0.0',title,summary,entry:'index.html',runtime:'sesame-report/1',runtimeRevision:'1.0.0',data:[{id:'replay',ref:data,usage:'已揭示行情、精确模拟成交/费用/权益、角色提交与模型任务证据'}],related:[{role:'source',artifact:source}],features:['interactive','trade_details'],locale:'zh-CN',provenance},dependencies:provenance.references,blobs:[{...html,path:'index.html',mediaType:'text/html'}],provenance}});
+ const receipt=host.context.sessionId?await host.views.inspect({surface:'artifact',ref},{signal}):{status:'published',rendered:false};
  await service.archiveFileSafe(`reports/report-${operationId}.html`,htmlText);
  await service.archiveSafe('report_published',{operationId,ref,receipt,data,source,note:'每版报告HTML/CSS/data与渲染回执归档'});
  return {...frozen,ref,receipt};
@@ -96,24 +97,24 @@ export async function publishWeeklyReport(host,service,job,signal){
  const fullOutputRefs=job.output.artifactRefs??[];
  assert(fullOutputRefs.every(r=>r.id&&typeof r.revision==='string'&&/^sha256:[a-f0-9]{64}$/.test(r.digest??'')&&r.kind&&r.schemaVersion==='1.0.0'),'完整Agent输出引用必须固定','SOURCE_DATA_INVALID');
  const provenanceKind=weeklyProvenanceKind(job.input),outputProvenance={kind:provenanceKind,references:[job.inputRef,...fullOutputRefs]};
- const outputRows=[{type:'agent-output',...job.output}],blob=await host.artifacts.blob(JSON.stringify(outputRows));
- const outputRef=await host.artifacts.publish({operationId:job.id+'_output',manifest:{kind:'data',schemaVersion:'1.0.0',content:{format:'json-rows',path:'output.json',rowCount:1,columns:Object.keys(outputRows[0]),provenance:outputProvenance},dependencies:outputProvenance.references,blobs:[{...blob,path:'output.json',mediaType:'application/json'}],provenance:outputProvenance}});
+ const outputRows=[{type:'agent-output',...job.output}],blob=await publicationFile(JSON.stringify(outputRows));
+ const outputRef=await publishFiles(host, {operationId:job.id+'_output',manifest:{kind:'data',schemaVersion:'1.0.0',content:{format:'json-rows',path:'output.json',rowCount:1,columns:Object.keys(outputRows[0]),provenance:outputProvenance},dependencies:outputProvenance.references,blobs:[{...blob,path:'output.json',mediaType:'application/json'}],provenance:outputProvenance}});
  // Optional Agent-authored presentation is frozen in the job before publish.
  // It may freely change outline/charts/HTML. The mandatory finance/raw evidence
  // bindings remain fixed; future frontend acceptance verifies their visibility.
- const htmlText=job.authoredPresentation?.html??weeklyReportHTML(),html=await host.artifacts.blob(htmlText),partial=job.input.period.partial;
+ const htmlText=job.authoredPresentation?.html??weeklyReportHTML(),html=await publicationFile(htmlText),partial=job.input.period.partial;
  const assets=[];
  for(const asset of job.authoredPresentation?.assets??[]){
    assert(typeof asset.path==='string'&&!asset.path.startsWith('/')&&!asset.path.split('/').some(p=>p==='..'||p==='.')&&asset.path!=='index.html'&&typeof asset.mediaType==='string'&&typeof asset.content==='string','报告资源必须是安全包内路径/明确媒体类型/固定内容');
    assert(!assets.some(a=>a.path===asset.path),'报告资源路径不可重复');
-   const packaged=await host.artifacts.blob(asset.content);assets.push({...packaged,path:asset.path,mediaType:asset.mediaType});
+   const packaged=await publicationFile(asset.content);assets.push({...packaged,path:asset.path,mediaType:asset.mediaType});
    const archived=await service.archiveFileSafe(`weekly/${job.id}/assets/${asset.path}`,asset.content);assert(archived,'Agent完整自定义资源归档不可用','ARCHIVE_UNAVAILABLE');
  }
  assert(assets.reduce((n,b)=>n+b.size,html.size)<=16*1024*1024,'完整周报资源预算超限，不截断','RESOURCE_EXHAUSTED');
  const provenance={kind:provenanceKind,references:[job.inputRef,outputRef,...fullOutputRefs]};
- const ref=await host.artifacts.publish({operationId:job.id+'_report',manifest:{kind:'report',schemaVersion:'1.0.0',content:{schemaVersion:'1.0.0',title:'模拟UTC投资周报'+(partial?' · 部分周':''),summary:'固定截止财务对账与完整模型观点；同历史知情重放，非样本外。',entry:'index.html',runtime:'sesame-report/1',runtimeRevision:'1.0.0',data:[{id:'weekly',ref:job.inputRef,usage:'精确截止财务、已消费市场、真实订单/成交与方法版本'},{id:'agent-output',ref:outputRef,usage:'完整Agent输出及真实模型描述符'}],related:[{role:'source',artifact:job.inputRef}],features:['interactive','trade_details'],locale:'zh-CN',provenance},dependencies:provenance.references,blobs:[{...html,path:'index.html',mediaType:'text/html'},...assets],provenance}});
+ const ref=await publishFiles(host, {operationId:job.id+'_report',manifest:{kind:'report',schemaVersion:'1.0.0',content:{schemaVersion:'1.0.0',title:'模拟UTC投资周报'+(partial?' · 部分周':''),summary:'固定截止财务对账与完整模型观点；同历史知情重放，非样本外。',entry:'index.html',runtime:'sesame-report/1',runtimeRevision:'1.0.0',data:[{id:'weekly',ref:job.inputRef,usage:'精确截止财务、已消费市场、真实订单/成交与方法版本'},{id:'agent-output',ref:outputRef,usage:'完整Agent输出及真实模型描述符'}],related:[{role:'source',artifact:job.inputRef}],features:['interactive','trade_details'],locale:'zh-CN',provenance},dependencies:provenance.references,blobs:[{...html,path:'index.html',mediaType:'text/html'},...assets],provenance}});
  const archive=await service.archiveFileSafe(`weekly/${job.id}/report.html`,htmlText);assert(archive,'周报HTML归档不可用','ARCHIVE_UNAVAILABLE');
  // Real host inspector ONLY. A failed/pending receipt is not relabelled rendered.
- const receipt=await host.artifacts.inspect(ref,signal);
+ const receipt=host.context.sessionId?await host.views.inspect({surface:'artifact',ref},{signal}):{status:'published',rendered:false};
  return {ref,outputRef,inputRef:job.inputRef,receipt,htmlArchive:archive,partial};
 }

@@ -1,0 +1,752 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "capabilities": [
+    {
+      "id": "plugin_discover",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "分页检索已安装插件和能力摘要。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "关键词"
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160,
+              "description": "插件完整 ID"
+            },
+            "maxItems": 100
+          },
+          "cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "上一页返回的游标"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "分页检索已安装插件和能力摘要。",
+        "inputs": "query 按名称/能力搜索，ids 可选精确插件 ID；cursor/limit 用于分页。空输入列出已安装插件。",
+        "outputs": "{items,nextCursor?}，含已安装插件状态和能力摘要；不联网安装。",
+        "prerequisites": [],
+        "limitations": [
+          "未启用的已安装插件可 plugin_load；本机没有的包才查 plugin_catalog 或使用已准备的本地包。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "plugin_discover"
+      }
+    },
+    {
+      "id": "plugin_load",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "在当前会话启用允许使用的插件并刷新工具。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pluginId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "description": "插件完整 ID"
+          }
+        },
+        "required": [
+          "pluginId"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.session.load"
+      ],
+      "usage": {
+        "purpose": "在当前会话启用允许使用的插件并刷新工具。",
+        "inputs": "pluginId 是 plugin_discover 返回的完整 ID，如 sesame/data-access。",
+        "outputs": "当前会话启用结果；宿主刷新该会话的工具与公开资料。",
+        "prerequisites": [
+          "插件已安装，工作区策略允许启用。"
+        ],
+        "limitations": [
+          "不会安装依赖或修改连接；失败用 plugin_inspect 看 runtime_status/diagnostics，不反复加载。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "plugin_load"
+      }
+    },
+    {
+      "id": "plugin_catalog",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "查询固定发布目录中 API 2 包的精确摘要与发布证据。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "plugin_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "description": "插件完整 ID"
+          },
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "关键词"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "network.read"
+      ],
+      "usage": {
+        "purpose": "查询固定发布目录中 API 2 包的精确摘要与发布证据。",
+        "inputs": "plugin_id 精确查一个官方包，或 query 搜索发布名称/描述。",
+        "outputs": "{catalog_url,catalog_digest,apiVersion,channel,releases,items}；items 含固定包摘要、版本与发布/审核证据。",
+        "prerequisites": [
+          "可访问官方发布目录。"
+        ],
+        "limitations": [
+          "目录必须 API2；版本不匹配/目录下载失败应保留原错误，不把失败当无插件。已安装状态用 plugin_discover。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "plugin_catalog"
+      }
+    },
+    {
+      "id": "plugin_install_catalog",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "下载核对固定目录包后由宿主一次完成检查与安装或显式更新。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "稳定操作 ID，重试保持不变"
+          },
+          "plugin_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "description": "插件完整 ID"
+          },
+          "catalog_digest": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$"
+          },
+          "action": {
+            "enum": [
+              "install",
+              "update"
+            ]
+          },
+          "expected_digest": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "command_id",
+          "plugin_id",
+          "catalog_digest"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "network.read",
+        "filesystem.write",
+        "plugin.install",
+        "state.write"
+      ],
+      "usage": {
+        "purpose": "下载核对固定目录包后由宿主一次完成检查与安装或显式更新。",
+        "inputs": "plugin_id/catalog_digest 取自同一次 plugin_catalog；command_id 固定此次请求。action 默认 install；更新用 update 并传 plugin_inspect.digest 为 expected_digest。",
+        "outputs": "安装/更新或 already-installed 回执，含真实插件状态；关闭的插件不自动启用。",
+        "prerequisites": [
+          "主 Agent；确切目录版本仍可用。"
+        ],
+        "limitations": [
+          "CATALOG_CHANGED 重查目录；CATALOG_INSTALLED_CHANGED 重读安装摘要。下载、摘要或测试失败不绕过校验，不重复创建新安装命令掩盖失败。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "plugin_install_catalog"
+      }
+    },
+    {
+      "id": "plugin_read",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "读取已安装插件声明的 manifest 或知识资源。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pluginId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "description": "插件完整 ID"
+          },
+          "part": {
+            "enum": [
+              "manifest",
+              "resource"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "资源相对路径"
+          }
+        },
+        "required": [
+          "pluginId",
+          "part"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "读取已安装插件声明的 manifest 或知识资源。",
+        "inputs": "pluginId 为已安装 ID；part=manifest 返回静态声明；part=resource 时 path 必须在其 knowledge 中，例如 prompt.md 或 skills/.../SKILL.md。",
+        "outputs": "manifest 返回 {id,version,revision,capabilities,sources,knowledge,...}；resource 返回 {pluginId,path,content,revision}。",
+        "prerequisites": [],
+        "limitations": [
+          "不用于扒宿主或插件私有实现；资源不在公开清单时使用已有声明，确有能力缺口再开发。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "plugin_read"
+      }
+    },
+    {
+      "id": "plugin_inspect",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "读取插件当前版本、摘要、运行状态和诊断。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pluginId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "description": "插件完整 ID"
+          }
+        },
+        "required": [
+          "pluginId"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "读取插件当前版本、摘要、运行状态和诊断。",
+        "inputs": "pluginId 来自发现/安装结果。",
+        "outputs": "版本、digest、runtime_status、启用状态与 diagnostics；是更新 expectedRevision 和故障定位的来源。",
+        "prerequisites": [],
+        "limitations": [
+          "ready 只说明插件加载就绪，不证明其外部连接或业务任务成功。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "plugin_inspect"
+      }
+    },
+    {
+      "id": "plugin_create",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "创建不覆盖已有目录的 API 2 完整声明草稿。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "稳定操作 ID，重试保持不变"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "小写 slug"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024,
+            "description": "业务用途"
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "SemVer"
+          },
+          "template": {
+            "enum": [
+              "native",
+              "skill"
+            ]
+          },
+          "publisher": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "发布者 slug"
+          },
+          "min_host": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "最低宿主版本"
+          }
+        },
+        "required": [
+          "command_id",
+          "name",
+          "description"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "filesystem.write",
+        "state.write"
+      ],
+      "usage": {
+        "purpose": "创建不覆盖已有目录的 API 2 完整声明草稿。",
+        "inputs": "command_id 稳定；name/publisher 用小写连字符 slug，description 描述业务；template=native或skill，version 默认0.1.0。",
+        "outputs": "{path,id,name,version,template,files,...} 指向工作区 plugin-drafts 的新草稿。",
+        "prerequisites": [
+          "主 Agent；开发资料见 skills/develop-plugins/SKILL.md。"
+        ],
+        "limitations": [
+          "native 只含 echo 起点，skill 无执行能力。不会覆盖既有草稿；完成业务实现和用法声明后才安装。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "plugin_create"
+      }
+    },
+    {
+      "id": "plugin_install",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "由宿主校验、测试并安装指定 API 2 包，一次返回完整诊断或安装结果。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "实际包目录"
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$"
+          },
+          "operationId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "稳定操作 ID，重试保持不变"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.install"
+      ],
+      "usage": {
+        "purpose": "由宿主校验、测试并安装指定 API 2 包，一次返回完整诊断或安装结果。",
+        "inputs": "path 为完成的工作区 API2 包；digest 可固定已知包摘要，operationId 可标识同一次安装。",
+        "outputs": "{plugin,...} 安装回执；宿主在一次调用中做静态声明、绑定和包测试，失败带 diagnostics。",
+        "prerequisites": [
+          "主 Agent；完整 plugin.json/capabilities.json 及实现资源。"
+        ],
+        "limitations": [
+          "已有同 ID 用 plugin_update；根据具体 diagnostics 修包再试，无需手动重复 validate/test/install 三段链。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "plugin_install"
+      }
+    },
+    {
+      "id": "plugin_set_state",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "设置插件在工作区或当前会话中的启用状态。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pluginId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "description": "插件完整 ID"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "scope": {
+            "enum": [
+              "workspace",
+              "session"
+            ]
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "pluginId",
+          "enabled",
+          "scope"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.policy"
+      ],
+      "usage": {
+        "purpose": "设置插件在工作区或当前会话中的启用状态。",
+        "inputs": "pluginId、enabled、scope=session或workspace；工作区修改按当前状态提供 expectedVersion。",
+        "outputs": "相应范围的真实启用策略/状态回执；可引发注册或资源释放。",
+        "prerequisites": [
+          "工作区策略变更需要主 Agent。"
+        ],
+        "limitations": [
+          "disabled 可能影响其他会话；版本冲突重读状态，卸载或连接问题不能靠反复切换开关修复。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "plugin_set_state"
+      }
+    },
+    {
+      "id": "plugin_update",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "以已知安装版本为前提，检查并更新一个 API 2 包。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pluginId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "description": "插件完整 ID"
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "实际包目录"
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$"
+          },
+          "expectedRevision": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$"
+          },
+          "operationId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "稳定操作 ID，重试保持不变"
+          }
+        },
+        "required": [
+          "pluginId",
+          "path",
+          "expectedRevision"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.update"
+      ],
+      "usage": {
+        "purpose": "以已知安装版本为前提，检查并更新一个 API 2 包。",
+        "inputs": "pluginId 指向已安装包；path 为新包；expectedRevision 使用 plugin_inspect 的现有 digest，digest 可固定新包摘要；operationId 固定请求。",
+        "outputs": "检查和更新后的 plugin 及真实状态；已有配置按宿主更新语义保留。",
+        "prerequisites": [
+          "主 Agent；包 ID 一致且新包验证通过。"
+        ],
+        "limitations": [
+          "修订冲突先读当前版本；失败保留诊断并检查当前状态，不把安装成功与外部业务验收混为一谈。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "plugin_update"
+      }
+    },
+    {
+      "id": "plugin_uninstall",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "按预期版本卸载插件并撤销能力注册。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pluginId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "description": "插件完整 ID"
+          },
+          "expectedRevision": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$"
+          },
+          "operationId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "稳定操作 ID，重试保持不变"
+          }
+        },
+        "required": [
+          "pluginId",
+          "expectedRevision"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.remove"
+      ],
+      "usage": {
+        "purpose": "按预期版本卸载插件并撤销能力注册。",
+        "inputs": "pluginId 和 expectedRevision 锁定待卸载的安装摘要；operationId 标识此次移除。",
+        "outputs": "宿主卸载回执，能力注册和所属运行资源会释放。",
+        "prerequisites": [
+          "主 Agent；用户任务确实要求移除此插件。"
+        ],
+        "limitations": [
+          "卸载不证明插件外部程序、业务订单或用户导出文件已删除。冲突读 plugin_inspect 后确认目标。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "plugin_uninstall"
+      }
+    }
+  ],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "resource.1",
+      "path": "prompt.md",
+      "description": "随包资源 prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "resource.2",
+      "path": "README.md",
+      "description": "随包资源 README.md",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.3",
+      "path": "scaffold.js",
+      "description": "随包资源 scaffold.js",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.4",
+      "path": "scripts/create-plugin.mjs",
+      "description": "随包资源 scripts/create-plugin.mjs",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.5",
+      "path": "skills/develop-plugins/SKILL.md",
+      "description": "随包资源 skills/develop-plugins/SKILL.md",
+      "kind": "skill"
+    },
+    {
+      "id": "resource.6",
+      "path": "skills/develop-plugins/references/authoring.md",
+      "description": "随包资源 skills/develop-plugins/references/authoring.md",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.7",
+      "path": "skills/develop-plugins/references/host-api.md",
+      "description": "随包资源 skills/develop-plugins/references/host-api.md",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.8",
+      "path": "skills/develop-plugins/references/recovery.md",
+      "description": "随包资源 skills/develop-plugins/references/recovery.md",
+      "kind": "reference"
+    }
+  ],
+  "hooks": [],
+  "stateCollections": [
+    {
+      "name": "operations",
+      "schemaVersion": "1",
+      "mode": "document",
+      "access": "private",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "fingerprint": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "输入摘要"
+          },
+          "status": {
+            "enum": [
+              "running",
+              "completed"
+            ]
+          },
+          "result": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "fingerprint",
+          "status"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ],
+  "artifactSchemas": []
+}

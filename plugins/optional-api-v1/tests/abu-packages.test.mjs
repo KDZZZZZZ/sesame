@@ -5,7 +5,6 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { Type } from '@sesame/plugin-sdk/schema';
 import { Value } from '@sesame/plugin-sdk/schema/value';
 import { validateInput, bars, envelope } from '../scripts/abu-runtime.mjs';
 
@@ -50,17 +49,21 @@ test('a customized calculation cannot mutate the recorded caller input', () => {
 for (const entry of catalog) {
   const url = new URL(`packages/${entry.directory}/`, root);
   test(`${entry.id}: metadata, native tool, CLI, evidence and modification trace agree`, async () => {
-    const manifest = read(url, 'plugin.json'), definitions = read(url, 'tools.json');
-    const { createTools } = await import(new URL('index.js', url));
+    const manifest = read(url, 'plugin.json'), declaration = read(url, 'capabilities.json'), definitions = declaration.capabilities;
+    const { createCapabilities } = await import(new URL('index.js', url));
     const data = read(url, 'examples/input.json'), registry = new Map();
-    const host = { tools: { Type, define: (name, description, properties, execute) => ({ name, description, parameters: Type.Object(properties, { additionalProperties: false }), execute }) },
-      datasets: { register(record) { registry.set(record.id, structuredClone(record)); return record; } } };
-    const tools = createTools(host);
-    assert.deepEqual(tools.map(({ name, description, parameters }) => JSON.parse(JSON.stringify({ name, description, parameters }))), definitions);
-    assert.deepEqual(manifest.tool_names, [entry.tool]); assert.equal(manifest.default_state, 'discoverable');
+    let sequence = 0;
+    const host = { resources: {
+      async create(spec) { assert.match(spec.name, /^abu-evidence-[a-f0-9-]+\.json$/); const ref = { id: 'resource-' + ++sequence, kind: spec.kind, version: 1 }; registry.set(ref.id, { spec, rows: JSON.parse(spec.source.content) }); return ref; },
+      async publish(source, manifest) { const ref = { id: 'artifact-' + ++sequence, revision: 'one', digest: 'sha256:' + 'a'.repeat(64), kind: manifest.kind, schemaVersion: manifest.schemaVersion }; registry.set(ref.id, { ...registry.get(source.id), manifest }); return { ref }; },
+      async remove(ref) { registry.delete(ref.id); },
+    } };
+    const tools = createCapabilities(host);
+    assert.deepEqual(tools.map(t => t.name), definitions.map(c => c.binding.name));
+    assert.equal(manifest.apiVersion, '2'); assert.equal(manifest.tool_names, undefined); assert.equal(manifest.default_state, 'discoverable');
     assert.equal(manifest.license, 'GPL-3.0-only'); assert.equal(manifest.agent_scope, 'all');
-    assert.equal(Value.Check(tools[0].parameters, { input: data }), true);
-    assert.equal(Value.Check(tools[0].parameters, { input: data, code: 'evil()' }), false);
+    assert.equal(Value.Check(definitions[0].inputSchema, { input: data }), true);
+    assert.equal(Value.Check(definitions[0].inputSchema, { input: data, code: 'evil()' }), false);
     for (const resource of manifest.resources) assert.ok(readFileSync(new URL(resource, url)).length, resource);
     for (const resource of ['README.md', 'prompt.md', `skills/${entry.directory}/SKILL.md`]) {
       const text = readFileSync(new URL(resource, url), 'utf8');
@@ -70,12 +73,14 @@ for (const entry of catalog) {
       }
     }
     assert.equal(readFileSync(new URL('scripts/runtime.mjs', url), 'utf8'), readFileSync(new URL('scripts/abu-runtime.mjs', root), 'utf8'));
-    const output = tools[0].execute({ input: data });
+    const output = await tools[0].execute({ input: data });
     assert.equal(output.baseline, true); assert.equal(output.status, 'research_baseline');
     assert.match(output.input_sha256, /^sha256:[a-f0-9]{64}$/); assert.match(output.implementation_sha256, /^sha256:[a-f0-9]{64}$/);
-    assert.deepEqual(registry.get(output.dataset_id).rows, [output]);
-    assert.deepEqual(registry.get(output.input_dataset_id).rows, [{ input: data }]);
-    assert.equal(registry.get(output.dataset_id).provenance.kind, 'demo');
+    const { input_artifact, result_artifact, ...calculated } = output;
+    assert.deepEqual(registry.get(result_artifact.id).rows, [calculated]);
+    assert.deepEqual(registry.get(input_artifact.id).rows, [{ input: data }]);
+    assert.equal(registry.get(result_artifact.id).manifest.content.provenance.kind, 'demo');
+    assert.deepEqual(registry.get(result_artifact.id).manifest.dependencies, [input_artifact]);
     const controller = new AbortController(); controller.abort();
     assert.throws(() => tools[0].execute({ input: data }, controller.signal), /cancelled/); assert.equal(registry.size, 2);
     const dir = mkdtempSync(join(tmpdir(), 'sesame-abu-cli-'));
@@ -84,7 +89,7 @@ for (const entry of catalog) {
       writeFileSync(input, JSON.stringify(data));
       const command = spawnSync(process.execPath, [cli, input, '--out', out], { encoding: 'utf8', timeout: 20000 });
       assert.equal(command.status, 0, command.stderr); const fromCli = JSON.parse(readFileSync(out));
-      const { dataset_id: _dataset, input_dataset_id: _input, ...fromTool } = output;
+      const { input_artifact: _input, result_artifact: _result, ...fromTool } = output;
       assert.deepEqual(fromCli, fromTool);
       const again = spawnSync(process.execPath, [cli, input, '--out', out], { encoding: 'utf8', timeout: 20000 });
       assert.notEqual(again.status, 0); assert.match(again.stderr, /EEXIST/); assert.deepEqual(JSON.parse(readFileSync(out)), fromCli);

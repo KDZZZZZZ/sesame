@@ -25,8 +25,8 @@ test('external CLI creates exactly the shared native and instruction-only recipe
     assert.equal(result.id, 'fixture/research-note');
     for (const [path, content] of Object.entries(recipe.files)) assert.equal(await readFile(join(output, path), 'utf8'), content, path);
     await run(process.execPath, ['--check', join(output, 'index.js')]);
-    const { createTools } = await import(pathToFileURL(join(output, 'index.js')));
-    if (template === 'skill') assert.deepEqual(createTools(), []);
+    const { createCapabilities } = await import(pathToFileURL(join(output, 'index.js')));
+    if (template === 'skill') assert.deepEqual(createCapabilities(), []);
   }
 });
 
@@ -50,9 +50,9 @@ test('invalid identities, versions and CLI arguments cannot create drafts', asyn
     await assert.rejects(run(process.execPath, [cli, ...args], { cwd: root }), error => error.code === 1 && !error.stdout.trim());
   }
   assert.deepEqual(await readdir(root), []);
-  const long = JSON.parse(scaffold({ ...input, name: 'a'.repeat(64) }).files['tools.json'])[0].name;
+  const long = JSON.parse(scaffold({ ...input, name: 'a'.repeat(64) }).files['capabilities.json']).capabilities[0].id;
   assert.ok(long.length <= 64, 'generated names fit common model tool-name limits');
-  assert.notEqual(JSON.parse(scaffold(input).files['tools.json'])[0].name, JSON.parse(scaffold({ ...input, publisher: 'other' }).files['tools.json'])[0].name);
+  assert.notEqual(JSON.parse(scaffold(input).files['capabilities.json']).capabilities[0].id, JSON.parse(scaffold({ ...input, publisher: 'other' }).files['capabilities.json']).capabilities[0].id);
 });
 
 test('invalid paths and canceled/failed writes leave no draft or escaped files', async t => {
@@ -65,5 +65,5 @@ test('invalid paths and canceled/failed writes leave no draft or escaped files',
 });
 
 test('managed native drafts reject non-main scope before accessing files or storage', async () => {
-  for (const kind of ['subagent', 'service']) await assert.rejects(createNativeDraft({ scope: { kind } }, input), /Only the main Agent/);
+  for (const kind of ['subagent', 'service']) await assert.rejects(createNativeDraft({ context: { kind } }, input), /Only the main Agent/);
 });
