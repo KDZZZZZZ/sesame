@@ -27,6 +27,7 @@ export async function fixture(t) {
   const entries = [
     { id: 'fixture/execution', state: 'discoverable', digest: 'fixture-v1', tools: ['fixture_context', 'fixture_apply'] },
     { id: 'custom/research', state: 'discoverable', digest: 'research-v1', tools: ['lookup'] },
+    { id: 'sesame/memory', state: 'discoverable', digest: 'memory-v1', tools: ['memory_trading_context', 'memory_read', 'memory_manage'] },
   ];
   let extraExecutionTools = [];
   const identity = () => ({ account: copy(account), tools: [...entries[0].tools, ...extraExecutionTools], readTools: ['fixture_context'], taskContext: { bindingId: 'fixture' }, quantityRules: { unit: 'contracts', signed: true, integer: false }, accountProvider: { pluginId: 'fixture/execution', providerId: 'account' } });

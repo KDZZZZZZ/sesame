@@ -24,7 +24,7 @@ test('research packages declare their actual callable and knowledge surfaces wit
     for (const name of ['strategy-research', 'factor-research']) {
       cpSync(packageRoot(name), join(root, 'packages', name), { recursive: true });
       const manifest = read(name, 'plugin.json');
-      assert.equal(manifest.default_state, 'discoverable'); assert.equal(manifest.engines.sesame, '>=0.2.0-0');
+      assert.equal(manifest.default_state, 'discoverable'); assert.equal(manifest.engines.sesame, '>=0.2.3');
       assert.equal(manifest.tool_names, undefined); assert.equal(manifest.apiVersion, '2');
       const declaration = read(name, 'capabilities.json');
       const { createCapabilities } = await import(new URL(`../packages/${name}/index.js`, import.meta.url));

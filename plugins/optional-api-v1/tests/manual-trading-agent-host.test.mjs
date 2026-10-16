@@ -83,6 +83,14 @@ test('installed workflow composes independent portfolio execution and produces o
     const call = (name, extra = {}) => respond(response, null, { name, arguments: { run_id: input.runId, ...extra } });
     const closeQuant = input.trigger.id === 'close-quant-fixture-run';
     if (input.role === 'manager') {
+      assert.ok(body.tools.some(tool => tool.function.name === 'memory_trading_context'));
+      assert.ok(body.tools.some(tool => tool.function.name === 'memory_read'));
+      assert.equal(body.tools.some(tool => tool.function.name === 'memory_manage'), false);
+      if (!names.includes('memory_trading_context')) {
+        respond(response, null, { name: 'memory_trading_context', arguments: {} }); return true;
+      }
+      const personalMemory = outputs.find(output => output.name === 'memory_trading_context').value;
+      assert.equal(personalMemory.risk_state, 'missing'); assert.equal(personalMemory.complete, true);
       const pages = outputs.filter(output => output.name === 'manual_trading_context');
       if (!pages.length) call('manual_trading_context', { section: 'all', offset: 0, limit: 1 });
       else if (pages.length === 1) {
@@ -106,6 +114,7 @@ test('installed workflow composes independent portfolio execution and produces o
         call('manual_trading_decide', { decision });
       } else respond(response, closeQuant ? '已保存零目标和极大风险挂载暂停理由，等待实际执行回执。' : '已检查全账户和交易历史，保存目标仓位不变。');
     } else if (input.role === 'executor') {
+      assert.equal(body.tools.some(tool => tool.function.name.startsWith('memory_')), false);
       assert.equal(input.execution.pluginId, 'sesame/portfolio-execution');
       assert.equal(input.tradingPlan.backend, undefined);
       if (!names.includes('manual_trading_apply')) call('manual_trading_apply');
@@ -119,6 +128,15 @@ test('installed workflow composes independent portfolio execution and produces o
     }
   } });
   try {
+    const memory = app.runtime.plugins.entries.get('sesame/memory');
+    if (!memory?.capabilityManifest.capabilities.some(cap => cap.id === 'memory_trading_context')) {
+      const memoryDraft = join(app.runtime.workspaces.root('conv_main'), 'trading-memory-draft');
+      await cp(fileURLToPath(new URL('../../api-v1/packages/memory/', import.meta.url)), memoryDraft, { recursive: true });
+      const checkedMemory = await app.runtime.plugins.manager.test('conv_main', { path: memoryDraft });
+      assert.equal(checkedMemory.passed, true, JSON.stringify(checkedMemory.results));
+      const installedMemory = await app.runtime.plugins.manager.install('conv_main', { path: memoryDraft, digest: checkedMemory.digest, ...(memory ? { expected_digest: memory.digest } : {}) }, Boolean(memory));
+      assert.equal(installedMemory.runtime_status, 'ready');
+    }
     const baselineDraft = join(app.runtime.workspaces.root('conv_main'), 'abu-indicators-draft');
     await cp(fileURLToPath(new URL('../packages/abu-indicators/', import.meta.url)), baselineDraft, { recursive: true });
     const baselineChecked = await app.runtime.plugins.manager.test('conv_main', { path: baselineDraft });
@@ -205,7 +223,7 @@ test('installed workflow composes independent portfolio execution and produces o
     const installed = await app.runtime.plugins.manager.install('conv_main', { path: draft, digest: checked.digest });
     assert.equal(installed.runtime_status, 'ready', JSON.stringify(installed.diagnostics));
     app.runtime.plugins.activate('conv_main', installed.id);
-    assert.ok(app.runtime.plugins.services.has(installed.id), 'The actual activation hook must have started the scheduler and merged judgment service.');
+    assert.ok(app.runtime.plugins.services.has(installed.id), 'The actual activation hook must have started the trading scheduler.');
     const executionDraft = join(app.runtime.workspaces.root('conv_main'), 'portfolio-execution-draft');
     await cp(fileURLToPath(new URL('../packages/portfolio-execution/', import.meta.url)), executionDraft, { recursive: true });
     const executionChecked = await app.runtime.plugins.manager.test('conv_main', { path: executionDraft });

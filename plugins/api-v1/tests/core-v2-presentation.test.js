@@ -9,8 +9,8 @@ import { createCapabilities as canvas } from '../packages/canvas-control/index.j
 import { resourceHost } from './core-v2-fixture.mjs';
 const table = capabilities => new Map(capabilities.map(item => [item.name, item.execute]));
 
-test('all six core factories exactly implement declared API 2 names without legacy factories', async () => {
-  for (const name of ['orchestration', 'plugin-manager', 'workspace', 'data-access', 'reports', 'canvas-control']) {
+test('core tool factories exactly implement declared API 2 names without legacy factories', async () => {
+  for (const name of ['plugin-manager', 'workspace', 'data-access', 'reports', 'canvas-control']) {
     const root = new URL(`../packages/${name}/`, import.meta.url), declared = JSON.parse(await readFile(new URL('capabilities.json', root), 'utf8')), implementation = await import(new URL('index.js', root));
     assert.equal(implementation.createTools, undefined);
     const capabilities = implementation.createCapabilities({ context: { filePolicy: { protectedRoots: [], readRoots: [], writeRoots: [] } } });
@@ -30,7 +30,7 @@ test('canvas fixes source and actual connection revisions and routes CAS without
   assert.deepEqual(value.binding.source, { ...source, binding: { ...source.binding, connection } });assert.equal(value.binding.provider, undefined);assert.equal(value.validation.rendered, false);
   assert.equal(value.binding.spec.calendarRevision.status, 'unknown');
   await assert.rejects(tools.get('canvas_binding')({ source: { ...source, revision: 'stale' }, instrument, timeframe: '1h' }), { code: 'STALE_REVISION' });
-  assert.throws(() => tools.get('canvas_apply')({ command_id: 'same', expected_version: 1, operations: [] }), { code: 'VERSION_CONFLICT' });
+  await assert.rejects(tools.get('canvas_apply')({ command_id: 'same', expected_version: 1, operations: [] }), { code: 'VERSION_CONFLICT' });
   const applied = await tools.get('canvas_apply')({ command_id: 'same', expected_version: 2, operations: [{ op: 'add', chart: value.chart }] });
   assert.equal(applied.render_status, 'pending');assert.equal(calls.at(-1).commandId, 'same');assert.equal(calls.at(-1).expectedVersion, 2);
 });

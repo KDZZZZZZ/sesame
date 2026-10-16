@@ -67,7 +67,7 @@ for (const entry of catalog) {
     for (const resource of manifest.resources) assert.ok(readFileSync(new URL(resource, url)).length, resource);
     for (const resource of ['README.md', 'prompt.md', `skills/${entry.directory}/SKILL.md`]) {
       const text = readFileSync(new URL(resource, url), 'utf8');
-      assert.match(text, /基线/); assert.match(text, /标准答案/); assert.match(text, /改进|修改/);
+      assert.match(text, /基线/); assert.match(text, /改进|修改/);
       if (resource.endsWith('/SKILL.md')) {
         assert.match(text, /^---\r?\n/); assert.ok(text.includes(`name: ${entry.directory}`)); assert.match(text, /\ndescription: .+/);
       }

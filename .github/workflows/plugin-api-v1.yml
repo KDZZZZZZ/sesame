@@ -1,7 +1,10 @@
-name: Plugin API 2 sources and historical publications
+# Preserve the required-check workflow identity until API 2 validation reaches main.
+name: Plugin API 1 sources
 on:
   push:
-    branches: [main, dev]
+    # One reviewed release branch bootstraps the API 2 validator on main.
+    # workflow_dispatch checks cannot satisfy GitHub's required PR checks.
+    branches: [main, dev, release/api2-plugins-0.2.3]
   pull_request_target:
     branches: [main, dev]
     types: [opened, synchronize, reopened, edited, ready_for_review]
@@ -12,6 +15,8 @@ jobs:
   package-static-review:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # The separately named check provides auditable evidence for the migration.
+    name: ${{ github.event_name == 'push' && github.ref != 'refs/heads/main' && 'package-bootstrap-review' || 'package-static-review' }}
     steps:
       - name: Use the supported source tool runtime
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -50,10 +55,12 @@ jobs:
         run: node historical/.github/scripts/release-plugins.mjs --check candidate
       - name: Validate historical R2 plans without publishing
         run: node historical/.github/scripts/plugin-r2.mjs --check candidate
+      - name: Validate API 2 R2 plans with the trusted fixed-source builder
+        run: node trusted/.github/scripts/plugin-r2.mjs --check candidate
       - name: Validate the application release plan without publishing
         run: node trusted/.github/scripts/release-application.mjs --check candidate
       - name: Test current source validation and shared publication boundaries
-        run: node --test trusted/plugins/api-v1/tests/lock.test.mjs trusted/plugins/api-v1/tests/host-engine-range.test.mjs trusted/plugins/api-v1/tests/catalog-published.test.mjs trusted/plugins/api-v1/tests/capability-bindings.test.mjs trusted/.github/scripts/release-plugins.test.mjs trusted/.github/scripts/release-application.test.mjs trusted/.github/scripts/semantic-review.test.mjs trusted/.github/scripts/api1-required-catalog.test.mjs trusted/.github/scripts/contribution-policy.test.mjs trusted/.github/scripts/publish-plugin-r2.test.mjs trusted/.github/scripts/dev-source-ci.test.mjs
+        run: node --test trusted/plugins/api-v1/tests/lock.test.mjs trusted/plugins/api-v1/tests/host-engine-range.test.mjs trusted/plugins/api-v1/tests/catalog-published.test.mjs trusted/plugins/api-v1/tests/capability-bindings.test.mjs trusted/.github/scripts/release-plugins.test.mjs trusted/.github/scripts/release-application.test.mjs trusted/.github/scripts/semantic-review.test.mjs trusted/.github/scripts/api1-required-catalog.test.mjs trusted/.github/scripts/contribution-policy.test.mjs trusted/.github/scripts/plugin-r2.test.mjs trusted/.github/scripts/publish-plugin-r2.test.mjs trusted/.github/scripts/dev-source-ci.test.mjs
       - name: Test the fixed historical catalog and R2 validators
         run: node --test historical/.github/scripts/api1-catalog.test.mjs historical/.github/scripts/plugin-r2.test.mjs
       - name: Record scope

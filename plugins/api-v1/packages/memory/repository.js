@@ -8,10 +8,18 @@ const DAY = 86_400_000;
 const EVIDENCE = ['explicit', 'verified', 'inferred', 'conflicted'];
 const STATES = ['hot', 'warm', 'archived', 'expired', 'conflict'];
 const SCOPE_KEYS = ['kind', 'project_id', 'strategy_id'];
-const WRITE_KEYS = ['id', 'expected_version', 'category', 'title', 'summary', 'content', 'scope', 'sources', 'tags', 'evidence', 'pinned', 'expires_at', 'review_at', 'value', 'conflicts_with'];
+const WRITE_KEYS = ['id', 'expected_version', 'category', 'title', 'summary', 'content', 'scope', 'sources', 'tags', 'evidence', 'pinned', 'expires_at', 'review_at', 'value', 'conflicts_with', 'confirmation_source'];
+const riskRule = value => typeof value?.category === 'string' && value.category.trim() === 'trading/risk-rules';
+const TRADING_CONTEXT_BYTES = 32000;
+const contextFits = value => {
+  const text = JSON.stringify(value, null, 2);
+  return Buffer.byteLength(text) <= TRADING_CONTEXT_BYTES - 128 && text.split('\n').length <= 1800;
+};
+const riskConfirmationMessage = '风险红线需要本次真实用户消息确认。请读取用户明确设定、修改、撤销或恢复该红线的消息，在 memory_manage 顶层传 confirmation_source:{type:"user_message",id:"实际消息ID"}；修改已有红线必须使用不同于 confirmed_by 的新消息，不能沿用候选或旧确认。';
 export const MEMORY_POLICY = Object.freeze({ version: 1, hot_days: 30, archive_days: 90, candidate_days: 14, inferred_low_value_days: 365, maintenance_interval_ms: 3_600_000 });
 export const MEMORY_CATEGORIES = Object.freeze({
   user: ['communication', 'workflow', 'constraints'],
+  trading: ['style', 'risk-rules', 'strategy-knowledge'],
   projects: ['overview', 'architecture', 'decisions', 'conventions'],
   strategies: ['hypotheses', 'findings', 'limitations'],
   lessons: ['user-corrections', 'research-methods', 'data-quality', 'strategies', 'plugins-tools'],
@@ -88,7 +96,7 @@ export class MemoryRepository {
   }
   category(value, scope) {
     const path = textValue(value, 'category', 320), parts = path.split('/'); let valid = false;
-    if (['user', 'lessons', 'references'].includes(parts[0])) valid = parts.length === 2 && MEMORY_CATEGORIES[parts[0]].includes(parts[1]);
+    if (['user', 'trading', 'lessons', 'references'].includes(parts[0])) valid = parts.length === 2 && MEMORY_CATEGORIES[parts[0]].includes(parts[1]);
     if (parts[0] === 'user') requireValue(scope.kind === 'global', '用户偏好必须使用 global 范围');
     if (parts[0] === 'projects') {
       valid = parts.length === 3 && MEMORY_CATEGORIES.projects.includes(parts[2]) || parts.length === 5 && parts[2] === 'strategies' && MEMORY_CATEGORIES.strategies.includes(parts[4]);
@@ -106,6 +114,20 @@ export class MemoryRepository {
     requireValue(Array.isArray(value) && value.length >= 1 && value.length <= 20, '需要 1–20 个持久来源引用');
     const verified = await Promise.all(value.map(source => this.source(cid, source)));
     return [...new Map(verified.map(source => [sourceKey(source), source])).values()];
+  }
+  async confirmRisk(cid, source, previous = null) {
+    requireValue(source?.type === 'user_message' && typeof source.id === 'string' && source.id !== previous?.confirmed_by?.id,
+      riskConfirmationMessage, 422, 'memory_risk_confirmation_required');
+    try { return await this.source(cid, source); }
+    catch { requireValue(false, riskConfirmationMessage, 422, 'memory_risk_confirmation_required'); }
+  }
+  confirmedSources(sources, confirmation, previousConfirmation) {
+    // Previous confirmations remain in revision history, not an ever-growing
+    // current-source list that would prevent a later change or revocation.
+    const retained = sources.filter(source => !previousConfirmation || sourceKey(source) !== sourceKey(previousConfirmation));
+    const values = [...new Map([...retained, confirmation].map(source => [sourceKey(source), source])).values()];
+    requireValue(values.length <= 20, '风险红线最多保留 20 个来源；请核验来源并整理后再提交', 422, 'memory_source_budget');
+    return values;
   }
   async normalize(cid, input, previous = null) {
     requireValue(input && typeof input === 'object' && !Array.isArray(input) && Object.keys(input).every(key => WRITE_KEYS.includes(key)), '记忆包含未知字段');
@@ -127,15 +149,28 @@ export class MemoryRepository {
     this.assertVisible(cid, result); return result;
   }
   fingerprint(value) { return digest(JSON.stringify([value.category, value.scope, value.title.normalize('NFKC').trim(), value.content.normalize('NFKC').trim(), value.sources.map(sourceKey).sort()])); }
-  status(value, policy = this.policy()) {
+  effectiveConflicts(value, entries) {
+    if (!riskRule(value)) return value.conflicts_with;
+    if (value.manually_archived) return [];
+    // Keep stored references and revision history intact. Only currently active
+    // rules constrain a risk decision; restoring a rule rechecks the same fact.
+    const references = new Set(value.conflicts_with);
+    return (entries ?? this.rows()).filter(other => other.id !== value.id && !other.manually_archived &&
+      (references.has(other.id) || riskRule(other) && scopeKey(other.scope) === scopeKey(value.scope) && other.title === value.title && other.content !== value.content)).map(other => other.id);
+  }
+  status(value, policy = this.policy(), conflicts = this.effectiveConflicts(value)) {
     if (value.expires_at && Date.parse(value.expires_at) <= this.clock()) return 'expired';
-    if (value.evidence === 'conflicted' || value.conflicts_with.length) return 'conflict';
+    if (riskRule(value) && value.manually_archived) return 'archived';
+    if (value.evidence === 'conflicted' || conflicts.length) return 'conflict';
     if (value.manually_archived) return 'archived';
-    if (value.pinned || value.category === 'user/constraints' && value.evidence === 'explicit') return 'hot';
+    if (riskRule(value) || value.pinned || value.category === 'user/constraints' && value.evidence === 'explicit') return 'hot';
     const days = (this.clock() - Math.max(Date.parse(value.last_used_at ?? value.created_at), value.restored_at ? Date.parse(value.restored_at) : 0)) / DAY;
     return days >= policy.archive_days ? 'archived' : days >= policy.hot_days ? 'warm' : 'hot';
   }
-  decorate(value) { return { ...value, status: this.status(value), review_due: Boolean(value.review_at && Date.parse(value.review_at) <= this.clock()), reference_count: Number(this.db.prepare('SELECT COUNT(*) AS n FROM memory_links WHERE memory_id=?').get(value.id).n) }; }
+  decorate(value, entries) {
+    const conflicts = this.effectiveConflicts(value, entries);
+    return { ...value, conflicts_with: conflicts, status: this.status(value, undefined, conflicts), review_due: Boolean(value.review_at && Date.parse(value.review_at) <= this.clock()), reference_count: Number(this.db.prepare('SELECT COUNT(*) AS n FROM memory_links WHERE memory_id=?').get(value.id).n) };
+  }
   record(value) {
     this.db.prepare('INSERT INTO memories VALUES(?,?) ON CONFLICT(id) DO UPDATE SET body=excluded.body').run(value.id, JSON.stringify(value));
     this.db.prepare('DELETE FROM memory_fts WHERE id=?').run(value.id);
@@ -144,7 +179,19 @@ export class MemoryRepository {
   async save(cid, input, expectedVersion = input?.expected_version) {
     this.main(cid); const previous = input.id ? this.raw(input.id) : null;
     if (previous) requireValue(expectedVersion === previous.version, '记忆已更新，请刷新后重试', 409, 'version_conflict');
-    const normalized = await this.normalize(cid, input, previous), fingerprint = this.fingerprint(normalized);
+    requireValue(!riskRule(previous) || input.category === undefined || riskRule(input), '风险红线不能改为其他分类；修改或撤销需提供新的用户确认', 422, 'memory_risk_protected');
+    const proposed = { ...previous, ...input };
+    let confirmation;
+    if (riskRule(proposed)) {
+      requireValue(proposed.evidence === 'explicit', '正式风险红线必须是用户明确确认的 explicit 记忆；推断只能提交候选', 422, 'memory_risk_protected');
+      requireValue(input.pinned !== false, '风险红线必须固定，不能取消 pinned', 422, 'memory_risk_protected');
+      requireValue(proposed.expires_at == null, '风险红线不能设置 expires_at；请使用 review_at 提醒重新核实', 422, 'memory_risk_protected');
+      confirmation = await this.confirmRisk(cid, input.confirmation_source, previous);
+      input = { ...input, pinned: true, expires_at: null, sources: this.confirmedSources(proposed.sources ?? [], confirmation, previous?.confirmed_by) };
+    }
+    const normalized = await this.normalize(cid, input, previous);
+    if (confirmation) normalized.confirmed_by = confirmation;
+    const fingerprint = this.fingerprint(normalized);
     if (previous) requireValue(this.raw(previous.id).version === previous.version, '记忆已更新，请刷新后重试', 409, 'version_conflict');
     requireValue(!this.db.prepare('SELECT 1 FROM memory_tombstones WHERE fingerprint=?').get(fingerprint), '该内容已被遗忘，禁止从旧来源自动恢复', 409, 'memory_forgotten');
     if (!previous) {
@@ -158,7 +205,8 @@ export class MemoryRepository {
       this.record(value);
       // Exact same fact key with another conclusion is a visible conflict until the
       // main agent explicitly edits/merges it; no last-writer-wins factual overwrite.
-      for (const other of this.rows().filter(row => row.id !== value.id && row.category === value.category && scopeKey(row.scope) === scopeKey(value.scope) && row.title === value.title && row.content !== value.content)) {
+      for (const other of this.rows().filter(row => row.id !== value.id && row.category === value.category && scopeKey(row.scope) === scopeKey(value.scope) && row.title === value.title && row.content !== value.content &&
+        (!riskRule(value) || !value.manually_archived && !row.manually_archived))) {
         if (!value.conflicts_with.includes(other.id)) value.conflicts_with.push(other.id);
         if (!other.conflicts_with.includes(value.id)) { other.conflicts_with.push(value.id); other.version++; other.updated_at = timestamp; this.record(other); }
       }
@@ -192,7 +240,7 @@ export class MemoryRepository {
   tree(cid) {
     const entries = this.rows().filter(value => this.visible(cid, value.scope)), nodes = new Map();
     const add = (path, label = path.split('/').at(-1)) => { if (!nodes.has(path)) nodes.set(path, { id: path, path, name: label, label, count: 0, children: [] }); return nodes.get(path); };
-    for (const root of ['user', 'projects', 'lessons', 'references']) {
+    for (const root of ['user', 'trading', 'projects', 'lessons', 'references']) {
       add(root); if (root !== 'projects') for (const leaf of MEMORY_CATEGORIES[root]) add(`${root}/${leaf}`);
     }
     for (const entry of entries) {
@@ -205,6 +253,43 @@ export class MemoryRepository {
     const values = this.search(cid, { include_archived: false, limit: 200 }).items.filter(item => ['hot', 'warm'].includes(item.status));
     const items = values.slice(0, Math.min(30, Math.max(1, Number(limit) || 20))).map(({ id, category, title, summary, scope, version, status }) => ({ id, category, title, summary, scope, version, status }));
     return { items, total: values.length };
+  }
+  tradingContext(cid, { limit = 10, risk_offset = 0 } = {}) {
+    this.conversation(cid);
+    requireValue(Number.isInteger(limit) && limit >= 1 && limit <= 20, 'limit 应为 1–20');
+    requireValue(Number.isSafeInteger(risk_offset) && risk_offset >= 0, 'risk_offset 必须是非负整数');
+    // Scope describes applicability. Do not silently omit another account/project's
+    // rule: the caller must inspect its scope and full body before using it.
+    const entries = this.rows();
+    const values = entries.filter(value => !value.manually_archived && value.category.startsWith('trading/')).map(value => this.decorate(value, entries))
+      .sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.updated_at.localeCompare(a.updated_at) || a.id.localeCompare(b.id));
+    const risks = values.filter(riskRule).sort((a, b) => a.id.localeCompare(b.id));
+    requireValue(risk_offset <= risks.length, '风险规则已变化或分页位置无效，请从 risk_offset:0 重新读取');
+    const style = values.filter(value => value.category === 'trading/style');
+    const knowledge = values.filter(value => value.category === 'trading/strategy-knowledge');
+    const result = { risk_state: 'needs_review', complete: false, risk_rules: [], unread_risk_rule_ids: [], risk_offset, next_risk_offset: null,
+      pending_risk_candidates: this.rows('memory_candidates').filter(value => riskRule(value) && Date.parse(value.expires_at) > this.clock()).length,
+      style: [], strategy_knowledge: [], totals: { risk_rules: risks.length, style: style.length, strategy_knowledge: knowledge.length } };
+    // Budget the actual pretty-printed UTF-8 envelope, including metadata, so the
+    // host does not subsequently truncate a response that claimed completeness.
+    for (let offset = risk_offset; offset < risks.length; offset++) {
+      result.risk_rules.push(risks[offset]);
+      if (contextFits(result)) continue;
+      result.risk_rules.pop(); result.unread_risk_rule_ids.push(risks[offset].id);
+      if (contextFits(result)) continue;
+      result.unread_risk_rule_ids.pop(); result.next_risk_offset = offset; break;
+    }
+    for (const [key, entries] of [['style', style], ['strategy_knowledge', knowledge]]) {
+      for (const { content, ...value } of entries.slice(0, limit)) {
+        result[key].push(value);
+        if (!contextFits(result)) { result[key].pop(); break; }
+      }
+    }
+    result.complete = risk_offset === 0 && result.next_risk_offset === null && result.unread_risk_rule_ids.length === 0;
+    const needsReview = !result.complete || risks.some(value => ['conflict', 'expired'].includes(value.status) || value.review_due
+      || value.evidence !== 'explicit' || value.confirmed_by?.type !== 'user_message' || !value.sources.some(source => sourceKey(source) === sourceKey(value.confirmed_by)));
+    result.risk_state = risks.length === 0 ? 'missing' : needsReview ? 'needs_review' : 'documented';
+    return result;
   }
   indexPrompt(cid) {
     const { items } = this.index(cid);
@@ -223,15 +308,17 @@ export class MemoryRepository {
     this.db.prepare('INSERT INTO memory_candidates VALUES(?,?)').run(value.id, JSON.stringify(value)); return value;
   }
   candidates(cid) { const main = this.conversation(cid).scope === 'main'; return { items: this.rows('memory_candidates').filter(value => main || value.owner_conversation_id === cid) }; }
-  async resolveCandidate(cid, { id: key, action, expected_version, ...patch }) {
+  async resolveCandidate(cid, { id: key, action, expected_version, confirmation_source, ...patch }) {
     this.main(cid); const candidate = this.raw(key, 'memory_candidates');
     requireValue(expected_version === candidate.version, '候选已更新，请刷新', 409, 'version_conflict');
     requireValue(['accept', 'reject'].includes(action), '候选处理方式无效');
     let memory = null;
     if (action === 'accept') {
       requireValue(Date.parse(candidate.expires_at) > this.clock(), '候选已过期，请从最终成果重新提取', 409, 'memory_candidate_expired');
-      const input = Object.fromEntries(WRITE_KEYS.filter(field => field !== 'id' && field in candidate).map(field => [field, candidate[field]]));
-      memory = await this.save(cid, { ...input, expires_at: candidate.memory_expires_at, ...patch });
+      requireValue(!riskRule(candidate) || patch.category === undefined || riskRule(patch), '风险候选不能改为其他分类绕过用户确认', 422, 'memory_risk_protected');
+      const input = Object.fromEntries(WRITE_KEYS.filter(field => !['id', 'confirmation_source'].includes(field) && field in candidate).map(field => [field, candidate[field]]));
+      // A candidate is never an authorization, including a copied confirmation.
+      memory = await this.save(cid, { ...input, expires_at: candidate.memory_expires_at, ...patch, ...(riskRule(candidate) ? { pinned: true } : {}), confirmation_source });
       this.db.prepare('INSERT OR IGNORE INTO memory_aliases VALUES(?,?)').run(memory.id, key);
     }
     if (action === 'reject') this.discardCandidate(candidate);
@@ -256,24 +343,33 @@ export class MemoryRepository {
     const token = sourceKey(reference), existing = this.db.prepare('SELECT 1 FROM memory_links WHERE memory_id=? AND source_key=?').get(key, token);
     if (!existing) this.transaction(() => {
       this.db.prepare('INSERT INTO memory_links VALUES(?,?,?)').run(key, token, JSON.stringify(reference));
-      value.last_used_at = this.timestamp(); value.use_count++; value.manually_archived = false; this.record(value);
+      value.last_used_at = this.timestamp(); value.use_count++; if (!riskRule(value)) value.manually_archived = false; this.record(value);
     });
     this.refreshIndex(); return this.decorate(value);
   }
-  archive(cid, key, expectedVersion, archived = true) {
+  async archive(cid, key, expectedVersion, archived = true, confirmationSource) {
     this.main(cid); const value = this.raw(key); requireValue(expectedVersion === value.version, '记忆已更新，请刷新', 409, 'version_conflict');
+    const previous = structuredClone(value);
+    if (riskRule(value)) {
+      const confirmation = await this.confirmRisk(cid, confirmationSource, value);
+      requireValue(this.raw(key).version === expectedVersion, '记忆已更新，请刷新', 409, 'version_conflict');
+      value.sources = this.confirmedSources(value.sources, confirmation, value.confirmed_by); value.confirmed_by = confirmation;
+    }
     value.manually_archived = archived; value.version++; value.updated_at = this.timestamp();
     // Restore makes it discoverable in the startup index without fabricating a use.
     if (!archived) value.restored_at = this.timestamp();
-    this.record(value); this.refreshIndex(); return this.decorate(value);
+    this.transaction(() => { this.db.prepare('INSERT INTO memory_history VALUES(?,?,?)').run(previous.id, previous.version, JSON.stringify(previous)); this.record(value); });
+    this.refreshIndex(); return this.decorate(value);
   }
-  forget(cid, key, expectedVersion) {
+  async forget(cid, key, expectedVersion, confirmationSource) {
     this.main(cid); const value = this.raw(key, 'memories', true);
     if (!value && this.db.prepare('SELECT 1 FROM memory_tombstones WHERE id=?').get(key)) return { id: key, status: 'forgotten' };
     requireValue(value, '记忆不存在', 404, 'memory_not_found');
     requireValue(expectedVersion === value.version, '记忆已更新，请刷新', 409, 'version_conflict');
+    const confirmation = riskRule(value) ? await this.confirmRisk(cid, confirmationSource, value) : null;
+    requireValue(this.raw(key).version === expectedVersion, '记忆已更新，请刷新', 409, 'version_conflict');
     const copies = this.forgetInternal(value); this.refreshIndex(); this.purgePages();
-    for (const copy of copies) this.onForget?.(copy); return { id: key, status: 'forgotten' };
+    for (const copy of copies) this.onForget?.(copy); return { id: key, status: 'forgotten', ...(confirmation ? { confirmed_by: confirmation } : {}) };
   }
   forgetInternal(value) {
     return this.transaction(() => {
@@ -303,7 +399,7 @@ export class MemoryRepository {
       if (this.status(value, policy) === 'archived') counts.archived++;
       const idleDays = (this.clock() - Date.parse(value.last_used_at ?? value.created_at)) / DAY;
       const linked = this.db.prepare('SELECT 1 FROM memory_links WHERE memory_id=? LIMIT 1').get(value.id);
-      if (policy.inferred_low_value_days > 0 && value.evidence === 'inferred' && value.value === 'low' && !value.pinned && !value.category.startsWith('user/') && !linked && idleDays >= policy.inferred_low_value_days) {
+      if (policy.inferred_low_value_days > 0 && value.evidence === 'inferred' && value.value === 'low' && !value.pinned && !riskRule(value) && value.category !== 'trading/style' && !value.category.startsWith('user/') && !linked && idleDays >= policy.inferred_low_value_days) {
         for (const key of this.forgetInternal(value)) this.onForget?.(key); counts.forgotten_low_value++;
       }
     }
@@ -335,8 +431,8 @@ export class MemoryRepository {
   facade(cid) {
     this.conversation(cid);
     return { tree: () => this.tree(cid), search: filters => this.search(cid, filters), list: filters => this.search(cid, filters), read: key => this.read(cid, key), get: key => this.read(cid, key),
-      index: options => this.index(cid, options), save: (input, version) => this.save(cid, input, version), propose: input => this.propose(cid, input), candidates: () => this.candidates(cid),
-      resolveCandidate: input => this.resolveCandidate(cid, input), markUsed: input => this.markUsed(cid, input), forget: (input, version) => typeof input === 'string' ? this.forget(cid, input, version) : this.forget(cid, input.id, input.expected_version),
-      archive: (key, version) => this.archive(cid, key, version, true), restore: (key, version) => this.archive(cid, key, version, false), stats: () => this.stats(cid), configure: input => this.configure(cid, input) };
+      index: options => this.index(cid, options), tradingContext: options => this.tradingContext(cid, options), save: (input, version) => this.save(cid, input, version), propose: input => this.propose(cid, input), candidates: () => this.candidates(cid),
+      resolveCandidate: input => this.resolveCandidate(cid, input), markUsed: input => this.markUsed(cid, input), forget: (input, version, confirmation) => typeof input === 'string' ? this.forget(cid, input, version, confirmation) : this.forget(cid, input.id, input.expected_version, input.confirmation_source),
+      archive: (key, version, confirmation) => this.archive(cid, key, version, true, confirmation), restore: (key, version, confirmation) => this.archive(cid, key, version, false, confirmation), stats: () => this.stats(cid), configure: input => this.configure(cid, input) };
   }
 }

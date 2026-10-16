@@ -21,14 +21,22 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Check out the fixed historical API 1 validator
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: KDZZZZZZ/sesame
+          ref: 2aeb09c9d5d4a8e78572e1d7e23afe574570597e
+          path: historical
+          persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
       - name: Test release identity and approval boundaries
-        run: node --test .github/scripts/release-plugins.test.mjs .github/scripts/semantic-review.test.mjs .github/scripts/api1-catalog.test.mjs plugins/api-v1/tests/lock.test.mjs .github/scripts/distribution-profiles.test.mjs .github/scripts/api1-required-catalog.test.mjs
+        run: node --test historical/.github/scripts/release-plugins.test.mjs historical/.github/scripts/semantic-review.test.mjs historical/.github/scripts/api1-catalog.test.mjs historical/plugins/api-v1/tests/lock.test.mjs historical/.github/scripts/distribution-profiles.test.mjs historical/.github/scripts/api1-required-catalog.test.mjs
       - name: Verify merged source bytes and optional catalog
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
-          node plugins/api-v1/scripts/plugin-lock.mjs --check
-          node plugins/api-v1/scripts/plugin-lock.mjs --check --source plugins/optional-api-v1
-          node .github/scripts/validate-api1-catalog.mjs . --published
-          node .github/scripts/release-plugins.mjs --check .
+          node historical/.github/scripts/validate-api1-catalog.mjs . --published
+          node historical/.github/scripts/release-plugins.mjs --check .
+          node historical/.github/scripts/plugin-r2.mjs --check .

@@ -4,8 +4,6 @@ import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createTradingMemory, MEMORY_LIMITS } from '../packages/manual-trading/memory.js';
-import { JudgmentService } from '../packages/manual-trading/judgment/service.js';
-import { createJudgmentCapabilities } from '../packages/manual-trading/judgment/tools.js';
 import { createService as createResearchService } from '../packages/financial-research/service.js';
 import { records, closeRecords } from '../packages/manual-trading/records.js';
 import { records as researchRecords, closeRecords as closeResearchRecords } from '../packages/financial-research/records.js';
@@ -263,10 +261,11 @@ test('snapshot size limits are explicit and source snapshots cannot contain futu
 const prediction = { command_id: 'forecast-1', claim: 'EURUSD closes above 1.1', topic: 'price', regime: 'range', rationale: 'Fixture prospective statement with an explicit invalidation threshold.', probability: 0.6,
   due_at: new Date(T0 + 3600000).toISOString(), verification: { provider: 'https://prices.example/quotes', metric: 'close', observed_at_field: 'observedAt', op: 'gt', target: 1.1, selector: { symbol: 'EURUSD' } } };
 
-test('migrated judgment service keeps frozen verification, reflection, candidate rules and its own durable state', async t => {
+test('independent judgment service keeps frozen verification, reflection, candidate rules and its own durable state', async t => {
   const f = fixture(t), options = { clock: () => new Date(f.now()), snapshot: f.snapshot };
-  let service = new JudgmentService(f.host, options).init(); f.onDispose(() => service.close());
-  assert.equal(service.directory, join(f.host.context.storageRoot, 'judgment-state', 'exports'));
+  const host = { context: { ...f.host.context, pluginId: 'sesame/judgment-evolution', storageRoot: join(f.directory, 'judgment-evolution') } };
+  let service = new StandaloneJudgmentService(host, options).init(); f.onDispose(() => service.close());
+  assert.equal(service.directory, join(host.context.storageRoot, 'exports'));
   const item = service.record('conv_main', prediction);
   assert.throws(() => service.record('conv_main', { ...prediction, probability: 0.9 }), /command_id/);
   assert.throws(() => service.record('child', { ...prediction, command_id: 'child' }), /仅供主/);
@@ -278,43 +277,45 @@ test('migrated judgment service keeps frozen verification, reflection, candidate
   const rule = service.proposeRule('conv_main', { command_id: 'rule-1', title: 'A tentative range filter', guideline: 'Check the range boundary before forecasting a breakout.', topic: 'price', regime: 'range', limitations: 'Only a hypothesis from one case.', evidence_ids: [item.id] });
   assert.equal(rule.status, 'candidate');
   assert.equal(service.reviewQueue('conv_main').statistics.registered, 1);
-  await service.close(); service = new JudgmentService(f.host, options).init();
+  await service.close(); service = new StandaloneJudgmentService(host, options).init();
   assert.equal(service.read('conv_main', item.id).review.semantic.no_change_reason, 'Maintain existing policy pending prospective independent samples.');
   assert.equal(service.rules('conv_main').items[0].status, 'candidate');
   assert.match(readFileSync(join(service.directory, 'CRITERIA.md'), 'utf8'), /尚无通过/);
 });
 
-test('judgment capability factory takes the explicit service and publishes only manual names', async () => {
-  const calls = [], host = { context: { sessionId: 'conv_main' } }, service = { invoke: (context, method, args) => { calls.push([context, method, args]); return { items: [] }; } };
-  const tools = createJudgmentCapabilities(host, () => service);
-  assert.equal(tools.length, 13); assert.ok(tools.every(tool => tool.name.startsWith('manual_judgment_')));
-  assert.deepEqual(await tools.find(tool => tool.name === 'manual_judgment_rules').execute({}), { items: [] });
-  assert.deepEqual(calls, [[host, 'rules', ['conv_main', {}]]]);
+test('independent judgment factory owns the thirteen business capabilities', async () => {
+  const calls = [], host = { context: { sessionId: 'conv_main', storageRoot: 'judgment-factory' } }, service = { invoke: (context, method, args) => { calls.push([context, method, args]); return { items: [] }; } };
+  setJudgmentInstance(host, service);
+  try {
+    const tools = createStandaloneJudgmentCapabilities(host).filter(tool => !['judgment_activate', 'judgment_dispose', 'judgment_after_turn'].includes(tool.name));
+    assert.equal(tools.length, 13); assert.ok(tools.every(tool => tool.name.startsWith('judgment_')));
+    assert.deepEqual(await tools.find(tool => tool.name === 'judgment_rules').execute({}), { items: [] });
+    assert.deepEqual(calls, [[host, 'rules', ['conv_main', {}]]]);
+  } finally { setJudgmentInstance(host, null); }
 });
 
-test('manual judgment publishes fixed criteria readable through the Agent resource capability', { skip: !hostRoot }, async t => {
-  const native = await nativeHost(t); let service;
-  const host = native.attach('manual-trading', context => createJudgmentCapabilities(context, () => service), cap => cap.id.startsWith('manual_judgment_'));
-  service = new JudgmentService(host).init(); native.onDispose(() => service.close());
-  const result = await native.call('sesame/manual-trading#manual_judgment_rules', {});
+test('independent judgment publishes fixed criteria readable through the Agent resource capability', { skip: !hostRoot }, async t => {
+  const native = await nativeHost(t);
+  const host = native.attach('judgment-evolution', createStandaloneJudgmentCapabilities);
+  const service = new StandaloneJudgmentService(host).init(); setJudgmentInstance(host, service);
+  native.onDispose(async () => { await service.close(); setJudgmentInstance(host, null); });
+  const result = await native.call('sesame/judgment-evolution#judgment_rules', {});
   assert.equal(result.criteria.kind, 'resource'); assert.equal(result.criteria.schemaVersion, '1.0.0');
   assert.equal(result.path, undefined); assert.equal(result.criteria_path, undefined);
   const text = await native.call('host.resources.read', { ref: result.criteria, part: 'content', entry: 'CRITERIA.md' });
   assert.match(text.content, /尚无通过/);
-  assert.deepEqual((await native.call('sesame/manual-trading#manual_judgment_rules', {})).criteria, result.criteria);
+  assert.deepEqual((await native.call('sesame/judgment-evolution#judgment_rules', {})).criteria, result.criteria);
   const draft = await host.resources.create({ kind: 'blob', lifetime: 'durable', name: 'private.md', source: { content: 'Private draft' } });
   await assert.rejects(native.call('host.resources.read', { ref: draft, part: 'content' }), { code: 'FORBIDDEN' });
 });
 
-for (const standalone of [false, true]) test(`${standalone ? 'standalone' : 'manual'} judgment resolves actual financial source evidence and published artifact ancestry`, { skip: !hostRoot }, async t => {
-  const native = await nativeHost(t), researchHost = native.attach('financial-research', createResearchCapabilities); let service, time = T0;
+test('independent judgment resolves actual financial source evidence and published artifact ancestry', { skip: !hostRoot }, async t => {
+  const native = await nativeHost(t), researchHost = native.attach('financial-research', createResearchCapabilities); let time = T0;
   native.onDispose(() => closeResearchRecords(researchHost));
-  const plugin = standalone ? 'judgment-evolution' : 'manual-trading', prefix = standalone ? 'judgment_' : 'manual_judgment_';
-  const host = native.attach(plugin, standalone ? createStandaloneJudgmentCapabilities : context => createJudgmentCapabilities(context, () => service), cap => standalone || cap.id.startsWith(prefix));
-  service = new (standalone ? StandaloneJudgmentService : JudgmentService)(host, { clock: () => new Date(time) }).init();
-  if (standalone) setJudgmentInstance(host, service);
-  native.onDispose(async () => { await service.close(); if (standalone) setJudgmentInstance(host, null); });
-  const call = (name, input) => native.call(`sesame/${plugin}#${prefix}${name}`, input);
+  const host = native.attach('judgment-evolution', createStandaloneJudgmentCapabilities);
+  const service = new StandaloneJudgmentService(host, { clock: () => new Date(time) }).init(); setJudgmentInstance(host, service);
+  native.onDispose(async () => { await service.close(); setJudgmentInstance(host, null); });
+  const call = (name, input) => native.call(`sesame/judgment-evolution#judgment_${name}`, input);
   const forecast = { ...prediction, verification: { provider: 'fmp', metric: 'data.title', observed_at_field: 'observed_at', op: 'eq', target: 'Confirmed source publication', selector: { 'data.symbol': 'EURUSD' } } };
   const sourceCase = await call('record', forecast), artifactCase = await call('record', { ...forecast, command_id: 'forecast-artifact' });
   time = T0 + 3660000;

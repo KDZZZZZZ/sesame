@@ -28,7 +28,7 @@
     "resources/indicator-publish.json"
   ],
   "engines": {
-    "sesame": ">=0.2.0-0"
+    "sesame": ">=0.2.3"
   },
   "execution": "native",
   "capability_manifest": "capabilities.json"

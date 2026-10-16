@@ -42,7 +42,7 @@ function mt5Fixture(t, role) {
   const deployments = [{ id: 'own', login: '123', server: 'broker', status: 'running' }, { id: 'foreign', login: '999', server: 'broker', status: 'running' }];
   const data = { account_info: { login: '123', server: 'broker' }, terminal_info: { connected: true },
     positions_get: [{ ticket: 'manual', magic: 0 }, { ticket: 'strategy', magic: 42 }], orders_get: [], history_deals_get: [{ ticket: 'fill' }], history_orders_get: [] }, receipts = new Map();
-  const mt5 = { official: { settings: () => config, async call(request, owner) {
+  const mt5 = { official: { settings: () => config, redact: value => structuredClone(value), async call(request, owner) {
     if (receipts.has(request.command_id)) return receipts.get(request.command_id);
     calls.push(request);
     if (request.tool === 'order_send') assert.ok(mt5Records(host).get('mt5_trading_commands', request.command_id), 'Intent is durable before native dispatch');

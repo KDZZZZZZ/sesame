@@ -7,13 +7,17 @@ import { join } from 'node:path';
 import { CATALOG_URL, catalogQuery, installCatalog, treeDigest } from '../packages/plugin-manager/catalog.js';
 const hash = bytes => `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
 function directory({ official = false, format = 'sesame-native' } = {}) {
-  const files = { 'plugin.json': Buffer.from('{"id":"sesame/example","version":"2.0.0","apiVersion":"2"}'), LICENSE: Buffer.from('MIT fixture') };
+  const capabilities = [{ id: 'example_read', kind: 'function', description: 'Read the fixture.', consumers: ['agent', 'host'], execution: 'immediate', effects: [], binding: { type: 'native', name: 'read' } },
+    { id: 'example_host', kind: 'function', description: 'Read through the host.', consumers: ['host'], execution: 'immediate', effects: [], binding: { type: 'native', name: 'host_read' } }];
+  const files = { 'plugin.json': Buffer.from('{"id":"sesame/example","version":"2.0.0","apiVersion":"2","capability_manifest":"capabilities.json"}'),
+    'capabilities.json': Buffer.from(JSON.stringify({ schemaVersion: 1, apiVersion: '2', capabilities })), LICENSE: Buffer.from('MIT fixture') };
   const index = Object.entries(files).map(([path, bytes]) => ({ path, bytes: bytes.length, sha256: hash(bytes).slice(7) }));
   const tag = official ? 'plugins-api-v1-dev.12' : 'plugins-optional-api-v1-dev.4', base = `https://github.com/KDZZZZZZ/sesame/releases/download/${tag}`;
   const release = { tag, sourceRoot: `plugins/${official ? 'api-v1' : 'optional-api-v1'}`, sourceCommit: 'a'.repeat(40), releaseCommit: 'b'.repeat(40),
     archive: { url: `${base}/sesame-${official ? 'official' : 'optional'}-plugins-api-v1-${tag.split('-').at(-1)}.tar.gz`, sha256: 'c'.repeat(64) },
     lock: { url: `${base}/official-plugins.lock.json`, sha256: 'd'.repeat(64) }, review: { url: `${base}/review.json`, sha256: 'e'.repeat(64) } };
   const entry = { id: 'sesame/example', version: '2.0.0', apiVersion: '2', format, status: 'active', title: 'Example', description: 'Fixture only', release: tag,
+    capabilityManifest: 'capabilities.json', capabilities, tools: ['example_read'],
     source: { repository: 'https://github.com/KDZZZZZZ/sesame', commit: release.sourceCommit, path: `${release.sourceRoot}/packages/example` },
     package: { files: index, treeDigest: treeDigest(index) }, review: { automated: 'package-static-review', human: 'not-recorded', record: release.review } };
   return { files, entry, catalog: { schemaVersion: 1, apiVersion: '2', channel: 'development', releases: [release], plugins: [entry] } };
@@ -75,7 +79,7 @@ const previous = more => ({ id: 'sesame/example', version: '1.0.0', digest: hash
 test('query accepts official native and MCP identities with fixed publication/review metadata', async () => {
   for (const format of ['sesame-native', 'sesame-mcp']) {
     const f = directory({ official: true, format }), net = download(f), queried = await catalogQuery({ plugin_id: f.entry.id }, undefined, net.fetcher);
-    assert.equal(queried.catalog_digest, hash(JSON.stringify(f.catalog))); assert.equal(queried.items[0].review.human, 'not-recorded'); assert.equal(queried.items[0].format, format); assert.equal(queried.items[0].package.files, 2); assert.equal(net.requests.length, 1);
+    assert.equal(queried.catalog_digest, hash(JSON.stringify(f.catalog))); assert.equal(queried.items[0].review.human, 'not-recorded'); assert.equal(queried.items[0].format, format); assert.equal(queried.items[0].package.files, 3); assert.equal(net.requests.length, 1);
     f.entry.status = 'withdrawn'; assert.deepEqual((await catalogQuery({}, undefined, net.fetcher)).items, []);
   }
 });
@@ -91,6 +95,30 @@ test('R2 catalog query/install/update uses dl.sesame.bot package URLs only', asy
   const updateFixture = await hostFixture(t, f, { current: previous() });
   const update = await installCatalog(updateFixture.host, argsFor(f, { action: 'update', command_id: 'r2-update-fixture-1', expected_digest: updateFixture.current.digest }), undefined, download(f).fetcher);
   assert.equal(update.status, 'updated');
+});
+
+test('API 2 catalog exposes only declared agent capabilities as tools and requires their pinned declaration', async () => {
+  const changes = [
+    f => { f.entry.tools.push('example_host'); },
+    f => { f.entry.tools = ['invented_tool']; },
+    f => { delete f.entry.capabilities; },
+    f => { f.entry.capabilities[0].consumers = ['other']; },
+    f => { f.entry.capabilities.push({ ...f.entry.capabilities[0] }); },
+    f => { f.entry.capabilityManifest = 'tools.json'; },
+    f => { f.entry.apiVersion = '1'; },
+  ];
+  for (const change of changes) {
+    const f = r2Directory(); change(f);
+    await assert.rejects(catalogQuery({}, undefined, download(f).fetcher), { code: 'CATALOG_INVALID' });
+  }
+});
+
+test('downloaded capability metadata must match the catalog before any host installation', async t => {
+  const f = r2Directory(), fixture = await hostFixture(t, f);
+  f.entry.capabilities[0].description = 'A claim absent from the immutable capability declaration.';
+  await assert.rejects(installCatalog(fixture.host, argsFor(f), undefined, download(f).fetcher), { code: 'PACKAGE_INTEGRITY' });
+  assert.deepEqual(fixture.calls, []);
+  assert.deepEqual(await readdir(join(fixture.root, 'plugin-drafts')), []);
 });
 
 test('R2 catalogs reject mixed legacy assets, arbitrary hosts and release compatibility shims', async () => {

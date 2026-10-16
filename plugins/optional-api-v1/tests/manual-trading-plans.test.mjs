@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { makePlan, selectModel, accountKey, ROLES, validateDecision } from '../packages/manual-trading/plans.js';
-import { stages, taskTools } from '../packages/manual-trading/team.js';
+import { stages, taskTools, taskPlugins } from '../packages/manual-trading/team.js';
 import { fixture, baseModel, alternateModel, unchanged, copy } from './manual-trading-plans-fixture.mjs';
 
 test('a failed event subscription close still clears local ownership and is not repeated', async t => {
@@ -311,7 +311,7 @@ test('decision validation supports unchanged exposure and rejects inconsistent t
 
 test('configuration rejects an oversized composed plugin set before saving or scheduling', async t => {
   const f = await fixture(t);
-  const dependencies = Array.from({ length: 8 }, (_, i) => ({ id: `custom/native-${i}`, state: 'discoverable', digest: `native-${i}`, tools: [`native_read_${i}`] }));
+  const dependencies = Array.from({ length: 7 }, (_, i) => ({ id: `custom/native-${i}`, state: 'discoverable', digest: `native-${i}`, tools: [`native_read_${i}`] }));
   const skills = Array.from({ length: 24 }, (_, i) => ({ id: `custom/skill-${i}`, state: 'discoverable', digest: `skill-${i}`, tools: [] }));
   f.entries.push(...dependencies, ...skills);
   f.setExecutionTools(dependencies.flatMap(entry => entry.tools));
@@ -320,5 +320,5 @@ test('configuration rejects an oversized composed plugin set before saving or sc
   assert.equal(f.requests.length, 0);
   assert.equal(f.managed.size, 0);
   const plan = await f.runtime.configure(f.main, f.input({ research: { plugins: skills.slice(1).map(entry => entry.id) } }));
-  assert.equal(plan.research.plugins.length + plan.execution.plugins.length, 32);
+  assert.equal(taskPlugins(plan, 'manager').length, 32, 'The manager budget includes its required personal-memory plugin');
 });

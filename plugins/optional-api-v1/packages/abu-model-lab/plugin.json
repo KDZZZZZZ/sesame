@@ -1,7 +1,7 @@
 {
   "id": "sesame/abu-model-lab",
   "apiVersion": "2",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "title": "轻量模型基线",
   "description": "按时间分离训练与评估的透明预测实验。这是可改进基线而非标准答案；输入显式来源和截止时点，输出可复核研究结果。 自动冻结输入与结果数据工件，用户可复核。",
   "author": {
@@ -28,7 +28,7 @@
   ],
   "provides": {},
   "engines": {
-    "sesame": ">=0.2.0-0"
+    "sesame": ">=0.2.3"
   },
   "capability_manifest": "capabilities.json"
 }

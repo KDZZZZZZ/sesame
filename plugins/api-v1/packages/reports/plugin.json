@@ -46,7 +46,7 @@
   "license": "MIT",
   "agent_scope": "all",
   "engines": {
-    "sesame": ">=0.2.2"
+    "sesame": ">=0.2.3"
   },
   "dependencies": [
     {

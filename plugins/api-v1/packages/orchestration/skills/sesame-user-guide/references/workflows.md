@@ -22,6 +22,29 @@
 
 成果放在右侧 Research / Strategy，能引用、追问和修订；子任务结束后临时过程清理，最终成果保留。主 Agent 最后负责把需要的曲线放到 Dashboard，subagent 不直接抢占用户布局。
 
+### 宿主编排接口（供 Agent 按需参考）
+
+本指南不提供工具。普通 Agent 和工作流使用同一套宿主 Run 生命周期，工具是否可用以当前工具列表和明确授予的能力为准。
+
+| 能力 ID | Agent 工具名 | 输入与结果 |
+| --- | --- | --- |
+| `host.agent.run` | `host_agent_run` | `title/instructions/objective/input/allowedCalls/budget` 定义任务，返回受理的 Run 引用。`model` 和 `output` 可选。 |
+| `host.runs.list` | `host_runs_list` | 用 `sessionId/parentRunId/capabilityId/status` 等筛选运行，返回分页概要；不创建任务。 |
+| `host.runs.read` | `host_runs_read` | `runId` 读取真实状态；可用 `include/cursor/limit` 读取消息、调用、事件、输出和资源。 |
+| `host.runs.wait` | `host_runs_wait` | `runId` 配合 `until:"settled"` 等待最终结果；`until:"changed"`、`afterVersion` 用于观察变化。返回等待原因与最新 Run。 |
+| `host.runs.interrupt` | `host_runs_interrupt` | `reason` 说明阻碍；子 Agent 省略 `runId` 时暂停自身，主 Agent 操作其他任务需指定 `runId`。 |
+| `host.runs.resume` | `host_runs_resume` | `runId/interruptIds` 明确选择已处理的中断，`response` 提供解决信息；恢复同一个 Run。 |
+| `host.runs.message` | `host_runs_message` | `runId/text` 向现有运行发送补充信息，不能代替明确的恢复操作。 |
+| `host.runs.cancel` | `host_runs_cancel` | `runId` 和可选 `reason` 请求取消；以后续读取的真实状态确认收尾。 |
+
+`instructions` 给出相关能力、因果明确的原则与约束，`objective` 给出可核验目标；不要让子任务重新猜测已经知道的输入或依赖。`allowedCalls` 使用 `{pluginId,capabilityId}`，其中 `capabilityId` 是局部 ID，例如 `{pluginId:"sesame/data-access",capabilityId:"data_query"}`。每个 Agent 自动拥有 read/wait/interrupt 三项基础 Run 能力；`allowedCalls:[]` 不授予业务工具、再次委派、恢复或取消权限。
+
+`budget` 的 `maxTurns/maxToolCalls/timeoutMs` 三项必填，基础 Run 工具也计入调用预算。`model` 省略时复用宿主配置，显式选择需使用 `host#models` 返回的 `{provider,id,configurationDigest}`。需要幂等操作标识时，通过 `host.capabilities.invoke`（工具 `host_capabilities_invoke`）向 `host.agent.run` 传递 `input` 和 `operationId`；不要把 `operationId` 塞入 Agent 任务输入或以新 ID 重启未确认的动作。
+
+报告任务可指定 `output:{type:"report",space:"research",path:"comparison.html"}`，也可用 `space:"strategy"`。这是该 Run 的报告交付位置，正文标题由最终报告内容决定。普通任务可省略 `output` 或使用 `{type:"none"}`，无需为了运行 Agent 创建报告。
+
+受理返回的 `run.id` 是后续控制和读取的身份；只有 `completed` 的 `run.output` 才是最终结果，包含 `text/sessionId/model/turns/toolCalls`。等待超时只结束本次等待，不取消任务；`changed` 可因细小进度提前返回，不适合反复轮询最终成果。依赖缺失时暂停并报告具体需求，等待返回 `reason:"interrupted"` 后应交主 Agent 与用户沟通。恢复前从同一 Run 读取待处理中断，明确选择 `interruptIds`，不默认把一个答复套到全部中断。正常结束由宿主收尾，无需另行完成调用；取消不回滚已发生的外部副作用，结果未知时读取 Run 与对应后端状态。
+
 ## 不写代码，也能提出想看的曲线
 
 说清“输入什么、怎么算、画在哪里、是否跟随新行情”。Agent 可在图上发布 JavaScript 指标，或把 Python 等研究计算得到的最终数值序列画到主图/副图。

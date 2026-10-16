@@ -56,8 +56,8 @@
 
 取消结束当前父 Run 及其活动子 Run，同时保留目标与真实执行回执。取消不能撤销已经发生的成交；应用重启也不会重放不确定的外部执行。
 
-`judgment-evolution` 的完整判断登记、固定证据核验、归因和规则工具已合入为 `manual_judgment_*`；旧数据保留原位。交易案例按账户、标的和实际已知时间检索，后续通过 `manual_trading_review` 使用真实外部数据集复盘；不将目标、持有不变或报价变化当作成交收益。[判断与记忆接口](judgment/README.md)说明证据与证据约束。
+交易案例按账户、标的和实际已知时间检索，后续通过 `manual_trading_review` 使用真实外部数据集复盘；不将目标、持有不变或报价变化当作成交收益。事前判断登记、固定证据核验、归因、校准和准则由独立 `sesame/judgment-evolution` 提供，需要安装并启用该插件。主 Agent 使用 `host.capabilities.list` 中已注册的 `judgment_record`、`judgment_resolve`、`judgment_reflect`、`judgment_rules` 及其队列和审计能力，依照该插件公开声明调用；缺少能力时明确报告依赖。判断管理只允许主会话，角色可以经允许的 `host.resources.read` 读取主 Agent 提供的准则 ArtifactRef。
 
-计划/任务/案例存于插件私有 SQLite，研究证据存于 datasets，判断数据库/可读导出分别位于 `judgment-state/` 和主工作区 `manual-trading/judgment/`。计划不保存 API 密钥；研究插件仅保存环境变量名。
+计划/任务/案例存于插件私有 SQLite，研究证据存于 datasets。3.1 起本插件不创建判断数据库、不审计主会话回复，也不注册判断转发入口；已有判断账本和导出保留原位，不自动迁移或删除。计划不保存 API 密钥；研究插件仅保存环境变量名。
 
 验证使用虚构账户、来源响应和本地模型协议夹具，不向真实券商发送测试订单。未知发送必须查询原回执；无实盘盈利、零滑点或券商端 exactly-once 保证。

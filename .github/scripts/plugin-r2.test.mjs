@@ -1,12 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildLock, sha256 } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
 import { buildR2Publication, buildR2Profile, prepareR2Release, validateR2Plan } from './plugin-r2.mjs';
+import { readCatalog } from '../../plugins/api-v1/packages/plugin-manager/catalog.js';
 
 const json = (path, value) => writeFileSync(path, JSON.stringify(value, null, 2) + '\n');
 const git = (root, args) => execFileSync('git', ['-C', root, '-c', 'core.autocrlf=false', '-c', 'user.name=R2 test', '-c', 'user.email=r2-test@example.invalid', ...args], { encoding: 'utf8' }).trim();
@@ -14,11 +15,16 @@ const git = (root, args) => execFileSync('git', ['-C', root, '-c', 'core.autocrl
 function packageAt(root, sourceRoot, name, version = '1.0.0', marker = name) {
   const dir = join(root, sourceRoot, 'packages', name);
   mkdirSync(dir, { recursive: true });
-  json(join(dir, 'plugin.json'), { id: `sesame/${name}`, apiVersion: '1', version, title: name, description: `${name} fixture`, license: 'MIT',
-    default_state: sourceRoot.includes('optional') ? 'discoverable' : 'mounted', entry: 'index.js', tool_names: [`${name.replaceAll('-', '_')}_tool`],
-    tool_definitions: 'tools.json', engines: { sesame: '>=0.2.0-0' } });
+  json(join(dir, 'plugin.json'), { id: `sesame/${name}`, apiVersion: '2', version, title: name, description: `${name} fixture`, license: 'MIT',
+    default_state: sourceRoot.includes('optional') ? 'discoverable' : 'mounted', entry: 'index.js',
+    capability_manifest: 'capabilities.json', engines: { sesame: '>=0.2.3' } });
   json(join(dir, 'package.json'), { type: 'module', version, license: 'MIT' });
-  json(join(dir, 'tools.json'), [{ name: `${name.replaceAll('-', '_')}_tool`, description: marker, parameters: { type: 'object', properties: {}, additionalProperties: false } }]);
+  const capability = (suffix, consumers) => ({ id: `${name.replaceAll('-', '_')}_${suffix}`, kind: 'function', description: marker,
+    inputSchema: { type: 'object' }, outputSchema: { type: 'object' }, consumers, execution: 'immediate', effects: [],
+    binding: { type: 'native', name: suffix }, usage: { purpose: marker, inputs: 'An empty object.', outputs: 'The fixture value.', prerequisites: [], limitations: [] } });
+  json(join(dir, 'capabilities.json'), { schemaVersion: 1, apiVersion: '2', configSchema: {},
+    capabilities: [capability('read', ['agent', 'host']), capability('host_only', ['host'])],
+    sources: [], views: [], services: [], knowledge: [], hooks: [], stateCollections: [], artifactSchemas: [] });
   writeFileSync(join(dir, 'LICENSE'), 'MIT\n');
   writeFileSync(join(dir, 'index.js'), `throw new Error('candidate code executed: ${marker}');\n`);
   writeFileSync(join(dir, 'PROVENANCE.md'), `${marker}\n`);
@@ -56,20 +62,26 @@ test('prepare builds deterministic selected source locks and archives without ca
   const first = prepareR2Release(root, plan), second = prepareR2Release(root, plan);
   assert.deepEqual(first.profiles.map(profile => [profile.profile, profile.archiveSha256, profile.lockSha256]), second.profiles.map(profile => [profile.profile, profile.archiveSha256, profile.lockSha256]));
   assert.equal(first.profiles[0].lock.packages.length, 1);
+  assert.ok(first.profiles.every(profile => profile.lock.apiVersion === '2' && profile.pin.apiVersion === '2'));
   assert.equal(first.profiles[1].lock.packages.length, 1);
   assert.equal(first.profiles[1].lock.packages[0].id, 'sesame/optional-one');
   assert.doesNotMatch(first.profiles[1].archive.toString('latin1'), /EXCLUDED_SENTINEL/);
 });
 
-test('publication emits R2 catalog, release objects and immutable package file objects', t => {
+test('publication emits API 2 capabilities, R2 catalog and immutable package file objects accepted by the manager', async t => {
   const { root, plan } = fixture(t), review = Buffer.from('{"schemaVersion":1,"ok":true}\n'), releaseCommit = 'b'.repeat(40);
   const publication = buildR2Publication(root, plan, { releaseCommit, review });
   assert.equal(publication.catalog.schemaVersion, 2);
+  assert.equal(publication.catalog.apiVersion, '2');
   assert.deepEqual(publication.catalog.releases.map(release => release.tag), ['r2-core-api-v1-dev.9', 'r2-optional-api-v1-dev.9']);
   assert.equal(publication.catalog.releases[0].archive.url, 'https://dl.sesame.bot/plugins/api-v1/releases/dev.9/core/plugins.tar.gz');
   assert.ok(!('engines' in publication.catalog.releases[0]));
   assert.equal(publication.catalog.plugins.length, 2);
   for (const plugin of publication.catalog.plugins) {
+    assert.equal(plugin.apiVersion, '2');
+    assert.equal(plugin.capabilityManifest, 'capabilities.json');
+    assert.equal(plugin.capabilities.length, 2);
+    assert.deepEqual(plugin.tools, [`${plugin.name.replaceAll('-', '_')}_read`]);
     assert.match(plugin.package.baseUrl, /^https:\/\/dl\.sesame\.bot\/plugins\/api-v1\/packages\/[a-f0-9]{64}$/);
     for (const file of plugin.package.files) assert.equal(publication.objects.has(`plugins/api-v1/packages/${plugin.package.treeDigest.slice(7)}/${file.path}`), true);
   }
@@ -77,6 +89,8 @@ test('publication emits R2 catalog, release objects and immutable package file o
   assert.equal(publication.objects.has('plugins/api-v1/releases/dev.9/core/application-official-plugins.lock.json'), true);
   assert.equal(publication.objects.has('plugins/api-v1/releases/dev.9/catalog.json'), true);
   assert.equal(sha256(publication.objects.get('plugins/api-v1/releases/dev.9/review.json')), publication.catalog.releases[0].review.sha256);
+  const downloaded = await readCatalog(undefined, async () => new Response(JSON.stringify(publication.catalog)));
+  assert.deepEqual(downloaded.catalog, publication.catalog);
 });
 
 test('plans reject duplicate identities, wrong roots, bad paths and digest drift', t => {
@@ -107,7 +121,7 @@ test('CLI check allows empty infrastructure and build writes deterministic objec
     assert.equal(check.status, 0, check.stderr);
     assert.match(check.stdout, /"plans":0/);
   } finally { rmSync(empty, { recursive: true, force: true }); }
-  const { root, plan } = fixture(t), out = join(root, 'out'), review = join(root, 'review.json'), planPath = join(root, '.github/plugin-r2/dev.9.json');
+  const { root, plan } = fixture(t), out = join(root, 'out'), review = join(root, 'review.json'), planPath = join(root, '.github/plugin-r2-api2/dev.9.json');
   mkdirSync(dirname(planPath), { recursive: true });
   json(planPath, plan);
   writeFileSync(review, '{"schemaVersion":1}\n');
@@ -118,10 +132,23 @@ test('CLI check allows empty infrastructure and build writes deterministic objec
 });
 
 test('CLI check rejects a plan filename that does not match its fixed id', t => {
-  const { root, plan } = fixture(t), planPath = join(root, '.github/plugin-r2/dev.10.json');
+  const { root, plan } = fixture(t), planPath = join(root, '.github/plugin-r2-api2/dev.10.json');
   mkdirSync(dirname(planPath), { recursive: true });
   json(planPath, plan);
   const check = spawnSync(process.execPath, [fileURLToPath(new URL('./plugin-r2.mjs', import.meta.url)), '--check', root], { encoding: 'utf8' });
   assert.notEqual(check.status, 0);
   assert.match(check.stderr, /filename must match id/);
+});
+
+test('API 2 check leaves historical API 1 plans to their fixed validator without changing bytes', t => {
+  const root = mkdtempSync(join(tmpdir(), 'sesame-r2-history-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const legacy = join(root, '.github/plugin-r2/dev.3.json');
+  mkdirSync(dirname(legacy), { recursive: true });
+  const bytes = Buffer.from('{"historical":"validated by the pinned API 1 tool"}\n');
+  writeFileSync(legacy, bytes);
+  const checked = spawnSync(process.execPath, [fileURLToPath(new URL('./plugin-r2.mjs', import.meta.url)), '--check', root], { encoding: 'utf8' });
+  assert.equal(checked.status, 0, checked.stderr);
+  assert.match(checked.stdout, /"plans":0/);
+  assert.deepEqual(readFileSync(legacy), bytes);
 });

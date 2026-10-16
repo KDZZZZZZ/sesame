@@ -1,7 +1,7 @@
 {
   "id": "sesame/strategy-research",
   "apiVersion": "2",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "title": "策略实验流程",
   "description": "按需组织固定研究计划、时间切分、试验预算与真实引擎交接，不强制算法。",
   "author": {
@@ -30,7 +30,7 @@
   ],
   "provides": {},
   "engines": {
-    "sesame": ">=0.2.0-0"
+    "sesame": ">=0.2.3"
   },
   "capability_manifest": "capabilities.json"
 }

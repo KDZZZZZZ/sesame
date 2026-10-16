@@ -101,7 +101,8 @@ test('manual dispatch still requires owner, trusted main and an actual PR number
 test('static workflows cover both integration branches and keep forks as data', () => {
   for (const name of ['plugin-api-v1.yml', 'plugin-catalog.yml']) {
     const workflow = readFileSync(new URL(`../workflows/${name}`, import.meta.url), 'utf8');
-    assert.equal((workflow.match(/branches: \[main, dev\]/g) ?? []).length, 2);
+    const branches = [...workflow.matchAll(/branches: \[([^\]]+)\]/g)].map(match => match[1].split(', '));
+    assert.deepEqual(branches, [name === 'plugin-api-v1.yml' ? ['main', 'dev', 'release/api2-plugins-0.2.3'] : ['main', 'dev'], ['main', 'dev']]);
     assert.doesNotMatch(workflow, /^\s*paths(?:-ignore)?:/m);
     assert.match(workflow, /repository: \$\{\{ github\.event\.pull_request\.head\.repo\.full_name \|\| github\.repository \}\}/);
     if (name === 'plugin-catalog.yml') assert.match(workflow, /repository: KDZZZZZZ\/sesame\s+ref: 2aeb09c9d5d4a8e78572e1d7e23afe574570597e\s+path: trusted/);

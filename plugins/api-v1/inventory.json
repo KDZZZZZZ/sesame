@@ -12,11 +12,11 @@
   "packages": [
     {
       "id": "sesame/abu-backtest-lab",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "GPL-3.0-only",
@@ -60,11 +60,11 @@
     },
     {
       "id": "sesame/abu-breakout",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "GPL-3.0-only",
@@ -108,11 +108,11 @@
     },
     {
       "id": "sesame/abu-exit-rules",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "GPL-3.0-only",
@@ -156,11 +156,11 @@
     },
     {
       "id": "sesame/abu-indicators",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "GPL-3.0-only",
@@ -204,11 +204,11 @@
     },
     {
       "id": "sesame/abu-ml-features",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "GPL-3.0-only",
@@ -252,11 +252,11 @@
     },
     {
       "id": "sesame/abu-model-lab",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "GPL-3.0-only",
@@ -300,11 +300,11 @@
     },
     {
       "id": "sesame/abu-moving-average",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "GPL-3.0-only",
@@ -348,11 +348,11 @@
     },
     {
       "id": "sesame/abu-parameter-search",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "GPL-3.0-only",
@@ -396,11 +396,11 @@
     },
     {
       "id": "sesame/abu-position-sizing",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "GPL-3.0-only",
@@ -444,11 +444,11 @@
     },
     {
       "id": "sesame/abu-price-structure",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "GPL-3.0-only",
@@ -492,11 +492,11 @@
     },
     {
       "id": "sesame/abu-seasonality",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "GPL-3.0-only",
@@ -540,11 +540,11 @@
     },
     {
       "id": "sesame/abu-similarity",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "GPL-3.0-only",
@@ -588,11 +588,11 @@
     },
     {
       "id": "sesame/abu-stock-screening",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "GPL-3.0-only",
@@ -636,11 +636,11 @@
     },
     {
       "id": "sesame/abu-trade-judges",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "GPL-3.0-only",
@@ -684,11 +684,11 @@
     },
     {
       "id": "sesame/abu-trade-metrics",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "GPL-3.0-only",
@@ -732,11 +732,11 @@
     },
     {
       "id": "sesame/abu-trend",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "GPL-3.0-only",
@@ -780,11 +780,11 @@
     },
     {
       "id": "sesame/abu-trend-pullback",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "GPL-3.0-only",
@@ -828,11 +828,11 @@
     },
     {
       "id": "sesame/abu-volatility",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "GPL-3.0-only",
@@ -876,11 +876,11 @@
     },
     {
       "id": "sesame/akshare",
-      "version": "1.0.8",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -1060,11 +1060,11 @@
     },
     {
       "id": "sesame/auto-factor-mining",
-      "version": "1.0.0-dev.2",
+      "version": "1.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.2"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -1215,11 +1215,11 @@
     },
     {
       "id": "sesame/backtrader",
-      "version": "1.0.2",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "GPL-3.0-or-later",
@@ -1300,11 +1300,11 @@
     },
     {
       "id": "sesame/behavioral-finance",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -1340,7 +1340,7 @@
       "distribution": "core",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -1434,11 +1434,11 @@
     },
     {
       "id": "sesame/ccxt",
-      "version": "1.0.4",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -1570,11 +1570,11 @@
     },
     {
       "id": "sesame/configuration",
-      "version": "2.0.4",
+      "version": "3.0.0",
       "distribution": "core",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -1642,7 +1642,7 @@
       "distribution": "core",
       "state": "mounted",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -1756,11 +1756,11 @@
     },
     {
       "id": "sesame/dow-theory",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -1792,11 +1792,11 @@
     },
     {
       "id": "sesame/elliott-wave",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -1828,11 +1828,11 @@
     },
     {
       "id": "sesame/factor-evaluator",
-      "version": "1.0.0-dev.1",
+      "version": "1.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.2"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -1876,11 +1876,11 @@
     },
     {
       "id": "sesame/factor-research",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -1912,11 +1912,11 @@
     },
     {
       "id": "sesame/financial-research",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.2"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -2022,11 +2022,11 @@
     },
     {
       "id": "sesame/ict",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -2058,11 +2058,11 @@
     },
     {
       "id": "sesame/institutional-analysis",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -2094,11 +2094,11 @@
     },
     {
       "id": "sesame/judgment-evolution",
-      "version": "2.1.0",
+      "version": "3.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -2843,11 +2843,11 @@
     },
     {
       "id": "sesame/manual-trading",
-      "version": "3.0.0",
+      "version": "3.2.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.2"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -2864,8 +2864,8 @@
         "zh": "在原生运行图中组织行情分析、组合决策与获授权执行，统一产出一份报告。"
       },
       "dependencies": {
-        "en": "Sesame 0.2.1+ and an existing supported trading backend. Read that backend's own resources for its account, platform and API requirements; use M5+ decisions.",
-        "zh": "需要 Sesame 0.2.1+ 与已有可用交易后端；账户、平台与 API 前提见该后端自身资源，使用 M5+ 决策。"
+        "en": "Sesame 0.2.1+ and an existing supported trading backend. Read that backend's own account, platform and API requirements; use M5+ decisions. Prediction tracking and criteria use the separately enabled judgment-evolution plugin.",
+        "zh": "需要 Sesame 0.2.1+ 与已有可用交易后端；账户、平台与 API 前提见该后端自身资源，使用 M5+ 决策。预测跟踪和判断准则由另行启用的 judgment-evolution 提供。"
       },
       "tools": [
         "manual_trading_models",
@@ -2879,20 +2879,7 @@
         "manual_trading_apply",
         "manual_trading_execution_export",
         "manual_trading_report",
-        "manual_trading_review",
-        "manual_judgment_review_queue",
-        "manual_judgment_review_due",
-        "manual_judgment_record",
-        "manual_judgment_list",
-        "manual_judgment_read",
-        "manual_judgment_resolve",
-        "manual_judgment_defer",
-        "manual_judgment_reflect",
-        "manual_judgment_rule",
-        "manual_judgment_rules",
-        "manual_judgment_retire_rule",
-        "manual_judgment_audit_source",
-        "manual_judgment_coverage"
+        "manual_trading_review"
       ],
       "capabilities": [
         {
@@ -3004,132 +2991,7 @@
           "execution": "immediate"
         },
         {
-          "id": "manual_judgment_review_queue",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "manual_judgment_review_due",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "manual_judgment_record",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "manual_judgment_list",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "manual_judgment_read",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "manual_judgment_resolve",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "manual_judgment_defer",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "manual_judgment_reflect",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "manual_judgment_rule",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "manual_judgment_rules",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "manual_judgment_retire_rule",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "manual_judgment_audit_source",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "manual_judgment_coverage",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
           "id": "activate",
-          "kind": "function",
-          "consumers": [
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "after_turn",
           "kind": "function",
           "consumers": [
             "host"
@@ -3174,13 +3036,6 @@
             }
           },
           {
-            "id": "after_turn",
-            "contract": "sesame.lifecycle/1",
-            "operations": {
-              "handle": "after_turn"
-            }
-          },
-          {
             "id": "dispose",
             "contract": "sesame.lifecycle/1",
             "operations": {
@@ -3193,11 +3048,11 @@
     },
     {
       "id": "sesame/market-data-parser",
-      "version": "2.0.3",
+      "version": "3.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-mcp",
       "license": "MIT",
@@ -3251,11 +3106,11 @@
     },
     {
       "id": "sesame/memory",
-      "version": "3.0.0",
+      "version": "3.1.0",
       "distribution": "core",
       "state": "mounted",
       "engines": {
-        "sesame": ">=0.2.2"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -3268,8 +3123,8 @@
         "zh": "记忆"
       },
       "summary": {
-        "en": "Keep explicit working notes and reusable preferences across conversations.",
-        "zh": "保留明确的工作笔记和可复用偏好。"
+        "en": "Retain sourced preferences and knowledge, including trading style, confirmed risk rules and strategy understanding.",
+        "zh": "保存有来源的偏好与知识，区分个人交易风格、已确认风险红线和策略认知。"
       },
       "dependencies": {
         "en": "No external runtime or market connection.",
@@ -3278,6 +3133,7 @@
       "tools": [
         "memory_search",
         "memory_read",
+        "memory_trading_context",
         "memory_propose",
         "memory_mark_used",
         "memory_manage"
@@ -3294,6 +3150,15 @@
         },
         {
           "id": "memory_read",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "memory_trading_context",
           "kind": "function",
           "consumers": [
             "agent",
@@ -3407,7 +3272,8 @@
               "index": "memory_index",
               "manage": "memory_manage",
               "stats": "memory_stats",
-              "configure": "memory_configure"
+              "configure": "memory_configure",
+              "trading_context": "memory_trading_context"
             }
           }
         ],
@@ -3446,11 +3312,11 @@
     },
     {
       "id": "sesame/mt5",
-      "version": "1.6.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.3-dev.8"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -4117,11 +3983,11 @@
     },
     {
       "id": "sesame/narrative-analysis",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -4153,11 +4019,11 @@
     },
     {
       "id": "sesame/orchestration",
-      "version": "3.0.0",
+      "version": "3.1.0",
       "distribution": "core",
       "state": "mounted",
       "engines": {
-        "sesame": ">=0.2.2"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -4166,61 +4032,19 @@
       },
       "category": "workspace",
       "title": {
-        "en": "Agent collaboration",
-        "zh": "Agent 协作"
+        "en": "Sesame user guide",
+        "zh": "Sesame 使用指南"
       },
       "summary": {
-        "en": "Delegate focused work and use the built-in product guidance.",
-        "zh": "分派明确任务，并提供通用产品使用指南。"
+        "en": "Read product guidance and the host's unified Agent and Run capabilities; this package registers no execution tools.",
+        "zh": "查阅产品用法与宿主统一的 Agent、Run 能力；本包不注册执行工具。"
       },
       "dependencies": {
-        "en": "A configured model is needed to run Agent tasks; no trading backend is required.",
-        "zh": "运行 Agent 任务需要配置模型；无需交易后端。"
+        "en": "Reading the guide needs no model or trading backend. Agent execution is provided by the host.",
+        "zh": "读取指南无需模型或交易后端；Agent 执行由宿主提供。"
       },
-      "tools": [
-        "agent_list",
-        "agent_delegate",
-        "agent_inspect",
-        "agent_stop"
-      ],
-      "capabilities": [
-        {
-          "id": "agent_list",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "agent_delegate",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "agent_inspect",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "agent_stop",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        }
-      ],
+      "tools": [],
+      "capabilities": [],
       "hostContributions": {
         "sources": [],
         "views": [],
@@ -4235,7 +4059,7 @@
       "distribution": "core",
       "state": "mounted",
       "engines": {
-        "sesame": ">=0.2.2"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -4379,11 +4203,11 @@
     },
     {
       "id": "sesame/portfolio-execution",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.2"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -4523,11 +4347,11 @@
     },
     {
       "id": "sesame/price-action",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -4559,11 +4383,11 @@
     },
     {
       "id": "sesame/qmt",
-      "version": "1.4.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -4869,11 +4693,11 @@
     },
     {
       "id": "sesame/quantskills-catalog",
-      "version": "2.1.0",
+      "version": "3.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-mcp",
       "license": "MIT",
@@ -4961,7 +4785,7 @@
       "distribution": "core",
       "state": "mounted",
       "engines": {
-        "sesame": ">=0.2.2"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -5055,11 +4879,11 @@
     },
     {
       "id": "sesame/rss-collect",
-      "version": "2.0.3",
+      "version": "3.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-mcp",
       "license": "MIT",
@@ -5107,7 +4931,7 @@
       "distribution": "core",
       "state": "mounted",
       "engines": {
-        "sesame": ">=0.2.2"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -5252,11 +5076,11 @@
     },
     {
       "id": "sesame/strategy-research",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -5288,11 +5112,11 @@
     },
     {
       "id": "sesame/vnpy",
-      "version": "1.0.4",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -5372,11 +5196,11 @@
     },
     {
       "id": "sesame/web-extract",
-      "version": "2.0.3",
+      "version": "3.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-mcp",
       "license": "MIT",
@@ -5420,11 +5244,11 @@
     },
     {
       "id": "sesame/web-sources",
-      "version": "2.0.2",
+      "version": "3.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -5488,7 +5312,7 @@
       "distribution": "core",
       "state": "mounted",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -5652,11 +5476,11 @@
     },
     {
       "id": "sesame/wyckoff",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.0-0"
+        "sesame": ">=0.2.3"
       },
       "format": "sesame-native",
       "license": "MIT",
