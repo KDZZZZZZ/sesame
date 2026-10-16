@@ -57,14 +57,14 @@ export class Deployments {
       this.storage.put('mt5_deployment_observation_pending', { id: value.id, token: id('observation') });
       return saved;
     });
-    if (observe) this.syncObservation(saved);
+    if (observe) return this.syncObservation(saved).then(() => saved);
     return saved;
   }
-  syncObservation(value) {
+  async syncObservation(value) {
     if (!this.mt5.runObserver) return;
     const pending = this.storage.get('mt5_deployment_observation_pending', value.id, true);
     try {
-      this.mt5.runObserver.deployment(value);
+      await this.mt5.runObserver.deployment(value);
       this.storage.transaction(() => {
         if (this.storage.get('mt5_deployment_observation_pending', value.id, true)?.token !== pending?.token) return;
         this.storage.delete('mt5_deployment_observation_pending', value.id);
@@ -76,9 +76,9 @@ export class Deployments {
       this.storage.put('mt5_deployment', { ...current, observer_error: this.mt5.official.redact(error.message) }); throw error;
     }
   }
-  flushObservations() {
+  async flushObservations() {
     for (const pending of this.storage.list('mt5_deployment_observation_pending')) {
-      try { this.syncObservation(this.storage.get('mt5_deployment', pending.id)); } catch { /* Durable pending entry is retried; never replay native execution. */ }
+      try { await this.syncObservation(this.storage.get('mt5_deployment', pending.id)); } catch { /* Durable pending entry is retried; never replay native execution. */ }
     }
   }
   candidates() {
@@ -164,7 +164,7 @@ export class Deployments {
           const compiled = await this.mt5.startBuild(queued.id);
           requireValue(compiled.status === 'succeeded' && compiled.live_capable, compiled.diagnostics || '构建更新尚未完成', 409);
           update({ stage: 'backtesting' });
-          const job = this.mt5.tester.queue(compiled.id, { ...pass.config, parameters: pass.parameters }, {}, owner, pass.risk_limits); update({ backtest_id: job.id });
+          const job = await this.mt5.tester.queue(compiled.id, { ...pass.config, parameters: pass.parameters }, {}, owner, pass.risk_limits); update({ backtest_id: job.id });
           const finished = await this.mt5.tester.start(job.id);
           requireValue(finished.status === 'succeeded' && finished.passes.length === 1, finished.error || '更新后的回测尚未完成', 409);
           update({ pass_id: finished.passes[0].id });
@@ -236,10 +236,10 @@ export class Deployments {
         d = { id: id('deploy'), request_key: requestKey, status: 'preparing', pass_id: pass.id,
           source_pass_id: expected.source_pass_id ?? pass.id, source_artifact_digest: expected.source_artifact_digest ?? check.artifact_digest,
           build_id: build.id, project_id: build.project_id, revision: build.revision, server: check.server, login: check.login, symbol: check.symbol, period: check.period, artifact_digest: check.artifact_digest, parameters: pass.parameters, risk_limits: pass.risk_limits, conversation_id: expected.conversation_id ?? null, chart_id: null, created_at: now(), reason: null };
-        d = this.save(d);
+        d = await this.save(d);
         const expert = await this.stage(build);
         requireValue(!(await this.recognitionReason(build)), '终端尚未识别冻结构建，请先运行自动准备', 409, 'deployment_not_ready');
-        d = this.save({ ...d, expert_path: expert, output_path: join(hostPath(workspace.common_folder, this.mt5.native), 'Files/MT5Agent', d.id) });
+        d = await this.save({ ...d, expert_path: expert, output_path: join(hostPath(workspace.common_folder, this.mt5.native), 'Files/MT5Agent', d.id) });
         const r = pass.risk_limits;
         const inputs = { ...pass.parameters, Product_RunId: d.id, Product_EnableLive: true, Product_AccountLogin: d.login, Product_AccountServer: d.server, Product_MaxRiskPct: r.max_risk_per_trade_pct, Product_MaxDailyLossPct: r.max_daily_loss_pct, Product_MaxPositions: r.max_open_positions, Product_MaxLots: r.max_lots };
         for (const [key, value] of Object.entries(inputs)) requireValue(/^[A-Za-z][\w]*$/.test(key) && /^[^,=\s]+$/.test(String(value)), 'EA 输入不能包含逗号、等号或空白');
@@ -248,9 +248,9 @@ export class Deployments {
         requireValue(Object.keys(inputs).every(key => names.has(key)), '编译产物缺少指定 EA 输入，拒绝静默使用默认参数');
         // Persist intent before the native start; an interrupted attempt remains
         // unknown and is never replayed. The official startup opens its own chart.
-        d = this.save({ ...d, native_start_requested: true });
+        d = await this.save({ ...d, native_start_requested: true });
         const opened = await this.attach(d, inputs);
-        d = this.save({ ...d, chart_id: opened.chart_id, status: 'attaching' });
+        d = await this.save({ ...d, chart_id: opened.chart_id, status: 'attaching' });
         let events = [];
         // The 1 s timer gives a visual-engine EA its first post-init event; allow a few of them.
         for (let attempt = 0; attempt < 40; attempt++) {
@@ -258,19 +258,19 @@ export class Deployments {
           await sleep(250);
         }
         requireValue(initialized(events), '终端尚未确认 EA 初始化，请核对原生图表', 409);
-        return this.save({ ...d, status: 'running', native_evidence: { verified: true, sequence: events.at(-1)?.seq ?? 0, observedAt: Date.now(), trace: events.slice(-32) } });
+        return await this.save({ ...d, status: 'running', native_evidence: { verified: true, sequence: events.at(-1)?.seq ?? 0, observedAt: Date.now(), trace: events.slice(-32) } });
       } catch (error) {
         if (!d) throw error;
         d = this.storage.get('mt5_deployment', d.id, true) ?? d;
         // Persist the outcome before optional stop-file I/O; an observer or
         // filesystem failure must not erase a durable native-start intent.
-        d = this.save({ ...d, status: d.native_start_requested || d.chart_id || this.storage.get('mt5_command', `${d.id}_open`, true) ? 'unknown' : 'failed', reason: this.mt5.official.redact(error.message) }, false);
+        d = await this.save({ ...d, status: d.native_start_requested || d.chart_id || this.storage.get('mt5_command', `${d.id}_open`, true) ? 'unknown' : 'failed', reason: this.mt5.official.redact(error.message) }, false);
         if (d.output_path && d.native_start_requested) {
           try {
             await fs.mkdir(d.output_path, { recursive: true });
             await fs.writeFile(join(d.output_path, 'stop'), 'stop', { mode: 0o600 });
           } catch (stopError) {
-            d = this.save({ ...d, reason: d.reason + '；停止信号尚未写入：' + this.mt5.official.redact(stopError.message) }, false);
+            d = await this.save({ ...d, reason: d.reason + '；停止信号尚未写入：' + this.mt5.official.redact(stopError.message) }, false);
           }
         }
         return d;
@@ -292,8 +292,8 @@ export class Deployments {
         // Persistent stop marker blocks new managed requests even if detach loses its response.
         if (d.output_path) { await fs.mkdir(d.output_path, { recursive: true }); await fs.writeFile(join(d.output_path, 'stop'), 'stop', { mode: 0o600 }); }
         await this.action(d, 'stop', 'chart_remove_expert', { chart_id: d.chart_id });
-        d = this.save({ ...d, status: 'stopped', reason: null });
-      } catch (error) { d = this.save({ ...d, status: 'unknown', reason: this.mt5.official.redact(error.message) }); }
+        d = await this.save({ ...d, status: 'stopped', reason: null });
+      } catch (error) { d = await this.save({ ...d, status: 'unknown', reason: this.mt5.official.redact(error.message) }); }
       return d;
     });
   }

@@ -1,0 +1,374 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "capabilities": [
+    {
+      "id": "abu_parameter_search_analyze",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "对已完成实验的有限网格指标排序，冻结开发期选型，再核对该固定选型的留出期证据；不运行策略。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "schema_version": {
+                "const": 1
+              },
+              "as_of": {
+                "type": "string",
+                "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+              },
+              "source": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "kind": {
+                    "enum": [
+                      "synthetic",
+                      "historical",
+                      "live"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "kind"
+                ],
+                "additionalProperties": true,
+                "description": "Caller-declared provenance; synthetic remains synthetic in output artifacts."
+              },
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "phase": {
+                    "type": "string",
+                    "default": "development",
+                    "enum": [
+                      "development",
+                      "holdout"
+                    ],
+                    "description": "开发排序或固定留出验证"
+                  },
+                  "objective_metric": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500,
+                    "description": "要排序的 metrics 字段，默认 input.objective.metric 或 score"
+                  },
+                  "direction": {
+                    "type": "string",
+                    "default": "maximize",
+                    "enum": [
+                      "maximize",
+                      "minimize"
+                    ],
+                    "description": "目标优化方向；input.objective.direction 可提供默认值"
+                  },
+                  "max_grid_points": {
+                    "type": "integer",
+                    "default": 5000,
+                    "minimum": 1,
+                    "maximum": 100000,
+                    "description": "允许的网格组合数上限"
+                  }
+                },
+                "additionalProperties": false,
+                "description": "Optional overrides. Defaults and limits match the existing calculation."
+              },
+              "grid": {
+                "type": "object",
+                "minProperties": 1,
+                "maxProperties": 10,
+                "additionalProperties": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 100,
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "boolean"
+                      }
+                    ]
+                  }
+                },
+                "description": "Arbitrary parameter names and scalar candidates; not restricted to lookback/threshold."
+              },
+              "frozen_selection": {
+                "type": "object",
+                "properties": {
+                  "selected_at": {
+                    "type": "string",
+                    "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+                  },
+                  "parameters": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "boolean"
+                        }
+                      ]
+                    },
+                    "description": "Exact grid parameter names and values for one evaluated point."
+                  },
+                  "development_sha256": {
+                    "type": "string"
+                  },
+                  "grid_sha256": {
+                    "type": "string"
+                  },
+                  "objective_sha256": {
+                    "type": "string"
+                  },
+                  "parameter_hash": {
+                    "type": "string"
+                  },
+                  "selection_sha256": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": true,
+                "description": "Required only for holdout. Pass the exact prior observations.frozen_selection, including all hashes; never manufacture or recompute a selection to fit holdout."
+              },
+              "trials": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "split": {
+                      "enum": [
+                        "development",
+                        "holdout"
+                      ]
+                    },
+                    "available_at": {
+                      "type": "string",
+                      "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+                    },
+                    "parameters": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "boolean"
+                          }
+                        ]
+                      },
+                      "description": "Exact grid parameter names and values for one evaluated point."
+                    },
+                    "metrics": {
+                      "type": "object",
+                      "additionalProperties": {},
+                      "description": "Contains a finite numeric value at objective_metric. Other evidence fields are preserved."
+                    }
+                  },
+                  "additionalProperties": true,
+                  "required": [
+                    "split",
+                    "available_at",
+                    "parameters"
+                  ]
+                },
+                "maxItems": 10000,
+                "minItems": 1
+              }
+            },
+            "additionalProperties": true,
+            "required": [
+              "schema_version",
+              "source",
+              "as_of",
+              "grid",
+              "trials"
+            ],
+            "description": "完整的固定输入对象；examples/input.json 仅为合成格式示例，不是实盘证据。"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "schema_version": {
+            "const": 1
+          },
+          "baseline": {
+            "const": true
+          },
+          "status": {
+            "const": "research_baseline"
+          },
+          "parameters": {
+            "type": "object"
+          },
+          "observations": {
+            "description": "observations.development_rank 是仅按开发指标排序的排名；frozen_selection 含 parameters、selected_at 和全部核验哈希；fixed_holdout_evidence 仅含选中参数的留出期指标；grid_points 是网格组合数。"
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "input_artifact": {
+            "type": "object",
+            "description": "立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。"
+          },
+          "result_artifact": {
+            "type": "object",
+            "description": "立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。"
+          }
+        },
+        "required": [
+          "schema_version",
+          "baseline",
+          "status",
+          "parameters",
+          "observations",
+          "limitations",
+          "input_artifact",
+          "result_artifact"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "resources.create",
+        "resources.publish"
+      ],
+      "binding": {
+        "type": "native",
+        "name": "abu_parameter_search_analyze"
+      },
+      "usage": {
+        "purpose": "对已完成实验的有限网格指标排序，冻结开发期选型，再核对该固定选型的留出期证据；不运行策略。",
+        "inputs": "调用形状为 {input:{schema_version:1,source:{id,kind},as_of,parameters?,...}}，不是文件路径或数据 ID。source.id 为 1..500 字符，kind 为 synthetic/historical/live；as_of 及全部时间字段使用真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒）。输入限 2MiB 有限 JSON，不接收代码。parameters 只支持列出的字段。 grid 是 1..10 个任意参数名到候选数组的映射，每数组 1..100 个有限数值/字符串/布尔值，组合数 <= max_grid_points。trials:[{split:\"development\"|\"holdout\",available_at,parameters,metrics}]，每个 parameters 必须精确对应某个网格点，metrics[objective_metric] 为有限值。development 阶段至少 1 条开发试验，不接受 holdout 或 frozen_selection。holdout 阶段传回开发运行的完整 frozen_selection、相同 grid/目标/开发 trials，加上只属于选中参数的 holdout trials；保持选型和哈希原值，selected_at 必须早于 holdout.available_at <= as_of。",
+        "outputs": "observations.development_rank 是仅按开发指标排序的排名；frozen_selection 含 parameters、selected_at 和全部核验哈希；fixed_holdout_evidence 仅含选中参数的留出期指标；grid_points 是网格组合数。 立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。",
+        "prerequisites": [
+          "提供与任务相符的已知输入；本能力不联网取数，不需要 Python、ABU 安装或券商账户。",
+          "留出验证依赖先前真实的开发选型记录；若只有一阶段的证据，结果只支持该阶段的结论。缺少选型时不要编造哈希或把留出结果改标为开发结果。"
+        ],
+        "limitations": [
+          "哈希只能核对记录内一致性；外部固定保存的开发工件才支持先选型后验证的时序证据。传入的是已有指标，本能力不会执行任意策略或表达式。",
+          "来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。"
+        ]
+      }
+    }
+  ],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "knowledge-0",
+      "path": "examples/input.json",
+      "description": "参数实验基线 — examples/input.json",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-1",
+      "path": "prompt.md",
+      "description": "参数实验基线 — prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "knowledge-2",
+      "path": "PROVENANCE.md",
+      "description": "参数实验基线 — PROVENANCE.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-3",
+      "path": "README.md",
+      "description": "参数实验基线 — README.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-4",
+      "path": "skills/abu-parameter-search/references/method.md",
+      "description": "参数实验基线 — skills/abu-parameter-search/references/method.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-5",
+      "path": "skills/abu-parameter-search/SKILL.md",
+      "description": "参数实验基线 — skills/abu-parameter-search/SKILL.md",
+      "kind": "skill"
+    }
+  ],
+  "hooks": [],
+  "stateCollections": [],
+  "artifactSchemas": [
+    {
+      "id": "data",
+      "kind": "data",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "const": "json-rows"
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rowCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "columns": {
+            "type": "array"
+          },
+          "provenance": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "format",
+          "path",
+          "rowCount",
+          "columns",
+          "provenance"
+        ],
+        "additionalProperties": true
+      }
+    }
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

@@ -1,6 +1,6 @@
 {
   "id": "sesame/wyckoff",
-  "apiVersion": "1",
+  "apiVersion": "2",
   "version": "1.0.0",
   "title": "Wyckoff 量价与阶段研究",
   "description": "独立 Wyckoff 研究：供需、努力/结果与阶段候选；成交量单位、替代解释和反证明确，Composite Man 仅是启发式。",
@@ -11,8 +11,6 @@
   "default_state": "discoverable",
   "agent_scope": "all",
   "entry": "index.js",
-  "tool_definitions": "tools.json",
-  "tool_names": [],
   "prompts": [
     "prompt.md"
   ],
@@ -31,5 +29,6 @@
   "provides": {},
   "engines": {
     "sesame": ">=0.2.0-0"
-  }
+  },
+  "capability_manifest": "capabilities.json"
 }

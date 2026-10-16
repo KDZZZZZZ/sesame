@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { withAccountLock } from '../packages/portfolio-execution/execution-lock.js';
 
 test('only the same account execution waits; independent accounts and reads continue', { timeout: 2000 }, async () => {
-  const host = { storage: { directory: randomUUID() } }, record = { backend: 'mt5', account: { accountId: 'one', server: 'broker', revision: '1' } };
+  const host = { context: { storageRoot: randomUUID() } }, record = { backend: 'mt5', account: { accountId: 'one', server: 'broker', revision: '1' } };
   let release, entered;
   const gate = new Promise(resolve => { release = resolve; }), ready = new Promise(resolve => { entered = resolve; });
   const first = withAccountLock(host, record, async () => { entered(); await gate; return 'first'; });
@@ -17,7 +17,7 @@ test('only the same account execution waits; independent accounts and reads cont
 });
 
 test('a portfolio batch reuses its own account lock for service writes and releases after failure', { timeout: 2000 }, async () => {
-  const host = { storage: { directory: randomUUID() } }, record = { backend: 'qmt', account: { accountId: 'one', connectionId: 'route', revision: '1' } };
+  const host = { context: { storageRoot: randomUUID() } }, record = { backend: 'qmt', account: { accountId: 'one', connectionId: 'route', revision: '1' } };
   await assert.rejects(withAccountLock(host, record, async () => {
     assert.equal(await withAccountLock(host, record, () => 'nested-write'), 'nested-write');
     throw new Error('fixture failure');

@@ -1,10 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, copyFile, writeFile, readFile, rm } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
+
+const hostRoot = process.env.SESAME_HOST_ROOT ?? fileURLToPath(new URL("../../../../mt5agent/", import.meta.url));
+const { hostPythonPath } = await import(pathToFileURL(join(hostRoot, "modules/agent/host-environment.js")).href);
+const python = process.env.PYTHON ?? hostPythonPath();
 
 // A real local JSONL process isolates transport/lifecycle behavior from networking.
 const fixtureBridge = `import sys,json,os,time
@@ -25,13 +29,15 @@ for line in sys.stdin:
 `;
 
 async function fixture(t) {
+  assert.ok(python, "The real worker transport fixture requires an available native Python interpreter");
   const directory = await mkdtemp(join(tmpdir(), "sesame-ccxt-worker-"));
   await copyFile(new URL("../packages/ccxt/worker.js", import.meta.url), join(directory, "worker.mjs"));
   await writeFile(join(directory, "bridge.py"), fixtureBridge);
-  await writeFile(join(directory, "selection.json"), JSON.stringify({ python: process.env.PYTHON ?? "python3" }));
+  await writeFile(join(directory, "selection.json"), JSON.stringify({ python }));
   const worker = await import(pathToFileURL(join(directory, "worker.mjs")).href);
   t.after(async () => {
     await worker.closeWorkers(directory);
+    assert.ok(resolve(directory).startsWith(resolve(join(tmpdir(), "sesame-ccxt-worker-"))));
     await rm(directory, { recursive: true, force: true });
   });
   const call = (payload = {}, signal = AbortSignal.timeout(2000)) => worker.execute({ exchange: "coinbase", action: "bars", symbol: "BTC/USD", ...payload }, { directory, signal });

@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "capabilities": [],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "knowledge-0",
+      "path": "examples/expected.md",
+      "description": "Price Action 价格行为 — examples/expected.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-1",
+      "path": "prompt.md",
+      "description": "Price Action 价格行为 — prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "knowledge-2",
+      "path": "PROVENANCE.md",
+      "description": "Price Action 价格行为 — PROVENANCE.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-3",
+      "path": "README.md",
+      "description": "Price Action 价格行为 — README.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-4",
+      "path": "skills/price-action/references/execution.md",
+      "description": "Price Action 价格行为 — skills/price-action/references/execution.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-5",
+      "path": "skills/price-action/references/method.md",
+      "description": "Price Action 价格行为 — skills/price-action/references/method.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-6",
+      "path": "skills/price-action/references/validation.md",
+      "description": "Price Action 价格行为 — skills/price-action/references/validation.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-7",
+      "path": "skills/price-action/SKILL.md",
+      "description": "Price Action 价格行为 — skills/price-action/SKILL.md",
+      "kind": "skill"
+    }
+  ],
+  "hooks": [],
+  "stateCollections": [],
+  "artifactSchemas": [],
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

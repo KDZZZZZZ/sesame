@@ -1,18 +1,14 @@
 ---
 name: analyze-data
-description: 使用真实后端输入，在本机任务工作区中编写与执行可追溯分析，并登记报告数据。
+description: Read fixed inputs, execute workspace analysis and publish results backed by frozen host execution evidence.
 ---
 
-工具回复是有界预览；原始后端响应可能包含大量行或嵌套 JSON 文本。data_read 会把完整行数据写入返回的真实 path。在实际执行 cwd 中解析并只输出范围、字段、计数、少量样本和所需统计；不要用 read/cat 或 print 将完整行情回灌模型。_tool_output_truncated 表示预览截断，不表示原始文件缺失。
+data_read({datasetId}) 读取登记数据；data_read({ref}) 读取固定 DataRef。两者均将完整行写入 directory/inputs，返回实际 path 和有界摘要。原始文件缺失与工具预览截断不同，分析直接从实际文件读取。
 
-先用 data_read 查询或加载实际 dataset ID，记录列名、类型、行数、缺失值与数据范围。CSV 数值通常是字符串，转换失败和缺失不能静默当作零。
+用 write/edit 编写独立脚本，明确单位、缺失值、筛选、分母和时间口径；数值转换失败不静默补零。输出为 JSON 对象数组，不允许 NaN/Infinity。workspace bash 返回实际 executionId、进程 Run 与执行回执；research_register 使用 executionId，不使用 Run ID。bash.cwd 与 data_read.directory 指向同一工作区计算目录，保证 inputs 与脚本一起进入执行快照。
 
-用 write/edit 编写独立 Python 分析脚本，从 inputs 读取数据。明确单位、样本筛选、分母与时间口径；必要时输出诊断数据。不使用写死的样本或结论来代替输入计算。
+research_register 使用 operationId、executionId、path、title、description，以及 inputIds（登记输入）或 inputRefs（固定 DataRef），可附 recipePaths。宿主执行记录必须包含该输出及实际输入、配方快照；缺少冻结证据时直接拒绝，不能用当前文件或手填验证状态替代。输出的 DataRef 可直接交给报告或其他声明能力。
 
-用 bash 执行；检查退出状态和输出。输出保存为 JSON 对象数组，避免 NaN/Infinity。统计方法、随机种子和限制写在代码与说明中。
+例如 data_read({datasetId,directory:"analysis"}) 写入 analysis/inputs，脚本保存在 analysis/calculate.mjs，bash({command:"node calculate.mjs",cwd:"analysis"}) 的 executionId 对应本次计算；输出为 analysis/result.json 时，research_register.path 使用 "result.json"、recipePaths 使用 ["calculate.mjs"]。这是目录与证据关系示例，不要求特定脚本语言。snapshotErrors 提示文件过多、过大或不安全链接时，将必要输入与脚本集中到独立计算目录后重算；缩小工具输出文本不能补回缺失的文件快照。
 
-调用 research_register，传入本次 execution_id、输出文件、title、description 和实际 input_ids。登记失败时查明输入绑定或格式问题，不伪造执行 ID。
-
-将返回的 dataset ID 交给报告插件。报告需要解释方法和局限；固定代码计算、SVL 回放和各原生引擎回测分别标识；没有对应目标实际结果时，不宣称该目标已验证。
-
-工作区代码使用当前系统用户权限，不是 OS 沙箱。使用 data_read 返回的真实路径与相同的 bash.cwd；不要假设 /work 是系统挂载。先复用现有环境，缺失依赖才按需准备。research_register 只接受成功执行的冻结输入、输出和脚本快照；改变 inputs 后必须重新执行，不得用当前可变文件伪造旧执行。
+统计结论、SVL 固定事件回放、原生引擎回测有不同验证范围。代码成功退出只证明该次执行完成，不能替代方法、样本和目标引擎证据。工作区进程使用当前系统用户权限；使用实际返回路径，不假设 /work 是挂载点。

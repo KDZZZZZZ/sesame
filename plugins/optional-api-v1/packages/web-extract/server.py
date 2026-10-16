@@ -90,19 +90,9 @@ def extract_webpage(args):
     except Exception as e:
         return {"error": str(e), "version": VERSION}
 
-TOOLS = [
-    {
-        "name": "extract_webpage",
-        "description": "Extract title, text, links and metadata from HTML content (inline or bundled file path)",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "html_content": {"type": "string", "description": "Raw HTML string"},
-                "file_path": {"type": "string", "description": "Relative path to a bundled HTML file; cannot access conversation or host files"}
-            }
-        }
-    }
-]
+with open(os.path.join(str(PLUGIN_ROOT), "capabilities.json"), encoding="utf-8") as declaration_file:
+    DECLARED_CAPABILITIES = json.load(declaration_file)["capabilities"]
+TOOLS = [{"name": c["binding"]["name"], "description": c["description"], "inputSchema": c["inputSchema"], "outputSchema": c["outputSchema"]} for c in DECLARED_CAPABILITIES if c["binding"]["type"] == "mcp"]
 
 for line in sys.stdin:
     try:

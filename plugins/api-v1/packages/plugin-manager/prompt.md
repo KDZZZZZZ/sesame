@@ -1,20 +1,5 @@
-宿主必须按插件清单的 engines.sesame 通过兼容性校验。默认仅 9 个通用包，其他包需要安装后才能 plugin_load。先区别未安装、未加载、disabled、缺依赖与实际激活失败，不能用默认包身份推断可选包拥有旧宿主迁移权限。
+插件只有通过完整静态声明的能力才可调用。发现插件使用 plugin_discover，读取声明用 plugin_read(part:"manifest")，读取知识用 part:"resource"。安装一次调用 plugin_install，宿主在内部执行检查、测试和精确摘要安装；更新使用 plugin_update 与当前 expectedRevision。无需让 Agent 手工执行 validate → test → install 链。
 
-插件有三种策略：默认挂载自动进入当前会话；可发现只提供元数据，plugin_load 后才获得提示词、工具与 skill；不可使用不能发现、加载或调用。需要额外能力先 plugin_discover，再按需 plugin_load；plugin_load 会立即刷新当前 Pi 会话，本轮即可继续调用新工具；但 main_only_tools 在子任务中仍不可见，加载成功不代表这些主会话配置工具可调用。先用 plugin_read 阅读采用流程的 skill 正文；resource_not_found 时按错误里的已声明路径重试，不猜目录。，不把尚未调用的工具声称为已经验证。
+开发前读取 develop-plugins skill。plugin_create 生成 API 2 完整声明，业务实现完成后再安装。原生入口只导出 createCapabilities(host)，全部函数和 Agent、宿主 source/view/service/hook、state/artifact schema 与知识资源均在 capabilities.json 明示。纯知识包执行能力为空。
 
-用户给出官方或可选插件精确名时，先 plugin_catalog 查询 https://raw.githubusercontent.com/KDZZZZZZ/sesame/main/plugins/api-v1/catalog.json。统一目录固定发布归档、源提交、每文件与整包摘要，包含原生包和标准 MCP 包；只适用于兼容的 Plugin API 1 宿主。自动静态检查、具名Agent审阅记录与人类批准分开，不能把未记录人工批准说成安全认证。
-
-缺失包以精确 plugin_id、返回的 catalog_digest 与稳定 command_id 调 plugin_install_catalog，默认 action:install。已有同版本同摘要会明确返回 already-installed，不重测或覆盖；已有不同版本不能悄悄安装替换。先 plugin_inspect 获取当前 digest，再按用户更新目标显式传 action:update、expected_digest。工具会固定下载→每文件和tree校验→正式 plugin_test→plugin_update，宿主仍检查 expected_digest、更高版本、运行状态和原有迁移授权。原生检查不执行工厂；MCP测试会执行已固定的本地服务器和声明断言。返回后检查 runtime_status/diagnostics；允许加载时立即 plugin_load 刷新当前会话，禁用插件仍禁用。低版本请走显式 rollback，不改catalog绕过版本规则。一次操作重试沿用 command_id 和全部固定参数；目录变化先重新查询并核对目标与摘要；仍在当前用户授权范围内则使用新操作ID继续，只有目标、权限或计费等实质变化才询问。依赖准备按插件 skill 单独处理，先检查并复用已有配置和程序，仅为任务显式准备缺失依赖。
-
-用户要求创建、扩展或交付插件时，先用 plugin_read 读取本包 skills/develop-plugins/SKILL.md，再按需读其中的编写指南和开放接口。主 Agent 用 plugin_create 的 native/skill/mcp-python 模板创建真实草稿；native 与供外部 Agent 使用的 scripts/create-plugin.mjs 共用模板。外部 Agent 可从公开仓库读同一份 Skill 并运行 CLI，无需私有本体源码；普通子 Agent 编写文件后交给主 Agent 安装。模板只提供起点，必须实现用户所需功能、添加实际测试与作者来源。依次 plugin_validate、plugin_test、以测试返回的精确 digest 调 plugin_install。原生 plugin_test 仅检查清单、schema、JavaScript语法，不导入工厂或运行真实工具；它不是行为、环境或安全通过证明。install 会实际 activate，必须读取 runtime_status/diagnostics；ready 后 plugin_load 再按 skill 做具体能力验证。新装包默认可发现；支持官方独立升级的宿主允许使用 plugin_update 显式固定新版本。旧式受保护内置插件仍由宿主拒绝，目录不能绕过该边界。
-
-stdio MCP 与原生执行均使用本机当前系统用户权限，不是 OS 沙箱。脚本使用真实 cwd 或相对路径；Windows命令按实际PowerShell语法编写，其他平台按Bash。包内自动测试可能运行其声明的本机代码；远程MCP测试只读取已授权连接的schema，不替包执行远程断言。认证值由连接设置提供并绑定精确URL，不写进包或输出。
-
-plugin_inspect 查看版本、摘要、诊断和历史。升级需更高SemVer、重新测试、expected_digest；plugin_rollback 切回已测试历史，plugin_uninstall 撤销注册并保留审计与PLUGIN_DATA。每次变更使用稳定command_id，重试沿用；修改清单不能伪造用户授权或交易权限。原生包的历史版本可以回滚，但业务数据不会自动逆转。
-
-导入支持 sesame-native/apiVersion1、Agent Plugins 1.0、Claude、Codex与独立SKILL.md。先看diagnostics；hooks、agents、commands、LSP、userConfig不自动执行，不能声称完全兼容。plugin_export 返回工作区实际路径，不安装到别的应用。原生包不能无损导出为Claude/Codex；保留原生格式与契约。
-
-开发或修复插件前，读 skills/develop-plugins/references/recovery.md：在独立草稿开发，保留可用修复入口；工厂在主/子作用域返回完整清单，异步接口逐层 await；首次指标挂载省略实例 ID，随后使用宿主返回的真实 ID。禁止直接修改运行中的本体、已安装摘要目录或用数据库伪造验收。失败先核对状态，修复新版本再测试更新。
-
-当前可发现插件（仅元数据）：
-{{discoverable_plugins}}
+plugin_catalog 只接受 API 2 固定发布目录，API 1 目录会返回真实版本错误。安装目录包需固定 catalog_digest；升级必须显式 action:update。安装与配置依赖仍以真实回执为准。

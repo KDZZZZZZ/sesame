@@ -1,77 +1,47 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
-import { mkdtemp, realpath, mkdir, writeFile, readFile, rm, symlink, truncate } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { mkdir, writeFile, readFile, rm, symlink, truncate } from 'node:fs/promises';
+import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { Type } from '@sesame/plugin-sdk/schema';
-import { digest, canonical } from '@sesame/plugin-sdk/protocol';
-import { validateSource } from '@sesame/plugin-sdk/svl';
+import { digest } from '@sesame/plugin-sdk/protocol';
 import { registerTranslationFile } from '../../optional-api-v1/packages/mt5/backend/translation-file.js';
 import { registerTranslation, targetProfile } from '../../optional-api-v1/packages/mt5/backend/target.js';
-import { createTools } from '../../optional-api-v1/packages/mt5/tools/strategy.js';
+import { createCapabilities } from '../../optional-api-v1/packages/mt5/tools/strategy.js';
 import { translationManifestSchema, translationSchema, MAX_TRANSLATION_MANIFEST_BYTES } from '../../optional-api-v1/packages/mt5/backend/translation-input.js';
-import { Store, hostForStore } from './mt5-host.js';
+import { fixtureHost } from './mt5-conformance-fixture.js';
+import { readBytes } from '../../optional-api-v1/packages/mt5/backend/resource-io.js';
 
 const clone = value => structuredClone(value);
-const conflict = () => Object.assign(new Error('Idempotency conflict'), { code: 'idempotency_conflict' });
 async function fixture(t) {
-  const directory = await realpath(await mkdtemp(join(tmpdir(), 'sesame-translation-file-'))), workspace = join(directory, 'workspace');
-  await mkdir(workspace); t.after(() => rm(directory, { recursive: true, force: true }));
-  const store = new Store(join(directory, 'storage')), blobs = new Map(), records = new Map(), requests = new Map(), pending = new Map();
-  const host = hostForStore(store);
-  host.plugin = { id: 'sesame/mt5', version: '1.1.9', digest: `sha256:${'1'.repeat(64)}` }; host.scope = { kind: 'main', conversationId: 'fixture-main', runId: 'fixture-run' };
-  host.workspace = { path: path => resolve(workspace, path) };
-  host.tools = { Type, define: (name, description, properties, execute) => ({ name, label: name, description, parameters: Type.Object(properties, { additionalProperties: false }), execute }) };
-  host.storage.idempotentAsync = async (key, fingerprint, action) => {
-    const done = store.requests.get(key);
-    if (done) { if (done.fingerprint !== fingerprint) throw conflict(); return clone(done.value); }
-    const running = pending.get(key);
-    if (running) { if (running.fingerprint !== fingerprint) throw conflict(); return running.promise; }
-    const promise = Promise.resolve().then(action).then(value => store.idempotent(key, fingerprint, () => value)).finally(() => pending.delete(key));
-    pending.set(key, { fingerprint, promise }); return promise;
-  };
-  host.artifacts = {
-    blob(value) { const bytes = Buffer.from(value), ref = { digest: digest(bytes), size: bytes.length }; blobs.set(ref.digest, bytes); return ref; },
-    readBlob(ref) { const bytes = blobs.get(ref.digest); assert.ok(bytes); assert.equal(bytes.length, ref.size); assert.equal(digest(bytes), ref.digest); return Buffer.from(bytes); },
-    publish(input) {
-      const old = requests.get(input.operationId), hash = digest(input);
-      if (old) { if (old.hash !== hash) throw conflict(); return clone(old.ref); }
-      for (const ref of input.manifest.dependencies) this.read(ref);
-      for (const blob of input.manifest.blobs) this.readBlob(blob);
-      const ref = { id: `artifact-${records.size}`, revision: `revision-${records.size}`, digest: digest(input.manifest), kind: input.manifest.kind, schemaVersion: '1.0.0' };
-      records.set(ref.id, { ref, producer: clone(host.plugin), manifest: clone(input.manifest) }); requests.set(input.operationId, { hash, ref }); return clone(ref);
-    },
-    read(ref) { const record = records.get(ref.id); assert.ok(record); assert.equal(canonical(record.ref), canonical(ref)); return clone(record); },
-  };
-  const value = JSON.parse(await readFile(new URL('../packages/strategy-authoring/examples/close-threshold.svl.json', import.meta.url))), checked = validateSource(value);
-  const source = host.artifacts.publish({ operationId: 'fixture-source', manifest: { kind: 'strategy.source', schemaVersion: '1.0.0', content: { language: 'svl/1', languageVersion: '1.0.0', sourcePath: 'strategy.svl.json', sourceDigest: checked.sourceDigest }, dependencies: [], blobs: [{ path: 'strategy.svl.json', mediaType: 'application/json', ...host.artifacts.blob(JSON.stringify(value)) }] } });
-  const target = await targetProfile(host);
+  const f = await fixtureHost(t), { workspace, host, artifacts: records } = f;
+  const value = JSON.parse(await readFile(new URL('../packages/strategy-authoring/examples/close-threshold.svl.json', import.meta.url)));
+  const source = await f.publishSource(value), target = await targetProfile(host);
   const manifest = { title: '  Fixture translation  ', source, target, mode: 'backtest', parameter_map: { instrument: { binding: 'instrument' }, threshold: { nativeInput: 'Threshold' } },
     files: { 'Experts/Strategy.mq5': '#property strict\n' + '// declaration fixture, not native validation\n'.repeat(800) + 'void OnTick() {}\n' },
     source_map: value.nodes.map(node => ({ nodeId: node.id, generated: [{ path: 'Experts/Strategy.mq5', startLine: 1, endLine: 1 }], instrumentation: 'direct' })), adaptations: [] };
   const path = join(workspace, 'translation.json'); await writeFile(path, JSON.stringify(manifest));
   const args = { operation_id: 'translation_file_fixture_01', manifest_path: 'translation.json' };
-  return { directory, workspace, path, store, host, manifest, args, mt5: { status: () => ({ compile: false }) }, blobs, records, requests, write: value => writeFile(path, JSON.stringify(value)), run: (input = args) => registerTranslationFile(host, { status: () => ({ compile: false }) }, input) };
+  return { ...f, records, manifest, args, path, write: value => writeFile(path, JSON.stringify(value)), run: (input = args) => registerTranslationFile(host, f.mt5, input) };
 }
 
-function withoutManifest(result) { const { manifest, ...rest } = result; return rest; }
+function withoutManifest(result) { const { manifest: _manifest, ...rest } = result; return rest; }
 
 test('short file tool publishes exact 800-line bytes through the shared target pipeline and returns compact refs', async t => {
-  const f = await fixture(t), tools = createTools(f.host, f.mt5), call = tools.find(tool => tool.name === 'mt5_translation_file');
-  assert.deepEqual(Object.keys(call.parameters.properties), ['operation_id', 'manifest_path']);
-  const result = await call.execute(f.args), artifact = f.host.artifacts.read(result.translation);
+  const f = await fixture(t), tools = createCapabilities(f.host, f.mt5), call = tools.find(tool => tool.name === 'mt5_translation_file');
+  const declared = JSON.parse(await readFile(new URL('../../optional-api-v1/packages/mt5/capabilities.json', import.meta.url)));
+  assert.deepEqual(Object.keys(declared.capabilities.find(item => item.binding.name === call.name).inputSchema.properties), ['operation_id', 'manifest_path']);
+  const result = await call.execute(f.args), artifact = (await f.readArtifact(result.translation));
   const file = artifact.manifest.blobs.find(item => item.path === 'Experts/Strategy.mq5');
-  assert.equal(f.host.artifacts.readBlob(file).toString(), f.manifest.files['Experts/Strategy.mq5']);
-  assert.equal(f.host.artifacts.read(result.validation).manifest.content.outcome, 'partial');
+  assert.equal((await readBytes(f.host, result.translation, file.path)).toString(), f.manifest.files['Experts/Strategy.mq5']);
+  assert.equal((await f.readArtifact(result.validation)).manifest.content.outcome, 'partial');
   assert.equal(result.manifest.source.sha256, digest(await readFile(f.path))); assert.equal(result.manifest.reused, false);
   assert.equal(result.manifest.digest, digest(f.manifest));
   assert.ok(JSON.stringify(result).length < 4000); assert.equal(JSON.stringify(result).includes('declaration fixture'), false);
   assert.equal(f.store.list('mt5_project').length, 1); assert.equal(f.store.list('mt5_translation_receipt').length, 1);
   assert.deepEqual(await registerTranslation(f.host, f.mt5, { operation_id: f.args.operation_id, ...f.manifest }), withoutManifest(result));
   assert.deepEqual(Object.fromEntries(Object.entries(translationSchema.properties).filter(([key]) => key !== 'operation_id')), translationManifestSchema.properties);
-  const profile = f.host.artifacts.read(f.manifest.target).manifest.content;
+  const profile = (await f.readArtifact(f.manifest.target)).manifest.content;
   assert.ok(profile.workflows[0].tools.some(tool => tool.toolId === 'mt5_translation_file')); assert.ok(profile.runtime.resources.includes('target/translation-file.md'));
 });
 
@@ -84,12 +54,12 @@ test('concurrent same-operation calls converge; retries explicitly reuse the fro
   await rm(f.workspace, { recursive: true });
   const retry = await f.run(); assert.deepEqual(withoutManifest(retry), withoutManifest(old)); assert.equal(retry.manifest.reused, true); assert.equal(f.records.size, size);
   await assert.rejects(f.run({ ...f.args, manifest_path: 'another.json' }), { code: 'idempotency_conflict' });
-  await assert.rejects(registerTranslation(f.host, f.mt5, { operation_id: f.args.operation_id, ...f.manifest, title: 'Other input' }), { code: 'idempotency_conflict' });
+  await assert.rejects(registerTranslation(f.host, f.mt5, { operation_id: f.args.operation_id, ...f.manifest, title: 'Other input' }), { code: 'IDEMPOTENCY_CONFLICT' });
 });
 
 test('unknown outcome after project commit recovers without republishing or overwriting a later project revision', async t => {
-  const f = await fixture(t), transaction = f.host.storage.transaction; let lost = false;
-  f.host.storage.transaction = action => {
+  const f = await fixture(t), transaction = f.store.transaction; let lost = false;
+  f.store.transaction = action => {
     const result = transaction(action);
     if (!lost && f.store.list('mt5_translation_receipt').length) { lost = true; throw new Error('Injected lost response after commit'); }
     return result;
@@ -97,7 +67,7 @@ test('unknown outcome after project commit recovers without republishing or over
   await assert.rejects(f.run(), /lost response/);
   const project = f.store.list('mt5_project')[0]; assert.ok(project); const count = f.records.size;
   f.store.update('mt5_project', project.id, { revision: 7, title: 'Later user revision' }); await rm(f.workspace, { recursive: true });
-  f.host.artifacts.read = () => { throw new Error('A committed retry must not reread artifacts'); };
+  f.host.resources.read = () => { throw new Error('A committed retry must not reread artifacts'); };
   const recovered = await f.run(); assert.equal(recovered.project_id, project.id); assert.equal(recovered.manifest.reused, true);
   assert.equal(f.records.size, count); assert.equal(f.store.get('mt5_project', project.id).revision, 7);
 });
@@ -125,17 +95,17 @@ test('simultaneous different paths conflict and receipt-write failure rolls the 
   const results = await Promise.allSettled([f.run(), f.run({ ...f.args, manifest_path: 'other.json' })]);
   assert.equal(results.filter(result => result.status === 'fulfilled').length, 1);
   assert.equal(results.find(result => result.status === 'rejected').reason.code, 'idempotency_conflict');
-  const next = { ...f.args, operation_id: 'receipt_failure_operation_01' }, put = f.host.storage.put; let failed = false;
-  f.host.storage.put = (kind, value) => { if (kind === 'mt5_translation_receipt' && !failed) { failed = true; throw new Error('Receipt storage unavailable'); } return put(kind, value); };
+  const next = { ...f.args, operation_id: 'receipt_failure_operation_01' }, put = f.store.put; let failed = false;
+  f.store.put = (kind, value) => { if (kind === 'mt5_translation_receipt' && !failed) { failed = true; throw new Error('Receipt storage unavailable'); } return put(kind, value); };
   await assert.rejects(f.run(next), /Receipt storage/); assert.equal(f.store.list('mt5_project').length, 1);
   const recovered = await f.run(next); assert.ok(recovered.translation); assert.equal(f.store.list('mt5_project').length, 2);
 });
 
 test('partial publication and unknown artifact response reuse fixed operation refs, even if compiler availability changes', async t => {
-  const f = await fixture(t), publish = f.host.artifacts.publish.bind(f.host.artifacts); let failed = false;
-  f.host.artifacts.publish = input => {
-    const result = publish(input);
-    if (!failed && input.manifest.kind === 'strategy.translation') { failed = true; throw new Error('Lost translation publication result'); }
+  const f = await fixture(t), publish = f.host.resources.publish.bind(f.host.resources); let failed = false;
+  f.host.resources.publish = async (resource, input, options) => {
+    const result = await publish(resource, input, options);
+    if (!failed && input.kind === 'strategy.translation') { failed = true; throw new Error('Lost translation publication result'); }
     return result;
   };
   await assert.rejects(f.run(), /Lost translation/); const translation = [...f.records.values()].find(record => record.ref.kind === 'strategy.translation').ref;
@@ -146,18 +116,18 @@ test('partial publication and unknown artifact response reuse fixed operation re
 });
 
 test('final transaction respects a receipt committed by another connection after the initial lookup', async t => {
-  const f = await fixture(t), publish = f.host.artifacts.publish.bind(f.host.artifacts), operation = digest(f.args.operation_id).slice(7); let winner;
-  f.host.artifacts.publish = input => {
-    const ref = publish(input);
-    if (input.manifest.kind === 'strategy.validation') {
-      const start = f.store.requests.get(`translation-start-${operation}`).value;
-      winner = { project_id: start.projectId, revision: 1, source: f.manifest.source, translation: input.manifest.content.translation, validation: ref, implementation: 'translated_unverified', limitations: input.manifest.content.limitations };
+  const f = await fixture(t), publish = f.host.resources.publish.bind(f.host.resources), operation = digest(f.args.operation_id).slice(7); let winner;
+  f.host.resources.publish = async (resource, input, options) => {
+    const published = await publish(resource, input, options), ref = published.ref;
+    if (input.kind === 'strategy.validation') {
+      const start = f.store.get('operation', `translation-start-${operation}`).result;
+      winner = { project_id: start.projectId, revision: 1, source: f.manifest.source, translation: input.content.translation, validation: ref, implementation: 'translated_unverified', limitations: input.content.limitations };
       // Controlled stand-in for a second connection completing then editing its
       // project while this call was between the initial lookup and final commit.
       f.store.put('mt5_project', { id: start.projectId, revision: 9, title: 'Newer committed edit' });
       f.store.put('mt5_translation_receipt', { id: operation, fingerprint: digest({ operation_id: f.args.operation_id, ...f.manifest }), result: winner });
     }
-    return ref;
+    return published;
   };
   const result = await f.run(); assert.deepEqual(withoutManifest(result), winner);
   assert.equal(f.store.get('mt5_project', winner.project_id).revision, 9); assert.equal(f.store.get('mt5_project', winner.project_id).title, 'Newer committed edit');
@@ -243,7 +213,8 @@ test('cancellation before intake leaves no snapshot; persisted-snapshot corrupti
 });
 
 test('manifest and static tool definitions expose the short entry without changing the inline schema', async t => {
-  const f = await fixture(t), root = new URL('../../optional-api-v1/packages/mt5/', import.meta.url), definition = JSON.parse(await readFile(new URL('plugin.json', root))), tools = JSON.parse(await readFile(new URL('tools.json', root)));
-  assert.equal(definition.version, JSON.parse(await readFile(new URL('package.json', root))).version); assert.ok(definition.tool_names.includes('mt5_translation_file')); assert.ok(definition.resources.includes('target/translation-file.md'));
-  for (const tool of createTools(f.host, f.mt5)) assert.deepEqual(JSON.parse(JSON.stringify({ ...tool, execute: undefined })), tools.find(item => item.name === tool.name));
+  const f = await fixture(t), root = new URL('../../optional-api-v1/packages/mt5/', import.meta.url), definition = JSON.parse(await readFile(new URL('plugin.json', root))), capabilities = JSON.parse(await readFile(new URL('capabilities.json', root))).capabilities;
+  assert.equal(definition.version, JSON.parse(await readFile(new URL('package.json', root))).version); assert.ok(capabilities.some(item => item.binding.name === 'mt5_translation_file')); assert.ok(definition.resources.includes('target/translation-file.md'));
+  for (const capability of createCapabilities(f.host, f.mt5)) { assert.equal(typeof capability.execute, 'function'); assert.ok(capabilities.some(item => item.binding.name === capability.name)); }
+  assert.deepEqual(capabilities.find(item => item.binding.name === 'mt5_translation').inputSchema, JSON.parse(JSON.stringify(translationSchema)));
 });

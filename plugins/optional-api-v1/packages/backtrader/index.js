@@ -1,3 +1,8 @@
+import { capability } from '@sesame/plugin-sdk/capabilities';
+import { records,closeRecords } from './records.js';
+import { once } from './operation.js';
+import { readArtifact,readEntry,publishFiles } from './resource-files.js';
+import { readUserFile,runProcess } from './execution.js';
 import { mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -5,31 +10,9 @@ import { randomUUID } from "node:crypto";
 import { check, digest, decimal } from "@sesame/plugin-sdk/protocol";
 import { Decimal } from "@sesame/plugin-sdk/decimal";
 import { environment, selected } from "./environment.js";
-function resource(
-  host,
-  operationId,
-  kind,
-  content,
-  files = {},
-  dependencies = [],
-) {
-  return host.artifacts.publish({
-    operationId,
-    manifest: {
-      kind,
-      schemaVersion: "1.0.0",
-      content,
-      dependencies,
-      blobs: Object.entries(files).map(([path, bytes]) => ({
-        path,
-        mediaType: path.endsWith(".py") ? "text/x-python" : "application/json",
-        ...host.artifacts.blob(bytes),
-      })),
-    },
-  });
-}
-export function fixedRows(host, ref, columns = {}) {
-  const artifact = host.artifacts.read(ref),
+async function resource(host,operationId,kind,content,files={},dependencies=[],origin) {return publishFiles(host,{operationId,kind,content,files,dependencies,...(origin?{provenance:{kind:origin,references:dependencies}}:{})});}
+export async function fixedRows(host, ref, columns = {}) {
+  const artifact = await readArtifact(host,ref),
     content = artifact.manifest.content;
   check(
     ref.kind === "data" && content.format === "json-rows",
@@ -44,7 +27,7 @@ export function fixedRows(host, ref, columns = {}) {
   );
   const rows = JSON.parse(
     new TextDecoder("utf-8", { fatal: true }).decode(
-      host.artifacts.readBlob(blob),
+      await readEntry(host,ref,blob.path),
     ),
   );
   check(
@@ -97,7 +80,7 @@ export function fixedRows(host, ref, columns = {}) {
   return { rows: mapped, origin: content.provenance.kind };
 }
 async function backtest(host, args, signal) {
-  const bytes = await host.workspace.file(
+  const bytes = await readUserFile(host,
     "read",
     args.strategy_path,
     undefined,
@@ -108,7 +91,7 @@ async function backtest(host, args, signal) {
     "One strategy Python file <=512KiB",
   );
   const source = new TextDecoder("utf-8", { fatal: true }).decode(bytes),
-    fixed = fixedRows(host, args.data, args.columns),
+    fixed = await fixedRows(host, args.data, args.columns),
     fingerprint = digest({
       source,
       data: args.data,
@@ -118,7 +101,7 @@ async function backtest(host, args, signal) {
       parameters: args.parameters ?? {},
       config: args.config,
     });
-  const old = host.storage.get("backtests", args.operation_id, true);
+  const old = records(host).get("backtests", args.operation_id, true);
   if (old) {
     check(
       old.fingerprint === fingerprint,
@@ -158,8 +141,8 @@ async function backtest(host, args, signal) {
     "Capital positive; rates are ratios below allowed bound",
   );
   const selectedEnv = await selected(host, signal);
-  const claimed = host.storage.transaction(() => {
-    const existing = host.storage.get("backtests", args.operation_id, true);
+  const claimed = records(host).transaction(() => {
+    const existing = records(host).get("backtests", args.operation_id, true);
     if (existing) {
       check(
         existing.fingerprint === fingerprint,
@@ -168,7 +151,7 @@ async function backtest(host, args, signal) {
       );
       return false;
     }
-    host.storage.put("backtests", {
+    records(host).put("backtests", {
       id: args.operation_id,
       fingerprint,
       status: "running",
@@ -176,7 +159,7 @@ async function backtest(host, args, signal) {
     return true;
   });
   if (!claimed) {
-    const existing = host.storage.get("backtests", args.operation_id);
+    const existing = records(host).get("backtests", args.operation_id);
     return (
       existing.result ?? {
         status: "unknown",
@@ -192,7 +175,7 @@ async function backtest(host, args, signal) {
     result,
     preserve = false;
   try {
-    const envRef = resource(
+    const envRef = await resource(
       host,
       args.operation_id + ":environment",
       "environment",
@@ -204,7 +187,7 @@ async function backtest(host, args, signal) {
       },
       { "environment.json": JSON.stringify(selectedEnv) },
     );
-    const sourceRef = resource(
+    const sourceRef = await resource(
       host,
       args.operation_id + ":source",
       "resource",
@@ -218,7 +201,7 @@ async function backtest(host, args, signal) {
       },
       { "strategy.py": bytes },
     );
-    const inputs = resource(
+    const inputs = await resource(
       host,
       args.operation_id + ":inputs",
       "resource",
@@ -233,7 +216,7 @@ async function backtest(host, args, signal) {
       { "bars.json": JSON.stringify(fixed.rows) },
       [args.data, sourceRef, envRef],
     );
-    directory = join(host.workspace.root(), `.backtrader-${randomUUID()}`);
+    directory = join(host.context.workspaceRoot, `.backtrader-${randomUUID()}`);
     await mkdir(directory);
     await writeFile(join(directory, "strategy.py"), bytes);
     await writeFile(
@@ -246,7 +229,7 @@ async function backtest(host, args, signal) {
         config: args.config,
       }),
     );
-    run = await host.workspace.run(
+    run = await runProcess(host,
       [
         selectedEnv.python,
         "-I",
@@ -267,23 +250,23 @@ async function backtest(host, args, signal) {
       "Engine/process status disagree",
     );
     const dependencies = [args.data, sourceRef, envRef, inputs],
-      raw = resource(
+      raw = await resource(
         host,
         args.operation_id + ":receipt",
         "resource",
         {
           type: "backtrader-receipt",
           status: result.status,
-          executionId: run.executionId ?? null,
+          executionRunId: run.runId ?? null,
         },
         { "result.json": rawBytes },
         dependencies,
       );
     const tables =
       result.status === "completed"
-        ? ["equity", "trades", "orders"].map((name) => ({
+        ? await Promise.all(["equity", "trades", "orders"].map(async (name) => ({
             id: name,
-            ref: resource(
+            ref: await resource(
               host,
               args.operation_id + ":" + name,
               "data",
@@ -303,9 +286,9 @@ async function backtest(host, args, signal) {
               { "rows.json": JSON.stringify(result[name]) },
               [...dependencies, raw],
             ),
-          }))
+          })))
         : [];
-    const ref = resource(
+    const ref = await resource(
       host,
       args.operation_id,
       "strategy.result",
@@ -341,18 +324,18 @@ async function backtest(host, args, signal) {
       data: tables,
       statistics: result.statistics ?? {},
       diagnostics: result.error ?? null,
-      executionId: run.executionId ?? null,
+      executionRunId: run.runId ?? null,
       nativeSource: sourceRef,
       environment: envRef,
     };
-    host.storage.update("backtests", args.operation_id, {
+    records(host).update("backtests", args.operation_id, {
       status: result.status,
       result: answer,
     });
     return answer;
   } catch (error) {
     preserve = error.code === "runtime_cleanup_failed";
-    host.storage.update("backtests", args.operation_id, {
+    records(host).update("backtests", args.operation_id, {
       status: "unknown",
       reason: error.code ?? "EXECUTION_INTERRUPTED",
     });
@@ -362,76 +345,11 @@ async function backtest(host, args, signal) {
       await rm(directory, { recursive: true, force: true });
   }
 }
-export function createTools(host) {
-  const { define, Type, string } = host.tools,
-    ref = (kind) =>
-      Type.Object(
-        {
-          id: Type.String(),
-          revision: Type.String(),
-          digest: Type.String({ pattern: "^sha256:[a-f0-9]{64}$" }),
-          kind: Type.Literal(kind),
-          schemaVersion: Type.Literal("1.0.0"),
-        },
-        { additionalProperties: false },
-      ),
-    number = Type.String({ pattern: "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$" });
-  return [
-    define(
-      "backtrader_environment",
-      "Inspect and select existing pinned Backtrader/Python first; explicit prepare installs private PyPI dependencies only if missing. No startup downloads.",
-      {
-        action: Type.Union(["inspect", "prepare"].map(Type.Literal)),
-        python_path: Type.Optional(string("Existing native Python executable")),
-      },
-      (args, signal) => environment(host, args, signal),
-    ),
-    define(
-      "backtrader_backtest",
-      "Run real Cerebro on one fixed UTC/offset DataRef and authored backtrader.Strategy file. Managed host execution, stocklike cash simulation, never connects a broker; no SVL equivalence. Frozen operation never replays an interrupted run.",
-      {
-        operation_id: string("Immutable operation key"),
-        title: string("Result title"),
-        data: ref("data"),
-        strategy_path: string("Authored workspace Python file"),
-        class_name: Type.String({ pattern: "^[A-Za-z_][A-Za-z0-9_]*$" }),
-        config: Type.Object(
-          {
-            capital: number,
-            commission: number,
-            slippage: number,
-            feed: Type.Object(
-              {
-                timeframe: Type.Union(
-                  ["minutes", "days", "weeks", "months"].map(Type.Literal),
-                ),
-                compression: Type.Integer({ minimum: 1, maximum: 100000 }),
-              },
-              { additionalProperties: false },
-            ),
-          },
-          { additionalProperties: false },
-        ),
-        parameters: Type.Optional(Type.Record(Type.String(), Type.Unknown())),
-        columns: Type.Optional(
-          Type.Object(
-            Object.fromEntries(
-              ["datetime", "open", "high", "low", "close", "volume"].map(
-                (key) => [key, Type.Optional(Type.String())],
-              ),
-            ),
-            { additionalProperties: false },
-          ),
-        ),
-        timeout: Type.Optional(Type.Integer({ minimum: 1, maximum: 600 })),
-      },
-      (args, signal) => backtest(host, args, signal),
-    ),
-    define(
-      "backtrader_result",
-      "Read fixed result and report DataRefs without rerunning native code.",
-      { ref: ref("strategy.result") },
-      (args) => host.artifacts.read(args.ref),
-    ),
+export function createCapabilities(host) {
+return [
+    capability('backtrader_dispose',()=>{closeRecords(host);return{closed:true};}),
+    capability("backtrader_environment", (args, signal) => environment(host, args, signal)),
+    capability("backtrader_backtest", (args, signal) => backtest(host, args, signal)),
+    capability("backtrader_result", async (args) => await readArtifact(host,args.ref)),
   ];
 }

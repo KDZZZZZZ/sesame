@@ -1,0 +1,781 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "capabilities": [
+    {
+      "id": "read",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "读取工作区或公开绝对路径的真实文件；文本默认2000行/50KB，图片返回有界base64。知识资源使用plugin_read读取。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "工作区文件路径或宿主返回的插件资源路径",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "filesystem.read"
+      ],
+      "usage": {
+        "purpose": "读取工作区或公开绝对路径的真实文件；文本默认2000行/50KB，图片返回有界base64。知识资源使用plugin_read读取。",
+        "inputs": "path 相对当前工作区，也可为允许读取的绝对路径；offset 是1起始行号，limit 默认2000；每次文本最多50KB。",
+        "outputs": "文本为 {path,text,offset,lines,next_offset,digest}，digest 是完整文件哈希；PNG/JPEG/GIF/WebP 为 mediaType/encoding/base64 data。",
+        "prerequisites": [],
+        "limitations": [
+          "知识资源用 plugin_read(resource)。next_offset 非空才需要续读；超长单行用工作区代码按需读取，不重复同一页。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "read"
+      }
+    },
+    {
+      "id": "write",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "写入UTF-8工作区文件，创建父目录；可用expected_sha256防止覆盖变化的原文件。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "path",
+          "content"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "工作区路径",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 12582912
+          },
+          "overwrite": {
+            "type": "boolean"
+          },
+          "expected_sha256": {
+            "type": "string",
+            "pattern": "^(sha256:)?[a-f0-9]{64}$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "filesystem.write"
+      ],
+      "usage": {
+        "purpose": "写入UTF-8工作区文件，创建父目录；可用expected_sha256防止覆盖变化的原文件。",
+        "inputs": "path 限当前工作区，content 为UTF-8文本；默认 overwrite=true，可传 false 防覆盖；expected_sha256 可锁定 read.digest。自动创建父目录，≤8MiB。",
+        "outputs": "{path,size,sha256,execution:\"host\"}，是实际写入的文件与完整哈希。",
+        "prerequisites": [],
+        "limitations": [
+          "覆盖冲突重读文件后合并；不会自动验证文件内容。外部路径用 host_files_write。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "write"
+      }
+    },
+    {
+      "id": "edit",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "精确替换原文件中唯一且互不重叠的文本；全部匹配通过后一次写入。保留 BOM 和原换行风格。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "path",
+          "edits"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "工作区路径",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "edits": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "oldText",
+                "newText"
+              ],
+              "properties": {
+                "oldText": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1048576
+                },
+                "newText": {
+                  "type": "string",
+                  "maxLength": 1048576
+                }
+              },
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 128
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "filesystem.write"
+      ],
+      "usage": {
+        "purpose": "精确替换原文件中唯一且互不重叠的文本；全部匹配通过后一次写入。保留 BOM 和原换行风格。",
+        "inputs": "path 为工作区文件；edits=[{oldText,newText}]，每个 oldText 必须在原文件唯一且各段互不重叠。",
+        "outputs": "写入路径、字节数、完整 sha256 与 replacements 计数；保留 BOM/原换行。",
+        "prerequisites": [
+          "已知道原文件的精确待改文字。"
+        ],
+        "limitations": [
+          "找不到或不唯一时读取相关片段扩大匹配范围；全部替换一次提交，失败不部分修改。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "edit"
+      }
+    },
+    {
+      "id": "bash",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "在实际工作区运行PowerShell或Bash，宿主创建和取消真实进程Run；返回退出码、输出和Run引用。不能将进程成功本身当作产物验证。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "command"
+        ],
+        "properties": {
+          "command": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100000
+          },
+          "timeout": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 600
+          },
+          "cwd": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "process.exec"
+      ],
+      "usage": {
+        "purpose": "在实际工作区运行PowerShell或Bash，宿主创建和取消真实进程Run；返回退出码、输出和Run引用。不能将进程成功本身当作产物验证。",
+        "inputs": "command 是当前平台脚本（Windows=PowerShell，其他=Bash）；cwd 为工作区子目录，默认根；timeout 秒，默认60。",
+        "outputs": "真实 output/exitCode/executionId 及 run={id,status}、receipt；executionId 可供 research_register 使用。大输出标记 truncated；snapshotErrors 明示输入输出快照缺失。",
+        "prerequisites": [
+          "当前工作区；所需可执行程序已存在。"
+        ],
+        "limitations": [
+          "不是OS沙箱。需要冻结计算证据时使用仅含相关输入/脚本/输出的 cwd，避免整工作区超过256文件/16MiB快照预算。非零退出按输出修命令；超时/取消先检查已发生结果，不盲目重放。",
+          "Windows 使用 PowerShell；含引号或多行的 Python 程序可先用 write 保存 .py，再用当前环境的 Python 加 -X utf8 执行，避免重复嵌套 shell 引号。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "bash"
+      }
+    },
+    {
+      "id": "host_files_list",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "只读列出宿主目录中的普通文件和目录；结果有界且可分页，遵循文件端口的应用私有区保护。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "宿主绝对路径；支持 ~/"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "filesystem.read"
+      ],
+      "usage": {
+        "purpose": "只读列出宿主目录中的普通文件和目录；结果有界且可分页，遵循文件端口的应用私有区保护。",
+        "inputs": "path 为允许访问的宿主绝对目录或 ~/；offset 默认0，limit 默认100、最大200。",
+        "outputs": "{path,items,next_offset,scanned,scan_truncated,read_only:true}；条目含名称、路径、类型、大小、修改时间。",
+        "prerequisites": [],
+        "limitations": [
+          "扫描有上限；scan_truncated 不表示目录遍历完整。受保护路径不会因改路径写法而开放。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "host_files_list"
+      }
+    },
+    {
+      "id": "host_files_search",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "在宿主目录中按文件名片段递归搜索；不执行内容，不递归跟随符号链接。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "path",
+          "query"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "宿主绝对路径；支持 ~/"
+          },
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "depth": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 8
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "filesystem.read"
+      ],
+      "usage": {
+        "purpose": "在宿主目录中按文件名片段递归搜索；不执行内容，不递归跟随符号链接。",
+        "inputs": "path 为宿主目录，query 为文件名/相对路径片段；depth 默认3、最大8；offset/limit 分页。",
+        "outputs": "{path,query,items,next_offset,scanned,scan_truncated,read_only:true}；不搜索文件内容或跟随目录符号链接。",
+        "prerequisites": [],
+        "limitations": [
+          "无匹配不证明程序未安装，可能是范围或扫描预算；缩小到相关目录后查找。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "host_files_search"
+      }
+    },
+    {
+      "id": "host_files_read",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "只读读取宿主普通文件，每次最多 256 KiB；支持按字节分页，二进制返回 base64。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "宿主绝对路径；支持 ~/"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 262144
+          },
+          "encoding": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "utf8"
+              },
+              {
+                "type": "string",
+                "const": "base64"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "filesystem.read"
+      ],
+      "usage": {
+        "purpose": "只读读取宿主普通文件，每次最多 256 KiB；支持按字节分页，二进制返回 base64。",
+        "inputs": "path 为宿主普通文件；offset 是0起始字节偏移，limit 最大256KiB；encoding=utf8或base64。",
+        "outputs": "{path,size,modified_at,offset,encoding,content,bytes_returned,chunk_sha256,next_offset,read_only:true}；非UTF-8自动返回base64。",
+        "prerequisites": [],
+        "limitations": [
+          "chunk_sha256 只代表返回片段，不是覆盖需要的完整文件哈希；下一页使用 next_offset。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "host_files_read"
+      }
+    },
+    {
+      "id": "host_files_import",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "复制最多8MiB的普通文件为受管资源，返回版本引用、实际路径和原文件哈希。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "宿主绝对路径；支持 ~/"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "filesystem.write"
+      ],
+      "usage": {
+        "purpose": "复制最多8MiB的普通文件为受管资源，返回版本引用、实际路径和原文件哈希。",
+        "inputs": "path 为宿主普通文件，最多8MiB。",
+        "outputs": "{ref,path,provenance:{sourcePath,modifiedAt,sha256,bytes}}；新建受管 durable 文件资源，原文件保留。",
+        "prerequisites": [],
+        "limitations": [
+          "导入不会登记数据或验证来源；分析/报告需要真实数据冻结接口。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "host_files_import"
+      }
+    },
+    {
+      "id": "host_files_write",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "在宿主写入不超过 8 MiB 的普通文件；覆盖需显式 overwrite，可用完整文件哈希防止覆盖已变化的内容。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "path",
+          "content"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "宿主绝对路径；支持 ~/"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 12582912
+          },
+          "encoding": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "utf8"
+              },
+              {
+                "type": "string",
+                "const": "base64"
+              }
+            ]
+          },
+          "overwrite": {
+            "type": "boolean"
+          },
+          "expected_sha256": {
+            "type": "string",
+            "pattern": "^(sha256:)?[a-f0-9]{64}$",
+            "description": "预期完整文件 SHA-256；不要使用分页片段的哈希代替完整文件哈希。"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "filesystem.write"
+      ],
+      "usage": {
+        "purpose": "在宿主写入不超过 8 MiB 的普通文件；覆盖需显式 overwrite，可用完整文件哈希防止覆盖已变化的内容。",
+        "inputs": "path 是宿主绝对文件，content/encoding(默认utf8)；覆盖显式 overwrite=true；expected_sha256 为完整原文件哈希，内容≤8MiB。",
+        "outputs": "{path,size,sha256,execution:\"host\"}；实际写入，父目录需已存在。",
+        "prerequisites": [],
+        "limitations": [
+          "existing/changed 冲突先读实际目标；不要以片段哈希或强制覆盖绕过竞争变化。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "host_files_write"
+      }
+    },
+    {
+      "id": "host_files_mkdir",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "在宿主递归创建所需目录，保留已存在目录。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "宿主绝对路径；支持 ~/"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "filesystem.write"
+      ],
+      "usage": {
+        "purpose": "在宿主递归创建所需目录，保留已存在目录。",
+        "inputs": "path 为要创建的宿主绝对目录。",
+        "outputs": "{path,execution:\"host\"}；递归创建缺失目录，保留已有目录。",
+        "prerequisites": [],
+        "limitations": [
+          "不修改文件权限或提升系统权限；路径受保护时选择任务可用位置。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "host_files_mkdir"
+      }
+    },
+    {
+      "id": "host_files_move",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "在同一文件系统移动一个宿主普通文件到不存在的目标；不覆盖已有目标，跨文件系统需明确复制并核验。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "path",
+          "destination"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "宿主绝对路径；支持 ~/"
+          },
+          "destination": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "宿主绝对路径；支持 ~/"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "filesystem.write"
+      ],
+      "usage": {
+        "purpose": "在同一文件系统移动一个宿主普通文件到不存在的目标；不覆盖已有目标，跨文件系统需明确复制并核验。",
+        "inputs": "path/destination 是宿主绝对路径；源为普通文件，目标必须不存在。",
+        "outputs": "{path,destination,execution:\"host\"}；完成后源消失、目标含原字节。",
+        "prerequisites": [],
+        "limitations": [
+          "不能跨文件系统；需要跨盘时复制并核验后按用户意图移除源，不把失败当已移动。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "host_files_move"
+      }
+    },
+    {
+      "id": "host_files_remove",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "删除一个宿主普通文件或空目录；不会递归删除目录树，可用完整文件哈希检查目标。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "宿主绝对路径；支持 ~/"
+          },
+          "expected_sha256": {
+            "type": "string",
+            "pattern": "^(sha256:)?[a-f0-9]{64}$",
+            "description": "预期完整文件 SHA-256；不要使用分页片段的哈希代替完整文件哈希。"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "filesystem.write"
+      ],
+      "usage": {
+        "purpose": "删除一个宿主普通文件或空目录；不会递归删除目录树，可用完整文件哈希检查目标。",
+        "inputs": "path 为普通文件或空目录；文件可附 expected_sha256 核对完整内容。",
+        "outputs": "{path,removed:true,execution:\"host\"}。",
+        "prerequisites": [
+          "用户任务已明确指定删除目标。"
+        ],
+        "limitations": [
+          "不递归删目录树；非空目录或变化的文件会失败，重新确认实际目标范围。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "host_files_remove"
+      }
+    },
+    {
+      "id": "host_files_run",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "用逐项argv运行实际宿主命令，由host.process.exec统一超时、取消和Run结果。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "argv",
+          "cwd"
+        ],
+        "properties": {
+          "argv": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 32768
+            },
+            "minItems": 1,
+            "maxItems": 256
+          },
+          "cwd": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "宿主绝对路径；支持 ~/"
+          },
+          "timeout": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 600,
+            "description": "秒"
+          },
+          "env": {
+            "type": "object",
+            "patternProperties": {
+              "^[A-Za-z_][A-Za-z0-9_]*$": {
+                "type": "string",
+                "maxLength": 32768
+              }
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "process.exec"
+      ],
+      "usage": {
+        "purpose": "用逐项argv运行实际宿主命令，由host.process.exec统一超时、取消和Run结果。",
+        "inputs": "argv 为逐项参数数组，无隐式shell；cwd 为已存在宿主目录；timeout 默认60秒；env 可补充环境。",
+        "outputs": "实际进程 output/exitCode 与宿主 run/receipt，等待至进程结束；超时/非零退出有具体错误。",
+        "prerequisites": [
+          "可执行程序与 cwd 实际存在。"
+        ],
+        "limitations": [
+          "命令以当前用户权限运行，并非OS沙箱；参数中的凭据会暴露给进程，应使用适合该后端的认证入口。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "host_files_run"
+      }
+    }
+  ],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "hooks": [],
+  "stateCollections": [],
+  "artifactSchemas": [],
+  "knowledge": [
+    {
+      "id": "resource.1",
+      "path": "prompt.md",
+      "description": "随包文件能力说明 prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "resource.2",
+      "path": "skills/prepare-environment/SKILL.md",
+      "description": "随包文件能力说明 skills/prepare-environment/SKILL.md",
+      "kind": "skill"
+    }
+  ]
+}

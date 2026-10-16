@@ -1,208 +1,273 @@
 {
+  "id": "sesame/quantskills-catalog",
+  "apiVersion": "2",
+  "version": "2.1.0",
+  "title": "QuantSkills 目录",
+  "description": "查询固定 QuantSkills 元数据，按需求选择去重后的 Sesame 方法流程和可选后端；安装与可用性另行核验。",
+  "license": "MIT",
   "author": {
     "name": "Sesame"
   },
-  "name": "quantskills-catalog",
-  "version": "2.1.0",
-  "description": "查询固定 QuantSkills 元数据，按需求选择去重后的 Sesame 方法流程和可选后端；安装与可用性另行核验。",
-  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
-  "extensions": {
-    "bot.sesame": {
-      "dependencies": [],
-      "tests": [
-        {
-          "server": "analysis",
-          "tool": "catalog_list_categories",
-          "arguments": {},
-          "expected": {
-            "categories": [
-              {
-                "id": "01",
-                "name": "01 数据接口与数据仓库",
-                "count": 7
-              },
-              {
-                "id": "02",
-                "name": "02 因子研发工具箱",
-                "count": 44
-              },
-              {
-                "id": "03",
-                "name": "03 市场与标的分析",
-                "count": 44
-              },
-              {
-                "id": "04",
-                "name": "04 风险监控与预警",
-                "count": 22
-              },
-              {
-                "id": "05",
-                "name": "05 策略回测与交易工具",
-                "count": 25
-              },
-              {
-                "id": "06",
-                "name": "06 投研模型与研究复现",
-                "count": 30
-              },
-              {
-                "id": "07",
-                "name": "07 研究验证与质量工具",
-                "count": 12
-              },
-              {
-                "id": "08",
-                "name": "08 资讯搜索与知识分析",
-                "count": 10
-              },
-              {
-                "id": "09",
-                "name": "09 量化智能体与自动化",
-                "count": 14
-              },
-              {
-                "id": "10",
-                "name": "10 基础设施与模板",
-                "count": 6
-              }
-            ],
-            "total_items": 214,
-            "version": "2.1.0"
-          }
-        },
-        {
-          "server": "analysis",
-          "tool": "catalog_search",
-          "arguments": {
-            "query": "alpha191",
-            "limit": 10
+  "default_state": "discoverable",
+  "agent_scope": "all",
+  "execution": "mcp",
+  "capability_manifest": "capabilities.json",
+  "prompts": [],
+  "skills": [
+    "skills"
+  ],
+  "resources": [],
+  "engines": {
+    "sesame": ">=0.2.0-0"
+  },
+  "tests": [
+    {
+      "server": "analysis",
+      "tool": "catalog_list_categories",
+      "arguments": {},
+      "expected": {
+        "categories": [
+          {
+            "id": "01",
+            "name": "01 数据接口与数据仓库",
+            "count": 7
           },
-          "expected": {
-            "results": [
-              {
-                "name": "skill-factor-alpha191-alpha101",
-                "repo_url": "https://github.com/quantskills/skill-factor-alpha191-alpha101",
-                "category": "02 因子研发工具箱",
-                "subcategory": "因子生成（26）",
-                "stage": "factor-generation",
-                "asset_type": "skill",
-                "verification_level": "pending_review"
-              }
-            ],
-            "count": 1,
-            "query": "alpha191",
-            "version": "2.1.0"
-          }
-        },
-        {
-          "server": "analysis",
-          "tool": "catalog_filter",
-          "arguments": {
-            "category": "02 因子研发工具箱",
-            "limit": 5
+          {
+            "id": "02",
+            "name": "02 因子研发工具箱",
+            "count": 44
           },
-          "expected": {
-            "results": [
-              {
-                "name": "skill-factor-idea-generation",
-                "repo_url": "https://github.com/quantskills/skill-factor-idea-generation",
-                "category": "02 因子研发工具箱",
-                "subcategory": "因子创意（2）",
-                "stage": "factor-generation",
-                "asset_type": "skill",
-                "verification_level": "pending_review"
-              },
-              {
-                "name": "skill-factormad-debate-factor-mining",
-                "repo_url": "https://github.com/quantskills/skill-factormad-debate-factor-mining",
-                "category": "02 因子研发工具箱",
-                "subcategory": "因子创意（2）",
-                "stage": "factor-generation",
-                "asset_type": "skill",
-                "verification_level": "pending_review"
-              },
-              {
-                "name": "skill-a1-lhb-tracking",
-                "repo_url": "https://github.com/quantskills/skill-a1-lhb-tracking",
-                "category": "02 因子研发工具箱",
-                "subcategory": "因子生成（26）",
-                "stage": "factor-generation",
-                "asset_type": "skill",
-                "verification_level": "pending_review"
-              },
-              {
-                "name": "skill-alpha-a06-hotmoney-reversal",
-                "repo_url": "https://github.com/quantskills/skill-alpha-a06-hotmoney-reversal",
-                "category": "02 因子研发工具箱",
-                "subcategory": "因子生成（26）",
-                "stage": "factor-generation",
-                "asset_type": "skill",
-                "verification_level": "pending_review"
-              },
-              {
-                "name": "skill-alpha-a3-streak-leader-relay",
-                "repo_url": "https://github.com/quantskills/skill-alpha-a3-streak-leader-relay",
-                "category": "02 因子研发工具箱",
-                "subcategory": "因子生成（26）",
-                "stage": "evaluation",
-                "asset_type": "skill",
-                "verification_level": "pending_review"
-              }
-            ],
-            "count": 5,
-            "filters": {
-              "category": "02 因子研发工具箱",
-              "limit": 5
-            },
-            "version": "2.1.0"
-          }
-        },
-        {
-          "server": "analysis",
-          "tool": "catalog_get_item",
-          "arguments": {
-            "name": "skill-factor-alpha191-alpha101"
+          {
+            "id": "03",
+            "name": "03 市场与标的分析",
+            "count": 44
           },
-          "expected": {
-            "found": true,
-            "item": {
-              "name": "skill-factor-alpha191-alpha101",
-              "repo_url": "https://github.com/quantskills/skill-factor-alpha191-alpha101",
-              "category": "02 因子研发工具箱",
-              "subcategory": "因子生成（26）",
-              "description": "从长表OHLCV CSV批量计算Alpha101和Alpha191因子并输出宽表CSV。",
-              "stage": "factor-generation",
-              "input": "—",
-              "output": "—",
-              "interface_status": "待维护者审核 / 无公开端点",
-              "screenshot": "",
-              "fetched_at": "2026-10-03T14:34:06.311Z",
-              "source": "https://raw.githubusercontent.com/quantskills/quantskills/main/README.md",
-              "asset_type": "skill",
-              "data_dependencies": [
-                "OHLCV/CSV data"
-              ],
-              "mt5agent_integration": "file_import",
-              "verification_level": "pending_review",
-              "workflow_stage": "研究信号 / Research signal"
-            },
-            "version": "2.1.0"
+          {
+            "id": "04",
+            "name": "04 风险监控与预警",
+            "count": 22
+          },
+          {
+            "id": "05",
+            "name": "05 策略回测与交易工具",
+            "count": 25
+          },
+          {
+            "id": "06",
+            "name": "06 投研模型与研究复现",
+            "count": 30
+          },
+          {
+            "id": "07",
+            "name": "07 研究验证与质量工具",
+            "count": 12
+          },
+          {
+            "id": "08",
+            "name": "08 资讯搜索与知识分析",
+            "count": 10
+          },
+          {
+            "id": "09",
+            "name": "09 量化智能体与自动化",
+            "count": 14
+          },
+          {
+            "id": "10",
+            "name": "10 基础设施与模板",
+            "count": 6
           }
-        }
-      ],
-      "builtin": {
-        "title": "QuantSkills 目录",
-        "default_state": "discoverable",
-        "tool_definitions": "tools.json"
+        ],
+        "total_items": 214,
+        "version": "2.1.0"
+      }
+    },
+    {
+      "server": "analysis",
+      "tool": "catalog_search",
+      "arguments": {
+        "query": "alpha191",
+        "limit": 10
       },
-      "id": "sesame/quantskills-catalog",
-      "apiVersion": "1",
-      "provides": {},
-      "engines": {
-        "sesame": ">=0.2.0-0"
+      "expected": {
+        "results": [
+          {
+            "name": "skill-factor-alpha191-alpha101",
+            "repo_url": "https://github.com/quantskills/skill-factor-alpha191-alpha101",
+            "category": "02 因子研发工具箱",
+            "subcategory": "因子生成（26）",
+            "stage": "factor-generation",
+            "asset_type": "skill",
+            "verification_level": "pending_review"
+          }
+        ],
+        "count": 1,
+        "query": "alpha191",
+        "version": "2.1.0"
+      }
+    },
+    {
+      "server": "analysis",
+      "tool": "catalog_filter",
+      "arguments": {
+        "category": "02 因子研发工具箱",
+        "limit": 5
+      },
+      "expected": {
+        "results": [
+          {
+            "name": "skill-factor-idea-generation",
+            "repo_url": "https://github.com/quantskills/skill-factor-idea-generation",
+            "category": "02 因子研发工具箱",
+            "subcategory": "因子创意（2）",
+            "stage": "factor-generation",
+            "asset_type": "skill",
+            "verification_level": "pending_review"
+          },
+          {
+            "name": "skill-factormad-debate-factor-mining",
+            "repo_url": "https://github.com/quantskills/skill-factormad-debate-factor-mining",
+            "category": "02 因子研发工具箱",
+            "subcategory": "因子创意（2）",
+            "stage": "factor-generation",
+            "asset_type": "skill",
+            "verification_level": "pending_review"
+          },
+          {
+            "name": "skill-a1-lhb-tracking",
+            "repo_url": "https://github.com/quantskills/skill-a1-lhb-tracking",
+            "category": "02 因子研发工具箱",
+            "subcategory": "因子生成（26）",
+            "stage": "factor-generation",
+            "asset_type": "skill",
+            "verification_level": "pending_review"
+          },
+          {
+            "name": "skill-alpha-a06-hotmoney-reversal",
+            "repo_url": "https://github.com/quantskills/skill-alpha-a06-hotmoney-reversal",
+            "category": "02 因子研发工具箱",
+            "subcategory": "因子生成（26）",
+            "stage": "factor-generation",
+            "asset_type": "skill",
+            "verification_level": "pending_review"
+          },
+          {
+            "name": "skill-alpha-a3-streak-leader-relay",
+            "repo_url": "https://github.com/quantskills/skill-alpha-a3-streak-leader-relay",
+            "category": "02 因子研发工具箱",
+            "subcategory": "因子生成（26）",
+            "stage": "evaluation",
+            "asset_type": "skill",
+            "verification_level": "pending_review"
+          }
+        ],
+        "count": 5,
+        "filters": {
+          "category": "02 因子研发工具箱",
+          "limit": 5
+        },
+        "version": "2.1.0"
+      }
+    },
+    {
+      "server": "analysis",
+      "tool": "catalog_get_item",
+      "arguments": {
+        "name": "skill-factor-alpha191-alpha101"
+      },
+      "expected": {
+        "found": true,
+        "item": {
+          "name": "skill-factor-alpha191-alpha101",
+          "repo_url": "https://github.com/quantskills/skill-factor-alpha191-alpha101",
+          "category": "02 因子研发工具箱",
+          "subcategory": "因子生成（26）",
+          "description": "从长表OHLCV CSV批量计算Alpha101和Alpha191因子并输出宽表CSV。",
+          "stage": "factor-generation",
+          "input": "—",
+          "output": "—",
+          "interface_status": "待维护者审核 / 无公开端点",
+          "screenshot": "",
+          "fetched_at": "2026-10-03T14:34:06.311Z",
+          "source": "https://raw.githubusercontent.com/quantskills/quantskills/main/README.md",
+          "asset_type": "skill",
+          "data_dependencies": [
+            "OHLCV/CSV data"
+          ],
+          "mt5agent_integration": "file_import",
+          "verification_level": "pending_review",
+          "workflow_stage": "研究信号 / Research signal"
+        },
+        "version": "2.1.0"
+      }
+    },
+    {
+      "server": "analysis",
+      "tool": "catalog_recommend",
+      "arguments": {
+        "need": "native-backtest"
+      },
+      "expected": {
+        "need": "native-backtest",
+        "method": null,
+        "workflow": {
+          "purpose": "在选定的成熟引擎上运行固定策略与数据，保存真实结果。",
+          "primary_plugins": [],
+          "shared_plugins": [
+            "sesame/data-access",
+            "sesame/reports"
+          ],
+          "backend_choices": [
+            "sesame/mt5",
+            "sesame/vnpy",
+            "sesame/backtrader"
+          ],
+          "selection": "MQL5 用 MT5 Tester、兼容 CTA Python 用 vn.py、Backtrader Strategy 用 Cerebro。撮合假设不可互换；对比结果须统一日期、成本、复权、数量与期末仓位处理。",
+          "reference_names": [
+            "skill-backtest",
+            "skill-factor-backtest",
+            "skill-backtest-assumption-check"
+          ]
+        },
+        "selection_required": false,
+        "references": [
+          {
+            "name": "skill-backtest",
+            "repo_url": "https://github.com/quantskills/skill-backtest",
+            "category": "05 策略回测与交易工具",
+            "subcategory": "回测引擎（2）",
+            "stage": "backtesting",
+            "asset_type": "skill",
+            "verification_level": "pending_review"
+          },
+          {
+            "name": "skill-factor-backtest",
+            "repo_url": "https://github.com/quantskills/skill-factor-backtest",
+            "category": "05 策略回测与交易工具",
+            "subcategory": "回测引擎（2）",
+            "stage": "backtesting",
+            "asset_type": "skill",
+            "verification_level": "pending_review"
+          },
+          {
+            "name": "skill-backtest-assumption-check",
+            "repo_url": "https://github.com/quantskills/skill-backtest-assumption-check",
+            "category": "07 研究验证与质量工具",
+            "subcategory": "工作流审计（2）",
+            "stage": "reporting",
+            "asset_type": "skill",
+            "verification_level": "pending_review"
+          }
+        ],
+        "availability": "not_checked",
+        "next_steps": [
+          "Use the declared plugin catalog capability to inspect exact published IDs and versions.",
+          "Choose capabilities that meet the task objective; installation includes prerequisite checks.",
+          "Read the selected SKILL and retain its sources; directory references are not imported implementations or proof of trading performance."
+        ],
+        "snapshot_date": "2026-10-03T14:34:06.311Z",
+        "version": "2.1.0"
       }
     }
-  },
-  "license": "MIT"
+  ]
 }

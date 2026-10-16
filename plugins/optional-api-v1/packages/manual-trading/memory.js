@@ -1,3 +1,4 @@
+import { records } from './records.js';
 import { createHash } from 'node:crypto';
 
 // Design references: TradingAgents decision/outcome logs and META episodic
@@ -57,26 +58,26 @@ function symbolsFor(run) {
   return [...new Set(values.map(value => text(value, 'symbol', 100)))].sort();
 }
 
-export function createTradingMemory(host, { now = Date.now, ownerConversationId } = {}) {
+export function createTradingMemory(host, { now = Date.now, ownerConversationId, datasetReader } = {}) {
   const serviceOwner = ownerConversationId === undefined ? undefined : text(ownerConversationId, 'ownerConversationId');
-  check(serviceOwner === undefined || host.scope?.kind === 'service', 'FORBIDDEN', 'Only a service host can bind an internal memory owner');
+  check(serviceOwner === undefined || host.context?.kind === 'service', 'FORBIDDEN', 'Only a service host can bind an internal memory owner');
   const clock = () => timestamp(now(), 'clock');
   const scope = () => {
-    if (host.scope?.kind === 'service') {
+    if (host.context?.kind === 'service') {
       check(serviceOwner, 'FORBIDDEN', 'Service memory requires an explicit owner bound by its factory');
       return serviceOwner;
     }
-    check(host.scope?.kind === 'main', 'FORBIDDEN', 'Trading memory belongs to the main conversation');
-    return text(host.scope.conversationId, 'conversationId');
+    check(host.context?.kind === 'main', 'FORBIDDEN', 'Trading memory belongs to the main conversation');
+    return text(host.context.sessionId, 'conversationId');
   };
-  const optional = (kind, id) => host.storage.get(kind, id, true);
+  const optional = (kind, id) => records(host).get(kind, id, true);
   const owned = value => {
     check(value, 'NOT_FOUND', 'Trading memory record not found');
     check(value.conversationId === scope(), 'FORBIDDEN', 'Trading memory belongs to another conversation');
     return value;
   };
   const getRun = runId => owned(optional(RUNS, text(runId, 'runId')));
-  function sources(dataset, cutoff, seen = new Set(), budget = { remaining: 128 }) {
+  function sources(dataset, cutoff, readDataset, seen = new Set(), budget = { remaining: 128 }) {
     check(dataset && typeof dataset.id === 'string' && !seen.has(dataset.id) && seen.size < 32 && --budget.remaining >= 0, 'INVALID_EVIDENCE', 'Invalid or oversized dataset provenance chain');
     seen.add(dataset.id);
     check(!['synthetic', 'simulated', 'forecast', 'user_input'].includes(dataset.provenance?.source_kind), 'INVALID_EVIDENCE', 'Simulated, forecast or manually entered data cannot verify a real outcome');
@@ -87,21 +88,21 @@ export function createTradingMemory(host, { now = Date.now, ownerConversationId 
     }
     if (dataset.input_ids?.length) {
       check(dataset.input_ids.length <= 16, 'MEMORY_LIMIT', 'Too many evidence sources');
-      return dataset.input_ids.flatMap(id => sources(host.datasets.read(id), cutoff, new Set(seen), budget));
+      return dataset.input_ids.flatMap(id => sources(readDataset(id), cutoff, readDataset, new Set(seen), budget));
     }
     const provenance = dataset.provenance;
     check(provenance?.source_kind === 'external' && typeof provenance.provider === 'string' && provenance.provider.trim(), 'INVALID_EVIDENCE', 'Evidence requires a registered external source');
     const asOf = timestamp(provenance.as_of, 'source.as_of');
     check(asOf <= cutoff, 'FUTURE_EVIDENCE', 'Evidence was obtained after the review time');
-    return [{ datasetId: dataset.id, provider: provenance.provider, producerPluginId: dataset.producer_plugin_id ?? null, asOf, sourceKind: provenance.source_kind }];
+    return [{ datasetId: dataset.id, provider: provenance.provider, producerPluginId: dataset.producer_plugin_id ?? null, asOf, sourceKind: provenance.source_kind, ...(dataset.source ? { source: dataset.source, query: dataset.sourceQuery } : {}), ...(dataset.artifact ? { artifact: dataset.artifact } : {}) }];
   }
-  function evidenceFor(ref, run, cutoff) {
+  function evidenceFor(ref, run, cutoff, readDataset) {
     check(ref && typeof ref === 'object' && !Array.isArray(ref), 'INVALID_ARGUMENT', 'Evidence must reference a registered dataset row');
     const datasetId = text(ref.datasetId ?? ref.dataset_id, 'datasetId');
     const kind = ref.kind ?? 'observation', rowIndex = ref.rowIndex ?? 0;
     check(['observation', 'market', 'execution'].includes(kind) && Number.isInteger(rowIndex) && rowIndex >= 0, 'INVALID_ARGUMENT', 'Invalid evidence kind or row index');
-    check(typeof host.datasets?.read === 'function', 'PREREQUISITE_REQUIRED', 'The host dataset port is required to verify outcomes');
-    const dataset = host.datasets.read(datasetId), roots = sources(dataset, cutoff);
+    check(typeof readDataset === 'function', 'PREREQUISITE_REQUIRED', 'A verified saved-data snapshot is required to verify outcomes');
+    const dataset = readDataset(datasetId), roots = sources(dataset, cutoff, readDataset);
     check(Array.isArray(dataset.rows) && rowIndex < dataset.rows.length, 'INVALID_EVIDENCE', 'Evidence row does not exist');
     const row = bounded(dataset.rows[rowIndex], 32768, 'evidence row');
     const observedAtField = text(ref.observedAtField, 'observedAtField', 160);
@@ -111,7 +112,7 @@ export function createTradingMemory(host, { now = Date.now, ownerConversationId 
     check(!symbol || !run.symbols.length || run.symbols.includes(symbol), 'INVALID_EVIDENCE', 'Evidence concerns an unrelated symbol');
     if (ref.accountIdField) check(String(dot(row, ref.accountIdField)) === (run.executionAccountId ?? run.accountId), 'ACCOUNT_MISMATCH', 'Evidence belongs to another account');
     if (kind === 'execution') {
-      check(!dataset.input_ids?.length, 'INVALID_EVIDENCE', 'Execution requires an original registered fill row; derived datasets may provide observations but cannot confirm fills');
+      check(!dataset.input_ids?.length && !dataset.artifactDependencies?.length, 'INVALID_EVIDENCE', 'Execution requires an original registered fill row; derived datasets may provide observations but cannot confirm fills');
       check(roots.some(root => run.executionSources?.some(source => source.pluginId === root.producerPluginId && source.provider === root.provider)), 'INVALID_EVIDENCE', 'Execution requires a fill source frozen by the selected execution capability and its registered producer; targets and quotes are not fills');
       check(ref.accountIdField && ref.executionIdField && ref.quantityField && ref.priceField && ref.runIdField && symbol, 'INVALID_EVIDENCE', 'Execution evidence requires source fields binding the account, run, symbol, fill ID, quantity and price');
       check(String(dot(row, ref.runIdField)) === run.id, 'INVALID_EVIDENCE', 'Execution evidence is not correlated with this decision');
@@ -143,10 +144,10 @@ export function createTradingMemory(host, { now = Date.now, ownerConversationId 
         return bounded(prior, MEMORY_LIMITS.runBytes + 2048, 'stored decision');
       }
       const value = { ...body, conversationId, recordedAt, fingerprint: hash };
-      host.storage.put(RUNS, value);
+      records(host).put(RUNS, value);
       return bounded(value, MEMORY_LIMITS.runBytes + 2048, 'stored decision');
     },
-    review({ runId, asOf, evidence, reflection } = {}) {
+    review({ runId, asOf, evidence, reflection } = {}, datasets) {
       const run = getRun(runId), recordedAt = clock(), cutoff = timestamp(asOf ?? recordedAt, 'asOf');
       check(cutoff >= run.createdAt && cutoff <= recordedAt, 'FUTURE_EVIDENCE', 'Review time must be between the decision and now');
       check(Array.isArray(evidence) && evidence.length > 0 && evidence.length <= MEMORY_LIMITS.evidence, 'INVALID_EVIDENCE', 'Provide 1–16 registered source rows; an intended trade is not outcome evidence');
@@ -160,7 +161,7 @@ export function createTradingMemory(host, { now = Date.now, ownerConversationId 
         return prior;
       }
       const observations = [...new Map(evidence.map(ref => {
-        const item = evidenceFor(ref, run, cutoff);
+        const item = evidenceFor(ref, run, cutoff, datasets ? id => datasets.get(id) : datasetReader);
         return [`${item.datasetId}:${item.rowIndex}:${item.kind}`, item];
       })).values()];
       const executionConfirmed = observations.some(item => item.kind === 'execution');
@@ -170,7 +171,7 @@ export function createTradingMemory(host, { now = Date.now, ownerConversationId 
           basis: executionConfirmed ? 'correlated_source_fills' : 'source_observations_only',
           note: 'Reflection is an agent interpretation. Price changes and target weights are not fills; portfolio P&L requires separate reconciliation of all actual fills and costs.' },
       }, MEMORY_LIMITS.reviewBytes, 'review');
-      host.storage.put(REVIEWS, result); return result;
+      records(host).put(REVIEWS, result); return result;
     },
     context({ planId, accountId, symbols = [], asOf, limit = 8 } = {}) {
       const conversationId = scope(), cutoff = timestamp(asOf ?? clock(), 'asOf');
@@ -178,8 +179,8 @@ export function createTradingMemory(host, { now = Date.now, ownerConversationId 
       check(cutoff <= clock(), 'FUTURE_EVIDENCE', 'Memory context cannot be requested from the future');
       check(Number.isInteger(limit) && limit > 0 && limit <= MEMORY_LIMITS.limit && Array.isArray(symbols) && symbols.length <= 100, 'INVALID_ARGUMENT', 'Invalid context limit or symbols');
       const wanted = new Set(symbols.map(value => text(value, 'symbol', 100)));
-      const reviews = host.storage.list(REVIEWS).filter(item => item.conversationId === conversationId && item.accountId === accountId && item.recordedAt <= cutoff && item.asOf <= cutoff);
-      const candidates = host.storage.list(RUNS).filter(item => item.conversationId === conversationId && item.accountId === accountId && item.createdAt <= cutoff && item.recordedAt <= cutoff)
+      const reviews = records(host).list(REVIEWS).filter(item => item.conversationId === conversationId && item.accountId === accountId && item.recordedAt <= cutoff && item.asOf <= cutoff);
+      const candidates = records(host).list(RUNS).filter(item => item.conversationId === conversationId && item.accountId === accountId && item.createdAt <= cutoff && item.recordedAt <= cutoff)
         .map(run => ({ run, overlap: run.symbols.filter(symbol => wanted.has(symbol)).length }))
         .filter(({ run, overlap }) => wanted.size ? overlap > 0 : planId === undefined || run.planId === planId)
         .sort((a, b) => b.overlap - a.overlap || Number(b.run.planId === planId) - Number(a.run.planId === planId) || b.run.recordedAt - a.run.recordedAt || a.run.id.localeCompare(b.run.id));

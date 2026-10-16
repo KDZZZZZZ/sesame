@@ -18,4 +18,4 @@ restricted 模式仅通过工作流给角色开发集，select 冻结候选后 f
 
 独立复现：`node scripts/reproduce.mjs <run.json> <run.dataset.json>`。比较全部已计算开发指标和冻结选择的最终指标，任何输入漂移都会失败。未完成选择的封存归档不包含原始留出数据，不能用于完整复现。
 
-验证：`node --test tests/*.test.js`。所有测试使用合成价格，没有远程数据、模型或交易调用。需要 Sesame >=0.2.3-dev.8 的 `host.tools.invocation()` 及嵌套调用活性校验；安装器会在加载前拒绝旧版宿主，能力缺失时直接失败。
+验证：`node --test tests/*.test.js`。所有测试使用合成价格，没有远程数据、模型或交易调用。需要支持 `executionContext.provenance` 的当前 Sesame dev 主体；能力缺失时直接失败，不回退。

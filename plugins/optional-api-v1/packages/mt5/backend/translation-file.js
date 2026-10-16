@@ -1,3 +1,4 @@
+import { records } from './records.js';
 import { promises as fs, constants } from 'node:fs';
 import { isAbsolute, join, normalize, relative, resolve, sep } from 'node:path';
 import { Value } from '@sesame/plugin-sdk/schema/value';
@@ -21,7 +22,7 @@ const sameFile = (a, b) => sameIdentity(a, b) && a.size === b.size && a.mtimeNs 
 // identities and real paths are checked again before accepting any read bytes.
 export async function readTranslationManifest(host, requested, signal) {
   signal?.throwIfAborted();
-  const logicalRoot = resolve(host.workspace.path('.')), declaredRoot = await fs.lstat(logicalRoot, { bigint: true });
+  const logicalRoot = resolve(host.context.workspaceRoot), declaredRoot = await fs.lstat(logicalRoot, { bigint: true });
   requireValue(declaredRoot.isDirectory() && !declaredRoot.isSymbolicLink(), '工作区根目录不能是符号链接或非目录');
   const root = await fs.realpath(logicalRoot);
   requireValue(sameIdentity(declaredRoot, await fs.lstat(root, { bigint: true })), '工作区根目录在解析时发生变化');
@@ -88,19 +89,19 @@ function checkedSnapshot(row, requestDigest) {
 export async function registerTranslationFile(host, mt5, args, signal) {
   requireValue(Value.Check(translationFileSchema, args), '需要 operation_id 与 manifest_path，不能附加内联翻译字段');
   const path = requestedPath(args.manifest_path), operation = digest(args.operation_id).slice(7), requestDigest = digest({ manifest_path: path });
-  let row = host.storage.get('mt5_translation_manifest', operation, true), reused = Boolean(row);
+  let row = records(host).get('mt5_translation_manifest', operation, true), reused = Boolean(row);
   if (row) row = checkedSnapshot(row, requestDigest);
   else {
     const input = await readTranslationManifest(host, path, signal), manifestDigest = digest(input.manifest);
-    row = host.storage.transaction(() => {
-      const prior = host.storage.get('mt5_translation_manifest', operation, true);
+    row = records(host).transaction(() => {
+      const prior = records(host).get('mt5_translation_manifest', operation, true);
       if (prior) {
         reused = true;
         const checked = checkedSnapshot(prior, requestDigest);
         requireValue(checked.manifest_digest === manifestDigest, '并发请求读取了不同的清单内容；操作 ID 已固定首次快照', 409, 'idempotency_conflict');
         return checked;
       }
-      return host.storage.put('mt5_translation_manifest', { id: operation, request_digest: requestDigest, manifest_digest: manifestDigest, manifest_bytes: Buffer.byteLength(canonical(input.manifest)), ...input });
+      return records(host).put('mt5_translation_manifest', { id: operation, request_digest: requestDigest, manifest_digest: manifestDigest, manifest_bytes: Buffer.byteLength(canonical(input.manifest)), ...input });
     });
   }
   signal?.throwIfAborted();

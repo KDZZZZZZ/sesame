@@ -1,6 +1,6 @@
 {
   "id": "sesame/ict",
-  "apiVersion": "1",
+  "apiVersion": "2",
   "version": "1.0.0",
   "title": "ICT 价格结构研究",
   "description": "仅按需 ICT：固定参考范围、三柱价格区间、结构转变候选与失效证据；不从 OHLC 反推机构真实订单。",
@@ -11,8 +11,6 @@
   "default_state": "discoverable",
   "agent_scope": "all",
   "entry": "index.js",
-  "tool_definitions": "tools.json",
-  "tool_names": [],
   "prompts": [
     "prompt.md"
   ],
@@ -35,5 +33,6 @@
   "provides": {},
   "engines": {
     "sesame": ">=0.2.0-0"
-  }
+  },
+  "capability_manifest": "capabilities.json"
 }

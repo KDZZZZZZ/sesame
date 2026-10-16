@@ -79,34 +79,23 @@ const system = request => `${request.program.prompt}\n\nYou are a versioned stra
 /** Durable, asynchronous decision producer. Adapters consume outputs; no order
  * transport, main-chat memory or provider credentials enter this plugin. */
 export class AgentDecisionService {
-  constructor(host, { clock = () => Date.now(), concurrency = 2 } = {}) {
-    int(concurrency, 1, 8, 'decision concurrency'); this.host = host; this.clock = clock; this.concurrency = concurrency;
+  constructor(services, { clock = () => Date.now(), concurrency = 2 } = {}) {
+    int(concurrency, 1, 8, 'decision concurrency'); this.services = services; this.records = services.records; this.clock = clock; this.concurrency = concurrency;
     this.tasks = new Map(); this.queue = []; this.running = 0; this.closed = false;
-    for (const job of host.storage.list('decision_job')) if (active(job.status)) this.finishFailure(job.id, 'interrupted', { error: { code: 'RESTARTED', message: 'Decision request interrupted; no automatic replay' } });
-    for (const simulation of host.storage.list('decision_simulation')) if (simulation.pending) host.storage.update('decision_simulation', simulation.id, { pending: null });
+    for (const job of this.records.list('decision_job')) if (active(job.status)) this.finishFailure(job.id, 'interrupted', { error: { code: 'RESTARTED', message: 'Decision request interrupted; no automatic replay' } });
+    for (const simulation of this.records.list('decision_simulation')) if (simulation.pending) this.records.update('decision_simulation', simulation.id, { pending: null });
   }
-  get(id) { return this.host.storage.get('decision_job', id); }
+  get(id) { return this.records.get('decision_job', id); }
   state(request) {
     const key = runKey(request.scope);
-    return this.host.storage.get('decision_run', key, true) ?? { id: key, scope: portfolioScope(request.scope), mode: request.mode, epoch: 0, sequence: 0, lastAvailableAt: -1, lastTriggeredAt: -1, lastObservedAt: -1, lastTransitionAt: -1,
+    return this.records.get('decision_run', key, true) ?? { id: key, scope: portfolioScope(request.scope), mode: request.mode, epoch: 0, sequence: 0, lastAvailableAt: -1, lastTriggeredAt: -1, lastObservedAt: -1, lastTransitionAt: -1,
       context: digest([request.mode, request.simulation?.id ?? null, request.simulation?.parametersDigest ?? null]) };
   }
-  readInputs(request) {
-    return request.inputs.map(input => {
-      const artifact = this.host.artifacts.read(input.ref), payload = { ref: input.ref, availableAt: input.availableAt, content: artifact.manifest.content, provenance: artifact.manifest.provenance ?? null };
-      if (input.paths?.length) payload.files = input.paths.map(path => {
-        const blob = artifact.manifest.blobs.find(blob => blob.path === path); check(blob, 'Frozen input blob is missing');
-        check(blob.size <= MAX_BYTES && /^(application\/json|text\/)/.test(blob.mediaType), 'Decision blobs must be bounded text or JSON');
-        const bytes = this.host.artifacts.readBlob(blob); check(bytes.length <= MAX_BYTES, 'Input blob exceeds 1 MiB');
-        const content = new TextDecoder('utf-8', { fatal: true }).decode(bytes); return { path, content, digest: blob.digest };
-      });
-      return boundedJson(payload, 'Input artifact');
-    });
-  }
-  submit(value) {
+
+  async submit(value) {
     check(!this.closed, 'Decision service stopped');
     const request = validateDecisionRequest(value), fingerprint = digest(request), id = digest(['decision', request.requestId]);
-    const previous = this.host.storage.get('decision_job', id, true);
+    const previous = this.records.get('decision_job', id, true);
     if (previous) { check(previous.fingerprint === fingerprint, 'Decision request ID reused with different content', 'IDEMPOTENCY_CONFLICT'); return previous; }
     check(this.tasks.size < 64, 'Decision queue is full', 'RESOURCE_EXHAUSTED');
     const currentTime = this.clock();
@@ -114,9 +103,14 @@ export class AgentDecisionService {
       check(request.triggeredAt.unixMs <= currentTime, 'Live trigger is in the future');
       check(currentTime < request.triggeredAt.unixMs + request.program.ttlMs && currentTime - request.dataCutoffAt.unixMs <= request.program.maxInputAgeMs, 'Decision input or lifetime already expired');
     }
-    check(this.host.inference.models().some(model => same(model, request.program.model)), 'Frozen model is not currently configured', 'MODEL_CHANGED');
-    const inputs = this.readInputs(request); boundedJson(inputs, 'Combined decision inputs');
-    const run = this.state(request), channel = channelKey(request), prior = this.host.storage.get('decision_channel', channel, true), revision = (prior?.revision ?? 0) + 1;
+    check((await this.services.models()).some(model => same(model, request.program.model)), 'Frozen model is not currently configured', 'MODEL_CHANGED');
+    const inputs = await this.services.readInputs(request); boundedJson(inputs, 'Combined decision inputs');
+    check(!this.closed, 'Decision service stopped');
+    const concurrent = this.records.get('decision_job', id, true);
+    if (concurrent) { check(concurrent.fingerprint === fingerprint, 'Decision request ID reused with different content', 'IDEMPOTENCY_CONFLICT'); return concurrent; }
+    check(this.tasks.size < 64, 'Decision queue is full', 'RESOURCE_EXHAUSTED');
+    if (request.mode === 'live') check(this.clock() < request.triggeredAt.unixMs + request.program.ttlMs && this.clock() - request.dataCutoffAt.unixMs <= request.program.maxInputAgeMs, 'Decision expired during input resolution');
+    const run = this.state(request), channel = channelKey(request), prior = this.records.get('decision_channel', channel, true), revision = (prior?.revision ?? 0) + 1;
     check(run.context === digest([request.mode, request.simulation?.id ?? null, request.simulation?.parametersDigest ?? null]), 'A decision run cannot mix live/history or different simulation paths');
     if (request.mode === 'historical') check(request.triggeredAt.unixMs >= Math.max(run.lastObservedAt ?? -1, run.lastTransitionAt ?? -1), 'Historical decisions must remain chronological after an observed result or invalidation');
     int(revision, 1, Number.MAX_SAFE_INTEGER, 'channel revision');
@@ -125,18 +119,18 @@ export class AgentDecisionService {
     let simulation;
     if (request.mode === 'historical') {
       const simulationId = digest([portfolioScope(request.scope), request.simulation.id]);
-      simulation = this.host.storage.get('decision_simulation', simulationId, true) ?? { id: simulationId, parametersDigest: request.simulation.parametersDigest, step: -1, trigger: -1, available: -1 };
+      simulation = this.records.get('decision_simulation', simulationId, true) ?? { id: simulationId, parametersDigest: request.simulation.parametersDigest, step: -1, trigger: -1, available: -1 };
       check(simulation.parametersDigest === request.simulation.parametersDigest, 'Simulation parameters changed within a feedback chain');
       check(!simulation.pending && request.simulation.step > simulation.step && request.triggeredAt.unixMs >= simulation.available, 'Account-feedback decisions must be awaited in chronological simulation order');
       simulation = { ...simulation, pending: id };
     }
     const record = { id, fingerprint, request, inputs, inputDigest: digest(inputs), programDigest: digest(request.program), epoch: run.epoch,
       channel, revision, status: 'queued', createdAt: currentTime, attempts: [], output: null, simulationId: simulation?.id ?? null };
-    this.host.storage.transaction(() => {
-      this.host.storage.put('decision_run', { ...run, mode: request.mode, lastTriggeredAt: Math.max(run.lastTriggeredAt ?? -1, request.triggeredAt.unixMs) });
-      this.host.storage.put('decision_channel', { ...(prior ?? {}), id: channel, revision, latestJob: id });
-      if (simulation) this.host.storage.put('decision_simulation', simulation);
-      this.host.storage.put('decision_job', record);
+    this.records.transaction(() => {
+      this.records.put('decision_run', { ...run, mode: request.mode, lastTriggeredAt: Math.max(run.lastTriggeredAt ?? -1, request.triggeredAt.unixMs) });
+      this.records.put('decision_channel', { ...(prior ?? {}), id: channel, revision, latestJob: id });
+      if (simulation) this.records.put('decision_simulation', simulation);
+      this.records.put('decision_job', record);
     });
     if (prior?.latestJob) this.cancel(prior.latestJob, 'superseded');
     const controller = new AbortController(); let resolve;
@@ -164,58 +158,60 @@ export class AgentDecisionService {
     return Math.max(at, record.request.triggeredAt.unixMs, run.lastAvailableAt ?? -1, run.lastObservedAt ?? -1, run.lastTransitionAt ?? -1);
   }
   block(record, status, at) {
-    const channel = this.host.storage.get('decision_channel', record.channel, true), run = this.state(record.request);
+    const channel = this.records.get('decision_channel', record.channel, true), run = this.state(record.request);
     // A canceled/superseded old task must never block a newer channel result.
     if (channel?.latestJob !== record.id || run.epoch !== record.epoch) return;
     const id = digest(['decision-block', record.id]);
-    if (this.host.storage.get('decision_block', id, true)) return;
-    const retiredSignals = this.host.storage.list('decision_job').filter(job => job.channel === record.channel && job.status === 'completed' && job.request.program.role === 'signal' && job.output.availableAt.unixMs <= at).map(job => ({ id: job.output.id, revision: job.output.revision }));
-    this.host.storage.put('decision_block', { id, channel: record.channel, revision: record.revision, jobId: record.id, scope: clone(record.request.scope), issuedAt: utc(at), retireThroughSequence: run.sequence - 1, clearedAt: null,
+    if (this.records.get('decision_block', id, true)) return;
+    const retiredSignals = this.records.list('decision_job').filter(job => job.channel === record.channel && job.status === 'completed' && job.request.program.role === 'signal' && job.output.availableAt.unixMs <= at).map(job => ({ id: job.output.id, revision: job.output.revision }));
+    this.records.put('decision_block', { id, channel: record.channel, revision: record.revision, jobId: record.id, scope: clone(record.request.scope), issuedAt: utc(at), retireThroughSequence: run.sequence - 1, clearedAt: null,
       retiredSignals, reason: `decision_${status}`, evidence: record.request.inputs.map(input => clone(input.ref)) });
   }
   finishFailure(id, status, changes = {}, asOf) {
     const record = this.get(id); if (!active(record.status)) return record;
     const at = this.eventTime(record, asOf);
-    this.host.storage.transaction(() => {
+    this.records.transaction(() => {
       this.block(record, status, at);
-      this.host.storage.update('decision_job', id, { ...changes, status, failedAt: utc(at) });
+      this.records.update('decision_job', id, { ...changes, status, failedAt: utc(at) });
       const run = this.state(record.request);
-      if (this.host.storage.get('decision_channel', record.channel, true)?.latestJob === id && run.epoch === record.epoch)
-        this.host.storage.put('decision_run', { ...run, lastObservedAt: Math.max(run.lastObservedAt ?? -1, at) });
+      if (this.records.get('decision_channel', record.channel, true)?.latestJob === id && run.epoch === record.epoch)
+        this.records.put('decision_run', { ...run, lastObservedAt: Math.max(run.lastObservedAt ?? -1, at) });
     });
     return this.get(id);
   }
   clearBlocks(record, generated) {
-    for (const block of this.host.storage.list('decision_block')) if (block.channel === record.channel && block.revision < record.revision && !block.clearedAt && generated >= block.issuedAt.unixMs)
-      this.host.storage.update('decision_block', block.id, { clearedAt: utc(generated), clearedBy: record.id });
+    for (const block of this.records.list('decision_block')) if (block.channel === record.channel && block.revision < record.revision && !block.clearedAt && generated >= block.issuedAt.unixMs)
+      this.records.update('decision_block', block.id, { clearedAt: utc(generated), clearedBy: record.id });
   }
   recordEpoch(scopeValue, epoch, at, reason, evidence, kind = 'risk') {
-    this.host.storage.put('decision_epoch', { id: digest([runKey(scopeValue), epoch]), scope: clone(portfolioScope(scopeValue)), epoch, issuedAt: utc(at), kind, reason, evidence: clone(evidence) });
+    this.records.put('decision_epoch', { id: digest([runKey(scopeValue), epoch]), scope: clone(portfolioScope(scopeValue)), epoch, issuedAt: utc(at), kind, reason, evidence: clone(evidence) });
   }
   cancel(id, reason = 'canceled', asOf) {
-    const record = this.host.storage.get('decision_job', id, true); if (!record || !active(record.status)) return record;
-    if (reason === 'superseded') this.host.storage.update('decision_job', id, { status: 'superseded', error: { code: 'CANCELED', message: reason } });
+    const record = this.records.get('decision_job', id, true); if (!record || !active(record.status)) return record;
+    if (reason === 'superseded') this.records.update('decision_job', id, { status: 'superseded', error: { code: 'CANCELED', message: reason } });
     else this.finishFailure(id, 'canceled', { error: { code: 'CANCELED', message: reason } }, asOf);
     this.tasks.get(id)?.controller.abort(failError('CANCELED', reason));
     if (record.simulationId) {
-      const sim = this.host.storage.get('decision_simulation', record.simulationId); if (sim.pending === id) this.host.storage.update('decision_simulation', sim.id, { pending: null });
+      const sim = this.records.get('decision_simulation', record.simulationId); if (sim.pending === id) this.records.update('decision_simulation', sim.id, { pending: null });
     }
     return this.get(id);
   }
   retire(scopeValue, at, epoch, reason, evidence) {
-    check(Array.isArray(evidence) && evidence.length > 0, 'Invalidation needs frozen evidence'); evidence.forEach(ref => this.host.artifacts.read(ref));
+    check(Array.isArray(evidence) && evidence.length > 0, 'Invalidation needs frozen evidence');
     const groups = new Map(), key = runKey(scopeValue);
-    for (const job of this.host.storage.list('decision_job')) if (runKey(job.request.scope) === key && job.status === 'completed' && job.request.program.role === 'signal' && job.output.availableAt.unixMs <= at) {
+    for (const job of this.records.list('decision_job')) if (runKey(job.request.scope) === key && job.status === 'completed' && job.request.program.role === 'signal' && job.output.availableAt.unixMs <= at) {
       const instrumentKey = canonical(job.request.scope.instrument), group = groups.get(instrumentKey) ?? { scope: job.request.scope, retiredSignals: [] };
       group.retiredSignals.push({ id: job.output.id, revision: job.output.revision }); groups.set(instrumentKey, group);
     }
-    for (const group of groups.values()) this.host.storage.put('decision_guard', { id: digest([key, epoch, group.scope.instrument]), ...group,
-      issuedAt: utc(at), retireThroughSequence: this.host.storage.get('decision_run', key).sequence - 1, blockedUntil: utc(at), reason, evidence: clone(evidence) });
+    for (const group of groups.values()) this.records.put('decision_guard', { id: digest([key, epoch, group.scope.instrument]), ...group,
+      issuedAt: utc(at), retireThroughSequence: this.records.get('decision_run', key).sequence - 1, blockedUntil: utc(at), reason, evidence: clone(evidence) });
   }
-  invalidate(scopeValue, reason, evidence, asOf) {
-    text(reason); const key = runKey(scopeValue), run = this.host.storage.get('decision_run', key, true);
+  async invalidate(scopeValue, reason, evidence, asOf) {
+    check(Array.isArray(evidence) && evidence.length > 0, 'Invalidation needs frozen evidence');
+    await this.services.verifyRefs(evidence);
+    text(reason); const key = runKey(scopeValue), run = this.records.get('decision_run', key, true);
     check(run && same(run.scope, portfolioScope(scopeValue)), 'Unknown decision run');
-    const jobs = this.host.storage.list('decision_job').filter(job => runKey(job.request.scope) === key);
+    const jobs = this.records.list('decision_job').filter(job => runKey(job.request.scope) === key);
     const historical = run.mode === 'historical' || jobs.some(job => job.request.mode === 'historical');
     check(!historical || asOf !== undefined, 'Historical invalidation requires an explicit UTC asOf');
     const at = asOf === undefined ? this.clock() : time(asOf, 'invalidation time');
@@ -224,13 +220,13 @@ export class AgentDecisionService {
     const horizon = Math.max(run.lastAvailableAt ?? -1, run.lastTriggeredAt ?? -1, run.lastObservedAt ?? -1, run.lastTransitionAt ?? -1,
       ...jobs.map(job => job.request.triggeredAt.unixMs), ...jobs.filter(job => job.status === 'completed').map(job => job.output.availableAt.unixMs));
     check(at >= horizon, 'Invalidation cannot move backwards before a trigger or observed result');
-    this.host.storage.transaction(() => {
+    this.records.transaction(() => {
       this.retire(scopeValue, at, run.epoch + 1, reason, evidence);
       this.recordEpoch(scopeValue, run.epoch + 1, at, reason, evidence, 'invalidate');
-      this.host.storage.update('decision_run', key, { epoch: run.epoch + 1, invalidatedEpoch: run.epoch + 1, invalidatedAt: at, lastTransitionAt: at, reason });
+      this.records.update('decision_run', key, { epoch: run.epoch + 1, invalidatedEpoch: run.epoch + 1, invalidatedAt: at, lastTransitionAt: at, reason });
     });
     for (const job of jobs) if (active(job.status)) this.cancel(job.id, reason, utc(at));
-    return this.host.storage.get('decision_run', key);
+    return this.records.get('decision_run', key);
   }
   pump() {
     while (!this.closed && this.running < this.concurrency && this.queue.length) {
@@ -240,7 +236,7 @@ export class AgentDecisionService {
         if (active(this.get(id).status)) this.finishFailure(id, error.code === 'EXPIRED' ? 'expired' : 'failed', { error: { code: error.code ?? 'DECISION_FAILED', message: 'Decision failed; inspect inputs or model configuration before retrying' } });
       }).finally(() => {
         const record = this.get(id);
-        if (record.simulationId) { const simulation = this.host.storage.get('decision_simulation', record.simulationId); if (simulation.pending === id) this.host.storage.update('decision_simulation', simulation.id, { pending: null }); }
+        if (record.simulationId) { const simulation = this.records.get('decision_simulation', record.simulationId); if (simulation.pending === id) this.records.update('decision_simulation', simulation.id, { pending: null }); }
         this.running--; this.tasks.delete(id); task.resolve(); this.pump();
       });
     }
@@ -248,7 +244,7 @@ export class AgentDecisionService {
   async execute(id, signal) {
     const job = this.get(id), request = job.request, p = request.program;
     signal.throwIfAborted();
-    this.host.storage.update('decision_job', id, { status: 'running' });
+    this.records.update('decision_job', id, { status: 'running' });
     let response;
     for (let attempt = 0; attempt <= (p.maxRetries ?? 0); attempt++) {
       signal.throwIfAborted();
@@ -256,14 +252,14 @@ export class AgentDecisionService {
       if (request.mode === 'live' && (now >= request.triggeredAt.unixMs + p.ttlMs || now - request.dataCutoffAt.unixMs > p.maxInputAgeMs)) throw failError('EXPIRED', 'Decision expired before model request');
       const startedAt = now;
       try {
-        response = await this.host.inference.complete({ requestId: `${request.requestId}/${attempt}`, model: p.model, systemPrompt: system(request),
+        response = await this.services.complete({ requestId: `${request.requestId}/${attempt}`, model: p.model, systemPrompt: system(request),
           input: { scope: request.scope, mode: request.mode, triggeredAt: request.triggeredAt, dataCutoffAt: request.dataCutoffAt, inputs: job.inputs,
             ...(request.simulation ? { simulation: request.simulation } : {}) }, maxTokens: p.maxTokens, temperature: p.temperature, reasoning: p.reasoning, timeoutMs: p.timeoutMs }, signal);
         this.attempt(id, { attempt, startedAt, finishedAt: this.clock(), status: 'completed', usage: response.usage ?? {} }); break;
       } catch (error) {
         this.attempt(id, { attempt, startedAt, finishedAt: this.clock(), status: 'failed', code: error.code ?? 'MODEL_ERROR' });
         if (signal.aborted || attempt === (p.maxRetries ?? 0) || ['MODEL_CHANGED', 'MODEL_RESPONSE_INVALID', 'MODEL_UNAVAILABLE'].includes(error.code)) throw error;
-        this.host.storage.update('decision_job', id, { status: 'retrying' }); await sleep(5000, undefined, { signal }); this.host.storage.update('decision_job', id, { status: 'running' });
+        this.records.update('decision_job', id, { status: 'retrying' }); await sleep(5000, undefined, { signal }); this.records.update('decision_job', id, { status: 'running' });
       }
     }
     signal.throwIfAborted();
@@ -279,10 +275,10 @@ export class AgentDecisionService {
     const source = { kind: 'agent', id: p.id, version: p.version, configurationDigest: job.programDigest,
       model: { provider: p.model.provider, id: p.model.id, version: p.model.configurationDigest, promptDigest: digest(system(request)) } };
     let emitted;
-    this.host.storage.transaction(() => {
-      const run = this.state(request), channel = this.host.storage.get('decision_channel', job.channel);
+    this.records.transaction(() => {
+      const run = this.state(request), channel = this.records.get('decision_channel', job.channel);
       if (run.epoch !== job.epoch || channel.latestJob !== id || !active(this.get(id).status)) {
-        this.host.storage.update('decision_job', id, { status: 'superseded', finishedAt: completionTime }); return;
+        this.records.update('decision_job', id, { status: 'superseded', finishedAt: completionTime }); return;
       }
       check(generated >= Math.max(run.lastAvailableAt, run.lastObservedAt ?? -1, run.lastTransitionAt ?? -1), 'Decision availability clock moved backwards');
       const common = { id: digest([id, decision]), scope: request.scope, source, generatedAt: utc(generated), availableAt: utc(generated), expiresAt: utc(expires), dataCutoffAt: request.dataCutoffAt,
@@ -294,28 +290,28 @@ export class AgentDecisionService {
       const nextEpoch = p.role === 'risk' && decision.action !== 'allow' ? run.epoch + 1 : run.epoch;
       if (nextEpoch !== run.epoch) { this.retire(request.scope, generated, nextEpoch, decision.reason, decision.evidence); this.recordEpoch(request.scope, nextEpoch, generated, decision.reason, decision.evidence); }
       this.clearBlocks(job, generated);
-      this.host.storage.put('decision_run', { ...run, epoch: nextEpoch, sequence: run.sequence + 1, lastAvailableAt: generated, lastObservedAt: generated, ...(nextEpoch !== run.epoch ? { lastTransitionAt: generated } : {}) });
-      this.host.storage.put('decision_channel', { ...channel, latestOutput: { id: emitted.id, revision: job.revision } });
-      this.host.storage.update('decision_job', id, { status: 'completed', finishedAt: completionTime, response: receipt, decision, output: emitted, publishedEpoch: nextEpoch, publishedSequence: run.sequence,
+      this.records.put('decision_run', { ...run, epoch: nextEpoch, sequence: run.sequence + 1, lastAvailableAt: generated, lastObservedAt: generated, ...(nextEpoch !== run.epoch ? { lastTransitionAt: generated } : {}) });
+      this.records.put('decision_channel', { ...channel, latestOutput: { id: emitted.id, revision: job.revision } });
+      this.records.update('decision_job', id, { status: 'completed', finishedAt: completionTime, response: receipt, decision, output: emitted, publishedEpoch: nextEpoch, publishedSequence: run.sequence,
         limitations: request.mode === 'historical' ? ['Declared historical availability is not proof against model training-data leakage.', 'Latency is explicitly simulated; saved responses define replay.'] : ['Provider model weights/revision are not independently verified.'] });
-      if (job.simulationId) this.host.storage.update('decision_simulation', job.simulationId, { step: request.simulation.step, trigger: request.triggeredAt.unixMs, available: generated, stateDigest: request.simulation.stateDigest, pending: null });
+      if (job.simulationId) this.records.update('decision_simulation', job.simulationId, { step: request.simulation.step, trigger: request.triggeredAt.unixMs, available: generated, stateDigest: request.simulation.stateDigest, pending: null });
     });
-    if (emitted && p.role === 'risk' && decision.action !== 'allow') for (const other of this.host.storage.list('decision_job')) if (other.id !== id && runKey(other.request.scope) === runKey(request.scope) && active(other.status)) this.cancel(other.id, 'risk_epoch_changed', utc(generated));
-    if (emitted) this.host.events?.emit('strategy.decision', { jobId: id, role: p.role, scope: request.scope, output: emitted });
+    if (emitted && p.role === 'risk' && decision.action !== 'allow') for (const other of this.records.list('decision_job')) if (other.id !== id && runKey(other.request.scope) === runKey(request.scope) && active(other.status)) this.cancel(other.id, 'risk_epoch_changed', utc(generated));
+    if (emitted) await this.services.emit?.( { jobId: id, role: p.role, scope: request.scope, output: emitted });
   }
-  attempt(id, attempt) { const job = this.get(id); this.host.storage.update('decision_job', id, { attempts: [...job.attempts, attempt] }); }
+  attempt(id, attempt) { const job = this.get(id); this.records.update('decision_job', id, { attempts: [...job.attempts, attempt] }); }
   timeline(scopeValue, asOf) {
-    const now = time(asOf, 'timeline time'), key = runKey(scopeValue), run = this.host.storage.get('decision_run', key, true);
-    const transitions = this.host.storage.list('decision_epoch').filter(change => runKey(change.scope) === key && change.issuedAt.unixMs <= now);
+    const now = time(asOf, 'timeline time'), key = runKey(scopeValue), run = this.records.get('decision_run', key, true);
+    const transitions = this.records.list('decision_epoch').filter(change => runKey(change.scope) === key && change.issuedAt.unixMs <= now);
     // A manual context reset invalidates every earlier risk judgment as well as
     // Alpha. A restrictive result from one risk source must not erase others.
     const invalidatedEpoch = Math.max(0, ...transitions.filter(change => change.kind === 'invalidate').map(change => change.epoch), run?.invalidatedAt <= now ? run.invalidatedEpoch ?? 0 : 0);
-    const records = this.host.storage.list('decision_job').filter(job => runKey(job.request.scope) === key && job.status === 'completed' && job.output.availableAt.unixMs <= now);
+    const records = this.records.list('decision_job').filter(job => runKey(job.request.scope) === key && job.status === 'completed' && job.output.availableAt.unixMs <= now);
     records.sort((a, b) => a.output.availableAt.unixMs - b.output.availableAt.unixMs || (a.publishedSequence ?? a.output.sequence ?? 0) - (b.publishedSequence ?? b.output.sequence ?? 0) || a.revision - b.revision || a.id.localeCompare(b.id));
     const signals = records.filter(job => job.request.program.role === 'signal').map(job => job.output), adviceHistory = records.filter(job => job.request.program.role === 'risk' && job.epoch >= invalidatedEpoch);
     const latest = new Map(); adviceHistory.forEach(job => latest.set(job.channel, job));
-    const advice = [...latest.values()].map(job => job.output), guards = this.host.storage.list('decision_guard').filter(guard => runKey(guard.scope) === key && guard.issuedAt.unixMs <= now);
-    for (const block of this.host.storage.list('decision_block')) if (runKey(block.scope) === key && block.issuedAt.unixMs <= now) {
+    const advice = [...latest.values()].map(job => job.output), guards = this.records.list('decision_guard').filter(guard => runKey(guard.scope) === key && guard.issuedAt.unixMs <= now);
+    for (const block of this.records.list('decision_block')) if (runKey(block.scope) === key && block.issuedAt.unixMs <= now) {
       // Never reveal a future recovery in a historical view. Retired signals stay
       // retired after recovery; only a later valid channel judgment reopens risk.
       guards.push({ id: block.id, scope: clone(block.scope), issuedAt: clone(block.issuedAt), ...(block.retireThroughSequence === undefined ? {} : { retireThroughSequence: block.retireThroughSequence }), blockedUntil: block.clearedAt && block.clearedAt.unixMs <= now ? clone(block.clearedAt) : utc(Number.MAX_SAFE_INTEGER), retiredSignals: clone(block.retiredSignals), reason: block.reason, evidence: clone(block.evidence) });

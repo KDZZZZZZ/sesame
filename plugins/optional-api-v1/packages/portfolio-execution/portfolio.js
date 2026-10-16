@@ -1,6 +1,7 @@
 import { Decimal } from '@sesame/plugin-sdk/decimal';
 import { canonical, digest } from '@sesame/plugin-sdk/protocol';
-import { check, payload } from './adapters.js';
+import { check } from './adapters.js';
+import { invoke } from './calls.js';
 import { createService } from './service.js';
 const cleanError = error => ({ code: error?.code ?? 'EXECUTION_FAILED', message: String(error?.message ?? error).slice(0, 1000) });
 
@@ -45,7 +46,7 @@ function priceLimit(observation, side, bps) {
 export async function applyPortfolio(host, run, { now = Date.now, signal, assertActive, authorizeRequest = (_name, args) => args, checkpoint = () => {}, service } = {}) {
   const plan = run.plan, execution = { startedAt: now(), status: 'checking', pauses: [], orders: [], after: null, targetReached: null };
   const persist = () => checkpoint({ executionProgress: structuredClone(execution) });
-  const call = async (name, args) => payload(await host.tools.call({ pluginId: `sesame/${plan.backend}`, name, arguments: args }, signal));
+  const call = (name, args) => invoke(host, `sesame/${plan.backend}`, name, args, signal);
   const trader = service ?? createService(host, { now, authorize: assertActive, authorizeRequest, ownerConversationId: plan.ownerConversationId });
   try {
     assertActive();

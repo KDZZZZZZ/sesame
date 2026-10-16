@@ -4,9 +4,9 @@
 
 SVL 描述输入、判断、状态更新和交易**意图**。`strategy_validate` 做结构、引用、原语和预算检查；它不是完整静态类型推断器，不能证明每个动态值都合法。`strategy_replay` 执行固定输入，动态类型/单位、分支和错误须在这里验证。二者都不连接券商、不撮合、不编译原生代码、不下单。目标插件另行声明翻译、编译、回测和运行限制。
 
-## 先读示例，再写源
+## 语法示例与能力入口
 
-通过 `plugin_read` 使用 `plugin_id:"sesame/strategy-authoring"` 和下列包内相对路径：
+通过 `plugin_read` 使用 `pluginId:"sesame/strategy-authoring"`、`part:"resource"` 和下列包内相对路径：
 
 | 路径 | 用途与可核对预期 |
 | --- | --- |
@@ -19,12 +19,14 @@ SVL 描述输入、判断、状态更新和交易**意图**。`strategy_validate
 
 示例的 `demo/EXAMPLE`、价格、账户和参数都是教学值。真实品种须从行情/账户插件发现，保留其引用和实际量纲，不能把 `share` 静默换成 `lot`，或把 `last/regular` 静默换成 `bid/all`。
 
-先把读到的完整示例复制到自己的实际工作区，如 `strategies/example.svl.json`，再按用户需求修改。最小调用顺序：
+需要创建源时，可将完整示例保存为工作区 `strategies/example.svl.json` 后按需求修改。已有完整源可以直接调用相应能力：
 
-1. `strategy_validate({source_path:"strategies/example.svl.json"})`。
-2. `strategy_publish({operation_id:"my-source-v1",source_path:"strategies/example.svl.json",title:"明确的策略标题",change_summary:"本次实际逻辑变更"})`，保存返回的完整 `ref`。
-3. 把这个真实 `ref` 传给 `strategy_graph({source:ref})` 和 `strategy_replay({source:ref,fixture_path:"strategies/example.replay.json",output_path:"results/replay.json",operation_id:"my-replay-v1"})`。`ref` 是工具返回对象，不是自行填写的占位 ID。
-4. 按手工预期检查每个事件的状态、意图、trace 与 `status`。失败后修源并发布新修订；不要修改已经冻结的引用。
+- 诊断结构、引用与预算：`strategy_validate({source_path:"strategies/example.svl.json"})`。
+- 冻结源：`strategy_publish({operation_id:"my-source-v1",source_path:"strategies/example.svl.json",title:"明确的策略标题",change_summary:"本次实际逻辑变更"})`。发布内部也会验证，返回完整 ref，无需机械重复 validate。
+- 读取同源图：`strategy_graph({source:ref})`。需要图时才调用；publish 已返回该源的 graph。
+- 验证固定事件：`strategy_replay({source:ref,fixture_path:"strategies/example.replay.json",output_path:"results/replay.json",operation_id:"my-replay-v1"})`。ref 必须是发布实际返回的对象。
+
+固定事件的状态、意图、trace 与 status 应符合独立给出的预期。失败后修源并发布新修订，不能修改冻结引用冒充原证据。
 
 ## 源结构与固定语义
 

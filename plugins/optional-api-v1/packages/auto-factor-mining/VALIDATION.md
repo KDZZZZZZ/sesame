@@ -1,9 +1,7 @@
-# 验证
+# 验证范围
 
-本包测试覆盖组合解析、任意命名研究工具/纯技能插件、主会话工具过滤、报告和实时公开状态，所有模块与资源引用均位于本包。外层 `plugins/optional-api-v1/tests/auto-factor-mining-runtime.test.mjs` 保留跨包集成验证：实现摘要漂移、模型配置、真实独立数值回执、非 AST evaluator、角色与代际鉴权、冻结输入、暂停/取消/重启/恢复、预算、最终评估、幂等单份归档、用户文件修改和独立复现脚本。`auto-factor-mining-packages.test.mjs` 把两个包复制到隔离分发目录，执行官方 buildLock，不放宽导入边界校验。
+API v2 定向测试覆盖声明精确绑定、任意显式研究能力、资源断点/CAS屏障、原生父子 Run 与实际结果交接、真实数值评估、受限留出、角色与代际鉴权、暂停/重启/恢复、模型漂移、预算、失败归档和报告修改保护。
 
-数学验证迁至 factor-evaluator/tests，工作流不再导入数值引擎。外层 `plugins/optional-api-v1/tests/auto-factor-mining-host.test.mjs` 安装两个独立包，在真实 HostContext/Store 上运行双方向研究、最终归档及重启恢复，仅模型与价格为本地夹具。设置匹配宿主的 `SESAME_PLUGIN_SDK_LOADER` 后，在 `plugins/optional-api-v1` 运行 `npm test` 会同时收集包内和外层测试。
+外层 auto-factor-mining-runtime.test.mjs 注入确定性的研究角色和真实 evaluator；auto-factor-mining-host.test.mjs 安装两个真实包，使用真实 Store、声明路由、工具循环、Run、资源、报告及重开恢复，仅模型传输和价格是本地 SSE/合成夹具。fixture 不构成模型质量或市场有效性证明。
 
-带通用研究能力的路径要求 development-only 原数据并在报告明确未执行留出检验。最终评估仅发生于冻结选择之后。所有 Agent output:none；实时视图不写报告文件。
-
-无真实模型、数据或交易调用；这些测试验证协议与实现正确性，不验证因子市场有效性。
+官方独立分发校验需要 API v2 的 buildLock；不会为兼容旧校验器把声明改回 v1。真实已配置模型的 Agent 验收独立记录其模型、输入、实际工具调用与局限。

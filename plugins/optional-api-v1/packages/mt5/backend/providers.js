@@ -282,7 +282,9 @@ export class MT5AccountProvider extends NativeProvider {
     return { data: result.page, meta: { ...meta(from, nativeWarnings), observedAt: result.observedAt } };
   }
   async nativeHistory(input, context) {
-    const binding = this.binding(context, input.account), info = await this.accountInfo(context), { account } = info, historyRange = await this.historyRange(input, context, binding), range = this.range(historyRange, binding);
+    const binding = this.binding(context, input.account), { account } = await this.accountInfo(context);
+    const requestedRange = await this.historyRange(input, context, binding);
+    const range = this.range(requestedRange, binding);
     const orders = [], deals = [];
     const read = async (from, to) => {
       const data = await this.read('get_trading_history_orders', { datetime_from: brokerISO(from), datetime_to: brokerISO(to), include_orders: true, include_deals: true, limit: 5000 }, context);
@@ -292,29 +294,29 @@ export class MT5AccountProvider extends NativeProvider {
       check(orders.length + deals.length <= 200000, 'RESOURCE_EXHAUSTED', 'Use a smaller account-history range');
     };
     await read(range.from, range.to); this.binding(context, input.account);
-    return { binding: { ...binding, currency: account.currency, revisions: this.revisions }, orders, deals, range: historyRange };
+    return { binding: { ...binding, currency: account.currency, revisions: this.revisions }, orders, deals, requestedRange };
   }
   async queryOrders(input, context) {
     check(['working', 'history', 'all'].includes(input.scope), 'INVALID_ARGUMENT', 'Order scope must be working, history or all');
     const from = Date.now(); this.binding(context, input.account);
     check(['working', 'history', 'all'].includes(input.scope), 'INVALID_ARGUMENT', 'An order scope is required');
     const result = await this.pages.read(input, context.bindingId, async () => {
-      const rows = [];
+      const rows = []; let requestedRange = input.range;
       if (input.scope !== 'history') { const { data, binding } = await this.open(input, context); rows.push(...data.orders.map(row => mapOrder(row, binding))); }
-      if (input.scope !== 'working') { const { orders, binding, range } = await this.nativeHistory(input, context); rows.push(...orders.map(row => mapOrder(row, binding)).filter(row => within(row.createdAt, range))); }
+      if (input.scope !== 'working') { const history = await this.nativeHistory(input, context); requestedRange = history.requestedRange; rows.push(...history.orders.map(row => mapOrder(row, history.binding)).filter(row => within(row.createdAt, requestedRange))); }
       const items = [...new Map(rows.map(row => [row.id, row])).values()].filter(row => !input.instruments?.length || input.instruments.some(ref => ref.sourceId === row.instrument.sourceId && ref.instrumentId === row.instrument.instrumentId)).sort((a, b) => timeKey(a.createdAt) - timeKey(b.createdAt) || a.id.localeCompare(b.id));
-      return { items, ...(input.range ? { coverage: this.coverage(input.range, items, row => row.createdAt) } : {}), observedAt: Date.now() };
+      return { items, ...(requestedRange ? { coverage: this.coverage(requestedRange, items, row => row.createdAt) } : {}), observedAt: Date.now() };
     });
     const { observedAt, ...data } = result; return { data, meta: { ...meta(from, nativeWarnings), observedAt } };
   }
   async history(input, context, ledger) {
     const from = Date.now(); this.binding(context, input.account);
     const result = await this.pages.read(input, context.bindingId, async () => {
-      const { deals, binding, range } = await this.nativeHistory(input, context);
+      const { deals, binding, requestedRange } = await this.nativeHistory(input, context);
       const traded = row => ['buy', 'sell', '0', '1', 'deal_type_buy', 'deal_type_sell'].includes(String(row.action ?? row.type).toLowerCase());
-      const mapped = deals.filter(row => ledger ? !traded(row) : traded(row)).map(row => ledger ? mapLedgerEntry(row, binding) : mapFill(row, binding)).filter(Boolean).filter(row => within(row.time, range));
+      const mapped = deals.filter(row => ledger ? !traded(row) : traded(row)).map(row => ledger ? mapLedgerEntry(row, binding) : mapFill(row, binding)).filter(Boolean).filter(row => within(row.time, requestedRange));
       const items = [...new Map(mapped.map(row => [row.id, row])).values()].filter(row => ledger ? !input.kinds?.length || input.kinds.includes(row.kind) : (!input.instruments?.length || input.instruments.some(ref => ref.sourceId === row.instrument.sourceId && ref.instrumentId === row.instrument.instrumentId)) && (!input.orderIds?.length || row.orderId.status === 'value' && input.orderIds.includes(row.orderId.value))).sort((a, b) => timeKey(a.time) - timeKey(b.time) || a.id.localeCompare(b.id));
-      return { items, coverage: this.coverage(range, items, row => row.time), observedAt: Date.now() };
+      return { items, coverage: this.coverage(requestedRange, items, row => row.time), observedAt: Date.now() };
     });
     const { observedAt, ...data } = result; return { data, meta: { ...meta(from, [...nativeWarnings, { code: 'NATIVE_RETENTION_UNKNOWN', message: 'The terminal returned this bounded history; broker retention and internal gaps cannot be certified.' }]), observedAt } };
   }

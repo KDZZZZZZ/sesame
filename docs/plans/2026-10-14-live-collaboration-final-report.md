@@ -1,7 +1,5 @@
 # 实时协作与单份任务总结
 
-> 2026-10-15 归档：以下保留 2026-10-14 的实施过程、版本及验证结果；当前开发包身份以插件清单和锁文件为准。文中 output 证据、备份及安装状态属于本地历史记录，不随本次源码提交发布。
-
 日期：2026-10-14。状态：dev 源码已实现并验证；未替换用户安装目录，未公开发布。
 
 ## 用户要求
@@ -62,4 +60,4 @@
 - 两插件共用 assets/live-viewer 一致性通过。独立干净副本执行官方包检查，锁文件仅更新这两个条目；其他插件、Kurumi 临时数据与已有 Python cache 保留。整个工作目录的包检查会遇到这些既有临时文件，本次没有将它们纳入包。
 - 宿主共享 Electron 网络策略由其他工作修改，本次保持原策略。审查中发现的既有 WebRTC 隔离边界另见宿主 live-reports 接口文档，不将保留 CSP 误述成全网络流量防火墙。
 
-具体记录及 Electron 截图保存在本地验证输出，未纳入仓库。首次修改前已在独立备份目录保存原文件；宿主改动位于独立宿主仓库，未覆盖其他并行修改。
+具体记录：`output/live-collaboration-package-validation.json`；Electron 截图 `output/live-collaboration-panel.png`。首次修改前备份位于 `E:/brief2great/sesame/research/backups/live-collaboration-20261014`。宿主改动仅在 `E:/brief2great/sesame/mt5agent` 工作目录，未覆盖其余并行修改。

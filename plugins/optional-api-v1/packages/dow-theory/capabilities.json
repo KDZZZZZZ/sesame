@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "capabilities": [],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "knowledge-0",
+      "path": "examples/expected.md",
+      "description": "Dow Theory 趋势确认 — examples/expected.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-1",
+      "path": "prompt.md",
+      "description": "Dow Theory 趋势确认 — prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "knowledge-2",
+      "path": "PROVENANCE.md",
+      "description": "Dow Theory 趋势确认 — PROVENANCE.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-3",
+      "path": "README.md",
+      "description": "Dow Theory 趋势确认 — README.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-4",
+      "path": "skills/dow-theory/references/method.md",
+      "description": "Dow Theory 趋势确认 — skills/dow-theory/references/method.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-5",
+      "path": "skills/dow-theory/references/validation.md",
+      "description": "Dow Theory 趋势确认 — skills/dow-theory/references/validation.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-6",
+      "path": "skills/dow-theory/SKILL.md",
+      "description": "Dow Theory 趋势确认 — skills/dow-theory/SKILL.md",
+      "kind": "skill"
+    }
+  ],
+  "hooks": [],
+  "stateCollections": [],
+  "artifactSchemas": [],
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

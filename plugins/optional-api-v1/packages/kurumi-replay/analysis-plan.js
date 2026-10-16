@@ -146,7 +146,7 @@ export async function verifyMethodUse(host,record,signal){
  signal?.throwIfAborted();check(record.pluginId!=='technical-analysis-theory','Failed method cannot be adopted','METHOD_UNAVAILABLE');
  check(record.version&&record.method&&record.executionReceipt?.status==='succeeded'&&record.executionReceipt.pluginId===record.pluginId&&record.executionReceipt.method===record.method&&record.executionReceipt.version===record.version,'Actual successful invocation receipt required','METHOD_EVIDENCE_REQUIRED');
  check(Number.isSafeInteger(record.asOfMs)&&Array.isArray(record.inputRefs)&&record.inputRefs.length,'Fixed inputs/cutoff required');record.inputRefs.forEach(ref);ref(record.outputRef);
- const output=await host.artifacts.read(record.outputRef);check(output,'Output not readable','METHOD_EVIDENCE_REQUIRED');for(const input of record.inputRefs)check(await host.artifacts.read(input),'Input not readable','METHOD_EVIDENCE_REQUIRED');
+ const output=await host.resources.read(record.outputRef,{part:'manifest'});check(output,'Output not readable','METHOD_EVIDENCE_REQUIRED');for(const input of record.inputRefs)check(await host.resources.read(input,{part:'manifest'}),'Input not readable','METHOD_EVIDENCE_REQUIRED');
  check(record.executionReceipt.outputDigest===record.outputRef.digest&&record.executionReceipt.inputDigest===digest(record.inputRefs),'Receipt/output/input mismatch','SOURCE_MISMATCH');
  return {...structuredClone(record),status:'adopted',adopted:true,verification:'public-receipt-and-artifact-read; not evidence of predictive validity'};
 }

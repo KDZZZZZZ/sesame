@@ -1,3 +1,5 @@
+import { records } from './records.js';
+import { runWorker } from './worker-call.js';
 import { randomUUID } from "node:crypto";
 import { check, canonical, digest, decimal } from "@sesame/plugin-sdk/protocol";
 import { Decimal } from "@sesame/plugin-sdk/decimal";
@@ -123,7 +125,7 @@ export class CCXTProvider {
         "Provide explicit configuration first or an exact previously saved connection",
         "PREREQUISITE_REQUIRED",
       );
-      const saved = this.host.storage.get(
+      const saved = records(this.host).get(
         "public_connections",
         digest(input.connection),
         true,
@@ -155,7 +157,7 @@ export class CCXTProvider {
       "CONNECTION_CHANGED",
     );
     const id = digest(connection),
-      saved = this.host.storage.get("public_connections", id, true);
+      saved = records(this.host).get("public_connections", id, true);
     const frozen = { exchange, ...(proxy ? { publicProxy: proxy } : {}) };
     check(
       !saved || canonical(saved.configuration) === canonical(frozen),
@@ -163,7 +165,7 @@ export class CCXTProvider {
       "CONNECTION_CHANGED",
     );
     if (!saved)
-      this.host.storage.put("public_connections", {
+      records(this.host).put("public_connections", {
         id,
         connection,
         configuration: frozen,
@@ -198,9 +200,7 @@ export class CCXTProvider {
   }
   async call(context, action, args = {}) {
     const binding = this.bound(context);
-    const result = await this.host.environment.executeWorker(
-      "worker.js",
-      {
+    const result = await runWorker(this.host, {
         exchange: binding.exchange,
         publicProxy: binding.proxy,
         action,
@@ -706,6 +706,6 @@ export class CCXTProvider {
     this.pages.clear();
     this.revisions.clear();
     this.closedThrough.clear();
-    await closeWorkers(this.host.storage.directory);
+    await closeWorkers(this.host.context.storageRoot);
   }
 }

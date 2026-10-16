@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Decimal } from '@sesame/plugin-sdk/decimal';
 import { canonical } from '@sesame/plugin-sdk/protocol';
+import { invoke, requirePlugin, pluginStatus } from './calls.js';
 
 export const check = (ok, code, message) => { if (!ok) throw Object.assign(new Error(message), { code }); };
 export const sameAccount=(a,b)=>a?.accountId===b?.accountId && typeof a?.accountId==='string' && (typeof a.server==='string'?a.server===b.server && b.connectionId===undefined:typeof a.connectionId==='string' && a.connectionId===b.connectionId && b.server===undefined);
@@ -23,20 +24,30 @@ export function payload(result) {
   return result;
 }
 export function createAdapters(host, {now=Date.now,authorizeRequest}={}) {
-  const background=()=>host.scope?.kind==='subagent';
+  const background=()=>host.context?.kind==='subagent';
   async function call(backend,name,args,signal) {
     const pluginId=`sesame/${backend}`;
-    check(typeof host.tools.call==='function','PREREQUISITE_REQUIRED','This host needs the public tools.call plugin composition port');
-    check(host.plugins.isActive(pluginId),'PREREQUISITE_REQUIRED',`Load ${pluginId} in this conversation first; disabled plugins are not enabled automatically`);
+    await requirePlugin(host, pluginId);
     if(background() && ['mt5_trading_order','mt5_trading_pause','qmt_trading_order','qmt_trading_cancel'].includes(name)) {
       check(typeof authorizeRequest==='function','FORBIDDEN','Backend write requires a live portfolio executor intent');
       args=authorizeRequest(name,args);
     }
-    return payload(await host.tools.call({pluginId,name,arguments:args},signal));
+    return invoke(host, pluginId, name, args, signal);
   }
   async function py(method,args,signal,commandId=`manual-read-${randomUUID()}`) {
+    signal?.throwIfAborted();
     const command=await call('mt5',method==='order_send'?'mt5_trade':'mt5_python',{server:'python',tool:method,arguments:args,command_id:commandId},signal);
-    check(command?.status==='returned' && !command.result?.error && command.result?.result!==null && command.result?.result!==undefined,'SOURCE_UNAVAILABLE',`MT5 ${method} did not return a confirmed result`);
+    signal?.throwIfAborted();
+    if (!(command?.status==='returned' && !command.result?.error && command.result?.result!==null && command.result?.result!==undefined)) {
+      const native=command?.result?.last_error, failure=command?.error??command?.result?.error;
+      const nativeCode=Array.isArray(native)?native[0]:null, nativeMessage=Array.isArray(native)?String(native[1]??'').slice(0,1000):null;
+      const disconnected=nativeCode===-10004;
+      throw Object.assign(new Error(`MT5 ${method}: ${failure?.message??nativeMessage??'did not return a confirmed result'}`), {
+        code:disconnected?'MT5_PYTHON_UNAVAILABLE':failure?.code??'SOURCE_UNAVAILABLE',
+        details:{transport:'python',requiredTransport:'python',method,commandId:command?.id??commandId,commandStatus:command?.status??null,nativeCode,nativeMessage,
+          ...(disconnected?{retryable:false,recovery:'Reconnect the configured MetaTrader 5 Python terminal, verify the same account, then start a new workflow run. Terminal MCP connectivity alone does not establish Python IPC.'}:{})},
+      });
+    }
     return command.result.result;
   }
   async function identity(backend,signal) {
@@ -56,9 +67,11 @@ export function createAdapters(host, {now=Date.now,authorizeRequest}={}) {
       const catalog=await call('mt5','mt5_catalog',{server:'python',query:'order_send'},signal);
       const order=catalog.items?.find(x=>x.server==='python')?.tools?.find(x=>x.name==='order_send');
       check(order?.callable && order.inputSchema?.properties?.execution_guard,'PREREQUISITE_REQUIRED','Use sesame/mt5 1.3.0+ with a connected Python SDK and execution_guard; pure MCP quotes do not establish UTC freshness');
-      const [info,terminal,spec,positions,orders]=await Promise.all([py('account_info',{},signal),py('terminal_info',{},signal),py('symbol_info',{symbol},signal),py('positions_get',{symbol},signal),background()?py('orders_get',{symbol},signal):undefined]);
+      const info=await py('account_info',{},signal);
       check(String(info.login)===account.accountId && info.server===account.server,'ACCOUNT_MISMATCH','MT5 current account differs from configured account');
+      const terminal=await py('terminal_info',{},signal);
       check(terminal.connected===true,'SOURCE_UNAVAILABLE','MT5 is not connected to its broker');
+      const spec=await py('symbol_info',{symbol},signal), positions=await py('positions_get',{symbol},signal), orders=background()?await py('orders_get',{symbol},signal):undefined;
       check(spec.name===symbol && Array.isArray(positions) && (!background() || Array.isArray(orders)),'SOURCE_DATA_INVALID','Native symbol/positions/orders omitted');
       const quote=await quoteFor(backend,symbol,signal);
       return {account,symbol,spec,positions,...(orders ? {orders} : {}),quote,readStartedAt:began,capturedAt:now(),captureMs:now()-began,accountSummary:{balance:info.balance??null,equity:info.equity??null,currency:info.currency??null,tradeAllowed:info.trade_allowed===true && info.trade_expert===true}};
@@ -67,7 +80,7 @@ export function createAdapters(host, {now=Date.now,authorizeRequest}={}) {
     // Background identity already requires the guarded 1.3+ plan tool. The
     // public plugin-inspection port is main/service only.
     if(!background()) {
-      const installed=host.plugins.inspect('sesame/qmt');
+      const installed=await pluginStatus(host, 'sesame/qmt');
       check(/^1\.(?:[2-9]|[1-9]\d)\./.test(installed?.version??''),'PREREQUISITE_REQUIRED','Use sesame/qmt 1.2.0+ with native execution guards');
     }
     const [specResult,asset,positions,orders]=await Promise.all([call('qmt','qmt_read',{action:'describe',symbols:[symbol]},signal),call('qmt','qmt_read',{action:'asset'},signal),call('qmt','qmt_read',{action:'positions',page:{limit:200}},signal),background()?call('qmt','qmt_read',{action:'orders',page:{limit:200}},signal):undefined]);

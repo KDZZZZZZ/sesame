@@ -1,3 +1,4 @@
+import { readArtifact, readBytes } from './resource-io.js';
 import { evaluateReplay, validateSource } from '@sesame/plugin-sdk/svl';
 import { sourceIdentity, accountIdentity, nativeTimeframe } from './contract-mapping.js';
 import { requireValue } from './support.js';
@@ -52,12 +53,12 @@ export function nativeParameterValue(declaration, value, name = '参数') {
   return scalar;
 }
 
-export function translationBinding(host, mt5, buildId, config) {
+export async function translationBinding(host, mt5, buildId, config) {
   const build = mt5.storage.get('mt5_build', buildId), revision = mt5.storage.get('mt5_revision', `${build.project_id}:${build.revision}`);
   if (!revision.translation) return null;
-  const translation = host.artifacts.read(revision.translation).manifest.content, artifact = host.artifacts.read(translation.source), blob = artifact.manifest.blobs.find(blob => blob.path === artifact.manifest.content.sourcePath);
-  const { source } = validateSource(host.artifacts.readBlob(blob).toString('utf8'));
-  const target = host.artifacts.read(translation.target).manifest.content;
+  const translation = (await readArtifact(host, revision.translation)).manifest.content, artifact = (await readArtifact(host, translation.source)), blob = artifact.manifest.blobs.find(blob => blob.path === artifact.manifest.content.sourcePath);
+  const { source } = validateSource((await readBytes(host, translation.source, blob.path)).toString('utf8'));
+  const target = (await readArtifact(host, translation.target)).manifest.content;
   assertTargetCapabilities(source, target);
   const mapping = parameterMapping(source, translation.nativeParameterMap), account = mt5.official.config.account, native = { ...(config.parameters ?? {}) }, parameters = {};
   const instrument = { sourceId: sourceIdentity(account.server), instrumentId: config.symbol };

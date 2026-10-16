@@ -104,7 +104,8 @@ test('static workflows cover both integration branches and keep forks as data', 
     assert.equal((workflow.match(/branches: \[main, dev\]/g) ?? []).length, 2);
     assert.doesNotMatch(workflow, /^\s*paths(?:-ignore)?:/m);
     assert.match(workflow, /repository: \$\{\{ github\.event\.pull_request\.head\.repo\.full_name \|\| github\.repository \}\}/);
-    assert.match(workflow, /ref: \$\{\{ github\.event\.pull_request\.base\.sha \|\| github\.sha \}\}/);
+    if (name === 'plugin-catalog.yml') assert.match(workflow, /repository: KDZZZZZZ\/sesame\s+ref: 2aeb09c9d5d4a8e78572e1d7e23afe574570597e\s+path: trusted/);
+    else assert.match(workflow, /ref: \$\{\{ github\.event\.pull_request\.base\.sha \|\| github\.sha \}\}/);
     assert.doesNotMatch(workflow, /\b(?:node|npm|bash|sh|python3?)\s+(?:\.\/)?candidate\//);
     assert.doesNotMatch(workflow, /contents: write|persist-credentials: true/);
   }

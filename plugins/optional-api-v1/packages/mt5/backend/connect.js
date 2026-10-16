@@ -1,3 +1,4 @@
+import { records } from './records.js';
 import { promises as fs } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
@@ -159,29 +160,29 @@ export async function ensureMT5Connection(mt5, { start_if_needed = true } = {}, 
 
 /** Main-agent entry, with the same configuration lock and durable audit as other settings changes. */
 export async function connectMT5(host, mt5, args, signal) {
-  const conversationId = host.scope.conversationId;
-  if (conversationId) requireValue(host.scope.kind === 'main', '只有主 Agent 可以恢复 MT5 连接', 403);
+  const conversationId = host.context.sessionId;
+  if (conversationId) requireValue(host.context.kind === 'main', '只有主 Agent 可以恢复 MT5 连接', 403);
   requireValue(args && Object.keys(args).every(key => ['command_id', 'start_if_needed'].includes(key)) && typeof args.command_id === 'string' && /^[A-Za-z0-9_-]{16,128}$/.test(args.command_id)
     && (args.start_if_needed === undefined || typeof args.start_if_needed === 'boolean'), '连接请求需要唯一 command_id，可选 start_if_needed 布尔值');
   const fingerprint = digest(stableJSON({ ...args, conversationId }));
-  const previous = host.storage.get('configuration_change', args.command_id, true);
+  const previous = records(host).get('configuration_change', args.command_id, true);
   if (previous) {
     requireValue(previous.fingerprint === fingerprint && previous.conversation_id === conversationId, '连接命令 ID 已用于其他请求', 409, 'idempotency_conflict');
     return publicRecord(previous);
   }
-  return host.configuration.exclusive(async () => {
-    const repeated = host.storage.get('configuration_change', args.command_id, true);
+  return records(host).exclusive(async () => {
+    const repeated = records(host).get('configuration_change', args.command_id, true);
     if (repeated) {
       requireValue(repeated.fingerprint === fingerprint && repeated.conversation_id === conversationId, '连接命令 ID 已用于其他请求', 409, 'idempotency_conflict');
       return publicRecord(repeated);
     }
     const record = { id: args.command_id, fingerprint, conversation_id: conversationId, target: 'mt5', changes: { connect: true, start_if_needed: args.start_if_needed ?? true }, status: 'running', created_at: now() };
-    host.storage.put('configuration_change', record);
+    records(host).put('configuration_change', record);
     const finish = changes => {
       const value = { ...record, ...changes, completed_at: now() };
-      host.storage.transaction(() => {
-        host.storage.put('configuration_change', value);
-        host.events.emit('configuration.updated', { id: record.id, target: 'mt5', status: value.status });
+      records(host).transaction(() => {
+        records(host).put('configuration_change', value);
+        host.events.emit({ topic: 'workspace.mt5.configuration', payload: { id: record.id, target: 'mt5', status: value.status } });
       });
       return publicRecord(value);
     };

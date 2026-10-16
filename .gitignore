@@ -1,0 +1,10 @@
+# Local verification workspaces and generated bundles.
+.omx/
+/output/
+node_modules/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+plugins/optional-api-v1/packages/kurumi-replay/.core-sqlite-roundtrip-*/

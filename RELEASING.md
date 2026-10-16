@@ -75,6 +75,13 @@ assets to make a release pass.
 
 ## Plugin compatibility
 
+Current development source packages and the development host use API 2.
+Development builds must select a fixed API 2 plugin source commit; historical
+API 1 archives are not interchangeable with that source. The following
+compatibility rules preserve existing API 1 clients and publications. See
+[API 2 development and historical publication](plugins/api-v1/PUBLISHING.md)
+for the separate validation paths.
+
 Older plugin managers and application locks require historical plugin URLs and
 fixed source commits. Keep those assets, tags and source identities available.
 The R2-compatible plugin-manager 2.3.0 or newer and first catalog require separate

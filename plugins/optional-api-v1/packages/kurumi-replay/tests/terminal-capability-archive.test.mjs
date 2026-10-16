@@ -1,0 +1,40 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, readFile, rm, realpath } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
+import { tmpdir } from 'node:os';
+import { ReplayService } from '../service.js';
+import { Recorder } from '../recording.js';
+import { createRun } from '../native-engine.js';
+import { records, closeRecords } from '../records.js';
+
+test('terminal archive retains the actual API 2 capability manifest in both copies without running an Agent', async t => {
+  const temporaryRoot = await realpath(tmpdir());
+  const directory = await mkdtemp(join(temporaryRoot, 'kurumi-api2-terminal-'));
+  const host = { context: { storageRoot: directory, pluginId: 'sesame/kurumi-replay', kind: 'main', sessionId: 'fixture-main' } };
+  t.after(async () => {
+    closeRecords(host);
+    assert.ok(resolve(directory).startsWith(resolve(temporaryRoot, 'kurumi-api2-terminal-')));
+    await rm(directory, { recursive: true, force: true });
+  });
+  const service = new ReplayService(host);
+  service.recorder = new Recorder(directory, { mirrorRoot: join(directory, 'mirror') });
+  await service.recorder.initialize();
+  const chapters = ['AUDJPY', 'USDJPY', 'EURCHF'].map(symbol => ({ symbol, startIndex: 0, endIndex: 1 }));
+  const engine = createRun('api2-terminal-fixture', chapters, { fixture: 'synthetic-terminal-no-trades' });
+  Object.assign(engine, { status: 'complete', outcome: 'not_reached', chapter: 2, index: 1 });
+  const document = { id: 'continuous', revision: 7, engine, model: null, commands: {}, control: { running: false, remaining: 0, active: null, recovery: null, continuation: null, phase: 'complete', attempt: 0 } };
+  records(host).put('challenge', document);
+  service.data = { chapters, frames: chapters.map(() => [{ time: 1000 }, { time: 3601000 }]), digests: engine.dataDigests, provenance: { kind: 'demo' } };
+  const input = { command_id: 'terminal-api2-archive', expected_version: 7, run_id: engine.id };
+  const result = await service.archiveTerminal(input);
+  assert.equal(result.sealed, true);
+  assert.deepEqual(service.getDocument(), document);
+  const history = records(host).get('experiment-history', engine.id);
+  const manifest = history.manifest.files.find(file => file.path.endsWith('/code/capabilities.json'));
+  assert.ok(manifest, 'Archive the current public capability contract');
+  assert.equal(history.manifest.files.some(file => file.path.endsWith('/code/tools.json')), false);
+  const source = await readFile(new URL('../capabilities.json', import.meta.url));
+  for (const root of [service.recorder.root, service.recorder.mirror]) assert.deepEqual(await readFile(join(root, manifest.path)), source);
+  assert.deepEqual(await service.archiveTerminal(input), result);
+});

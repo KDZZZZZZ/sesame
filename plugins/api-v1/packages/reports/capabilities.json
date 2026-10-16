@@ -1,0 +1,1523 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "capabilities": [
+    {
+      "id": "report_data",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Freeze a registered host dataset or explicitly selected declared source query into a fixed DataRef. Preserve actual rows and provenance; demo remains demo.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "operation_id"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "description": "Stable idempotency key for this exact snapshot",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "dataset_id": {
+            "type": "string",
+            "description": "Existing registered dataset ID",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "provenance_kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "observed"
+              },
+              {
+                "type": "string",
+                "const": "derived"
+              },
+              {
+                "type": "string",
+                "const": "user_input"
+              },
+              {
+                "type": "string",
+                "const": "demo"
+              }
+            ]
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "revision",
+                "digest",
+                "kind",
+                "schemaVersion"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "revision": {
+                  "type": "string"
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^sha256:[a-f0-9]{64}$"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "schemaVersion": {
+                  "type": "string",
+                  "const": "1.0.0"
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 64
+          },
+          "source": {
+            "type": "object",
+            "properties": {
+              "providerId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "description": "data_sources 返回的完整来源ID"
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "description": "精确声明版本"
+              },
+              "binding": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "providerId",
+              "revision"
+            ],
+            "additionalProperties": false
+          },
+          "input": {
+            "type": "object"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "dataset_id"
+            ],
+            "not": {
+              "required": [
+                "source"
+              ]
+            }
+          },
+          {
+            "required": [
+              "source",
+              "input",
+              "title"
+            ],
+            "not": {
+              "required": [
+                "dataset_id"
+              ]
+            }
+          }
+        ]
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "data.query",
+        "resource.publish",
+        "resource.write",
+        "state.write"
+      ],
+      "usage": {
+        "purpose": "Freeze a registered host dataset or explicitly selected declared source query into a fixed DataRef. Preserve actual rows and provenance; demo remains demo.",
+        "inputs": "operation_id 固定采集；选择 dataset_id，或明确 source+input+title（二者互斥）；provenance_kind 仅在来源缺失时补充；dependencies 为固定引用。",
+        "outputs": "data_snapshot 的 {ref,evidence,rowCount,columns,sample,provenance,receipt}；ref 可直接绑定报告。",
+        "prerequisites": [
+          "sesame/data-access 已安装可用；已得到固定 DataRef 时无需再冻结。"
+        ],
+        "limitations": [
+          "不生成数据或计算统计；demo 永远保留 demo。未登记文件可通过真实来源/计算能力生成数据成果。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "report_data"
+      }
+    },
+    {
+      "id": "report_template",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Write an editable report/1 HTML scaffold with Sesame’s original typography, conclusion, numbered evidence and folded methods. Optional comparison, distribution, temporal and relationship charts use the same style. Read report-design for chart field mappings; all chart data comes from named fixed bindings.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "output_path",
+          "title",
+          "summary",
+          "data_id",
+          "chart_title",
+          "takeaway",
+          "source_note",
+          "kind",
+          "unit",
+          "columns"
+        ],
+        "properties": {
+          "output_path": {
+            "type": "string",
+            "description": "Workspace HTML path to create",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "title": {
+            "type": "string",
+            "description": "Descriptive report title",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "summary": {
+            "type": "string",
+            "description": "Main finding supported by the bound data",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "data_id": {
+            "type": "string",
+            "description": "Exact binding ID to include in report_publish.data",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "chart_title": {
+            "type": "string",
+            "description": "Chart title with scope and period",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "takeaway": {
+            "type": "string",
+            "description": "The supported point this chart makes",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "source_note": {
+            "type": "string",
+            "description": "Source, observation period, units and material limitations",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "line"
+              },
+              {
+                "type": "string",
+                "const": "bar"
+              },
+              {
+                "type": "string",
+                "const": "scatter"
+              },
+              {
+                "type": "string",
+                "const": "matrix"
+              },
+              {
+                "type": "string",
+                "const": "units"
+              },
+              {
+                "type": "string",
+                "const": "waterfall"
+              },
+              {
+                "type": "string",
+                "const": "dumbbell"
+              },
+              {
+                "type": "string",
+                "const": "strip"
+              },
+              {
+                "type": "string",
+                "const": "histogram"
+              },
+              {
+                "type": "string",
+                "const": "boxplot"
+              },
+              {
+                "type": "string",
+                "const": "ridgeline"
+              },
+              {
+                "type": "string",
+                "const": "violin"
+              },
+              {
+                "type": "string",
+                "const": "calendar"
+              },
+              {
+                "type": "string",
+                "const": "parallel"
+              },
+              {
+                "type": "string",
+                "const": "bump"
+              },
+              {
+                "type": "string",
+                "const": "lifecycle"
+              },
+              {
+                "type": "string",
+                "const": "treemap"
+              },
+              {
+                "type": "string",
+                "const": "threads"
+              },
+              {
+                "type": "string",
+                "const": "flow"
+              },
+              {
+                "type": "string",
+                "const": "network-circular"
+              },
+              {
+                "type": "string",
+                "const": "network-force"
+              }
+            ]
+          },
+          "x": {
+            "type": "string",
+            "description": "Category or x-coordinate column; required by line/bar/scatter/matrix/units",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "y": {
+            "type": "string",
+            "description": "Value or matrix row column; required by line/bar/scatter/matrix/units",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "value": {
+            "type": "string",
+            "description": "Matrix numeric value column",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "unit": {
+            "type": "string",
+            "description": "Displayed measurement unit",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "unit_value": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Exact column name in the data",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "minItems": 1,
+            "maxItems": 32
+          },
+          "locale": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "en"
+              },
+              {
+                "type": "string",
+                "const": "zh-CN"
+              }
+            ]
+          },
+          "demo": {
+            "type": "boolean"
+          },
+          "chart_options": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true,
+            "description": "Chart-specific field mappings and display options from report-design. Do not put data rows, callbacks or computed financial results here."
+          },
+          "chart_data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "property",
+                "data_id"
+              ],
+              "properties": {
+                "property": {
+                  "type": "string",
+                  "description": "Extra chart data property, for example nodes",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "data_id": {
+                  "type": "string",
+                  "description": "Fixed report data binding to read for that property",
+                  "minLength": 1,
+                  "maxLength": 20000
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 8
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "workspace.write"
+      ],
+      "usage": {
+        "purpose": "Write an editable report/1 HTML scaffold with Sesame’s original typography, conclusion, numbered evidence and folded methods. Optional comparison, distribution, temporal and relationship charts use the same style. Read report-design for chart field mappings; all chart data comes from named fixed bindings.",
+        "inputs": "output_path 为工作区 HTML；data_id 是稍后 report_publish.data[].id，非 Artifact ID。title/summary/takeaway/source_note 说明结论与口径；kind 与 x/y/value/columns 映射固定数据列，复杂图读 report-design 对应资源。",
+        "outputs": "{path,bytes,runtime,runtimeRevision,binding,editable:true}；可编辑 HTML 已内联原版样式、reportKit 和图表代码。",
+        "prerequisites": [
+          "sesame/workspace 可读写；数据列与单位已知。"
+        ],
+        "limitations": [
+          "只生成文件，不发布、不计算金融统计、不证明渲染。图形参数冲突时修正具体字段映射，不填演示值补缺口。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "report_template"
+      }
+    },
+    {
+      "id": "report_backtest_template",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Create an editable Strategy report with the graph derived from an exact SVL source, a symbol/timeframe heatmap of preselected optimization winners, all-trial inspection and parameter sensitivity charts. Read report-writing/backtest.md for frozen row fields and selection rules. This renders results; it never runs or optimizes a strategy.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "output_path",
+          "title",
+          "summary",
+          "strategy_source",
+          "data_id",
+          "parameters",
+          "selection_rule",
+          "source_note",
+          "currency"
+        ],
+        "properties": {
+          "output_path": {
+            "type": "string",
+            "description": "Workspace HTML path",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "title": {
+            "type": "string",
+            "description": "Strategy report title",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "summary": {
+            "type": "string",
+            "description": "Finding supported by actual results",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "strategy_source": {
+            "type": "object",
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string",
+                "const": "strategy.source"
+              },
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              }
+            },
+            "additionalProperties": false
+          },
+          "data_id": {
+            "type": "string",
+            "description": "Fixed report data binding containing all trials; see backtest.md",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "parameters": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Parameter key in each row.parameters",
+              "minLength": 1,
+              "maxLength": 20000
+            },
+            "minItems": 1,
+            "maxItems": 32
+          },
+          "selection_metric": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "sharpe"
+              },
+              {
+                "type": "string",
+                "const": "max_drawdown_pct"
+              },
+              {
+                "type": "string",
+                "const": "net_profit"
+              }
+            ]
+          },
+          "selection_rule": {
+            "type": "string",
+            "description": "Prespecified optimization objective, sample, constraints and tie-break; selected rows must already be recorded upstream",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "source_note": {
+            "type": "string",
+            "description": "Engine, data range, sample split, costs, currency, metric definitions and limitations",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "currency": {
+            "type": "string",
+            "description": "One common profit currency for these rows; split different currencies into separate comparisons",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "locale": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "en"
+              },
+              {
+                "type": "string",
+                "const": "zh-CN"
+              }
+            ]
+          },
+          "demo": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "workspace.write"
+      ],
+      "usage": {
+        "purpose": "Create an editable Strategy report with the graph derived from an exact SVL source, a symbol/timeframe heatmap of preselected optimization winners, all-trial inspection and parameter sensitivity charts. Read report-writing/backtest.md for frozen row fields and selection rules. This renders results; it never runs or optimizes a strategy.",
+        "inputs": "output_path/title/summary/strategy_source/data_id/parameters/selection_metric/selection_rule/source_note 描述已计算优化结果；strategy_source 是固定 SVL 引用。行字段见 report-writing/backtest.md。",
+        "outputs": "已写入的可编辑 Strategy 报告 HTML 路径、字节数与绑定信息；图来自同一 SVL，网格和参数检查来自绑定数据。",
+        "prerequisites": [
+          "workspace 可用；已发布策略源及有选优标记的固定回测结果。"
+        ],
+        "limitations": [
+          "不运行策略或重新选优；缺失的样本外统计需由计算能力产生，不能用模板补造。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "report_backtest_template"
+      }
+    },
+    {
+      "id": "report_read",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "List fixed report artifact revisions or read an exact report reference, including its pinned data and related evidence.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ref": {
+            "type": "object",
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string",
+                "const": "report"
+              },
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              }
+            },
+            "additionalProperties": false
+          },
+          "include_checks": {
+            "type": "boolean"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "宿主返回的分页游标"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "read"
+      ],
+      "usage": {
+        "purpose": "List fixed report artifact revisions or read an exact report reference, including its pinned data and related evidence.",
+        "inputs": "无 ref 分页列出 report 成果（limit 默认30）；有 ref 读该固定版本，include_checks=true 同时读取渲染回执。",
+        "outputs": "列表为 {items,nextCursor?}；单项为资源 metadata、manifest 和可选 checks。",
+        "prerequisites": [],
+        "limitations": [
+          "旧 revision 的 rendered 只证明旧版本；未完成/未检查报告不冒充已验证成果。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "report_read"
+      }
+    },
+    {
+      "id": "report_check",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Render an exact published report revision through the host inspector. Return the persisted actual rendering receipt, viewport checks and diagnostics. Repair failed HTML as a new revision and inspect it again.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "ref"
+        ],
+        "properties": {
+          "ref": {
+            "type": "object",
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string",
+                "const": "report"
+              },
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "presentation.render",
+        "write:receipt"
+      ],
+      "usage": {
+        "purpose": "Render an exact published report revision through the host inspector. Return the persisted actual rendering receipt, viewport checks and diagnostics. Repair failed HTML as a new revision and inspect it again.",
+        "inputs": "ref 为 report_publish 返回的完整固定 report ArtifactRef。",
+        "outputs": "宿主真实渲染检查回执，含状态、视口/运行时检查和 diagnostics，并保存到该版本 receipts。",
+        "prerequisites": [
+          "宿主报告渲染器可用；已发布该 ref。"
+        ],
+        "limitations": [
+          "rendered 才证明本次检查通过；失败根据具体诊断修 HTML/数据，发布新 revision 再检查。无渲染器时明确未验证。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "report_check"
+      }
+    },
+    {
+      "id": "report_publish",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Publish Agent-authored HTML and packaged assets as an immutable report/1 artifact. All data and related artifacts are fixed references; report code gets only the read-only bridge. Publication does not claim successful rendering.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "operation_id",
+          "title",
+          "summary",
+          "html_path",
+          "provenance_kind",
+          "data"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "description": "Stable idempotency key for this exact report",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "title": {
+            "type": "string",
+            "description": "Report title",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "summary": {
+            "type": "string",
+            "description": "Supported takeaway",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "html_path": {
+            "type": "string",
+            "description": "Authored workspace HTML file",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "locale": {
+            "type": "string",
+            "description": "BCP 47 language, for example en or zh-CN",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "provenance_kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "observed"
+              },
+              {
+                "type": "string",
+                "const": "derived"
+              },
+              {
+                "type": "string",
+                "const": "user_input"
+              },
+              {
+                "type": "string",
+                "const": "demo"
+              }
+            ]
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "ref",
+                "usage"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Local data binding ID used by report.readData",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "ref": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "revision",
+                    "digest",
+                    "kind",
+                    "schemaVersion"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "revision": {
+                      "type": "string"
+                    },
+                    "digest": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "const": "data"
+                    },
+                    "schemaVersion": {
+                      "type": "string",
+                      "const": "1.0.0"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "usage": {
+                  "type": "string",
+                  "description": "What this fixed data supports",
+                  "minLength": 1,
+                  "maxLength": 20000
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 32
+          },
+          "strategy_source": {
+            "type": "object",
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string",
+                "const": "strategy.source"
+              },
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              }
+            },
+            "additionalProperties": false
+          },
+          "related": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "role"
+              ],
+              "properties": {
+                "role": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "strategy"
+                    },
+                    {
+                      "type": "string",
+                      "const": "translation"
+                    },
+                    {
+                      "type": "string",
+                      "const": "run"
+                    },
+                    {
+                      "type": "string",
+                      "const": "result"
+                    },
+                    {
+                      "type": "string",
+                      "const": "source"
+                    }
+                  ]
+                },
+                "artifact": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "revision",
+                    "digest",
+                    "kind",
+                    "schemaVersion"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "revision": {
+                      "type": "string"
+                    },
+                    "digest": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$"
+                    },
+                    "kind": {
+                      "type": "string"
+                    },
+                    "schemaVersion": {
+                      "type": "string",
+                      "const": "1.0.0"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "record": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "version"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 32
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "revision",
+                "digest",
+                "kind",
+                "schemaVersion"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "revision": {
+                  "type": "string"
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^sha256:[a-f0-9]{64}$"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "schemaVersion": {
+                  "type": "string",
+                  "const": "1.0.0"
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 64
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "interactive"
+                },
+                {
+                  "type": "string",
+                  "const": "strategy_details"
+                },
+                {
+                  "type": "string",
+                  "const": "trade_details"
+                }
+              ]
+            },
+            "maxItems": 3
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "path",
+                "source_path",
+                "media_type"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "description": "Safe relative path used by the HTML",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "source_path": {
+                  "type": "string",
+                  "description": "Workspace file containing this asset",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "media_type": {
+                  "type": "string",
+                  "description": "Exact MIME type",
+                  "minLength": 1,
+                  "maxLength": 20000
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 64
+          },
+          "artifact_id": {
+            "type": "string",
+            "description": "Existing report artifact ID for a new revision",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "expected_revision": {
+            "type": "string",
+            "description": "Exact current revision when updating",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "resource.publish",
+        "resource.write",
+        "state.write"
+      ],
+      "usage": {
+        "purpose": "Publish Agent-authored HTML and packaged assets as an immutable report/1 artifact. All data and related artifacts are fixed references; report code gets only the read-only bridge. Publication does not claim successful rendering.",
+        "inputs": "operation_id/title/summary/html_path/provenance_kind/data 必填；data=[{id,ref,...}] 将 HTML 的 bindingId 对应完整 DataRef。assets 打包本地资源；已有报告更新提供 artifact_id+expected_revision；strategy_source 将策略报告关联 SVL。",
+        "outputs": "{ref,title,data,runtime,runtimeRevision,renderStatus:\"not_checked\"}；不可变报告已发布，尚无渲染成功证据。",
+        "prerequisites": [
+          "workspace 可读；所有引用已发布；HTML≤1MiB、打包总量≤16MiB；报告 API 与模板见公开 skills。"
+        ],
+        "limitations": [
+          "同一 operation_id 对应同一固定内容；修改后用新 ID 和当前 revision。资源须打包，demo 输入必须保持 demo；渲染验收使用 report_check(ref)。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "report_publish"
+      }
+    }
+  ],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "resource.1",
+      "path": "prompt.md",
+      "description": "随包资源 prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "resource.2",
+      "path": "repair.md",
+      "description": "随包资源 repair.md",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.3",
+      "path": "PROVENANCE.md",
+      "description": "随包资源 PROVENANCE.md",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.4",
+      "path": "templates/research-brief.html",
+      "description": "随包资源 templates/research-brief.html",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.5",
+      "path": "examples/demo-data.json",
+      "description": "随包资源 examples/demo-data.json",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.6",
+      "path": "examples/editorial-demo.html",
+      "description": "随包资源 examples/editorial-demo.html",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.7",
+      "path": "examples/chart-gallery.md",
+      "description": "随包资源 examples/chart-gallery.md",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.8",
+      "path": "examples/statistical-fixtures.json",
+      "description": "随包资源 examples/statistical-fixtures.json",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.9",
+      "path": "examples/temporal-fixtures.json",
+      "description": "随包资源 examples/temporal-fixtures.json",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.10",
+      "path": "examples/structural-fixtures.json",
+      "description": "随包资源 examples/structural-fixtures.json",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.11",
+      "path": "skills/report-design/statistical-charts.md",
+      "description": "随包资源 skills/report-design/statistical-charts.md",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.12",
+      "path": "skills/report-design/temporal-charts.md",
+      "description": "随包资源 skills/report-design/temporal-charts.md",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.13",
+      "path": "skills/report-design/structural-charts.md",
+      "description": "随包资源 skills/report-design/structural-charts.md",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.14",
+      "path": "templates/backtest.html",
+      "description": "随包资源 templates/backtest.html",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.15",
+      "path": "skills/report-writing/backtest.md",
+      "description": "随包资源 skills/report-writing/backtest.md",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.16",
+      "path": "skills/interactive-report/SKILL.md",
+      "description": "随包资源 skills/interactive-report/SKILL.md",
+      "kind": "skill"
+    },
+    {
+      "id": "resource.17",
+      "path": "skills/report-design/SKILL.md",
+      "description": "随包资源 skills/report-design/SKILL.md",
+      "kind": "skill"
+    },
+    {
+      "id": "resource.18",
+      "path": "skills/report-writing/SKILL.md",
+      "description": "随包资源 skills/report-writing/SKILL.md",
+      "kind": "skill"
+    }
+  ],
+  "hooks": [],
+  "stateCollections": [],
+  "artifactSchemas": [
+    {
+      "id": "report",
+      "kind": "report",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "schemaVersion": {
+            "const": "1.0.0"
+          },
+          "title": {
+            "type": "string",
+            "description": "Report title",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "summary": {
+            "type": "string",
+            "description": "Supported takeaway",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "entry": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "description": "包内 HTML 文件"
+          },
+          "runtime": {
+            "const": "sesame-report/1"
+          },
+          "runtimeRevision": {
+            "const": "1.0.0"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "ref",
+                "usage"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Local data binding ID used by report.readData",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "ref": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "revision",
+                    "digest",
+                    "kind",
+                    "schemaVersion"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "revision": {
+                      "type": "string"
+                    },
+                    "digest": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "const": "data"
+                    },
+                    "schemaVersion": {
+                      "type": "string",
+                      "const": "1.0.0"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "usage": {
+                  "type": "string",
+                  "description": "What this fixed data supports",
+                  "minLength": 1,
+                  "maxLength": 20000
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 32
+          },
+          "related": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "role"
+              ],
+              "properties": {
+                "role": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "strategy"
+                    },
+                    {
+                      "type": "string",
+                      "const": "translation"
+                    },
+                    {
+                      "type": "string",
+                      "const": "run"
+                    },
+                    {
+                      "type": "string",
+                      "const": "result"
+                    },
+                    {
+                      "type": "string",
+                      "const": "source"
+                    }
+                  ]
+                },
+                "artifact": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "revision",
+                    "digest",
+                    "kind",
+                    "schemaVersion"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "revision": {
+                      "type": "string"
+                    },
+                    "digest": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$"
+                    },
+                    "kind": {
+                      "type": "string"
+                    },
+                    "schemaVersion": {
+                      "type": "string",
+                      "const": "1.0.0"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "record": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "version"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 32
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "interactive"
+                },
+                {
+                  "type": "string",
+                  "const": "strategy_details"
+                },
+                {
+                  "type": "string",
+                  "const": "trade_details"
+                }
+              ]
+            },
+            "maxItems": 3
+          },
+          "locale": {
+            "type": "string",
+            "description": "BCP 47 language, for example en or zh-CN",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "provenance": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "enum": [
+                  "observed",
+                  "derived",
+                  "user_input",
+                  "demo"
+                ]
+              },
+              "references": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4096,
+                      "description": "成果ID"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4096,
+                      "description": "精确修订"
+                    },
+                    "digest": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4096,
+                      "description": "成果类型"
+                    },
+                    "schemaVersion": {
+                      "const": "1.0.0"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "revision",
+                    "digest",
+                    "kind",
+                    "schemaVersion"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxItems": 128
+              }
+            },
+            "required": [
+              "kind",
+              "references"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "title",
+          "summary",
+          "entry",
+          "runtime",
+          "runtimeRevision",
+          "data",
+          "related",
+          "features",
+          "locale",
+          "provenance"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

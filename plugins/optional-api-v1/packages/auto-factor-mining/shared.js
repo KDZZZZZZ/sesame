@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { resolveResearch, resolveEvaluator, taskPlugins } from './composition.js';
 
 export const ID = 'sesame/auto-factor-mining';
-export const ROLES = ['supervisor', 'researcher', 'coder', 'reviewer', 'reflector', 'reporter'];
+export const ROLES = ['supervisor', 'researcher', 'coder', 'reviewer', 'reflector'];
 export const terminal = new Set(['completed', 'failed', 'cancelled', 'interrupted', 'exhausted']);
 export const canonical = value => JSON.stringify(normalize(value));
 function normalize(value) {
@@ -22,7 +22,7 @@ export function integer(value, min, max, name) {
 }
 export function configuredModel(host, choice) {
   check(choice?.provider && choice?.id, 'MODEL_REQUIRED', 'Choose a configured provider/id using auto_factor_models');
-  const found = host.inference.models().find(m => m.provider === choice.provider && m.id === choice.id);
+  const found = host.context.models.find(m => m.provider === choice.provider && m.id === choice.id);
   check(found, 'MODEL_UNAVAILABLE', `Model unavailable: ${choice.provider}/${choice.id}`);
   check(!choice.configurationDigest || choice.configurationDigest === found.configurationDigest, 'MODEL_CHANGED', 'Model configuration changed; select the current descriptor');
   return structuredClone(found);

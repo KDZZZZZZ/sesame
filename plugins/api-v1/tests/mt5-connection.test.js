@@ -1,4 +1,4 @@
-import { mt5Import, mt5Path } from './mt5-path.js';
+import { mt5Import } from './mt5-path.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, appendFile, rm } from 'node:fs/promises';
@@ -26,8 +26,7 @@ test('isolated Tester inherits only explicit proxy settings, clears stale proxie
   assert.deepEqual(testerProxyLines('[Tester]\nProxyEnable=1\n'), ['ProxyEnable=0']);
   assert.equal(proxySettings('[common]\nproxyenable = 1\nPROXYTYPE=2\n;ProxyType=0\n').ProxyType, '2');
   for (const invalid of ['[Common]\nProxyEnable=1', '[Common]\nProxyEnable=bad', '[Common]\nProxyEnable=1\nProxyType=1\nProxyAddress=host:99999']) assert.throws(() => testerProxyLines(invalid));
-  const official = new MT5Official({ storage: {} }, null);
-  official.config = { account, servers: {}, startup_ini: ini };
+  const official = { config: { account, servers: {}, startup_ini: ini }, redact: MT5Official.prototype.redact };
   assert.equal(official.redact('proxy: fixture=proxy-password'), 'proxy: [redacted]');
 });
 

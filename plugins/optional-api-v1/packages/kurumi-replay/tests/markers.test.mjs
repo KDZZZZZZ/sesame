@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { ORIGINAL_REFERENCES, buildMarkerSnapshot, compute, createMarkerIndicator, publishMarkers } from '../markers.js';
 import { ReplayMarketProvider } from '../providers.js';
 import { createReferenceRun as createRun, decideReferenceAndAdvance as decideAndAdvance, snapshotReference as engineSnapshot } from '../engine.js';
@@ -27,34 +27,11 @@ const markers = result => result.series.flatMap(s => s.markers);
 const series = (result, id) => result.series.find(s => s.seriesId === id).markers;
 async function sourceCompute(source) { const sourceURL='data:text/javascript;base64,' + Buffer.from(source).toString('base64'); return (await import(sourceURL)).compute; }
 
-function publicSchemaValidate(value, schema, where = 'input') {
-  if (schema.anyOf) { assert.ok(schema.anyOf.some(s => { try { publicSchemaValidate(value, s); return true; } catch { return false; } }), where); return; }
-  if (schema.const !== undefined) assert.deepEqual(value, schema.const, where);
-  if (schema.enum) assert.ok(schema.enum.includes(value), where);
-  if (schema.type === 'object') {
-    assert.ok(value && typeof value === 'object' && !Array.isArray(value), where);
-    for (const key of schema.required ?? []) assert.ok(Object.hasOwn(value, key), where + '.' + key);
-    for (const [key, v] of Object.entries(value)) {
-      if (schema.properties?.[key]) publicSchemaValidate(v, schema.properties[key], where + '.' + key);
-      else if (schema.additionalProperties === false) assert.fail(where + ' has undeclared property ' + key);
-      else if (typeof schema.additionalProperties === 'object') publicSchemaValidate(v, schema.additionalProperties, where + '.' + key);
-    }
-    if (schema.maxProperties !== undefined) assert.ok(Object.keys(value).length <= schema.maxProperties);
-  }
-  if (schema.type === 'array') { assert.ok(Array.isArray(value)); for (const v of value) publicSchemaValidate(v, schema.items, where + '[]'); if (schema.maxItems !== undefined) assert.ok(value.length <= schema.maxItems); }
-  if (schema.type === 'string') { assert.equal(typeof value, 'string', where); if (schema.pattern) assert.match(value, new RegExp(schema.pattern)); if (schema.maxLength !== undefined) assert.ok(value.length <= schema.maxLength); }
-  if (['number', 'integer'].includes(schema.type)) { assert.equal(typeof value, 'number'); assert.ok(Number.isFinite(value)); if (schema.type === 'integer') assert.ok(Number.isInteger(value)); if (schema.minimum !== undefined) assert.ok(value >= schema.minimum); if (schema.maximum !== undefined) assert.ok(value <= schema.maximum); }
-  if (schema.type === 'boolean') assert.equal(typeof value, 'boolean');
-}
-
-test('native definition matches public canvas-control indicator_publish schema and compiled compute is standalone', async () => {
+test('native definition matches host artifact validation and compiled compute is standalone', async () => {
   const f = fixture(); f.state.fills.push(f.fill('buy', '1000'), f.fill('sell', '-1000', T + 3 * H - 1));
   const bundle = createMarkerIndicator(f.service, { originals: [f.interval()] });
-  const original = new URL('../../../../api-v1/packages/canvas-control/tools.json', import.meta.url);
-  const contract = process.env.SESAME_TEST_CANVAS_TOOLS ?? (existsSync(original) ? original : (process.env.SESAME_OFFICIAL_PLUGINS_DIR ?? '/Applications/Sesame.app/Contents/Resources/official-plugins') + '/canvas-control/tools.json');
-  const tools = JSON.parse(readFileSync(contract, 'utf8'));
-  const schema = tools.find(t => t.name === 'indicator_publish').parameters;
-  publicSchemaValidate({ operation_id: 'marker_publication_0001', definition: bundle.definition, files: bundle.files }, schema);
+  const {validateArtifact}=await import(new URL('../../../../../../mt5agent/modules/plugins/artifact-schema.js',import.meta.url));
+  validateArtifact({}, {kind:'indicator',content:bundle.definition,dependencies:[],blobs:Object.entries(bundle.files).map(([path,content])=>({path,size:Buffer.byteLength(content),mediaType:'text/javascript'}))});
   assert.equal(bundle.definition.inputs[0].forming, 'closed_only');
   const computeCompiled = await sourceCompute(bundle.files['markers.js']);
   const output = computeCompiled({ parameters:{label_mode:'events'}, inputs: { price: { rows: f.bars } } });
@@ -154,15 +131,19 @@ test('missing prices/side/time are errors, never zero or invented orders', () =>
   f.state.fills[0].signedQuantity = '1000'; f.state.fills[0].time = T + 3 * H + 1; assert.throws(() => buildMarkerSnapshot(f.service), error('FUTURE_DATA_FORBIDDEN'));
 });
 
-test('publication helper uses only public artifact APIs; source/evidence blobs are fixed, main-only, no display claim', async () => {
+test('publication helper uses actual managed resources; source/evidence blobs are fixed, main-only, no display claim', async () => {
   const f = fixture(); f.state.fills.push(f.fill('buy', '1000'));
   const ref = { id: 'indicator-1', revision: '1', digest: 'sha256:' + 'a'.repeat(64), kind: 'indicator', schemaVersion: '1.0.0' }, calls = [], bodies = [];
-  const host = { scope: { kind: 'main' }, artifacts: { blob: body => { bodies.push(body); return { digest: 'sha256:' + createHash('sha256').update(body).digest('hex'), size: Buffer.byteLength(body) }; }, publish: args => { calls.push(args); return ref; } } };
+  let serial=0;
+  const host={context:{kind:'main'},resources:{
+    create:async input=>{if(input.source)bodies.push(input.source.content);return {id:`resource-${++serial}`,kind:input.kind,version:1};},
+    publish:async(resource,manifest)=>{calls.push({resource,manifest});return {ref};},
+  }};
   const before = structuredClone(f.state), result = await publishMarkers(host, f.service, { operationId: 'marker_publication_0001', originals: [f.interval()] });
   assert.deepEqual(result.ref, ref); assert.equal(result.static, true); assert.equal(result.audienceOnly, true); assert.ok(!Object.hasOwn(result, 'rendered'));
   assert.equal(calls[0].manifest.kind, 'indicator'); assert.equal(calls[0].manifest.provenance.kind, 'demo'); assert.equal(calls[0].manifest.blobs.length, 2); assert.deepEqual(calls[0].manifest.dependencies, []);
   assert.ok(bodies.every(b => !b.includes('NEVER_INCLUDE'))); assert.deepEqual(f.state, before); assert.deepEqual(f.counts(), { observes: 0, subscribes: 0 });
-  await assert.rejects(publishMarkers({ ...host, scope: { kind: 'subagent' } }, f.service, { operationId: 'marker_publication_0002' }), error('SCOPE_DENIED'));
+  await assert.rejects(publishMarkers({ ...host, context: { kind: 'subagent' } }, f.service, { operationId: 'marker_publication_0002' }), error('SCOPE_DENIED'));
   assert.equal(calls.length, 1); await assert.rejects(publishMarkers(host, f.service, { operationId: 'short' }), error('INVALID_ARGUMENT'));
 });
 

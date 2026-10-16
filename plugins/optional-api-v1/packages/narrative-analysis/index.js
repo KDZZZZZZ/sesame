@@ -1,2 +1,2 @@
-// Optional, independently loadable method instructions and declared resources.
-export function createTools() { return []; }
+// Declarative knowledge package; no executable capabilities.
+export function createCapabilities() { return []; }

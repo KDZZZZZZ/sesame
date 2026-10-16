@@ -3,6 +3,8 @@ name: native-ea
 description: 使用有明确修改范围的空模板编写独立 MQL5 EA，声明各模块与状态机，实现原生逻辑并验证真实回测。
 ---
 
+公开资源定位：本包路径以插件根目录为准；[完整接口契约](../../INTERFACES.md) 可由 plugin_read({pluginId:"sesame/mt5",part:"resource",path:"INTERFACES.md"}) 读取。此引用给出位置，无需每次调用前重复读取。
+
 本技能用于调用者选择的独立原生模板工程；选择 SVL→MQL5 翻译时另读 svl-mql5 skill。编写前调用 mt5_inspect；create / checkout 后先读取工程 README.md、strategy.json 和六个 Include/Strategy 模块。平台 SDK 在返回的 sdk_path 下，save 会核对其字节未变；这些是普通本机文件，不由操作系统设为只读。新工程是不可执行的空骨架，不能假设已经实现突破、固定风险或退出策略。不要修改终端标准库，也不要用 Python/Rust 策略循环冒充 MT5。
 
 **先按版本分流。** 新工程模板 3.x 使用 `visual-mql-v1`：必须读取 visual-state-machines skill 及其 `references/language.md`，由解析后的受限源码生成原生类、图和埋点；不写 class/include、辅助文件或 rules.json。本节后续关于手写原生类、规则声明、disabled 和观测归属的细节仅适用于保留的 2.x 工程。不能删除 language 或降低模板版本绕过校验。
@@ -30,7 +32,7 @@ CExpertSignal 方向、强度、权重与阈值不是简单 AND。Advance 推进
 
 通过工作区 read/write/edit/bash 修改 checkout，mt5_project save 保存不可变 revision；revision_conflict 时重新 checkout 并合并。使用明确 revision 调用 mt5_compile，按真实诊断修复工具返回的可恢复问题。可用后使用同包的 mt5_backtest，运行真实 Tester，核对实际参数、原生指标、成交和 trace；编译成功不能写成已经验证的策略。
 
-实际回测结果通过 mt5_report_data 和 report_data 冻结为 DataRef，按 reports skill 编写 HTML 与数据绑定，report_publish 后调用 report_check。报告不会自动插入 MT5 组件；旧原生工程不能附会为 SVL RunRecord。已有无 strategy.json 的工程按其原语言维护，不自动重写历史研究或冻结结果。
+实际回测结果通过 mt5_report_data 返回 sourceRef/query，经 data_snapshot({source:sourceRef,input:query,operationId,title}) 冻结为 DataRef，按 reports skill 编写 HTML 与数据绑定，report_publish 后调用 report_check。报告不会自动插入 MT5 组件；旧原生工程不能附会为 SVL RunRecord。已有无 strategy.json 的工程按其原语言维护，不自动重写历史研究或冻结结果。
 
 原生参考：https://www.mql5.com/en/docs/standardlibrary/expertclasses/expertbaseclasses/cexpert
 处理顺序：https://www.mql5.com/en/docs/standardlibrary/expertclasses/expertbaseclasses/cexpert/cexpertprocessing

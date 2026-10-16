@@ -1,10 +1,22 @@
 # 工作流组合协议
 
-工作流通过现有 `host.tools.call` 调用已选择能力，不定义后端枚举、安装依赖或账户配置。调用发生在当前 Agent 工具内；调度服务不会冒充 Agent 调用。
+工作流通过现有 `host.capabilities.invoke` 调用已选择能力，不定义后端枚举、安装依赖或账户配置。调用发生在当前 Agent 工具内；调度服务不会冒充 Agent 调用。
 
 ## 选择与冻结
 
-计划 `execution` 为 `{plugin_id,context_tool,apply_tool,arguments?}`。arguments 是能力配置返回的 JSON 绑定参数，不能包含 `action/run/history_days`，最多 4KB。所选插件及工具依赖必须已加载，缺失时返回前置条件错误。插件身份/摘要、账户、单位和调用参数均冻结在计划中。
+计划 `execution` 为 `{plugin_id,context_tool,apply_tool,arguments?}`，使用执行实现的绑定能力返回的对象。不能根据相似工具名自行拼装。arguments 是能力配置返回的 JSON 绑定参数，不能包含 `action/run/history_days`，最多 4KB。所选插件及工具依赖必须已加载，缺失时返回前置条件错误。插件身份/摘要、账户、单位和调用参数均冻结在计划中。
+
+已提供的独立实现是 `sesame/portfolio-execution`；其他声明同一契约的实现同样有效。其公开接口关系如下：
+
+| 能力 | 输入 | 结果与用途 |
+| --- | --- | --- |
+| `portfolio_execution_configure` | `{backend:"mt5"}` 或 `{backend:"qmt"}`；可选稳定 `id` | 为已配置账户创建不可变绑定，返回 `{plugin_id:"sesame/portfolio-execution",context_tool:"portfolio_execution_context",apply_tool:"portfolio_execution_apply",arguments:{binding_id}}`，整个返回对象可作为计划的 `execution`。本操作不下单，也不配置或连接原生终端。 |
+| `portfolio_execution_context` | `{binding_id,action:"identity"}` | 返回下述完整组合契约；`action:"snapshot"` 则返回同一账户的观察数据。 |
+| `portfolio_execution_apply` | `{binding_id,run}` | 由工作流代码在受托执行调用链中传递冻结目标，返回真实执行回执。它不接受模型绕过工作流直接下单。 |
+
+MT5 的 `mt5_trading_context({action:"identity"})` 只返回 `{account}`，`mt5_trading_order` 执行单笔原生命令，两者不构成上述目标仓位执行契约。不能通过给账户返回值补造 tools、quantityRules 等字段来改变它们的能力。
+
+`plugin_discover({ids:["sesame/portfolio-execution"]})` 查询安装状态；`host.capabilities.list({pluginId:"sesame/portfolio-execution"})` 查询当前可用声明。缺少实现时，`plugin_catalog({plugin_id:"sesame/portfolio-execution"})` 返回可获取的发布目录信息；只能依据实际返回的包与权限使用公开安装/加载接口。目录没有可用版本时明确报告缺少执行能力，不要求 Agent 逆向插件代码。执行契约校验一次列出全部缺项和所选能力 ID，完整声明由实现负责。
 
 context 工具收到 `{...arguments, action:"identity"}`，返回：
 
@@ -29,12 +41,12 @@ context 工具收到 `{...arguments, action:"identity"}`，返回：
 
 每个角色任务 input 包含 `execution:{pluginId,contextTool,applyTool,arguments,account,context,...}`、`tradingPlan:{id,ownerConversationId,account}`、runId、role。`context` 是 identity 返回的 taskContext，工作流不解释其后端内容。
 
-经理提交目标后，执行角色调用 `manual_trading_apply`；该工具向选中的 apply 工具传递 `{...arguments,run:{id,plan:{id,account,ownerConversationId,slippageBps},decision,decidedAt}}`。执行实现核验当前活跃任务、冻结绑定/账户、executor 角色，以及 `host.tools.invocation()` 的真实祖先调用链。模型直接调用 apply 或底层写工具缺少工作流祖先，必须被拒绝。宿主不向插件暴露可伪造 token。
+经理提交目标后，执行角色调用 `manual_trading_apply`；该工具向选中的 apply 工具传递 `{...arguments,run:{id,plan:{id,account,ownerConversationId,slippageBps},decision,decidedAt}}`。执行实现核验当前活跃任务、冻结绑定/账户、executor 角色，以及 `executionContext.provenance.chain` 的真实祖先调用链。模型直接调用 apply 或底层写工具缺少工作流祖先，必须被拒绝。宿主不向插件暴露可伪造 token。
 
 执行返回结构化回执 `{status,orders:[],pauses:[],...}`，可以包含 after、targetReached 和错误。实现持久保存每笔操作的 ID、进度与未知结果，重复请求不得重复发送。工作流只归档真实回执，不转换数量、不推导成交，也不假装取消能撤销已发送操作。
 
 ## 研究组合
 
-`research:{plugins:[...],tools?:[...]}` 接受任意可委派插件，含无工具的技能包。未传 tools 时使用所选插件的 delegatable_tools，传入时仅允许精确子集。角色通过 Agent 请求的 plugins 和 tools 挂载固定版本。研究/决策、执行、总结各自持有本阶段工具，main-only 工具不能被借用。调用者负责选需要的能力，不要求同类型插件全部装上。
+`research:{plugins:[...],tools?:[...]}` 接受显式选择的插件，含无工具的技能包。未传 tools 时使用所选插件能力声明中 consumers 包含 agent 的能力，传入时仅允许精确子集。角色通过 Agent 请求的插件引用和 allowedCalls 挂载固定版本。研究/决策、执行、总结各自持有本阶段能力；main-only 能力仍受调用者边界限制，不适合作为子 Agent 的研究工具。调用者负责选需要的能力，不要求同类型插件全部装上。
 
 每个角色的研究与执行依赖合并去重后，最多 32 个插件、64 个工具；保存计划和提交任务时都检查，超出需缩小本轮选择。

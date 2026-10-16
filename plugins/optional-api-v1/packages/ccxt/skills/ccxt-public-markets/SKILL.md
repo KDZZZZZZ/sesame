@@ -1,19 +1,23 @@
 ---
 name: ccxt-public-markets
-description: Use explicit CCXT exchange public spot instruments, UTC candles and dashboard subscriptions; no keys or trading.
+description: Use explicit public CCXT spot candle sources with exact route identity and bounded coverage; no quotes, account, or trading API.
 ---
 
-1. Load `sesame/ccxt`. `ccxt_environment inspect` checks the supplied path, saved selection, private venv, host Python and the native PATH candidate. It does not enumerate all Conda/venv installations: if unresolved, use `host_files_list/search/run` to locate likely existing Python executables within task-related directories, then inspect with that exact `python_path`. Verify the actual import rather than treating one failed path as no installation. `prepare` first reuses pinned CCXT 4.5.85 and installs private dependencies from official PyPI only if unavailable. Complete this as part of the authorized task; never upgrade a shared environment or install globally. This public backend needs no API key, exchange login or Sesame Settings form.
-2. Discover `sesame.market` provider `sesame/ccxt:market`. Bind with explicit `configuration.exchange` = `kraken`, `coinbase` or `okx`. Persist returned exact connection revision. Do not silently switch exchange/source if networking fails.
-3. Search/describe an actual spot instrument. Data uses this explicit exchange's normalized CCXT symbol, UTC timestamps, base-asset volume. Supported spec: 1m/5m/15m/1h/1d, last, none, session all/default, calendarRevision unknown. Network or missing dependency errors are not empty success.
-4. History is one bounded native window (Kraken <=500, Coinbase/OKX <=300), paged immutably; larger range coverage stays partial/unknown. Backward starts with the latest requested bounded window; pages remain ascending. A later source candle proves prior closure; receipt clock does not. includeForming false is respected.
-5. Bind dashboard bars via generic host contracts. The host keeps configured chart subscriptions updating; leave their exact binding on the chart. Close only temporary subscriptions created for bounded agent reads. Polling waits one second after each completed request, subject to network latency and exchange rate limits; it is not an exchange tick feed. Connections, markets and HTTP sessions are reused across symbols. Stream gaps require a fresh snapshot on the same route. No account/order/private API capability exists. Never add exchange credentials.
-6. Freeze research data through generic data-access. Read-only public candles do not prove trade permission or a broker session. Native float-derived Decimal strings cannot restore exchange precision lost by CCXT.
+公开资源定位：本包路径以插件根目录为准；[完整接口契约](../../INTERFACES.md) 可由 plugin_read({pluginId:"sesame/ccxt",part:"resource",path:"INTERFACES.md"}) 读取。此引用给出位置，无需每次调用前重复读取。
 
-`inspect` validates and selects a compatible existing environment by saving only a private selection receipt. It never installs or upgrades dependencies. Ready after inspect is immediately usable; prepare is needed only when no compatible dependency is found.
+CCXT提供公开现货目录与K线，支持Kraken、Coinbase、OKX，不提供bid/ask报价订阅、账户或交易；无需API Key。
 
-## Exact public route and dashboard binding
+ccxt_environment({action:"inspect"})核验固定CCXT 4.5.85/本机64位Python>=3.11；ready:true已保存私有选择，可立即查询。prepare仅在无兼容依赖时安装私有环境。ccxt_catalog({})返回交易所、周期和边界，静态目录不证明网络连通。
 
-Use `configuration:{exchange:'kraken'}` for an explicitly selected direct route. If the user selects a credential-free proxy, the exact field is `configuration:{exchange:'kraken',publicProxy:'http://127.0.0.1:7897'}`. `proxy`, `proxyUrl`, null/boolean proxy values and unknown fields are rejected; they do not silently select direct access. The local address is an example, not a default. Never read system proxy settings or insert credentials.
+来源 sesame/ccxt#market 的首次路由用 binding:{configuration:{exchange:"kraken"}}，交易所取用户选择；publicProxy仅接受明确的无凭据HTTP(S)代理。绑定后保留实际connection，后续同连接会恢复已保存路由；不可静默切换交易所或代理。
 
-The first explicit bind saves only this public configuration in private plugin storage, keyed by its returned exact connection ID/revision. Persist that connection through `canvas_binding`; later dashboard or restarted host connection-only bindings restore exactly the saved route. If the record is missing or mismatched, supply the authorized configuration explicitly instead of guessing or changing routes. `plugin_read` can read this package's `README.md` and `PROVENANCE.md`.
+行情与画布的公开入口是 data_providers({contract:"sesame.market/1"})、market_instruments、market_read、canvas_binding/canvas_apply。来源采用发现返回的完整 {providerId,revision}，可按 configSchema 附 binding；品种采用搜索结果 ref，连接身份来自 metadata.connection。source.revision 是插件声明摘要，connection.revision 是来源配置身份，两者不可互换。host 专用 bind/query/subscribe 的完整形状在本包 INTERFACES.md，Agent 无需持有 bindingId。
+
+market_read 返回固定数据、rowCount 和覆盖证据。coverage.complete:false 保留已取得的真实行，同时说明范围尚未获完整证明；不能改写为true。历史成功不证明实时订阅成功；canvas_apply 保存配置不证明用户已看到图。canvas_inspect 的当前版本 rendering[].charts[] 提供 status/error/bar_count/feed_status；无当前回执只表示未确认。明确源协议错误（如首帧position缺失）不能通过重复绑定/新建探针图修复；连接或声明版本已变才有刷新身份的依据。宿主管理持续订阅，退出Agent调用不应把已配置图表断开。
+
+仅支持UTC、last、none、1m/5m/15m/1h/1d；单原生窗口Kraken≤500、Coinbase/OKX≤300。订阅是请求后约1秒轮询，不是逐笔行情；需要bid/ask时本包无法提供。更晚源K线才证明前柱收盘，接收时钟不是收盘证据。原生浮点转换不恢复已丢失精度。
+
+
+有效spec例：{timeframe:"1h",priceBasis:"last",adjustment:"none",session:"all",calendarRevision:{status:"unknown"}}。instrument.ref如{sourceId:"ccxt:kraken:spot",instrumentId:"BTC/USD"}必须来自当前搜索。range为{from:{basis:"utc",unixMs},to:{basis:"utc",unixMs}}，不凭稀疏柱推断完整日历。
+
+publicProxy示例 http://127.0.0.1:7897 仅展示形状，不是默认值；没有已知代理就不猜。配置只接受exchange/publicProxy，准确错误用于修正参数，不换同义字段试错。CONNECTION_CHANGED说明保存路由或revision不符；网络失败则保留原路由和源错误。INTERFACES.md逐项列出所有Agent与宿主能力。

@@ -5,11 +5,6 @@
   "version": "2.0.4",
   "default_state": "discoverable",
   "agent_scope": "main",
-  "tool_names": [
-    "configuration_read",
-    "configuration_update",
-    "configuration_open"
-  ],
   "entry": "index.js",
   "prompts": [
     "prompt.md"
@@ -17,11 +12,10 @@
   "skills": [
     "skills"
   ],
-  "tool_definitions": "tools.json",
-  "apiVersion": "1",
-  "provides": {},
+  "apiVersion": "2",
   "license": "MIT",
   "engines": {
-    "sesame": ">=0.2.3-dev.5"
-  }
+    "sesame": ">=0.2.0-0"
+  },
+  "capability_manifest": "capabilities.json"
 }

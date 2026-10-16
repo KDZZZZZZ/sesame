@@ -1,5 +1,10 @@
-判断复盘是可选方法，不在默认安装中。首次启用在本插件私有目录创建空白数据库；不自动导入旧应用账本或申请 legacy 存储权限。只有已经登记、证据可复查的判断才参与复盘，旧报告可以作为明确引用的资料，不能据此虚构历史前瞻记录。
+本插件保存前瞻判断、事前证据口径、真实核验结果与候选准则。目标是观察判断的概率校准与适用边界，不把历史结果补录为前瞻样本。
 
-你可以按需使用 judgment-review skill，复查自己的未来判断并改进专属准则。由你根据用户任务和证据决定何时复盘，不必每轮调用，不自行制造用户消息或循环清空待办。需要时读取该 skill，再通过 judgment_review_queue 查看待处理事项。
+可按任务需要读取 judgment_review_queue、judgment_read、judgment_rules。judgment_record 冻结概率、对象、来源与观察窗口；judgment_resolve 和 judgment_review_due 只从已经保存的真实数据集计算结果。缺失或冲突证据保留待核验，自动评分不等于语义归因。judgment_reflect 保存证据支持的归因，judgment_rule 保存待前瞻检验的假设。
 
-发表未来可验证判断前，仍须先用 judgment_record 登记真实口径和概率并引用 ID，不得事后补填为成功预测。使用或委派同类研究时通过 judgment_rules 查阅准则，提示相关 subagent 读取 CRITERIA.md 的绝对路径；候选准则未经前瞻验证不能称为可靠规则。
+核验证据可以是宿主已登记的 dataset_id，也可以是来源能力返回的 source + query；使用 financial_research_query.evidence 时，将 datasetId 传给 dataset_id。judgment_review_due 可接收这些 evidence 描述。发布的数据成果可通过 artifact 引用，dataset_id 此时等于 artifact.id。核验器通过声明的数据源或不可变成果读取完整行与祖先，不读取其他插件私有数据库；手工输入、合成数据和预测不能充当真实结果。
+
+候选准则只有通过独立样本、时间窗口、同期主判断和事前基准门槛才转为有效。准则以结构化内容和不可变 ArtifactRef 返回，通过 host.resources.read 读取 CRITERIA.md；资料不改变能力权限。主 Agent 的公共回复可进入审计队列，全文与关键词线索通过 judgment_audit_source 读取，不能把线索当成完整语义判断。身份、进度和用户沟通规则由 Sesame 本体统一提供。
+The judgment_* interfaces are main-conversation ledger operations. judgment_record creates an immutable future criterion; judgment_read/list expose the actual record. judgment_review_queue distinguishes due evidence, semantic reflection and source-coverage work. judgment_review_due/resolve calculate outcomes from matching external evidence, judgment_defer preserves missing evidence, judgment_reflect records causal interpretation, and judgment_rule/rules/retire_rule manage prospective criteria. Candidate rules are not validated merely by being created. judgment_audit_source and judgment_coverage audit complete earlier text without inventing retrospective predictions.
+
+Evidence comes through an actual registered dataset ID or the producer-returned source/query or published data ArtifactRef described by the selected evidence capability. criterion provider/metric/selector/window are frozen at registration. A criteria ArtifactRef from list/rules/review_queue is read with host.resources.read({ref,part:"content",entry:"CRITERIA.md"}) in the Agent tool form; sharing this artifact with a delegated Agent does not make main-only ledger writes available to it. No missing source is inferred from prose or from a guessed plugin implementation.

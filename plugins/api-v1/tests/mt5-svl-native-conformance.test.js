@@ -81,14 +81,14 @@ test('actual MetaEditor/Tester matches SVL 1.2 function/clamp and UTC-gated exte
   const config = JSON.parse(await readFile(process.env.SESAME_TESTER_CONNECTION_JSON, 'utf8'));
   const secrets = [config.account.password, ...Object.values(config.servers).map(value => value.token)].filter(Boolean);
   const redact = value => secrets.reduce((text, secret) => text.split(secret).join('[redacted]'), String(value));
-  const schema = f.publish('resource', { type: 'native-external-fixture' }), value = sourceFixture('1.2.0');
+  const schema = await f.publish('resource', { type: 'native-external-fixture' }), value = sourceFixture('1.2.0');
   value.parameters = {}; value.inputs.clock = { kind: 'external', schema: structuredClone(schema), availabilityPolicy: structuredClone(schema) }; value.handlers[0].event.type = 'external.input';
   value.nodes[0].inputs.arguments.record.step = { input: 'clock', field: 'increment' };
   value.nodes.splice(1, 0, { id: 'limit', op: 'math.clamp', inputs: { value: { node: 'call' }, min: '0', max: '4' } }); value.nodes.at(-1).inputs.value = { node: 'limit' };
-  const source = f.publishSource(value), replay = replayFixture();
+  const source = await f.publishSource(value), replay = replayFixture();
   replay.events.forEach((event, i) => { event.type = 'external.input'; event.inputs.clock = { increment: String(i + 1) }; });
   assert.deepEqual(evaluateReplay(value, replay).events.map(event => event.state.counter), ['1', '3', '4']);
-  await f.host.workspace.file('write', 'fixture.json', JSON.stringify(replay));
+  await f.writeWorkspace('fixture.json', JSON.stringify(replay));
   const prepared = await prepareConformance(f.host, { operation_id: 'native_fixture_001', source, fixture_path: 'fixture.json', header_path: 'ConformanceFixture.mqh', timeline_path: 'timeline.ndjson' });
   const files = { 'Experts/Strategy.mq5': mql(prepared), 'Include/Strategy/ConformanceFixture.mqh': await readFile(join(f.workspace, 'ConformanceFixture.mqh'), 'utf8'), [TIMELINE_PATH]: await readFile(join(f.workspace, 'timeline.ndjson'), 'utf8') };
   const target = await targetProfile(f.host), registered = await registerTranslation(f.host, f.mt5, { operation_id: 'native_translation_001', title: 'No-trade native SVL fixture', source, target, mode: 'backtest', parameter_map: {}, files, source_map: sourceNodes(value).map(node => ({ nodeId: node.nodeId, ...(node.functionId ? { functionId: node.functionId } : {}), instrumentation: 'direct', generated: [{ path: 'Experts/Strategy.mq5', startLine: 1, endLine: files['Experts/Strategy.mq5'].split('\n').length }] })), adaptations: [{ code: 'EXTERNAL_INPUT_BRIDGE', nodes: ['call'], status: 'limited', description: 'Fixed external fixture only; no live HTTP bridge and no trades', evidence: [prepared.bridgeConfiguration] }] });
@@ -109,10 +109,10 @@ test('actual MetaEditor/Tester matches SVL 1.2 function/clamp and UTC-gated exte
   const pass = { id: 'pass_' + randomUUID(), build_id: buildId, artifact_digest: compiled.ex5_sha256, backtest_id: 'backtest_native_conformance', label: 'No-trade semantic fixture', status: 'queued', connection_version: config.version, risk_limits: structuredClone(DEFAULT_RISK_LIMITS), config: { symbol: process.env.SESAME_TESTER_SYMBOL ?? 'EURUSD', period: 'M1', from_date: process.env.SESAME_TESTER_FROM ?? '2026-10-08', to_date: process.env.SESAME_TESTER_TO ?? '2026-10-09', deposit: 100000, currency: 'USD', leverage: 100, model: 1, parameters: {} }, created_at: new Date().toISOString() };
   f.store.put('mt5_pass', pass); let resultRef;
   // Publish only parsed results delivered by the real Tester, never reference values.
-  f.mt5.runObserver = { backtest() {}, result(nativePass, parsed) {
-    const chunk = f.publish('data', { path: 'rows.json', rowCount: parsed.trace.length, provenance: { kind: 'observed', nativePassId: nativePass.id } }, { 'rows.json': parsed.trace });
-    const raw = f.publish('resource', {}, { 'result.json': parsed.result });
-    resultRef = f.publish('strategy.result', { source, translation: registered.translation, status: 'completed', nativePassId: nativePass.id, buildId, codeDigest: compiled.ex5_sha256, rawResult: raw, data: [{ role: 'trace', offset: 0, ref: chunk }] });
+  f.mt5.runObserver = { backtest() {}, async result(nativePass, parsed) {
+    const chunk = await f.publish('data', { path: 'rows.json', rowCount: parsed.trace.length, provenance: { kind: 'observed', nativePassId: nativePass.id } }, { 'rows.json': parsed.trace });
+    const raw = await f.publish('resource', {}, { 'result.json': parsed.result });
+    resultRef = await f.publish('strategy.result', { source, translation: registered.translation, status: 'completed', nativePassId: nativePass.id, buildId, codeDigest: compiled.ex5_sha256, rawResult: raw, data: [{ role: 'trace', offset: 0, ref: chunk }] });
     f.store.update('mt5_pass', nativePass.id, { result_artifact: resultRef });
   } };
   const tester = new Tester(f.mt5); tester.get = () => ({ passes: [] });
@@ -120,9 +120,9 @@ test('actual MetaEditor/Tester matches SVL 1.2 function/clamp and UTC-gated exte
   catch (error) { preserve = error.code === 'runtime_cleanup_failed'; throw new Error(redact(error.message), { cause: error }); }
   assert.ok(resultRef); const receipt = f.store.get('mt5_pass', pass.id);
   assert.equal(receipt.metrics.trade_count, 0); assert.equal(receipt.process_cleanup.activeProcesses, 0);
-  const verified = verifyConformance(f.host, f.mt5, { operation_id: 'native_verify_001', fixture: prepared.fixture, translation: registered.translation, result: resultRef });
+  const verified = await verifyConformance(f.host, f.mt5, { operation_id: 'native_verify_001', fixture: prepared.fixture, translation: registered.translation, result: resultRef });
   assert.equal(verified.outcome, 'passed', JSON.stringify(verified.differences)); assert.equal(verified.covered, 4);
-  const report = { completedAt: new Date().toISOString(), sourceDigest: f.host.artifacts.read(source).manifest.content.sourceDigest, languageVersion: value.schemaVersion, fixtureDigest: prepared.fixtureDigest, buildId, ex5Digest: compiled.ex5_sha256, compilerDigest: manifestFiles['.compiler/MetaEditor64.exe'].sha256, passId: pass.id, tradeCount: receipt.metrics.trade_count, metrics: receipt.metrics, processCleanup: receipt.process_cleanup, observedInputFile: receipt.native_input_files.map(({ digest, rows }) => ({ digest, rows })), validation: verified };
+  const report = { completedAt: new Date().toISOString(), sourceDigest: (await f.readArtifact(source)).manifest.content.sourceDigest, languageVersion: value.schemaVersion, fixtureDigest: prepared.fixtureDigest, buildId, ex5Digest: compiled.ex5_sha256, compilerDigest: manifestFiles['.compiler/MetaEditor64.exe'].sha256, passId: pass.id, tradeCount: receipt.metrics.trade_count, metrics: receipt.metrics, processCleanup: receipt.process_cleanup, observedInputFile: receipt.native_input_files.map(({ digest, rows }) => ({ digest, rows })), validation: verified };
   if (process.env.SESAME_SVL_NATIVE_REPORT) await writeFile(process.env.SESAME_SVL_NATIVE_REPORT, JSON.stringify(report, null, 2));
   t.diagnostic(JSON.stringify({ nativeEngineExecuted: true, languageVersion: value.schemaVersion, ex5Digest: compiled.ex5_sha256, tradeCount: 0, outcome: verified.outcome, covered: verified.covered, inputRows: replay.events.length, cleanup: receipt.process_cleanup }));
 });

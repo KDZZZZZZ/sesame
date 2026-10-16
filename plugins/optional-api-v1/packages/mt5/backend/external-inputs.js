@@ -1,3 +1,4 @@
+import { readArtifact, readBytes } from './resource-io.js';
 import { promises as fs } from 'node:fs';
 import { join } from 'node:path';
 import { canonical, digest } from '@sesame/plugin-sdk/protocol';
@@ -27,11 +28,11 @@ export function readTimeline(text) {
   return { events: rows.map(row => row.event), digest: digest(Buffer.from(text)), rows: rows.length };
 }
 
-export function externalInputAdaptation(host, source, mode, files, adaptations) {
+export async function externalInputAdaptation(host, source, mode, files, adaptations) {
   if (!source.handlers.some(handler => handler.event.type === 'external.input')) return null;
   const matches = adaptations.filter(item => item.code === 'EXTERNAL_INPUT_BRIDGE');
   requireValue(matches.length === 1 && matches[0].status === 'limited' && matches[0].evidence.length === 1, 'external.input 需要唯一 EXTERNAL_INPUT_BRIDGE limited 声明和固定无密钥配置证据', 422, 'UNSUPPORTED_CAPABILITY');
-  const ref = matches[0].evidence[0], artifact = host.artifacts.read(ref), value = artifact.manifest.content;
+  const ref = matches[0].evidence[0], artifact = await readArtifact(host, ref), value = artifact.manifest.content;
   requireValue(ref.kind === 'resource' && fields(value, ['format', 'mode', 'clock', 'availability', 'failurePolicy', 'transport']), '外部输入配置必须是固定白名单资源；不要保存地址、token或密码');
   requireValue(value.format === EXTERNAL_INPUT_FORMAT && value.clock === 'utc' && value.availability === 'availableAt-and-expiry' && value.failurePolicy === 'halt_new_risk', '外部输入必须按真实到达/有效期筛选，失败时暂停新增风险');
   if (mode === 'backtest') {
@@ -51,10 +52,10 @@ export async function stageFrozenTimeline(mt5, pass, output) {
   if (!build) return null; // Legacy isolated Tester acceptance can lack source records.
   const revision = mt5.storage.get('mt5_revision', `${build.project_id}:${build.revision}`);
   if (!Object.hasOwn(revision.files, TIMELINE_PATH)) return null;
-  requireValue(revision.translation && mt5.host?.artifacts, '冻结 timeline 需要翻译成果及其固定内容');
-  const artifact = mt5.host.artifacts.read(revision.translation), blob = artifact.manifest.blobs.find(blob => blob.path === TIMELINE_PATH);
+  requireValue(revision.translation && mt5.host?.resources, '冻结 timeline 需要翻译成果及其固定内容');
+  const artifact = await readArtifact(mt5.host, revision.translation), blob = artifact.manifest.blobs.find(blob => blob.path === TIMELINE_PATH);
   requireValue(blob && blob.size <= 1024 * 1024, '翻译成果缺少冻结 timeline');
-  const bytes = mt5.host.artifacts.readBlob(blob), timeline = readTimeline(bytes.toString('utf8'));
+  const bytes = await readBytes(mt5.host, revision.translation, blob.path), timeline = readTimeline(bytes.toString('utf8'));
   requireValue(revision.files[TIMELINE_PATH] === bytes.toString('utf8'), '冻结 revision timeline 与翻译成果不一致');
   await fs.mkdir(join(output, '..'), { recursive: true, mode: 0o700 });
   await fs.mkdir(output, { recursive: false, mode: 0o700 });

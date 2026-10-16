@@ -4,38 +4,6 @@
   "description": "MT5 行情、账户、原生 MQL5 工程、编译、Tester、交易与持久运行观察。",
   "version": "1.6.0",
   "default_state": "discoverable",
-  "tool_names": [
-    "mt5_catalog",
-    "mt5_call",
-    "mt5_cache",
-    "mt5_command",
-    "mt5_chart",
-    "mt5_edit",
-    "mt5_python",
-    "mt5_system",
-    "mt5_test",
-    "mt5_backtest",
-    "mt5_trade",
-    "mt5_deployment",
-    "mt5_project",
-    "mt5_inspect",
-    "mt5_compile",
-    "mt5_settings",
-    "mt5_update_configuration",
-    "mt5_import_configuration",
-    "mt5_connect",
-    "mt5_report_data",
-    "mt5_trade_detail",
-    "mt5_target",
-    "mt5_translation",
-    "mt5_translation_file",
-    "mt5_dependencies",
-    "mt5_conformance",
-    "mt5_trading_context",
-    "mt5_trading_pause",
-    "mt5_trading_order",
-    "mt5_trading_command"
-  ],
   "entry": "index.js",
   "prompts": [
     "prompt.md",
@@ -73,25 +41,17 @@
     "backend/sdk/FrozenInputs.mqh",
     "target/examples/FrozenTimeline.mq5"
   ],
-  "tool_definitions": "tools.json",
+  "apiVersion": "2",
+  "license": "MIT",
+  "engines": {
+    "sesame": ">=0.2.3-dev.8"
+  },
+  "capability_manifest": "capabilities.json",
   "main_tool_names": [
     "mt5_deployment",
     "mt5_update_configuration",
     "mt5_import_configuration",
     "mt5_connect",
     "mt5_dependencies"
-  ],
-  "apiVersion": "1",
-  "provides": {
-    "sesame.market": "1",
-    "sesame.account": "1",
-    "sesame.strategy": "1"
-  },
-  "workers": [
-    "backend/compiler-worker.js"
-  ],
-  "license": "MIT",
-  "engines": {
-    "sesame": ">=0.2.3-dev.8"
-  }
+  ]
 }

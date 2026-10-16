@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const root = new URL('../packages/quantskills-catalog/', import.meta.url);
 const json = name => JSON.parse(readFileSync(new URL(name, root)));
 function exchange(lines) {
-  const result = spawnSync(process.env.PYTHON || 'python3', ['-B', '-X', 'utf8', fileURLToPath(new URL('server.py', root))], {
+  const result = spawnSync(process.env.PYTHON || (process.platform === 'win32' ? 'python' : 'python3'), ['-X', 'utf8', fileURLToPath(new URL('server.py', root))], {
     encoding: 'utf8', input: lines.map(line => typeof line === 'string' ? line : JSON.stringify(line)).join('\n') + '\n',
     timeout: 10000,
   });
@@ -49,7 +49,7 @@ test('workflow routing keeps factor research separate from general strategy expe
   assert.ok(backtest.workflow.backend_choices.includes('sesame/backtrader'));
   for (const response of [factor, strategy, backtest]) {
     assert.equal(response.availability, 'not_checked');
-    assert.ok(response.next_steps.some(step => step.includes('plugin_catalog')));
+    assert.ok(response.next_steps.some(step => step.includes('capabilities')));
     assert.ok(response.references.length > 0);
     assert.equal(response.snapshot_date, json('catalog.json').meta.snapshot_date);
   }
@@ -74,7 +74,7 @@ test('selecting only ICT returns no other theory, and does not mutate later choi
 
 test('runtime schema, route references and preserved source snapshot agree', () => {
   const [tools] = exchange([{ jsonrpc: '2.0', id: 1, method: 'tools/list' }]);
-  assert.deepEqual(tools.result.tools, json('tools.json').analysis);
+  assert.deepEqual(tools.result.tools, json('capabilities.json').capabilities.map(item => ({ name: item.binding.name, description: item.description, inputSchema: item.inputSchema, outputSchema: item.outputSchema })));
   const snapshot = json('catalog.json');
   assert.equal(snapshot.meta.total_items, snapshot.items.length);
   const names = new Set(snapshot.items.map(item => item.name));
@@ -89,7 +89,7 @@ test('runtime schema, route references and preserved source snapshot agree', () 
 });
 
 test('all retained package tool assertions pass through a real stdio server', () => {
-  const tests = json('plugin.json').extensions['bot.sesame'].tests;
+  const tests = json('plugin.json').tests;
   const replies = exchange(tests.map((entry, index) => call(index, entry.tool, entry.arguments)));
   for (let index = 0; index < tests.length; index++) assert.deepEqual(replies[index].result.structuredContent, tests[index].expected);
 });

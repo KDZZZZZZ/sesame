@@ -1,9 +1,7 @@
 # 参数实验基线
 
-按 abu-parameter-search skill 工作，先读取 skills/abu-parameter-search/SKILL.md、references/method.md 和 examples/input.json。
+用 `abu_parameter_search_analyze` 比较已完成实验的开发期指标，冻结选型，再用独立留出证据评价同一组合的稳定性。
 
-**本包代码是可修改、可验证的基线，不是标准答案。Agent 可以根据用户需求改进算法、参数、特征和验证方法。**
-保留原版，说明为什么修改和可能失败的条件；把改进代码复制到研究工作区，记录代码/输入/参数摘要、全部试验与固定样本外对照。不得因为默认参数存在就把它当最优参数。
+选型依据与留出验证分离，避免把留出期也变成调参数据。验证使用实际返回的 frozen_selection；哈希只证明记录内一致，固定保存的开发工件才支持先选型后验证的时序。本能力不运行策略或表达式。
 
-只按任务需要加载本包。复用 data-access / financial-research 获取固定数据，abu_parameter_search_analyze 或本包 CLI 计算；用户与 Agent 查看同一已登记结果。
-研究观察不等于成交；如用于 manual-trading，只作为决策证据，目标仓位仍由其现有账户与执行流程形成，允许不变。
+这是可修改的研究基线。改进时保留假设、原结果与同一输入上的对照；合成数据保持演示标记。需要核对公式或设计改进时，可读 `skills/abu-parameter-search/references/method.md`；参数、返回值与错误恢复由工具说明直接提供。

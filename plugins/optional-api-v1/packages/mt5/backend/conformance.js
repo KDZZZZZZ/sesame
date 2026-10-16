@@ -1,3 +1,6 @@
+import { readArtifact, readBytes, publishArtifact as publish } from './resource-io.js';
+import { readWorkspace, writeWorkspace } from './files.js';
+import { pluginIdentity } from './records.js';
 import { evaluateReplay } from '@sesame/plugin-sdk/svl';
 import { canonical, digest, artifactRef, decimal } from '@sesame/plugin-sdk/protocol';
 import { Decimal } from '@sesame/plugin-sdk/decimal';
@@ -13,8 +16,7 @@ const object = value => value && typeof value === 'object' && !Array.isArray(val
 const keys = (value, allowed, label) => requireValue(object(value) && Object.keys(value).every(key => allowed.includes(key)), `${label} 有未知字段或不是对象`);
 const frozen = value => { artifactRef(value); return value; };
 const decode = bytes => JSON.parse(Buffer.from(bytes).toString('utf8'));
-const readJson = (host, artifact, path) => { const blob = artifact.manifest.blobs.find(blob => blob.path === path); requireValue(blob && blob.size <= 8 * 1024 * 1024, '固定 JSON 文件缺失或过大'); return decode(host.artifacts.readBlob(blob)); };
-const publish = (host, operationId, kind, content, dependencies, files = {}) => host.artifacts.publish({ operationId, manifest: { kind, schemaVersion: '1.0.0', content, dependencies, blobs: Object.entries(files).map(([path, value]) => ({ path, mediaType: path.endsWith('.mqh') ? 'text/plain' : 'application/json', ...host.artifacts.blob(typeof value === 'string' ? value : JSON.stringify(value)) })) } });
+const readJson = async (host, artifact, path) => { const blob = artifact.manifest.blobs.find(blob => blob.path === path); requireValue(blob && blob.size <= 8 * 1024 * 1024, '固定 JSON 文件缺失或过大'); return decode(await readBytes(host, artifact.ref, blob.path)); };
 
 function parameters(source, fixture) {
   return Object.fromEntries(Object.entries(source.parameters).map(([name, declaration]) => {
@@ -68,8 +70,8 @@ export function compareNativeReplay(expected, observed, policy = []) {
 }
 
 export async function prepareConformance(host, args, signal) {
-  frozen(args.source); const checked = readSource(host, args.source);
-  const bytes = await host.workspace.file('read', args.fixture_path, undefined, signal);
+  frozen(args.source); const checked = await readSource(host, args.source);
+  const bytes = await readWorkspace(host, args.fixture_path, signal);
   requireValue(bytes.length <= 4 * 1024 * 1024, '回放 fixture 超过4MiB');
   const fixture = decode(bytes);
   requireValue(object(fixture) && typeof fixture.runId === 'string' && fixture.runId.length > 0 && Array.isArray(fixture.events) && fixture.events.length > 0, '对照需要固定runId和非空事件序列');
@@ -86,53 +88,53 @@ export async function prepareConformance(host, args, signal) {
   // Large fixtures are blobs, never duplicated into the small artifact manifest.
   delete content.fixture;
   signal?.throwIfAborted();
-  const ref = publish(host, args.operation_id, 'resource', content, [args.source], { 'fixture.json': fixture, 'reference.json': expected, 'ConformanceFixture.mqh': header, ...(timeline ? { [TIMELINE_PATH]: timeline } : {}) });
-  const bridgeConfiguration = timeline ? publish(host, `${args.operation_id}-external-input`, 'resource', { format: EXTERNAL_INPUT_FORMAT, mode: 'frozen-timeline', clock: 'utc', availability: 'availableAt-and-expiry', failurePolicy: 'halt_new_risk', transport: { path: TIMELINE_PATH, digest: timelineInfo.digest } }, [ref]) : null;
-  if (args.timeline_path) { requireValue(timeline, 'timeline_path仅用于external.input源'); await host.workspace.file('write', args.timeline_path, timeline, signal); }
-  if (args.header_path) await host.workspace.file('write', args.header_path, header, signal);
+  const ref = await publish(host, args.operation_id, 'resource', content, [args.source], { 'fixture.json': fixture, 'reference.json': expected, 'ConformanceFixture.mqh': header, ...(timeline ? { [TIMELINE_PATH]: timeline } : {}) });
+  const bridgeConfiguration = timeline ? await publish(host, `${args.operation_id}-external-input`, 'resource', { format: EXTERNAL_INPUT_FORMAT, mode: 'frozen-timeline', clock: 'utc', availability: 'availableAt-and-expiry', failurePolicy: 'halt_new_risk', transport: { path: TIMELINE_PATH, digest: timelineInfo.digest } }, [ref]) : null;
+  if (args.timeline_path) { requireValue(timeline, 'timeline_path仅用于external.input源'); await writeWorkspace(host, args.timeline_path, timeline, signal); }
+  if (args.header_path) await writeWorkspace(host, args.header_path, header, signal);
   return { fixture: ref, fixtureDigest, ...(timeline ? { bridgeConfiguration, timelineDigest: timelineInfo.digest, timelinePath: TIMELINE_PATH } : {}), referenceDigest: content.referenceDigest, events: expected.events.length, status: expected.status, validationScope: 'reference-only', nativeEngineExecuted: false, ...(args.header_path ? { header_path: args.header_path } : {}) };
 }
 
-function readFixture(host, ref) {
-  const artifact = host.artifacts.read(frozen(ref)), content = artifact.manifest.content;
-  requireValue(ref.kind === 'resource' && artifact.producer.id === host.plugin.id && content.format === CONFORMANCE_FORMAT, '需要本插件固定的conformance fixture');
-  const fixture = readJson(host, artifact, content.fixturePath), checked = readSource(host, content.source);
+async function readFixture(host, ref) {
+  const artifact = await readArtifact(host, frozen(ref)), content = artifact.manifest.content;
+  requireValue(ref.kind === 'resource' && artifact.producer.id === pluginIdentity(host).id && content.format === CONFORMANCE_FORMAT, '需要本插件固定的conformance fixture');
+  const fixture = await readJson(host, artifact, content.fixturePath), checked = await readSource(host, content.source);
   requireValue(checked.sourceDigest === content.sourceDigest, 'fixture源身份已改变');
   const body = { format: content.format, source: content.source, sourceDigest: content.sourceDigest, languageVersion: content.languageVersion, runId: content.runId, inputDigest: content.inputDigest, parametersDigest: content.parametersDigest, fixture, tolerances: content.tolerances };
   requireValue(digest(body) === content.fixtureDigest && digest(fixture.events) === content.inputDigest, 'fixture内容摘要不匹配');
   const expected = evaluateReplay(checked.source, fixture);
-  requireValue(digest(expected) === content.referenceDigest && digest(readJson(host, artifact, content.referencePath)) === content.referenceDigest, '参考解释器结果已改变；重新冻结并运行测试');
+  requireValue(digest(expected) === content.referenceDigest && digest(await readJson(host, artifact, content.referencePath)) === content.referenceDigest, '参考解释器结果已改变；重新冻结并运行测试');
   return { content, fixture, expected, source: checked.source };
 }
 
-function nativeTrace(host, mt5, translationRef, resultRef) {
-  const translation = host.artifacts.read(frozen(translationRef)), result = host.artifacts.read(frozen(resultRef)), body = result.manifest.content;
-  requireValue(translationRef.kind === 'strategy.translation' && resultRef.kind === 'strategy.result' && [translation, result].every(value => value.producer.id === host.plugin.id), '只接受MT5插件产生的冻结翻译和实际Tester结果');
+async function nativeTrace(host, mt5, translationRef, resultRef) {
+  const translation = await readArtifact(host, frozen(translationRef)), result = await readArtifact(host, frozen(resultRef)), body = result.manifest.content;
+  requireValue(translationRef.kind === 'strategy.translation' && resultRef.kind === 'strategy.result' && [translation, result].every(value => value.producer.id === pluginIdentity(host).id), '只接受MT5插件产生的冻结翻译和实际Tester结果');
   requireValue(body.status === 'completed' && equal(body.translation, translationRef) && equal(body.source, translation.manifest.content.source), '原生结果不属于此翻译或源');
   const pass = mt5.storage.get('mt5_pass', body.nativePassId), build = mt5.storage.get('mt5_build', pass.build_id), revision = mt5.storage.get('mt5_revision', `${build.project_id}:${build.revision}`);
   requireValue(pass.status === 'succeeded' && build.status === 'succeeded' && equal(pass.result_artifact, resultRef) && equal(revision.translation, translationRef), '未找到已成功执行且属于此翻译的真实Tester账本', 422, 'NATIVE_EVIDENCE_REQUIRED');
   requireValue(body.buildId === build.id && body.codeDigest === build.ex5_sha256 && pass.artifact_digest === build.ex5_sha256 && !pass.trace_truncated, '原生构建身份不符或执行trace不完整', 422, 'NATIVE_EVIDENCE_REQUIRED');
   requireValue(build.execution?.backend === 'native' && pass.process_cleanup?.activeProcesses === 0, '缺少实际原生编译或已确认的Tester进程清理回执', 422, 'NATIVE_EVIDENCE_REQUIRED');
   requireValue(object(pass.actual_inputs) && Object.values(translation.manifest.content.nativeParameterMap).every(entry => !entry.nativeInput || Object.hasOwn(pass.actual_inputs, entry.nativeInput)), '必须读取实际Tester参数，不能用提交配置冒充');
-  const raw = host.artifacts.read(frozen(body.rawResult)), summary = readJson(host, raw, 'result.json');
-  requireValue(raw.producer.id === host.plugin.id && summary.completed === true && summary.build_id === build.id && summary.run_id === pass.id && summary.trace_truncated === false, '原生完成证据不匹配');
+  const raw = await readArtifact(host, frozen(body.rawResult)), summary = await readJson(host, raw, 'result.json');
+  requireValue(raw.producer.id === pluginIdentity(host).id && summary.completed === true && summary.build_id === build.id && summary.run_id === pass.id && summary.trace_truncated === false, '原生完成证据不匹配');
   requireValue(summary.metrics?.trade_count === 0 && Array.isArray(summary.deals) && summary.deals.every(row => ['DEAL_TYPE_BALANCE', 'DEAL_TYPE_CREDIT', 'balance', 'credit'].includes(row.type)), '语义fixture只能捕获意图，不能执行模拟或实盘订单');
   const rows = [], chunks = body.data?.filter(item => item.role === 'trace').sort((a, b) => a.offset - b.offset);
   requireValue(Array.isArray(chunks) && chunks.length > 0, '原生结果没有trace');
   for (const chunk of chunks) {
     requireValue(chunk.offset === rows.length, '原生trace分块缺失或重叠');
-    const artifact = host.artifacts.read(frozen(chunk.ref)), data = artifact.manifest.content;
-    requireValue(artifact.producer.id === host.plugin.id && chunk.ref.kind === 'data' && data.provenance?.kind === 'observed' && data.provenance.nativePassId === pass.id, 'trace不是此原生pass的观察数据');
-    const values = readJson(host, artifact, data.path);
+    const artifact = await readArtifact(host, frozen(chunk.ref)), data = artifact.manifest.content;
+    requireValue(artifact.producer.id === pluginIdentity(host).id && chunk.ref.kind === 'data' && data.provenance?.kind === 'observed' && data.provenance.nativePassId === pass.id, 'trace不是此原生pass的观察数据');
+    const values = await readJson(host, artifact, data.path);
     requireValue(Array.isArray(values) && values.length === data.rowCount && rows.length + values.length <= 200000, '原生trace数量无效'); rows.push(...values);
   }
   requireValue(rows.every((row, i) => row.seq === i + 1 && row.build_id === build.id && typeof row.kind === 'string'), '原生trace顺序或构建身份不符');
   const actualParameters = Object.fromEntries(Object.entries(pass.actual_inputs).filter(([key]) => !key.startsWith('Product_')));
-  return { translation: translation.manifest.content, body, pass, build, rows, binding: translationBinding(host, mt5, build.id, { ...pass.config, parameters: actualParameters }) };
+  return { translation: translation.manifest.content, body, pass, build, rows, binding: await translationBinding(host, mt5, build.id, { ...pass.config, parameters: actualParameters }) };
 }
 
-export function verifyConformance(host, mt5, args) {
-  const prepared = readFixture(host, args.fixture), native = nativeTrace(host, mt5, args.translation, args.result), { content, fixture, expected, source } = prepared;
+export async function verifyConformance(host, mt5, args) {
+  const prepared = await readFixture(host, args.fixture), native = await nativeTrace(host, mt5, args.translation, args.result), { content, fixture, expected, source } = prepared;
   requireValue(equal(native.translation.source, content.source) && native.translation.sourceDigest === content.sourceDigest, 'fixture源与原生翻译不一致');
   requireValue(equal(native.binding.parameters, parameters(source, fixture)), '实际原生参数/账户/品种绑定与fixture不同');
   if (source.handlers.some(handler => handler.event.type === 'external.input')) {
@@ -165,7 +167,7 @@ export function verifyConformance(host, mt5, args) {
   requireValue(Number.isFinite(Date.parse(native.pass.created_at)) && Number.isFinite(Date.parse(native.pass.completed_at)) && Date.parse(native.pass.completed_at) >= Date.parse(native.pass.created_at), '原生执行时间回执无效');
   const limitations = ['A matching fixture proves only those actual native observations under the fixed tolerance; it is not universal translation equivalence or live execution certification.', 'Fixture execution captures intended requests, without a broker matching engine or trading side effects.', ...(uncovered.length ? ['Some source/function nodes were not observed by this fixture.'] : [])];
   const dependencies = [content.source, args.translation, args.fixture, args.result, native.translation.environment];
-  const evidence = publish(host, args.operation_id, 'strategy.validation', { schemaVersion: '1.0.0', source: content.source, translation: args.translation, layer: 'target', validator: { id: 'sesame.mt5.native-conformance', version: '1.0.0', digest: host.plugin.digest ? { status: 'value', value: host.plugin.digest } : { status: 'unknown', reason: 'Package digest unavailable' } }, issuer: 'plugin', fixtures: [args.fixture], parameters: native.binding.parameters, environment: native.translation.environment, startedAt: Date.parse(native.pass.created_at), finishedAt: Date.parse(native.pass.completed_at), outcome,
+  const evidence = await publish(host, args.operation_id, 'strategy.validation', { schemaVersion: '1.0.0', source: content.source, translation: args.translation, layer: 'target', validator: { id: 'sesame.mt5.native-conformance', version: '1.0.0', digest: pluginIdentity(host).digest ? { status: 'value', value: pluginIdentity(host).digest } : { status: 'unknown', reason: 'Package digest unavailable' } }, issuer: 'plugin', fixtures: [args.fixture], parameters: native.binding.parameters, environment: native.translation.environment, startedAt: Date.parse(native.pass.created_at), finishedAt: Date.parse(native.pass.completed_at), outcome,
     cases: [{ id: content.fixtureDigest, outcome: comparison.matched ? 'passed' : 'failed', evidence: [args.result], diagnostics: comparison.differences }], coverage: { nodes: observable.map(sourceRuleId), events: fixture.events.map(value => value.type), scenarios: [content.runId], uncovered: uncovered.map(sourceRuleId) }, tolerancePolicy: content.tolerances, validationScope, nativeEngineExecuted: true, generalEquivalence: 'not_proven', nativePassId: native.pass.id, buildId: native.build.id, fixtureDigest: content.fixtureDigest, nativeObservationDigest: digest(observed), limitations }, dependencies, { 'comparison.json': comparison, 'observed.json': observed });
   return { validation: evidence, outcome, validationScope, nativeEngineExecuted: true, generalEquivalence: 'not_proven', differences: comparison.differences, covered: observable.length, uncovered: uncovered.map(sourceRuleId), limitations };
 }

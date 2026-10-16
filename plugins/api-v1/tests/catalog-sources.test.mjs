@@ -4,13 +4,15 @@ import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { buildCatalog, validateCatalog, validatePublishedRelease, checkPublished } from '../scripts/catalog.mjs';
-import { catalogQuery, CATALOG_URL } from '../packages/plugin-manager/catalog.js';
+import { readCatalog, CATALOG_URL } from '../packages/plugin-manager/catalog.js';
 const root = fileURLToPath(new URL('../../../', import.meta.url));
 const catalogBytes = readFileSync(new URL('../catalog.json', import.meta.url));
 const catalog = JSON.parse(catalogBytes);
 
-test('the unified directory reconstructs selected releases and preserves each package minimum', () => {
-  assert.deepEqual(validateCatalog(root), catalog);
+test('the published API 1 directory retains its real fixed source bytes and is not relabeled as API 2', () => {
+  assert.equal(catalog.apiVersion, '1');
+  assert.throws(() => buildCatalog(root), /API 1 historical snapshot/);
+  assert.throws(() => validateCatalog(root), /API 1 historical snapshot/);
   assert.equal(catalog.plugins.length, 32);
   assert.equal(catalog.plugins.filter(item => item.format === 'agent-plugins').length, 4);
   assert.equal(catalog.plugins.filter(item => item.distribution === 'core').length, 9);
@@ -32,20 +34,18 @@ test('the unified directory reconstructs selected releases and preserves each pa
   assert.equal(catalog.plugins.find(item => item.id === 'sesame/backtrader').license, 'GPL-3.0-or-later');
 });
 
-test('exact official/native/MCP/optional names resolve from the same fixed catalog snapshot', async () => {
-  const fetcher = async url => { assert.equal(url, CATALOG_URL); return new Response(catalogBytes); };
-  for (const id of catalog.plugins.map(item => item.id)) {
-    const result = await catalogQuery({ plugin_id: id }, undefined, fetcher);
-    assert.deepEqual(result.items.map(item => item.id), [id]); assert.match(result.catalog_digest, /^sha256:[0-9a-f]{64}$/);
-  }
-  for (const plugin_id of ['sesame/mt5-official', 'sesame/host-files', 'sesame/user-guide', 'sesame/research', 'sesame/technical-analysis', 'sesame/market-interpretation', 'sesame/quant-research']) {
-    assert.deepEqual((await catalogQuery({ plugin_id }, undefined, fetcher)).items, [], 'Removed or old stable identities are not aliases');
-  }
+test('the API 2 reader rejects the historical published API 1 snapshot without installing or aliasing it', async () => {
+  let requests = 0;
+  const fetcher = async url => { requests++; assert.equal(url, CATALOG_URL); return new Response(catalogBytes); };
+  await assert.rejects(readCatalog(undefined, fetcher), { code: 'CATALOG_INVALID' });
+  assert.equal(requests, 1);
 });
 
 test('stable 0.1.4 and the historical optional catalog remain byte-identical to the dev12 publishing commit', () => {
   for (const path of ['plugins/catalog.json', 'plugins/optional-api-v1/catalog.json']) {
-    assert.deepEqual(readFileSync(new URL(`../../../${path}`, import.meta.url)), execFileSync('git', ['show', `e35da9047d628a37f78adc2552d0799881dca6dd:${path}`], { cwd: root }));
+    const published = execFileSync('git', ['show', `e35da9047d628a37f78adc2552d0799881dca6dd:${path}`], { cwd: root });
+    assert.deepEqual(execFileSync('git', ['show', `HEAD:${path}`], { cwd: root }), published, 'Published Git bytes stay fixed');
+    assert.equal(readFileSync(new URL(`../../../${path}`, import.meta.url), 'utf8').replaceAll('\r\n', '\n'), published.toString('utf8'), 'Checkout line ending conversion cannot change catalog content');
   }
 });
 

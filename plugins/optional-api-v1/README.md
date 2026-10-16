@@ -2,9 +2,8 @@
 
 **Installable entries are identified by the published catalog.** The
 optional packages declare their own compatible host ranges in `engines.sesame`.
-The current manual-trading, portfolio-execution, auto-factor-mining,
-factor-evaluator, MT5 and QMT packages require 0.2.3-dev.8 or newer.
-Source, published archives and the install catalog may select different
+For example, `sesame/manual-trading` requires 0.2.2 and current MT5 source requires
+0.2.2. Source, published archives and the install catalog may select different
 versions; use the manifest for the version being installed. Their reviewed
 archive identities remain fixed; application installers are listed on the
 [release page](https://github.com/KDZZZZZZ/sesame/releases/latest). They do not
@@ -37,7 +36,7 @@ host-readable without granting access to old mutable application collections.
 | `sesame/vnpy` | Actual CTA backtesting of authored Python against fixed DataRefs | Reuses native VeighNa 4.5.0 / CTA 1.4.1. Real macOS engine, simulated matching, errors, warmup and frozen artifacts verified. Not a broker bridge or SVL equivalence claim. |
 | `sesame/qmt` | MiniQMT daily market/account adapter and explicit stock order/cancel tools | Requires existing broker-authorized Windows MiniQMT and compatible Python/XtQuant. Contract/host fixtures are separate from native Windows broker acceptance, which has not occurred. Readiness never grants trading authorization. |
 | `sesame/mt5` | Native terminal, account, compiler, Tester and target workflows | Existing compatible terminal and explicit connection/configuration. No terminal distribution is embedded. |
-| `sesame/manual-trading` | Scheduled/event-driven trading workflow, per-role models, selected research capabilities, live collaboration and one final summary per run | Sesame 0.2.3-dev.8 or newer. Explicit execution tool binding; no backend default. M5+ cadence. |
+| `sesame/manual-trading` | Scheduled/event-driven trading workflow, per-role models, selected research capabilities, live collaboration and one final summary per run | Composition and live panels need the current 0.2.3 development host. Explicit execution tool binding; no backend default. M5+ cadence. |
 | `sesame/portfolio-execution` | Independent target-portfolio execution and native order receipt recovery | Explicit MT5 >=1.6.0 or QMT >=1.4.0 account binding in this implementation. Same-account writes serialize; other accounts and research can proceed. No model-supplied execution authority. |
 | `sesame/judgment-evolution` | Private prediction/outcome ledger | Local SQLite; no default legacy-data import. |
 | `sesame/web-sources` | Fetch source-labelled web evidence | Network access to the selected source; not a parser or brokerage feed. |
@@ -49,7 +48,7 @@ host-readable without granting access to old mutable application collections.
 | `sesame/behavioral-finance`, `sesame/institutional-analysis`, `sesame/narrative-analysis` | Three independently selected social and interpretive methods | Dated primary evidence, competing explanations and explicit limits; no automatic inference of motives or causation. |
 | `sesame/strategy-research` | Separate experiment planning and evidence-ledger workflow | Existing Node.js 22+ for bounded resource checks; actual backtests use a separately selected engine. No algorithm is preselected. |
 | `sesame/factor-research` | Separate point-in-time factor diagnostics and fixed-selection holdout workflow | Existing Node.js 22+; descriptive statistics, explicit cost assumptions and trial records. No significance or live execution claim. |
-| `sesame/auto-factor-mining` | Multi-Agent hypothesis, evaluation receipt, review and frozen-selection workflow; live collaboration and one final summary | Sesame 0.2.3-dev.8 or newer, configured role models and an explicitly selected evaluator. Arbitrary research tools/skills use development-only data; no implicit backend or mathematical implementation. [Source](packages/auto-factor-mining/README.md); install availability follows the published catalog. |
+| `sesame/auto-factor-mining` | Multi-Agent hypothesis, evaluation receipt, review and frozen-selection workflow; live collaboration and one final summary | Current 0.2.3 development host, configured role models and an explicitly selected evaluator. Arbitrary research tools/skills use development-only data; no implicit backend or mathematical implementation. [Source](packages/auto-factor-mining/README.md); development source, not yet a published catalog entry. |
 | `sesame/factor-evaluator` | Independent AST factor calculation, numerical gates, redundancy checks and reproducibility artifacts | Frozen registered panel data. Restricted workflow isolation or explicit development-only evaluation; descriptive baseline, not a broker backtest. Other implementations can follow the [tool protocol](packages/factor-evaluator/PROTOCOL.md). |
 
 ## Install through a compatible API 1 host
@@ -67,7 +66,7 @@ checks activation and refreshes the current session. Updates explicitly supply t
 current `expected_digest`; identical version/bytes return already-installed. Native
 tests are manifest/schema/JavaScript checks, not behavioral or environment approval.
 
-The directory requires Plugin API 1 and checks each package's declared engines range. The new composition and live-report packages require Sesame 0.2.3-dev.8 or newer, including invocation-lifetime checks; older hosts reject installation. A 0.1.4 installation cannot use these packages; its historical catalog is deliberately preserved. A previously installed different version requires an explicit update/rollback with its expected digest; catalog installation does not silently replace it or enable a disabled plugin. Publishing a newer catalog does not change the plugins inside an already published application installer.
+The directory requires Plugin API 1 and checks each package's declared engines range. New composition/live-report APIs additionally require the current development host and fail explicitly when unavailable. A 0.1.4 installation cannot use these packages; its historical catalog is deliberately preserved. A previously installed different version requires an explicit update/rollback with its expected digest; catalog installation does not silently replace it or enable a disabled plugin. Publishing a newer catalog does not change the plugins inside an already published application installer.
 
 Dependencies, configuration and platform adapters live in each plugin. Check existing installations and saved configuration, reuse them where compatible, prepare only missing dependencies for the requested task, then verify actual calls. Native code uses the current system user's permissions with task process cleanup; it is not an OS sandbox. Trading permissions are not inferred from a successful import or read-only query.
 

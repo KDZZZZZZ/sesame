@@ -1,3 +1,4 @@
+import os
 """Offline references and deduplicated Sesame workflows (Python standard library)."""
 import json
 from copy import deepcopy
@@ -9,7 +10,11 @@ VERSION = json.loads((PLUGIN_ROOT / "plugin.json").read_text(encoding="utf-8"))[
 CATALOG = json.loads((PLUGIN_ROOT / "catalog.json").read_text(encoding="utf-8"))
 ITEMS = CATALOG["items"]
 CATEGORIES = CATALOG["categories"]
-TOOLS = json.loads((PLUGIN_ROOT / "tools.json").read_text(encoding="utf-8"))["analysis"]
+with open(os.path.join(str(PLUGIN_ROOT), "capabilities.json"), encoding="utf-8") as declaration_file:
+    DECLARED_CAPABILITIES = json.load(declaration_file)["capabilities"]
+TOOLS = [{"name": c["binding"]["name"], "description": c["description"], "inputSchema": c["inputSchema"], "outputSchema": c["outputSchema"]} for c in DECLARED_CAPABILITIES if c["binding"]["type"] == "mcp"]
+
+
 ROUTES = json.loads((PLUGIN_ROOT / "workflows.json").read_text(encoding="utf-8"))["workflows"]
 
 def text_arg(args, key, required=False):
@@ -76,8 +81,8 @@ def handle_recommend(args):
         "references": [brief(item) for item in ITEMS if item["name"] in route["reference_names"]],
         "availability": "not_checked",
         "next_steps": [
-            "Use plugin_discover to inspect installed plugins and plugin_catalog to verify exact published IDs and versions.",
-            "Choose only the required method package and backend. Install or update explicitly through plugin_install_catalog, then plugin_load and verify prerequisites.",
+            "Use the declared plugin catalog capability to inspect exact published IDs and versions.",
+            "Choose capabilities that meet the task objective; installation includes prerequisite checks.",
             "Read the selected SKILL and retain its sources; directory references are not imported implementations or proof of trading performance."
         ],
         "snapshot_date": CATALOG["meta"]["snapshot_date"], "version": VERSION

@@ -9,16 +9,19 @@ export function buildInventory(directory = root) {
   for (const source of [directory, resolve(directory, '../optional-api-v1')]) {
     const profile = readProfile(source), lock = buildLock(source);
     for (const pkg of lock.packages) {
-      const manifest = JSON.parse(readFileSync(join(source, 'packages', pkg.directory, 'plugin.json'))), extension = manifest.extensions?.['bot.sesame'];
+      const manifest = JSON.parse(readFileSync(join(source, 'packages', pkg.directory, 'plugin.json')));
       if (!policy[pkg.directory]) throw new Error(`Missing reviewed package explanation: ${pkg.id}`);
-      const standard = Boolean(manifest.$schema), names = standard ? Object.values(JSON.parse(readFileSync(join(source, 'packages', pkg.directory, extension.builtin.tool_definitions)))).flat().map(tool => tool.name) : manifest.tool_names;
-      entries.push({ id: pkg.id, version: pkg.version, distribution: profile.kind, state: standard ? extension.builtin.default_state : manifest.default_state, engines: standard ? extension?.engines : manifest.engines,
-        format: standard ? 'agent-plugins' : 'sesame-native', license: manifest.license, author: manifest.author ?? { name: 'Sesame contributors' },
-        ...policy[pkg.directory], tools: names, sourcePath: `plugins/${profile.kind === 'core' ? 'api-v1' : 'optional-api-v1'}/packages/${pkg.directory}` });
+      const declared = JSON.parse(readFileSync(join(source, 'packages', pkg.directory, manifest.capability_manifest)));
+      entries.push({ id: pkg.id, version: pkg.version, distribution: profile.kind, state: manifest.default_state, engines: manifest.engines,
+        format: manifest.execution === 'mcp' ? 'sesame-mcp' : 'sesame-native', license: manifest.license, author: manifest.author ?? { name: 'Sesame contributors' },
+        ...policy[pkg.directory], tools: declared.capabilities.filter(capability => capability.consumers.includes('agent')).map(capability => capability.id),
+        capabilities: declared.capabilities.map(({id,kind,consumers,execution}) => ({id,kind,consumers,execution})),
+        hostContributions: Object.fromEntries(['sources','views','services','hooks'].map(kind => [kind, declared[kind].map(({id,contract,operations}) => ({id,contract,operations}))])),
+        sourcePath: `plugins/${profile.kind === 'core' ? 'api-v1' : 'optional-api-v1'}/packages/${pkg.directory}` });
     }
   }
   if (entries.length !== Object.keys(policy).length) throw new Error('Inventory policy contains absent packages');
-  return { schemaVersion: 1, apiVersion: '1', status: 'descriptive-inventory', application: { minimum: '0.2.0', engines: { sesame: '>=0.2.0-0' } },
+  return { schemaVersion: 1, apiVersion: '2', status: 'descriptive-inventory', application: { minimum: '0.2.0', engines: { sesame: '>=0.2.0-0' } },
     notice: 'This descriptive inventory is not an installation catalog. It has no source commits or package digests. Installable entries are generated separately only from fixed, actually published releases.',
     packages: entries.sort((a, b) => a.id < b.id ? -1 : 1) };
 }

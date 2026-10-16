@@ -17,11 +17,11 @@ test('eight independent zero-tool packages have complete resources, licenses and
     for (const name of names) {
       const path = join(packages, name), manifest = await json(join(path, 'plugin.json'));
       assert.equal(manifest.id, `sesame/${name}`); assert.equal(manifest.default_state, 'discoverable');
-      assert.equal(manifest.engines.sesame, '>=0.2.0-0'); assert.deepEqual(manifest.tool_names, []);
+      assert.equal(manifest.engines.sesame, '>=0.2.0-0'); assert.equal(manifest.apiVersion, '2'); assert.equal(manifest.tool_names, undefined);
       assert.deepEqual(manifest.provides, {}); assert.equal(manifest.migration, undefined); assert.equal(manifest.dependencies, undefined);
       const module = await import(new URL(`../packages/${name}/index.js`, import.meta.url));
-      assert.deepEqual(module.createTools(), []); assert.equal(module.activate, undefined);
-      assert.deepEqual(await json(join(path, 'tools.json')), []);
+      assert.deepEqual(module.createCapabilities(), []); assert.equal(module.activate, undefined);
+      const declaration = await json(join(path, 'capabilities.json')); assert.deepEqual(declaration.capabilities, []); assert.ok(declaration.knowledge.length);
       const skill = await readFile(join(path, `skills/${name}/SKILL.md`), 'utf8');
       assert.match(skill, new RegExp(`name: ${name}`)); assert.ok(skill.length > 800);
       for (const resource of manifest.resources) await readFile(join(path, resource));

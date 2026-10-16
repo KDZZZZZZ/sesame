@@ -1,4 +1,19 @@
-# Plugin API 1 publication
+# Plugin publication and API 2 development
+
+## Current development sources
+
+The packages under `plugins/api-v1/packages` and
+`plugins/optional-api-v1/packages` now declare **API 2**. The directory names are
+retained, but the declarations, source locks and host interface are API 2.
+Development builds select an exact source commit and verify its two committed
+locks. A source push does not publish packages or rewrite a catalog.
+
+Existing API 1 catalogs, release plans, R2 plans and archives retain their exact
+historical identities. CI checks them with the fixed historical validator at
+`e91f45bdaaf1e0b02304f590656878ae8d23254f`; the current validator checks API 2
+sources. The publication and compatibility procedures below describe those
+historical API 1 clients and artifacts. API 2 distribution requires a separate
+reviewed publication; do not relabel an API 1 archive as API 2.
 
 ## Current policy
 

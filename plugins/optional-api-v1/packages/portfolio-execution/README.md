@@ -1,8 +1,6 @@
 # 目标仓位执行
 
-从 manual-trading 分离出的执行能力，要求 Sesame **0.2.3-dev.8 或更新版本**，使用带祖先调用活性校验的宿主调用来源证明。它可供任何满足冻结任务契约的工作流调用，不调度模型、不决定研究来源、不生成报告。
-
-工作流绑定要求 `sesame/mt5` **1.6.0+** 或 `sesame/qmt` **1.4.0+**。直接单次交易工具仍按 `manual_trade_inspect` 返回的原生能力要求核验：MT5 需要带 `execution_guard` 的 Python SDK 通道（插件 1.3.0+），QMT 需要带原生执行校验的 1.2.0+。已有连接和账户由后端配置，执行插件不自动连接或切换账户。
+从 manual-trading 分离出的执行能力。它可供任何满足冻结任务契约的工作流调用，不调度模型、不决定研究来源、不生成报告。
 
 1. 显式加载已配置的 MT5 或 QMT 与本插件。
 2. 主会话调用 `portfolio_execution_configure({backend:"mt5"})`，获得包含插件、context/apply 工具和 binding_id 的通用执行引用。

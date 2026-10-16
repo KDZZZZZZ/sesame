@@ -74,6 +74,11 @@ test('frozen build transfers exclude host files and reject changed manifests, co
     delete manifest.files['.compiler/MetaEditor64.exe'];
     await assert.rejects(stageFrozenBuild(source, await save(), staging), /路径/);
     delete manifest.files['../escape'];
+    const outside = join(root, 'source-neighbor'); await mkdir(outside); await writeFile(join(outside, 'foreign.txt'), 'external');
+    await symlink(outside, join(source, 'linked-directory'), process.platform === 'win32' ? 'junction' : 'dir');
+    manifest.files['linked-directory/foreign.txt'] = { bytes: 8, sha256: digest('external') };
+    await assert.rejects(stageFrozenBuild(source, await save(), staging), /越过目录边界/);
+    delete manifest.files['linked-directory/foreign.txt'];
     if (process.platform !== 'win32') {
       await symlink(join(source, 'private.txt'), join(source, 'link'));
       manifest.files.link = { bytes: 17, sha256: digest('never transferred') };

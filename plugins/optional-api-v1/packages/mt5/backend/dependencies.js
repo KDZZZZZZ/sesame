@@ -1,3 +1,4 @@
+import { records } from './records.js';
 import { statSync, openSync, readSync, closeSync } from 'node:fs';
 import { isAbsolute, join, delimiter } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,8 +16,8 @@ export const dependencyChanges = Type.Object({
   python: Type.Optional(path), wine: Type.Optional(path), wine_prefix: Type.Optional(path),
 }, { additionalProperties: false, minProperties: 1 });
 const defaultSettings = () => ({ id: 'local', version: 1, terminal_directory: null, data_directory: null, python: null, wine: null, wine_prefix: null });
-export const dependencySettings = host => host.storage.get('mt5_dependencies', 'local', true) ?? defaultSettings();
-export const dependencyDirectory = host => join(host.storage.directory, 'dependencies');
+export const dependencySettings = host => records(host).get('mt5_dependencies', 'local', true) ?? defaultSettings();
+export const dependencyDirectory = host => join(records(host).directory, 'dependencies');
 const present = (file, directory = false) => { try { const info = statSync(file); return directory ? info.isDirectory() : info.isFile(); } catch { return false; } };
 const executable = command => isAbsolute(command) ? present(command) : (process.env.PATH ?? '').split(delimiter).some(folder => present(join(folder, command)));
 
@@ -30,7 +31,7 @@ export function discoverDependencies(host, options = {}) {
     const python = candidates.find(file => present(file));
     if (python) native.python = python;
   }
-  return { native, environment: { ...host.environment, native }, settings };
+  return { native, environment: { ...{ python: host.context.pythonPath, platform: process.platform }, native }, settings };
 }
 
 export function inspectDependencies(mt5, { probe = false } = {}) {
@@ -76,11 +77,11 @@ function validatePaths(changes) {
 }
 
 export async function configureDependencies(host, mt5, args) {
-  requireValue(host.scope.kind === 'main', '只有主 Agent 可以修改本机 MT5 依赖路径', 403);
+  requireValue(host.context.kind === 'main', '只有主 Agent 可以修改本机 MT5 依赖路径', 403);
   requireValue(Value.Check(dependencyChanges, args.changes) && /^[A-Za-z0-9_-]{16,128}$/.test(args.command_id) && Number.isInteger(args.expected_version), '依赖配置参数无效');
-  const fingerprint = digest(stableJSON({ ...args, conversationId: host.scope.conversationId }));
-  return host.configuration.exclusive(async () => {
-    const previous = host.storage.get('mt5_dependency_command', args.command_id, true);
+  const fingerprint = digest(stableJSON({ ...args, conversationId: host.context.sessionId }));
+  return records(host).exclusive(async () => {
+    const previous = records(host).get('mt5_dependency_command', args.command_id, true);
     if (previous) { requireValue(previous.fingerprint === fingerprint, '依赖配置命令 ID 已用于其他修改', 409, 'idempotency_conflict'); return previous.result; }
     requireValue(!mt5.jobs.size && !mt5.tester.pending.size && !mt5.official.jobs.size
       && !mt5.deployments.list().some(item => ['preparing', 'attaching', 'running', 'unknown'].includes(item.status)), '编译、Tester 或持久 EA 仍在运行；不能改其依赖路径', 409, 'mt5_busy');
@@ -91,9 +92,9 @@ export async function configureDependencies(host, mt5, args) {
     if (result.terminal_directory) requireValue(installation(result.terminal_directory, result.data_directory), '目录必须含 terminal64.exe、MetaEditor64.exe 和有效的 MQL5/Include 数据目录');
     // Closing the plugin's Python IPC never closes a user's terminal or EA.
     await mt5.official.python.close();
-    host.storage.transaction(() => {
-      host.storage.put('mt5_dependencies', result);
-      host.storage.put('mt5_dependency_command', { id: args.command_id, fingerprint, result });
+    records(host).transaction(() => {
+      records(host).put('mt5_dependencies', result);
+      records(host).put('mt5_dependency_command', { id: args.command_id, fingerprint, result });
     });
     const found = discoverDependencies(host, mt5.options);
     mt5.native = found.native; mt5.compilerEnvironment = found.environment;

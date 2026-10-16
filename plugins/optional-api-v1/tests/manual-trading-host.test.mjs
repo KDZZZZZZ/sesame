@@ -1,21 +1,12 @@
 /** Formal package installation + actual host composition, fictional backend only. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,cp,rm,readFile} from 'node:fs/promises';
-import {createRequire} from 'node:module';
+import {mkdtemp,cp,rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {pathToFileURL,fileURLToPath} from 'node:url';
 import {Type} from '@sesame/plugin-sdk/schema';
 const root=process.env.SESAME_HOST_ROOT;
-test('workflow packages require the host with active invocation ancestry checks',{skip:!root},async()=>{
-  const semver=createRequire(join(root,'package.json'))('semver');
-  for(const name of ['manual-trading','portfolio-execution']){
-    const manifest=JSON.parse(await readFile(new URL(`../packages/${name}/plugin.json`,import.meta.url),'utf8'));
-    for(const version of ['0.2.2','0.2.3-dev.6','0.2.3-dev.7']) assert.equal(semver.satisfies(version,manifest.engines.sesame,{includePrerelease:true}),false,`${name} rejects ${version}`);
-    for(const version of ['0.2.3-dev.8','0.2.3','0.2.4']) assert.equal(semver.satisfies(version,manifest.engines.sesame,{includePrerelease:true}),true,`${name} accepts ${version}`);
-  }
-});
 test('formal portfolio execution package composes current-session tools and a receipt through the actual host without broker I/O',{skip:!root,timeout:60000},async()=>{
   const {Store}=await import(pathToFileURL(join(root,'modules/agent/store.js'))),{Runtime}=await import(pathToFileURL(join(root,'modules/agent/runtime.js'))),{createTools}=await import(pathToFileURL(join(root,'modules/agent/tools.js')));
   const directory=await mkdtemp(join(tmpdir(),'manual-trading-host-'));let store,runtime,sends=0,blockQuote=false,quoteStarted;

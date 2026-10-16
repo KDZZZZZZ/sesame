@@ -87,15 +87,18 @@ export function envelope(input, analyze, moduleUrl) {
     limitations: [...result.limitations, 'Input availability and source provenance are supplied declarations, not independently verified vendor history.', 'Research observations are not orders, fills or evidence of investment performance.'],
   };
 }
-export function publish(host, input, result, pluginId, title) {
-  const id = `${pluginId.split('/')[1]}-${randomUUID()}`, inputId = `${id}-input`;
-  const provenance = { kind: input.source.kind === 'synthetic' ? 'demo' : 'derived', source_kind: input.source.kind === 'synthetic' ? 'synthetic' : 'derived',
-    source: input.source, as_of: input.as_of, recorded_at: new Date().toISOString(), baseline: true,
-    input_sha256: result.input_sha256, implementation_sha256: result.implementation_sha256, plugin_id: pluginId };
-  const output = { ...result, dataset_id: id, input_dataset_id: inputId };
-  host.datasets.register({ id: inputId, title: `${title} / 固定输入`, rows: [{ input }], provenance });
-  host.datasets.register({ id, title, rows: [output], input_ids: [inputId], provenance });
-  return output;
+export async function publish(host, input, result, pluginId, title) {
+  const provenance = { kind: input.source.kind === 'synthetic' ? 'demo' : 'user_input', source: input.source, as_of: input.as_of,
+    recorded_at: new Date().toISOString(), baseline: true, input_sha256: result.input_sha256, implementation_sha256: result.implementation_sha256, plugin_id: pluginId };
+  const freeze = async (name, rows, dependencies, evidence) => {
+    const source = await host.resources.create({ kind: 'blob', name: 'abu-evidence-' + randomUUID() + '.json', source: { content: JSON.stringify(rows) }, lifetime: 'durable' });
+    const { ref } = await host.resources.publish(source, { kind: 'data', schemaVersion: '1.0.0', content: { format: 'json-rows', title: name, path: 'rows.json', rowCount: rows.length, columns: Object.keys(rows[0] ?? {}).map(key => ({ key })), provenance: evidence }, dependencies, blobs: [{ entry: 'content', path: 'rows.json', mediaType: 'application/json' }] });
+    await host.resources.remove(source, { mode: 'permanent', expectedVersion: source.version });
+    return ref;
+  };
+  const input_artifact = await freeze(title + ' / 固定输入', [{ input }], [], provenance);
+  const result_artifact = await freeze(title, [result], [input_artifact], { ...provenance, kind: provenance.kind === 'demo' ? 'demo' : 'derived' });
+  return { ...result, input_artifact, result_artifact };
 }
 export function runCli(moduleUrl, analyze) {
   if (!process.argv[1] || resolve(process.argv[1]) !== fileURLToPath(moduleUrl)) return;

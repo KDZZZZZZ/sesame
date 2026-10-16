@@ -8,7 +8,7 @@ import { pathToFileURL, fileURLToPath } from 'node:url';
 import { buildLock } from '../../api-v1/scripts/plugin-lock.mjs';
 
 const hostRoot = process.env.SESAME_HOST_ROOT;
-test('18 ABU plugins formally install, isolate skills, compute and persist identical user evidence across restart', { skip: !hostRoot, timeout: 180000 }, async t => {
+test('18 ABU plugins formally install, isolate skills, compute and persist identical user evidence across restart', { skip: !hostRoot, timeout: 600000 }, async t => {
   const load = path => import(pathToFileURL(join(hostRoot, path)));
   const { Store } = await load('modules/agent/store.js'), { Runtime } = await load('modules/agent/runtime.js');
   const { ModelRuntime } = await load('node_modules/@earendil-works/pi-coding-agent/dist/index.js');
@@ -30,37 +30,41 @@ test('18 ABU plugins formally install, isolate skills, compute and persist ident
     await open(); await runtime.session('conv_main');
     const call = async (conversation, name, args) => {
       const tool = runtime.plugins.definitions({ conversationId: conversation }).find(item => item.name === name); assert.ok(tool, name);
-      const result = await tool.execute('abu-host-fixture', args); assert.notEqual(result.isError, true, JSON.stringify(result)); return result.details;
+      const result = await tool.execute(crypto.randomUUID(), args); assert.notEqual(result.isError, true, JSON.stringify(result)); return result.details;
     };
     for (const item of catalog) {
       const sourcePath = fileURLToPath(new URL(`packages/${item.directory}/`, source)), draft = join(runtime.workspaces.root('conv_main'), `draft-${item.directory}`);
       await cp(sourcePath, draft, { recursive: true });
-      const tested = await call('conv_main', 'plugin_test', { path: draft }); assert.equal(tested.passed, true, JSON.stringify(tested));
-      const installed = await call('conv_main', 'plugin_install', { command_id: `install_${item.directory.replaceAll('-', '_')}`, path: draft, digest: tested.digest });
+      const { plugin: installed } = await call('conv_main', 'plugin_install', { operationId: `install_${item.directory.replaceAll('-', '_')}`, path: draft });
       assert.equal(installed.runtime_status, 'ready'); assert.equal(installed.state, 'discoverable');
+      const checked = store.get('plugin_test', installed.digest); assert.equal(checked.passed, true, 'single install includes actual package checks');
+      t.diagnostic(`installed ${item.id}`);
     }
     assert.equal((await runtime.session('conv_main')).resourceLoader.getSkills().skills.some(skill => names.includes(skill.name)), false);
     for (const [i, item] of catalog.entries()) {
       const conversation = `conv_abu_${i}`; runtime.createConversation('orchestrator', item.title, null, conversation);
       const session = await runtime.session(conversation);
-      await call(conversation, 'plugin_load', { plugin_id: item.id });
+      await call(conversation, 'plugin_load', { pluginId: item.id });
       assert.deepEqual(session.resourceLoader.getSkills().skills.filter(skill => names.includes(skill.name)).map(skill => skill.name), [item.directory]);
       const manifest = JSON.parse(await readFile(new URL(`packages/${item.directory}/plugin.json`, source)));
       for (const path of [`skills/${item.directory}/SKILL.md`, ...manifest.resources]) {
-        const resource = await call(conversation, 'plugin_read', { plugin_id: item.id, path });
+        const resource = await call(conversation, 'plugin_read', { pluginId: item.id, part: 'resource', path });
         assert.equal(resource.content, await readFile(new URL(`packages/${item.directory}/${path}`, source), 'utf8'));
       }
       const other = catalog[(i + 1) % catalog.length];
-      await assert.rejects(() => call(conversation, 'plugin_read', { plugin_id: other.id, path: 'README.md' }), /未挂载|不可使用/);
-      const input = JSON.parse((await call(conversation, 'plugin_read', { plugin_id: item.id, path: 'examples/input.json' })).content);
+      assert.throws(() => runtime.plugins.assertTool(conversation, other.tool), /未挂载|不可使用/);
+      assert.ok((await call(conversation, 'plugin_read', { pluginId: other.id, part: 'resource', path: 'README.md' })).content, 'declared reference text is readable without enabling executable capabilities');
+      const input = JSON.parse((await call(conversation, 'plugin_read', { pluginId: item.id, part: 'resource', path: 'examples/input.json' })).content);
       const result = await call(conversation, item.tool, { input });
-      assert.equal(result.baseline, true); outputs.push(result);
-      assert.deepEqual(store.get('dataset', result.dataset_id).rows, [result]);
-      assert.deepEqual(store.get('dataset', result.input_dataset_id).rows, [{ input }]);
-      const fixedInput = await call(conversation, 'report_data', { operation_id: `abu_input_${i}`, dataset_id: result.input_dataset_id });
-      const fixed = await call(conversation, 'report_data', { operation_id: `abu_output_${i}`, dataset_id: result.dataset_id, dependencies: [fixedInput.ref] });
-      assert.equal(fixed.provenance.kind, 'demo');
-      assert.deepEqual(runtime.contractArtifacts.data(fixed.ref).rows, [result]); frozen.push(fixed.ref);
+      assert.equal(result.baseline, true);
+      const { input_artifact, result_artifact, ...calculated } = result;
+      outputs.push(calculated); frozen.push(result_artifact);
+      assert.deepEqual(runtime.contractArtifacts.data(input_artifact).rows, [{ input }]);
+      assert.deepEqual(runtime.contractArtifacts.data(result_artifact).rows, [calculated]);
+      const artifactManifest = runtime.contractArtifacts.read(result_artifact).manifest;
+      assert.equal(artifactManifest.content.provenance.kind, 'demo');
+      assert.deepEqual(artifactManifest.dependencies, [input_artifact]);
+      assert.match(runtime.contractArtifacts.read(input_artifact).manifest.content.title, / \/ 固定输入$/, 'display titles retain separators while actual resources use a valid basename');
     }
     await close(); await open();
     for (const [i, item] of catalog.entries()) {

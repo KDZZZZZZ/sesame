@@ -23,12 +23,12 @@ export async function startDecisionBridge(decisions) {
       const data = chunks.length ? JSON.parse(Buffer.concat(chunks).toString('utf8')) : {};
       const url = new URL(request.url, 'http://127.0.0.1'), parts = url.pathname.split('/').filter(Boolean);
       if (request.method === 'GET' && url.pathname === '/health') return reply(200, { status: 'ready', protocol: 'sesame.decision/1', serverTime: Date.now() });
-      if (request.method === 'POST' && url.pathname === '/requests') return reply(202, view(decisions.submit(data)));
+      if (request.method === 'POST' && url.pathname === '/requests') return reply(202, view(await decisions.submit(data)));
       if (parts[0] === 'requests' && parts.length === 2 && request.method === 'GET') return reply(200, view(decisions.get(decodeURIComponent(parts[1]))));
       if (request.method === 'POST' && url.pathname === '/cancel') return reply(200, view(decisions.cancel(data.jobId, data.reason ?? 'Backend canceled request', data.asOf)));
       if (request.method === 'POST' && url.pathname === '/invalidate') {
         const job = decisions.get(data.jobId);
-        return reply(200, decisions.invalidate(job.request.scope, data.reason ?? 'Backend context changed', data.evidence ?? job.request.inputs.map(input => input.ref), data.asOf));
+        return reply(200, await decisions.invalidate(job.request.scope, data.reason ?? 'Backend context changed', data.evidence ?? job.request.inputs.map(input => input.ref), data.asOf));
       }
       if (request.method === 'POST' && url.pathname === '/timeline') {
         const job = decisions.get(data.jobId);

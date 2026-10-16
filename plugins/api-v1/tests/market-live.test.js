@@ -1,4 +1,4 @@
-import { mt5Import, mt5Path, hostForStore } from './mt5-host.js';
+import { mt5Import, hostForStore } from './mt5-host.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, rm } from 'node:fs/promises';
@@ -27,7 +27,7 @@ test('batch subscriptions validate before starting and tag independent chart cha
 });
 async function fixture() {
   const directory = await mkdtemp(join(tmpdir(), 'market-live-')), store = new Store(directory); await mkdir(join(directory, 'mt5'));
-  const mt5 = { storage: hostForStore(store).storage, host: hostForStore(store), official: { config: { account: { server: 'Demo', login: '1' } }, redact: value => value, access: () => ({ blocked_reason: null }) } };
+  const mt5 = { storage: store, host: hostForStore(store), official: { config: { account: { server: 'Demo', login: '1' } }, redact: value => value, access: () => ({ blocked_reason: null }) } };
   const market = mt5.market = new Market(mt5); market.connected = async () => ({ scope: market.scope() });
   return { mt5, market, store, async close() { await mt5.live?.close(); await market.close(); store.close(); await rm(directory, { recursive: true, force: true }); } };
 }

@@ -1,3 +1,4 @@
+import { records } from './records.js';
 import { Type } from '@sesame/plugin-sdk/schema';
 import { Value } from '@sesame/plugin-sdk/schema/value';
 import { ApiError, digest, now, requireValue } from './support.js';
@@ -20,14 +21,14 @@ export const importProperties = { command_id: commandSchema, source_message_id: 
 const publicChange = ({ fingerprint, ...record }) => record;
 
 function recordChange(host, record) {
-  host.storage.put('configuration_change', record);
-  host.events.emit('configuration.updated', { id: record.id, status: record.status });
+  records(host).put('configuration_change', record);
+  host.events.emit({ topic: 'workspace.mt5.configuration', payload: { id: record.id, status: record.status } });
   return publicChange(record);
 }
 function previous(host, args) {
-  requireValue(host.scope.kind === 'main', '仅主 Agent 可以修改 MT5 连接配置', 403);
-  const hash = digest(stableJSON(args)), old = host.storage.get('configuration_change', args.command_id, true);
-  if (old) requireValue(old.fingerprint === hash && old.conversation_id === host.scope.conversationId, '配置命令 ID 已用于其他修改', 409, 'idempotency_conflict');
+  requireValue(host.context.kind === 'main', '仅主 Agent 可以修改 MT5 连接配置', 403);
+  const hash = digest(stableJSON(args)), old = records(host).get('configuration_change', args.command_id, true);
+  if (old) requireValue(old.fingerprint === hash && old.conversation_id === host.context.sessionId, '配置命令 ID 已用于其他修改', 409, 'idempotency_conflict');
   return { hash, old: old ? publicChange(old) : null };
 }
 export function readConfiguration(mt5, imports) {
@@ -37,9 +38,9 @@ export async function updateConfiguration(host, mt5, args) {
   requireValue(Value.Check(object({ command_id: commandSchema, expected_version: Type.Integer({ minimum: 1 }), changes: changesSchema }), args), 'MT5 配置参数无效；密钥通过安全配置引用导入');
   for (const [name, config] of Object.entries(args.changes.servers ?? {})) if (config.url !== undefined) connectionURL(name, config.url);
   const { hash, old } = previous(host, args); if (old) return old;
-  return host.configuration.exclusive(async () => {
+  return records(host).exclusive(async () => {
     const repeated = previous(host, args).old; if (repeated) return repeated;
-    const record = { id: args.command_id, conversation_id: host.scope.conversationId, fingerprint: hash, target: 'mt5', changes: args.changes, status: 'running', created_at: now() };
+    const record = { id: args.command_id, conversation_id: host.context.sessionId, fingerprint: hash, target: 'mt5', changes: args.changes, status: 'running', created_at: now() };
     recordChange(host, record);
     try { const result = await mt5.official.configure({ expected_version: args.expected_version, ...args.changes }); mt5.monitor?.settingsChanged(); return recordChange(host, { ...record, status: 'applied', result, completed_at: now() }); }
     catch (cause) { recordChange(host, { ...record, status: 'failed', error: { code: cause.code ?? 'configuration_failed', message: mt5.official.redact(cause.message) }, completed_at: now() }); throw cause; }
@@ -48,13 +49,13 @@ export async function updateConfiguration(host, mt5, args) {
 export async function importConfiguration(host, mt5, imports, args) {
   requireValue(Value.Check(object(importProperties), args), '需要有效配置引用、操作 ID 和版本');
   const { hash, old } = previous(host, args); if (old) return old;
-  return host.configuration.exclusive(async () => {
+  return records(host).exclusive(async () => {
     const repeated = previous(host, args).old; if (repeated) return repeated;
     requireValue(mt5.official.settings().version === args.expected_version, 'MT5 配置已更新，请重新读取', 409, 'version_conflict');
-    const pending = imports.read(args.source_message_id, host.scope.conversationId);
+    const pending = await imports.read(args.source_message_id, host.context.sessionId);
     if (pending.binding) requireValue(pending.binding.login === mt5.official.config.account.login && pending.binding.server === mt5.official.config.account.server,
       '账户绑定已改变，此密码引用不能用于其他账户；请确认目标并重新提供账户配置。', 409, 'mt5_account_binding_changed');
-    const record = { id: args.command_id, conversation_id: host.scope.conversationId, fingerprint: hash, target: 'mt5', changes: { source_message_id: args.source_message_id }, status: 'running', created_at: now() };
+    const record = { id: args.command_id, conversation_id: host.context.sessionId, fingerprint: hash, target: 'mt5', changes: { source_message_id: args.source_message_id }, status: 'running', created_at: now() };
     recordChange(host, record);
     let result;
     try { result = await mt5.official.configure({ expected_version: args.expected_version, servers: pending.servers, ...(pending.account ? { account: pending.account } : {}) }); }

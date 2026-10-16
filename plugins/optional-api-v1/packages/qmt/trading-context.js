@@ -1,5 +1,5 @@
-import { createPublicKey, verify } from 'node:crypto';
-import { check, canonical } from '@sesame/plugin-sdk/protocol';
+import { capability,currentTask,currentExecution } from './execution.js';
+import { check } from '@sesame/plugin-sdk/protocol';
 import { configuration } from './configuration.js';
 
 export const tradingAccount = host => {
@@ -8,37 +8,29 @@ export const tradingAccount = host => {
   return { accountId: c.account_id, connectionId: c.connection_id, revision: String(c.version) };
 };
 const sameAccount = (a, b) => a?.accountId === b.accountId && a?.connectionId === b.connectionId && a?.revision === b.revision;
-export function verifyExecutionAuthorization(task, action, parameters, now = Date.now(), host) {
-  const { authorization, ...args } = parameters;
+export function verifyExecutionAuthorization(task, action, parameters) {
+  const { authorization: _authorization, ...args } = parameters;
   if (!task) return args;
   if (task.input.execution) {
-    const execution = task.input.execution, chain = host?.tools.invocation?.()?.chain;
-    const apply = Array.isArray(chain) ? chain.findIndex(row => row.pluginId === execution.pluginId && row.toolName === execution.applyTool) : -1;
+    const execution = task.input.execution, chain = currentExecution()?.provenance?.chain;
+    const applyId = `${execution.pluginId}#${execution.applyTool.split('#').at(-1)}`;
+    const apply = Array.isArray(chain) ? chain.findIndex(row => row.pluginId === execution.pluginId && row.capabilityId === applyId) : -1;
     check(apply > 0 && apply < chain.length - 1
       && chain.slice(0, apply).some(row => row.pluginId === task.pluginId)
-      && chain.at(-1).pluginId === 'sesame/qmt' && chain.at(-1).toolName === action,
+      && chain.at(-1).pluginId === 'sesame/qmt' && chain.at(-1).capabilityId === `sesame/qmt#${action}`,
     'Execution requires a live workflow-to-execution invocation chain', 'FORBIDDEN');
     return args;
   }
-  let valid = false;
-  try {
-    const key = createPublicKey(task.input.executionPublicKey), signature = Buffer.from(authorization.signature, 'base64');
-    valid = key.asymmetricKeyType === 'ed25519' && signature.length === 64 && signature.toString('base64') === authorization.signature
-      && Number.isSafeInteger(authorization.expiresAt) && authorization.expiresAt > now && authorization.expiresAt - now <= 60000
-      && verify(null, Buffer.from(canonical({ version: 1, taskId: task.id, runId: task.input.runId, action, args, expiresAt: authorization.expiresAt })), key, signature);
-  } catch { /* Missing or malformed proof has no authority. */ }
-  check(valid, 'Execution requires an unexpired signed intent from the trading runtime', 'FORBIDDEN');
-  return args;
+  check(false, 'Execution requires a host-proven workflow invocation chain', 'FORBIDDEN');
 }
 export function assertTradingTask(host, account, write = false, identity = false) {
-  if (host.scope.kind === 'main') return null;
-  const task = host.agents?.current(), input = task?.input, plan = input?.tradingPlan;
+  if (host.context.kind === 'main') return null;
+  const task = currentTask(), input = task?.input, plan = input?.tradingPlan;
   const execution = input?.execution;
   const composed = execution && execution.context?.backend === 'qmt' && typeof execution.pluginId === 'string'
     && typeof execution.applyTool === 'string' && typeof execution.contextTool === 'string'
     && sameAccount(execution.account, account) && sameAccount(execution.context.account, account);
-  const legacy = !execution && task?.pluginId === 'sesame/manual-trading' && plan?.backend === 'qmt';
-  check((composed || legacy) && task.status === 'running' && task.conversationId === host.scope.conversationId
+  check(composed && task?.status === 'running' && task.conversationId === host.context.sessionId
     && typeof plan?.id === 'string' && plan.id.length > 0
     && typeof plan.ownerConversationId === 'string' && plan.ownerConversationId.length > 0
     && typeof input.runId === 'string' && input.runId.length > 0 && typeof input.role === 'string' && input.role.length > 0
@@ -73,24 +65,12 @@ export function createTradingContext(host, service, { now = Date.now } = {}) {
   };
 }
 
-export function createTradingTools(host, service, executionGuard) {
-  const { Type, define, string } = host.tools, context = createTradingContext(host, service);
-  const operation = Type.String({ pattern: '^[A-Za-z0-9_-]{1,100}$' });
-  const authorization = Type.Optional(Type.Object({ expiresAt: Type.Integer({ minimum: 1 }), signature: Type.String({ minLength: 88, maxLength: 88 }) }, { additionalProperties: false }));
-  const common = { operation_id: operation, user_authorized: Type.Literal(true), account_id: string('Exact authorized account ID'), connection_revision: string('Exact configured connection revision'), authorization };
-  return [
-    define('qmt_trading_context', 'Read configured identity or complete full-account raw positions/current-day orders and fills for an active workflow task with a frozen matching execution contract. No origin filter, terminal launch or trade.', {
-      action: Type.Union(['identity', 'snapshot'].map(Type.Literal)), history_days: Type.Optional(Type.Integer({ minimum: 1, maximum: 90 })),
-    }, context),
-    define('qmt_trading_order', 'Main Agent, host-proven workflow-to-execution call chain, or legacy runtime-signed executor intent: submit one guarded exact-account limit order through the existing idempotent native path. Unknown receipts are not retried.', {
-      ...common, symbol: Type.String({ pattern: '^\\d{6}\\.(SH|SZ|BJ)$' }), side: Type.Union([Type.Literal('buy'), Type.Literal('sell')]),
-      shares: Type.String({ pattern: '^[1-9]\\d*$' }), price: Type.String({ pattern: '^(0|[1-9]\\d*)(\\.\\d+)?$' }), execution_guard: executionGuard,
-    }, (args, signal) => service.command('order', args, signal, host.scope, host)),
-    define('qmt_trading_cancel', 'Main Agent, host-proven workflow-to-execution call chain, or legacy runtime-signed executor intent: cancel only an existing exact-account original order through the native ownership and idempotence checks. Inspect native status after unknown results.', {
-      ...common, original_operation_id: string('Original qmt_order operation ID'), order_id: Type.String({ pattern: '^[1-9]\\d*$' }),
-    }, (args, signal) => service.command('cancel', args, signal, host.scope, host)),
-    define('qmt_trading_command', 'Read one exact-account retained order/cancel receipt for an active workflow task with a frozen matching execution contract without submitting or replaying it.', {
-      operation_id: string('Existing operation ID'),
-    }, args => service.commandRecord(args.operation_id, host.scope, host)),
+export function createTradingCapabilities(host,service) {
+const context=createTradingContext(host,service);
+return [
+    capability('qmt_trading_context', context),
+    capability('qmt_trading_order', (args, signal) => service.command('order', args, signal, host.context, host)),
+    capability('qmt_trading_cancel', (args, signal) => service.command('cancel', args, signal, host.context, host)),
+    capability('qmt_trading_command', args => service.commandRecord(args.operation_id, host.context, host)),
   ];
 }

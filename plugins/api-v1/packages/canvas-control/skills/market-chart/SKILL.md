@@ -1,32 +1,34 @@
 ---
 name: market-chart
-description: Bind charts from discovered provider and instrument identities, then publish typed indicator artifacts and verify actual rendering.
+description: Bind charts from fixed SourceRefs, publish typed indicators and inspect actual rendering.
 ---
 
-## Open or update a market chart
+公开能力覆盖来源、绑定、显示与诊断，不需要反向工程宿主或安装包。按任务所需选用能力，已有的精确身份与成果可以直接复用。
 
-1. `canvas_inspect` returns the current layout version, chart IDs, receipts and `market_providers`. `data_providers` gives the same public provider identities without reading layout. Keep existing charts and user locks unless the task calls for changing them.
-2. Use `market_instruments action:search` to find the exact instrument in the chosen provider. Preserve the returned InstrumentRef and real ConnectionRef. Use `action:describe` when you need to inspect supported periods, units or source-time semantics. These are public plugin tools; reading application source, credentials or provider implementation files is unnecessary.
-3. Call `canvas_binding` for each required timeframe. For example, two views of the same discovered instrument may use `timeframe:"1h"` and `timeframe:"15m"`. Reuse the returned provider/connection/instrument values, not a hard-coded vendor ID. The result's `chart` contains a display symbol, a complete binding and `volume:true`.
-4. Send those chart objects to `canvas_apply` in `add` or `update` operations with the latest `expected_version` and one stable `command_id`. `chart.symbol` is only a label. The actual data identity is `chart.binding={provider,connection?,instrument,spec}`; there is no `chart.period` field. Binding `null` explicitly removes the market source.
-5. Inspect again. Layout success only saves a requested view. Claim it is displayed after the current version's recent frontend receipt reports the target chart rendered. Preserve failures and stale source status. Forming bars and source volume are enabled by default; tick volume is not traded lot volume.
+`resources/indicator-publish.json` 是完整的 `indicator_publish` 调用示例：`files` 与 `definition` 并列，不放进 `implementation`。integer 参数的 default/min/max 是 JSON 安全整数，decimal 参数用精确十进制字符串，boolean/string/enum 保留各自类型；enum 声明 choices。发布结果为 `{ref,receipt}`，挂载时把其中完整 `ref` 传入 chart_script.artifact。
 
-Batch related changes into one `canvas_apply.operations` array. `version` belongs to the whole workspace, including indicator mounts; two parallel writes with the same old version can conflict even when they name different charts. After `version_conflict`, use `canvas_inspect`, compare what already changed, then submit only the remaining intended edits with its version and a new command ID. Do not remove version checks or retry by merely incrementing a number. For a transport retry with an unknown result, retain the original command ID **and identical arguments** so the host can recognize a completed operation. `canvas_busy` and `canvas_locked` are user drag/lock protection; respect them.
+同一轮布局变更可合并到一个 operations。重试同一请求保留 command_id 和参数；版本冲突后读取 canvas_inspect，核对最新布局并使用新 command_id 与当前 expected_version 提交剩余变更，不能并行复用旧版本覆盖用户操作。
 
-Changing timeframe, price basis, adjustment, session or connection creates a different series. `canvas_binding` preserves unknown calendar status, actual source time basis and provider metadata; it never fabricates a broker timezone or calendar. A description-only validation does not fetch candles or certify their freshness.
+| 能力 | 输入与实际结果 | 能证明什么 |
+| --- | --- | --- |
+| `canvas_inspect` | `{}` → `{version,charts,layout,workspace,scripts,market_sources,render_status,rendering,...}`。charts 含 id、binding、locked、script_ids；market_sources 项含 ref、contract、operations、configSchema、available。 | 当前画布与公开来源声明；available 不证明连接或行情成功。 |
+| `data_providers` | `{contract:"sesame.market/1"}` → `{items,nextCursor?}`；items 与 market_sources 使用同一来源声明形状。 | 可选 SourceRef 与明确支持的操作。 |
+| `market_instruments` | `{action:"search",source,query,...}` → `{items,nextCursor?,metadata}`；`{action:"describe",source,instrument}` → `{source,instrument,metadata}`。品种身份是搜索项的 ref；描述含 timeBasis、calendar、features。 | 精确品种与支持的周期/价格/时段；metadata.connection 是来源返回的连接身份。 |
+| `canvas_binding` | `{source,instrument,timeframe,price_basis?,adjustment?,session?}` → `{binding,chart,instrument,metadata,validation,operations}`。chart 为 `{symbol,binding,volume:true}`。 | 仅完成来源描述，validation 固定为 `{scope:"source_description",marketDataRead:false,rendered:false}`。 |
+| `canvas_apply` | `{command_id,expected_version,operations}` → 更新后的画布、scripts、render_status、rendering；重放另含 replayed 与 command_version，不含 market_sources。add/update 接收 canvas_binding 返回的 chart。 | 布局已保存；调用不等待行情订阅或前端绘制。 |
 
-## Add analysis as an indicator artifact
+SourceRef 为 `{providerId,revision,binding?}`，binding 只使用来源 configSchema 明示字段。`canvas_binding` 将实际 `{id,revision}` 固定到 `binding.source.binding.connection`，并仅自动选择唯一声明的价格/复权/时段；未知日历保持未知。`chart.binding={source,instrument,spec}`，symbol 仅是标签，没有 period 字段。宿主管理运行时 bindingId、订阅和释放，Agent 不手填临时绑定身份。画布变更使用实际 version 和稳定 command_id；冲突、用户锁和拖动租约说明保存条件改变，应保留用户操作。
 
-Use `indicator_publish` followed by `chart_script action:put` with its full ArtifactRef and the target `chart_id`. The schema describes inputs, panes and series before code runs. `resources/indicator-publish.json` is a complete tool call: `operation_id`, `definition` and `files` are siblings at the top level. `definition.implementation.entry` names a key in `files`; never nest the file table inside `definition` or `implementation`. Use a fresh operation ID for changed content and retain it only when retrying the identical publication. `resources/close-line.json` and `resources/close-line.js` are the separate definition/code examples; the definition alone is not the complete tool input.
+显示证据位于 `rendering[].charts[]`，通过 id 对应目标图表，并要求外层回执 version 等于当前画布 version。回执 at 是宿主接收时间（毫秒）；超过 30 秒的回执不再返回。`render_status:"reported"` 只证明有当前版本回执，不能代替逐图状态；rendering 为空或只有旧版本意味着尚不可确认。
 
-For an `integer` parameter, `default`, `min` and `max` are safe JSON integers, for example `{id:"length",type:"integer",required:false,title:"Visible bars",default:20,min:1,max:500}`. For `decimal`, those fields are exact strings such as `"0.01"`; do not interchange the two representations. Boolean/string defaults keep their own JSON type; enum defaults must belong to `choices`. `files` contains the complete JavaScript source text, not a workspace file path.
+每图回执为 `{id,status,error?,warning?,bar_count?,feed_status?}`。status 为 rendered/loading/offline/error/hidden；bar_count 是该图当前可绘制 K 线数量，feed_status 是数据通道状态，error 保留失败文本并优先展示底层数据订阅错误，warning 说明非阻断的数据限制。当前版本中 `status:"rendered"` 且 `bar_count>0` 是行情已显示的证据；hidden 表示不可见，相关数量和通道状态可省略。`feed_status:"live"` 说明订阅收到有效数据，不证明市场持续成交；行情时间与时效仍以实际来源为准。
 
-The code must export `compute(input)`. Read declared bars from `input.inputs.<inputId>.rows`; each row has an ID, `openTime`/`endTime` SourceTime, Decimal-string OHLC, typed volume and `isClosed`. Preserve SourceTime as returned, including broker wall time. Do not use old `{time,open,volume}` chart-library input assumptions or a bare function body.
+历史 queryBars/market_read、来源描述、画布保存和实时订阅各有独立结果。明确的 `SCHEMA_MISMATCH` 等协议错误应沿原 error、SourceRef 和 chart ID 定位；重复绑定同一身份、新建探针图或启用无关数据服务不会改变协议形状。`STALE_REVISION` 与 `CONNECTION_CHANGED` 才指向身份修订变化；缺配置、权限拒绝、没有客户端回执也有各自原因。指标“输入不足”是下游现象，有行情错误时应以行情错误为主要诊断。
 
-Return `{status,series,diagnostics}`. A line/area/histogram entry is `{seriesId,points:[{key,time,value:{status:"value",value:"1.2345"}}]}`; a marker entry uses `{seriesId,markers:[{key,time,position:"above"|"below"|"at_price",price?,shape:"circle"|"arrow_up"|"arrow_down",color,text?}]}`. Match every `seriesId` to the declaration and use stable keys. Missing values have explicit value status; not enough warmup returns `not_ready`. Numbers used in JS calculations must be finite and converted to Decimal strings on output; a binary64 calculation is not exact decimal arithmetic.
+价格口径、时段、复权、周期、源修订不同即不同序列；描述成功不证明行情新鲜度。独立图表默认独立时间轴，sync_group 是显式时间范围联动设置。
 
-Use `inputs[].forming:"include"` for analysis that intentionally updates with the current bar; use `closed_only` for confirmed-bar logic. The source's `isClosed` is authoritative. A pivot requiring later bars cannot be labelled as known at its earlier bar without disclosing confirmation delay. Wave, PA and ICT annotations are analysis with stated rules and uncertainty, not evidence of a strategy fill.
+indicator_publish({operation_id,definition,files}) 发布固定指标成果，chart_script({action:"put",artifact,...CAS}) 将完整 ArtifactRef 挂载到图表。定义声明 parameters、inputs、panes、series、implementation。代码仅支持 sesame-indicator/1 JavaScript compute(input)，包内入口必须存在，无法联网或读文件。例子为 resources/close-line.json 和 close-line.js。
 
-Give overlays a `placement:"main"` pane and `scale.mode:"price"`. Give an oscillator/volume-like series a `placement:"separate"` pane and independent scale. Only line, area, histogram and markers are supported by this contract; do not promise rectangles or arbitrary chart-library APIs. JavaScript is supported; TypeScript and streaming static data have no executor in this release. Python research may publish a fixed DataRef for a static series, retaining its exact instrument/spec and provenance.
+固定研究序列使用 implementation.kind=series、updateMode=static、initial=DataRef。发布冻结实际代码/定义字节，挂载与渲染另行检查。静态指标不会自动更新。布局操作、指标发布和挂载不执行交易。
 
-Each chart owns its indicator instance and generation. The frontend recalculates bounded declared inputs and checks output before replacing the frame. Code has no network, host filesystem, credentials or trading API. Do not reference a temporary child workspace file: publish all code/data dependencies first. After mounting, verify current instance/render receipts through `canvas_inspect`; publication and successful computation alone do not prove a visible plot.
+`rendering[].charts[].warning` 是不阻止渲染的数据限制。来源 `coverage.complete:false` 也可能表示未证明区间完整；有效行仍可绘制，指标按实际收到的闭柱/总行数检查输入。保留这项限制，不将它推断为断线，也不把完整性改写为 true 来消除提示。

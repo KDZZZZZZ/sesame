@@ -15,13 +15,15 @@ scope 使用 `{kind:"global"}`、`{kind:"project",project_id:"真实项目ID"}` 
 - lessons/user-corrections、research-methods、data-quality、strategies、plugins-tools：按实际情况使用 global、project 或 strategy，注明适用的后端。
 - references/repositories、documentation、datasets、skills-plugins、artifacts：保存位置、用途、版本和读取条件。
 
-global 对各任务可见；project 和 strategy 由运行时分配的任务范围决定，工具参数不能自授权。主 Agent 可以管理全部范围。classification 与 scope 是两件事：例如 lessons/data-quality 可以仅限某项目。
+scope 标记记忆适用的全局、项目或策略上下文，当前工作区的会话均可检索；参数不改变应用权限。主 Agent 管理正式记忆，子 Agent 提交候选。分类与 scope 是两件事：例如 lessons/data-quality 可以只适用于某项目。
+
+用户消息来源形状为 `{type:"user_message",id:"实际消息ID"}`；可通过 data_query 的 `{source:{providerId:"host#messages",revision:"host:2"},input:{sessionId:"当前会话ID"}}` 读取真实消息。成果来源为 `{type:"artifact",id,revision,kind,digest,schemaVersion}`。新偏好的最小保存形状：`memory_manage({action:"save",entry:{category:"user/workflow",title,summary,content,scope:{kind:"global"},sources:[真实来源],evidence:"explicit"}})`。返回 `id/version/status` 后才有保存证据；修订使用这份 version 作为 expected_version。
 
 evidence 使用 explicit（有明确用户消息）、verified（有成果证据）、inferred（推断）、conflicted（冲突）。同一范围与分类下，同标题的不同内容会形成显式冲突。核验后用带 expected_version 的 save 修订、合并；不要用覆盖掩盖分歧。固定用户约束优先于推测，不会自动提高权限。
 
 ## 来源与候选的正确形状
 
-`sources` 的每一项都需要 `type`，ArtifactRef 本身没有这个字段。真实用户表达使用 `{type:"user_message",id:"实际用户消息ID"}`。冻结成果使用 `{type:"artifact",id:ref.id,revision:ref.revision,kind:ref.kind,digest:ref.digest,schemaVersion:ref.schemaVersion}`，等价于 `{type:"artifact",...ref}`；`revision` 是原来的字符串，不能改成整数或省略摘要。旧宿主报告的数字 revision 只用于实际返回的旧报告引用，不能拿来代替 ArtifactRef。不要把成果重新标为用户消息以通过校验。
+`sources` 的每一项都需要 `type`，ArtifactRef 本身没有这个字段。真实用户表达使用 `{type:"user_message",id:"实际用户消息ID"}`。冻结成果使用 `{type:"artifact",id:ref.id,revision:ref.revision,kind:ref.kind,digest:ref.digest,schemaVersion:ref.schemaVersion}`，等价于 `{type:"artifact",...ref}`；`revision` 是原来的字符串，不能改成整数或省略摘要。API2 只接受完整冻结引用，不接受旧报告整数版本。不要把成果重新标为用户消息以通过校验。
 
 `memory_propose` 返回候选正文以及候选的 `id/version`，它们不是正式记忆 ID/版本。主 Agent 用 `memory_manage {action:"candidates"}` 重新读取候选，核验后调用 `{action:"accept",id:candidate.id,expected_version:candidate.version}`。接纳结果的顶层 `id` 仍指候选；`memory.id` 和 `memory.version` 才是正式记忆，应将 `memory.id` 传给 `memory_read`。子 Agent 保留 propose 回执并通知主 Agent 处理，不能自己管理候选或猜测正式 ID。
 
@@ -29,7 +31,7 @@ evidence 使用 explicit（有明确用户消息）、verified（有成果证据
 
 ## 每次压缩前的整理
 
-插件已经注册 `host.lifecycle.onBeforeCompact`，覆盖手动压缩、上下文达到阈值和溢出重试。不是靠你记得调用某个命令，也不是向用户聊天插入定时提示。插件复用当前会话已经配置的模型做一次有界整理；来源较长时分块，每次最多处理六块，未完成的下次继续。
+capabilities.json 的 `lifecycle.beforeCompact` 钩子绑定 `memory_before_compact`，覆盖手动压缩、上下文达到阈值和溢出重试，由宿主调用。插件复用当前会话已经配置的模型做一次有界整理；来源较长时分块，每次最多处理六块，未完成的下次继续。
 
 - 从将被压缩的真实用户消息、当前会话的近期已发布成果、待核验候选的原始来源提炼；不把旧压缩摘要、助手的自述、工具日志或委派消息当作已验证事实。
 - 优先保存稳定偏好、用户纠正、项目决定、可复用经验和最终成果引用；跳过任务流水、即时行情和账户余额、密码与密钥。关键结论必须引用原文证据，完整保留成果版本。

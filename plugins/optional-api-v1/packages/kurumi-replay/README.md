@@ -1,10 +1,14 @@
+本目录已迁移为 Host API 2；唯一接口声明是 `capabilities.json`，入口仅导出 `createCapabilities`。角色授权使用宿主提供的 `executionContext.provenance.agent.runId`，不接受调用参数伪造身份。私有 SQLite 保存账本与幂等回执，公开证据通过资源发布，图表使用静态 SourceRef。激活和恢复不会自动请求模型或安装依赖。
+
+固定 Nautilus 环境仍要求 macOS arm64 / Python 3.13；不支持的平台明确返回不可用。Windows 可读取、展示和归档历史证据；文件执行 fsync，目录 fsync 不受 Node 支持，归档回执中 `durability.directorySync` 明确为 `unsupported`。以下历史撮合验收不等于当前平台真实撮合验收。
+
 # 久留美 · 原生回放体验 (`sesame/kurumi-replay` 0.1.3-dev.3.8)
 
 普通、discoverable、Plugin API 1 可选插件；最低 Sesame 0.2.2。**当前是合入源码的未发布验收快照，整体体验验收未完成。** 不进入 core/default bundle，不接真实券商；本次不创建 Release 或修改安装 catalog。插件实现来自 Sesame 内部主/子 Agent，本次由 Codex 整理合入、文档、仓库检查及审阅修正；报告/留档/测试修正的范围见 VALIDATION.md。
 
 当前状态及剩余门槛见 [VALIDATION.md](VALIDATION.md)。第二次只验代表性片段：新 300000 JPY、全部 50x、4H 决定，达到效果即在已提交决定边界暂停。当前已有原生账户、闭合 H1/SMA20、简洁双方标注及主聊天 PK 的实测；形成中帧、真实 UTC 投资周报和完整新玩家安装/reload 仍待验。以下规则、阶段测试和 HANDOFF 保留实现参考及历史记录，以 VALIDATION.md 的当前状态为准。
 
-插件主体是只读 `sesame.market` / `sesame.account` 数据源，以及宿主真实 `agents.submit/inspect/wait/cancel/current` 角色子任务。主Agent管理与解说；Dashboard使用现有行情图/账户/Agent面板，报告使用打包的 MIT Sesame reportKit/CSS，不更改本体前端。
+插件声明 API 2 的 `sesame.market/1`、`sesame.account/1` 数据源；角色通过 `host.agent.run` 创建统一 Run，并用 `runs.read/wait/cancel` 观察和取消。主Agent管理与解说；Dashboard使用现有行情图/账户/Agent面板，报告使用打包的 MIT Sesame reportKit/CSS，不更改本体前端。
 
 ## 连续规则
 

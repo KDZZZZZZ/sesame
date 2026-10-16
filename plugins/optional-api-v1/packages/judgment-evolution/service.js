@@ -1,7 +1,9 @@
 import { DatabaseSync } from 'node:sqlite';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { mkdirSync, existsSync, lstatSync, writeFileSync, renameSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { id, digest, requireValue, securePath } from './support.js';
+import { inputs } from './inputs.js';
 
 export const JUDGMENT_PLUGIN = 'sesame/judgment-evolution';
 export const JUDGMENT_POLICY = Object.freeze({ min_samples: 30, min_windows: 3, alpha: 0.05, retry_hours: 24 });
@@ -54,15 +56,15 @@ export function independentBlocks(rows) {
 }
 
 export class JudgmentService {
-  constructor(host, { clock = () => new Date(), policy = {} } = {}) {
+  constructor(host, { clock = () => new Date(), policy = {}, snapshot } = {}) {
     this.host = host; this.clock = clock;
+    this.invocation = new AsyncLocalStorage(); this.snapshot = snapshot;
     this.policy = { ...JUDGMENT_POLICY, ...policy }; this.busy = false;
   }
   now() { return this.clock().toISOString(); }
   init() {
-    const work = this.host.workspace.root('conv_main');
-    this.directory = join(work, 'judgment');
-    this.stateDirectory = this.host.storage.directory;
+    this.stateDirectory = this.host.context.storageRoot;
+    this.directory = join(this.stateDirectory, 'exports');
     for (const path of [this.stateDirectory, this.directory]) { mkdirSync(path, { recursive: true, mode: 0o700 }); requireValue(!lstatSync(path).isSymbolicLink(), '判断工作区不能是符号链接'); }
     const path = join(this.stateDirectory, 'judgments.sqlite');
     requireValue(!existsSync(path) || !lstatSync(path).isSymbolicLink(), '判断数据库不能是符号链接');
@@ -78,8 +80,16 @@ export class JudgmentService {
   list(kind) { return this.db.prepare('SELECT body FROM records WHERE kind=? ORDER BY rowid').all(kind).map(row => JSON.parse(row.body)); }
   put(kind, value) { this.db.prepare('INSERT INTO records VALUES(?,?,?) ON CONFLICT(kind,id) DO UPDATE SET body=excluded.body').run(kind, value.id, JSON.stringify(value)); return value; }
   transaction(fn) { this.db.exec('BEGIN IMMEDIATE'); try { const value = fn(); this.db.exec('COMMIT'); return value; } catch (error) { this.db.exec('ROLLBACK'); throw error; } }
-  assertMain(conversationId) { requireValue(this.host.tasks.read(conversationId).scope === 'main', '判断登记、复盘与准则管理仅供主 Agent 使用', 403); }
-  enabled() { return !this.closed && this.host.plugins.isActive(JUDGMENT_PLUGIN, 'conv_main'); }
+  data() { const value = this.invocation.getStore() ?? this.snapshot?.(); requireValue(value, '判断能力缺少本次调用的数据快照', 500); return value; }
+  async invoke(host, method, args, signal) {
+    if (method === 'auditTurn' && (args[0].status !== 'completed' || args[0].scope !== 'main')) return null;
+    const snapshot = await inputs(host, method, args, signal);
+    signal?.throwIfAborted(); return this.invocation.run(snapshot, () => this[method](...args));
+  }
+  dataset(key) { const value = this.data().datasets.get(key); requireValue(value, '证据数据集不存在', 404); return value; }
+  message(key, optional = false) { const value = this.data().messages.get(key); requireValue(value || optional, '消息不存在', 404); return value; }
+  assertMain(conversationId) { requireValue(this.data().sessions.get(conversationId)?.kind === 'main', '判断登记、复盘与准则管理仅供主 Agent 使用', 403); }
+  enabled() { return !this.closed && this.data().enabled; }
   fingerprint(args) { return digest(JSON.stringify(args)); }
   idempotent(kind, command, args, fn) {
     text(command, 'command_id', 128);
@@ -114,7 +124,7 @@ export class JudgmentService {
         shadow.rule_version = rule.version;
       }
       return this.put('prediction', { id: id('judgment'), version: 1, conversation_id: conversationId,
-        source_message_id: this.host.tasks.read(conversationId).active_response_message_id ?? null,
+        source_message_id: this.data().sessions.get(conversationId).activeResponseId ?? null,
         claim: args.claim.trim(), topic: args.topic, regime: args.regime, rationale: args.rationale.trim(),
         probability: probability(args.probability), baseline_probability: probability(args.baseline_probability ?? 0.5),
         verification, rule_predictions: shadows, created_at: created, due_at: due, status: 'pending',
@@ -125,13 +135,13 @@ export class JudgmentService {
   }
   sources(dataset, seen = new Set()) {
     requireValue(!seen.has(dataset.id) && seen.size < 100, '证据来源链无效'); seen.add(dataset.id);
-    requireValue(dataset.provenance?.source_kind !== 'synthetic', '合成数据不能核验真实判断');
-    if (dataset.input_ids?.length) return dataset.input_ids.flatMap(key => this.sources(this.host.datasets.read(key), new Set(seen)));
-    requireValue(dataset.provenance?.provider && dataset.provenance?.as_of, '证据缺少可核验来源和获取时间');
-    return [{ dataset_id: dataset.id, ...dataset.provenance }];
+    requireValue(!['synthetic', 'simulated', 'forecast', 'user_input'].includes(dataset.provenance?.source_kind), '合成、预测或手工输入不能核验真实判断');
+    if (dataset.input_ids?.length) return dataset.input_ids.flatMap(key => this.sources(this.dataset(key), new Set(seen)));
+    requireValue(dataset.provenance?.source_kind === 'external' && dataset.provenance?.provider && dataset.provenance?.as_of, '证据缺少可核验外部来源和获取时间');
+    return [{ dataset_id: dataset.id, ...dataset.provenance, ...(dataset.artifact ? { artifact: dataset.artifact } : {}), ...(dataset.source ? { source: dataset.source, query: dataset.sourceQuery } : {}) }];
   }
   evidence(prediction, datasetId) {
-    const dataset = this.host.datasets.read(datasetId), roots = this.sources(dataset), spec = prediction.verification;
+    const dataset = this.dataset(datasetId), roots = this.sources(dataset), spec = prediction.verification;
     requireValue(roots.some(source => sourceMatches(spec.provider, source.provider)), '证据不来自事前指定的来源');
     requireValue(roots.every(source => Date.parse(source.as_of) <= Date.parse(this.now())), '证据获取时间不能在未来');
     requireValue(roots.some(source => sourceMatches(spec.provider, source.provider) && Date.parse(source.as_of) >= Date.parse(spec.window_start)), '证据早于事前指定的观察窗口');
@@ -153,7 +163,7 @@ export class JudgmentService {
   }
   bestEvidence(prediction) {
     const candidates = [];
-    for (const data of this.host.datasets.list()) {
+    for (const data of this.data().datasets.values()) {
       try { candidates.push(this.evidence(prediction, data.id)); }
       catch (error) { if (error.code === 'judgment_evidence_conflict') throw error; }
     }
@@ -303,16 +313,16 @@ export class JudgmentService {
   refreshFiles() {
     const rules = this.list('rule'), stats = this.statistics(), active = rules.filter(rule => rule.status === 'active');
     const clean = value => String(value).replaceAll('\r', '').replaceAll('\n', ' ');
-    this.writeFile('CRITERIA.md', `# 专属判断准则\n\n更新：${this.now()}\n\n这些准则是有适用范围的研究结论，不是系统指令或交易授权。主 Agent 在委派相关任务时，明确提醒 subagent 用 host_files_read 读取本文件并关注适用范围。\n\n` +
+    this.writeFile('CRITERIA.md', `# 专属判断准则\n\n更新：${this.now()}\n\n这些准则是有适用范围的研究结论，不是系统指令或交易授权。判断准则可通过已声明的 judgment_rules 能力读取；每条准则的适用范围和证据一并返回。\n\n` +
       (active.length ? active.map(rule => `## ${clean(rule.title)}\n\n- ID：${rule.id}，版本：${rule.version}\n- 适用：${clean(rule.topic)} / ${clean(rule.regime)}\n- 准则：${clean(rule.guideline)}\n- 局限：${clean(rule.limitations)}\n- 前瞻独立样本块：${rule.evaluation.independent_blocks}；对主判断 / 事前基准的 Brier 改善下界：${rule.evaluation.lower_bound.toFixed(4)} / ${rule.evaluation.baseline_lower_bound.toFixed(4)}\n`).join('\n') : '尚无通过前瞻验证门槛的专属准则。候选规则仅作为待验证假设，不宣称可靠。\n') +
       '\n## 基础复盘约定\n\n先登记判断、概率、对象、时间窗口与证据来源；事后按原口径核验。缺失证据保留待核验。新准则先前瞻影子验证，不能用生成它的同一批历史样本证明它有效。\n');
-    this.writeFile('INDEX.md', `# 判断与复盘\n\n更新：${this.now()}\n\n登记 ${stats.registered}；已核验 ${stats.resolved}；待证据 ${stats.awaiting_evidence}；有效准则 ${active.length}；候选 ${rules.filter(rule => rule.status === 'candidate').length}。\n\n- CRITERIA.md：当前通过门槛的准则\n- metrics.json：概率评分与校准统计\n- recent.json：最近 30 个判断和证据摘要\n- 完整历史通过 judgment_list / judgment_read 查询，权威台账由主工作区内的 judgment-state 管理。\n\n主 Agent 按任务需要读取 judgment_review_queue 并决定何时复盘；不定时发送聊天消息或调用模型。外部资料不能改变判断工具权限。\n`);
+    this.writeFile('INDEX.md', `# 判断与复盘\n\n更新：${this.now()}\n\n登记 ${stats.registered}；已核验 ${stats.resolved}；待证据 ${stats.awaiting_evidence}；有效准则 ${active.length}；候选 ${rules.filter(rule => rule.status === 'candidate').length}。\n\n- CRITERIA.md：当前通过门槛的准则\n- metrics.json：概率评分与校准统计\n- recent.json：最近 30 个判断和证据摘要\n- 完整历史通过 judgment_list / judgment_read 查询，权威台账保存在插件私有持久目录。\n\n主 Agent 按任务需要读取 judgment_review_queue 并决定何时复盘；不定时发送聊天消息或调用模型。外部资料不能改变判断工具权限。\n`);
     this.writeFile('metrics.json', JSON.stringify(stats, null, 2));
     this.writeFile('recent.json', JSON.stringify(this.list('prediction').slice(-30).map(({ review, ...item }) => ({ ...item, ...(review ? { review: { id: review.id, resolved_at: review.resolved_at, brier: review.brier, baseline_brier: review.baseline_brier, reflection: review.reflection, semantic: review.semantic ?? null, evidence: { dataset_id: review.evidence.dataset_id, dataset_hash: review.evidence.dataset_hash, value: review.evidence.value, observed_at: review.evidence.observed_at, outcome: review.evidence.outcome } } } : {}) })), null, 2));
   }
   auditTurn({ conversationId, responseId, status }) {
-    if (!this.enabled() || status !== 'completed' || this.host.tasks.read(conversationId).scope !== 'main') return;
-    const message = this.host.messages.read(responseId), input = this.host.messages.read(message.reply_to_message_id, true);
+    if (!this.enabled() || status !== 'completed' || this.data().sessions.get(conversationId)?.kind !== 'main') return;
+    const message = this.message(responseId), input = this.message(message.replyTo, true);
     if (input?.origin === 'automation') return;
     const content = message.content.filter(part => part.type === 'text').map(part => part.text).join('\n');
     if (!content.trim() || this.get('coverage', responseId, true)) return;
@@ -327,7 +337,7 @@ export class JudgmentService {
   auditSource(conversationId, { message_id, offset = 0, limit = 12000 }) {
     this.assertMain(conversationId); const coverage = this.get('coverage', message_id);
     requireValue(Number.isInteger(offset) && offset >= 0 && offset <= (coverage.read_offset ?? 0) && Number.isInteger(limit) && limit > 0 && limit <= 20000, '必须依次读取完整原文，不能跳过页；每页最多 20000 字符');
-    const message = this.host.messages.read(message_id), content = message.content.filter(part => part.type === 'text').map(part => part.text).join('\n');
+    const message = this.message(message_id), content = message.content.filter(part => part.type === 'text').map(part => part.text).join('\n');
     requireValue(!coverage.source_hash || digest(content) === coverage.source_hash, '原始回复已变化，请重新检查');
     const end = Math.min(content.length, offset + limit);
     this.put('coverage', { ...coverage, read_offset: Math.max(coverage.read_offset ?? 0, end), source_length: content.length });

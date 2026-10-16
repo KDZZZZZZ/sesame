@@ -3,13 +3,12 @@ import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Type } from '@sesame/plugin-sdk/schema';
 import { digest } from '../../optional-api-v1/packages/mt5/backend/support.js';
 import { stageFrozenBuild } from '../../optional-api-v1/packages/mt5/backend/frozen-compiler.js';
 import { parseLosslessJson, stringifyLosslessJson, nativeValueForLosslessIds, assertNoUnsafeNativeIds } from '../../optional-api-v1/packages/mt5/backend/json.js';
 import { MT5MCP } from '../../optional-api-v1/packages/mt5/backend/mcp.js';
 import { MT5Official } from '../../optional-api-v1/packages/mt5/backend/official.js';
-import { createTools as officialTools } from '../../optional-api-v1/packages/mt5/tools/official/index.js';
+import { createCapabilities as officialCapabilities } from '../../optional-api-v1/packages/mt5/tools/official/index.js';
 
 async function frozenFixture(t) {
   const root = await mkdtemp(join(tmpdir(), 'mt5-frozen-')), source = join(root, 'source'), staging = join(root, 'staging');
@@ -225,12 +224,14 @@ test('mt5_catalog supports tester as a discovery alias for terminal tester tools
 });
 
 test('published MT5 metadata leaves read-only settings available outside main-only tools and documents tester/time contracts', async () => {
-  const host = { scope: { conversationId: 'main' }, workspace: {}, tools: { Type, string: description => Type.String({ description, minLength: 1, maxLength: 20000 }), optional: description => Type.Optional(Type.String({ description, minLength: 1, maxLength: 20000 })), define: (name, description, properties) => ({ name, description, parameters: Type.Object(properties, { additionalProperties: false }) }) } };
-  const tools = officialTools(host, { official: { catalog: () => {}, command: () => {} }, market: {} });
-  const catalog = tools.find(tool => tool.name === 'mt5_catalog'), cache = tools.find(tool => tool.name === 'mt5_cache');
+  const host = { context: { sessionId: 'main' } };
+  const tools = officialCapabilities(host, { official: { catalog: () => {}, command: () => {} }, market: {} });
+  const declared = JSON.parse(await readFile(new URL('../../optional-api-v1/packages/mt5/capabilities.json', import.meta.url), 'utf8')).capabilities;
+  const catalog = declared.find(tool => tool.id === 'mt5_catalog'), cache = declared.find(tool => tool.id === 'mt5_cache');
+  for (const tool of tools) assert.ok(declared.some(item => item.binding.name === tool.name));
   assert.ok(catalog.description.includes('server:"tester"'));
-  assert.ok(catalog.parameters.properties.server.anyOf.some(item => item.const === 'tester'));
-  assert.match(cache.parameters.properties.from.description, /券商服务器墙钟/);
+  assert.ok(catalog.inputSchema.properties.server.anyOf.some(item => item.const === 'tester'));
+  assert.match(cache.inputSchema.properties.from.description, /券商服务器墙钟/);
   const manifest = JSON.parse(await readFile(new URL('../../optional-api-v1/packages/mt5/plugin.json', import.meta.url), 'utf8'));
-  assert.ok(manifest.tool_names.includes('mt5_settings')); assert.ok(!manifest.main_tool_names.includes('mt5_settings'));
+  assert.ok(declared.some(tool => tool.id === 'mt5_settings')); assert.ok(!manifest.main_tool_names.includes('mt5_settings'));
 });

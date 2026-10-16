@@ -1,3 +1,7 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
+import { invokeValue } from '@sesame/plugin-sdk/capabilities';
+import { roleTask, submitRole, waitRole } from './role-runs.js';
+import { records } from './records.js';
 import { isDeepStrictEqual } from 'node:util';
 import { randomUUID } from 'node:crypto';
 import { auditLedger } from './ledger.js';
@@ -29,11 +33,11 @@ function repeat(doc,id,input) {if(!doc?.commands[id])return false; assert(isDeep
 function record(doc,id,input) {assert(Object.keys(doc.commands).length<10000,'操作账本超过限额');doc.commands[id]={input};}
 const COLLECTION = 'challenge';
 const DOCUMENT = 'continuous';
-const terminal = status => ['succeeded','completed','failed','cancelled','canceled','expired','interrupted','timed_out'].includes(status);
+const terminal = status => ['succeeded','completed','failed','cancelled','canceled','expired','interrupted','timed_out','unknown'].includes(status);
 const services = new Map();
-export function getService(host) { const s = services.get(host.storage.directory); assert(s, '回放服务未激活', 'SERVICE_UNAVAILABLE'); return s; }
-export function setService(host, service) { services.set(host.storage.directory, service); }
-export function removeService(host) { services.delete(host.storage.directory); }
+export function getService(host) { const s = services.get(host.context.storageRoot); assert(s, '回放服务未激活', 'SERVICE_UNAVAILABLE'); return s; }
+export function setService(host, service) { services.set(host.context.storageRoot, service); }
+export function removeService(host) { services.delete(host.context.storageRoot); }
 const ARCHIVE_CODES = new Set(['ARCHIVE_WRITE_FAILED','ARCHIVE_CONFLICT','ARCHIVE_BUDGET','ARCHIVE_JOURNAL_CORRUPT']);
 const isArchiveError = error => ARCHIVE_CODES.has(error?.code);
 // 完整角色任务证据：最终文字与工具调用不再截断（0.1.2-dev.1 起；完整原始证据另入 recording 归档）。
@@ -74,18 +78,25 @@ const PLAYER_INSTRUCTIONS = `你扮演一个非官方二创角色久留美，进
 const PLAYER_4H_SUFFIX = `本次为4小时决策模式：你的这一次决定执行第一根H1后，当时实际剩余仓位与止损将最多自动保持后续3根H1的真实撮合，期间不再询问你、不伪造你的新决定；止损/强平后保持空仓，绝不重新开仓；章边界/破产/缺数会提前停住并结算。`;
 
 export class ReplayService {
-  constructor(host) { this.host = host; this.newState=createRun; this.accountSnapshot=snapshot; this.data = null; this.listeners = new Set(); this.closed = false; this.waiting = new Set(); this.preparing = false; this.jobs = new Map(); this.recorder = null; this.verifyBackend = signal => this.host.environment.executeWorker('runtime-adapter.js',{action:'status',storageDirectory:this.host.storage.directory},{signal,timeoutMs:600000}); this.advance = async (storageDirectory,state,decision,data,{signal}={}) => this.host.environment.executeWorker('runtime-adapter.js',{action:'advance',storageDirectory,state,decision,data},{signal,timeoutMs:600000}); }
+  constructor(host) {
+    this.host=host;this.newState=createRun;this.accountSnapshot=snapshot;this.data=null;this.listeners=new Set();this.closed=false;
+    this.waiting=new Map();this.preparing=false;this.jobs=new Map();this.recorder=null;this.invocation=new AsyncLocalStorage();this.lifetime=new AbortController();
+    this.verifyBackend=signal=>this.native({action:'status'},signal);
+    this.advance=(_storageDirectory,state,decision,data,{signal}={})=>this.native({action:'advance',state,decision,data},signal);
+  }
+  native(input,signal){return invokeValue(this.host,`${this.host.context.pluginId}#native_run`,input,{signal:AbortSignal.any([this.lifetime.signal,signal].filter(Boolean))});}
+
   getDocument() {
-    const pointer=this.host.storage.get('experiments','current',true);
-    if(pointer){const doc=this.host.storage.get(COLLECTION,pointer.documentId,true);assert(doc?.engine.id===pointer.runId,'Current experiment pointer is unknown; do not fall back/reset','TRANSACTION_UNKNOWN');return doc;}
-    return this.host.storage.get(COLLECTION, DOCUMENT, true) ?? null;
+    const pointer=records(this.host).get('experiments','current',true);
+    if(pointer){const doc=records(this.host).get(COLLECTION,pointer.documentId,true);assert(doc?.engine.id===pointer.runId,'Current experiment pointer is unknown; do not fall back/reset','TRANSACTION_UNKNOWN');return doc;}
+    return records(this.host).get(COLLECTION, DOCUMENT, true) ?? null;
   }
   archiveTerminal(args,signal) { return archiveTerminal(this,args,signal); }
   createExperiment(args,signal) { return createExperiment(this,args,signal); }
   experimentHistory() { return experimentHistory(this); }
-  getSpectatorState() { const state=this.getState();if(!state)return null;const visible=this.host.storage.get('round2-visible-state',state.id,true);return visible?.financialVersion===state.version?visible.engine:state; }
+  getSpectatorState() { const state=this.getState();if(!state)return null;const visible=records(this.host).get('round2-visible-state',state.id,true);return visible?.financialVersion===state.version?visible.engine:state; }
   get presentationEnabled() { return this.getState()?.rules?.experimentProfile?.id===ROUND2_PROFILE_ID; }
-  getReplayPresentation() { return this.host.storage.get('round2-presentation',this.getState()?.id,true)??null; }
+  getReplayPresentation() { return records(this.host).get('round2-presentation',this.getState()?.id,true)??null; }
   getState() { return this.getDocument()?.engine ?? null; }
   getData() { return this.data; }
   intervalHours(doc=this.getDocument()) { return doc?.settings?.decisionIntervalHours ?? 1; }
@@ -95,17 +106,17 @@ export class ReplayService {
   emit() { for (const fn of this.listeners) { try { fn(); } catch { /* Each consumer owns its errors. */ } } }
   mutate(expected, fn) {
     let result;
-    this.host.storage.transaction(() => {
+    records(this.host).transaction(() => {
       const current = this.getDocument();
       assert(current, '先开始挑战');
-      assert(!this.host.storage.get('experiment-history',current.engine.id,true),'Terminal history is immutable; create a separate experiment, never mutate/reset old continuous','HISTORY_SEALED');
+      assert(!records(this.host).get('experiment-history',current.engine.id,true),'Terminal history is immutable; create a separate experiment, never mutate/reset old continuous','HISTORY_SEALED');
       if (expected !== undefined) assert(current.revision === expected, '状态版本已改变，请读取最新状态', 'VERSION_CONFLICT');
       const next = clone(current); result = fn(next, current); next.revision++;
-      this.host.storage.put(COLLECTION, next);
+      records(this.host).put(COLLECTION, next);
     });
     // A new-profile financial CAS is not broadcast until its consumed-only
     // presentation/weekly freeze hooks finish; no old/future OHLC flash.
-    if(!(this.host.storage.list?.('committed-hooks')??[]).some(r=>r.runId===this.getState()?.id&&r.status!=='done'))this.emit();
+    if(!(records(this.host).list?.('committed-hooks')??[]).some(r=>r.runId===this.getState()?.id&&r.status!=='done'))this.emit();
     return result;
   }
   // 归档：追加哈希链原始证据；失败暂停后续付费回合（素材完整性是硬约束）。
@@ -189,11 +200,11 @@ export class ReplayService {
     this.clearArchiveFailed('pending_repair:' + (pendings.map(p => p.pendingFile?.path ?? p.pendingKind).join(',') || 'probe'), af.failureId);
   }
   async initialize() {
-    if(!this.recorder){try{const selection=await recordingSelection(this.host.storage.directory);this.recordingSelection=selection;this.recorder=new Recorder(this.host.storage.directory,{mirrorRoot:selection.mirrorRoot});}catch(e){if(e.code!=='MIRROR_SELECTION_REQUIRED')throw e;this.recordingSelectionError={code:e.code,message:e.message};}}
+    if(!this.recorder){try{const selection=await recordingSelection(this.host.context.storageRoot);this.recordingSelection=selection;this.recorder=new Recorder(this.host.context.storageRoot,{mirrorRoot:selection.mirrorRoot});}catch(e){if(e.code!=='MIRROR_SELECTION_REQUIRED')throw e;this.recordingSelectionError={code:e.code,message:e.message};}}
     if(this.recorder)await this.recorder.initialize();
     if (this.getDocument()) {
-      try { this.data = await loadData(this.host.storage.directory); } catch (e) { this.loadError = e.message; }
-      const sealed=this.host.storage.get('experiment-history',this.getState().id,true);
+      try { this.data = await loadData(this.host.context.storageRoot); } catch (e) { this.loadError = e.message; }
+      const sealed=records(this.host).get('experiment-history',this.getState().id,true);
       if(!sealed&&this.getState().status!=='complete')this.mutate(undefined, d => {
         d.control.running = false;
         d.control.remaining = 0;
@@ -221,9 +232,9 @@ export class ReplayService {
     assert(!this.getDocument()?.control.running && !this.getDocument()?.control.active&&!this.getDocument()?.control.recovery, '活跃回合期间不能替换行情缓存');
     this.preparing = true;
     try {
-      this.nativeEnvironment = await this.host.environment.executeWorker('runtime-adapter.js',{action:'prepare',storageDirectory:this.host.storage.directory},{signal,timeoutMs:600000});
-      const prepared = this.getState()?{reused:true,status:'ready',nativeEnvironment:nativeSummary(this.nativeEnvironment)}:await prepareData(this.host.storage.directory, { signal });
-      const data = await loadData(this.host.storage.directory);
+      this.nativeEnvironment = await this.native({action:'prepare'},signal);
+      const prepared = this.getState()?{reused:true,status:'ready',nativeEnvironment:nativeSummary(this.nativeEnvironment)}:await prepareData(this.host.context.storageRoot, { signal });
+      const data = await loadData(this.host.context.storageRoot);
       const prior = this.getState();
       if (prior) assert(isDeepStrictEqual(prior.dataDigests,data.digests), '当前挑战固定数据摘要不同，拒绝替换', 'DATA_CHANGED');
       this.data = data; this.loadError = null; this.emit();
@@ -231,7 +242,7 @@ export class ReplayService {
       return prepared;
     } finally { this.preparing = false; }
   }
-  async clear(signal) { assert(!this.getDocument(), '已存在挑战账本，不能清除它所依赖的数据'); signal?.throwIfAborted(); return clearData(this.host.storage.directory); }
+  async clear(signal) { assert(!this.getDocument(), '已存在挑战账本，不能清除它所依赖的数据'); signal?.throwIfAborted(); return clearData(this.host.context.storageRoot); }
   async importFxSupplement({command_id,expected_version,bundle_directory},signal) {
     signal?.throwIfAborted(); const old=this.getDocument(), command={kind:'import_fx_supplement',expected_version,bundle_directory};
     assert(old && this.data,'先核对当前挑战与固定快照');
@@ -250,7 +261,7 @@ export class ReplayService {
       await this.archiveSafe('fx_supplement_verified',{index:prepared.index,rowCount:prepared.rowCount,archiveFiles,engineVersion:old.engine.version,
         note:'显式补入另一个来源的真实直接CHFJPY报价；原来源与已提交账本不变，只在原报价超过60秒时采用仍在60秒内的过去报价。'});
       assert(!this.closed&&this.getDocument().revision===old.revision,'导入期间状态改变；未发布','VERSION_CONFLICT');
-      signal?.throwIfAborted();const result=await publishFxSupplement(this.host.storage.directory,prepared);
+      signal?.throwIfAborted();const result=await publishFxSupplement(this.host.context.storageRoot,prepared);
       this.mutate(expected_version,d=>{record(d,command_id,command);(d.fxSupplements??=[]).push({commandId:command_id,index:prepared.index,rowCount:prepared.rowCount,installedAt:Date.now()});});
       await this.archiveSafe('fx_supplement_installed',{commandId:command_id,index:prepared.index,engineVersion:old.engine.version,reused:result.reused});
       return {installed:true,reused:result.reused,rowCount:prepared.rowCount,engineUnchanged:true,engineVersion:old.engine.version,revision:this.getDocument().revision,index:prepared.index};
@@ -258,14 +269,14 @@ export class ReplayService {
   }
   async bindExperimentFx({command_id,expected_version,run_id,bundle_directory},signal) {
     assert(typeof command_id==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(command_id),'Stable command id required','INVALID_ID');
-    const input={kind:'bind_experiment_fx',expected_version,run_id,bundle_directory},prior=this.host.storage.get('experiment-commands',command_id,true);
+    const input={kind:'bind_experiment_fx',expected_version,run_id,bundle_directory},prior=records(this.host).get('experiment-commands',command_id,true);
     if(prior){assert(isDeepStrictEqual(prior.input,input),'Changed FX command content','IDEMPOTENCY_CONFLICT');if(prior.status==='committed')return clone(prior.result);}
     if(prior&&this.getDocument()?.control.archiveFailed)await this.assertArchiveHealthy();
     const old=this.getDocument();
     assert(old?.engine.id===run_id&&old.engine.rules.experimentProfile?.id===ROUND2_PROFILE_ID,'Explicit NEW50x run binding required','RUN_MISMATCH');
     assert(prior||old.revision===expected_version,'Stale document revision','VERSION_CONFLICT');
     assert(old.engine.version===1&&!old.control.running&&!old.control.active&&!old.control.recovery&&!old.control.continuation&&!old.control.archiveFailed&&!this.preparing,'Bind complete window before any new-run consumption','DECISION_PENDING');
-    assert((this.host.storage.list('experiment-commands')??[]).filter(r=>r.status!=='committed').every(r=>r.id===command_id),'Unknown other lifecycle transaction blocks FX publication','TRANSACTION_UNKNOWN');
+    assert((records(this.host).list('experiment-commands')??[]).filter(r=>r.status!=='committed').every(r=>r.id===command_id),'Unknown other lifecycle transaction blocks FX publication','TRANSACTION_UNKNOWN');
     const engineDigest=sha256(canonical(old.engine));if(prior)assert(prior.engineDigest===engineDigest,'Reserved FX engine changed','SOURCE_CHANGED');
     const chapter=old.engine.chapters.findIndex(c=>c.symbol.endsWith('CHF'));assert(chapter>=0,'No CHF chapter');
     const c=old.engine.chapters[chapter],frames=this.data.frames[chapter],from=frames[c.startIndex+1]?.time,toExclusive=frames[c.endIndex]?.time+3600000;
@@ -273,13 +284,13 @@ export class ReplayService {
     this.preparing=true;try{
       const prepared=await prepareExperimentFx(bundle_directory,{runId:run_id,from,toExclusive,snapshotDigest:this.data.digests.download,configDigest:this.data.digests.config});
       if(prior)assert(isDeepStrictEqual(prior.index,prepared.index),'Reserved supplemental source changed','SOURCE_CHANGED');
-      this.host.storage.transaction(()=>{assert(this.getDocument().engine.id===run_id&&sha256(canonical(this.getState()))===engineDigest,'Engine changed before FX reservation','VERSION_CONFLICT');if(!prior)this.host.storage.put('experiment-commands',{id:command_id,input,status:'binding_fx',engineDigest,index:prepared.index});});
+      records(this.host).transaction(()=>{assert(this.getDocument().engine.id===run_id&&sha256(canonical(this.getState()))===engineDigest,'Engine changed before FX reservation','VERSION_CONFLICT');if(!prior)records(this.host).put('experiment-commands',{id:command_id,input,status:'binding_fx',engineDigest,index:prepared.index});});
       for(const[r,b]of prepared.files)await this.archiveFileSafe(`data-supplements/${r.path}`,b);
       await this.archiveSafe('experiment_fx_verified',{commandId:command_id,index:prepared.index,rowCount:prepared.rowCount});
       signal?.throwIfAborted();assert(!this.closed&&sha256(canonical(this.getState()))===engineDigest&&!this.getDocument().control.running,'State changed; no pointer publication','VERSION_CONFLICT');
-      const published=await publishExperimentFx(this.host.storage.directory,prepared);
+      const published=await publishExperimentFx(this.host.context.storageRoot,prepared);
       const result={bound:true,runId:run_id,rowCount:prepared.rowCount,index:prepared.index,reused:published.reused,engineUnchanged:true,completeForArbitraryExposure:false};
-      this.mutate(undefined,d=>{assert(sha256(canonical(d.engine))===engineDigest&&!d.control.running&&!d.control.active&&!d.control.recovery,'FX publication needs explicit reconciliation; engine changed','VERSION_CONFLICT');record(d,command_id,input);d.commands[command_id].result=result;(d.fxSupplements??=[]).push({commandId:command_id,index:prepared.index,rowCount:prepared.rowCount});this.host.storage.put('experiment-commands',{...this.host.storage.get('experiment-commands',command_id),status:'committed',result});});
+      this.mutate(undefined,d=>{assert(sha256(canonical(d.engine))===engineDigest&&!d.control.running&&!d.control.active&&!d.control.recovery,'FX publication needs explicit reconciliation; engine changed','VERSION_CONFLICT');record(d,command_id,input);d.commands[command_id].result=result;(d.fxSupplements??=[]).push({commandId:command_id,index:prepared.index,rowCount:prepared.rowCount});records(this.host).put('experiment-commands',{...records(this.host).get('experiment-commands',command_id),status:'committed',result});});
       return result;
     }finally{this.preparing=false;}
   }
@@ -303,20 +314,20 @@ export class ReplayService {
   status() {
     const doc = this.getDocument();
     let task = null;
-    if (doc?.control.active?.taskId) { try { task = this.host.agents.inspect(doc.control.active.taskId); } catch (e) { task = { error: e.message }; } }
+    if (doc?.control.active?.taskId) { try { task = roleTask(this.host,doc.control.active.taskId); } catch (e) { task = { error: e.message }; } }
     return { simulated: true, prepared: !!this.data, nativeEnvironment: nativeSummary(this.nativeEnvironment), preparing: this.preparing, loadError: this.loadError ?? null, revision: doc?.revision ?? 0, runId: doc?.engine.id ?? null,
       state: doc ? { chapter: doc.engine.chapter + 1, index: doc.engine.index, status: doc.engine.status, balance: doc.engine.balance, position: doc.engine.position, decisions: doc.engine.decisions.length, fills: doc.engine.fills.length } : null,
       control: doc ? {audienceHold:doc.control.audienceHold??null,mainChatClaim:doc.control.mainChatClaim??null, phase: doc.control.phase, running: doc.control.running, remaining: doc.control.remaining, active: doc.control.active ? { requestId: doc.control.active.requestId, taskId: doc.control.active.taskId, stepId: doc.control.active.stepId, decided: doc.control.active.decided, attempt: doc.control.active.attempt } : null } : null,
       settings: { decisionIntervalHours: this.intervalHours(doc) },
       experiment:doc?.experiment??null,profile:doc?resolveExperimentProfile(doc.engine):null,
       experience:doc?.experience??null,experienceUsage:doc?.experience?experienceUsage(doc):null,recordingSelection:this.recordingSelection??null,recordingSelectionError:this.recordingSelectionError??null,
-      hooks:{failure:doc?.control.hookFailure??null,pending:(this.host.storage.list?.('committed-hooks')??[]).filter(r=>r.runId===doc?.engine.id&&r.status!=='done').map(r=>({id:r.id,status:r.status}))},
+      hooks:{failure:doc?.control.hookFailure??null,pending:(records(this.host).list?.('committed-hooks')??[]).filter(r=>r.runId===doc?.engine.id&&r.status!=='done').map(r=>({id:r.id,status:r.status}))},
       continuation: doc?.control.continuation ? { decisionId: doc.control.continuation.decisionId, remainingBars: doc.control.continuation.remainingBars, committedCount: doc.control.continuation.committedCount } : null,
       archive: { failed: !!doc?.control.archiveFailed, journalSeq: this.recorder?.seq ?? null, root: this.recorder?.root ?? null, mirror: this.recorder?.mirror ?? null },
       model: doc?.model ?? null, recovery:doc?.control.recovery?{commandId:doc.control.recovery.commandId,decisionId:doc.control.recovery.decisionId,originalEngineVersion:doc.control.recovery.originalEngineVersion??null,requiresReconcile:doc.control.recovery.requiresReconcile??false,cancelled:doc.control.recovery.cancelled??false}:null, reconciliation:doc?.lastRecoveryReconciliation??null, error:doc?.control.error??null, task };
   }
   chooseModel() {
-    const model = this.host.inference.models().find(m => m.provider === 'openai' && m.id === 'gpt-6.1-sol');
+    const model = (this.invocation.getStore()?.host??this.host).context.models.find(m => m.provider === 'openai' && m.id === 'gpt-6.1-sol');
     assert(model, '当前未配置 openai/gpt-6.1-sol；暂停，绝不切换其他模型', 'MODEL_UNAVAILABLE'); return clone(model);
   }
   async repairCheckpointText({ command_id, expected_version }, signal) {
@@ -366,19 +377,19 @@ export class ReplayService {
     assert(!this.recordingSelectionError,'Recorder selection unresolved; no paid task','MIRROR_SELECTION_REQUIRED');
     if (repeat(old,command_id,command)) return this.status();
     if(old)assertExperienceStart(old,max_steps);
-    if(old?.experience)assert(this.host.storage.get('initial-warmup',old.engine.id,true),'Bootstrap >=20 actual disclosed native H1 with verified sources before first/new model; no fabricated tick warmup','WARMUP_REQUIRED');
+    if(old?.experience)assert(records(this.host).get('initial-warmup',old.engine.id,true),'Bootstrap >=20 actual disclosed native H1 with verified sources before first/new model; no fabricated tick warmup','WARMUP_REQUIRED');
     assert(!old?.control.audienceHold,'Consume native UTC report/PK at held frontier before any next H1','AUDIENCE_HOLD');
-    assert(!this.host.storage.list('pk-main-chat').some(r=>r.runId===old?.engine.id&&r.status!=='acknowledged_public_message'),'Acknowledge/reconcile existing native main response before next H1; hold exact frontier','MAIN_CHAT_PENDING');
-    if(old?.experience)assert(!this.host.storage.list('round2-pk').some(r=>r.runId===old.engine.id&&r.engineVersion===old.engine.version&&r.cutoffMs===this.getReplayPresentation()?.cutoffMs&&r.status==='ready'&&r.deliveryStatus!=='public_main_message_acknowledged'),'Current4H/UTC facts require ordinary main output ACK, not merely no active claim','MAIN_CHAT_PENDING');
+    assert(!records(this.host).list('pk-main-chat').some(r=>r.runId===old?.engine.id&&r.status!=='acknowledged_public_message'),'Acknowledge/reconcile existing native main response before next H1; hold exact frontier','MAIN_CHAT_PENDING');
+    if(old?.experience)assert(!records(this.host).list('round2-pk').some(r=>r.runId===old.engine.id&&r.engineVersion===old.engine.version&&r.cutoffMs===this.getReplayPresentation()?.cutoffMs&&r.status==='ready'&&r.deliveryStatus!=='public_main_message_acknowledged'),'Current4H/UTC facts require ordinary main output ACK, not merely no active claim','MAIN_CHAT_PENDING');
     assert(!old?.control.hookFailure,'Committed spectator/report hooks pending; explicitly retry before advancing','HOOKS_PENDING');
-    assert(!(this.host.storage.list?.('experiment-commands')??[]).some(r=>r.status!=='committed'),'Unknown lifecycle transaction; explicitly reconcile the same command, no new task','TRANSACTION_UNKNOWN');
+    assert(!(records(this.host).list?.('experiment-commands')??[]).some(r=>r.status!=='committed'),'Unknown lifecycle transaction; explicitly reconcile the same command, no new task','TRANSACTION_UNKNOWN');
     const model = this.chooseModel();
     if (!old) {
       assert(expected_version === 0, '新挑战版本必须0');
       const engine = this.newState(`kurumi-${randomUUID()}`, this.data.chapters, this.data.digests);
-      this.host.storage.transaction(() => {
+      records(this.host).transaction(() => {
         assert(!this.getDocument(), '挑战已存在', 'VERSION_CONFLICT');
-        this.host.storage.put(COLLECTION, { id: DOCUMENT, revision: 1, engine, model, settings: { decisionIntervalHours: 4 }, commands: { [command_id]: {input:command} }, control: { phase: 'ready', running: true, remaining: max_steps, active: null, attempt: 0 } });
+        records(this.host).put(COLLECTION, { id: DOCUMENT, revision: 1, engine, model, settings: { decisionIntervalHours: 4 }, commands: { [command_id]: {input:command} }, control: { phase: 'ready', running: true, remaining: max_steps, active: null, attempt: 0 } });
       }); this.emit();
       await this.archiveSafe('challenge_started', { runId: engine.id, model, settings: { decisionIntervalHours: 4 }, dataDigests: this.data.digests });
     } else {
@@ -428,7 +439,7 @@ export class ReplayService {
     assert(!a || a.taskId,'提交结果未知，没有宿主taskId；先按requestId核对实际宿主任务，不能清除并重付费','TASK_UNKNOWN');
     const knownTaskId=a?.taskId??old.lastTaskReceipt?.taskId;let knownTask=null;
     if (knownTaskId) {
-      const task = knownTask=this.host.agents.inspect(knownTaskId);
+      const task = knownTask=roleTask(this.host,knownTaskId);
       assert(terminal(task.status), '当前子任务仍在执行；先暂停/取消后再核对', 'DECISION_PENDING');
     }
     this.mutate(expected_version, d => {saveTaskEvidence(d,a,knownTask);record(d,command_id,command); d.control.running = false; d.control.remaining = 0; d.control.active = null; d.control.phase = 'paused'; d.control.attempt++; });
@@ -439,7 +450,7 @@ export class ReplayService {
     const command={kind:'pause',expected_version};
     if (repeat(old,command_id,command)) return this.status();
     this.mutate(expected_version, d => { record(d,command_id,command); d.control.running = false; d.control.remaining = 0; d.control.phase = 'paused'; if(d.experience)d.experience.manualPause={latched:true,commandId:command_id,at:Date.now()}; if (d.control.active) d.control.active.cancelled = true;if(d.control.recovery)d.control.recovery.cancelled=true; });
-    if (old.control.active?.taskId) this.host.agents.cancel(old.control.active.taskId, '观众暂停久留美回放');
+    if (old.control.active?.taskId) await this.host.runs.cancel({id:old.control.active.taskId},{reason:'观众暂停久留美回放'});
     await this.archiveSafe('paused', { note: '观众暂停；已提交决定与成交不撤销，自动延续在下一根前停住' });
     return this.status();
   }
@@ -468,7 +479,7 @@ export class ReplayService {
     this.mutate(undefined, next => { assert(next.control.running === true && !next.control.active && !next.control.continuation && !next.control.recovery && !next.control.archiveFailed && ['ready','prepare'].includes(next.control.phase), '归档等待期间已暂停或状态改变；不提交新付费角色任务', 'CONFLICT'); });
     this.mutate(undefined, next => { if(next.experience){assertExperienceStart(next,1);const rows=next.paidRoleRequests??=[];assert(!rows.some(r=>r.requestId===requestId),'Known reservation cannot be paid again','REQUEST_ALREADY_RESERVED');rows.push({requestId,model:clone(d.model),reservedAt:Date.now(),status:'reserved_before_submit',unknownCountsAsSpent:true});}next.control.active = { requestId, stepId: view.stepId, authorization, taskId: null, request, decided: false, cancelled: false, attempt: next.control.attempt, chapterAtSubmit: next.engine.chapter }; next.control.phase = 'submitting'; });
     try {
-      const task = this.host.agents.submit(request);
+      const task = await submitRole(this.host,request,this.lifetime.signal);
       assert(task?.id, '宿主未返回真实Agent任务ID', 'AGENT_SUBMIT_FAILED');
       this.mutate(undefined, next => { assert(next.control.active?.requestId === requestId, '任务已失效'); next.control.active.taskId = task.id;const reservation=next.paidRoleRequests?.find(r=>r.requestId===requestId);if(reservation)Object.assign(reservation,{status:'submitted',taskId:task.id,confirmedAt:Date.now()}); (next.control.taskIds ??= []).push(task.id); next.control.phase = 'waiting_for_kurumi'; });
       this.watch(task.id, requestId);
@@ -477,15 +488,15 @@ export class ReplayService {
     }
   }
   watch(taskId, requestId) {
-    if (this.waiting.has(taskId)) return; this.waiting.add(taskId);
+    if (this.waiting.has(taskId)) return;
     // Waiting is observation. No timer/market polling and no automatic retry.
-    void this.host.agents.wait(taskId).then(async result => {
+    const job=waitRole(this.host,taskId,this.lifetime.signal).then(async result => {
       if (this.closed || this.getDocument()?.control.active?.requestId !== requestId) return;
       if(!terminal(result?.status)){this.mutate(undefined,d=>{d.control.running=false;d.control.remaining=0;d.control.phase='unknown_task_status_paused';d.control.active.suspended=true;d.control.error='Wait未返回明确终态；保留原任务身份，仅显式核对，不重付费';});return;}
       this.mutate(undefined, d => {
         const active = d.control.active;
         d.lastTaskReceipt = { taskId, requestId, status: result?.status ?? null, decided: active.decided };
-        saveTaskEvidence(d,active,this.host.agents.inspect(taskId));const reservation=d.paidRoleRequests?.find(r=>r.requestId===requestId);if(reservation)Object.assign(reservation,{status:'finished',taskStatus:result?.status??null,completedAt:Date.now()});
+        saveTaskEvidence(d,active,roleTask(this.host,taskId));const reservation=d.paidRoleRequests?.find(r=>r.requestId===requestId);if(reservation)Object.assign(reservation,{status:'finished',taskStatus:result?.status??null,completedAt:Date.now()});
         if(d.experience?.pausedReason){d.control.running=false;d.control.phase='experience_paused_boundary';}
         else if (!active.decided || active.cancelled || active.suspended) { d.control.running = false; d.control.phase = active.decided ? 'paused_after_committed_step' : 'no_decision_paused'; }
         else if (d.engine.status === 'complete' || d.engine.outcome === 'bankrupt' || d.engine.balance.startsWith('-') || d.engine.balance === '0' || d.engine.status === 'missing_data' || d.control.remaining <= 0) { d.control.running = false; d.control.phase = d.engine.status === 'complete' ? 'complete' : d.engine.status === 'missing_data' ? 'missing_data_paused' : 'step_complete'; }
@@ -501,18 +512,20 @@ export class ReplayService {
     }).catch(error => {
       try { if (!this.closed && this.getDocument()?.control.active?.requestId === requestId) this.mutate(undefined, d => { d.control.running = false; d.control.remaining=0; d.control.phase = 'wait_error_paused'; d.control.error = error.message; }); } catch (persistenceError) { this.closed=true;this.loadError='任务核对无法持久化，内存禁止继续提交：'+persistenceError.message; }
     }).finally(() => this.waiting.delete(taskId));
+    this.waiting.set(taskId,job);
   }
   authorize(host) {
-    assert(host.scope.kind === 'subagent', '只有本步角色子Agent可用', 'SCOPE_DENIED');
-    const current = host.agents.current();
+    assert(host.context.kind === 'subagent', '只有本步角色子Agent可用', 'SCOPE_DENIED');
+    const execution=this.invocation.getStore();execution?.signal?.throwIfAborted();
+    const current=execution?.provenance?.agent;
     const active = this.getDocument()?.control.active;
-    assert(current && active && !active.cancelled && !active.suspended, '没有有效的当前角色任务', 'SCOPE_DENIED');
+    assert(current&&current.pluginId===host.context.pluginId&&['queued','running'].includes(current.status)&&active&&!active.cancelled&&!active.suspended, '没有有效的当前角色任务', 'SCOPE_DENIED');
     // Identity comes from the host, never from caller arguments.
-    const taskId = current.id ?? current.taskId ?? current.task?.id;
-    const input = current.input ?? current.request?.input;
+    const taskId=current.runId;
+    const input=current.input;
     assert(taskId === active.taskId && input?.authorization === active.authorization && input?.snapshot?.stepId === active.stepId,
       '当前子任务不属于这个回放步骤', 'SCOPE_DENIED');
-    assert(!active.actorRunId || active.actorRunId === host.scope.runId, '角色Run不匹配', 'SCOPE_DENIED');
+    assert(!active.actorRunId || active.actorRunId === current.runId, '角色Run不匹配', 'SCOPE_DENIED');
     return { current, active };
   }
   playerObserve(host) { const { active } = this.authorize(host); assert(!active.decided, '本步已提交，请结束任务'); return this.observe(); }
@@ -530,10 +543,10 @@ export class ReplayService {
   // allowed to mutate a role decision or use an unconsumed execution slice.
   enqueueCommittedHooks(before,after) {
     if(after.rules?.experimentProfile?.id!==ROUND2_PROFILE_ID)return;
-    const id=`${after.id}:${after.version}`,old=this.host.storage.get('committed-hooks',id,true);
+    const id=`${after.id}:${after.version}`,old=records(this.host).get('committed-hooks',id,true);
     if(old){assert(isDeepStrictEqual(old.engine,after),'Conflicting committed hook version','IDEMPOTENCY_CONFLICT');return;}
-    const pre=this.host.storage.get('pre-step-boundaries',id,true);
-    this.host.storage.put('committed-hooks',{id,runId:after.id,status:'pending',previousEngine:clone(before),engine:clone(after),preStep:pre?clone(pre.input):null});
+    const pre=records(this.host).get('pre-step-boundaries',id,true);
+    records(this.host).put('committed-hooks',{id,runId:after.id,status:'pending',previousEngine:clone(before),engine:clone(after),preStep:pre?clone(pre.input):null});
   }
   dispatchCommittedHooks(signal) {
     if(this.dispatchingHooks)return this.dispatchingHooks;
@@ -541,11 +554,11 @@ export class ReplayService {
   }
   async dispatchCommittedHooksOnce(signal) {
     const runId=this.getState()?.id;
-    const rows=(this.host.storage.list?.('committed-hooks')??[]).filter(r=>r.runId===runId&&r.status!=='done').sort((a,b)=>a.engine.version-b.engine.version);
+    const rows=(records(this.host).list?.('committed-hooks')??[]).filter(r=>r.runId===runId&&r.status!=='done').sort((a,b)=>a.engine.version-b.engine.version);
     for(let row of rows) {
       signal?.throwIfAborted();
       try {
-        const {ticks,interval,bytes}=await consumedInterval(this.host.storage.directory,row.engine,{signal});
+        const {ticks,interval,bytes}=await consumedInterval(this.host.context.storageRoot,row.engine,{signal});
         assert(interval,'Committed native quote interval is missing','INVALID_DATA');
         const presentation=await import('./replay-presentation.js'),weekly=await import('./weekly-reports.js');
         const batch=presentation.batchFromCommittedJournal(row.engine,row.previousEngine,row.engine.nativeJournal.at(-1),bytes);
@@ -573,7 +586,7 @@ export class ReplayService {
         for(let i=resume;i<frames.length;i++){
           const point=frames[i],sequenceStart=i===0?0:frames[i-1].sequence+1;
           const prefix=point.unanimated?batch:deltaBatch(row.engine,row.previousEngine,row.engine.nativeJournal.at(-1),ticks,point,sequenceStart);
-          this.host.storage.transaction(()=>this.host.storage.put('round2-visible-state',{id:runId,financialVersion:row.engine.version,engine:point.engine,cutoffMs:point.cutoffMs}));
+          records(this.host).transaction(()=>records(this.host).put('round2-visible-state',{id:runId,financialVersion:row.engine.version,engine:point.engine,cutoffMs:point.cutoffMs}));
           const account={...snapshot(point.engine,{time:interval.from}),engineVersion:point.engine.version,asOfMs:point.cutoffMs,quoteTimeMs:point.engine.lastQuote?.time??interval.lastTime};
           if(!point.intervalComplete&&!point.unanimated&&i<frames.length-1){
             assert(typeof presentation.onConsumedPrefix==='function','Native prefix presentation hook required','CONSUMED_CHECKPOINT_REQUIRED');
@@ -581,9 +594,9 @@ export class ReplayService {
             await presentation.onConsumedPrefix(this.host,this,{...context,engine:point.engine,consumedTicks:prefix,replayCutoffMs:point.cutoffMs,account,nativeConsumedProof:proof},signal);
           }else{
             await presentation.onReplayCommitted(this.host,this,{...context,engine:point.engine,consumedTicks:prefix,replayCutoffMs:point.cutoffMs,account},signal);
-            if(point.engine.chapter!==row.engine.chapter)this.host.storage.transaction(()=>this.host.storage.put('round2-spectator-checkpoint',{id:runId,runId,cutoffMs:point.cutoffMs,engine:point.engine,account,proof:{kind:'settled-consumed-chapter-checkpoint',nativeIntervalDigest:nativeIntervalDigest}}));
+            if(point.engine.chapter!==row.engine.chapter)records(this.host).transaction(()=>records(this.host).put('round2-spectator-checkpoint',{id:runId,runId,cutoffMs:point.cutoffMs,engine:point.engine,account,proof:{kind:'settled-consumed-chapter-checkpoint',nativeIntervalDigest:nativeIntervalDigest}}));
           }
-          row={...row,playbackCursor:i+1};this.host.storage.transaction(()=>this.host.storage.put('committed-hooks',row));this.emit();
+          row={...row,playbackCursor:i+1};records(this.host).transaction(()=>records(this.host).put('committed-hooks',row));this.emit();
           if(i<frames.length-1)await waitPlayback(this.getDocument()?.experience?.content.playbackMsPerFrame??0,signal);
         }
         const weeklyResult=await weekly.onWeeklyBoundary(this.host,this,context,signal);
@@ -596,9 +609,9 @@ export class ReplayService {
         if(generation?.enabled===true){this.assertWeeklyBudget();await weekly.drainWeeklyQueue(this.host,this,{authorizeGeneration:true,transport:'inference',model:generation.model,generationTrigger:{kind:context.weeklyJobs.some(j=>j.period.reason==='utc_week')?'automatic_committed_utc_week':'automatic_committed_bounded_partial',automatic:true,caller:'service.committed-hooks',engineVersion:row.engine.version,cutoffMs:cutoff,utcJobIds:context.weeklyJobs.filter(j=>j.period.reason==='utc_week').map(j=>j.id)}},signal);}
         const utcJobs=context.weeklyJobs.filter(j=>j.period.reason==='utc_week');if(utcJobs.length)this.mutate(undefined,d=>{d.control.running=false;d.control.audienceHold={kind:'utc_week_report',engineVersion:row.engine.version,cutoffMs:cutoff,reportAsOfMs:utcJobs[0].period.toMs,jobIds:utcJobs.map(j=>j.id),requiresMainConsumer:true};d.control.phase='utc_week_audience_hold';});
         this.emit();
-        this.host.storage.transaction(()=>this.host.storage.put('committed-hooks',{...row,status:'done',contextDigest:null}));
+        records(this.host).transaction(()=>records(this.host).put('committed-hooks',{...row,status:'done',contextDigest:null}));
       }catch(error){
-        this.host.storage.transaction(()=>this.host.storage.put('committed-hooks',{...(this.host.storage.get('committed-hooks',row.id,true)??row),status:'pending',error:{code:error.code??'HOOK_FAILURE',message:error.message}}));
+        records(this.host).transaction(()=>records(this.host).put('committed-hooks',{...(records(this.host).get('committed-hooks',row.id,true)??row),status:'pending',error:{code:error.code??'HOOK_FAILURE',message:error.message}}));
         this.mutate(undefined,d=>{d.control.running=false;d.control.remaining=0;d.control.hookFailure={id:row.id,code:error.code??'HOOK_FAILURE',message:error.message};d.control.phase='committed_hooks_pending';});throw error;
       }
     }
@@ -606,21 +619,21 @@ export class ReplayService {
     return {processed:rows.length,modelRequested:false,runId};
   }
   audienceControl(host,args,signal){return audienceDriver(host,this,args,signal);}
-  methodWorkflow(host,args,signal) { assert(host.scope?.kind==='main','Actual main tool host required','SCOPE_DENIED');return methodWorkflow(host,this,args,signal); }
-  narrationControl(host,args,signal) { assert(host.scope?.kind==='main','Actual main tool host required','SCOPE_DENIED');return mainChatWorkflow(host,this,args,signal); }
+  methodWorkflow(host,args,signal) { assert(host.context?.kind==='main','Actual main tool host required','SCOPE_DENIED');return methodWorkflow(host,this,args,signal); }
+  narrationControl(host,args,signal) { assert(host.context?.kind==='main','Actual main tool host required','SCOPE_DENIED');return mainChatWorkflow(host,this,args,signal); }
   async recordingControl({action,command_id,mirror_root,acknowledge_existing=false},signal) {
     if(action==='status')return {selection:this.recordingSelection??null,error:this.recordingSelectionError??null,default:'plugin-private recording-mirror'};
     assert(action==='pin'&&typeof command_id==='string','Explicit stable pin command required','INVALID_ARGUMENT');
     const doc=this.getDocument();assert(!doc?.control.running&&!doc?.control.active&&!doc?.control.recovery&&!this.preparing,'No active operations while pinning recorder','DECISION_PENDING');
-    const input={action,mirror_root:mirror_root??null,acknowledge_existing},old=this.host.storage.get('recording-commands',command_id,true);
+    const input={action,mirror_root:mirror_root??null,acknowledge_existing},old=records(this.host).get('recording-commands',command_id,true);
     if(old){assert(isDeepStrictEqual(old.input,input),'Changed recorder command','IDEMPOTENCY_CONFLICT');return old.result;}
-    signal?.throwIfAborted();const selected=await recordingSelection(this.host.storage.directory,{mirrorRoot:mirror_root,acknowledgeExisting:acknowledge_existing});
-    const recorder=new Recorder(this.host.storage.directory,{mirrorRoot:selected.mirrorRoot});await recorder.initialize();
+    signal?.throwIfAborted();const selected=await recordingSelection(this.host.context.storageRoot,{mirrorRoot:mirror_root,acknowledgeExisting:acknowledge_existing});
+    const recorder=new Recorder(this.host.context.storageRoot,{mirrorRoot:selected.mirrorRoot});await recorder.initialize();
     this.recorder=recorder;this.recordingSelection=selected;this.recordingSelectionError=null;
-    const result={pinned:true,selection:selected.record,root:recorder.root,mirror:recorder.mirror,engineUnchanged:true};this.host.storage.transaction(()=>this.host.storage.put('recording-commands',{id:command_id,input,result}));return result;
+    const result={pinned:true,selection:selected.record,root:recorder.root,mirror:recorder.mirror,engineUnchanged:true};records(this.host).transaction(()=>records(this.host).put('recording-commands',{id:command_id,input,result}));return result;
   }
   async experienceControl(host,{action,command_id,expected_version,limits,gate,evidence_refs,verified_by_main=false,timeout_ms},signal) {
-    assert(host.scope?.kind==='main','Actual main tool host required','SCOPE_DENIED');
+    assert(host.context?.kind==='main','Actual main tool host required','SCOPE_DENIED');
     const old=this.getDocument();assert(old?.engine.rules.experimentProfile?.id===ROUND2_PROFILE_ID,'New50x experiment required','RUN_MISMATCH');
     if(action==='status')return {plan:old.experience,usage:experienceUsage(old)};
     if(action==='wait_boundary')return this.waitAudienceBoundary(timeout_ms??120000,signal);
@@ -631,7 +644,7 @@ export class ReplayService {
     if(action==='configure')assert(old.engine.version===1&&!old.control.continuation,'Plan may be configured only before consumption','EXPERIENCE_PLAN_FROZEN');
     if(action==='record_gate'){
       assert(EXPERIENCE_GATES.includes(gate)&&verified_by_main===true&&Array.isArray(evidence_refs)&&evidence_refs.length,'Explicit main review with fixed native evidence required','NATIVE_EVIDENCE_REQUIRED');
-      for(const ref of evidence_refs){assert(ref.id&&typeof ref.revision==='string'&&/^sha256:[a-f0-9]{64}$/.test(ref.digest??''),'Full fixed evidence reference required','NATIVE_EVIDENCE_REQUIRED');const evidence=await host.artifacts.read(ref);assert(evidence&&evidence.available_for_analysis!==false,'Native evidence unavailable','NATIVE_EVIDENCE_REQUIRED');}
+      for(const ref of evidence_refs){assert(ref.id&&typeof ref.revision==='string'&&/^sha256:[a-f0-9]{64}$/.test(ref.digest??''),'Full fixed evidence reference required','NATIVE_EVIDENCE_REQUIRED');const evidence=await host.resources.read(ref,{part:'manifest'});assert(evidence&&evidence.available_for_analysis!==false,'Native evidence unavailable','NATIVE_EVIDENCE_REQUIRED');}
     }
     signal?.throwIfAborted();let result;
     this.mutate(expected_version,d=>{
@@ -644,13 +657,13 @@ export class ReplayService {
   }
   waitAudienceBoundary(timeoutMs,signal) {
     assert(Number.isSafeInteger(timeoutMs)&&timeoutMs>=1&&timeoutMs<=120000,'Bounded 120s wait only','INVALID_ARGUMENT');
-    const finished=()=>{const d=this.getDocument();return d&&!d.control.running&&!d.control.active&&!d.control.recovery&&(!this.host.storage.list('committed-hooks').some(r=>r.runId===d.engine.id&&r.status!=='done')||d.control.hookFailure||d.control.archiveFailed);};
+    const finished=()=>{const d=this.getDocument();return d&&!d.control.running&&!d.control.active&&!d.control.recovery&&(!records(this.host).list('committed-hooks').some(r=>r.runId===d.engine.id&&r.status!=='done')||d.control.hookFailure||d.control.archiveFailed);};
     if(finished())return Promise.resolve({status:'boundary_or_paused',checkpoint:this.status(),modelRequested:false});
     return new Promise((resolve,reject)=>{let off=()=>{},timer;const cleanup=()=>{off();clearTimeout(timer);signal?.removeEventListener('abort',abort);};const abort=()=>{cleanup();reject(Object.assign(Error('Wait cancelled; controller task not replayed'),{code:'CANCELLED'}));};off=this.subscribe(()=>{if(finished()){cleanup();resolve({status:'boundary_or_paused',checkpoint:this.status(),modelRequested:false});}});timer=setTimeout(()=>{cleanup();resolve({status:'still_pending',checkpoint:this.status(),modelRequested:false});},timeoutMs);signal?.addEventListener('abort',abort,{once:true});if(signal?.aborted)abort();});
   }
   assertWeeklyBudget() {
     const doc=this.getDocument();if(!doc?.experience)return;
-    const jobs=this.host.storage.list('round2-weekly').filter(j=>j.id.startsWith('weekly_')&&j.input?.opening?.runId===doc.engine.id);
+    const jobs=records(this.host).list('round2-weekly').filter(j=>j.id.startsWith('weekly_')&&j.input?.opening?.runId===doc.engine.id);
     const spent=jobs.filter(j=>j.requestId).length,queued=jobs.filter(j=>j.status==='queued'||j.status==='input_frozen'||j.status==='input_archive_failed').length;
     assert(spent+queued<=doc.experience.content.limits.maxWeeklyGenerations,'Weekly model cap reached/unknown requests remain spent; no model call','WEEKLY_BUDGET');
   }
@@ -708,7 +721,7 @@ export class ReplayService {
         utterance: '（自动延续，非角色发言）', continuationOf: c.decisionId };
       const before = this.getState();
       let after;
-      try { await freezeBeforeNative(this,before,continuationDecision,signal);after = await this.advance(this.host.storage.directory, clone(before), continuationDecision, this.data, { signal }); }
+      try { await freezeBeforeNative(this,before,continuationDecision,signal);after = await this.advance(this.host.context.storageRoot, clone(before), continuationDecision, this.data, { signal }); }
       catch (error) {
         if (!isArchiveError(error)&&error.code!=='UTC_BEFORE_STEP_HOLD') this.mutate(undefined, d => { if(d.control.continuation?.decisionId===identity.decisionId){d.control.running=false;d.control.phase='continuation_error_paused';d.control.error=error.message;} });
         throw error;
@@ -750,7 +763,7 @@ export class ReplayService {
     return committed;
   }
   async playerDecide(host, args, signal) {
-    signal?.throwIfAborted(); const { active } = this.authorize(host);
+    signal?.throwIfAborted(); const { active,current } = this.authorize(host);
     const decision = { id: `${active.requestId}:decision`, runId: args.run_id, stepId: args.step_id, expectedVersion: args.expected_version, target: args.target, stop: args.stop ?? null, reason: args.reason, utterance: args.utterance };
     if (active.decided) { assert(isDeepStrictEqual(active.decision,decision), '已决定，同一步不同内容被拒绝', 'IDEMPOTENCY_CONFLICT'); return clone(active.receipt); }
     assert(this.data, '真实行情未准备，暂停', 'SOURCE_UNAVAILABLE');
@@ -760,13 +773,13 @@ export class ReplayService {
       return this.jobs.get(active.requestId);
     }
     const before = this.getState();
-    this.mutate(undefined, d => { const a=d.control.active; assert(a?.requestId===active.requestId&&!a.cancelled, '决定已失效'); a.processing=true; a.pendingDecision=decision; a.actorRunId=host.scope.runId; d.control.phase='matching_native'; (d.roleEvidence??=[]).push({taskId:a.taskId,requestId:a.requestId,actorRunId:host.scope.runId,conversationId:host.scope.conversationId,model:d.model,stepId:a.stepId,status:'matching',inputSnapshot:clone(a.request.input.snapshot),decision,receipt:null,submittedAt:Date.now()}); });
+    this.mutate(undefined, d => { const a=d.control.active; assert(a?.requestId===active.requestId&&!a.cancelled, '决定已失效'); a.processing=true; a.pendingDecision=decision; a.actorRunId=current.runId; d.control.phase='matching_native'; (d.roleEvidence??=[]).push({taskId:a.taskId,requestId:a.requestId,actorRunId:current.runId,conversationId:host.context.sessionId,model:d.model,stepId:a.stepId,status:'matching',inputSnapshot:clone(a.request.input.snapshot),decision,receipt:null,submittedAt:Date.now()}); });
     const job = (async () => {
       try {
         // Native matching is deterministic and has no broker-side effects. Only
         // the following transaction may reveal its next interval or move money.
         await freezeBeforeNative(this,before,decision,signal);
-        const after = await this.advance(this.host.storage.directory, clone(before), decision, this.data, {signal});
+        const after = await this.advance(this.host.context.storageRoot, clone(before), decision, this.data, {signal});
         signal?.throwIfAborted(); assert(after && after.id===before.id, '原生适配器返回无效Run');
         let receipt;
         this.mutate(undefined, d => {
@@ -829,12 +842,12 @@ export class ReplayService {
     assert(!old.experience||old.engine.version-1<old.experience.content.limits.maxCommittedHours,'Recovery cannot cross hard committed-hour cap','EXPERIENCE_STOP_CONDITION');
     const decision=clone(evidence.decision);assert(decision.runId===old.engine.id&&decision.stepId===old.engine.id+':'+old.engine.chapter+':'+old.engine.index&&decision.expectedVersion===old.engine.version,'保存决定不属于当前未推进版本','RECOVERY_NOT_ALLOWED');
     assert(!old.engine.decisions.some(e=>e.decision?.id===decision.id||e.decision?.stepId===decision.stepId),'此步已有提交，禁止重复恢复','ALREADY_COMMITTED');
-    const task=this.host.agents.inspect(evidence.taskId);assert(terminal(task?.status)&&task.id===evidence.taskId&&task.requestId===evidence.requestId,'旧角色任务身份/终态未核对','DECISION_PENDING');
+    const task=roleTask(this.host,evidence.taskId);assert(terminal(task?.status)&&task.id===evidence.taskId&&task.requestId===evidence.requestId,'旧角色任务身份/终态未核对','DECISION_PENDING');
     assert(isDeepStrictEqual(task.model,evidence.model)&&task.model?.provider==='openai'&&task.model.id==='gpt-6.1-sol','原任务模型证据不匹配','RECOVERY_NOT_ALLOWED');
     assert(task.toolCalls?.some(c=>c.name==='kurumi_decide'&&c.status===(missingDataAttempt?'returned':'failed')),'没有对应终态的真实decide调用证据','RECOVERY_NOT_ALLOWED');
     const env=await this.verifyBackend(signal);assert(env?.ready,'撮合后端未实际可用；先显式prepare','NATIVE_NOT_PREPARED');this.nativeEnvironment=env;
     this.mutate(expected_version,d=>{assert(!this.closed&&!this.preparing&&!d.control.recovery&&!d.control.active&&!d.control.running,'后端核对期间状态改变；不能预约恢复','DECISION_PENDING');record(d,command_id,command);d.control.recovery={commandId:command_id,decisionId:decision.id,runId:old.engine.id,stepId:decision.stepId,originalEngineVersion:old.engine.version,originalDecisionCount:old.engine.decisions.length,originalFillCount:old.engine.fills.length,originalBalance:old.engine.balance,dataDigests:clone(old.engine.dataDigests),startedAt:Date.now(),cancelled:false};d.control.phase='recovery_matching_native';d.control.remaining=0;(d.recoveries??=[]).push({commandId:command_id,decisionId:decision.id,originalTaskId:task.id,originalRequestId:task.requestId,originalTaskStatus:task.status,status:'matching',originalEngineVersion:old.engine.version,startedAt:Date.now(),model:evidence.model});});
-    this.recovering=true;try{await freezeBeforeNative(this,old.engine,decision,signal);const after=await this.advance(this.host.storage.directory,clone(old.engine),decision,this.data,{signal});signal?.throwIfAborted();assert(after?.id===old.engine.id&&after.version===old.engine.version+1&&after.decisions?.length===old.engine.decisions.length+1&&isDeepStrictEqual(after.decisions.at(-1)?.decision,decision)&&after.status!=='missing_data','恢复未恰好完成真实H1；不提交','NATIVE_RECOVERY_FAILED');
+    this.recovering=true;try{await freezeBeforeNative(this,old.engine,decision,signal);const after=await this.advance(this.host.context.storageRoot,clone(old.engine),decision,this.data,{signal});signal?.throwIfAborted();assert(after?.id===old.engine.id&&after.version===old.engine.version+1&&after.decisions?.length===old.engine.decisions.length+1&&isDeepStrictEqual(after.decisions.at(-1)?.decision,decision)&&after.status!=='missing_data','恢复未恰好完成真实H1；不提交','NATIVE_RECOVERY_FAILED');
       assert(!this.closed,'恢复服务已中断；保留预约，重启后显式 reconcile','INTERRUPTED');
       this.mutate(undefined,d=>{assert(!this.closed&&d.control.recovery?.commandId===command_id&&!d.control.recovery.cancelled&&d.engine.version===old.engine.version&&!d.control.active,'恢复期间状态改变，不提交','VERSION_CONFLICT');this.enqueueCommittedHooks(old.engine,after);d.engine=after;d.control.running=false;d.control.remaining=0;d.control.recovery=null;d.control.phase='step_complete';d.control.error=null;const row=d.recoveries.find(r=>r.commandId===command_id);Object.assign(row,{status:'committed',completedAt:Date.now(),engineVersion:after.version,balance:after.balance});const e=d.roleEvidence.find(r=>r.decision?.id===decision.id);e.previousStatus=e.status;e.previousReceipt=clone(e.receipt??null);e.status='recovered_committed';e.recoveryCommandId=command_id;e.receipt={accepted:true,decisionId:decision.id,engineVersion:after.version,balance:after.balance};
         if(this.intervalHours(d)===4&&after.chapter===old.engine.chapter&&after.status!=='complete'&&after.outcome!=='bankrupt'&&!after.balance.startsWith('-')&&after.balance!=='0'){
@@ -860,7 +873,7 @@ export class ReplayService {
     }finally{this.recovering=false;}
   }
   // 本插件实际提交过的角色 runId 判定：roleEvidence/roleTasks 的 actorRunId 兼容路径 +
-  // 已提交任务ID集合（active.taskId 含未 decide/失败角色 + control.taskIds 登记）经 host.agents.inspect(taskId).runId 精确匹配。
+  // 已提交公开 Run ID 与活动步骤的持久身份精确匹配。
   async #ownedRun(runId) {
     const doc = this.getDocument();
     if (!doc) return false;
@@ -869,19 +882,17 @@ export class ReplayService {
     if (doc.control?.active?.taskId) taskIds.add(doc.control.active.taskId);
     for (const id of doc.control?.taskIds ?? []) taskIds.add(id);
     for (const t of [...(doc.roleTasks ?? []), ...(doc.roleEvidence ?? [])]) if (t?.taskId) taskIds.add(t.taskId);
-    for (const taskId of taskIds) {
-      try { const info = await this.host.agents.inspect(taskId); if (info?.runId === runId) return true; } catch { /* inspect 失败不视为匹配 */ }
-    }
-    return false;
+    return taskIds.has(runId);
   }
   // protectArtifacts 生命周期钩子：仅匹配本插件实际提交的角色 runId。
-  async protectArtifacts(runId) {
+  async protectArtifacts(runId,cleanupHost) {
     const owned = await this.#ownedRun(runId);
     if (!owned) return { artifacts: [], resources: [] };
     assert(!this.recordingSelectionError,'Explicit existing recorder selection required before task protection','MIRROR_SELECTION_REQUIRED');
-    if (!this.recorder) {const selected=await recordingSelection(this.host.storage.directory);this.recorder=new Recorder(this.host.storage.directory,{mirrorRoot:selected.mirrorRoot});}
+    if (!this.recorder) {const selected=await recordingSelection(this.host.context.storageRoot);this.recorder=new Recorder(this.host.context.storageRoot,{mirrorRoot:selected.mirrorRoot});}
     try {
-      const taskRootPath = this.host.workspace.taskRoot(runId);
+      const taskRootPath=cleanupHost?.context.workspaceRoot;
+      assert(cleanupHost?.context.runId===runId&&typeof taskRootPath==='string','Exact releasing Run workspace context required','ARCHIVE_MISSING');
       const result = await this.recorder.protectRun(runId, taskRootPath, { simClockMs: this.simClock() });
       // Sealing this role workspace does not repair earlier pending journal or
       // file writes. Only assertArchiveHealthy may clear that recovery state.
@@ -900,5 +911,10 @@ export class ReplayService {
     try { await fs.access(`${this.recorder.root}/runs/${runId}/sealed.json`); }
     catch { throw Object.assign(new Error(`角色任务 ${runId} 的封存缺失，拒绝清理现场`), { code: 'ARCHIVE_MISSING' }); }
   }
-  async dispose() { this.closed = true; this.listeners.clear(); /* Restart never submits or repeats a model request. */ }
+  async dispose(cleanupHost) {
+    this.closed=true;this.lifetime.abort();this.listeners.clear();
+    const active=this.getDocument()?.control.active?.taskId;
+    if(active)try{await cleanupHost.runs.cancel({id:active},{reason:'Replay service disposed'});}catch{}
+    await Promise.allSettled([...this.waiting.values(),...this.jobs.values(),...(this.launching?[this.launching]:[])]);
+  }
 }

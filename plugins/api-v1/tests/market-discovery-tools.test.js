@@ -1,98 +1,38 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { Type } from '@sesame/plugin-sdk/schema';
-import { canonical, check } from '@sesame/plugin-sdk/protocol';
-import { createTools as dataTools } from '../packages/data-access/index.js';
-import { createTools as canvasTools } from '../packages/canvas-control/tools.js';
+import { createCapabilities as data } from '../packages/data-access/index.js';
+import { createCapabilities as canvas } from '../packages/canvas-control/index.js';
 import { compute } from '../packages/canvas-control/resources/close-line.js';
 
 function fixture() {
-  const provider = { pluginId: 'fixture/quotes', providerId: 'broker-bars' }, connection = { id: 'already-configured', revision: '17' };
-  const descriptor = { id: provider.providerId, pluginId: provider.pluginId, contract: 'sesame.market', capabilities: ['instruments.search', 'instruments.describe', 'bars.history', 'bars.subscribe'], sessions: ['all'], priceBases: ['bid'], adjustments: ['none'] };
-  const instrument = { ref: { sourceId: 'opaque-provider-source', instrumentId: 'EURUSD.pro' }, symbol: 'EURUSD.pro', name: 'Euro / US Dollar', timeBasis: { kind: 'wall', authority: 'Fixture-Broker' }, calendar: { status: 'unknown', reason: 'No frozen broker calendar' }, features: { timeframes: ['1h', '15m'], priceBases: ['bid'], adjustments: ['none'] }, volume: { hasReal: false, hasTick: true } };
-  const meta = { observedAt: 123, receivedAt: 124, origin: 'observed', freshness: 'unknown', consistency: 'best_effort', warnings: ['Fixture catalog only'] };
-  const bindings = new Set(), events = []; let failRead = null, more = false, next = 0;
-  const string = description => Type.String({ description, minLength: 1, maxLength: 20000 });
-  const host = { scope: { conversationId: 'main' }, workspace: {}, tools: { Type, string, optional: description => Type.Optional(string(description)), define: (name, description, properties, execute) => ({ name, label: name, description, parameters: Type.Object(properties, { additionalProperties: false }), execute }) },
-    layout: { inspect: () => ({ version: 5, charts: [] }), apply: input => { events.push(['layout', structuredClone(input)]); return input; } },
-    providers: {
-      list: contract => !contract || contract === descriptor.contract ? [structuredClone(descriptor)] : [],
-      bind: async (ref, input, signal) => { signal?.throwIfAborted(); assert.deepEqual(ref, provider); check(!input.connection || canonical(input.connection) === canonical(connection), 'Connection changed', 'CONNECTION_CHANGED'); const bindingId = 'ephemeral-' + ++next; bindings.add(bindingId); events.push(['bind', bindingId, structuredClone(input)]); return { bindingId, connection, health: 'connecting', sourceIds: [instrument.ref.sourceId] }; },
-      call: async (id, method, input, options) => { assert.ok(bindings.has(id)); options.signal?.throwIfAborted(); events.push([method, structuredClone(input)]); if (failRead) throw failRead; if (method === 'searchInstruments') return { data: { items: [{ ref: instrument.ref, symbol: instrument.symbol, name: instrument.name }], nextCursor: more ? 'native-cursor-requires-binding' : null, snapshotId: 'source-snapshot' }, meta }; assert.equal(method, 'describeInstrument'); assert.deepEqual(input.instrument, instrument.ref); return { data: structuredClone(instrument), meta }; },
-      unbind: async id => { assert.ok(bindings.delete(id)); events.push(['unbind', id]); },
-    } };
-  const tools = [...dataTools(host), ...canvasTools(host)], call = (name, input, signal) => tools.find(tool => tool.name === name).execute(input, signal);
-  return { host, provider, connection, descriptor, instrument, meta, bindings, events, tools, call, fail: value => { failRead = value; }, more: value => { more = value; } };
+ const source={providerId:'fixture/market#prices',revision:'fixed'},connection={id:'configured',revision:'7'},instrument={ref:{sourceId:'opaque-source',instrumentId:'EXACT'},symbol:'EXACT',timeBasis:{kind:'wall',authority:'Fixture/Broker'},calendar:{status:'unknown',reason:'No fixed calendar'},features:{timeframes:['1h','15m'],priceBases:['bid'],adjustments:['none'],sessions:['regular']}},calls=[];
+ const f={source,connection,instrument,calls};
+ const host={data:{sources:()=>({items:[{ref:source,available:true,contract:'sesame.market/1',configSchema:{properties:{connection:{}}},operations:{searchInstruments:'search',describeInstrument:'describe',queryBars:'history'}}]}),query:async(request,options)=>{options.signal?.throwIfAborted();calls.push(request);if(f.error)throw f.error;return{items:[structuredClone(instrument)],metadata:{connection,...(request.operation==='describeInstrument'?{}:{snapshotId:'exact'})},...(request.operation==='searchInstruments'?{nextCursor:'host-opaque-cursor'}:{})};}},views:{inspect:()=>({version:5,charts:[]})}};
+ const tools=new Map([...data(host),...canvas(host)].map(c=>[c.name,c.execute]));f.call=(name,args,signal)=>tools.get(name)(args,signal);return f;
 }
-
-test('discovery exposes provider identity and exact current connection without leaking a closed cursor', async () => {
-  const f = fixture();
-  assert.deepEqual(f.call('data_providers', { contract: 'sesame.market' }).providers[0].provider, f.provider);
-  assert.deepEqual(f.call('canvas_inspect', {}).market_providers[0].provider, f.provider);
-  assert.equal(f.events.length, 0, 'Listing must not connect a provider');
-  f.more(true);
-  const result = await f.call('market_instruments', { action: 'search', provider: f.provider, query: 'EURUSD', limit: 10 });
-  assert.deepEqual(result.connection, f.connection); assert.deepEqual(result.items[0].ref, f.instrument.ref);
-  assert.equal(result.has_more, true); assert.equal(result.pagination, 'bounded_search_refine_query');
-  assert.equal(JSON.stringify(result).includes('native-cursor'), false); assert.equal(JSON.stringify(result).includes('ephemeral-'), false);
-  assert.deepEqual(result.meta, f.meta); assert.equal(f.bindings.size, 0);
-  assert.deepEqual(f.events[1], ['searchInstruments', { query: 'EURUSD', page: { limit: 10 } }]);
+test('source discovery has no connection side effect and instrument search preserves host pagination',async()=>{
+ const f=fixture();assert.deepEqual((await f.call('data_providers',{contract:'sesame.market/1'})).items[0].ref,f.source);
+ assert.deepEqual((await f.call('canvas_inspect',{})).market_sources[0].ref,f.source);assert.equal(f.calls.length,0);
+ const result=await f.call('market_instruments',{action:'search',source:f.source,query:'EXACT',limit:10,cursor:'prior'});
+ assert.equal(result.nextCursor,'host-opaque-cursor');assert.deepEqual(result.metadata.connection,f.connection);assert.equal(f.calls[0].cursor,'prior');assert.equal(f.calls[0].limit,10);
 });
-
-test('description preserves source time and unknown calendar, then H1/M15 chart bindings use exact declarations', async () => {
-  const f = fixture(), args = { provider: f.provider, connection: f.connection, instrument: f.instrument.ref };
-  const described = await f.call('market_instruments', { ...args, action: 'describe' });
-  assert.deepEqual(described.instrument.timeBasis, f.instrument.timeBasis); assert.deepEqual(described.series_options.calendarRevision, f.instrument.calendar);
-  const charts = [];
-  for (const timeframe of ['1h', '15m']) {
-    const result = await f.call('canvas_binding', { ...args, timeframe });
-    assert.deepEqual(result.binding, { provider: f.provider, connection: f.connection, instrument: f.instrument.ref, spec: { timeframe, priceBasis: 'bid', adjustment: 'none', session: 'all', calendarRevision: f.instrument.calendar } });
-    assert.equal(result.chart.volume, true); assert.equal(result.validation.marketDataRead, false); assert.equal(result.validation.rendered, false);
-    charts.push(result.chart);
-  }
-  await f.call('canvas_apply', { command_id: 'discovered-charts-command', expected_version: 5, operations: charts.map(chart => ({ op: 'add', chart })) });
-  assert.equal(f.events.filter(event => event[0] === 'layout').length, 1); assert.equal(f.bindings.size, 0);
-  assert.ok(!f.events.some(event => /subscribe|queryBars|trade/.test(event[0])), 'Binding descriptions must not start data streams or trade');
+test('description and chart binding preserve exact clock and unknown calendar',async()=>{
+ const f=fixture(),args={source:f.source,instrument:f.instrument.ref};
+ const result=await f.call('market_instruments',{...args,action:'describe'});assert.deepEqual(result.instrument.timeBasis,f.instrument.timeBasis);
+ for(const timeframe of ['1h','15m']){const value=await f.call('canvas_binding',{...args,timeframe});assert.equal(value.binding.spec.timeframe,timeframe);assert.deepEqual(value.binding.spec.calendarRevision,f.instrument.calendar);assert.deepEqual(value.binding.source.binding.connection,f.connection);assert.equal(value.validation.rendered,false);}
+ assert.ok(f.calls.every(call=>call.operation==='describeInstrument'));
 });
-
-test('unsupported, ambiguous and stale bindings fail without persisting layout or leaking provider handles', async () => {
-  const f = fixture(), args = { provider: f.provider, instrument: f.instrument.ref, timeframe: '1h' };
-  await assert.rejects(f.call('canvas_binding', { ...args, timeframe: 'H1' }), { code: 'UNSUPPORTED_CAPABILITY' });
-  await assert.rejects(f.call('canvas_binding', { ...args, price_basis: 'last' }), { code: 'UNSUPPORTED_CAPABILITY' });
-  await assert.rejects(f.call('canvas_binding', { ...args, connection: { ...f.connection, revision: 'old' } }), { code: 'CONNECTION_CHANGED' });
-  f.descriptor.sessions = ['all', 'regular'];
-  await assert.rejects(f.call('canvas_binding', args), /Choose session explicitly/);
-  assert.equal((await f.call('canvas_binding', { ...args, session: 'regular' })).binding.spec.session, 'regular');
-  assert.equal(f.bindings.size, 0); assert.equal(f.events.filter(event => event[0] === 'layout').length, 0);
+test('ambiguous or stale bindings and source errors never silently choose another source',async()=>{
+ const f=fixture(),args={source:f.source,instrument:f.instrument.ref,timeframe:'1h'};
+ await assert.rejects(f.call('canvas_binding',{...args,timeframe:'H1'}),{code:'UNSUPPORTED_CAPABILITY'});
+ await assert.rejects(f.call('canvas_binding',{...args,source:{...f.source,binding:{connection:{...f.connection,revision:'old'}}}}),{code:'CONNECTION_CHANGED'});
+ f.instrument.features.sessions=['regular','extended'];await assert.rejects(f.call('canvas_binding',args),/Choose session/);
+ assert.equal((await f.call('canvas_binding',{...args,session:'extended'})).binding.spec.session,'extended');
+ f.error=Object.assign(Error('source unavailable'),{code:'SOURCE_UNAVAILABLE'});await assert.rejects(f.call('market_instruments',{...args,action:'describe'}),{code:'SOURCE_UNAVAILABLE'});
 });
-
-test('provider read errors and cancellation still close the temporary binding', async () => {
-  const f = fixture(), args = { action: 'describe', provider: f.provider, instrument: f.instrument.ref };
-  f.fail(Object.assign(new Error('source unavailable'), { code: 'SOURCE_UNAVAILABLE' }));
-  await assert.rejects(f.call('market_instruments', args), { code: 'SOURCE_UNAVAILABLE' }); assert.equal(f.bindings.size, 0);
-  f.fail(new DOMException('Canceled native read', 'AbortError'));
-  await assert.rejects(f.call('canvas_binding', { provider: f.provider, instrument: f.instrument.ref, timeframe: '1h' }), { name: 'AbortError' }); assert.equal(f.bindings.size, 0);
-});
-
-test('provider replacement between listing and binding cannot apply an old descriptor', async () => {
-  const f = fixture(); f.descriptor.instanceId = 'provider-before-update';
-  await assert.rejects(f.call('canvas_binding', { provider: f.provider, instrument: f.instrument.ref, timeframe: '1h' }), { code: 'CONNECTION_CHANGED' });
-  await assert.rejects(f.call('market_instruments', { action: 'search', provider: f.provider, query: 'EURUSD' }), { code: 'CONNECTION_CHANGED' });
-  assert.equal(f.bindings.size, 0); assert.equal(f.events.some(([method]) => ['searchInstruments', 'describeInstrument'].includes(method)), false);
-});
-
-test('indicator example retains exact Decimal and SourceTime, including a forming bar', () => {
-  const time = { basis: 'wall', authority: 'Fixture-Broker', value: '2026-10-09T12:00:00' };
-  const output = compute({ inputs: { price: { rows: [{ id: 'stable-bar', openTime: time, close: '1.1234567890123456789', isClosed: false }] } }, parameters: {} });
-  assert.equal(output.status, 'ready'); assert.deepEqual(output.series[0].points[0], { key: 'stable-bar', time, value: { status: 'value', value: '1.1234567890123456789' } });
-  assert.equal(compute({ inputs: { price: { rows: [] } } }).status, 'not_ready');
-});
-
-test('discovery and canvas public schemas match the shipped definitions', async () => {
-  const f = fixture();
-  for (const [name, create] of [['canvas-control', canvasTools], ['data-access', dataTools]]) {
-    const expected = JSON.parse(await readFile(new URL(`../packages/${name}/tools.json`, import.meta.url)));
-    assert.deepEqual(JSON.parse(JSON.stringify(create(f.host).map(({ execute, ...tool }) => tool))), expected);
-  }
+test('indicator example retains Decimal and SourceTime, including forming data',()=>{
+ const time={basis:'wall',authority:'Fixture-Broker',value:'2026-10-09T12:00:00'};
+ const output=compute({inputs:{price:{rows:[{id:'stable-bar',openTime:time,close:'1.1234567890123456789',isClosed:false}]}},parameters:{}});
+ assert.equal(output.status,'ready');assert.deepEqual(output.series[0].points[0],{key:'stable-bar',time,value:{status:'value',value:'1.1234567890123456789'}});
+ assert.equal(compute({inputs:{price:{rows:[]}}}).status,'not_ready');
 });

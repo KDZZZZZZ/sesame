@@ -1,0 +1,809 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "capabilities": [
+    {
+      "id": "portfolio_execution_configure",
+      "kind": "function",
+      "description": "Bind an already configured execution adapter to its exact account and revision. Returns the execution capability reference for any workflow. Does not load, configure or connect a backend, or place an order. Imports legacy receipts when the old manual-trading package is installed.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "backend"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,100}$"
+          },
+          "backend": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "mt5"
+              },
+              {
+                "type": "string",
+                "const": "qmt"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "backend.read",
+        "state.write"
+      ],
+      "usage": {
+        "purpose": "Bind an already configured execution adapter to its exact account and revision. Returns the execution capability reference for any workflow. Does not load, configure or connect a backend, or place an order. Imports legacy receipts when the old manual-trading package is installed.",
+        "inputs": "{backend:\"mt5\"|\"qmt\",id?:<stable binding ID>}; e.g. {backend:\"mt5\",id:\"my-account\"}. The backend must already be configured; this does not accept login credentials.",
+        "outputs": "{plugin_id:\"sesame/portfolio-execution\",context_tool:\"portfolio_execution_context\",apply_tool:\"portfolio_execution_apply\",arguments:{binding_id}}; pass this entire object as a workflow execution reference.",
+        "prerequisites": [
+          "Main conversation only; task/tool names do not grant a delegated Agent this authority.",
+          "Loaded MT5 >=1.6.0 or QMT >=1.4.0 with an existing exact account/revision. If manual-trading is installed it must expose manual_trading_execution_export for safe migration.",
+          "Installed implementations: plugin_discover and host.capabilities.list. Published optional packages: plugin_catalog({plugin_id}); installation/loading is a separate public operation."
+        ],
+        "limitations": [
+          "Binding ID is immutable for its owner/account/revision. After account/config change create a new binding instead of replacing the old identity."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "portfolio_execution_configure"
+      }
+    },
+    {
+      "id": "portfolio_execution_context",
+      "kind": "function",
+      "description": "Read the bound account identity/capability contract, or its full account snapshot including strategy positions, retained history and mounted strategies. Delegated reads require the frozen execution binding.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "binding_id",
+          "action"
+        ],
+        "properties": {
+          "binding_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Immutable binding from portfolio_execution_configure"
+          },
+          "action": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "identity"
+              },
+              {
+                "type": "string",
+                "const": "snapshot"
+              }
+            ]
+          },
+          "history_days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 90
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "state.read",
+        "backend.read"
+      ],
+      "usage": {
+        "purpose": "Read the bound account identity/capability contract, or its full account snapshot including strategy positions, retained history and mounted strategies. Delegated reads require the frozen execution binding.",
+        "inputs": "{binding_id:<configure result arguments.binding_id>,action:\"identity\"|\"snapshot\",history_days?:1..90}.",
+        "outputs": "identity => {account,tools,readTools,taskContext,accountProvider,fillSources,quantityRules}; snapshot => the native full-account snapshot with positions, history and mounts. MT5 quantity unit is signed lots; QMT is nonnegative integer shares.",
+        "prerequisites": [
+          "Owned configure binding, or a delegated workflow task carrying that exact frozen execution binding."
+        ],
+        "limitations": [
+          "Snapshot is observation, not permission to trade. ACCOUNT_CHANGED requires a new binding; native mt5_trading_context identity alone is not this composition contract.",
+          "A confirmed missing MT5 Python IPC connection returns MT5_PYTHON_UNAVAILABLE with details.retryable=false, requiredTransport=python, nativeCode/nativeMessage, commandId and recovery. Reconnect the configured Python terminal and verify the same account before a newly authorized workflow run; repeating a failed snapshot cannot connect it. Other failures keep their native reason without being classified as nonretryable."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "portfolio_execution_context"
+      }
+    },
+    {
+      "id": "portfolio_execution_status",
+      "kind": "function",
+      "description": "Read this main owner's retained workflow execution applications and their operation IDs, including interrupted runs. Does not submit, resume or replay execution. Query individual order receipts with manual_trade_status.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Immutable binding from portfolio_execution_configure"
+          },
+          "run_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Saved workflow run ID"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "state.read",
+        "backend.read"
+      ],
+      "usage": {
+        "purpose": "Read this main owner's retained workflow execution applications and their operation IDs, including interrupted runs. Does not submit, resume or replay execution. Query individual order receipts with manual_trade_status.",
+        "inputs": "{binding_id?,run_id?,offset?:0,limit?:20}; run_id is the source workflow business ID.",
+        "outputs": "{items,total,nextOffset}; each application has run_id,plan_id,binding_id,status,orders:[{operation_id,symbol,status}],pauses,error,recovery.",
+        "prerequisites": [
+          "Main conversation only; task/tool names do not grant a delegated Agent this authority."
+        ],
+        "limitations": [
+          "running/interrupted/blocked does not imply rejection. manual_trade_status on retained operation IDs reconciles evidence; this read never resumes execution."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "portfolio_execution_status"
+      }
+    },
+    {
+      "id": "portfolio_execution_apply",
+      "kind": "function",
+      "description": "Apply one saved target portfolio through the bound execution adapter. Requires a live workflow tool calling for its matching executor task; direct model calls fail. Exact native units, all-origin close/reduction, guarded strategy stops and durable no-replay receipts are preserved.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "binding_id",
+          "run"
+        ],
+        "properties": {
+          "binding_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Immutable binding from portfolio_execution_configure"
+          },
+          "run": {
+            "type": "object",
+            "required": [
+              "id",
+              "decidedAt",
+              "plan",
+              "decision"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100,
+                "description": "Saved workflow run ID"
+              },
+              "decidedAt": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "plan": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "account",
+                  "ownerConversationId",
+                  "slippageBps"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "description": "Frozen workflow plan ID"
+                  },
+                  "account": {
+                    "type": "object",
+                    "properties": {},
+                    "additionalProperties": true
+                  },
+                  "ownerConversationId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "description": "Frozen parent conversation"
+                  },
+                  "slippageBps": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 500
+                  }
+                },
+                "additionalProperties": false
+              },
+              "decision": {
+                "type": "object",
+                "required": [
+                  "unchanged",
+                  "targets",
+                  "pause_strategies"
+                ],
+                "properties": {
+                  "unchanged": {
+                    "type": "boolean"
+                  },
+                  "targets": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "symbol",
+                        "quantity",
+                        "unit"
+                      ],
+                      "properties": {
+                        "symbol": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100,
+                          "description": "Exact native symbol"
+                        },
+                        "quantity": {
+                          "type": "string",
+                          "pattern": "^-?(0|[1-9]\\d*)(\\.\\d+)?$",
+                          "maxLength": 40
+                        },
+                        "unit": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "const": "lots"
+                            },
+                            {
+                              "type": "string",
+                              "const": "shares"
+                            }
+                          ]
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "maxItems": 100
+                  },
+                  "pause_strategies": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "deployment_id",
+                        "reason"
+                      ],
+                      "properties": {
+                        "deployment_id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100,
+                          "description": "Observed deployment ID"
+                        },
+                        "reason": {
+                          "type": "string",
+                          "minLength": 10,
+                          "maxLength": 2000
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "maxItems": 30
+                  },
+                  "rationale": {
+                    "type": "string",
+                    "maxLength": 8000
+                  },
+                  "evidence_dataset_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "maxItems": 30
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "run",
+      "effects": [
+        "broker.write",
+        "state.write"
+      ],
+      "usage": {
+        "purpose": "Apply one saved target portfolio through the bound execution adapter. Requires a live workflow tool calling for its matching executor task; direct model calls fail. Exact native units, all-origin close/reduction, guarded strategy stops and durable no-replay receipts are preserved.",
+        "inputs": "{binding_id,run:{id,decidedAt,plan:{id,account,ownerConversationId,slippageBps},decision:{unchanged,targets,pause_strategies,...}}}; all values come from the frozen workflow, not a model-composed authorization object.",
+        "outputs": "Host Run whose output is the durable application receipt {status,orders,pauses,after,targetReached,...}; retain per-order operation IDs and actual native receipts.",
+        "prerequisites": [
+          "Nested call from a live workflow tool for its matching registered executor task. Models use that workflow's apply capability (e.g. manual_trading_apply), not this adapter directly."
+        ],
+        "limitations": [
+          "Capability visibility is not callable authority. Identical saved run reuses its receipt; changed intent conflicts; unknown/interrupted sends are never replayed."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "portfolio_execution_apply"
+      }
+    },
+    {
+      "id": "manual_trade_inspect",
+      "kind": "function",
+      "description": "Inspect supported direct execution channels and enforced latency policy. Does not connect, configure, install, or trade.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "state.read",
+        "backend.read"
+      ],
+      "usage": {
+        "purpose": "Inspect supported direct execution channels and enforced latency policy. Does not connect, configure, install, or trade.",
+        "inputs": "{}.",
+        "outputs": "{policy,compositionAvailable,backends,unavailable,note}; policy reports measured/enforced time bounds and supported native actions.",
+        "prerequisites": [
+          "Main conversation only; task/tool names do not grant a delegated Agent this authority."
+        ],
+        "limitations": [
+          "Listing a channel does not establish its connection, a successful broker order or profitability."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "manual_trade_inspect"
+      }
+    },
+    {
+      "id": "manual_trade_observe",
+      "kind": "function",
+      "description": "Read current account, symbol conditions, positions and a source-timestamped executable quote from an already loaded MT5/QMT backend. Returns an observation_id that starts the model decision clock; no order is sent.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "backend",
+          "symbol"
+        ],
+        "properties": {
+          "backend": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "mt5"
+              },
+              {
+                "type": "string",
+                "const": "qmt"
+              }
+            ]
+          },
+          "symbol": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Exact broker symbol"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "backend.read",
+        "state.write"
+      ],
+      "usage": {
+        "purpose": "Read current account, symbol conditions, positions and a source-timestamped executable quote from an already loaded MT5/QMT backend. Returns an observation_id that starts the model decision clock; no order is sent.",
+        "inputs": "{backend:\"mt5\"|\"qmt\",symbol:<exact broker symbol>}.",
+        "outputs": "{observation_id,backend,symbol,account,accountSummary,quote,positions,orders?,spec,capturedAt,expiresAt,policy,...}; times are epoch milliseconds. Use the returned observation_id for one intent.",
+        "prerequisites": [
+          "Main conversation only; task/tool names do not grant a delegated Agent this authority.",
+          "Already enabled/configured native backend with a fresh source-timestamped executable quote."
+        ],
+        "limitations": [
+          "Observation expires after the decision window and does not authorize execution. An observation consumed by an intent cannot be used for another intent.",
+          "MT5 requires the configured Python terminal, not only an EA/MCP quote connection. MT5_PYTHON_UNAVAILABLE with details.retryable=false identifies confirmed missing IPC; its recovery field explains the connection/account prerequisites. Account health is checked before the remaining snapshot reads; the capability never logs in or retries automatically."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "manual_trade_observe"
+      }
+    },
+    {
+      "id": "manual_trade_execute",
+      "kind": "function",
+      "description": "Submit one explicitly user-authorized order from a recent observation. M5+ only. In the native process recheck account, available position/specification, deadline and latest quote, then send once without another model turn. Stable operation_id prevents duplicates; stale/slow preparation rejects. unknown must be queried, never resent.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "operation_id",
+          "observation_id",
+          "user_authorized",
+          "action",
+          "side",
+          "quantity",
+          "price_limit"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,100}$"
+          },
+          "observation_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "ID from manual_trade_observe; one intent per observation"
+          },
+          "user_authorized": {
+            "type": "boolean",
+            "const": true
+          },
+          "timeframe": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "5m"
+              },
+              {
+                "type": "string",
+                "const": "15m"
+              },
+              {
+                "type": "string",
+                "const": "30m"
+              },
+              {
+                "type": "string",
+                "const": "1h"
+              },
+              {
+                "type": "string",
+                "const": "4h"
+              },
+              {
+                "type": "string",
+                "const": "1d"
+              }
+            ]
+          },
+          "action": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "market"
+              },
+              {
+                "type": "string",
+                "const": "limit"
+              },
+              {
+                "type": "string",
+                "const": "close"
+              }
+            ]
+          },
+          "side": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "buy"
+              },
+              {
+                "type": "string",
+                "const": "sell"
+              }
+            ]
+          },
+          "quantity": {
+            "type": "string",
+            "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+            "maxLength": 40,
+            "description": "MT5 lots or QMT integer shares, based on the user intent"
+          },
+          "price_limit": {
+            "type": "string",
+            "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+            "maxLength": 40,
+            "description": "Maximum buy/minimum sell executable quote. A market fill can still slip; use a limit order for a hard order-price limit"
+          },
+          "limit_price": {
+            "type": "string",
+            "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+            "maxLength": 40,
+            "description": "Required only for limit orders"
+          },
+          "position_id": {
+            "type": "string",
+            "pattern": "^[1-9]\\d*$",
+            "description": "Required MT5 position ticket for close"
+          },
+          "stop_loss": {
+            "type": "string",
+            "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+            "maxLength": 40,
+            "description": "Optional MT5 stop loss"
+          },
+          "take_profit": {
+            "type": "string",
+            "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$",
+            "maxLength": 40,
+            "description": "Optional MT5 take profit"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "run",
+      "effects": [
+        "broker.write",
+        "state.write"
+      ],
+      "usage": {
+        "purpose": "Submit one explicitly user-authorized order from a recent observation. M5+ only. In the native process recheck account, available position/specification, deadline and latest quote, then send once without another model turn. Stable operation_id prevents duplicates; stale/slow preparation rejects. unknown must be queried, never resent.",
+        "inputs": "{operation_id,observation_id,user_authorized:true,action:\"market\"|\"limit\"|\"close\",side,quantity,price_limit,timeframe?,limit_price?,position_id?}; quantity is an exact string in MT5 lots/QMT integer shares; limit requires limit_price; MT5 close requires the observed position ticket. timeframe defaults5m; 1h does not schedule repetition.",
+        "outputs": "Host Run output is one durable command record {id,status,receipt?,evidence?,intent,timing,error?}. Status may be rejected, submitted, execution_reported, partially_filled or outcome_unknown; query manual_trade_status(refresh:true) for broker evidence.",
+        "prerequisites": [
+          "Main conversation only; task/tool names do not grant a delegated Agent this authority.",
+          "An existing explicit user trading intent and recent unused manual_trade_observe observation; supported backend action from manual_trade_inspect."
+        ],
+        "limitations": [
+          "Stable operation_id + identical input prevents duplicate sends. price_limit bounds the executable quote, not a guaranteed market fill price; a hard order-price bound requires limit.",
+          "Expired observation before any dispatch may be reassessed. An unknown dispatched command must be reconciled under its original ID, never replaced."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "manual_trade_execute"
+      }
+    },
+    {
+      "id": "manual_trade_status",
+      "kind": "function",
+      "description": "Read a durable receipt; refresh reads the backend command and actual orders/fills for recovery. No matching record never proves a timed-out send failed. Does not replay or place orders.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "operation_id"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Existing operation ID"
+          },
+          "refresh": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "state.read",
+        "backend.read"
+      ],
+      "usage": {
+        "purpose": "Read a durable receipt; refresh reads the backend command and actual orders/fills for recovery. No matching record never proves a timed-out send failed. Does not replay or place orders.",
+        "inputs": "{operation_id:<existing exact command ID>,refresh?:false}.",
+        "outputs": "Stored command; refresh:true additionally reads native command/orders/fills, records evidence and checkedAt, and may resolve an uncertain state.",
+        "prerequisites": [
+          "Main conversation only; task/tool names do not grant a delegated Agent this authority.",
+          "The operation belongs to this conversation; refresh requires the same configured account."
+        ],
+        "limitations": [
+          "No matching order or deal does not prove a timed-out send failed. A native accepted receipt and an observed fill are distinct evidence."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "manual_trade_status"
+      }
+    },
+    {
+      "id": "manual_trade_cancel",
+      "kind": "function",
+      "description": "Request cancellation of a confirmed pending order created through this plugin, using a separate stable operation ID. Does not close a filled position. Query afterwards; cancel_requested is not confirmed cancellation.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "operation_id",
+          "original_operation_id",
+          "user_authorized"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,100}$"
+          },
+          "original_operation_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Original manual_trade_execute operation"
+          },
+          "user_authorized": {
+            "type": "boolean",
+            "const": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "run",
+      "effects": [
+        "broker.write",
+        "state.write"
+      ],
+      "usage": {
+        "purpose": "Request cancellation of a confirmed pending order created through this plugin, using a separate stable operation ID. Does not close a filled position. Query afterwards; cancel_requested is not confirmed cancellation.",
+        "inputs": "{operation_id:<new stable cancellation ID>,original_operation_id:<existing plugin order>,user_authorized:true}.",
+        "outputs": "Host Run output is a durable cancellation record with originalOperationId, receipt and status (cancel_requested/rejected/outcome_unknown); status(refresh:true) reads the original order evidence.",
+        "prerequisites": [
+          "Main conversation only; task/tool names do not grant a delegated Agent this authority.",
+          "User cancellation intent for a confirmed pending order created through this plugin."
+        ],
+        "limitations": [
+          "cancel_requested is not confirmed cancellation and cannot close an already filled position. Unknown cancel results retain the same cancellation ID."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "manual_trade_cancel"
+      }
+    },
+    {
+      "id": "dispose",
+      "kind": "function",
+      "description": "Close the private durable receipt database after all execution settles.",
+      "consumers": [
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "Close the private durable receipt database after all execution settles.",
+        "inputs": "Host lifecycle disposal payload.",
+        "outputs": "Private receipt storage closure acknowledgement.",
+        "prerequisites": [
+          "Host lifecycle only after active work settles."
+        ],
+        "limitations": [
+          "Does not issue broker cancellation or delete retained receipts."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "dispose"
+      }
+    }
+  ],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "instructions",
+      "path": "prompt.md",
+      "description": "Execution workflow and receipt recovery instructions.",
+      "kind": "prompt"
+    }
+  ],
+  "hooks": [
+    {
+      "id": "dispose",
+      "contract": "sesame.lifecycle/1",
+      "event": "lifecycle.dispose",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "operations": {
+        "handle": "dispose"
+      }
+    }
+  ],
+  "stateCollections": [],
+  "artifactSchemas": []
+}

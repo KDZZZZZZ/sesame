@@ -1,3 +1,4 @@
+import { records } from './records.js';
 import { mkdirSync, readdirSync, readFileSync, writeFileSync, rmSync, lstatSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse as parseTOML } from '@sesame/plugin-sdk/toml';
@@ -123,7 +124,7 @@ export function extractMT5Account(text, boundAccount = {}) {
 export class MT5ConfigImports {
   constructor(host, clock = Date.now, account = () => ({})) {
     this.host = host; this.clock = clock; this.account = account;
-    this.directory = join(host.storage.directory, 'mt5', 'pending-imports');
+    this.directory = join(records(host).directory, 'mt5', 'pending-imports');
     mkdirSync(this.directory, { recursive: true, mode: 0o700 }); securePath(this.directory);
     this.pending();
   }
@@ -169,10 +170,11 @@ export class MT5ConfigImports {
     content[matches.findIndex(Boolean)].text += `\n[Sesame 已安全提取用户提供的 MT5 配置]\nsource_message_id: ${messageId}\n${JSON.stringify({ servers: summary(servers), ...(account ? { account: accountSummary(account) } : {}) })}\n可用 mt5_import_configuration 按此引用导入；按用户意图处理，不需要再次索取凭据。此引用 24 小时后过期。`;
     return content;
   }
-  read(messageId, conversationId) {
+  async read(messageId, conversationId) {
     this.pending();
-    const message = this.host.messages.read(messageId, true);
-    requireValue(message?.role === 'user' && !message.source_conversation_id && !message.system_generated && message.origin !== 'automation' && message.conversation_id === conversationId,
+    const page = await this.host.data.query({ source: { providerId: 'host#messages', revision: 'host:2' }, operation: 'query', input: { sessionId: conversationId, ids: [messageId] }, limit: 1 });
+    const message = page.items[0];
+    requireValue(message?.role === 'user' && !message.source_conversation_id && !message.system_generated && message.origin !== 'automation' && (message.sessionId ?? message.conversation_id) === conversationId,
       '只能导入本次主会话用户直接提供的配置', 403);
     let record;
     try { const path = this.path(messageId); requireValue(!lstatSync(path).isSymbolicLink(), '配置引用无效'); record = JSON.parse(readFileSync(path, 'utf8')); }

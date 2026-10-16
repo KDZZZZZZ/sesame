@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ReplayMarketProvider, ReplayAccountProvider, registerProviders, marketDescriptor, accountDescriptor } from '../providers.js';
+import { ReplayMarketProvider, ReplayAccountProvider, marketDescriptor, accountDescriptor } from '../providers.js';
 
 const H = 3600000, T = Date.UTC(2010, 0, 1);
 const spec = basis => ({ timeframe: '1h', priceBasis: basis ?? 'bid', adjustment: 'none', session: 'all', calendarRevision: { status: 'unknown' } });
@@ -22,13 +22,10 @@ function fixture() {
 }
 const code = c => e => e.code === c;
 
-test('registration is public HostContext only, complete capability lists and idempotent disposal', () => {
-  const f = fixture(), records = [];
-  const dispose = registerProviders({ providers: { register: (descriptor, implementation) => { records.push({ descriptor, implementation, disposed: 0 }); const entry = records.at(-1); return () => entry.disposed++; } } }, f.service);
-  assert.deepEqual(records.map(x => x.descriptor.contract), ['sesame.market', 'sesame.account']);
-  for (const { descriptor, implementation } of records) assert.ok(descriptor.capabilities.length && implementation.bind);
-  dispose(); dispose(); assert.deepEqual(records.map(x => x.disposed), [1, 1]);
-  assert.throws(() => records[0].implementation.bind({}, f.context), code('CONNECTION_CHANGED'));
+test('provider projections are explicit and private lifecycle disposal is idempotent', () => {
+  const f=fixture();
+  assert.deepEqual([marketDescriptor.contract,accountDescriptor.contract],['sesame.market','sesame.account']);
+  for(const provider of [f.market,f.account]){provider.dispose();provider.dispose();assert.throws(()=>provider.bind({},f.context),code('CONNECTION_CHANGED'));}
 });
 
 test('exact simulation identities and SIMULATED account, currency and missing money stay honest', async () => {

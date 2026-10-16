@@ -11,10 +11,32 @@ const hex = (value, length) => typeof value === 'string' && new RegExp(`^[a-f0-9
 const git = (root, args) => execFileSync('git', args, { cwd: root, maxBuffer: 4 * 1024 * 1024 });
 const jsonAt = (root, commit, path) => JSON.parse(git(root, ['show', `${commit}:${path}`]));
 
+/** Project a verified package index without evaluating any plugin code. */
+export function catalogPackage(pkg, manifest, declaration, release, { withdrawn = false } = {}) {
+  require(manifest.apiVersion === '2' && declaration?.apiVersion === '2' && declaration.schemaVersion === 1 && Array.isArray(declaration.capabilities), 'Catalog requires API 2 manifests and explicit capability declarations');
+  require(manifest.id === pkg.id && manifest.version === pkg.version, 'Catalog package identity differs from its fixed manifest');
+  require(manifest.capability_manifest === 'capabilities.json' && pkg.files.some(file => file.path === manifest.capability_manifest), 'Catalog capability manifest must be the indexed capabilities.json');
+  require(manifest.tool_names === undefined && manifest.tool_definitions === undefined, 'API 2 capabilities have one declaration source');
+  const path = `${release.sourceRoot}/packages/${pkg.directory}`, mcp = manifest.execution === 'mcp';
+  return { id: pkg.id, name: pkg.directory, version: pkg.version, apiVersion: '2', format: mcp ? 'sesame-mcp' : 'sesame-native',
+    engines: manifest.engines, distribution: release.sourceRoot === 'plugins/api-v1' ? 'core' : 'optional',
+    title: manifest.title, description: manifest.description, license: manifest.license,
+    author: manifest.author ?? { name: 'Sesame contributors', url: `https://github.com/${REPOSITORY}` }, status: withdrawn ? 'withdrawn' : 'active',
+    release: release.tag, source: { repository: `https://github.com/${REPOSITORY}`, commit: release.sourceCommit, path },
+    package: { treeDigest: pkg.treeDigest, files: pkg.files }, capabilityManifest: manifest.capability_manifest,
+    capabilities: declaration.capabilities.map(({ id, kind, description, consumers, execution, effects, binding }) => ({ id, kind, description, consumers, execution, effects, binding })),
+    tools: declaration.capabilities.filter(cap => cap.consumers.includes('agent')).map(cap => cap.id),
+    review: { automated: 'package-static-review', human: 'not-recorded', record: release.review,
+      notes: 'The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety.' },
+    requirements: `Plugin API 2 host. ${mcp ? 'Declared MCP servers and tests run locally as the current user; reuse an existing compatible runtime.' : 'Native checks cover the explicit capability manifest and JavaScript syntax; activation follows installation.'} Read the declared capability usage and knowledge, and verify environment prerequisites separately. The catalog downloader does not install dependencies.`,
+    documentationUrl: `https://github.com/${REPOSITORY}/tree/${release.sourceCommit}/${path}`, feedbackUrl: `https://github.com/${REPOSITORY}/issues` };
+}
+
 // Candidate manifests are data. The fixed Git source is reconstructed and checked
 // by the same trusted archive builder used for release publication, never imported.
 export function buildCatalog(root = repository, sources = JSON.parse(readFileSync(join(root, 'plugins/api-v1/catalog.sources.json')))) {
   require(sources.schemaVersion === 1 && Array.isArray(sources.releases) && sources.releases.length === 2, 'Select one fixed official and one fixed optional release');
+  require(new Set(sources.releases.map(item => item.tag)).size === sources.releases.length, 'Catalog release group is missing or repeated');
   const withdrawals = sources.withdrawn ?? [];
   require(Array.isArray(withdrawals) && withdrawals.every(id => /^sesame\/[a-z][a-z0-9-]*$/.test(id)) && new Set(withdrawals).size === withdrawals.length, 'Withdrawals must be unique exact IDs');
   const releases = [], plugins = [], roots = new Set(), ids = new Set();
@@ -25,6 +47,7 @@ export function buildCatalog(root = repository, sources = JSON.parse(readFileSyn
     require(plan.tag === selected.tag && !roots.has(plan.sourceRoot), 'Catalog release group is missing or repeated'); roots.add(plan.sourceRoot);
     require(JSON.stringify(plan) === JSON.stringify(JSON.parse(readFileSync(join(root, planPath)))), 'Recorded release plan changed after publication');
     git(root, ['merge-base', '--is-ancestor', plan.sourceCommit, selected.releaseCommit]);
+    require(jsonAt(root, plan.sourceCommit, `${plan.sourceRoot}/official-plugins.lock.json`).apiVersion === '2', `Release ${plan.tag} is an API 1 historical snapshot; select a reviewed API 2 release instead of relabeling its bytes`);
     const prepared = prepareRelease(root, plan), lock = JSON.parse(prepared.files.get('official-plugins.lock.json'));
     const download = `https://github.com/${REPOSITORY}/releases/download/${plan.tag}`;
     const release = { tag: plan.tag, releaseCommit: selected.releaseCommit, sourceCommit: plan.sourceCommit, sourceRoot: plan.sourceRoot, ...(plan.profile ? { profile: plan.profile, engines: { sesame: '>=0.2.0-0' } } : {}),
@@ -35,19 +58,8 @@ export function buildCatalog(root = repository, sources = JSON.parse(readFileSyn
     for (const pkg of lock.packages) {
       require(!ids.has(pkg.id), `Repeated catalog identity: ${pkg.id}`); ids.add(pkg.id);
       const path = `${plan.sourceRoot}/packages/${pkg.directory}`, manifest = jsonAt(root, plan.sourceCommit, `${path}/plugin.json`);
-      const extension = manifest.extensions?.['bot.sesame'], standard = Boolean(manifest.$schema);
-      const definitions = jsonAt(root, plan.sourceCommit, `${path}/${standard ? extension.builtin.tool_definitions : manifest.tool_definitions}`);
-      plugins.push({ id: pkg.id, name: pkg.directory, version: pkg.version, apiVersion: '1', format: standard ? 'agent-plugins' : 'sesame-native',
-        ...(plan.profile ? { engines: extension?.engines ?? manifest.engines, distribution: plan.profile } : {}),
-        title: standard ? extension.builtin.title : manifest.title, description: manifest.description, license: manifest.license,
-        author: manifest.author ?? { name: 'Sesame contributors', url: `https://github.com/${REPOSITORY}` }, status: withdrawals.includes(pkg.id) ? 'withdrawn' : 'active',
-        release: plan.tag, source: { repository: `https://github.com/${REPOSITORY}`, commit: plan.sourceCommit, path },
-        package: { treeDigest: pkg.treeDigest, files: pkg.files },
-        tools: standard ? Object.entries(definitions).flatMap(([server, tools]) => tools.map(tool => ({ server, name: tool.name }))) : manifest.tool_names,
-        review: { automated: 'package-static-review', human: 'not-recorded', record: release.review,
-          notes: 'The linked publication record distinguishes static checks, maintainer-recorded Agent review and human approval. Static checks do not certify behavior, environment readiness or safety.' },
-        requirements: standard ? 'Plugin API 1 host. Declared stdio tests and servers execute locally as the current user; inspect and reuse an existing compatible runtime. No dependency installer is executed by the catalog downloader.' : 'Plugin API 1 host. Native checks cover manifest/schema/JavaScript syntax; installation activates the plugin. Read its skill and verify environment prerequisites separately. Existing host-granted migration access is not expanded by this catalog.',
-        documentationUrl: `https://github.com/${REPOSITORY}/tree/${plan.sourceCommit}/${path}`, feedbackUrl: `https://github.com/${REPOSITORY}/issues` });
+      const declared = jsonAt(root, plan.sourceCommit, `${path}/${manifest.capability_manifest}`);
+      plugins.push(catalogPackage(pkg, manifest, declared, release, { withdrawn: withdrawals.includes(pkg.id) }));
     }
     // Published readers interpret this optional shorthand as exact equality for
     // every package, not as a lower bound. prepareRelease already validated the
@@ -59,7 +71,7 @@ export function buildCatalog(root = repository, sources = JSON.parse(readFileSyn
   }
   require(withdrawals.every(id => ids.has(id)), 'Cannot withdraw an unknown package identity');
   plugins.sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
-  return { schemaVersion: 1, apiVersion: '1', channel: 'development', releases, plugins };
+  return { schemaVersion: 1, apiVersion: '2', channel: 'development', releases, plugins };
 }
 
 export function validatePublishedRelease(release, actual) {

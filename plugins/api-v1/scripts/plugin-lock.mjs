@@ -2,10 +2,10 @@ import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, lstatSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildApi2Lock } from './api2-lock-bootstrap.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const fail = (condition, message) => { if (!condition) throw new Error(message); };
+const bindingId = value => typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/.test(value);
 export const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 export const treeDigest = files => `sha256:${sha256(JSON.stringify([...files].sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0).map(file => [file.path, `sha256:${file.sha256}`])))}`;
 const safePath = path => typeof path === 'string' && path.length > 0 && path.length <= 512 && !/[\x00-\x1f\\:]/.test(path) && !path.startsWith('/') && path.split('/').every(part => part && part !== '.' && part !== '..' && !/[. ]$/.test(part) && !/^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part));
@@ -60,6 +60,10 @@ export function portableGzip(bytes) {
 export function packageFiles(directory, base = '') {
   const files = [];
   for (const name of readdirSync(directory).sort()) {
+    // Source-only residue from an old local SQLite round-trip fixture. This
+    // directory is never indexed or copied into the deterministic archive.
+    if (!base && /^\.core-sqlite-roundtrip-[A-Za-z0-9]+$/.test(name) && lstatSync(join(directory, name)).isDirectory()) continue;
+    if (name === '__pycache__' && lstatSync(join(directory, name)).isDirectory() || /\.py[co]$/.test(name) && lstatSync(join(directory, name)).isFile()) continue;
     fail(!['.git', 'node_modules', '__pycache__', '.DS_Store'].includes(name), `Local or generated files must not enter a plugin: ${base}${name}`);
     const path = base + name, absolute = join(directory, name), stat = lstatSync(absolute);
     fail(safePath(path) && !stat.isSymbolicLink(), `Unsafe package entry: ${path}`);
@@ -87,26 +91,6 @@ export function readProfile(source) {
 }
 
 export function buildLock(source = root) {
-  // Choose a trusted validator from manifest data; never execute candidate code.
-  const packageRoot = join(source, 'packages'), packageRootStat = lstatSync(packageRoot);
-  fail(packageRootStat.isDirectory() && !packageRootStat.isSymbolicLink(), 'Packages must be an ordinary directory');
-  const versions = new Set(), directories = readdirSync(packageRoot);
-  fail(directories.length > 0 && directories.length <= 100, 'Bundle requires 1–100 packages');
-  for (const directory of directories) {
-    fail(/^[a-z][a-z0-9-]*$/.test(directory), `Package directory must be a simple slug: ${directory}`);
-    const path = join(source, 'packages', directory), stat = lstatSync(path);
-    fail(stat.isDirectory() && !stat.isSymbolicLink(), `Package is not an ordinary directory: ${directory}`);
-    const manifestPath = join(path, 'plugin.json'), manifestStat = lstatSync(manifestPath);
-    fail(manifestStat.isFile() && !manifestStat.isSymbolicLink() && manifestStat.nlink === 1 && manifestStat.size <= 2 * 1024 * 1024, `${directory}: manifest must be an ordinary file within the byte budget`);
-    const manifest = JSON.parse(readFileSync(manifestPath)), extensionVersion = manifest.extensions?.['bot.sesame']?.apiVersion;
-    fail(manifest.apiVersion === undefined || extensionVersion === undefined || manifest.apiVersion === extensionVersion, `${directory}: conflicting API versions`);
-    const version = extensionVersion ?? manifest.apiVersion;
-    fail(['1', '2'].includes(version), `${directory}: unsupported API version`);
-    versions.add(version);
-  }
-  fail(versions.size === 1, 'Mixed API versions are not permitted in one bundle');
-  if (versions.has('2')) return buildApi2Lock(source, { packageFiles, readProfile, engineWithinProfile, treeDigest, safePath, semver });
-
   const packagesDirectory = join(source, 'packages'), packages = [], profile = readProfile(source);
   for (const directory of readdirSync(packagesDirectory).sort()) {
     fail(/^[a-z][a-z0-9-]*$/.test(directory), `Package directory must be a simple slug: ${directory}`);
@@ -123,24 +107,29 @@ export function buildLock(source = root) {
       const state = extension?.builtin?.default_state ?? manifest.default_state;
       fail(profile.kind === 'optional' ? state === 'discoverable' : ['mounted', 'discoverable'].includes(state), `${id}: profile default state differs`);
     }
-    fail((extension?.apiVersion ?? manifest.apiVersion) === '1', `${id}: API version must be 1`);
+    fail(manifest.apiVersion === '2', `${id}: API version must be 2`);
     fail(semver(manifest.version) && npm.version === manifest.version && npm.type === 'module', `${id}: package version or module scope differs`);
     fail(typeof manifest.license === 'string' && manifest.license === npm.license && names.has('LICENSE'), `${id}: explicit per-package license is required`);
-    if (manifest.$schema) {
-      fail(manifest.$schema === 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json' && !manifest.entry && names.has('mcp.json'), `${id}: unsupported standard MCP package`);
-      fail(extension.builtin && safePath(extension.builtin.tool_definitions) && names.has(extension.builtin.tool_definitions), `${id}: MCP tool schema is missing`);
-      const servers = JSON.parse(readFileSync(join(path, 'mcp.json'))).mcpServers;
-      const tools = JSON.parse(readFileSync(join(path, extension.builtin.tool_definitions)));
-      fail(servers && tools && JSON.stringify(Object.keys(servers).sort()) === JSON.stringify(Object.keys(tools).sort()) && Object.values(tools).every(Array.isArray), `${id}: MCP server and tool schema differ`);
-    } else {
-      fail(['mounted', 'discoverable', 'disabled'].includes(manifest.default_state), `${id}: invalid default state`);
-      fail(Array.isArray(manifest.tool_names) && new Set(manifest.tool_names).size === manifest.tool_names.length, `${id}: tool names must be unique`);
-      if (manifest.tool_names.length) fail(safePath(manifest.entry) && names.has(manifest.entry), `${id}: native entry is missing`);
-      fail(names.has(manifest.tool_definitions), `${id}: tool schema is missing`);
-      const tools = JSON.parse(readFileSync(join(path, manifest.tool_definitions)));
-      fail(Array.isArray(tools) && JSON.stringify(tools.map(tool => tool.name).sort()) === JSON.stringify([...manifest.tool_names].sort()), `${id}: tool schema differs from manifest`);
-      for (const resource of [...manifest.prompts ?? [], ...manifest.resources ?? []]) fail(safePath(resource) && names.has(resource), `${id}: missing resource ${resource}`);
+    fail(['mounted', 'discoverable', 'disabled'].includes(manifest.default_state), `${id}: invalid default state`);
+    fail(!Object.hasOwn(manifest, 'tool_names') && !Object.hasOwn(manifest, 'tool_definitions'), `${id}: capabilities.json is the single capability declaration`);
+    fail(safePath(manifest.capability_manifest) && names.has(manifest.capability_manifest), `${id}: capability manifest is missing`);
+    const declared = JSON.parse(readFileSync(join(path, manifest.capability_manifest)));
+    fail(declared.apiVersion === '2' && declared.schemaVersion === 1, `${id}: invalid capability manifest version`);
+    for (const field of ['capabilities', 'sources', 'views', 'services', 'knowledge', 'hooks', 'stateCollections', 'artifactSchemas']) fail(Array.isArray(declared[field]), `${id}: ${field} must be explicitly declared`);
+    fail(new Set(declared.capabilities.map(cap => cap.id)).size === declared.capabilities.length, `${id}: capability IDs must be unique`);
+    const servers = manifest.execution === 'mcp' ? JSON.parse(readFileSync(join(path, 'mcp.json'))).mcpServers : {};
+    for (const cap of declared.capabilities) {
+      fail(typeof cap.id === 'string' && cap.inputSchema && cap.outputSchema && cap.usage && ['purpose', 'inputs', 'outputs'].every(key => typeof cap.usage[key] === 'string' && cap.usage[key].trim()) && ['prerequisites', 'limitations'].every(key => Array.isArray(cap.usage[key])), `${id}: incomplete capability declaration ${cap.id}`);
+      fail(Array.isArray(cap.consumers) && cap.consumers.length && cap.consumers.every(value => ['agent', 'host'].includes(value)), `${id}: capability consumers must be explicit`);
+      const binding = cap.binding;
+      fail(binding !== null && typeof binding === 'object' && !Array.isArray(binding), `${id}: capability binding must be an object: ${cap.id}`);
+      fail(['native', 'mcp', 'agent', 'graph'].includes(binding.type), `${id}: unsupported binding type: ${cap.id}`);
+      if (binding.type === 'native' || binding.type === 'mcp') fail(bindingId(binding.name), `${id}: binding name must be a valid local ID: ${cap.id}`);
+      if (binding.type === 'mcp') fail(bindingId(binding.server), `${id}: binding server must be a valid local ID: ${cap.id}`);
+      if (cap.binding?.type === 'native') fail(safePath(manifest.entry) && names.has(manifest.entry), `${id}: native entry is missing`);
+      if (binding.type === 'mcp') fail(servers && Object.hasOwn(servers, binding.server) && servers[binding.server], `${id}: undeclared MCP server binding`);
     }
+    for (const resource of [...manifest.prompts ?? [], ...manifest.resources ?? [], ...declared.knowledge.map(item => item.path)]) fail(safePath(resource) && names.has(resource), `${id}: missing resource ${resource}`);
     for (const file of files.filter(file => /\.(?:m?js|cjs)$/.test(file.path))) {
       const text = readFileSync(join(path, file.path), 'utf8');
       if (profile) fail(!/\bstorage\s*(?:(?:\?\.)?\[\s*['"]legacy['"]\s*\]|(?:\?\.|\.)\s*legacy\b)/.test(text), `${id}: profiled packages must use private storage`);
@@ -156,7 +145,7 @@ export function buildLock(source = root) {
   }
   if (profile) fail(JSON.stringify(packages.map(pkg => pkg.id).sort()) === JSON.stringify([...profile.packages].sort()), 'Package set differs from the reviewed core/optional profile');
   fail(packages.length > 0 && packages.length <= 100, 'Bundle requires 1–100 packages');
-  return { schemaVersion: 1, apiVersion: '1', channel: 'development', packages };
+  return { schemaVersion: 1, apiVersion: '2', channel: 'development', packages };
 }
 
 function tarFile(name, bytes) {
@@ -194,5 +183,5 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     fail(args[archiveIndex + 1], '--archive needs an output path'); const target = resolve(args[archiveIndex + 1]), bytes = createArchive(source, lock);
     mkdirSync(dirname(target), { recursive: true }); writeFileSync(target, bytes);
     console.log(JSON.stringify({ archive: target, bytes: bytes.length, sha256: sha256(bytes), lockSha256: sha256(text), packages: lock.packages.length }));
-  } else console.log(`Validated ${lock.packages.length} API ${lock.apiVersion} packages; lock sha256:${sha256(text)}`);
+  } else console.log(`Validated ${lock.packages.length} API 2 packages; lock sha256:${sha256(text)}`);
 }

@@ -6,22 +6,7 @@
   "license": "MIT",
   "default_state": "discoverable",
   "entry": "index.js",
-  "apiVersion": "1",
-  "provides": {
-    "sesame.market": "1"
-  },
-  "tool_names": [
-    "akshare_discover",
-    "akshare_status",
-    "akshare_prepare",
-    "akshare_catalog",
-    "akshare_query",
-    "akshare_quote"
-  ],
-  "tool_definitions": "tools.json",
-  "workers": [
-    "worker.js"
-  ],
+  "apiVersion": "2",
   "prompts": [
     "prompt.md"
   ],
@@ -34,5 +19,6 @@
   ],
   "engines": {
     "sesame": ">=0.2.0-0"
-  }
+  },
+  "capability_manifest": "capabilities.json"
 }

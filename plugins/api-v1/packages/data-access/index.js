@@ -1,3 +1,3 @@
-import { createTools as access } from './tools.js';
-import { createTools as research } from './research-tools.js';
-export function createTools(host) { return [...access(host), ...research(host)]; }
+import { createCapabilities as data } from './tools.js';
+import { createCapabilities as research } from './research-tools.js';
+export const createCapabilities = host => [...data(host), ...research(host)];

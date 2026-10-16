@@ -1,48 +1,34 @@
 {
   "id": "sesame/plugin-manager",
   "title": "插件管理",
-  "description": "发现和管理插件；内外部 Agent 共用开发 Skill 与模板，创建、验证、测试、安装、升级和交付插件。",
-  "version": "2.3.0",
+  "description": "发现、检查安装和管理显式声明的 API 2 插件，生成可独立开发的完整草稿。",
+  "version": "3.0.0",
   "default_state": "mounted",
-  "tool_names": [
-    "plugin_discover",
-    "plugin_load",
-    "plugin_catalog",
-    "plugin_install_catalog",
-    "plugin_read",
-    "plugin_inspect",
+  "execution": "native",
+  "entry": "index.js",
+  "apiVersion": "2",
+  "capability_manifest": "capabilities.json",
+  "main_tool_names": [
     "plugin_create",
-    "plugin_validate",
-    "plugin_test",
     "plugin_install",
-    "plugin_set_state",
+    "plugin_install_catalog",
     "plugin_update",
-    "plugin_rollback",
-    "plugin_uninstall",
-    "plugin_export"
+    "plugin_uninstall"
   ],
   "prompts": [
     "prompt.md"
   ],
-  "skills": ["skills"],
-  "resources": ["README.md", "scaffold.js", "scripts/create-plugin.mjs"],
-  "entry": "index.js",
-  "tool_definitions": "tools.json",
-  "main_tool_names": [
-    "plugin_inspect",
-    "plugin_create",
-    "plugin_validate",
-    "plugin_test",
-    "plugin_install",
-    "plugin_set_state",
-    "plugin_update",
-    "plugin_rollback",
-    "plugin_uninstall",
-    "plugin_export",
-    "plugin_install_catalog"
+  "skills": [
+    "skills"
   ],
-  "apiVersion": "1",
-  "provides": {},
+  "resources": [
+    "README.md",
+    "scaffold.js",
+    "scripts/create-plugin.mjs",
+    "skills/develop-plugins/references/authoring.md",
+    "skills/develop-plugins/references/host-api.md",
+    "skills/develop-plugins/references/recovery.md"
+  ],
   "license": "MIT",
   "engines": {
     "sesame": ">=0.2.2"

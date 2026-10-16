@@ -1,11 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, realpath, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
-import { AKShareProvider, descriptor, mapBar, wall as projectWall } from '../../optional-api-v1/packages/akshare/provider.js';
-import { marketReadTools } from '../packages/data-access/market-read.js';
+import { AKShareProvider, mapBar, wall as projectWall } from '../../optional-api-v1/packages/akshare/provider.js';
+import { marketReadCapabilities } from '../packages/data-access/market-read.js';
+import { resourceHost } from './core-v2-fixture.mjs';
 
 const authority = 'Asia/Shanghai';
 const timeBasis = { kind: 'wall', authority, zone: authority };
@@ -16,11 +13,13 @@ const instrument = source => ({ sourceId: `akshare:${source}:a-share`, instrumen
 const row = day => ({ date: `2024-09-${day}`, open: '10.0000000000000001', high: '11', low: '9', close: '10.5', volume: '9007199254740993' });
 function fixture(source = 'tencent') {
   const calls = [], context = { bindingId: `fixture-${source}` };
-  const provider = new AKShareProvider({ environment: { executeWorker: async (_entry, payload) => {
+  const provider = new AKShareProvider({});
+  provider.fetch = async (name, args) => {
+    const payload = { interface: name, arguments: args };
     calls.push(payload);
     const rows = ['stock_zh_a_spot_tx', 'stock_info_a_code_name'].includes(payload.interface) ? [{ code: '000001', name: 'Fixture stock' }] : ['02', '03', '04'].map(day => source === 'eastmoney' ? { '日期': row(day).date, '开盘': row(day).open, '最高': row(day).high, '最低': row(day).low, '收盘': row(day).close, '成交量': row(day).volume } : row(day));
     return { interface: payload.interface, observedAt: Date.parse('2024-10-01T00:00:00Z'), akshareVersion: '1.19.1', rows };
-  } } });
+  };
   const bound = provider.bind({ configuration: { source } }, context);
   return { provider, context, bound, calls, query: { instrument: instrument(source), spec, range: range(), page: { limit: 1 } } };
 }
@@ -94,7 +93,7 @@ test('UTC projection follows historical Shanghai DST and preserves millisecond h
     ['2024-09-02T01:30:00.001Z', '2024-09-02T09:30:00.001'],
   ]) assert.equal(projectWall({ basis: 'utc', unixMs: Date.parse(utc) }), expected);
   const f = fixture();
-  f.provider.host.environment.executeWorker = async (_entry, payload) => ({ interface: payload.interface, observedAt: 0, akshareVersion: '1.19.1', rows: [{ ...row('02'), date: '1991-07-01' }] });
+  f.provider.fetch = async name => ({ interface: name, observedAt: 0, akshareVersion: '1.19.1', rows: [{ ...row('02'), date: '1991-07-01' }] });
   try {
     const instant = Date.parse('1991-07-01T00:30:00Z');
     const query = { ...f.query, range: { from: { basis: 'utc', unixMs: instant }, to: { basis: 'utc', unixMs: instant + 1 } } };
@@ -108,7 +107,7 @@ test('UTC projection follows historical Shanghai DST and preserves millisecond h
 
 test('UTC ranges keep their instant ordering across Shanghai clock rollback and spring-forward', async () => {
   const f = fixture();
-  f.provider.host.environment.executeWorker = async (_entry, payload) => ({ interface: payload.interface, observedAt: 0, akshareVersion: '1.19.1', rows: ['1991-04-13', '1991-04-14', '1991-09-14', '1991-09-15', '1991-09-16'].map(date => ({ ...row('02'), date })) });
+  f.provider.fetch = async name => ({ interface: name, observedAt: 0, akshareVersion: '1.19.1', rows: ['1991-04-13', '1991-04-14', '1991-09-14', '1991-09-15', '1991-09-16'].map(date => ({ ...row('02'), date })) });
   const query = async (from, to) => f.provider.queryBars({ ...f.query, page: { limit: 20 }, range: { from: { basis: 'utc', unixMs: Date.parse(from) }, to: { basis: 'utc', unixMs: Date.parse(to) } } }, f.context);
   try {
     // Both endpoints are in the repeated hour: wall strings reverse, instants do not.
@@ -126,36 +125,29 @@ test('UTC ranges keep their instant ordering across Shanghai clock rollback and 
   } finally { f.provider.dispose(); }
 });
 
-const hostRoot = process.env.SESAME_HOST_ROOT;
-test('unchanged data-access market_read freezes zoned, legacy and UTC requests through real public host ports', { skip: !hostRoot }, async t => {
-  const load = path => import(pathToFileURL(join(hostRoot, path)));
-  const { Store } = await load('modules/agent/store.js');
-  const { ContractArtifacts } = await load('modules/plugins/artifacts.js');
-  const { ProviderRegistry } = await load('modules/plugins/providers.js');
-  const { createHostContext } = await load('modules/plugins/context.js');
-  const directory = await realpath(await mkdtemp(join(tmpdir(), 'sesame-akshare-zone-host-')));
-  const store = new Store(join(directory, 'state')), registry = new ProviderRegistry();
-  const f = fixture(), plugin = { id: 'sesame/akshare', version: '1.0.5', digest: `sha256:${'a'.repeat(64)}` };
-  f.provider.unbind(f.context);
-  const dispose = registry.register(plugin, descriptor, f.provider);
-  const runtime = { store, providers: registry, contractArtifacts: new ContractArtifacts(store) };
-  const host = createHostContext(runtime, { id: 'sesame/data-access', version: '2.3.0', digest: `sha256:${'d'.repeat(64)}` });
-  const tool = marketReadTools(host)[0];
+test('data-access market_read composes with AKShare query pages and freezes exact zoned, zoneless and UTC evidence', async t => {
+  const f = fixture(), resources = resourceHost();
+  resources.host.data = { query: async request => {
+    assert.equal(request.source.providerId, 'sesame/akshare#market');
+    assert.equal(request.operation, 'queryBars');
+    const result = await f.provider.queryBars({ ...request.input, page: { limit: request.limit, cursor: request.cursor } }, f.context);
+    const { page, ...metadata } = result.data;
+    return { items: page.items, nextCursor: page.nextCursor, metadata: { ...metadata, snapshotId: page.snapshotId, consistency: page.consistency, meta: result.meta, connection: f.bound.connection } };
+  } };
+  const tool = marketReadCapabilities(resources.host)[0];
   try {
     for (const [name, requested] of [['zoned', range()], ['legacy', range(false)], ['utc', { from: { basis: 'utc', unixMs: Date.parse('2024-09-01T00:00:00+08:00') }, to: { basis: 'utc', unixMs: Date.parse('2024-10-01T00:00:00+08:00') } }]]) await t.test(name, async () => {
-      const args = { operation_id: `zone-${name}`, title: 'Controlled source fixture', provider: { pluginId: plugin.id, providerId: 'market' }, configuration: { source: 'tencent' }, instrument: instrument('tencent'), spec, range: requested, include_forming: false, volume_kind: 'real', max_rows: 1000 };
-      const output = (await tool.execute('fixture', args)).details;
-      assert.equal(output.row_count, 2); assert.equal(output.status, 'partial');
-      const rows = runtime.contractArtifacts.data(output.ref).rows;
+      const args = { operation_id: `zone-${name}`, title: 'Controlled source fixture', source: { providerId: 'sesame/akshare#market', revision: 'fixture', binding: { configuration: { source: 'tencent' } } }, instrument: instrument('tencent'), spec, range: requested, include_forming: false, volume_kind: 'real', max_rows: 1000 };
+      const output = await tool.execute(args);
+      assert.equal(output.rowCount, 2); assert.equal(output.status, 'partial');
+      const rows = resources.rows(output.ref);
       assert.equal(rows.length, 2); rows.forEach(bar => checkZone({ openTime: bar.datetime, endTime: bar.end_time }, name === 'legacy' ? undefined : authority));
       assert.equal(rows[0].open, '10.0000000000000001'); assert.equal(rows[0].volume, '9007199254740993');
-      assert.deepEqual(store.get('dataset', output.dataset_id).rows, rows);
-      const raw = runtime.contractArtifacts.read(output.raw), blob = raw.manifest.blobs.find(item => item.path === 'responses.json');
-      const retained = JSON.parse(runtime.contractArtifacts.readBlob(blob));
+      const retained = resources.rows(output.evidence);
       assert.deepEqual(retained.pages[0].meta.source.timeBasis, timeBasis);
       const before = f.calls.length;
-      assert.deepEqual((await tool.execute('fixture-retry', args)).details.ref, output.ref);
-      assert.equal(f.calls.length, before); assert.equal(registry.bindings.size, 0); assert.equal(f.provider.snapshots.size, 0);
+      assert.deepEqual((await tool.execute(args)).ref, output.ref);
+      assert.equal(f.calls.length, before);
     });
-  } finally { await dispose(); store.close(); await rm(directory, { recursive: true, force: true }); }
+  } finally { f.provider.unbind(f.context); assert.equal(f.provider.snapshots.size, 0); f.provider.dispose(); }
 });

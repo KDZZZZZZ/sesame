@@ -8,7 +8,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const hostRoot = process.env.SESAME_HOST_ROOT;
 const pluginId = 'sesame/auto-factor-mining';
-const roles = ['supervisor', 'researcher', 'coder', 'reviewer', 'reflector', 'reporter'];
+const roles = ['supervisor', 'researcher', 'coder', 'reviewer', 'reflector'];
 const packageRoot = fileURLToPath(new URL('../packages/auto-factor-mining/', import.meta.url));
 let sequence = 0;
 
@@ -49,11 +49,11 @@ function syntheticRows() {
   }))).flat();
 }
 
-test('installed factor workflow executes parallel research with role models, archives actual evidence and resumes after Store reopen', { skip: !hostRoot, timeout: 150000 }, async t => {
+test('installed factor workflow executes parallel research with role models, archives actual evidence and resumes after Store reopen', { skip: !hostRoot, timeout: 300000 }, async t => {
   const load = relative => import(pathToFileURL(join(hostRoot, relative)));
   const { fixture, eventually } = await load('tests/fixture-provider.js');
   const { createTools } = await load('modules/agent/tools.js');
-  const { createHostContext } = await load('modules/plugins/context.js');
+  const { createHostContextV2: createHostContext } = await load('modules/plugins/host-v2/context.js');
   const { Store } = await load('modules/agent/store.js');
   const { Runtime } = await load('modules/agent/runtime.js');
   const observations = [], observedData = [], failures = [], held = [];
@@ -63,7 +63,7 @@ test('installed factor workflow executes parallel research with role models, arc
       const input = taskInput(body);
       if (!input?.runId) { respond(response, body.model, 'Local fixture ready.'); return true; }
       assert.equal(body.model, `factor-${input.role}`, 'Every role must reach its selected model transport.');
-      const expectedTools = input.mode === 'report' ? ['auto_factor_report'] : input.mode === 'finalize' ? ['auto_factor_finalize', 'factor_evaluate'] : ['auto_factor_context', 'auto_factor_submit', 'factor_evaluate'];
+      const expectedTools = ['auto_factor_context', 'auto_factor_submit', 'host_runs_interrupt', 'host_runs_read', 'host_runs_wait'];
       assert.deepEqual(body.tools.map(tool => tool.function.name).sort(), expectedTools.sort());
       for (const tool of body.tools) assert.equal(tool.function.parameters.type, 'object');
       observations.push({ ...input, model: body.model });
@@ -153,40 +153,38 @@ test('installed factor workflow executes parallel research with role models, arc
       assert.ok(tool, `Tool missing: ${name}`);
       const result = await tool.execute(`factor-host-${++sequence}`, args);
       assert.notEqual(result.isError, true, JSON.stringify(result));
-      return result.details;
+      if (result.details?.type !== 'run') return result.details;
+      const settled = await runtime.runs.wait(result.details.run.id, { timeoutMs: 30000 });
+      if (settled.run.status !== 'completed') throw new Error(settled.run.error?.message ?? settled.run.status);
+      return settled.run.output;
     };
     const main = (name, args) => invoke(app.runtime, 'conv_main', name, args);
-    const manifest = JSON.parse(await readFile(join(packageRoot, 'plugin.json')));
+    const manifest = JSON.parse(await readFile(join(packageRoot, 'capabilities.json')));
     const visible = createTools(app.runtime, 'conv_main').map(tool => tool.name);
-    for (const name of manifest.tool_names) assert.ok(visible.includes(name), name);
+    for (const capability of manifest.capabilities.filter(value => value.consumers.includes('agent'))) assert.ok(visible.includes(capability.id), capability.id);
     const outsider = app.runtime.createConversation('fixture', 'Unassigned research task', 'conv_main');
     app.runtime.plugins.activate(outsider.id, pluginId);
-    const childTools = app.runtime.plugins.activeTools(outsider.id);
-    for (const name of manifest.main_tool_names) assert.equal(childTools.includes(name), false, name);
-    for (const name of manifest.tool_names.filter(name => !manifest.main_tool_names.includes(name))) assert.ok(childTools.includes(name), name);
     const mainHost = createHostContext(app.runtime, app.runtime.plugins.entry(pluginId), 'conv_main');
-    assert.equal(mainHost.storage.get('runs', 'missing-first-run', true), null, 'Optional first get works against the actual Store.');
     const available = await main('auto_factor_models');
     const byRole = Object.fromEntries(roles.map(role => [role, available.models.find(model => model.id === `factor-${role}`)]));
     for (const model of Object.values(byRole)) assert.match(model.configurationDigest, /^sha256:/);
     const rows = syntheticRows();
-    mainHost.datasets.register({ id: 'factor-fictional-data', title: 'Invented panel for integration test only', rows, provenance: { kind: 'demo', source_kind: 'synthetic' } });
+    app.store.put('dataset', { id: 'factor-fictional-data', title: 'Invented panel for integration test only', rows, provenance: { kind: 'demo', source_kind: 'synthetic' } });
     const input = { request_id: 'parallel-fixture', title: '本地虚构因子研究', goal: '验证真实宿主多角色工具循环，不检验市场收益。', dataset_id: 'factor-fictional-data',
       config: { model: byRole.supervisor, agentModels: byRole, directions: ['正向组别', '反向对照'], rounds: 1, maxTrials: 2, parallelism: 2, evaluator: { plugin_id: 'sesame/factor-evaluator', tool: 'factor_evaluate', arguments: { dataset: datasetConfig } } } };
     testStage = 'first-run';
     const created = await main('auto_factor_start', input);
     await assert.rejects(() => main('factor_evaluate', { protocol: 'sesame.factor-evaluator/v1', action: 'prepare', run_id: created.id, dataset_id: input.dataset_id,
       access: 'restricted', options: { dataset: datasetConfig } }), /nested workflow/);
-    await assert.rejects(() => mainHost.tools.call({ pluginId: 'sesame/factor-evaluator', name: 'factor_evaluate', arguments: { protocol: 'sesame.factor-evaluator/v1', action: 'finalize', run_id: created.id } }), /current Agent tool invocation/);
     const activity = await main('auto_factor_activity', { run_id: created.id });
-    assert.equal(activity.panel, 'report'); assert.equal(typeof activity.viewId, 'string');
-    assert.equal(activity.url, undefined);
+    assert.equal(activity.opened, true); assert.equal(typeof activity.runId, 'string');
     const finish = async (runtime, id) => {
       const run = await eventually(async () => {
         if (failures.length) throw failures[0];
         const value = await invoke(runtime, 'conv_main', 'auto_factor_runs', { action: 'read', run_id: id });
-        return (value.report || value.reportError) && value.tasks.every(task => task.finishedAt) && runtime.agentTasks.running.size === 0 ? value : false;
-      }, 50000);
+        return (value.report || value.reportError) && value.tasks.every(task => task.finishedAt) && runtime.agentTasks.running.size === 0 &&
+          ['completed', 'failed', 'cancelled', 'unknown'].includes(runtime.runs.read(value.workflow.id).status) ? value : false;
+      }, 120000);
       assert.equal(run.status, 'completed', JSON.stringify({ error: run.error, tasks: run.tasks, trials: run.trials }));
       assert.equal(run.reportPending, false, JSON.stringify(run.reportError));
       return run;
@@ -198,81 +196,107 @@ test('installed factor workflow executes parallel research with role models, arc
     const parallelHypotheses = done.tasks.filter(task => task.mode === 'hypothesis');
     assert.equal(parallelHypotheses.length, 2);
     assert.ok(Math.max(...parallelHypotheses.map(task => task.createdAt)) <= Math.min(...parallelHypotheses.map(task => task.finishedAt)), 'Both research directions were dispatched before either finished.');
-    assert.deepEqual(new Set(done.tasks.map(task => task.mode)), new Set(['plan', 'hypothesis', 'code', 'review', 'reflection', 'selection', 'finalize', 'report']));
+    assert.deepEqual(new Set(done.tasks.map(task => task.mode)), new Set(['plan', 'hypothesis', 'code', 'review', 'reflection', 'selection']));
     assert.ok(done.tasks.every(task => task.status === 'completed'));
     for (const task of done.tasks) assert.deepEqual(task.model, byRole[task.role]);
-    assert.ok(done.tasks.every(task => app.runtime.agentTasks.raw(task.id).request.output.type === 'none'), 'Roles never create individual report entries.');
-    const snapshot = await main('auto_factor_activity', { action: 'read', run_id: created.id });
-    assert.equal(snapshot.run.status, 'completed');
-    assert.ok(snapshot.events.some(event => event.type === 'report.read' && event.fromTaskId && event.toTaskId));
-    assert.ok(snapshot.tasks.every(task => !('arguments' in (task.publicOutput ?? {}))));
-    assert.equal(snapshot.holdout, undefined); assert.equal(snapshot.run.holdout, undefined);
+    assert.ok(done.tasks.every(task => task.runRef && app.runtime.runs.read(task.runRef.id).capabilityId === 'host.agent.run'), 'Every research role owns a tracked Agent Run.');
+    const workflow = app.runtime.runs.read(done.workflow.id);
+    assert.equal(workflow.kind, 'workflow'); assert.equal(workflow.status, 'completed'); assert.notEqual(workflow.executionSessionId, 'conv_main');
+    assert.ok(done.tasks.every(task => app.runtime.runs.read(task.runRef.id).parentRunId === workflow.id));
+    assert.ok(app.runtime.runs.readHistory(workflow.id, { type: 'handoff' }).items.some(event => event.data.fromRunId && event.data.toRunId));
     assert.equal(done.selection.trialIds.length, 1);
     assert.ok(Number.isFinite(done.holdout[done.selection.trialIds[0]].rankIC));
     assert.ok(observedData.length > 0);
     assert.equal(app.runtime.messages('conv_main').length, 0, 'Background research creates no fake user messages.');
     testStage = 'archive';
-    const files = mainHost.reports.files.forSpace('research');
+    const files = { list: options => app.runtime.reportLibrary.list({ space: 'research', ...options }), read: options => app.runtime.reportLibrary.read({ space: 'research', ...options }) };
+    await app.runtime.reportLibrary.flush();
     assert.equal((await files.list({ recursive: true })).entries.filter(entry => entry.path.endsWith('.html')).length, 1);
-    const html = await files.read({ path: done.report.path });
+    const target = app.runtime.reportLibrary.boundTarget(workflow.executionSessionId);
+    const html = await files.read({ path: target.path });
     assert.match(html.content, /<!doctype html>/i);
     assert.ok(html.content.includes(done.id));
-    const evidence = JSON.parse((await files.read({ path: done.report.dataPath })).content);
+    const attachment = async name => {
+      let offset=0, parts=[];
+      for (;;) { const part=await mainHost.resources.read(done.report.ref,{part:'content',entry:name,offset,encoding:'base64'});parts.push(Buffer.from(part.content,'base64'));if(part.nextOffset===undefined)break;offset=part.nextOffset; }
+      return JSON.parse(Buffer.concat(parts).toString());
+    };
+    const evidence = await attachment('run.json');
     assert.deepEqual(evidence.selection, done.selection);
     assert.deepEqual(evidence.trials, done.trials);
-    const frozenDataset = JSON.parse((await files.read({ path: done.report.datasetPath })).content);
+    const frozenDataset = await attachment('dataset.json');
     assert.deepEqual(frozenDataset.dataset.rows, rows);
-    const factors = JSON.parse((await files.read({ path: done.report.factorsPath })).content);
+    const factors = await attachment('factors.json');
     assert.equal(factors.factors.length, 1);
     assert.deepEqual(factors.factors[0].candidate, done.trials.find(trial => trial.status === 'accepted').candidate);
-    assert.ok(mainHost.artifacts.read(done.report.evidenceRef));
+    assert.equal((await mainHost.resources.read(done.report.ref, { part: 'manifest' })).kind, 'report');
     testStage = 'idempotency';
     const requestCount = observations.length;
     assert.equal((await main('auto_factor_start', input)).id, done.id);
     assert.equal(observations.length, requestCount, 'Request retry does not repeat research.');
-    assert.equal((await main('auto_factor_report', { run_id: done.id })).fileId, done.report.fileId);
-    assert.equal((await files.read({ path: done.report.path })).content, html.content);
+    assert.deepEqual((await main('auto_factor_report', { run_id: done.id })).ref, done.report.ref);
+    assert.equal((await files.read({ path: target.path })).content, html.content);
 
     // Pause after a durable hypothesis. Reopen the actual SQLite Store and
-    // Runtime; only explicit resume may submit a new Agent for unfinished code.
+    // Runtime; explicit resume continues the same accepted Agent and workflow.
     testStage = 'second-run-start';
     holdCode = true;
     const second = await main('auto_factor_start', { ...input, request_id: 'resume-fixture', title: '暂停及重开测试', config: { ...input.config, directions: ['正向组别'], maxTrials: 1 } });
     await eventually(() => held.length > 0, 20000);
     const streaming = await eventually(async () => {
-      const value = await main('auto_factor_activity', { action: 'read', run_id: second.id });
-      return value.tasks.some(task => task.role.startsWith('coder:') && task.status === 'running' && task.publicOutput?.text.includes('公开协作进度')) ? value : false;
+      const value = await main('auto_factor_runs', { action: 'read', run_id: second.id });
+      const task = value.tasks.find(task => task.role === 'coder');
+      if (!task) return false;
+      const actual = app.runtime.runs.read(task.runRef.id), session = actual.executionSessionId;
+      return session && app.runtime.messages(session).some(message => JSON.stringify(message).includes('公开协作进度')) ? actual : false;
     }, 10000);
-    assert.equal(streaming.run.status, 'running');
-    assert.equal((await files.list({ recursive: true })).entries.filter(entry => entry.path.endsWith('.html')).length, 1, 'No report is written while the next run is active.');
+    assert.equal(streaming.status, 'running');
+    assert.equal(app.runtime.runs.read((await main('auto_factor_runs', { action: 'read', run_id: second.id })).workflow.id).report, undefined, 'An active workflow has no published final report.');
+    assert.equal((await files.list({ recursive: true })).entries.filter(entry => entry.path.endsWith('.html')).length, 2, 'The host reserves the next report destination before work begins.');
     testStage = 'pause';
-    const paused = await main('auto_factor_runs', { action: 'pause', run_id: second.id });
-    assert.equal(paused.status, 'paused');
+    await main('auto_factor_runs', { action: 'pause', run_id: second.id });
+    const paused = await eventually(async () => {
+      const value = await main('auto_factor_runs', { action: 'read', run_id: second.id });
+      return value.status === 'interrupted' && app.runtime.runs.read(value.workflow.id).status === 'interrupted' ? value : false;
+    }, 20000);
+    const retainedWorkflow = app.runtime.runs.read(paused.workflow.id), retainedCoder = paused.tasks.find(task => task.mode === 'code').runRef.id;
     assert.ok(paused.tasks.some(task => task.mode === 'hypothesis' && task.output));
-    await assert.rejects(main('auto_factor_report', { run_id: second.id }), /Only completed, cancelled or exhausted/);
-    assert.equal((await files.list({ recursive: true })).entries.filter(entry => entry.path.endsWith('.html')).length, 1);
+    await assert.rejects(main('auto_factor_report', { run_id: second.id }), /no published report/);
+    assert.equal((await files.list({ recursive: true })).entries.filter(entry => entry.path.endsWith('.html')).length, 2, 'Interruption retains the host reservation and business checkpoint.');
     const beforeReopen = observations.length;
     testStage = 'reopen';
     await app.close();
     reopenedStore = new Store(join(app.directory, 'app'));
     reopenedRuntime = await new Runtime(reopenedStore, { piDir: app.directory, modelRuntime, model: modelRuntime.getModel('fixture', 'fixture') }).init();
     const reopened = (name, args) => invoke(reopenedRuntime, 'conv_main', name, args);
-    assert.equal((await reopened('auto_factor_runs', { action: 'read', run_id: second.id })).status, 'paused');
+    assert.equal((await reopened('auto_factor_runs', { action: 'read', run_id: second.id })).status, 'interrupted');
     assert.equal(observations.length, beforeReopen, 'Reopening must not replay paused research.');
     assert.deepEqual((await reopened('auto_factor_runs', { action: 'read', run_id: done.id })).trials, done.trials);
     testStage = 'resume';
     holdCode = false;
-    await reopened('auto_factor_runs', { action: 'resume', run_id: second.id });
+    const pending = await reopened('auto_factor_runs', { action: 'read', run_id: second.id });
+    assert.equal(pending.interrupts.length, 1);
+    const resumeInput = { action: 'resume', run_id: second.id, interrupt_ids: [pending.interrupts[0].id], response: { resolution: 'Fixture stream ready' } };
+    await assert.rejects(reopened('auto_factor_runs', resumeInput), { code: 'run_resume_requires_user' });
+    const userId = 'fixture-resume-user', responseId = 'fixture-resume-response';
+    reopenedStore.put('message', { id: userId, conversation_id: 'conv_main', role: 'user', status: 'accepted', created_at: new Date(Date.now() + 1).toISOString(), content: [{ type: 'text', text: '已恢复测试依赖，继续原因子研究任务。' }] });
+    reopenedStore.put('message', { id: responseId, conversation_id: 'conv_main', role: 'assistant', status: 'streaming', reply_to_message_id: userId, content: [] });
+    reopenedStore.update('conversation', 'conv_main', { active_response_message_id: responseId });
+    await reopened('auto_factor_runs', resumeInput);
+    reopenedStore.update('message', responseId, { status: 'completed' }); reopenedStore.update('conversation', 'conv_main', { active_response_message_id: null });
     const resumed = await finish(reopenedRuntime, second.id);
-    assert.equal(resumed.generation, 1);
+    assert.equal(resumed.generation, 0);
+    assert.equal(resumed.workflow.id, retainedWorkflow.id);
+    assert.equal(reopenedRuntime.runs.read(resumed.workflow.id).executionSessionId, retainedWorkflow.executionSessionId);
     assert.equal(resumed.tasks.filter(task => task.mode === 'hypothesis').length, 1, 'Committed hypothesis is a durable checkpoint.');
-    assert.equal(resumed.tasks.filter(task => task.mode === 'code').length, 2, 'Only unfinished implementation gets a new generation.');
-    assert.ok(resumed.tasks.find(task => task.mode === 'code' && task.generation === 0).error);
+    assert.equal(resumed.tasks.filter(task => task.mode === 'code').length, 1, 'An accepted role is resumed, never replaced.');
+    assert.equal(resumed.tasks.find(task => task.mode === 'code').runRef.id, retainedCoder);
+    assert.equal(reopenedRuntime.runs.read(retainedCoder).executionSessionId, streaming.executionSessionId);
     assert.deepEqual(failures, []);
     t.diagnostic(JSON.stringify({ installation: 'production-manager', modelTransport: 'local-SSE-fixture', marketData: 'invented', completedRuns: 2, roles: roles.length, rejectedTrialsPreserved: 1, sqliteReopened: true, explicitResume: true, vendorCalls: 0, brokerCalls: 0 }));
   } catch (error) {
     primaryError = error;
-    try { t.diagnostic(JSON.stringify({ testStage, observed: observations.slice(-3), runs: (reopenedStore ?? app.store).list(`plugin:${pluginId}:runs`).map(run => ({ id: run.id, status: run.status, phase: run.phase, tasks: run.tasks.map(task => ({ role: task.role, mode: task.mode, status: task.status, error: task.error })), error: run.error })) })); }
+    try { t.diagnostic(JSON.stringify({ testStage, observed: observations.slice(-3), runs: (reopenedStore ?? app.store).list('run').map(run => ({ id: run.id, capability: run.capabilityId, status: run.status, error: run.error })) })); }
     catch { t.diagnostic(`State diagnostics unavailable; original failure: ${error.message}`); }
     throw error;
   } finally {

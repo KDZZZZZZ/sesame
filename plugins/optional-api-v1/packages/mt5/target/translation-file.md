@@ -2,7 +2,7 @@
 
 For long source, write the native code and source map in the current task workspace, then assemble one UTF-8 JSON manifest with a local script. Call `mt5_translation_file` with only `operation_id` and `manifest_path`. The manifest has exactly the `mt5_translation` fields **except** `operation_id`: `title`, full `source` and `target` ArtifactRefs, `mode`, `parameter_map`, `files`, `source_map`, and `adaptations`. All are required. `files` maps native relative project paths to source text; this tool does not scan directories or follow file references inside JSON.
 
-Read the exact tool schema from the packaged `tools.json`. Use the existing fixed source and target refs and actual source-node IDs. Do not ask the model to repeat a long generated program in another tool argument. For example, after writing `translation-metadata.json` with the refs, mappings and other fields, run this in the actual workspace cwd:
+Read the exact tool schema from the packaged `capabilities.json`. Use the existing fixed source and target refs and actual source-node IDs. Do not ask the model to repeat a long generated program in another tool argument. For example, after writing `translation-metadata.json` with the refs, mappings and other fields, run this in the actual workspace cwd:
 
 ```python
 import json

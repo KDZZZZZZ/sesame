@@ -1,33 +1,12 @@
 import { digest } from '@sesame/plugin-sdk/protocol';
-import { check } from './shared.js';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const json = value => `<pre>${escape(JSON.stringify(value ?? null, null, 2))}</pre>`;
 const table = (rows, fields) => `<table><thead><tr>${fields.map(key => `<th>${escape(key)}</th>`).join('')}</tr></thead><tbody>${rows.map(row => `<tr>${fields.map(key => `<td>${escape(typeof row[key] === 'object' ? JSON.stringify(row[key]) : row[key])}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
 export const reportPath = run => `${run.plan.reportFolder}/${new Date(run.createdAt).toISOString().replace(/[:.]/g, '-')}-${run.id}.html`;
-export const reportFiles = host => host.reports.files.forSpace ? { files: host.reports.files.forSpace('research'), prefix: '' } : { files: host.reports.files, prefix: 'research/' };
-
-export async function ensureReportFolder(host, path) {
-  const { files, prefix } = reportFiles(host);
-  const tree = await files.list({ recursive: true }), known = new Map(tree.entries.map(entry => [entry.path, entry]));
-  let parent = '';
-  for (const part of `${prefix}${path}`.split('/')) {
-    parent = parent ? `${parent}/${part}` : part;
-    if (known.has(parent)) check(known.get(parent).kind === 'directory', 'REPORT_PATH_OCCUPIED', `Report folder is a file: ${parent}`);
-    else {
-      try { await files.mkdir({ path: parent }); }
-      catch (error) { // Another plan may create the common 日报 directory concurrently.
-        const entry = (await files.list({ recursive: true })).entries.find(value => value.path === parent);
-        if (entry?.kind !== 'directory') throw error;
-      }
-    }
-  }
-  return { files, prefix };
-}
-
 export function dailyHTML(run) {
   const decision = run.decision, status = ({ blocked: '执行受阻，需要核对', unchanged: '保持仓位不变', target_observed: '目标仓位已核对', reconciliation_required: '实际仓位仍需核对' })[run.execution?.status] ?? (run.error ? '本轮未完成' : '等待执行');
-  const models = (run.tasks ?? []).filter(task => task.role !== 'reporter').map(task => ({ role: task.role, round: task.round, provider: task.model?.provider, model: task.model?.id, status: task.status, taskId: task.id }));
+  const models = (run.tasks ?? []).map(task => ({ role: task.role, round: task.round, provider: task.model?.provider, model: task.model?.id, status: task.status, taskId: task.id }));
   const execution = run.execution ?? run.executionProgress;
   const executionSummary = execution ? { ...execution, before: undefined, after: undefined } : { status: 'not_executed' };
   const evidenceIndex = (run.evidence ?? []).map(item => ({ datasetId: item.datasetId, capturedAt: item.capturedAt, digest: item.digest, provenance: item.dataset?.provenance, rowCount: item.dataset?.rows?.length }));
@@ -39,42 +18,27 @@ export function dailyHTML(run) {
   <section><h2>挂载风险与停止结果</h2>${json(execution?.pauses ?? decision?.pause_strategies ?? [])}<p class="muted">停止挂载不等于平仓；实际停止行为与状态以回执为准。</p></section>
   <section><h2>交易执行与核对</h2>${json(executionSummary)}<p class="muted">submitted、outcome_unknown 与部分成交均不表示目标已达到。本报告不从目标计算实际收益。</p></section>
   <section><h2>团队报告与分歧</h2>${table(models, ['role', 'round', 'provider', 'model', 'status'])}${(run.reports ?? []).map(report => `<details open><summary>${escape(report.role)} · ${escape(report.model?.provider)}/${escape(report.model?.id)}</summary><pre>${escape(report.text)}</pre></details>`).join('')}</section>
-  <section><h2>证据、交易历史与复盘</h2><p>以下快照为当时可见资料。来源缺失与时间边界保留在原始记录中。完整记录另存于同目录 JSON 文件：${escape(reportPath(run).split('/').at(-1).replace(/\.html$/, '.json'))}。</p><details><summary>研究证据索引</summary>${json(evidenceIndex)}</details><details><summary>委托和成交历史</summary>${json({ orders: run.snapshot?.orders, fills: run.snapshot?.fills, historicalOrders: run.snapshot?.historicalOrders })}</details><details><summary>已知案例与复盘</summary>${json(run.memoryContext)}</details><details><summary>运行状态</summary>${json({ id: run.id, status: run.status, createdAt: run.createdAt, completedAt: run.completedAt, trigger: run.trigger, error: run.error, memoryError: run.memoryError })}</details></section></body></html>`;
+  <section><h2>证据、交易历史与复盘</h2><p>以下快照为当时可见资料。来源缺失与时间边界保留在原始记录中。完整记录保存在本报告冻结附件 run.json 中。</p><details><summary>研究证据索引</summary>${json(evidenceIndex)}</details><details><summary>委托和成交历史</summary>${json({ orders: run.snapshot?.orders, fills: run.snapshot?.fills, historicalOrders: run.snapshot?.historicalOrders })}</details><details><summary>已知案例与复盘</summary>${json(run.memoryContext)}</details><details><summary>运行状态</summary>${json({ id: run.id, status: run.status, createdAt: run.createdAt, completedAt: run.completedAt, trigger: run.trigger, error: run.error, memoryError: run.memoryError })}</details></section></body></html>`;
 }
 
-export async function writeDailyReport(host, run, { onSnapshot = () => {}, onFile = () => {} } = {}) {
-  const { files, prefix } = reportFiles(host);
-  if (run.report?.fileId) {
-    const entry = (await files.list({ recursive: true })).entries.find(value => value.id === run.report.fileId);
-    if (!entry) return { ...run.report, state: 'removed_by_user' };
-    const current = await files.read({ path: entry.path });
-    return { ...run.report, path: entry.path, state: digest(current.content) === run.report.digest ? 'archived' : 'modified_by_user' };
-  }
+export async function writeDailyReport(host, run, { onSnapshot = () => {} } = {}) {
+  if (run.report?.ref) return run.report;
   let frozen = run.reportSnapshot;
   if (!frozen) {
-    frozen = { ...run, tasks: run.tasks.filter(task => task.role !== 'reporter'), reports: run.reports.filter(report => report.role !== 'reporter') };
-    for (const key of ['report', 'reportError', 'reportPending', 'reportSnapshot', 'reportFiles', 'activityReport']) delete frozen[key];
-    if (frozen.activity) frozen.activity = { events: frozen.activity.events.filter(event => event.role !== 'reporter' && !['run.finished', 'report.archived'].includes(event.type)) };
-    // Freeze before any asynchronous file work: reporter events can evict older live history.
+    frozen = { ...run };
+    for (const key of ['report', 'reportError', 'reportPending', 'reportSnapshot', 'workflow', 'consumedOutputs']) delete frozen[key];
     frozen = structuredClone(frozen); onSnapshot(frozen);
   }
-  await ensureReportFolder(host, frozen.plan.reportFolder);
-  const path = `${prefix}${reportPath(run)}`, html = dailyHTML(frozen), raw = JSON.stringify(frozen, null, 2), dataPath = path.replace(/\.html$/, '.json');
-  const blob = host.artifacts.blob(raw);
-  const evidenceRef = host.artifacts.publish({ operationId: `manual-trading-report:${run.id}`, manifest: { kind: 'resource', schemaVersion: '1.0.0',
-    content: { type: 'manual-trading-run', runId: run.id, path: 'run.json' }, dependencies: [], blobs: [{ ...blob, path: 'run.json', mediaType: 'application/json' }], provenance: { kind: 'derived', references: [] } } });
-  const entries = (await files.list({ recursive: true })).entries, saved = {};
-  for (const [suffix, target, content] of [['.json', dataPath, raw], ['.html', path, html]]) {
-    const recorded = run.reportFiles?.find(file => file.suffix === suffix);
-    const existing = recorded ? entries.find(entry => entry.id === recorded.fileId) : entries.find(entry => entry.path === target);
-    if (recorded) check(existing, 'REPORT_REMOVED_BY_USER', `Previously written evidence was removed; it will not be recreated: ${recorded.path}`);
-    let entry;
-    if (existing) {
-      check((await files.read({ path: existing.path })).content === content, 'REPORT_PATH_OCCUPIED', 'Existing daily evidence differs and will not be overwritten');
-      entry = existing;
-    } else entry = await files.write({ path: target, content });
-    saved[suffix] = { fileId: entry.id, path: entry.path ?? target };
-    onFile({ suffix, ...saved[suffix], digest: digest(content) });
+  const raw = JSON.stringify(frozen, null, 2), html = dailyHTML(frozen), hash = digest(raw);
+  const root = await host.resources.create({ kind: 'directory', lifetime: 'durable', name: run.id + '-report-' + hash.slice(7) }, { operationId: 'manual-report:' + run.id + ':' + hash });
+  const blobs = [];
+  for (const [path, content] of [['run.json', raw], ['report.html', html]]) {
+    await host.resources.create({ kind: 'file', lifetime: 'durable', parent: root, name: path, source: { content }, policy: { readOnly: true } }, { operationId: 'manual-report:' + run.id + ':' + hash + ':' + path });
+    blobs.push({ entry: path, path, mediaType: path.endsWith('.html') ? 'text/html' : 'application/json' });
   }
-  return { ...saved['.html'], dataPath: saved['.json'].path, evidenceRef, space: 'research', digest: digest(html), state: 'archived' };
+  const { ref, receipt } = await host.resources.publish(root, { kind: 'report', schemaVersion: '1.0.0', content: {
+    schemaVersion: '1.0.0', title: run.plan.title, summary: run.decision?.rationale ?? run.error?.message ?? run.status, entry: 'report.html', runtime: 'sesame-report/1', runtimeRevision: '1.0.0', data: [], related: [], features: [], locale: 'zh-CN',
+    provenance: { kind: run.mockModelResponses ? 'demo' : 'derived', references: [] },
+  }, dependencies: [], blobs }, { operationId: 'manual-publication:' + run.id + ':' + hash });
+  return { ref, receipt, entry: 'report.html', attachments: [{ path: 'run.json', mediaType: 'application/json' }], state: 'published' };
 }

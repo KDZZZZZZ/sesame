@@ -1,3 +1,4 @@
+import { runProcess } from './execution.js';
 import {
   mkdir,
   readFile,
@@ -15,7 +16,7 @@ const locks = new Map();
 const json = (bytes) => JSON.parse(bytes.toString());
 export async function command(host, argv, cwd, signal, timeout = 120, env) {
   signal?.throwIfAborted();
-  const result = await host.workspace.run(argv, { cwd, signal, timeout, env });
+  const result = await runProcess(host,argv, { cwd, signal, timeout, env });
   check(
     result.exitCode === 0,
     "Dependency/engine command failed; inspect its owned execution receipt",
@@ -24,7 +25,7 @@ export async function command(host, argv, cwd, signal, timeout = 120, env) {
   return result;
 }
 async function inspect(host, python, signal) {
-  const path = join(host.storage.directory, `.probe-${randomUUID()}.json`);
+  const path = join(host.context.storageRoot, `.probe-${randomUUID()}.json`);
   try {
     await command(
       host,
@@ -36,7 +37,7 @@ async function inspect(host, python, signal) {
         `import json,sys,struct,importlib,importlib.metadata as m; from pathlib import Path; module=importlib.import_module('${NAME}'); Path(sys.argv[1]).write_text(json.dumps({'python':sys.executable,'version':list(sys.version_info[:3]),'platform':sys.platform,'bits':struct.calcsize('P')*8,'library':m.version('${NAME}'),'packages':{d.metadata['Name']:d.version for d in m.distributions()}}))`,
         path,
       ],
-      host.storage.directory,
+      host.context.storageRoot,
       signal,
       30,
     );
@@ -59,7 +60,7 @@ export async function selected(host, signal) {
   let value;
   try {
     value = json(
-      await readFile(join(host.storage.directory, "selection.json")),
+      await readFile(join(host.context.storageRoot, "selection.json")),
     );
   } catch (e) {
     check(
@@ -72,7 +73,7 @@ export async function selected(host, signal) {
   return { ...value, ...(await inspect(host, value.python, signal)) };
 }
 export async function environment(host, args, signal) {
-  const key = host.storage.directory;
+  const key = host.context.storageRoot;
   check(
     !locks.has(key),
     "Environment preparation already in progress",
@@ -87,8 +88,8 @@ export async function environment(host, args, signal) {
   }
 }
 async function perform(host, args, signal) {
-  await mkdir(host.storage.directory, { recursive: true });
-  const root = join(host.storage.directory, `${NAME}-${VERSION}`),
+  await mkdir(host.context.storageRoot, { recursive: true });
+  const root = join(host.context.storageRoot, `${NAME}-${VERSION}`),
     privatePython = join(
       root,
       process.platform === "win32" ? "Scripts/python.exe" : "bin/python",
@@ -96,7 +97,7 @@ async function perform(host, args, signal) {
   let prior;
   try {
     prior = json(
-      await readFile(join(host.storage.directory, "selection.json")),
+      await readFile(join(host.context.storageRoot, "selection.json")),
     );
   } catch (e) {
     if (e.code !== "ENOENT") throw e;
@@ -107,7 +108,7 @@ async function perform(host, args, signal) {
         args.python_path,
         prior?.python,
         privatePython,
-        host.environment.pythonPath,
+        host.context.pythonPath,
         process.platform === "win32" ? "python.exe" : "python3",
       ].filter(Boolean),
     ),
@@ -147,12 +148,12 @@ async function perform(host, args, signal) {
     ...new Set(
       [
         args.python_path,
-        host.environment.pythonPath,
+        host.context.pythonPath,
         process.platform === "win32" ? "python.exe" : "python3",
       ].filter(Boolean),
     ),
   ]) {
-    const path = join(host.storage.directory, `.base-${randomUUID()}.json`);
+    const path = join(host.context.storageRoot, `.base-${randomUUID()}.json`);
     try {
       await command(
         host,
@@ -163,7 +164,7 @@ async function perform(host, args, signal) {
           "import sys,struct,json;from pathlib import Path;Path(sys.argv[1]).write_text(json.dumps({'v':list(sys.version_info[:2]),'bits':struct.calcsize('P')*8,'platform':sys.platform}))",
           path,
         ],
-        host.storage.directory,
+        host.context.storageRoot,
         signal,
         30,
       );
@@ -201,12 +202,12 @@ async function perform(host, args, signal) {
     await command(
       host,
       [base, "-I", "-m", "venv", root],
-      host.storage.directory,
+      host.context.storageRoot,
       signal,
       120,
     );
   const report = join(root, "pip-report.json"),
-    cache = join(host.storage.directory, "pip-cache");
+    cache = join(host.context.storageRoot, "pip-cache");
   await command(
     host,
     [
@@ -225,7 +226,7 @@ async function perform(host, args, signal) {
       report,
       `${NAME}==${VERSION}`,
     ],
-    host.storage.directory,
+    host.context.storageRoot,
     signal,
     600,
     {
@@ -278,7 +279,7 @@ async function exists(path) {
   }
 }
 async function save(host, value) {
-  const target = join(host.storage.directory, "selection.json"),
+  const target = join(host.context.storageRoot, "selection.json"),
     temp = target + "." + randomUUID();
   await writeFile(temp, JSON.stringify(value), { mode: 0o600 });
   await rename(temp, target);

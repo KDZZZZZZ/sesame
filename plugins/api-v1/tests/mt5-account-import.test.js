@@ -4,16 +4,14 @@ import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Store, hostForStore, mt5Import } from './mt5-host.js';
-import { Type } from '@sesame/plugin-sdk/schema';
-import { createTools } from '../../optional-api-v1/packages/mt5/tools/configuration.js';
+import { createCapabilities } from '../../optional-api-v1/packages/mt5/tools/configuration.js';
 const { MT5Official } = await mt5Import('official.js');
 const { MT5ConfigImports, extractMT5Account } = await mt5Import('config-import.js');
 const { importConfiguration, updateConfiguration } = await mt5Import('configuration.js');
 
 async function setup(t) {
   const directory = await mkdtemp(join(tmpdir(), 'mt5-account-import-')), store = new Store(directory);
-  const host = { ...hostForStore(store), scope: { kind: 'main', conversationId: 'conv_main' },
-    messages: { read: (id, optional) => store.get('message', id, optional) }, configuration: { exclusive: action => action() } };
+  const host = hostForStore(store, { sessionId: 'conv_main' });
   const official = await new MT5Official(host, null).init();
   let changes = 0, clock = Date.now();
   const imports = new MT5ConfigImports(host, () => clock, () => official.settings().account);
@@ -23,7 +21,7 @@ async function setup(t) {
     store.put('message', { id, role: 'user', conversation_id: 'conv_main', content: parts }); return parts;
   };
   const request = id => ({ command_id: `import_${id}_command`, source_message_id: id, expected_version: official.config.version });
-  t.after(async () => { await official.close(); await rm(directory, { recursive: true, force: true }); });
+  t.after(async () => { await official.close(); store.close(); await rm(directory, { recursive: true, force: true }); });
   return { host, official, store, imports, mt5, prepare, request, changes: () => changes, expire: () => { clock += 86400001; } };
 }
 
@@ -106,18 +104,18 @@ function queuedExclusive() {
 }
 
 test('same configuration command queued by plugin lock reuses the committed receipt once', async t => {
-  const f = await setup(t); f.host.configuration.exclusive = queuedExclusive();
+  const f = await setup(t); f.store.exclusive = queuedExclusive();
   let configureCalls = 0; const configure = f.official.configure.bind(f.official);
   f.official.configure = async value => { configureCalls++; await Promise.resolve(); return configure(value); };
   const args = { command_id: 'same_update_command', expected_version: f.official.config.version, changes: { allow_trading: false } };
   const [first, second] = await Promise.all([updateConfiguration(f.host, f.mt5, args), updateConfiguration(f.host, f.mt5, args)]);
   assert.deepEqual(second, first); assert.equal(first.status, 'applied'); assert.equal(configureCalls, 1);
-  assert.equal(f.store.list('configuration_change').length, 1); assert.equal(f.store.events.filter(event => event.type === 'configuration.updated' && event.data.id === args.command_id).length, 2);
+  assert.equal(f.store.list('configuration_change').length, 1); assert.equal(f.store.events.filter(event => event.type === 'workspace.mt5.configuration' && event.data.id === args.command_id).length, 2);
   await assert.rejects(updateConfiguration(f.host, f.mt5, { ...args, changes: { allow_trading: true } }), { code: 'idempotency_conflict' });
 });
 
 test('same import command queued by plugin lock reuses receipt after reference removal', async t => {
-  const f = await setup(t); f.host.configuration.exclusive = queuedExclusive();
+  const f = await setup(t); f.store.exclusive = queuedExclusive();
   f.prepare('msg_parallel_import', [JSON.stringify({ mt5Account: { login: '700123', server: 'Fixture-Demo', password: 'parallel-private' } })]);
   let configureCalls = 0; const configure = f.official.configure.bind(f.official);
   f.official.configure = async value => { configureCalls++; await Promise.resolve(); return configure(value); };
@@ -131,8 +129,10 @@ test('conflicting multipart credentials fail before persistence and tool metadat
   const f = await setup(t), config = password => JSON.stringify({ mt5Account: { login: '700123', server: 'Fixture-Demo', password } });
   assert.throws(() => f.prepare('msg_conflict', [config('first-private'), config('second-private')]), error => error.code === 'mt5_account_import_invalid' && !/first-private|second-private/.test(error.message));
   assert.deepEqual(f.imports.pending(), []); assert.deepEqual(f.store.list('message'), []);
-  const host = { tools: { Type, define: (name, description, properties) => ({ name, label: name, description, parameters: Type.Object(properties, { additionalProperties: false }) }) } };
-  const tools = createTools(host, f.mt5, f.imports), declared = JSON.parse(await readFile(new URL('../../optional-api-v1/packages/mt5/tools.json', import.meta.url)));
-  for (const tool of tools) assert.deepEqual(JSON.parse(JSON.stringify(tool)), declared.find(item => item.name === tool.name));
-  assert.doesNotMatch(JSON.stringify(tools.map(tool => tool.parameters)), /password|token|Authorization/);
+  const capabilities = createCapabilities(f.host, f.mt5, f.imports), declared = JSON.parse(await readFile(new URL('../../optional-api-v1/packages/mt5/capabilities.json', import.meta.url)));
+  const schemas = capabilities.map(capability => {
+    const entry = declared.capabilities.find(item => item.binding.name === capability.name); assert.ok(entry);
+    assert.equal(typeof capability.execute, 'function'); return entry.inputSchema;
+  });
+  assert.doesNotMatch(JSON.stringify(schemas), /password|token|Authorization/);
 });

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "apiVersion": "1",
+  "apiVersion": "2",
   "status": "descriptive-inventory",
   "application": {
     "minimum": "0.2.0",
@@ -23,22 +23,39 @@
       "author": {
         "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
       },
-      "category": "strategy",
+      "category": "research",
       "title": {
-        "en": "Backtest audit baseline",
-        "zh": "回测审计基线"
+        "en": "Backtest diagnostics",
+        "zh": "回测诊断"
       },
       "summary": {
-        "en": "Audit timeline, costs, fills and position constraints before handing work to a native engine.",
-        "zh": "审计时序、成本、成交与持仓约束，再交接给原生引擎。"
+        "en": "Inspect timing, cost, fill and position assumptions before handing fixed evidence to a native engine.",
+        "zh": "时序、成本、成交和持仓约束诊断及原生引擎交接。"
       },
       "dependencies": {
-        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
-        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+        "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
+        "zh": "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
       },
       "tools": [
         "abu_backtest_lab_analyze"
       ],
+      "capabilities": [
+        {
+          "id": "abu_backtest_lab_analyze",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/abu-backtest-lab"
     },
     {
@@ -54,22 +71,39 @@
       "author": {
         "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
       },
-      "category": "strategy",
+      "category": "research",
       "title": {
-        "en": "Breakout signal baseline",
-        "zh": "突破信号基线"
+        "en": "Breakout research",
+        "zh": "突破研究"
       },
       "summary": {
-        "en": "Study historical range breakouts with next-period executable constraints.",
-        "zh": "研究历史区间突破，并保留下个时段可执行约束。"
+        "en": "Observe historical-window breakouts with explicit next-period execution constraints.",
+        "zh": "历史窗口高低点突破观察及次时段可执行约束。"
       },
       "dependencies": {
-        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
-        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+        "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
+        "zh": "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
       },
       "tools": [
         "abu_breakout_analyze"
       ],
+      "capabilities": [
+        {
+          "id": "abu_breakout_analyze",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/abu-breakout"
     },
     {
@@ -85,22 +119,39 @@
       "author": {
         "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
       },
-      "category": "strategy",
+      "category": "research",
       "title": {
-        "en": "Exit rules baseline",
-        "zh": "退出规则基线"
+        "en": "Exit-rule research",
+        "zh": "退出规则"
       },
       "summary": {
-        "en": "Compare ATR exits, trailing drawdown and holding-period exits on fixed data.",
-        "zh": "在固定数据上比较 ATR 退出、峰值回撤与持有期退出。"
+        "en": "Measure ATR exits, drawdown exits and holding-period exits on fixed observations.",
+        "zh": "ATR止损止盈、峰值回撤和持有期退出观察。"
       },
       "dependencies": {
-        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
-        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+        "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
+        "zh": "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
       },
       "tools": [
         "abu_exit_rules_analyze"
       ],
+      "capabilities": [
+        {
+          "id": "abu_exit_rules_analyze",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/abu-exit-rules"
     },
     {
@@ -116,22 +167,39 @@
       "author": {
         "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
       },
-      "category": "strategy",
+      "category": "research",
       "title": {
-        "en": "Technical indicator baseline",
-        "zh": "技术指标基线"
+        "en": "Indicator calculations",
+        "zh": "指标计算"
       },
       "summary": {
-        "en": "Compute ATR, averages, MACD, RSI and Bollinger indicators as reproducible baselines.",
-        "zh": "计算 ATR、均线、MACD、RSI 与布林带作为可复核基线。"
+        "en": "Calculate ATR, moving averages, MACD, RSI and Bollinger bands from fixed inputs.",
+        "zh": "ATR、均线、MACD、RSI、布林带的可修改研究计算。"
       },
       "dependencies": {
-        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
-        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+        "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
+        "zh": "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
       },
       "tools": [
         "abu_indicators_analyze"
       ],
+      "capabilities": [
+        {
+          "id": "abu_indicators_analyze",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/abu-indicators"
     },
     {
@@ -147,22 +215,39 @@
       "author": {
         "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
       },
-      "category": "strategy",
+      "category": "research",
       "title": {
-        "en": "Trading feature baseline",
-        "zh": "交易特征基线"
+        "en": "Point-in-time features",
+        "zh": "时点特征"
       },
       "summary": {
-        "en": "Generate point-in-time regression, quantile, volatility and gap features.",
-        "zh": "按时点生成回归、分位、波动与跳空特征。"
+        "en": "Construct regression, quantile, volatility and gap features without future observations.",
+        "zh": "严格按时点生成回归、分位、波动和跳空特征。"
       },
       "dependencies": {
-        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
-        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+        "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
+        "zh": "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
       },
       "tools": [
         "abu_ml_features_analyze"
       ],
+      "capabilities": [
+        {
+          "id": "abu_ml_features_analyze",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/abu-ml-features"
     },
     {
@@ -178,22 +263,39 @@
       "author": {
         "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
       },
-      "category": "strategy",
+      "category": "research",
       "title": {
-        "en": "Lightweight model baseline",
-        "zh": "轻量模型基线"
+        "en": "Prediction experiments",
+        "zh": "预测实验"
       },
       "summary": {
-        "en": "Run transparent time-split prediction experiments on frozen inputs.",
-        "zh": "在固定输入上运行透明的时间分割预测实验。"
+        "en": "Evaluate transparent prediction experiments with chronological train/evaluation separation.",
+        "zh": "按时间分离训练与评估的透明预测实验。"
       },
       "dependencies": {
-        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
-        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+        "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
+        "zh": "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
       },
       "tools": [
         "abu_model_lab_analyze"
       ],
+      "capabilities": [
+        {
+          "id": "abu_model_lab_analyze",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/abu-model-lab"
     },
     {
@@ -209,22 +311,39 @@
       "author": {
         "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
       },
-      "category": "strategy",
+      "category": "research",
       "title": {
-        "en": "Moving average baseline",
-        "zh": "均线信号基线"
+        "en": "Moving-average research",
+        "zh": "均线研究"
       },
       "summary": {
-        "en": "Study dual-average crossover observations and parameter sensitivity.",
-        "zh": "研究双均线交叉观察与参数敏感性。"
+        "en": "Compare moving-average crossings and parameter sensitivity.",
+        "zh": "双均线交叉观察与参数敏感性研究。"
       },
       "dependencies": {
-        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
-        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+        "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
+        "zh": "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
       },
       "tools": [
         "abu_moving_average_analyze"
       ],
+      "capabilities": [
+        {
+          "id": "abu_moving_average_analyze",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/abu-moving-average"
     },
     {
@@ -240,22 +359,39 @@
       "author": {
         "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
       },
-      "category": "strategy",
+      "category": "research",
       "title": {
-        "en": "Parameter experiment baseline",
-        "zh": "参数实验基线"
+        "en": "Parameter search",
+        "zh": "参数搜索"
       },
       "summary": {
-        "en": "Record bounded grids, development rankings and fixed holdout choices.",
-        "zh": "记录有限网格、开发期排名与固定留出选择。"
+        "en": "Search a bounded grid and freeze development-period selections before out-of-sample evaluation.",
+        "zh": "有限网格、开发期排名与固定样本外选择记录。"
       },
       "dependencies": {
-        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
-        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+        "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
+        "zh": "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
       },
       "tools": [
         "abu_parameter_search_analyze"
       ],
+      "capabilities": [
+        {
+          "id": "abu_parameter_search_analyze",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/abu-parameter-search"
     },
     {
@@ -271,22 +407,39 @@
       "author": {
         "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
       },
-      "category": "strategy",
+      "category": "research",
       "title": {
-        "en": "Position sizing baseline",
-        "zh": "仓位计算基线"
+        "en": "Position sizing",
+        "zh": "仓位研究"
       },
       "summary": {
-        "en": "Compare ATR risk budgets, fractional Kelly and price quantile sizing.",
-        "zh": "比较 ATR 风险预算、分数凯利与价格分位仓位。"
+        "en": "Compare ATR risk budgets, fractional Kelly sizing and price-quantile allocation.",
+        "zh": "ATR风险预算、分数凯利和价格分位仓位比较。"
       },
       "dependencies": {
-        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
-        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+        "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
+        "zh": "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
       },
       "tools": [
         "abu_position_sizing_analyze"
       ],
+      "capabilities": [
+        {
+          "id": "abu_position_sizing_analyze",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/abu-position-sizing"
     },
     {
@@ -302,22 +455,39 @@
       "author": {
         "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
       },
-      "category": "strategy",
+      "category": "research",
       "title": {
-        "en": "Price structure baseline",
-        "zh": "价格结构基线"
+        "en": "Price structure",
+        "zh": "价格结构"
       },
       "summary": {
-        "en": "Calculate delayed pivots, support/resistance and Fibonacci observations.",
-        "zh": "计算延迟确认摆点、支撑阻力与黄金分割观察。"
+        "en": "Measure delayed-confirmation swings, support, resistance and retracements.",
+        "zh": "延迟确认摆动、支撑阻力和黄金分割的可修改研究计算。"
       },
       "dependencies": {
-        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
-        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+        "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
+        "zh": "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
       },
       "tools": [
         "abu_price_structure_analyze"
       ],
+      "capabilities": [
+        {
+          "id": "abu_price_structure_analyze",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/abu-price-structure"
     },
     {
@@ -333,22 +503,39 @@
       "author": {
         "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
       },
-      "category": "strategy",
+      "category": "research",
       "title": {
-        "en": "Seasonality baseline",
-        "zh": "日历效应基线"
+        "en": "Seasonality research",
+        "zh": "季节性研究"
       },
       "summary": {
-        "en": "Measure weekday effects only over completed historical periods with declared calendars.",
-        "zh": "仅按已结束历史时期和声明日历统计星期效应。"
+        "en": "Measure weekday effects using completed periods and an explicit trading calendar.",
+        "zh": "按已结束历史时期统计星期效应并声明交易日历。"
       },
       "dependencies": {
-        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
-        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+        "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
+        "zh": "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
       },
       "tools": [
         "abu_seasonality_analyze"
       ],
+      "capabilities": [
+        {
+          "id": "abu_seasonality_analyze",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/abu-seasonality"
     },
     {
@@ -364,22 +551,39 @@
       "author": {
         "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
       },
-      "category": "strategy",
+      "category": "research",
       "title": {
-        "en": "Market similarity baseline",
-        "zh": "市场相似性基线"
+        "en": "Series similarity",
+        "zh": "序列相似性"
       },
       "summary": {
-        "en": "Compare time-aligned return correlation, rank correlation and directional similarity.",
-        "zh": "比较时间对齐的收益相关、秩相关与方向相似性。"
+        "en": "Compare time-aligned return correlations, rank correlations and directional similarity.",
+        "zh": "时间对齐的收益相关、秩相关和方向相似性。"
       },
       "dependencies": {
-        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
-        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+        "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
+        "zh": "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
       },
       "tools": [
         "abu_similarity_analyze"
       ],
+      "capabilities": [
+        {
+          "id": "abu_similarity_analyze",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/abu-similarity"
     },
     {
@@ -395,22 +599,39 @@
       "author": {
         "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
       },
-      "category": "strategy",
+      "category": "research",
       "title": {
-        "en": "Stock screening baseline",
-        "zh": "股票筛选基线"
+        "en": "Stock screening",
+        "zh": "股票筛选"
       },
       "summary": {
-        "en": "Screen bounded universes by momentum, price, trend and path efficiency.",
-        "zh": "按动量、价格、趋势与路径效率筛选有界股票池。"
+        "en": "Screen a bounded universe by momentum, price, trend and path efficiency.",
+        "zh": "有界股票池的动量、价格、趋势和路径效率筛选。"
       },
       "dependencies": {
-        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
-        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+        "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
+        "zh": "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
       },
       "tools": [
         "abu_stock_screening_analyze"
       ],
+      "capabilities": [
+        {
+          "id": "abu_stock_screening_analyze",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/abu-stock-screening"
     },
     {
@@ -426,22 +647,39 @@
       "author": {
         "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
       },
-      "category": "strategy",
+      "category": "research",
       "title": {
-        "en": "Historical trade judge baseline",
-        "zh": "历史交易裁判基线"
+        "en": "Trade-neighbor evidence",
+        "zh": "交易邻居证据"
       },
       "summary": {
-        "en": "Score completed trades with similar historical neighbors and rejection evidence.",
-        "zh": "用相似历史邻居与拒绝证据评分已结束交易。"
+        "en": "Score similarities to completed trades and retain evidence for rejection.",
+        "zh": "已结束交易的相似邻居评分与拒绝证据。"
       },
       "dependencies": {
-        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
-        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+        "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
+        "zh": "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
       },
       "tools": [
         "abu_trade_judges_analyze"
       ],
+      "capabilities": [
+        {
+          "id": "abu_trade_judges_analyze",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/abu-trade-judges"
     },
     {
@@ -457,22 +695,39 @@
       "author": {
         "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
       },
-      "category": "strategy",
+      "category": "research",
       "title": {
-        "en": "Trade metrics baseline",
-        "zh": "交易绩效基线"
+        "en": "Trade metrics",
+        "zh": "交易指标"
       },
       "summary": {
-        "en": "Compute equity drawdown, attribution, return and risk metrics.",
-        "zh": "计算权益回撤、交易归因、收益与风险指标。"
+        "en": "Calculate drawdown, attribution, return and risk metrics from supplied evidence.",
+        "zh": "权益回撤、交易归因、收益与风险指标。"
       },
       "dependencies": {
-        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
-        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+        "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
+        "zh": "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
       },
       "tools": [
         "abu_trade_metrics_analyze"
       ],
+      "capabilities": [
+        {
+          "id": "abu_trade_metrics_analyze",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/abu-trade-metrics"
     },
     {
@@ -488,22 +743,39 @@
       "author": {
         "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
       },
-      "category": "strategy",
+      "category": "research",
       "title": {
-        "en": "Trend analysis baseline",
-        "zh": "趋势分析基线"
+        "en": "Trend calculations",
+        "zh": "趋势计算"
       },
       "summary": {
-        "en": "Calculate regression slope, trend channels and path efficiency.",
-        "zh": "计算回归斜率、趋势通道与路径效率。"
+        "en": "Measure regression slopes, trend channels and path efficiency.",
+        "zh": "回归斜率、趋势通道和路径效率的可修改研究计算。"
       },
       "dependencies": {
-        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
-        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+        "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
+        "zh": "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
       },
       "tools": [
         "abu_trend_analyze"
       ],
+      "capabilities": [
+        {
+          "id": "abu_trend_analyze",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/abu-trend"
     },
     {
@@ -519,22 +791,39 @@
       "author": {
         "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
       },
-      "category": "strategy",
+      "category": "research",
       "title": {
-        "en": "Trend pullback baseline",
-        "zh": "趋势回撤基线"
+        "en": "Trend pullbacks",
+        "zh": "趋势回撤"
       },
       "summary": {
-        "en": "Study long-trend, short-pullback and rebound combinations.",
-        "zh": "研究长趋势、短回撤与反弹组合。"
+        "en": "Compare long-trend, short-pullback and rebound observations.",
+        "zh": "长趋势、短回撤和反弹的组合观察。"
       },
       "dependencies": {
-        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
-        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+        "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
+        "zh": "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
       },
       "tools": [
         "abu_trend_pullback_analyze"
       ],
+      "capabilities": [
+        {
+          "id": "abu_trend_pullback_analyze",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/abu-trend-pullback"
     },
     {
@@ -550,22 +839,39 @@
       "author": {
         "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
       },
-      "category": "strategy",
+      "category": "research",
       "title": {
-        "en": "Volatility and gap baseline",
-        "zh": "波动与跳空基线"
+        "en": "Volatility calculations",
+        "zh": "波动计算"
       },
       "summary": {
-        "en": "Calculate return volatility, ATR, volume-price averages and gaps.",
-        "zh": "计算收益波动、ATR、量价均价与跳空。"
+        "en": "Calculate return volatility, ATR, volume-weighted prices and gaps.",
+        "zh": "收益波动、ATR、量价均价和跳空的可修改研究计算。"
       },
       "dependencies": {
-        "en": "Existing Node.js 22+ and explicit frozen input data. These ABu-inspired tools are baselines, not trading advice or a native engine.",
-        "zh": "需要已有 Node.js 22+ 与明确固定输入数据；这些 ABu 启发工具是基线，不是交易建议或原生引擎。"
+        "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
+        "zh": "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
       },
       "tools": [
         "abu_volatility_analyze"
       ],
+      "capabilities": [
+        {
+          "id": "abu_volatility_analyze",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/abu-volatility"
     },
     {
@@ -602,6 +908,154 @@
         "akshare_query",
         "akshare_quote"
       ],
+      "capabilities": [
+        {
+          "id": "akshare_discover",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "akshare_status",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "akshare_prepare",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "akshare_catalog",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "akshare_query",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "akshare_quote",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "market_bind",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_unbind",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_searchInstruments",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_describeInstrument",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_queryBars",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_subscribeBars",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_subscribeQuotes",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "akshare_dispose",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [
+          {
+            "id": "market",
+            "contract": "sesame.market/1",
+            "operations": {
+              "bind": "market_bind",
+              "unbind": "market_unbind",
+              "searchInstruments": "market_searchInstruments",
+              "describeInstrument": "market_describeInstrument",
+              "queryBars": "market_queryBars",
+              "subscribeBars": "market_subscribeBars",
+              "subscribeQuotes": "market_subscribeQuotes"
+            }
+          }
+        ],
+        "views": [],
+        "services": [],
+        "hooks": [
+          {
+            "id": "dispose",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "akshare_dispose"
+            }
+          }
+        ]
+      },
       "sourcePath": "plugins/optional-api-v1/packages/akshare"
     },
     {
@@ -610,7 +1064,7 @@
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.3-dev.8"
+        "sesame": ">=0.2.2"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -619,16 +1073,16 @@
       },
       "category": "research",
       "title": {
-        "en": "Agent factor research",
-        "zh": "自动因子挖掘"
+        "en": "Factor research workflow",
+        "zh": "因子研究工作流"
       },
       "summary": {
-        "en": "Coordinate parallel factor research with chosen tools and an independent evaluator, preserving trials and one final report.",
-        "zh": "组合所选研究工具与独立评估器，并行探索因子，保留试验记录与单份最终报告。"
+        "en": "Coordinate configured role Agents and an explicitly selected evaluator in one native Run graph and final report.",
+        "zh": "用已配置角色 Agent 和明确选择的评估器组织研究，共用宿主运行图和最终报告。"
       },
       "dependencies": {
-        "en": "Sesame 0.2.3-dev.8 or newer, configured models, explicit input data and a selected evaluator. No trading account is required.",
-        "zh": "需要 Sesame 0.2.3-dev.8 或更新版本、已配置模型、明确输入数据和选定的评估器；无需交易账户。"
+        "en": "A configured model, a selected evaluator and fixed evidence. No implicit trading backend.",
+        "zh": "需要已配置模型、选定评估器与固定证据，不隐式绑定交易后端。"
       },
       "tools": [
         "auto_factor_models",
@@ -637,9 +1091,126 @@
         "auto_factor_context",
         "auto_factor_submit",
         "auto_factor_report",
-        "auto_factor_activity",
-        "auto_factor_finalize"
+        "auto_factor_activity"
       ],
+      "capabilities": [
+        {
+          "id": "auto_factor_models",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "auto_factor_start",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "auto_factor_runs",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "auto_factor_context",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "auto_factor_submit",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "auto_factor_report",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "auto_factor_activity",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "auto_factor_workflow",
+          "kind": "workflow",
+          "consumers": [
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "auto_factor_activate",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "auto_factor_dispose",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "auto_factor_dependencies",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": [
+          {
+            "id": "activate",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "auto_factor_activate"
+            }
+          },
+          {
+            "id": "dispose",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "auto_factor_dispose"
+            }
+          }
+        ]
+      },
       "sourcePath": "plugins/optional-api-v1/packages/auto-factor-mining"
     },
     {
@@ -674,6 +1245,57 @@
         "backtrader_backtest",
         "backtrader_result"
       ],
+      "capabilities": [
+        {
+          "id": "backtrader_environment",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "backtrader_backtest",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "backtrader_result",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "backtrader_dispose",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": [
+          {
+            "id": "dispose",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "backtrader_dispose"
+            }
+          }
+        ]
+      },
       "sourcePath": "plugins/optional-api-v1/packages/backtrader"
     },
     {
@@ -703,11 +1325,18 @@
         "zh": "需注明日期的原始证据或数据，不能只凭图形推断投资者心理。"
       },
       "tools": [],
+      "capabilities": [],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/behavioral-finance"
     },
     {
       "id": "sesame/canvas-control",
-      "version": "2.1.2",
+      "version": "3.0.0",
       "distribution": "core",
       "state": "discoverable",
       "engines": {
@@ -739,6 +1368,68 @@
         "chart_script",
         "indicator_publish"
       ],
+      "capabilities": [
+        {
+          "id": "canvas_inspect",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "canvas_binding",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "canvas_apply",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "canvas_focus",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "chart_script",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "indicator_publish",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/api-v1/packages/canvas-control"
     },
     {
@@ -772,6 +1463,109 @@
         "ccxt_environment",
         "ccxt_catalog"
       ],
+      "capabilities": [
+        {
+          "id": "ccxt_environment",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "ccxt_catalog",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_bind",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_unbind",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_searchInstruments",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_describeInstrument",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_queryBars",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_subscribeBars",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "ccxt_dispose",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [
+          {
+            "id": "market",
+            "contract": "sesame.market/1",
+            "operations": {
+              "bind": "market_bind",
+              "unbind": "market_unbind",
+              "searchInstruments": "market_searchInstruments",
+              "describeInstrument": "market_describeInstrument",
+              "queryBars": "market_queryBars",
+              "subscribeBars": "market_subscribeBars"
+            }
+          }
+        ],
+        "views": [],
+        "services": [],
+        "hooks": [
+          {
+            "id": "dispose",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "ccxt_dispose"
+            }
+          }
+        ]
+      },
       "sourcePath": "plugins/optional-api-v1/packages/ccxt"
     },
     {
@@ -780,7 +1574,7 @@
       "distribution": "core",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.3-dev.5"
+        "sesame": ">=0.2.0-0"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -797,19 +1591,54 @@
         "zh": "通过带版本核验的操作读取和修改应用设置。"
       },
       "dependencies": {
-        "en": "Sesame 0.2.3-dev.5 or newer. Application settings only; backend connections belong to their own plugins.",
-        "zh": "需要 Sesame 0.2.3-dev.5 或更新版本。管理应用设置；后端连接由各自插件管理。"
+        "en": "Application settings only. Backend connections belong to their own plugins.",
+        "zh": "管理应用设置；后端连接由各自插件管理。"
       },
       "tools": [
         "configuration_read",
         "configuration_update",
         "configuration_open"
       ],
+      "capabilities": [
+        {
+          "id": "configuration_read",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "configuration_update",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "configuration_open",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/api-v1/packages/configuration"
     },
     {
       "id": "sesame/data-access",
-      "version": "2.3.1",
+      "version": "3.0.0",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -835,14 +1664,94 @@
       },
       "tools": [
         "market_read",
-        "data_providers",
-        "market_instruments",
         "data_sources",
         "data_query",
         "data_snapshot",
         "data_read",
-        "research_register"
+        "research_register",
+        "data_providers",
+        "market_instruments"
       ],
+      "capabilities": [
+        {
+          "id": "market_read",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "data_sources",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "data_query",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "data_snapshot",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "data_read",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "research_register",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "data_providers",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_instruments",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/api-v1/packages/data-access"
     },
     {
@@ -872,6 +1781,13 @@
         "zh": "使用可比且有来源的序列；缺少确认资料时保持证据不足。"
       },
       "tools": [],
+      "capabilities": [],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/dow-theory"
     },
     {
@@ -901,6 +1817,13 @@
         "zh": "需有来源的价格证据；浪形标记是解释，可独立选择本方法。"
       },
       "tools": [],
+      "capabilities": [],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/elliott-wave"
     },
     {
@@ -909,7 +1832,7 @@
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.3-dev.8"
+        "sesame": ">=0.2.2"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -918,20 +1841,37 @@
       },
       "category": "research",
       "title": {
-        "en": "Factor evaluation",
-        "zh": "因子数值评估"
+        "en": "Deterministic factor evaluator",
+        "zh": "确定性因子评估"
       },
       "summary": {
-        "en": "Evaluate deterministic factor expressions on frozen inputs and retain candidate metrics and selection receipts.",
-        "zh": "在固定输入上评估确定性因子表达式，保存候选指标和选择回执。"
+        "en": "Evaluate factor expressions, retain measured candidate metrics, freeze selection and evaluate held-out data.",
+        "zh": "计算因子表达式，保留实测候选指标，冻结选择并评估留出数据。"
       },
       "dependencies": {
-        "en": "Sesame 0.2.3-dev.8 or newer and explicit input datasets. No external runtime or trading account is required.",
-        "zh": "需要 Sesame 0.2.3-dev.8 或更新版本和明确输入数据集；无需外部运行环境或交易账户。"
+        "en": "Fixed point-in-time data and a trusted workflow invocation; no broker connection.",
+        "zh": "需要固定时点数据和可信工作流调用，不连接券商。"
       },
       "tools": [
         "factor_evaluate"
       ],
+      "capabilities": [
+        {
+          "id": "factor_evaluate",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/factor-evaluator"
     },
     {
@@ -961,6 +1901,13 @@
         "zh": "需现有 Node.js 22+ 与固定时点数据，样本外评估前冻结选择；不预加载模型流派。"
       },
       "tools": [],
+      "capabilities": [],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/factor-research"
     },
     {
@@ -978,16 +1925,16 @@
       },
       "category": "data",
       "title": {
-        "en": "Financial research tools",
-        "zh": "金融研究工具"
+        "en": "Financial evidence",
+        "zh": "金融研究证据"
       },
       "summary": {
-        "en": "Collect sourced market, filing, news, macro and discussion evidence for research agents.",
-        "zh": "为研究 Agent 收集有来源的行情、公告、新闻、宏观与讨论证据。"
+        "en": "Retain sourced financial, filing, news, macro and discussion evidence with acquisition and visibility times.",
+        "zh": "保存财报、公告、新闻、宏观和讨论等原始证据及获取时间、可见时间。"
       },
       "dependencies": {
-        "en": "Requires configured provider credentials for non-public sources; each result keeps source and fetch metadata.",
-        "zh": "非公开来源需要配置供应商凭据；结果保留来源与获取元数据。"
+        "en": "Selected sources may require network access, environment credentials or identifying user agents; research prices cannot be traded directly.",
+        "zh": "所选来源可能需要联网、环境凭据或身份明确的 user-agent；研究价格不可直接用于成交。"
       },
       "tools": [
         "financial_research_status",
@@ -995,6 +1942,82 @@
         "financial_research_query",
         "financial_research_read"
       ],
+      "capabilities": [
+        {
+          "id": "financial_research_status",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "financial_research_configure",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "financial_research_query",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "financial_research_read",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "research_evidence_query",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "research_dispose",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [
+          {
+            "id": "evidence",
+            "contract": "sesame.rows/1",
+            "operations": {
+              "query": "research_evidence_query"
+            }
+          }
+        ],
+        "views": [],
+        "services": [],
+        "hooks": [
+          {
+            "id": "dispose",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "research_dispose"
+            }
+          }
+        ]
+      },
       "sourcePath": "plugins/optional-api-v1/packages/financial-research"
     },
     {
@@ -1024,6 +2047,13 @@
         "zh": "观察需选行情来源；不加载其他技术理论，辅助脚本需 Python 3。"
       },
       "tools": [],
+      "capabilities": [],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/ict"
     },
     {
@@ -1053,6 +2083,13 @@
         "zh": "使用对应地区的原始材料与生效日期，不自动推导法律或交易结论。"
       },
       "tools": [],
+      "capabilities": [],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/institutional-analysis"
     },
     {
@@ -1096,6 +2133,177 @@
         "judgment_audit_source",
         "judgment_coverage"
       ],
+      "capabilities": [
+        {
+          "id": "judgment_review_queue",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "judgment_review_due",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "judgment_record",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "judgment_list",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "judgment_read",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "judgment_resolve",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "judgment_defer",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "judgment_reflect",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "judgment_rule",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "judgment_rules",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "judgment_retire_rule",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "judgment_audit_source",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "judgment_coverage",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "judgment_activate",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "judgment_dispose",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "judgment_after_turn",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": [
+          {
+            "id": "activate",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "judgment_activate"
+            }
+          },
+          {
+            "id": "dispose",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "judgment_dispose"
+            }
+          },
+          {
+            "id": "afterAgentTurn",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "judgment_after_turn"
+            }
+          }
+        ]
+      },
       "sourcePath": "plugins/optional-api-v1/packages/judgment-evolution"
     },
     {
@@ -1154,6 +2362,483 @@
         "kurumi_narration",
         "kurumi_audience"
       ],
+      "capabilities": [
+        {
+          "id": "kurumi_prepare",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_status",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "kurumi_configure",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_start",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_continue",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_step",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_pause",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_reconcile",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_display",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_export",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_report",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_observe",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "kurumi_decide",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_recover",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_repair_checkpoint_text",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_import_fx_supplement",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_archive_terminal",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_new_experiment",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_experiment_history",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "kurumi_retry_committed_hooks",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_bind_experiment_fx",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_refresh_presentation",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_weekly",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_recording",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_experience",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_method_workflow",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_narration",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "kurumi_audience",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "market_bind",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_unbind",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_searchInstruments",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_describeInstrument",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_queryBars",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_subscribeBars",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account_bind",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account_unbind",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account_listAccounts",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account_snapshot",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account_queryPositions",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account_queryOrders",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account_queryFills",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account_queryHistory",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account_subscribeAccount",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "activate",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "before_deactivate",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "before_run_release",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "dispose",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "native_run",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "run"
+        }
+      ],
+      "hostContributions": {
+        "sources": [
+          {
+            "id": "market",
+            "contract": "sesame.market/1",
+            "operations": {
+              "bind": "market_bind",
+              "unbind": "market_unbind",
+              "searchInstruments": "market_searchInstruments",
+              "describeInstrument": "market_describeInstrument",
+              "queryBars": "market_queryBars",
+              "subscribeBars": "market_subscribeBars"
+            }
+          },
+          {
+            "id": "account",
+            "contract": "sesame.account/1",
+            "operations": {
+              "bind": "account_bind",
+              "unbind": "account_unbind",
+              "listAccounts": "account_listAccounts",
+              "snapshot": "account_snapshot",
+              "queryPositions": "account_queryPositions",
+              "queryOrders": "account_queryOrders",
+              "queryFills": "account_queryFills",
+              "queryHistory": "account_queryHistory",
+              "subscribeAccount": "account_subscribeAccount"
+            }
+          }
+        ],
+        "views": [],
+        "services": [],
+        "hooks": [
+          {
+            "id": "activate",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "activate"
+            }
+          },
+          {
+            "id": "before_deactivate",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "before_deactivate"
+            }
+          },
+          {
+            "id": "before_run_release",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "before_run_release"
+            }
+          },
+          {
+            "id": "dispose",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "dispose"
+            }
+          }
+        ]
+      },
       "sourcePath": "plugins/optional-api-v1/packages/kurumi-replay"
     },
     {
@@ -1162,7 +2847,7 @@
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.3-dev.8"
+        "sesame": ">=0.2.2"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -1175,12 +2860,12 @@
         "zh": "Agent 手动交易"
       },
       "summary": {
-        "en": "Schedule model teams, share live research, choose target positions and produce one final report per run.",
-        "zh": "调度模型团队、实时共享研究、输出目标仓位，并在每轮结束后生成一份总结。"
+        "en": "Coordinate market analysis, portfolio decisions and authorized execution in a native Run graph with one report.",
+        "zh": "在原生运行图中组织行情分析、组合决策与获授权执行，统一产出一份报告。"
       },
       "dependencies": {
-        "en": "Sesame 0.2.3-dev.8 or newer, configured models and an explicitly selected execution capability. Research plugins are independently selected. Legacy plans pause until rebound.",
-        "zh": "需要 Sesame 0.2.3-dev.8 或更新版本、已配置模型和明确选择的执行能力；研究插件独立选择，旧计划重新绑定前暂停。"
+        "en": "Sesame 0.2.1+ and an existing supported trading backend. Read that backend's own resources for its account, platform and API requirements; use M5+ decisions.",
+        "zh": "需要 Sesame 0.2.1+ 与已有可用交易后端；账户、平台与 API 前提见该后端自身资源，使用 M5+ 决策。"
       },
       "tools": [
         "manual_trading_models",
@@ -1209,6 +2894,301 @@
         "manual_judgment_audit_source",
         "manual_judgment_coverage"
       ],
+      "capabilities": [
+        {
+          "id": "manual_trading_models",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_trading_plan",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_trading_run",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_trading_event",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_trading_runs",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_trading_activity",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_trading_context",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_trading_decide",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_trading_apply",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_trading_execution_export",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_trading_report",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_trading_review",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_judgment_review_queue",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_judgment_review_due",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_judgment_record",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_judgment_list",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_judgment_read",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_judgment_resolve",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_judgment_defer",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_judgment_reflect",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_judgment_rule",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_judgment_rules",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_judgment_retire_rule",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_judgment_audit_source",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_judgment_coverage",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "activate",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "after_turn",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "dispose",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "workflow_execute",
+          "kind": "workflow",
+          "consumers": [
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "workflow_dependencies",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": [
+          {
+            "id": "activate",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "activate"
+            }
+          },
+          {
+            "id": "after_turn",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "after_turn"
+            }
+          },
+          {
+            "id": "dispose",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "dispose"
+            }
+          }
+        ]
+      },
       "sourcePath": "plugins/optional-api-v1/packages/manual-trading"
     },
     {
@@ -1219,7 +3199,7 @@
       "engines": {
         "sesame": ">=0.2.0-0"
       },
-      "format": "agent-plugins",
+      "format": "sesame-mcp",
       "license": "MIT",
       "author": {
         "name": "Sesame"
@@ -1241,11 +3221,37 @@
         "parse_fx_json",
         "parse_fx_xml"
       ],
+      "capabilities": [
+        {
+          "id": "parse_fx_json",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "parse_fx_xml",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/market-data-parser"
     },
     {
       "id": "sesame/memory",
-      "version": "2.1.2",
+      "version": "3.0.0",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -1276,6 +3282,166 @@
         "memory_mark_used",
         "memory_manage"
       ],
+      "capabilities": [
+        {
+          "id": "memory_search",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "memory_read",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "memory_propose",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "memory_mark_used",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "memory_manage",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "memory_tree",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "memory_index",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "memory_stats",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "memory_configure",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "memory_activate",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "memory_before_compact",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "memory_before_run_release",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "memory_dispose",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [
+          {
+            "id": "memory",
+            "contract": "sesame.memory/1",
+            "operations": {
+              "search": "memory_search",
+              "read": "memory_read",
+              "tree": "memory_tree",
+              "index": "memory_index",
+              "manage": "memory_manage",
+              "stats": "memory_stats",
+              "configure": "memory_configure"
+            }
+          }
+        ],
+        "hooks": [
+          {
+            "id": "activate",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "memory_activate"
+            }
+          },
+          {
+            "id": "beforeCompact",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "memory_before_compact"
+            }
+          },
+          {
+            "id": "beforeRunRelease",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "memory_before_run_release"
+            }
+          },
+          {
+            "id": "dispose",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "memory_dispose"
+            }
+          }
+        ]
+      },
       "sourcePath": "plugins/api-v1/packages/memory"
     },
     {
@@ -1297,8 +3463,8 @@
         "zh": "MetaTrader 5"
       },
       "summary": {
-        "en": "Connect a chosen terminal for market data, account evidence and native strategy workflows.",
-        "zh": "连接指定终端，读取行情、账户证据并执行原生策略流程。"
+        "en": "Connect a chosen terminal for market data, accounts, manual position closing and native strategy workflows.",
+        "zh": "连接指定终端，读取行情、账户，手动平仓并执行原生策略流程。"
       },
       "dependencies": {
         "en": "An installed, authorized MT5 terminal. Compilation and Tester need compatible native dependencies; none are bundled with Sesame.",
@@ -1336,6 +3502,617 @@
         "mt5_trading_order",
         "mt5_trading_command"
       ],
+      "capabilities": [
+        {
+          "id": "mt5_catalog",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_call",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_cache",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_command",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_chart",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_edit",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_python",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_system",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_test",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_backtest",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_trade",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_deployment",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_project",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_inspect",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_compile",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_settings",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_update_configuration",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_import_configuration",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_connect",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_report_data",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_trade_detail",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_target",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_translation",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_translation_file",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_dependencies",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_conformance",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_trading_context",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_trading_pause",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_trading_order",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "mt5_trading_command",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "activate",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "dispose",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "beforeAgentTurn",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "beforeConfigChange",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "beforeDeactivate",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "configChanged",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "beforeRunRelease",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market.bind",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market.unbind",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market.searchInstruments",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market.describeInstrument",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market.queryBars",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market.subscribeBars",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account.bind",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account.unbind",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account.listAccounts",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account.snapshot",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account.queryPositions",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account.queryOrders",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account.queryFills",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account.queryHistory",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account.subscribeAccount",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "datasets.query",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "bars.query",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "runs.query",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "runs.watch",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "positions_close",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "positions_read_receipt",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [
+          {
+            "id": "market",
+            "contract": "sesame.market/1",
+            "operations": {
+              "bind": "market.bind",
+              "unbind": "market.unbind",
+              "searchInstruments": "market.searchInstruments",
+              "describeInstrument": "market.describeInstrument",
+              "queryBars": "market.queryBars",
+              "subscribeBars": "market.subscribeBars"
+            }
+          },
+          {
+            "id": "account",
+            "contract": "sesame.account/1",
+            "operations": {
+              "bind": "account.bind",
+              "unbind": "account.unbind",
+              "listAccounts": "account.listAccounts",
+              "snapshot": "account.snapshot",
+              "queryPositions": "account.queryPositions",
+              "queryOrders": "account.queryOrders",
+              "queryFills": "account.queryFills",
+              "queryHistory": "account.queryHistory",
+              "subscribeAccount": "account.subscribeAccount"
+            }
+          },
+          {
+            "id": "datasets",
+            "contract": "sesame.datasets/1",
+            "operations": {
+              "query": "datasets.query"
+            }
+          },
+          {
+            "id": "bars",
+            "contract": "sesame.native-bars/1",
+            "operations": {
+              "query": "bars.query"
+            }
+          },
+          {
+            "id": "runs",
+            "contract": "sesame.strategy-run/1",
+            "operations": {
+              "query": "runs.query",
+              "watch": "runs.watch"
+            }
+          }
+        ],
+        "views": [],
+        "services": [
+          {
+            "id": "positions",
+            "contract": "sesame.positions/1",
+            "operations": {
+              "close": "positions_close",
+              "readReceipt": "positions_read_receipt"
+            }
+          }
+        ],
+        "hooks": [
+          {
+            "id": "activate",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "activate"
+            }
+          },
+          {
+            "id": "dispose",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "dispose"
+            }
+          },
+          {
+            "id": "beforeAgentTurn",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "beforeAgentTurn"
+            }
+          },
+          {
+            "id": "beforeConfigChange",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "beforeConfigChange"
+            }
+          },
+          {
+            "id": "beforeDeactivate",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "beforeDeactivate"
+            }
+          },
+          {
+            "id": "configChanged",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "configChanged"
+            }
+          },
+          {
+            "id": "beforeRunRelease",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "beforeRunRelease"
+            }
+          }
+        ]
+      },
       "sourcePath": "plugins/optional-api-v1/packages/mt5"
     },
     {
@@ -1365,15 +4142,22 @@
         "zh": "需可归属且有日期的文本证据；关注度与共同变化不证明因果。"
       },
       "tools": [],
+      "capabilities": [],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/narrative-analysis"
     },
     {
       "id": "sesame/orchestration",
-      "version": "2.2.3",
+      "version": "3.0.0",
       "distribution": "core",
       "state": "mounted",
       "engines": {
-        "sesame": ">=0.2.3-dev.5"
+        "sesame": ">=0.2.2"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -1390,21 +4174,64 @@
         "zh": "分派明确任务，并提供通用产品使用指南。"
       },
       "dependencies": {
-        "en": "Sesame 0.2.3-dev.5 or newer and a configured model for Agent tasks; no trading backend is required.",
-        "zh": "需要 Sesame 0.2.3-dev.5 或更新版本及已配置模型；无需交易后端。"
+        "en": "A configured model is needed to run Agent tasks; no trading backend is required.",
+        "zh": "运行 Agent 任务需要配置模型；无需交易后端。"
       },
       "tools": [
         "agent_list",
         "agent_delegate",
         "agent_inspect",
-        "agent_stop",
-        "agent_finish"
+        "agent_stop"
       ],
+      "capabilities": [
+        {
+          "id": "agent_list",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "agent_delegate",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "agent_inspect",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "agent_stop",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/api-v1/packages/orchestration"
     },
     {
       "id": "sesame/plugin-manager",
-      "version": "2.3.0",
+      "version": "3.0.0",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -1436,15 +4263,118 @@
         "plugin_read",
         "plugin_inspect",
         "plugin_create",
-        "plugin_validate",
-        "plugin_test",
         "plugin_install",
         "plugin_set_state",
         "plugin_update",
-        "plugin_rollback",
-        "plugin_uninstall",
-        "plugin_export"
+        "plugin_uninstall"
       ],
+      "capabilities": [
+        {
+          "id": "plugin_discover",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "plugin_load",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "plugin_catalog",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "plugin_install_catalog",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "plugin_read",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "plugin_inspect",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "plugin_create",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "plugin_install",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "plugin_set_state",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "plugin_update",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "plugin_uninstall",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/api-v1/packages/plugin-manager"
     },
     {
@@ -1453,25 +4383,25 @@
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.3-dev.8"
+        "sesame": ">=0.2.2"
       },
       "format": "sesame-native",
       "license": "MIT",
       "author": {
         "name": "Sesame contributors"
       },
-      "category": "backend",
+      "category": "strategy",
       "title": {
         "en": "Portfolio execution",
-        "zh": "目标仓位执行"
+        "zh": "组合执行"
       },
       "summary": {
-        "en": "Apply exact target positions through a selected account, with order receipts, account checks and strategy pause controls.",
-        "zh": "通过指定账户执行准确目标仓位，保留订单回执、账户核验和策略暂停控制。"
+        "en": "Bind an existing account, observe executable quotes, apply authorized targets and reconcile durable single-submit receipts.",
+        "zh": "绑定已有账户，观察可执行报价，应用获授权目标并核验持久化单次提交回执。"
       },
       "dependencies": {
-        "en": "Sesame 0.2.3-dev.8 or newer and authorized MT5 1.6.0+ or QMT 1.4.0+ configured by the caller. Loading does not place orders.",
-        "zh": "需要 Sesame 0.2.3-dev.8 或更新版本，以及调用者已配置并授权的 MT5 1.6.0+ 或 QMT 1.4.0+；加载不会下单。"
+        "en": "An already configured supported trading adapter; native account and position checks remain authoritative.",
+        "zh": "需要已配置且受支持的交易适配器，原生账户与持仓核验决定是否可执行。"
       },
       "tools": [
         "portfolio_execution_configure",
@@ -1484,6 +4414,111 @@
         "manual_trade_status",
         "manual_trade_cancel"
       ],
+      "capabilities": [
+        {
+          "id": "portfolio_execution_configure",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "portfolio_execution_context",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "portfolio_execution_status",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "portfolio_execution_apply",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "manual_trade_inspect",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_trade_observe",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_trade_execute",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "manual_trade_status",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "manual_trade_cancel",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "dispose",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": [
+          {
+            "id": "dispose",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "dispose"
+            }
+          }
+        ]
+      },
       "sourcePath": "plugins/optional-api-v1/packages/portfolio-execution"
     },
     {
@@ -1513,6 +4548,13 @@
         "zh": "需固定 K 线与明确确认时间；辅助脚本需 Python 3，不强制 ICT 或波浪指导。"
       },
       "tools": [],
+      "capabilities": [],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/price-action"
     },
     {
@@ -1521,7 +4563,7 @@
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.3-dev.8"
+        "sesame": ">=0.2.0-0"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -1534,8 +4576,8 @@
         "zh": "QMT / MiniQMT"
       },
       "summary": {
-        "en": "Use an authorized Windows terminal for daily history, accounts and explicit stock commands.",
-        "zh": "通过获授权的 Windows 终端读取日线、账户并执行明确股票指令。"
+        "en": "Use an authorized Windows terminal for history, accounts, stock orders and manual position closing.",
+        "zh": "通过获授权的 Windows 终端读取历史、账户，执行股票指令与手动平仓。"
       },
       "dependencies": {
         "en": "A broker-authorized Windows terminal and xtquant environment. Windows native acceptance remains outstanding.",
@@ -1554,6 +4596,275 @@
         "qmt_trading_cancel",
         "qmt_trading_command"
       ],
+      "capabilities": [
+        {
+          "id": "qmt_environment",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "qmt_configure",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "qmt_read",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "qmt_download_history",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "qmt_order",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "qmt_cancel",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "qmt_command",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "qmt_trading_context",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "qmt_trading_order",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "qmt_trading_cancel",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "qmt_trading_command",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_bind",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_unbind",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_searchInstruments",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_describeInstrument",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_queryBars",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_subscribeBars",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "market_subscribeQuotes",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account_bind",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account_unbind",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account_listAccounts",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account_snapshot",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "account_queryPositions",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "qmt_dispose",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "positions_close",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "positions_read_receipt",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [
+          {
+            "id": "market",
+            "contract": "sesame.market/1",
+            "operations": {
+              "bind": "market_bind",
+              "unbind": "market_unbind",
+              "searchInstruments": "market_searchInstruments",
+              "describeInstrument": "market_describeInstrument",
+              "queryBars": "market_queryBars",
+              "subscribeBars": "market_subscribeBars",
+              "subscribeQuotes": "market_subscribeQuotes"
+            }
+          },
+          {
+            "id": "account",
+            "contract": "sesame.account/1",
+            "operations": {
+              "bind": "account_bind",
+              "unbind": "account_unbind",
+              "listAccounts": "account_listAccounts",
+              "snapshot": "account_snapshot",
+              "queryPositions": "account_queryPositions"
+            }
+          }
+        ],
+        "views": [],
+        "services": [
+          {
+            "id": "positions",
+            "contract": "sesame.positions/1",
+            "operations": {
+              "close": "positions_close",
+              "readReceipt": "positions_read_receipt"
+            }
+          }
+        ],
+        "hooks": [
+          {
+            "id": "dispose",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "qmt_dispose"
+            }
+          }
+        ]
+      },
       "sourcePath": "plugins/optional-api-v1/packages/qmt"
     },
     {
@@ -1564,7 +4875,7 @@
       "engines": {
         "sesame": ">=0.2.0-0"
       },
-      "format": "agent-plugins",
+      "format": "sesame-mcp",
       "license": "MIT",
       "author": {
         "name": "Sesame"
@@ -1589,11 +4900,64 @@
         "catalog_get_item",
         "catalog_recommend"
       ],
+      "capabilities": [
+        {
+          "id": "catalog_search",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "catalog_filter",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "catalog_list_categories",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "catalog_get_item",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "catalog_recommend",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/quantskills-catalog"
     },
     {
       "id": "sesame/reports",
-      "version": "2.2.0",
+      "version": "3.0.0",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -1625,6 +4989,68 @@
         "report_check",
         "report_publish"
       ],
+      "capabilities": [
+        {
+          "id": "report_data",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "report_template",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "report_backtest_template",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "report_read",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "report_check",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "report_publish",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/api-v1/packages/reports"
     },
     {
@@ -1635,7 +5061,7 @@
       "engines": {
         "sesame": ">=0.2.0-0"
       },
-      "format": "agent-plugins",
+      "format": "sesame-mcp",
       "license": "MIT",
       "author": {
         "name": "Sesame"
@@ -1656,11 +5082,28 @@
       "tools": [
         "parse_feed"
       ],
+      "capabilities": [
+        {
+          "id": "parse_feed",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/rss-collect"
     },
     {
       "id": "sesame/strategy-authoring",
-      "version": "1.2.0",
+      "version": "3.0.0",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -1694,6 +5137,117 @@
         "strategy_decision",
         "strategy_functions"
       ],
+      "capabilities": [
+        {
+          "id": "strategy_validate",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "strategy_publish",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "strategy_graph",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "strategy_replay",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "strategy_pipeline",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "strategy_workflow",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "strategy_decision",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "strategy_functions",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "strategy_activate",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "strategy_dispose",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": [
+          {
+            "id": "activate",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "strategy_activate"
+            }
+          },
+          {
+            "id": "dispose",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "strategy_dispose"
+            }
+          }
+        ]
+      },
       "sourcePath": "plugins/api-v1/packages/strategy-authoring"
     },
     {
@@ -1723,6 +5277,13 @@
         "zh": "需现有 Node.js 22+；真实回测需另选引擎，不预选策略算法。"
       },
       "tools": [],
+      "capabilities": [],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/strategy-research"
     },
     {
@@ -1756,6 +5317,57 @@
         "vnpy_backtest",
         "vnpy_result"
       ],
+      "capabilities": [
+        {
+          "id": "vnpy_environment",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "vnpy_backtest",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "vnpy_result",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "vnpy_dispose",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": [
+          {
+            "id": "dispose",
+            "contract": "sesame.lifecycle/1",
+            "operations": {
+              "handle": "vnpy_dispose"
+            }
+          }
+        ]
+      },
       "sourcePath": "plugins/optional-api-v1/packages/vnpy"
     },
     {
@@ -1766,7 +5378,7 @@
       "engines": {
         "sesame": ">=0.2.0-0"
       },
-      "format": "agent-plugins",
+      "format": "sesame-mcp",
       "license": "MIT",
       "author": {
         "name": "Sesame"
@@ -1787,6 +5399,23 @@
       "tools": [
         "extract_webpage"
       ],
+      "capabilities": [
+        {
+          "id": "extract_webpage",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/web-extract"
     },
     {
@@ -1818,11 +5447,44 @@
       "tools": [
         "sources_fetch"
       ],
+      "capabilities": [
+        {
+          "id": "sources_fetch",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "http_query",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [
+          {
+            "id": "http",
+            "contract": "sesame.rows/1",
+            "operations": {
+              "query": "http_query"
+            }
+          }
+        ],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/web-sources"
     },
     {
       "id": "sesame/workspace",
-      "version": "1.1.2",
+      "version": "3.0.0",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -1861,6 +5523,131 @@
         "host_files_remove",
         "host_files_run"
       ],
+      "capabilities": [
+        {
+          "id": "read",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "write",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "edit",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "bash",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "host_files_list",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "host_files_search",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "host_files_read",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "host_files_import",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "host_files_write",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "host_files_mkdir",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "host_files_move",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "host_files_remove",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "host_files_run",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/api-v1/packages/workspace"
     },
     {
@@ -1890,6 +5677,13 @@
         "zh": "需价格及单位明确的成交量；未知量或 tick volume 限制结论。"
       },
       "tools": [],
+      "capabilities": [],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
       "sourcePath": "plugins/optional-api-v1/packages/wyckoff"
     }
   ]

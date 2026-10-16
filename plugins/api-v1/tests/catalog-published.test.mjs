@@ -97,7 +97,7 @@ test('CI scopes the read-only token to trusted publication verification and runs
   const workflow = readFileSync(new URL('../../../.github/workflows/plugin-api-v1.yml', import.meta.url), 'utf8');
   assert.equal((workflow.match(/GITHUB_TOKEN:/g) ?? []).length, 1);
   assert.match(workflow, /permissions:\s+contents: read\s+jobs:/);
-  assert.match(workflow, /env:\s+GITHUB_TOKEN: \$\{\{ github\.token \}\}\s+run: node trusted\/\.github\/scripts\/validate-api1-catalog\.mjs candidate --published/);
+  assert.match(workflow, /env:\s+GITHUB_TOKEN: \$\{\{ github\.token \}\}\s+run: node (?:trusted|historical)\/\.github\/scripts\/validate-api1-catalog\.mjs candidate --published/);
   assert.ok(workflow.includes('trusted/plugins/api-v1/tests/catalog-published.test.mjs'));
   assert.doesNotMatch(workflow, /\bnode\s+candidate\//);
 });

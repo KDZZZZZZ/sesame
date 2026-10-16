@@ -17,7 +17,7 @@ const fPlan = () => read('factor-research', 'examples/plan.demo.json');
 const development = () => read('factor-research', 'examples/development.demo.json');
 const held = () => read('factor-research', 'examples/holdout.demo.json');
 
-test('separate resource packages pass the same package validator with no implicit methods or host grant', () => {
+test('research packages declare their actual callable and knowledge surfaces without implicit host grants', async () => {
   const root = mkdtempSync(join(tmpdir(), 'research-lock-'));
   try {
     mkdirSync(join(root, 'packages'));
@@ -25,7 +25,11 @@ test('separate resource packages pass the same package validator with no implici
       cpSync(packageRoot(name), join(root, 'packages', name), { recursive: true });
       const manifest = read(name, 'plugin.json');
       assert.equal(manifest.default_state, 'discoverable'); assert.equal(manifest.engines.sesame, '>=0.2.0-0');
-      assert.deepEqual(manifest.tool_names, []); assert.deepEqual(read(name, 'tools.json'), []);
+      assert.equal(manifest.tool_names, undefined); assert.equal(manifest.apiVersion, '2');
+      const declaration = read(name, 'capabilities.json');
+      const { createCapabilities } = await import(new URL(`../packages/${name}/index.js`, import.meta.url));
+      assert.deepEqual(declaration.capabilities.map(item => item.binding.name), createCapabilities({}).map(item => item.name));
+      assert.ok(declaration.knowledge.length);
       assert.equal(manifest.migration, undefined); assert.deepEqual(manifest.provides, {});
       for (const path of manifest.resources) assert.ok(readFileSync(join(packageRoot(name), path)).length, path);
     }

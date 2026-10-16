@@ -1,3 +1,4 @@
+import { records } from './records.js';
 import { now } from './support.js';
 import { ensureMT5Connection } from './connect.js';
 
@@ -34,7 +35,7 @@ export class MT5AutoConnection {
     if (!official.config.servers.terminal.enabled || !official.config.servers.terminal.token
       || official.access('terminal', 'get_trading_account_info', null).blocked_reason) return this.maxRetryMs;
     // Other tasks keep their current session. Defer mutations while they work.
-    try { host.configuration.assertIdle(); } catch { return this.retryMs; }
+    try { records(host).assertIdle(); } catch { return this.retryMs; }
     if (official.jobs.size) return this.retryMs;
     const requestVersion = official.config.version;
     if (this.version === official.config.version && this.healthy) {
@@ -46,16 +47,16 @@ export class MT5AutoConnection {
       } catch { /* Restore only the connection; never replay an application command. */ }
     }
     this.healthy = false;
-    const result = await ensureMT5Connection(mt5, {}, this.lifetime.signal, { exclusive: action => host.configuration.exclusive(action) });
+    const result = await ensureMT5Connection(mt5, {}, this.lifetime.signal, { exclusive: action => records(host).exclusive(action) });
     if (['agent_busy', 'mt5_busy', 'version_conflict', 'terminal_preparing'].includes(result.code)) return this.retryMs;
     this.version = result.settings_version ?? requestVersion;
     this.healthy = result.status === 'connected';
     this.failures = this.healthy ? 0 : this.failures + 1;
     // A single replaceable status record, not an ever-growing retry transcript.
-    host.storage.put('mt5_connection_status', { id: 'terminal', ...result, checked_at: now() });
+    records(host).put('mt5_connection_status', { id: 'terminal', ...result, checked_at: now() });
     if (this.healthy) {
       mt5.live.accountCache = null;
-      host.events.emit('configuration.updated', { id: 'mt5-autoconnect', target: 'mt5', status: 'applied' });
+      host.events.emit({ topic: 'workspace.mt5.configuration', payload: { id: 'mt5-autoconnect', target: 'mt5', status: 'applied' } });
     }
     return this.healthy ? this.intervalMs : Math.min(this.maxRetryMs, this.retryMs * 2 ** Math.min(this.failures, 6));
   }

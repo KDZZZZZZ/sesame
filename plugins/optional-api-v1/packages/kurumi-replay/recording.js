@@ -36,6 +36,14 @@ export function redactSecrets(value) {
   return value;
 }
 
+const durability=Object.freeze({fileSync:true,directorySync:process.platform==='win32'?'unsupported':'fsync'});
+async function syncDirectory(path){
+  // Node cannot fsync directory handles on Windows. File handles are still
+  // synchronously flushed; receipts explicitly expose the weaker directory guarantee.
+  if(process.platform==='win32')return;
+  const directory=await fs.open(path,'r');try{await directory.sync();}finally{await directory.close();}
+}
+
 async function exists(path) { try { await fs.lstat(path); return true; } catch (e) { if (e.code === 'ENOENT') return false; throw e; } }
 
 async function journalTail(path) {
@@ -70,7 +78,7 @@ async function readExact(handle,position,length){
 }
 
 export class Recorder {
-  /** rootDirectory 是插件持久目录（host.storage.directory）。 */
+  /** rootDirectory 是插件持久目录（host.context.storageRoot）。 */
   constructor(rootDirectory, { mirrorRoot } = {}) {
     if (typeof rootDirectory !== 'string' || !rootDirectory) throw failure('INVALID_STORAGE', '归档需要插件持久目录');
     this.root = join(rootDirectory, 'recording');
@@ -113,7 +121,7 @@ export class Recorder {
     await this.initialize();
     if (this.locked) await this.#recoverMirror(); // 恢复失败直接抛出，不写权威日志
     const safe = redactSecrets(payload);
-    const body = { seq: this.seq + 1, wallClockUtc: new Date().toISOString(), simClockMs, prevDigest: this.prevDigest, kind, payload: safe };
+    const body = { durability, seq: this.seq + 1, wallClockUtc: new Date().toISOString(), simClockMs, prevDigest: this.prevDigest, kind, payload: safe };
     const record = { ...body, digest: sha(Buffer.from(canonical(body))) };
     const line = JSON.stringify(record) + '\n';
     try { await this.#appendLine(join(this.root, this.journalName), line); }
@@ -144,8 +152,7 @@ export class Recorder {
       if (before === 0) {
         // This is part of the append transaction: a directory-sync failure must
         // roll the line back before the service queues it as unwritten.
-        const dir = await fs.open(dirname(path), 'r');
-        try { await dir.sync(); } finally { await dir.close(); }
+        await syncDirectory(dirname(path));
       }
     } catch (e) {
       try { await handle.truncate(before); await handle.sync(); } catch { /* 保留诊断 */ }
@@ -175,7 +182,7 @@ export class Recorder {
             for(let offset=mirrorSize;offset<tail.size;offset+=chunkSize)await mirror.writeFile(await readExact(source,offset,Math.min(chunkSize,tail.size-offset)));
             await mirror.sync();
           }catch(error){await mirror.truncate(mirrorSize);await mirror.sync();throw error;}
-          if(!mirrorSize){const directory=await fs.open(dirname(mirrorPath),'r');try{await directory.sync();}finally{await directory.close();}}
+          if(!mirrorSize){await syncDirectory(dirname(mirrorPath));}
         }
       }catch(e){throw failure('ARCHIVE_MIRROR_LOCKED','归档镜像核验或补齐失败，保持故障锁定：'+e.message);}
       finally{await source.close();if(mirror)await mirror.close();}
@@ -197,7 +204,7 @@ export class Recorder {
       const placed = await this.#placeBytes(join(base, relPath), bytes, { mode });
       if (!placed.reused) reused = false;
     }
-    return { path: relPath, digest, bytes: bytes.length, reused };
+    return { path: relPath, digest, bytes: bytes.length, reused, durability };
   }
 
   async #placeBytes(target, bytes, { mode = 0o600 } = {}) {
@@ -232,7 +239,7 @@ export class Recorder {
     }
     await fs.rm(tmp, { force: true }).catch(() => {});
     // 目录项持久化（尽力而为；失败视为写盘失败）。
-    try { const dir = await fs.open(dirname(target), 'r'); try { await dir.sync(); } finally { await dir.close(); } } catch (e) { throw failure('ARCHIVE_WRITE_FAILED', '归档目录持久化失败（' + target + '）：' + e.message); }
+    try { await syncDirectory(dirname(target)); } catch (e) { throw failure('ARCHIVE_WRITE_FAILED', '归档目录持久化失败（' + target + '）：' + e.message); }
     return { reused: false };
   }
 

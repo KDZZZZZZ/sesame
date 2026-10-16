@@ -7,7 +7,7 @@ const queues = new Map(), ownership = new AsyncLocalStorage();
 // this lock across its orders; nested service writes reuse the active lock.
 // Research, observation and other accounts do not wait for this critical section.
 export async function withAccountLock(host, record, action) {
-  const key = canonical([host.storage.directory, record.backend, record.account.accountId,
+  const key = canonical([host.context.storageRoot, record.backend, record.account.accountId,
     record.account.server ?? null, record.account.connectionId ?? null]);
   const current = ownership.getStore();
   if (current?.active && current.key === key) return action();

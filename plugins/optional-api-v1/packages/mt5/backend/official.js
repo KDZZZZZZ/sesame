@@ -1,3 +1,4 @@
+import { records } from './records.js';
 import { promises as fs } from 'node:fs';
 import { join } from 'node:path';
 import { isIP } from 'node:net';
@@ -46,7 +47,7 @@ export function connectionURL(server, value) {
 }
 
 export class MT5Official {
-  constructor(host, native) { this.host = host; this.storage = host.storage; this.native = native; this.clients = new Map(); this.python = new MT5Python(native); this.jobs = new Map(); this.routeEntries = builtinRoutes(); }
+  constructor(host, native) { this.host = host; this.storage = records(host); this.native = native; this.clients = new Map(); this.python = new MT5Python(native); this.jobs = new Map(); this.routeEntries = builtinRoutes(); }
   async init() {
     this.directory = join(this.storage.directory, 'mt5'); await fs.mkdir(this.directory, { recursive: true, mode: 0o700 }); securePath(this.directory);
     this.file = join(this.directory, 'connection.json'); this.config = defaults();
@@ -262,7 +263,7 @@ export class MT5Official {
         if (command.status === 'returned' && server !== 'launcher') {
           const key = entityId('data'), received = now();
           const rows = [{ command_id: id, server, tool, received_at: received, result: command.result }];
-          this.host.datasets.register( { id: key, title: `MT5 ${server} / ${tool}`, rows,
+          this.storage.put('dataset', { id: key, title: `MT5 ${server} / ${tool}`, rows,
             provenance: { kind: 'observed', dataset_id: key, source_kind: 'external', provider: `mt5/${server}/${tool}`, as_of: received, data_hash: digest(JSON.stringify(rows)), engine_version: server === 'python' ? 'MetaTrader5-python' : 'mt5-native-mcp', time_range: null } });
           command.dataset_id = key;
         }

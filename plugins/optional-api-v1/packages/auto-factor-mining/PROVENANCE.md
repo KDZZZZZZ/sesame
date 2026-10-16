@@ -9,7 +9,7 @@
 - [CoSTEER knowledge](https://github.com/microsoft/RD-Agent/blob/v1.0.0/rdagent/components/coder/CoSTEER/knowledge_management.py)：实现反馈与经验复用思路。
 - [Qlib factor runner](https://github.com/microsoft/RD-Agent/blob/v1.0.0/rdagent/scenarios/qlib/developer/factor_runner.py)：执行评价和结果反馈边界。
 
-Sesame 本地 `manual-trading`（MIT）提供已验证的 HostContext service/agents 调度、每角色模型固定、structured tool 输出和 reporter 文件归档模式。这里只复用该机制，未复用盯盘、账户、目标仓位或交易执行业务。
+Sesame 本地 `manual-trading`（MIT）提供已验证的 多角色研究、固定模型、结构化断点与单份报告的业务设计。这里只复用该机制，未复用盯盘、账户、目标仓位或交易执行业务。
 
 原有 `engine.js`、数学测试和复现脚本已移至独立 `sesame/factor-evaluator` 插件。它是可明确选择的有界 AST 与统计诊断基线，不是上游 Qlib 的复现，也不宣称当前 SOTA。工作流只定义通用评估工具协议，其他实现无需接受 AST 或相同指标。演示 HTML 的研究与收益数字为合成示例。
 

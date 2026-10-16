@@ -1,3 +1,5 @@
+import { records } from './records.js';
+import { publishRows } from './resource-files.js';
 import { createHash, randomUUID } from 'node:crypto';
 import { CONFIG_FIELDS, KINDS } from './schema.js';
 import { SOURCE_KINDS, dateOnly, querySource, selectProvider, timestamp } from './sources.js';
@@ -123,15 +125,17 @@ async function secSlot(signal) {
 }
 
 export function createService(host, { now = Date.now, fetch: fetcher = globalThis.fetch, env = process.env, timeoutMs = 15000 } = {}) {
-  const config = () => ({ ...DEFAULTS, ...host.storage.get('research_config', 'default', true)?.values });
+  const evidenceRef = id => ({ datasetId: id, source: { providerId: `${host.context.pluginId}#evidence`, revision: host.context.pluginRevision }, query: { dataset_id: id } });
+  const config = () => ({ ...DEFAULTS, ...records(host).get('research_config', 'default', true)?.values });
   const credential = field => {
     const value = env[config()[field]];
     fail(typeof value === 'string' && value.trim().length > 0 && !/[\r\n]/.test(value), 'A required source environment variable is unavailable.', 'SOURCE_CREDENTIAL_MISSING');
     return value.trim();
   };
-  const snapshots = () => host.storage.list('research_snapshots').sort((a, b) => b.retrieved_at.localeCompare(a.retrieved_at));
+  const snapshots = () => records(host).list('research_snapshots').sort((a, b) => b.retrieved_at.localeCompare(a.retrieved_at));
   const unavailable = (args, code, sources = []) => ({ status: 'source_unavailable', provider: args.provider, kind: args.kind, reason: code, rows: [], dataset_id: null, raw_dataset_id: null, sources, retrieved_at: new Date(now()).toISOString(), warnings: ['No research conclusion can be drawn from this unavailable source.'] });
 
+  const saveDataset = async data => {const dependencies=(data.input_ids??[]).map(id=>records(host).get('datasets',id).ref);const ref=await publishRows(host,data,dependencies);return records(host).put('datasets',{...data,ref,producer_plugin_id:host.context.pluginId});};
   const service = {
     status() {
       const settings = config();
@@ -142,20 +146,31 @@ export function createService(host, { now = Date.now, fetch: fetcher = globalThi
       };
     },
     configure(input) {
-      fail(host.scope?.kind === 'main', 'Research configuration requires the main conversation.', 'MAIN_ONLY');
+      fail(host.context?.kind === 'main', 'Research configuration requires the main conversation.', 'MAIN_ONLY');
       fail(Object.keys(input).every(key => CONFIG_FIELDS.includes(key)), 'Only source environment-variable names can be configured.');
       for (const value of Object.values(input)) fail(typeof value === 'string' && /^[A-Za-z_][A-Za-z0-9_]{0,127}$/.test(value), 'Pass an environment-variable name, never a credential value.');
-      host.storage.put('research_config', { id: 'default', values: { ...config(), ...input }, updated_at: new Date(now()).toISOString() });
+      records(host).put('research_config', { id: 'default', values: { ...config(), ...input }, updated_at: new Date(now()).toISOString() });
       return service.status();
     },
     read({ dataset_id: id, offset = 0, limit = 20 }) {
       fail(typeof id === 'string' && /^financial-research-[a-f0-9-]+(?:-raw)?$/.test(id), 'Invalid research dataset ID.');
       fail(Number.isInteger(offset) && offset >= 0 && offset <= 10000 && Number.isInteger(limit) && limit >= 1 && limit <= 100, 'Invalid evidence page.');
       const base = id.endsWith('-raw') ? id.slice(0, -4) : id;
-      const record = host.storage.get('research_snapshots', base, true);
+      const record = records(host).get('research_snapshots', base, true);
       fail(record && (record.id === id || record.raw_dataset_id === id), 'Research evidence not found.', 'NOT_FOUND');
-      const dataset = host.datasets.read(id);
-      return { status: 'saved_evidence', dataset_id: id, provenance: dataset.provenance, ...page(dataset.rows, offset, limit), warnings: record.warnings };
+      const dataset = records(host).get('datasets',id);
+      return { status: 'saved_evidence', dataset_id: id, ref: dataset.ref, evidence: evidenceRef(id), provenance: dataset.provenance, ...page(dataset.rows, offset, limit), warnings: record.warnings };
+    },
+    queryEvidence({ dataset_id: id }, { cursor, limit }) {
+      fail(typeof id === 'string' && /^financial-research-[a-f0-9-]+(?:-raw)?$/.test(id), 'Invalid research dataset ID.');
+      fail(cursor === undefined || /^(0|[1-9]\d*)$/.test(cursor), 'Invalid evidence cursor.');
+      const offset = cursor === undefined ? 0 : Number(cursor);
+      fail(Number.isSafeInteger(offset) && offset >= 0 && Number.isInteger(limit) && limit >= 1 && limit <= 1000, 'Invalid evidence page.');
+      const dataset = records(host).get('datasets', id), { rows, ...metadata } = dataset;
+      fail(offset <= rows.length, 'Evidence cursor exceeds the saved dataset.');
+      const end = Math.min(rows.length, offset + limit);
+      return { items: rows.slice(offset, end), ...(end < rows.length ? { nextCursor: String(end) } : {}),
+        metadata: { ...metadata, producer_plugin_id: host.context.pluginId, inputs: (dataset.input_ids ?? []).map(datasetId => ({ datasetId, query: { dataset_id: datasetId } })) } };
     },
     async query(input, signal) {
       signal?.throwIfAborted();
@@ -163,8 +178,8 @@ export function createService(host, { now = Date.now, fetch: fetcher = globalThi
       if (args.as_of && ['fmp', 'reddit'].includes(args.provider)) {
         const record = snapshots().find(row => identity(row.query) === identity(args) && Date.parse(row.retrieved_at) <= Date.parse(args.as_of));
         if (!record) return unavailable(args, 'HISTORICAL_SNAPSHOT_UNAVAILABLE');
-        const dataset = host.datasets.read(record.id), rows = selected(dataset.rows, args);
-        return { status: rows.length ? 'saved_evidence' : 'partial', provider: args.provider, kind: args.kind, dataset_id: record.id, raw_dataset_id: record.raw_dataset_id, ...page(rows, 0, args.limit), retrieved_at: record.retrieved_at, as_of: args.as_of, sources: record.sources, coverage: { ...record.coverage, saved_query: record.query, returned: rows.length }, warnings: [...record.warnings, 'Reused the latest saved matching snapshot acquired before the cutoff; its original bounded coverage still applies.'] };
+        const dataset = records(host).get('datasets',record.id), rows = selected(dataset.rows, args);
+        return { status: rows.length ? 'saved_evidence' : 'partial', provider: args.provider, kind: args.kind, dataset_id: record.id, raw_dataset_id: record.raw_dataset_id, evidence: evidenceRef(record.id), raw_evidence: evidenceRef(record.raw_dataset_id), ref: dataset.ref, raw_ref: records(host).get('datasets', record.raw_dataset_id).ref, ...page(rows, 0, args.limit), retrieved_at: record.retrieved_at, as_of: args.as_of, sources: record.sources, coverage: { ...record.coverage, saved_query: record.query, returned: rows.length }, warnings: [...record.warnings, 'Reused the latest saved matching snapshot acquired before the cutoff; its original bounded coverage still applies.'] };
       }
 
       const sources = [], secrets = [];
@@ -226,10 +241,10 @@ export function createService(host, { now = Date.now, fetch: fetcher = globalThi
       if (rows.some(row => row.available_at === null)) warnings.push('Some source publication times are unknown. Their content is known only from this retrieval onward.');
       const coverage = { requested_limit: args.limit, returned: rows.length, source_candidates: result.candidates.length, excluded_by_cutoff: excludedByCutoff, limited: result.limited || rows.length < result.candidates.length, as_of: args.as_of ?? null };
       const provenance = { kind: 'observed', source_kind: 'external', as_of: retrievedAt, provider: args.provider, sources, query: args, retrieved_at: retrievedAt, coverage, untrusted_source_text: true, precision: 'Source numbers and decimal strings are retained as received; JSON numbers retain JSON numeric precision.' };
-      host.datasets.register({ id: rawId, title: `${args.kind} raw source evidence`, rows: rows.map((row, index) => ({ index, source_url: row.source_url, retrieved_at: row.retrieved_at, available_at: row.available_at, content_available_at: row.content_available_at, availability: row.availability, raw: row.data })), provenance: { ...provenance, retention: 'Selected eligible source records; secrets redacted. Full response hashes identify the fetched payloads; excluded future records are not retained in this dataset.' } });
-      host.datasets.register({ id, title: `${args.kind} ${args.symbol ?? args.cik ?? args.series_id}`, rows, input_ids: [rawId], provenance });
-      host.storage.put('research_snapshots', { id, raw_dataset_id: rawId, query: args, retrieved_at: retrievedAt, row_count: rows.length, sources, coverage, warnings });
-      return { status: !rows.length || coverage.limited ? 'partial' : 'ok', provider: args.provider, kind: args.kind, dataset_id: id, raw_dataset_id: rawId, ...page(rows, 0, args.limit), retrieved_at: retrievedAt, sources, coverage, warnings };
+      await saveDataset({ id: rawId, title: `${args.kind} raw source evidence`, rows: rows.map((row, index) => ({ index, source_url: row.source_url, retrieved_at: row.retrieved_at, available_at: row.available_at, content_available_at: row.content_available_at, availability: row.availability, raw: row.data })), provenance: { ...provenance, retention: 'Selected eligible source records; secrets redacted. Full response hashes identify the fetched payloads; excluded future records are not retained in this dataset.' } });
+      await saveDataset({ id, title: `${args.kind} ${args.symbol ?? args.cik ?? args.series_id}`, rows, input_ids: [rawId], provenance });
+      records(host).put('research_snapshots', { id, raw_dataset_id: rawId, query: args, retrieved_at: retrievedAt, row_count: rows.length, sources, coverage, warnings });
+      return { status: !rows.length || coverage.limited ? 'partial' : 'ok', provider: args.provider, kind: args.kind, dataset_id: id, raw_dataset_id: rawId, evidence: evidenceRef(id), raw_evidence: evidenceRef(rawId), ref: records(host).get('datasets',id).ref, raw_ref: records(host).get('datasets',rawId).ref, ...page(rows, 0, args.limit), retrieved_at: retrievedAt, sources, coverage, warnings };
     },
   };
   return service;

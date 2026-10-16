@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "capabilities": [],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "knowledge-0",
+      "path": "examples/expected.md",
+      "description": "ICT 价格结构研究 — examples/expected.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-1",
+      "path": "prompt.md",
+      "description": "ICT 价格结构研究 — prompt.md",
+      "kind": "prompt"
+    },
+    {
+      "id": "knowledge-2",
+      "path": "PROVENANCE.md",
+      "description": "ICT 价格结构研究 — PROVENANCE.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-3",
+      "path": "README.md",
+      "description": "ICT 价格结构研究 — README.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-4",
+      "path": "skills/ict/references/execution.md",
+      "description": "ICT 价格结构研究 — skills/ict/references/execution.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-5",
+      "path": "skills/ict/references/method.md",
+      "description": "ICT 价格结构研究 — skills/ict/references/method.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-6",
+      "path": "skills/ict/references/validation.md",
+      "description": "ICT 价格结构研究 — skills/ict/references/validation.md",
+      "kind": "reference"
+    },
+    {
+      "id": "knowledge-7",
+      "path": "skills/ict/SKILL.md",
+      "description": "ICT 价格结构研究 — skills/ict/SKILL.md",
+      "kind": "skill"
+    }
+  ],
+  "hooks": [],
+  "stateCollections": [],
+  "artifactSchemas": [],
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

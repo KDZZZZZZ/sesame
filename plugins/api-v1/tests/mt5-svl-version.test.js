@@ -5,10 +5,12 @@ import { digest } from '@sesame/plugin-sdk/protocol';
 import { validateSource } from '@sesame/plugin-sdk/svl';
 import { registerTranslation } from '../../optional-api-v1/packages/mt5/backend/target.js';
 import { translationBinding } from '../../optional-api-v1/packages/mt5/backend/parameters.js';
+import { fixtureHost } from './mt5-conformance-fixture.js';
 
 // Only storage and immutable artifact ports are fixtures. The production SVL
 // validator and MT5 translation/binding code execute unchanged; no terminal runs.
-function fixture(version, versions = ['1.0.0']) {
+async function fixture(t, version, versions = ['1.0.0']) {
+  const f = await fixtureHost(t);
   const source = JSON.parse(readFileSync(new URL('../packages/strategy-authoring/examples/close-threshold.svl.json', import.meta.url)));
   source.schemaVersion = version;
   const checked = validateSource(source), bytes = Buffer.from(JSON.stringify(source));
@@ -25,23 +27,17 @@ function fixture(version, versions = ['1.0.0']) {
     ['mt5_revision/project:1', { translation: translationRef }],
   ]);
   let writes = 0;
-  const storage = {
-    get(kind, id, optional = false) {
-      const row = records.get(`${kind}/${id}`);
-      assert.ok(optional || row, `Unexpected storage read ${kind}/${id}`);
-      return structuredClone(row);
-    },
-    idempotentAsync: async (_key, _fingerprint, action) => action(),
-    put: () => { writes++; throw new Error('Unexpected write before version validation'); },
+  const storage = f.store;
+  for (const [key, value] of records) { const [kind, id] = key.split('/'); storage.put(kind, { ...value, id }); }
+  const host = f.host;
+  host.resources.read = async (value, options) => {
+    const record = artifacts.get(value.id); assert.ok(record); assert.deepEqual(value, record.ref);
+    if (options.part === 'metadata') return { ref: record.ref, producer: record.producer };
+    if (options.part === 'manifest') return structuredClone(record.manifest);
+    assert.equal(options.part, 'content'); assert.equal(value.id, sourceRef.id);
+    return { content: bytes.toString(options.encoding), total: bytes.length };
   };
-  const host = {
-    plugin: { id: 'sesame/mt5' }, storage,
-    artifacts: {
-      read(value) { const record = artifacts.get(value.id); assert.ok(record); assert.deepEqual(value, record.ref); return structuredClone(record); },
-      readBlob(value) { assert.equal(value.digest, digest(bytes)); assert.equal(value.size, bytes.length); return Buffer.from(bytes); },
-      publish: () => { writes++; throw new Error('Unexpected publication before version validation'); },
-    },
-  };
+  host.resources.create = () => { writes++; throw new Error('Unexpected publication before version validation'); };
   const mt5 = { storage, official: { config: { account: { server: 'Fixture-Demo', login: '7001' } } } };
   const config = { symbol: 'EURUSD', period: 'M1', parameters: { Threshold: '101.25' } };
   const args = {
@@ -49,27 +45,27 @@ function fixture(version, versions = ['1.0.0']) {
     files: { 'Experts/Strategy.mq5': '// Identity fixture; not native code validation' },
     source_map: source.nodes.map(node => ({ nodeId: node.id, generated: [], instrumentation: 'unobservable', reason: 'No native run in this test' })), adaptations: [],
   };
-  return { host, mt5, config, args, artifacts, records, writes: () => writes };
+  return { host, mt5, config, args, artifacts, records: storage, writes: () => writes };
 }
 
-test('MT5 registration refuses a newer SVL source before project publication', async () => {
+test('MT5 registration refuses a newer SVL source before project publication', async t => {
   for (const versions of [['1.0.0'], [], null, '1.1.0', {}]) {
-    const f = fixture('1.1.0', versions);
+    const f = await fixture(t, '1.1.0', versions);
     await assert.rejects(registerTranslation(f.host, f.mt5, f.args), { code: 'UNSUPPORTED_CAPABILITY', status: 422 });
     assert.equal(f.writes(), 0);
   }
 });
 
-test('resuming or retesting a frozen translation cannot bypass its target language versions', () => {
+test('resuming or retesting a frozen translation cannot bypass its target language versions', async t => {
   for (const versions of [['1.0.0'], [], null, '1.1.0', {}]) {
-    const f = fixture('1.1.0', versions);
-    assert.throws(() => translationBinding(f.host, f.mt5, 'build', f.config), { code: 'UNSUPPORTED_CAPABILITY', status: 422 });
+    const f = await fixture(t, '1.1.0', versions);
+    await assert.rejects(translationBinding(f.host, f.mt5, 'build', f.config), { code: 'UNSUPPORTED_CAPABILITY', status: 422 });
     assert.equal(f.writes(), 0);
   }
 });
 
-test('existing SVL 1.0 translations retain exact parameters and native bindings', () => {
-  const f = fixture('1.0.0'), bound = translationBinding(f.host, f.mt5, 'build', f.config);
+test('existing SVL 1.0 translations retain exact parameters and native bindings', async t => {
+  const f = await fixture(t, '1.0.0'), bound = await translationBinding(f.host, f.mt5, 'build', f.config);
   assert.equal(bound.parameters.threshold, '101.25');
   assert.equal(bound.parameters.instrument.instrumentId, 'EURUSD');
   assert.deepEqual(bound.native, { Threshold: '101.25' });
@@ -78,8 +74,8 @@ test('existing SVL 1.0 translations retain exact parameters and native bindings'
   assert.equal(f.writes(), 0);
 });
 
-test('native legacy projects without a SVL translation keep their existing path', () => {
-  const f = fixture('1.0.0');
-  f.records.set('mt5_revision/project:1', {});
-  assert.equal(translationBinding(f.host, f.mt5, 'build', f.config), null);
+test('native projects without a SVL translation keep their existing path', async t => {
+  const f = await fixture(t, '1.0.0');
+  f.records.put('mt5_revision', { id: 'project:1' });
+  assert.equal(await translationBinding(f.host, f.mt5, 'build', f.config), null);
 });

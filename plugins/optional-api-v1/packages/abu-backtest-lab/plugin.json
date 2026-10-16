@@ -1,9 +1,9 @@
 {
   "id": "sesame/abu-backtest-lab",
-  "apiVersion": "1",
+  "apiVersion": "2",
   "version": "1.0.0",
   "title": "回测审计基线",
-  "description": "时序、成本、成交和持仓约束诊断及原生引擎交接。这是可改进基线而非标准答案；输入显式来源和截止时点，输出可复核研究结果。 自动登记输入与结果数据集，用户可复核。",
+  "description": "时序、成本、成交和持仓约束诊断及原生引擎交接。这是可改进基线而非标准答案；输入显式来源和截止时点，输出可复核研究结果。 自动冻结输入与结果数据工件，用户可复核。",
   "author": {
     "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
   },
@@ -11,10 +11,6 @@
   "default_state": "discoverable",
   "agent_scope": "all",
   "entry": "index.js",
-  "tool_definitions": "tools.json",
-  "tool_names": [
-    "abu_backtest_lab_analyze"
-  ],
   "prompts": [
     "prompt.md"
   ],
@@ -33,5 +29,6 @@
   "provides": {},
   "engines": {
     "sesame": ">=0.2.0-0"
-  }
+  },
+  "capability_manifest": "capabilities.json"
 }

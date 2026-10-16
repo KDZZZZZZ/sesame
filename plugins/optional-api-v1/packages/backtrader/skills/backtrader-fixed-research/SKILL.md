@@ -1,15 +1,19 @@
 ---
 name: backtrader-fixed-research
-description: Run real Backtrader Cerebro on frozen observed or explicitly fictional inputs and authored Python; no broker or SVL equivalence.
+description: Run an authored Backtrader Strategy against frozen OHLCV, with explicit cost/feed settings and native execution evidence.
 ---
 
-1. Load `sesame/backtrader`. `backtrader_environment inspect` checks the supplied path, saved selection, private venv, host Python and native PATH candidate. If unresolved, use `host_files_list/search/run` to find other existing task-related Python/Conda/venv executables, then inspect with the exact `python_path`; the tool does not scan all installations itself. Complete setup as part of the user's backtest request. Explicit prepare reuses compatible pinned 1.9.78.123 first, otherwise installs only a private venv via official PyPI. Does not download Python, change shared environments, or run on plugin load. No broker credentials or Sesame Settings form are needed for this local BackBroker backtest.
-2. Acquire real data through a market provider and generic data-access (CCXT/AKShare/MT5/QMT are separate sources). Backtest accepts a fixed json-rows DataRef, not mutable dataset IDs. Preserve provenance; synthetic samples stay demo. Supply columns if names differ. OHLCV must be complete Decimal strings with strictly ordered explicit UTC/offset datetime (SourceTime UTC accepted). Unknown volume or ambiguous wall clocks are rejected; do not fabricate zero or timezone.
-3. Write one actual `backtrader.Strategy` file in the task workspace. Use `class_name` and explicit parameters. Python runs with current-user host permissions; plugin provides no OS sandbox and configures only BackBroker cash simulation, never a live store or gateway. Do not read or export credentials.
-4. `backtrader_backtest` requires unique operation_id, title, fixed DataRef, strategy_path, class_name and config {capital,commission,slippage,feed:{timeframe,compression}} as Decimal strings. Commission/slippage are ratios; model is stocklike cash, not derivative margin. Original code, data, environment, matching assumptions and raw native outputs are frozen.
-5. Interrupted reserved operations return unknown and never rerun automatically. Changing frozen inputs under a key conflicts. Use a new explicit research request for a new run. Native failures are failed outcomes, not success.
-6. Read `backtrader_result`, then use existing reports/data-access/canvas capabilities with its equity/trades/orders DataRefs. Do not create another report publisher, canvas controller or environment framework. Native Python is not SVL; no automatic translation or equivalence is claimed. Engine uses binary floats despite Decimal input/output text.
+公开资源定位：本包路径以插件根目录为准；[完整接口契约](../../INTERFACES.md) 可由 plugin_read({pluginId:"sesame/backtrader",part:"resource",path:"INTERFACES.md"}) 读取。此引用给出位置，无需每次调用前重复读取。
 
-`inspect` validates and selects a compatible existing environment by saving only a private selection receipt. It never installs or upgrades dependencies. Ready after inspect is immediately usable; prepare is needed only when no compatible dependency is found.
+可用能力是环境核验/准备、固定数据原生回测、读取冻结结果，具体输入输出和最小例在 INTERFACES.md。环境检查是证据入口，不要求先扫描全机。可使用任务已知的实际Python路径；错误明确指出缺失依赖时，prepare可在授权任务内创建私有环境。安装器不安装解释器、不升级共享环境；读取失败不能把样本冒充真实数据。
 
-Every backtest requires explicit `config.feed:{timeframe:"minutes"|"days"|"weeks"|"months",compression:<positive integer>}`. For fixed 1h bars use `minutes/60`, for 1d use `days/1`; obtain this from the frozen source query, not guessed timestamp intervals. These fields are passed to native FixedFeed and frozen in assumptions. The Strategy sees the actual declared timeframe/compression; missing values reject before running.
+固定输入可由 market_read 或 data_snapshot 发布；工作区已有研究文件用 research_register 保留来源后取得ref。data_read({ref})读取固定内容。DataRef必须原样传递，不能只传datasetId或猜digest。策略是工作区已编写的单文件原生Python，执行在当前用户宿主权限下，并非OS沙箱；本插件不连接实盘网关。输入、源代码、环境、成本和结果分别冻结，使结论可追溯。
+
+status=completed 只确认引擎完成；failed按diagnostics修正实际问题，unknown保留执行不确定，不用新operation_id自动重放。新数据/源码/参数是一项新的研究操作。data中的表ref可直接交data_read或reports能力；保留demo、时间与数量单位、浮点精度和撮合假设，不把一次回测推成盈利保证或SVL等价。
+
+backtrader_environment inspect返回ready:true会保存选择；要求本机64位Python>=3.11、Backtrader1.9.78.123，不需要broker/API Key。backtrader_backtest要求backtrader.Strategy、明确UTC/offset时间与完整OHLCV十进制文本。config={capital,commission,slippage,feed:{timeframe,compression}}；commission/slippage是比例；股票现金模拟不等于衍生品保证金。回测data含equity/trades/orders。
+
+
+config例：{capital:"100000",commission:"0.001",slippage:"0",feed:{timeframe:"days",compression:1}}；1小时柱为minutes/60，依据固定来源定义，不猜时间间隔。class_name必须是工作区源文件的实际类名。输入2–100000行、≤16MiB，source文件≤512KiB，默认列datetime/open/high/low/close/volume；有别名用columns声明。
+
+最小原生类形状为 import backtrader as bt / class ResearchStrategy(bt.Strategy):，next(self) 是逐bar策略回调，参数由类params与调用parameters对应。是否入场、仓位和退出应由研究目标决定，不将示例策略当默认金融逻辑。官方参考 https://www.backtrader.com/docu/strategy/ 。准确调用/回执形状、限制与恢复方式在INTERFACES.md。

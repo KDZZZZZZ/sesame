@@ -25,7 +25,7 @@ test('deployments freeze tested parameters, bind accounts, verify initialization
     : { mql5_folder: 'C:\\Terminal\\MQL5', common_folder: 'C:\\Common' };
   const client = { workspace: { structuredContent: { workspace } } };
   const official = {
-    storage: hostForStore(store).storage, config: { account: scope }, deploymentAccess: () => ({ blocked_reason: null }), callDeployment: MT5Official.prototype.callDeployment,
+    storage: store, config: { account: scope }, deploymentAccess: () => ({ blocked_reason: null }), callDeployment: MT5Official.prototype.callDeployment,
     redact: value => value, client: () => client,
     call: async command => {
       const previous = store.get('mt5_command', command.command_id, true); if (previous) return previous;
@@ -38,7 +38,7 @@ test('deployments freeze tested parameters, bind accounts, verify initialization
     connected: async () => ({ scope, info: { terminal: { experts_trade_allowed: true, mcp_trade_allowed: true }, account: { type: 'demo' } } }),
     read: async tool => tool === 'list_available_mql5_programs' ? { programs: indexed.map(path => ({ type: 'Expert', path })) } : ({ parameters: ['InpPeriod', 'Product_RunId', 'Product_EnableLive', 'Product_AccountLogin', 'Product_AccountServer', 'Product_MaxRiskPct', 'Product_MaxDailyLossPct', 'Product_MaxPositions', 'Product_MaxLots'].map(name => ({ name })) }),
   };
-  const deploy = new Deployments({ storage: hostForStore(store).storage, host: hostForStore(store), official, market });
+  const deploy = new Deployments({ storage: store, host: hostForStore(store), official, market });
   deploy.attach = async (d, params) => {
     calls.push({ tool: 'native_startup', arguments: { expert_path: d.expert_path, inputs: params } });
     assert.equal(params.InpPeriod, 20); assert.equal(params.Product_AccountLogin, '7001'); assert.equal(params.Product_AccountServer, 'Demo');
@@ -138,7 +138,7 @@ test('automatic preparation upgrades the exact tested revision and parameters, p
     configure: async input => { calls.push('authorize'); Object.assign(official.config, input); } };
   const upgraded = { ...build, id: 'build_new', ex5_sha256: digest('new'), sdk_version: SDK_VERSION, live_capable: true };
   await mkdir(join(directory, 'mt5/builds/build_new/Experts'), { recursive: true }); await writeFile(join(directory, 'mt5/builds/build_new/Experts/Strategy.ex5'), 'new');
-  const mt5 = { storage: hostForStore(store).storage, host: hostForStore(store), official, market: { connected: async () => ({ scope, info: { terminal: { experts_trade_allowed: true, mcp_trade_allowed: true }, account: { type: 'demo' } } }),
+  const mt5 = { storage: store, host: hostForStore(store), official, market: { connected: async () => ({ scope, info: { terminal: { experts_trade_allowed: true, mcp_trade_allowed: true }, account: { type: 'demo' } } }),
       read: async () => ({ programs: indexed.map(path => ({ type: 'Expert', path })) }) },
     queueBuild: (project, revision) => { assert.equal(project, build.project_id); assert.equal(revision, 3); calls.push('compile'); return upgraded; },
     startBuild: async () => store.put('mt5_build', upgraded),

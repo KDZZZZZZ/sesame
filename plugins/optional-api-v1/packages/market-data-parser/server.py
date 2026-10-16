@@ -82,32 +82,9 @@ def parse_fx_xml(args):
     except Exception as e:
         return {"error": str(e), "version": VERSION}
 
-TOOLS = [
-    {
-        "name": "parse_fx_json",
-        "description": "Parse exchangerate-api style JSON (base, date, rates) with optional currency filter",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "json_content": {"type": "string", "description": "Raw JSON string"},
-                "file_path": {"type": "string", "description": "Relative path to a bundled JSON file; cannot access conversation or host files"},
-                "codes": {"type": "array", "items": {"type": "string"}, "description": "Optional currency code filter, e.g. [\"EUR\",\"JPY\"]"}
-            }
-        }
-    },
-    {
-        "name": "parse_fx_xml",
-        "description": "Parse TCMB style daily FX XML (date, bulletin, currencies) with optional code filter",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "xml_content": {"type": "string", "description": "Raw XML string"},
-                "file_path": {"type": "string", "description": "Relative path to a bundled XML file; cannot access conversation or host files"},
-                "codes": {"type": "array", "items": {"type": "string"}, "description": "Optional currency code filter, e.g. [\"USD\",\"EUR\"]"}
-            }
-        }
-    }
-]
+with open(os.path.join(str(PLUGIN_ROOT), "capabilities.json"), encoding="utf-8") as declaration_file:
+    DECLARED_CAPABILITIES = json.load(declaration_file)["capabilities"]
+TOOLS = [{"name": c["binding"]["name"], "description": c["description"], "inputSchema": c["inputSchema"], "outputSchema": c["outputSchema"]} for c in DECLARED_CAPABILITIES if c["binding"]["type"] == "mcp"]
 
 for line in sys.stdin:
     try:
