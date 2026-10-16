@@ -11,7 +11,7 @@ permissions:
 jobs:
   package-static-review:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     steps:
       - name: Use the supported source tool runtime
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -34,9 +34,11 @@ jobs:
       - name: Validate package boundaries, metadata and every locked byte
         run: node trusted/plugins/api-v1/scripts/plugin-lock.mjs --check --source candidate/plugins/api-v1
       - name: Validate optional package data with the trusted base validator
-        run: |
-          node trusted/plugins/api-v1/scripts/plugin-lock.mjs --check --source candidate/plugins/optional-api-v1
-          node trusted/.github/scripts/validate-api1-catalog.mjs candidate --published
+        run: node trusted/plugins/api-v1/scripts/plugin-lock.mjs --check --source candidate/plugins/optional-api-v1
+      - name: Verify fixed published releases with the trusted base validator
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node trusted/.github/scripts/validate-api1-catalog.mjs candidate --published
       - name: Validate fixed release plans without publishing
         run: node trusted/.github/scripts/release-plugins.mjs --check candidate
       - name: Validate R2 plans with the trusted fixed-source builder
@@ -44,7 +46,7 @@ jobs:
       - name: Validate the application release plan without publishing
         run: node trusted/.github/scripts/release-application.mjs --check candidate
       - name: Test trusted validators, lock and archive code
-        run: node --test trusted/plugins/api-v1/tests/lock.test.mjs trusted/plugins/api-v1/tests/host-engine-range.test.mjs trusted/.github/scripts/release-plugins.test.mjs trusted/.github/scripts/release-application.test.mjs trusted/.github/scripts/semantic-review.test.mjs trusted/.github/scripts/api1-required-catalog.test.mjs trusted/.github/scripts/contribution-policy.test.mjs trusted/.github/scripts/plugin-r2.test.mjs trusted/.github/scripts/publish-plugin-r2.test.mjs
+        run: node --test trusted/plugins/api-v1/tests/lock.test.mjs trusted/plugins/api-v1/tests/host-engine-range.test.mjs trusted/plugins/api-v1/tests/api2-bootstrap.test.mjs trusted/plugins/api-v1/tests/catalog-published.test.mjs trusted/plugins/api-v1/tests/capability-bindings.test.mjs trusted/.github/scripts/release-plugins.test.mjs trusted/.github/scripts/release-application.test.mjs trusted/.github/scripts/semantic-review.test.mjs trusted/.github/scripts/api1-required-catalog.test.mjs trusted/.github/scripts/contribution-policy.test.mjs trusted/.github/scripts/plugin-r2.test.mjs trusted/.github/scripts/publish-plugin-r2.test.mjs
       - name: Record scope
         run: |
           echo '### API 1 package identity checks' >> "$GITHUB_STEP_SUMMARY"
