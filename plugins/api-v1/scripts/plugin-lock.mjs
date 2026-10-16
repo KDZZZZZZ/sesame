@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, lstatSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildApi2Lock } from './api2-lock-bootstrap.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const fail = (condition, message) => { if (!condition) throw new Error(message); };
@@ -86,6 +87,26 @@ export function readProfile(source) {
 }
 
 export function buildLock(source = root) {
+  // Choose a trusted validator from manifest data; never execute candidate code.
+  const packageRoot = join(source, 'packages'), packageRootStat = lstatSync(packageRoot);
+  fail(packageRootStat.isDirectory() && !packageRootStat.isSymbolicLink(), 'Packages must be an ordinary directory');
+  const versions = new Set(), directories = readdirSync(packageRoot);
+  fail(directories.length > 0 && directories.length <= 100, 'Bundle requires 1–100 packages');
+  for (const directory of directories) {
+    fail(/^[a-z][a-z0-9-]*$/.test(directory), `Package directory must be a simple slug: ${directory}`);
+    const path = join(source, 'packages', directory), stat = lstatSync(path);
+    fail(stat.isDirectory() && !stat.isSymbolicLink(), `Package is not an ordinary directory: ${directory}`);
+    const manifestPath = join(path, 'plugin.json'), manifestStat = lstatSync(manifestPath);
+    fail(manifestStat.isFile() && !manifestStat.isSymbolicLink() && manifestStat.nlink === 1 && manifestStat.size <= 2 * 1024 * 1024, `${directory}: manifest must be an ordinary file within the byte budget`);
+    const manifest = JSON.parse(readFileSync(manifestPath)), extensionVersion = manifest.extensions?.['bot.sesame']?.apiVersion;
+    fail(manifest.apiVersion === undefined || extensionVersion === undefined || manifest.apiVersion === extensionVersion, `${directory}: conflicting API versions`);
+    const version = extensionVersion ?? manifest.apiVersion;
+    fail(['1', '2'].includes(version), `${directory}: unsupported API version`);
+    versions.add(version);
+  }
+  fail(versions.size === 1, 'Mixed API versions are not permitted in one bundle');
+  if (versions.has('2')) return buildApi2Lock(source, { packageFiles, readProfile, engineWithinProfile, treeDigest, safePath, semver });
+
   const packagesDirectory = join(source, 'packages'), packages = [], profile = readProfile(source);
   for (const directory of readdirSync(packagesDirectory).sort()) {
     fail(/^[a-z][a-z0-9-]*$/.test(directory), `Package directory must be a simple slug: ${directory}`);
@@ -173,5 +194,5 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     fail(args[archiveIndex + 1], '--archive needs an output path'); const target = resolve(args[archiveIndex + 1]), bytes = createArchive(source, lock);
     mkdirSync(dirname(target), { recursive: true }); writeFileSync(target, bytes);
     console.log(JSON.stringify({ archive: target, bytes: bytes.length, sha256: sha256(bytes), lockSha256: sha256(text), packages: lock.packages.length }));
-  } else console.log(`Validated ${lock.packages.length} API 1 packages; lock sha256:${sha256(text)}`);
+  } else console.log(`Validated ${lock.packages.length} API ${lock.apiVersion} packages; lock sha256:${sha256(text)}`);
 }
