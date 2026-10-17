@@ -5,6 +5,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { collaboration } from '../packages/manual-trading/team.js';
+import { createExecution, PLUGIN, CONTEXT, APPLY } from '../packages/portfolio-execution/bindings.js';
+import { closeRecords as closeExecutionRecords } from '../packages/portfolio-execution/records.js';
 import { fixture, unchanged } from './manual-trading-plans-fixture.mjs';
 
 const input = (f, extra = {}) => {
@@ -143,6 +145,89 @@ test('analysis excludes other plugins declared trading/configuration writes whil
   assert.deepEqual(run.plan.research.tools, ['lookup']);
   await f.waitFor(() => f.active().length === 4);
   assert.ok(f.requests.every(request => request.allowedCalls.every(call => !['other_order', 'source_configure'].includes(call.capabilityId))));
+});
+
+const mt5WriteTools = ['mt5_trade', 'mt5_system', 'mt5_edit', 'mt5_chart', 'mt5_test', 'mt5_python', 'mt5_backtest', 'mt5_compile', 'mt5_project',
+  'mt5_update_configuration', 'mt5_import_configuration', 'mt5_deployment', 'mt5_start_terminal', 'mt5_connect', 'mt5_dependencies', 'mt5_trading_pause', 'mt5_trading_order'];
+const mt5ReadTools = ['mt5_catalog', 'mt5_call', 'mt5_cache', 'mt5_command', 'mt5_inspect', 'mt5_report_data', 'mt5_trade_detail', 'mt5_trading_context', 'mt5_trading_command'];
+async function registerManifest(f, name) {
+  const manifest = JSON.parse(await readFile(new URL(`../packages/${name}/capabilities.json`, import.meta.url)));
+  const plugin = JSON.parse(await readFile(new URL(`../packages/${name}/plugin.json`, import.meta.url)));
+  const capabilities = manifest.capabilities.filter(cap => cap.consumers.includes('agent'));
+  f.entries.push({ id: plugin.id, version: plugin.version, state: 'discoverable', digest: `real-${name}-manifest`, tools: capabilities.map(cap => cap.id),
+    effects: Object.fromEntries(capabilities.map(cap => [cap.id, cap.effects])) });
+}
+
+test('analysis uses the real MT5 declarations to exclude native writes and retain market, indicator and evidence reads', async t => {
+  const f = await fixture(t); await registerManifest(f, 'mt5');
+  const run = await f.runtime.analyze(f.main, input(f, { research: { plugins: ['sesame/mt5'] } }));
+  for (const name of mt5WriteTools) assert.equal(run.plan.research.tools.includes(name), false, `${name} must not be granted by default`);
+  for (const name of mt5ReadTools) assert.ok(run.plan.research.tools.includes(name), `${name} remains available for research`);
+  await finishTeam(f, run.id);
+  assert.equal(f.requests.length, 8);
+  for (const request of f.requests) {
+    for (const name of mt5WriteTools) assert.equal(request.allowedCalls.some(call => call.pluginId === 'sesame/mt5' && call.capabilityId === name), false, `${request.input.role} must not receive ${name}`);
+    for (const name of mt5ReadTools) assert.ok(request.allowedCalls.some(call => call.pluginId === 'sesame/mt5' && call.capabilityId === name), `${request.input.role} keeps ${name}`);
+  }
+});
+
+test('analysis explicitly rejects each writable MT5 entry before admitting a workflow or Agent', async t => {
+  const f = await fixture(t); await registerManifest(f, 'mt5');
+  for (const name of mt5WriteTools) await assert.rejects(f.runtime.analyze(f.main,
+    input(f, { request_id: `analysis-${name}`, research: { plugins: ['sesame/mt5'], tools: [name] } })), error => {
+    assert.equal(error.code, 'READ_ONLY_WORKFLOW'); assert.ok(error.message.includes(name)); return true;
+  });
+  assert.equal(f.requests.length, 0); assert.equal(f.storage.list('plans').length, 0); assert.equal(f.storage.list('runs').length, 0);
+});
+
+test('analysis retains safe market tools from a real MT5 binding and filters mixed readTools with financial research only', async t => {
+  let service, portfolioHost, injectMixed = false;
+  t.after(() => { if (portfolioHost) closeExecutionRecords(portfolioHost); });
+  const f = await fixture(t, { invokeCapability: async (id, args) => {
+    if (id !== `${PLUGIN}#${CONTEXT}`) return;
+    const value = await service.context(args);
+    if (args.action === 'identity' && injectMixed) { value.tools.push('mt5_python'); value.readTools.push('mt5_python'); }
+    return { type: 'result', value };
+  } });
+  await registerManifest(f, 'mt5'); await registerManifest(f, 'portfolio-execution'); await registerManifest(f, 'financial-research');
+  const nativeReads = [];
+  portfolioHost = { context: { ...f.main.context, pluginId: PLUGIN, storageRoot: join(f.host.context.storageRoot, 'portfolio') }, plugins: f.main.plugins,
+    capabilities: { invoke: async (id, args) => {
+      assert.equal(id, 'sesame/mt5#mt5_trading_context'); nativeReads.push(args.action);
+      return { type: 'result', value: { account: f.account, capturedAt: f.time, summary: {}, positions: [], orders: [], fills: [], historicalOrders: [], deployments: [] } };
+    } } };
+  service = createExecution(portfolioHost);
+  const execution = await service.configure({ backend: 'mt5', id: 'analysis-binding' });
+  const identity = await service.context({ ...execution.arguments, action: 'identity' });
+  const safeReads = [CONTEXT, 'mt5_trading_context', 'mt5_catalog', 'mt5_call'];
+  assert.deepEqual(identity.readTools, safeReads, 'The producer explicitly grants schema discovery plus market/indicator reads');
+  for (const mixed of [false, true]) {
+    injectMixed = mixed;
+    const run = await f.runtime.analyze(f.main, input(f, { execution, request_id: `binding-${mixed ? 'mixed' : 'safe'}`, research: { plugins: ['sesame/financial-research'] } }));
+    assert.deepEqual(run.plan.execution.readTools, safeReads);
+    assert.ok(run.plan.execution.tools.every(name => ![APPLY, ...mt5WriteTools].includes(name)));
+    await finishTeam(f, run.id);
+    const requests = f.requests.filter(request => request.input.runId === run.id);
+    assert.equal(requests.length, 8);
+    for (const request of requests) {
+      assert.deepEqual(request.input.execution.readTools, safeReads);
+      for (const name of safeReads) assert.ok(request.allowedCalls.some(call => call.capabilityId === name), `${request.input.role} keeps ${name}`);
+      for (const name of [...mt5WriteTools, APPLY]) assert.equal(request.allowedCalls.some(call => call.capabilityId === name), false, `${request.input.role} must not receive ${name} from execution`);
+      assert.ok(request.input.execution.allowedCalls.every(call => ![...mt5WriteTools, APPLY].includes(call.capabilityId)));
+    }
+  }
+  assert.ok(nativeReads.every(action => ['identity', 'snapshot'].includes(action)));
+  await assert.rejects(f.runtime.analyze(f.main, input(f, { execution, request_id: 'explicit-mixed-python', research: { plugins: ['sesame/mt5'], tools: ['mt5_python'] } })), { code: 'READ_ONLY_WORKFLOW' });
+});
+
+test('analysis rejects an execution context that declares writes before saving or dispatching', async t => {
+  const f = await fixture(t);
+  f.entries[0].effects = { fixture_context: ['native-state.write'] };
+  await assert.rejects(f.runtime.analyze(f.main, input(f)), error => {
+    assert.equal(error.code, 'READ_ONLY_WORKFLOW'); assert.ok(error.message.includes('fixture_context')); return true;
+  });
+  assert.equal(f.brokerCalls.length, 0, 'Reject a declared write context before even requesting its identity');
+  assert.equal(f.requests.length, 0); assert.equal(f.storage.list('plans').length, 0); assert.equal(f.storage.list('runs').length, 0);
 });
 
 test('the analysis package validates, installs and exposes its registered entry in the actual host', { skip: !process.env.SESAME_HOST_ROOT, timeout: 60000 }, async () => {

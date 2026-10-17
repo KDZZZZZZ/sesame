@@ -1,6 +1,6 @@
 # 金融研究工具
 
-`sesame/financial-research` 是 Sesame 0.2.3+ 的独立可选插件，需要宿主支持 `host.configuration.update` 的 `environment` 配置目标。主会话和子 Agent 共用查询、证据保存及读取接口；只有修改数据源配置需要主会话。插件只读取研究数据，交易执行由 `manual-trading` 及账户后端负责。
+`sesame/financial-research` 是 Sesame 0.2.4+ 的独立可选插件，需要宿主支持 `host.configuration.update` 的 `environment` 配置目标。主会话和子 Agent 共用查询、证据保存及读取接口；只有修改数据源配置需要主会话。插件只读取研究数据，交易执行由 `manual-trading` 及账户后端负责。
 
 | kind | 默认来源 | 内容 |
 | --- | --- | --- |

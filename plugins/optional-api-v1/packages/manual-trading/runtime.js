@@ -16,7 +16,7 @@ const requirement = id => ({ id: 'trading-dependencies', capability: 'sesame/man
 const dependencyError = (id, error) => Object.assign(new Error(error.message), { code: 'DEPENDENCY_UNAVAILABLE', details: { requirements: [requirement(id)], cause: cleanError(error), ...error.details } });
 const publishesReport = plan => plan.purpose !== 'analysis' || plan.publishReport === true;
 const schedulingKey = plan => plan.purpose === 'analysis' ? `analysis:${plan.id}` : accountKey(plan);
-const analysisWriteEffect = /^(?:broker\.write|external-trading|external-strategy-operation|application-configuration|invoke:selected-execution|(?:write:plans|manage:|start:|cancel:workflow|control:workflow)|native-(?:connection|process-start)|may-(?:start|resume)-|process\.(?:exec|cancel)|plugin\.(?:install|update|remove|policy)|plugin\.state\.write-on-configure)/;
+const analysisWriteEffect = /^(?:broker\.write|external-trading|external-strategy-operation|application-configuration|invoke:selected-execution|(?:write:plans|manage:|start:|cancel:workflow|control:workflow)|native-(?:connection|process-start|state\.write)|may-(?:start|resume)-|process\.(?:exec|cancel)|plugin\.(?:install|update|remove|policy)|plugin\.state\.write-on-configure)/;
 
 export class TradingRuntime {
   constructor(host, { now = Date.now, timer = true, mockModelResponses = false } = {}) {
@@ -195,15 +195,21 @@ export class TradingRuntime {
     }
     let plan = previous;
     if (!plan) {
+      const declaredWrites = (await catalog(host)).filter(cap => cap.effects?.some(effect => analysisWriteEffect.test(effect)));
+      check(!declaredWrites.some(cap => cap.pluginId === input.execution?.plugin_id && cap.localId === input.execution?.context_tool),
+        'READ_ONLY_WORKFLOW', `Execution context ${input.execution?.context_tool} declares writes. Select a read-only account context.`);
       const execution = await bindExecution(host, input.execution, signal);
       plan = { ...await makePlan(host, { ...input, id, mode: 'team', interval_minutes: null, event_keys: [], account_events: false, enabled: true }, execution, null, this.now()),
         purpose: 'analysis', publishReport: input.report === true, requestDigest };
-      // Reads may cache/publish evidence. Exclude declared trading/configuration/control effects;
-      // a dynamic read capability's operation-level boundary remains its producer's contract.
+      // Reads may cache/publish evidence. Mixed native read/write entries are excluded as a whole;
+      // read-only producers must reject write operations before native dispatch.
       const forbidden = new Set(['manual_trading_decide', 'manual_trading_apply', 'manual_trading_review', ...execution.tools.filter(name => !execution.readTools.includes(name)),
-        ...(await catalog(host)).filter(cap => plan.research.plugins.includes(cap.pluginId) && cap.effects?.some(effect => analysisWriteEffect.test(effect))).map(cap => cap.localId)]);
+        ...declaredWrites.filter(cap => plan.research.plugins.includes(cap.pluginId) || execution.plugins.includes(cap.pluginId)).map(cap => cap.localId)]);
       const blocked = plan.research.tools.filter(name => forbidden.has(name));
-      check(!input.research?.tools || !blocked.length, 'READ_ONLY_WORKFLOW', `Analysis excludes declared trading, configuration and workflow controls: ${blocked.join(', ')}. Select the reading/research capabilities.`);
+      check(!input.research?.tools || !blocked.length, 'READ_ONLY_WORKFLOW', `Analysis excludes declared trading, configuration, native state/process changes and workflow controls: ${blocked.join(', ')}. Select the reading/research capabilities.`);
+      plan.execution.readTools = plan.execution.readTools.filter(name => !forbidden.has(name));
+      plan.execution.tools = plan.execution.tools.filter(name => !forbidden.has(name));
+      plan.execution.allowedCalls = plan.execution.allowedCalls.filter(call => !forbidden.has(call.capabilityId));
       plan.research.tools = plan.research.tools.filter(name => !forbidden.has(name));
       plan.research.allowedCalls = plan.research.allowedCalls.filter(call => !forbidden.has(call.capabilityId));
       for (const role of stages(plan).flat()) {

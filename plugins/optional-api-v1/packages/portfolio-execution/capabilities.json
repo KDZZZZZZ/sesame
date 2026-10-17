@@ -53,7 +53,7 @@
         "outputs": "{plugin_id:\"sesame/portfolio-execution\",context_tool:\"portfolio_execution_context\",apply_tool:\"portfolio_execution_apply\",arguments:{binding_id}}; pass this entire object as a workflow execution reference.",
         "prerequisites": [
           "Main conversation only; task/tool names do not grant a delegated Agent this authority.",
-          "Loaded MT5 >=1.6.0 or QMT >=1.4.0 with an existing exact account/revision. If manual-trading is installed it must expose manual_trading_execution_export for safe migration.",
+          "Loaded MT5 >=2.1.0 (read-only catalog, market/indicator reads and profit/margin calculations via mt5_call) or QMT >=1.4.0 with an existing exact account/revision. If manual-trading is installed it must expose manual_trading_execution_export for safe migration.",
           "Installed implementations: plugin_discover and host.capabilities.list. Published optional packages: plugin_catalog({plugin_id}); installation/loading is a separate public operation."
         ],
         "limitations": [
