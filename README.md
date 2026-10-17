@@ -46,21 +46,21 @@ Sesame 是面向量化研究与交易的 Agent 工作台。它把对话、行情
 
 ## 下载与开始使用
 
-当前本体版本：[Sesame 0.2.2](https://github.com/KDZZZZZZ/sesame/releases/tag/v0.2.2)。
+当前本体版本：[Sesame 0.2.3](https://github.com/KDZZZZZZ/sesame/releases/tag/v0.2.3)。
 
 | 平台 | 安装包 |
 | --- | --- |
-| macOS 13+ · Apple Silicon | [DMG](https://github.com/KDZZZZZZ/sesame/releases/download/v0.2.2/Sesame-0.2.2-mac-arm64.dmg) |
-| Windows 10/11 x64 | [安装器](https://github.com/KDZZZZZZ/sesame/releases/download/v0.2.2/Sesame-0.2.2-win-x64.exe) |
-| Linux x64 · Debian / Ubuntu | [DEB](https://github.com/KDZZZZZZ/sesame/releases/download/v0.2.2/Sesame-0.2.2-linux-x64.deb) |
-| Linux x64 · 其他兼容桌面发行版 | [AppImage](https://github.com/KDZZZZZZ/sesame/releases/download/v0.2.2/Sesame-0.2.2-linux-x64.AppImage) |
+| macOS 13+ · Apple Silicon | [DMG](https://github.com/KDZZZZZZ/sesame/releases/download/v0.2.3/Sesame-0.2.3-mac-arm64.dmg) |
+| Windows 10/11 x64 | [安装器](https://github.com/KDZZZZZZ/sesame/releases/download/v0.2.3/Sesame-0.2.3-win-x64.exe) |
+| Linux x64 · Debian / Ubuntu | [DEB](https://github.com/KDZZZZZZ/sesame/releases/download/v0.2.3/Sesame-0.2.3-linux-x64.deb) |
+| Linux x64 · 其他兼容桌面发行版 | [AppImage](https://github.com/KDZZZZZZ/sesame/releases/download/v0.2.3/Sesame-0.2.3-linux-x64.AppImage) |
 
 1. 下载对应安装包，核对发行页的 SHA256，并按 [安装指南](INSTALL.md) 完成安装。
 2. 在设置中配置模型供应商与凭证，发送一条消息验证连接。
 3. 从插件库选择需要的数据源、交易后端或研究方法，告诉 Sesame 要完成的任务。
 4. 查看图表、报告和工具结果，随时补充约束、调整任务并验证结论。
 
-本体不需要另装 Node.js、Python 或浏览器。MT5、Python、Wine、QMT 等插件依赖按实际任务准备，优先复用本机环境。macOS 安装包尚未公证，Windows 安装包未签名；系统提示、升级备份和故障排查见 [INSTALL.md](INSTALL.md)。0.2.2 尚不包含自动更新。
+本体不需要另装 Node.js、Python 或浏览器。MT5、Python、Wine、QMT 等插件依赖按实际任务准备，优先复用本机环境。macOS 安装包尚未公证，Windows 安装包未签名；系统提示、升级备份和故障排查见 [INSTALL.md](INSTALL.md)。0.2.3 尚不包含自动更新。
 
 ## 开发自己的插件
 
