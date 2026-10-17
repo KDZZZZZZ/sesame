@@ -28,7 +28,7 @@ jobs:
           node-version: 24
       - name: Verify distribution, integrity and review boundaries
         run: |
-          node --test .github/scripts/catalog.test.mjs .github/scripts/plugin-r2.test.mjs .github/scripts/publish-plugin-r2.test.mjs .github/scripts/semantic-review.test.mjs plugins/api-v1/tests/plugin-catalog.test.mjs
+          node --test plugins/api-v1/tests/lock.test.mjs plugins/api-v1/tests/host-engine-range.test.mjs plugins/api-v1/tests/catalog-published.test.mjs plugins/api-v1/tests/capability-bindings.test.mjs plugins/api-v1/tests/plugin-catalog.test.mjs .github/scripts/release-plugins.test.mjs .github/scripts/release-application.test.mjs .github/scripts/semantic-review.test.mjs .github/scripts/catalog.test.mjs .github/scripts/distribution-profiles.test.mjs .github/scripts/contribution-policy.test.mjs .github/scripts/plugin-r2.test.mjs .github/scripts/publish-plugin-r2.test.mjs .github/scripts/dev-source-ci.test.mjs
           node .github/scripts/validate-catalog.mjs .
       - name: Publish immutable objects, then promote the verified catalog
         env:

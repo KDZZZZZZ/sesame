@@ -98,6 +98,7 @@ test('current source CI needs no token or deleted GitHub plugin releases and ret
   assert.equal((workflow.match(/GITHUB_TOKEN:/g) ?? []).length, 0);
   assert.match(workflow, /permissions:\s+contents: read\s+jobs:/);
   assert.doesNotMatch(workflow, /validate-api1-catalog|--published/);
-  assert.ok(workflow.includes('trusted/plugins/api-v1/tests/catalog-published.test.mjs'));
+  const publisher = readFileSync(new URL('../../../.github/workflows/plugin-r2.yml', import.meta.url), 'utf8');
+  assert.ok(publisher.includes('plugins/api-v1/tests/catalog-published.test.mjs'));
   assert.doesNotMatch(workflow, /\bnode\s+candidate\//);
 });
