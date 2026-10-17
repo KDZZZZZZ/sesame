@@ -16,16 +16,16 @@ test('required API 2 checks use trusted base validators without deleted Git or r
     assert.match(text, /ref: \$\{\{ github\.event\.pull_request\.base\.sha \|\| github\.sha \}\}[\s\S]*?path: trusted/);
     assert.match(text, /ref: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}[\s\S]*?path: candidate/);
     assert.doesNotMatch(text, /node candidate\/|--publish(?:\s|$)|contents: write|if test -f/);
+    assert.doesNotMatch(text, /node --test/, 'PR checks validate candidate data without rerunning stale base self-tests');
   }
   for (const root of ['api-v1', 'optional-api-v1']) assert.ok(source.includes(`node trusted/plugins/api-v1/scripts/plugin-lock.mjs --check --source candidate/plugins/${root}`));
   assert.ok(source.includes('node trusted/.github/scripts/plugin-r2.mjs --check candidate'));
   assert.ok(source.includes('node trusted/.github/scripts/release-application.mjs --check candidate'));
-  assert.ok(source.includes('trusted/.github/scripts/plugin-r2.test.mjs'));
-  assert.ok(source.includes('trusted/.github/scripts/dev-source-ci.test.mjs'));
   const catalog = workflow('plugin-catalog.yml');
   assert.match(catalog, /catalog-static-review:/);
   assert.ok(catalog.includes('node trusted/.github/scripts/validate-catalog.mjs candidate'));
-  assert.ok(catalog.includes('trusted/.github/scripts/catalog.test.mjs'));
+  const publisher = workflow('plugin-r2.yml');
+  for (const path of ['plugins/api-v1/tests/lock.test.mjs', 'plugins/api-v1/tests/capability-bindings.test.mjs', '.github/scripts/catalog.test.mjs', '.github/scripts/plugin-r2.test.mjs', '.github/scripts/dev-source-ci.test.mjs']) assert.ok(publisher.includes(path), 'Validator regressions run on the actual release revision');
   for (const name of readdirSync(new URL('../workflows/', import.meta.url)).filter(name => name.endsWith('.yml'))) {
     assert.doesNotMatch(workflow(name), /2aeb09c9d5d4a8e78572e1d7e23afe574570597e|historical\/|CATALOG_BASE_SHA|validate-api1-catalog\.mjs|api1-catalog\.test\.mjs|api1-required-catalog\.test\.mjs|release-plugins\.mjs --check/, name);
   }

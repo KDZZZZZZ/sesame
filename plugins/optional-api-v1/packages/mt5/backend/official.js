@@ -133,7 +133,7 @@ export class MT5Official {
   }
   client(server) {
     const config = this.config.servers[server];
-    requireValue(config?.enabled && config.token, '此 MCP 连接尚未配置或未启用；先用 mt5_settings 读取已保存配置与待导入引用，按 connection skill 发现、导入并验证，尊重用户明确禁用的连接', 503, 'mt5_not_configured');
+    requireValue(config?.enabled && config.token, '此 MCP 连接尚未配置或未启用；mt5_settings 返回当前状态，主 Agent 可用 mt5_update_configuration 直接保存已提供的 token 或按用户授权启用连接；已有待导入引用也可复用，随后核验连接', 503, 'mt5_not_configured');
     if (!this.clients.has(server)) this.clients.set(server, new MT5MCP({ ...config, server }));
     return this.clients.get(server);
   }
@@ -192,19 +192,19 @@ export class MT5Official {
     const items = await Promise.all((catalogServer ? [catalogServer] : OFFICIAL_SERVERS).map(async name => {
       const empty = (status, reason) => ({ server: name, status, reason, server_info: null, workspace: null, tools: [] });
       const config = this.config.servers[name];
-      if (config && !config.enabled) return empty('disabled', name === 'marketdata' ? '此独立数据服务未启用，不影响券商行情。' : '此连接未启用，需要时可在高级设置开启。');
-      if (config && !config.token) return empty('unconfigured', '需要时在高级设置填写此服务的 API Key。');
+      if (config && !config.enabled) return empty('disabled', name === 'marketdata' ? '此独立数据服务未启用，不影响券商行情。' : '此连接未启用，主 Agent 可按用户授权用 mt5_update_configuration 开启。');
+      if (config && !config.token) return empty('unconfigured', '缺少此服务的 API Key；主 Agent 可用 mt5_update_configuration 直接保存用户已提供的 token。');
       if (name === 'python' && !this.python.available()) return { ...empty('not_installed', '尚未找到 MT5 或已配置的 Windows Python。'), prerequisite: dependencyRequirement('python-ipc', this.storage.directory, ['MT5', 'Windows Python + MetaTrader5 SDK']) };
       if (name === 'launcher' && !this.native) return { ...empty('not_installed', '尚未找到本机 MT5 安装。'), prerequisite: dependencyRequirement('launcher', this.storage.directory, ['MT5 terminal']) };
       try {
-        const tools = await this.tools(name, signal, { startIfNeeded: server === 'metaeditor' }), client = this.clients.get(name);
+        const tools = await this.tools(name, signal), client = this.clients.get(name);
         return { server: name, status: client ? 'connected' : 'installed', reason: client ? null : '已找到运行环境；实际连接与执行结果以调用为准。', server_info: client?.info ?? null, workspace: client?.workspace?.structuredContent ?? null,
           tools: tools.filter(t => `${t.name} ${t.description}`.toLowerCase().includes(catalogQuery.toLowerCase())).map(tool => {
             return { ...tool, category: categories.get(tool.name) ?? name, permission: this.permission(name, tool.name), ...this.access(name, tool.name, owner) };
           }) };
       } catch (error) {
         if (['terminal', 'metaeditor'].includes(name) && connectionRefused(error)) return empty('not_running', name === 'metaeditor' ? '需要编辑或编译 MQL5 时启动 MetaEditor。' : '正在等待 MT5 启动，应用会自动尝试连接。');
-        return empty('unavailable', this.redact(error.upstreamStatus === 401 ? '连接密钥未通过验证，请在高级设置更新。' : error.message === 'fetch failed' ? '连接失败，请检查服务地址和网络。' : error.message));
+        return empty('unavailable', this.redact(error.upstreamStatus === 401 ? '连接密钥未通过验证；主 Agent 可用 mt5_update_configuration 保存有效的新 token，再核验连接。' : error.message === 'fetch failed' ? '连接失败，请检查服务地址和网络。' : error.message));
       }
     }));
     return this.redact({ checked_at: now(), items });
@@ -232,7 +232,7 @@ export class MT5Official {
     const task = (async () => {
       let nativeArgs;
       try {
-      const definition = (await this.tools(server, signal, { startIfNeeded: !this.access(server, tool, owner).blocked_reason })).find(t => t.name === tool);
+      const definition = (await this.tools(server, signal, { startIfNeeded: this.route(server, tool).group === 'editor' && !this.access(server, tool, owner).blocked_reason })).find(t => t.name === tool);
       requireValue(definition, '此连接没有提供该工具，请刷新 mt5_catalog', 404, 'mt5_tool_missing');
       nativeArgs = nativeValueForLosslessIds(definition.inputSchema, args);
       const { blocked_reason: blocked } = managed ? this.deploymentAccess() : this.access(server, tool, owner); requireValue(!blocked, blocked, 403, 'mt5_permission_denied');
@@ -280,7 +280,7 @@ export class MT5Official {
     const configured = { login: String(this.config.account.login ?? ''), server: this.config.account.server ?? '' };
     const base = { checked_at: now(), configured, terminal: null, account: null, open: null, history: null };
     const terminal = this.config.servers.terminal;
-    if (!terminal?.enabled || !terminal.token) return { ...base, status: 'not_configured', reason: '请先在“MT5 连接”中启用并配置交易终端' };
+    if (!terminal?.enabled || !terminal.token) return { ...base, status: 'not_configured', reason: '交易终端连接未就绪；主 Agent 可用 mt5_update_configuration 保存已提供的 token，并按用户授权启用连接' };
     const tools = ['get_trading_account_info', 'get_trading_open_positions', 'get_trading_history_positions'];
     const blocked = tools.map(tool => this.access('terminal', tool, null).blocked_reason).find(Boolean);
     if (blocked) return { ...base, status: 'blocked', reason: blocked };

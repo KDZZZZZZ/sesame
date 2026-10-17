@@ -1,5 +1,6 @@
 """Copy verified binary artifacts to an existing draft without source credentials."""
 import hashlib
+import base64
 import json
 import os
 from pathlib import Path
@@ -17,7 +18,16 @@ TARGETS = {
     "windows": ("win32", "x64", ["win-x64.exe"]),
     "macos": ("darwin", "arm64", ["mac-arm64.dmg"]),
 }
-REQUIRED_CHECKS = {"installer extraction", "native host package without VM bundle", "packaged server import", "no auto-updater dependency"}
+REQUIRED_CHECKS = {"installer extraction", "native host package without VM bundle", "packaged server import", "desktop update configuration"}
+
+
+def artifact_names(version, platform):
+    native, arch, suffixes = TARGETS[platform]
+    installers = {f"Sesame-{version}-{suffix}" for suffix in suffixes}
+    if native == "darwin":
+        return installers
+    blockmaps = {f"{name}.blockmap" for name in installers if name.endswith((".exe", ".deb"))}
+    return installers | blockmaps | {f"update-feed-{native}-{arch}.yml", f"update-plan-{native}-{arch}.json"}
 
 
 def check(condition, message):
@@ -25,12 +35,12 @@ def check(condition, message):
         raise ValueError(message)
 
 
-def digest(path):
-    h = hashlib.sha256()
+def digest(path, algorithm="sha256"):
+    h = hashlib.new(algorithm)
     with path.open("rb") as stream:
         for block in iter(lambda: stream.read(4 * 1024 * 1024), b""):
             h.update(block)
-    return h.hexdigest()
+    return base64.b64encode(h.digest()).decode("ascii") if algorithm == "sha512" else h.hexdigest()
 
 
 def api(path):
@@ -83,9 +93,9 @@ def download_artifact(url, archive):
 
 def extract_artifact(archive, root, inputs, platform):
     check(digest(archive) == inputs[f"{platform}_sha256"], "Artifact archive digest mismatch")
-    native_platform, arch, suffixes = TARGETS[platform]
+    native_platform, arch, _ = TARGETS[platform]
     version = inputs["tag"][1:]
-    names = {f"Sesame-{version}-{suffix}" for suffix in suffixes}
+    names = artifact_names(version, platform)
     inventory = []
     with zipfile.ZipFile(archive) as bundle:
         entries = bundle.namelist()
@@ -98,6 +108,8 @@ def extract_artifact(archive, root, inputs, platform):
         check(verification.get("plugin_lock_sha256") == inputs["plugin_lock_sha256"], "Reviewed plugin source lock mismatch")
         checks = verification.get("checks")
         check(isinstance(checks, list) and all(isinstance(item, str) for item in checks) and REQUIRED_CHECKS.issubset(checks), "Required build verification checks missing")
+        if native_platform != "darwin":
+            check("update feed integrity" in checks, "Required update feed verification missing")
         assets = verification.get("assets")
         check(isinstance(assets, list) and len(assets) == len(names), "Verification inventory mismatch")
         expected = {}
@@ -111,7 +123,32 @@ def extract_artifact(archive, root, inputs, platform):
                 shutil.copyfileobj(source, destination)
             check(digest(file) == expected[name], "Installer digest mismatch")
             inventory.append({"name": name, "bytes": file.stat().st_size, "sha256": expected[name]})
+        if native_platform != "darwin":
+            verify_update_plan(root, version, native_platform, arch, names)
     return inventory, verification
+
+
+def verify_update_plan(root, version, platform, arch, names):
+    manifest = f"update-feed-{platform}-{arch}.yml"
+    plan_name = f"update-plan-{platform}-{arch}.json"
+    plan = json.loads((root / plan_name).read_text(encoding="utf-8"))
+    check(isinstance(plan, dict) and plan.get("schemaVersion") == 1 and plan.get("runtimeProtocol") == 2 and plan.get("eligible") is True,
+          "Invalid update verification plan")
+    check((plan.get("version"), plan.get("channel"), plan.get("platform"), plan.get("arch")) == (version, "stable", platform, arch),
+          "Update plan differs from stable release")
+    channel_file = "latest-linux.yml" if platform == "linux" else "latest.yml"
+    check(plan.get("manifest") == manifest and plan.get("key") == f"updates/stable/{platform}-{arch}/{channel_file}", "Invalid update feed destination")
+    assets = plan.get("assets")
+    expected = names - {manifest, plan_name}
+    check(isinstance(assets, list) and len(assets) == len(expected), "Incomplete update verification plan")
+    seen = set()
+    for asset in assets:
+        check(isinstance(asset, dict), "Invalid update plan asset")
+        name = asset.get("file")
+        check(isinstance(name, str) and name in expected and name not in seen and asset.get("key") == f"v{version}/{name}", "Invalid update plan asset")
+        seen.add(name)
+        file = root / name
+        check(asset.get("bytes") == file.stat().st_size and asset.get("sha512") == digest(file, "sha512"), "Update plan artifact digest mismatch")
 
 
 def existing_assets(release, inventory):

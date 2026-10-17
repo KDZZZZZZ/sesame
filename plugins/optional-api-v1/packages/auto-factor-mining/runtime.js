@@ -1,11 +1,11 @@
 import { configuration, configuredModel, check, digest, canonical, text, errorInfo, ID, terminal } from './shared.js';
-import { SYSTEM, OUTPUTS, PURPOSES } from './team.js';
+import { SYSTEM, OUTPUTS, PURPOSES, collaboration } from './team.js';
 import { verifyResearch, verifyEvaluator, taskPlugins } from './composition.js';
 import { callEvaluator } from './evaluation.js';
 import { archiveReport, finalSnapshot } from './archive.js';
 import { Checkpoints } from './checkpoints.js';
 
-const FINAL = new Set(['completed', 'failed', 'cancelled', 'exhausted']);
+const FINAL = new Set(['completed', 'cancelled']);
 const interruption = (error, signal) => ['RUN_INTERRUPTED', 'DEPENDENCY_UNAVAILABLE'].includes(error?.code) ? error
   : ['RUN_INTERRUPTED', 'DEPENDENCY_UNAVAILABLE'].includes(signal?.reason?.code) ? signal.reason : null;
 const dependencyCodes = new Set(['DEPENDENCY_UNAVAILABLE', 'MODEL_UNAVAILABLE', 'MODEL_CHANGED', 'RESEARCH_PLUGIN_UNAVAILABLE', 'RESEARCH_PLUGIN_CHANGED', 'EVALUATOR_UNAVAILABLE', 'EVALUATOR_CHANGED', 'SOURCE_UNAVAILABLE', 'PROVIDER_UNAVAILABLE']);
@@ -37,6 +37,8 @@ export class MiningRuntime {
     const run = this.get(id);
     try {
       this.dataset(id);
+      const missingOutput = run.tasks.find(task => task.finishedAt && !task.output && task.status !== 'cancelled');
+      check(!missingOutput, 'MISSING_OUTPUT', `Completed ${missingOutput?.role}/${missingOutput?.mode} Agent ${missingOutput?.runRef?.id ?? missingOutput?.id} did not save its structured output. Its text and prior evidence are retained. auto_factor_submit requires that registered running role; the main Agent cannot submit on its behalf or repeat a completed Agent.`);
       if (!run.finalEvaluation) {
         verifyEvaluator(host, run.config.evaluator);
         if (!run.selection) {
@@ -111,7 +113,7 @@ export class MiningRuntime {
       createdAt: this.now(), updatedAt: this.now(), round: 0, generation: 0, tasks: [], trials: [], events: [], reflections: [], memory,
       data: prepared.data, evaluation, reportPending: false };
     await this.checkpoints.setDataset(id, { id, dataset, digest: digest(dataset) }); this.save(run);
-    this.event(id, 'created', '固定输入、时间分割、模型和预算，开始因子研究');
+    this.event(id, 'created', '固定输入、时间分割、模型和研究范围，开始因子研究');
     await this.checkpoints.flush(); await this.pump(host, id); return this.get(id);
   }
   dataset(id) {
@@ -126,7 +128,7 @@ export class MiningRuntime {
       const actual = (await host.runs.read(run.workflow)).run;
       interrupts = (actual.interrupts ?? []).filter(item => !item.resolvedAt);
       if (actual.status === 'interrupted' && run.status !== 'interrupted') run = this.update(id, { status: 'interrupted', error: { code: 'RUN_INTERRUPTED', message: actual.interrupts?.find(item => !item.resolvedAt)?.reason ?? 'Workflow requires dependency or input resolution' } });
-      else if (['failed', 'cancelled', 'unknown'].includes(actual.status)) run = this.update(id, { status: actual.status === 'cancelled' ? 'cancelled' : 'failed', error: errorInfo(actual.error ?? new Error(`Host workflow ${actual.status}`)) });
+      else if (['cancelled', 'unknown'].includes(actual.status)) run = this.update(id, { status: actual.status === 'cancelled' ? 'cancelled' : 'interrupted', error: errorInfo(actual.error ?? new Error(`Host workflow ${actual.status}`)) });
       await this.checkpoints.flush();
     }
     return { ...run, interrupts };
@@ -170,7 +172,7 @@ export class MiningRuntime {
     const run = this.get(id);
     if (run.workflow) return run.workflow;
     const result = await host.capabilities.invoke(ID + '#auto_factor_workflow', { run_id: id }, { operationId: id + ':workflow',
-      task: { title: run.title, output: { type: 'report', space: 'research', path: `${run.config.reportFolder}/${id}-attempt-${run.generation + 1}.html` } } });
+      task: { title: run.title, collaboration: collaboration(), output: { type: 'report', space: 'research', path: `${run.config.reportFolder}/${id}-attempt-${run.generation + 1}.html` } } });
     check(result.type === 'run', 'INVALID_HOST_RESULT', 'Workflow requires a tracked Run'); this.update(id, { workflow: result.run }); await this.checkpoints.flush();
   }
   async workflow(host, id, signal, execution) {
@@ -192,19 +194,18 @@ export class MiningRuntime {
     const prior = run.tasks.filter(t => t.key === key).at(-1);
     if (prior?.output && prior.finishedAt && prior.status === 'completed') return prior.output;
     if (prior?.finishedAt) throw Object.assign(new Error(prior.error?.message ?? 'Task ended without a reusable output; no new Agent is created'), { code: prior.error?.code ?? 'AGENT_FAILED' });
-    check(prior || run.tasks.length < run.config.maxTasks, 'BUDGET_EXHAUSTED', 'Maximum Agent task budget reached');
     const model = run.config.agentModels[role] ?? run.config.model; configuredModel(host, model);
     verifyEvaluator(host, run.config.evaluator); verifyResearch(host, run.config.research); taskPlugins(run.config.evaluator, run.config.research);
     const allowedCalls = [{ pluginId: ID, capabilityId: 'auto_factor_context' }, { pluginId: ID, capabilityId: 'auto_factor_submit' }, ...run.config.research.tools.map(value => { const index = value.lastIndexOf('#'); return { pluginId: value.slice(0, index), capabilityId: value.slice(index + 1) }; })];
     const assignmentId = 'assignment_' + digest([id, key, run.generation]).slice(7, 39);
     const request = prior?.request ?? { title: run.title.slice(0, 60) + ' · ' + role, instructions: SYSTEM + '\n' + run.evaluation.contract.instructions, objective: PURPOSES[mode],
       input: { runId: id, assignmentId, generation: run.generation, role, mode, ...details, ...(prior?.pendingOutput ? { retryOutput: prior.pendingOutput } : {}) },
-      allowedCalls, model, budget: { timeoutMs: run.config.taskTimeoutMs, maxTurns: 12, maxToolCalls: 24 } };
+      allowedCalls, model };
     if (!prior) this.update(id, { tasks: [...run.tasks, { id: assignmentId, key, role, mode, ...details, generation: run.generation, model, status: 'queued', createdAt: this.now(), request, requestDigest: digest(request) }] });
     await this.checkpoint(id); let ref = prior?.runRef;
     try {
       const result = ref ? { type: 'run', run: ref } : await host.capabilities.invoke('host.agent.run', request, { operationId: assignmentId, signal,
-        task: { title: request.title, role, stage: mode, iteration: details.round ?? 0, output: { type: 'none' } } });
+        task: { title: request.title, agentId: role, role, stage: mode, iteration: details.round ?? 0, output: { type: 'none' } } });
       check(result.type === 'run', 'INVALID_HOST_RESULT', 'Agent capability must return a Run'); ref = result.run;
       this.update(id, { tasks: this.get(id).tasks.map(t => t.id === assignmentId ? { ...t, runRef: ref } : t) }); await this.checkpoint(id);
       let finished;
@@ -222,8 +223,7 @@ export class MiningRuntime {
         this.update(id, { tasks: this.get(id).tasks.map(t => t.id === assignmentId ? { ...t, status: 'interrupted', error: errorInfo(control ?? error) } : t) });
         await this.checkpoints.flush(); throw control ?? dependencyError(id, error);
       }
-      if (ref) await this.cancelTask(ref, 'Mining task stopped');
-      this.update(id, { tasks: this.get(id).tasks.map(t => t.id === assignmentId ? { ...t, status: signal.aborted ? 'cancelled' : 'failed', finishedAt: this.now(), error: errorInfo(error) } : t) });
+      this.update(id, { tasks: this.get(id).tasks.map(t => t.id === assignmentId ? { ...t, status: signal.aborted ? 'cancelled' : 'interrupted', ...(signal.aborted ? { finishedAt: this.now() } : {}), error: errorInfo(error) } : t) });
       await this.checkpoints.flush(); throw error;
     }
   }
@@ -334,10 +334,8 @@ export class MiningRuntime {
       this.trial(id, trialId, { review, eligible, status: review.verdict === 'accept' && eligible ? 'accepted' : 'rejected',
         gate: measured.gate ?? '' });
     } catch (error) {
-      if (signal.aborted || interruption(error, signal) || error.code === 'BUDGET_EXHAUSTED') throw error;
       if (dependencyCodes.has(error.code)) throw dependencyError(id, error);
-      this.trial(id, trialId, { status: 'failed', error: errorInfo(error) });
-      this.event(id, 'trial_failed', errorInfo(error).message, { trialId });
+      throw error;
     }
   }
   async execute(id, signal) {
@@ -376,23 +374,24 @@ export class MiningRuntime {
       this.update(id, { status: 'completed', phase: 'complete', completedAt: this.now(), reportPending: true }); this.event(id, 'completed', '研究完成；候选与评估回执可复核');
     } catch (error) {
       const control = interruption(error, signal) ?? (dependencyCodes.has(error.code) ? dependencyError(id, error) : null);
-      if (control) {
-        this.update(id, { status: 'interrupted', reportPending: false, error: errorInfo(control) }); await this.checkpoints.flush();
-        if (control.code === 'DEPENDENCY_UNAVAILABLE') await this.executions.get(id).interrupt({ reason: control.message, requirements: control.details?.requirements, state: { runId: id, generation: this.get(id).generation, phase: this.get(id).phase, round: this.get(id).round } });
-        throw control;
+      if (control || !signal.aborted) {
+        this.update(id, { status: 'interrupted', reportPending: false, error: errorInfo(control ?? error) }); await this.checkpoints.flush();
+        if (!control || control.code === 'DEPENDENCY_UNAVAILABLE') await this.executions.get(id).interrupt({ reason: (control ?? error).message, requirements: control?.details?.requirements, state: { runId: id, generation: this.get(id).generation, phase: this.get(id).phase, round: this.get(id).round } });
+        throw control ?? error;
       }
-      if (!signal.aborted) { const exhausted = error.code === 'BUDGET_EXHAUSTED'; this.update(id, { status: exhausted ? 'exhausted' : 'failed', reportPending: true,
-        ...(exhausted ? { completedAt: this.now() } : {}), error: errorInfo(error) }); this.event(id, 'stopped', errorInfo(error).message); }
     } finally {
       if (!this.closed && !signal.aborted && FINAL.has(this.get(id).status) && !this.get(id).report) {
         try { await this.report(this.workHosts.get(id), id); }
-        catch (error) { reportInterruption = interruption(error, signal); this.update(id, { reportPending: true, reportError: errorInfo(error) }); }
+        catch (error) { reportInterruption = interruption(error, signal) ?? error; this.update(id, { reportPending: true, reportError: errorInfo(error) }); }
       }
       reportInterruption ??= interruption(null, signal);
-      if (reportInterruption) this.update(id, { status: 'interrupted', completedAt: null, reportPending: false, error: errorInfo(reportInterruption) });
+      if (reportInterruption) this.update(id, { status: 'interrupted', completedAt: null, reportPending: false, error: this.get(id).error ?? errorInfo(reportInterruption) });
       if (FINAL.has(this.get(id).status)) this.event(id, 'run.finished', '本次因子研究已结束');
     }
-    if (reportInterruption) throw reportInterruption;
+    if (reportInterruption) {
+      if (!interruption(reportInterruption, signal)) await this.executions.get(id).interrupt({ reason: reportInterruption.message, state: { runId: id, generation: this.get(id).generation, phase: this.get(id).phase, round: this.get(id).round } });
+      throw reportInterruption;
+    }
     if (signal.aborted) {
       if (['running', 'queued'].includes(this.get(id).status)) this.update(id, { status: 'cancelled', completedAt: this.now() });
       signal.throwIfAborted();
@@ -417,7 +416,7 @@ export class MiningRuntime {
     if (host.context.kind === 'main') { this.main(host, run); check(run.report, 'REPORT_UNAVAILABLE', 'This execution has no published report; inspect its retained checkpoint or resume unfinished work'); return run.report; }
     this.executor(host, run, this.executions.get(id));
     check(FINAL.has(run.status) && run.tasks.every(value => value.finishedAt),
-      'RUN_NOT_FINISHED', 'Only completed, cancelled or exhausted work with all research tasks settled can publish its final summary');
+      'RUN_NOT_FINISHED', 'Only completed or cancelled work with all research tasks settled can publish its final summary');
     if (!this.reporting.has(id)) {
       const pending = Promise.resolve().then(async () => {
         if (!this.get(id).reportSnapshot && !this.get(id).report) this.update(id, { reportSnapshot: finalSnapshot(this.get(id)), reportPending: true });

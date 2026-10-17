@@ -75,8 +75,7 @@
       },
       "execution": "immediate",
       "effects": [
-        "native-discovery",
-        "may-start-metaeditor"
+        "native-discovery"
       ],
       "usage": {
         "purpose": "取得当前原生方法定义、归属工具及不可用原因。",
@@ -86,7 +85,7 @@
           "原生接口需要时使用；Sesame行情有已声明 data-access/canvas 入口，不以catalog作为必经流程。"
         ],
         "limitations": [
-          "指定metaeditor可能按需启动编辑器；installed不等于已连接。marketdata是独立可选服务，disabled不影响terminal券商行情。"
+          "目录查询不启动终端或 MetaEditor。未运行的服务返回 not_running；确需编辑时由主 Agent 使用 mt5_edit 的 launcher/start_editor，或执行已授权的编辑/编译能力。installed 不等于已连接。marketdata 是独立可选服务，disabled 不影响 terminal 券商行情。"
         ]
       },
       "binding": {
@@ -101,7 +100,7 @@
         "agent",
         "host"
       ],
-      "description": "调用 official 所属的官方能力。先从 mt5_catalog 获取精确 tool / inputSchema；其他插件的方法不能从此入口调用。command_id 沿用同一动作的稳定 ID；结果 unknown 时先核对真实状态。save_as 可保存大 JSON。",
+      "description": "调用官方纯读取及风险计算能力。先从 mt5_catalog 获取精确 tool / inputSchema；支持行情、账户、指标，以及 server:\"python\" 的 order_calc_profit/order_calc_margin。写操作和其他 Python 方法拒绝。command_id 沿用同一动作的稳定 ID；结果 unknown 时先核对真实状态。save_as 可保存大 JSON。",
       "inputSchema": {
         "type": "object",
         "required": [
@@ -172,18 +171,19 @@
       "effects": [
         "native-call",
         "plugin.state.write",
-        "filesystem-on-save_as"
+        "filesystem-on-save_as",
+        "process"
       ],
       "usage": {
-        "purpose": "调用目录已声明的official一般读取方法，并保留原生回执。",
+        "purpose": "读取原生行情、账户和指标，或计算利润/保证金，并保留原生回执。",
         "inputs": "{server,tool,arguments,command_id,save_as?}；从 mt5_catalog.items[].tools 取 agent_tool=\"mt5_call\" 且 callable:true 的具体方法。最小调用形状：{server:item.server,tool:method.name,arguments:<该方法声明的业务参数>,command_id:\"native-operation-unique-01\"}；server 取包含该方法的目录项，arguments 按该方法 inputSchema 与说明填写，不把其他组的方法当例子重试。command_id 稳定16–128字符；save_as 为工作区JSON路径。",
         "outputs": "{id,conversation_id,server,tool,operation_class,status,result,dataset_id,error,created_at,completed_at}；status=returned|failed|unknown（运行中可为running）。returned只说明收到响应，实际操作还要读result.isError/error/retcode或业务status；dataset_id是本插件保存证据。save_as时省略result并返回saved_to。",
         "prerequisites": [
-          "仅处理 official一般读取；catalog给出参数与callable/blocked_reason，跨组方法按agent_tool调用。"
+          "仅处理 official 读取组及 Python order_calc_profit/order_calc_margin；catalog 给出当前参数与 callable/blocked_reason。计算需既有 Python IPC 连接，不初始化或切换账户；连接不可用由主 Agent 处理。"
         ],
         "limitations": [
           "同一ID、同请求、同配置版本返回原回执；unknown保持原ID用mt5_command核对，不自动重放。调用前的明确submission_attempted:false才证明未发送。",
-          "副作用取决于catalog所声明的方法；只读目标不能用写入/启动方法冒充检查。"
+          "原生路由在发送前拒绝交易、图表修改、文件编辑、进程控制及未声明方法。读取不启动终端或 MetaEditor；Python 计算可使用受信任的 IPC 辅助进程，但不调用 initialize/login/order_send。保存回执或 save_as 不改变终端业务状态。"
         ]
       },
       "binding": {
@@ -430,7 +430,8 @@
       "effects": [
         "native-call",
         "plugin.state.write",
-        "filesystem-on-save_as"
+        "filesystem-on-save_as",
+        "native-state.write"
       ],
       "usage": {
         "purpose": "调用目录已声明的charts终端原生图表方法，并保留原生回执。",
@@ -441,7 +442,7 @@
         ],
         "limitations": [
           "同一ID、同请求、同配置版本返回原回执；unknown保持原ID用mt5_command核对，不自动重放。调用前的明确submission_attempted:false才证明未发送。",
-          "管理MT5终端原生图表，不是Sesame画布；工作台显示用canvas_*。"
+          "修改 MT5 原生图表指标和 MarketWatch 列表，整个能力不用于只读分析；不是 Sesame 画布，工作台显示用 canvas_*。"
         ]
       },
       "binding": {
@@ -527,7 +528,10 @@
       "effects": [
         "native-call",
         "plugin.state.write",
-        "filesystem-on-save_as"
+        "filesystem-on-save_as",
+        "native-state.write",
+        "process.exec",
+        "native-process-start"
       ],
       "usage": {
         "purpose": "调用目录已声明的editor文件编辑/编译方法，并保留原生回执。",
@@ -538,7 +542,7 @@
         ],
         "limitations": [
           "同一ID、同请求、同配置版本返回原回执；unknown保持原ID用mt5_command核对，不自动重放。调用前的明确submission_attempted:false才证明未发送。",
-          "副作用取决于catalog所声明的方法；只读目标不能用写入/启动方法冒充检查。"
+          "包含原生文件创建、写入、删除、格式化、编译及编辑器启动；整个混合入口不用于只读分析。"
         ]
       },
       "binding": {
@@ -624,18 +628,20 @@
       "effects": [
         "native-call",
         "plugin.state.write",
-        "filesystem-on-save_as"
+        "filesystem-on-save_as",
+        "native-connection",
+        "native-state.write"
       ],
       "usage": {
-        "purpose": "调用目录已声明的python官方只读API方法，并保留原生回执。",
+        "purpose": "调用目录已声明的 Python 官方 API，包含读取、连接关闭及订阅管理，并保留原生回执。",
         "inputs": "{server,tool,arguments,command_id,save_as?}；从 mt5_catalog.items[].tools 取 agent_tool=\"mt5_python\" 且 callable:true 的具体方法。最小调用形状：{server:item.server,tool:method.name,arguments:<该方法声明的业务参数>,command_id:\"native-operation-unique-01\"}；server 取包含该方法的目录项，arguments 按该方法 inputSchema 与说明填写，不把其他组的方法当例子重试。command_id 稳定16–128字符；save_as 为工作区JSON路径。",
         "outputs": "{id,conversation_id,server,tool,operation_class,status,result,dataset_id,error,created_at,completed_at}；status=returned|failed|unknown（运行中可为running）。returned只说明收到响应，实际操作还要读result.isError/error/retcode或业务status；dataset_id是本插件保存证据。save_as时省略result并返回saved_to。",
         "prerequisites": [
-          "仅处理 python官方只读API；catalog给出参数与callable/blocked_reason，跨组方法按agent_tool调用。"
+          "仅处理 python 组；catalog 给出参数与 callable/blocked_reason，跨组方法按 agent_tool 调用。"
         ],
         "limitations": [
           "同一ID、同请求、同配置版本返回原回执；unknown保持原ID用mt5_command核对，不自动重放。调用前的明确submission_attempted:false才证明未发送。",
-          "不执行任意Python；order_send/login等交易类方法路由到交易能力。"
+          "不执行任意 Python；order_send/login/initialize 路由到交易能力。本入口仍含 shutdown、symbol_select 和市场深度订阅管理，会改变连接或终端状态，整个能力不用于只读分析；行情及指标读取使用 mt5_call。"
         ]
       },
       "binding": {
@@ -721,7 +727,11 @@
       "effects": [
         "native-call",
         "plugin.state.write",
-        "filesystem-on-save_as"
+        "filesystem-on-save_as",
+        "process.exec",
+        "process.cancel",
+        "native-state.write",
+        "network"
       ],
       "usage": {
         "purpose": "调用目录已声明的system本机/网络操作方法，并保留原生回执。",
@@ -732,7 +742,7 @@
         ],
         "limitations": [
           "同一ID、同请求、同配置版本返回原回执；unknown保持原ID用mt5_command核对，不自动重放。调用前的明确submission_attempted:false才证明未发送。",
-          "副作用取决于catalog所声明的方法；只读目标不能用写入/启动方法冒充检查。"
+          "包含 shell、任意网络请求及 Tester 服务安装/启停，可改变本机或外部状态；整个能力不用于只读分析。"
         ]
       },
       "binding": {
@@ -818,7 +828,10 @@
       "effects": [
         "native-call",
         "plugin.state.write",
-        "filesystem-on-save_as"
+        "filesystem-on-save_as",
+        "native-state.write",
+        "process.exec",
+        "process.cancel"
       ],
       "usage": {
         "purpose": "调用目录已声明的tester原生Tester方法，并保留原生回执。",
@@ -829,7 +842,7 @@
         ],
         "limitations": [
           "同一ID、同请求、同配置版本返回原回执；unknown保持原ID用mt5_command核对，不自动重放。调用前的明确submission_attempted:false才证明未发送。",
-          "副作用取决于catalog所声明的方法；只读目标不能用写入/启动方法冒充检查。"
+          "包含 Tester 启动、停止和配置文件准备；读取与控制共用入口，整个能力不用于只读分析。"
         ]
       },
       "binding": {
@@ -1027,9 +1040,10 @@
       },
       "execution": "immediate",
       "effects": [
-        "process",
         "plugin.state.write",
-        "resources.publish"
+        "resources.publish",
+        "process.exec",
+        "process.cancel"
       ],
       "usage": {
         "purpose": "运行或观察管理中的真实MT5 Tester任务。",
@@ -1125,7 +1139,11 @@
       "effects": [
         "native-call",
         "plugin.state.write",
-        "filesystem-on-save_as"
+        "filesystem-on-save_as",
+        "external-trading",
+        "external-strategy-operation",
+        "native-connection",
+        "native-process-start"
       ],
       "usage": {
         "purpose": "调用目录已声明的trading原生交易方法，并保留原生回执。",
@@ -1398,7 +1416,8 @@
       "execution": "immediate",
       "effects": [
         "plugin.state.write",
-        "workspace.write"
+        "workspace.write",
+        "application-configuration"
       ],
       "usage": {
         "purpose": "创建、签出、保存或查看独立MQL5工程。",
@@ -1511,9 +1530,9 @@
       },
       "execution": "immediate",
       "effects": [
-        "process",
         "plugin.state.write",
-        "private-filesystem"
+        "private-filesystem",
+        "process.exec"
       ],
       "usage": {
         "purpose": "编译指定冻结源码并保存真实构建结果。",
@@ -1577,7 +1596,7 @@
         "agent",
         "host"
       ],
-      "description": "按用户任务修改 MT5 连接、原生设置或普通运行选项。先读取版本；密钥通过 mt5_import_configuration 的安全引用导入。",
+      "description": "直接保存用户提供的 MT5 连接 token、券商账户密码、MetaTester 代理密码或普通运行选项。只需当前版本和稳定 command_id，无需导入文件、设置页或重启；返回脱敏回执，连接另行核验。",
       "inputSchema": {
         "type": "object",
         "required": [
@@ -1634,6 +1653,13 @@
                           },
                           "enabled": {
                             "type": "boolean"
+                          },
+                          "token": {
+                            "type": "string",
+                            "maxLength": 8192,
+                            "pattern": "^[^\\r\\n\\u0000]*$",
+                            "writeOnly": true,
+                            "description": "用户提供的 MCP API Key 原文；省略保留现有值，空字符串清除。保存后立即生效，回执不返回密钥。"
                           }
                         },
                         "additionalProperties": false,
@@ -1649,6 +1675,13 @@
                           },
                           "enabled": {
                             "type": "boolean"
+                          },
+                          "token": {
+                            "type": "string",
+                            "maxLength": 8192,
+                            "pattern": "^[^\\r\\n\\u0000]*$",
+                            "writeOnly": true,
+                            "description": "用户提供的 MCP API Key 原文；省略保留现有值，空字符串清除。保存后立即生效，回执不返回密钥。"
                           }
                         },
                         "additionalProperties": false,
@@ -1664,6 +1697,13 @@
                           },
                           "enabled": {
                             "type": "boolean"
+                          },
+                          "token": {
+                            "type": "string",
+                            "maxLength": 8192,
+                            "pattern": "^[^\\r\\n\\u0000]*$",
+                            "writeOnly": true,
+                            "description": "用户提供的 MCP API Key 原文；省略保留现有值，空字符串清除。保存后立即生效，回执不返回密钥。"
                           }
                         },
                         "additionalProperties": false,
@@ -1684,6 +1724,13 @@
                         "type": "string",
                         "maxLength": 200,
                         "pattern": "^[^\\r\\n\\u0000]*$"
+                      },
+                      "password": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "pattern": "^[^\\r\\n\\u0000]*$",
+                        "writeOnly": true,
+                        "description": "用户提供的券商账户密码；省略保留现有值，空字符串清除。账户改变时需明确提供对应密码。"
                       }
                     },
                     "additionalProperties": false,
@@ -1701,6 +1748,13 @@
                         "type": "integer",
                         "minimum": 1024,
                         "maximum": 65535
+                      },
+                      "password": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "pattern": "^[^\\r\\n\\u0000]*$",
+                        "writeOnly": true,
+                        "description": "用户提供的 MetaTester 代理密码；省略保留现有值，空字符串清除。"
                       }
                     },
                     "additionalProperties": false,
@@ -1725,17 +1779,19 @@
       },
       "execution": "immediate",
       "effects": [
-        "plugin.state.write"
+        "plugin.state.write",
+        "application-configuration"
       ],
       "usage": {
-        "purpose": "更新明确连接/权限配置并保留幂等回执。",
-        "inputs": "{command_id:<稳定16–128字符>,expected_version:<settings.version>,changes}；changes为 {import_native:true} 或 account:{login,server}/servers:{terminal|metaeditor|marketdata:{url?,enabled?}}/allow_trading/allow_host_operations/tester_agent。例仅导入已知原生配置 {command_id:\"import-native-config-01\",expected_version:1,changes:{import_native:true}}。",
-        "outputs": "{id,conversation_id,target,status,changes,result?,error?,created_at,completed_at}；applied只证明配置已保存；连接结果由mt5_connect核验。",
+        "purpose": "直接配置 MT5 连接、账户、凭据及运行权限，立即刷新后台配置并保留脱敏幂等回执。",
+        "inputs": "{command_id:<稳定16–128字符>,expected_version:<settings.version>,changes}。changes支持 servers:{terminal|metaeditor|marketdata:{url?,enabled?,token?}}、account:{login?,server?,password?}、tester_agent:{address?,port?,password?}、allow_trading、allow_host_operations；也可单独用 {import_native:true} 读取已有原生配置。例 {command_id:\"configure-terminal-token-01\",expected_version:1,changes:{servers:{terminal:{token:\"用户提供的API Key\"}}}}。凭据字段省略保留现有值，空字符串清除；更换endpoint或账户身份会清除对应旧凭据，必要时同次传入新凭据。",
+        "outputs": "{id,conversation_id,target,status,changes,result?,error?,created_at,completed_at}；changes里的token/password均为[redacted]，result只含脱敏settings。applied说明已保存且立即生效；mt5_connect核验终端与账户，mt5_catalog单独核验其他服务。",
         "prerequisites": [
-          "主会话；读取mt5_settings获得版本，实际连接/账号来自已知配置。"
+          "主会话；expected_version来自mt5_settings。目标及凭据来自用户提供或已知配置，已取得的用户授权继续有效。"
         ],
         "limitations": [
-          "不接受密钥值。版本冲突刷新settings；配置任务不自动授权下单/EA运行。"
+          "直接配置和可选mt5_import_configuration均可用；用户已给信息就保存并核验，不要求重新导出、设置页填写或重复授权。不回显密钥，不把密钥写入报告、脚本或长期记忆。",
+          "版本冲突读取当前settings；相同command_id和输入重试仅返回原回执。保存不自动登录、启动终端或下单；外部原生拒绝保留其具体事实。"
         ]
       },
       "binding": {
@@ -1750,7 +1806,7 @@
         "agent",
         "host"
       ],
-      "description": "导入主会话用户直接提供的 MT5 MCP 或账户凭据引用；凭据仅在插件后台传递，保存后立即生效，不登录、不启动终端。随后 mt5_connect 核验账户；MetaEditor、Python 与 Tester 分别验证。",
+      "description": "可选：复用已由宿主提取的 MT5 MCP 或账户凭据引用。没有引用时可直接用 mt5_update_configuration 保存用户已提供的 token/password。保存立即生效，不登录、不启动终端；随后核验所需连接。",
       "inputSchema": {
         "type": "object",
         "required": [
@@ -1786,10 +1842,11 @@
       },
       "execution": "immediate",
       "effects": [
-        "plugin.state.write"
+        "plugin.state.write",
+        "application-configuration"
       ],
       "usage": {
-        "purpose": "按安全消息引用导入已有原生配置。",
+        "purpose": "复用安全消息引用保存已有原生配置；它是直接配置之外的可选入口。",
         "inputs": "{command_id,source_message_id:<settings.pendingImports中的msg_ID>,expected_version:<settings.version>}；没有secret/token/password参数。",
         "outputs": "{id,conversation_id,target,status,changes,result?,error?,created_at,completed_at}；applied只证明配置已保存；连接结果由mt5_connect核验。",
         "prerequisites": [
@@ -1802,6 +1859,146 @@
       "binding": {
         "type": "native",
         "name": "mt5_import_configuration"
+      }
+    },
+    {
+      "id": "mt5_start_terminal",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "打开插件已选的本机 MT5 终端，保持原数据目录模式；不需要 MCP 密钥、Python 或 catalog。仅主 Agent，参数只需稳定 command_id。复用原 profile，可能恢复已有 EA，沿用现有启动权限；不传新账户或自定义 INI。returned/result.status=spawned 只说明系统接收启动请求，连接另用 mt5_connect(start_if_needed:false) 核验；unknown 先查原回执与实际状态，不能换 ID 重启。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "本次打开终端动作的稳定 ID；同一动作重试沿用，例如 open-selected-terminal-01"
+          }
+        },
+        "required": [
+          "command_id"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "conversation_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "server": {
+            "const": "launcher",
+            "type": "string"
+          },
+          "tool": {
+            "const": "start_terminal",
+            "type": "string"
+          },
+          "operation_class": {
+            "const": "trading",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "running",
+              "returned",
+              "failed",
+              "unknown"
+            ],
+            "type": "string"
+          },
+          "result": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "pid": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "unit": {
+                "type": "string"
+              },
+              "status": {
+                "const": "spawned",
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "dataset_id": {
+            "type": "null"
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "completed_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "conversation_id",
+          "server",
+          "tool",
+          "operation_class",
+          "status",
+          "result",
+          "dataset_id",
+          "error",
+          "created_at",
+          "completed_at"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "native-process-start",
+        "may-resume-existing-terminal-profile",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "按用户要求打开已选的本机 MT5，适用于尚未配置 MCP 的首次设置以及再次打开终端。",
+        "inputs": "{command_id:<稳定16–128字符，只含字母数字下划线或连字符>}；完整例 {command_id:\"open-selected-terminal-01\"}。没有 path、account、profile、INI 或密钥参数，也无需先读 catalog；目标是插件已选安装。",
+        "outputs": "原生命令回执 {id,conversation_id,server:\"launcher\",tool:\"start_terminal\",operation_class:\"trading\",status,result,dataset_id:null,error,created_at,completed_at}；成功请求 status=returned 且 result={status:\"spawned\",pid,message,unit?}，仅证明系统接收请求，PID 不证明界面、MCP、券商或 Python IPC 已就绪。",
+        "prerequisites": [
+          "主会话；已有明确打开终端的任务，插件已发现并选定本机 MT5 安装。mt5_settings.environment 与 mt5_dependencies({action:\"inspect\"}) 可解释缺项；不要求已配置 MCP 凭据或 Python。",
+          "原终端 profile 可能恢复已有 EA，故复用 launcher.start_terminal 的现有 allow_trading 启动权限；拒绝时不自动修改权限。"
+        ],
+        "limitations": [
+          "只打开已选安装，保持原 portable/数据目录模式；不强制关闭或重启已有实例，不传新账户/profile，不执行 Sesame 保存的自定义 startup_ini。",
+          "需要连接证明时调用 mt5_connect({command_id:\"verify-started-terminal-01\",start_if_needed:false})；缺 MCP 凭据时可先打开终端；用户已提供的连接配置由mt5_update_configuration直接保存，已有安全引用也可使用。",
+          "同一动作沿用 command_id，原 returned/unknown 回执会复用。unknown 用 mt5_command({command_id:<原ID>}) 及实际进程/连接状态核对，不换 ID 自动重放。",
+          "PREREQUISITE_REQUIRED 表示未派发，按 mt5_dependencies inspect 返回的缺项处理；mt5_permission_denied 表示当前启动权限拒绝；submission_attempted:false 才能确认未派发。配置变化后旧 ID 会 idempotency_conflict，应先核对旧动作，而非盲目换 ID。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_start_terminal"
       }
     },
     {

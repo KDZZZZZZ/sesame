@@ -2,7 +2,9 @@
 
 The source directories retain the names `plugins/api-v1` and
 `plugins/optional-api-v1`; their current manifests, capabilities and locks use
-**API 2** and require Sesame **>=0.2.3**. Every plugin explicitly declares its
+**API 2**. Updated packages for the 0.2.4 release require Sesame **>=0.2.4**;
+unchanged packages retain **>=0.2.3**. Each manifest's `engines.sesame` is authoritative.
+Every plugin explicitly declares its
 capabilities, input/output schemas, consumers, dependencies and usage guidance.
 Preserve each package's license, author and third-party provenance.
 
@@ -19,6 +21,8 @@ owner-merged dev → main PR. Required checks are `package-static-review`,
 `catalog-static-review` and `contribution-policy`. Candidate packages are data:
 trusted-base validators check identities, explicit capabilities, licenses,
 paths, module boundaries and every locked byte without executing candidate code.
+PR checks do not rerun the old base validator's own unit tests. Validator
+regressions run once on the actual main revision before plugin publication.
 Behavior, external dependencies and platform integration require separate tests.
 
 The R2 catalog is

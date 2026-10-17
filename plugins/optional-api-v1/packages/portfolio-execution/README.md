@@ -7,6 +7,8 @@
 3. 工作流调用 context identity，并冻结返回的 account、taskContext、tools/readTools、quantityRules。执行角色的 task.input.execution 保存该引用，tradingPlan 保存 id、ownerConversationId、account。
 4. 工作流工具调用 apply，传入保存的 run、plan 和目标仓位；后端由不可变绑定解析。主会话或模型直接调用 apply 会失败。
 
+MT5 绑定要求 MT5 2.1.0+，`readTools` 明确包含账户上下文、纯读取的 `mt5_catalog` 和 `mt5_call`。先用目录取得当前行情/K线/指标及 Python `order_calc_profit` / `order_calc_margin` 的准确参数，再通过只读原生路由调用；目录查询不启动编辑器，计算不初始化或切换账户。包含连接关闭、订阅修改的 `mt5_python` 不授予研究角色。工作流还应按能力声明的 `effects` 核验绑定返回的读取工具。
+
 执行层核验宿主提供的实际调用链，而不是模型传来的权限声明。后端也核验冻结账户、配置版本、活动任务、executor 角色及 workflow → execution.apply → backend 的调用来源。旧 manual-trading 的短期 Ed25519 授权仍受后端支持。
 
 原生行为保持：MT5 精确 lots/ticket、QMT 整数 shares/T+1，账户全来源平仓/减仓，目标不变不发单；M5+、源报价时效、最终一跳头寸/价格校验；策略停止须确认；未知或部分成交停止该批次。一个应用意图写入后不重放，读取回执和真实成交后由新一轮工作流重新判断。仅同一原生账户的交易写入与完整目标批次串行；不同账户、研究和观察继续并发，已有回执只读查询无需等交易锁。

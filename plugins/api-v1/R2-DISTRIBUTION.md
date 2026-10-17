@@ -1,6 +1,6 @@
 # Sesame plugin distribution
 
-Current API 2 packages for Sesame >=0.2.3 are distributed at
+Current API 2 packages, with per-package Sesame compatibility ranges, are distributed at
 [`https://dl.sesame.bot/plugins/api-v1/catalog.json`](https://dl.sesame.bot/plugins/api-v1/catalog.json).
 The Sesame website Worker serves this domain with its `sesame-releases` R2
 binding. Packages download from R2 and exact Git source references supply

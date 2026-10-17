@@ -3,6 +3,7 @@ from pathlib import Path
 from contextlib import redirect_stdout
 from copy import deepcopy
 import hashlib
+import base64
 import importlib.util
 import io
 import json
@@ -28,12 +29,27 @@ def inputs_fixture():
     return inputs
 
 
-def artifact_fixture(inputs, platform, change=None, extra_entry=None, corrupt_installer=False):
+def artifact_fixture(inputs, platform, change=None, extra_entry=None, corrupt_installer=False, change_update=None):
     native, arch, suffixes = publisher.TARGETS[platform]
-    files = {f"Sesame-{inputs['tag'][1:]}-{suffix}": (platform + suffix).encode() for suffix in suffixes}
+    version = inputs["tag"][1:]
+    names = publisher.artifact_names(version, platform)
+    files = {name: (platform + name).encode() for name in sorted(names) if name.startswith("Sesame-")}
+    checks = set(publisher.REQUIRED_CHECKS)
+    if native != "darwin":
+        manifest = f"update-feed-{native}-{arch}.yml"
+        plan = {"schemaVersion": 1, "runtimeProtocol": 2, "version": version, "channel": "stable", "platform": native, "arch": arch,
+                "eligible": True, "manifest": manifest,
+                "key": f"updates/stable/{native}-{arch}/" + ("latest-linux.yml" if native == "linux" else "latest.yml"),
+                "assets": [{"file": name, "key": f"v{version}/{name}", "bytes": len(data), "sha512": base64.b64encode(hashlib.sha512(data).digest()).decode("ascii")}
+                           for name, data in files.items()]}
+        if change_update:
+            change_update(plan)
+        files[manifest] = json.dumps({"version": version, "sesame": {"runtimeProtocol": 2}, "files": []}).encode()
+        files[f"update-plan-{native}-{arch}.json"] = json.dumps(plan).encode()
+        checks.add("update feed integrity")
     verification = {"version": inputs["tag"][1:], "source_revision": inputs["source_revision"], "platform": native, "arch": arch,
                     "plugin_source": {"repository": inputs["plugins_repository"], "commit": inputs["plugins_commit"]},
-                    "plugin_lock_sha256": inputs["plugin_lock_sha256"], "checks": sorted(publisher.REQUIRED_CHECKS),
+                    "plugin_lock_sha256": inputs["plugin_lock_sha256"], "checks": sorted(checks),
                     "assets": [{"name": name, "sha256": hashlib.sha256(data).hexdigest()} for name, data in files.items()]}
     if change:
         change(verification)
@@ -48,7 +64,7 @@ def artifact_fixture(inputs, platform, change=None, extra_entry=None, corrupt_in
                 bundle.writestr(extra_entry, b"unexpected")
     archive = buffer.getvalue()
     inputs[f"{platform}_sha256"] = hashlib.sha256(archive).hexdigest()
-    inventory = [{"name": name, "digest": "sha256:" + hashlib.sha256(data).hexdigest(), "size": len(data)} for name, data in files.items()]
+    inventory = [{"name": name, "digest": "sha256:" + hashlib.sha256(data).hexdigest(), "size": len(data)} for name, data in sorted(files.items())]
     return archive, inventory
 
 
@@ -106,11 +122,16 @@ class WorkflowTests(unittest.TestCase):
 
 
 class VerificationTests(unittest.TestCase):
-    def test_all_three_platforms_upload_four_verified_installers_to_draft(self):
+    def test_three_platforms_upload_verified_installers_and_win_linux_update_artifacts_to_draft(self):
         fixture = PublicationFixture(inputs_fixture())
         output = fixture.run()
         self.assertEqual(fixture.uploads, fixture.expected)
         self.assertTrue(fixture.release["draft"])
+        names = [asset["name"] for asset in fixture.uploads]
+        self.assertEqual(len([name for name in names if name.endswith((".exe", ".deb", ".AppImage", ".dmg"))]), 4)
+        self.assertEqual(len([name for name in names if name.endswith(".blockmap")]), 2)
+        self.assertEqual(len([name for name in names if name.startswith("update-plan-")]), 2)
+        self.assertFalse(any("darwin" in name for name in names if name.startswith("update-")))
         for platform in publisher.TARGETS:
             lines = [line for line in output.splitlines() if "private-" + platform in line]
             self.assertEqual(lines, ["::add-mask::" + fixture.inputs[f"{platform}_url"]])
@@ -156,6 +177,34 @@ class VerificationTests(unittest.TestCase):
                 with patch.object(publisher, "api") as api, self.assertRaises(ValueError):
                     publisher.publish(fixture.inputs, "KDZZZZZZ/sesame", "test-token")
                 api.assert_not_called()
+
+    def test_update_channel_contract_paths_inventory_and_hashes_are_verified_before_upload(self):
+        changes = [
+            (lambda plan: plan.update(runtimeProtocol=1), "Invalid update verification plan"),
+            (lambda plan: plan.update(eligible=False), "Invalid update verification plan"),
+            (lambda plan: plan.update(channel="preview"), "differs from stable release"),
+            (lambda plan: plan.update(platform="darwin"), "differs from stable release"),
+            (lambda plan: plan.update(key="updates/stable/other/latest.yml"), "Invalid update feed destination"),
+            (lambda plan: plan.update(manifest="../outside.yml"), "Invalid update feed destination"),
+            (lambda plan: plan["assets"].pop(), "Incomplete update verification plan"),
+            (lambda plan: plan["assets"].append(plan["assets"][0]), "Incomplete update verification plan"),
+            (lambda plan: plan["assets"][0].update(file="../outside.exe"), "Invalid update plan asset"),
+            (lambda plan: plan["assets"][0].update(key="elsewhere/file.exe"), "Invalid update plan asset"),
+            (lambda plan: plan["assets"][0].update(sha512="wrong"), "artifact digest mismatch"),
+        ]
+        for change, error in changes:
+            with self.subTest(error=error):
+                inputs = inputs_fixture()
+                fixture = PublicationFixture(inputs)
+                archive, _ = artifact_fixture(inputs, "windows", change_update=change)
+                fixture.archives[inputs["windows_url"]] = archive
+                with self.assertRaisesRegex(ValueError, error):
+                    fixture.run()
+                self.assertEqual(fixture.uploads, [])
+        fixture = PublicationFixture(inputs_fixture(), "windows", lambda evidence: evidence["checks"].remove("update feed integrity"))
+        with self.assertRaisesRegex(ValueError, "Required update feed verification"):
+            fixture.run()
+        self.assertEqual(fixture.uploads, [])
 
     def test_same_bytes_are_idempotent_and_different_existing_bytes_prevent_all_uploads(self):
         fixture = PublicationFixture(inputs_fixture())

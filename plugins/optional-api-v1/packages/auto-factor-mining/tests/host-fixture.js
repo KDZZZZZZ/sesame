@@ -52,10 +52,10 @@ export async function fixture({ storage, onTask, onEvaluate, beforeResource, eva
       read: async ref => ({ run: structuredClone(jobs.get(ref.id)?.value ?? { id: ref.id, status: 'unknown' }) }),
       wait: async (ref, { signal } = {}) => { const job = jobs.get(ref.id); if (!job) return { reason: 'settled', run: { id: ref.id, status: 'unknown' } }; if (signal?.aborted) throw signal.reason;
         return new Promise((resolve,reject) => { const abort=()=>reject(signal.reason);signal?.addEventListener('abort',abort,{once:true});job.promise.then(run=>resolve({reason:run.status==='interrupted'?'interrupted':'settled',run}),reject).finally(()=>signal?.removeEventListener('abort',abort)); }); },
-      cancel: async ref => { const job = jobs.get(ref.id); if (job && !['completed','failed','cancelled'].includes(job.value.status)) { job.controller.abort(error('CANCELLED','Cancelled')); job.finish({ status:'cancelled' }); } return {}; },
+      cancel: async ref => { const job = jobs.get(ref.id); if (job && !['completed','cancelled'].includes(job.value.status)) { job.controller.abort(error('CANCELLED','Cancelled')); job.finish({ status:'cancelled' }); } return {}; },
       interrupt: async ref => {
         const job = jobs.get(ref.id), reason = error('RUN_INTERRUPTED','Fixture interruption');
-        for (const child of jobs.values()) if (child.parentRunId === ref.id && !['completed','failed','cancelled'].includes(child.value.status)) { child.controller.abort(reason); child.finish({status:'interrupted'}); }
+        for (const child of jobs.values()) if (child.parentRunId === ref.id && !['completed','cancelled'].includes(child.value.status)) { child.controller.abort(reason); child.finish({status:'interrupted'}); }
         job.controller.abort(reason);
         if (job.capability === 'host.agent.run') job.finish({status:'interrupted'});
         await job.promise; return {run:structuredClone(job.value)};
@@ -98,7 +98,7 @@ export async function fixture({ storage, onTask, onEvaluate, beforeResource, eva
     const {capability:id,args,context:hostContext,workflow}=job,ref={id:job.value.id},controller=new AbortController();let settle;
     job.controller=controller;job.value={...job.value,status:'running',error:undefined};job.attempt=(job.attempt??0)+1;job.promise=new Promise(resolve=>{settle=resolve;});
     job.finish=update=>{
-      if(['completed','failed','cancelled','interrupted'].includes(job.value.status))return;
+      if(['completed','cancelled','interrupted'].includes(job.value.status))return;
       if(update.status==='interrupted'){
         const root=jobs.get(job.parentRunId)??job;
         let interrupts=root.value.interrupts??[];
@@ -121,9 +121,10 @@ export async function fixture({ storage, onTask, onEvaluate, beforeResource, eva
         job.value.progress={sessionId:ref.id,status:'running'};
         if (await onTask?.({request:args,child,execution,runtime,job})==='hold')return;
         const {runId,mode}=args.input,context=runtime.context(child,runId,'team',0,20,execution);
-        const output={plan:{directions:['momentum'],stop:false,reason:'Fixed fixture direction'},hypothesis:{hypothesis:'Synthetic ordering',rationale:'Numerical fixture, no market claim'},code:{candidate:{op:'field',name:'signal'},explanation:'Observed fixture feature'},review:{verdict:'accept',reason:'Measured IC passes threshold'},reflection:{summary:'Measured synthetic ordering',lessons:['Check independent data'],stop:false},selection:{trialIds:context.trials.items.filter(t=>t.status==='accepted').map(t=>t.id),reason:'Freeze eligible candidates'}}[mode];
+        const candidate=args.input.round?{op:'add',args:[{op:'field',name:'signal'},{op:'constant',value:args.input.round}]}:{op:'field',name:'signal'};
+        const output={plan:{directions:['momentum'],stop:false,reason:'Fixed fixture direction'},hypothesis:{hypothesis:'Synthetic ordering',rationale:'Numerical fixture, no market claim'},code:{candidate,explanation:'Observed fixture feature'},review:{verdict:'accept',reason:'Measured IC passes threshold'},reflection:{summary:'Measured synthetic ordering',lessons:['Check independent data'],stop:false},selection:{trialIds:context.trials.items.filter(t=>t.status==='accepted').slice(0,1).map(t=>t.id),reason:'Freeze one eligible candidate without redundant copies'}}[mode];
         await runtime.submit(child,runId,output,controller.signal,execution);job.finish({status:'completed',output:{text:'Fixture done',sessionId:ref.id,toolCalls:[],turns:2,model:args.model}});
-      }catch(e){job.finish({status:['RUN_INTERRUPTED','DEPENDENCY_UNAVAILABLE'].includes(e.code)?'interrupted':controller.signal.aborted?'cancelled':'failed',error:{code:e.code??'ERROR',message:e.message}});}});
+      }catch(e){job.finish({status:['RUN_INTERRUPTED','DEPENDENCY_UNAVAILABLE'].includes(e.code)||!controller.signal.aborted?'interrupted':'cancelled',error:{code:e.code??'ERROR',message:e.message}});}});
   }
   const host=hostFor({kind:'service',sessionId:null}), main=hostFor({kind:'main',sessionId:'main'});runtime=await new MiningRuntime(host).start();
   return {host,main,runtime,requests,jobs,saved,datasets,manifests,hostFor};

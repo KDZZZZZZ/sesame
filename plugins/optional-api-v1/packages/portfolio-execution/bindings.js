@@ -128,8 +128,8 @@ export function createExecution(host, { now = Date.now, apply = applyPortfolio, 
       main(host); check(['mt5', 'qmt'].includes(args.backend), 'UNSUPPORTED_CAPABILITY', 'Choose a supported execution adapter');
       await migrateLegacy(host, signal);
       const dependency = await requirePlugin(host, `sesame/${args.backend}`), version = /^(\d+)\.(\d+)\.(\d+)(?:[-+]|$)/.exec(dependency.version ?? '');
-      const minimumMinor = args.backend === 'mt5' ? 6 : 4;
-      check(version && (Number(version[1]) > 1 || Number(version[1]) === 1 && Number(version[2]) >= minimumMinor), 'PREREQUISITE_REQUIRED', `Composed workflow execution requires sesame/${args.backend} 1.${minimumMinor}.0+ with the delegated execution contract`);
+      const [minimumMajor, minimumMinor] = args.backend === 'mt5' ? [2, 1] : [1, 4];
+      check(version && (Number(version[1]) > minimumMajor || Number(version[1]) === minimumMajor && Number(version[2]) >= minimumMinor), 'PREREQUISITE_REQUIRED', `Composed workflow execution requires sesame/${args.backend} ${minimumMajor}.${minimumMinor}.0+ with the delegated execution contract and declared read capabilities`);
       const id = args.id ?? randomUUID();
       check(/^[A-Za-z0-9_-]{1,100}$/.test(id), 'INVALID_ARGUMENT', 'Use a stable binding ID');
       const prior = records(host).get('bindings', id, true);
@@ -150,7 +150,7 @@ export function createExecution(host, { now = Date.now, apply = applyPortfolio, 
       assertBinding(binding);
       check(same(result.account, binding.account), 'ACCOUNT_CHANGED', 'Configured execution account changed; create a new binding');
       if (args.action === 'snapshot') return result;
-      const readTools = [CONTEXT, `${binding.backend}_trading_context`, ...(binding.backend === 'mt5' ? ['mt5_catalog', 'mt5_python'] : ['qmt_read'])];
+      const readTools = [CONTEXT, `${binding.backend}_trading_context`, ...(binding.backend === 'mt5' ? ['mt5_catalog', 'mt5_call'] : ['qmt_read'])];
       return { account: clone(binding.account), tools: [...readTools, APPLY, ...(binding.backend === 'mt5' ? ['mt5_trading_order', 'mt5_trading_pause', 'mt5_trading_command'] : ['qmt_trading_order', 'qmt_trading_cancel', 'qmt_trading_command'])], readTools,
         taskContext: { bindingId: binding.id, backend: binding.backend, account: clone(binding.account) },
         accountProvider: { pluginId: `sesame/${binding.backend}`, providerId: 'account' },

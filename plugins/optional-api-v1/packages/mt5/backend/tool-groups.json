@@ -31,6 +31,23 @@
     }
   },
   {
+    "id": "official",
+    "tool": "mt5_call",
+    "rule": {
+      "priority": 70,
+      "servers": [
+        "python"
+      ],
+      "methods": [
+        "order_calc_profit",
+        "order_calc_margin"
+      ],
+      "permissions": [
+        "standard"
+      ]
+    }
+  },
+  {
     "id": "charts",
     "tool": "mt5_chart",
     "rule": {

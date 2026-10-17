@@ -15,7 +15,7 @@
         "agent",
         "host"
       ],
-      "description": "读取模型、认证状态、偏好和已安装插件。不会返回秘密或启动程序。连接设置由对应提供方插件管理。",
+      "description": "读取模型、认证状态、偏好、应用保存的环境配置和已安装插件。环境配置只返回名称、configured 和 source，不返回密钥或密码。",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -32,6 +32,10 @@
               {
                 "type": "string",
                 "const": "preferences"
+              },
+              {
+                "type": "string",
+                "const": "environment"
               }
             ]
           },
@@ -51,9 +55,9 @@
       "execution": "immediate",
       "effects": [],
       "usage": {
-        "purpose": "读取模型、认证状态、偏好和已安装插件。不会返回秘密或启动程序。连接设置由对应提供方插件管理。",
-        "inputs": "section 默认 all；model 返回模型/认证可用性，preferences 返回偏好；provider 可筛选供应商并展开其模型。例：{section:\"model\",provider:\"openai\"}。",
-        "outputs": "preferences 返回偏好与版本，model 返回模型与认证状态，all 才含插件清单；recent_changes 是对应配置的简短状态回执，不含完整历史结果。秘密值不返回。",
+        "purpose": "读取模型、认证状态、偏好、应用保存的环境配置和已安装插件。环境配置只返回名称、configured 和 source，不返回密钥或密码。",
+        "inputs": "section 默认 all；model 返回模型与认证状态，preferences 返回偏好与版本，environment 返回环境配置名称、configured 和 source；provider 可筛选模型供应商。",
+        "outputs": "公开设置和 recent_changes 状态回执；environment 只描述配置是否存在及来源，所有 section 均不返回秘密值。",
         "prerequisites": [
           "主 Agent 会话。"
         ],
@@ -73,7 +77,7 @@
         "agent",
         "host"
       ],
-      "description": "按用户要求修改回复语言、账户视图的精确连接/账户选择或已认证模型。偏好修改使用 configuration_read 返回的 preferences.version 作为 expected_version；不传凭据。模型切换不传 expected_version，queued 后等待本轮结束再确认。",
+      "description": "按用户要求直接保存模型 API Key、兼容接口、插件环境凭据或应用偏好；无需导入、手工设置环境变量或打开设置窗口。target=environment 将 changes 的环境变量值私有持久保存并立即生效，null 删除；target=model 在当前回复结束后应用。回执不含秘密。",
       "inputSchema": {
         "type": "object",
         "required": [
@@ -97,6 +101,10 @@
               {
                 "type": "string",
                 "const": "preferences"
+              },
+              {
+                "type": "string",
+                "const": "environment"
               }
             ]
           },
@@ -154,6 +162,52 @@
                         "const": "max"
                       }
                     ]
+                  },
+                  "api_key": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 8192,
+                    "writeOnly": true,
+                    "description": "用户提供的 API Key 原文，宿主私有保存；省略时复用已有认证。",
+                    "pattern": "^[^\\r\\n\\u0000]+$"
+                  },
+                  "base_url": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2048,
+                    "description": "仅自定义供应商：HTTPS 接口地址，本机服务可用 HTTP。"
+                  },
+                  "api": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "const": "openai-completions"
+                      },
+                      {
+                        "type": "string",
+                        "const": "openai-responses"
+                      },
+                      {
+                        "type": "string",
+                        "const": "anthropic-messages"
+                      },
+                      {
+                        "type": "string",
+                        "const": "google-generative-ai"
+                      }
+                    ]
+                  },
+                  "context_window": {
+                    "type": "integer",
+                    "minimum": 1024,
+                    "maximum": 10000000
+                  },
+                  "max_tokens": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "reasoning": {
+                    "type": "boolean"
                   }
                 },
                 "additionalProperties": false,
@@ -396,6 +450,28 @@
                 },
                 "additionalProperties": false,
                 "minProperties": 1
+              },
+              {
+                "type": "object",
+                "minProperties": 1,
+                "propertyNames": {
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,127}$"
+                },
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 8192,
+                      "pattern": "^[^\\r\\n\\u0000]+$",
+                      "writeOnly": true
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "maxProperties": 128
               }
             ]
           }
@@ -411,14 +487,16 @@
         "application-configuration"
       ],
       "usage": {
-        "purpose": "按用户要求修改回复语言、账户视图的精确连接/账户选择或已认证模型。偏好修改使用 configuration_read 返回的 preferences.version 作为 expected_version；不传凭据。模型切换不传 expected_version，queued 后等待本轮结束再确认。",
-        "inputs": "target=preferences：changes 放最小偏好补丁，expected_version 来自 configuration_read.preferences.version；target=model：changes={provider,model,thinking?}，不传 expected_version。command_id 为该次修改的稳定 ID。 account_view.selected 是当前勾选账户数组，保留读取结果的精确身份；空数组取消全部勾选。",
-        "outputs": "{id,target,status,changes,result?,error?}；preferences 的 applied 表示已持久化，model 可先 queued，当前回复结束后处理。",
+        "purpose": "按用户要求直接保存模型 API Key、兼容接口、插件环境凭据或应用偏好；无需导入、手工设置环境变量或打开设置窗口。target=environment 将 changes 的环境变量值私有持久保存并立即生效，null 删除；target=model 在当前回复结束后应用。回执不含秘密。",
+        "inputs": "target=environment：changes={FMP_API_KEY:<用户提供的值>,FRED_API_KEY:<用户提供的值>}，值为单行非空字符串或 null 删除，不传 expected_version。target=model：changes={provider,model,thinking?,api_key?,base_url?,api?,context_window?,max_tokens?,reasoning?}，不传 expected_version；自定义接口使用新的 provider ID，base_url 与 api 配套。target=preferences：changes 为偏好补丁，expected_version 来自 preferences.version。command_id 为本次修改的稳定 ID。",
+        "outputs": "脱敏变更回执 {id,target,status,changes,result?,error?}；environment/preferences 的 applied 表示已持久化生效，model 的 queued 表示将在当前回复结束后处理。秘密不会出现在回执中。",
         "prerequisites": [
-          "主 Agent；模型必须在 configuration_read 中可用且已认证。"
+          "主 Agent；使用用户提供的凭据或已保存认证，只有缺少必要信息时才询问用户。"
         ],
         "limitations": [
-          "version_conflict 时重读并以新 command_id 提交修订补丁；queued 时读取 recent_changes，不重复切换模型；unknown 时核对实际设置。"
+          "保存配置不证明远端认证、套餐或网络可用，使用对应能力的实际结果确认。",
+          "version_conflict 时重读并以新 command_id 提交修订补丁；model 返回 queued 后不要本轮反复轮询或重复提交，下一轮可读取 recent_changes。",
+          "自定义模型使用已知接口协议；只有供应商本身要求 OAuth 交互时才需要登录界面。"
         ]
       },
       "binding": {
@@ -433,7 +511,7 @@
         "agent",
         "host"
       ],
-      "description": "按用户要求打开设置，或处理无法复用的模型认证。后端环境和连接由对应插件主动发现、导入并验证，不用此工具让用户手填。",
+      "description": "按用户要求打开设置，或完成供应商要求的交互式 OAuth 登录。API Key、模型接口和插件环境凭据可由 configuration_update 直接保存，不需要打开设置。",
       "inputSchema": {
         "type": "object",
         "required": [
@@ -456,14 +534,14 @@
         "presentation"
       ],
       "usage": {
-        "purpose": "按用户要求打开设置，或处理无法复用的模型认证。后端环境和连接由对应插件主动发现、导入并验证，不用此工具让用户手填。",
+        "purpose": "按用户要求打开设置，或完成供应商要求的交互式 OAuth 登录。API Key、模型接口和插件环境凭据可由 configuration_update 直接保存，不需要打开设置。",
         "inputs": "dialog=\"settings\"；打开 Sesame 设置页，不接收凭据或平台连接参数。",
         "outputs": "宿主 views.open 的界面打开回执；不表示用户完成认证或配置。",
         "prerequisites": [
           "主 Agent 会话。"
         ],
         "limitations": [
-          "平台连接由对应插件管理；需要状态确认时使用 configuration_read。"
+          "打开设置不证明已认证；API Key 配置直接使用 configuration_update，平台连接使用对应插件配置能力。"
         ]
       },
       "binding": {
@@ -487,6 +565,12 @@
       "path": "skills/configure-application/SKILL.md",
       "description": "Documentation: skills\\configure-application\\SKILL.md",
       "kind": "skill"
+    },
+    {
+      "id": "configuration-guide",
+      "path": "README.md",
+      "description": "Agent 直接配置模型、插件凭据和偏好的参数与生效方式。",
+      "kind": "reference"
     }
   ],
   "hooks": [],

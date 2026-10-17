@@ -1,11 +1,17 @@
 ---
 name: configure-application
-description: Read and update application model and preference settings through the host configuration tools.
+description: Directly save user-provided model credentials, plugin environment credentials and preferences through the host configuration tools.
 ---
 
-先用 configuration_read 读取当前版本及脱敏配置。根据用户请求提供最小 changes，使用稳定 command_id 调用 configuration_update。修改 preferences 时传入刚读取的 preferences.version 作为 expected_version；版本冲突时重新读取，用新的 command_id 重试。修改 model 不传 expected_version。只有用户主动要求打开设置，或确实需要新的模型认证时，才用 configuration_open 打开模型设置；模型密钥由该界面处理，不要求用户在普通工具参数里提供。
+目标是由 Sesame 完成已授权的配置，并提供脱敏的生效证据。用户提供的凭据可以直接交给声明的配置能力，不需要用户导入文件、编辑环境变量或重复填写设置页；只有缺少必要字段或必须进行 OAuth 交互时才请用户补充。不要在回复、报告或公开文件中回显凭据。
 
-平台连接不使用模型设置页。加载对应后端插件，先用其 inspect/discover/status 工具和工作区文件、命令工具检查已有安装、运行进程、服务与已保存配置；根据用户当前任务直接复用、配置和验证。只有缺失且无法自动取得的字段才请用户从该供应商 GUI 复制必要信息发给 Sesame。收到后由后端插件导入保存并做真实只读连接检查；例如 MT5 MCP 导出使用 mt5_import_configuration 的 source_message_id，不把认证值重写进命令、普通工具参数或报告。不额外要求用户去 Sesame 设置中填写，不索要后端无需使用的密码或 API Key，也不把配置请求转成持续交易授权。
+configuration_update 使用稳定 command_id。target="environment" 的 changes 按环境变量名保存单行字符串，null 删除，省略字段保留；宿主私有保存、立即生效并在重启时恢复。configuration_read({section:"environment"}) 只返回名称、configured、source。financial_research_configure({credentials:{fmp_api_key:<用户提供的值>,fred_api_key:<用户提供的值>}}) 是领域入口，使用同一宿主保存机制；只配置当前需要的来源。
+
+target="model" 的 changes={provider,model,thinking?,api_key?,base_url?,api?,context_window?,max_tokens?,reasoning?} 可保存新的认证与模型，无需预先完成设置。自定义接口使用新的 provider ID 和匹配的 base_url/api；已知供应商省略 api_key 时复用已有认证。model 不传 expected_version，queued 表示等待当前回复结束，当前轮不循环等待；后续读取 recent_changes 判断 applied 或具体失败。configuration_open 仅供用户要求查看设置或供应商要求交互式 OAuth 登录。
+
+平台连接由对应后端插件的直接配置能力保存，例如 mt5_update_configuration 可接收明确的连接、账户和凭据；导入现有原生配置是可选方式。读取、发现或连接检查是为了复用现状、补足具体缺项并验证结果，不是每次配置必须重复的固定步骤。配置保存与远端认证成功不同；按实际错误说明 Key、套餐、网络或接口覆盖问题，不把它们笼统说成没有宿主权限。配置请求也不自动授权持续交易。
+
+修改 preferences 时用 configuration_read 返回的 preferences.version 作为 expected_version，传最小 changes；版本冲突时重读并以新 command_id 提交合并后的补丁。
 
 配置账户页时，先通过对应插件配置或复用连接，用 configuration_read {section:"preferences"} 读取当前勾选及版本。changes.account_view.selected = [{ provider: { pluginId, providerId }, connection: { id, revision }, accountId, accountConnectionId? }] 保存当前勾选账户。沿用插件或读取结果给出的精确引用；connection 仅在提供方不需要时省略，accountConnectionId 仅在读取结果提供时保留。不要推测连接 ID、修订或账户。此步骤不需要先创建行情图，纯账户插件也可使用。
 

@@ -13,7 +13,7 @@ test('orchestration declares knowledge without duplicate callable or native entr
   for (const key of ['sources', 'views', 'services', 'hooks', 'stateCollections', 'artifactSchemas']) assert.deepEqual(declarations[key], [], key);
   assert.equal(manifest.entry, undefined);
   assert.equal(manifest.execution, undefined);
-  assert.equal(manifest.version, '3.1.0');
+  assert.equal(manifest.version, '3.1.1');
   assert.equal((await json('package.json')).version, manifest.version);
   const files = await readdir(root);
   for (const path of ['index.js', 'tools.js', 'support.js']) assert.ok(!files.includes(path), `${path} is not part of a knowledge-only guide`);
@@ -40,6 +40,6 @@ test('the published guidance uses the host names and preserves execution boundar
     assert.ok(text.includes(`host.runs.${action}`), action);
     assert.ok(text.includes(`host_runs_${action}`), action);
   }
-  for (const field of ['allowedCalls', 'maxTurns', 'maxToolCalls', 'timeoutMs', 'run.output', 'interruptIds']) assert.ok(text.includes(field), field);
+  for (const field of ['allowedCalls', 'run.output', 'interruptIds']) assert.ok(text.includes(field), field);
   assert.match(text, /type:\s*"report"/);
 });

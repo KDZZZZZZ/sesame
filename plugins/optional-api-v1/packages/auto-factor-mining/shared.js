@@ -3,7 +3,7 @@ import { resolveResearch, resolveEvaluator, taskPlugins } from './composition.js
 
 export const ID = 'sesame/auto-factor-mining';
 export const ROLES = ['supervisor', 'researcher', 'coder', 'reviewer', 'reflector'];
-export const terminal = new Set(['completed', 'failed', 'cancelled', 'interrupted', 'exhausted']);
+export const terminal = new Set(['completed', 'cancelled', 'interrupted']);
 export const canonical = value => JSON.stringify(normalize(value));
 function normalize(value) {
   if (Array.isArray(value)) return value.map(normalize);
@@ -41,8 +41,7 @@ export function configuration(host, input) {
   return {
     model, agentModels, directions, research, evaluator,
     rounds: integer(input.rounds ?? 3, 1, 10, 'rounds'), maxTrials: integer(input.maxTrials ?? 12, 1, 40, 'maxTrials'),
-    parallelism: integer(input.parallelism ?? 3, 1, 3, 'parallelism'), maxTasks: integer(input.maxTasks ?? 80, 4, 200, 'maxTasks'),
-    taskTimeoutMs: integer(input.taskTimeoutMs ?? 600000, 30000, 1800000, 'taskTimeoutMs'),
+    parallelism: integer(input.parallelism ?? 3, 1, 3, 'parallelism'),
     reportFolder: '自动因子挖掘',
   };
 }

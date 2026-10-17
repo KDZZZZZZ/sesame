@@ -65,7 +65,7 @@ test('stale locks, source bytes and display metadata cannot pass inventory valid
     ['plugins/api-v1/packages/core-one/capabilities.json', value => { delete value.capabilities[0].usage; }, /incomplete capability/],
     ['plugins/api-v1/packages/core-one/plugin.json', value => { value.license = 'invented'; }, /per-package license/],
     ['plugins/api-v1/bundle-profile.json', value => { value.packages = ['sesame/wrong']; }, /Package set/],
-    ['.github/application-release.json', value => { value.assets.pop(); }, /exactly six assets/],
+    ['.github/application-release.json', value => { value.assets.pop(); }, /schemaVersion 1 requires exactly 6 assets/],
   ]) {
     const { root } = fixture(t), target = join(root, path), value = JSON.parse(readFileSync(target)); mutate(value); json(target, value);
     assert.throws(() => validateRepository(root), message);
