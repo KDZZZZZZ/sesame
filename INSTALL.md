@@ -1,56 +1,59 @@
-# Sesame 0.2.2 安装与开始使用
+# Sesame 安装与开始使用
 
-[下载安装包](https://github.com/KDZZZZZZ/sesame/releases/tag/v0.2.2) · [插件目录](https://sesame.bot/zh/plugins/) · [使用文档](https://sesame.bot/zh/docs/)
+版本 **0.2.3** 使用 Plugin API 2：插件明确声明能力、参数、依赖和使用说明；普通子 Agent 与多 Agent 工作流共用运行控制和可展开的成果界面。个人交易记忆区分风格、用户确认的风险红线和策略认知；账户页支持由后端提供的手动平仓能力。
+
+[下载安装包](https://github.com/KDZZZZZZ/sesame/releases/tag/v0.2.3) · [插件目录](https://sesame.bot/zh/plugins/) · [使用文档](https://sesame.bot/zh/docs/)
 
 ## 选择安装包
 
 | 系统 | 文件 | 安装方式 |
 | --- | --- | --- |
-| macOS 13+，Apple Silicon（M 系列） | `Sesame-0.2.2-mac-arm64.dmg` | 打开后拖入 Applications，再从 Applications 启动 |
-| Windows 10/11 x64 | `Sesame-0.2.2-win-x64.exe` | 运行安装器，选择安装目录 |
-| Linux x64，Debian/Ubuntu 系 | `Sesame-0.2.2-linux-x64.deb` | 在文件所在目录运行 `sudo apt install ./Sesame-0.2.2-linux-x64.deb` |
-| Linux x64，其他兼容桌面发行版 | `Sesame-0.2.2-linux-x64.AppImage` | 添加执行权限后运行；依赖发行版的 FUSE 支持，也可使用 `--appimage-extract-and-run` |
+| macOS 13+，Apple Silicon | `Sesame-0.2.3-mac-arm64.dmg` | 打开后拖入 Applications，再从 Applications 启动 |
+| Windows 10/11 x64 | `Sesame-0.2.3-win-x64.exe` | 运行安装器，选择安装目录 |
+| Linux x64，Debian/Ubuntu 系 | `Sesame-0.2.3-linux-x64.deb` | `sudo apt install ./Sesame-0.2.3-linux-x64.deb` |
+| Linux x64，其他兼容桌面发行版 | `Sesame-0.2.3-linux-x64.AppImage` | 添加执行权限后运行；没有 FUSE 时可使用 `--appimage-extract-and-run` |
 
-下载时可用同一发行页的 `SHA256SUMS.txt` 核对文件。当前 macOS 包是本机签名，未经过 Apple 公证；Windows 包未购买代码签名证书，首次启动可能被系统拦截。确认来源与校验值后，macOS 可在「系统设置 → 隐私与安全性」允许打开，Windows 可在 SmartScreen 中查看「更多信息」。请勿全局关闭系统安全检查。
+使用同一发行页的 `SHA256SUMS.txt` 核对下载文件。macOS 包采用 ad-hoc 签名、未经过 Apple 公证；Windows 包未签名。系统提示时先确认来源和校验值，再按系统提示允许打开。没有 Intel Mac 或 ARM Windows/Linux 安装包，本版不提供自动更新。
 
-没有 Intel Mac 或 ARM Windows/Linux 安装包。本版没有自动更新，需要手动下载并替换应用。
+## 开始使用
 
-## 安装后还需要什么
+1. 在用户设置中配置可用模型及凭证，发送消息验证连接。Sesame 不附赠模型额度。
+2. 默认自带工作区、编排指南、数据引用、记忆、插件管理、报告、策略编写、图表控制和配置这 9 个基础插件。
+3. 按任务安装需要的可选插件，例如“安装 sesame/mt5，复用本机终端并检查连接”或“安装 sesame/akshare 和 sesame/vnpy，准备 A 股研究与回测”。插件会检查已声明能力和依赖；缺少服务、凭证或运行环境时应暂停并说明需要补充的条件。
 
-1. **配置可用模型。** 打开用户设置，配置模型供应商和凭证，先发送一条消息验证连接。Sesame 不附赠模型额度；API 费用由模型供应商收取。
-2. **告诉 Sesame 想用的数据或交易平台。** 默认自带工作区、并行研究、数据引用、记忆、插件管理、报告、策略编写、图表控制和配置这 9 个基础插件。可以先用自己的文件做研究；实时行情、账户、原生回测需要另外安装相应后端。
-3. **让 Agent 检查已有环境。** 例如发送「安装 sesame/mt5，复用我本机的 MT5 并检查连接」或「安装 sesame/akshare 和 sesame/vnpy，准备 A 股行情与策略回测」。Agent 根据插件指南查找已有软件、Python 和配置，缺少时再按任务安装依赖。安装插件后立即生效，不需要重启聊天。
+本次插件目录包含 **54 个 API 2 插件：9 个基础插件和 45 个可选插件**。Kurumi 暂不在本次发布范围内。安装插件不等于已安装其外部依赖或已连接账户。
 
-不需要为 Sesame 本体单独安装 Node.js、浏览器、Python 或 MT5。所选插件可能需要独立的 Python/Node.js 环境、交易终端或模型以外的服务；它们不包含在安装包内。
+本体不需要单独安装 Node.js、浏览器、Python 或交易终端。插件按需使用独立的 Python/Node.js 环境、终端、模型或数据服务，这些环境不随安装包分发。
 
-| 需求 | 可选插件 | 额外条件 |
+| 需求 | 插件 | 额外条件 |
 | --- | --- | --- |
-| MT5 行情、账户、MQL5 编译、回测及交易 | `sesame/mt5` | 已配置的 MT5、可用终端接口和券商账户；macOS 使用可运行的 MT5 环境 |
-| A 股行情与研究数据 | `sesame/akshare` | 可用 Python 环境和上游网络，不提供券商交易 |
-| VeighNa 原生 CTA 回测 | `sesame/vnpy` | 相应 Python 依赖和历史数据；当前插件不提供实盘网关 |
-| QMT 行情、账户及显式报单/撤单 | `sesame/qmt` | Windows MiniQMT/XtQuant、券商支持和授权账户；未开户也可先做研究 |
-| 加密资产公开现货行情 | `sesame/ccxt` | Python、CCXT 及相应交易所网络；当前仅公开数据，无私有账户或交易 |
-| Backtrader 策略回测 | `sesame/backtrader` | Python、Backtrader 和固定历史数据；不提供实盘 |
-| Agent 按明确指令手动交易 | `sesame/manual-trading` | Sesame 0.2.1+，以及已配置的受支持交易后端；插件本身不提供券商连接 |
+| MT5 行情、账户、MQL5 工程、编译、回测及交易 | `sesame/mt5` | 可用终端、相应接口及券商账户 |
+| A 股研究数据 | `sesame/akshare` | Python、AKShare 及上游网络 |
+| VeighNa 原生 CTA 回测 | `sesame/vnpy` | Python 依赖和历史数据 |
+| QMT 行情、账户及交易 | `sesame/qmt` | Windows MiniQMT/XtQuant、券商支持及授权账户 |
+| 加密资产公开行情 | `sesame/ccxt` | Python、CCXT 及交易所网络 |
+| Backtrader 回测 | `sesame/backtrader` | Python、Backtrader 和历史数据 |
 
-ICT、Price Action、波浪、威科夫、道氏理论、人文分析、策略研究和因子研究等是独立方法插件。按自己需要安装，不会因选择其中一种方法而自动启用其他方法。完整的 32 个插件（9 个核心、23 个按需包）及各自许可证、能力范围见插件目录。插件目录与本体版本分别维护，已发布安装包内的固定插件版本仍以发行记录为准；更新已安装插件时由 Agent 核验当前版本与摘要后执行。
+研究方法、因子研究、组合执行和手动交易等能力分别由可选插件提供；可用范围和依赖以各插件的明确声明为准。
 
-## 从 0.1.x 升级
+## 从旧版升级
 
-退出旧 Sesame 后替换应用。请先备份现有用户数据目录，尤其是仍在使用的配置、报告和策略。本版保留会话、报告和原始数据，**旧原生插件不兼容 Plugin API 1**；请通过 Agent 从新版目录安装对应插件。旧 MT5 专用插件已合并为 `sesame/mt5`，不默认随应用安装。已有后端配置应由新插件发现并明确导入，不会因启动应用而静默迁移或下载交易终端。
+退出旧 Sesame，备份用户数据，再替换应用。**0.2.3 需要 Plugin API 2 插件；API 1 插件不能继续加载。** 通过新版插件目录重新安装或更新需要的插件。不要为了升级直接删除原始配置、报告或策略；旧后端配置的发现和导入由相应插件处理。
 
-默认数据目录是 macOS 的 `~/Library/Application Support/Sesame`、Windows 的 `%APPDATA%\Sesame`、Linux 的 `~/.config/Sesame`。更早安装可能沿用 macOS 的 `MT5Agent` 或其他系统的 `mt5agent` 同级目录；以本机实际存在的目录为准。不要删除它来完成升级。
+开发期旧工作流和交易计划不提供自动兼容迁移。升级前暂停旧计划，在新版重新配置并核验依赖后再启用，不能假定旧计划可以直接恢复执行。
 
-先核验后端连接，再让 Agent 恢复所需图表。安装插件成功不等于已连接账户；关闭 Sesame 也不等于停止外部策略、撤单或平仓。
+默认数据目录：macOS 为 `~/Library/Application Support/Sesame`，Windows 为 `%APPDATA%\Sesame`，Linux 为 `~/.config/Sesame`。更早版本可能沿用同级 `MT5Agent` 或 `mt5agent` 目录，以实际安装为准。
+
+先核验连接，再恢复图表和交易工作。关闭 Sesame 不等于停止外部策略、撤单或平仓。个人交易风险记忆供 Agent 查询和核对；保存规则不会自动在券商端创建止损单，也不构成交易许可。
 
 ## 执行与验证范围
 
-Agent、原生插件和本地 MCP 以当前系统用户权限执行，能够读写工作区外的文件、联网及启动程序。依赖优先复用本机配置；任务结束只清理自己拥有的临时文件和进程，不删除用户外部文件。报告和图表指标仍在隔离的浏览器/Worker 中渲染。
+Agent、原生插件和本地 MCP 以当前系统用户权限执行，可以访问文件、联网和启动程序。报告与图表指标在隔离的浏览器或 Worker 中渲染。
 
-本版检查覆盖功能回归、报告真实渲染、macOS 应用启动，以及 Windows/Linux 原生构建、安装包提取和后端导入。Windows/Linux 完整桌面交互、真实券商及模拟账户交易没有在本版重新测试；QMT 券商连接和 A 股实盘仍未验证。各插件的环境要求与实测范围见其说明。
+发布构建对 Windows、Linux 和 macOS 安装包核对提取内容、插件源码锁与逐文件摘要，并验证包内服务导入。这些检查不代表已完成全部桌面交互、外部数据服务或真实券商交易验收。各插件的外部依赖和实测范围见其说明。
 
 ## English quick start
 
-Install the package for your operating system, configure a working model in user settings, then ask Sesame to install a plugin by its exact ID from the [plugin directory](https://sesame.bot/plugins/). Nine core plugins are included; market data, brokerage and native backtesting integrations are optional. Reuse existing local software first; plugins guide dependency setup when needed. The app itself does not require a separate Node.js, Python, Chromium or trading terminal installation.
+Install Sesame 0.2.3 for your operating system, configure a model, then ask Sesame to install the required plugins by their exact IDs. Nine core plugins are bundled; 45 optional API 2 plugins are published separately. Kurumi is excluded from this release. Plugin installation does not configure an external account or install every backend dependency.
 
-Version 0.2.0 introduces Plugin API 1. Back up your existing data before upgrading from 0.1.x and install the corresponding new plugins; legacy native plugins are incompatible. The app preserves existing data directories. macOS builds are ad-hoc signed and not notarized; Windows installers are unsigned. Automatic updates are not included. Windows/Linux packaging checks do not constitute full desktop or broker testing.
+Back up user data before upgrading. API 1 plugins must be replaced with API 2 versions. macOS builds are ad-hoc signed and not notarized; Windows installers are unsigned. There is no automatic updater. Package verification does not establish full desktop, market-service or broker compatibility. Trading memory is guidance for the Agent; it does not automatically place broker orders or enforce a broker-side risk limit.
