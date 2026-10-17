@@ -21,6 +21,8 @@ owner-merged dev → main PR. Required checks are `package-static-review`,
 `catalog-static-review` and `contribution-policy`. Candidate packages are data:
 trusted-base validators check identities, explicit capabilities, licenses,
 paths, module boundaries and every locked byte without executing candidate code.
+PR checks do not rerun the old base validator's own unit tests. Validator
+regressions run once on the actual main revision before plugin publication.
 Behavior, external dependencies and platform integration require separate tests.
 
 The R2 catalog is

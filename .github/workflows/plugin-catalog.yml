@@ -33,8 +33,6 @@ jobs:
           node-version: 24
       - name: Validate current locks, descriptive inventory and publication plans
         run: node trusted/.github/scripts/validate-catalog.mjs candidate
-      - name: Run trusted validator regression checks
-        run: node --test trusted/.github/scripts/catalog.test.mjs trusted/.github/scripts/plugin-r2.test.mjs trusted/.github/scripts/release-application.test.mjs
       - name: Publish validation scope
         run: |
           echo '### API 2 inventory and publication checks' >> "$GITHUB_STEP_SUMMARY"

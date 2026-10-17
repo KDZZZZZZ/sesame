@@ -39,8 +39,6 @@ jobs:
         run: node trusted/.github/scripts/plugin-r2.mjs --check candidate
       - name: Validate the application release plan without publishing
         run: node trusted/.github/scripts/release-application.mjs --check candidate
-      - name: Test current source validation and shared publication boundaries
-        run: node --test trusted/plugins/api-v1/tests/lock.test.mjs trusted/plugins/api-v1/tests/host-engine-range.test.mjs trusted/plugins/api-v1/tests/catalog-published.test.mjs trusted/plugins/api-v1/tests/capability-bindings.test.mjs trusted/.github/scripts/release-plugins.test.mjs trusted/.github/scripts/release-application.test.mjs trusted/.github/scripts/semantic-review.test.mjs trusted/.github/scripts/catalog.test.mjs trusted/.github/scripts/distribution-profiles.test.mjs trusted/.github/scripts/contribution-policy.test.mjs trusted/.github/scripts/plugin-r2.test.mjs trusted/.github/scripts/publish-plugin-r2.test.mjs trusted/.github/scripts/dev-source-ci.test.mjs
       - name: Record scope
         run: |
           echo '### API 2 source checks' >> "$GITHUB_STEP_SUMMARY"
