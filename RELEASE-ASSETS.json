@@ -1,92 +1,135 @@
 {
-  "version": "0.2.1",
-  "source_revision": "6c761d87e5ae9392bc0bdfa5140d86ad3f50e7dc",
-  "main_merge_revision": "6c761d87e5ae9392bc0bdfa5140d86ad3f50e7dc",
-  "release_url": "https://github.com/KDZZZZZZ/sesame/releases/tag/v0.2.1",
+  "version": "0.2.3",
+  "source_revision": "0e01b39ed6d167ef7619753ba2638584c93199b2",
+  "release_id": 414947217,
+  "release_url": "https://github.com/KDZZZZZZ/sesame/releases/tag/v0.2.3",
   "preview": false,
-  "minimum_macos": "13.0",
-  "electron": "44.5.1",
-  "report_renderer": "bundled Electron; no standalone Chromium",
   "automatic_updates": false,
-  "plugin_api": "1.0.0",
+  "plugin_api": "2",
   "default_plugins": 9,
-  "optional_catalog_plugins": 22,
-  "official_plugin_archives": [
-    "plugins-api-v1-dev.16",
-    "plugins-optional-api-v1-dev.10"
-  ],
+  "optional_catalog_plugins": 45,
+  "plugin_source": {
+    "repository": "KDZZZZZZ/sesame",
+    "commit": "635b367105b4b824fcb92e176c14818ac6976e0b"
+  },
+  "plugin_distribution": {
+    "backend": "r2",
+    "release": "dev.5",
+    "core_archive": "r2-core-api-v1-dev.5",
+    "optional_archive": "r2-optional-api-v1-dev.5",
+    "release_revision": "ccf37dee1ba2484523ee4f26cd1c34109f965a7b",
+    "catalog_sha256": "2e5e792ddeaaa1bc0b427cc75f060b9dc503cc989fd274bc552107f49886f19f",
+    "catalog_bytes": 462829,
+    "core_lock_sha256": "017fcd68554babf45a49e361503fc8b6b4ec2347639a5c81e3db249abab98a64",
+    "optional_source_lock_sha256": "aa57a938fcb4a81a1f6277b92b4a162706699ac0dcdbca1d0ed84e64b8b079a4",
+    "public_archive_and_lock_bytes_verified": true,
+    "kurumi_published": false
+  },
   "validation": {
     "suite": {
-      "tests": 357,
-      "passed": 345,
+      "tests": 1131,
+      "passed": 1123,
       "failed": 0,
-      "skipped": 12
+      "skipped": 8
     },
     "windows_scope": {
-      "tests": 88,
-      "passed": 88,
+      "tests": 377,
+      "passed": 377,
       "failed": 0,
       "skipped": 0
     },
     "linux_scope": {
-      "tests": 88,
-      "passed": 84,
+      "tests": 377,
+      "passed": 373,
       "failed": 0,
       "skipped": 4
     },
-    "macos": [
-      "DMG integrity",
-      "extracted package integrity",
-      "135 packaged module files match merged source",
-      "strict ad-hoc signature",
-      "packaged server import",
-      "first launch and reopen with independent user-data directory"
-    ],
-    "native_installers": [
-      "native Windows/Linux builds",
-      "installer extraction",
-      "official plugin integrity",
-      "packaged server import"
-    ],
+    "macos_scope": {
+      "tests": 377,
+      "passed": 373,
+      "failed": 0,
+      "skipped": 4
+    },
+    "native_verification": {
+      "win32": {
+        "arch": "x64",
+        "job_id": 117296064729,
+        "log_sha256": "2bb1e35ef8b1c773e94ac798db86ebe4e320fa71a9ab0c4eda1867596e95ecc4",
+        "verification_sha256": "ed2b1d68512e101156d160c8e3ce343e5bda77ba6cdd18a5a1b4df5ad6167d8f",
+        "checks": [
+          "installer extraction",
+          "native host package without VM bundle",
+          "packaged server import",
+          "no auto-updater dependency"
+        ]
+      },
+      "linux": {
+        "arch": "x64",
+        "job_id": 117296064714,
+        "log_sha256": "70e62b49796b9c639954e1883aba941549b19d25a24dba4b637f37dd0f96af17",
+        "verification_sha256": "41341e17d94524b90bd131000e4e3ebceae478fe97ffceced80cbc4f222fe541",
+        "checks": [
+          "installer extraction",
+          "native host package without VM bundle",
+          "packaged server import",
+          "no auto-updater dependency"
+        ]
+      },
+      "darwin": {
+        "arch": "arm64",
+        "job_id": 117296064571,
+        "log_sha256": "1b5219a86f18e4bc411d52915f10945e9f55aee668cae1bf6f39131374cd9463",
+        "verification_sha256": "391b2f9a3221fac5ee15b783abcfd1132f4b7ed45697687655b7ce106cef71de",
+        "checks": [
+          "installer extraction",
+          "native host package without VM bundle",
+          "packaged server import",
+          "no auto-updater dependency"
+        ]
+      }
+    },
     "limitations": [
-      "macOS is ad-hoc signed, not notarized; Windows is unsigned.",
-      "Windows/Linux full desktop and broker flows are not exercised by the build job.",
-      "QMT Windows broker/A-share live operation remains unverified.",
-      "Optional plugins have different platform, dependency and live test coverage."
+      "macOS uses ad-hoc signing; Apple notarization and Gatekeeper approval are not verified.",
+      "Windows installers are unsigned.",
+      "Automatic updates are disabled; extracted packages were checked for the absence of an auto-updater dependency.",
+      "Clean desktop installation and broker operations are not exercised by this build job.",
+      "Live trading and broker order, position, and account operations remain unverified.",
+      "Optional plugins require their own external services, credentials, platform support, and runtime dependencies; native installer verification does not establish those integrations or live trading behavior."
     ],
-    "build_run": 38049863824,
-    "binary_upload_run": 38050254674
+    "build_run": 38998445449,
+    "build_attempt": 1,
+    "plugin_publication_run": 38997958785
   },
   "assets": [
     {
       "name": "INSTALL.md",
-      "bytes": 6267,
-      "sha256": "f66ca0a346bf569b95610d8dbeef52d671b8bc1430d6fd37351066c1d1d43eab"
+      "bytes": 5443,
+      "sha256": "9822f9ff9c1376ab9dbb31ee7a707e706ab24920ad4fca146c8a4eb9f1c9e84a"
+    },
+    {
+      "name": "Sesame-0.2.3-linux-x64.AppImage",
+      "bytes": 236611648,
+      "sha256": "8f50af813ed62e57b0456e58473a97ecf789177dfb8aa73f57774e415db8ae37"
+    },
+    {
+      "name": "Sesame-0.2.3-linux-x64.deb",
+      "bytes": 205249024,
+      "sha256": "2cc0b0ba2789194468382723afad7e1f48b74c14ce7e0e4b30dfc1e19eb6be42"
+    },
+    {
+      "name": "Sesame-0.2.3-mac-arm64.dmg",
+      "bytes": 256628550,
+      "sha256": "a6b15c0f16c130e8b9e5c101e036b4f6845e995326c600adaf9e68bc9eaf972d"
+    },
+    {
+      "name": "Sesame-0.2.3-win-x64.exe",
+      "bytes": 225086785,
+      "sha256": "58ae992bba4ad3fdd0bd72a6340d7b22ba784120efac6a15a9814cab5fa1c556"
     },
     {
       "name": "SHA256SUMS.txt",
       "bytes": 452,
-      "sha256": "5aad22aebd95bd3a6d0cdf6bc4a39aae69004178cbda8b4c341b17d53a05b903"
-    },
-    {
-      "name": "Sesame-0.2.1-linux-x64.AppImage",
-      "bytes": 236136035,
-      "sha256": "208e4cb2970107725f6c771532bc5590586e31fbfa8a8c4bf4bcd492dde8c8e1"
-    },
-    {
-      "name": "Sesame-0.2.1-linux-x64.deb",
-      "bytes": 204867012,
-      "sha256": "d125cb1fb1b98485c611350c136d23438ebab0cb747b38450d19a5ae261ece0d"
-    },
-    {
-      "name": "Sesame-0.2.1-mac-arm64.dmg",
-      "bytes": 255009828,
-      "sha256": "aafa957953e6d5f6bbdb195bddbfc7b297b809020583580e7c6b872b34841572"
-    },
-    {
-      "name": "Sesame-0.2.1-win-x64.exe",
-      "bytes": 224633720,
-      "sha256": "74cf3eaead9eca006aa5f6dc5e8c4279a8555305a9406fa7edffe00b28b79ec3"
+      "sha256": "a542b4e5a30337b0dffb96d8bf4fc72f0f9d02af7656e7f5dfffe653fafbe132"
     }
   ]
 }
