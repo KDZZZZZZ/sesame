@@ -302,16 +302,6 @@
                 "minimum": 1,
                 "maximum": 3
               },
-              "maxTasks": {
-                "type": "integer",
-                "minimum": 4,
-                "maximum": 200
-              },
-              "taskTimeoutMs": {
-                "type": "integer",
-                "minimum": 30000,
-                "maximum": 1800000
-              },
               "research": {
                 "type": "object",
                 "properties": {
@@ -451,7 +441,7 @@
         ],
         "limitations": [
           "Any general research tools imply development-only access; the bundled evaluator then rejects rows beyond validationEnd and makes no holdout claim.",
-          "Starting schedules real Agent calls within rounds/maxTrials/maxTasks/taskTimeoutMs limits. Queued/running is not research completion."
+          "Starting schedules real Agent calls for the selected research rounds and maximum candidate count. Queued/running is not research completion."
         ]
       },
       "binding": {
@@ -627,10 +617,10 @@
         "outputs": "list => {runs}; read/control => saved run with status,phase,tasks,trials,selection,reflections,report and errors. read includes current pending interrupts. The separate workflow reference identifies the original host Run.",
         "prerequisites": [
           "Main conversation only; task/tool names do not grant a delegated Agent this authority.",
-          "Resume follows the host control contract: the main Agent must be responding to a user reply received after interruption. Select only the resolved interrupt IDs; a tool argument cannot create this authorization."
+          "Resume follows the host control contract. The main Agent can repair dependencies within the existing task scope and select only the resolved interrupt IDs without requiring a new user reply. response describes the resolution; it cannot grant new authority or override a user-requested pause."
         ],
         "limitations": [
-          "Pause acceptance is not safe-point completion; read reveals actual interrupted status. Resume resolves only the supplied interrupt_ids, rechecks dependencies and resumes the same Run/session when no unresolved items remain. It does not create a generation or reopen selection. Cancelled, failed and exhausted runs are terminal."
+          "Pause acceptance is not safe-point completion; read reveals actual interrupted status. Resume resolves only the supplied interrupt_ids, rechecks dependencies and resumes the same Run/session when no unresolved items remain. It does not create a generation or reopen selection. Completed and cancelled runs are terminal; execution errors interrupt the retained workflow with diagnostics."
         ]
       },
       "binding": {
@@ -745,7 +735,7 @@
       ],
       "usage": {
         "purpose": "Save one immutable role output. Candidates are opaque JSON defined by the selected evaluator. Candidate and selection submissions invoke that evaluator and save its actual receipt; Agent-supplied metrics are never accepted.",
-        "inputs": "{run_id,output:<assignment.expectedOutput>}; plan={directions:string[],stop:boolean,reason:string}; hypothesis={hypothesis:string,rationale:string,parentId?:string} or {skip:true,reason:string}. parentId may only reference an existing trial from an earlier round; omit it in round 0 or for an independent hypothesis, never use the current trial ID. code={candidate,explanation:string}; review={verdict:\"accept\"|\"reject\",reason:string}; reflection={summary:string,lessons:string[],stop?:boolean}: summary is required, nonempty and at most 4000 characters; lessons is a required array (possibly empty), each nonempty string at most 1000 characters, with no item-count limit. Reflection stop defaults to false when omitted, continuing within the configured rounds and budget; only explicit true stops later research. selection={trialIds:string[],reason:string}. Every output is limited to 16000 UTF-8 bytes of JSON. Candidate format comes from context.evaluator/expectedOutput.",
+        "inputs": "{run_id,output:<assignment.expectedOutput>}; plan={directions:string[],stop:boolean,reason:string}; hypothesis={hypothesis:string,rationale:string,parentId?:string} or {skip:true,reason:string}. parentId may only reference an existing trial from an earlier round; omit it in round 0 or for an independent hypothesis, never use the current trial ID. code={candidate,explanation:string}; review={verdict:\"accept\"|\"reject\",reason:string}; reflection={summary:string,lessons:string[],stop?:boolean}: summary is required, nonempty and at most 4000 characters; lessons is a required array (possibly empty), each nonempty string at most 1000 characters, with no item-count limit. Reflection stop defaults to false when omitted, continuing within the configured research rounds; only explicit true stops later research. selection={trialIds:string[],reason:string}. Every output is limited to 16000 UTF-8 bytes of JSON. Candidate format comes from context.evaluator/expectedOutput.",
         "outputs": "Saved immutable role output; reflection includes stop:false when omitted and retains every submitted lesson. code/selection additionally contain the actual evaluator receipt in evaluation, including measured metrics/eligibility or exact selected IDs/digest.",
         "prerequisites": [
           "Current registered role task; active run and matching assignment mode."
@@ -909,7 +899,7 @@
           "Host workflow admission only."
         ],
         "limitations": [
-          "No hidden model/evaluator is selected; errors and budget exhaustion remain in the saved run.",
+          "No hidden model/evaluator is selected; execution errors interrupt the same Run and retain checkpoints and diagnostics.",
           "Interruptions preserve checkpoints and do not publish a final failure report. Unknown external execution outcomes require reconciliation and are never resent automatically."
         ]
       },

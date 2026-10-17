@@ -62,7 +62,7 @@ export async function ensureMT5Connection(mt5, { start_if_needed = true } = {}, 
   catch { steps.push({ step: 'discover', status: 'failed', reason: '忽略不支持的本机 MCP 地址，保留已选终端' }); }
   if (sameEndpoint) add('native', nativeServer);
   if (!candidates.length) return unavailable(mt5.native ? 'mcp_not_configured' : 'mt5_not_installed',
-    mt5.native ? '本机可读配置没有可用 MCP 凭据；先检查 mt5_settings 的待导入引用。仍缺失时请用户从 MT5「工具 → 选项 → MCP」复制当前连接导出发给 Sesame，再由 mt5_import_configuration 导入并验证' : '未找到唯一的 MT5 安装；先用 mt5_dependencies inspect 与本机文件/进程查找已有安装，保存准确终端路径；确认未安装后再准备依赖', steps);
+    mt5.native ? '本机可读配置没有可用 MCP 凭据；主 Agent 可用 mt5_update_configuration 直接保存用户已提供的 token，已有 pendingImports 引用也可复用。确实缺少 token 时只索取该值，连接导出是可选方式；保存后再核验' : '未找到唯一的 MT5 安装；先用 mt5_dependencies inspect 与本机文件/进程查找已有安装，保存准确终端路径；确认未安装后再准备依赖', steps);
 
   const deadline = AbortSignal.timeout(timeoutMs);
   const combined = AbortSignal.any([deadline, ...(signal ? [signal] : [])]);
@@ -119,7 +119,7 @@ export async function ensureMT5Connection(mt5, { start_if_needed = true } = {}, 
       signal?.throwIfAborted();
       const code = lastError?.upstreamStatus === 401 ? 'mcp_auth_failed' : refused && !started ? 'terminal_not_running' : 'mcp_unreachable';
       return unavailable(code, code === 'mcp_auth_failed'
-        ? 'MT5 拒绝当前 MCP 密钥；本机候选凭据未通过认证。先检查 mt5_settings 的待导入引用；仍缺失时请用户从 MT5「工具 → 选项 → MCP」复制当前连接导出发给 Sesame，再由 mt5_import_configuration 导入并验证'
+        ? 'MT5 拒绝当前 MCP 密钥；本机候选凭据未通过认证。主 Agent 可用 mt5_update_configuration 直接保存用户已提供的有效 token，或复用 pendingImports，再核验连接；只有仍缺有效凭据时才询问用户，无需强制导出'
         : code === 'terminal_not_running' ? '交易终端 MCP 尚未启动；先按 connection/dependencies 指南核对所选安装与已有进程并恢复该服务，不另开一个终端代替发现' : 'MT5 MCP 暂不可用，请检查原生 MCP 服务与本机连接', steps, { started });
     }
     steps.push({ step: 'authenticate', source: chosen.source, status: 'verified' });

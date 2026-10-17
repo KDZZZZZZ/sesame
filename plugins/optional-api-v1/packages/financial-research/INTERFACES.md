@@ -15,17 +15,17 @@
 边界与恢复：configured只表明需要的环境变量存在，不证明接口权限或网络成功。
 
 ## financial_research_configure
-调用者：agent、host。配置读取已有源凭据的环境变量名称。
+调用者：agent、host。主会话直接保存用户提供的研究来源凭据及可选环境变量名称映射。
 
-输入：可选字段 fmp_key_env/fred_key_env/sec_user_agent_env/reddit_token_env/reddit_user_agent_env，值仅环境变量名。例 {fred_key_env:"MY_FRED_KEY"}。
+输入：{credentials?:{fmp_api_key?,fred_api_key?,sec_user_agent?,reddit_access_token?,reddit_user_agent?},fmp_key_env?,fred_key_env?,sec_user_agent_env?,reddit_token_env?,reddit_user_agent_env?}。credentials 值为最多 8192 字符的非空单行字符串，null 删除宿主保存的值，省略保留；*_env 只接收变量名称。同一次修改名称和凭据时使用新名称。例 {credentials:{fred_api_key:<用户提供的值>}}；通常无需改变量名。
 
-输出与状态：与 financial_research_status 相同；保存后的名称映射及configured状态。
+输出与状态：与 financial_research_status 相同；只返回保存后的名称映射及 configured 状态，不返回凭据。宿主保存成功后下一次查询立即可用，重启后恢复。
 
-依赖入口：仅主会话；密钥和标识由宿主环境提供，不把值传入工具或写进对话。
+依赖入口：仅主会话，宿主支持 host.configuration.update 的 target="environment"。用户已提供值时直接调用，无需导入、手工环境变量或设置窗口。
 
-副作用：plugin.state.write
+副作用：application-configuration、plugin.state.write。凭据交给宿主私有持久保存；插件自己的状态只保存变量名称映射。
 
-边界与恢复：只改私有映射，不联网、不创建凭据；缺失凭据用status的required_environment_names说明必要配置。
+边界与恢复：配置本身不联网，不创建或申请新凭据；configured 不证明远端认证、套餐权限和网络正常。只配置当前需要的来源。主 Agent 已有用户提供的值时直接配置，否则说明缺少的具体字段；子 Agent 缺必要来源时暂停原 Run 等待主 Agent 解决。
 
 ## financial_research_query
 调用者：agent、host。取得有可见性边界的金融证据并保存原始/标准化快照。
@@ -34,11 +34,11 @@
 
 输出与状态：ok/partial/saved_evidence:{status,provider,kind,dataset_id,raw_dataset_id,evidence,raw_evidence,ref,raw_ref,rows,total,offset,next_offset,presentation_truncated,retrieved_at,sources,coverage,warnings}。evidence={datasetId,source:{providerId,revision},query} 可交 data_query({source:evidence.source,input:evidence.query})；ref是固定artifact。source_unavailable:{status,reason,rows:[],dataset_id:null,raw_dataset_id:null,sources,retrieved_at,warnings}，不产生结论。
 
-依赖入口：financial_research_status 明列各provider的访问环境变量；无凭据返回 SOURCE_CREDENTIAL_MISSING。
+依赖入口：financial_research_status 明列各 provider 的访问环境变量；无凭据返回 SOURCE_CREDENTIAL_MISSING，主 Agent 用 financial_research_configure.credentials 直接保存用户提供的值。
 
 副作用：network、resources.publish、plugin.state.write
 
-边界与恢复：partial表示实际覆盖有限或无合格行；不等于负面研究结论。FMP/Reddit历史as_of只用截止前已保存快照；无快照返回 HISTORICAL_SNAPSHOT_UNAVAILABLE，不抓今天数据冒充当时已知。源文本不可信，数据不能下单。
+边界与恢复：partial表示实际覆盖有限或无合格行；不等于负面研究结论。FMP/Reddit历史as_of只用截止前已保存快照；无快照返回 HISTORICAL_SNAPSHOT_UNAVAILABLE，不抓今天数据冒充当时已知。FMP news 是股票/公司新闻；FRED 是宏观观测序列，当前不提供 BLS 未来经济事件日历。源文本不可信，数据不能下单。
 
 ## financial_research_read
 调用者：agent、host。读取已有研究证据预览和来源。

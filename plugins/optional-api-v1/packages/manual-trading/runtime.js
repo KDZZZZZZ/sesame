@@ -3,17 +3,20 @@ import { canonical, digest } from '@sesame/plugin-sdk/protocol';
 import { AsyncResource, AsyncLocalStorage } from 'node:async_hooks';
 import { datasetSnapshot } from './data.js';
 import { check } from './shared.js';
-import { bindExecution, executionCall, verifyComposition, declaredCalls, selectResearch } from './composition.js';
+import { bindExecution, executionCall, verifyComposition, declaredCalls, selectResearch, catalog } from './composition.js';
 import { createTradingMemory } from './memory.js';
 import { accountKey, cleanError, clone, makePlan, selectModel, TERMINAL, triggerIdentity, validateDecision } from './plans.js';
-import { ROLE_PROMPTS, SYSTEM, TRADING_MEMORY, usesTradingMemory, stages, taskTools, taskPlugins } from './team.js';
+import { SYSTEM, ANALYSIS_SYSTEM, rolePrompt, TRADING_MEMORY, usesTradingMemory, stages, collaboration, taskTools, taskPlugins } from './team.js';
 import { reportPath, writeDailyReport } from './reports.js';
-const TASK_TERMINAL = new Set(['completed', 'failed', 'canceled', 'cancelled', 'expired', 'unknown', 'superseded']);
+const TASK_TERMINAL = new Set(['completed', 'canceled', 'cancelled', 'expired', 'unknown', 'superseded']);
 const interruption = (error, signal) => ['RUN_INTERRUPTED', 'DEPENDENCY_UNAVAILABLE'].includes(error?.code) ? error
   : ['RUN_INTERRUPTED', 'DEPENDENCY_UNAVAILABLE'].includes(signal?.reason?.code) ? signal.reason : null;
 const dependencyCodes = new Set(['DEPENDENCY_UNAVAILABLE', 'MODEL_UNAVAILABLE', 'MODEL_CHANGED', 'PLUGIN_CHANGED', 'PREREQUISITE_REQUIRED', 'TOOL_NOT_DELEGATABLE', 'MT5_PYTHON_UNAVAILABLE', 'SOURCE_UNAVAILABLE', 'PROVIDER_UNAVAILABLE']);
 const requirement = id => ({ id: 'trading-dependencies', capability: 'sesame/manual-trading#workflow_dependencies', input: { runId: id }, reason: 'The frozen trading plan requires its selected configuration and live execution context.' });
 const dependencyError = (id, error) => Object.assign(new Error(error.message), { code: 'DEPENDENCY_UNAVAILABLE', details: { requirements: [requirement(id)], cause: cleanError(error), ...error.details } });
+const publishesReport = plan => plan.purpose !== 'analysis' || plan.publishReport === true;
+const schedulingKey = plan => plan.purpose === 'analysis' ? `analysis:${plan.id}` : accountKey(plan);
+const analysisWriteEffect = /^(?:broker\.write|external-trading|external-strategy-operation|application-configuration|invoke:selected-execution|(?:write:plans|manage:|start:|cancel:workflow|control:workflow)|native-(?:connection|process-start)|may-(?:start|resume)-|process\.(?:exec|cancel)|plugin\.(?:install|update|remove|policy)|plugin\.state\.write-on-configure)/;
 
 export class TradingRuntime {
   constructor(host, { now = Date.now, timer = true, mockModelResponses = false } = {}) {
@@ -21,6 +24,7 @@ export class TradingRuntime {
     this.memories = new Map();
     this.mockModelResponses = mockModelResponses === true;
     this.archiving = new Map(); this.cancelling = new Set(); this.executions = new Map(); this.workHosts = new Map();
+    this.analysisAdmissions = new Map();
     this.executionScope = new AsyncResource('sesame.manual-trading.scheduler', { requireManualDestroy: true });
   }
   currentAgent() { const call = this.invocation.getStore(); call?.signal?.throwIfAborted(); return call?.provenance?.agent; }
@@ -59,13 +63,17 @@ export class TradingRuntime {
     try {
       check(this.plan(run.planId).enabled, 'PLAN_PAUSED', 'The frozen trading plan is paused; resume the plan before its workflow.');
       check(!run.executionStartedAt || run.execution, 'EXECUTION_OUTCOME_UNKNOWN', 'An execution was already sent without a saved receipt. Reconcile that original run; no action will be resent.');
+      const manager = run.tasks.find(task => task.role === 'manager' && task.status === 'completed');
+      if (manager && plan.purpose !== 'analysis') check(run.decision, 'NO_DECISION', 'The completed manager did not save its target. The main Agent can read manual_trading_context, verify the retained analysis and existing trading authorization, and use manual_trading_decide before resuming this workflow.');
+      if (manager && plan.purpose === 'analysis') check(run.reports.find(report => report.taskId === manager.id && report.status === 'completed')?.text?.trim(), 'NO_ANALYSIS', 'The completed research manager returned no Markdown synthesis. Its Run and prior evidence are retained; no registered capability can submit that missing role output on its behalf.');
+      if (run.tasks.some(task => task.role === 'executor' && task.status === 'completed')) check(run.execution, 'NOT_EXECUTED', 'The completed executor did not save an execution receipt. Reconcile the original operation IDs before resuming; the workflow cannot infer a trade from its text or repeat the completed Agent.');
       if (!run.execution) {
         await verifyComposition(host, plan.execution);
         const pending = stages(plan).slice(run.stageIndex ?? 0).flat();
         if (pending.length) await verifyComposition(host, plan.research);
-        const roles = [...new Set([...pending, 'executor'])];
+        const roles = [...new Set([...pending, ...(plan.purpose === 'analysis' ? [] : ['executor'])])];
         for (const role of roles) selectModel(host, plan.agentModels[role] ?? plan.model);
-        if (roles.some(usesTradingMemory)) await selectResearch(host, { plugins: [TRADING_MEMORY.pluginId], tools: [] });
+        if (roles.some(role => usesTradingMemory(role, plan))) await selectResearch(host, { plugins: [TRADING_MEMORY.pluginId], tools: [] });
         await declaredCalls(host, [...new Set(roles.flatMap(role => taskTools(plan, role)))], ['sesame/manual-trading', ...new Set(roles.flatMap(role => taskPlugins(plan, role)))]);
         const snapshot = await executionCall(host, plan.execution, 'context', { action: 'snapshot', history_days: 30 }, signal);
         check(canonical(snapshot.account) === canonical(plan.account), 'ACCOUNT_CHANGED', 'Selected execution account differs from the frozen plan.');
@@ -152,6 +160,7 @@ export class TradingRuntime {
     this.main(host);
     check(input && typeof input === 'object', 'INVALID_ARGUMENT', 'A workflow plan is required');
     const previous = input.id ? records(this.host).get('plans', input.id, true) : null;
+    check(previous?.purpose !== 'analysis', 'READ_ONLY_WORKFLOW', 'A one-shot analysis is immutable; use a new analysis request or an explicitly authorized trading plan.');
     if (previous) this.ownedPlan(host, previous.id);
     check(!previous || !records(this.host).list('runs').some(run => run.planId === previous.id && !TERMINAL.has(run.status)), 'PLAN_BUSY', 'Stop the active run before changing its frozen plan');
     const execution = await bindExecution(host, input.execution, signal);
@@ -165,8 +174,53 @@ export class TradingRuntime {
     if (plan.enabled && plan.accountEvents) await this.subscribe(plan);
     return this.plan(plan.id);
   }
+  async analyze(host, input, signal) {
+    this.main(host);
+    check(typeof input.request_id === 'string' && input.request_id.length > 0 && input.request_id.length <= 200, 'INVALID_ARGUMENT', 'Use one stable request_id for this analysis.');
+    const id = `analysis_${digest([host.context.sessionId, input.request_id]).slice(7, 39)}`, requestDigest = digest(input);
+    const pending = this.analysisAdmissions.get(id);
+    if (pending) {
+      check(pending.requestDigest === requestDigest, 'IDEMPOTENCY_CONFLICT', 'This analysis request_id already has different input.');
+      return pending.promise;
+    }
+    const promise = this.admitAnalysis(host, input, id, requestDigest, signal);
+    this.analysisAdmissions.set(id, { requestDigest, promise });
+    try { return await promise; } finally { this.analysisAdmissions.delete(id); }
+  }
+  async admitAnalysis(host, input, id, requestDigest, signal) {
+    const previous = records(this.host).get('plans', id, true);
+    if (previous) {
+      check(previous.requestDigest === requestDigest, 'IDEMPOTENCY_CONFLICT', 'This analysis request_id already has different input.');
+      if (previous.lastRunId) return this.run(previous.lastRunId);
+    }
+    let plan = previous;
+    if (!plan) {
+      const execution = await bindExecution(host, input.execution, signal);
+      plan = { ...await makePlan(host, { ...input, id, mode: 'team', interval_minutes: null, event_keys: [], account_events: false, enabled: true }, execution, null, this.now()),
+        purpose: 'analysis', publishReport: input.report === true, requestDigest };
+      // Reads may cache/publish evidence. Exclude declared trading/configuration/control effects;
+      // a dynamic read capability's operation-level boundary remains its producer's contract.
+      const forbidden = new Set(['manual_trading_decide', 'manual_trading_apply', 'manual_trading_review', ...execution.tools.filter(name => !execution.readTools.includes(name)),
+        ...(await catalog(host)).filter(cap => plan.research.plugins.includes(cap.pluginId) && cap.effects?.some(effect => analysisWriteEffect.test(effect))).map(cap => cap.localId)]);
+      const blocked = plan.research.tools.filter(name => forbidden.has(name));
+      check(!input.research?.tools || !blocked.length, 'READ_ONLY_WORKFLOW', `Analysis excludes declared trading, configuration and workflow controls: ${blocked.join(', ')}. Select the reading/research capabilities.`);
+      plan.research.tools = plan.research.tools.filter(name => !forbidden.has(name));
+      plan.research.allowedCalls = plan.research.allowedCalls.filter(call => !forbidden.has(call.capabilityId));
+      for (const role of stages(plan).flat()) {
+        check(taskTools(plan, role).length <= 64, 'TOOL_BUDGET_EXCEEDED', 'Select a smaller research tool subset; each role supports 64 tools.');
+        check(taskPlugins(plan, role).length <= 32, 'PLUGIN_BUDGET_EXCEEDED', 'Select fewer research plugins; each role supports 32 plugins.');
+      }
+      signal?.throwIfAborted();
+      records(this.host).put('plans', plan);
+    }
+    const run = this.trigger(plan.id, { kind: 'analysis', id: input.request_id }, host);
+    const admission = this.running.get(schedulingKey(plan))?.admission;
+    if (admission) await admission;
+    return this.run(run.id);
+  }
   async setEnabled(host, id, enabled) {
     const plan = this.ownedPlan(host, id);
+    check(plan.purpose !== 'analysis', 'READ_ONLY_WORKFLOW', 'Analysis has no schedule; resume its retained host Run instead.');
     check(!enabled || plan.execution, 'EXECUTION_REQUIRED', 'Reconfigure the legacy plan with a selected execution capability');
     if (enabled) { await verifyComposition(host, plan.execution); await verifyComposition(host, plan.research); }
     records(this.host).put('plans', { ...plan, enabled, updatedAt: this.now(), nextDueAt: enabled && plan.intervalMinutes ? this.now() + plan.intervalMinutes * 60000 : plan.nextDueAt });
@@ -181,13 +235,15 @@ export class TradingRuntime {
     const plan = this.plan(planId), id = triggerIdentity(plan, trigger), previous = records(this.host).get('runs', id, true);
     if (previous) { check(canonical(previous.trigger) === canonical(trigger), 'IDEMPOTENCY_CONFLICT', 'Event ID already has different input'); return previous; }
     check(plan.enabled, 'PLAN_PAUSED', 'Trading plan is paused');
+    check(plan.purpose !== 'analysis' || trigger.kind === 'analysis' && !plan.lastRunId,
+      'READ_ONLY_WORKFLOW', 'A one-shot analysis cannot be triggered as a trading cycle.');
     check(plan.execution, 'EXECUTION_REQUIRED', 'Select an execution capability before starting this workflow');
     check(Buffer.byteLength(JSON.stringify(trigger)) <= 12000, 'INVALID_ARGUMENT', 'Event payload exceeds 12 KB');
     for (const queued of records(this.host).list('runs').filter(run => run.planId === plan.id && run.status === 'queued')) {
       this.update(queued.id, { status: 'cancelled', completedAt: this.now(), supersededBy: id });
       this.activity(queued.id, 'run.finished', { status: 'cancelled', message: '尚未开始的运行已被新事件替换。' });
     }
-    const run = this.save({ id, planId: plan.id, plan, trigger: clone(trigger), status: 'queued', createdAt: this.now(), tasks: [], reports: [], reportPending: true, mockModelResponses: this.mockModelResponses });
+    const run = this.save({ id, planId: plan.id, plan, trigger: clone(trigger), status: 'queued', createdAt: this.now(), tasks: [], reports: [], reportPending: publishesReport(plan), mockModelResponses: this.mockModelResponses });
     if (host) this.workHosts.set(id, host);
     records(this.host).put('plans', { ...plan, lastRunId: id }); this.pump(); return run;
   }
@@ -211,27 +267,32 @@ export class TradingRuntime {
   pump() {
     if (this.closed) return;
     for (const run of records(this.host).list('runs').filter(value => value.status === 'queued').sort((a, b) => a.createdAt - b.createdAt)) {
-      const key = accountKey(run.plan), plan = this.plan(run.planId);
-      if (!plan.enabled || this.running.has(key) || records(this.host).list('runs').some(other => other.id !== run.id && accountKey(other.plan) === key && other.status !== 'queued' && !TERMINAL.has(other.status))) continue;
+      const key = schedulingKey(run.plan), plan = this.plan(run.planId);
+      if (!plan.enabled || this.running.has(key) || records(this.host).list('runs').some(other => other.id !== run.id && schedulingKey(other.plan) === key && other.status !== 'queued' && !TERMINAL.has(other.status))) continue;
       const last = plan.lastEventAt ?? 0;
       if (run.trigger.kind === 'event' && this.now() - last < plan.eventCooldownMs) continue;
       if (run.trigger.kind === 'event') records(this.host).put('plans', { ...plan, lastEventAt: this.now() });
       const controller = new AbortController(), entry = { runId: run.id, controller };
+      let admitted;
+      entry.admission = new Promise(resolve => { admitted = resolve; });
       this.running.set(key, entry);
       const host = this.workHosts.get(run.id) ?? this.host;
       entry.promise = this.executionScope.runInAsyncScope(async () => {
         const accepted = await host.capabilities.invoke('sesame/manual-trading#workflow_execute', { runId: run.id }, { signal: controller.signal, operationId: 'workflow:' + run.id,
-          task: { ...(host.context.kind === 'service' ? { sessionId: run.plan.ownerConversationId } : {}), title: run.plan.title,
-            output: { type: 'report', space: 'research', path: reportPath(run) } } });
+          task: { ...(host.context.kind === 'service' ? { sessionId: run.plan.ownerConversationId } : {}), title: run.plan.title, collaboration: collaboration(run.plan),
+            output: publishesReport(run.plan) ? { type: 'report', space: 'research', path: reportPath(run) } : { type: 'none' } } });
         check(accepted.type === 'run', 'TASK_RECEIPT_INVALID', 'Workflow requires a real Run'); this.update(run.id, { workflow: accepted.run });
+        admitted();
         let settled; do { settled = await host.runs.wait(accepted.run, { until: 'settled', timeoutMs: 30000 }); } while (settled.reason === 'timeout');
-        if (settled.reason === 'interrupted' || settled.run.status === 'interrupted') this.update(run.id, { status: 'interrupted', error: { code: 'RUN_INTERRUPTED', message: settled.run.interrupts?.find(item => !item.resolvedAt)?.reason ?? 'Workflow dependency or input is unavailable' } });
-        else if (!TERMINAL.has(this.run(run.id).status) && ['failed', 'cancelled', 'unknown'].includes(settled.run.status)) this.update(run.id, { status: settled.run.status === 'cancelled' ? 'cancelled' : 'failed', completedAt: this.now(), error: cleanError(settled.run.error ?? new Error(`Host workflow ${settled.run.status}`)) });
+        if (settled.reason === 'interrupted' || settled.run.status === 'interrupted') this.update(run.id, { status: 'interrupted', error: this.run(run.id).error ?? cleanError(settled.run.error ?? { code: 'RUN_INTERRUPTED', message: settled.run.interrupts?.find(item => !item.resolvedAt)?.reason ?? 'Workflow dependency or input is unavailable' }) });
+        else if (!TERMINAL.has(this.run(run.id).status) && settled.run.status === 'cancelled') this.update(run.id, { status: 'cancelled', completedAt: this.now(), error: cleanError(settled.run.error ?? new Error('Host workflow cancelled')) });
+        else if (!TERMINAL.has(this.run(run.id).status) && settled.run.status === 'unknown') this.update(run.id, { status: 'interrupted', error: cleanError(settled.run.error ?? new Error('Host workflow outcome is unknown; inspect its retained Run.')) });
         return settled.run;
       }).catch(error => {
-        if (interruption(error, controller.signal)) { this.update(run.id, { status: 'interrupted', error: cleanError(interruption(error, controller.signal)) }); return; }
-        if (!TERMINAL.has(this.run(run.id).status)) this.update(run.id, { status: controller.signal.aborted ? 'cancelled' : 'failed', error: cleanError(error), completedAt: this.now() });
-        this.notify('run.failed', { runId: run.id, ...cleanError(error) });
+        admitted();
+        if (interruption(error, controller.signal)) { this.update(run.id, { status: 'interrupted', error: this.run(run.id).error ?? cleanError(interruption(error, controller.signal)) }); return; }
+        if (!TERMINAL.has(this.run(run.id).status)) this.update(run.id, { status: controller.signal.aborted ? 'cancelled' : 'interrupted', error: cleanError(error), ...(controller.signal.aborted ? { completedAt: this.now() } : {}) });
+        this.notify('run.interrupted', { runId: run.id, ...cleanError(error) });
       }).finally(() => { this.running.delete(key); this.workHosts.delete(run.id); this.pump(); });
     }
   }
@@ -249,33 +310,26 @@ export class TradingRuntime {
     try {
       await verifyComposition(host, plan.execution);
       if (role !== 'executor') await verifyComposition(host, plan.research);
-      if (usesTradingMemory(role)) await selectResearch(host, { plugins: [TRADING_MEMORY.pluginId], tools: [] });
+      if (usesTradingMemory(role, plan)) await selectResearch(host, { plugins: [TRADING_MEMORY.pluginId], tools: [] });
       allowedCalls = await declaredCalls(host, tools, ['sesame/manual-trading', ...plugins]);
     } catch (error) { if (dependencyCodes.has(error.code)) throw dependencyError(runId, error); throw error; }
     const request = run.taskRequests?.[key] ?? {
       title: `${plan.title.slice(0, 50)} · ${role} ${round}`,
-      instructions: `${SYSTEM}\n\n本角色：${ROLE_PROMPTS[role]}\n\n计划要求：${plan.instructions}`,
+      instructions: `${plan.purpose === 'analysis' ? ANALYSIS_SYSTEM : SYSTEM}\n\n本角色：${rolePrompt(plan, role)}\n\n计划要求：${plan.instructions}`,
       objective: `以符合 ${role} 角色目标的实际证据或保存的执行回执形成可共享成果；必要依赖缺失则暂停并说明恢复条件，不能替换目标后宣告完成。`,
-      input: { tradingPlan: { id: plan.id, account: plan.account, ownerConversationId: plan.ownerConversationId }, execution: plan.execution, runId, role, round, trigger: run.trigger },
-      allowedCalls, model, budget: { timeoutMs: plan.taskTimeoutMs, maxTurns: role === 'executor' ? 4 : 16, maxToolCalls: role === 'executor' ? 256 : 48 },
+      input: { tradingPlan: { id: plan.id, account: plan.account, ownerConversationId: plan.ownerConversationId }, execution: plan.execution, runId, role, round, trigger: run.trigger, ...(plan.purpose === 'analysis' ? { purpose: 'analysis', report: plan.publishReport } : {}) },
+      allowedCalls, model,
     };
     if (!run.taskRequests?.[key]) this.update(runId, { taskRequests: { ...this.run(runId).taskRequests, [key]: request } });
     let accepted;
     try { accepted = previous ? { type: 'run', run: { id: previous.id } } : await host.capabilities.invoke('host.agent.run', request,
-      { signal, operationId: `${run.id}:${role}:${round}`, task: { title: `${plan.title.slice(0, 50)} · ${role}`, role, stage: role, iteration: round, output: { type: 'none' } } }); }
+      { signal, operationId: `${run.id}:${role}:${round}`, task: { title: `${plan.title.slice(0, 50)} · ${role}`, agentId: role, role, stage: role, iteration: round, output: { type: 'none' } } }); }
     catch (error) { if (dependencyCodes.has(error.code)) throw dependencyError(runId, error); throw error; }
     check(accepted.type === 'run', 'TASK_RECEIPT_INVALID', 'Agent execution must return a Run');
     const task = accepted.run;
     if (!previous) this.update(runId, { tasks: [...this.run(runId).tasks, { id: task.id, role, round, model, status: 'queued', createdAt: this.now() }] });
     await this.checkpoint(runId);
-    let result;
-    try { result = await this.waitTask(task.id, signal, view => this.observeTaskView(runId, task.id, view), host); }
-    catch (error) {
-      if (interruption(error, signal)) throw interruption(error, signal);
-      try { this.observeTaskView(runId, task.id, this.taskView((await this.host.runs.cancel(task, { reason: 'Trading task wait stopped' })).run)); }
-      catch { /* Keep the original wait failure. */ }
-      throw error;
-    }
+    const result = await this.waitTask(task.id, signal, view => this.observeTaskView(runId, task.id, view), host);
     const current = this.run(runId);
     const errorText = result.error?.message ?? result.error ?? '';
     this.update(runId, { tasks: current.tasks.map(value => value.id === task.id ? { ...value, status: result.status, conversationId: result.conversationId } : value),
@@ -301,30 +355,37 @@ export class TradingRuntime {
         await Promise.all(stageTasks);
         this.update(id, { stageIndex: round + 1 }); await this.checkpoint(id);
       }
-      check(this.run(id).decision, 'NO_DECISION', 'Manager did not save a valid target portfolio'); signal.throwIfAborted();
-      if (!this.run(id).execution) await this.task(id, 'executor', steps.length, signal);
-      check(this.run(id).execution, 'NOT_EXECUTED', 'Executor did not return a durable execution result');
-      this.recordMemory(this.update(id, { status: 'completed', completedAt: this.now() }));
+      signal.throwIfAborted();
+      if (this.run(id).plan.purpose === 'analysis') {
+        const summary = this.run(id).reports.findLast(report => report.role === 'manager' && report.status === 'completed')?.text;
+        check(summary?.trim(), 'NO_ANALYSIS', 'Research manager did not return its Markdown synthesis.');
+        this.update(id, { status: 'completed', completedAt: this.now(), summary });
+      } else {
+        check(this.run(id).decision, 'NO_DECISION', 'Manager did not save a valid target portfolio');
+        if (!this.run(id).execution) await this.task(id, 'executor', steps.length, signal);
+        check(this.run(id).execution, 'NOT_EXECUTED', 'Executor did not return a durable execution result');
+        this.recordMemory(this.update(id, { status: 'completed', completedAt: this.now() }));
+      }
     } catch (error) {
       const control = interruption(error, signal);
-      if (control) {
-        interrupted = true; this.update(id, { status: 'interrupted', error: cleanError(control) });
-        if (control.code === 'DEPENDENCY_UNAVAILABLE') await execution.interrupt({ reason: control.message, requirements: control.details?.requirements, state: { runId: id, stageIndex: this.run(id).stageIndex ?? 0 } });
-        throw control;
+      if (control || !signal.aborted) {
+        interrupted = true; this.update(id, { status: 'interrupted', reportPending: false, error: cleanError(control ?? error) });
+        if (!control || control.code === 'DEPENDENCY_UNAVAILABLE') await execution.interrupt({ reason: (control ?? error).message, requirements: control?.details?.requirements, state: { runId: id, stageIndex: this.run(id).stageIndex ?? 0 } });
+        throw control ?? error;
       }
       await Promise.allSettled(stageTasks);
       failure = error;
-      const run = this.update(id, { status: signal.aborted ? 'cancelled' : 'failed', completedAt: this.now(), error: cleanError(error) });
+      const run = this.update(id, { status: 'cancelled', completedAt: this.now(), error: cleanError(error) });
       if (run.decision) this.recordMemory(run);
     } finally {
-      if (!interrupted && !this.run(id).report && !this.closed && !signal.aborted) {
+      if (!interrupted && publishesReport(this.run(id).plan) && !this.run(id).report && !this.closed && !signal.aborted) {
         try { await this.archive(host, id); }
         catch (error) { failure = interruption(error, signal) ?? failure ?? error; this.update(id, { reportPending: true, reportError: cleanError(error) }); }
       }
       const control = interruption(failure, signal);
-      if (control) {
-        interrupted = true; failure = control;
-        this.update(id, { status: 'interrupted', completedAt: null, reportPending: false, error: cleanError(control) });
+      if (control || failure && !signal.aborted) {
+        interrupted = true; failure = control ?? failure;
+        this.update(id, { status: 'interrupted', completedAt: null, reportPending: false, error: this.run(id).error ?? cleanError(failure) });
       }
       if (!interrupted) this.notify('run.finished', { runId: id, planId: this.run(id).planId, status: this.run(id).status, reportPending: this.run(id).reportPending });
       this.executions.delete(id);
@@ -332,8 +393,9 @@ export class TradingRuntime {
     }
     if (interruption(failure, signal)) throw interruption(failure, signal);
     signal.throwIfAborted();
+    if (interrupted && failure) await execution.interrupt({ reason: failure.message, state: { runId: id, stageIndex: this.run(id).stageIndex ?? 0 } });
     if (failure) throw Object.assign(new Error(failure.message), { code: failure.code ?? 'WORKFLOW_FAILED', details: { runId: id, report: this.run(id).report ?? null } });
-    return { runId: id, status: this.run(id).status, report: this.run(id).report };
+    return { runId: id, status: this.run(id).status, report: this.run(id).report ?? null, ...(this.run(id).summary ? { summary: this.run(id).summary } : {}) };
   }
   recordMemory(run) {
     try { this.memoryFor(run.plan).record({ id: run.id, planId: run.planId, accountId: accountKey(run.plan),
@@ -390,6 +452,7 @@ export class TradingRuntime {
   }
   async decide(host, id, decision, signal) {
     const run = this.authorize(host, id, ['manager']);
+    check(run.plan.purpose !== 'analysis', 'READ_ONLY_WORKFLOW', 'Analysis returns advice, not an executable target.');
     check(this.plan(run.planId).enabled && !TERMINAL.has(run.status) && run.snapshot, 'RUN_NOT_READY', 'Read this active run account context before deciding');
     const value = validateDecision(run.plan, run.snapshot, decision);
     if (run.decision) { check(canonical(run.decision) === canonical(value), 'DECISION_FROZEN', 'This run already has a different frozen target'); return run.decision; }
@@ -410,6 +473,7 @@ export class TradingRuntime {
   }
   async apply(host, id, signal) {
     const run = this.authorize(host, id, ['executor']);
+    check(run.plan.purpose !== 'analysis', 'READ_ONLY_WORKFLOW', 'This analysis has no execution authorization.');
     if (run.execution) return run.execution;
     check(this.plan(run.planId).enabled && run.decision && !TERMINAL.has(run.status), 'RUN_NOT_READY', 'Run is not active with a saved decision');
     if (!this.applying.has(id)) this.applying.set(id, (async () => {
@@ -457,7 +521,7 @@ export class TradingRuntime {
         .catch(error => this.notify('cancel.failed', { runId: id, taskId: task.id, ...cleanError(error) })).finally(() => this.cancelling.delete(work));
       this.cancelling.add(work);
     }
-    const active = this.running.get(accountKey(run.plan));
+    const active = this.running.get(schedulingKey(run.plan));
     if (active?.runId === id) active.controller.abort(new Error(reason));
     else this.activity(id, 'run.finished', { status: 'cancelled', message: '本轮已取消。' });
     return this.run(id);

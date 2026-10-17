@@ -282,12 +282,13 @@ test('installed workflow composes independent portfolio execution and produces o
     assert.ok(target.path.startsWith(`${plan.reportFolder}/`));
     const html = await files.read({ space: target.space, path: target.path });
     assert.match(html.content, /目标仓位不变/);
-    assert.match(html.content, /QUANT_FIXTURE/);
-    assert.match(html.content, /fixture-fill/);
+    assert.doesNotMatch(html.content, /QUANT_FIXTURE|fixture-fill/);
     const raw = await rawFor(done);
     assert.equal(raw.id, done.id);
     assert.equal(raw.execution.status, 'unchanged');
     assert.deepEqual(raw.snapshot.positions, positions);
+    assert.match(JSON.stringify(raw.snapshot), /QUANT_FIXTURE/);
+    assert.match(JSON.stringify(raw.snapshot), /fixture-fill/);
     assert.equal(raw.evidence.length, 1);
     assert.equal(raw.evidence[0].dataset.rows[0].baseline, true);
     assert.deepEqual(raw.evidence[0].artifact, raw.decision.evidence_artifacts[0]);

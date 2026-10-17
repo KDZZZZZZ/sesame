@@ -11,7 +11,7 @@ const resume = async (f, id) => {
  return f.runtime.control(f.main,id,'resume',{interrupt_ids:read.interrupts.map(item=>item.id)});
 };
 
-test('v2 workflow uses real evaluator scores, bounded declared Agent calls and native finalization/publication', async t=>{
+test('v2 workflow uses real evaluator scores, declared Agent calls and native finalization/publication', async t=>{
  const f=own(t,await fixture()),run=await f.runtime.create(f.main,input()),done=await finished(f,run.id);
  assert.equal(done.status,'completed',JSON.stringify(done.error));assert.equal(done.trials[0].metrics.validation.rankIC,1);assert.equal(Object.keys(done.holdout).length,1);
  assert.equal(f.requests.length,6);assert.ok(f.requests.every(request=>!['finalize','report'].includes(request.input.mode)));
@@ -58,9 +58,11 @@ test('caller input cannot replace trusted Agent provenance and completed outputs
   await assert.rejects(runtime.submit(child,id,{...output,reason:'rewrite'},undefined,execution),/different output/);checked=true;
  }}));const run=await f.runtime.create(f.main,input());assert.equal((await finished(f,run.id)).status,'completed');assert.ok(checked);
 });
-test('research budget reserves native report completion without an extra model call',async t=>{
- const f=own(t,await fixture()),args=input();args.config.maxTasks=4;
- const run=await f.runtime.create(f.main,args),done=await finished(f,run.id);assert.equal(done.status,'exhausted');assert.equal(f.requests.length,4);assert.equal(done.reportPending,false,JSON.stringify(done.reportError));assert.ok(!done.selection);
+test('research completes its selected rounds and native report without an Agent call quota',async t=>{
+ const f=own(t,await fixture()),args=input();args.config.rounds=3;
+ const run=await f.runtime.create(f.main,args),done=await finished(f,run.id);
+ assert.equal(done.status,'completed',JSON.stringify(done.error));assert.equal(done.reflections.length,3);assert.ok(f.requests.length>12);
+ assert.ok(f.requests.every(request=>!Object.hasOwn(request,'budget')));assert.equal(done.reportPending,false);assert.ok(done.selection);
 });
 test('model drift and frozen input corruption keep the same Run interrupted before model dispatch',async t=>{
  const f=own(t,await fixture({onTask:()=> 'hold'})),run=await f.runtime.create(f.main,input());await poll(()=>f.requests.length);await f.runtime.control(f.main,run.id,'pause');
@@ -168,4 +170,43 @@ test('publication interruption keeps final measurements resumable without repeat
  assert.equal(paused.events.some(event=>event.type==='run.finished'),false);
  const calls=f.requests.length;await resume(f,created.id);const done=await finished(f,created.id);
  assert.equal(done.status,'completed');assert.ok(done.report);assert.equal(f.requests.length,calls);assert.equal(finals,1);
+});
+
+test('an ordinary report write error retains final evaluation and resumes the same workflow without re-running Agents',async t=>{
+ let stop=true,finals=0;
+ const f=own(t,await fixture({onEvaluate:args=>{if(args.action==='finalize')finals++;},beforeResource:spec=>{
+  if(stop&&spec.kind==='directory'){stop=false;throw Object.assign(new Error('Report storage temporarily unavailable'),{code:'EIO'});}
+ }}));
+ const created=await f.runtime.create(f.main,input()),paused=await finished(f,created.id);
+ assert.equal(paused.status,'interrupted');assert.equal(paused.reportError.code,'EIO');assert.ok(paused.finalEvaluation);assert.equal(paused.report,undefined);
+ assert.equal(paused.events.some(event=>event.type==='run.finished'),false);
+ const calls=f.requests.length;await resume(f,created.id);const done=await finished(f,created.id);
+ assert.equal(done.status,'completed');assert.ok(done.report);assert.equal(done.workflow.id,paused.workflow.id);assert.equal(f.requests.length,calls);assert.equal(finals,1);
+});
+
+test('an ordinary model error interrupts its original role and resumes it without abandoning the trial',async t=>{
+ let interrupted=false;
+ const f=own(t,await fixture({onTask:({request})=>{
+  if(request.input.mode==='code'&&!interrupted){interrupted=true;throw Object.assign(new Error('Model connection reset'),{code:'ECONNRESET'});}
+ }}));
+ const created=await f.runtime.create(f.main,input()),paused=await finished(f,created.id),coder=paused.tasks.find(task=>task.mode==='code');
+ assert.equal(paused.status,'interrupted');assert.equal(paused.report,undefined);assert.equal(coder.finishedAt,undefined);
+ assert.equal(f.jobs.get(coder.runRef.id).value.error.code,'ECONNRESET');
+ const trial=structuredClone(paused.trials[0]);await resume(f,created.id);const done=await finished(f,created.id);
+ assert.equal(done.status,'completed');assert.equal(done.workflow.id,paused.workflow.id);assert.equal(done.trials[0].id,trial.id);
+ assert.equal(done.tasks.find(task=>task.mode==='code').runRef.id,coder.runRef.id);
+ assert.equal(f.requests.filter(request=>request.input.mode==='plan').length,1);assert.equal(f.requests.filter(request=>request.input.mode==='hypothesis').length,1);
+ assert.equal(f.requests.filter(request=>request.input.mode==='code').length,2);
+});
+
+test('a completed role missing structured output remains a specific preflight blocker without repeating other work',async t=>{
+ const f=own(t,await fixture({onTask:({request,job})=>{
+  if(request.input.mode==='code'){job.finish({status:'completed',output:{text:'Retained explanation without a submitted candidate'}});return 'hold';}
+ }}));
+ const created=await f.runtime.create(f.main,input()),paused=await finished(f,created.id),coder=paused.tasks.find(task=>task.mode==='code');
+ assert.equal(paused.status,'interrupted');assert.equal(paused.error.code,'MISSING_OUTPUT');assert.match(coder.text,/Retained explanation/);
+ const readiness=f.runtime.dependencies(f.main,created.id);assert.equal(readiness.available,false);assert.equal(readiness.details.cause.code,'MISSING_OUTPUT');
+ assert.match(readiness.reason,/auto_factor_submit/);assert.match(readiness.reason,/main Agent cannot submit/);
+ const calls=f.requests.length;await resume(f,created.id);
+ assert.equal(f.runtime.get(created.id).status,'interrupted');assert.equal(f.requests.length,calls);assert.equal(f.runtime.get(created.id).workflow.id,paused.workflow.id);
 });

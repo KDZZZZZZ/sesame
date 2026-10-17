@@ -7,6 +7,7 @@ import { pathToFileURL } from 'node:url';
 const REPOSITORY = 'KDZZZZZZ/sesame';
 const PLAN_PATH = '.github/application-release.json';
 const STABLE_TAG = /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
+const FIRST_UPDATER_TAG = 'v0.2.4';
 const SUMS = 'SHA256SUMS.txt';
 const MAX_SUMS = 64 * 1024;
 const MAX_TAG_ANNOTATIONS = 8;
@@ -16,18 +17,28 @@ function fields(value, required, label) {
   assert(value && typeof value === 'object' && !Array.isArray(value), `${label} must be an object`);
   assert(JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...required].sort()), `${label} has missing or unknown fields`);
 }
-function assetNames(tag) {
+function compareStableTags(left, right) {
+  const a = left.slice(1).split('.').map(BigInt), b = right.slice(1).split('.').map(BigInt);
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i] ? -1 : 1;
+  return 0;
+}
+function assetNames(tag, schemaVersion) {
   assert(typeof tag === 'string' && STABLE_TAG.test(tag), 'Application tag must be stable vX.Y.Z');
+  // Keep legacy plans verifiable without allowing new releases to omit updater assets.
+  if (schemaVersion === 1) assert(compareStableTags(tag, FIRST_UPDATER_TAG) < 0, `Application releases ${FIRST_UPDATER_TAG} and later require schemaVersion 2 with update assets`);
+  else assert(compareStableTags(tag, FIRST_UPDATER_TAG) >= 0, `Application schemaVersion 2 requires ${FIRST_UPDATER_TAG} or later`);
   const version = tag.slice(1);
-  return ['INSTALL.md', `Sesame-${version}-linux-x64.AppImage`, `Sesame-${version}-linux-x64.deb`, `Sesame-${version}-mac-arm64.dmg`, `Sesame-${version}-win-x64.exe`, SUMS];
+  const names = ['INSTALL.md', `Sesame-${version}-linux-x64.AppImage`, `Sesame-${version}-linux-x64.deb`, `Sesame-${version}-mac-arm64.dmg`, `Sesame-${version}-win-x64.exe`, SUMS];
+  if (schemaVersion === 2) names.push(`Sesame-${version}-win-x64.exe.blockmap`, `Sesame-${version}-linux-x64.deb.blockmap`, 'update-feed-win32-x64.yml', 'update-plan-win32-x64.json', 'update-feed-linux-x64.yml', 'update-plan-linux-x64.json');
+  return names;
 }
 
 export function validateApplicationPlan(plan) {
   fields(plan, ['schemaVersion', 'repository', 'tag', 'releaseId', 'assets'], 'Application release plan');
-  assert(plan.schemaVersion === 1 && plan.repository === REPOSITORY, 'Unsupported application release schema or repository');
+  assert([1, 2].includes(plan.schemaVersion) && plan.repository === REPOSITORY, 'Unsupported application release schema or repository');
   assert(Number.isSafeInteger(plan.releaseId) && plan.releaseId > 0, 'Application release ID must be a positive integer');
-  const expected = new Set(assetNames(plan.tag));
-  assert(Array.isArray(plan.assets) && plan.assets.length === expected.size, 'Application release requires exactly six assets');
+  const expected = new Set(assetNames(plan.tag, plan.schemaVersion));
+  assert(Array.isArray(plan.assets) && plan.assets.length === expected.size, `Application schemaVersion ${plan.schemaVersion} requires exactly ${expected.size} assets`);
   for (const asset of plan.assets) {
     fields(asset, ['name', 'size', 'sha256'], 'Application asset');
     assert(expected.delete(asset.name), `Unexpected or duplicate application asset: ${asset.name}`);
@@ -61,7 +72,7 @@ export function validateChecksums(input, bytes) {
   assert(Buffer.isBuffer(bytes) && bytes.length === checksum.size && sha256(bytes) === checksum.sha256, 'Checksum file size or SHA256 differs from the application plan');
   const expected = new Map(plan.assets.filter(asset => asset.name !== SUMS).map(asset => [asset.name, asset.sha256]));
   const lines = bytes.toString('utf8').replace(/\r\n/g, '\n').replace(/\n$/, '').split('\n');
-  assert(lines.length === expected.size, 'Checksum file must cover exactly five application payloads');
+  assert(lines.length === expected.size, `Checksum file must cover exactly ${expected.size} application payloads`);
   for (const line of lines) {
     const match = /^([a-f0-9]{64})  ([^\r\n]+)$/.exec(line);
     assert(match && expected.get(match[2]) === match[1] && expected.delete(match[2]), 'Checksum entry is missing, repeated, unexpected or differs from the application plan');
@@ -80,11 +91,7 @@ function checkLatest(plan, latest) {
   if (!latest) return;
   assert(STABLE_TAG.test(latest.tag_name) && latest.draft === false && latest.prerelease === false, 'Latest release must be a stable application version');
   if (latest.tag_name === plan.tag) assert(latest.id === plan.releaseId, 'Latest tag belongs to a different release ID');
-  const current = plan.tag.slice(1).split('.').map(BigInt), previous = latest.tag_name.slice(1).split('.').map(BigInt);
-  for (let i = 0; i < current.length; i++) {
-    assert(current[i] >= previous[i], 'A newer application release is already latest; refusing downgrade');
-    if (current[i] > previous[i]) return;
-  }
+  assert(compareStableTags(plan.tag, latest.tag_name) >= 0, 'A newer application release is already latest; refusing downgrade');
 }
 
 async function publicationTarget(plan, release, workflowSha, request) {

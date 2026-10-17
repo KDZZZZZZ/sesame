@@ -2,7 +2,9 @@
 
 **Installable entries are identified by the published catalog.** The
 optional packages declare their own compatible host ranges in `engines.sesame`.
-Current packages require Sesame >=0.2.3 and Plugin API 2. This release selects
+Current packages use Plugin API 2. The updated auto-factor-mining, financial-research,
+manual-trading and MT5 packages require Sesame >=0.2.4; unchanged packages retain
+>=0.2.3. This release selects
 45 optional plugins and excludes Kurumi. Source, published archives and the install catalog may select different
 versions; use the manifest for the version being installed. Their reviewed
 archive identities remain fixed; application installers are listed on the
@@ -36,7 +38,7 @@ host-readable without granting access to old mutable application collections.
 | `sesame/vnpy` | Actual CTA backtesting of authored Python against fixed DataRefs | Reuses native VeighNa 4.5.0 / CTA 1.4.1. Real macOS engine, simulated matching, errors, warmup and frozen artifacts verified. Not a broker bridge or SVL equivalence claim. |
 | `sesame/qmt` | MiniQMT daily market/account adapter and explicit stock order/cancel tools | Requires existing broker-authorized Windows MiniQMT and compatible Python/XtQuant. Contract/host fixtures are separate from native Windows broker acceptance, which has not occurred. Readiness never grants trading authorization. |
 | `sesame/mt5` | Native terminal, account, compiler, Tester and target workflows | Existing compatible terminal and explicit connection/configuration. No terminal distribution is embedded. |
-| `sesame/manual-trading` | Scheduled/event-driven trading workflow, per-role models, selected research capabilities, live collaboration and one final summary per run | Composition and live panels need the current 0.2.3 development host. Explicit execution tool binding; no backend default. M5+ cadence. |
+| `sesame/manual-trading` | Read-only research or scheduled/event-driven trading workflow, per-role models, selected research capabilities, collaboration and a manager-only final report | Unified workflow, same-run recovery and Markdown reports require Sesame >=0.2.4. Explicit execution tool binding; no backend default. M5+ trading cadence. |
 | `sesame/portfolio-execution` | Independent target-portfolio execution and native order receipt recovery | Explicit MT5 >=1.6.0 or QMT >=1.4.0 account binding in this implementation. Same-account writes serialize; other accounts and research can proceed. No model-supplied execution authority. |
 | `sesame/judgment-evolution` | Private prediction/outcome ledger | Local SQLite; no default legacy-data import. |
 | `sesame/web-sources` | Fetch source-labelled web evidence | Network access to the selected source; not a parser or brokerage feed. |
@@ -48,7 +50,7 @@ host-readable without granting access to old mutable application collections.
 | `sesame/behavioral-finance`, `sesame/institutional-analysis`, `sesame/narrative-analysis` | Three independently selected social and interpretive methods | Dated primary evidence, competing explanations and explicit limits; no automatic inference of motives or causation. |
 | `sesame/strategy-research` | Separate experiment planning and evidence-ledger workflow | Existing Node.js 22+ for bounded resource checks; actual backtests use a separately selected engine. No algorithm is preselected. |
 | `sesame/factor-research` | Separate point-in-time factor diagnostics and fixed-selection holdout workflow | Existing Node.js 22+; descriptive statistics, explicit cost assumptions and trial records. No significance or live execution claim. |
-| `sesame/auto-factor-mining` | Multi-Agent hypothesis, evaluation receipt, review and frozen-selection workflow; live collaboration and one final summary | Current 0.2.3 development host, configured role models and an explicitly selected evaluator. Arbitrary research tools/skills use development-only data; no implicit backend or mathematical implementation. [Source](packages/auto-factor-mining/README.md); development source, not yet a published catalog entry. |
+| `sesame/auto-factor-mining` | Multi-Agent hypothesis, evaluation receipt, review and frozen-selection workflow; collaboration and one final summary | Sesame >=0.2.4, configured role models and an explicitly selected evaluator. Arbitrary research tools/skills use development-only data; no implicit backend or mathematical implementation. [Source](packages/auto-factor-mining/README.md). |
 | `sesame/factor-evaluator` | Independent AST factor calculation, numerical gates, redundancy checks and reproducibility artifacts | Frozen registered panel data. Restricted workflow isolation or explicit development-only evaluation; descriptive baseline, not a broker backtest. Other implementations can follow the [tool protocol](packages/factor-evaluator/PROTOCOL.md). |
 
 ## Install through a compatible API 2 host

@@ -34,6 +34,32 @@ test('unavailable or drifted configurations require an explicit new model select
   assert.equal(selectModel(f.main, { provider: 'fixture', id: 'primary' }).configurationDigest, 'sha256:new-route');
 });
 
+test('the main Agent can repair a missing manager decision and resume the same workflow without a new user reply', async t => {
+  const f = await fixture(t), plan = await f.runtime.configure(f.main, f.input());
+  const created = f.runtime.trigger(plan.id, { kind: 'manual', id: 'repair-manager-output' });
+  await f.waitFor(() => f.active('manager').length === 1);
+  const manager = f.active('manager')[0];
+  await f.call('context', f.child(manager.id), created.id);
+  f.finish(manager.id, 'Retained account analysis recommends leaving the portfolio unchanged.');
+  await f.waitFor(() => f.runtime.run(created.id).status === 'interrupted' && f.runtime.running.size === 0);
+  const paused = f.runtime.run(created.id), hostRun = f.runs.read(paused.workflow.id);
+  const blocked = await f.runtime.dependencies(f.main, created.id);
+  assert.equal(blocked.available, false); assert.equal(blocked.details.cause.code, 'NO_DECISION');
+  assert.match(blocked.reason, /manual_trading_decide/); assert.equal(f.active('executor').length, 0);
+  await f.runtime.context(f.main, created.id);
+  await f.runtime.decide(f.main, created.id, unchanged);
+  assert.equal((await f.runtime.dependencies(f.main, created.id)).available, true);
+  await f.runs.resume(hostRun.id, { interruptIds: hostRun.interrupts.filter(item => !item.resolvedAt).map(item => item.id), response: { resolution: 'Saved the unchanged target using retained account evidence and the existing authorization.' } });
+  await f.waitFor(() => f.active('executor').length === 1);
+  const executor = f.active('executor')[0];
+  await f.call('apply', f.child(executor.id), created.id); f.finish(executor.id);
+  await f.waitFor(() => f.runtime.run(created.id).status === 'completed');
+  const done = f.runtime.run(created.id);
+  assert.equal(done.workflow.id, hostRun.id); assert.equal(done.tasks.find(task => task.role === 'manager').id, manager.id);
+  assert.equal(f.requests.filter(request => request.input.role === 'manager').length, 1);
+  assert.equal(done.reports.find(report => report.taskId === manager.id).text, 'Retained account analysis recommends leaving the portfolio unchanged.');
+});
+
 test('team stages preserve task responsibilities and use selected capability tools', async t => {
   const f = await fixture(t), plan = await makePlan(f.main, f.input({mode:'team',debate_rounds:2,research:{plugins:['custom/research']}}), f.execution);
   assert.equal(stages(plan)[0].length, 4);
@@ -69,7 +95,7 @@ test('saved workflows contain no execution backend and reject foreign-owner conf
   assert.equal(f.runtime.plan(plan.id).enabled,true);
 });
 
-test('actual child progress is visible before completion and failed reports preserve the host error', async t => {
+test('actual child progress is visible and a dependency interruption preserves its error without a final report', async t => {
   const f = await fixture(t);
   const plan = await f.runtime.configure(f.main, f.input());
   const started = f.runtime.trigger(plan.id, { kind: 'manual', id: 'observable-failure' });
@@ -79,14 +105,13 @@ test('actual child progress is visible before completion and failed reports pres
   const observed = f.runtime.run(started.id).tasks.find(task => task.id === child.id);
   assert.equal(observed.conversationId, f.runs.read(child.id).executionSessionId);
   assert.ok(observed.startedAt);
-  f.runs.cancel(child.id, { reason: 'Synthetic provider unavailable; no execution attempted' });
-  await f.waitFor(() => f.runtime.run(started.id).reportPending === false);
-  const finished = f.runtime.run(started.id), frozen = await f.report(started.id);
-  assert.equal(finished.status, 'failed'); assert.equal(finished.execution, undefined);
+  f.runs.interrupt(child.id, { reason: 'Synthetic provider unavailable; no execution attempted' });
+  await f.waitFor(() => f.runtime.run(started.id).status === 'interrupted' && f.runtime.running.size === 0);
+  const finished = f.runtime.run(started.id);
+  assert.equal(finished.status, 'interrupted'); assert.equal(finished.execution, undefined); assert.equal(finished.report, undefined);
   assert.match(finished.error.message, /Synthetic provider unavailable/);
-  assert.match(frozen.reports[0].text, /Synthetic provider unavailable/);
-  assert.ok(!JSON.stringify(frozen).includes('[object Object]'));
-  assert.equal(finished.tasks[0].status, 'cancelled');
+  assert.ok(!JSON.stringify(finished).includes('[object Object]'));
+  assert.equal(f.runs.read(finished.tasks[0].id).status, 'interrupted');
   assert.equal(f.requests.some(request => request.input.role === 'executor'), false);
 });
 
@@ -159,7 +184,7 @@ test('completed stages explicitly share reports with subsequent roles using thei
   assert.equal(f.runs.list({kind:'agent'}).length, finished.tasks.length);
 });
 
-test('daily evidence retains an unexecuted target without turning it into fills or returns', async t => {
+test('interrupted evidence retains an unexecuted target without turning it into fills or returns', async t => {
   const f = await fixture(t); await f.runtime.configure(f.main, f.input());
   const run = f.runtime.trigger('plan-1', { kind: 'manual', id: 'unexecuted-target' });
   await f.waitFor(() => f.active('manager').length === 1);
@@ -169,12 +194,13 @@ test('daily evidence retains an unexecuted target without turning it into fills 
   f.finish(manager.id);
   await f.waitFor(() => f.active('executor').length === 1);
   f.finish(f.active('executor')[0].id, 'Execution was not attempted.');
-  await f.waitFor(() => f.runtime.run(run.id).status === 'failed' && f.runtime.run(run.id).report);
-  const frozen = await f.report(run.id);
+  await f.waitFor(() => f.runtime.run(run.id).status === 'interrupted' && f.runtime.running.size === 0);
+  const frozen = f.runtime.run(run.id);
   assert.equal(frozen.error.code, 'NOT_EXECUTED'); assert.equal(frozen.decision.targets[0].quantity, '0.1');
   assert.equal(frozen.execution, undefined); assert.deepEqual(frozen.snapshot.fills, []);
   assert.equal(frozen.realizedPnl, undefined); assert.equal(frozen.actualTradeReturn, undefined);
-  assert.equal(f.storage.list('trading_memory_runs')[0].execution, null);
+  assert.equal(frozen.report, undefined); assert.equal(f.storage.list('trading_memory_runs').length, 0);
+  assert.equal((await f.runtime.dependencies(f.main, run.id)).details.cause.code, 'NOT_EXECUTED');
   assert.ok(f.brokerCalls.every(call => call.arguments.action === 'identity' || call.arguments.action === 'snapshot'));
 });
 
@@ -267,17 +293,17 @@ test('restart retains partial execution receipts and interrupts unfinished runs 
   assert.equal(f.requests.length, 0); assert.equal(f.brokerCalls.filter(call => call.arguments.action === 'snapshot').length, 0);
 });
 
-test('a terminal failure settles the workflow without leaving a reporter to block shutdown', async t => {
+test('a missing manager decision interrupts the workflow and releases resources without blocking shutdown', async t => {
   const f = await fixture(t); await f.runtime.configure(f.main, f.input());
   const run = f.runtime.trigger('plan-1', { kind: 'manual', id: 'terminal-failure' });
   await f.waitFor(() => f.active('manager').length === 1);
   f.finish(f.active('manager')[0].id, 'Manager ended without submitting a structured decision.');
-  await f.waitFor(() => f.runtime.run(run.id).report && f.runtime.running.size === 0);
+  await f.waitFor(() => f.runtime.run(run.id).status === 'interrupted' && f.runtime.running.size === 0);
   await f.runtime.dispose();
   assert.equal(f.active().length, 0);
-  assert.equal(f.runtime.run(run.id).status, 'failed');
+  assert.equal(f.runtime.run(run.id).status, 'interrupted'); assert.equal(f.runtime.run(run.id).report, undefined);
   assert.equal(f.runtime.run(run.id).error.code, 'NO_DECISION');
-  assert.equal(f.runs.read(f.runtime.run(run.id).workflow.id).status, 'failed');
+  assert.equal(f.runs.read(f.runtime.run(run.id).workflow.id).status, 'interrupted');
   assert.deepEqual(f.requests.map(request => request.input.role), ['manager']);
 });
 
@@ -297,7 +323,7 @@ test('a model configuration change after plan creation interrupts before any dec
   f.models[0].configurationDigest = 'sha256:changed-route';
   const run = f.runtime.trigger('plan-1', { kind: 'manual', id: 'model-drift' });
   await f.waitFor(() => f.runtime.run(run.id).status === 'interrupted' && f.runtime.running.size === 0);
-  assert.equal(f.runtime.run(run.id).error.code, 'RUN_INTERRUPTED');
+  assert.equal(f.runtime.run(run.id).error.code, 'DEPENDENCY_UNAVAILABLE');
   assert.equal(f.runtime.run(run.id).report, undefined);
   assert.equal(f.requests.length, 0); assert.equal(f.runtime.run(run.id).decision, undefined); assert.equal(f.runtime.run(run.id).execution, undefined);
 });

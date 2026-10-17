@@ -8,7 +8,7 @@
 
 `config.evaluator = {plugin_id, tool, arguments?}` 必填。任何已安装且实现 `sesame.factor-evaluator/v1` 的可委派工具都可选择，没有品牌白名单。工作流将 candidate 作为不透明 JSON，保存该工具实际返回的指标、资格、冗余和冻结选择回执，拒绝模型自己提供的指标。计算方法、字段、公式语言、成本及门槛由 evaluator.arguments 和该能力的契约决定。
 
-同样支持任意已配置模型；`auto_factor_models` 提供当前描述，每个角色可以在 agentModels 指定 provider/id。研究轮数、方向数、任务预算和并行分支数是工作流设置，与执行能力无关。
+同样支持任意已配置模型；`auto_factor_models` 提供当前描述，每个角色可以在 agentModels 指定 provider/id。研究轮数、方向数、候选数和并行分支数是工作流设置，与执行能力无关。
 
 ## 示例
 
@@ -31,8 +31,7 @@
     "directions":["动量与反转","量价关系"],
     "rounds":3,
     "parallelism":2,
-    "maxTrials":12,
-    "maxTasks":80
+    "maxTrials":12
   }
 }
 ```
@@ -45,21 +44,21 @@
 
 未选研究插件时可使用评估器的受限工作流模式：每个角色仅有声明的上下文和结构化提交能力；评估工具拒绝直接 Agent 调用。prepare 只给出开发集；select 冻结后由原生工作流直接调用最终评估。不把最终结果回流研究。原生插件本身是受信代码，这不是对恶意原生代码/外部进程的隔离承诺。
 
-跨插件调用只发生在有效的 auto_factor_start、auto_factor_submit 与 auto_factor_workflow 能力调用里。后台工作本身是声明的 native Run，研究角色通过 host.agent.run 执行；最终评估和归档直接使用代码。评估器版本改变或依赖不可用会明确中断，等待恢复原选定实现；普通计算或业务错误仍按失败保留证据，不悄悄切换实现。
+跨插件调用只发生在有效的 auto_factor_start、auto_factor_submit 与 auto_factor_workflow 能力调用里。后台工作本身是声明的 native Run，研究角色通过 host.agent.run 执行；最终评估和归档直接使用代码。评估器版本改变或依赖不可用会明确中断，等待恢复原选定实现；计算或执行异常同样保留具体诊断并中断原 Run，不悄悄切换实现。
 
 ## 原生任务与报告
 
 `auto_factor_activity({run_id})` 打开宿主原生 Run 界面。工作流与普通子 Agent 使用同一组运行、观察和取消接口；每个节点对应实际 Run，交接只在后续角色真正读到前序产物时产生。插件保留结构化研究断点，不复制公开消息和工具状态，也不提供第二套 HTML 监控。
 
-工作流预先绑定研究报告目标，由宿主准备目录。完成、失败或预算耗尽且子任务已退出时，原生代码发布一份 report artifact：`report.html` 加 `run.json`、`dataset.json`、`factors.json` 证据附件。报告不占研究 Agent 预算。失败会保留证据并让实际 Run 失败，不能返回正常完成。暂停是非终态中断，不发布最终失败报告；显式恢复沿用原宿主 Run、会话、业务 ID、角色 assignment/RunRef 和已提交成果。取消、失败和预算耗尽是终态，不能通过恢复换 ID 绕过。
+工作流预先绑定研究报告目标，由宿主准备目录。研究完成且子任务已退出时，原生代码发布一份 report artifact：`report.html` 加 `run.json`、`dataset.json`、`factors.json` 证据附件。执行或归档异常保留证据、具体错误和断点，并中断原 Run，不发布终态报告；修复后恢复沿用原宿主 Run、会话、业务 ID、角色 assignment/RunRef 和已提交成果。已完成与已取消的运行是终态。实际评估得到的不合格候选仍是合法研究结果。
 
 `auto_factor_runs` 支持 list/read/pause/resume/cancel；`auto_factor_report` 只读取当前已发布的同一份报告，尊重用户对宿主绑定文件的移动、编辑和删除。没有有效候选、空选择或提前停止都是合法研究结果。
 
 宿主在 `auto_factor_workflow` 的 `requires` 中调用只读 `auto_factor_dependencies({run_id})`，返回 `{available,reason?,details?}`。它核验冻结数据完整性、剩余阶段选择的模型配置及 evaluator/research 声明修订；不会重做 prepare、创建新评估会话或启动 Agent。现有 evaluator 协议没有独立只读 session 探针，评估器持久会话的实际可读性仍由下一次真实 operation 核验，不把声明存在当作评估已成功。
 
-依赖不可用时宿主中断整个工作流并释放运行资源，主 Agent 沟通和修复后用 `host.runs.resume` 恢复；`auto_factor_runs` 的 pause/resume 只是同一宿主控制的业务 ID 便捷入口。恢复前重新预检，仍不可用继续挂起。运行中结构化 `DEPENDENCY_UNAVAILABLE` 与 `RUN_INTERRUPTED` 必须向宿主传播，不能变成某个 trial 的普通失败或报告终态。
+依赖不可用时宿主中断整个工作流并释放运行资源，主 Agent 核验并修复具体依赖后用 `host.runs.resume` 恢复；`auto_factor_runs` 的 pause/resume 只是同一宿主控制的业务 ID 便捷入口。恢复前重新预检，仍不可用继续挂起。若某角色已完成但未调用 auto_factor_submit 保存结构化输出，预检明确返回 MISSING_OUTPUT 并保留其文字；当前 submit 只接受原注册运行角色，主 Agent 没有代交该产物的能力，不能反复恢复或重开已完成角色来绕过。运行中结构化 `DEPENDENCY_UNAVAILABLE` 与 `RUN_INTERRUPTED` 必须向宿主传播，不能变成某个 trial 的普通失败或报告终态。
 
-`auto_factor_runs({action:"read",run_id})` 返回 `interrupts:[{id,reason,requirements,...}]`。主 Agent 获得中断后的用户回复并处理对应事项后，可调用 `auto_factor_runs({action:"resume",run_id,interrupt_ids:["读到的中断ID"],response:{resolution:"实际处理结果"}})`；`response` 可省略。它转发为 `host.runs.resume(workflow,{interruptIds,response})`，沿用宿主对用户回复的确认。即使只有一项也明确选 ID；只解决部分事项时，其余中断继续等待，不默认批准全部。
+`auto_factor_runs({action:"read",run_id})` 返回 `interrupts:[{id,reason,requirements,...}]`。主 Agent 处理并核验对应事项后，可调用 `auto_factor_runs({action:"resume",run_id,interrupt_ids:["读到的中断ID"],response:{resolution:"实际处理结果"}})`；`response` 可省略。它转发为 `host.runs.resume(workflow,{interruptIds,response})`，沿用宿主中断控制契约；已授权范围内可修复的依赖不要求再收到一条用户回复，用户明确暂停或尚缺必要授权仍不能被依赖修复覆盖。即使只有一项也明确选 ID；只解决部分事项时，其余中断继续等待，不默认批准全部。
 
 原生执行声明 `resumable:true`，通过 `execution.checkpointState`、`execution.attempt/resume` 与 `await execution.checkpoint(state)` 保存阶段位置；业务成果继续存于原有 durable checkpoints。角色派发前保存请求和固定 operationId，接受后保存 RunRef；恢复只观察或恢复该 Run。已完成角色输出、评估回执、reflection、selection 与 finalEvaluation 直接复用。评估器协议要求同一 session/trial/selection 的冻结请求具有幂等回执；不能换 trial ID 或改输入重试未知结果。
 
@@ -74,3 +73,5 @@
 ## 宿主 API v2
 
 capabilities.json 是能力、输入输出、生命周期、状态集合和报告 schema 的唯一声明；createCapabilities 仅绑定实现。所选研究能力使用 pluginId#capabilityId 精确引用，模型来自 context.models。workflow 能力有独立任务会话，子 Agent 继承真实父 Run；state 保存 CAS 索引，resources 保存不可变断点与报告。views.open 只打开宿主原生 Run 界面。最终评估与报告归档由代码完成。
+
+启动 workflow 时通过 `options.task.collaboration={agents,relationships}` 声明研究主管、假设研究员、因子实现员、证据评审员和研究复盘员五个稳定身份。主管分配研究方向，假设交给实现员，实现和实测回执交给评审员；评审结果进入复盘并供主管最终选择，复盘向主管和研究员反馈下一轮方向。方向分支、轮次和最终选择属于这些 Agent 的工作，不是额外图节点；每次 `host.agent.run` 通过 `options.task.agentId` 绑定同一个角色身份，同时保留 role/stage/iteration 详情。评估器和报告归档是代码能力，不作为 Agent。原 `handoff` 事件继续记录实际成果消费，不能据此增删协作图中的边。

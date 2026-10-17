@@ -72,7 +72,7 @@ test('real host preflight retains a report workspace but dispatches no Agent whe
   await writeFile(join(path, 'index.js'), "export function createCapabilities() { return [{name:'fixture_context', execute:()=>({})},{name:'fixture_apply',execute:()=>{throw new Error('No trading is permitted in this fixture')}}]; }");
   const tested = await f.runtime.plugins.manager.test('conv_main', { path }); await f.runtime.plugins.manager.install('conv_main', { path, digest: tested.digest });
   const execution = f.runtime.plugins.entry('fixture/execution');
-  const plan = { ...completed.plan, enabled: true, model: { provider: 'unconfigured-fixture', id: 'model', configurationDigest: 'sha256:fixture' }, agentModels: {}, symbols: [], instructions: '', debateRounds: 1, taskTimeoutMs: 30000, eventCooldownMs: 5000,
+  const plan = { ...completed.plan, enabled: true, model: { provider: 'unconfigured-fixture', id: 'model', configurationDigest: 'sha256:fixture' }, agentModels: {}, symbols: [], instructions: '', debateRounds: 1, eventCooldownMs: 5000,
     execution: { pluginId: execution.id, contextTool: 'fixture_context', applyTool: 'fixture_apply', account, arguments: {}, context: {}, quantityRules: { unit: 'units', signed: true, integer: false }, tools: ['fixture_context', 'fixture_apply'], readTools: ['fixture_context'], plugins: [execution.id], revisions: [{ id: execution.id, digest: execution.digest }] }, research: { plugins: [], tools: [], revisions: [] } };
   records(f.host).put('plans', plan);
   const run = await f.call('manual_trading_run', { plan_id: 'plan', request_id: 'once' });
@@ -98,4 +98,19 @@ test('real host preflight retains a report workspace but dispatches no Agent whe
   await Promise.all([...f.instance.runtime.running.values()].map(value => value.promise));
   const scheduledRecord = f.instance.runtime.run(scheduled.id);
   assert.equal(scheduledRecord.status, 'queued'); assert.equal(scheduledRecord.workflow, undefined, 'A blocked account workflow is not bypassed by a new scheduled Run');
+
+  for (const report of [false, true]) {
+    const analysisPlan = { ...plan, id: `analysis-${report}`, mode: 'team', purpose: 'analysis', publishReport: report };
+    records(f.host).put('plans', analysisPlan);
+    const analysis = f.instance.runtime.trigger(analysisPlan.id, { kind: 'analysis', id: 'one-shot' }, f.host);
+    await Promise.all([...f.instance.runtime.running.values()].map(value => value.promise));
+    const retained = f.instance.runtime.run(analysis.id), actual = f.runtime.runs.read(retained.workflow.id);
+    assert.equal(actual.kind, 'workflow'); assert.equal(actual.status, 'interrupted');
+    assert.equal(actual.task.collaboration.agents.length, 8); assert.equal(actual.task.collaboration.agents.some(agent => agent.id === 'executor'), false);
+    assert.equal(Boolean(f.runtime.reportLibrary.boundTarget(actual.executionSessionId)), report,
+      'Only explicitly requested analysis reports are reserved by the actual host before research completes');
+    assert.equal((await f.call('manual_trading_activity', { run_id: analysis.id })).runId, actual.id,
+      'A reportless analysis still opens its own native workflow process');
+    assert.equal(retained.report, undefined); assert.equal(retained.decision, undefined); assert.equal(retained.execution, undefined);
+  }
 });

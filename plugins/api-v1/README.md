@@ -1,6 +1,6 @@
 # Default plugins / Plugin API 2
 
-**Current packages require Sesame >=0.2.3 and Plugin API 2.** Each package explicitly declares capabilities, schemas, consumers and dependencies. Installers are listed on the [application release page](https://github.com/KDZZZZZZ/sesame/releases/latest). API 1 hosts must upgrade before installing these packages. Source, published archives and the install catalog may select different package versions.
+**Current packages use Plugin API 2 and declare their minimum Sesame version individually.** The updated configuration, orchestration and plugin-manager packages require Sesame >=0.2.4; unchanged packages retain >=0.2.3. Each package explicitly declares capabilities, schemas, consumers and dependencies. Installers are listed on the [application release page](https://github.com/KDZZZZZZ/sesame/releases/latest). API 1 hosts must upgrade before installing these packages. Source, published archives and the install catalog may select different package versions.
 
 This directory contains exactly nine default packages for the 0.2 application bundle. The application
 keeps the protocol, verified loader and general interface. Plugin implementations,
@@ -41,7 +41,7 @@ actual installation and activation are checked by a matching Sesame host.
 - `scripts/plugin-lock.mjs`: data-only validation, lock generation and deterministic archive creation.
 - `tests/`: source-repository tests; never included in the application bundle.
 
-Native plugins export `createTools(host)` and optional `activate(host)`. They use
+Native plugins export `createCapabilities(host)` and optional `activate(host)`. They use
 the public HostContext or allowlisted `@sesame/plugin-sdk/...` modules. They cannot
 import an application's private source tree. The four standard MCP packages keep
 their process boundary and `bot.sesame` manifest namespace.

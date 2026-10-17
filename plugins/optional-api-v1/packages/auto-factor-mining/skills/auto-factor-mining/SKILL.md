@@ -1,6 +1,6 @@
 ---
 name: auto-factor-mining
-description: 以显式评估能力、固定模型和研究预算构建可复核因子试验。
+description: 以显式评估能力、固定模型和研究范围构建可复核因子试验。
 ---
 
 研究目标是产生可检验的候选、实测评价、失败证据与后续假设。配置由 auto_factor_start 的完整 schema 定义；evaluator 使用指定插件的局部 capability ID，research.tools 使用已注册的 pluginId#capabilityId，模型选择来自 auto_factor_models。没有声明的接口不会被自动猜测或补齐。

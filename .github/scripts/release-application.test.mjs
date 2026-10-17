@@ -6,12 +6,14 @@ import { validateApplicationPlan, validateApplicationAssets, validateChecksums, 
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const head = 'a'.repeat(40);
 const context = () => ({ GITHUB_ACTIONS: 'true', GITHUB_REPOSITORY: 'KDZZZZZZ/sesame', GITHUB_REF: 'refs/heads/main', GITHUB_EVENT_NAME: 'push', GITHUB_SHA: head, GITHUB_WORKFLOW_REF: 'KDZZZZZZ/sesame/.github/workflows/application-release.yml@refs/heads/main' });
-function fixture() {
-  const names = ['INSTALL.md', 'Sesame-0.2.3-linux-x64.AppImage', 'Sesame-0.2.3-linux-x64.deb', 'Sesame-0.2.3-mac-arm64.dmg', 'Sesame-0.2.3-win-x64.exe'];
+function fixture({ schemaVersion = 1, tag = schemaVersion === 1 ? 'v0.2.3' : 'v0.2.4' } = {}) {
+  const version = tag.slice(1);
+  const names = ['INSTALL.md', `Sesame-${version}-linux-x64.AppImage`, `Sesame-${version}-linux-x64.deb`, `Sesame-${version}-mac-arm64.dmg`, `Sesame-${version}-win-x64.exe`];
+  if (schemaVersion === 2) names.push(`Sesame-${version}-win-x64.exe.blockmap`, `Sesame-${version}-linux-x64.deb.blockmap`, 'update-feed-win32-x64.yml', 'update-plan-win32-x64.json', 'update-feed-linux-x64.yml', 'update-plan-linux-x64.json');
   const assets = names.map(name => ({ name, size: 100, sha256: sha256(name) }));
   const sums = Buffer.from(assets.map(asset => `${asset.sha256}  ${asset.name}\n`).join(''));
   assets.push({ name: 'SHA256SUMS.txt', size: sums.length, sha256: sha256(sums) });
-  const plan = { schemaVersion: 1, repository: 'KDZZZZZZ/sesame', tag: 'v0.2.3', releaseId: 42, assets };
+  const plan = { schemaVersion, repository: 'KDZZZZZZ/sesame', tag, releaseId: 42, assets };
   const release = { id: 42, tag_name: plan.tag, target_commitish: 'main', draft: true, prerelease: false, published_at: null, assets: assets.map((asset, i) => ({ id: i + 1, name: asset.name, size: asset.size, digest: `sha256:${asset.sha256}`, state: 'uploaded' })) };
   return { plan, release, sums };
 }
@@ -38,6 +40,31 @@ test('manifest pins one stable application release and exactly the six required 
   for (const patch of [{ schemaVersion: 2 }, { repository: 'other/repo' }, { tag: 'v01.2.3' }, { tag: 'plugins-api-v1-dev.22' }, { tag: 'v0.2.3-rc.1' }, { releaseId: 0 }, { releaseId: '42' }, { extra: true }]) assert.throws(() => validateApplicationPlan({ ...plan, ...patch }));
   for (const assets of [plan.assets.slice(1), [...plan.assets, plan.assets[0]], plan.assets.map((a, i) => i ? a : { ...a, name: '../INSTALL.md' }), plan.assets.map((a, i) => i ? a : { ...a, sha256: 'wrong' }), plan.assets.map((a, i) => i ? a : { ...a, size: -1 }), plan.assets.map((a, i) => i ? a : { ...a, size: 1.5 }), plan.assets.map((a, i) => i ? a : { ...a, extra: true })]) assert.throws(() => validateApplicationPlan({ ...plan, assets }));
 });
+
+test('schema 2 requires exactly twelve assets including both platform update feeds, plans and blockmaps', () => {
+  const { plan } = fixture({ schemaVersion: 2 });
+  assert.equal(validateApplicationPlan(plan), plan);
+  assert.equal(plan.assets.length, 12);
+  for (const asset of plan.assets) {
+    assert.throws(() => validateApplicationPlan({ ...plan, assets: plan.assets.filter(candidate => candidate !== asset) }));
+    assert.throws(() => validateApplicationPlan({ ...plan, assets: [...plan.assets, asset] }));
+    for (const patch of [{ name: `extra-${asset.name}` }, { sha256: 'invalid' }, { size: 0 }]) {
+      assert.throws(() => validateApplicationPlan({ ...plan, assets: plan.assets.map(candidate => candidate === asset ? { ...asset, ...patch } : candidate) }));
+    }
+  }
+  assert.throws(() => validateApplicationPlan({ ...plan, schemaVersion: 3 }));
+});
+
+test('the updater release boundary cannot be bypassed by selecting the legacy schema', () => {
+  for (const tag of ['v0.2.4', 'v0.2.10', 'v0.3.0', 'v0.10.0', 'v1.0.0']) {
+    assert.throws(() => validateApplicationPlan(fixture({ schemaVersion: 1, tag }).plan), /schemaVersion 2/);
+    validateApplicationPlan(fixture({ schemaVersion: 2, tag }).plan);
+  }
+  for (const tag of ['v0.1.99', 'v0.2.2', 'v0.2.3']) {
+    validateApplicationPlan(fixture({ schemaVersion: 1, tag }).plan);
+    assert.throws(() => validateApplicationPlan(fixture({ schemaVersion: 2, tag }).plan), /v0\.2\.4/);
+  }
+});
 test('remote release identity, uploaded state, exact asset set, sizes and GitHub digests must match', () => {
   const { plan, release } = fixture();
   validateApplicationAssets(plan, release);
@@ -54,6 +81,44 @@ test('checksums authenticate the small file and independently cover all five pay
     const bytes = Buffer.from(changed.join('\n') + '\n');
     const manifest = { ...plan, assets: plan.assets.map(asset => asset.name === 'SHA256SUMS.txt' ? { ...asset, size: bytes.length, sha256: sha256(bytes) } : asset) };
     assert.throws(() => validateChecksums(manifest, bytes));
+  }
+});
+
+test('schema 2 checksums must authenticate all eleven payloads, including every update attachment', () => {
+  const { plan, sums } = fixture({ schemaVersion: 2 });
+  validateChecksums(plan, sums);
+  assert.throws(() => validateChecksums(plan, Buffer.concat([sums, Buffer.from('x')])));
+  const lines = sums.toString().trimEnd().split('\n');
+  assert.equal(lines.length, 11);
+  const checksumPlan = bytes => ({ ...plan, assets: plan.assets.map(asset => asset.name === 'SHA256SUMS.txt' ? { ...asset, size: bytes.length, sha256: sha256(bytes) } : asset) });
+  for (let index = 0; index < lines.length; index++) {
+    for (const changed of [
+      lines.filter((_, i) => i !== index),
+      [...lines, lines[index]],
+      lines.map((line, i) => i === index ? line.replace(/^[a-f0-9]{64}/, 'f'.repeat(64)) : line),
+      lines.map((line, i) => i === index ? line.replace('  ', '  ../') : line),
+    ]) {
+      const bytes = Buffer.from(changed.join('\n') + '\n');
+      assert.throws(() => validateChecksums(checksumPlan(bytes), bytes));
+    }
+  }
+  const duplicated = Buffer.from([...lines.slice(0, -1), lines[0]].join('\n') + '\n');
+  assert.throws(() => validateChecksums(checksumPlan(duplicated), duplicated));
+});
+
+test('schema 2 remote attachment integrity is rechecked before publication and failures never write', async () => {
+  const original = fixture({ schemaVersion: 2 });
+  validateApplicationAssets(original.plan, original.release);
+  for (const asset of original.release.assets) {
+    for (const changed of [
+      original.release.assets.filter(candidate => candidate.id !== asset.id),
+      [...original.release.assets, asset],
+      ...[{ name: 'extra.zip' }, { size: asset.size + 1 }, { digest: `sha256:${'b'.repeat(64)}` }, { state: 'new' }].map(patch => original.release.assets.map(candidate => candidate.id === asset.id ? { ...asset, ...patch } : candidate)),
+    ]) {
+      const f = fixture({ schemaVersion: 2 }), c = client(f, { refreshed: { ...f.release, assets: changed } });
+      await assert.rejects(releaseApplication(f.plan, { ...c.options, mode: 'publish' }));
+      assert.equal(c.calls.some(call => call.method), false);
+    }
   }
 });
 test('publication is restricted to this exact main workflow, event and checked-out commit', () => {
@@ -176,4 +241,31 @@ test('a concurrent completed publication is validated then skipped', async () =>
 test('the first stable release can publish without an existing latest', async () => {
   const f = fixture(), c = client(f, { latest: null });
   assert.equal((await releaseApplication(f.plan, { ...c.options, mode: 'publish' })).action, 'published');
+});
+
+test('schema 2 verification stays read-only and publication uses the same trusted main path', async () => {
+  const f = fixture({ schemaVersion: 2 }), verify = client(f), publish = client(f, { tag: null });
+  assert.equal((await releaseApplication(f.plan, { ...verify.options, mode: 'verify', env: {} })).action, 'verified-draft');
+  assert.equal(verify.calls.some(call => call.method), false);
+  assert.deepEqual(verify.downloads, ['SHA256SUMS.txt']);
+  assert.equal((await releaseApplication(f.plan, { ...publish.options, mode: 'publish' })).action, 'published');
+  assert.deepEqual(publish.calls.filter(call => call.method), [{ path: '/releases/42', method: 'PATCH', body: { draft: false, prerelease: false, make_latest: 'true', target_commitish: head } }]);
+  assert.deepEqual(publish.downloads, ['SHA256SUMS.txt']);
+});
+
+test('schema 2 cannot publish a downgrade, another release identity, an untrusted checkout or stale main', async () => {
+  const f = fixture({ schemaVersion: 2 });
+  for (const latest of ['v0.2.5', 'v0.2.10', 'v0.3.0', 'v1.0.0', f.plan.tag]) {
+    const c = client(f, { latest: { id: 50, tag_name: latest, draft: false, prerelease: false } });
+    for (const mode of ['verify', 'publish']) await assert.rejects(releaseApplication(f.plan, { ...c.options, mode }), /downgrade|different release ID/);
+    assert.equal(c.calls.some(call => call.method), false);
+  }
+  for (const options of [{ main: 'b'.repeat(40) }, { tag: { ref: `refs/tags/${f.plan.tag}`, object: { type: 'commit', sha: 'b'.repeat(40) } } }]) {
+    const c = client(f, options);
+    await assert.rejects(releaseApplication(f.plan, { ...c.options, mode: 'publish' }), /Main advanced|tag.*workflow commit/);
+    assert.equal(c.calls.some(call => call.method), false);
+  }
+  const c = client(f);
+  await assert.rejects(releaseApplication(f.plan, { ...c.options, mode: 'publish', env: { ...context(), GITHUB_REF: 'refs/heads/dev' } }), /main branch in GitHub Actions/);
+  assert.deepEqual(c.calls, []);
 });

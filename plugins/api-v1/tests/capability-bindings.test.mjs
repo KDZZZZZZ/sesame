@@ -20,7 +20,7 @@ function fixture(t, binding, servers = { [String(binding?.server)]: { command: '
     inputSchema: { type: 'object' }, outputSchema: { type: 'object' }, consumers: ['agent', 'host'], effects: [], binding,
     usage: { purpose: 'Read the fixture.', inputs: 'An empty object.', outputs: 'The fixture value.', prerequisites: [], limitations: [] } };
   if (binding?.type === 'agent') Object.assign(capability, { kind: 'agent', execution: 'run', instructions: 'Use the declared capabilities to answer the objective.',
-    objective: 'Return the fixture value.', allowedCalls: [], budget: { maxTurns: 1, maxToolCalls: 0, timeoutMs: 1000 } });
+    objective: 'Return the fixture value.', allowedCalls: [] });
   if (binding?.type === 'graph') Object.assign(capability, { kind: 'workflow', execution: 'run' });
   save('capabilities.json', { schemaVersion: 1, apiVersion: '2', configSchema: {}, capabilities: [capability],
     sources: [], views: [], services: [], knowledge: [], hooks: [], stateCollections: [], artifactSchemas: [] });

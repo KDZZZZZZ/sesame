@@ -2,7 +2,9 @@
 
 The source directories retain the names `plugins/api-v1` and
 `plugins/optional-api-v1`; their current manifests, capabilities and locks use
-**API 2** and require Sesame **>=0.2.3**. Every plugin explicitly declares its
+**API 2**. Updated packages for the 0.2.4 release require Sesame **>=0.2.4**;
+unchanged packages retain **>=0.2.3**. Each manifest's `engines.sesame` is authoritative.
+Every plugin explicitly declares its
 capabilities, input/output schemas, consumers, dependencies and usage guidance.
 Preserve each package's license, author and third-party provenance.
 

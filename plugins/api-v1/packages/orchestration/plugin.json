@@ -2,7 +2,7 @@
   "id": "sesame/orchestration",
   "title": "Sesame 使用与编排指南",
   "description": "纯知识指南：介绍 Sesame 工作台与宿主统一 Agent/Run 接口，不注册运行工具。",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "default_state": "mounted",
   "apiVersion": "2",
   "capability_manifest": "capabilities.json",
@@ -23,6 +23,6 @@
   ],
   "license": "MIT",
   "engines": {
-    "sesame": ">=0.2.3"
+    "sesame": ">=0.2.4"
   }
 }
