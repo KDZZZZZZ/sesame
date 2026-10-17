@@ -13,7 +13,7 @@ function fixture({ backend = 'mt5', apply } = {}) {
   const calls = [], time = 1800000000000, root = mkdtempSync(join(tmpdir(), 'portfolio-api2-'));
   const controller = new AbortController();
   const account = backend === 'mt5' ? { accountId: '123', server: 'broker', revision: '1' } : { accountId: '123', connectionId: 'route', revision: '1' };
-  const host = { context: { kind: 'main', sessionId: 'owner', storageRoot: root }, plugins: { read: async id => id === 'sesame/manual-trading' ? undefined : { version: id === 'sesame/mt5' ? '1.6.0' : '1.4.0', state: 'discoverable' } },
+  const host = { context: { kind: 'main', sessionId: 'owner', storageRoot: root }, plugins: { read: async id => id === 'sesame/manual-trading' ? undefined : { version: id === 'sesame/mt5' ? '2.1.0' : '1.4.0', state: 'discoverable' } },
     capabilities: { invoke: async (id, input) => { calls.push({ pluginId: id.split('#')[0], name: id.split('#')[1], arguments: clone(input) }); return { type: 'result', value: { account: clone(account), positions: [], orders: [], deployments: [] } }; } } };
   const provenance = { get agent() { return host.task && { pluginId: host.task.pluginId, taskId: host.task.id, sessionId: host.task.conversationId, input: clone(host.task.input) }; }, get chain() { return clone(host.chain)?.map(item => ({ pluginId: item.pluginId, capabilityId: `${item.pluginId}#${item.toolName}` })); } };
   fixtures.push({ host, root });
@@ -40,6 +40,7 @@ test('binding freezes native identity and declares complete composable execution
     const identity = await f.execution.context({ binding_id: 'binding', action: 'identity' });
     assert(identity.tools.includes(APPLY)); assert(!identity.readTools.includes(APPLY));
     assert(identity.readTools.every(name => identity.tools.includes(name)));
+    if (backend === 'mt5') assert.deepEqual(identity.readTools, [CONTEXT, 'mt5_trading_context', 'mt5_catalog', 'mt5_call']);
     assert.equal(identity.quantityRules.integer, backend === 'qmt');
     assert.deepEqual(identity.fillSources, backend === 'mt5' ? [{ pluginId: 'sesame/mt5', provider: 'mt5/python/history_deals_get' }] : []);
     f.account.revision = '2';
@@ -85,8 +86,12 @@ test('bindings cannot be read or reused by another main owner or an unrelated ch
 
 test('an older native plugin is rejected while binding, before a workflow can schedule incompatible execution', async () => {
   const f = fixture();
-  f.host.plugins.read = id => id === 'sesame/manual-trading' ? undefined : { version: '1.5.0' };
-  await assert.rejects(f.execution.configure({ id: 'binding', backend: 'mt5' }), { code: 'PREREQUISITE_REQUIRED' });
+  for (const version of ['1.5.0', '1.6.0', '2.0.9']) {
+    f.host.plugins.read = id => id === 'sesame/manual-trading' ? undefined : { version };
+    await assert.rejects(f.execution.configure({ id: 'binding', backend: 'mt5' }), error => {
+      assert.equal(error.code, 'PREREQUISITE_REQUIRED'); assert.match(error.message, /2\.1\.0\+/); return true;
+    });
+  }
   assert.equal(f.calls.length, 0);
 });
 

@@ -19,7 +19,7 @@ export const copy = value => value === undefined ? undefined : structuredClone(v
 
 // The scheduler and private receipts are real. Only model completion, broker
 // observations and resource bytes are controlled; executions use the host Run ledger.
-export async function fixture(t) {
+export async function fixture(t, { invokeCapability } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'manual-plans-v2-'));
   const store = new Store(join(root, 'host')), runs = new RunService(store);
   let time = Date.parse('2026-10-13T12:00:00Z'), account = { accountId: 'account-1', server: 'Fixture-Demo', revision: '1' };
@@ -49,6 +49,8 @@ export async function fixture(t) {
       },
       async invoke(id, input, options = {}) {
         options.signal?.throwIfAborted();
+        const intercepted = await invokeCapability?.(id, input, options);
+        if (intercepted !== undefined) return intercepted;
         if (id === 'fixture/execution#fixture_context' || id === 'fixture/execution#fixture_apply') {
           const name = id.split('#')[1]; brokerCalls.push({ name, arguments: copy(input) });
           return { type: 'result', value: name === 'fixture_apply'

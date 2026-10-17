@@ -197,7 +197,7 @@ export class MT5Official {
       if (name === 'python' && !this.python.available()) return { ...empty('not_installed', '尚未找到 MT5 或已配置的 Windows Python。'), prerequisite: dependencyRequirement('python-ipc', this.storage.directory, ['MT5', 'Windows Python + MetaTrader5 SDK']) };
       if (name === 'launcher' && !this.native) return { ...empty('not_installed', '尚未找到本机 MT5 安装。'), prerequisite: dependencyRequirement('launcher', this.storage.directory, ['MT5 terminal']) };
       try {
-        const tools = await this.tools(name, signal, { startIfNeeded: server === 'metaeditor' }), client = this.clients.get(name);
+        const tools = await this.tools(name, signal), client = this.clients.get(name);
         return { server: name, status: client ? 'connected' : 'installed', reason: client ? null : '已找到运行环境；实际连接与执行结果以调用为准。', server_info: client?.info ?? null, workspace: client?.workspace?.structuredContent ?? null,
           tools: tools.filter(t => `${t.name} ${t.description}`.toLowerCase().includes(catalogQuery.toLowerCase())).map(tool => {
             return { ...tool, category: categories.get(tool.name) ?? name, permission: this.permission(name, tool.name), ...this.access(name, tool.name, owner) };
@@ -232,7 +232,7 @@ export class MT5Official {
     const task = (async () => {
       let nativeArgs;
       try {
-      const definition = (await this.tools(server, signal, { startIfNeeded: !this.access(server, tool, owner).blocked_reason })).find(t => t.name === tool);
+      const definition = (await this.tools(server, signal, { startIfNeeded: this.route(server, tool).group === 'editor' && !this.access(server, tool, owner).blocked_reason })).find(t => t.name === tool);
       requireValue(definition, '此连接没有提供该工具，请刷新 mt5_catalog', 404, 'mt5_tool_missing');
       nativeArgs = nativeValueForLosslessIds(definition.inputSchema, args);
       const { blocked_reason: blocked } = managed ? this.deploymentAccess() : this.access(server, tool, owner); requireValue(!blocked, blocked, 403, 'mt5_permission_denied');

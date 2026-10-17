@@ -2238,7 +2238,7 @@
       "id": "sesame/financial-research",
       "version": "2.1.0",
       "directory": "financial-research",
-      "treeDigest": "sha256:af7d1e681a225ddd81b7eca676fb0c7006b1ecc7a5399e56508dc5c119af165d",
+      "treeDigest": "sha256:e70eb73b5f49b6ee2caff557e75352b437eb6bdd3b66778da708835a3c56a29f",
       "files": [
         {
           "path": "INTERFACES.md",
@@ -2257,7 +2257,7 @@
         },
         {
           "path": "README.md",
-          "sha256": "65e262b722609adb1c586848ebcb0e1c5ecbd639ad4dd5015306623852837741",
+          "sha256": "442b0d0bfe1a8aa5c482a5051d29311033438e8d3a7860632c2edd5abc99a9fb",
           "bytes": 6074
         },
         {
@@ -3198,7 +3198,7 @@
       "id": "sesame/manual-trading",
       "version": "3.3.0",
       "directory": "manual-trading",
-      "treeDigest": "sha256:74cd66c482840d8cfd3b0fb91a0ea6c6cb2f591a4dd320ce5a661f2e4541ebe7",
+      "treeDigest": "sha256:0a3d8fc68df18ee14eeca47cc73dcb4df7d60efd73956d925ab7499574a11f8c",
       "files": [
         {
           "path": "COMPOSITION.md",
@@ -3217,8 +3217,8 @@
         },
         {
           "path": "README.md",
-          "sha256": "46ef2b29959ba0297b1297bb64040da7ab38fbd0503df1eea56f22b48c309bdb",
-          "bytes": 17073
+          "sha256": "a90c3fc57d99b219372eaa7cf01e82b492b590beccfde976717d9925197828ac",
+          "bytes": 17271
         },
         {
           "path": "agent-tools.js",
@@ -3267,8 +3267,8 @@
         },
         {
           "path": "prompt.md",
-          "sha256": "f24c66a482249cd2ef53922c2f4927cd588c4de76138d0e9950068d7745f3334",
-          "bytes": 13017
+          "sha256": "84e08496b444fcf558bace53ef920fcecd36215405970de0702474afaaff9f19",
+          "bytes": 13199
         },
         {
           "path": "records.js",
@@ -3282,8 +3282,8 @@
         },
         {
           "path": "runtime.js",
-          "sha256": "2395ae41376db675fbcb3939478c0c5e74d70d1bb73e1f96691612fa037aada6",
-          "bytes": 51204
+          "sha256": "0c1205bb13b9baa91eba93d9eaca96b55704d8e40998abfc4014aee763439ac9",
+          "bytes": 51908
         },
         {
           "path": "shared.js",
@@ -3302,8 +3302,8 @@
         },
         {
           "path": "team.js",
-          "sha256": "339642748d6cd25c4473682465d5cfe2f26e3b676c5d4dc25b5e337feef5fe59",
-          "bytes": 11949
+          "sha256": "f90c2002757cde70887381a4400b2034fd392a82417ae36803e3d68866aec8aa",
+          "bytes": 12181
         }
       ]
     },
@@ -3369,7 +3369,7 @@
       "id": "sesame/mt5",
       "version": "2.1.0",
       "directory": "mt5",
-      "treeDigest": "sha256:f508f654193e739986e303d8b44d71872438d3fece7c18297557b11a829356b1",
+      "treeDigest": "sha256:ceb6919602b1e88866b0e16a2994553305ad44b4d9abf8164b6103fe4734f42b",
       "files": [
         {
           "path": "INTERFACES.md",
@@ -3528,8 +3528,8 @@
         },
         {
           "path": "backend/official.js",
-          "sha256": "37415e65e9b0807156f0ece32dde0d2ddee792b44ef1467d84f532647352661e",
-          "bytes": 27802
+          "sha256": "d7318b805370bdc0c40439f10d5199a1d6615c337999c74579375f290993f71b",
+          "bytes": 27805
         },
         {
           "path": "backend/parameters.js",
@@ -3743,8 +3743,8 @@
         },
         {
           "path": "backend/tool-groups.json",
-          "sha256": "12851de2107be34029ba8620bed214e597d7b58f8b4341bee0741ac462ff5476",
-          "bytes": 1925
+          "sha256": "43ed43770488a81fd88e40a10ad0724e73fc06aabbc362de58a97091a980c2da",
+          "bytes": 2202
         },
         {
           "path": "backend/translation-file.js",
@@ -3783,8 +3783,8 @@
         },
         {
           "path": "capabilities.json",
-          "sha256": "53f89d355d151a7afba92ece37253a29ba986afa05eba63cefa6d2f8cf99c827",
-          "bytes": 219841
+          "sha256": "d15bf0b61ccee18fd52c2471b26fb67ecf4ae9ea846e1b0936d609b3c263a7d7",
+          "bytes": 221380
         },
         {
           "path": "index.js",
@@ -3993,8 +3993,8 @@
         },
         {
           "path": "tools/python/prompt.md",
-          "sha256": "e00226713ffaddd3cdf0b0d594221dc815058e5a45a97dc02bcc63eb1ae1f01a",
-          "bytes": 600
+          "sha256": "c0d5b1ec02638d9b7d087fcf1fe9c6ec1ed7b0d8ced2b6a6a1b00bb3e836cfad",
+          "bytes": 773
         },
         {
           "path": "tools/strategy.js",
@@ -4113,9 +4113,9 @@
     },
     {
       "id": "sesame/portfolio-execution",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "directory": "portfolio-execution",
-      "treeDigest": "sha256:40f354080592081fc636ee54ea272125f44eed1b8f547572ced3d049048fead4",
+      "treeDigest": "sha256:82bcb9c59da05a686dff5dd40f6f821432e3fd75426c65e4f3d93d52fbc4a435",
       "files": [
         {
           "path": "LICENSE",
@@ -4124,8 +4124,8 @@
         },
         {
           "path": "README.md",
-          "sha256": "f022870a31d1a332363c9ec8b195eb7c82a70761582371faf3e602bf88121dcf",
-          "bytes": 2404
+          "sha256": "16b3966ea2b55be64250d0d66fe8d3f85d0dfa9e3a8b8fe3395bb7ee0b954ae2",
+          "bytes": 2894
         },
         {
           "path": "adapters.js",
@@ -4134,8 +4134,8 @@
         },
         {
           "path": "bindings.js",
-          "sha256": "1c075151aaa0ff5e3e2398c949a203301e48bfed80a5bbfa2df95dec10dd0959",
-          "bytes": 15329
+          "sha256": "f420007e6487596532ffe57bc7c04e949f1afddc3e61a1a4c9d88b5a1a0b76b7",
+          "bytes": 15420
         },
         {
           "path": "calls.js",
@@ -4144,8 +4144,8 @@
         },
         {
           "path": "capabilities.json",
-          "sha256": "1a53ca44c7b5a60f8834b284004de36d56ab95741ad4cc7174d2749c62094c39",
-          "bytes": 30836
+          "sha256": "7303f1bc7522bcd92653bb60e09cecbde29ef4bc513002ca21c50226c150e60c",
+          "bytes": 30924
         },
         {
           "path": "execution-lock.js",
@@ -4159,12 +4159,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "5eca9dc2f38865a8a4b70b4bbd344c1d03b7aae8d007cb24a1bbcfb71fabf839",
+          "sha256": "18a733306c8e872aaffa1c3d23c3cdd04494b2c87563193f6076dc2391cba6e7",
           "bytes": 113
         },
         {
           "path": "plugin.json",
-          "sha256": "3a7edabeb6cd6d27c629816082eba8965647dbbbf4b310b056e247a8fc7dc905",
+          "sha256": "730f9d3d465ac6c61c6a22f1f33f5db74d6b98b93c299003e25817d95b435120",
           "bytes": 800
         },
         {

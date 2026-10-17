@@ -4223,11 +4223,11 @@
     },
     {
       "id": "sesame/portfolio-execution",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.2.3"
+        "sesame": ">=0.2.4"
       },
       "format": "sesame-native",
       "license": "MIT",
