@@ -23,4 +23,4 @@ state commit 每项 {op:"put"|"append"|"delete",key:{collection,key},value?,expe
 
 views canvas/indicator 修改需要 commandId 和 expectedVersion，保留用户锁。open 的 live view 必须静态声明，文档/快照/流操作由宿主分发。events 只暴露 workspace.* 或本插件已声明hook通知，不能订阅原始凭据/Store事件。
 
-host.process.exec 输入 {argv,cwd,env?,stdin?,timeoutMs?}，返回真实 Run。host.agent.run 输入 {title,instructions,objective,input,allowedCalls,budget,model?}，返回真实 Agent Run。不要重建旧的 tasks/process/providers/workspace/storage HostContext。
+host.process.exec 输入 {argv,cwd,env?,stdin?,timeoutMs?}，返回真实 Run。host.agent.run 输入 {title,instructions,objective,input,allowedCalls,model?}，返回真实 Agent Run。不要重建旧的 tasks/process/providers/workspace/storage HostContext。

@@ -13,7 +13,8 @@ test('formal portfolio execution package composes current-session tools and a re
     store=new Store(join(directory,'app'));runtime=new Runtime(store,{piDir:join(directory,'pi'),officialPluginsDirectory:join(directory,'empty')});await runtime.init();
     const draft=join(runtime.workspaces.root('conv_main'),'execution-draft');await cp(fileURLToPath(new URL('../packages/portfolio-execution',import.meta.url)),draft,{recursive:true});
     const checked=await runtime.plugins.manager.test('conv_main',{path:draft});assert.equal(checked.passed,true,JSON.stringify(checked));
-    const installed=await runtime.plugins.manager.install('conv_main',{path:draft,digest:checked.digest});assert.equal(installed.runtime_status,'ready');assert.equal(installed.id,'sesame/portfolio-execution');assert.equal(installed.version,'1.0.0');runtime.plugins.activate('conv_main',installed.id);
+    const packageManifest=JSON.parse(await readFile(new URL('../packages/portfolio-execution/plugin.json',import.meta.url)));
+    const installed=await runtime.plugins.manager.install('conv_main',{path:draft,digest:checked.digest});assert.equal(installed.runtime_status,'ready');assert.equal(installed.id,'sesame/portfolio-execution');assert.equal(installed.version,packageManifest.version);runtime.plugins.activate('conv_main',installed.id);
     const backendPlugin=JSON.parse(await readFile(new URL('../packages/mt5/plugin.json',import.meta.url)));
     const backendManifest=JSON.parse(await readFile(new URL('../packages/mt5/capabilities.json',import.meta.url)));
     const names=['mt5_settings','mt5_catalog','mt5_python','mt5_trade','mt5_command'];

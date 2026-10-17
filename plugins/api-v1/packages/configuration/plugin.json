@@ -1,8 +1,8 @@
 {
   "id": "sesame/configuration",
   "title": "配置助手",
-  "description": "主 Agent 读取和修改应用模型、提供方与偏好设置；模型认证使用宿主界面，后端配置由对应插件完成。",
-  "version": "3.0.0",
+  "description": "主 Agent 直接保存模型认证、兼容接口、插件环境凭据和应用偏好；私有持久保存并返回脱敏状态，无需手工导入。",
+  "version": "3.1.0",
   "default_state": "discoverable",
   "agent_scope": "main",
   "entry": "index.js",
@@ -15,7 +15,10 @@
   "apiVersion": "2",
   "license": "MIT",
   "engines": {
-    "sesame": ">=0.2.3"
+    "sesame": ">=0.2.4"
   },
-  "capability_manifest": "capabilities.json"
+  "capability_manifest": "capabilities.json",
+  "resources": [
+    "README.md"
+  ]
 }

@@ -27,7 +27,7 @@ import { createCapabilities as tradingContext } from './tools/trading-context.js
 import { createPositionCapabilities } from './positions.js';
 
 const factories = [official, charts, editor, python, system, tester, trading, deployment, authoring, configuration, evidence, strategy, dependencies, tradingContext, createPositionCapabilities];
-const mainOnly = new Set(['mt5_deployment', 'mt5_settings', 'mt5_update_configuration', 'mt5_import_configuration', 'mt5_connect', 'mt5_dependencies']);
+const mainOnly = new Set(['mt5_deployment', 'mt5_settings', 'mt5_update_configuration', 'mt5_import_configuration', 'mt5_start_terminal', 'mt5_connect', 'mt5_dependencies']);
 async function activate(host, options = {}) {
   const mt5 = await new MT5(host, options).init();
   const imports = new MT5ConfigImports(host, Date.now, () => mt5.official.settings().account);

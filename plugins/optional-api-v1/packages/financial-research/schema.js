@@ -1,6 +1,7 @@
 export const KINDS = ['prices', 'fundamentals', 'news', 'filings', 'analyst', 'insiders', 'macro', 'sentiment'];
 export const PROVIDERS = ['sec', 'fmp', 'fred', 'reddit'];
 export const CONFIG_FIELDS = ['fmp_key_env', 'fred_key_env', 'sec_user_agent_env', 'reddit_token_env', 'reddit_user_agent_env'];
+export const CREDENTIAL_FIELDS = Object.freeze({ fmp_api_key: 'fmp_key_env', fred_api_key: 'fred_key_env', sec_user_agent: 'sec_user_agent_env', reddit_access_token: 'reddit_token_env', reddit_user_agent: 'reddit_user_agent_env' });
 
 export function definitions(Type) {
   const optional = value => Type.Optional(value);
@@ -15,8 +16,13 @@ export function definitions(Type) {
     },
     {
       name: 'financial_research_configure',
-      description: 'Configure research source environment-variable NAMES in the main conversation. Set credentials in the host environment; never pass secret values to this tool. SEC and Reddit require an identifying user-agent. No network request is made.',
-      parameters: Object.fromEntries(CONFIG_FIELDS.map(key => [key, optional(Type.String({ pattern: '^[A-Za-z_][A-Za-z0-9_]{0,127}$', description: 'Environment-variable name, not its value.' }))])),
+      description: 'Save user-provided research API keys and user-agent identifiers directly from the main conversation. credentials accepts fmp_api_key, fred_api_key, sec_user_agent, reddit_access_token and reddit_user_agent; null removes a saved value. The host persists values privately and applies them immediately, without import, manual environment setup or restart. Optional *_env fields select environment-variable names. Returns configuration availability, never secret values; a saved key does not prove remote access or extend source coverage.',
+      parameters: {
+        ...Object.fromEntries(CONFIG_FIELDS.map(key => [key, optional(Type.String({ pattern: '^[A-Za-z_][A-Za-z0-9_]{0,127}$', description: 'Optional environment-variable name; normally keep the default and pass the value in credentials.' }))])),
+        credentials: optional(Type.Object(Object.fromEntries(Object.keys(CREDENTIAL_FIELDS).map(key => [key, optional(Type.Union([
+          Type.String({ minLength: 1, maxLength: 8192, pattern: '^[^\\r\\n\\u0000]+$', writeOnly: true }), Type.Null(),
+        ], { description: 'User-provided value to save privately; null removes the saved value.' }))])), { additionalProperties: false, minProperties: 1 })),
+      },
       method: 'configure',
     },
     {

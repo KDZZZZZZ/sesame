@@ -23,7 +23,8 @@ export async function fixture(t) {
   const root = await mkdtemp(join(tmpdir(), 'manual-plans-v2-'));
   const store = new Store(join(root, 'host')), runs = new RunService(store);
   let time = Date.parse('2026-10-13T12:00:00Z'), account = { accountId: 'account-1', server: 'Fixture-Demo', revision: '1' };
-  const models = [copy(baseModel), copy(alternateModel)], jobs = new Map(), requests = [], brokerCalls = [], events = [];
+  const models = [copy(baseModel), copy(alternateModel)], jobs = new Map(), requests = [], brokerCalls = [], events = [], executors = new Map();
+  runs.setResolver(run => executors.get(run.id));
   const entries = [
     { id: 'fixture/execution', state: 'discoverable', digest: 'fixture-v1', tools: ['fixture_context', 'fixture_apply'] },
     { id: 'custom/research', state: 'discoverable', digest: 'research-v1', tools: ['lookup'] },
@@ -43,7 +44,7 @@ export async function fixture(t) {
     selected.capabilities = {
       async list(filter = {}) {
         const items = [...manifest.capabilities.map(cap => ({ pluginId: 'sesame/manual-trading', localId: cap.id, consumers: cap.consumers })),
-          ...entries.flatMap(entry => entry.tools.map(localId => ({ pluginId: entry.id, localId, consumers: ['agent', 'host'] })))];
+          ...entries.flatMap(entry => entry.tools.map(localId => ({ pluginId: entry.id, localId, consumers: ['agent', 'host'], effects: entry.effects?.[localId] ?? [] })))];
         return { items: items.filter(item => !filter.pluginId || item.pluginId === filter.pluginId) };
       },
       async invoke(id, input, options = {}) {
@@ -62,8 +63,7 @@ export async function fixture(t) {
           assert.ok(input.allowedCalls.every(call => call.pluginId && call.capabilityId));
         }
         const ownerSessionId = agent ? runs.read(context.runId).sessionId : options.task?.sessionId ?? context.sessionId;
-        const ref = runs.start({ kind: agent ? 'agent' : 'workflow', capabilityId: id, pluginId: context.pluginId,
-          sessionId: ownerSessionId, parentRunId: context.runId, operationId: options.operationId, input, task: options.task }, async executionContext => {
+        const executor = async executionContext => {
           const sessionId = `session-${executionContext.run.id}`;
           runs.bindSession(executionContext.run.id, sessionId);
           if (!agent) {
@@ -80,9 +80,16 @@ export async function fixture(t) {
             job.finish = text => { signal.removeEventListener('abort', abort); job.status = 'completed'; resolve({ text, sessionId, model: copy(input.model), turns: 1, toolCalls: [] }); };
             signal.addEventListener('abort', abort, { once: true }); if (signal.aborted) abort();
           });
-        });
+        };
+        const ref = runs.start({ kind: agent ? 'agent' : 'workflow', capabilityId: id, pluginId: context.pluginId,
+          sessionId: ownerSessionId, parentRunId: context.runId, operationId: options.operationId, input, task: options.task }, executor);
+        executors.set(ref.id, executor);
         if (options.signal) {
-          const abort = () => runs.cancel(ref.id, { reason: 'Parent execution stopped' });
+          const abort = () => {
+            if (options.signal.reason?.code === 'RUN_INTERRUPTED') {
+              if (['queued', 'running'].includes(runs.read(ref.id).status)) runs.interrupt(ref.id, { reason: options.signal.reason.message });
+            } else runs.cancel(ref.id, { reason: 'Parent execution stopped' });
+          };
           options.signal.addEventListener('abort', abort, { once: true });
           runs.watch(ref.id, run => { if (['completed', 'failed', 'cancelled', 'unknown'].includes(run.status)) options.signal.removeEventListener('abort', abort); });
         }

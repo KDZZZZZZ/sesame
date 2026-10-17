@@ -29,15 +29,23 @@ test('manual workflow declares a native Run and no custom live HTML protocol', a
   assert.deepEqual(manifest.views, []); assert.equal(manifest.capabilities.some(cap => cap.id.startsWith('activity_')), false);
 });
 
-test('failure archives only observed evidence then rejects the actual workflow; no reporter Agent is created', async t => {
+test('an execution error interrupts with its checkpoint and resumes without repeating a completed stage', async t => {
   const f = await fixture(t), roles = [];
-  f.runtime.task = async (_id, role) => { roles.push(role); throw Object.assign(new Error('Controlled model failure'), { code: 'MODEL_UNAVAILABLE' }); };
-  await assert.rejects(f.runtime.execute(f.host, 'business-run', new AbortController().signal, f.execution), /Controlled model failure/);
+  let blocked = true;
+  f.runtime.task = async (id, role) => {
+    roles.push(role);
+    if (role === 'manager') f.runtime.update(id, { decision: { unchanged: true, targets: [], rationale: 'Retained manager decision' } });
+    else if (blocked) throw Object.assign(new Error('Temporary execution transport error'), { code: 'ECONNRESET' });
+    else f.runtime.update(id, { execution: { status: 'unchanged', targetReached: true, orders: [], pauses: [] } });
+  };
+  await assert.rejects(f.runtime.execute(f.host, 'business-run', new AbortController().signal, f.execution), /Temporary execution transport error/);
   const run = f.runtime.run('business-run');
-  assert.equal(run.status, 'failed'); assert.equal(run.execution, undefined); assert.equal(run.report.ref.kind, 'report');
-  assert.deepEqual(roles, ['manager']); assert.equal(run.reportPending, false);
-  assert.ok(f.emitted.some(event => event.type === 'artifact' && event.data.ref.id === run.report.ref.id));
-  const artifact = f.artifacts.get(run.report.ref.id); assert.ok(artifact.manifest.blobs.some(blob => blob.path === 'run.json'));
+  assert.equal(run.status, 'interrupted'); assert.equal(run.error.code, 'ECONNRESET'); assert.equal(run.execution, undefined); assert.equal(run.report, undefined);
+  assert.equal(run.stageIndex, 1); assert.ok(run.decision); assert.equal(f.emitted.some(event => event.type === 'artifact'), false);
+  blocked = false; f.execution.attempt = 2;
+  const done = await f.runtime.execute(f.host, 'business-run', new AbortController().signal, f.execution);
+  assert.equal(done.status, 'completed'); assert.equal(done.runId, run.id); assert.equal(f.runtime.run(run.id).workflow.id, 'workflow-run');
+  assert.deepEqual(roles, ['manager', 'executor', 'executor']); assert.equal(done.report.ref.kind, 'report');
 });
 
 test('a workflow cannot borrow another main conversation plan using input metadata', async t => {
@@ -101,7 +109,7 @@ test('interrupt after a completed stage retains its checkpoint and resumes the s
 
 test('an interrupted accepted role reuses its Run identity and creates only one report entry', async t => {
   const f = await fixture(t), model = { provider: 'fixture', id: 'one', configurationDigest: 'one' };
-  const plan = { ...f.runtime.run('business-run').plan, model, agentModels: {}, instructions: '', taskTimeoutMs: 30000,
+  const plan = { ...f.runtime.run('business-run').plan, model, agentModels: {}, instructions: '',
     execution: { readTools: [], plugins: [], revisions: [] }, research: { tools: [], plugins: [], revisions: [] } };
   f.runtime.update('business-run', { plan });
   let invokes = 0, cancels = 0, state = 'interrupted';

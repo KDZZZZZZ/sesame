@@ -5,7 +5,7 @@ import { selectResearch } from './composition.js';
 
 export const ROLES = ['market', 'fundamentals', 'news', 'sentiment', 'bull', 'bear', 'risk', 'manager', 'executor'];
 export const ANALYSTS = ROLES.slice(0, 4);
-export const TERMINAL = new Set(['completed', 'failed', 'cancelled']);
+export const TERMINAL = new Set(['completed', 'cancelled']);
 export const clone = value => structuredClone(value);
 export const accountKey = plan => canonical([plan.execution?.pluginId ?? 'legacy', Object.fromEntries(Object.entries(plan.account).filter(([key]) => key !== 'revision'))]);
 export const cleanError = error => ({ code: error?.code ?? 'RUN_FAILED', message: String(error?.message ?? error).slice(0, 1000) });
@@ -39,16 +39,16 @@ export async function makePlan(host, input, execution, previous, now = Date.now(
   const eventKeys = input.event_keys ?? [];
   check(Array.isArray(eventKeys) && eventKeys.length <= 20 && eventKeys.every(key => /^[a-zA-Z0-9_.:-]{1,100}$/.test(key)), 'INVALID_ARGUMENT', 'Use at most 20 bounded event keys');
   const cooldownSeconds = input.event_cooldown_seconds ?? 60, debateRounds = input.debate_rounds ?? 1;
-  const timeoutSeconds = input.task_timeout_seconds ?? 600, slippageBps = input.slippage_bps ?? 50;
+  const slippageBps = input.slippage_bps ?? 50;
   bounded(cooldownSeconds, 5, 86400, 'event_cooldown_seconds'); bounded(debateRounds, 1, 3, 'debate_rounds');
-  bounded(timeoutSeconds, 30, 1800, 'task_timeout_seconds'); bounded(slippageBps, 0, 500, 'slippage_bps');
+  bounded(slippageBps, 0, 500, 'slippage_bps');
   const symbols = input.symbols ?? [];
   check(Array.isArray(symbols) && symbols.length <= 30 && symbols.every(symbol => typeof symbol === 'string' && symbol.length > 0 && symbol.length <= 100), 'INVALID_ARGUMENT', 'Use at most 30 exact broker symbols');
   const research = await selectResearch(host, input.research ?? previous?.research ?? {});
   check(typeof (input.instructions ?? '') === 'string' && (input.instructions ?? '').length <= 6000, 'INVALID_ARGUMENT', 'Instructions exceed 6000 characters');
   const plan = { id, title: input.title.trim(), execution: clone(execution), account: clone(execution.account), mode, model, agentModels,
     symbols: [...new Set(symbols)], research, intervalMinutes, eventKeys: [...new Set(eventKeys)], accountEvents: input.account_events ?? false,
-    eventCooldownMs: cooldownSeconds * 1000, debateRounds, taskTimeoutMs: timeoutSeconds * 1000, slippageBps,
+    eventCooldownMs: cooldownSeconds * 1000, debateRounds, slippageBps,
     instructions: input.instructions ?? '', enabled: input.enabled ?? true, ownerConversationId: host.context.sessionId,
     reportFolder: `手工交易日报/${safeName(input.title)}-${id}`, revision: (previous?.revision ?? 0) + 1,
     createdAt: previous?.createdAt ?? now, updatedAt: now, nextDueAt: intervalMinutes === null ? null : now + intervalMinutes * 60000,

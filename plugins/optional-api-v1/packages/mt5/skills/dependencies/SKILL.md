@@ -10,7 +10,7 @@ description: 读取 MT5 各通道的依赖证据、复用明确配置，并按�
 ## 可用依赖与缺失组件
 
 - `discovered`、`settings` 和脱敏 `connections` 是当前依赖证据。mt5_catalog 给出所选连接的真实方法目录，mt5_connect 核验绑定账户。已有 MCP 可用而安装路径未发现并不矛盾，也不构成启动第二个终端的理由。
-- 已知实际安装路径可以直接 configure；只有缺少相关路径且任务确实需要本机程序时，`host_files_list/search/read/run` 才用于检查既有安装和进程的可执行文件路径。Windows 查已安装应用与 `%APPDATA%/MetaQuotes/Terminal/*/origin.txt` 的安装/数据目录关系；macOS 查 MetaTrader 应用及其现有 Wine prefix；Linux 查现有 Wine prefix。仅查任务相关目录和必要字段，不输出整份凭据文件或全部进程参数。读取已有配置时不把密码/token写回工具参数、报告或长期记忆；有效 MCP 凭据的后台导入与 GUI 导出回退见 connection skill。
+- 已知实际安装路径可以直接 configure；只有缺少相关路径且任务确实需要本机程序时，`host_files_list/search/read/run` 才用于检查既有安装和进程的可执行文件路径。Windows 查已安装应用与 `%APPDATA%/MetaQuotes/Terminal/*/origin.txt` 的安装/数据目录关系；macOS 查 MetaTrader 应用及其现有 Wine prefix；Linux 查现有 Wine prefix。仅查任务相关目录和必要字段，不输出整份凭据文件或全部进程参数。用户提供或已有配置中的有效 token/password 可直接交给 mt5_update_configuration 保存，不写入报告或长期记忆；凭据引用导入是可选方式，见 connection skill。
 - 对已确认的安装调用 `mt5_dependencies configure`，传新的稳定 `command_id`、刚读到的 `expected_version` 和 `changes`。可分别指定 `terminal_directory`、`data_directory`、Windows `python.exe`、非 Windows 的 `wine` 绝对路径和 `wine_prefix`。编译使用本机 MetaEditor。配置不会覆盖文件、更改账户、下载软件或启动终端；运行中构建、Tester、持久 EA 的依赖不能被改指向别处。
 - 只有确认缺失的组件才下载。使用 `host_files_mkdir` 创建返回的 `private_directory`，用 `host_files_run` 的 `argv` 数组、真实 `cwd` 和有界 `timeout` 执行安装脚本；不要通过字符串拼接 shell。下载和记录放在该目录内；不要把第三方程序拷进插件源码或应用安装目录。安装器由本插件提供或来自下列官方来源，先核对来源、摘要或签名，再执行必要安装步骤。没有适用安装权限时说明实际失败条件，不转为模拟结果。
 - `inspect` 带 `probe:true` 可核验已配置路径；安装结果的真实路径可由 configure 保存。这只核对本机依赖路径，不能代替真实编译、Python IPC、终端账户或交易授权验证。

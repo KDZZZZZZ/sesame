@@ -2,7 +2,9 @@ MT5公开能力分为本地工程/目标翻译、实际终端/Tester/交易、�
 
 本地mt5_project create/checkout/save、mt5_inspect、mt5_target/translation/conformance准备不依赖实时券商。源码保存、编译succeeded、Tester succeeded、EA running分别证明不同阶段，不互相替代。mt5_project create只创建草稿；修改源码须保存新的revision，原样save不会递增。长翻译可用mt5_translation_file冻结单个清单，修改内容需新operation_id；源映射登记只证明结构，native语义仍未验证。
 
-mt5_settings提供脱敏配置与pendingImports，mt5_dependencies inspect给具体missing/获取资源；mt5_connect核验MCP、券商及精确账户。已有配置可复用，无需先扫描本机；确有缺项时公开connection/dependencies skill给安全导入/安装入口。任务与方法的前提不同，不把本机安装缺失推成远程MCP不可用，也不把配置存在当已连接。
+mt5_settings提供脱敏配置与pendingImports，mt5_dependencies inspect给具体missing/获取资源；mt5_connect核验MCP、券商及精确账户。主Agent可用mt5_update_configuration直接保存用户提供的servers.<服务>.token、account.password、tester_agent.password及普通选项，立即生效，无需导入文件、设置页或重启。已有pendingImports可选用mt5_import_configuration复用，不作为直接配置的前提。用户已给的信息和授权继续有效，完成设置并核验，不再要求重复提供、改格式或授权；只询问任务实际缺少的值。凭据只进入配置能力，不回显到报告、脚本或长期记忆。任务与方法的前提不同，不把本机安装缺失推成远程MCP不可用，也不把配置存在当已连接。
+
+用户要求打开本机 MT5 时，主 Agent 可直接用 mt5_start_terminal({command_id:"open-selected-terminal-01"})；使用本插件已选安装和已有数据目录，不需要 MCP 密钥、Python 或先读取 catalog。它复用原终端 profile，可能恢复其中已有 EA，因此沿用现有启动权限；不自动启用权限、传入新账户或执行保存的自定义 INI。returned/result.status=spawned 只证明启动请求已交给系统，不证明 MCP、券商、Python 或界面已经就绪；需要连接证据时再用 mt5_connect({command_id:"verify-started-terminal-01",start_if_needed:false})。同一启动动作沿用 command_id；unknown 先用 mt5_command 查回执并核对真实状态，不能换 ID 盲目重启。缺安装按 mt5_dependencies inspect 的缺项处理，缺 MCP 凭据不妨碍先打开终端供用户设置。
 
 行情与画布的公开入口是 data_providers({contract:"sesame.market/1"})、market_instruments、market_read、canvas_binding/canvas_apply。来源采用发现返回的完整 {providerId,revision}，可按 configSchema 附 binding；品种采用搜索结果 ref，连接身份来自 metadata.connection。source.revision 是插件声明摘要，connection.revision 是来源配置身份，两者不可互换。host 专用 bind/query/subscribe 的完整形状在本包 INTERFACES.md，Agent 无需持有 bindingId。
 

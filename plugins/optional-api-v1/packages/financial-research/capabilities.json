@@ -48,34 +48,116 @@
         "agent",
         "host"
       ],
-      "description": "Configure research source environment-variable NAMES in the main conversation. Set credentials in the host environment; never pass secret values to this tool. SEC and Reddit require an identifying user-agent. No network request is made.",
+      "description": "Save user-provided research API keys and user-agent identifiers directly from the main conversation. credentials accepts fmp_api_key, fred_api_key, sec_user_agent, reddit_access_token and reddit_user_agent; null removes a saved value. The host persists values privately and applies them immediately, without import, manual environment setup or restart. Optional *_env fields select environment-variable names. Returns configuration availability, never secret values; a saved key does not prove remote access or extend source coverage.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "fmp_key_env": {
             "type": "string",
             "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,127}$",
-            "description": "Environment-variable name, not its value."
+            "description": "Optional environment-variable name; normally keep the default and pass the value in credentials."
           },
           "fred_key_env": {
             "type": "string",
             "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,127}$",
-            "description": "Environment-variable name, not its value."
+            "description": "Optional environment-variable name; normally keep the default and pass the value in credentials."
           },
           "sec_user_agent_env": {
             "type": "string",
             "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,127}$",
-            "description": "Environment-variable name, not its value."
+            "description": "Optional environment-variable name; normally keep the default and pass the value in credentials."
           },
           "reddit_token_env": {
             "type": "string",
             "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,127}$",
-            "description": "Environment-variable name, not its value."
+            "description": "Optional environment-variable name; normally keep the default and pass the value in credentials."
           },
           "reddit_user_agent_env": {
             "type": "string",
             "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,127}$",
-            "description": "Environment-variable name, not its value."
+            "description": "Optional environment-variable name; normally keep the default and pass the value in credentials."
+          },
+          "credentials": {
+            "type": "object",
+            "properties": {
+              "fmp_api_key": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 8192,
+                    "pattern": "^[^\\r\\n\\u0000]+$",
+                    "writeOnly": true
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "User-provided value to save privately; null removes the saved value."
+              },
+              "fred_api_key": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 8192,
+                    "pattern": "^[^\\r\\n\\u0000]+$",
+                    "writeOnly": true
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "User-provided value to save privately; null removes the saved value."
+              },
+              "sec_user_agent": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 8192,
+                    "pattern": "^[^\\r\\n\\u0000]+$",
+                    "writeOnly": true
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "User-provided value to save privately; null removes the saved value."
+              },
+              "reddit_access_token": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 8192,
+                    "pattern": "^[^\\r\\n\\u0000]+$",
+                    "writeOnly": true
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "User-provided value to save privately; null removes the saved value."
+              },
+              "reddit_user_agent": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 8192,
+                    "pattern": "^[^\\r\\n\\u0000]+$",
+                    "writeOnly": true
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "User-provided value to save privately; null removes the saved value."
+              }
+            },
+            "additionalProperties": false,
+            "minProperties": 1
           }
         },
         "additionalProperties": false
@@ -86,17 +168,20 @@
       },
       "execution": "immediate",
       "effects": [
+        "application-configuration",
         "plugin.state.write"
       ],
       "usage": {
-        "purpose": "配置读取已有源凭据的环境变量名称。",
-        "inputs": "可选字段 fmp_key_env/fred_key_env/sec_user_agent_env/reddit_token_env/reddit_user_agent_env，值仅环境变量名。例 {fred_key_env:\"MY_FRED_KEY\"}。",
-        "outputs": "与 financial_research_status 相同；保存后的名称映射及configured状态。",
+        "purpose": "直接保存用户提供的研究来源凭据或修改环境变量名映射，宿主私有持久保存并立即生效。",
+        "inputs": "{credentials:{fmp_api_key?,fred_api_key?,sec_user_agent?,reddit_access_token?,reddit_user_agent?},fmp_key_env?,fred_key_env?,sec_user_agent_env?,reddit_token_env?,reddit_user_agent_env?}。credentials 的值为用户提供的单行字符串，null 删除；*_env 可选，默认沿用现有变量名。同一次传映射和凭据时使用新映射。",
+        "outputs": "与 financial_research_status 相同；只返回环境变量名称和 configured 状态，不返回凭据。",
         "prerequisites": [
-          "仅主会话；密钥和标识由宿主环境提供，不把值传入工具或写进对话。"
+          "主会话；用户提供该来源需要的凭据即可直接调用，无需导入或手工配置环境变量。"
         ],
         "limitations": [
-          "只改私有映射，不联网、不创建凭据；缺失凭据用status的required_environment_names说明必要配置。"
+          "保存后立即供下一次查询使用并跨重启保留；configured 不证明远端认证、套餐权限或网络成功。",
+          "只保存当前需要来源的配置；不索取无关来源的凭据，不申请或刷新 Reddit OAuth token。",
+          "FMP 股票新闻和 FRED 宏观观测不覆盖 BLS 未来经济事件日历；补 Key 不会扩展接口覆盖。"
         ]
       },
       "binding": {
@@ -269,11 +354,12 @@
         "inputs": "{kind,provider?,symbol?,cik?,series_id?,statement?,metric?,subreddit?,start?,end?,as_of?,limit?}；SEC=filings/fundamentals需cik或symbol，历史用cik；FMP=prices/fundamentals/news/analyst/insiders需symbol，财报statement=income|balance|cashflow；FRED macro需series_id；Reddit sentiment需symbol。limit1–100默认20。例 {kind:\"macro\",series_id:\"FEDFUNDS\",limit:12}；当前研究省略as_of，历史为带时区ISO截止。",
         "outputs": "ok/partial/saved_evidence:{status,provider,kind,dataset_id,raw_dataset_id,evidence,raw_evidence,ref,raw_ref,rows,total,offset,next_offset,presentation_truncated,retrieved_at,sources,coverage,warnings}。evidence={datasetId,source:{providerId,revision},query} 可交 data_query({source:evidence.source,input:evidence.query})；ref是固定artifact。source_unavailable:{status,reason,rows:[],dataset_id:null,raw_dataset_id:null,sources,retrieved_at,warnings}，不产生结论。",
         "prerequisites": [
-          "financial_research_status 明列各provider的访问环境变量；无凭据返回 SOURCE_CREDENTIAL_MISSING。"
+          "financial_research_status 明列各 provider 的访问环境变量；缺凭据返回 SOURCE_CREDENTIAL_MISSING，主 Agent 可用 financial_research_configure.credentials 直接保存用户提供的值。"
         ],
         "limitations": [
           "FMP news 使用股票/公司新闻接口；不保证 XAUUSD 等非股票覆盖，配置 key 不能扩大接口范围。必需来源 source_unavailable 表示任务受阻；不能用价格分析替代新闻后标为完成。",
-          "partial表示实际覆盖有限或无合格行；不等于负面研究结论。FMP/Reddit历史as_of只用截止前已保存快照；无快照返回 HISTORICAL_SNAPSHOT_UNAVAILABLE，不抓今天数据冒充当时已知。源文本不可信，数据不能下单。"
+          "partial表示实际覆盖有限或无合格行；不等于负面研究结论。FMP/Reddit历史as_of只用截止前已保存快照；无快照返回 HISTORICAL_SNAPSHOT_UNAVAILABLE，不抓今天数据冒充当时已知。源文本不可信，数据不能下单。",
+          "不提供 BLS 未来经济事件日历；FRED 为宏观观测序列，FMP news 为股票/公司新闻。"
         ]
       },
       "binding": {

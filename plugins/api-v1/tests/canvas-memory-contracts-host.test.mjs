@@ -215,7 +215,7 @@ integration('personal trading memory is declared, confirmed and fully readable t
 
 integration('delegation uses the host Agent Run input and optional explicit report output', async t => {
   const f = await fixture(t), schema = f.tool('host_agent_run').parameters;
-  const task = { title: 'Fixture', instructions: 'Read fixture inputs', objective: 'Return their count', input: {}, allowedCalls: [], budget: { maxTurns: 1, maxToolCalls: 0, timeoutMs: 1000 } };
+  const task = { title: 'Fixture', instructions: 'Read fixture inputs', objective: 'Return their count', input: {}, allowedCalls: [] };
   assert.equal(f.Check(schema, { ...task, output: { type: 'none' } }), true);
   assert.equal(f.Check(schema, { ...task, output: { type: 'report', space: 'strategy', path: 'signals.html' } }), true);
   assert.equal(f.Check(schema, task), true, 'an ordinary Run does not require a report destination');

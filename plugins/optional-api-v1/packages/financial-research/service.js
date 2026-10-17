@@ -1,7 +1,7 @@
 import { records } from './records.js';
 import { publishRows } from './resource-files.js';
 import { createHash, randomUUID } from 'node:crypto';
-import { CONFIG_FIELDS, KINDS } from './schema.js';
+import { CONFIG_FIELDS, CREDENTIAL_FIELDS, KINDS } from './schema.js';
 import { SOURCE_KINDS, dateOnly, querySource, selectProvider, timestamp } from './sources.js';
 
 const DEFAULTS = Object.freeze({ fmp_key_env: 'FMP_API_KEY', fred_key_env: 'FRED_API_KEY', sec_user_agent_env: 'SEC_USER_AGENT', reddit_token_env: 'REDDIT_ACCESS_TOKEN', reddit_user_agent_env: 'REDDIT_USER_AGENT' });
@@ -145,11 +145,28 @@ export function createService(host, { now = Date.now, fetch: fetcher = globalThi
         recent_snapshots: snapshots().slice(0, 20).map(row => ({ dataset_id: row.id, raw_dataset_id: row.raw_dataset_id, query: row.query, retrieved_at: row.retrieved_at, row_count: row.row_count })),
       };
     },
-    configure(input) {
+    async configure(input, signal) {
       fail(host.context?.kind === 'main', 'Research configuration requires the main conversation.', 'MAIN_ONLY');
-      fail(Object.keys(input).every(key => CONFIG_FIELDS.includes(key)), 'Only source environment-variable names can be configured.');
-      for (const value of Object.values(input)) fail(typeof value === 'string' && /^[A-Za-z_][A-Za-z0-9_]{0,127}$/.test(value), 'Pass an environment-variable name, never a credential value.');
-      records(host).put('research_config', { id: 'default', values: { ...config(), ...input }, updated_at: new Date(now()).toISOString() });
+      fail(input && typeof input === 'object' && !Array.isArray(input) && Object.keys(input).every(key => CONFIG_FIELDS.includes(key) || key === 'credentials'), 'Use credentials for source values and *_env fields for optional environment-variable names.');
+      const { credentials, ...mapping } = input;
+      for (const value of Object.values(mapping)) fail(typeof value === 'string' && /^[A-Za-z_][A-Za-z0-9_]{0,127}$/.test(value), 'The *_env fields require environment-variable names; put source values in credentials.');
+      const settings = { ...config(), ...mapping };
+      if (credentials !== undefined) {
+        fail(credentials && typeof credentials === 'object' && !Array.isArray(credentials) && Object.keys(credentials).length > 0 && Object.keys(credentials).every(key => Object.hasOwn(CREDENTIAL_FIELDS, key)), 'credentials supports fmp_api_key, fred_api_key, sec_user_agent, reddit_access_token and reddit_user_agent.');
+        const changes = {};
+        for (const [key, value] of Object.entries(credentials)) {
+          fail(value === null || typeof value === 'string' && value.trim().length > 0 && value.length <= 8192 && !/[\r\n\0]/.test(value), 'Each credential must be a nonempty single-line value of at most 8192 characters or null to remove it.');
+          const name = settings[CREDENTIAL_FIELDS[key]], normalized = value === null ? null : value.trim();
+          fail(!Object.hasOwn(changes, name) || changes[name] === normalized, 'Different source credentials cannot overwrite the same environment-variable name.');
+          changes[name] = normalized;
+        }
+        signal?.throwIfAborted();
+        const result = await host.capabilities.invoke('host.configuration.update', { command_id: `research-config-${randomUUID()}`, target: 'environment', changes }, { mode: 'inline', signal });
+        fail(result?.type === 'result' && result.value?.status === 'applied', 'Host configuration has not been applied; read application configuration before retrying.', 'CONFIGURATION_NOT_APPLIED');
+      }
+      // Values belong to host configuration. This plugin stores only the public
+      // variable-name mapping, after the host has accepted the credential update.
+      records(host).put('research_config', { id: 'default', values: settings, updated_at: new Date(now()).toISOString() });
       return service.status();
     },
     read({ dataset_id: id, offset = 0, limit = 20 }) {

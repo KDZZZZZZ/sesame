@@ -2,6 +2,8 @@
 
 工作流通过现有 `host.capabilities.invoke` 调用已选择能力，不定义后端枚举、安装依赖或账户配置。调用发生在当前 Agent 工具内；调度服务不会冒充 Agent 调用。
 
+`manual_trading_analyze` 只读入口复用下述绑定的账户和 `readTools`，不调用 apply、不创建 executor。默认返回原生工作流中的 Markdown 结果而不生成文件；`report:true` 才预留/发布报告。`manual_trading_plan` / `manual_trading_run` 为另行授权的真实交易入口。模型、账户和来源配置的取得位置、输入形状、可选项见 README.md 的配置表。
+
 ## 选择与冻结
 
 计划 `execution` 为 `{plugin_id,context_tool,apply_tool,arguments?}`，使用执行实现的绑定能力返回的对象。不能根据相似工具名自行拼装。arguments 是能力配置返回的 JSON 绑定参数，不能包含 `action/run/history_days`，最多 4KB。所选插件及工具依赖必须已加载，缺失时返回前置条件错误。插件身份/摘要、账户、单位和调用参数均冻结在计划中。
@@ -48,5 +50,7 @@ context 工具收到 `{...arguments, action:"identity"}`，返回：
 ## 研究组合
 
 `research:{plugins:[...],tools?:[...]}` 接受显式选择的插件，含无工具的技能包。未传 tools 时使用所选插件能力声明中 consumers 包含 agent 的能力，传入时仅允许精确子集。角色通过 Agent 请求的插件引用和 allowedCalls 挂载固定版本。研究/决策、执行、总结各自持有本阶段能力；main-only 能力仍受调用者边界限制，不适合作为子 Agent 的研究工具。调用者负责选需要的能力，不要求同类型插件全部装上。
+
+主 Agent 默认选择 `sesame/financial-research` 的 `financial_research_status`、`financial_research_query`、`financial_research_read` 作为外部研究来源。只有用户明确不用该插件时才改用其他已注册来源或搜索办法；`instructions` 保留该用户选择并传给成员。缺安装、凭据、访问权限、额度或标的覆盖时暂停受影响的原 Run，主 Agent 向用户说明缺项和处理选择，不能因另有等价能力就自行换源。账户读取、本地计算和分析方法是独立能力，不替代缺失的研究证据。
 
 每个角色的研究与执行依赖合并去重后，最多 32 个插件、64 个工具；保存计划和提交任务时都检查，超出需缩小本轮选择。

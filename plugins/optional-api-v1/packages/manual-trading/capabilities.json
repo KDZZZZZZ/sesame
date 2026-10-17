@@ -483,7 +483,8 @@
                         "maxItems": 48
                       }
                     },
-                    "additionalProperties": false
+                    "additionalProperties": false,
+                    "description": "External research defaults to sesame/financial-research with financial_research_status, financial_research_query and financial_research_read. Other sources or search methods require the user to explicitly decline this plugin; preserve that choice in instructions. Declared analysis/method plugins may also be selected."
                   },
                   "mode": {
                     "anyOf": [
@@ -496,7 +497,7 @@
                         "const": "team"
                       }
                     ],
-                    "description": "single or team; both include target execution. team coordinates research, manager and executor, not research-only Agents."
+                    "description": "single or team for an authorized execution plan; both include target execution. Read-only collaboration uses manual_trading_analyze."
                   },
                   "symbols": {
                     "type": "array",
@@ -509,7 +510,10 @@
                     "maxItems": 30
                   },
                   "interval_minutes": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 5,
                     "maximum": 43200,
                     "description": "Recurring execution cadence in minutes; null means no interval. Independent of analysis timeframe (H1 does not imply 60 here)."
@@ -537,11 +541,6 @@
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 3
-                  },
-                  "task_timeout_seconds": {
-                    "type": "integer",
-                    "minimum": 30,
-                    "maximum": 1800
                   },
                   "slippage_bps": {
                     "type": "integer",
@@ -671,13 +670,448 @@
         "outputs": "list => {plans}; save/pause/resume => persisted plan with id, account, frozen execution/research/model descriptors, enabled and scheduling state. Saving an enabled interval/event plan allows future execution; the saved plan itself is not a run or fill.",
         "prerequisites": [
           "Main conversation only; task/tool names do not grant a delegated Agent this authority.",
+          "Select sesame/financial-research for external research unless the user explicitly declines it; use financial_research_status, financial_research_query and financial_research_read. Preserve the user's source choice in instructions. The main Agent can repair the selected source using its declared configuration/status capabilities and already supplied credentials. Missing installation, credentials, paid access, quota or target coverage does not permit another provider, website, browser or search method.",
           "Use the exact execution reference returned by a composition implementation. sesame/portfolio-execution provides portfolio_execution_configure({backend:\"mt5\"|\"qmt\",id?}) and portfolio_execution_context({binding_id,action:\"identity\"}); other implementations of COMPOSITION.md are supported. MT5 native identity is only an account, not this execution contract.",
           "Installed implementations: plugin_discover and host.capabilities.list. Published optional packages: plugin_catalog({plugin_id}); installation/loading is a separate public operation."
         ],
         "limitations": [
-          "mode=team includes an executor after research and manager; this interface has no research-only execution mode. A request for research alone does not authorize its execution branch.",
+          "Both saved plan modes include target execution. Use manual_trading_analyze for a one-shot read-only workflow; a research request alone does not authorize execution or a schedule.",
           "H1/1h is a market analysis timeframe, not interval_minutes=60. No interval defaults to null; enabled defaults to true. Use enabled:false for an explicitly requested draft and do not invent a schedule.",
           "Pausing cancels future/active work, but already dispatched broker effects require reconciliation."
+        ]
+      }
+    },
+    {
+      "id": "manual_trading_analyze",
+      "kind": "function",
+      "description": "Start one read-only multi-Agent research workflow: parallel analysts, bull/bear review, risk review and Markdown synthesis. One parent workflow owns all member Runs; no target decision, executor, broker action or schedule. Report files are optional and default off.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "request_id",
+          "title",
+          "execution",
+          "model",
+          "symbols"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "description": "User-visible plan name"
+          },
+          "execution": {
+            "type": "object",
+            "required": [
+              "plugin_id",
+              "context_tool",
+              "apply_tool"
+            ],
+            "properties": {
+              "plugin_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Explicitly selected execution capability plugin"
+              },
+              "context_tool": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Declared composition identity/snapshot capability returning account, tools, readTools, taskContext and quantityRules; use the producer-returned reference."
+              },
+              "apply_tool": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Declared target-portfolio apply capability from the same execution reference; a native order_send tool is not interchangeable."
+              },
+              "arguments": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": true,
+                "description": "Opaque binding arguments returned by the execution capability"
+              }
+            },
+            "additionalProperties": false,
+            "description": "Use the exact execution reference returned by a composition implementation. sesame/portfolio-execution provides portfolio_execution_configure({backend:\"mt5\"|\"qmt\",id?}) and portfolio_execution_context({binding_id,action:\"identity\"}); other implementations of COMPOSITION.md are supported. MT5 native identity is only an account, not this execution contract. Analysis only reads its account context/readTools and never invokes the apply capability."
+          },
+          "model": {
+            "type": "object",
+            "required": [
+              "provider",
+              "id"
+            ],
+            "properties": {
+              "provider": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Configured provider ID"
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Configured model ID"
+              },
+              "configurationDigest": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Digest returned by manual_trading_models"
+              }
+            },
+            "additionalProperties": false
+          },
+          "agent_models": {
+            "type": "object",
+            "properties": {
+              "market": {
+                "type": "object",
+                "required": [
+                  "provider",
+                  "id"
+                ],
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Configured provider ID"
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Configured model ID"
+                  },
+                  "configurationDigest": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Digest returned by manual_trading_models"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "fundamentals": {
+                "type": "object",
+                "required": [
+                  "provider",
+                  "id"
+                ],
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Configured provider ID"
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Configured model ID"
+                  },
+                  "configurationDigest": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Digest returned by manual_trading_models"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "news": {
+                "type": "object",
+                "required": [
+                  "provider",
+                  "id"
+                ],
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Configured provider ID"
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Configured model ID"
+                  },
+                  "configurationDigest": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Digest returned by manual_trading_models"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "sentiment": {
+                "type": "object",
+                "required": [
+                  "provider",
+                  "id"
+                ],
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Configured provider ID"
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Configured model ID"
+                  },
+                  "configurationDigest": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Digest returned by manual_trading_models"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "bull": {
+                "type": "object",
+                "required": [
+                  "provider",
+                  "id"
+                ],
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Configured provider ID"
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Configured model ID"
+                  },
+                  "configurationDigest": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Digest returned by manual_trading_models"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "bear": {
+                "type": "object",
+                "required": [
+                  "provider",
+                  "id"
+                ],
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Configured provider ID"
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Configured model ID"
+                  },
+                  "configurationDigest": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Digest returned by manual_trading_models"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "risk": {
+                "type": "object",
+                "required": [
+                  "provider",
+                  "id"
+                ],
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Configured provider ID"
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Configured model ID"
+                  },
+                  "configurationDigest": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Digest returned by manual_trading_models"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "manager": {
+                "type": "object",
+                "required": [
+                  "provider",
+                  "id"
+                ],
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Configured provider ID"
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Configured model ID"
+                  },
+                  "configurationDigest": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Digest returned by manual_trading_models"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "description": "Optional research-role model overrides; executor does not exist in this read-only workflow."
+          },
+          "research": {
+            "type": "object",
+            "required": [
+              "plugins"
+            ],
+            "properties": {
+              "plugins": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "description": "Chosen installed research, data or skill plugin ID"
+                },
+                "maxItems": 24
+              },
+              "tools": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "description": "Optional exact subset of delegatable tools from the selected plugins"
+                },
+                "maxItems": 48
+              }
+            },
+            "additionalProperties": false,
+            "description": "External research defaults to sesame/financial-research with financial_research_status, financial_research_query and financial_research_read. Other sources or search methods require the user to explicitly decline this plugin; preserve that choice in instructions. Source credentials stay in the source configuration. Choose reading/research capabilities, not trading, configuration or scheduling tools. Declared analysis/method plugins may also be selected."
+          },
+          "symbols": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "description": "Exact broker symbol"
+            },
+            "maxItems": 30,
+            "minItems": 1
+          },
+          "instructions": {
+            "type": "string",
+            "maxLength": 6000,
+            "description": "Research question, timeframe and constraints. For example: analyze XAUUSD H1 and the next week, compare scenarios with evidence. A timeframe is not an execution schedule."
+          },
+          "debate_rounds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "request_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Stable ID for this one-shot analysis. An identical retry returns the same business run and workflow; changed input requires a new ID."
+          },
+          "report": {
+            "type": "boolean",
+            "default": false,
+            "description": "Only true when a report file was requested: reserves one report on this workflow at startup and publishes after completion. False/omitted keeps Markdown results in the native workflow without a report file."
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "workflow": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "read:account",
+        "start:workflow",
+        "write:trading-checkpoints",
+        "publish:report-if-requested"
+      ],
+      "binding": {
+        "type": "native",
+        "name": "manual_trading_analyze"
+      },
+      "usage": {
+        "purpose": "Start one read-only multi-Agent research workflow: parallel analysts, bull/bear review, risk review and Markdown synthesis. One parent workflow owns all member Runs; no target decision, executor, broker action or schedule. Report files are optional and default off.",
+        "inputs": "{request_id,title,symbols:[exact broker symbols],execution:<producer-returned binding>,model:{provider,id},research?:{plugins:[ids],tools?:[exact capability local IDs]},instructions?,agent_models?,debate_rounds?:1..3,report?:false}. Obtain model from manual_trading_models and execution from portfolio_execution_configure({backend:\"mt5\"|\"qmt\"}) or another declared COMPOSITION.md implementation. Put analysis timeframe in instructions.",
+        "outputs": "The saved business run {id,status,workflow,...}; workflow is the one native parent Run. manual_trading_runs({action:\"read\",run_id:id}) returns retained member reports and final Markdown summary. manual_trading_activity({run_id:id}) opens its process; host.runs.read/wait control that workflow. Default creates no report file. report:true binds the report at workflow startup and publishes the same file at completion.",
+        "prerequisites": [
+          "Main conversation; an existing configured model and account reading binding. Analysis does not require a trading authorization, schedule or confirmed risk rules.",
+          "Select sesame/financial-research for external research unless the user explicitly declines it; use financial_research_status, financial_research_query and financial_research_read. Preserve the user's source choice in instructions. The main Agent can repair the selected source using its declared configuration/status capabilities and already supplied credentials. Missing installation, credentials, paid access, quota or target coverage does not permit another provider, website, browser or search method.",
+          "Configure only providers relevant to the goal using their capability schemas, usage and readiness/status declarations. The trading plugin does not store keys. FMP stock news is not general search and does not guarantee XAUUSD or macro-event coverage; configured status alone does not prove access or coverage.",
+          "The selected execution binding supplies account, taskContext, tools, readTools and quantityRules through context(identity). Native mt5_trading_context identity alone is not this composition contract."
+        ],
+        "limitations": [
+          "Invoke this single entry for a coordinated research request. Do not reproduce its members with separate host.agent.run roots or copy collaboration declarations per member.",
+          "No executable targets, manual_trading_decide/apply, executor Agent, recurring schedule, order placement, closing positions or stopping strategies. Recommendations remain advisory.",
+          "A missing required source interrupts the same workflow with the concrete missing configuration and retained partial results. After the main Agent repairs and verifies the dependency within the authorized scope, resume its returned workflow with the resolved interrupt IDs. A new user reply is required only when the host interruption contract requires user input or authorization. Do not create a replacement request to bypass a pause.",
+          "An identical request_id must have identical input; the same request returns the same Run, not another analysis.",
+          "Known trading/configuration/terminal/workflow-control effects and binding writes are excluded. Omitted research.tools selects the remaining research subset; explicit prohibited tools are reported together. Evidence caching/publication remains available. Dynamic read interfaces enforce operation-level boundaries in their own plugins; declarations are not a sandbox for arbitrary native code."
         ]
       }
     },
@@ -993,7 +1427,7 @@
       "usage": {
         "purpose": "Read saved trading runs including all shared team reports, target portfolios, mounted-strategy stop results, actual order receipts and report paths; cancel an active/queued run without undoing broker effects.",
         "inputs": "action=list with plan_id?/offset?/limit?; read or cancel with run_id. Use the business run id returned by manual_trading_run, not the host workflow Run ID.",
-        "outputs": "list => {runs}; read => persisted run with plan, trigger, current tasks/reports, decision, execution, report and error. workflow identifies the original host Run; runs.read(workflow) supplies pending interrupt IDs/reasons/requirements. Interrupted is waiting, not completion; after a user reply and resolving selected items, runs.resume continues the same Run with explicit interruptIds.",
+        "outputs": "list => {runs}; read => persisted run with plan, trigger, current tasks/reports, decision, execution, report and error. workflow identifies the original host Run; runs.read(workflow) supplies pending interrupt IDs/reasons/requirements. Interrupted retains unfinished work; after resolving and verifying selected items, runs.resume continues the same Run with explicit interruptIds under the host control contract.",
         "prerequisites": [
           "Main conversation only; task/tool names do not grant a delegated Agent this authority."
         ],
@@ -1142,14 +1576,14 @@
         ],
         "limitations": [
           "This reads an already admitted run; it does not create a portfolio execution binding or obtain current market prices. The snapshot includes all position origins. account/history/memory/all require the full snapshot; memory includes actual held symbols as well as plan symbols.",
-          "When the execution provider explicitly reports error.details.retryable=false, the same run retains and returns that failure without querying again. Follow its recovery diagnosis, verify the connection/account, and start a newly authorized run; repeating context in the old run cannot repair it. team remains available."
+          "When the execution provider explicitly reports error.details.retryable=false, the same run retains and returns that failure without querying again. Follow its recovery diagnosis, verify the connection/account, then resume the original host Run. The resumed attempt clears the unavailable context cache and rechecks the connection; repeating context before repair does not help. team remains available."
         ]
       }
     },
     {
       "id": "manual_trading_decide",
       "kind": "function",
-      "description": "Save one immutable target portfolio for the current manager task using the selected execution capability’s quantity rules. Explicit zero closes all positions for that symbol, including quantitative-strategy positions; omitted symbols stay unchanged. Stop extremely risky mounted strategies by ID with a concrete reason.",
+      "description": "Save one immutable target portfolio from the registered manager task or the owning main conversation using the selected execution capability’s quantity rules. Explicit zero closes all positions for that symbol, including quantitative-strategy positions; omitted symbols stay unchanged. Stop extremely risky mounted strategies by ID with a concrete reason.",
       "consumers": [
         "agent",
         "host"
@@ -1350,11 +1784,11 @@
         "name": "manual_trading_decide"
       },
       "usage": {
-        "purpose": "Save one immutable target portfolio for the current manager task using the selected execution capability’s quantity rules. Explicit zero closes all positions for that symbol, including quantitative-strategy positions; omitted symbols stay unchanged. Stop extremely risky mounted strategies by ID with a concrete reason.",
+        "purpose": "Save one immutable target portfolio from the registered manager task or the owning main conversation using the selected execution capability’s quantity rules. Explicit zero closes all positions for that symbol, including quantitative-strategy positions; omitted symbols stay unchanged. Stop extremely risky mounted strategies by ID with a concrete reason.",
         "inputs": "{run_id,decision:{unchanged,targets,pause_strategies,rationale,...evidence references}}; targets use exact symbol and quantity strings in the selected quantityRules unit. unchanged:true requires targets:[]; explicit zero closes that symbol, omitted symbols are untouched.",
         "outputs": "The saved immutable decision attached to the business run, with frozen evidence. Identical retry retains it; a conflicting replacement is rejected.",
         "prerequisites": [
-          "Current registered manager task for this run; selected execution identity supplies units/signedness/integer rules."
+          "Current registered manager task or owning main conversation for this authorized trading run, with its account context read. The main Agent may use retained analysis to repair a missing structured decision before resuming the same workflow. Selected execution identity supplies units/signedness/integer rules."
         ],
         "limitations": [
           "Saving a target does not submit an order. A strategy pause and its position closure are separate outcomes."
@@ -1563,7 +1997,8 @@
           "Owning main or authorized task; the workflow must have produced its final report."
         ],
         "limitations": [
-          "Reading cannot restore user-deleted files; verify actual artifact/render receipts separately from generation."
+          "Reading cannot restore user-deleted files; verify actual artifact/render receipts separately from generation.",
+          "Read-only analysis has no report file unless started with report:true. Its default Markdown summary and member results are available through manual_trading_runs."
         ]
       }
     },
@@ -1866,7 +2301,7 @@
     {
       "id": "workflow_execute",
       "kind": "workflow",
-      "description": "Execute one already admitted workflow through all declared role Agents and final report publication.",
+      "description": "Execute one admitted analysis or authorized trading workflow through its declared role Agents, optional report publication and retained checkpoints.",
       "consumers": [
         "host"
       ],
@@ -1893,8 +2328,15 @@
             "type": "string"
           },
           "report": {
-            "type": "object",
+            "type": [
+              "object",
+              "null"
+            ],
             "additionalProperties": true
+          },
+          "summary": {
+            "type": "string",
+            "description": "Final advisory Markdown synthesis for analysis workflows."
           }
         },
         "required": [
@@ -1918,7 +2360,7 @@
       "usage": {
         "purpose": "Execute one already admitted workflow through all declared role Agents and final report publication.",
         "inputs": "{runId:<already admitted business run>}.",
-        "outputs": "Accepted host Run; missing dependencies interrupt it before Agent dispatch. Explicit resume retains the same host Run/session, business run, accepted child Runs and committed stage outputs. Completion returns the saved outcome and report.",
+        "outputs": "Accepted host Run; missing dependencies interrupt before Agent dispatch. Resume retains the same Run/session, accepted children and stage outputs. Analysis returns {runId,status,summary,report:null} by default; report is populated only when requested. Authorized trading plans retain their existing report/execution behavior.",
         "prerequisites": [
           "Host workflow admission only; no direct Agent invocation."
         ],

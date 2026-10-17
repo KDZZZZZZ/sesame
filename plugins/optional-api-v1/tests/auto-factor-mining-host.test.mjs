@@ -26,9 +26,11 @@ function textContent(content) {
 }
 
 function taskInput(body) {
-  const text = textContent(body.messages.filter(message => message.role === 'user').at(-1)?.content);
-  const marker = '\n\nInput JSON:\n', index = text.lastIndexOf(marker);
-  return index < 0 ? null : JSON.parse(text.slice(index + marker.length));
+  for (const message of body.messages.filter(message => message.role === 'user').toReversed()) {
+    const text = textContent(message.content), marker = '\n\nInput JSON:\n', index = text.lastIndexOf(marker);
+    if (index >= 0) return JSON.parse(text.slice(index + marker.length));
+  }
+  return null;
 }
 
 function toolOutputs(body) {
@@ -182,8 +184,9 @@ test('installed factor workflow executes parallel research with role models, arc
       const run = await eventually(async () => {
         if (failures.length) throw failures[0];
         const value = await invoke(runtime, 'conv_main', 'auto_factor_runs', { action: 'read', run_id: id });
+        assert.notEqual(value.status, 'interrupted', JSON.stringify({ error: value.error, tasks: value.tasks, trials: value.trials }));
         return (value.report || value.reportError) && value.tasks.every(task => task.finishedAt) && runtime.agentTasks.running.size === 0 &&
-          ['completed', 'failed', 'cancelled', 'unknown'].includes(runtime.runs.read(value.workflow.id).status) ? value : false;
+          ['completed', 'cancelled', 'unknown'].includes(runtime.runs.read(value.workflow.id).status) ? value : false;
       }, 120000);
       assert.equal(run.status, 'completed', JSON.stringify({ error: run.error, tasks: run.tasks, trials: run.trials }));
       assert.equal(run.reportPending, false, JSON.stringify(run.reportError));
@@ -207,7 +210,7 @@ test('installed factor workflow executes parallel research with role models, arc
     assert.equal(done.selection.trialIds.length, 1);
     assert.ok(Number.isFinite(done.holdout[done.selection.trialIds[0]].rankIC));
     assert.ok(observedData.length > 0);
-    assert.equal(app.runtime.messages('conv_main').length, 0, 'Background research creates no fake user messages.');
+    assert.equal(app.runtime.messages('conv_main').filter(message => message.role === 'user').length, 0, 'Background research creates no fake user messages.');
     testStage = 'archive';
     const files = { list: options => app.runtime.reportLibrary.list({ space: 'research', ...options }), read: options => app.runtime.reportLibrary.read({ space: 'research', ...options }) };
     await app.runtime.reportLibrary.flush();
@@ -277,13 +280,8 @@ test('installed factor workflow executes parallel research with role models, arc
     const pending = await reopened('auto_factor_runs', { action: 'read', run_id: second.id });
     assert.equal(pending.interrupts.length, 1);
     const resumeInput = { action: 'resume', run_id: second.id, interrupt_ids: [pending.interrupts[0].id], response: { resolution: 'Fixture stream ready' } };
-    await assert.rejects(reopened('auto_factor_runs', resumeInput), { code: 'run_resume_requires_user' });
-    const userId = 'fixture-resume-user', responseId = 'fixture-resume-response';
-    reopenedStore.put('message', { id: userId, conversation_id: 'conv_main', role: 'user', status: 'accepted', created_at: new Date(Date.now() + 1).toISOString(), content: [{ type: 'text', text: '已恢复测试依赖，继续原因子研究任务。' }] });
-    reopenedStore.put('message', { id: responseId, conversation_id: 'conv_main', role: 'assistant', status: 'streaming', reply_to_message_id: userId, content: [] });
-    reopenedStore.update('conversation', 'conv_main', { active_response_message_id: responseId });
     await reopened('auto_factor_runs', resumeInput);
-    reopenedStore.update('message', responseId, { status: 'completed' }); reopenedStore.update('conversation', 'conv_main', { active_response_message_id: null });
+    assert.equal(reopenedRuntime.messages('conv_main').filter(message => message.role === 'user').length, 0, 'The main Agent can resolve its technical interruption without manufacturing a user reply.');
     const resumed = await finish(reopenedRuntime, second.id);
     assert.equal(resumed.generation, 0);
     assert.equal(resumed.workflow.id, retainedWorkflow.id);

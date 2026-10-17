@@ -210,20 +210,20 @@
 边界与恢复：配置存在、python_installed或文件存在不证明Python IPC或券商账户连接成功；Terminal MCP与Python是独立通道。
 
 ## mt5_update_configuration
-调用者：agent、host。更新明确连接/权限配置并保留幂等回执。
+调用者：agent、host。直接配置 MT5 连接、账户、凭据及运行权限，立即刷新后台配置并保留脱敏幂等回执。
 
-输入：{command_id:<稳定16–128字符>,expected_version:<settings.version>,changes}；changes为 {import_native:true} 或 account:{login,server}/servers:{terminal|metaeditor|marketdata:{url?,enabled?}}/allow_trading/allow_host_operations/tester_agent。例仅导入已知原生配置 {command_id:"import-native-config-01",expected_version:1,changes:{import_native:true}}。
+输入：{command_id:<稳定16–128字符>,expected_version:<settings.version>,changes}。changes支持 servers:{terminal|metaeditor|marketdata:{url?,enabled?,token?}}、account:{login?,server?,password?}、tester_agent:{address?,port?,password?}、allow_trading、allow_host_operations；也可单独用 {import_native:true} 读取已有原生配置。例 {command_id:"configure-terminal-token-01",expected_version:1,changes:{servers:{terminal:{token:"用户提供的API Key"}}}}。凭据字段省略保留现有值，空字符串清除；更换endpoint或账户身份会清除对应旧凭据，必要时同次传入新凭据。
 
-输出与状态：{id,conversation_id,target,status,changes,result?,error?,created_at,completed_at}；applied只证明配置已保存；连接结果由mt5_connect核验。
+输出与状态：{id,conversation_id,target,status,changes,result?,error?,created_at,completed_at}；changes里的token/password均为[redacted]，result只含脱敏settings。applied说明已保存且立即生效；mt5_connect核验终端与账户，mt5_catalog单独核验其他服务。
 
-依赖入口：主会话；读取mt5_settings获得版本，实际连接/账号来自已知配置。
+依赖入口：主会话；expected_version来自mt5_settings。目标及凭据来自用户提供或已知配置，已取得的用户授权继续有效。
 
 副作用：plugin.state.write
 
-边界与恢复：不接受密钥值。版本冲突刷新settings；配置任务不自动授权下单/EA运行。
+边界与恢复：直接配置和可选mt5_import_configuration均可用；用户已给信息就保存并核验，不要求重新导出、设置页填写或重复授权。不回显密钥，不把密钥写入报告、脚本或长期记忆。版本冲突读取当前settings；相同command_id和输入重试仅返回原回执。保存不自动登录、启动终端或下单；外部原生拒绝保留其具体事实。
 
 ## mt5_import_configuration
-调用者：agent、host。按安全消息引用导入已有原生配置。
+调用者：agent、host。复用安全消息引用保存已有原生配置；它是直接配置之外的可选入口。
 
 输入：{command_id,source_message_id:<settings.pendingImports中的msg_ID>,expected_version:<settings.version>}；没有secret/token/password参数。
 
@@ -234,6 +234,21 @@
 副作用：plugin.state.write
 
 边界与恢复：引用限原会话/绑定账户；账户变更或引用失效不能凭猜测重建。敏感配置原文不读回工具参数。
+
+## mt5_start_terminal
+调用者：agent、host；仅主会话。按用户要求打开本插件已选的本机 MT5，适用于首次设置和再次打开终端。
+
+输入：{command_id:<稳定16–128字符，只含字母数字下划线或连字符>}；完整例 {command_id:"open-selected-terminal-01"}。没有路径、账户、profile、INI 或密钥参数，不需要先读 catalog。
+
+输出与状态：原生命令回执 {id,conversation_id,server:"launcher",tool:"start_terminal",operation_class:"trading",status,result,dataset_id:null,error,created_at,completed_at}。成功请求 status=returned、result={status:"spawned",pid,message,unit?} 只证明系统接收了启动请求；PID 不证明界面、MCP、券商或 Python IPC 已就绪。
+
+依赖入口：已选定本机 MT5 安装；mt5_settings.environment 和 mt5_dependencies({action:"inspect"}) 可解释缺项。启动不需要 MCP 密钥或 Python。原终端 profile 可能恢复已有 EA，故沿用 launcher.start_terminal 的 allow_trading 启动权限；拒绝时不自动更改权限。
+
+副作用：native-process-start、may-resume-existing-terminal-profile、plugin.state.write。
+
+边界与恢复：保持原 portable/数据目录模式，不强制关闭或重启已有实例，不传新账户/profile，不执行 Sesame 保存的自定义 startup_ini。需要连接证明时调用 mt5_connect({command_id:"verify-started-terminal-01",start_if_needed:false})。缺凭据仍可先打开终端供用户配置 MCP。PREREQUISITE_REQUIRED 和 mt5_permission_denied 的 submission_attempted:false 表明未派发，按返回缺项或权限处理；原 returned/unknown 回执会复用，同一动作不换 ID 重放。unknown 先用 mt5_command({command_id:<原ID>}) 及实际进程/连接状态核对；配置变化后的 idempotency_conflict 也应先核对旧动作。
+
+原生行为参考：[MetaTrader 5 官方平台启动文档](https://www.metatrader5.com/zh/terminal/help/start_advanced/start)。特定原生启动参数继续由 mt5_catalog 声明的 launcher 方法和 mt5_trade 路由处理。
 
 ## mt5_connect
 调用者：agent、host。复用现有MT5配置并核验终端、券商和账户身份。
