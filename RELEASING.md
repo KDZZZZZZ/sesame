@@ -21,6 +21,10 @@ their original source trees as parentless snapshots.
    stage the same verified files in private draft Releases; a maintainer validates
    and copies those bytes to the public draft. Private staging never publishes an
    application version or replaces the reviewed public promotion step.
+   Versions from 0.2.4 use schema 2 with twelve assets: the six files above,
+   Windows EXE and Linux DEB blockmaps, and one update feed and plan for each of
+   Windows/Linux. `SHA256SUMS.txt` covers all eleven other files. AppImage's
+   blockmap is embedded in its installer.
    Set the draft target to this public repository's `main`, and normally leave
    the version tag uncreated until promotion. The publisher will resolve that
    target and pin tag creation to the exact checked `main` commit.
@@ -37,6 +41,11 @@ their original source trees as parentless snapshots.
    assets and checksum file, then publishes the matching draft as a normal
    application Release. The workflow explicitly runs the R2 mirror after a new
    publication; it does not rely on a token-generated `release` event.
+6. After every immutable asset is mirrored and verified, deploy the website and
+   download Worker, then explicitly promote each Windows/Linux update channel.
+   Keep mutable manifests and missing-channel responses uncached. The private
+   application's promotion script verifies the complete mirrored files before
+   writing the channel manifest last; see [desktop updates](AUTO-UPDATES.md).
 
 The main-triggered step is **automatic publication of prepared installers**.
 It does not remotely start the private build or manufacture a version for every
@@ -82,7 +91,8 @@ assets to make a release pass.
 
 ## Plugin compatibility
 
-Sesame **0.2.3** and its 54 published plugins use API 2; Kurumi is excluded.
+Sesame **0.2.4** and its 54 published plugins use API 2; Kurumi is excluded.
+Eight updated plugins require host >=0.2.4; each package declares its own range.
 Release builds select an exact source commit from the rebuilt history and the
 corresponding published R2 archive. API 1 hosts must upgrade before installing
 API 2 plugins. Historical plugin GitHub URLs are no longer supported; retained
