@@ -1,38 +1,68 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "repository": "KDZZZZZZ/sesame",
-  "tag": "v0.2.3",
-  "releaseId": 414947217,
+  "tag": "v0.2.4",
+  "releaseId": 415884110,
   "assets": [
     {
       "name": "INSTALL.md",
-      "size": 5443,
-      "sha256": "9822f9ff9c1376ab9dbb31ee7a707e706ab24920ad4fca146c8a4eb9f1c9e84a"
+      "size": 6716,
+      "sha256": "967cbf6f290b8c63a3044e3574c983c8d08bb5f3419eb711074ec986e8a36b4b"
     },
     {
-      "name": "Sesame-0.2.3-linux-x64.AppImage",
-      "size": 236611648,
-      "sha256": "8f50af813ed62e57b0456e58473a97ecf789177dfb8aa73f57774e415db8ae37"
+      "name": "Sesame-0.2.4-linux-x64.AppImage",
+      "size": 236903152,
+      "sha256": "4fd008422121a5ec9e9069806fbb5f93f6a1c91257a0b66477d51c717a8d4af8"
     },
     {
-      "name": "Sesame-0.2.3-linux-x64.deb",
-      "size": 205249024,
-      "sha256": "2cc0b0ba2789194468382723afad7e1f48b74c14ce7e0e4b30dfc1e19eb6be42"
+      "name": "Sesame-0.2.4-linux-x64.deb",
+      "size": 205470496,
+      "sha256": "e577697055f8641eb9cd842e8dc357684253d44936e2762cfb0c840e8a017e68"
     },
     {
-      "name": "Sesame-0.2.3-mac-arm64.dmg",
-      "size": 256628550,
-      "sha256": "a6b15c0f16c130e8b9e5c101e036b4f6845e995326c600adaf9e68bc9eaf972d"
+      "name": "Sesame-0.2.4-linux-x64.deb.blockmap",
+      "size": 214408,
+      "sha256": "4dca4da92594a36c4de7a0e2cd1393511d8d7febfcb2143401c720235ed98901"
     },
     {
-      "name": "Sesame-0.2.3-win-x64.exe",
-      "size": 225086785,
-      "sha256": "58ae992bba4ad3fdd0bd72a6340d7b22ba784120efac6a15a9814cab5fa1c556"
+      "name": "Sesame-0.2.4-mac-arm64.dmg",
+      "size": 256902067,
+      "sha256": "00c37d1606993deca6a8a09da963c8a1228c263a7cef051727e31a9d10fe2005"
+    },
+    {
+      "name": "Sesame-0.2.4-win-x64.exe",
+      "size": 225379638,
+      "sha256": "1f45c8b6a584e5857a6cbf4e36b8a0c296491d46aa14de71df252b8a34fe38a3"
+    },
+    {
+      "name": "Sesame-0.2.4-win-x64.exe.blockmap",
+      "size": 228948,
+      "sha256": "be20c69ecace9401cdc20dca5e8a8747137f6f6ceeffd7ba30a702ab6c0f193b"
     },
     {
       "name": "SHA256SUMS.txt",
-      "size": 452,
-      "sha256": "a542b4e5a30337b0dffb96d8bf4fc72f0f9d02af7656e7f5dfffe653fafbe132"
+      "size": 1024,
+      "sha256": "603d81357c9d4e10bb114cda651a5911fb359e46ff2224448f8ca900727de919"
+    },
+    {
+      "name": "update-feed-linux-x64.yml",
+      "size": 539,
+      "sha256": "ebd83c9bfcc35f7810803179b76dfd0be3386062d4f0d070c93673b6a1d06b67"
+    },
+    {
+      "name": "update-feed-win32-x64.yml",
+      "size": 321,
+      "sha256": "030d036c8d587d159355a9326886bd50d748e8ad7e9b6040495d6148d980f2b3"
+    },
+    {
+      "name": "update-plan-linux-x64.json",
+      "size": 1014,
+      "sha256": "e6b472e74e6b0cd9dd7a0d5a8982cd837bdd2d5fde1bf12e517b752ac00bbec4"
+    },
+    {
+      "name": "update-plan-win32-x64.json",
+      "size": 750,
+      "sha256": "6ce3490fe3dac6a38b79d049f11942b16c37601264bac26d49f6064014b93499"
     }
   ]
 }
