@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "dev.6",
-  "sourceCommit": "b30a8045abcdd9585200585fb19b85f6616f28fc",
+  "sourceCommit": "4e153a4474285e162d88a484d517fa37283a465c",
   "pullRequest": 85,
   "title": "Sesame 0.2.4: resumable Agent workflows, Markdown reports, configuration and MT5 terminal launch",
   "profiles": [
@@ -72,8 +72,8 @@
         "sesame/web-sources",
         "sesame/wyckoff"
       ],
-      "archiveSha256": "f649e06bf562b5d27b2a996fa8bad634313c341aba01a185cebf1870647c7657",
-      "lockSha256": "87d62093012a2338ff6eb37789b8c703a26a53a92688111845463e7795fd896d"
+      "archiveSha256": "c6669a0bf133970511b312197d758d4c6ea27fa40a291e7e2683f9dfb2f3e45b",
+      "lockSha256": "d8f8ec098e7fe14b8b328976ee2c4e9b26e91b78f8747dfafd5faa5c4eda52c2"
     }
   ]
 }
