@@ -1,0 +1,63 @@
+import { REPORT_CALLS } from './team.js';
+
+export const check = (condition, code, message) => { if (!condition) throw Object.assign(new Error(message), { code }); };
+const blockedEffect = /^(?:broker\.(?:write|trade)|external-trading|external-strategy-operation|application-configuration|invoke:selected-execution|(?:write:plans|manage:|start:|cancel:workflow|control:workflow)|native-(?:connection|process-start|state\.write)|may-(?:start|resume)-|process\.(?:exec|cancel)|plugin\.(?:install|update|remove|policy)|workspace\.write)/;
+const readOnly = cap => cap.kind === 'function' && !(cap.effects ?? []).some(effect => blockedEffect.test(effect));
+
+async function plugin(host, id) {
+  let value;
+  try { value = await host.plugins.read(id, { part: 'status' }); }
+  catch (error) { throw Object.assign(new Error(`Required plugin ${id} is unavailable: ${error.message}`), { code: 'DEPENDENCY_UNAVAILABLE' }); }
+  check(value.state !== 'disabled' && value.runtime_status !== 'failed' && value.agent_scope !== 'main', 'DEPENDENCY_UNAVAILABLE', `Required plugin ${id} must be enabled and usable by a research Agent.`);
+  return value;
+}
+async function catalog(host, pluginId) {
+  const items = []; let cursor;
+  do {
+    const page = await host.capabilities.list({ pluginId, limit: 200, ...(cursor ? { cursor } : {}) });
+    items.push(...page.items); cursor = page.nextCursor;
+  } while (cursor);
+  return items.filter(cap => cap.consumers.includes('agent'));
+}
+export function configuredModel(host, selection) {
+  const model = host.context.models.find(value => value.provider === selection?.provider && value.id === selection?.id);
+  check(model, 'DEPENDENCY_UNAVAILABLE', `Configure the selected model ${selection?.provider}/${selection?.id} before running research.`);
+  check(!selection.configurationDigest || selection.configurationDigest === model.configurationDigest, 'DEPENDENCY_UNAVAILABLE', 'The explicitly selected model configuration has changed.');
+  return structuredClone(model);
+}
+export async function selectResearch(host, selection) {
+  const entries = await Promise.all(selection.plugins.map(id => plugin(host, id)));
+  const declarations = (await Promise.all(entries.map(entry => catalog(host, entry.id)))).flat()
+    .filter(cap => entries.find(entry => entry.id === cap.pluginId).delegatable_tools?.includes(cap.localId));
+  const requested = selection.tools ?? declarations.filter(readOnly).map(cap => cap.id);
+  const calls = requested.map(name => {
+    const candidates = declarations.filter(cap => cap.id === name || cap.localId === name);
+    check(candidates.length === 1, 'DEPENDENCY_UNAVAILABLE', `Select one declared research capability for ${name}; qualified pluginId#capabilityId avoids ambiguity.`);
+    const cap = candidates[0];
+    check(readOnly(cap), 'READ_ONLY_RESEARCH', `Research cannot use ${cap.id}: it declares trading, configuration, process, workspace editing or workflow control effects.`);
+    return { pluginId: cap.pluginId, capabilityId: cap.localId };
+  });
+  if (entries.length) calls.push({ pluginId: 'sesame/plugin-manager', capabilityId: 'plugin_read' });
+  return freezeSelection(host, [...new Set([...selection.plugins, ...calls.map(call => call.pluginId)])], calls);
+}
+async function freezeSelection(host, plugins, calls) {
+  const entries = await Promise.all(plugins.map(id => plugin(host, id)));
+  for (const entry of entries) {
+    const declared = await catalog(host, entry.id);
+    for (const call of calls.filter(call => call.pluginId === entry.id)) {
+      check(declared.some(cap => cap.localId === call.capabilityId) && entry.delegatable_tools?.includes(call.capabilityId), 'DEPENDENCY_UNAVAILABLE', `Required Agent capability ${entry.id}#${call.capabilityId} is unavailable.`);
+    }
+  }
+  const allowedCalls = [...new Map(calls.map(call => [`${call.pluginId}#${call.capabilityId}`, call])).values()];
+  return { plugins, allowedCalls, revisions: entries.map(entry => ({ id: entry.id, digest: entry.digest })) };
+}
+export const reportSelection = host => freezeSelection(host, [...new Set(REPORT_CALLS.map(call => call.pluginId))], REPORT_CALLS);
+export const synthesisSelection = (host, research) => freezeSelection(host, research.plugins,
+  research.allowedCalls.filter(call => call.pluginId === 'sesame/plugin-manager' && call.capabilityId === 'plugin_read'));
+export async function verifySelection(host, selection) {
+  for (const revision of selection.revisions) {
+    const current = await plugin(host, revision.id);
+    check(current.digest === revision.digest, 'DEPENDENCY_UNAVAILABLE', `Selected plugin changed during this research: ${revision.id}. Restore its selected revision before resuming.`);
+  }
+  await freezeSelection(host, selection.plugins, selection.allowedCalls);
+}

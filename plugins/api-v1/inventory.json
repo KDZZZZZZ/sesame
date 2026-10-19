@@ -2093,6 +2093,74 @@
       "sourcePath": "plugins/optional-api-v1/packages/institutional-analysis"
     },
     {
+      "id": "sesame/investment-research",
+      "version": "3.1.4",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.2.4"
+      },
+      "format": "sesame-native",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors"
+      },
+      "category": "research",
+      "title": {
+        "en": "Investment research workflow",
+        "zh": "投资研究工作流"
+      },
+      "summary": {
+        "en": "Combine selected information sources and analysis methods into reusable research and a manager report, with analyst QA and reruns from a chosen stage.",
+        "zh": "组合明确的信息来源与分析方法，形成可复用研究与经理报告，支持后续角色向研究员问答及从指定进度重跑。"
+      },
+      "dependencies": {
+        "en": "Requires a configured model and explicitly selected research plugins; reports additionally require reports, data-access, workspace and plugin-manager. No trading account required.",
+        "zh": "需要已配置模型与明确选择的研究插件；报告另需 reports、data-access、workspace、plugin-manager，不依赖交易账户。"
+      },
+      "tools": [
+        "investment_research_analyze",
+        "investment_research_report",
+        "investment_research_ask"
+      ],
+      "capabilities": [
+        {
+          "id": "investment_research_analyze",
+          "kind": "workflow",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "investment_research_report",
+          "kind": "workflow",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "investment_research_ask",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
+      "sourcePath": "plugins/optional-api-v1/packages/investment-research"
+    },
+    {
       "id": "sesame/judgment-evolution",
       "version": "3.0.0",
       "distribution": "optional",
