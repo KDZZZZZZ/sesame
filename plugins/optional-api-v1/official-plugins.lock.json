@@ -2479,6 +2479,84 @@
       ]
     },
     {
+      "id": "sesame/investment-research",
+      "version": "3.1.4",
+      "directory": "investment-research",
+      "treeDigest": "sha256:7e672745801d84595f536001e91798f097bab5b4b78e57f1ff0b654146fe4ee0",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "f63206b9f3be0ded0c6ac5c320fa456d1b68bcd9b752a88d84fac6673894df1f",
+          "bytes": 1076
+        },
+        {
+          "path": "PROVENANCE.md",
+          "sha256": "6569b38ba29862b7a4e101b407ffd260ad14d15470f984b00f2b7ec9735b0206",
+          "bytes": 1178
+        },
+        {
+          "path": "README.md",
+          "sha256": "d6b063b1cba59054c708a6a04ad1e9b9f47fc104fba663ed7b99034940b2682d",
+          "bytes": 12613
+        },
+        {
+          "path": "capabilities.json",
+          "sha256": "25ee52c209ae035aad1d9895dd2cafda66e7987e8a6457f9f3b7a30e215ae070",
+          "bytes": 39175
+        },
+        {
+          "path": "index.js",
+          "sha256": "afbb6be303cbf2d7c4d4b103daae064f42701e3d5ca1682d58273d0034348951",
+          "bytes": 577
+        },
+        {
+          "path": "package.json",
+          "sha256": "3f1a62dacd54168ea5b9cae63eee9b0bb5295c6465c75456fd2e7f9bdaa19005",
+          "bytes": 132
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "6b08ccee0270357b129a4f9f123f4effcf477576052433091be311083513e8fc",
+          "bytes": 516
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "552f1a1defb191aa4b4acd1b6e7dff9a991ee1eeb554082f73fc909f5cb4af1e",
+          "bytes": 4392
+        },
+        {
+          "path": "src/artifacts.js",
+          "sha256": "a103fe5206b87002a8baab4753798eeec402f7f005ecf983e7de1ff68e593fb1",
+          "bytes": 6979
+        },
+        {
+          "path": "src/composition.js",
+          "sha256": "d9b6ce40aa1525dc1b9e42e370516329de3e84348a71ba6db896f183072b7dec",
+          "bytes": 4756
+        },
+        {
+          "path": "src/members.js",
+          "sha256": "b4a5cf002351dc7df4a93b26b791aa8c21fc022a8b6d7c04372d930641278dd8",
+          "bytes": 1895
+        },
+        {
+          "path": "src/qa.js",
+          "sha256": "246de14611866dc5a867908b80b894409fc0f40364b82b0c8d9f4e2376ecb5b9",
+          "bytes": 5160
+        },
+        {
+          "path": "src/runtime.js",
+          "sha256": "ad840a0567b2fb2fe66eb6e38048b7011bbf2af60b567c230ab4d74acbfd5042",
+          "bytes": 8942
+        },
+        {
+          "path": "src/team.js",
+          "sha256": "63bcb5c427493f399b7afec5b7aa16e2fea572641f60569a2b418ff1ac8ba528",
+          "bytes": 17929
+        }
+      ]
+    },
+    {
       "id": "sesame/judgment-evolution",
       "version": "3.0.0",
       "directory": "judgment-evolution",

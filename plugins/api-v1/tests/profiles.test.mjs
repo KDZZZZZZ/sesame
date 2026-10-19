@@ -21,12 +21,13 @@ function fixture(t, kind = 'optional') {
   writeFileSync(join(root, 'bundle-profile.json'), JSON.stringify(profile));
   return { root, pkg, manifest, profile, write };
 }
-test('candidate distribution has nine defaults and forty-six optional identities, with no duplicate tools from merged packages', () => {
+test('candidate distribution has nine defaults and forty-seven optional identities, with no duplicate tools from merged packages', () => {
   const defaults = buildLock(core), options = buildLock(optional);
-  assert.equal(defaults.packages.length, 9); assert.equal(options.packages.length, 46);
-  const ids = [...defaults.packages, ...options.packages].map(item => item.id); assert.equal(new Set(ids).size, 55);
+  assert.equal(defaults.packages.length, 9); assert.equal(options.packages.length, 47);
+  const ids = [...defaults.packages, ...options.packages].map(item => item.id); assert.equal(new Set(ids).size, 56);
   assert.deepEqual(defaults.packages.map(item => item.id), readProfile(core).packages);
   assert.ok(options.packages.some(item => item.id === 'sesame/mt5'));
+  assert.ok(options.packages.some(item => item.id === 'sesame/investment-research'));
   for (const id of ['sesame/host-files', 'sesame/user-guide', 'sesame/research']) assert.ok(!ids.includes(id));
   const names = defaults.packages.flatMap(pkg => JSON.parse(readFileSync(join(core, 'packages', pkg.directory, 'capabilities.json'))).capabilities.filter(cap => cap.consumers.includes('agent')).map(cap => cap.id));
   assert.equal(new Set(names).size, names.length);
@@ -68,7 +69,7 @@ test('descriptive inventory records compatibility without claiming an applicatio
   assert.equal(preview.application.released, undefined);
   assert.equal(preview.application.minimum, '0.2.0');
   assert.equal(preview.packages.filter(p => p.distribution === 'core').length, 9);
-  assert.equal(preview.packages.filter(p => p.distribution === 'optional').length, 46);
+  assert.equal(preview.packages.filter(p => p.distribution === 'optional').length, 47);
   for (const item of preview.packages) {
     for (const key of ['source', 'sourceCommit', 'package', 'treeDigest', 'review', 'release']) assert.equal(item[key], undefined);
     assert.equal(item.engines.sesame, JSON.parse(readFileSync(join(core, '../..', item.sourcePath, 'plugin.json'))).engines.sesame);

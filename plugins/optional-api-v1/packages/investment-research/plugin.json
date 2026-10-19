@@ -1,0 +1,15 @@
+{
+  "id": "sesame/investment-research",
+  "apiVersion": "2",
+  "version": "3.1.4",
+  "title": "投资研究工作流",
+  "description": "围绕投资问题组合明确信源与分析方法，形成固定研究成果和经理图表报告；可仅用已有成果重新制作报告，不依赖交易账户。",
+  "license": "MIT",
+  "default_state": "discoverable",
+  "agent_scope": "all",
+  "entry": "index.js",
+  "engines": {
+    "sesame": ">=0.2.4"
+  },
+  "capability_manifest": "capabilities.json"
+}

@@ -1,5 +1,12 @@
 # Optional plugins / Plugin API 2
 
+The dev source tree includes [Investment research](packages/investment-research/README.md)
+3.1.4: an account-independent research workflow, targeted analyst QA for bull,
+bear, risk and manager, and reruns from a selected stage using frozen prior
+results. It registers analyze, report-only and team QA capabilities, requires
+Sesame >=0.2.4, and is included in the current source profile and inventory.
+Its inclusion in dev does not change the published install catalog below.
+
 **Installable entries are identified by the published catalog.** The
 optional packages declare their own compatible host ranges in `engines.sesame`.
 Current packages use Plugin API 2. The updated auto-factor-mining, financial-research,
