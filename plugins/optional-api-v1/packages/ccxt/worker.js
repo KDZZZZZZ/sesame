@@ -20,6 +20,8 @@ class PublicWorker {
     this.queue = [];
     this.active = null;
     this.serial = 0;
+    this.rateLimits = 0;
+    this.retryAt = 0;
     this.output = "";
     this.stderr = "";
     this.lastUsed = Date.now();
@@ -59,7 +61,7 @@ class PublicWorker {
         // A canceled reader never kills another chart's shared connection.
         // If already sent, drain its bounded response before the next request.
         const index = this.queue.indexOf(item);
-        if (index >= 0) this.queue.splice(index, 1);
+        if (index >= 0) { this.queue.splice(index, 1); this.dispatch(); }
       };
       signal?.addEventListener("abort", item.abort, { once: true });
       this.queue.push(item);
@@ -76,14 +78,21 @@ class PublicWorker {
   }
   dispatch() {
     if (this.dead || this.active) return;
-    const item = this.queue.shift();
-    if (!item) {
+    clearTimeout(this.retryTimer);
+    clearTimeout(this.idleTimer);
+    if (!this.queue.length) {
       this.lastUsed = Date.now();
       this.reference(false);
       this.idleTimer = setTimeout(() => this.stop(failure("Idle public connection closed", "CONNECTION_CHANGED")), IDLE_MS);
       this.idleTimer.unref?.();
       return;
     }
+    const remaining = this.retryAt - Date.now();
+    if (remaining > 0) {
+      this.retryTimer = setTimeout(() => this.dispatch(), remaining);
+      return;
+    }
+    const item = this.queue.shift();
     this.active = item;
     this.requestTimer = setTimeout(() => this.stop(failure("Public exchange request timed out")), REQUEST_MS);
     this.child.stdin.write(JSON.stringify({ id: item.id, payload: item.payload }) + "\n");
@@ -112,6 +121,17 @@ class PublicWorker {
       }
       clearTimeout(this.requestTimer);
       this.active = null;
+      if (response.error?.code === "RATE_LIMITED") {
+        // All readers of this route share the upstream limit. A stream's retry
+        // delay must not be bypassed by history or another chart already queued.
+        this.retryAt = Date.now() + Math.min(30000, 2000 * 2 ** this.rateLimits);
+        this.rateLimits = Math.min(4, this.rateLimits + 1);
+      } else if (!response.error && ["bars", "ticker"].includes(item.payload.action)) {
+        // markets can succeed entirely from CCXT's cached directory. Only an
+        // actual market-data fetch is evidence that upstream access recovered.
+        this.rateLimits = 0;
+        this.retryAt = 0;
+      }
       this.settle(item, response.error ? failure(safeMessage(response.error.message), response.error.code ?? "SOURCE_UNAVAILABLE") : null, response.result);
       this.dispatch();
     }
@@ -121,6 +141,7 @@ class PublicWorker {
     this.dead = true;
     if (workers.get(this.key) === this) workers.delete(this.key);
     clearTimeout(this.idleTimer);
+    clearTimeout(this.retryTimer);
     clearTimeout(this.requestTimer);
     for (const item of [...this.queue, ...(this.active ? [this.active] : [])]) this.settle(item, error);
     this.queue = [];

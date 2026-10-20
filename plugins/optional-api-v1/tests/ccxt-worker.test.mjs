@@ -4,7 +4,7 @@ import { mkdtemp, copyFile, writeFile, readFile, rm } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { setTimeout as delay } from "node:timers/promises";
+import { setTimeout as delay, scheduler } from "node:timers/promises";
 
 const hostRoot = process.env.SESAME_HOST_ROOT ?? fileURLToPath(new URL("../../../../mt5agent/", import.meta.url));
 const { hostPythonPath } = await import(pathToFileURL(join(hostRoot, "modules/agent/host-environment.js")).href);
@@ -22,7 +22,7 @@ for line in sys.stdin:
     if p.get('pause'): time.sleep(p['pause'])
     if p.get('exit'): os._exit(7)
     if p.get('fail'):
-        response={'id':request['id'],'error':{'code':'SOURCE_UNAVAILABLE','message':'temporary upstream failure'}}
+        response={'id':request['id'],'error':{'code':p['fail'] if isinstance(p['fail'],str) else 'SOURCE_UNAVAILABLE','message':'temporary upstream failure'}}
     else:
         response={'id':request['id'],'result':{'pid':os.getpid(),'count':count,'symbol':p.get('symbol'),'exchange':p['exchange']}}
     print(json.dumps(response),flush=True)
@@ -112,4 +112,109 @@ test("Idle native connections expire and active polling is unaffected by cleanup
   t.mock.timers.tick(300000);
   await f.worker.closeWorkers(f.directory);
   assert.throws(() => process.kill(first.pid, 0), { code: "ESRCH" });
+});
+
+test("A rate-limited public route pauses sibling reads already queued behind it", { timeout: 6000 }, async t => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
+  const f = await fixture(t), signal = new AbortController().signal;
+  const first = await f.call({}, signal);
+  const limited = assert.rejects(f.call({ pause: 0.1, fail: "RATE_LIMITED" }, signal), { code: "RATE_LIMITED" });
+  for (let i = 0; i < 100; i++) {
+    if (JSON.parse(await readFile(join(f.directory, "started.json"))).count === 2) break;
+    await scheduler.wait(5);
+  }
+  assert.equal(JSON.parse(await readFile(join(f.directory, "started.json"))).count, 2);
+  const sibling = f.call({ symbol: "ETH/USD" }, signal);
+  // Attach a rejection handler even if a red assertion disposes this queued read.
+  sibling.catch(() => {});
+  await limited;
+  await scheduler.wait(30);
+  assert.equal(JSON.parse(await readFile(join(f.directory, "started.json"))).count, 2, "A queued sibling must not bypass the route's rate-limit cooldown");
+  t.mock.timers.tick(1999);
+  await scheduler.wait(20);
+  assert.equal(JSON.parse(await readFile(join(f.directory, "started.json"))).count, 2);
+  t.mock.timers.tick(1);
+  const recovered = await sibling;
+  assert.equal(recovered.pid, first.pid, "Recovery retains the exchange session and its limiter");
+  assert.equal(recovered.count, 3);
+  assert.equal(recovered.symbol, "ETH/USD");
+});
+
+test("Repeated rate limits back off to a fixed bound and a successful read resets recovery", { timeout: 6000 }, async t => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
+  const f = await fixture(t), signal = new AbortController().signal;
+  await assert.rejects(f.call({ fail: "RATE_LIMITED" }, signal), { code: "RATE_LIMITED" });
+  let count = 1;
+  for (const interval of [2000, 4000, 8000, 16000, 30000, 30000]) {
+    const limited = assert.rejects(f.call({ fail: "RATE_LIMITED" }, signal), { code: "RATE_LIMITED" });
+    await scheduler.wait(20);
+    t.mock.timers.tick(interval - 1);
+    await scheduler.wait(20);
+    assert.equal(JSON.parse(await readFile(join(f.directory, "started.json"))).count, count, "Repeated limits must not dispatch before the increasing cooldown expires");
+    t.mock.timers.tick(1);
+    await limited;
+    count++;
+  }
+  const recovered = f.call({}, signal);
+  recovered.catch(() => {});
+  await scheduler.wait(20);
+  t.mock.timers.tick(30000);
+  assert.equal((await recovered).count, ++count);
+  await assert.rejects(f.call({ fail: "RATE_LIMITED" }, signal), { code: "RATE_LIMITED" });
+  count++;
+  const next = f.call({}, signal);
+  next.catch(() => {});
+  await scheduler.wait(20);
+  t.mock.timers.tick(2000);
+  assert.equal((await next).count, ++count, "After success, the next recovery starts at two seconds");
+});
+
+test("A cached market directory cannot clear an upstream rate-limit streak", { timeout: 6000 }, async t => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
+  const f = await fixture(t), signal = new AbortController().signal;
+  await assert.rejects(f.call({ fail: "RATE_LIMITED" }, signal), { code: "RATE_LIMITED" });
+  const markets = f.call({ action: "markets" }, signal);
+  markets.catch(() => {});
+  await scheduler.wait(20);
+  t.mock.timers.tick(2000);
+  assert.equal((await markets).count, 2);
+  await assert.rejects(f.call({ fail: "RATE_LIMITED" }, signal), { code: "RATE_LIMITED" });
+  const recovered = f.call({}, signal);
+  recovered.catch(() => {});
+  await scheduler.wait(20);
+  t.mock.timers.tick(3999);
+  await scheduler.wait(20);
+  assert.equal(JSON.parse(await readFile(join(f.directory, "started.json"))).count, 3, "A directory success may be local; the next upstream limit still requires four seconds");
+  t.mock.timers.tick(1);
+  assert.equal((await recovered).count, 4);
+});
+
+test("Rate-limit cooldown respects route isolation, cancellation and disposal", { timeout: 6000 }, async t => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
+  const f = await fixture(t), signal = new AbortController().signal;
+  const first = await f.call({}, signal);
+  await assert.rejects(f.call({ fail: "RATE_LIMITED" }, signal), { code: "RATE_LIMITED" });
+  const controller = new AbortController();
+  const canceled = assert.rejects(f.call({}, controller.signal), { code: "ABORTED" });
+  const other = await f.call({ exchange: "kraken" }, signal);
+  assert.notEqual(other.pid, first.pid, "An unrelated route is not delayed by another route's limit");
+  let completed = false;
+  const sibling = f.call({}, signal).then(value => { completed = true; return value; });
+  sibling.catch(() => {});
+  await scheduler.wait(20);
+  controller.abort();
+  await canceled;
+  t.mock.timers.tick(1999);
+  await scheduler.wait(20);
+  assert.equal(completed, false, "Canceling a waiting reader must not release the next reader before the shared cooldown");
+  t.mock.timers.tick(1);
+  assert.equal((await sibling).count, 3, "The canceled reader never reached the native process");
+  await assert.rejects(f.call({ fail: "RATE_LIMITED" }, signal), { code: "RATE_LIMITED" });
+  const pending = assert.rejects(f.call({}, signal), { code: "CONNECTION_CHANGED" });
+  await scheduler.wait(20);
+  await f.worker.closeWorkers(f.directory);
+  await pending;
+  t.mock.timers.tick(30000);
+  assert.throws(() => process.kill(first.pid, 0), { code: "ESRCH" });
+  assert.throws(() => process.kill(other.pid, 0), { code: "ESRCH" });
 });
