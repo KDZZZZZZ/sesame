@@ -1,7 +1,7 @@
 {
   "id": "sesame/auto-factor-mining",
   "apiVersion": "2",
-  "version": "1.1.0",
+  "version": "1.1.3",
   "title": "自动因子挖掘",
   "description": "以任意已选研究能力和独立评估工具编排因子研究；不绑定执行后端，每次工作结束统一产出一份总结。",
   "author": {
