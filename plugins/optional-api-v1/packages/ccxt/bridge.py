@@ -19,6 +19,27 @@ class RequestError(ValueError):
         self.code = code
 
 
+def error_code(error):
+    if isinstance(error, RequestError):
+        return error.code
+    if isinstance(error, ccxt.RateLimitExceeded):
+        return 'RATE_LIMITED'
+    # CCXT 4.5.85 classifies these Kraken rate limits as DDoSProtection,
+    # alongside unrelated lockouts. Only the exact rate-limit payload qualifies.
+    message = str(error)
+    if isinstance(error, ccxt.DDoSProtection) and message.startswith('kraken '):
+        try:
+            response = json.loads(message[len('kraken '):])
+        except json.JSONDecodeError:
+            response = None
+        errors = response.get('error') if isinstance(response, dict) else None
+        if isinstance(errors, list) and errors and all(code in (
+                'EGeneral:Too many requests', 'EAPI:Rate limit exceeded', 'EOrder:Rate limit exceeded',
+        ) for code in errors):
+            return 'RATE_LIMITED'
+    return 'SOURCE_UNAVAILABLE'
+
+
 def norm(value):
     if isinstance(value, float):
         if not math.isfinite(value):
@@ -124,7 +145,7 @@ def main():
             except Exception as error:
                 message = re.sub(r'(https?://)[^\s/@]+(?::[^\s/@]*)?@', r'\1[redacted]@', str(error))[-1500:]
                 encoded = json.dumps({'id': request.get('id') if isinstance(request, dict) else None, 'error': {
-                    'code': error.code if isinstance(error, RequestError) else 'SOURCE_UNAVAILABLE', 'message': message,
+                    'code': error_code(error), 'message': message,
                 }}, allow_nan=False)
             print(encoded, flush=True)
     finally:

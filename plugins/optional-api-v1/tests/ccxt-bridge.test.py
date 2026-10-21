@@ -41,6 +41,18 @@ class Exchange:
 instances = []
 
 
+class RateLimitExceeded(Exception):
+    pass
+
+
+class DDoSProtection(Exception):
+    pass
+
+
+class PermissionDenied(Exception):
+    pass
+
+
 def factory(name):
     def create(settings):
         exchange = Exchange(name, settings)
@@ -49,7 +61,8 @@ def factory(name):
     return create
 
 
-sys.modules['ccxt'] = types.SimpleNamespace(__version__='4.5.85', **{
+sys.modules['ccxt'] = types.SimpleNamespace(__version__='4.5.85',
+    RateLimitExceeded=RateLimitExceeded, DDoSProtection=DDoSProtection, PermissionDenied=PermissionDenied, **{
     name: factory(name) for name in ['kraken', 'coinbase', 'okx']
 })
 spec = importlib.util.spec_from_file_location('ccxt_bridge', Path(__file__).parents[1] / 'packages/ccxt/bridge.py')
@@ -89,6 +102,50 @@ class PublicBridgeTests(unittest.TestCase):
         self.assertEqual(responses[0]['result']['sessionId'], responses[2]['result']['sessionId'])
         self.assertEqual(responses[2]['result']['requestNumber'], 2)
         self.assertTrue(instances[-1].closed)
+
+    def test_rate_limit_diagnostics_keep_the_jsonl_service_and_next_request_usable(self):
+        cases = [RateLimitExceeded('coinbase native rate limit')]
+        cases.extend(DDoSProtection('kraken ' + json.dumps({'error': [code]})) for code in [
+            'EGeneral:Too many requests', 'EAPI:Rate limit exceeded', 'EOrder:Rate limit exceeded',
+        ])
+        for failure in cases:
+            with self.subTest(failure=str(failure)):
+                incoming = io.StringIO(''.join(json.dumps({'id': str(i), 'payload': bars()}) + '\n' for i in range(2)))
+                outgoing = io.StringIO()
+                with patch.object(bridge.PublicSession, 'read', side_effect=[failure, {'rows': []}]), \
+                        patch('sys.stdin', incoming), patch('sys.stdout', outgoing):
+                    bridge.main()
+                responses = [json.loads(line) for line in outgoing.getvalue().splitlines()]
+                self.assertEqual(responses, [
+                    {'id': '0', 'error': {'code': 'RATE_LIMITED', 'message': str(failure)}},
+                    {'id': '1', 'result': {'rows': []}},
+                ])
+
+    def test_other_failures_are_not_reclassified_as_rate_limits(self):
+        message = 'kraken {"error":["EGeneral:Too many requests"]}'
+        failures = [
+            DDoSProtection('kraken {"error":["EGeneral:Temporary lockout"]}'),
+            DDoSProtection('kraken access denied: Too many requests'),
+            DDoSProtection('coinbase {"error":["EGeneral:Too many requests"]}'),
+            DDoSProtection('kraken {"error":["EGeneral:Too many requests","EGeneral:Permission denied"]}'),
+            DDoSProtection('kraken {"error":"EGeneral:Too many requests"}'),
+            DDoSProtection('kraken {"error":[]}'),
+            DDoSProtection('kraken {"error":[{}]}'),
+            DDoSProtection('kraken {invalid JSON}'),
+            PermissionDenied(message),
+            RuntimeError(message),
+            bridge.RequestError('Invalid fixed input', 'INVALID_ARGUMENT'),
+            RateLimitExceeded('limited via https://fixture-user:fixture-password@localhost/'),
+        ]
+        incoming = io.StringIO(''.join(json.dumps({'id': str(i), 'payload': bars()}) + '\n' for i in range(len(failures))))
+        outgoing = io.StringIO()
+        with patch.object(bridge.PublicSession, 'read', side_effect=failures), \
+                patch('sys.stdin', incoming), patch('sys.stdout', outgoing):
+            bridge.main()
+        responses = [json.loads(line) for line in outgoing.getvalue().splitlines()]
+        self.assertEqual([row['error']['code'] for row in responses],
+                         ['SOURCE_UNAVAILABLE'] * 10 + ['INVALID_ARGUMENT', 'RATE_LIMITED'])
+        self.assertEqual(responses[-1]['error']['message'], 'limited via https://[redacted]@localhost/')
 
     def test_no_private_operations_credentials_or_route_changes(self):
         session = bridge.PublicSession()
