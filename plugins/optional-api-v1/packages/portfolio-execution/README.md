@@ -15,6 +15,8 @@ MT5 绑定要求 MT5 2.1.0+，`readTools` 明确包含账户上下文、纯读�
 
 主会话可用 `portfolio_execution_status` 按 binding_id/run_id 查询保存的执行进度及 operation_id，再用 `manual_trade_status` 读取对应命令。操作 ID 在发送前写入进度，进程中断后也可恢复查询；状态查询不恢复执行或重新发送。
 
+MT5 状态刷新对已确认的原生订单先读取历史/当前订单中真实的 `position_id`，再按持仓标识读取成交并仅保留该订单的成交；订单 ID 不等于持仓 ID，成交票也不作为订单 ID。查不到持仓标识时明确保留未确认状态，不能把缺失记录当作未发送或未成交。原生查询失败继续返回错误；不靠扩大历史时间窗或重报订单恢复。
+
 主会话手动交易入口：
 
 - 意图待整理时，立即调用 `manual_trade_prepare({backend:"mt5",symbol:"EURUSD",operation_id:"prepare-1",user_authorized:true})`。返回既有观察结构、`observation_id` 和 `preparation`；不发订单。MT5 2.1.7+ 内部只做一次配置身份读取和一次 `mt5_trading_prepare`，在精确账户锁中准备权限与 Python 连接，按需正常重启原终端，再采集品种规则、持仓、挂单和最后报价。QMT 使用既有只读快照，不修改权限或连接。

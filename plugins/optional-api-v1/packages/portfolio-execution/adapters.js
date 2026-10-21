@@ -194,14 +194,35 @@ export function createAdapters(host, {now=Date.now,authorizeRequest}={}) {
       const verifyNativeAccount=async()=>{const info=await py('account_info',{},signal);check(String(info.login)===record.account.accountId && info.server===record.account.server,'ACCOUNT_MISMATCH','Do not recover an order against a different logged-in account');};
       await verifyNativeAccount();
       const orderId=nativeId(command.result?.result?.order), dealId=nativeId(command.result?.result?.deal);
-      // The SDK ticket selector is an ORDER ID, not a deal ticket. Prefer the
-      // confirmed identity so a server-wall history timestamp cannot hide fills.
-      const history=orderId!==null?{ticket:orderId}:{date_from:new Date(record.createdAt-60000).toISOString(),date_to:new Date(now()+1000).toISOString()};
-      const [orders,deals,positions]=await Promise.all([py('orders_get',{symbol:record.symbol},signal),py('history_deals_get',history,signal),py('positions_get',{symbol:record.symbol},signal)]);
-      await verifyNativeAccount();await verifyConfiguration();
       const ownSymbol=x=>x.symbol===record.symbol,ownRemark=x=>typeof record.remark==='string' && record.remark.length>0 && x.comment===record.remark;
-      const matchesDeal=x=>ownSymbol(x) && ['0','1'].includes(String(x.type)) && nativeId(x.ticket)!==null && nativeId(x.order)!==null && (ownRemark(x) || orderId!==null && nativeId(x.order)===orderId || dealId!==null && nativeId(x.ticket)===dealId);
-      return {command,orders:orders.filter(x=>ownSymbol(x) && nativeId(x.ticket)!==null && (ownRemark(x) || orderId!==null && nativeId(x.ticket)===orderId) && (record.action!=='limit'||mt5Pending(x,record))),deals:deals.filter(matchesDeal),positions:positions.filter(x=>ownSymbol(x) && nativeId(x.ticket)!==null && ownRemark(x)),coverage:'Native queried range; missing matches do not prove no order was sent'};
+      let orders,deals,positions,coverage='Native queried range; missing matches do not prove no order was sent';
+      if(orderId!==null) {
+        // Observed terminal/SDK 5.0.6231 rejects history_deals_get(ticket=orderId). Resolve the
+        // native position_id through this exact order; order/deal/position IDs
+        // are distinct, and a current partial order may not be in history yet.
+        let historical;
+        [orders,historical,positions]=await Promise.all([py('orders_get',{symbol:record.symbol},signal),py('history_orders_get',{ticket:orderId},signal),py('positions_get',{symbol:record.symbol},signal)]);
+        check(Array.isArray(orders) && Array.isArray(historical) && historical.length<=1 && historical.every(x=>x?.symbol===record.symbol && nativeId(x.ticket)===orderId),'SOURCE_DATA_INVALID','Native order history does not identify the exact requested order and symbol');
+        const currentOrders=orders.filter(x=>ownSymbol(x) && nativeId(x.ticket)===orderId);
+        check(currentOrders.length<=1,'SOURCE_DATA_INVALID','Native current order identity is ambiguous');
+        const sources=[...historical,...currentOrders];
+        check(sources.every(x=>x.position_id==null || String(x.position_id)==='0' || nativeId(x.position_id)!==null),'SOURCE_DATA_INVALID','Native order has an invalid position identifier');
+        const positionIds=[...new Set(sources.map(x=>nativeId(x.position_id)).filter(x=>x!==null))];
+        check(positionIds.length<=1,'SOURCE_DATA_INVALID','Native current and historical order position identifiers conflict');
+        if(positionIds.length) {
+          deals=await py('history_deals_get',{position:positionIds[0]},signal);
+          coverage='Native position history filtered to the confirmed order; missing matches do not prove no order was sent';
+        } else {
+          deals=[];coverage='Native order position_id is unverified; deal history was not queried. Missing records do not prove no order was sent';
+        }
+      } else {
+        const history={date_from:new Date(record.createdAt-60000).toISOString(),date_to:new Date(now()+1000).toISOString()};
+        [orders,deals,positions]=await Promise.all([py('orders_get',{symbol:record.symbol},signal),py('history_deals_get',history,signal),py('positions_get',{symbol:record.symbol},signal)]);
+      }
+      check([orders,deals,positions].every(Array.isArray),'SOURCE_DATA_INVALID','Native order, deal or position snapshot is missing');
+      await verifyNativeAccount();await verifyConfiguration();
+      const matchesDeal=x=>ownSymbol(x) && ['0','1'].includes(String(x.type)) && nativeId(x.ticket)!==null && nativeId(x.order)!==null && (orderId!==null?nativeId(x.order)===orderId:ownRemark(x) || dealId!==null && nativeId(x.ticket)===dealId);
+      return {command,orders:orders.filter(x=>ownSymbol(x) && nativeId(x.ticket)!==null && (ownRemark(x) || orderId!==null && nativeId(x.ticket)===orderId) && (record.action!=='limit'||mt5Pending(x,record))),deals:deals.filter(matchesDeal),positions:positions.filter(x=>ownSymbol(x) && nativeId(x.ticket)!==null && ownRemark(x)),coverage};
     }
     const reads=await Promise.all(['orders','fills'].map(action=>call('qmt','qmt_read',{action,page:{limit:200}},signal)));
     for(const read of reads) check(read.connection?.id===current.connectionId && read.connection.revision===current.revision,'CONNECTION_CHANGED','Cannot recover against a different QMT connection');
