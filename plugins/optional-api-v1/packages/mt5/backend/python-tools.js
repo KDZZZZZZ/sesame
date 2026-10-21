@@ -5,6 +5,7 @@ const b = description => ({ type: 'boolean', description });
 const symbol = s('券商品种的精确名称');
 const date = s('带时区的 ISO 8601 时间，传入官方 API 前转为 UTC datetime');
 const ticket = s('MT5 uint64 ticket 的十进制字符串');
+const historyId = description => ({ ...s(description), pattern: '^[1-9][0-9]*$', maxLength: 20 });
 const enumeration = s('官方常量名，例如 TIMEFRAME_M5 / COPY_TICKS_ALL / ORDER_TYPE_BUY，也支持对应整数');
 enumeration.type = ['string', 'integer'];
 const request = { type: 'object', description: '官方 MqlTradeRequest 字段；action/type/type_time/type_filling 可用官方常量名，ticket 使用字符串。', additionalProperties: false,
@@ -41,8 +42,17 @@ const methods = [
   ['order_send', '向实际账户提交交易请求；需用户交易意图与实际权限。可选 execution_guard 在原生进程中校验账户、有效期、最新 tick、数量与价格边界，先 order_check 再刷新报价并仅发送一次；cancellation_guard 在原生撤单前复核账户及唯一匹配活动挂单。返回执行耗时。unknown 不重发。通过 mt5_trade 调用。', { request, execution_guard:executionGuard, cancellation_guard:cancellationGuard }, ['request']],
   ['positions_total', '当前持仓数量。', {}], ['positions_get', '当前持仓。', { symbol, group: s('组过滤'), ticket }],
   ['history_orders_total', 'UTC 区间历史订单数量。', { date_from: date, date_to: date }, ['date_from', 'date_to']],
-  ['history_orders_get', '历史订单：使用 UTC 起止时间、ticket 或 position。', { date_from: date, date_to: date, group: s('组过滤'), ticket, position: ticket }],
+  ['history_orders_get', '历史订单三选一：完整 UTC 起止时间（可加 group）、订单 ticket、持仓 position；不得混用。', { date_from: date, date_to: date, group: s('仅用于时间区间的品种组过滤'), ticket: historyId('订单 ticket 的正 uint64 十进制字符串'), position: historyId('持仓标识（ORDER_POSITION_ID）的正 uint64 十进制字符串') }],
   ['history_deals_total', 'UTC 区间历史成交数量。', { date_from: date, date_to: date }, ['date_from', 'date_to']],
-  ['history_deals_get', '历史成交：使用 UTC 起止时间、ticket 或 position。', { date_from: date, date_to: date, group: s('组过滤'), ticket, position: ticket }],
+  ['history_deals_get', '历史成交三选一：完整 UTC 起止时间（可加 group）、订单 ticket、持仓 position；不得混用。ticket 对应订单，不是成交 ticket。', { date_from: date, date_to: date, group: s('仅用于时间区间的品种组过滤'), ticket: historyId('订单 ticket（DEAL_ORDER）的正 uint64 十进制字符串，不是成交自身的 ticket（deal ticket）'), position: historyId('持仓标识（DEAL_POSITION_ID）的正 uint64 十进制字符串') }],
 ];
-export const PYTHON_TOOLS = methods.map(([name, description, properties, required = []]) => ({ name, description, inputSchema: { type: 'object', properties, required, additionalProperties: false } }));
+export const PYTHON_TOOLS = methods.map(([name, description, properties, required = []]) => {
+  const inputSchema = { type: 'object', properties, required, additionalProperties: false };
+  if (name === 'history_orders_get' || name === 'history_deals_get') {
+    inputSchema.oneOf = [['date_from', 'date_to', 'group'], ['ticket'], ['position']].map(keys => ({
+      type: 'object', properties: Object.fromEntries(keys.map(key => [key, properties[key]])),
+      required: keys.filter(key => key !== 'group'), additionalProperties: false,
+    }));
+  }
+  return { name, description, inputSchema };
+});
