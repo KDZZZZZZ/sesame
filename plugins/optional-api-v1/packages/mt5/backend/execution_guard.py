@@ -17,9 +17,10 @@ _clock_spec.loader.exec_module(_quote_clock)
 
 
 class GuardRejected(Exception):
-    def __init__(self, code, message):
+    def __init__(self, code, message, details=None):
         super().__init__(message)
         self.code = code
+        self.details = details
 
 
 def need(condition, code, message):
@@ -155,7 +156,11 @@ def guarded_send(mt5, request, guard, clock=lambda: int(time.time() * 1000), mon
         order_price = number(request.get("price"))
         need(order_price <= limit if side == "buy" else order_price >= limit, "INVALID_ARGUMENT", "Limit order exceeds authorized boundary")
     checked = mt5.order_check(request)
-    need(checked is not None and checked.retcode == 0, "ORDER_CHECK_REJECTED", "Native order_check rejected the request")
+    if checked is None or checked.retcode != 0:
+        # Capture before another SDK call can replace this check's last_error.
+        native_error = mt5.last_error()
+        raise GuardRejected("ORDER_CHECK_REJECTED", "Native order_check rejected the request",
+                            {"order_check": checked, "last_error": native_error})
     verify_portfolio()
     # order_check may be slow; refresh after it without another model turn.
     proof, received, received_mono, quote_ms, fresh_price = fresh_quote()

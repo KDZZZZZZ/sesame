@@ -55,6 +55,7 @@ class MT5:
     def order_check(self, request):
         self.calls.append("check"); self.clock.now += self.check_delay
         return N(retcode=self.check_retcode)
+    def last_error(self): self.calls.append("last_error"); return (1, "success")
     def order_send(self, request):
         self.calls.append("send"); self.sent.append(dict(request)); self.clock.now += 20
         return N(retcode=10009, order=123)
@@ -98,6 +99,25 @@ class GuardTests(unittest.TestCase):
             self.setUp();mutate()
             with self.assertRaises(mt.GuardRejected) as caught:self.send()
             self.assertEqual(caught.exception.code,code);self.assertFalse(self.mt.sent)
+    def test_mt5_rejected_order_check_retains_native_object_and_immediate_last_error(self):
+        checked = N(retcode=10030, comment="Fixture filling rejected", margin=12.5, request=N(symbol="FIXTURE", volume=0.1))
+        def check_order(request): self.mt.calls.append("check"); return checked
+        self.mt.order_check = check_order
+        with self.assertRaises(mt.GuardRejected) as caught: self.send()
+        self.assertEqual(caught.exception.code, "ORDER_CHECK_REJECTED")
+        self.assertIs(caught.exception.details["order_check"], checked)
+        self.assertEqual(caught.exception.details["last_error"], (1, "success"))
+        self.assertEqual(self.mt.calls[-2:], ["check", "last_error"])
+        self.assertEqual(self.mt.calls.count("check"), 1); self.assertFalse(self.mt.sent)
+    def test_mt5_null_order_check_retains_native_error_without_inventing_retcode(self):
+        def check_order(request): self.mt.calls.append("check"); return None
+        def last_error(): self.mt.calls.append("last_error"); return (-2, "Fixture invalid price")
+        self.mt.order_check, self.mt.last_error = check_order, last_error
+        with self.assertRaises(mt.GuardRejected) as caught: self.send()
+        self.assertEqual(caught.exception.code, "ORDER_CHECK_REJECTED")
+        self.assertEqual(caught.exception.details, {"order_check": None, "last_error": (-2, "Fixture invalid price")})
+        self.assertEqual(self.mt.calls[-2:], ["check", "last_error"])
+        self.assertEqual(self.mt.calls.count("check"), 1); self.assertFalse(self.mt.sent)
     def test_mt5_close_requires_matching_current_opposite_position(self):
         self.request.update(position=100,type=1);self.guard.update(side='sell',price_limit='99')
         self.send();self.assertEqual(len(self.mt.sent),1)
@@ -310,10 +330,10 @@ class GuardTests(unittest.TestCase):
 
 
 class WorkerBoundaryTests(unittest.TestCase):
-    def run_worker(self, expired=False, guarded=True, cancel=False, changed_account=False, portfolio=False, change=''):
+    def run_worker(self, expired=False, guarded=True, cancel=False, changed_account=False, portfolio=False, change='', check_failure=''):
         # Fixed stand-ins supplied only to this subprocess. No real SDK import.
         with tempfile.TemporaryDirectory(prefix='sesame-guard-fixture-') as tmp:
-            directory=Path(tmp);audit=directory/'sent.txt'
+            directory=Path(tmp);audit=directory/'sent.txt';check_audit=directory/'checks.txt'
             (directory/'numpy.py').write_text('class ndarray: pass\nclass generic: pass\n')
             (directory/'MetaTrader5.py').write_text('''
 import os,time
@@ -340,6 +360,10 @@ def symbol_info_tick(symbol): return R(time_msc=int(time.time()*1000)+10800000,b
 positions=[]
 orders=[]
 def order_check(request):
+ with open(os.environ['SESAME_FIXTURE_CHECK_AUDIT'],'a') as f: f.write('check\\n')
+ failure=os.environ.get('SESAME_FIXTURE_CHECK_FAILURE')
+ if failure=='none': return None
+ if failure=='reject': return R(retcode=10030,comment='Fixture filling rejected',margin=12.5,request=R(**request))
  if os.environ.get('SESAME_FIXTURE_CHANGE')=='position': positions.append(R(ticket=100,symbol='FIXTURE',type=0,volume=0.1))
  if os.environ.get('SESAME_FIXTURE_CHANGE')=='working': orders.append(R(ticket=701,symbol='FIXTURE'))
  return R(retcode=0)
@@ -350,7 +374,9 @@ def orders_get(**kwargs):
 def order_send(request):
  with open(os.environ['SESAME_FIXTURE_AUDIT'],'a') as f: f.write('sent\\n')
  return R(retcode=10009,order=123)
-def last_error(): return (1,'success')
+def last_error():
+ with open(os.environ['SESAME_FIXTURE_CHECK_AUDIT'],'a') as f: f.write('last_error\\n')
+ return (-2,'Fixture invalid price') if os.environ.get('SESAME_FIXTURE_CHECK_FAILURE')=='none' else (1,'success')
 def shutdown(): pass
 ''')
             now=FIXED_NOW-(61000 if expired else 0)
@@ -360,7 +386,8 @@ def shutdown(): pass
             if guarded:args['execution_guard']=guard
             if cancel:args={'request':{'action':'TRADE_ACTION_REMOVE','order':'700'},'cancellation_guard':{'expected_account':'42','expected_server':'FTMO-Demo','symbol':'FIXTURE','remark':'SOwn','order':'700','side':'buy'}}
             request={'tool':'order_send','arguments':args}
-            result=subprocess.run([sys.executable,'-B',str(ROOT/'mt5/backend/python-worker.py')],input=json.dumps(request)+'\n',text=True,capture_output=True,env={**os.environ,'PYTHONPATH':tmp,'SESAME_FIXTURE_AUDIT':str(audit),'SESAME_FIXTURE_ACCOUNT':'43' if changed_account else '42','SESAME_FIXTURE_PORTFOLIO':'1' if portfolio else '0','SESAME_FIXTURE_CHANGE':change},timeout=5,check=True)
+            result=subprocess.run([sys.executable,'-B',str(ROOT/'mt5/backend/python-worker.py')],input=json.dumps(request)+'\n',text=True,capture_output=True,env={**os.environ,'PYTHONPATH':tmp,'SESAME_FIXTURE_AUDIT':str(audit),'SESAME_FIXTURE_CHECK_AUDIT':str(check_audit),'SESAME_FIXTURE_CHECK_FAILURE':check_failure,'SESAME_FIXTURE_ACCOUNT':'43' if changed_account else '42','SESAME_FIXTURE_PORTFOLIO':'1' if portfolio else '0','SESAME_FIXTURE_CHANGE':change},timeout=5,check=True)
+            if check_failure: self.assertEqual(check_audit.read_text().splitlines(), ['check', 'last_error'])
             return json.loads(result.stdout.strip()),audit.read_text().splitlines() if audit.exists() else []
     def test_actual_worker_consumes_guard_and_preserves_native_result(self):
         result,sends=self.run_worker()
@@ -368,6 +395,19 @@ def shutdown(): pass
     def test_actual_worker_marks_expired_as_known_not_sent(self):
         result,sends=self.run_worker(expired=True)
         self.assertEqual(sends,[]);self.assertEqual(result['error'],'SIGNAL_EXPIRED');self.assertIs(result['submission_attempted'],False)
+        self.assertEqual(set(result), {'error', 'message', 'submission_attempted'})
+    def test_actual_worker_preserves_rejected_native_check_diagnostics_without_sending(self):
+        result,sends=self.run_worker(check_failure='reject')
+        self.assertEqual(sends,[]);self.assertEqual(result['error'],'ORDER_CHECK_REJECTED');self.assertIs(result['submission_attempted'],False)
+        self.assertEqual(result['last_error'],[1,'success'])
+        self.assertEqual(result['order_check'],{'retcode':10030,'comment':'Fixture filling rejected','margin':12.5,
+            'request':{'action':1,'type':0,'symbol':'FIXTURE','volume':0.1,'price':101.0}})
+        self.assertNotIn('result',result)
+    def test_actual_worker_preserves_null_native_check_and_last_error_without_sending(self):
+        result,sends=self.run_worker(check_failure='none')
+        self.assertEqual(sends,[]);self.assertEqual(result['error'],'ORDER_CHECK_REJECTED');self.assertIs(result['submission_attempted'],False)
+        self.assertIsNone(result['order_check']);self.assertEqual(result['last_error'],[-2,'Fixture invalid price'])
+        self.assertNotIn('result',result)
     def test_actual_worker_rechecks_full_positions_and_orders_after_check(self):
         result,sends=self.run_worker(portfolio=True)
         self.assertEqual(sends,['sent']);self.assertEqual(result['result']['retcode'],10009)

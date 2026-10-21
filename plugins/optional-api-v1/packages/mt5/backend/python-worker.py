@@ -138,7 +138,8 @@ for line in sys.stdin:
         if len(text) > 8 * 1024 * 1024:
             raise ValueError('Result exceeds 8 MiB; use a smaller time range')
     except _guard.GuardRejected as error:
-        text = json.dumps({'error': error.code, 'message': str(error), 'submission_attempted': False})
+        text = json.dumps({'error': error.code, 'message': str(error), 'submission_attempted': False,
+                           **clean(error.details or {})})
     except Exception as error:
         # Do not echo exceptions containing user credentials or native process arguments.
         text = json.dumps({'error': type(error).__name__, 'message': 'Official Python call failed; check function parameters and terminal connection.'})
