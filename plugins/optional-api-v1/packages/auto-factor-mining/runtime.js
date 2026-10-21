@@ -230,7 +230,16 @@ export class MiningRuntime {
   context(host, id, section = 'team', offset = 0, limit = 20, execution) {
     const { run, task } = this.authorize(host, id, undefined, execution);
     const page = rows => ({ items: rows.slice(offset, offset + limit), total: rows.length, nextOffset: offset + limit < rows.length ? offset + limit : null });
-    const base = { runId: id, title: run.title, goal: run.goal, status: run.status, config: run.config, data: run.data,
+    let config = run.config, data = run.data;
+    if (task && run.data.holdoutMode !== 'none') {
+      // A full input Ref resolves the held-out rows too. Keep it in the owner
+      // record and final archive, outside the research roles' development view.
+      const { arguments: _arguments, ...evaluator } = run.config.evaluator;
+      const { sourceId: _sourceId, inputRefs: _inputRefs, provenance: _provenance, dependencies: _dependencies, ...developmentData } = run.data;
+      config = { ...run.config, evaluator };
+      data = developmentData;
+    }
+    const base = { runId: id, title: run.title, goal: run.goal, status: run.status, config, data,
       assignment: task ? { role: task.role, mode: task.mode, direction: task.direction ?? null, round: task.round ?? null, trialId: task.trialId ?? null,
         expectedOutput: task.mode === 'code' ? { candidate: run.evaluation?.contract?.candidateExample ?? {}, explanation: '实现与假设之间的关系' } : OUTPUTS[task.mode] ?? null } : null,
       evaluator: run.evaluation?.contract ?? null, holdoutMode: run.data.holdoutMode ?? 'legacy' };

@@ -7,6 +7,7 @@ export function finalSnapshot(run) {
 export async function archiveReport(host, run, dataset) {
   if (run.report?.ref) return run.report;
   const snapshot = run.reportSnapshot ?? finalSnapshot(run), hash = digest(snapshot);
+  const inputRefs = structuredClone(snapshot.data.inputRefs ?? []);
   const raw = canonical(snapshot), html = renderReport(snapshot, { demo: Boolean(run.data.synthetic) });
   const source = canonical({ schemaVersion: 1, dataDigest: run.data.digest, holdoutSealed: run.data.holdoutMode !== 'none' && !run.finalEvaluation,
     holdoutStatus: run.finalEvaluation?.holdoutStatus ?? (run.data.holdoutMode === 'none' ? 'not-requested' : 'sealed'), evaluator: run.config.evaluator, dataset });
@@ -21,8 +22,9 @@ export async function archiveReport(host, run, dataset) {
     blobs.push({ entry: path, path, mediaType: path.endsWith('.html') ? 'text/html' : 'application/json' });
   }
   const { ref, receipt } = await host.resources.publish(packageRoot, { kind: 'report', schemaVersion: '1.0.0', content: {
-    schemaVersion: '1.0.0', title: run.title, summary: run.goal, entry: 'report.html', runtime: 'sesame-report/1', runtimeRevision: '1.0.0', data: [], related: [], features: ['interactive'], locale: 'zh-CN',
-    provenance: { kind: run.data.synthetic ? 'demo' : 'derived', references: [] },
-  }, dependencies: [], blobs }, { operationId: 'factor-publication:' + run.id + ':' + hash });
+    schemaVersion: '1.0.0', title: run.title, summary: run.goal, entry: 'report.html', runtime: 'sesame-report/1', runtimeRevision: '1.0.0',
+    data: inputRefs.map((ref, index) => ({ id: `input-${index + 1}`, ref, usage: 'Frozen factor evaluation input' })), related: [], features: ['interactive'], locale: 'zh-CN',
+    provenance: { kind: run.data.synthetic ? 'demo' : 'derived', references: inputRefs },
+  }, dependencies: inputRefs, blobs }, { operationId: 'factor-publication:' + run.id + ':' + hash });
   return { ref, receipt, entry: 'report.html', attachments: blobs.filter(blob => blob.path !== 'report.html').map(({ path, mediaType }) => ({ path, mediaType })), state: 'published' };
 }

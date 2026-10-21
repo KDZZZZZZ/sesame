@@ -9,6 +9,17 @@ const receipt = value => ({ ...value, receiptDigest: digest(value) });
 const bounded = (value, label) => { check(typeof value === 'string' && value.length > 0 && value.length <= 200, `${label} is required`); return value; };
 const candidateExample = { op: 'delta', args: [{ op: 'field', name: 'close' }], window: 5 };
 const instructions = 'This explicitly selected evaluator accepts a factor AST. Operators: field(name), constant(value), add/sub/mul/div(2 args), neg/abs/log/rank/zscore(1 arg), lag/delta/mean/std/sum(1 arg, window 1..252). It computes train/validation Rank IC, coverage, non-overlapping long-short return after costs and train-only redundancy. Submit the AST as candidate; never supply measured metrics.';
+const MAX_INPUT_BYTES = 4 * 1024 * 1024;
+const hashBytes = bytes => `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+export const inputDigest = (dataset, data) => digest({ dataset, sourceId: data.sourceId, ...(data.inputRefs ? { inputRefs: data.inputRefs } : {}) });
+// Published artifacts sort keys while serializing. Keep the evaluator's existing
+// receipt/input digest contract unchanged: JSON.stringify reorders integer keys.
+function artifactCanonical(value) {
+  if (Array.isArray(value)) return `[${value.map(artifactCanonical).join(',')}]`;
+  if (value !== null && typeof value === 'object') return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${artifactCanonical(value[key])}`).join(',')}}`;
+  check(value === null || typeof value === 'boolean' || typeof value === 'string' || Number.isFinite(value), 'Artifact manifest must contain JSON values');
+  return JSON.stringify(value);
+}
 
 function caller(host, execution) {
   const provenance = execution?.provenance, chain = provenance?.chain;
@@ -27,6 +38,45 @@ async function readDataset(host, datasetId, signal) {
     check(bytes <= 4 * 1024 * 1024, 'Use a panel <=4MiB'); cursor = result.nextCursor;
   } while (cursor);
   check(metadata?.id === datasetId, 'Dataset source returned a different identity'); return { ...metadata, rows };
+}
+async function readFixedDataset(host, ref, signal) {
+  check(ref && typeof ref === 'object' && !Array.isArray(ref) && Object.keys(ref).sort().join(',') === 'digest,id,kind,revision,schemaVersion' &&
+    ['id', 'revision'].every(key => typeof ref[key] === 'string' && ref[key].length > 0 && ref[key].length <= 200) &&
+    ref.kind === 'data' && ref.schemaVersion === '1.0.0' && /^sha256:[a-f0-9]{64}$/.test(ref.digest), 'Use a complete fixed data reference');
+  signal?.throwIfAborted();
+  const manifest = await host.resources.read(ref, { part: 'manifest' });
+  check(manifest && typeof manifest === 'object' && hashBytes(artifactCanonical(manifest)) === ref.digest, 'Fixed input manifest digest differs');
+  check(manifest.kind === 'data' && manifest.schemaVersion === ref.schemaVersion, 'Unsupported fixed data schema');
+  const content = manifest.content;
+  check(content?.format === 'json-rows', 'Fixed data must use json-rows');
+  check(Number.isSafeInteger(content.rowCount) && content.rowCount > 0 && content.rowCount <= 20000, 'Use a panel with 1–20000 rows');
+  check(content.provenance && ['observed', 'derived', 'user_input', 'demo'].includes(content.provenance.kind), 'Fixed data requires recorded provenance');
+  check(Array.isArray(manifest.dependencies) && manifest.dependencies.length <= 256 && (content.provenance.kind !== 'derived' || manifest.dependencies.length > 0), 'Fixed data requires its recorded dependencies');
+  const entries = Array.isArray(manifest.blobs) ? manifest.blobs.filter(blob => blob.path === content.path) : [];
+  check(typeof content.path === 'string' && content.path.length > 0 && entries.length === 1, 'Fixed data requires its published content entry');
+  const blob = entries[0];
+  check(Number.isSafeInteger(blob.size) && blob.size > 0 && blob.size <= MAX_INPUT_BYTES, 'Use a panel <=4MiB');
+  check(/^sha256:[a-f0-9]{64}$/.test(blob.digest), 'Fixed data content digest is required');
+  const parts = []; let offset = 0;
+  for (;;) {
+    signal?.throwIfAborted();
+    const value = await host.resources.read(ref, { part: 'content', entry: content.path, encoding: 'base64', offset, length: 262144 });
+    check(canonical(value.ref) === canonical(ref), 'Fixed input returned a different source identity');
+    check(value.encoding === 'base64' && typeof value.content === 'string', 'Fixed input must return base64 content');
+    const chunk = Buffer.from(value.content, 'base64');
+    check(value.offset === offset && value.length === chunk.length && value.total === blob.size && offset + chunk.length <= MAX_INPUT_BYTES, 'Fixed input byte range differs or exceeds 4MiB');
+    parts.push(chunk); offset += chunk.length;
+    if (value.nextOffset === undefined) { check(offset === blob.size, 'Fixed input content is incomplete'); break; }
+    check(chunk.length > 0 && value.nextOffset === offset && offset < blob.size, 'Invalid fixed input byte cursor');
+  }
+  signal?.throwIfAborted();
+  const bytes = Buffer.concat(parts);
+  check(hashBytes(bytes) === blob.digest, 'Fixed input content digest differs');
+  let rows;
+  try { rows = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)); }
+  catch { check(false, 'Fixed input must contain UTF-8 JSON rows'); }
+  check(Array.isArray(rows) && rows.length === content.rowCount, 'Fixed input rowCount differs from actual rows');
+  return { id: ref.id, rows, provenance: structuredClone(content.provenance), inputRefs: [structuredClone(ref)], dependencies: structuredClone(manifest.dependencies) };
 }
 async function readJson(host, ref) {
   const parts = []; let offset = 0, bytes = 0;
@@ -58,9 +108,9 @@ async function saveSession(host, session, signal) {
   await host.state.commit([{ op: 'put', key: { collection: 'sessions', key: session.id }, expectedVersion: _stateVersion ?? 0, value: { ...metadata, refs } }], { signal });
 }
 function options(value = {}) {
-  check(value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).every(key => ['dataset', 'minRankIC', 'minCoverage', 'maxCorrelation'].includes(key)), 'Unknown evaluator option');
+  check(value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).every(key => ['dataset', 'inputRef', 'minRankIC', 'minCoverage', 'maxCorrelation'].includes(key)), 'Unknown evaluator option');
   const number = (value, fallback, min, max) => { const n = value ?? fallback; check(Number.isFinite(n) && n >= min && n <= max, 'Invalid evaluator threshold'); return n; };
-  return { dataset: value.dataset, minRankIC: number(value.minRankIC, 0, -1, 1), minCoverage: number(value.minCoverage, .6, 0, 1), maxCorrelation: number(value.maxCorrelation, .95, 0, 1) };
+  return { dataset: value.dataset, ...(value.inputRef === undefined ? {} : { inputRef: structuredClone(value.inputRef) }), minRankIC: number(value.minRankIC, 0, -1, 1), minCoverage: number(value.minCoverage, .6, 0, 1), maxCorrelation: number(value.maxCorrelation, .95, 0, 1) };
 }
 const sessions = new Map();
 export async function evaluate(host, args, signal, execution) {
@@ -80,20 +130,23 @@ async function evaluateSession(host, args, signal, execution) {
   if (args.action === 'prepare') {
     check(host.context.kind === 'main', 'Prepare a new evaluator session in the main conversation', 'FORBIDDEN');
     check(['restricted', 'development-only'].includes(args.access), 'Choose restricted or development-only data access');
-    const sourceId = bounded(args.dataset_id, 'dataset_id'), config = options(args.options), source = await readDataset(host, sourceId, signal);
+    const config = options(args.options), hasDataset = args.dataset_id !== undefined, hasRef = config.inputRef !== undefined;
+    check(hasDataset !== hasRef, hasDataset ? 'Choose dataset_id or options.inputRef, not both' : 'dataset_id or options.inputRef is required');
+    const source = hasRef ? await readFixedDataset(host, config.inputRef, signal) : await readDataset(host, bounded(args.dataset_id, 'dataset_id'), signal);
+    const sourceId = source.id, sourceIdentity = { sourceId, ...(source.inputRefs ? { inputRefs: source.inputRefs } : {}) };
     check(Buffer.byteLength(JSON.stringify(source.rows)) <= 4 * 1024 * 1024, 'Use a panel <=4MiB');
     const dataset = prepareDataset(source.rows, config.dataset, { developmentOnly: args.access === 'development-only' });
     config.dataset = dataset.config;
     const provenance = structuredClone(source.provenance ?? { source_kind: source.source_kind ?? 'unspecified' });
     check(Buffer.byteLength(JSON.stringify(provenance)) <= 12000, 'Keep input provenance within 12KB');
     const id = `fe_${digest([workflowPluginId, host.context.sessionId, runId]).slice(7, 39)}`;
-    const inputDigest = digest({ dataset, sourceId }), fingerprint = digest({ inputDigest, config, provenance, access: args.access });
+    const frozenDigest = inputDigest(dataset, sourceIdentity), fingerprint = digest({ inputDigest: frozenDigest, config, provenance, access: args.access });
     const prior = await storedSession(host, id);
     if (prior) { check(prior.fingerprint === fingerprint, 'Evaluator session already has different frozen inputs'); return prior.prepared; }
     const development = { evaluatorVersion: EVALUATOR_VERSION, access: args.access, config: dataset.config, summary: dataset.summary,
       rows: dataset.rows.filter(row => row.time <= dataset.config.validationEnd) };
-    const prepared = receipt({ protocol: PROTOCOL, action: 'prepare', runId, sessionId: id, inputDigest,
-      data: { sourceId, digest: inputDigest, evaluatorVersion: EVALUATOR_VERSION, rowCount: dataset.summary.rows, symbolCount: dataset.summary.symbols.length,
+    const prepared = receipt({ protocol: PROTOCOL, action: 'prepare', runId, sessionId: id, inputDigest: frozenDigest,
+      data: { ...sourceIdentity, ...(source.dependencies ? { dependencies: source.dependencies } : {}), digest: frozenDigest, evaluatorVersion: EVALUATOR_VERSION, rowCount: dataset.summary.rows, symbolCount: dataset.summary.symbols.length,
         fields: dataset.summary.fields, range: { start: dataset.summary.start, end: dataset.summary.end }, provenance,
         synthetic: /demo|synthetic|fixture/i.test([source.source_kind, provenance.kind, provenance.source_kind].join(' ')),
         scope: 'development', holdoutMode: args.access === 'restricted' ? 'workflow-isolated' : 'none' },
@@ -115,7 +168,7 @@ async function evaluateSession(host, args, signal, execution) {
   }
   check(session.dataset.evaluatorVersion === EVALUATOR_VERSION, 'Evaluator version changed');
   const dataset = prepareDataset(session.dataset.rows, session.dataset.config, { developmentOnly: session.dataset.access === 'development-only' });
-  check(digest({ dataset, sourceId: session.prepared.data.sourceId }) === session.prepared.inputDigest, 'Frozen input digest differs');
+  check(inputDigest(dataset, session.prepared.data) === session.prepared.inputDigest, 'Frozen input digest differs');
   const common = { protocol: PROTOCOL, action: args.action, runId, sessionId: session.id };
   if (args.action === 'candidate') {
     check(!session.selection, 'Candidate selection is frozen');
