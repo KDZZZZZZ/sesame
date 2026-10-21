@@ -38,10 +38,14 @@ const outcome = trial => ['accepted', 'rejected', 'failed', 'cancelled', 'cancel
   ? trial.status : trial.review?.verdict || trial.status;
 const zeroBased = run => arr(run.trials).some(t => t.round === 0) || arr(run.reflections).some(r => r.round === 0);
 const roundLabel = (round, offset) => typeof round === 'number' ? round + offset : round ?? '—';
+const prose = (value, summary, className = '') => {
+  const text = String(value ?? ''), paragraph = `<p${className ? ` class="${e(className)}"` : ''}>${e(text)}</p>`;
+  return text.length > 280 ? `<details><summary>${e(summary)}</summary>${paragraph}</details>` : paragraph;
+};
 
 function metricTable(trial) {
   const metrics = trial.metrics || {};
-  if (trial.evaluationReceipt) return `<details open><summary>选中评估能力的计算结果</summary><pre>${e(json(metrics))}</pre></details>`;
+  if (trial.evaluationReceipt) return `<details><summary>选中评估能力的计算结果</summary><pre>${e(json(metrics))}</pre></details>`;
   const rows = [
     ['Rank IC', 'rankIC', number], ['ICIR', 'rankICIR', number],
     ['覆盖率', 'coverage', percent], ['净收益', 'netReturn', percent],
@@ -54,7 +58,7 @@ function trialDetail(trial, index, tasks, roundOffset) {
   const taskList = tasks.filter(task => task.trialId === trial.id);
   return `<article class="trial-detail" id="trial-detail-${index}" data-trial-detail="${index}" ${index ? 'hidden' : ''} aria-labelledby="trial-title-${index}">
     <div class="detail-heading"><div><span class="eyebrow">TRIAL ${e(trial.id)}</span><h3 id="trial-title-${index}">${e(trial.hypothesis || '待补充假设')}</h3></div>${badge(outcome(trial))}</div>
-    <p class="rationale">${e(trial.rationale || '尚未记录经济解释。')}</p>
+    ${prose(trial.rationale || '尚未记录经济解释。', '研究依据与限制', 'rationale')}
     <dl class="inline-meta"><div><dt>研究方向</dt><dd>${e(trial.direction || '未指定')}</dd></div><div><dt>研究轮次</dt><dd>${e(roundLabel(trial.round, roundOffset))}</dd></div><div><dt>父试验</dt><dd>${e(trial.parentId || '初始分支')}</dd></div></dl>
     ${metricTable(trial)}
     <div class="review ${tone(outcome(trial))}"><span class="eyebrow">评审意见${trial.review?.verdict ? ` · ${e(label(trial.review.verdict))}` : ''}</span><p>${e(trial.review?.reason || '未记录评审意见。')}</p>${trial.gate ? `<p><strong>确定性门槛${trial.eligible === false ? '未通过' : trial.eligible === true ? '已通过' : ''}：</strong>${e(trial.gate)}</p>` : ''}</div>
@@ -81,8 +85,8 @@ function renderSelection(run) {
   const selection = run.selection;
   if (!selection) return `<div class="selection-pending"><span class="seal">未冻结</span><div><h3>未记录最终选择</h3><p>无留出集证据。</p></div></div>`;
   const holdouts = Object.entries(run.holdout || {});
-  if (run.config?.evaluator) return `<div class="selection-summary"><span class="seal">已冻结</span><div><h3>${arr(selection.trialIds).length} 个最终候选</h3><p>${e(selection.reason || '')}</p><p class="mono">${e(arr(selection.trialIds).join(' · '))}</p></div></div><p class="digest">选择指纹：${e(selection.digest)}</p>${run.data?.holdoutMode === 'none' ? empty('本次仅使用开发集，未执行留出检验。') : run.finalEvaluation?.holdoutStatus === 'evaluated' ? `<details open><summary>冻结后的最终评估回执</summary><pre>${e(json(run.holdout))}</pre></details>` : empty('最终评估尚未完成，没有留出检验结论。')}`;
-  return `<div class="selection-summary"><span class="seal">已冻结</span><div><h3>${arr(selection.trialIds).length} 个候选进入最终验证</h3><p>${e(selection.reason || '未记录选择理由')}</p><p class="mono">${e(arr(selection.trialIds).join(' · '))}</p></div></div><dl class="provenance"><div><dt>冻结时间</dt><dd>${e(date(selection.frozenAt))}</dd></div><div><dt>选择指纹</dt><dd class="mono">${e(selection.digest || '未记录')}</dd></div></dl>${holdouts.length ? `<div class="table-scroll"><table><caption>留出集 · 冻结后的独立检验</caption><thead><tr><th>试验</th><th>Rank IC</th><th>ICIR</th><th>净收益</th><th>最大回撤</th><th>覆盖率</th></tr></thead><tbody>${holdouts.map(([id, value]) => {
+  if (run.config?.evaluator) return `<div class="selection-summary"><span class="seal">已冻结</span><div><h3>${arr(selection.trialIds).length} 个最终候选</h3>${prose(selection.reason || '', '完整选择理由')}<p class="mono">${e(arr(selection.trialIds).join(' · '))}</p></div></div><p class="digest">选择指纹：${e(selection.digest)}</p>${run.data?.holdoutMode === 'none' ? empty('本次仅使用开发集，未执行留出检验。') : run.finalEvaluation?.holdoutStatus === 'evaluated' ? `<details><summary>冻结后的最终评估回执</summary><pre>${e(json(run.holdout))}</pre></details>` : empty('最终评估尚未完成，没有留出检验结论。')}`;
+  return `<div class="selection-summary"><span class="seal">已冻结</span><div><h3>${arr(selection.trialIds).length} 个候选进入最终验证</h3>${prose(selection.reason || '未记录选择理由', '完整选择理由')}<p class="mono">${e(arr(selection.trialIds).join(' · '))}</p></div></div><dl class="provenance"><div><dt>冻结时间</dt><dd>${e(date(selection.frozenAt))}</dd></div><div><dt>选择指纹</dt><dd class="mono">${e(selection.digest || '未记录')}</dd></div></dl>${holdouts.length ? `<div class="table-scroll"><table><caption>留出集 · 冻结后的独立检验</caption><thead><tr><th>试验</th><th>Rank IC</th><th>ICIR</th><th>净收益</th><th>最大回撤</th><th>覆盖率</th></tr></thead><tbody>${holdouts.map(([id, value]) => {
     const m = value?.metrics || value || {};
     return `<tr><th scope="row">${e(id)}</th><td>${number(m.rankIC)}</td><td>${number(m.rankICIR)}</td><td>${percent(m.netReturn)}</td><td>${percent(m.maxDrawdown)}</td><td>${percent(m.coverage)}</td></tr>`;
   }).join('')}</tbody></table></div>` : empty('候选已冻结，尚无留出集计算结果。')}`;
