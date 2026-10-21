@@ -30,11 +30,21 @@ POSITIONAL = {
 }
 IDS = {'ticket', 'order', 'deal', 'position', 'position_id', 'position_by', 'identifier', 'magic', 'login'}
 ENUMS = {'timeframe', 'flags', 'action', 'type', 'type_time', 'type_filling'}
+# MqlTradeRequest doubles; JSON may encode an integral price such as 157.0 as 157.
+REQUEST_DOUBLES = {'volume', 'price', 'stoplimit', 'sl', 'tp'}
 
 
 def convert_input(value, key=''):
     if isinstance(value, dict):
-        return {k: convert_input(v, k) for k, v in value.items()}
+        converted = {k: convert_input(v, k) for k, v in value.items()}
+        if key == 'request':
+            for field in REQUEST_DOUBLES:
+                if type(converted.get(field)) is int:
+                    number = float(converted[field])
+                    if number != converted[field]:
+                        raise ValueError('MT5 request double is not exactly representable')
+                    converted[field] = number
+        return converted
     if key in ENUMS and isinstance(value, str):
         if not value.isupper() or not isinstance(getattr(mt5, value, None), int):
             raise ValueError('Unknown MT5 enum constant')
