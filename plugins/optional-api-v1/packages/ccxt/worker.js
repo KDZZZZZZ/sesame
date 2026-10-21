@@ -9,9 +9,20 @@ const workers = new Map();
 const processes = new Set();
 const MAX_WORKERS = 8, MAX_QUEUE = 128, MAX_OUTPUT = 8 * 1024 * 1024;
 const IDLE_MS = 5 * 60000, REQUEST_MS = 45000;
-const failure = (message, code = "SOURCE_UNAVAILABLE") => Object.assign(Error(message), { code });
 const safeMessage = value => String(value).replace(/(https?:\/\/)[^\s/@]+(?::[^\s/@]*)?@/g, "$1[redacted]@").slice(-1500);
-const checkCanceled = signal => { if (signal?.aborted) throw failure("Public request canceled", "ABORTED"); };
+const exceptionName = value => typeof value === "string" && /^[A-Za-z_][A-Za-z0-9_.]{0,79}$/.test(value);
+const failure = (message, code = "SOURCE_UNAVAILABLE", native) => {
+  const details = {};
+  if (exceptionName(native?.exceptionType)) details.exceptionType = native.exceptionType;
+  if (Array.isArray(native?.causeTypes)) details.causeTypes = native.causeTypes.slice(0, 4).filter(exceptionName);
+  if (Number.isInteger(native?.httpStatus) && native.httpStatus >= 100 && native.httpStatus <= 599) details.httpStatus = native.httpStatus;
+  const prefix = details.exceptionType ? `[${details.exceptionType}] ` : "";
+  const text = String(message).startsWith(prefix) ? String(message).slice(prefix.length) : String(message);
+  return Object.assign(Error(prefix + safeMessage(text)), { code, ...(Object.keys(details).length ? { details } : {}) });
+};
+const cancellation = signal => signal?.reason?.code === "TIMEOUT" || signal?.reason?.name === "TimeoutError"
+  ? failure("Public request deadline exceeded", "TIMEOUT") : failure("Public request canceled", "ABORTED");
+const checkCanceled = signal => { if (signal?.aborted) throw cancellation(signal); };
 
 class PublicWorker {
   constructor(key, directory, python) {
@@ -49,7 +60,7 @@ class PublicWorker {
     for (const pipe of [this.child.stdin, this.child.stdout, this.child.stderr]) pipe[method]?.();
   }
   request(payload, signal) {
-    if (signal?.aborted) return Promise.reject(failure("Public request canceled", "ABORTED"));
+    if (signal?.aborted) return Promise.reject(cancellation(signal));
     if (this.dead) return Promise.reject(failure("Public exchange worker is closed"));
     if (this.queue.length >= MAX_QUEUE) return Promise.reject(failure("Public request queue is full", "RESOURCE_EXHAUSTED"));
     clearTimeout(this.idleTimer);
@@ -57,7 +68,7 @@ class PublicWorker {
     return new Promise((resolve, reject) => {
       const item = { id: String(++this.serial), payload, signal, resolve, reject, settled: false };
       item.abort = () => {
-        this.settle(item, failure("Public request canceled", "ABORTED"));
+        this.settle(item, cancellation(signal));
         // A canceled reader never kills another chart's shared connection.
         // If already sent, drain its bounded response before the next request.
         const index = this.queue.indexOf(item);
@@ -94,7 +105,7 @@ class PublicWorker {
     }
     const item = this.queue.shift();
     this.active = item;
-    this.requestTimer = setTimeout(() => this.stop(failure("Public exchange request timed out")), REQUEST_MS);
+    this.requestTimer = setTimeout(() => this.stop(failure("Public exchange request timed out", "TIMEOUT")), REQUEST_MS);
     this.child.stdin.write(JSON.stringify({ id: item.id, payload: item.payload }) + "\n");
   }
   receive(chunk) {
@@ -132,7 +143,7 @@ class PublicWorker {
         this.rateLimits = 0;
         this.retryAt = 0;
       }
-      this.settle(item, response.error ? failure(safeMessage(response.error.message), response.error.code ?? "SOURCE_UNAVAILABLE") : null, response.result);
+      this.settle(item, response.error ? failure(response.error.message, response.error.code ?? "SOURCE_UNAVAILABLE", response.error.details) : null, response.result);
       this.dispatch();
     }
   }

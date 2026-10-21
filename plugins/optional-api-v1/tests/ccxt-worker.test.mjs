@@ -22,7 +22,8 @@ for line in sys.stdin:
     if p.get('pause'): time.sleep(p['pause'])
     if p.get('exit'): os._exit(7)
     if p.get('fail'):
-        response={'id':request['id'],'error':{'code':p['fail'] if isinstance(p['fail'],str) else 'SOURCE_UNAVAILABLE','message':'temporary upstream failure'}}
+        response={'id':request['id'],'error':{'code':p['fail'] if isinstance(p['fail'],str) else 'SOURCE_UNAVAILABLE','message':p.get('message','temporary upstream failure')}}
+        if 'details' in p: response['error']['details']=p['details']
     else:
         response={'id':request['id'],'result':{'pid':os.getpid(),'count':count,'symbol':p.get('symbol'),'exchange':p['exchange']}}
     print(json.dumps(response),flush=True)
@@ -32,17 +33,77 @@ async function fixture(t) {
   assert.ok(python, "The real worker transport fixture requires an available native Python interpreter");
   const directory = await mkdtemp(join(tmpdir(), "sesame-ccxt-worker-"));
   await copyFile(new URL("../packages/ccxt/worker.js", import.meta.url), join(directory, "worker.mjs"));
+  const wrapper = await readFile(new URL("../packages/ccxt/worker-call.js", import.meta.url), "utf8");
+  await writeFile(join(directory, "worker-call.mjs"), wrapper.replace("'./worker.js'", "'./worker.mjs'"));
   await writeFile(join(directory, "bridge.py"), fixtureBridge);
   await writeFile(join(directory, "selection.json"), JSON.stringify({ python }));
   const worker = await import(pathToFileURL(join(directory, "worker.mjs")).href);
+  const { runWorker } = await import(pathToFileURL(join(directory, "worker-call.mjs")).href);
   t.after(async () => {
     await worker.closeWorkers(directory);
     assert.ok(resolve(directory).startsWith(resolve(join(tmpdir(), "sesame-ccxt-worker-"))));
     await rm(directory, { recursive: true, force: true });
   });
   const call = (payload = {}, signal = AbortSignal.timeout(2000)) => worker.execute({ exchange: "coinbase", action: "bars", symbol: "BTC/USD", ...payload }, { directory, signal });
-  return { directory, worker, call };
+  return { directory, worker, call, wrapped: (payload, options) => runWorker({ context: { storageRoot: directory } }, { exchange: "coinbase", action: "bars", ...payload }, options) };
 }
+
+test("Worker errors retain bounded typed diagnostics and make the type visible to the model", { timeout: 6000 }, async t => {
+  const f = await fixture(t), first = await f.call();
+  const details = { exceptionType: "NetworkError", causeTypes: ["ConnectionError", "TimeoutError"], httpStatus: 502 };
+  await assert.rejects(f.call({ fail: "SOURCE_UNAVAILABLE", message: "coinbase GET https://fixture-user:fixture-secret@localhost/", details }), error => {
+    assert.equal(error.code, "SOURCE_UNAVAILABLE");
+    assert.deepEqual(error.details, details);
+    assert.equal(error.message, "[NetworkError] coinbase GET https://[redacted]@localhost/");
+    assert.doesNotMatch(JSON.stringify([error.message, error.details]), /fixture-secret/);
+    return true;
+  });
+  await assert.rejects(f.call({ fail: "TIMEOUT", message: "[RequestTimeout] okx GET https://fixture.invalid/", details: { exceptionType: "RequestTimeout", causeTypes: [] } }), error => {
+    assert.equal(error.code, "TIMEOUT");
+    assert.equal(error.message, "[RequestTimeout] okx GET https://fixture.invalid/");
+    assert.equal(Object.hasOwn(error.details, "httpStatus"), false);
+    return true;
+  });
+  assert.equal((await f.call()).pid, first.pid, "Diagnostics do not change connection recovery or reuse");
+});
+
+test("Worker diagnostic fields are bounded and unknown upstream properties are not propagated", { timeout: 6000 }, async t => {
+  const f = await fixture(t);
+  await assert.rejects(f.call({ fail: true, details: { exceptionType: "NetworkError", causeTypes: ["TimeoutError", "ConnectionError", "RuntimeError", "OSError", "Discarded"], httpStatus: "429", token: "do-not-copy", stack: "do-not-copy" } }), error => {
+    assert.deepEqual(error.details, { exceptionType: "NetworkError", causeTypes: ["TimeoutError", "ConnectionError", "RuntimeError", "OSError"] });
+    return true;
+  });
+});
+
+test("The known native worker request deadline is TIMEOUT, not an unclassified outage", { timeout: 6000 }, async t => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const f = await fixture(t), signal = new AbortController().signal;
+  const pending = assert.rejects(f.call({ pause: 1 }, signal), { code: "TIMEOUT" });
+  for (let i = 0; i < 100; i++) {
+    try { await readFile(join(f.directory, "started.json")); break; } catch {}
+    await scheduler.wait(5);
+  }
+  assert.equal(JSON.parse(await readFile(join(f.directory, "started.json"))).count, 1);
+  t.mock.timers.tick(45000);
+  await pending;
+});
+
+test("Outer source deadlines remain TIMEOUT while explicit user cancellation remains ABORTED", { timeout: 6000 }, async t => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const f = await fixture(t);
+  const pending = assert.rejects(f.wrapped({ pause: 0.15 }, { timeoutMs: 30 }), { code: "TIMEOUT" });
+  for (let i = 0; i < 100; i++) {
+    try { await readFile(join(f.directory, "started.json")); break; } catch {}
+    await scheduler.wait(5);
+  }
+  assert.equal(JSON.parse(await readFile(join(f.directory, "started.json"))).count, 1);
+  t.mock.timers.tick(30);
+  await pending;
+  const controller = new AbortController(); controller.abort(new Error("user canceled"));
+  await assert.rejects(f.call({}, controller.signal), { code: "ABORTED" });
+  const timeout = new AbortController(); timeout.abort(Object.assign(new Error("elapsed"), { code: "TIMEOUT" }));
+  await assert.rejects(f.call({}, timeout.signal), { code: "TIMEOUT" });
+});
 
 test("Public worker retains process between refreshes and symbols, and keeps a failed request recoverable", { timeout: 6000 }, async t => {
   const f = await fixture(t);

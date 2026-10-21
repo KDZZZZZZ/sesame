@@ -24,6 +24,8 @@ def error_code(error):
         return error.code
     if isinstance(error, ccxt.RateLimitExceeded):
         return 'RATE_LIMITED'
+    if isinstance(error, ccxt.RequestTimeout):
+        return 'TIMEOUT'
     # CCXT 4.5.85 classifies these Kraken rate limits as DDoSProtection,
     # alongside unrelated lockouts. Only the exact rate-limit payload qualifies.
     message = str(error)
@@ -38,6 +40,26 @@ def error_code(error):
         ) for code in errors):
             return 'RATE_LIMITED'
     return 'SOURCE_UNAVAILABLE'
+
+
+def error_details(error):
+    details = {'exceptionType': type(error).__name__[:80], 'causeTypes': []}
+    current, seen = error, {id(error)}
+    for _ in range(4):
+        current = current.__cause__ if current.__cause__ is not None else (
+            None if current.__suppress_context__ else current.__context__)
+        if current is None or id(current) in seen:
+            break
+        seen.add(id(current))
+        details['causeTypes'].append(type(current).__name__[:80])
+    # A network failure may have no HTTP response. Do not infer status from its
+    # URL, message or exchange; preserve only an actual numeric response status.
+    response = getattr(error, 'response', None)
+    for status in (getattr(error, 'status_code', None), getattr(error, 'status', None), getattr(response, 'status_code', None)):
+        if type(status) is int and 100 <= status <= 599:
+            details['httpStatus'] = status
+            break
+    return details
 
 
 def norm(value):
@@ -144,8 +166,9 @@ def main():
                     raise RequestError('Public response exceeds output budget', 'RESOURCE_EXHAUSTED')
             except Exception as error:
                 message = re.sub(r'(https?://)[^\s/@]+(?::[^\s/@]*)?@', r'\1[redacted]@', str(error))[-1500:]
+                details = error_details(error)
                 encoded = json.dumps({'id': request.get('id') if isinstance(request, dict) else None, 'error': {
-                    'code': error_code(error), 'message': message,
+                    'code': error_code(error), 'message': f"[{details['exceptionType']}] {message}", 'details': details,
                 }}, allow_nan=False)
             print(encoded, flush=True)
     finally:

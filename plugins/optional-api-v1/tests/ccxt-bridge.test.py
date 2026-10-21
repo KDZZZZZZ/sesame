@@ -53,6 +53,14 @@ class PermissionDenied(Exception):
     pass
 
 
+class RequestTimeout(Exception):
+    pass
+
+
+class NetworkError(Exception):
+    pass
+
+
 def factory(name):
     def create(settings):
         exchange = Exchange(name, settings)
@@ -62,7 +70,8 @@ def factory(name):
 
 
 sys.modules['ccxt'] = types.SimpleNamespace(__version__='4.5.85',
-    RateLimitExceeded=RateLimitExceeded, DDoSProtection=DDoSProtection, PermissionDenied=PermissionDenied, **{
+    RateLimitExceeded=RateLimitExceeded, DDoSProtection=DDoSProtection, PermissionDenied=PermissionDenied,
+    RequestTimeout=RequestTimeout, NetworkError=NetworkError, **{
     name: factory(name) for name in ['kraken', 'coinbase', 'okx']
 })
 spec = importlib.util.spec_from_file_location('ccxt_bridge', Path(__file__).parents[1] / 'packages/ccxt/bridge.py')
@@ -117,7 +126,8 @@ class PublicBridgeTests(unittest.TestCase):
                     bridge.main()
                 responses = [json.loads(line) for line in outgoing.getvalue().splitlines()]
                 self.assertEqual(responses, [
-                    {'id': '0', 'error': {'code': 'RATE_LIMITED', 'message': str(failure)}},
+                    {'id': '0', 'error': {'code': 'RATE_LIMITED', 'message': f'[{type(failure).__name__}] {failure}',
+                                         'details': {'exceptionType': type(failure).__name__, 'causeTypes': []}}},
                     {'id': '1', 'result': {'rows': []}},
                 ])
 
@@ -145,7 +155,62 @@ class PublicBridgeTests(unittest.TestCase):
         responses = [json.loads(line) for line in outgoing.getvalue().splitlines()]
         self.assertEqual([row['error']['code'] for row in responses],
                          ['SOURCE_UNAVAILABLE'] * 10 + ['INVALID_ARGUMENT', 'RATE_LIMITED'])
-        self.assertEqual(responses[-1]['error']['message'], 'limited via https://[redacted]@localhost/')
+        self.assertEqual(responses[-1]['error']['message'], '[RateLimitExceeded] limited via https://[redacted]@localhost/')
+
+    def test_timeout_and_network_errors_keep_actual_types_without_inventing_http_status(self):
+        failures = [RequestTimeout('okx GET https://www.okx.com/api/v5/public/instruments?instType=SPOT'),
+                    NetworkError('kraken GET https://api.kraken.com/0/public/Assets'),
+                    PermissionDenied('coinbase GET https://api.coinbase.com/v2/currencies')]
+        incoming = io.StringIO(''.join(json.dumps({'id': str(i), 'payload': bars()}) + '\n' for i in range(len(failures))))
+        outgoing = io.StringIO()
+        with patch.object(bridge.PublicSession, 'read', side_effect=failures), \
+                patch('sys.stdin', incoming), patch('sys.stdout', outgoing):
+            bridge.main()
+        errors = [json.loads(line)['error'] for line in outgoing.getvalue().splitlines()]
+        self.assertEqual([error['code'] for error in errors], ['TIMEOUT', 'SOURCE_UNAVAILABLE', 'SOURCE_UNAVAILABLE'])
+        for error, failure in zip(errors, failures):
+            self.assertEqual(error['details'], {'exceptionType': type(failure).__name__, 'causeTypes': []})
+            self.assertEqual(error['message'], f'[{type(failure).__name__}] {failure}')
+
+    def test_cause_types_are_bounded_and_real_http_status_is_preserved(self):
+        failure = NetworkError('failed via https://fixture-user:fixture-secret@localhost/endpoint')
+        failure.response = types.SimpleNamespace(status_code=502)
+        chain = [TimeoutError('cause secret must not be copied'), ConnectionError('closed'), RuntimeError('upstream'), ValueError('limit'), OSError('omitted')]
+        failure.__cause__ = chain[0]
+        for current, following in zip(chain, chain[1:]):
+            current.__cause__ = following
+        chain[-1].__cause__ = failure
+        incoming, outgoing = io.StringIO(json.dumps({'id': '1', 'payload': bars()}) + '\n'), io.StringIO()
+        with patch.object(bridge.PublicSession, 'read', side_effect=failure), \
+                patch('sys.stdin', incoming), patch('sys.stdout', outgoing):
+            bridge.main()
+        error = json.loads(outgoing.getvalue())['error']
+        self.assertEqual(error['details'], {'exceptionType': 'NetworkError', 'causeTypes': ['TimeoutError', 'ConnectionError', 'RuntimeError', 'ValueError'], 'httpStatus': 502})
+        self.assertEqual(error['message'], '[NetworkError] failed via https://[redacted]@localhost/endpoint')
+        self.assertNotIn('fixture-secret', outgoing.getvalue())
+        self.assertNotIn('cause secret', outgoing.getvalue())
+
+    def test_explicit_context_suppression_and_missing_or_invalid_http_status_are_respected(self):
+        failures = []
+        for status in [None, '429', 99, 600, True]:
+            failure = NetworkError('public fetch failed')
+            failure.status_code = status
+            failure.__context__ = ConnectionError('implicit context')
+            failure.__suppress_context__ = True
+            failures.append(failure)
+        valid = PermissionDenied('public HTTP refusal')
+        valid.status = 403
+        valid.__context__ = OSError('native context')
+        failures.append(valid)
+        incoming = io.StringIO(''.join(json.dumps({'id': str(i), 'payload': bars()}) + '\n' for i in range(len(failures))))
+        outgoing = io.StringIO()
+        with patch.object(bridge.PublicSession, 'read', side_effect=failures), \
+                patch('sys.stdin', incoming), patch('sys.stdout', outgoing):
+            bridge.main()
+        errors = [json.loads(line)['error'] for line in outgoing.getvalue().splitlines()]
+        for error in errors[:-1]:
+            self.assertEqual(error['details'], {'exceptionType': 'NetworkError', 'causeTypes': []})
+        self.assertEqual(errors[-1]['details'], {'exceptionType': 'PermissionDenied', 'causeTypes': ['OSError'], 'httpStatus': 403})
 
     def test_no_private_operations_credentials_or_route_changes(self):
         session = bridge.PublicSession()
