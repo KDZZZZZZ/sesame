@@ -1,7 +1,7 @@
 {
   "id": "sesame/portfolio-execution",
   "apiVersion": "2",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "title": "目标仓位执行",
   "description": "独立执行能力：绑定既有账户，为工作流提供快照与目标仓位执行，保留原生校验、风险停止挂载、幂等回执和直接下单工具。",
   "license": "MIT",
