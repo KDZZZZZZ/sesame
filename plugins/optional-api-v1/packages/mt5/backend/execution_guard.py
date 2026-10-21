@@ -41,7 +41,7 @@ def guarded_cancel(mt5, request, guard, clock=lambda: int(time.time() * 1000)):
     """Verify the configured account and unique live pending order in this worker."""
     need(isinstance(guard, dict) and set(guard) == {"expected_account", "expected_server", "symbol", "remark", "order", "side"}, "INVALID_ARGUMENT", "Invalid cancellation guard")
     need(all(isinstance(guard[k], str) and guard[k] for k in guard) and guard["side"] in ("buy", "sell") and guard["order"].isdigit() and 0 < int(guard["order"]) < 2**64, "INVALID_ARGUMENT", "Explicit cancellation ownership required")
-    need(set(request) == {"action", "order"} and request["action"] == mt5.TRADE_ACTION_REMOVE and str(request["order"]) == guard["order"], "INVALID_ARGUMENT", "Guard only supports the exact pending order removal")
+    need(set(request) == {"action", "order"} and request["action"] == mt5.TRADE_ACTION_REMOVE and str(request["order"]) == guard["order"], "INVALID_ARGUMENT", "Cancellation request must contain only action=TRADE_ACTION_REMOVE and order matching cancellation_guard.order; put symbol and remark ownership in cancellation_guard, not request")
     def account_matches():
         account, terminal = mt5.account_info(), mt5.terminal_info()
         need(account is not None and terminal is not None and str(account.login) == guard["expected_account"] and account.server == guard["expected_server"], "ACCOUNT_MISMATCH", "Cancellation account changed")
