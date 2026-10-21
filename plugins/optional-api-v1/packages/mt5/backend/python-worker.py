@@ -106,7 +106,9 @@ for line in sys.stdin:
             if name in {'history_orders_get', 'history_deals_get'} and 'date_from' in args:
                 positional = ['date_from', 'date_to']
             values = [args.pop(key) for key in positional]
-            result = getattr(mt5, name)(*values, **args)
+            # Some SDK C functions distinguish NULL kwargs from an empty dict.
+            # Dispatch exactly once and retain real keyword filters.
+            result = getattr(mt5, name)(*values, **args) if args else getattr(mt5, name)(*values)
         output = {'result': clean(result), 'last_error': clean(mt5.last_error()), 'package_version': mt5.__version__}
         if timing is not None:
             output['execution_timing'] = timing
