@@ -12,6 +12,7 @@ export function createCapabilities(host) {
     execution('portfolio_execution_apply', 'apply'),
     { name: 'manual_trade_inspect', execute: () => createService(host).inspect() },
     direct('manual_trade_observe', 'observe'),
+    direct('manual_trade_prepare', 'prepare'),
     direct('manual_trade_execute', 'execute'),
     direct('manual_trade_status', 'status'),
     direct('manual_trade_cancel', 'cancel'),

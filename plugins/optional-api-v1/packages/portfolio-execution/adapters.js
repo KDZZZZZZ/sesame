@@ -66,7 +66,7 @@ export function createAdapters(host, {now=Date.now,authorizeRequest}={}) {
     if(backend==='mt5') {
       const catalog=await call('mt5','mt5_catalog',{server:'python',query:'order_send'},signal);
       const order=catalog.items?.find(x=>x.server==='python')?.tools?.find(x=>x.name==='order_send');
-      check(order?.callable && order.inputSchema?.properties?.execution_guard,'PREREQUISITE_REQUIRED','Use sesame/mt5 1.3.0+ with a connected Python SDK and execution_guard; pure MCP quotes do not establish UTC freshness');
+      check(order?.callable && order.inputSchema?.properties?.execution_guard,'PREREQUISITE_REQUIRED','Use a connected MT5 Python SDK with execution_guard; a separate MCP quote connection does not establish Python readiness');
       const info=await py('account_info',{},signal);
       check(String(info.login)===account.accountId && info.server===account.server,'ACCOUNT_MISMATCH','MT5 current account differs from configured account');
       const terminal=await py('terminal_info',{},signal);
@@ -90,12 +90,37 @@ export function createAdapters(host, {now=Date.now,authorizeRequest}={}) {
     const quote=await quoteFor(backend,symbol,signal);
     return {account,symbol,spec:specResult.items[0].detail,positions:positions.items,...(orders ? {orders:orders.items} : {}),quote,readStartedAt:began,capturedAt:now(),captureMs:now()-began,accountSummary:asset.asset};
   }
+  async function prepare(backend,symbol,{account,commandId,userAuthorized},signal) {
+    check(host.context?.kind==='main' && userAuthorized===true,'FORBIDDEN','Only the main conversation may prepare authorized manual trading');
+    if(backend==='qmt') {
+      const observed=await snapshot(backend,symbol,signal);
+      check(canonical(observed.account)===canonical(account),'CONNECTION_CHANGED','QMT account or configuration changed during preparation');
+      return {...observed,preparation:{backend:'qmt',mode:'read-only',permissionsChanged:false}};
+    }
+    check(backend==='mt5','UNSUPPORTED_CAPABILITY','Choose an actually supported trading backend');
+    const began=now(), value=await call('mt5','mt5_trading_prepare',{symbol,command_id:commandId,user_authorized:true,expected_account:account},signal);
+    signal?.throwIfAborted();
+    const receivedAt=now(), actual=value?.account, info=value?.summary, terminal=value?.terminal;
+    check(sameAccount(actual,account) && typeof actual.revision==='string' && actual.revision.length>0,'ACCOUNT_MISMATCH','MT5 preparation returned a different account');
+    check(String(info?.login)===actual.accountId && info?.server===actual.server,'ACCOUNT_MISMATCH','MT5 prepared native account differs from its binding');
+    check(terminal?.connected===true,'SOURCE_UNAVAILABLE','Prepared MT5 terminal is not connected to its broker');
+    check(info.trade_allowed===true && info.trade_expert===true && terminal.trade_allowed===true && terminal.tradeapi_disabled===false,'TRADING_NOT_ALLOWED','MT5 preparation did not establish native account and algorithmic trading permissions');
+    check(value.spec?.name===symbol && Array.isArray(value.positions) && Array.isArray(value.orders) && [...value.positions,...value.orders].every(row=>row?.symbol===symbol),'SOURCE_DATA_INVALID','Prepared native symbol/positions/orders omitted or differ from the requested symbol');
+    check(value.preparation?.status==='ready','SOURCE_DATA_INVALID','MT5 preparation did not return a ready preparation receipt');
+    check(Number.isSafeInteger(value.readStartedAt) && Number.isSafeInteger(value.capturedAt) && value.capturedAt>=value.readStartedAt && value.capturedAt<=receivedAt,'SOURCE_DATA_INVALID','Prepared snapshot has invalid native capture timing');
+    const quote=normalizeQuote('mt5',value.tick,{receivedAt,requestMs:null,sourceReceivedAt:value.capturedAt,preparationRequestMs:receivedAt-began});
+    return {account:actual,symbol,spec:value.spec,positions:value.positions,orders:value.orders,quote,readStartedAt:value.readStartedAt,capturedAt:receivedAt,captureMs:receivedAt-began,backendCapturedAt:value.capturedAt,
+      accountSummary:{balance:info.balance??null,equity:info.equity??null,currency:info.currency??null,tradeAllowed:true},preparation:value.preparation};
+  }
+  function normalizeQuote(backend,tick,timing) {
+    const rawTime=backend==='mt5'?tick?.time_msc:tick?.time,sourceTimeMs=Number(rawTime),source=backend==='mt5'?'mt5/python/symbol_info_tick':'qmt/quotes';
+    if(!Number.isSafeInteger(sourceTimeMs) || sourceTimeMs<1000000000000)throw Object.assign(new Error('Quote has no valid source epoch milliseconds; reception time is not source time'),{code:'SOURCE_DATA_INVALID',details:{reason:'invalid_source_time',source,sourceTimeMs:rawTime??null,receivedAt:timing.receivedAt}});
+    return {source,sourceTimeMs,...timing,bid:decimal(backend==='mt5'?tick?.bid:tick?.bidPrice?.[0]),ask:decimal(backend==='mt5'?tick?.ask:tick?.askPrice?.[0])};
+  }
   async function quoteFor(backend,symbol,signal) {
     const startedAt=now();
     const tick=backend==='mt5'?await py('symbol_info_tick',{symbol},signal):(await call('qmt','qmt_read',{action:'quotes',symbols:[symbol]},signal)).items?.find(x=>x.symbol===symbol)?.tick;
-    const sourceTimeMs=Number(backend==='mt5'?tick?.time_msc:tick?.time);
-    check(Number.isSafeInteger(sourceTimeMs) && sourceTimeMs>=1000000000000,'SOURCE_DATA_INVALID','Quote has no verified UTC epoch milliseconds; reception time is not source time');
-    return {sourceTimeMs,receivedAt:now(),requestMs:now()-startedAt,bid:decimal(backend==='mt5'?tick?.bid:tick?.bidPrice?.[0]),ask:decimal(backend==='mt5'?tick?.ask:tick?.askPrice?.[0])};
+    return normalizeQuote(backend,tick,{receivedAt:now(),requestMs:now()-startedAt});
   }
   function expectedPositions(observation) {
     const rows=observation.positions.filter(row=>(row.symbol??row.stock_code)===observation.symbol);
@@ -194,5 +219,5 @@ export function createAdapters(host, {now=Date.now,authorizeRequest}={}) {
     } catch(error) {error.details={...error.details,submission_attempted:false};throw error;}
     return call(record.backend,record.backend==='mt5'?(background()?'mt5_trading_order':'mt5_trade'):background()?'qmt_trading_cancel':'qmt_cancel',request,signal);
   }
-  return {snapshot,identity,submit,status,cancel,orderRequest,command};
+  return {snapshot,prepare,identity,submit,status,cancel,orderRequest,command};
 }
