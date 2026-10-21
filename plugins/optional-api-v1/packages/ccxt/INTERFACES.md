@@ -15,17 +15,17 @@
 边界与恢复：inspect 不下载；prepare 从官方 PyPI 安装到插件私有目录，不安装解释器、不改共享环境。失败根据缺失解释器、导入版本或具体网络错误选择现有路径/准备；重复同一失败不产生新证据。
 
 ## ccxt_catalog
-调用者：agent、host。读取固定支持的交易所、周期和公开数据边界。
+调用者：agent、host。发现已保存的公开连接身份，并读取支持的交易所、周期和公开数据边界。
 
 输入：{}；不需要 Python 或联网。
 
-输出与状态：{exchanges:["kraken","coinbase","okx"],library:"4.5.85",market:"public spot",timeframes,pollIntervalMs:1000,orders:false,apiKeys:false,coverage:"partial/unknown",closed}。
+输出与状态：{connections:[{exchange,connection:{id,revision}}],exchanges:["kraken","coinbase","okx"],library:"4.5.85",market:"public spot",timeframes,pollIntervalMs:1000,orders:false,apiKeys:false,coverage:"partial/unknown",closed}。connections 只返回保存的公开身份，不返回代理地址或凭据；无存储返回空数组且不创建数据库。
 
-依赖入口：Agent 使用 data_providers({contract:"sesame.market/1"}) 返回的 sesame/ccxt#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。
+依赖入口：无。沿用已配置交易所时，把匹配的完整 connection 放入当前 data_providers 来源的 source.binding.connection，直接调用 market_instruments 或 market_read。已知有效身份可直接复用，无需重复读目录或扫描历史文件。
 
 副作用：只读，无外部写入。
 
-边界与恢复：此包不提供账户、下单或实盘成交能力；公开数据可用不代表可交易。 静态目录不是连接/网络成功证明。
+边界与恢复：此包不提供账户、下单或实盘成交能力；保存的连接和静态目录不证明网络连通。目录不选择默认连接、不创建或修改路由；同一交易所存在多条路由时保留完整 revision，不能默认取第一项或擅自改成直连。
 
 ## market_bind
 调用者：host。为宿主建立精确行情来源会话；不代表已取得报价。

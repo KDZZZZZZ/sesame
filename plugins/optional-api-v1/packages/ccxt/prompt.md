@@ -1,6 +1,8 @@
 CCXT提供公开现货目录与K线，支持Kraken、Coinbase、OKX，不提供bid/ask报价订阅、账户或交易；无需API Key。
 
-ccxt_environment({action:"inspect"})核验固定CCXT 4.5.85/本机64位Python>=3.11；ready:true已保存私有选择，可立即查询。prepare仅在无兼容依赖时安装私有环境。ccxt_catalog({})返回交易所、周期和边界，静态目录不证明网络连通。
+ccxt_environment({action:"inspect"})核验固定CCXT 4.5.85/本机64位Python>=3.11；ready:true已保存私有选择，可立即查询。prepare仅在无兼容依赖时安装私有环境。环境ready、目录和已保存路由均不证明交易所网络连通。
+
+沿用已配置交易所但缺少连接身份时，一次 ccxt_catalog({}) 返回 connections:[{exchange,connection:{id,revision}}]。选择任务指定交易所及路由的完整 connection，放入当前 SourceRef 的 binding.connection，直接调用 market_instruments；已知有效完整身份时无需重读目录。不为找连接查询通用设置、扫描历史文件或检查画布。目录只读、不运行Python或联网、不返回代理地址；空数组表示没有保存的路由，不是网络失败。同一交易所的多条路由全部保留，不存在默认选择；已有信息不能区分时明确缺少路由身份，不能取第一项或擅自改成直连。
 
 来源 sesame/ccxt#market 的首次路由用 binding:{configuration:{exchange:"kraken"}}，交易所取用户选择；publicProxy仅接受明确的无凭据HTTP(S)代理。绑定后保留实际connection，后续同连接会恢复已保存路由；不可静默切换交易所或代理。
 

@@ -76,7 +76,7 @@
         "agent",
         "host"
       ],
-      "description": "Describe the supported public-only exchanges and provider limitations; never starts requests or trades.",
+      "description": "List saved public connection identities and supported exchanges without exposing proxy addresses or credentials; read-only, no Python or network requests.",
       "inputSchema": {
         "type": "object",
         "properties": {},
@@ -84,20 +84,43 @@
       },
       "outputSchema": {
         "type": "object",
+        "required": ["connections"],
+        "properties": {
+          "connections": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["exchange", "connection"],
+              "properties": {
+                "exchange": { "type": "string", "enum": ["kraken", "coinbase", "okx"] },
+                "connection": {
+                  "type": "object",
+                  "required": ["id", "revision"],
+                  "properties": {
+                    "id": { "type": "string", "minLength": 1 },
+                    "revision": { "type": "string", "minLength": 1 }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
         "additionalProperties": true
       },
       "execution": "immediate",
       "effects": [],
       "usage": {
-        "purpose": "读取固定支持的交易所、周期和公开数据边界。",
+        "purpose": "发现已保存的公开连接身份并查看交易所、周期和边界；已有完整有效身份可直接复用。",
         "inputs": "{}；不需要 Python 或联网。",
-        "outputs": "{exchanges:[\"kraken\",\"coinbase\",\"okx\"],library:\"4.5.85\",market:\"public spot\",timeframes,pollIntervalMs:1000,orders:false,apiKeys:false,coverage:\"partial/unknown\",closed}。",
+        "outputs": "{connections:[{exchange,connection:{id,revision}}],exchanges:[\"kraken\",\"coinbase\",\"okx\"],library:\"4.5.85\",market:\"public spot\",timeframes,pollIntervalMs:1000,orders:false,apiKeys:false,coverage:\"partial/unknown\",closed}。connections 只列已保存身份，不返回代理地址或凭据；无存储时为空且不创建数据库。",
         "prerequisites": [
-          "Agent 使用 data_providers({contract:\"sesame.market/1\"}) 返回的 sesame/ccxt#market 精确 ref，经 market_instruments 搜索/描述，再按任务使用 market_read 或 canvas_binding/canvas_apply；本 capability 仅供宿主数据适配层调用。"
+          "无。沿用已配置交易所时取 connections 中匹配的完整 connection，放入当前 data_providers 来源的 source.binding.connection，直接调用 market_instruments、market_read；不必查设置或扫描历史文件。"
         ],
         "limitations": [
           "此包不提供账户、下单或实盘成交能力；公开数据可用不代表可交易。",
-          "静态目录不是连接/网络成功证明。"
+          "保存的身份和静态支持范围不证明网络连通；目录只读，不选择默认、不创建或修改路由。同一交易所有多个路由时保留完整 revision，按已有明确身份选择，不能默认取第一项或改成直连。"
         ]
       },
       "binding": {
