@@ -18,6 +18,244 @@
   },
   "capabilities": [
     {
+      "id": "mt5_trading_prepare",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "主 Agent 按已有用户交易授权集中准备准确品种：同账户许可、必要的一次 Python IPC 恢复、账户核验、规格/持仓/挂单一并调度及最新原始报价。正常连接不重启或初始化；不下单、不切换账户，无需模型逐项检查或先读 catalog。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[^\\r\\n\\u0000]+$"
+          },
+          "command_id": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "user_authorized": {
+            "type": "boolean",
+            "const": true,
+            "description": "用户现有指令已授权该账户的交易准备；不是要求另发确认问题。"
+          },
+          "expected_account": {
+            "type": "object",
+            "properties": {
+              "accountId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "server": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "accountId",
+              "server",
+              "revision"
+            ],
+            "additionalProperties": false,
+            "description": "可选的组合调用账户锁；主 Agent 可省略，直接使用当前精确绑定账户。"
+          }
+        },
+        "required": [
+          "symbol",
+          "command_id",
+          "user_authorized"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": [
+          "account",
+          "summary",
+          "terminal",
+          "spec",
+          "positions",
+          "orders",
+          "tick",
+          "readStartedAt",
+          "capturedAt",
+          "preparation",
+          "quote_clock"
+        ],
+        "properties": {
+          "account": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "summary": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "terminal": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "spec": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "positions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "orders": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "tick": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "readStartedAt": {
+            "type": "integer"
+          },
+          "capturedAt": {
+            "type": "integer"
+          },
+          "preparation": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "quote_clock": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "status": {
+                "type": "string",
+                "const": "verified"
+              },
+              "source": {
+                "type": "string",
+                "const": "mt5/python/symbol_info_tick"
+              },
+              "accountId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "server": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rawTimeMs": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "sourceTimeMs": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "basis": {
+                "type": "string",
+                "enum": [
+                  "utc",
+                  "server-wall"
+                ]
+              },
+              "offsetMinutes": {
+                "type": "integer",
+                "minimum": -840,
+                "maximum": 840
+              },
+              "ruleId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "ruleRevision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "status",
+              "source",
+              "accountId",
+              "server",
+              "rawTimeMs",
+              "sourceTimeMs",
+              "basis",
+              "offsetMinutes",
+              "ruleId",
+              "ruleRevision"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "network",
+        "process",
+        "application-configuration",
+        "may-restart-terminal",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "把授权后必要的技术准备收敛到一次调用，缩短手动交易关键路径；业务意图、数量、限价和末端执行由 portfolio-execution 负责。",
+        "inputs": "{symbol:<准确品种>,command_id:<稳定16–128位ID>,user_authorized:true,expected_account?:{accountId,server,revision}}。直接复用用户已有授权，无需先读配置版本或目录。",
+        "outputs": "{account:{accountId,server,revision},summary,terminal,spec,positions,orders,tick,quote_clock,readStartedAt,capturedAt,preparation:{commandId,status,applicationPermissionChanged,algorithmPermissionChanged,restarted,initialized,stages,readScheduling}}。原生数组限定当前品种，原始报价时间不改写；readStartedAt/capturedAt为宿主UTC epoch毫秒。 quote_clock保留实际账户/服务器、rawTimeMs、sourceTimeMs、basis、offsetMinutes、ruleId与ruleRevision；未知时间域拒绝ready，sourceTimeMs才供UTC验龄。",
+        "prerequisites": [
+          "仅主会话；已有交易授权与准确品种，当前配置绑定的账户和终端可验证。expected_account如提供，任何权限副作用前精确匹配；内部授权许可更新可递增revision，但不改变账户域。",
+          "终端权限确需准备时沿用现有空闲检查，无活动持仓、挂单、EA或终端任务才正常重启；正常连接跳过该路径。"
+        ],
+        "limitations": [
+          "只对明确nativeCode=-10004尝试一次配置终端的initialize，绝不login、改绑定、循环恢复或自动重放订单。只读账户、券商权限与Python API禁用返回具体缺项，不猜原生AI Assistant Trading设置。",
+          "规格/持仓/挂单请求一起调度，但Python worker保持串行SDK调用；任一读失败整批settle后拒绝，不返回伪造空仓或部分ready。最终读取tick后复核账户与配置。",
+          "同command_id副作用幂等，同时请求合并；后续重复重新读取事实与报价，不用旧快照冒充ready。输入冲突、配置/账户变更、取消均拒绝。ready不证明行情新鲜、实际方法授权或成交，执行入口仍校验价格、时效与真实回执。",
+          "时钟转换只发生在MT5原生桥接的已验证年度规则内；原始tick不变。规则外服务器/日期或不确定DST时段返回QUOTE_CLOCK_UNVERIFIED，既有观察的规则版本变化由发送前guard拒绝。不得拟合当前差值、用接收时间替代源时间或调整历史API的UTC请求。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_trading_prepare"
+      },
+      "configurationRequirements": [
+        {
+          "field": "terminal_token",
+          "reason": "核验绑定终端与必要的权限准备。"
+        },
+        {
+          "field": "account_login",
+          "reason": "准备不切换账户，必须绑定明确登录号。"
+        },
+        {
+          "field": "account_server",
+          "reason": "核验精确券商服务器。"
+        },
+        {
+          "field": "allow_trading",
+          "optional": true,
+          "reason": "已有用户授权时入口内部使用当前版本开启。"
+        },
+        {
+          "field": "python",
+          "optional": true,
+          "reason": "复用已有Python发现与连接，实际可用性以原生回执为准。"
+        }
+      ]
+    },
+    {
       "id": "mt5_catalog",
       "kind": "function",
       "consumers": [

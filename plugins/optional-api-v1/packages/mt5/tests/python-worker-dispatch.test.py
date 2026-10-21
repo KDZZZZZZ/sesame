@@ -28,7 +28,7 @@ class WorkerDispatch(unittest.TestCase):
     def setUp(self):
         self.calls, self.keep_alive = [], []
         self.mt5 = SimpleNamespace(TRADE_ACTION_DEAL=1, ORDER_TYPE_BUY=0, ORDER_FILLING_IOC=1)
-        for name in ("order_check", "order_send", "orders_get", "version", "history_orders_get"):
+        for name in ("order_check", "order_send", "orders_get", "version", "history_orders_get", "symbol_info_tick"):
             @CALLBACK
             def invoke(_self, args_pointer, kwargs_pointer, name=name):
                 args = ctypes.cast(args_pointer, ctypes.py_object).value
@@ -44,19 +44,26 @@ class WorkerDispatch(unittest.TestCase):
         declarations = [node for node in TREE.body if isinstance(node, ast.Assign)
                         and any(isinstance(target, ast.Name) and target.id in {"POSITIONAL", "IDS", "ENUMS"} for target in node.targets)]
         converter = next(node for node in TREE.body if isinstance(node, ast.FunctionDef) and node.name == "convert_input")
-        self.scope = {"mt5": self.mt5, "datetime": datetime}
-        exec(compile(ast.Module(body=[*declarations, converter], type_ignores=[]), str(WORKER), "exec"), self.scope)
+        identity = next(node for node in TREE.body if isinstance(node, ast.FunctionDef) and node.name == "quote_account_identity")
+        self.mt5.account_info = lambda: SimpleNamespace(login=42, server="FTMO-Demo")
+        self.mt5.last_error = lambda: (4, "tick-specific-status")
+        self.scope = {"mt5": self.mt5, "datetime": datetime,
+                      "_quote_clock": SimpleNamespace(resolve_quote_clock=lambda *args: {"status": "unverified"})}
+        exec(compile(ast.Module(body=[*declarations, converter, identity], type_ignores=[]), str(WORKER), "exec"), self.scope)
         # Execute the worker's actual normal dispatch block, including its conditional.
         branch = next(node for node in ast.walk(TREE) if isinstance(node, ast.If)
                       and ast.unparse(node.test) == "name == 'initialize'")
         while len(branch.orelse) == 1 and isinstance(branch.orelse[0], ast.If):
             branch = branch.orelse[0]
         self.dispatch_code = compile(ast.Module(body=branch.orelse, type_ignores=[]), str(WORKER), "exec")
+        tick_branch = next(node for node in ast.walk(TREE) if isinstance(node, ast.If)
+                           and ast.unparse(node.test) == "name == 'symbol_info_tick'")
+        self.tick_dispatch_code = compile(ast.Module(body=tick_branch.body, type_ignores=[]), str(WORKER), "exec")
 
     def dispatch(self, name, arguments):
         scope = {**self.scope, "name": name, "args": self.scope["convert_input"](arguments)}
         before = len(self.calls)
-        exec(self.dispatch_code, scope)
+        exec(self.tick_dispatch_code if name == "symbol_info_tick" else self.dispatch_code, scope)
         self.assertEqual(len(self.calls), before + 1, "never replay a native call")
         return scope["result"], self.calls[-1]
 
@@ -81,6 +88,12 @@ class WorkerDispatch(unittest.TestCase):
     def test_no_argument_method_omits_empty_kwargs(self):
         _, (_, args, kwargs) = self.dispatch("version", {})
         self.assertEqual(args, ())
+        self.assertIsNone(kwargs)
+
+    def test_clock_side_reads_preserve_single_c_tick_call_with_null_kwargs(self):
+        result, (_, args, kwargs) = self.dispatch("symbol_info_tick", {"symbol": "EURUSD"})
+        self.assertEqual(result, {"fixture": True})
+        self.assertEqual(args, ("EURUSD",))
         self.assertIsNone(kwargs)
 
     def test_invalid_enum_never_reaches_sdk(self):

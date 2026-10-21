@@ -543,7 +543,7 @@
         "outputs": "Run output is {status:\"prepared\",observation_id,backend,symbol,account,accountSummary,quote,positions,orders?,spec,preparation,capturedAt,expiresAt,timing,submission_attempted:false,...}; or {status:\"rejected\",error:{code,message,details},submission_attempted:false,...}. Original raw source quote time and receive time are retained; preparation time is separate from the quote age.",
         "prerequisites": [
           "Main conversation only, with an existing explicit user trading instruction. Workflow/executor delegation cannot use this authorization path.",
-          "MT5 2.1.6+ with mt5_trading_prepare and an already configured account. QMT requires its existing configured native connection."
+          "MT5 2.1.7+ with mt5_trading_prepare, verified quote_clock metadata and an already configured account. QMT requires its existing configured native connection."
         ],
         "limitations": [
           "MT5 may enable its trading gate, prepare algorithmic/Python permissions or normally restart its configured terminal; it must retain the same account. Preparation has a separate 180-second bound. QMT never changes permissions or connections.",
@@ -749,7 +749,7 @@
         "outputs": "Run output is one durable command record {id,status,submission_attempted,receipt?,evidence?,intent,preparation?,timing,error?}. Rejected preflight explicitly reports submission_attempted:false with the original error reason. Fast mode records preparation timing and model_round_trip_ms:0. Native acceptance and observed fills are different; query manual_trade_status(refresh:true) for recovery.",
         "prerequisites": [
           "Main conversation only. Backend + symbol preparation cannot be used by workflow/executor delegation.",
-          "An existing explicit, complete user order intent. Either a recent unused observation or an already configured account with MT5 2.1.6+ mt5_trading_prepare / existing QMT connection."
+          "An existing explicit, complete user order intent. Either a recent unused observation or an already configured account with MT5 2.1.7+ mt5_trading_prepare / existing QMT connection."
         ],
         "limitations": [
           "Stable operation_id + identical original input prevents duplicate preparation and sends. An operation ID cannot be reused with a different intent or observation. Fast mode does not guess an order from the returned quote.",

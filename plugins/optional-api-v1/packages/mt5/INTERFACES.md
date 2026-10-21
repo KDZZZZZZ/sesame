@@ -1,6 +1,18 @@
 # mt5 公开能力契约
 此文依据当前实现。示例中的ID/路径/Ref必须用对应公开入口的实际返回值；它们展示参数形状，不是默认任务步骤。宿主能力不会直接暴露为普通Agent工具。
 
+## mt5_trading_prepare
+
+调用者：主 Agent、host。用户已要求手动交易时优先使用此集中准备入口；参数完整时可直接调用 portfolio-execution 的 `manual_trade_execute` 快捷入口，由执行插件内部准备。无需先查目录、重复读取账户或逐项开启权限。
+
+输入：`{symbol:<准确品种>,command_id:<稳定16–128字符>,user_authorized:true,expected_account?:{accountId,server,revision}}`。已有用户授权继续有效；不猜订单数量、价格或账户，不自动切换登录。
+
+输出：`{account:{accountId,server,revision},summary,terminal,spec,positions,orders,tick,quote_clock,readStartedAt,capturedAt,preparation}`。原生 tick 时间保持不变；`quote_clock` 保留实际账户/服务器、原始毫秒、归一 UTC 毫秒、offsetMinutes、ruleId 与 ruleRevision。规则由 MT5 原生桥接统一解释；未知服务器/日期或未验证 DST 时段拒绝准备。报价是否可执行仍由执行入口即时校验决定，不能用接收时间代替源时间。
+
+行为：绑定当前账户，内部以配置版本校验开启 Sesame 交易许可；需要时复用终端算法交易准备；仅明确 Python `-10004` 时初始化一次。正常连接不初始化、不重启。规格、持仓和挂单一起调度，原生 Python worker 仍串行；随后读取最新报价，再核验账户。权限已开启时直接读取；主 Agent 可同时处理互不依赖的用户意图信息。
+
+幂等与失败：同命令并发调用共享准备，成功后再次调用重新读事实，权限副作用不重复。可选 expected_account 在任何权限副作用前校验，准备过程中账户或配置变化立即拒绝；自身开启应用许可后返回新 revision。保留取消、原生错误和失败阶段，不返回虚假 ready、不下单、不重放旧订单。券商限制、MCP AI Assistant Trading 授权和 Python API 禁用分别报明实际缺项；不猜未公开的配置项。
+
 ## mt5_catalog
 调用者：agent、host。取得当前原生方法定义、归属工具及不可用原因。
 

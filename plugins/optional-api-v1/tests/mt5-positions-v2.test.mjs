@@ -10,13 +10,18 @@ import { createPositionManager } from '../packages/mt5/positions.js';
 import { createCapabilities } from '../packages/mt5/index.js';
 import { digest } from '@sesame/plugin-sdk/protocol';
 
+const sourceTime = Date.UTC(2026, 9, 21, 12);
 async function fixture(t) {
   const root = await mkdtemp(join(tmpdir(), 'mt5-positions-'));
   const host = { context: { storageRoot: root, pluginId: 'sesame/mt5', kind: 'main', sessionId: 'conv_main' } };
-  const official = await new MT5Official(host, null).init(), now = () => 1800000000000;
+  const official = await new MT5Official(host, null).init(), now = () => sourceTime;
   official.config = { ...official.config, version: 7, account: { login: '9007199254740993', server: 'Fixture-Broker' } };
   const state = { positions: [{ ticket: '9007199254740995', identifier: '9007199254740995', symbol: 'EURUSD', type: 0, volume: 1.5 }], sends: 0, requests: [],
-    result: { retcode: 10008, order: '9007199254741001', deal: '0', volume: 0 }, deals: [], orders: [], error: null, nativeError: null, login: official.config.account.login, beforeSend: null };
+    result: { retcode: 10008, order: '9007199254741001', deal: '0', volume: 0 }, deals: [], orders: [], error: null, nativeError: null, login: official.config.account.login, beforeSend: null,
+    tick: { time: (sourceTime + 10800000) / 1000, time_msc: sourceTime + 10800000, bid: 1.1, ask: 1.1002 },
+    quoteClock: { status: 'verified', source: 'mt5/python/symbol_info_tick', server: official.config.account.server, accountId: official.config.account.login,
+      rawTimeMs: sourceTime + 10800000, sourceTimeMs: sourceTime, basis: 'server-wall', offsetMinutes: 180,
+      ruleId: 'ftmo-demo-current-tick-2026', ruleRevision: 'ftmo-demo-current-tick-2026-v1' } };
   official.python = { available: () => true, close: async () => {}, call: async (tool, args) => {
     state.requests.push({ tool, args });
     let result;
@@ -25,7 +30,7 @@ async function fixture(t) {
     else if (tool === 'positions_get') result = structuredClone(state.positions);
     else if (tool === 'orders_get') result = structuredClone(state.orders.filter(row => [1, 3].includes(row.state)));
     else if (tool === 'symbol_info') result = { volume_min: 0.01, volume_max: 100, volume_step: 0.01, filling_mode: 3, trade_exemode: 2 };
-    else if (tool === 'symbol_info_tick') result = { time_msc: now(), bid: 1.1, ask: 1.1002 };
+    else if (tool === 'symbol_info_tick') { result = structuredClone(state.tick); await state.afterTick?.(); }
     else if (tool === 'history_orders_get') result = structuredClone(state.orders.filter(row => ![1, 3].includes(row.state)));
     else if (tool === 'history_deals_get') result = structuredClone(state.deals);
     else if (tool === 'order_send') {
@@ -38,7 +43,8 @@ async function fixture(t) {
       if (state.nativeError) return structuredClone(state.nativeError);
       result = structuredClone(state.result);
     } else throw new Error('Unexpected native tool ' + tool);
-    return { result, last_error: [1, 'Success'], package_version: 'synthetic-fixture' };
+    return { result, last_error: [1, 'Success'], package_version: 'synthetic-fixture',
+      ...(tool === 'symbol_info_tick' ? { quote_clock: structuredClone(state.quoteClock) } : {}) };
   } };
   const manager = () => createPositionManager(host, { official }, { now });
   const execution = { provenance: { caller: { pluginId: 'host' } } };
@@ -74,9 +80,55 @@ test('MT5 close retains one native command, ticket precision and final-mile port
   assert.equal(request.type, 'ORDER_TYPE_SELL'); assert.equal(request.volume, 0.5); assert.equal(request.type_filling, 'ORDER_FILLING_FOK');
   assert.deepEqual(guard.expected_positions, [{ ticket: '9007199254740995', type: 0, volume: '1.5' }]);
   assert.equal(guard.expected_account, '9007199254740993'); assert.equal(guard.expected_server, 'Fixture-Broker');
+  assert.equal(guard.quote_clock_revision, f.state.quoteClock.ruleRevision);
+  assert.equal(guard.observed_at, sourceTime); assert.equal(guard.expires_at, sourceTime + 60000);
+  const quote = records(f.host).list('mt5_command').find(row => row.tool === 'symbol_info_tick').result;
+  assert.deepEqual(quote.result, f.state.tick); assert.deepEqual(quote.quote_clock, f.state.quoteClock);
+  assert.ok(quote.result.time_msc > guard.observed_at, 'Raw server-wall tick remains future-looking before interpretation');
   await assert.rejects(f.invoke('close', { ...f.input, quantity: { value: '1', unit: 'lot' } }), { code: 'IDEMPOTENCY_CONFLICT' });
   const blocked = await f.invoke('close', { ...f.input, operationId: 'replacement' });
   assert.equal(blocked.status, 'rejected'); assert.equal(blocked.error.code, 'POSITION_OPERATION_PENDING'); assert.equal(f.state.sends, 1);
+});
+
+test('MT5 close uses verified normalized quote freshness rather than raw server-wall time', async t => {
+  for (const delta of [-5001, -5000, 1]) await t.test(String(delta), async child => {
+    const f = await fixture(child);
+    f.state.tick.time_msc += delta; f.state.tick.time = Math.floor(f.state.tick.time_msc / 1000);
+    f.state.quoteClock.rawTimeMs += delta; f.state.quoteClock.sourceTimeMs += delta;
+    const result = await f.invoke('close', f.input);
+    assert.equal(result.status, delta === -5000 ? 'submitted' : 'rejected');
+    assert.equal(f.state.sends, delta === -5000 ? 1 : 0);
+    if (delta !== -5000) assert.equal(result.error.code, 'STALE_QUOTE');
+  });
+});
+
+test('MT5 close rejects missing, unverified and mismatched quote proofs without dispatch', async t => {
+  const cases = [
+    ['missing', f => { f.state.quoteClock = undefined; }, 'QUOTE_CLOCK_UNVERIFIED'],
+    ['unverified', f => { Object.assign(f.state.quoteClock, { status: 'unverified', sourceTimeMs: null, basis: 'unknown', offsetMinutes: null, ruleId: null, ruleRevision: null }); }, 'QUOTE_CLOCK_UNVERIFIED'],
+    ['account', f => { f.state.quoteClock.accountId = 'other'; }, 'ACCOUNT_MISMATCH'],
+    ['server', f => { f.state.quoteClock.server = 'Other-Broker'; }, 'ACCOUNT_MISMATCH'],
+    ['raw time', f => { f.state.quoteClock.rawTimeMs++; }, 'SOURCE_DATA_INVALID'],
+    ['normalization', f => { f.state.quoteClock.sourceTimeMs++; }, 'SOURCE_DATA_INVALID'],
+    ['revision', f => { delete f.state.quoteClock.ruleRevision; }, 'SOURCE_DATA_INVALID'],
+  ];
+  for (const [name, change, code] of cases) await t.test(name, async child => {
+    const f = await fixture(child); change(f);
+    const result = await f.invoke('close', f.input);
+    assert.equal(result.status, 'rejected'); assert.equal(result.error.code, code); assert.equal(f.state.sends, 0);
+    assert.equal(records(f.host).list('mt5_command').some(row => row.tool === 'order_send'), false);
+  });
+});
+
+test('MT5 close still brackets verified quote reads with the exact account and connection', async t => {
+  for (const kind of ['account', 'connection']) await t.test(kind, async child => {
+    const f = await fixture(child);
+    f.state.afterTick = () => { if (kind === 'account') f.state.login = 'another-account'; else f.official.config.version++; };
+    const result = await f.invoke('close', f.input);
+    assert.equal(result.status, 'rejected');
+    assert.equal(result.error.code, kind === 'account' ? 'ACCOUNT_MISMATCH' : 'CONNECTION_CHANGED');
+    assert.equal(f.state.sends, 0);
+  });
 });
 
 test('MT5 preflight rejects untrusted callers, changed native accounts/positions, unit and quantity precision', async t => {
@@ -135,7 +187,7 @@ test('MT5 maps explicit native guard rejection separately from broker timeout an
     assert.equal(receipt.status, expectedStatus); assert.equal(f.state.sends, 1);
     records(f.host).close();
     const restored = await new MT5Official(f.host, null).init(); restored.config = f.official.config;
-    const manager = createPositionManager(f.host, { official: restored }, { now: () => 1800000000001 });
+    const manager = createPositionManager(f.host, { official: restored }, { now: () => sourceTime + 1 });
     const execution = { provenance: { caller: { pluginId: 'host' } } };
     try {
       assert.equal((await manager.close(f.input, undefined, execution)).status, expectedStatus);

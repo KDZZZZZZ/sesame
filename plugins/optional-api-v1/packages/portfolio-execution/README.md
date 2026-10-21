@@ -15,6 +15,15 @@ MT5 绑定要求 MT5 2.1.0+，`readTools` 明确包含账户上下文、纯读�
 
 主会话可用 `portfolio_execution_status` 按 binding_id/run_id 查询保存的执行进度及 operation_id，再用 `manual_trade_status` 读取对应命令。操作 ID 在发送前写入进度，进程中断后也可恢复查询；状态查询不恢复执行或重新发送。
 
+主会话手动交易入口：
+
+- 意图待整理时，立即调用 `manual_trade_prepare({backend:"mt5",symbol:"EURUSD",operation_id:"prepare-1",user_authorized:true})`。返回既有观察结构、`observation_id` 和 `preparation`；不发订单。MT5 2.1.7+ 内部只做一次配置身份读取和一次 `mt5_trading_prepare`，在精确账户锁中准备权限与 Python 连接，按需正常重启原终端，再采集品种规则、持仓、挂单和最后报价。QMT 使用既有只读快照，不修改权限或连接。
+- 意图已完整时，`manual_trade_execute` 传 `backend + symbol`，在一次调用内准备并执行，避免模型的第二次往返。其余 `action`、`side`、`quantity`、`price_limit` 和适用的 `limit_price` / `position_id` 保持原合同，不能省略或推断。已有 `observation_id` 路径仍保留，不能与 `backend + symbol` 混用。
+- 准备有独立 180 秒上限，行情与决策有效期从最后原生 tick 开始计算。最终发送前再次核对准确账户和新配置版本，原生进程仍读取最新行情并校验持仓、价格、5 秒源行情时效与 1 秒报价到发送间隔。保留原始 tick 时间及 MT5 `quote_clock` 依据；使用后端归一的 UTC 验龄，异常保留原值、规则版本、实测 age、source 和 receivedAt。观察与发送绑定同一时钟规则版本；未知时钟或规则变化停止发送，不由执行插件推算时区。
+- 准备和订单意图在副作用前写入私有回执库。同一 operation_id 与相同原输入返回原结果，不再次准备或发送；快捷执行生成的 observation_id 不参与调用者指纹。发送前失败保留根因并返回 `submission_attempted:false`；券商收到请求后拒绝可同时返回 `status:"rejected"` 与 `submission_attempted:true`，不能只凭状态判断没有发送，`null` 表示发送情况尚不能确认。未确认结果继续阻止同账户新订单。准备入口仅主会话可用，不扩大工作流后台权限。
+
+`manual_trade_observe` 继续纯读。手动交易无需先运行 research、team、deployment 或遍历历史；原生权限与 SDK 恢复有顺序依赖，接口减少模型往返不代表这些原生步骤并行。
+
 旧数据通过已安装 manual-trading 的主会话只读 `manual_trading_execution_export` 导入，不申请跨插件私有存储权限。仅导入当前所有者回执，其他所有者的未知提交保留为账户阻断项；不复用旧观察。身份不同或冲突的 operation_id 拒绝。已安装旧插件但未加载/未升级时先报出迁移前置条件，避免把丢失旧账误当成可发送新订单。
 
 合成夹具验证不等于真实券商验收。QMT 原生券商接受路径未在此变更中实盘验证。

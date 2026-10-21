@@ -12,6 +12,7 @@ import numpy as np
 _guard_spec = importlib.util.spec_from_file_location("sesame_execution_guard", Path(__file__).with_name("execution_guard.py"))
 _guard = importlib.util.module_from_spec(_guard_spec)
 _guard_spec.loader.exec_module(_guard)
+_quote_clock = _guard._quote_clock
 
 ALLOWED = set('initialize login shutdown version last_error account_info terminal_info symbols_total symbols_get symbol_info symbol_info_tick symbol_select market_book_add market_book_get market_book_release copy_rates_from copy_rates_from_pos copy_rates_range copy_ticks_from copy_ticks_range orders_total orders_get order_calc_margin order_calc_profit order_check order_send positions_total positions_get history_orders_total history_orders_get history_deals_total history_deals_get'.split())
 POSITIONAL = {
@@ -70,6 +71,15 @@ def clean(value, key=''):
     return value
 
 
+def quote_account_identity():
+    """Side-read failure must not replace the ordinary tick's native result/error."""
+    try:
+        account = mt5.account_info()
+        return {'login': getattr(account, 'login', None), 'server': getattr(account, 'server', None)}
+    except Exception:
+        return None
+
+
 for line in sys.stdin:
     try:
         command = json.loads(line)
@@ -85,6 +95,8 @@ for line in sys.stdin:
             raise _guard.GuardRejected('INVALID_ARGUMENT', 'Guards are only supported for order_send')
         args = convert_input(supplied)
         timing = None
+        quote_clock = None
+        native_error = None
         if 'count' in args and not 1 <= args['count'] <= 100000:
             raise ValueError('count must be 1..100000')
         if name == 'initialize':
@@ -101,6 +113,14 @@ for line in sys.stdin:
             result, timing = _guard.guarded_send(mt5, args['request'], execution_guard)
         elif name == 'order_send' and cancellation_guard is not None:
             result, timing = _guard.guarded_cancel(mt5, args['request'], cancellation_guard)
+        elif name == 'symbol_info_tick':
+            symbol = args.pop('symbol')
+            account_before = quote_account_identity()
+            result = mt5.symbol_info_tick(symbol, **args) if args else mt5.symbol_info_tick(symbol)
+            # Capture immediately: account_info may overwrite the SDK's last_error.
+            native_error = mt5.last_error()
+            account_after = quote_account_identity()
+            quote_clock = _quote_clock.resolve_quote_clock(result, account_before, account_after)
         else:
             positional = POSITIONAL.get(name, [])
             if name in {'history_orders_get', 'history_deals_get'} and 'date_from' in args:
@@ -109,7 +129,9 @@ for line in sys.stdin:
             # Some SDK C functions distinguish NULL kwargs from an empty dict.
             # Dispatch exactly once and retain real keyword filters.
             result = getattr(mt5, name)(*values, **args) if args else getattr(mt5, name)(*values)
-        output = {'result': clean(result), 'last_error': clean(mt5.last_error()), 'package_version': mt5.__version__}
+        output = {'result': clean(result), 'last_error': clean(native_error if name == 'symbol_info_tick' else mt5.last_error()), 'package_version': mt5.__version__}
+        if quote_clock is not None:
+            output['quote_clock'] = quote_clock
         if timing is not None:
             output['execution_timing'] = timing
         text = json.dumps(output, ensure_ascii=True, allow_nan=False)

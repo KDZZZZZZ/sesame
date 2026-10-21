@@ -27,13 +27,15 @@ function persisted(host, collection) {
   finally { db.close(); }
 }
 
+const quoteClock=(account,time)=>({status:'verified',source:'mt5/python/symbol_info_tick',server:account.server,accountId:account.accountId,
+  rawTimeMs:time+10800000,sourceTimeMs:time,basis:'server-wall',offsetMinutes:180,ruleId:'ftmo-demo-current-tick-2026',ruleRevision:'ftmo-demo-current-tick-2026-v1'});
 function fixture() {
-  let time = 1800000000000;
-  const account = { accountId: '8001', server: 'Fixture-Demo', revision: '1' };
+  let time = 1792575202000;
+  const account = { accountId: '8001', server: 'FTMO-Demo', revision: '1' };
   const calls = [], hooks = {};
   const host = {
     context: { kind: 'main', sessionId: 'conv_fast', storageRoot: mkdtempSync(join(tmpdir(), 'portfolio-fast-')) },
-    plugins: { read: async () => ({ state: 'mounted', version: '2.1.6', runtime_status: 'ready' }) },
+    plugins: { read: async () => ({ state: 'mounted', version: '2.1.7', runtime_status: 'ready' }) },
     capabilities: { invoke: async (ref, args, options) => {
       const name = ref.split('#')[1]; calls.push({ name, args: structuredClone(args), options });
       if (name === 'mt5_settings') {
@@ -54,7 +56,7 @@ function fixture() {
           summary: { login: Number(account.accountId), server: account.server, balance: 10000, equity: 10000, currency: 'USD', trade_allowed: true, trade_expert: true },
           terminal: { connected: true, trade_allowed: true, tradeapi_disabled: false },
           spec: { name: args.symbol, volume_min: 0.01, volume_max: 10, volume_step: 0.01, filling_mode: 2, trade_exemode: 2 },
-          positions: [], orders: [], tick: { time_msc: time, bid: 100, ask: 101 },
+          positions: [], orders: [], tick: { time_msc: time+10800000, bid: 100, ask: 101 }, quote_clock: quoteClock(account,time),
           readStartedAt: began, capturedAt: time,
           preparation: { commandId: args.command_id, status: 'ready', applicationPermissionChanged: account.revision !== '1', restarted: time - began >= 90000, initialized: false },
         };
@@ -70,6 +72,7 @@ function fixture() {
         assert.equal(args.arguments.execution_guard.observed_at, row.signalSourceAt);
         assert.equal(args.arguments.execution_guard.max_quote_age_ms, 5000);
         assert.equal(args.arguments.execution_guard.max_quote_to_send_ms, 1000);
+        assert.equal(args.arguments.execution_guard.quote_clock_revision, 'ftmo-demo-current-tick-2026-v1');
         assert.equal('expected_revision' in args.arguments.execution_guard, false);
         const value = await hooks.trade?.(args, options) ?? { status: 'returned', result: { result: { retcode: 10009, order: '7001', deal: '7002' }, execution_timing: { quote_to_send_ms: 1, send_to_receipt_ms: 2 } } };
         return { type: 'result', value };
@@ -92,6 +95,8 @@ test('prepare is one identity + one backend call, records intent first and never
   assert.ok(result.observation_id); assert.equal(result.account.accountId, f.account.accountId);
   assert.deepEqual(result.orders, []); assert.equal(result.preparation.restarted, false);
   assert.equal(result.quote.sourceTimeMs, f.time); assert.equal(result.quote.source, 'mt5/python/symbol_info_tick');
+  assert.equal(result.quote.clock.rawTimeMs, f.time+10800000);
+  assert.equal(result.quote.clock.offsetMinutes, 180);
   assert.equal(result.quote.receivedAt, f.time); assert.equal(result.quote.requestMs, null);
   assert.deepEqual(f.names(), ['mt5_settings', 'mt5_trading_prepare']);
   assert.deepEqual(await f.service.prepare(preparation()), result);
@@ -208,7 +213,7 @@ test('an unknown prior same-account order blocks permission preparation and nati
 
 test('stale and future ticks retain source/received time and measured age, reject and cannot replay preparation', async () => {
   for (const offset of [-5001, 1, 7200000]) {
-    const f = fixture(); f.hooks.prepared = value => { value.tick.time_msc += offset; };
+    const f = fixture(); f.hooks.prepared = value => { value.tick.time_msc += offset; value.quote_clock.rawTimeMs+=offset; value.quote_clock.sourceTimeMs+=offset; };
     const args = intent(), result = await f.service.execute(args);
     assert.equal(result.status, 'rejected'); assert.equal(result.submission_attempted, false);
     assert.equal(result.error.code, 'STALE_QUOTE'); assert.equal(result.error.details.reason, offset > 0 ? 'future_quote' : 'stale_quote');
@@ -229,6 +234,42 @@ test('native preparation errors preserve code, message and diagnostic details wi
   assert.equal(result.error.details.nativeCode, -10004); assert.equal(result.error.details.method, 'account_info');
   assert.equal(result.observation_id, undefined);
   assert.deepEqual(await f.service.prepare(preparation()), result); assert.equal(f.calls.length, 2);
+});
+
+test('unverified or inconsistent MT5 clock proof never creates an observation or sends', async () => {
+  for(const [change,code] of [
+    [value=>{delete value.quote_clock;},'QUOTE_CLOCK_UNVERIFIED'],
+    [value=>{value.quote_clock.status='unverified';value.quote_clock.reason='unsupported_period';},'QUOTE_CLOCK_UNVERIFIED'],
+    [value=>{value.quote_clock.accountId='another-account';},'ACCOUNT_MISMATCH'],
+    [value=>{value.quote_clock.server='another-server';},'ACCOUNT_MISMATCH'],
+    [value=>{value.quote_clock.rawTimeMs++;},'SOURCE_DATA_INVALID'],
+    [value=>{value.quote_clock.sourceTimeMs++;},'SOURCE_DATA_INVALID'],
+    [value=>{value.quote_clock.ruleRevision='';},'SOURCE_DATA_INVALID'],
+    [value=>{value.quote_clock.basis='utc';},'SOURCE_DATA_INVALID'],
+  ]) {
+    const f=fixture();f.hooks.prepared=change;
+    const result=await f.service.execute(intent());
+    assert.equal(result.status,'rejected');assert.equal(result.error.code,code);assert.equal(result.submission_attempted,false);
+    assert.equal(records(f.host).list('observations').length,0);assert.equal(f.names().includes('mt5_trade'),false);
+  }
+});
+
+test('pure observation consumes the provider clock envelope without modifying the raw SDK tick', async () => {
+  const f=fixture(),tick={time_msc:f.time+10800000,bid:100,ask:101},proof=quoteClock(f.account,f.time),before=structuredClone(tick),calls=[];
+  const host={context:{kind:'main'},plugins:f.host.plugins,capabilities:{invoke:async(ref,args)=>{
+    const name=ref.split('#')[1];calls.push({name,args});
+    if(name==='mt5_settings')return {type:'result',value:{settings:{version:1,account:{login:f.account.accountId,server:f.account.server}}}};
+    if(name==='mt5_catalog')return {type:'result',value:{items:[{server:'python',tools:[{name:'order_send',callable:true,inputSchema:{properties:{execution_guard:{}}}}]}]}};
+    assert.equal(name,'mt5_python');
+    const values={account_info:{login:f.account.accountId,server:f.account.server},terminal_info:{connected:true},symbol_info:{name:'FIXTURE'},positions_get:[],symbol_info_tick:tick};
+    return {type:'result',value:{status:'returned',result:{result:values[args.tool],...(args.tool==='symbol_info_tick'?{quote_clock:proof}:{})}}};
+  }}};
+  const result=await createAdapters(host,{now:()=>f.time}).snapshot('mt5','FIXTURE');
+  assert.equal(result.quote.sourceTimeMs,f.time);assert.deepEqual(result.quote.clock,proof);assert.deepEqual(tick,before);
+  assert.equal(calls.filter(c=>c.args.tool==='symbol_info_tick').length,1);
+  proof.status='unverified';proof.reason='unknown_server';
+  await assert.rejects(createAdapters(host,{now:()=>f.time}).snapshot('mt5','FIXTURE'),{code:'QUOTE_CLOCK_UNVERIFIED'});
+  assert.equal(calls.some(c=>c.name==='mt5_trade'||c.name==='mt5_trading_prepare'),false);
 });
 
 test('an incomplete preparation receipt or malformed source clock cannot be reported as prepared', async () => {
@@ -305,7 +346,7 @@ test('QMT preparation uses only its existing read-only snapshot and cannot chang
 test('observe remains a pure snapshot read and an observed execution never calls prepare', async () => {
   const f = fixture(), adapter = createAdapters(f.host, { now: () => f.time });
   let snapshots = 0;
-  adapter.snapshot = async (_backend, symbol) => { snapshots++; return { account: structuredClone(f.account), symbol, spec: { volume_min: 0.01, volume_max: 10, volume_step: 0.01, filling_mode: 2 }, positions: [], quote: { sourceTimeMs: f.time, receivedAt: f.time, bid: '100', ask: '101' }, capturedAt: f.time, captureMs: 1 }; };
+  adapter.snapshot = async (_backend, symbol) => { snapshots++; return { account: structuredClone(f.account), symbol, spec: { volume_min: 0.01, volume_max: 10, volume_step: 0.01, filling_mode: 2 }, positions: [], quote: { sourceTimeMs: f.time, receivedAt: f.time, clock:quoteClock(f.account,f.time), bid: '100', ask: '101' }, capturedAt: f.time, captureMs: 1 }; };
   adapter.prepare = () => { throw new Error('Pure observation must not prepare'); };
   const service = f.create({ adapters: adapter }), observed = await service.observe({ backend: 'mt5', symbol: 'FIXTURE' });
   assert.equal(snapshots, 1); assert.equal(f.calls.length, 0);
@@ -330,5 +371,5 @@ test('public declarations expose prepare and enforce exactly one execution sourc
   for (const input of [{ ...intent(), observation_id: 'both' }, { ...args, observation_id: 'partial', backend: 'mt5' }, args, { ...args, backend: 'mt5' }]) {
     assert.equal(Value.Check(execution.inputSchema, input), false);
   }
-  assert.equal(createService({ context: { kind: 'main' }, capabilities: {} }).inspect().backends[0].minimumPluginVersion, '2.1.6');
+  assert.equal(createService({ context: { kind: 'main' }, capabilities: {} }).inspect().backends[0].minimumPluginVersion, '2.1.7');
 });

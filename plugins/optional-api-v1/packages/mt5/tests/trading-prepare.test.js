@@ -6,12 +6,14 @@ import { dirname, join, resolve } from 'node:path';
 import { records } from '../backend/records.js';
 import { tradingPrepare } from '../backend/trading-prepare.js';
 import { officialTool } from '../backend/plugin-tools.js';
+import { PYTHON_TOOLS } from '../backend/python-tools.js';
 import { createCapabilities as configurationCapabilities } from '../tools/configuration.js';
 import manifest from '../capabilities.json' with { type: 'json' };
 import plugin from '../plugin.json' with { type: 'json' };
 import { Value } from '@sesame/plugin-sdk/schema/value';
 
 const input = (extra = {}) => ({ symbol: 'EURUSD', command_id: 'fast-prepare-fixture-01', user_authorized: true, ...extra });
+const sourceTime = Date.UTC(2026, 9, 21, 12);
 async function fixture(t) {
   const root = await mkdtemp(join(tmpdir(), 'mt5-fast-prepare-')), events = [], calls = [], changes = [];
   const host = { context: { storageRoot: root, sessionId: 'fixture-owner', kind: 'main' }, events: { emit: value => events.push(value) } };
@@ -22,10 +24,13 @@ async function fixture(t) {
     terminal_info: { connected: true, trade_allowed: true, tradeapi_disabled: false },
     symbol_info: { name: 'EURUSD', volume_min: 0.01, volume_step: 0.01, volume_max: 100 },
     positions_get: [{ symbol: 'EURUSD', ticket: '101', volume: 0.01 }], orders_get: [],
-    symbol_info_tick: { time: 1700000000, time_msc: 1700000000123, bid: 1.1, ask: 1.1001 }, initialize: true,
+    symbol_info_tick: { time: (sourceTime + 10800000) / 1000, time_msc: sourceTime + 10800000, bid: 1.1, ask: 1.1001 }, initialize: true,
   };
-  let permissions = 0, clock = 1700000001000;
-  const f = { host, config, native, data, calls, changes, events, preparations: 0 };
+  let permissions = 0, clock = sourceTime + 1000;
+  const f = { host, config, native, data, calls, changes, events, preparations: 0,
+    quoteClock: { status: 'verified', source: 'mt5/python/symbol_info_tick', server: config.account.server, accountId: config.account.login,
+      rawTimeMs: data.symbol_info_tick.time_msc, sourceTimeMs: sourceTime, basis: 'server-wall', offsetMinutes: 180,
+      ruleId: 'ftmo-demo-current-tick-2026', ruleRevision: 'ftmo-demo-current-tick-2026-v1' } };
   const mt5 = f.mt5 = { official: {
     config, settings: () => structuredClone(config), redact: text => text.replaceAll('fixture-secret', '[redacted]'), jobs: new Map(),
     async configure(args) {
@@ -41,7 +46,8 @@ async function fixture(t) {
       calls.push(request);
       const override = await f.call?.(request, signal);
       if (override) return override;
-      return { id: request.command_id, status: 'returned', result: { result: structuredClone(data[request.tool]), last_error: [1, 'Success'] } };
+      return { id: request.command_id, status: 'returned', result: { result: structuredClone(data[request.tool]), last_error: [1, 'Success'],
+        ...(request.tool === 'symbol_info_tick' ? { quote_clock: structuredClone(f.quoteClock) } : {}) } };
     },
   }, market: { async connected() {
     permissions++; if (f.permissionRead) await f.permissionRead();
@@ -192,14 +198,74 @@ test('cancellation during restart allows cleanup but never proceeds into a ready
   assert.equal(g.permissionReads(), 0); assert.equal(g.store.list('mt5_trading_preparations').length, 0);
 });
 
-test('final tick is not normalized and malformed symbol rows cannot become a ready snapshot', async t => {
-  const f = await fixture(t); f.data.symbol_info_tick.time_msc += 10800000;
-  assert.deepEqual((await f.invoke()).tick, f.data.symbol_info_tick);
+test('verified server-wall quote retains raw future tick and exposes its bound normalized clock', async t => {
+  const f = await fixture(t), result = await f.invoke();
+  assert.deepEqual(result.tick, f.data.symbol_info_tick);
+  assert.ok(result.tick.time_msc > result.capturedAt);
+  assert.deepEqual(result.quote_clock, f.quoteClock);
+  assert.ok(result.quote_clock.sourceTimeMs <= result.readStartedAt);
+  assert.equal(result.tick.time_msc - result.quote_clock.sourceTimeMs, 10800000);
+});
+
+test('explicit verified UTC proof passes through without a second conversion', async t => {
+  const f = await fixture(t);
+  Object.assign(f.data.symbol_info_tick, { time: sourceTime / 1000, time_msc: sourceTime });
+  Object.assign(f.quoteClock, { rawTimeMs: sourceTime, sourceTimeMs: sourceTime, basis: 'utc', offsetMinutes: 0,
+    ruleId: 'fixture-explicit-utc', ruleRevision: 'fixture-explicit-utc-v1' });
+  const result = await f.invoke();
+  assert.deepEqual(result.tick, f.data.symbol_info_tick); assert.deepEqual(result.quote_clock, f.quoteClock);
+  assert.equal(result.quote_clock.sourceTimeMs, result.tick.time_msc);
+});
+
+test('missing, unverified or inconsistent quote clocks cannot become a ready preparation', async t => {
+  const cases = [
+    ['missing', f => { f.quoteClock = undefined; }, 'QUOTE_CLOCK_UNVERIFIED'],
+    ['unverified', f => { Object.assign(f.quoteClock, { status: 'unverified', sourceTimeMs: null, basis: 'unknown', offsetMinutes: null, ruleId: null, ruleRevision: null, reason: 'unknown_server' }); }, 'QUOTE_CLOCK_UNVERIFIED'],
+    ['account', f => { f.quoteClock.accountId = 'other'; }, 'ACCOUNT_MISMATCH'],
+    ['server', f => { f.quoteClock.server = 'Other-Demo'; }, 'ACCOUNT_MISMATCH'],
+    ['raw time', f => { f.quoteClock.rawTimeMs++; }, 'SOURCE_DATA_INVALID'],
+    ['normalized time', f => { f.quoteClock.sourceTimeMs++; }, 'SOURCE_DATA_INVALID'],
+    ['missing normalized time', f => { f.quoteClock.sourceTimeMs = null; }, 'SOURCE_DATA_INVALID'],
+    ['source', f => { f.quoteClock.source = 'fixture/untrusted'; }, 'SOURCE_DATA_INVALID'],
+    ['basis', f => { f.quoteClock.basis = 'unknown'; }, 'SOURCE_DATA_INVALID'],
+    ['rule', f => { f.quoteClock.ruleId = ''; }, 'SOURCE_DATA_INVALID'],
+    ['revision', f => { f.quoteClock.ruleRevision = ''; }, 'SOURCE_DATA_INVALID'],
+    ['oversized revision', f => { f.quoteClock.ruleRevision = 'x'.repeat(129); }, 'SOURCE_DATA_INVALID'],
+    ['offset', f => { f.quoteClock.offsetMinutes = '180'; }, 'SOURCE_DATA_INVALID'],
+    ['out-of-range offset', f => { f.quoteClock.offsetMinutes = 841; f.quoteClock.sourceTimeMs = f.quoteClock.rawTimeMs - 841 * 60000; }, 'SOURCE_DATA_INVALID'],
+    ['UTC offset', f => { f.quoteClock.basis = 'utc'; }, 'SOURCE_DATA_INVALID'],
+  ];
+  for (const [name, change, code] of cases) await t.test(name, async child => {
+    const f = await fixture(child); change(f);
+    await assert.rejects(f.invoke(), { code });
+    assert.equal(f.store.get('mt5_trading_preparations', input().command_id).status, 'failed');
+  });
+});
+
+test('malformed symbol rows cannot become a ready snapshot', async t => {
   for (const key of ['positions_get', 'orders_get']) {
     const g = await fixture(t); g.data[key] = [{ symbol: 'OTHER' }];
     await assert.rejects(g.invoke(), { code: 'SOURCE_DATA_INVALID' });
     assert.equal(g.calls.some(call => call.tool === 'symbol_info_tick'), false);
   }
+});
+
+test('execution guard schema requires quote clock provenance while cancellation stays independent', () => {
+  const schema = PYTHON_TOOLS.find(tool => tool.name === 'order_send').inputSchema;
+  const args = { request: { action: 'TRADE_ACTION_DEAL' }, execution_guard: {
+    observed_at: sourceTime, expires_at: sourceTime + 60000, max_quote_age_ms: 5000, max_quote_to_send_ms: 1000,
+    price_limit: '1.1', side: 'buy', expected_account: '7001', expected_server: 'Fixture-Demo',
+  } };
+  assert.equal(Value.Check(schema, args), false);
+  args.execution_guard.quote_clock_revision = 'ftmo-demo-current-tick-2026-v1';
+  assert.equal(Value.Check(schema, args), true);
+  args.execution_guard.quote_clock_revision = '';
+  assert.equal(Value.Check(schema, args), false);
+  args.execution_guard.quote_clock_revision = 'x'.repeat(129);
+  assert.equal(Value.Check(schema, args), false);
+  assert.equal(Value.Check(schema, { request: { action: 'TRADE_ACTION_REMOVE' }, cancellation_guard: {
+    expected_account: '7001', expected_server: 'Fixture-Demo', symbol: 'EURUSD', remark: 'fixture', order: '100', side: 'buy',
+  } }), true);
 });
 
 test('route rejection identifies the correct agent tool without a native call', async () => {

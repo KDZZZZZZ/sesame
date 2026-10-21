@@ -4,6 +4,7 @@ import { stableJSON } from './contracts.js';
 import { updateConfiguration } from './configuration.js';
 import { tradingPermissions } from './trading-permissions.js';
 import { prepareTerminal } from './terminal.js';
+import { verifiedQuoteClock } from './quote-clock-proof.js';
 import { ApiError, digest, requireValue } from './support.js';
 
 const pending = new WeakMap();
@@ -72,7 +73,7 @@ export async function tradingPrepare(host, mt5, args, signal, { now = Date.now, 
   };
   assertCurrent();
   const save = changes => { record = store.put('mt5_trading_preparations', { ...record, ...changes }); };
-  async function read(tool, input, id = `trading-prepare-read-${randomUUID()}`) {
+  async function readEnvelope(tool, input, id = `trading-prepare-read-${randomUUID()}`) {
     assertCurrent();
     const receipt = await mt5.official.call({ server: 'python', tool, arguments: input, command_id: id }, host.context.sessionId, signal);
     assertCurrent();
@@ -85,8 +86,9 @@ export async function tradingPrepare(host, mt5, args, signal, { now = Date.now, 
       error.details = { transport: 'python', method: tool, commandId: receipt?.id ?? id, commandStatus: receipt?.status ?? 'unknown', nativeCode, nativeMessage: message };
       throw error;
     }
-    return value;
+    return receipt.result;
   }
+  const read = async (...args) => (await readEnvelope(...args)).result;
   async function run() {
     save({ status: 'preparing', stage: 'permissions' });
     try {
@@ -136,12 +138,13 @@ export async function tradingPrepare(host, mt5, args, signal, { now = Date.now, 
       requireValue(object(spec) && spec.name === args.symbol, '原生品种规格不匹配', 503, 'SOURCE_DATA_INVALID');
       for (const rows of [positions, orders]) requireValue(Array.isArray(rows) && rows.every(row => object(row) && row.symbol === args.symbol), '原生持仓或挂单缺失，或混入其他品种', 503, 'SOURCE_DATA_INVALID');
       save({ stage: 'quote' });
-      const tick = await read('symbol_info_tick', { symbol: args.symbol });
+      const quote = await readEnvelope('symbol_info_tick', { symbol: args.symbol }), tick = quote.result;
       requireValue(object(tick) && Number.isSafeInteger(tick.time_msc) && tick.time_msc > 0 && Number.isFinite(tick.bid) && Number.isFinite(tick.ask), '原生报价没有返回有效毫秒时间与买卖价', 503, 'SOURCE_DATA_INVALID');
+      const quote_clock = verifiedQuoteClock(tick, quote.quote_clock, record.account);
       summary = await read('account_info', {}); assertNativeAccount(summary, record.account); assertCurrent();
       const capturedAt = now();
       save({ status: 'ready', stage: 'verified', completedAt: capturedAt });
-      return { account: record.account, summary, terminal, spec, positions, orders, tick, readStartedAt, capturedAt,
+      return { account: record.account, summary, terminal, spec, positions, orders, tick, quote_clock, readStartedAt, capturedAt,
         preparation: { commandId: args.command_id, status: 'ready', ...record.preparation,
           stages: ['permissions', 'python', 'symbol', 'quote', 'verified'], readScheduling: 'parallel_requests_serial_python_worker' } };
     } catch (cause) {

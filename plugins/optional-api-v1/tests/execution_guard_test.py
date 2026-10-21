@@ -9,8 +9,11 @@ import subprocess
 import sys
 import tempfile
 import time
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1] / "packages"
+FIXED_NOW = 1792575200000  # 2026-10-21, synthetic UTC; never the real SDK.
+CLOCK_REVISION = "ftmo-demo-current-tick-2026-v1"
 def load(name, path):
     spec = importlib.util.spec_from_file_location(name, ROOT / path)
     module = importlib.util.module_from_spec(spec)
@@ -22,7 +25,7 @@ qmt = load("fixture_qmt_guard", "qmt/execution_guard.py")
 
 
 class Clock:
-    def __init__(self): self.now = 1800000000000
+    def __init__(self): self.now = FIXED_NOW
     def __call__(self): return self.now
     def monotonic(self): return self.now / 1000
 
@@ -34,7 +37,7 @@ class MT5:
     POSITION_TYPE_BUY, POSITION_TYPE_SELL = 0, 1
     def __init__(self, clock):
         self.clock, self.sent, self.calls = clock, [], []
-        self.account = N(login=42, server="Fixture-Demo", trade_allowed=True, trade_expert=True)
+        self.account = N(login=42, server="FTMO-Demo", trade_allowed=True, trade_expert=True)
         self.terminal = N(connected=True, trade_allowed=True, tradeapi_disabled=False)
         self.spec = N(volume_min=0.01, volume_max=10, volume_step=0.01)
         self.quote_age, self.ask, self.bid, self.check_delay, self.check_retcode = 0, 101, 100, 0, 0
@@ -48,7 +51,7 @@ class MT5:
     def orders_get(self, symbol): return tuple(row for row in self.orders if row.symbol == symbol)
     def symbol_info_tick(self, symbol):
         self.calls.append("quote")
-        return N(time_msc=self.clock()-self.quote_age, ask=self.ask, bid=self.bid)
+        return N(time_msc=self.clock()-self.quote_age+10800000, ask=self.ask, bid=self.bid)
     def order_check(self, request):
         self.calls.append("check"); self.clock.now += self.check_delay
         return N(retcode=self.check_retcode)
@@ -60,16 +63,19 @@ class MT5:
 class GuardTests(unittest.TestCase):
     def setUp(self):
         self.clock = Clock(); self.mt = MT5(self.clock)
-        self.guard = {"observed_at":self.clock(),"expires_at":self.clock()+60000,"max_quote_age_ms":5000,"max_quote_to_send_ms":1000,"price_limit":"102","side":"buy","expected_account":"42","expected_server":"Fixture-Demo"}
+        self.guard = {"observed_at":self.clock(),"expires_at":self.clock()+60000,"max_quote_age_ms":5000,"max_quote_to_send_ms":1000,"price_limit":"102","side":"buy","expected_account":"42","expected_server":"FTMO-Demo","quote_clock_revision":CLOCK_REVISION}
         self.request = {"action":1,"symbol":"FIXTURE","type":0,"volume":0.1}
     def send(self): return mt.guarded_send(self.mt,self.request,self.guard,self.clock,self.clock.monotonic)
     def test_mt5_checks_refreshes_then_sends_once_and_reports_real_phase_times(self):
         self.mt.check_delay = 2500
         result, timing = self.send()
         self.assertEqual(result.order,123);self.assertEqual(len(self.mt.sent),1)
-        self.assertEqual(self.mt.calls,["account","terminal","spec","quote","check","quote","account","terminal","send"])
+        self.assertEqual(self.mt.calls,["account","terminal","spec","account","terminal","quote","account","terminal","check","account","terminal","quote","account","terminal","account","terminal","send"])
         self.assertEqual(timing["native_preflight_ms"],2500);self.assertEqual(timing["send_to_receipt_ms"],20)
-        self.assertEqual(timing["source_time_ms"],1800000002500)
+        self.assertEqual(timing["source_time_ms"],FIXED_NOW+2500)
+        self.assertEqual(timing["raw_source_time_ms"],FIXED_NOW+2500+10800000)
+        self.assertEqual(timing["quote_clock"]["ruleRevision"],CLOCK_REVISION)
+        self.assertEqual(timing["quote_clock"]["offsetMinutes"],180)
     def test_mt5_queue_delay_past_expiry_never_sends(self):
         self.clock.now += 60001
         with self.assertRaises(mt.GuardRejected) as caught: self.send()
@@ -118,11 +124,68 @@ class GuardTests(unittest.TestCase):
         def slow_final_account():
             nonlocal calls
             calls+=1
-            if calls==2:self.clock.now+=1001
+            if calls==6:self.clock.now+=1001
             return original()
         self.mt.account_info=slow_final_account
         with self.assertRaises(mt.GuardRejected) as caught:self.send()
         self.assertEqual(caught.exception.code,'LATENCY_BUDGET_EXCEEDED');self.assertFalse(self.mt.sent)
+    def test_mt5_quote_age_is_checked_after_final_account_and_terminal_reads(self):
+        self.mt.quote_age=4800;original=self.mt.terminal_info;calls=0
+        def slow_final_terminal():
+            nonlocal calls
+            calls+=1
+            if calls==6:self.clock.now+=300
+            return original()
+        self.mt.terminal_info=slow_final_terminal
+        with self.assertRaises(mt.GuardRejected) as caught:self.send()
+        self.assertEqual(caught.exception.code,'STALE_QUOTE');self.assertFalse(self.mt.sent)
+    def test_mt5_clock_rule_is_required_and_unknown_server_or_old_period_never_sends(self):
+        for problem,code in [('missing','INVALID_ARGUMENT'),('revision','QUOTE_CLOCK_REVISION_CHANGED'),('server','QUOTE_CLOCK_UNVERIFIED'),('old','QUOTE_CLOCK_UNVERIFIED')]:
+            self.setUp()
+            if problem=='missing':self.guard.pop('quote_clock_revision')
+            if problem=='revision':self.guard['quote_clock_revision']='old-rule'
+            if problem=='server':self.mt.account.server='Other';self.guard['expected_server']='Other'
+            if problem=='old':self.mt.symbol_info_tick=lambda symbol:N(time_msc=1700000000000,bid=100,ask=101)
+            with self.assertRaises(mt.GuardRejected) as caught:self.send()
+            self.assertEqual(caught.exception.code,code);self.assertFalse(self.mt.sent)
+    def test_mt5_second_quote_independently_checks_clock_rule_and_future_source(self):
+        original=self.mt.symbol_info_tick;reads=0
+        def tick(symbol):
+            nonlocal reads
+            reads+=1
+            if reads==2:self.mt.quote_age=-1
+            return original(symbol)
+        self.mt.symbol_info_tick=tick
+        with self.assertRaises(mt.GuardRejected) as caught:self.send()
+        self.assertEqual(caught.exception.code,'STALE_QUOTE');self.assertFalse(self.mt.sent)
+        self.setUp();resolve=mt._quote_clock.resolve_quote_clock;proofs=[]
+        def changed_rule(*args,**kwargs):
+            proof=resolve(*args,**kwargs);proofs.append(proof)
+            return {**proof,'ruleRevision':'changed-rule'} if len(proofs)==2 else proof
+        with mock.patch.object(mt._quote_clock,'resolve_quote_clock',side_effect=changed_rule):
+            with self.assertRaises(mt.GuardRejected) as caught:self.send()
+        self.assertEqual(caught.exception.code,'QUOTE_CLOCK_REVISION_CHANGED');self.assertEqual(len(proofs),2);self.assertFalse(self.mt.sent)
+    def test_mt5_quote_to_send_uses_monotonic_budget_even_if_wall_time_stalls(self):
+        mono=[0.0];original=self.mt.terminal_info;calls=0
+        def slow_final_terminal():
+            nonlocal calls
+            calls+=1
+            if calls==6:mono[0]+=1.001
+            return original()
+        self.mt.terminal_info=slow_final_terminal
+        with self.assertRaises(mt.GuardRejected) as caught:mt.guarded_send(self.mt,self.request,self.guard,self.clock,lambda:mono[0])
+        self.assertEqual(caught.exception.code,'LATENCY_BUDGET_EXCEEDED');self.assertFalse(self.mt.sent)
+    def test_mt5_account_switch_inside_either_native_tick_read_never_sends(self):
+        for switch_on in (1,2):
+            self.setUp();original=self.mt.symbol_info_tick;reads=0
+            def tick(symbol):
+                nonlocal reads
+                reads+=1;result=original(symbol)
+                if reads==switch_on:self.mt.account.login=43
+                return result
+            self.mt.symbol_info_tick=tick
+            with self.assertRaises(mt.GuardRejected) as caught:self.send()
+            self.assertEqual(caught.exception.code,'ACCOUNT_MISMATCH');self.assertFalse(self.mt.sent)
     def test_mt5_timeout_after_send_is_not_guard_rejection_or_retry(self):
         def send(request):self.mt.sent.append(request);raise TimeoutError('synthetic lost receipt')
         self.mt.order_send=send
@@ -165,7 +228,7 @@ class GuardTests(unittest.TestCase):
             with self.assertRaises(mt.GuardRejected) as caught:self.send()
             self.assertEqual(caught.exception.code,'POSITION_CHANGED' if change=='position' else 'WORKING_ORDERS');self.assertFalse(self.mt.sent)
     def test_mt5_cancel_checks_native_account_and_unique_active_order_after_queuing(self):
-        guard = {"expected_account":"42","expected_server":"Fixture-Demo","symbol":"FIXTURE","remark":"SOwn","order":"700","side":"buy"}
+        guard = {"expected_account":"42","expected_server":"FTMO-Demo","symbol":"FIXTURE","remark":"SOwn","order":"700","side":"buy"}
         request = {"action":8,"order":700}
         row = dict(ticket=700,symbol="FIXTURE",comment="SOwn",type=2,state=1,volume_current=0.1)
         self.mt.orders_get = lambda **kwargs: [N(**row)]
@@ -193,7 +256,7 @@ class GuardTests(unittest.TestCase):
             if state.on_tick:state.on_tick()
             return {'600000.SH':{'time':clock()-state.age,'bidPrice':[10],'askPrice':[state.ask]}}
         data=N(get_full_tick=tick)
-        req={'account_id':'fixture','symbol':'600000.SH','side':'buy','shares':'100','price':'10','execution_guard':{k:v for k,v in self.guard.items() if k not in ('side','expected_account','expected_server')}}
+        req={'account_id':'fixture','symbol':'600000.SH','side':'buy','shares':'100','price':'10','execution_guard':{k:v for k,v in self.guard.items() if k not in ('side','expected_account','expected_server','quote_clock_revision')}}
         req['execution_guard']['price_limit']='10.2'
         def send():state.sent+=1;clock.now+=15;return 123
         def execute():return qmt.submit(trader,object(),data,{'PriceTick':'0.01','MinLimitOrderVolume':'100','MaxLimitOrderVolume':'100000'},req,send,clock,clock.monotonic)
@@ -254,6 +317,7 @@ class WorkerBoundaryTests(unittest.TestCase):
             (directory/'numpy.py').write_text('class ndarray: pass\nclass generic: pass\n')
             (directory/'MetaTrader5.py').write_text('''
 import os,time
+time.time=lambda:1792575200.0
 class R:
  def __init__(self,**values): self.__dict__.update(values)
  def _asdict(self): return self.__dict__
@@ -269,10 +333,10 @@ ORDER_TYPE_BUY_LIMIT=2
 ORDER_TYPE_SELL_LIMIT=3
 POSITION_TYPE_BUY=0
 POSITION_TYPE_SELL=1
-def account_info(): return R(login=int(os.environ.get('SESAME_FIXTURE_ACCOUNT','42')),server='Fixture',trade_allowed=True,trade_expert=True)
+def account_info(): return R(login=int(os.environ.get('SESAME_FIXTURE_ACCOUNT','42')),server='FTMO-Demo',trade_allowed=True,trade_expert=True)
 def terminal_info(): return R(connected=True,trade_allowed=True,tradeapi_disabled=False)
 def symbol_info(symbol): return R(volume_min=0.01,volume_max=1,volume_step=0.01)
-def symbol_info_tick(symbol): return R(time_msc=int(time.time()*1000),bid=100,ask=101)
+def symbol_info_tick(symbol): return R(time_msc=int(time.time()*1000)+10800000,bid=100,ask=101)
 positions=[]
 orders=[]
 def order_check(request):
@@ -289,12 +353,12 @@ def order_send(request):
 def last_error(): return (1,'success')
 def shutdown(): pass
 ''')
-            now=int(time.time()*1000)-(61000 if expired else 0)
-            guard={'observed_at':now,'expires_at':now+60000,'max_quote_age_ms':5000,'max_quote_to_send_ms':1000,'price_limit':'102','side':'buy','expected_account':'42','expected_server':'Fixture'}
+            now=FIXED_NOW-(61000 if expired else 0)
+            guard={'observed_at':now,'expires_at':now+60000,'max_quote_age_ms':5000,'max_quote_to_send_ms':1000,'price_limit':'102','side':'buy','expected_account':'42','expected_server':'FTMO-Demo','quote_clock_revision':CLOCK_REVISION}
             if portfolio:guard['expected_positions']=[]
             args={'request':{'action':'TRADE_ACTION_DEAL','type':'ORDER_TYPE_BUY','symbol':'FIXTURE','volume':0.1}}
             if guarded:args['execution_guard']=guard
-            if cancel:args={'request':{'action':'TRADE_ACTION_REMOVE','order':'700'},'cancellation_guard':{'expected_account':'42','expected_server':'Fixture','symbol':'FIXTURE','remark':'SOwn','order':'700','side':'buy'}}
+            if cancel:args={'request':{'action':'TRADE_ACTION_REMOVE','order':'700'},'cancellation_guard':{'expected_account':'42','expected_server':'FTMO-Demo','symbol':'FIXTURE','remark':'SOwn','order':'700','side':'buy'}}
             request={'tool':'order_send','arguments':args}
             result=subprocess.run([sys.executable,'-B',str(ROOT/'mt5/backend/python-worker.py')],input=json.dumps(request)+'\n',text=True,capture_output=True,env={**os.environ,'PYTHONPATH':tmp,'SESAME_FIXTURE_AUDIT':str(audit),'SESAME_FIXTURE_ACCOUNT':'43' if changed_account else '42','SESAME_FIXTURE_PORTFOLIO':'1' if portfolio else '0','SESAME_FIXTURE_CHANGE':change},timeout=5,check=True)
             return json.loads(result.stdout.strip()),audit.read_text().splitlines() if audit.exists() else []

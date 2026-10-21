@@ -34,7 +34,7 @@ export function createAdapters(host, {now=Date.now,authorizeRequest}={}) {
     }
     return invoke(host, pluginId, name, args, signal);
   }
-  async function py(method,args,signal,commandId=`manual-read-${randomUUID()}`) {
+  async function pyResult(method,args,signal,commandId=`manual-read-${randomUUID()}`) {
     signal?.throwIfAborted();
     const command=await call('mt5',method==='order_send'?'mt5_trade':'mt5_python',{server:'python',tool:method,arguments:args,command_id:commandId},signal);
     signal?.throwIfAborted();
@@ -48,8 +48,9 @@ export function createAdapters(host, {now=Date.now,authorizeRequest}={}) {
           ...(disconnected?{retryable:false,recovery:'Reconnect the configured MetaTrader 5 Python terminal, verify the same account, then start a new workflow run. Terminal MCP connectivity alone does not establish Python IPC.'}:{})},
       });
     }
-    return command.result.result;
+    return command.result;
   }
+  const py=async(method,args,signal,commandId)=>(await pyResult(method,args,signal,commandId)).result;
   async function identity(backend,signal) {
     if(background()) return (await call(backend,`${backend}_trading_context`,{action:'identity'},signal)).account;
     if(backend==='mt5') {
@@ -73,7 +74,7 @@ export function createAdapters(host, {now=Date.now,authorizeRequest}={}) {
       check(terminal.connected===true,'SOURCE_UNAVAILABLE','MT5 is not connected to its broker');
       const spec=await py('symbol_info',{symbol},signal), positions=await py('positions_get',{symbol},signal), orders=background()?await py('orders_get',{symbol},signal):undefined;
       check(spec.name===symbol && Array.isArray(positions) && (!background() || Array.isArray(orders)),'SOURCE_DATA_INVALID','Native symbol/positions/orders omitted');
-      const quote=await quoteFor(backend,symbol,signal);
+      const quote=await quoteFor(backend,symbol,signal,account);
       return {account,symbol,spec,positions,...(orders ? {orders} : {}),quote,readStartedAt:began,capturedAt:now(),captureMs:now()-began,accountSummary:{balance:info.balance??null,equity:info.equity??null,currency:info.currency??null,tradeAllowed:info.trade_allowed===true && info.trade_expert===true}};
     }
     // Older QMT packages must not silently discard the final-mile guard.
@@ -108,19 +109,32 @@ export function createAdapters(host, {now=Date.now,authorizeRequest}={}) {
     check(value.spec?.name===symbol && Array.isArray(value.positions) && Array.isArray(value.orders) && [...value.positions,...value.orders].every(row=>row?.symbol===symbol),'SOURCE_DATA_INVALID','Prepared native symbol/positions/orders omitted or differ from the requested symbol');
     check(value.preparation?.status==='ready','SOURCE_DATA_INVALID','MT5 preparation did not return a ready preparation receipt');
     check(Number.isSafeInteger(value.readStartedAt) && Number.isSafeInteger(value.capturedAt) && value.capturedAt>=value.readStartedAt && value.capturedAt<=receivedAt,'SOURCE_DATA_INVALID','Prepared snapshot has invalid native capture timing');
-    const quote=normalizeQuote('mt5',value.tick,{receivedAt,requestMs:null,sourceReceivedAt:value.capturedAt,preparationRequestMs:receivedAt-began});
+    const quote=normalizeQuote('mt5',value.tick,{receivedAt,requestMs:null,sourceReceivedAt:value.capturedAt,preparationRequestMs:receivedAt-began},value.quote_clock,actual);
     return {account:actual,symbol,spec:value.spec,positions:value.positions,orders:value.orders,quote,readStartedAt:value.readStartedAt,capturedAt:receivedAt,captureMs:receivedAt-began,backendCapturedAt:value.capturedAt,
       accountSummary:{balance:info.balance??null,equity:info.equity??null,currency:info.currency??null,tradeAllowed:true},preparation:value.preparation};
   }
-  function normalizeQuote(backend,tick,timing) {
-    const rawTime=backend==='mt5'?tick?.time_msc:tick?.time,sourceTimeMs=Number(rawTime),source=backend==='mt5'?'mt5/python/symbol_info_tick':'qmt/quotes';
+  function normalizeQuote(backend,tick,timing,clock,account) {
+    const rawTime=backend==='mt5'?tick?.time_msc:tick?.time,source=backend==='mt5'?'mt5/python/symbol_info_tick':'qmt/quotes';
+    let sourceTimeMs=Number(rawTime);
+    if(backend==='mt5') {
+      if(clock?.status!=='verified')throw Object.assign(new Error('MT5 quote clock is not verified for this server and period; inspect the native clock evidence'),{code:'QUOTE_CLOCK_UNVERIFIED',details:{submission_attempted:false,reason:clock?.reason??'missing_quote_clock',source,rawTimeMs:rawTime??null,receivedAt:timing.receivedAt}});
+      check(clock.accountId===account?.accountId && clock.server===account?.server,'ACCOUNT_MISMATCH','MT5 quote clock belongs to a different native account');
+      check(clock.source===source && ['utc','server-wall'].includes(clock.basis)
+        && Number.isSafeInteger(rawTime) && clock.rawTimeMs===rawTime && Number.isSafeInteger(clock.sourceTimeMs)
+        && Number.isInteger(clock.offsetMinutes) && Math.abs(clock.offsetMinutes)<=840
+        && (clock.basis!=='utc'||clock.offsetMinutes===0) && clock.sourceTimeMs===rawTime-clock.offsetMinutes*60000
+        && typeof clock.ruleId==='string' && clock.ruleId.length>0 && typeof clock.ruleRevision==='string' && clock.ruleRevision.length>0,
+      'SOURCE_DATA_INVALID','MT5 quote clock evidence is incomplete or inconsistent with the original tick');
+      sourceTimeMs=clock.sourceTimeMs;
+    }
     if(!Number.isSafeInteger(sourceTimeMs) || sourceTimeMs<1000000000000)throw Object.assign(new Error('Quote has no valid source epoch milliseconds; reception time is not source time'),{code:'SOURCE_DATA_INVALID',details:{reason:'invalid_source_time',source,sourceTimeMs:rawTime??null,receivedAt:timing.receivedAt}});
-    return {source,sourceTimeMs,...timing,bid:decimal(backend==='mt5'?tick?.bid:tick?.bidPrice?.[0]),ask:decimal(backend==='mt5'?tick?.ask:tick?.askPrice?.[0])};
+    return {source,sourceTimeMs,...(backend==='mt5'?{clock:structuredClone(clock)}:{}),...timing,bid:decimal(backend==='mt5'?tick?.bid:tick?.bidPrice?.[0]),ask:decimal(backend==='mt5'?tick?.ask:tick?.askPrice?.[0])};
   }
-  async function quoteFor(backend,symbol,signal) {
+  async function quoteFor(backend,symbol,signal,account) {
     const startedAt=now();
-    const tick=backend==='mt5'?await py('symbol_info_tick',{symbol},signal):(await call('qmt','qmt_read',{action:'quotes',symbols:[symbol]},signal)).items?.find(x=>x.symbol===symbol)?.tick;
-    return normalizeQuote(backend,tick,{receivedAt:now(),requestMs:now()-startedAt});
+    const result=backend==='mt5'?await pyResult('symbol_info_tick',{symbol},signal):null;
+    const tick=result?result.result:(await call('qmt','qmt_read',{action:'quotes',symbols:[symbol]},signal)).items?.find(x=>x.symbol===symbol)?.tick;
+    return normalizeQuote(backend,tick,{receivedAt:now(),requestMs:now()-startedAt},result?.quote_clock,account);
   }
   function expectedPositions(observation) {
     const rows=observation.positions.filter(row=>(row.symbol??row.stock_code)===observation.symbol);
@@ -135,7 +149,7 @@ export function createAdapters(host, {now=Date.now,authorizeRequest}={}) {
       return {account_id:row.account_id,stock_code:row.stock_code,volume:String(row.volume),can_use_volume:String(row.can_use_volume)};
     });
   }
-  const guardFor=(observation,args)=>({observed_at:observation.quote.sourceTimeMs,expires_at:observation.expiresAt,max_quote_age_ms:5000,max_quote_to_send_ms:1000,price_limit:args.price_limit,...(background()?{expected_positions:expectedPositions(observation)}:{})});
+  const guardFor=(observation,args)=>({observed_at:observation.quote.sourceTimeMs,expires_at:observation.expiresAt,max_quote_age_ms:5000,max_quote_to_send_ms:1000,price_limit:args.price_limit,...(observation.backend==='mt5'?{quote_clock_revision:observation.quote.clock?.ruleRevision}:{}),...(background()?{expected_positions:expectedPositions(observation)}:{})});
   function orderRequest(observation,args) {
     const {spec,symbol}=observation, volume=decimal(args.quantity), limit=decimal(args.price_limit);
     check(['buy','sell'].includes(args.side),'INVALID_ARGUMENT','Choose buy or sell');
@@ -152,6 +166,7 @@ export function createAdapters(host, {now=Date.now,authorizeRequest}={}) {
       check(args.stop_loss===undefined && args.take_profit===undefined,'UNSUPPORTED_CAPABILITY','QMT does not provide attached stop loss or take profit through these tools');
       return {operation_id:args.operation_id,user_authorized:true,account_id:observation.account.accountId,connection_revision:observation.account.revision,symbol,side:args.side,shares:volume,price:args.limit_price,execution_guard:guardFor(observation,args)};
     }
+    check(observation.quote.clock?.status==='verified' && typeof observation.quote.clock.ruleRevision==='string' && observation.quote.clock.ruleRevision.length>0,'QUOTE_CLOCK_UNVERIFIED','MT5 order requires an observation with verified quote-clock provenance');
     check(Decimal.compare(volume,decimal(spec.volume_min))>=0 && Decimal.compare(volume,decimal(spec.volume_max))<=0 && Decimal.compare(Decimal.quantize(volume,decimal(spec.volume_step),'floor'),volume)===0,'INVALID_ARGUMENT','Quantity violates native lot minimum, maximum or step');
     check(Number.isFinite(Number(volume)) && Number(volume)>0,'INVALID_ARGUMENT','Native volume cannot represent this amount');
     // Choose only an actually supported fill policy. Pending orders use RETURN;
@@ -178,9 +193,12 @@ export function createAdapters(host, {now=Date.now,authorizeRequest}={}) {
     if(backend==='mt5') {
       const verifyNativeAccount=async()=>{const info=await py('account_info',{},signal);check(String(info.login)===record.account.accountId && info.server===record.account.server,'ACCOUNT_MISMATCH','Do not recover an order against a different logged-in account');};
       await verifyNativeAccount();
-      const [orders,deals,positions]=await Promise.all([py('orders_get',{symbol:record.symbol},signal),py('history_deals_get',{date_from:new Date(record.createdAt-60000).toISOString(),date_to:new Date(now()+1000).toISOString()},signal),py('positions_get',{symbol:record.symbol},signal)]);
-      await verifyNativeAccount();await verifyConfiguration();
       const orderId=nativeId(command.result?.result?.order), dealId=nativeId(command.result?.result?.deal);
+      // The SDK ticket selector is an ORDER ID, not a deal ticket. Prefer the
+      // confirmed identity so a server-wall history timestamp cannot hide fills.
+      const history=orderId!==null?{ticket:orderId}:{date_from:new Date(record.createdAt-60000).toISOString(),date_to:new Date(now()+1000).toISOString()};
+      const [orders,deals,positions]=await Promise.all([py('orders_get',{symbol:record.symbol},signal),py('history_deals_get',history,signal),py('positions_get',{symbol:record.symbol},signal)]);
+      await verifyNativeAccount();await verifyConfiguration();
       const ownSymbol=x=>x.symbol===record.symbol,ownRemark=x=>typeof record.remark==='string' && record.remark.length>0 && x.comment===record.remark;
       const matchesDeal=x=>ownSymbol(x) && ['0','1'].includes(String(x.type)) && nativeId(x.ticket)!==null && nativeId(x.order)!==null && (ownRemark(x) || orderId!==null && nativeId(x.order)===orderId || dealId!==null && nativeId(x.ticket)===dealId);
       return {command,orders:orders.filter(x=>ownSymbol(x) && nativeId(x.ticket)!==null && (ownRemark(x) || orderId!==null && nativeId(x.ticket)===orderId) && (record.action!=='limit'||mt5Pending(x,record))),deals:deals.filter(matchesDeal),positions:positions.filter(x=>ownSymbol(x) && nativeId(x.ticket)!==null && ownRemark(x)),coverage:'Native queried range; missing matches do not prove no order was sent'};
