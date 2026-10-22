@@ -32,6 +32,7 @@ class PublicWorker {
     this.active = null;
     this.serial = 0;
     this.rateLimits = 0;
+    this.recoveryReads = 0;
     this.retryAt = 0;
     this.output = "";
     this.stderr = "";
@@ -136,12 +137,20 @@ class PublicWorker {
         // All readers of this route share the upstream limit. A stream's retry
         // delay must not be bypassed by history or another chart already queued.
         this.retryAt = Date.now() + Math.min(30000, 2000 * 2 ** this.rateLimits);
-        this.rateLimits = Math.min(4, this.rateLimits + 1);
+        this.rateLimits = Math.min(5, this.rateLimits + 1);
+        this.recoveryReads = 0;
       } else if (!response.error && ["bars", "ticker"].includes(item.payload.action)) {
         // markets can succeed entirely from CCXT's cached directory. Only an
-        // actual market-data fetch is evidence that upstream access recovered.
-        this.rateLimits = 0;
-        this.retryAt = 0;
+        // actual market-data fetch advances recovery. Keep pacing every reader
+        // until three successful fetches allow one step toward the normal rate.
+        if (this.rateLimits && ++this.recoveryReads >= 3) {
+          this.rateLimits--;
+          this.recoveryReads = 0;
+        }
+        this.retryAt = this.rateLimits ? Date.now() + Math.min(30000, 2000 * 2 ** (this.rateLimits - 1)) : 0;
+      } else if (response.error) {
+        this.recoveryReads = 0;
+        this.retryAt = this.rateLimits ? Date.now() + Math.min(30000, 2000 * 2 ** (this.rateLimits - 1)) : 0;
       }
       this.settle(item, response.error ? failure(response.error.message, response.error.code ?? "SOURCE_UNAVAILABLE", response.error.details) : null, response.result);
       this.dispatch();

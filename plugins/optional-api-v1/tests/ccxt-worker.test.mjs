@@ -181,7 +181,9 @@ test("A rate-limited public route pauses sibling reads already queued behind it"
   const first = await f.call({}, signal);
   const limited = assert.rejects(f.call({ pause: 0.1, fail: "RATE_LIMITED" }, signal), { code: "RATE_LIMITED" });
   for (let i = 0; i < 100; i++) {
-    if (JSON.parse(await readFile(join(f.directory, "started.json"))).count === 2) break;
+    // The fixture is still writing this observation file while the request runs.
+    try { if (JSON.parse(await readFile(join(f.directory, "started.json"))).count === 2) break; }
+    catch (error) { if (!(error instanceof SyntaxError)) throw error; }
     await scheduler.wait(5);
   }
   assert.equal(JSON.parse(await readFile(join(f.directory, "started.json"))).count, 2);
@@ -201,7 +203,7 @@ test("A rate-limited public route pauses sibling reads already queued behind it"
   assert.equal(recovered.symbol, "ETH/USD");
 });
 
-test("Repeated rate limits back off to a fixed bound and a successful read resets recovery", { timeout: 6000 }, async t => {
+test("Repeated rate limits stay bounded and recovery requires sustained successful reads", { timeout: 6000 }, async t => {
   t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
   const f = await fixture(t), signal = new AbortController().signal;
   await assert.rejects(f.call({ fail: "RATE_LIMITED" }, signal), { code: "RATE_LIMITED" });
@@ -221,13 +223,32 @@ test("Repeated rate limits back off to a fixed bound and a successful read reset
   await scheduler.wait(20);
   t.mock.timers.tick(30000);
   assert.equal((await recovered).count, ++count);
-  await assert.rejects(f.call({ fail: "RATE_LIMITED" }, signal), { code: "RATE_LIMITED" });
-  count++;
-  const next = f.call({}, signal);
-  next.catch(() => {});
+  // One successful read must not release every waiting chart at once.
+  const relapse = assert.rejects(f.call({ fail: "RATE_LIMITED" }, signal), { code: "RATE_LIMITED" });
   await scheduler.wait(20);
-  t.mock.timers.tick(2000);
-  assert.equal((await next).count, ++count, "After success, the next recovery starts at two seconds");
+  t.mock.timers.tick(29999);
+  await scheduler.wait(20);
+  assert.equal(JSON.parse(await readFile(join(f.directory, "started.json"))).count, count, "A single success retains the shared recovery interval");
+  t.mock.timers.tick(1);
+  await relapse; count++;
+  // Three actual successful reads reduce the interval by one step. A fresh
+  // refusal above resets that progress; it does not reset the recovery pace.
+  for (const interval of [30000, 16000, 8000, 4000, 2000]) {
+    for (let index = 0; index < 3; index++) {
+      const next = f.call({}, signal); next.catch(() => {});
+      await scheduler.wait(20);
+      t.mock.timers.tick(interval - 1);
+      await scheduler.wait(20);
+      assert.equal(JSON.parse(await readFile(join(f.directory, "started.json"))).count, count, "Recovery continues to pace sibling reads before gradually speeding up");
+      t.mock.timers.tick(1);
+      assert.equal((await next).count, ++count);
+    }
+  }
+  assert.equal((await f.call({}, signal)).count, ++count, "Sustained recovery restores the ordinary native limiter");
+  await assert.rejects(f.call({ fail: "RATE_LIMITED" }, signal), { code: "RATE_LIMITED" }); count++;
+  const next = f.call({}, signal); next.catch(() => {});
+  await scheduler.wait(20); t.mock.timers.tick(2000);
+  assert.equal((await next).count, ++count, "Only sustained recovery resets the next refusal to the initial delay");
 });
 
 test("A cached market directory cannot clear an upstream rate-limit streak", { timeout: 6000 }, async t => {
@@ -270,7 +291,8 @@ test("Rate-limit cooldown respects route isolation, cancellation and disposal", 
   assert.equal(completed, false, "Canceling a waiting reader must not release the next reader before the shared cooldown");
   t.mock.timers.tick(1);
   assert.equal((await sibling).count, 3, "The canceled reader never reached the native process");
-  await assert.rejects(f.call({ fail: "RATE_LIMITED" }, signal), { code: "RATE_LIMITED" });
+  const relapse = assert.rejects(f.call({ fail: "RATE_LIMITED" }, signal), { code: "RATE_LIMITED" });
+  await scheduler.wait(20); t.mock.timers.tick(2000); await relapse;
   const pending = assert.rejects(f.call({}, signal), { code: "CONNECTION_CHANGED" });
   await scheduler.wait(20);
   await f.worker.closeWorkers(f.directory);
@@ -278,4 +300,29 @@ test("Rate-limit cooldown respects route isolation, cancellation and disposal", 
   t.mock.timers.tick(30000);
   assert.throws(() => process.kill(first.pid, 0), { code: "ESRCH" });
   assert.throws(() => process.kill(other.pid, 0), { code: "ESRCH" });
+});
+
+test("Cached directories and failed probes cannot accelerate sustained recovery", { timeout: 6000 }, async t => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"] });
+  const f = await fixture(t), signal = new AbortController().signal;
+  await assert.rejects(f.call({ exchange: "kraken", fail: "RATE_LIMITED" }, signal), { code: "RATE_LIMITED" });
+  let count = 1;
+  const paced = async payload => {
+    const pending = f.call({ exchange: "kraken", ...payload }, signal); pending.catch(() => {});
+    await scheduler.wait(20); t.mock.timers.tick(1999); await scheduler.wait(20);
+    assert.equal(JSON.parse(await readFile(join(f.directory, "started.json"))).count, count);
+    t.mock.timers.tick(1); count++;
+    return pending;
+  };
+  await paced({});
+  await paced({ action: "markets" });
+  // Directory reads can reuse native cache and do not count as data recovery.
+  await f.call({ exchange: "kraken", action: "markets" }, signal); count++;
+  await f.call({ exchange: "kraken" }, signal); count++;
+  await assert.rejects(paced({ fail: "SOURCE_UNAVAILABLE" }), { code: "SOURCE_UNAVAILABLE" });
+  // A failed upstream probe breaks the consecutive-success evidence.
+  await paced({});
+  await paced({});
+  await paced({});
+  assert.equal((await f.call({ exchange: "kraken" }, signal)).count, ++count);
 });

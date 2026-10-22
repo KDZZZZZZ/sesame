@@ -2,7 +2,7 @@
   "id": "sesame/ccxt",
   "title": "CCXT optional backend",
   "description": "Public spot market data only",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "apiVersion": "2",
   "engines": {
     "sesame": ">=0.2.3"
