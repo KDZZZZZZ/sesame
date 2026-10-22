@@ -22,9 +22,9 @@
 
 依赖入口：原生接口需要时使用；Sesame行情有已声明 data-access/canvas 入口，不以catalog作为必经流程。
 
-副作用：native-discovery、may-start-metaeditor
+副作用：native-discovery
 
-边界与恢复：指定metaeditor可能按需启动编辑器；installed不等于已连接。marketdata是独立可选服务，disabled不影响terminal券商行情。
+边界与恢复：目录查询不启动终端或 MetaEditor。Terminal MCP 拒绝连接返回 unavailable，不推断终端进程或账户状态；用 mt5_connect 先核对所选终端进程。MetaEditor 未监听返回 not_running；确需编辑时由主 Agent 使用 mt5_edit 的 launcher/start_editor，或执行已授权的编辑/编译能力。installed 不等于已连接。marketdata 是独立可选服务，disabled 不影响 terminal 券商行情。
 
 ## mt5_call
 调用者：agent、host。调用目录已声明的official一般读取方法，并保留原生回执。
@@ -263,17 +263,17 @@
 原生行为参考：[MetaTrader 5 官方平台启动文档](https://www.metatrader5.com/zh/terminal/help/start_advanced/start)。特定原生启动参数继续由 mt5_catalog 声明的 launcher 方法和 mt5_trade 路由处理。
 
 ## mt5_connect
-调用者：agent、host。复用现有MT5配置并核验终端、券商和账户身份。
+调用者：agent、host。复用现有MT5配置，依次检查所选终端进程、MCP、券商和账户身份。
 
 输入：{command_id:<稳定ID>,start_if_needed?:boolean}；例 {command_id:"connect-existing-01",start_if_needed:false} 只恢复/验证现有连接。
 
-输出与状态：命令回执status=applied|failed，result:{server:"terminal",status:"connected"或不可用状态,code,reason,mcp_connected?,broker_connected?,account?,settings_version?,started,steps}；connected需MCP和券商及账户一致。
+输出与状态：命令回执status=applied|failed，result:{server:"terminal",status:"connected"或不可用状态,code,reason,terminal_process?,mcp_connected?,broker_connected?,account?,settings_version?,started,steps}；terminal_process:{status,running,terminal_path,pids,checked_at}按完整路径匹配，running:null保留未知；connected需MCP和券商及账户一致。
 
-依赖入口：主会话；mt5_settings/mt5_dependencies说明已有配置。start_if_needed允许按现有配置启动终端。
+依赖入口：主会话；mt5_settings/mt5_dependencies说明已有配置。只诊断传start_if_needed:false；允许启动时仅在确认所选终端未运行后按现有配置启动，不重复启动运行中或状态未知的终端。
 
 副作用：native-connection、may-start-terminal、plugin.state.write
 
-边界与恢复：保存配置不等于connected；connected仅证明Terminal MCP和券商身份，不建立或证明Python IPC。独立marketdata disabled不是券商行情故障；身份不符不自动切换账号；超时/失败保留code和实际已验证环节。
+边界与恢复：MCP未连接先检查配置对应终端是否开启，不直接索取账户/密码/token，不循环重试；仅实际缺token或明确401处理MCP凭据。进程查询失败或不支持的平台保留unknown。保存配置不等于connected；connected不证明Python IPC。独立marketdata disabled不是券商行情故障；身份不符不自动切换账号；健康连接和正常交易不添加诊断步骤。
 
 ## mt5_report_data
 调用者：agent、host。构建真实Tester报告的数据源与组件绑定。

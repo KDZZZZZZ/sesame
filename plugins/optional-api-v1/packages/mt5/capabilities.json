@@ -323,7 +323,7 @@
           "原生接口需要时使用；Sesame行情有已声明 data-access/canvas 入口，不以catalog作为必经流程。"
         ],
         "limitations": [
-          "目录查询不启动终端或 MetaEditor。未运行的服务返回 not_running；确需编辑时由主 Agent 使用 mt5_edit 的 launcher/start_editor，或执行已授权的编辑/编译能力。installed 不等于已连接。marketdata 是独立可选服务，disabled 不影响 terminal 券商行情。"
+          "目录查询不启动终端或 MetaEditor。Terminal MCP 拒绝连接返回 unavailable，不推断终端进程或账户状态；用 mt5_connect 先核对所选终端进程。MetaEditor 未监听返回 not_running；确需编辑时由主 Agent 使用 mt5_edit 的 launcher/start_editor，或执行已授权的编辑/编译能力。installed 不等于已连接。marketdata 是独立可选服务，disabled 不影响 terminal 券商行情。"
         ]
       },
       "binding": {
@@ -2246,7 +2246,7 @@
         "agent",
         "host"
       ],
-      "description": "验证并恢复已配置的 MT5 Terminal 连接。connected 只证明终端及绑定账户通过核验；不切换账户、不重放交易。不读取或返回秘密。",
+      "description": "验证并恢复已配置的 MT5 Terminal 连接。先按配置路径检查本机终端进程，再核验 MCP 监听/认证、券商及绑定账户。MCP 未连接不等于终端未开或账户未登录；不切换账户、不重放交易，不返回秘密。",
       "inputSchema": {
         "type": "object",
         "required": [
@@ -2280,14 +2280,14 @@
         "plugin.state.write"
       ],
       "usage": {
-        "purpose": "复用现有MT5配置并核验终端、券商和账户身份。",
+        "purpose": "复用现有MT5配置，依次检查所选终端进程、MCP、券商和账户身份。",
         "inputs": "{command_id:<稳定ID>,start_if_needed?:boolean}；例 {command_id:\"connect-existing-01\",start_if_needed:false} 只恢复/验证现有连接。",
-        "outputs": "命令回执status=applied|failed，result:{server:\"terminal\",status:\"connected\"或不可用状态,code,reason,mcp_connected?,broker_connected?,account?,settings_version?,started,steps}；connected需MCP和券商及账户一致。",
+        "outputs": "命令回执status=applied|failed，result:{server:\"terminal\",status:\"connected\"或不可用状态,code,reason,terminal_process?,mcp_connected?,broker_connected?,account?,settings_version?,started,steps}；terminal_process:{status,running,terminal_path,pids,checked_at}按完整路径匹配，running:null保留未知；connected需MCP和券商及账户一致。",
         "prerequisites": [
-          "主会话；mt5_settings/mt5_dependencies说明已有配置。start_if_needed允许按现有配置启动终端。"
+          "主会话；mt5_settings/mt5_dependencies说明已有配置。只诊断传start_if_needed:false；允许启动时仅在确认所选终端未运行后按现有配置启动，不重复启动运行中或状态未知的终端。"
         ],
         "limitations": [
-          "保存配置不等于connected；connected仅证明Terminal MCP和券商身份，不建立或证明Python IPC。独立marketdata disabled不是券商行情故障；身份不符不自动切换账号；超时/失败保留code和实际已验证环节。"
+          "MCP未连接先检查配置对应终端是否开启，不直接索取账户/密码/token，不循环重试；仅实际缺token或明确401处理MCP凭据。进程查询失败或不支持的平台保留unknown。保存配置不等于connected；connected不证明Python IPC。独立marketdata disabled不是券商行情故障；身份不符不自动切换账号；健康连接和正常交易不添加诊断步骤。"
         ]
       },
       "binding": {
