@@ -18,7 +18,9 @@ export const IMPLEMENTATION_KINDS = [
 const legacyCategories = new Set(['workspace', 'data', 'backend', 'strategy', 'research']);
 const functionalCategories = new Set(FUNCTIONAL_CATEGORIES.map(item => item.id));
 const implementationKinds = new Set(IMPLEMENTATION_KINDS.map(item => item.id));
-const fields = new Set(['category', 'functionalCategory', 'implementationKinds', 'implementationReason', 'title', 'summary', 'dependencies']);
+const legacyFields = ['category', 'dependencies', 'summary', 'title'];
+const taxonomyFields = ['functionalCategory', 'implementationKinds', 'implementationReason'];
+const fields = new Set([...legacyFields, ...taxonomyFields]);
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const fail = (condition, message) => { if (!condition) throw new Error(message); };
 
@@ -59,13 +61,26 @@ export function validateInventoryPolicy(policy, packageNames) {
   for (const name of packageNames) fail(Object.hasOwn(policy, name), `Missing reviewed package explanation: sesame/${name}`);
   const names = new Set(packageNames);
   fail(Object.keys(policy).every(name => names.has(name)), 'Inventory policy contains absent packages');
+  // Existing releases have exactly four descriptive fields. A taxonomy policy
+  // uses the complete newer format for every package; missing labels in a mixed
+  // document must not silently fall back to the old validator.
+  let format;
   for (const [name, entry] of Object.entries(policy)) {
-    fail(object(entry), `${name}: reviewed classification must be an object`);
+    fail(/^[a-z][a-z0-9-]*$/.test(name) && object(entry), 'Invalid inventory policy entry');
     fail(Object.keys(entry).every(key => fields.has(key)), `${name}: Unknown policy field`);
+    const current = taxonomyFields.some(key => Object.hasOwn(entry, key)) ? 'taxonomy' : 'legacy';
+    format ??= current;
+    fail(format === current, 'Inventory policy cannot mix legacy and taxonomy formats');
+    fail(legacyFields.every(key => Object.hasOwn(entry, key)), `${name}: missing required descriptive policy field`);
     fail(legacyCategories.has(entry.category), `${name}: invalid legacy category`);
-    fail(functionalCategories.has(entry.functionalCategory), `${name}: invalid functional category`);
-    fail(Array.isArray(entry.implementationKinds) && entry.implementationKinds.length > 0 && entry.implementationKinds.every(kind => implementationKinds.has(kind)) && new Set(entry.implementationKinds).size === entry.implementationKinds.length, `${name}: implementationKinds requires unique supported implementation kinds`);
-    fail(entry.implementationReason === undefined || typeof entry.implementationReason === 'string' && entry.implementationReason.trim().length >= 20, `${name}: implementationReason must explain the curated exception`);
-    for (const field of ['title', 'summary', 'dependencies']) fail(object(entry[field]) && ['en', 'zh'].every(locale => typeof entry[field][locale] === 'string' && entry[field][locale].trim()), `${name}: ${field} requires English and Chinese text`);
+    if (current === 'taxonomy') {
+      fail(functionalCategories.has(entry.functionalCategory), `${name}: invalid functional category`);
+      fail(Array.isArray(entry.implementationKinds) && entry.implementationKinds.length > 0 && entry.implementationKinds.every(kind => implementationKinds.has(kind)) && new Set(entry.implementationKinds).size === entry.implementationKinds.length, `${name}: implementationKinds requires unique supported implementation kinds`);
+      fail(entry.implementationReason === undefined || typeof entry.implementationReason === 'string' && entry.implementationReason.trim().length >= 20, `${name}: implementationReason must explain the curated exception`);
+    }
+    for (const field of ['title', 'summary', 'dependencies']) {
+      fail(object(entry[field]) && Object.keys(entry[field]).sort().join(',') === 'en,zh' && ['en', 'zh'].every(locale => typeof entry[field][locale] === 'string' && entry[field][locale].trim() && entry[field][locale].length <= 2000), `${name}: ${field} requires explicit English and Chinese descriptions`);
+    }
   }
+  return format ?? 'legacy';
 }

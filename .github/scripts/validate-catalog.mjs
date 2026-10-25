@@ -10,7 +10,6 @@ import { validateApplicationPlan } from './release-application.mjs';
 
 const check = (condition, message) => { if (!condition) throw new Error(message); };
 const jsonBytes = value => Buffer.from(JSON.stringify(value, null, 2) + '\n');
-const object = value => value && typeof value === 'object' && !Array.isArray(value);
 
 function dataFile(root, path) {
   const parts = path.split('/');
@@ -35,12 +34,6 @@ export function validateRepository(repository) {
   }
   const policy = JSON.parse(dataFile(root, 'plugins/api-v1/inventory-policy.json'));
   validateInventoryPolicy(policy, packageNames);
-  for (const [name, entry] of Object.entries(policy)) {
-    check(/^[a-z][a-z0-9-]*$/.test(name) && object(entry), 'Invalid inventory policy entry');
-    for (const field of ['title', 'summary', 'dependencies']) {
-      check(object(entry[field]) && Object.keys(entry[field]).sort().join(',') === 'en,zh' && ['en', 'zh'].every(language => typeof entry[field][language] === 'string' && entry[field][language].trim() && entry[field][language].length <= 2000), `${name}: ${field} requires explicit English and Chinese descriptions`);
-    }
-  }
   const inventory = buildInventory(join(root, 'plugins/api-v1'));
   check(dataFile(root, 'plugins/api-v1/inventory.json').equals(jsonBytes(inventory)), 'Descriptive inventory differs from current API 2 package facts');
   // A new root needs no old commits or GitHub plugin releases. New R2 plans,
