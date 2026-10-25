@@ -77,7 +77,28 @@
       "binding": {
         "type": "native",
         "name": "qmt_environment"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "python_path",
+          "reason": "The saved Python is an optional candidate; an explicit input, environment or managed candidate can be selected.",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "enum": [
+                  "verify",
+                  "prepare"
+                ]
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        }
+      ]
     },
     {
       "id": "qmt_configure",
@@ -293,7 +314,7 @@
         "network"
       ],
       "usage": {
-        "purpose": "读取明确连接的原生股票行情和当日账户回报。",
+        "purpose": "读取明确范围的股票行情或账户事实，交给方法/工作流；只读任务不升级为交易意图。",
         "inputs": "{action:\"search\",query:\"000001\",page:{limit:20}}；describe/quotes 用 symbols:[\"000001.SZ\"]（1–50）；asset无附加参数；positions/orders/fills 可带 page:{limit:1..200,cursor?}，其他过滤条件保持不变。",
         "outputs": "search/positions/orders/fills:{items,nextCursor,snapshotId,consistency,meta,coverage,connection,nativeFieldPolicy}；describe/quotes:{items,connection,meta,nativeFieldPolicy}；asset:{asset,connection,meta,nativeFieldPolicy}。",
         "prerequisites": [
@@ -306,7 +327,90 @@
       "binding": {
         "type": "native",
         "name": "qmt_read"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "python_path",
+          "reason": "Native QMT calls use the saved existing Windows Python executable."
+        },
+        {
+          "field": "market_port",
+          "reason": "Native market reads use the explicitly configured MiniQMT localhost port.",
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "enum": [
+                  "search",
+                  "describe",
+                  "quotes"
+                ]
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        },
+        {
+          "field": "account_id",
+          "reason": "Account reads and commands target the explicitly configured STOCK account.",
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "enum": [
+                  "asset",
+                  "positions",
+                  "orders",
+                  "fills"
+                ]
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        },
+        {
+          "field": "userdata_directory",
+          "reason": "Account access uses the existing broker MiniQMT userdata_mini directory.",
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "enum": [
+                  "asset",
+                  "positions",
+                  "orders",
+                  "fills"
+                ]
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        },
+        {
+          "field": "sector",
+          "reason": "Stock search uses the configured catalog sector, whose existing default is 沪深京A股.",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "enum": [
+                  "search"
+                ]
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        }
+      ]
     },
     {
       "id": "qmt_download_history",
@@ -363,7 +467,17 @@
       "binding": {
         "type": "native",
         "name": "qmt_download_history"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "python_path",
+          "reason": "Native QMT calls use the saved existing Windows Python executable."
+        },
+        {
+          "field": "market_port",
+          "reason": "Native market reads use the explicitly configured MiniQMT localhost port."
+        }
+      ]
     },
     {
       "id": "qmt_order",
@@ -527,7 +641,26 @@
       "binding": {
         "type": "native",
         "name": "qmt_order"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "python_path",
+          "reason": "Native QMT calls use the saved existing Windows Python executable."
+        },
+        {
+          "field": "account_id",
+          "reason": "Account reads and commands target the explicitly configured STOCK account."
+        },
+        {
+          "field": "userdata_directory",
+          "reason": "Account access uses the existing broker MiniQMT userdata_mini directory."
+        },
+        {
+          "field": "market_port",
+          "reason": "A new order validates the instrument and quote through this port; an existing operation returns its retained receipt without reconnecting.",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "qmt_cancel",
@@ -604,7 +737,21 @@
       "binding": {
         "type": "native",
         "name": "qmt_cancel"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "python_path",
+          "reason": "Native QMT calls use the saved existing Windows Python executable."
+        },
+        {
+          "field": "account_id",
+          "reason": "Account reads and commands target the explicitly configured STOCK account."
+        },
+        {
+          "field": "userdata_directory",
+          "reason": "Account access uses the existing broker MiniQMT userdata_mini directory."
+        }
+      ]
     },
     {
       "id": "qmt_command",
@@ -686,8 +833,205 @@
         "additionalProperties": false
       },
       "outputSchema": {
-        "type": "object",
-        "additionalProperties": true
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "account": {
+                "type": "object",
+                "properties": {
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "connectionId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "accountId",
+                  "connectionId",
+                  "revision"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "account"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "account": {
+                "type": "object",
+                "properties": {
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "connectionId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "accountId",
+                  "connectionId",
+                  "revision"
+                ],
+                "additionalProperties": false
+              },
+              "summary": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "positions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "orders": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "fills": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "historicalOrders": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "deployments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "historyCoverage": {
+                "type": "object",
+                "properties": {
+                  "scope": {
+                    "const": "current_native_trading_day",
+                    "type": "string"
+                  },
+                  "complete": {
+                    "const": false,
+                    "type": "boolean"
+                  },
+                  "requestedDays": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 90
+                  },
+                  "orders": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "const": "partial"
+                      },
+                      "scope": {
+                        "const": "current_native_trading_day"
+                      }
+                    },
+                    "required": [
+                      "status",
+                      "scope"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "fills": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "const": "partial"
+                      },
+                      "scope": {
+                        "const": "current_native_trading_day"
+                      }
+                    },
+                    "required": [
+                      "status",
+                      "scope"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "historicalOrders": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "const": "unavailable"
+                      },
+                      "reason": {
+                        "const": "native_current_day_only"
+                      }
+                    },
+                    "required": [
+                      "status",
+                      "reason"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "limitations": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                "required": [
+                  "scope",
+                  "complete",
+                  "requestedDays",
+                  "orders",
+                  "fills",
+                  "historicalOrders",
+                  "limitations"
+                ],
+                "additionalProperties": false
+              },
+              "capturedAt": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "account",
+              "summary",
+              "positions",
+              "orders",
+              "fills",
+              "historicalOrders",
+              "deployments",
+              "historyCoverage",
+              "capturedAt"
+            ],
+            "additionalProperties": false
+          }
+        ]
       },
       "execution": "run",
       "effects": [
@@ -708,7 +1052,65 @@
       "binding": {
         "type": "native",
         "name": "qmt_trading_context"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "account_id",
+          "reason": "Account reads and commands target the explicitly configured STOCK account."
+        },
+        {
+          "field": "python_path",
+          "reason": "Native QMT calls use the saved existing Windows Python executable.",
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "enum": [
+                  "snapshot"
+                ]
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        },
+        {
+          "field": "userdata_directory",
+          "reason": "Account access uses the existing broker MiniQMT userdata_mini directory.",
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "enum": [
+                  "snapshot"
+                ]
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        },
+        {
+          "field": "market_port",
+          "reason": "Native market reads use the explicitly configured MiniQMT localhost port.",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "enum": [
+                  "snapshot"
+                ]
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        }
+      ]
     },
     {
       "id": "qmt_trading_order",
@@ -717,7 +1119,7 @@
         "agent",
         "host"
       ],
-      "description": "Main Agent, host-proven workflow-to-execution call chain, or legacy runtime-signed executor intent: submit one guarded exact-account limit order through the existing idempotent native path. Unknown receipts are not retried.",
+      "description": "Main Agent or a host-proven workflow-to-execution call chain: submit one guarded exact-account limit order through the existing idempotent native path. Agent-provided authorization or legacy signed intent does not establish this chain. Unknown receipts are not retried.",
       "inputSchema": {
         "type": "object",
         "required": [
@@ -891,7 +1293,26 @@
       "binding": {
         "type": "native",
         "name": "qmt_trading_order"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "python_path",
+          "reason": "Native QMT calls use the saved existing Windows Python executable."
+        },
+        {
+          "field": "account_id",
+          "reason": "Account reads and commands target the explicitly configured STOCK account."
+        },
+        {
+          "field": "userdata_directory",
+          "reason": "Account access uses the existing broker MiniQMT userdata_mini directory."
+        },
+        {
+          "field": "market_port",
+          "reason": "A new order validates the instrument and quote through this port; an existing operation returns its retained receipt without reconnecting.",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "qmt_trading_cancel",
@@ -900,7 +1321,7 @@
         "agent",
         "host"
       ],
-      "description": "Main Agent, host-proven workflow-to-execution call chain, or legacy runtime-signed executor intent: cancel only an existing exact-account original order through the native ownership and idempotence checks. Inspect native status after unknown results.",
+      "description": "Main Agent or a host-proven workflow-to-execution call chain: cancel only an existing exact-account original order through the native ownership and idempotence checks. Agent-provided authorization or legacy signed intent does not establish this chain. Inspect native status after unknown results.",
       "inputSchema": {
         "type": "object",
         "required": [
@@ -987,7 +1408,21 @@
       "binding": {
         "type": "native",
         "name": "qmt_trading_cancel"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "python_path",
+          "reason": "Native QMT calls use the saved existing Windows Python executable."
+        },
+        {
+          "field": "account_id",
+          "reason": "Account reads and commands target the explicitly configured STOCK account."
+        },
+        {
+          "field": "userdata_directory",
+          "reason": "Account access uses the existing broker MiniQMT userdata_mini directory."
+        }
+      ]
     },
     {
       "id": "qmt_trading_command",
@@ -1032,7 +1467,17 @@
       "binding": {
         "type": "native",
         "name": "qmt_trading_command"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "python_path",
+          "reason": "Native QMT calls use the saved existing Windows Python executable."
+        },
+        {
+          "field": "account_id",
+          "reason": "Account reads and commands target the explicitly configured STOCK account."
+        }
+      ]
     },
     {
       "id": "market_bind",
@@ -1098,7 +1543,13 @@
       "binding": {
         "type": "native",
         "name": "market_bind"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "python_path",
+          "reason": "Native QMT calls use the saved existing Windows Python executable."
+        }
+      ]
     },
     {
       "id": "market_unbind",
@@ -1234,7 +1685,22 @@
       "binding": {
         "type": "native",
         "name": "market_searchInstruments"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "python_path",
+          "reason": "Native QMT calls use the saved existing Windows Python executable."
+        },
+        {
+          "field": "market_port",
+          "reason": "Native market reads use the explicitly configured MiniQMT localhost port."
+        },
+        {
+          "field": "sector",
+          "reason": "Stock search uses the saved sector and preserves its existing 沪深京A股 default.",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "market_describeInstrument",
@@ -1327,7 +1793,17 @@
       "binding": {
         "type": "native",
         "name": "market_describeInstrument"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "python_path",
+          "reason": "Native QMT calls use the saved existing Windows Python executable."
+        },
+        {
+          "field": "market_port",
+          "reason": "Native market reads use the explicitly configured MiniQMT localhost port."
+        }
+      ]
     },
     {
       "id": "market_queryBars",
@@ -1580,7 +2056,17 @@
       "binding": {
         "type": "native",
         "name": "market_queryBars"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "python_path",
+          "reason": "Native QMT calls use the saved existing Windows Python executable."
+        },
+        {
+          "field": "market_port",
+          "reason": "Native market reads use the explicitly configured MiniQMT localhost port."
+        }
+      ]
     },
     {
       "id": "market_subscribeBars",
@@ -1712,7 +2198,17 @@
         "type": "native",
         "name": "market_subscribeBars"
       },
-      "transport": "subscription"
+      "transport": "subscription",
+      "configurationRequirements": [
+        {
+          "field": "python_path",
+          "reason": "Native QMT calls use the saved existing Windows Python executable."
+        },
+        {
+          "field": "market_port",
+          "reason": "Native market reads use the explicitly configured MiniQMT localhost port."
+        }
+      ]
     },
     {
       "id": "market_subscribeQuotes",
@@ -1799,7 +2295,17 @@
         "type": "native",
         "name": "market_subscribeQuotes"
       },
-      "transport": "subscription"
+      "transport": "subscription",
+      "configurationRequirements": [
+        {
+          "field": "python_path",
+          "reason": "Native QMT calls use the saved existing Windows Python executable."
+        },
+        {
+          "field": "market_port",
+          "reason": "Native market reads use the explicitly configured MiniQMT localhost port."
+        }
+      ]
     },
     {
       "id": "account_bind",
@@ -1865,7 +2371,13 @@
       "binding": {
         "type": "native",
         "name": "account_bind"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "python_path",
+          "reason": "Native QMT calls use the saved existing Windows Python executable."
+        }
+      ]
     },
     {
       "id": "account_unbind",
@@ -1982,7 +2494,26 @@
       "binding": {
         "type": "native",
         "name": "account_listAccounts"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "python_path",
+          "reason": "Native QMT calls use the saved existing Windows Python executable."
+        },
+        {
+          "field": "account_id",
+          "reason": "Account reads and commands target the explicitly configured STOCK account."
+        },
+        {
+          "field": "userdata_directory",
+          "reason": "Account access uses the existing broker MiniQMT userdata_mini directory."
+        },
+        {
+          "field": "broker",
+          "reason": "The account display uses this optional broker label and keeps the existing fallback when absent.",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "account_snapshot",
@@ -2061,7 +2592,26 @@
       "binding": {
         "type": "native",
         "name": "account_snapshot"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "python_path",
+          "reason": "Native QMT calls use the saved existing Windows Python executable."
+        },
+        {
+          "field": "account_id",
+          "reason": "Account reads and commands target the explicitly configured STOCK account."
+        },
+        {
+          "field": "userdata_directory",
+          "reason": "Account access uses the existing broker MiniQMT userdata_mini directory."
+        },
+        {
+          "field": "broker",
+          "reason": "The account display uses this optional broker label and keeps the existing fallback when absent.",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "account_queryPositions",
@@ -2147,7 +2697,26 @@
       "binding": {
         "type": "native",
         "name": "account_queryPositions"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "python_path",
+          "reason": "Native QMT calls use the saved existing Windows Python executable."
+        },
+        {
+          "field": "account_id",
+          "reason": "Account reads and commands target the explicitly configured STOCK account."
+        },
+        {
+          "field": "userdata_directory",
+          "reason": "Account access uses the existing broker MiniQMT userdata_mini directory."
+        },
+        {
+          "field": "market_port",
+          "reason": "Native market reads use the explicitly configured MiniQMT localhost port.",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "qmt_dispose",
@@ -2498,7 +3067,29 @@
       "binding": {
         "type": "native",
         "name": "positions_close"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "python_path",
+          "reason": "Native QMT calls use the saved existing Windows Python executable. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.",
+          "optional": true
+        },
+        {
+          "field": "account_id",
+          "reason": "Account reads and commands target the explicitly configured STOCK account. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.",
+          "optional": true
+        },
+        {
+          "field": "userdata_directory",
+          "reason": "Account access uses the existing broker MiniQMT userdata_mini directory. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.",
+          "optional": true
+        },
+        {
+          "field": "market_port",
+          "reason": "Native market reads use the explicitly configured MiniQMT localhost port. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "positions_read_receipt",
@@ -2717,6 +3308,1802 @@
       "binding": {
         "type": "native",
         "name": "positions_read_receipt"
+      },
+      "configurationRequirements": [
+        {
+          "field": "python_path",
+          "reason": "Native QMT calls use the saved existing Windows Python executable. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.",
+          "optional": true
+        },
+        {
+          "field": "account_id",
+          "reason": "Account reads and commands target the explicitly configured STOCK account. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.",
+          "optional": true
+        },
+        {
+          "field": "userdata_directory",
+          "reason": "Account access uses the existing broker MiniQMT userdata_mini directory. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.",
+          "optional": true
+        },
+        {
+          "field": "market_port",
+          "reason": "Native market reads use the explicitly configured MiniQMT localhost port. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "id": "configuration.read",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read only the saved QMT configuration for the shared settings catalog. No path discovery, SDK probe, process, terminal or broker connection is performed.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "state.read"
+      ],
+      "usage": {
+        "purpose": "统一配置入口读取现有 QMT 配置。",
+        "inputs": "{}",
+        "outputs": "{configuration:{id,version,connection_id,python_path,userdata_directory,account_id,broker,market_port,sector}}",
+        "prerequisites": [],
+        "limitations": [
+          "配置存在不代表 SDK、行情或账户已经连接；读取不会发现 Python 候选或执行健康探测。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "configuration.read"
+      }
+    },
+    {
+      "id": "configuration.update",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Main-conversation immediate adapter for shared QMT settings. Maps command_id to the existing operation_id and preserves the original configuration CAS, validation and receipt authority.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "command_id",
+          "expected_version",
+          "changes"
+        ],
+        "properties": {
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "changes": {
+            "type": "object",
+            "properties": {
+              "python_path": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "userdata_directory": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "account_id": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "broker": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "market_port": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 65535
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "sector": {
+                "type": "string",
+                "description": "Existing native stock catalog sector; default 沪深京A股",
+                "minLength": 1,
+                "maxLength": 20000
+              }
+            },
+            "additionalProperties": false
+          },
+          "command_id": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "description": "Stable command identity, mapped unchanged to the existing QMT configuration operation ID"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "统一配置入口沿用原 QMT 配置保存流程。",
+        "inputs": "{command_id,expected_version,changes}；changes 与 qmt_configure 相同。",
+        "outputs": "原 qmt_configure 保存结果；相同 command_id 和输入复用原回执。",
+        "prerequisites": [
+          "主会话即时执行；使用当前配置版本和已存在的路径。"
+        ],
+        "limitations": [
+          "不安装 SDK、不启动终端、不登录或下单；保存配置不构成交易授权。原 qmt_configure 与 qmt_environment 接口保持不变。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "configuration.update"
+      }
+    },
+    {
+      "id": "qmt_execution_identity",
+      "kind": "function",
+      "description": "Guarded native execution adapter identity. Retains raw audit receipts; unknown outcomes never authorize resend.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "sesame.execution-adapter/1",
+            "type": "string"
+          },
+          "backend": {
+            "const": "qmt",
+            "type": "string"
+          },
+          "account": {
+            "type": "object",
+            "properties": {
+              "accountId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "connectionId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "accountId",
+              "connectionId",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "contract",
+          "backend",
+          "account"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "state.read"
+      ],
+      "usage": {
+        "purpose": "sesame.execution-adapter/1 identity; native SDK mechanics stay in this adapter.",
+        "inputs": "Use the declared normalized operation input, exact account/revision and retained operation IDs.",
+        "outputs": "Versioned adapter projection plus unchanged raw native evidence. Snapshot/identity do not establish permission or broker readiness.",
+        "prerequisites": [
+          "Delegated access requires a matching frozen execution task; writes additionally require a live workflow-to-portfolio apply invocation chain."
+        ],
+        "limitations": [
+          "No broker acceptance is inferred from a declaration. Missing history never proves no submission."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "qmt_execution_identity"
+      }
+    },
+    {
+      "id": "qmt_execution_snapshot",
+      "kind": "function",
+      "description": "Guarded native execution adapter snapshot. Retains raw audit receipts; unknown outcomes never authorize resend.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "history_days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 90
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "sesame.execution-adapter/1",
+            "type": "string"
+          },
+          "backend": {
+            "const": "qmt",
+            "type": "string"
+          },
+          "account": {
+            "type": "object",
+            "properties": {
+              "accountId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "connectionId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "accountId",
+              "connectionId",
+              "revision"
+            ],
+            "additionalProperties": false
+          },
+          "symbol": {
+            "type": "string",
+            "minLength": 1
+          },
+          "projection": {
+            "type": "object",
+            "properties": {
+              "positions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "symbol": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "side": {
+                      "enum": [
+                        "buy",
+                        "sell"
+                      ]
+                    },
+                    "quantity": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$"
+                    },
+                    "availableQuantity": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "symbol",
+                    "side",
+                    "quantity",
+                    "availableQuantity"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "orders": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "symbol": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "working": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "symbol",
+                    "working"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "priceStep": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$"
+              }
+            },
+            "required": [
+              "positions",
+              "orders"
+            ],
+            "additionalProperties": false
+          },
+          "capturedAt": {
+            "type": "integer"
+          },
+          "readStartedAt": {
+            "type": "integer"
+          },
+          "captureMs": {
+            "type": "integer"
+          },
+          "quote": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "spec": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "positions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "orders": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "fills": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "historicalOrders": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "deployments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "historyCoverage": {
+            "type": "object",
+            "properties": {
+              "scope": {
+                "const": "current_native_trading_day",
+                "type": "string"
+              },
+              "complete": {
+                "const": false,
+                "type": "boolean"
+              },
+              "requestedDays": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 90
+              },
+              "orders": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "const": "partial"
+                  },
+                  "scope": {
+                    "const": "current_native_trading_day"
+                  }
+                },
+                "required": [
+                  "status",
+                  "scope"
+                ],
+                "additionalProperties": false
+              },
+              "fills": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "const": "partial"
+                  },
+                  "scope": {
+                    "const": "current_native_trading_day"
+                  }
+                },
+                "required": [
+                  "status",
+                  "scope"
+                ],
+                "additionalProperties": false
+              },
+              "historicalOrders": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "const": "unavailable"
+                  },
+                  "reason": {
+                    "const": "native_current_day_only"
+                  }
+                },
+                "required": [
+                  "status",
+                  "reason"
+                ],
+                "additionalProperties": false
+              },
+              "limitations": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [
+              "scope",
+              "complete",
+              "requestedDays",
+              "orders",
+              "fills",
+              "historicalOrders",
+              "limitations"
+            ],
+            "additionalProperties": false
+          },
+          "accountSummary": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "permissions": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "raw": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "preparation": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "backendCapturedAt": {
+            "type": "integer"
+          },
+          "summary": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "contract",
+          "backend",
+          "account",
+          "projection",
+          "capturedAt"
+        ],
+        "additionalProperties": true,
+        "oneOf": [
+          {
+            "required": [
+              "symbol",
+              "spec",
+              "quote",
+              "positions",
+              "orders",
+              "readStartedAt",
+              "captureMs",
+              "accountSummary",
+              "permissions"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "symbol"
+              ]
+            },
+            "required": [
+              "summary",
+              "positions",
+              "orders",
+              "fills",
+              "historicalOrders",
+              "deployments",
+              "historyCoverage"
+            ]
+          }
+        ]
+      },
+      "execution": "immediate",
+      "effects": [
+        "backend.read",
+        "network",
+        "process"
+      ],
+      "usage": {
+        "purpose": "sesame.execution-adapter/1 snapshot; native SDK mechanics stay in this adapter.",
+        "inputs": "Use the declared normalized operation input, exact account/revision and retained operation IDs.",
+        "outputs": "Versioned adapter projection plus unchanged raw native evidence. Snapshot/identity do not establish permission or broker readiness.",
+        "prerequisites": [
+          "Delegated access requires a matching frozen execution task; writes additionally require a live workflow-to-portfolio apply invocation chain."
+        ],
+        "limitations": [
+          "No broker acceptance is inferred from a declaration. Missing history never proves no submission."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "qmt_execution_snapshot"
+      }
+    },
+    {
+      "id": "qmt_execution_prepare",
+      "kind": "function",
+      "description": "Guarded native execution adapter prepare. Retains raw audit receipts; unknown outcomes never authorize resend.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "account": {
+            "type": "object",
+            "properties": {
+              "accountId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "connectionId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "accountId",
+              "connectionId",
+              "revision"
+            ],
+            "additionalProperties": false
+          },
+          "commandId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "userAuthorized": {
+            "type": "boolean",
+            "const": true
+          }
+        },
+        "required": [
+          "symbol",
+          "account",
+          "commandId",
+          "userAuthorized"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "sesame.execution-adapter/1",
+            "type": "string"
+          },
+          "backend": {
+            "const": "qmt",
+            "type": "string"
+          },
+          "account": {
+            "type": "object",
+            "properties": {
+              "accountId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "connectionId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "accountId",
+              "connectionId",
+              "revision"
+            ],
+            "additionalProperties": false
+          },
+          "symbol": {
+            "type": "string",
+            "minLength": 1
+          },
+          "projection": {
+            "type": "object",
+            "properties": {
+              "positions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "symbol": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "side": {
+                      "enum": [
+                        "buy",
+                        "sell"
+                      ]
+                    },
+                    "quantity": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$"
+                    },
+                    "availableQuantity": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "symbol",
+                    "side",
+                    "quantity",
+                    "availableQuantity"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "orders": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "symbol": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "working": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "symbol",
+                    "working"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "priceStep": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$"
+              }
+            },
+            "required": [
+              "positions",
+              "orders"
+            ],
+            "additionalProperties": false
+          },
+          "capturedAt": {
+            "type": "integer"
+          },
+          "readStartedAt": {
+            "type": "integer"
+          },
+          "captureMs": {
+            "type": "integer"
+          },
+          "quote": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "spec": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "positions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "orders": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "fills": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "historicalOrders": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "deployments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "historyCoverage": {
+            "type": "object",
+            "properties": {
+              "scope": {
+                "const": "current_native_trading_day",
+                "type": "string"
+              },
+              "complete": {
+                "const": false,
+                "type": "boolean"
+              },
+              "requestedDays": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 90
+              },
+              "orders": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "const": "partial"
+                  },
+                  "scope": {
+                    "const": "current_native_trading_day"
+                  }
+                },
+                "required": [
+                  "status",
+                  "scope"
+                ],
+                "additionalProperties": false
+              },
+              "fills": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "const": "partial"
+                  },
+                  "scope": {
+                    "const": "current_native_trading_day"
+                  }
+                },
+                "required": [
+                  "status",
+                  "scope"
+                ],
+                "additionalProperties": false
+              },
+              "historicalOrders": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "const": "unavailable"
+                  },
+                  "reason": {
+                    "const": "native_current_day_only"
+                  }
+                },
+                "required": [
+                  "status",
+                  "reason"
+                ],
+                "additionalProperties": false
+              },
+              "limitations": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [
+              "scope",
+              "complete",
+              "requestedDays",
+              "orders",
+              "fills",
+              "historicalOrders",
+              "limitations"
+            ],
+            "additionalProperties": false
+          },
+          "accountSummary": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "permissions": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "raw": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "preparation": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "backendCapturedAt": {
+            "type": "integer"
+          },
+          "summary": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "contract",
+          "backend",
+          "account",
+          "projection",
+          "capturedAt",
+          "symbol",
+          "preparation"
+        ],
+        "additionalProperties": true,
+        "oneOf": [
+          {
+            "required": [
+              "symbol",
+              "spec",
+              "quote",
+              "positions",
+              "orders",
+              "readStartedAt",
+              "captureMs",
+              "accountSummary",
+              "permissions"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "symbol"
+              ]
+            },
+            "required": [
+              "summary",
+              "positions",
+              "orders",
+              "fills",
+              "historicalOrders",
+              "deployments",
+              "historyCoverage"
+            ]
+          }
+        ]
+      },
+      "execution": "immediate",
+      "effects": [
+        "backend.read",
+        "network",
+        "process"
+      ],
+      "usage": {
+        "purpose": "sesame.execution-adapter/1 prepare; native SDK mechanics stay in this adapter.",
+        "inputs": "Use the declared normalized operation input, exact account/revision and retained operation IDs.",
+        "outputs": "Versioned adapter projection plus unchanged raw native evidence. Snapshot/identity do not establish permission or broker readiness.",
+        "prerequisites": [
+          "Main conversation and existing explicit user instruction only."
+        ],
+        "limitations": [
+          "No broker acceptance is inferred from a declaration. Missing history never proves no submission."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "qmt_execution_prepare"
+      }
+    },
+    {
+      "id": "qmt_execution_submit",
+      "kind": "function",
+      "description": "Guarded native execution adapter submit. Retains raw audit receipts; unknown outcomes never authorize resend.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "observation": {
+            "type": "object",
+            "properties": {
+              "backend": {
+                "const": "qmt"
+              },
+              "account": {
+                "type": "object",
+                "properties": {
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "connectionId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "accountId",
+                  "connectionId",
+                  "revision"
+                ],
+                "additionalProperties": false
+              },
+              "symbol": {
+                "type": "string",
+                "minLength": 1
+              },
+              "spec": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "positions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "quote": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "expiresAt": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "backend",
+              "account",
+              "symbol",
+              "spec",
+              "positions",
+              "quote",
+              "expiresAt"
+            ],
+            "additionalProperties": true
+          },
+          "intent": {
+            "type": "object",
+            "properties": {
+              "operation_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "user_authorized": {
+                "const": true,
+                "type": "boolean"
+              },
+              "backendCommandId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "remark": {
+                "type": "string",
+                "minLength": 1
+              },
+              "quantity": {
+                "type": "string",
+                "minLength": 1
+              },
+              "price_limit": {
+                "type": "string",
+                "minLength": 1
+              },
+              "side": {
+                "enum": [
+                  "buy",
+                  "sell"
+                ]
+              },
+              "action": {
+                "enum": [
+                  "market",
+                  "limit",
+                  "close"
+                ]
+              },
+              "limit_price": {
+                "type": "string",
+                "minLength": 1
+              },
+              "position_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "stop_loss": {
+                "type": "string",
+                "minLength": 1
+              },
+              "take_profit": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "operation_id",
+              "user_authorized",
+              "backendCommandId",
+              "remark",
+              "quantity",
+              "price_limit",
+              "side",
+              "action"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "observation",
+          "intent"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "sesame.execution-adapter/1",
+            "type": "string"
+          },
+          "backend": {
+            "const": "qmt",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "submitted",
+              "cancel_requested",
+              "rejected",
+              "partially_filled",
+              "execution_reported",
+              "outcome_unknown"
+            ]
+          },
+          "submissionAttempted": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "raw": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "timing": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "contract",
+          "backend",
+          "status",
+          "submissionAttempted",
+          "raw"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "external-trading",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "sesame.execution-adapter/1 submit; native SDK mechanics stay in this adapter.",
+        "inputs": "Use the declared normalized operation input, exact account/revision and retained operation IDs.",
+        "outputs": "Versioned adapter projection plus unchanged raw native evidence. Snapshot/identity do not establish permission or broker readiness.",
+        "prerequisites": [
+          "Delegated access requires a matching frozen execution task; writes additionally require a live workflow-to-portfolio apply invocation chain."
+        ],
+        "limitations": [
+          "No broker acceptance is inferred from a declaration. Missing history never proves no submission."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "qmt_execution_submit"
+      }
+    },
+    {
+      "id": "qmt_execution_recover",
+      "kind": "function",
+      "description": "Guarded native execution adapter recover. Retains raw audit receipts; unknown outcomes never authorize resend.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "record": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "backend": {
+                "const": "qmt"
+              },
+              "account": {
+                "type": "object",
+                "properties": {
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "connectionId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "accountId",
+                  "connectionId",
+                  "revision"
+                ],
+                "additionalProperties": false
+              },
+              "backendCommandId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "symbol": {
+                "type": "string",
+                "minLength": 1
+              },
+              "action": {
+                "enum": [
+                  "market",
+                  "limit",
+                  "close"
+                ]
+              },
+              "side": {
+                "enum": [
+                  "buy",
+                  "sell"
+                ]
+              },
+              "createdAt": {
+                "type": "integer"
+              },
+              "remark": {
+                "type": "string",
+                "minLength": 1
+              },
+              "quantity": {
+                "type": "string",
+                "minLength": 1
+              },
+              "planExecution": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "backend",
+              "account"
+            ],
+            "additionalProperties": true
+          },
+          "expectedCurrent": {
+            "type": "object",
+            "properties": {
+              "accountId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "connectionId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "accountId",
+              "connectionId",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "record"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "sesame.execution-adapter/1",
+            "type": "string"
+          },
+          "backend": {
+            "const": "qmt",
+            "type": "string"
+          },
+          "command": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "receipt": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "sesame.execution-adapter/1",
+                "type": "string"
+              },
+              "backend": {
+                "const": "qmt",
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "submitted",
+                  "cancel_requested",
+                  "rejected",
+                  "partially_filled",
+                  "execution_reported",
+                  "outcome_unknown"
+                ]
+              },
+              "submissionAttempted": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "raw": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "timing": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "required": [
+              "contract",
+              "backend",
+              "status",
+              "submissionAttempted",
+              "raw"
+            ],
+            "additionalProperties": false
+          },
+          "orders": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "historicalOrders": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "deals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "positions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "coverage": {
+            "type": "string",
+            "minLength": 1
+          },
+          "complete": {
+            "type": "boolean",
+            "const": false
+          },
+          "historyCoverage": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "contract",
+          "backend",
+          "command",
+          "receipt",
+          "orders",
+          "historicalOrders",
+          "deals",
+          "positions",
+          "coverage",
+          "complete"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "backend.read",
+        "network",
+        "process"
+      ],
+      "usage": {
+        "purpose": "sesame.execution-adapter/1 recover; native SDK mechanics stay in this adapter.",
+        "inputs": "Use the declared normalized operation input, exact account/revision and retained operation IDs.",
+        "outputs": "Versioned adapter projection plus unchanged raw native evidence. Snapshot/identity do not establish permission or broker readiness.",
+        "prerequisites": [
+          "Delegated access requires a matching frozen execution task; writes additionally require a live workflow-to-portfolio apply invocation chain."
+        ],
+        "limitations": [
+          "No broker acceptance is inferred from a declaration. Missing history never proves no submission."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "qmt_execution_recover"
+      }
+    },
+    {
+      "id": "qmt_execution_command",
+      "kind": "function",
+      "description": "Guarded native execution adapter command. Retains raw audit receipts; unknown outcomes never authorize resend.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "record": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "backend": {
+                "const": "qmt"
+              },
+              "account": {
+                "type": "object",
+                "properties": {
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "connectionId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "accountId",
+                  "connectionId",
+                  "revision"
+                ],
+                "additionalProperties": false
+              },
+              "backendCommandId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "symbol": {
+                "type": "string",
+                "minLength": 1
+              },
+              "action": {
+                "enum": [
+                  "market",
+                  "limit",
+                  "close"
+                ]
+              },
+              "side": {
+                "enum": [
+                  "buy",
+                  "sell"
+                ]
+              },
+              "createdAt": {
+                "type": "integer"
+              },
+              "remark": {
+                "type": "string",
+                "minLength": 1
+              },
+              "quantity": {
+                "type": "string",
+                "minLength": 1
+              },
+              "planExecution": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "backend",
+              "account"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "record"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "sesame.execution-adapter/1",
+            "type": "string"
+          },
+          "backend": {
+            "const": "qmt",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "submitted",
+              "cancel_requested",
+              "rejected",
+              "partially_filled",
+              "execution_reported",
+              "outcome_unknown"
+            ]
+          },
+          "submissionAttempted": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "raw": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "timing": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "contract",
+          "backend",
+          "status",
+          "submissionAttempted",
+          "raw"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "state.read"
+      ],
+      "usage": {
+        "purpose": "sesame.execution-adapter/1 command; native SDK mechanics stay in this adapter.",
+        "inputs": "Use the declared normalized operation input, exact account/revision and retained operation IDs.",
+        "outputs": "Versioned adapter projection plus unchanged raw native evidence. Snapshot/identity do not establish permission or broker readiness.",
+        "prerequisites": [
+          "Delegated access requires a matching frozen execution task; writes additionally require a live workflow-to-portfolio apply invocation chain."
+        ],
+        "limitations": [
+          "No broker acceptance is inferred from a declaration. Missing history never proves no submission."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "qmt_execution_command"
+      }
+    },
+    {
+      "id": "qmt_execution_cancel",
+      "kind": "function",
+      "description": "Guarded native execution adapter cancel. Retains raw audit receipts; unknown outcomes never authorize resend.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "record": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "backend": {
+                "const": "qmt"
+              },
+              "account": {
+                "type": "object",
+                "properties": {
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "connectionId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "accountId",
+                  "connectionId",
+                  "revision"
+                ],
+                "additionalProperties": false
+              },
+              "backendCommandId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "symbol": {
+                "type": "string",
+                "minLength": 1
+              },
+              "action": {
+                "enum": [
+                  "market",
+                  "limit",
+                  "close"
+                ]
+              },
+              "side": {
+                "enum": [
+                  "buy",
+                  "sell"
+                ]
+              },
+              "createdAt": {
+                "type": "integer"
+              },
+              "remark": {
+                "type": "string",
+                "minLength": 1
+              },
+              "quantity": {
+                "type": "string",
+                "minLength": 1
+              },
+              "planExecution": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "backend",
+              "account"
+            ],
+            "additionalProperties": true
+          },
+          "operationId": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "record",
+          "operationId"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "sesame.execution-adapter/1",
+            "type": "string"
+          },
+          "backend": {
+            "const": "qmt",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "submitted",
+              "cancel_requested",
+              "rejected",
+              "partially_filled",
+              "execution_reported",
+              "outcome_unknown"
+            ]
+          },
+          "submissionAttempted": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "raw": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "timing": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "contract",
+          "backend",
+          "status",
+          "submissionAttempted",
+          "raw"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "external-trading",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "sesame.execution-adapter/1 cancel; native SDK mechanics stay in this adapter.",
+        "inputs": "Use the declared normalized operation input, exact account/revision and retained operation IDs.",
+        "outputs": "Versioned adapter projection plus unchanged raw native evidence. Snapshot/identity do not establish permission or broker readiness.",
+        "prerequisites": [
+          "Delegated access requires a matching frozen execution task; writes additionally require a live workflow-to-portfolio apply invocation chain."
+        ],
+        "limitations": [
+          "No broker acceptance is inferred from a declaration. Missing history never proves no submission."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "qmt_execution_cancel"
       }
     }
   ],
@@ -2827,6 +5214,26 @@
         "close": "positions_close",
         "readReceipt": "positions_read_receipt"
       }
+    },
+    {
+      "id": "execution",
+      "contract": "sesame.execution-adapter/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "operations": {
+        "identity": "qmt_execution_identity",
+        "snapshot": "qmt_execution_snapshot",
+        "prepare": "qmt_execution_prepare",
+        "submit": "qmt_execution_submit",
+        "recover": "qmt_execution_recover",
+        "command": "qmt_execution_command",
+        "cancel": "qmt_execution_cancel"
+      }
     }
   ],
   "knowledge": [
@@ -2889,5 +5296,121 @@
     }
   ],
   "stateCollections": [],
-  "artifactSchemas": []
+  "artifactSchemas": [],
+  "configuration": {
+    "title": "QMT 行情与股票账户",
+    "fields": [
+      {
+        "id": "python_path",
+        "title": "Windows Python",
+        "description": "已有兼容 Windows Python 可执行文件的绝对路径；保存不会验证、安装或启动 Python。",
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "configuration.update",
+          "valuePath": "/configuration/python_path",
+          "writePath": "/changes/python_path",
+          "versionPath": "/configuration/version",
+          "clearValue": null
+        }
+      },
+      {
+        "id": "userdata_directory",
+        "title": "MiniQMT 账户目录",
+        "description": "已有券商 userdata_mini 目录；仅账户读取与交易需要，行情可单独配置。",
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "configuration.update",
+          "valuePath": "/configuration/userdata_directory",
+          "writePath": "/changes/userdata_directory",
+          "versionPath": "/configuration/version",
+          "clearValue": null
+        }
+      },
+      {
+        "id": "account_id",
+        "title": "股票账户",
+        "description": "券商授权的 STOCK 账户标识，按原始字符串保留前导零；填写不代表交易授权。",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "configuration.update",
+          "valuePath": "/configuration/account_id",
+          "writePath": "/changes/account_id",
+          "versionPath": "/configuration/version",
+          "clearValue": null
+        }
+      },
+      {
+        "id": "broker",
+        "title": "券商名称",
+        "description": "可选的账户展示名称；未填写时继续使用现有默认名称。",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "configuration.update",
+          "valuePath": "/configuration/broker",
+          "writePath": "/changes/broker",
+          "versionPath": "/configuration/version",
+          "clearValue": null
+        }
+      },
+      {
+        "id": "market_port",
+        "title": "MiniQMT 行情端口",
+        "description": "已有 MiniQMT 的实际 localhost 行情端口；保存不会启动或连接终端。",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "configuration.update",
+          "valuePath": "/configuration/market_port",
+          "writePath": "/changes/market_port",
+          "versionPath": "/configuration/version",
+          "clearValue": null
+        }
+      },
+      {
+        "id": "sector",
+        "title": "股票目录板块",
+        "description": "股票搜索使用的已有本地板块，默认沪深京A股；原接口不允许清空。",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "configuration.update",
+          "valuePath": "/configuration/sector",
+          "writePath": "/changes/sector",
+          "versionPath": "/configuration/version"
+        }
+      }
+    ]
+  }
 }

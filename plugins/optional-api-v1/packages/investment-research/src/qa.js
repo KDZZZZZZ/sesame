@@ -33,9 +33,11 @@ export async function researchQuestion(host, input, signal, execution) {
   try {
     if (!state.request) {
       const agent = execution.provenance?.agent, original = agent?.input, context = original?.qa_context;
-      check(REVIEWERS.includes(original?.role) && context?.workflow_ref?.id && agent.runId === execution.provenance.parentRunId,
+      check((context?.members ? context.requester === original?.role : REVIEWERS.includes(original?.role)) && context?.workflow_ref?.id && agent.runId === execution.provenance.parentRunId,
         'QA_CONTEXT_REQUIRED', 'Only downstream reviewers inside investment_research_analyze can ask its original analysts.');
-      check(ANALYSTS.includes(input.analyst), 'INVALID_ANALYST', 'Choose market, fundamentals, news or sentiment.');
+      check(context.members ? Object.hasOwn(context.members, input.analyst) : ANALYSTS.includes(input.analyst), 'INVALID_ANALYST', 'Choose a completed preceding member declared by this research plan.');
+      const member = context.members?.[input.analyst];
+      state.title = member?.title ?? TITLES[input.analyst];
       const { run: caller } = await host.runs.read({ id: agent.runId }), { run: workflow } = await host.runs.read(context.workflow_ref);
       check(caller.parentRunId === workflow.id && caller.task?.agentId === original.role && workflow.capabilityId === 'sesame/investment-research#investment_research_analyze',
         'QA_CONTEXT_REQUIRED', 'The question must belong to this original research team.');
@@ -44,9 +46,9 @@ export async function researchQuestion(host, input, signal, execution) {
       const research = { ...packet, qa, source_refs: uniqueRefs([...packet.source_refs, ...qa.flatMap(answer => answer.source_refs)]) };
       state.from = original.role; state.selection = context.selection;
       state.request = {
-        title: `${packet.title.slice(0, 60)} · ${TITLES[input.analyst]}定向核查`,
+        title: `${packet.title.slice(0, 60)} · ${member?.title ?? TITLES[input.analyst]}定向核查`,
         objective: '回答会影响判断的具体问题，核查证据和机制，说明对原结论的修正及剩余不确定性。',
-        instructions: qaInstructions(input.analyst),
+        instructions: qaInstructions(input.analyst, member),
         input: await memberInput(host, research, { role: input.analyst, qa: { from: original.role, question: input.question } }, `${execution.run.id}:context`),
         model: configuredModel(host, context.models[input.analyst]), plugins: state.selection.plugins, allowedCalls: state.selection.allowedCalls,
       };
@@ -57,7 +59,7 @@ export async function researchQuestion(host, input, signal, execution) {
     if (!state.ref) {
       const accepted = await host.capabilities.invoke('host.agent.run', state.request, {
         signal, operationId: `${execution.run.id}:answer`,
-        task: { title: `${TITLES[input.analyst]}定向核查`, agentId: input.analyst, role: input.analyst, stage: 'qa', output: { type: 'none' } },
+          task: { title: `${state.title ?? TITLES[input.analyst]}定向核查`, agentId: input.analyst, role: input.analyst, stage: 'qa', output: { type: 'none' } },
       });
       check(accepted.type === 'run', 'INVALID_HOST_RESULT', 'A research answer must return a tracked host Run.');
       state.ref = accepted.run; await save();

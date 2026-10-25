@@ -241,7 +241,7 @@
         "network"
       ],
       "usage": {
-        "purpose": "执行白名单上游接口，保留实际字段和预览截断信息。",
+        "purpose": "读取一个已声明接口的原始信息，交给方法/工作流处理；已有适用快照直接复用。",
         "inputs": "{interface,arguments?,max_rows?}；arguments 的值均为字符串。例 {interface:\"stock_zh_a_hist_tx\",arguments:{symbol:\"sz000001\",start_date:\"20260101\",end_date:\"20261015\",adjust:\"\"},max_rows:100}。stock_info_a_code_name/stock_zh_a_spot_em/stock_zh_a_spot_tx 无参数；stock_bid_ask_em 用 symbol 六位代码；stock_zh_a_hist 用六位symbol、period:\"daily\"；stock_zh_a_daily 用 sh/sz 前缀。",
         "outputs": "{ok,interface,akshareVersion,observedAt,rows,totalRows,truncated}；max_rows默认100、最多1000，只裁剪预览，totalRows 是原生返回行数。",
         "prerequisites": [
@@ -300,7 +300,7 @@
         "network"
       ],
       "usage": {
-        "purpose": "读取一个A股公开报价快照。",
+        "purpose": "取得一个A股公开报价观察；仅提供信息，不替代研究解释或可执行报价。",
         "inputs": "{symbol:\"000001\",source:\"tencent\"}；symbol六位代码，source=eastmoney（默认）|tencent。",
         "outputs": "{...原生查询回执,rows,source,exchangeTimeAvailable:false}；Tencent 从全市场快照筛选该代码；Eastmoney 返回报价项目行。",
         "prerequisites": [

@@ -10,6 +10,8 @@
 .backtest-handler{padding:.65rem 0;border-bottom:1px solid var(--report-line)}.backtest-handler strong{font-size:.85rem}.backtest-flow{display:flex;flex-wrap:wrap;gap:.6rem;color:var(--report-muted);font-size:.8rem}
 .backtest-pagination{display:flex;align-items:center;gap:.6rem;margin:.7rem 0;font-size:.75rem;color:var(--report-muted)}.backtest-pagination button:disabled{opacity:.35;cursor:default}
 
+/* Profit/loss colors keep their meaning independently of the blue theme. */
+.backtest-matrix[data-metric=net_profit] .sc-bar{fill:var(--success,var(--report-default-success))}
 /* Drawdown remains a positive exact magnitude but is colored as loss, also after resize. */
 .backtest-matrix[data-metric=max_drawdown_pct] .sc-bar{fill:var(--report-negative)}
 .backtest-matrix rect[role=button]{pointer-events:all}

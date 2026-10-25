@@ -199,14 +199,16 @@
       "usage": {
         "purpose": "在明确的决策时间点提取当时已经可见的趋势、价格排名、波动、ATR 与跳空特征。",
         "inputs": "调用形状为 {input:{schema_version:1,source:{id,kind},as_of,parameters?,...}}，不是文件路径或数据 ID。source.id 为 1..500 字符，kind 为 synthetic/historical/live；as_of 及全部时间字段使用真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒）。输入限 2MiB 有限 JSON，不接收代码。parameters 只支持列出的字段。 bars 是 1..10000 条已知 OHLCV，按收盘 time 严格递增且不重复；每行含 time、available_at、open/high/low/close、volume。time <= available_at <= as_of，价格为正且 high/low 覆盖 open/close，volume >= 0。 decision_times 可省略，默认 [as_of]；提供时是 1..1000 个不晚于 as_of 的 UTC 时点。每个时点至少需 max(window,atr_window,rank_window)+1 根当时已可见的历史 K 线；decision_times.length * bars.length <= 10000000。",
-        "outputs": "observations 是数组，每项含 decision_time、available_by、source_until、close_regression_slope、close_rank_percentile、realized_volatility、atr、gap_from_previous_close 和 close。 立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。",
+        "outputs": "observations 是数组，每项含 decision_time、available_by、source_until、close_regression_slope、close_rank_percentile、realized_volatility、atr、gap_from_previous_close 和 close。 立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。 交给调用者时保留上述固定引用、source/as_of、实际参数和 limitations。把 observations 中 decision_time、available_by 和特征列交给模型或交易近邻计算；标签、训练/评估切分由调用者提供，斜率/ATR 等与已有同口径计算重合时复用，不能把特征再当独立佐证。",
         "prerequisites": [
           "提供与任务相符的已知输入；本能力不联网取数，不需要 Python、ABU 安装或券商账户。",
           "atr_window 和 rank_window 省略时各自使用 window；它们不固定为 5。"
         ],
         "limitations": [
           "只生成时点特征；不生成未来标签、不训练模型，也不自行拉取数据。",
-          "来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。"
+          "每个决策时点都须满足 max(window,atr_window,rank_window)+1 根可见 K 线；任一时点不足会拒绝整个调用，不返回部分特征或填零的预热结果。",
+          "来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。",
+          "复用前核对输入版本、参数、截止时间与实现口径；已有匹配结果可直接引用。同源价格、成交或统计派生结果不能重复计为独立证据；计算只回答本项局部问题，方法解释与最终综合由调用者负责。"
         ]
       }
     }
@@ -224,7 +226,7 @@
     {
       "id": "knowledge-1",
       "path": "prompt.md",
-      "description": "交易特征基线 — prompt.md",
+      "description": "abu_ml_features_analyze 的局部目标、解释边界和跨方法交接。",
       "kind": "prompt"
     },
     {
@@ -242,13 +244,13 @@
     {
       "id": "knowledge-4",
       "path": "skills/abu-ml-features/references/method.md",
-      "description": "交易特征基线 — skills/abu-ml-features/references/method.md",
+      "description": "abu_ml_features_analyze 的公式、参数口径与基线差异；核对是否可以复用其他已计算结果。",
       "kind": "reference"
     },
     {
       "id": "knowledge-5",
       "path": "skills/abu-ml-features/SKILL.md",
-      "description": "交易特征基线 — skills/abu-ml-features/SKILL.md",
+      "description": "数值方法：在明确的决策时间点提取当时已经可见的趋势、价格排名、波动、ATR 与跳空特征。 输入为已固定证据；输出为 observations 与输入/结果工件，供方法解释或工作流复用。",
       "kind": "skill"
     }
   ],

@@ -51,7 +51,7 @@ test('strategy report renders real controls, every trial, stable winners and mis
   page.on('pageerror', error => errors.push(error.message));
   // More than one table page; the unselected B trial has a greater profit than the selected trial.
   const rows = Array.from({ length: 55 }, (_, i) => trial({ trial_id: `A${i}`, selected: i === 0, parameters: { lookback: String(10 + i), net_profit: 'parameter-only' }, net_profit: String(i ? 500 + i : -10), sharpe: String(1 - i / 100) }));
-  rows.push(trial({ trial_id: 'ETH', symbol: 'ETHUSD', timeframe: 'M5', parameters: { lookback: '30', net_profit: 'parameter-only' }, net_profit: '-30' }));
+  rows.push(trial({ trial_id: 'ETH', symbol: 'ETHUSD', timeframe: 'M5', parameters: { lookback: '30', net_profit: 'parameter-only' }, net_profit: '30' }));
   const { html } = await template({ selection_metric: 'net_profit', demo: false });
   try {
     await page.addInitScript(() => {});
@@ -60,6 +60,12 @@ test('strategy report renders real controls, every trial, stable winners and mis
     assert.match(await page.locator('.kit-eyebrow').innerText(), /DEMO SAMPLE/);
     assert.equal(await page.locator('.backtest-matrix [data-row-index]').count(), 4);
     assert.equal(await page.getByRole('combobox', { name: 'Color metric' }).inputValue(), 'net_profit');
+    for(const [theme,gain,loss] of [['light','rgb(36, 115, 74)','rgb(178, 67, 67)'],['dark','rgb(95, 227, 169)','rgb(255, 122, 143)']]){
+      await page.evaluate(theme=>{document.documentElement.dataset.theme=theme;},theme);
+      assert.equal(await page.locator('.backtest-matrix [data-row-index="0"]').evaluate(n=>getComputedStyle(n).fill),loss,'Negative P&L retains its loss color');
+      assert.equal(await page.locator('.backtest-matrix [data-row-index="3"]').evaluate(n=>getComputedStyle(n).fill),gain,'Positive P&L retains its gain color instead of theme blue');
+    }
+    await page.evaluate(()=>{document.documentElement.dataset.theme='light';});
     assert.equal(await page.locator('.backtest-detail tbody tr').count(), 50);
     assert.equal(await page.locator('.backtest-loop').count(), 2);
     assert.match(await page.locator('.backtest-handler').innerText(), /closed-bars.*positions.*limit 50.*children.*limit 20.*When: signal.*buy/s);

@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "baselineSha256": "sha256:4619b9ddb6f187f5e708dd17b3bc8a603c50b65cd577867a68b8936bc483b8a4",
+  "purpose": "Automated engineering acceptance of individually reviewed exact analysis migrations under the new host boundary. Original frozen bytes and authenticated original version labels remain intact. These records do not grant runtime permissions or constitute human release approval.",
+  "versionEvidence": {
+    "referenceCommit": "43cb773ba36b0f3a7abd8c316fe765926e1a6891",
+    "verification": "Every recorded version either restores the original full manifest digest directly, or does so after reversing the explicitly listed engine/permission migration. Git is not consulted by the checker."
+  },
+  "baselineVersions": {
+    "sesame/abu-backtest-lab": "2.0.0",
+    "sesame/abu-breakout": "2.0.0",
+    "sesame/abu-exit-rules": "2.0.0",
+    "sesame/abu-indicators": "2.0.0",
+    "sesame/abu-ml-features": "2.0.0",
+    "sesame/abu-model-lab": "2.0.0",
+    "sesame/abu-moving-average": "2.0.0",
+    "sesame/abu-parameter-search": "2.0.0",
+    "sesame/abu-position-sizing": "2.0.0",
+    "sesame/abu-price-structure": "2.0.0",
+    "sesame/abu-seasonality": "2.0.0",
+    "sesame/abu-similarity": "2.0.0",
+    "sesame/abu-stock-screening": "2.0.0",
+    "sesame/abu-trade-judges": "2.0.0",
+    "sesame/abu-trade-metrics": "2.0.0",
+    "sesame/abu-trend": "2.0.0",
+    "sesame/abu-trend-pullback": "2.0.0",
+    "sesame/abu-volatility": "2.0.0",
+    "sesame/behavioral-finance": "2.0.0",
+    "sesame/dow-theory": "2.0.0",
+    "sesame/elliott-wave": "2.0.0",
+    "sesame/factor-evaluator": "1.0.0",
+    "sesame/ict": "2.0.0",
+    "sesame/institutional-analysis": "2.0.0",
+    "sesame/market-data-parser": "3.0.0",
+    "sesame/narrative-analysis": "2.0.0",
+    "sesame/price-action": "2.0.0",
+    "sesame/rss-collect": "3.0.0",
+    "sesame/strategy-authoring": "3.0.0",
+    "sesame/web-extract": "3.0.0",
+    "sesame/wyckoff": "2.0.0"
+  },
+  "changes": [
+    {
+      "pluginId": "sesame/abu-exit-rules",
+      "component": "declaration",
+      "beforeDigest": "sha256:f3b85abd4a1f59f16a72bf7c98942d16006f2e5411d5b8c3eb2754aeb488a789",
+      "afterDigest": "sha256:e9db6aca1b33b9dcdf7502242d949b98ddcca407110926c1483b714f943804f6",
+      "decision": "approved",
+      "reason": "Automated exact-hash engineering acceptance: One source-verified usage limitation: first TR uses high-low and ATR needs atr_window bars. Removing only that sentence reconstructs the full original declaration; no executable schema/effect/binding change is accepted. Not human/release/broker acceptance.",
+      "evidence": {
+        "baselineReconstruction": "Remove exactly capabilities[0].usage.limitations[1]; the complete original declaration digest matches.",
+        "addedLimitation": "首根 TR 使用 high-low，累计 atr_window 根输入可得 ATR；不足时 atr=null。与 abu-indicators/abu-volatility 首根 TR=null、需 N+1 根的初始化口径不同，不能直接互换初始窗口结果。"
+      }
+    },
+    {
+      "pluginId": "sesame/abu-ml-features",
+      "component": "declaration",
+      "beforeDigest": "sha256:c4835a2c6764f095379d68cb3c5835fa924be4b287b0f4abc96e1ee554f3fa87",
+      "afterDigest": "sha256:a13b9e7adfdb235f4604854e56bf89e3cb385a47b48343c35cfe16121e945885",
+      "decision": "approved",
+      "reason": "Automated exact-hash engineering acceptance: One source-verified usage limitation: every decision needs max(window,atr_window,rank_window)+1 visible bars; insufficient history is rejected rather than partially/zero filled. Removing the sentence reconstructs the full original declaration. Not human/release/broker acceptance.",
+      "evidence": {
+        "baselineReconstruction": "Remove exactly capabilities[0].usage.limitations[1]; the complete original declaration digest matches.",
+        "addedLimitation": "每个决策时点都须满足 max(window,atr_window,rank_window)+1 根可见 K 线；任一时点不足会拒绝整个调用，不返回部分特征或填零的预热结果。"
+      }
+    },
+    {
+      "pluginId": "sesame/abu-position-sizing",
+      "component": "declaration",
+      "beforeDigest": "sha256:43d7bfac0cd4bb200685b435ddb9214c3b1fb5baf06ebd4048d9130d1fbb2290",
+      "afterDigest": "sha256:37a8f00ad80839df84842d5ea1630fe11905c8dd25c3bc2d9ed3a8d226aaac6f",
+      "decision": "approved",
+      "reason": "Automated exact-hash engineering acceptance: One source-verified limitation documents high-low first TR, price-rank warmup and status=warmup until both windows exist. Removing exactly that sentence reconstructs the entire frozen declaration. Not human/release/broker acceptance.",
+      "evidence": {
+        "baselineReconstruction": "Remove exactly capabilities[0].usage.limitations[1]; the complete original declaration digest matches.",
+        "addedLimitation": "首根 TR 使用 high-low，累计 atr_window 根输入可得 ATR；完整仓位结果还须满足 price_rank_window，否则 status=warmup。与 abu-indicators/abu-volatility 首根 TR=null、需 N+1 根的初始化口径不同。"
+      }
+    },
+    {
+      "pluginId": "sesame/factor-evaluator",
+      "component": "manifest",
+      "beforeDigest": "sha256:ff62640e6084b044b4d2ea48f14ad584c7889b6b09523f01ee56c01ee5ac85ea",
+      "afterDigest": "sha256:e3335677c53f54b885330c2b5526b32b54f5ab0ad2c53c95eb46cc12dce89861",
+      "decision": "approved",
+      "reason": "Exact engineering review: retain the previously verified explicit new-host range and fixed host.datasets.query request with no broad scope; the only subsequent manifest change is the description of single-symbol/cross-sectional evaluation and seven optional diagnostics. Restoring the prior description, baseline version, old engine and absence of permissions reconstructs the original manifest; no runtime grant is created.",
+      "evidence": {
+        "baselineReconstruction": "Restore the archived prior description, recorded baseline version, engines.sesame >=0.2.3, and absence of permissions; the complete original manifest digest matches.",
+        "beforeEngine": ">=0.2.3",
+        "afterEngine": ">=0.3.0-dev.1 <0.4.0",
+        "requestedPermissions": {
+          "scopes": [],
+          "calls": [
+            "host.datasets.query"
+          ]
+        },
+        "previousDescription": "可独立选择的确定性因子 AST 评估器，保存输入、候选和冻结选择回执；不编排 Agent、不连接交易账户。",
+        "previouslyReviewedDigest": "sha256:b52523be7795a4363e0bab8d5d22b1461ffb6f40da48487a4c4ca178c1c754f9"
+      }
+    },
+    {
+      "pluginId": "sesame/factor-evaluator",
+      "component": "declaration",
+      "beforeDigest": "sha256:53b08d7816ae14bbd7680c5a78c6eea75d9015ab2d8c20223c24757c594053ac",
+      "afterDigest": "sha256:1586b79c222ac68ff708f392a9e4a357d4707e10cb2dfb403334b927e3a14531",
+      "decision": "approved",
+      "reason": "Exact engineering review against recovered original declaration bytes whose full canonical digest matches the immutable baseline. Retain the previously reviewed fixed ArtifactRef input and bounded options, fixed-data read effect and provenance contract; add optional seven-diagnostic configuration and single-symbol/time-series descriptions. Diagnostic availability does not become a required selection gate; actual finite validation evidence and explicit thresholds still govern eligibility.",
+      "evidence": {
+        "baselineReconstruction": "The archived workflow-split declaration reproduces the immutable baseline digest exactly; no baseline bytes or digest are changed.",
+        "previouslyReviewedDigest": "sha256:e6fd47df5731d1c79ad99dfeec0ea84f765f28d1c794fe3e6e93d4a9cac91b70",
+        "reviewedChanges": [
+          "options: bounded inputRef/dataset/minRankIC/minCoverage/maxCorrelation plus optional diagnostics",
+          "effects: add read:fixed-data-artifacts while retaining private-state and durable-resource writes",
+          "diagnostics: placebo, monteCarlo, outOfSample, walkForward, sensitivity, regimes, bootstrap; omitted checks do not run",
+          "usage: fixed input provenance, one-symbol time-series support, actual workflow reports and distinct unavailable/not-applicable statuses",
+          "knowledge: additive DIAGNOSTICS.md research/configuration guide"
+        ],
+        "validation": "Existing fixed-ArtifactRef protocol/lineage, diagnostic, time-series and research-collaboration suites pass; seven diagnostics remain optional and isolated."
+      }
+    },
+    {
+      "pluginId": "sesame/market-data-parser",
+      "component": "manifest",
+      "beforeDigest": "sha256:e07f002256b757a7ed620c344cf2c1dc663a77f0805ee078173ef1289e842c47",
+      "afterDigest": "sha256:4b4ea3af9f3207de51110e2876fe03eec37ef984faff9db63e1efe85858abde3",
+      "decision": "approved",
+      "reason": "Automated exact-hash engineering acceptance: Explicit new-host range and actual packaged parser process.execute/host.process.exec requests. Exact inverse reconstruction confines the change to version/engine/request metadata; this is neither a runtime grant nor an OS sandbox. Not human/release/broker acceptance.",
+      "evidence": {
+        "baselineReconstruction": "Restore the recorded baseline version, engines.sesame >=0.2.3, and absence of permissions; the complete original manifest digest matches.",
+        "beforeEngine": ">=0.2.3",
+        "afterEngine": ">=0.3.0-dev.1 <0.4.0",
+        "requestedPermissions": {
+          "scopes": [
+            "process.execute"
+          ],
+          "calls": [
+            "host.process.exec"
+          ]
+        }
+      }
+    },
+    {
+      "pluginId": "sesame/rss-collect",
+      "component": "manifest",
+      "beforeDigest": "sha256:af1076f5ccdce40524a1ebf24af8c56f6b649955e41fe2c8093f704a8b9de304",
+      "afterDigest": "sha256:b5d144e34368fba90c00a5877da9effc780fb1abb1564fea8e608bc358ef2b0e",
+      "decision": "approved",
+      "reason": "Automated exact-hash engineering acceptance: Explicit new-host range and actual feed parser process.execute/host.process.exec requests. Inverse full-manifest reconstruction excludes other semantic changes; local authorization is still required. Not human/release/broker acceptance.",
+      "evidence": {
+        "baselineReconstruction": "Restore the recorded baseline version, engines.sesame >=0.2.3, and absence of permissions; the complete original manifest digest matches.",
+        "beforeEngine": ">=0.2.3",
+        "afterEngine": ">=0.3.0-dev.1 <0.4.0",
+        "requestedPermissions": {
+          "scopes": [
+            "process.execute"
+          ],
+          "calls": [
+            "host.process.exec"
+          ]
+        }
+      }
+    },
+    {
+      "pluginId": "sesame/strategy-authoring",
+      "component": "manifest",
+      "beforeDigest": "sha256:51ce736f8a19110d0c71ef307e61042719d6189bcbf0808d246e063d2a25efeb",
+      "afterDigest": "sha256:69ef65a886563c46033cca7c953f0aed5cb88d16af6a7e3959b9712b303ad831",
+      "decision": "approved",
+      "reason": "Automated exact-hash engineering acceptance: Explicit new-host range and only actual host.models.query, host.model.complete and workspace#write calls. No wildcard/broad scope; inverse full-manifest reconstruction proves the bounded request migration. Not human/release/broker acceptance.",
+      "evidence": {
+        "baselineReconstruction": "Restore the recorded baseline version, engines.sesame >=0.2.3, and absence of permissions; the complete original manifest digest matches.",
+        "beforeEngine": ">=0.2.3",
+        "afterEngine": ">=0.3.0-dev.1 <0.4.0",
+        "requestedPermissions": {
+          "scopes": [],
+          "calls": [
+            "host.models.query",
+            "host.model.complete",
+            "sesame/workspace#write"
+          ]
+        }
+      }
+    },
+    {
+      "pluginId": "sesame/web-extract",
+      "component": "manifest",
+      "beforeDigest": "sha256:c69d1599c0cde06d52be175ac180e16463cd55d1f53da0fd241a09285311fef4",
+      "afterDigest": "sha256:04d69f79375affc9ba901cf124ad3163b0971200fe73a4a848a69e0419ad9057",
+      "decision": "approved",
+      "reason": "Automated exact-hash engineering acceptance: Explicit new-host range and actual extraction parser process.execute/host.process.exec requests. The original full manifest is reconstructed by reversing only version/engine/request metadata; no automatic authority or backward compatibility is certified. Not human/release/broker acceptance.",
+      "evidence": {
+        "baselineReconstruction": "Restore the recorded baseline version, engines.sesame >=0.2.3, and absence of permissions; the complete original manifest digest matches.",
+        "beforeEngine": ">=0.2.3",
+        "afterEngine": ">=0.3.0-dev.1 <0.4.0",
+        "requestedPermissions": {
+          "scopes": [
+            "process.execute"
+          ],
+          "calls": [
+            "host.process.exec"
+          ]
+        }
+      }
+    },
+    {
+      "pluginId": "sesame/abu-parameter-search",
+      "component": "declaration",
+      "beforeDigest": "sha256:ba6f914796b286820634bc4e4a85bd8f3efa98b5003e159cd548c52184abc968",
+      "afterDigest": "sha256:3c7836bc8cbae0dc2fcab85d39d7bffed1431977c3cfca1d911b896da0e7c635",
+      "decision": "approved",
+      "reason": "Exact engineering review of one additive researchDataAccess declaration: schemaVersion:1, reads:input-only, writes:derived-artifacts-only. Removing only that field reproduces the complete archived baseline declaration. Existing calculation schemas, effects and input/output behavior are unchanged; this enables the authorized knowledge/calculator collaboration without granting external reads.",
+      "evidence": {
+        "baselineReconstruction": "Remove exactly capabilities[0].researchDataAccess; the complete archived original declaration digest matches.",
+        "addedContract": {
+          "schemaVersion": 1,
+          "reads": "input-only",
+          "writes": "derived-artifacts-only"
+        }
+      }
+    }
+  ]
+}

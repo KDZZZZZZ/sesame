@@ -271,7 +271,7 @@
         "plugin.state.write"
       ],
       "usage": {
-        "purpose": "运行固定输入的VeighNa CTA原生回测并冻结证据。",
+        "purpose": "消费已有固定数据、策略和参数执行一次原生计算，交付结果ref、输入血缘、统计和诊断；候选选择、比较与综合由工作流负责。",
         "inputs": "{operation_id,title,data,strategy_path,class_name,config,parameters?,columns?,timeout?}。data 为 data_snapshot 等公开数据工具返回的固定 {id,revision,digest,kind:\"data\",schemaVersion:\"1.0.0\"}，内容为 json-rows；禁止猜引用/用可变datasetId代替。 strategy_path 是工作区真实单文件（≤512KiB），class_name 为已编写的CtaTemplate类名；输入2–100000行、≤16MiB，列默认datetime/open/high/low/close/volume，columns可改名，未知量不填0。config最小例 {vt_symbol:\"TEST.LOCAL\",interval:\"d\",rate:\"0.001\",slippage:\"0\",size:\"1\",pricetick:\"0.01\",capital:\"100000\"}；interval=1m|1h|d|w，start/end可限定；无时区时间必须给原始wall_time_authority。",
         "outputs": "{ref:<固定strategy.result>,status:\"completed\"|\"failed\",data:[{id:\"daily\"|\"trades\"|\"orders\",ref,rowCount}],statistics,diagnostics,executionRunId,nativeSource,environment,rawResult,execution:\"host\"}；failed没有成功表；中断保留unknown/运行操作记录，不自动重放。",
         "prerequisites": [
@@ -343,7 +343,7 @@
       "execution": "immediate",
       "effects": [],
       "usage": {
-        "purpose": "读取固定原生回测成果与其可追溯证据。",
+        "purpose": "复用已冻结原生回测结果与输入/撮合假设；读取不重跑，也不自动另开报告。",
         "inputs": "{ref:<backtest返回的完整strategy.result引用>}；不传operation_id或工作区文件路径。",
         "outputs": "{ref,manifest}；manifest.content 含 status,title,engine,environment,assumptions,inputs,nativeSource,rawResult,data,statistics,limitations,provenance；表中ref可交data_read。",
         "prerequisites": [

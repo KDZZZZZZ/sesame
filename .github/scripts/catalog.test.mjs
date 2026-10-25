@@ -5,7 +5,8 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildLock } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
+import { buildLock, createArchive, sha256 } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
+import { buildCatalog } from '../../plugins/api-v1/scripts/catalog.mjs';
 import { buildInventory } from '../../plugins/api-v1/scripts/inventory.mjs';
 import { buildR2Profile } from './plugin-r2.mjs';
 import { validateRepository } from './validate-catalog.mjs';
@@ -193,4 +194,36 @@ test('new API 2 plans reconstruct exact source and reject changed digests after 
   assert.equal(validateRepository(root).r2Plans, 1);
   plan.profiles[0].archiveSha256 = '0'.repeat(64); json(path, plan);
   assert.throws(() => validateRepository(root), /archive digest differs/);
+});
+
+test('GitHub catalog projects taxonomy from each fixed source without changing release or package identities', t => {
+  const { root, core, policy } = fixture(t, { taxonomy: true });
+  git(root, 'init', '-q'); git(root, 'add', '.'); git(root, 'commit', '-qm', 'fixed API 2 source');
+  const sourceCommit = git(root, 'rev-parse', 'HEAD');
+  const plans = [['api-v1', 'core'], ['optional-api-v1', 'optional']].map(([directory, profile]) => {
+    const sourceRoot = `plugins/${directory}`, source = join(root, sourceRoot), lock = buildLock(source);
+    const tag = `plugins-${profile === 'optional' ? 'optional-' : ''}api-v1-dev.999999`;
+    return { schemaVersion: 1, tag, sourceCommit, sourceRoot, profile, pullRequest: 100, title: 'Fixed catalog fixture',
+      archive: { name: `sesame-${profile === 'optional' ? 'optional' : 'official'}-plugins-api-v1-dev.999999.tar.gz`, sha256: sha256(createArchive(source, lock)) },
+      lockSha256: sha256(readFileSync(join(source, 'official-plugins.lock.json'))) };
+  });
+  mkdirSync(join(root, '.github/plugin-releases'));
+  for (const plan of plans) json(join(root, `.github/plugin-releases/${plan.tag}.json`), plan);
+  git(root, 'add', '.'); git(root, 'commit', '-qm', 'reviewed publication plans');
+  const releaseCommit = git(root, 'rev-parse', 'HEAD');
+  const sources = { schemaVersion: 1, releases: plans.map(plan => ({ tag: plan.tag, releaseCommit, reviewSha256: 'a'.repeat(64) })) };
+  const catalog = buildCatalog(root, sources);
+  for (const plugin of catalog.plugins) {
+    assert.equal(plugin.functionalCategory, policy[plugin.name].functionalCategory);
+    assert.deepEqual(plugin.implementationKinds, policy[plugin.name].implementationKinds);
+    assert.equal(plugin.source.commit, sourceCommit);
+    assert.equal(plugin.engines.sesame, '>=0.3.0-dev.1 <0.4.0');
+    const plan = plans.find(item => item.tag === plugin.release);
+    const indexed = buildLock(join(root, plan.sourceRoot)).packages.find(item => item.id === plugin.id);
+    assert.equal(plugin.version, indexed.version);
+    assert.deepEqual(plugin.package, { treeDigest: indexed.treeDigest, files: indexed.files });
+    assert.equal(catalog.releases.find(item => item.tag === plan.tag).archive.sha256, plan.archive.sha256);
+  }
+  json(join(core, 'inventory-policy.json'), { 'core-one': { functionalCategory: 'unreviewed' } });
+  assert.equal(JSON.stringify(buildCatalog(root, sources)), JSON.stringify(catalog));
 });

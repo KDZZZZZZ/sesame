@@ -19,6 +19,49 @@ class RequestError(ValueError):
         self.code = code
 
 
+def error_code(error):
+    if isinstance(error, RequestError):
+        return error.code
+    if isinstance(error, ccxt.RateLimitExceeded):
+        return 'RATE_LIMITED'
+    if isinstance(error, ccxt.RequestTimeout):
+        return 'TIMEOUT'
+    # CCXT 4.5.85 classifies these Kraken rate limits as DDoSProtection,
+    # alongside unrelated lockouts. Only the exact rate-limit payload qualifies.
+    message = str(error)
+    if isinstance(error, ccxt.DDoSProtection) and message.startswith('kraken '):
+        try:
+            response = json.loads(message[len('kraken '):])
+        except json.JSONDecodeError:
+            response = None
+        errors = response.get('error') if isinstance(response, dict) else None
+        if isinstance(errors, list) and errors and all(code in (
+                'EGeneral:Too many requests', 'EAPI:Rate limit exceeded', 'EOrder:Rate limit exceeded',
+        ) for code in errors):
+            return 'RATE_LIMITED'
+    return 'SOURCE_UNAVAILABLE'
+
+
+def error_details(error):
+    details = {'exceptionType': type(error).__name__[:80], 'causeTypes': []}
+    current, seen = error, {id(error)}
+    for _ in range(4):
+        current = current.__cause__ if current.__cause__ is not None else (
+            None if current.__suppress_context__ else current.__context__)
+        if current is None or id(current) in seen:
+            break
+        seen.add(id(current))
+        details['causeTypes'].append(type(current).__name__[:80])
+    # A network failure may have no HTTP response. Do not infer status from its
+    # URL, message or exchange; preserve only an actual numeric response status.
+    response = getattr(error, 'response', None)
+    for status in (getattr(error, 'status_code', None), getattr(error, 'status', None), getattr(response, 'status_code', None)):
+        if type(status) is int and 100 <= status <= 599:
+            details['httpStatus'] = status
+            break
+    return details
+
+
 def norm(value):
     if isinstance(value, float):
         if not math.isfinite(value):
@@ -123,8 +166,9 @@ def main():
                     raise RequestError('Public response exceeds output budget', 'RESOURCE_EXHAUSTED')
             except Exception as error:
                 message = re.sub(r'(https?://)[^\s/@]+(?::[^\s/@]*)?@', r'\1[redacted]@', str(error))[-1500:]
+                details = error_details(error)
                 encoded = json.dumps({'id': request.get('id') if isinstance(request, dict) else None, 'error': {
-                    'code': error.code if isinstance(error, RequestError) else 'SOURCE_UNAVAILABLE', 'message': message,
+                    'code': error_code(error), 'message': f"[{details['exceptionType']}] {message}", 'details': details,
                 }}, allow_nan=False)
             print(encoded, flush=True)
     finally:

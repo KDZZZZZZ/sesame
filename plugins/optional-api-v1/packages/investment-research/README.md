@@ -4,15 +4,25 @@
 
 ## 能力与输入
 
+可选 `workflow` 是本次实际执行计划，省略时沿用原八成员流程。例如只研究基本面、核查替代解释，再由指定综合者交付：
+
+```json
+{"workflow":{"stages":[[{"id":"facts","role":"fundamentals"}],[{"id":"challenge","role":"custom","instructions":"检验最强替代解释及其证据。"}],[{"id":"editor","role":"manager"}]],"synthesis":"editor"}}
+```
+
+`stages` 依次执行，同一阶段并行；最多 32 个唯一成员。成员含 `id`、现有角色名或 `custom` 的 `role`、可选 `title/instructions`，custom 必须给职责。最后阶段只能有 `synthesis` 指定的成员，只有该成员获得请求的报告权限。`agent_models` 按实际成员 ID 覆盖模型。自定义流程的问答只面向已完成的前序成员，使用交接中 `qa_context.members` 的准确 ID，不能提问已省略的角色。宿主自动据此生成协作图，无需另填 `task.collaboration`。
+
+计划随原生 Run 断点和最终固定成果保存；恢复不改变成员、顺序或已接受请求。自定义 `start_from.role` 是实际成员 ID，省略新 workflow 时继承原结果的计划；保留前缀的职责或依赖发生变化则必须新开研究。自定义流程需要支持 `execution.setCollaboration` 的宿主，缺接口时明确中断，默认流程兼容旧接口。来源范围、真实证据、幂等恢复、报告实际渲染要求仍生效。
+
 注册两个公开工作流和一个团队内问答能力，不复制宿主 Run 控制接口：
 
 | 能力 | 输入 | 成果 |
 | --- | --- | --- |
-| `investment_research_analyze` | 必填 `title`、`question`、`subjects:string[]`、`research:{plugins:string[],tools?:string[]}`、`model:{provider,id}`；可选 `as_of`、`horizon`、`evidence_refs:DataRef[]`、`agent_models` | 四研究员、多空情景、风险和经理综合；固定 `result_ref`、Markdown `summary`、可选 `report_ref` |
+| `investment_research_analyze` | 必填 `title`、`question`、`subjects:string[]`、`research:{plugins:string[],tools?:string[]}`、`model:{provider,id}`；可选 `workflow`、`as_of`、`horizon`、`evidence_refs:DataRef[]`、`agent_models` | 按实际计划研究和综合；固定 `result_ref`、Markdown `summary`、可选 `report_ref` |
 | `investment_research_report` | `result_ref:DataRef`、`model:{provider,id}` | 仅一个经理消费既有完整成果，重新制作图表报告；返回原 `result_ref` 和新 `report_ref` |
-| `investment_research_ask` | 团队内多头、空头、风险或经理调用 `{analyst,question}`，analyst 为 market、fundamentals、news 或 sentiment | 后台 Run，输出 `{from,to,question,markdown,run_ref,source_refs}`；原研究员定向核查并返回完整 Markdown |
+| `investment_research_ask` | 后续成员调用 `{analyst,question}`；默认可问四研究员，自定义时仅可问实际已完成的前序成员 ID | 后台 Run，输出 `{from,to,question,markdown,run_ref,source_refs}`；原成员定向核查并返回完整 Markdown |
 
-模型与逐角色模型取自宿主已配置模型目录，插件不接收模型密钥。`agent_models` 支持 market、fundamentals、news、sentiment、bull、bear、risk、manager，省略时继承 model。`as_of` 建议用明确 UTC ISO 时间，省略为本轮启动时点，约束证据发布或观测时点，不要求已存在启动前采集的缓存。当前研究可启动后自行采集并记录真实获取时间；用户要求历史回测或当时可知版本时，另行核验数据版本，不能使用后续修订假装当时已知。`horizon` 是研究期限，不是调度频率。
+模型与逐角色模型取自宿主已配置模型目录，插件不接收模型密钥。`agent_models` 以实际成员 ID 为键，默认是 market、fundamentals、news、sentiment、bull、bear、risk、manager，省略时继承 model。自定义成员 ID 不能使用 constructor、toString 等继承字典属性名。`as_of` 建议用明确 UTC ISO 时间，省略为本轮启动时点，约束证据发布或观测时点，不要求已存在启动前采集的缓存。当前研究可启动后自行采集并记录真实获取时间；用户要求历史回测或当时可知版本时，另行核验数据版本，不能使用后续修订假装当时已知。`horizon` 是研究期限，不是调度频率。
 
 `research.plugins` 明确选择来源、计算或知识方法；`tools` 推荐精确 `pluginId#capabilityId`，唯一短名也可用。省略 tools 时仅选可委派的研究函数，剔除声明交易、配置、进程、编辑工作区和工作流控制副作用的能力；显式列入这些能力会在启动成员前暂停并指出具体能力。`tools:[]` 只授予知识。工作流不安装、切换或配置其他插件。
 
@@ -50,7 +60,7 @@
 
 调用 `host.capabilities.invoke('sesame/investment-research#investment_research_analyze', input, options)`，options.operationId 使用稳定业务操作 ID。返回原生 Run；状态、等待、中断、恢复、取消、打开过程全部使用宿主接口。
 
-仅 analyze 在能力声明中定义八个 Agent 的协作关系。它们是实际角色，单个角色的多次运行不伪造更多成员；工具与阶段不是图节点。report 入口只包含一个经理，不声明多 Agent 图。
+analyze 的声明提供默认八成员图。显式 workflow 由执行器在首个子 Run 前通过 `execution.setCollaboration` 冻结实际成员图；只有一名综合者时清除多成员图。单个成员的多次运行不新增身份，工具与阶段不是图节点。report 入口只包含原计划指定的综合者，不声明多 Agent 图。
 
 请求用户报告时使用宿主选项：
 
@@ -71,7 +81,7 @@
   schemaVersion: '1.0.0',
   type: 'sesame.investment-research.result',
   status: 'complete',
-  title, question, subjects, as_of, horizon?,
+  title, question, subjects, as_of, horizon?, workflow?,
   members: [{role, markdown, run_ref: {id}, source_refs: [DataRef]}],
   qa: [{from, to, question, markdown, run_ref: {id}, qa_run_ref: {id}, source_refs: [DataRef]}],
   summary,

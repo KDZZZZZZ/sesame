@@ -68,6 +68,46 @@ async function settled(host, ref) {
     if (result.reason !== 'timeout') return result.run;
   }
 }
+
+test('a report-bound custom synthesizer can ask its selected source analyst without gaining source calls', { skip: !hostRoot, timeout: 120000 }, async () => {
+  const failures=[];let receivedAnswer=false;
+  const {app,host}=await installedFixture((body,response)=>{
+    try {
+      const input=inputOf(body),names=body.tools?.map(tool=>tool.function.name)??[];
+      if(!input?.role){reply(response,body.model,'Local fixture ready.');return true;}
+      if(input.role==='facts') {
+        assert.ok(names.includes('sources_fetch'));
+        assert.equal(names.includes('investment_research_ask'),false);
+        reply(response,body.model,input.qa?'Fixed source scope verified by the original analyst.':'Initial fictional source observation.');
+      } else {
+        assert.equal(input.role,'editor');assert.ok(names.includes('report_publish'));assert.equal(names.includes('sources_fetch'),false);
+        const accepted=returned(body,'report_source_ask');
+        if(!accepted){reply(response,body.model,null,{id:'report_source_ask',name:'investment_research_ask',arguments:{analyst:'facts',question:'Verify the exact source scope before writing the report.'}});return true;}
+        assert.equal(accepted.type,'run');
+        const waited=returned(body,'report_source_wait');
+        if(!waited){reply(response,body.model,null,{id:'report_source_wait',name:'host_runs_wait',arguments:{runId:accepted.run.id,until:'settled',timeoutMs:10000}});return true;}
+        assert.equal(waited.run.status,'completed',JSON.stringify(waited));assert.match(waited.run.output.markdown,/source scope verified/);receivedAnswer=true;
+        // This boundary test stops before report authoring. Exact publication and
+        // rendering remain covered by the report artifact contract tests.
+        reply(response,body.model,null,{id:'report_qa_boundary_verified',name:'host_runs_interrupt',arguments:{reason:'Fixture stops after verifying report-bound QA permissions.'}});
+      }
+      return true;
+    } catch(error){failures.push(error.message);reply(response,body.model,`Fixture assertion failed: ${error.message}`);return true;}
+  },['web-sources']);
+  try {
+    const accepted=await host.capabilities.invoke(`${pluginId}#investment_research_analyze`,{
+      title:'Report-bound source QA fixture',question:'Verify source reuse with the actual report-bound Agent permissions.',subjects:['FICTIONAL'],
+      model:{provider:'fixture',id:'fixture'},research:{plugins:['sesame/web-sources'],tools:['sesame/web-sources#sources_fetch']},
+      workflow:{stages:[[{id:'facts',role:'fundamentals'}],[{id:'editor',role:'manager'}]],synthesis:'editor'},
+    },{operationId:'report-source-qa-boundary',task:{output:{type:'report',space:'research',path:'qa-boundary.html'}}});
+    const done=await settled(host,accepted.run);
+    assert.deepEqual(failures,[]);assert.equal(receivedAnswer,true,JSON.stringify({status:done.status,error:done.error,interrupts:done.interrupts,children:app.runtime.runs.descendants(done.id).map(run=>({kind:run.kind,status:run.status,role:run.task?.role,error:run.error}))}));assert.equal(done.status,'interrupted');
+    const descendants=app.runtime.runs.descendants(done.id),qa=descendants.find(run=>run.capabilityId===capabilityId);
+    assert.equal(qa.status,'completed');assert.equal(qa.output.to,'facts');
+    assert.equal(descendants.filter(run=>run.kind==='agent').length,3);
+    assert.equal(done.output?.report_ref,undefined);
+  } finally {await app.dispose();}
+});
 function publishSample(app, round) {
   return app.runtime.contractArtifacts.publish({ id: 'fixture/research-qa-evidence', version: '1.0.0', digest: `sha256:${'a'.repeat(64)}` }, {
     operationId: `qa-sample-${round}`, manifest: {

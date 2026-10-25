@@ -2,7 +2,7 @@
 // All factor values and diagnostics are computed locally; no generated code is executed.
 import { createHash } from 'node:crypto';
 
-export const EVALUATOR_VERSION = 'sesame-factor-ast/1.0.0';
+export const EVALUATOR_VERSION = 'sesame-factor-ast/1.1.0';
 const MAX_ROWS = 20000;
 const MAX_NODES = 128;
 const MAX_DEPTH = 12;
@@ -112,7 +112,7 @@ export function validateExpression(expression) {
 export function prepareDataset(rows, config, { developmentOnly = false } = {}) {
   assert(Array.isArray(rows) && rows.length >= 1 && rows.length <= MAX_ROWS, `Dataset must contain 1–${MAX_ROWS} rows`);
   assert(plain(config), 'Dataset config required');
-  const allowed = ['trainEnd', 'validationEnd', 'holdoutEnd', 'horizon', 'costBps', 'quantile'];
+  const allowed = ['trainEnd', 'validationEnd', 'holdoutEnd', 'horizon', 'costBps', 'quantile', 'mode'];
   assert(Object.keys(config).every(key => allowed.includes(key)), 'Unknown dataset config field');
   const normalized = {
     trainEnd: timestamp(config.trainEnd, 'trainEnd'),
@@ -121,7 +121,9 @@ export function prepareDataset(rows, config, { developmentOnly = false } = {}) {
     horizon: config.horizon ?? 1,
     costBps: config.costBps ?? 10,
     quantile: config.quantile ?? 0.25,
+    mode: config.mode ?? 'auto',
   };
+  assert(['auto', 'cross-sectional', 'time-series'].includes(normalized.mode), 'mode must be auto, cross-sectional or time-series');
   assert(normalized.trainEnd < normalized.validationEnd && (developmentOnly ? normalized.validationEnd <= normalized.holdoutEnd : normalized.validationEnd < normalized.holdoutEnd),
     'Require trainEnd < validationEnd < holdoutEnd');
   assert(Number.isSafeInteger(normalized.horizon) && normalized.horizon >= 1 && normalized.horizon <= 252,
@@ -155,6 +157,7 @@ export function prepareDataset(rows, config, { developmentOnly = false } = {}) {
     return { time, symbol: row.symbol, availableAt, fields };
   }).sort((a, b) => a.time < b.time ? -1 : a.time > b.time ? 1 : a.symbol < b.symbol ? -1 : a.symbol > b.symbol ? 1 : 0);
   const development = copied.filter(row => row.time <= normalized.validationEnd);
+  if (normalized.mode === 'auto') normalized.mode = new Set(development.map(row => row.symbol)).size === 1 ? 'time-series' : 'cross-sectional';
   assert(development.some(row => row.time <= normalized.trainEnd), 'Training split contains no rows');
   assert(development.some(row => row.time > normalized.trainEnd), 'Validation split contains no rows');
   assert(developmentOnly || copied.some(row => row.time > normalized.validationEnd), 'Holdout split contains no rows');
@@ -190,7 +193,7 @@ function groups(rows, key) {
   return result;
 }
 
-function average(values) {
+export function average(values) {
   if (!values.length) return null;
   const scale = values.reduce((maximum, value) => Math.max(maximum, Math.abs(value)), 0);
   if (scale === 0) return 0;
@@ -215,7 +218,7 @@ function ranks(values) {
   return result;
 }
 
-function rankCorrelation(x, y) {
+export function rankCorrelation(x, y) {
   if (x.length < 2) return null;
   const a = ranks(x), b = ranks(y), am = average(a), bm = average(b);
   let product = 0, aa = 0, bb = 0;
@@ -294,7 +297,7 @@ function compute(rows, expression) {
   return { values: run(expression), byTime };
 }
 
-function compound(returns) {
+export function compound(returns) {
   if (!returns.length) return { return: null, maxDrawdown: null, insolvent: false };
   let nav = 1, peak = 1, maxDrawdown = 0;
   for (const value of returns) {
@@ -307,7 +310,85 @@ function compound(returns) {
   return { return: numeric(nav - 1), maxDrawdown: numeric(maxDrawdown), insolvent: false };
 }
 
-function metrics(rows, values, config, name, byTime) {
+export function quantile(values, fraction) {
+  if (!values.length) return null;
+  const sorted = [...values].sort((a, b) => a - b), position = (sorted.length - 1) * fraction;
+  const lo = Math.floor(position), hi = Math.ceil(position);
+  return sorted[lo] * (hi - position || 1) + (hi === lo ? 0 : sorted[hi] * (position - lo));
+}
+
+function timeSeriesMetrics(rows, values, config, name, byTime, details, fitEnd) {
+  const times = [...byTime.keys()];
+  const start = name === 'train' ? null : name === 'validation' ? config.trainEnd : config.validationEnd;
+  const end = config[`${name}End`];
+  const lookup = new Map(rows.map((row, index) => [`${row.time}\u0000${row.symbol}`, index]));
+  const training = new Map();
+  for (let index = 0; index < rows.length; index++) if (rows[index].time <= fitEnd && values[index] !== null) {
+    const symbol = rows[index].symbol;
+    if (!training.has(symbol)) training.set(symbol, []);
+    training.get(symbol).push(values[index]);
+  }
+  const thresholds = Object.fromEntries([...training].map(([symbol, input]) => [symbol, {
+    low: quantile(input, config.quantile), high: quantile(input, 1 - config.quantile), observations: input.length,
+  }]));
+  details.observations = []; details.ic = []; details.returns = [];
+  details.thresholds = { fitEnd, bySymbol: thresholds };
+  let rowCount = 0, dates = 0, factorObservations = 0, labelObservations = 0;
+  let purgedBoundaryRows = 0, missingForwardRows = 0, numericReturnFailures = 0, overlapSkippedPeriods = 0;
+  let previousEnd = null;
+  for (let position = 0; position < times.length; position++) {
+    const time = times[position];
+    if ((start !== null && time <= start) || time > end) continue;
+    dates++;
+    const endTime = times[position + config.horizon], active = [];
+    for (const index of byTime.get(time)) {
+      rowCount++;
+      if (values[index] !== null) factorObservations++;
+      if (endTime === undefined || endTime > end) { purgedBoundaryRows++; continue; }
+      const row = rows[index], next = lookup.get(`${endTime}\u0000${row.symbol}`);
+      if (next === undefined) { missingForwardRows++; continue; }
+      const label = numeric(rows[next].fields.close / row.fields.close - 1);
+      if (label === null) { numericReturnFailures++; continue; }
+      labelObservations++;
+      if (values[index] === null) continue;
+      details.observations.push({ time, endTime, symbol: row.symbol, value: values[index], label, fields: row.fields });
+      const cutoff = Object.hasOwn(thresholds, row.symbol) ? thresholds[row.symbol] : null;
+      if (!cutoff || cutoff.low === null || cutoff.low >= cutoff.high) continue;
+      const direction = values[index] > cutoff.high ? 1 : values[index] < cutoff.low ? -1 : 0;
+      if (direction) active.push(direction * label);
+    }
+    if (!active.length) continue;
+    if (previousEnd !== null && time < previousEnd) { overlapSkippedPeriods++; continue; }
+    const gross = average(active), net = numeric(gross - 2 * config.costBps / 10000);
+    if (net === null) { numericReturnFailures++; continue; }
+    details.returns.push({ time, endTime, gross, net }); previousEnd = endTime;
+  }
+  const bySymbol = groups(details.observations, 'symbol');
+  const series = [...bySymbol].map(([symbol, indexes]) => {
+    const paired = indexes.map(index => details.observations[index]);
+    return { symbol, observations: paired.length, rankIC: paired.length >= 4 ? rankCorrelation(paired.map(row => row.value), paired.map(row => row.label)) : null };
+  });
+  const measured = series.filter(item => item.rankIC !== null);
+  const rankIC = average(measured.map(item => item.rankIC));
+  const grossReturns = details.returns.map(item => item.gross), netReturns = details.returns.map(item => item.net);
+  const gross = compound(grossReturns), net = compound(netReturns);
+  return {
+    rows: rowCount, dates, factorObservations, labelObservations, eligibleObservations: details.observations.length,
+    coverage: rowCount ? factorObservations / rowCount : null, labelCoverage: rowCount ? labelObservations / rowCount : null,
+    rankIC, rankICMean: rankIC, rankICStd: null, rankICIR: null, validICPeriods: 0,
+    validICSeries: measured.length, rankICMethod: 'equal-weight-per-symbol-time-series-spearman',
+    perSymbol: series.slice(0, 32), symbolCount: series.length, omittedSymbolDetails: Math.max(0, series.length - 32),
+    portfolioPeriods: netReturns.length, grossReturn: gross.return, netReturn: net.return,
+    meanGrossReturn: average(grossReturns), meanNetReturn: average(netReturns),
+    turnover: netReturns.length ? 2 : null, totalTurnover: netReturns.length * 2, costPerPeriod: 2 * config.costBps / 10000,
+    maxDrawdown: net.maxDrawdown, grossMaxDrawdown: gross.maxDrawdown, insolvent: net.insolvent,
+    thresholdFitEnd: fitEnd, purgedBoundaryRows, missingForwardRows, numericReturnFailures, overlapSkippedPeriods,
+  };
+}
+
+function metrics(rows, values, config, name, byTime, details = {}, fitEnd = config.trainEnd) {
+  if (config.mode === 'time-series') return timeSeriesMetrics(rows, values, config, name, byTime, details, fitEnd);
+  details.observations = []; details.ic = []; details.returns = [];
   const times = [...byTime.keys()];
   const start = name === 'train' ? null : name === 'validation' ? config.trainEnd : config.validationEnd;
   const end = config[`${name === 'train' ? 'train' : name === 'validation' ? 'validation' : 'holdout'}End`];
@@ -331,12 +412,13 @@ function metrics(rows, values, config, name, byTime) {
       const label = numeric(rows[next].fields.close / rows[index].fields.close - 1);
       if (label === null) { numericReturnFailures++; continue; }
       labelObservations++;
-      if (values[index] !== null) paired.push({ value: values[index], label });
+      if (values[index] !== null) paired.push({ time, endTime, symbol: rows[index].symbol, fields: rows[index].fields, value: values[index], label });
     }
     eligibleObservations += paired.length;
+    details.observations.push(...paired);
     if (paired.length < 4) { insufficientCrossSections++; continue; }
     const correlation = rankCorrelation(paired.map(row => row.value), paired.map(row => row.label));
-    if (correlation !== null) ic.push(correlation);
+    if (correlation !== null) { ic.push(correlation); details.ic.push({ time, value: correlation }); }
     // Full tied groups must fit in a tail. Symbol ordering never creates a signal.
     const ordered = [...paired].sort((a, b) => a.value - b.value);
     const tail = Math.max(1, Math.floor(ordered.length * config.quantile));
@@ -351,6 +433,7 @@ function metrics(rows, values, config, name, byTime) {
     if (net === null) { numericReturnFailures++; continue; }
     grossReturns.push(gross);
     netReturns.push(net);
+    details.returns.push({ time, endTime, gross, net });
     previousEnd = endTime;
   }
   const rankIC = average(ic), rankICStd = sampleSD(ic);
@@ -360,6 +443,7 @@ function metrics(rows, values, config, name, byTime) {
     coverage: rowCount ? factorObservations / rowCount : null,
     labelCoverage: rowCount ? labelObservations / rowCount : null,
     validICPeriods: ic.length, rankIC, rankICMean: rankIC, rankICStd,
+    rankICMethod: 'mean-cross-sectional-spearman',
     rankICIR: rankICStd !== null && rankICStd > 0 ? numeric(rankIC / rankICStd) : null,
     portfolioPeriods: netReturns.length,
     grossReturn: gross.return, netReturn: net.return,
@@ -374,7 +458,7 @@ function metrics(rows, values, config, name, byTime) {
 }
 
 const limitations = freeze([
-  'This AST evaluator is an editable research baseline, not a standard answer, a significance test, or a broker backtest.',
+  'Factor association and direction returns are research measurements, not a broker execution backtest.',
   'Availability timestamps are checked, not independently verified. Universe selection, corporate actions, delistings and vendor revisions require separate point-in-time evidence.',
   'Forward returns use supplied closes at aligned market timestamps. Entering at the observed close is an idealized assumption; latency, liquidity, short availability, impact and borrowing costs are not modeled.',
   'Portfolio diagnostics hold half long and half short with gross exposure one. Each nonoverlapping interval starts and ends flat, incurs absolute turnover two and fixed one-way costs twice.',
@@ -397,13 +481,17 @@ export function evaluateFactor(input, expression, { holdout = false } = {}) {
     expressionDigest: hash(normalized),
     dataDigest: hash({ config: dataset.config, rows }),
     protocol: {
-      splitEnds: 'inclusive', minAssets: 4, horizon: dataset.config.horizon,
+      splitEnds: 'inclusive', mode: dataset.config.mode, minAssets: dataset.config.mode === 'time-series' ? 1 : 4, horizon: dataset.config.horizon,
       horizonUnit: 'distinct-market-timestamps', rankICIR: 'not-annualized',
-      portfolio: 'gross-one-half-long-half-short-flat-to-flat',
+      portfolio: dataset.config.mode === 'time-series' ? 'train-quantile-direction-equal-active-symbols-flat-to-flat' : 'gross-one-half-long-half-short-flat-to-flat',
       costBps: dataset.config.costBps, quantile: dataset.config.quantile,
       portfolioSampling: 'nonoverlapping',
     },
-    limitations,
+    limitations: dataset.config.mode === 'time-series' ? [
+      'Time-series Rank IC measures within-symbol factor/forward-return association; multiple symbols are averaged equally without pooling prices or labels.',
+      'Direction diagnostics use only training factor quantiles, fixed through validation and holdout, with nonoverlapping close-to-close periods and two fixed one-way costs. They are not executed trades, win rates or per-trade R.',
+      ...limitations.filter(text => !text.startsWith('Portfolio diagnostics') && !text.startsWith('Rank IC is')),
+    ] : limitations,
   };
   if (holdout) result.holdout = metrics(rows, values, dataset.config, 'holdout', byTime);
   else {
@@ -411,6 +499,22 @@ export function evaluateFactor(input, expression, { holdout = false } = {}) {
     result.validation = metrics(rows, values, dataset.config, 'validation', byTime);
   }
   return result;
+}
+
+/** Internal numerical evidence for optional diagnostics. Bounds never expose a later split. */
+export function factorEvidence(input, expression, { split = 'validation', start, end, fitEnd } = {}) {
+  const dataset = checkedDataset(input), normalized = validateExpression(expression);
+  assert(['train', 'validation', 'holdout'].includes(split), 'Unknown evidence split');
+  assert(split !== 'holdout' || dataset.access !== 'development-only', 'Development-only evaluation has no holdout');
+  const cutoff = end ?? dataset.config[`${split}End`];
+  assert(cutoff <= dataset.config[`${split}End`], 'Diagnostic end exceeds its split');
+  const config = { ...dataset.config, [`${split}End`]: cutoff };
+  if (start !== undefined) { assert(split === 'validation', 'Custom start requires validation split'); config.trainEnd = start; }
+  const thresholdEnd = fitEnd ?? config.trainEnd;
+  assert(thresholdEnd <= config.trainEnd, 'Threshold fitting must end before validation');
+  const rows = dataset.rows.filter(row => row.time <= cutoff), computed = compute(rows, normalized), details = {};
+  const result = metrics(rows, computed.values, config, split, computed.byTime, details, thresholdEnd);
+  return { ...details, metrics: result, mode: dataset.config.mode };
 }
 
 /** Train-only redundancy: average of finite per-date rank correlations. */
@@ -421,7 +525,8 @@ export function compareFactors(input, expressionA, expressionB) {
   const resultA = compute(rows, a), resultB = compute(rows, b);
   const correlations = [];
   let observations = 0;
-  for (const indexes of resultA.byTime.values()) {
+  const comparisonGroups = dataset.config.mode === 'time-series' ? groups(rows, 'symbol') : resultA.byTime;
+  for (const indexes of comparisonGroups.values()) {
     const paired = indexes.filter(index => resultA.values[index] !== null && resultB.values[index] !== null);
     if (paired.length < 4) continue;
     const correlation = rankCorrelation(paired.map(index => resultA.values[index]), paired.map(index => resultB.values[index]));
@@ -429,7 +534,7 @@ export function compareFactors(input, expressionA, expressionB) {
   }
   return {
     evaluatorVersion: EVALUATOR_VERSION,
-    scope: 'train', method: 'mean-cross-sectional-spearman',
+    scope: 'train', method: dataset.config.mode === 'time-series' ? 'equal-weight-per-symbol-time-series-spearman' : 'mean-cross-sectional-spearman',
     correlation: average(correlations), periods: correlations.length, observations,
   };
 }

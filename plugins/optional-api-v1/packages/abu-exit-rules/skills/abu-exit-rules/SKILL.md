@@ -5,14 +5,18 @@ description: ABU-inspired ATR stop, trailing stop and holding-period exit baseli
 
 # 退出规则基线
 
-这是可修改、可验证的研究基线，不是标准答案。改进公式或参数时保留原结果、修改假设和对照证据。
+用 `abu_exit_rules_analyze` 对假设持仓评估 ATR 止损、止盈、跟踪与持有期规则，区分首次触发和最新状态。
 
-能力 `abu_exit_rules_analyze`：针对一个已声明的假设持仓计算 ATR 止损、止盈、追踪回撤与最长持有期退出观察。
+入场所在 K 线的高低点不必发生在入场之后；单根 OHLC 也无法证明止损与止盈触发的盘中顺序。输出是退出观察，不会平仓或发单。
 
-调用形状为 {input:{schema_version:1,source:{id,kind},as_of,parameters?,...}}，不是文件路径或数据 ID。source.id 为 1..500 字符，kind 为 synthetic/historical/live；as_of 及全部时间字段使用真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒）。输入限 2MiB 有限 JSON，不接收代码。parameters 只支持列出的字段。 bars 是 1..10000 条已知 OHLCV，按收盘 time 严格递增且不重复；每行含 time、available_at、open/high/low/close、volume。time <= available_at <= as_of，价格为正且 high/low 覆盖 open/close，volume >= 0。 position:{side:"long"|"short",entry_time,entry_price>0}；entry_time 必须等于已提供某根 K 线的收盘 time，且至少有一根其后的可见 K 线。
+本基线首根 TR 使用 high-low，ATR 在累计 atr_window 根输入 K 线后可得，之前为 null。与 abu-indicators/abu-volatility 的首根 TR=null、需 N+1 根口径不同，复用时须核对初始窗口。
 
-observations.position 保留假设持仓，latest/series 给出退出条件，first_exit 为首次触发观察，decision_available_at 为证据可用时点。 立即返回 {schema_version:1,baseline:true,status:"research_baseline",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。
+## 输入与交接
 
-入场前 K 线可用于 ATR 预热；入场那根 K 线的极值不作为入场后回撤。 退出观察不平仓、不发单；单根 OHLC 无法证明止损和止盈的盘中先后顺序。 来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。
+本能力属于数值方法层，消费调用者提供的已知输入。把 latest/series、first_exit 和假设持仓一起交给风险研究；触发点只是规则观察，是否执行平仓由执行能力依据实际账户另行处理。复用前核对输入版本、参数、截止时间与实现口径；已有匹配结果可直接引用。同源价格、成交或统计派生结果不能重复计为独立证据；计算只回答本项局部问题，方法解释与最终综合由调用者负责。缺少已声明的必需字段或真实时序时，交回具体缺口，不补造数据以通过校验。
 
-`references/method.md` 解释公式和原版差异；包根目录 `examples/input.json` 提供合成样例。两者用于需要时核对，不是调用前的固定步骤。
+工具 abu_exit_rules_analyze 的已注册 inputSchema 和 usage 给出准确字段、参数、返回路径与错误条件，不要求先阅读示例或运行教学演练。保留 input_artifact、result_artifact、source/as_of、实际参数和 limitations；原始工件可用 data_read({ref}) 按完整引用再次读取。其他方法需要不同输入形状时按其已声明接口显式转换，不把一个结果对象直接冒充另一个工具的输入。
+
+## 可选改进
+
+这是可修改、可验证的研究基线；只有任务需要比较公式或参数时才开展改进，保留原结果、修改假设与同一输入上的对照。references/method.md 解释公式和原版差异；examples/input.json 是合成教学输入。两者按需读取，合成结果保持演示身份。

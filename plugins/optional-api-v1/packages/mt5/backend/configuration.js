@@ -56,6 +56,16 @@ function previous(host, args) {
 export function readConfiguration(mt5, imports) {
   return { settings: mt5.official.settings(), pendingImports: imports.pending(), environment: { platform: process.platform, terminalInstalled: Boolean(mt5.native), ...mt5.status() }, connection: mt5.storage.get('mt5_connection_status', 'terminal', true) };
 }
+export function configurationStatus(mt5) {
+  const value = mt5.official.settings();
+  return { settings: { version: value.version, allow_trading: value.allow_trading, allow_host_operations: value.allow_host_operations,
+    servers: Object.fromEntries(['terminal', 'metaeditor', 'marketdata'].map(name => {
+      const { url, enabled, authenticated } = value.servers[name]; return [name, { url, enabled, authenticated }];
+    })),
+    account: { login: value.account.login, server: value.account.server, password_configured: value.account.password_configured },
+    tester_agent: { address: value.tester_agent.address, port: value.tester_agent.port, password_configured: value.tester_agent.password_configured },
+  } };
+}
 export async function startMT5Terminal(host, mt5, args, signal) {
   requireValue(host.context.kind === 'main', '只有主 Agent 可以启动 MT5 终端', 403, 'FORBIDDEN');
   requireValue(Value.Check(object({ command_id: commandSchema }), args), '启动终端只需要稳定 command_id，不接受路径、账户或启动 INI');

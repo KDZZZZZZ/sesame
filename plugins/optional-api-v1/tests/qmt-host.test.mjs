@@ -1,36 +1,51 @@
-/** Opt-in actual Sesame API1 installation/storage test; never uses native QMT. */
+/** Actual HostContext v2 installation/storage test; never uses native QMT. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtemp,cp,readFile,rm} from 'node:fs/promises';
-import {join} from 'node:path';
+import {dirname,join,resolve} from 'node:path';
 import {tmpdir} from 'node:os';
 import {pathToFileURL,fileURLToPath} from 'node:url';
 import {createService} from '../packages/qmt/service.js';
+import {createCapabilities} from '../packages/qmt/index.js';
+import {records,closeRecords} from '../packages/qmt/records.js';
 const root=process.env.SESAME_HOST_ROOT;
 test('actual HostContext installs all QMT tools and preserves unknown trade intent across Runtime restart without replay', {skip:!root,timeout:60000},async()=>{
   const {Store}=await import(pathToFileURL(join(root,'modules/agent/store.js')));
   const {Runtime}=await import(pathToFileURL(join(root,'modules/agent/runtime.js')));
-  const {createHostContext}=await import(pathToFileURL(join(root,'modules/plugins/context.js')));
-  const dir=await mkdtemp(join(tmpdir(),'qmt-host-restart-'));let store,runtime,service;
+  const {createHostContextV2}=await import(pathToFileURL(join(root,'modules/plugins/host-v2/context.js')));
+  const dir=await mkdtemp(join(tmpdir(),'qmt-host-restart-'));let store,runtime,service,host,installedRecords;
   const open=async()=>{store=new Store(join(dir,'app'));runtime=new Runtime(store,{piDir:join(dir,'pi'),officialPluginsDirectory:join(dir,'empty')});await runtime.init()};
-  const close=async()=>{await service?.dispose();service=null;await runtime?.close();runtime=null;store?.close();store=null};
+  const close=async()=>{await service?.dispose();service=null;if(host)closeRecords(host);await runtime?.close();runtime=null;if(host)installedRecords?.closeRecords(host);host=null;store?.close();store=null};
   try{
     await open();const draft=join(runtime.workspaces.root('conv_main'),'draft');await cp(fileURLToPath(new URL('../packages/qmt',import.meta.url)),draft,{recursive:true});
     const checked=await runtime.plugins.manager.test('conv_main',{path:draft});assert.equal(checked.passed,true,JSON.stringify(checked));
     const installed=await runtime.plugins.manager.install('conv_main',{path:draft,digest:checked.digest});assert.equal(installed.runtime_status,'ready');runtime.plugins.activate('conv_main',installed.id);
-    const host=createHostContext(runtime,runtime.plugins.entry('sesame/qmt'),'conv_main');assert.equal(host.scope.kind,'main');
-    const declared=JSON.parse(await readFile(new URL('../packages/qmt/tools.json',import.meta.url),'utf8')).map(tool=>tool.name).filter(name=>name.startsWith('qmt_')).sort();
+    host=createHostContextV2(runtime,runtime.plugins.entry('sesame/qmt'),'conv_main');assert.equal(host.context.kind,'main');
+    installedRecords=await import(pathToFileURL(join(runtime.plugins.entry('sesame/qmt').root,'records.js')));
+    const manifest=JSON.parse(await readFile(new URL('../packages/qmt/capabilities.json',import.meta.url),'utf8'));
+    assert.deepEqual(createCapabilities(host).map(tool=>tool.name).sort(),manifest.capabilities.map(tool=>tool.id).sort());
+    const declared=manifest.capabilities.filter(tool=>tool.consumers.includes('agent')).map(tool=>tool.id).filter(name=>name.startsWith('qmt_')).sort();
     const registered=runtime.plugins.definitions({conversationId:'conv_main'}).map(tool=>tool.name).filter(name=>name.startsWith('qmt_')).sort();
     assert.deepEqual(registered,declared);
     for(const name of ['qmt_trading_context','qmt_trading_order','qmt_trading_cancel','qmt_trading_command'])assert.ok(registered.includes(name),name);
-    host.storage.put('configuration',{id:'local',version:2,connection_id:'fixture',python_path:join(dir,'nonexecuted-python'),account_id:'00123',userdata_directory:dir});
+    const inspected=await host.capabilities.invoke('sesame/qmt#qmt_environment',{action:'inspect'});
+    assert.equal(inspected.type,'run');
+    const inspectedRun=(await host.runs.wait(inspected.run,{until:'settled',timeoutMs:10000})).run;
+    assert.equal(inspectedRun.status,'completed');assert.equal(inspectedRun.output.terminal_started,false);
+    const storageRoot=host.context.storageRoot;
+    records(host).put('configuration',{id:'local',version:2,connection_id:'fixture',python_path:join(dir,'nonexecuted-python'),account_id:'00123',userdata_directory:dir});
     const args={operation_id:'durable-unknown',user_authorized:true,account_id:'00123',connection_revision:'2',symbol:'600000.SH',side:'buy',shares:'100',price:'10'};let calls=0;
-    service=createService(host,{platform:'win32',request:async()=>{calls++;throw Object.assign(Error('Injected transport outcome unknown'),{code:'SOURCE_UNAVAILABLE'})}});
-    await assert.rejects(service.command('order',args),{code:'SOURCE_UNAVAILABLE'});assert.equal(calls,1);assert.equal(host.storage.get('qmt_commands',args.operation_id).status,'outcome_unknown');
-    await close();await open();const restored=createHostContext(runtime,runtime.plugins.entry('sesame/qmt'),'conv_main');
-    service=createService(restored,{platform:'win32',request:async()=>{calls++;throw Error('Must not replay native command')}});
+    service=createService(host,{platform:'win32',request:async()=>{calls++;assert.equal(records(host).get('qmt_commands',args.operation_id).status,'outcome_unknown');throw Object.assign(Error('Injected transport outcome unknown'),{code:'SOURCE_UNAVAILABLE'})}});
+    await assert.rejects(service.command('order',args),{code:'SOURCE_UNAVAILABLE'});assert.equal(calls,1);assert.equal(records(host).get('qmt_commands',args.operation_id).status,'outcome_unknown');
+    const original=service.commandRecord(args.operation_id,{kind:'main'});
+    await close();await open();host=createHostContextV2(runtime,runtime.plugins.entry('sesame/qmt'),'conv_main');
+    assert.equal(host.context.storageRoot,storageRoot);
+    assert.deepEqual(records(host).get('qmt_commands',args.operation_id),original);
+    service=createService(host,{platform:'win32',request:async()=>{calls++;throw Error('Must not replay native command')}});
     assert.equal((await service.command('order',args)).status,'outcome_unknown');assert.equal(calls,1);
     assert.equal(service.commandRecord(args.operation_id,{kind:'main'}).status,'outcome_unknown');assert.equal(calls,1);
+    const retained=await host.capabilities.invoke('sesame/qmt#qmt_command',{operation_id:args.operation_id});
+    assert.equal(retained.type,'result');assert.deepEqual(retained.value,original);assert.equal(calls,1);
     assert.equal(runtime.plugins.entry('sesame/qmt').runtime_status,'ready');
-  }finally{await close();await rm(dir,{recursive:true,force:true})}
+  }finally{await close();assert.equal(dirname(dir),resolve(tmpdir()));await rm(dir,{recursive:true,force:true})}
 });

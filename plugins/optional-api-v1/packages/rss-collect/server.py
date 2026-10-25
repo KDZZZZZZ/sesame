@@ -97,31 +97,11 @@ def parse_feed(args):
         "version": VERSION
     }
 
-with open(os.path.join(str(PLUGIN_ROOT), "capabilities.json"), encoding="utf-8") as declaration_file:
-    DECLARED_CAPABILITIES = json.load(declaration_file)["capabilities"]
-TOOLS = [{"name": c["binding"]["name"], "description": c["description"], "inputSchema": c["inputSchema"], "outputSchema": c["outputSchema"]} for c in DECLARED_CAPABILITIES if c["binding"]["type"] == "mcp"]
 
-for line in sys.stdin:
-    try:
-        req = json.loads(line)
-        method = req.get("method")
-        result = None
-        if "id" not in req:
-            continue
-        if method == "server/discover":
-            result = {"serverInfo": {"name": "rss-collect", "version": VERSION}, "capabilities": {"tools": {}}, "ttlMs": 0, "cacheScope": "private"}
-        elif method == "initialize":
-            result = {"protocolVersion": "2025-11-25", "serverInfo": {"name": "rss-collect", "version": VERSION}, "capabilities": {"tools": {}}}
-        elif method == "tools/list":
-            result = {"tools": TOOLS, "ttlMs": 0, "cacheScope": "private"}
-        elif method == "tools/call" and req["params"]["name"] == "parse_feed":
-            data = parse_feed(req["params"]["arguments"])
-            result = {"content": [{"type": "text", "text": json.dumps(data, ensure_ascii=False)}], "structuredContent": data, "isError": "error" in data}
-        if result is None:
-            response = {"jsonrpc": "2.0", "id": req["id"], "error": {"code": -32601, "message": "Method or tool not found"}}
-        else:
-            result["resultType"] = "complete"
-            response = {"jsonrpc": "2.0", "id": req["id"], "result": result}
-    except Exception as error:
-        response = {"jsonrpc": "2.0", "id": req.get("id"), "error": {"code": -32602, "message": str(error)}}
-    print(json.dumps(response, ensure_ascii=False), flush=True)
+if __name__ == "__main__":
+    functions = {"parse_feed": parse_feed}
+    with open(sys.argv[2], encoding="utf-8") as request:
+        arguments = json.load(request)
+    result = functions[sys.argv[1]](arguments)
+    with open(sys.argv[3], "w", encoding="utf-8") as response:
+        json.dump(result, response, ensure_ascii=False)

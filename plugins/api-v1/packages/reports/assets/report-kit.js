@@ -567,7 +567,7 @@
       };
       const sources = list(method.sources, 'method.sources', 12);
       root.append(h('details', { class: 'kit-appendix' },
-        h('summary', {}, h('span', { text: tr('方法、限制与来源', 'Method, limits and sources') })),
+        h('summary', {}, h('span', { text: tr('方法与来源', 'Method and sources') })),
         h('div', { class: 'kit-appendix-body' },
           group('steps', tr('方法', 'Method')), group('limits', tr('限制', 'Limits')),
           sources.length ? h('div', { class: 'kit-method-group' }, h('h3', { text: tr('来源', 'Sources') }), h('dl', { class: 'kit-sources' }, sources.flatMap((item, i) => {

@@ -29,6 +29,6 @@ export async function nativeHost(t) {
     await runtime.reportLibrary.flush(); runtime.resources.close(); store.close();
     assert.ok(resolve(directory).startsWith(resolve(join(tmpdir(), 'sesame-memory-host-')))); rmSync(directory, { recursive: true, force: true });
   });
-  const actor = { pluginId: 'host', sessionId: 'conv_main', kind: 'main', consumer: 'agent' };
+  const actor = runtime.authority.bind({ sessionId: 'conv_main', kind: 'main', consumer: 'agent' }, runtime.capabilities.hostEntry);
   return { runtime, store, attach, onDispose: fn => disposers.push(fn), call: async (id, input) => (await runtime.capabilities.invoke(id, input, {}, actor)).value };
 }

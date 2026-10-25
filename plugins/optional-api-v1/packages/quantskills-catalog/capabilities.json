@@ -118,7 +118,7 @@
               ],
               "count": 1,
               "query": "alpha191",
-              "version": "2.1.0"
+              "version": "3.0.0"
             }
           }
         ]
@@ -294,7 +294,7 @@
                 "category": "02 因子研发工具箱",
                 "limit": 5
               },
-              "version": "2.1.0"
+              "version": "3.0.0"
             }
           }
         ]
@@ -417,7 +417,7 @@
                 }
               ],
               "total_items": 214,
-              "version": "2.1.0"
+              "version": "3.0.0"
             }
           }
         ]
@@ -563,7 +563,7 @@
                 "verification_level": "pending_review",
                 "workflow_stage": "研究信号 / Research signal"
               },
-              "version": "2.1.0"
+              "version": "3.0.0"
             }
           }
         ]
@@ -698,7 +698,7 @@
                 "Read the selected SKILL and retain its sources; directory references are not imported implementations or proof of trading performance."
               ],
               "snapshot_date": "2026-10-03T14:34:06.311Z",
-              "version": "2.1.0"
+              "version": "3.0.0"
             }
           }
         ]

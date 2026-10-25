@@ -23,6 +23,15 @@ test('rejects invalid probability inputs', () => {
   assert.throws(() => analyze(input), /kelly_win_probability/);
 });
 
+test('initial ATR uses N bar ranges while sizing waits for the price-rank window', () => {
+  const series = analyze(load()).observations.series;
+  assert.equal(series[1].atr, null);
+  assert.equal(series[2].atr, (3 + 4 + 4) / 3);
+  assert.equal(series[2].status, 'warmup');
+  assert.equal(series[2].price_rank, null);
+  assert.equal(series[3].status, 'ready');
+});
+
 test('sizing availability waits for delayed ATR or price-rank window data', () => {
   const input = load();
   input.bars[1].available_at = '2026-01-05T00:30:00.000Z';

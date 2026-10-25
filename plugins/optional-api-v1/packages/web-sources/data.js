@@ -30,6 +30,7 @@ export function parseRows(text, filename = 'data.json') {
     });
   } else {
     try { rows = JSON.parse(text); } catch { requireValue(false, '需要 JSON 对象数组或 CSV 文件'); }
+    if (rows && typeof rows === 'object' && !Array.isArray(rows)) rows = [rows];
   }
   requireValue(Array.isArray(rows) && rows.length <= 100000 && rows.every(row => row && typeof row === 'object' && !Array.isArray(row)), '数据须为最多 100000 行的对象数组');
   requireValue(Buffer.byteLength(JSON.stringify(rows)) <= 8 * 1024 * 1024, '数据超过 8 MiB');

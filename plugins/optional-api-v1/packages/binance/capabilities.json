@@ -1,0 +1,3380 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "capabilities": [
+    {
+      "id": "binance_catalog",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "发现币安 Spot 的生产/测试网来源、当前配置状态、周期及执行入口；不联网、不显示密钥。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "state.read"
+      ],
+      "usage": {
+        "purpose": "发现币安 Spot 的生产/测试网来源、当前配置状态、周期及执行入口；不联网、不显示密钥。",
+        "inputs": "Use the declared object schema; see INTERFACES.md for concrete examples.",
+        "outputs": "{configuredEnvironment,credentials:{apiKey,apiSecret},connections,timeframes,trading,portfolioExecutionSupported:false}。",
+        "prerequisites": [
+          "Public market operations do not require an API key."
+        ],
+        "limitations": [
+          "Spot production and Spot Testnet are distinct identities. Futures, margin and withdrawals are outside this adapter."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "binance_catalog"
+      }
+    },
+    {
+      "id": "binance_account",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "读取已配置币安 Spot 账户的精确身份、每资产 free/locked 余额与原生 canTrade 权限。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "backend.read",
+        "network"
+      ],
+      "usage": {
+        "purpose": "读取已配置币安 Spot 账户的精确身份、每资产 free/locked 余额与原生 canTrade 权限。",
+        "inputs": "Use the declared object schema; see INTERFACES.md for concrete examples.",
+        "outputs": "{account:{accountId,connectionId,revision},environment,balances:[{asset,free,locked}],canTrade,permissions,observedAt}；不把多资产余额伪造成特定交易对仓位或统一币种净值。",
+        "prerequisites": [
+          "Configure the selected environment and HMAC API key/secret through configuration_integration_apply.",
+          "Trading mutations require the authorized main conversation; configuration presence alone does not grant trading permission."
+        ],
+        "limitations": [
+          "Spot production and Spot Testnet are distinct identities. Futures, margin and withdrawals are outside this adapter."
+        ]
+      },
+      "configurationRequirements": [
+        {
+          "field": "environment",
+          "optional": true,
+          "reason": "Select production or Spot Testnet; default is testnet."
+        },
+        {
+          "field": "api_key",
+          "reason": "Binance private account or trading operation."
+        },
+        {
+          "field": "api_secret",
+          "reason": "HMAC signing for the selected Binance account."
+        }
+      ],
+      "binding": {
+        "type": "native",
+        "name": "binance_account"
+      }
+    },
+    {
+      "id": "binance_order",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "执行已授权的币安 Spot 市价或限价单；内部并行准备账户/交易规则/报价，持久化 operation_id 后发送。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "production",
+              "testnet"
+            ]
+          },
+          "symbol": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "market",
+              "limit"
+            ]
+          },
+          "side": {
+            "type": "string",
+            "enum": [
+              "buy",
+              "sell"
+            ]
+          },
+          "quantity": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+            "maxLength": 64
+          },
+          "limit_price": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+            "maxLength": 64
+          },
+          "price_limit": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+            "maxLength": 64
+          },
+          "time_in_force": {
+            "type": "string",
+            "enum": [
+              "GTC",
+              "IOC",
+              "FOK"
+            ]
+          },
+          "user_authorized": {
+            "type": "boolean",
+            "const": true
+          }
+        },
+        "required": [
+          "operation_id",
+          "environment",
+          "symbol",
+          "action",
+          "side",
+          "quantity",
+          "user_authorized"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "type": "string",
+            "const": "sesame.execution-adapter/1"
+          },
+          "backend": {
+            "type": "string",
+            "const": "binance"
+          }
+        },
+        "required": [
+          "contract",
+          "backend"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "external-trading",
+        "network",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "执行已授权的币安 Spot 市价或限价单；内部并行准备账户/交易规则/报价，持久化 operation_id 后发送。",
+        "inputs": "{operation_id:\"spot-buy-001\",environment:\"testnet\",symbol:\"BTCUSDT\",action:\"limit\",side:\"buy\",quantity:\"0.001\",limit_price:\"50000\",user_authorized:true}；quantity 是基础资产数量，限价单必须有 limit_price。",
+        "outputs": "{contract,backend,status,submissionAttempted,raw}；raw 保存 account、clientOrderId、真实订单状态/成交或安全错误。",
+        "prerequisites": [
+          "Configure the selected environment and HMAC API key/secret through configuration_integration_apply.",
+          "Trading mutations require the authorized main conversation; configuration presence alone does not grant trading permission."
+        ],
+        "limitations": [
+          "同一 operation_id 只发送一次；未知结果先 binance_order_status，不能换 ID 盲目重下。",
+          "市价单的 price_limit 只约束发送前报价，不能保证实际成交价格；需要价格上限时使用 limit。",
+          "Spot 卖出使用已有基础资产；不做空、不接受 position_id/MT5 附加止损。portfolio-execution 当前只接 MT5/QMT，币安用本包工具。"
+        ]
+      },
+      "configurationRequirements": [
+        {
+          "field": "environment",
+          "optional": true,
+          "reason": "Select production or Spot Testnet; default is testnet."
+        },
+        {
+          "field": "api_key",
+          "reason": "Binance private account or trading operation."
+        },
+        {
+          "field": "api_secret",
+          "reason": "HMAC signing for the selected Binance account."
+        }
+      ],
+      "binding": {
+        "type": "native",
+        "name": "binance_order"
+      }
+    },
+    {
+      "id": "binance_order_test",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "向币安 /order/test 验证订单参数与签名，不送入撮合；结果不代表真实下单或成交。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "production",
+              "testnet"
+            ]
+          },
+          "symbol": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "market",
+              "limit"
+            ]
+          },
+          "side": {
+            "type": "string",
+            "enum": [
+              "buy",
+              "sell"
+            ]
+          },
+          "quantity": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+            "maxLength": 64
+          },
+          "limit_price": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+            "maxLength": 64
+          },
+          "price_limit": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+            "maxLength": 64
+          },
+          "time_in_force": {
+            "type": "string",
+            "enum": [
+              "GTC",
+              "IOC",
+              "FOK"
+            ]
+          },
+          "user_authorized": {
+            "type": "boolean",
+            "const": true
+          }
+        },
+        "required": [
+          "operation_id",
+          "environment",
+          "symbol",
+          "action",
+          "side",
+          "quantity"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "type": "string",
+            "const": "sesame.execution-adapter/1"
+          },
+          "backend": {
+            "type": "string",
+            "const": "binance"
+          }
+        },
+        "required": [
+          "contract",
+          "backend"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "network",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "向币安 /order/test 验证订单参数与签名，不送入撮合；结果不代表真实下单或成交。",
+        "inputs": "Use the declared object schema; see INTERFACES.md for concrete examples.",
+        "outputs": "status:\"validated\", raw.createsOrder:false 表示测试接口已通过；错误仍保留原生错误码，绝不伪称成交。",
+        "prerequisites": [
+          "Configure the selected environment and HMAC API key/secret through configuration_integration_apply.",
+          "Trading mutations require the authorized main conversation; configuration presence alone does not grant trading permission."
+        ],
+        "limitations": [
+          "Spot production and Spot Testnet are distinct identities. Futures, margin and withdrawals are outside this adapter."
+        ]
+      },
+      "configurationRequirements": [
+        {
+          "field": "environment",
+          "optional": true,
+          "reason": "Select production or Spot Testnet; default is testnet."
+        },
+        {
+          "field": "api_key",
+          "reason": "Binance private account or trading operation."
+        },
+        {
+          "field": "api_secret",
+          "reason": "HMAC signing for the selected Binance account."
+        }
+      ],
+      "binding": {
+        "type": "native",
+        "name": "binance_order_test"
+      }
+    },
+    {
+      "id": "binance_order_status",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "按已保存的 operation_id 查询真实订单身份并恢复未知下单/改单/撤单结果。只读 Binance，不重新发送。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "operation_id"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "type": "string",
+            "const": "sesame.execution-adapter/1"
+          },
+          "backend": {
+            "type": "string",
+            "const": "binance"
+          }
+        },
+        "required": [
+          "contract",
+          "backend"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "backend.read",
+        "network",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "按已保存的 operation_id 查询真实订单身份并恢复未知下单/改单/撤单结果。只读 Binance，不重新发送。",
+        "inputs": "Use the declared object schema; see INTERFACES.md for concrete examples.",
+        "outputs": "返回保存的回执及 recovery 观测；查无订单仍不能证明之前未发送，保留 outcome_unknown。",
+        "prerequisites": [
+          "Configure the selected environment and HMAC API key/secret through configuration_integration_apply.",
+          "Trading mutations require the authorized main conversation; configuration presence alone does not grant trading permission."
+        ],
+        "limitations": [
+          "Spot production and Spot Testnet are distinct identities. Futures, margin and withdrawals are outside this adapter."
+        ]
+      },
+      "configurationRequirements": [
+        {
+          "field": "environment",
+          "optional": true,
+          "reason": "Select production or Spot Testnet; default is testnet."
+        },
+        {
+          "field": "api_key",
+          "reason": "Binance private account or trading operation."
+        },
+        {
+          "field": "api_secret",
+          "reason": "HMAC signing for the selected Binance account."
+        }
+      ],
+      "binding": {
+        "type": "native",
+        "name": "binance_order_status"
+      }
+    },
+    {
+      "id": "binance_cancel",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "撤销本包已记录且仍在工作的币安 Spot 订单；成交与撤销竞态以真实订单状态为准。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "original_operation_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "user_authorized": {
+            "type": "boolean",
+            "const": true
+          }
+        },
+        "required": [
+          "operation_id",
+          "original_operation_id",
+          "user_authorized"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "type": "string",
+            "const": "sesame.execution-adapter/1"
+          },
+          "backend": {
+            "type": "string",
+            "const": "binance"
+          }
+        },
+        "required": [
+          "contract",
+          "backend"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "external-trading",
+        "network",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "撤销本包已记录且仍在工作的币安 Spot 订单；成交与撤销竞态以真实订单状态为准。",
+        "inputs": "Use the declared object schema; see INTERFACES.md for concrete examples.",
+        "outputs": "Exact source observations and status, or an explicit operation error.",
+        "prerequisites": [
+          "Configure the selected environment and HMAC API key/secret through configuration_integration_apply.",
+          "Trading mutations require the authorized main conversation; configuration presence alone does not grant trading permission."
+        ],
+        "limitations": [
+          "Spot production and Spot Testnet are distinct identities. Futures, margin and withdrawals are outside this adapter."
+        ]
+      },
+      "configurationRequirements": [
+        {
+          "field": "environment",
+          "optional": true,
+          "reason": "Select production or Spot Testnet; default is testnet."
+        },
+        {
+          "field": "api_key",
+          "reason": "Binance private account or trading operation."
+        },
+        {
+          "field": "api_secret",
+          "reason": "HMAC signing for the selected Binance account."
+        }
+      ],
+      "binding": {
+        "type": "native",
+        "name": "binance_cancel"
+      }
+    },
+    {
+      "id": "binance_amend",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "减少已记录 Spot 订单的数量并保留优先级；保持 clientOrderId，不支持原地改价或增加数量。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "original_operation_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "quantity": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+            "maxLength": 64
+          },
+          "user_authorized": {
+            "type": "boolean",
+            "const": true
+          }
+        },
+        "required": [
+          "operation_id",
+          "original_operation_id",
+          "quantity",
+          "user_authorized"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "type": "string",
+            "const": "sesame.execution-adapter/1"
+          },
+          "backend": {
+            "type": "string",
+            "const": "binance"
+          }
+        },
+        "required": [
+          "contract",
+          "backend"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "external-trading",
+        "network",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "减少已记录 Spot 订单的数量并保留优先级；保持 clientOrderId，不支持原地改价或增加数量。",
+        "inputs": "Use the declared object schema; see INTERFACES.md for concrete examples.",
+        "outputs": "Exact source observations and status, or an explicit operation error.",
+        "prerequisites": [
+          "Configure the selected environment and HMAC API key/secret through configuration_integration_apply.",
+          "Trading mutations require the authorized main conversation; configuration presence alone does not grant trading permission."
+        ],
+        "limitations": [
+          "Spot production and Spot Testnet are distinct identities. Futures, margin and withdrawals are outside this adapter."
+        ]
+      },
+      "configurationRequirements": [
+        {
+          "field": "environment",
+          "optional": true,
+          "reason": "Select production or Spot Testnet; default is testnet."
+        },
+        {
+          "field": "api_key",
+          "reason": "Binance private account or trading operation."
+        },
+        {
+          "field": "api_secret",
+          "reason": "HMAC signing for the selected Binance account."
+        }
+      ],
+      "binding": {
+        "type": "native",
+        "name": "binance_amend"
+      }
+    },
+    {
+      "id": "binance_execution_identity",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Binance Spot 标准执行适配 identity；保留精确账户环境、原生数量和真实回执。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "type": "string",
+            "const": "sesame.execution-adapter/1"
+          },
+          "backend": {
+            "type": "string",
+            "const": "binance"
+          }
+        },
+        "required": [
+          "contract",
+          "backend"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "backend.read",
+        "network",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "Binance Spot 标准执行适配 identity；保留精确账户环境、原生数量和真实回执。",
+        "inputs": "Use the declared object schema; see INTERFACES.md for concrete examples.",
+        "outputs": "Exact source observations and status, or an explicit operation error.",
+        "prerequisites": [
+          "Binance shared configuration is present and authenticated.",
+          "The standard service is declared for explicit composition; portfolio-execution currently excludes Spot semantics. Use the direct Binance tools for this release."
+        ],
+        "limitations": [
+          "No futures, margin, position-ticket close or attached stops. prepare observes existing permissions and does not alter exchange permissions."
+        ]
+      },
+      "configurationRequirements": [
+        {
+          "field": "environment",
+          "optional": true,
+          "reason": "Select production or Spot Testnet; default is testnet."
+        },
+        {
+          "field": "api_key",
+          "reason": "Binance private account or trading operation."
+        },
+        {
+          "field": "api_secret",
+          "reason": "HMAC signing for the selected Binance account."
+        }
+      ],
+      "binding": {
+        "type": "native",
+        "name": "binance_execution_identity"
+      }
+    },
+    {
+      "id": "binance_execution_snapshot",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Binance Spot 标准执行适配 snapshot；保留精确账户环境、原生数量和真实回执。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "type": "string",
+            "const": "sesame.execution-adapter/1"
+          },
+          "backend": {
+            "type": "string",
+            "const": "binance"
+          }
+        },
+        "required": [
+          "contract",
+          "backend"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "backend.read",
+        "network",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "Binance Spot 标准执行适配 snapshot；保留精确账户环境、原生数量和真实回执。",
+        "inputs": "Use the declared object schema; see INTERFACES.md for concrete examples.",
+        "outputs": "Exact source observations and status, or an explicit operation error.",
+        "prerequisites": [
+          "Binance shared configuration is present and authenticated.",
+          "The standard service is declared for explicit composition; portfolio-execution currently excludes Spot semantics. Use the direct Binance tools for this release."
+        ],
+        "limitations": [
+          "No futures, margin, position-ticket close or attached stops. prepare observes existing permissions and does not alter exchange permissions."
+        ]
+      },
+      "configurationRequirements": [
+        {
+          "field": "environment",
+          "optional": true,
+          "reason": "Select production or Spot Testnet; default is testnet."
+        },
+        {
+          "field": "api_key",
+          "reason": "Binance private account or trading operation."
+        },
+        {
+          "field": "api_secret",
+          "reason": "HMAC signing for the selected Binance account."
+        }
+      ],
+      "binding": {
+        "type": "native",
+        "name": "binance_execution_snapshot"
+      }
+    },
+    {
+      "id": "binance_execution_prepare",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Binance Spot 标准执行适配 prepare；保留精确账户环境、原生数量和真实回执。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "account": {
+            "type": "object",
+            "properties": {
+              "accountId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "connectionId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "accountId",
+              "connectionId",
+              "revision"
+            ],
+            "additionalProperties": false
+          },
+          "commandId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "userAuthorized": {
+            "type": "boolean",
+            "const": true
+          }
+        },
+        "required": [
+          "symbol",
+          "account",
+          "commandId",
+          "userAuthorized"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "type": "string",
+            "const": "sesame.execution-adapter/1"
+          },
+          "backend": {
+            "type": "string",
+            "const": "binance"
+          }
+        },
+        "required": [
+          "contract",
+          "backend"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "backend.read",
+        "network",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "Binance Spot 标准执行适配 prepare；保留精确账户环境、原生数量和真实回执。",
+        "inputs": "Use the declared object schema; see INTERFACES.md for concrete examples.",
+        "outputs": "Exact source observations and status, or an explicit operation error.",
+        "prerequisites": [
+          "Binance shared configuration is present and authenticated.",
+          "The standard service is declared for explicit composition; portfolio-execution currently excludes Spot semantics. Use the direct Binance tools for this release."
+        ],
+        "limitations": [
+          "No futures, margin, position-ticket close or attached stops. prepare observes existing permissions and does not alter exchange permissions."
+        ]
+      },
+      "configurationRequirements": [
+        {
+          "field": "environment",
+          "optional": true,
+          "reason": "Select production or Spot Testnet; default is testnet."
+        },
+        {
+          "field": "api_key",
+          "reason": "Binance private account or trading operation."
+        },
+        {
+          "field": "api_secret",
+          "reason": "HMAC signing for the selected Binance account."
+        }
+      ],
+      "binding": {
+        "type": "native",
+        "name": "binance_execution_prepare"
+      }
+    },
+    {
+      "id": "binance_execution_submit",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Binance Spot 标准执行适配 submit；保留精确账户环境、原生数量和真实回执。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "observation": {
+            "type": "object",
+            "properties": {
+              "backend": {
+                "type": "string",
+                "const": "binance"
+              },
+              "symbol": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "account": {
+                "type": "object",
+                "properties": {
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "connectionId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "accountId",
+                  "connectionId",
+                  "revision"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "backend",
+              "symbol",
+              "account"
+            ],
+            "additionalProperties": true
+          },
+          "intent": {
+            "type": "object",
+            "properties": {
+              "operation_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "environment": {
+                "type": "string",
+                "enum": [
+                  "production",
+                  "testnet"
+                ]
+              },
+              "symbol": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "action": {
+                "type": "string",
+                "enum": [
+                  "market",
+                  "limit"
+                ]
+              },
+              "side": {
+                "type": "string",
+                "enum": [
+                  "buy",
+                  "sell"
+                ]
+              },
+              "quantity": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+                "maxLength": 64
+              },
+              "limit_price": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+                "maxLength": 64
+              },
+              "price_limit": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+                "maxLength": 64
+              },
+              "time_in_force": {
+                "type": "string",
+                "enum": [
+                  "GTC",
+                  "IOC",
+                  "FOK"
+                ]
+              },
+              "user_authorized": {
+                "type": "boolean",
+                "const": true
+              }
+            },
+            "required": [
+              "operation_id",
+              "action",
+              "side",
+              "quantity",
+              "user_authorized"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "observation",
+          "intent"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "type": "string",
+            "const": "sesame.execution-adapter/1"
+          },
+          "backend": {
+            "type": "string",
+            "const": "binance"
+          }
+        },
+        "required": [
+          "contract",
+          "backend"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "external-trading",
+        "network",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "Binance Spot 标准执行适配 submit；保留精确账户环境、原生数量和真实回执。",
+        "inputs": "Use the declared object schema; see INTERFACES.md for concrete examples.",
+        "outputs": "Exact source observations and status, or an explicit operation error.",
+        "prerequisites": [
+          "Binance shared configuration is present and authenticated.",
+          "The standard service is declared for explicit composition; portfolio-execution currently excludes Spot semantics. Use the direct Binance tools for this release."
+        ],
+        "limitations": [
+          "No futures, margin, position-ticket close or attached stops. prepare observes existing permissions and does not alter exchange permissions."
+        ]
+      },
+      "configurationRequirements": [
+        {
+          "field": "environment",
+          "optional": true,
+          "reason": "Select production or Spot Testnet; default is testnet."
+        },
+        {
+          "field": "api_key",
+          "reason": "Binance private account or trading operation."
+        },
+        {
+          "field": "api_secret",
+          "reason": "HMAC signing for the selected Binance account."
+        }
+      ],
+      "binding": {
+        "type": "native",
+        "name": "binance_execution_submit"
+      }
+    },
+    {
+      "id": "binance_execution_recover",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Binance Spot 标准执行适配 recover；保留精确账户环境、原生数量和真实回执。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "record": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "backendCommandId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "account": {
+                "type": "object",
+                "properties": {
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "connectionId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "accountId",
+                  "connectionId",
+                  "revision"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "account"
+            ],
+            "additionalProperties": true
+          },
+          "expectedCurrent": {
+            "type": "object",
+            "properties": {
+              "accountId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "connectionId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "accountId",
+              "connectionId",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "record"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "type": "string",
+            "const": "sesame.execution-adapter/1"
+          },
+          "backend": {
+            "type": "string",
+            "const": "binance"
+          }
+        },
+        "required": [
+          "contract",
+          "backend"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "backend.read",
+        "network",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "Binance Spot 标准执行适配 recover；保留精确账户环境、原生数量和真实回执。",
+        "inputs": "Use the declared object schema; see INTERFACES.md for concrete examples.",
+        "outputs": "Exact source observations and status, or an explicit operation error.",
+        "prerequisites": [
+          "Binance shared configuration is present and authenticated.",
+          "The standard service is declared for explicit composition; portfolio-execution currently excludes Spot semantics. Use the direct Binance tools for this release."
+        ],
+        "limitations": [
+          "No futures, margin, position-ticket close or attached stops. prepare observes existing permissions and does not alter exchange permissions."
+        ]
+      },
+      "configurationRequirements": [
+        {
+          "field": "environment",
+          "optional": true,
+          "reason": "Select production or Spot Testnet; default is testnet."
+        },
+        {
+          "field": "api_key",
+          "reason": "Binance private account or trading operation."
+        },
+        {
+          "field": "api_secret",
+          "reason": "HMAC signing for the selected Binance account."
+        }
+      ],
+      "binding": {
+        "type": "native",
+        "name": "binance_execution_recover"
+      }
+    },
+    {
+      "id": "binance_execution_command",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Binance Spot 标准执行适配 command；保留精确账户环境、原生数量和真实回执。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "record": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "backendCommandId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "account": {
+                "type": "object",
+                "properties": {
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "connectionId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "accountId",
+                  "connectionId",
+                  "revision"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "account"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "record"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "type": "string",
+            "const": "sesame.execution-adapter/1"
+          },
+          "backend": {
+            "type": "string",
+            "const": "binance"
+          }
+        },
+        "required": [
+          "contract",
+          "backend"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "backend.read",
+        "network",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "Binance Spot 标准执行适配 command；保留精确账户环境、原生数量和真实回执。",
+        "inputs": "Use the declared object schema; see INTERFACES.md for concrete examples.",
+        "outputs": "Exact source observations and status, or an explicit operation error.",
+        "prerequisites": [
+          "Binance shared configuration is present and authenticated.",
+          "The standard service is declared for explicit composition; portfolio-execution currently excludes Spot semantics. Use the direct Binance tools for this release."
+        ],
+        "limitations": [
+          "No futures, margin, position-ticket close or attached stops. prepare observes existing permissions and does not alter exchange permissions."
+        ]
+      },
+      "configurationRequirements": [
+        {
+          "field": "environment",
+          "optional": true,
+          "reason": "Select production or Spot Testnet; default is testnet."
+        },
+        {
+          "field": "api_key",
+          "reason": "Binance private account or trading operation."
+        },
+        {
+          "field": "api_secret",
+          "reason": "HMAC signing for the selected Binance account."
+        }
+      ],
+      "binding": {
+        "type": "native",
+        "name": "binance_execution_command"
+      }
+    },
+    {
+      "id": "binance_execution_cancel",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Binance Spot 标准执行适配 cancel；保留精确账户环境、原生数量和真实回执。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "record": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "backendCommandId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "account": {
+                "type": "object",
+                "properties": {
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "connectionId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "accountId",
+                  "connectionId",
+                  "revision"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "account"
+            ],
+            "additionalProperties": true
+          },
+          "operationId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "record",
+          "operationId"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "type": "string",
+            "const": "sesame.execution-adapter/1"
+          },
+          "backend": {
+            "type": "string",
+            "const": "binance"
+          }
+        },
+        "required": [
+          "contract",
+          "backend"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "external-trading",
+        "network",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "Binance Spot 标准执行适配 cancel；保留精确账户环境、原生数量和真实回执。",
+        "inputs": "Use the declared object schema; see INTERFACES.md for concrete examples.",
+        "outputs": "Exact source observations and status, or an explicit operation error.",
+        "prerequisites": [
+          "Binance shared configuration is present and authenticated.",
+          "The standard service is declared for explicit composition; portfolio-execution currently excludes Spot semantics. Use the direct Binance tools for this release."
+        ],
+        "limitations": [
+          "No futures, margin, position-ticket close or attached stops. prepare observes existing permissions and does not alter exchange permissions."
+        ]
+      },
+      "configurationRequirements": [
+        {
+          "field": "environment",
+          "optional": true,
+          "reason": "Select production or Spot Testnet; default is testnet."
+        },
+        {
+          "field": "api_key",
+          "reason": "Binance private account or trading operation."
+        },
+        {
+          "field": "api_secret",
+          "reason": "HMAC signing for the selected Binance account."
+        }
+      ],
+      "binding": {
+        "type": "native",
+        "name": "binance_execution_cancel"
+      }
+    },
+    {
+      "id": "market_bind",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Binance Spot 标准行情 bind；生产/测试网精确分离，十进制与 UTC 时间不改写。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "id",
+                  "revision"
+                ],
+                "additionalProperties": false
+              },
+              "configuration": {
+                "type": "object",
+                "properties": {
+                  "environment": {
+                    "type": "string",
+                    "enum": [
+                      "production",
+                      "testnet"
+                    ]
+                  }
+                },
+                "required": [
+                  "environment"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.session.write"
+      ],
+      "usage": {
+        "purpose": "Binance Spot 标准行情 bind；生产/测试网精确分离，十进制与 UTC 时间不改写。",
+        "inputs": "{binding:{configuration:{environment:\"production\"}}}；也可使用 binance_catalog 返回的精确 connection。",
+        "outputs": "返回标准源绑定或分页 items/metadata。",
+        "prerequisites": [
+          "Public market operations do not require an API key."
+        ],
+        "limitations": [
+          "公开源使用官方 Binance REST/WebSocket；无 Python/CCXT 依赖。月周期 1mo 对应 Binance 1M，柱结束时间来自源，不按固定月长构造。",
+          "单次历史范围最多 10000 根；每页 1000；多消费者复用相同环境/品种/周期的订阅和限流预算。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_bind"
+      }
+    },
+    {
+      "id": "market_unbind",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Binance Spot 标准行情 unbind；生产/测试网精确分离，十进制与 UTC 时间不改写。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "binding"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "closed": {
+            "const": true
+          }
+        },
+        "required": [
+          "closed"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.session.close"
+      ],
+      "usage": {
+        "purpose": "Binance Spot 标准行情 unbind；生产/测试网精确分离，十进制与 UTC 时间不改写。",
+        "inputs": "由宿主数据入口提供 binding/query/page。Agent 使用 data_providers 返回的 sesame/binance#market 精确来源，经 market_instruments / market_read 或 canvas_binding。",
+        "outputs": "返回标准源绑定或分页 items/metadata。",
+        "prerequisites": [
+          "Public market operations do not require an API key."
+        ],
+        "limitations": [
+          "公开源使用官方 Binance REST/WebSocket；无 Python/CCXT 依赖。月周期 1mo 对应 Binance 1M，柱结束时间来自源，不按固定月长构造。",
+          "单次历史范围最多 10000 根；每页 1000；多消费者复用相同环境/品种/周期的订阅和限流预算。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_unbind"
+      }
+    },
+    {
+      "id": "market_searchInstruments",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Binance Spot 标准行情 searchInstruments；生产/测试网精确分离，十进制与 UTC 时间不改写。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string"
+              },
+              "assetClasses": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "venues": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array"
+          },
+          "nextCursor": {
+            "type": "string",
+            "minLength": 1
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items",
+          "metadata"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "network",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "Binance Spot 标准行情 searchInstruments；生产/测试网精确分离，十进制与 UTC 时间不改写。",
+        "inputs": "由宿主数据入口提供 binding/query/page。Agent 使用 data_providers 返回的 sesame/binance#market 精确来源，经 market_instruments / market_read 或 canvas_binding。",
+        "outputs": "返回标准源绑定或分页 items/metadata。",
+        "prerequisites": [
+          "Public market operations do not require an API key."
+        ],
+        "limitations": [
+          "公开源使用官方 Binance REST/WebSocket；无 Python/CCXT 依赖。月周期 1mo 对应 Binance 1M，柱结束时间来自源，不按固定月长构造。",
+          "单次历史范围最多 10000 根；每页 1000；多消费者复用相同环境/品种/周期的订阅和限流预算。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_searchInstruments"
+      }
+    },
+    {
+      "id": "market_describeInstrument",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Binance Spot 标准行情 describeInstrument；生产/测试网精确分离，十进制与 UTC 时间不改写。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "instrument": {
+                "type": "object",
+                "properties": {
+                  "sourceId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "instrumentId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "sourceId",
+                  "instrumentId"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "instrument"
+            ],
+            "additionalProperties": false
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array"
+          },
+          "nextCursor": {
+            "type": "string",
+            "minLength": 1
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items",
+          "metadata"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "network",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "Binance Spot 标准行情 describeInstrument；生产/测试网精确分离，十进制与 UTC 时间不改写。",
+        "inputs": "由宿主数据入口提供 binding/query/page。Agent 使用 data_providers 返回的 sesame/binance#market 精确来源，经 market_instruments / market_read 或 canvas_binding。",
+        "outputs": "返回标准源绑定或分页 items/metadata。",
+        "prerequisites": [
+          "Public market operations do not require an API key."
+        ],
+        "limitations": [
+          "公开源使用官方 Binance REST/WebSocket；无 Python/CCXT 依赖。月周期 1mo 对应 Binance 1M，柱结束时间来自源，不按固定月长构造。",
+          "单次历史范围最多 10000 根；每页 1000；多消费者复用相同环境/品种/周期的订阅和限流预算。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_describeInstrument"
+      }
+    },
+    {
+      "id": "market_queryBars",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Binance Spot 标准行情 queryBars；生产/测试网精确分离，十进制与 UTC 时间不改写。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "instrument": {
+                "type": "object",
+                "properties": {
+                  "sourceId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "instrumentId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "sourceId",
+                  "instrumentId"
+                ],
+                "additionalProperties": false
+              },
+              "spec": {
+                "type": "object",
+                "properties": {
+                  "timeframe": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "priceBasis": {
+                    "enum": [
+                      "bid",
+                      "ask",
+                      "mid",
+                      "last"
+                    ]
+                  },
+                  "adjustment": {
+                    "enum": [
+                      "none",
+                      "forward",
+                      "backward"
+                    ]
+                  },
+                  "session": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "calendarRevision": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                },
+                "required": [
+                  "timeframe",
+                  "priceBasis",
+                  "adjustment",
+                  "session",
+                  "calendarRevision"
+                ],
+                "additionalProperties": false
+              },
+              "range": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "basis": {
+                            "const": "utc"
+                          },
+                          "unixMs": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "basis",
+                          "unixMs"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "basis": {
+                            "const": "wall"
+                          },
+                          "authority": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "zone": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "value": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "fold": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "basis",
+                          "authority",
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "to": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "basis": {
+                            "const": "utc"
+                          },
+                          "unixMs": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "basis",
+                          "unixMs"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "basis": {
+                            "const": "wall"
+                          },
+                          "authority": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "zone": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "value": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "fold": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "basis",
+                          "authority",
+                          "value"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "from",
+                  "to"
+                ],
+                "additionalProperties": false
+              },
+              "includeForming": {
+                "type": "boolean"
+              },
+              "direction": {
+                "enum": [
+                  "forward",
+                  "backward"
+                ]
+              }
+            },
+            "required": [
+              "instrument",
+              "spec",
+              "range"
+            ],
+            "additionalProperties": false
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array"
+          },
+          "nextCursor": {
+            "type": "string",
+            "minLength": 1
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items",
+          "metadata"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "network",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "Binance Spot 标准行情 queryBars；生产/测试网精确分离，十进制与 UTC 时间不改写。",
+        "inputs": "由宿主数据入口提供 binding/query/page。Agent 使用 data_providers 返回的 sesame/binance#market 精确来源，经 market_instruments / market_read 或 canvas_binding。",
+        "outputs": "{items,nextCursor?,metadata:{seriesId,instrument,spec,coverage,cache,meta,connection}}；缓存比视区前后各多 100 根，过期保留已有数据并后台刷新。",
+        "prerequisites": [
+          "Public market operations do not require an API key."
+        ],
+        "limitations": [
+          "公开源使用官方 Binance REST/WebSocket；无 Python/CCXT 依赖。月周期 1mo 对应 Binance 1M，柱结束时间来自源，不按固定月长构造。",
+          "单次历史范围最多 10000 根；每页 1000；多消费者复用相同环境/品种/周期的订阅和限流预算。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "market_queryBars"
+      }
+    },
+    {
+      "id": "market_subscribeBars",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Binance Spot 标准行情 subscribeBars；生产/测试网精确分离，十进制与 UTC 时间不改写。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "instrument": {
+                "type": "object",
+                "properties": {
+                  "sourceId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "instrumentId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "sourceId",
+                  "instrumentId"
+                ],
+                "additionalProperties": false
+              },
+              "spec": {
+                "type": "object",
+                "properties": {
+                  "timeframe": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "priceBasis": {
+                    "enum": [
+                      "bid",
+                      "ask",
+                      "mid",
+                      "last"
+                    ]
+                  },
+                  "adjustment": {
+                    "enum": [
+                      "none",
+                      "forward",
+                      "backward"
+                    ]
+                  },
+                  "session": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "calendarRevision": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                },
+                "required": [
+                  "timeframe",
+                  "priceBasis",
+                  "adjustment",
+                  "session",
+                  "calendarRevision"
+                ],
+                "additionalProperties": false
+              },
+              "tailLimit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "includeForming": {
+                "type": "boolean"
+              },
+              "resumeToken": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "instrument",
+              "spec",
+              "tailLimit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "network",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "Binance Spot 标准行情 subscribeBars；生产/测试网精确分离，十进制与 UTC 时间不改写。",
+        "inputs": "由宿主数据入口提供 binding/query/page。Agent 使用 data_providers 返回的 sesame/binance#market 精确来源，经 market_instruments / market_read 或 canvas_binding。",
+        "outputs": "{id,events,close}，首帧 snapshot 后推送 bars.upsert/bars.closed/stream.gap；断线以新快照恢复。",
+        "prerequisites": [
+          "Public market operations do not require an API key."
+        ],
+        "limitations": [
+          "公开源使用官方 Binance REST/WebSocket；无 Python/CCXT 依赖。月周期 1mo 对应 Binance 1M，柱结束时间来自源，不按固定月长构造。",
+          "单次历史范围最多 10000 根；每页 1000；多消费者复用相同环境/品种/周期的订阅和限流预算。"
+        ]
+      },
+      "transport": "subscription",
+      "binding": {
+        "type": "native",
+        "name": "market_subscribeBars"
+      }
+    },
+    {
+      "id": "market_subscribeQuotes",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "共享 Binance Spot ticker WebSocket 提供带源时间的报价。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "instruments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "instrumentId": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "sourceId",
+                    "instrumentId"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 20
+              },
+              "resumeToken": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "instruments"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "network",
+        "plugin.session.write"
+      ],
+      "usage": {
+        "purpose": "共享 Binance Spot ticker WebSocket 提供带源时间的报价。",
+        "inputs": "{binding,query:{instruments:[{sourceId:\"binance:production:spot\",instrumentId:\"BTCUSDT\"}]}}；最多 20 个品种。",
+        "outputs": "标准订阅首帧 {quotes}，随后 quotes.upsert；ticker 默认约一秒更新。",
+        "prerequisites": [
+          "Public market operations do not require an API key."
+        ],
+        "limitations": [
+          "Spot production and Spot Testnet are distinct identities. Futures, margin and withdrawals are outside this adapter."
+        ]
+      },
+      "transport": "subscription",
+      "binding": {
+        "type": "native",
+        "name": "market_subscribeQuotes"
+      }
+    },
+    {
+      "id": "account_bind",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Binance Spot 标准账户 bind；余额为多资产，不虚构统一净值或交易对仓位。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "properties": {
+              "connection": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "id",
+                  "revision"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "backend.read",
+        "network",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "Binance Spot 标准账户 bind；余额为多资产，不虚构统一净值或交易对仓位。",
+        "inputs": "通过 data_providers 的 sesame/binance#account 及账户来源入口调用。账户环境来自统一配置，connection/revision 精确校验。",
+        "outputs": "标准账户摘要/快照；快照 native.balances 给出每资产 free/locked，未转换资产的 balance/equity 保持 unknown。",
+        "prerequisites": [
+          "Configure the selected environment and HMAC API key/secret through configuration_integration_apply.",
+          "Trading mutations require the authorized main conversation; configuration presence alone does not grant trading permission."
+        ],
+        "limitations": [
+          "Spot production and Spot Testnet are distinct identities. Futures, margin and withdrawals are outside this adapter."
+        ]
+      },
+      "configurationRequirements": [
+        {
+          "field": "environment",
+          "optional": true,
+          "reason": "Select production or Spot Testnet; default is testnet."
+        },
+        {
+          "field": "api_key",
+          "reason": "Binance private account or trading operation."
+        },
+        {
+          "field": "api_secret",
+          "reason": "HMAC signing for the selected Binance account."
+        }
+      ],
+      "binding": {
+        "type": "native",
+        "name": "account_bind"
+      }
+    },
+    {
+      "id": "account_unbind",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Binance Spot 标准账户 unbind；余额为多资产，不虚构统一净值或交易对仓位。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "binding"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.session.close"
+      ],
+      "usage": {
+        "purpose": "Binance Spot 标准账户 unbind；余额为多资产，不虚构统一净值或交易对仓位。",
+        "inputs": "通过 data_providers 的 sesame/binance#account 及账户来源入口调用。账户环境来自统一配置，connection/revision 精确校验。",
+        "outputs": "标准账户摘要/快照；快照 native.balances 给出每资产 free/locked，未转换资产的 balance/equity 保持 unknown。",
+        "prerequisites": [
+          "Public market operations do not require an API key."
+        ],
+        "limitations": [
+          "Spot production and Spot Testnet are distinct identities. Futures, margin and withdrawals are outside this adapter."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "account_unbind"
+      }
+    },
+    {
+      "id": "account_listAccounts",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Binance Spot 标准账户 listAccounts；余额为多资产，不虚构统一净值或交易对仓位。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "backend.read",
+        "network",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "Binance Spot 标准账户 listAccounts；余额为多资产，不虚构统一净值或交易对仓位。",
+        "inputs": "通过 data_providers 的 sesame/binance#account 及账户来源入口调用。账户环境来自统一配置，connection/revision 精确校验。",
+        "outputs": "标准账户摘要/快照；快照 native.balances 给出每资产 free/locked，未转换资产的 balance/equity 保持 unknown。",
+        "prerequisites": [
+          "Configure the selected environment and HMAC API key/secret through configuration_integration_apply.",
+          "Trading mutations require the authorized main conversation; configuration presence alone does not grant trading permission."
+        ],
+        "limitations": [
+          "Spot production and Spot Testnet are distinct identities. Futures, margin and withdrawals are outside this adapter."
+        ]
+      },
+      "configurationRequirements": [
+        {
+          "field": "environment",
+          "optional": true,
+          "reason": "Select production or Spot Testnet; default is testnet."
+        },
+        {
+          "field": "api_key",
+          "reason": "Binance private account or trading operation."
+        },
+        {
+          "field": "api_secret",
+          "reason": "HMAC signing for the selected Binance account."
+        }
+      ],
+      "binding": {
+        "type": "native",
+        "name": "account_listAccounts"
+      }
+    },
+    {
+      "id": "account_snapshot",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Binance Spot 标准账户 snapshot；余额为多资产，不虚构统一净值或交易对仓位。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "account": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "required": [
+              "account"
+            ],
+            "additionalProperties": false
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "backend.read",
+        "network",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "Binance Spot 标准账户 snapshot；余额为多资产，不虚构统一净值或交易对仓位。",
+        "inputs": "通过 data_providers 的 sesame/binance#account 及账户来源入口调用。账户环境来自统一配置，connection/revision 精确校验。",
+        "outputs": "标准账户摘要/快照；快照 native.balances 给出每资产 free/locked，未转换资产的 balance/equity 保持 unknown。",
+        "prerequisites": [
+          "Configure the selected environment and HMAC API key/secret through configuration_integration_apply.",
+          "Trading mutations require the authorized main conversation; configuration presence alone does not grant trading permission."
+        ],
+        "limitations": [
+          "Spot production and Spot Testnet are distinct identities. Futures, margin and withdrawals are outside this adapter."
+        ]
+      },
+      "configurationRequirements": [
+        {
+          "field": "environment",
+          "optional": true,
+          "reason": "Select production or Spot Testnet; default is testnet."
+        },
+        {
+          "field": "api_key",
+          "reason": "Binance private account or trading operation."
+        },
+        {
+          "field": "api_secret",
+          "reason": "HMAC signing for the selected Binance account."
+        }
+      ],
+      "binding": {
+        "type": "native",
+        "name": "account_snapshot"
+      }
+    },
+    {
+      "id": "account_queryOrders",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Binance Spot 订单分页观测；历史需明确品种与不超过 24 小时的 UTC 范围。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "account": {
+                "type": "object",
+                "properties": {
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "connectionId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "accountId",
+                  "connectionId"
+                ],
+                "additionalProperties": false
+              },
+              "scope": {
+                "enum": [
+                  "working",
+                  "history",
+                  "all"
+                ],
+                "type": "string"
+              },
+              "range": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "object",
+                    "properties": {
+                      "basis": {
+                        "const": "utc",
+                        "type": "string"
+                      },
+                      "unixMs": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    },
+                    "required": [
+                      "basis",
+                      "unixMs"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "to": {
+                    "type": "object",
+                    "properties": {
+                      "basis": {
+                        "const": "utc",
+                        "type": "string"
+                      },
+                      "unixMs": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    },
+                    "required": [
+                      "basis",
+                      "unixMs"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "from",
+                  "to"
+                ],
+                "additionalProperties": false
+              },
+              "instruments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "instrumentId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    }
+                  },
+                  "required": [
+                    "sourceId",
+                    "instrumentId"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxItems": 5
+              }
+            },
+            "required": [
+              "account",
+              "scope"
+            ],
+            "additionalProperties": false
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array"
+          },
+          "nextCursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items",
+          "metadata"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "backend.read",
+        "network"
+      ],
+      "usage": {
+        "purpose": "Binance Spot 订单分页观测；历史需明确品种与不超过 24 小时的 UTC 范围。",
+        "inputs": "{binding,query:{account,instruments:[{sourceId,instrumentId}],range:{from:{basis:\"utc\",unixMs},to:{basis:\"utc\",unixMs}},scope?},page:{limit:100,cursor?}}；仅 working orders 可省略范围和品种。",
+        "outputs": "{items,nextCursor?,metadata:{coverage?,truncated?,meta,connection}}。单品种历史接口到 1000 条时标记截断，可缩小范围；分页结束不抹掉原生截断。",
+        "prerequisites": [
+          "Configure the selected environment and HMAC API key/secret through configuration_integration_apply.",
+          "Trading mutations require the authorized main conversation; configuration presence alone does not grant trading permission."
+        ],
+        "limitations": [
+          "Spot production and Spot Testnet are distinct identities. Futures, margin and withdrawals are outside this adapter."
+        ]
+      },
+      "configurationRequirements": [
+        {
+          "field": "environment",
+          "optional": true,
+          "reason": "Select production or Spot Testnet; default is testnet."
+        },
+        {
+          "field": "api_key",
+          "reason": "Binance private account or trading operation."
+        },
+        {
+          "field": "api_secret",
+          "reason": "HMAC signing for the selected Binance account."
+        }
+      ],
+      "binding": {
+        "type": "native",
+        "name": "account_queryOrders"
+      }
+    },
+    {
+      "id": "account_queryFills",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Binance Spot 成交分页观测；历史需明确品种与不超过 24 小时的 UTC 范围。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": true
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "account": {
+                "type": "object",
+                "properties": {
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "connectionId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "accountId",
+                  "connectionId"
+                ],
+                "additionalProperties": false
+              },
+              "range": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "object",
+                    "properties": {
+                      "basis": {
+                        "const": "utc",
+                        "type": "string"
+                      },
+                      "unixMs": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    },
+                    "required": [
+                      "basis",
+                      "unixMs"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "to": {
+                    "type": "object",
+                    "properties": {
+                      "basis": {
+                        "const": "utc",
+                        "type": "string"
+                      },
+                      "unixMs": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    },
+                    "required": [
+                      "basis",
+                      "unixMs"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "from",
+                  "to"
+                ],
+                "additionalProperties": false
+              },
+              "instruments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "instrumentId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    }
+                  },
+                  "required": [
+                    "sourceId",
+                    "instrumentId"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 5
+              },
+              "orderIds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "maxItems": 100
+              }
+            },
+            "required": [
+              "account",
+              "range",
+              "instruments"
+            ],
+            "additionalProperties": false
+          },
+          "page": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000
+              },
+              "cursor": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "limit"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "binding",
+          "query",
+          "page"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array"
+          },
+          "nextCursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "items",
+          "metadata"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "backend.read",
+        "network"
+      ],
+      "usage": {
+        "purpose": "Binance Spot 成交分页观测；历史需明确品种与不超过 24 小时的 UTC 范围。",
+        "inputs": "{binding,query:{account,instruments:[{sourceId,instrumentId}],range:{from:{basis:\"utc\",unixMs},to:{basis:\"utc\",unixMs}},scope?},page:{limit:100,cursor?}}；仅 working orders 可省略范围和品种。",
+        "outputs": "{items,nextCursor?,metadata:{coverage?,truncated?,meta,connection}}。单品种历史接口到 1000 条时标记截断，可缩小范围；分页结束不抹掉原生截断。",
+        "prerequisites": [
+          "Configure the selected environment and HMAC API key/secret through configuration_integration_apply.",
+          "Trading mutations require the authorized main conversation; configuration presence alone does not grant trading permission."
+        ],
+        "limitations": [
+          "Spot production and Spot Testnet are distinct identities. Futures, margin and withdrawals are outside this adapter."
+        ]
+      },
+      "configurationRequirements": [
+        {
+          "field": "environment",
+          "optional": true,
+          "reason": "Select production or Spot Testnet; default is testnet."
+        },
+        {
+          "field": "api_key",
+          "reason": "Binance private account or trading operation."
+        },
+        {
+          "field": "api_secret",
+          "reason": "HMAC signing for the selected Binance account."
+        }
+      ],
+      "binding": {
+        "type": "native",
+        "name": "account_queryFills"
+      }
+    },
+    {
+      "id": "binance_dispose",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "关闭 Binance 订阅、待完成传输与私有存储。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "plugin.session.close"
+      ],
+      "usage": {
+        "purpose": "关闭 Binance 订阅、待完成传输与私有存储。",
+        "inputs": "Use the declared object schema; see INTERFACES.md for concrete examples.",
+        "outputs": "{closed:true}；已保存订单回执不删除。",
+        "prerequisites": [
+          "Host lifecycle disposal only."
+        ],
+        "limitations": [
+          "Spot production and Spot Testnet are distinct identities. Futures, margin and withdrawals are outside this adapter."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "binance_dispose"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "id": "market",
+      "contract": "sesame.market/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "connection": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "id",
+              "revision"
+            ],
+            "additionalProperties": false
+          },
+          "configuration": {
+            "type": "object",
+            "properties": {
+              "environment": {
+                "type": "string",
+                "enum": [
+                  "production",
+                  "testnet"
+                ]
+              }
+            },
+            "required": [
+              "environment"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "presentation": {
+        "connection": {
+          "required": false
+        },
+        "limits": {
+          "transportMode": "push",
+          "minPollIntervalMs": 1000,
+          "maxPageSize": 1000,
+          "maxSubscriptionInstruments": 20
+        }
+      },
+      "operations": {
+        "bind": "market_bind",
+        "unbind": "market_unbind",
+        "searchInstruments": "market_searchInstruments",
+        "describeInstrument": "market_describeInstrument",
+        "queryBars": "market_queryBars",
+        "subscribeBars": "market_subscribeBars",
+        "subscribeQuotes": "market_subscribeQuotes"
+      }
+    },
+    {
+      "id": "account",
+      "contract": "sesame.account/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "connection": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "id",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "presentation": {
+        "connection": {
+          "required": false
+        },
+        "limits": {
+          "minPollIntervalMs": 10000,
+          "maxPageSize": 1000,
+          "historyRequiresInstruments": true,
+          "maxHistoryWindowMs": 86400000
+        }
+      },
+      "operations": {
+        "bind": "account_bind",
+        "unbind": "account_unbind",
+        "listAccounts": "account_listAccounts",
+        "snapshot": "account_snapshot",
+        "queryOrders": "account_queryOrders",
+        "queryFills": "account_queryFills"
+      }
+    }
+  ],
+  "services": [
+    {
+      "id": "execution",
+      "contract": "sesame.execution-adapter/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "operations": {
+        "identity": "binance_execution_identity",
+        "snapshot": "binance_execution_snapshot",
+        "prepare": "binance_execution_prepare",
+        "submit": "binance_execution_submit",
+        "recover": "binance_execution_recover",
+        "command": "binance_execution_command",
+        "cancel": "binance_execution_cancel"
+      }
+    }
+  ],
+  "views": [],
+  "knowledge": [
+    {
+      "id": "documentation-0",
+      "path": "prompt.md",
+      "kind": "prompt",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Binance Spot: prompt.md"
+    },
+    {
+      "id": "documentation-1",
+      "path": "README.md",
+      "kind": "reference",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Binance Spot: README.md"
+    },
+    {
+      "id": "documentation-2",
+      "path": "INTERFACES.md",
+      "kind": "reference",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Binance Spot: INTERFACES.md"
+    },
+    {
+      "id": "documentation-3",
+      "path": "PROVENANCE.md",
+      "kind": "reference",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Binance Spot: PROVENANCE.md"
+    },
+    {
+      "id": "documentation-4",
+      "path": "VALIDATION.md",
+      "kind": "reference",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Binance Spot: VALIDATION.md"
+    },
+    {
+      "id": "documentation-5",
+      "path": "skills/binance-spot/SKILL.md",
+      "kind": "skill",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Binance Spot: skills/binance-spot/SKILL.md"
+    }
+  ],
+  "hooks": [
+    {
+      "id": "dispose",
+      "event": "lifecycle.dispose",
+      "contract": "sesame.lifecycle/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "operations": {
+        "handle": "binance_dispose"
+      }
+    }
+  ],
+  "stateCollections": [],
+  "artifactSchemas": [],
+  "configuration": {
+    "title": "币安 Spot / Spot Testnet",
+    "fields": [
+      {
+        "id": "environment",
+        "title": "账户环境",
+        "description": "testnet 是 Spot 测试网，production 是币安生产现货；未配置默认 testnet。公开行情绑定可独立明确选择环境。",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "production",
+            "testnet"
+          ],
+          "writeOnly": false,
+          "default": "testnet"
+        },
+        "binding": {
+          "type": "environment",
+          "name": "BINANCE_ENVIRONMENT"
+        }
+      },
+      {
+        "id": "api_key",
+        "title": "API Key",
+        "description": "所选环境的 HMAC API key。公开行情不需要；账户读取与交易权限由 Binance 验证。",
+        "schema": {
+          "type": "string",
+          "writeOnly": true,
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "binding": {
+          "type": "environment",
+          "name": "BINANCE_API_KEY"
+        }
+      },
+      {
+        "id": "api_secret",
+        "title": "HMAC API Secret",
+        "description": "所选环境的 HMAC secret；只用于原生签名，不写入插件账本或回执。",
+        "schema": {
+          "type": "string",
+          "writeOnly": true,
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "binding": {
+          "type": "environment",
+          "name": "BINANCE_API_SECRET"
+        }
+      }
+    ]
+  }
+}

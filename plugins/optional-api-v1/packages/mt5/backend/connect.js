@@ -9,6 +9,7 @@ import { MT5MCP, connectionRefused } from './mcp.js';
 import { nativeConnectionSettings } from './native-settings.js';
 import { proxySettings, testerProxyLines } from './connection.js';
 import { launch } from './process.js';
+import { inspectTerminalProcess } from './terminal-process.js';
 
 const busy = ['running', 'attaching', 'preparing', 'unknown'];
 const unpack = result => {
@@ -33,6 +34,7 @@ export function connectionStartup(config, nativeAccount) {
 /** Probe first, persist only working credentials, and pin the original account throughout. */
 export async function ensureMT5Connection(mt5, { start_if_needed = true } = {}, signal, {
   startTerminal = launch, timeoutMs = 30000, probeTimeoutMs = 5000, pollIntervalMs = 1000, exclusive = action => action(), probeAccount, readNativeSettings = nativeConnectionSettings,
+  inspectTerminal = inspectTerminalProcess,
 } = {}) {
   if (mt5.terminalPreparing) return unavailable('terminal_preparing', '终端正由受管理准备操作恢复连接，不另行启动', []);
   const preparationEpoch = mt5.terminalPreparationEpoch ?? 0;
@@ -44,6 +46,17 @@ export async function ensureMT5Connection(mt5, { start_if_needed = true } = {}, 
   if (!selected.enabled) return unavailable('connection_disabled', '交易终端连接已关闭；先读取 mt5_settings，只有用户要求恢复此连接时，才由 mt5_update_configuration 启用后再 mt5_connect', steps);
   const blocked = official.access('terminal', 'get_trading_account_info', null).blocked_reason;
   if (blocked) return unavailable('mt5_permission_denied', blocked, steps);
+  let terminalProcess;
+  const inspect = async () => {
+    try { terminalProcess = await inspectTerminal(mt5.native, signal); }
+    catch {
+      signal?.throwIfAborted();
+      terminalProcess = { status: 'unknown', running: null, terminal_path: mt5.native?.terminal ?? null, pids: [], checked_at: now(), reason: '无法确认所选终端进程，不能据此判为未启动' };
+    }
+    steps.push({ step: 'inspect_terminal', status: terminalProcess.status, reason: terminalProcess.reason });
+  };
+  await inspect();
+  const failed = (code, reason, extra = {}) => unavailable(code, reason, steps, { terminal_process: terminalProcess, ...extra });
   let nativeSettings;
   try { nativeSettings = await readNativeSettings(mt5.native); }
   catch { steps.push({ step: 'discover', status: 'failed', reason: '本机配置无法安全读取；保留已保存的连接设置' }); }
@@ -61,8 +74,12 @@ export async function ensureMT5Connection(mt5, { start_if_needed = true } = {}, 
   try { sameEndpoint = Boolean(nativeServer && connectionURL('terminal', nativeServer.url) === connectionURL('terminal', selected.url)); }
   catch { steps.push({ step: 'discover', status: 'failed', reason: '忽略不支持的本机 MCP 地址，保留已选终端' }); }
   if (sameEndpoint) add('native', nativeServer);
-  if (!candidates.length) return unavailable(mt5.native ? 'mcp_not_configured' : 'mt5_not_installed',
-    mt5.native ? '本机可读配置没有可用 MCP 凭据；主 Agent 可用 mt5_update_configuration 直接保存用户已提供的 token，已有 pendingImports 引用也可复用。确实缺少 token 时只索取该值，连接导出是可选方式；保存后再核验' : '未找到唯一的 MT5 安装；先用 mt5_dependencies inspect 与本机文件/进程查找已有安装，保存准确终端路径；确认未安装后再准备依赖', steps);
+  if (!candidates.length) {
+    if (terminalProcess.running === false) return failed('terminal_not_running', '已确认所选 MT5 终端未运行；先用 mt5_start_terminal 打开该终端，再核验 MCP；启动无需 MCP 密钥或账户密码', { started: false });
+    if (mt5.native && terminalProcess.running === null) return failed('terminal_status_unknown', '无法确认所选终端进程，且现有 MCP 配置不可用；先核对该终端是否开启，不据此判断账户未登录或索取账户密码', { started: false });
+    return failed(mt5.native ? 'mcp_not_configured' : 'mt5_not_installed',
+      mt5.native ? '所选终端已运行，但本机可读配置没有可用 MCP 凭据；主 Agent 可用 mt5_update_configuration 保存用户已提供的 token，或复用 pendingImports。确实缺少 token 时只索取该值，无需账户密码或强制导出' : '未找到唯一的 MT5 安装；先用 mt5_dependencies inspect 与本机文件/进程查找已有安装，保存准确终端路径；确认未安装后再准备依赖', { started: false });
+  }
 
   const deadline = AbortSignal.timeout(timeoutMs);
   const combined = AbortSignal.any([deadline, ...(signal ? [signal] : [])]);
@@ -99,6 +116,13 @@ export async function ensureMT5Connection(mt5, { start_if_needed = true } = {}, 
         requireValue(connectionRefused(lastError), '终端已响应或状态不明，不重复启动', 409, 'mt5_busy');
         requireValue(official.config.version === original.version, '连接设置已改变，请重新连接', 409, 'version_conflict');
         requireValue(!mt5.tester.pending.size && !official.jobs.size && !mt5.deployments.list().some(item => busy.includes(item.status)), '有终端任务正在运行，连接恢复暂不启动终端', 409, 'mt5_busy');
+        // Refused MCP does not prove the application is closed. Recheck absence
+        // under ownership immediately before dispatching a startup request.
+        if (terminalProcess.running !== false) return;
+        await inspect();
+        assertLifecycle(); combined.throwIfAborted();
+        requireValue(official.config.version === original.version, '连接设置已改变，请重新连接', 409, 'version_conflict');
+        if (terminalProcess.running !== false) return;
         startupFile = join(official.directory, `${id('connect')}.ini`);
         await fs.writeFile(startupFile, connectionStartup(original, nativeSettings.account), { mode: 0o600 });
         await fs.chmod(startupFile, 0o600); securePath(startupFile);
@@ -107,7 +131,7 @@ export async function ensureMT5Connection(mt5, { start_if_needed = true } = {}, 
         started = true;
       });
       if (started) steps.push({ step: 'start_terminal', status: 'requested', reason: '复用终端保存的账户，以算法交易关闭的配置启动；启动请求不代表已连接' });
-      while (!combined.aborted && !proof) {
+      while (started && !combined.aborted && !proof) {
         await sleep(pollIntervalMs, undefined, { signal: combined });
         for (const candidate of candidates) {
           try { proof = await probe(candidate); chosen = candidate; break; } catch (error) { lastError = error; }
@@ -117,10 +141,12 @@ export async function ensureMT5Connection(mt5, { start_if_needed = true } = {}, 
     }
     if (!proof) {
       signal?.throwIfAborted();
-      const code = lastError?.upstreamStatus === 401 ? 'mcp_auth_failed' : refused && !started ? 'terminal_not_running' : 'mcp_unreachable';
-      return unavailable(code, code === 'mcp_auth_failed'
+      const code = lastError?.upstreamStatus === 401 ? 'mcp_auth_failed' : connectionRefused(lastError) && !started && terminalProcess.running === false ? 'terminal_not_running' : 'mcp_unreachable';
+      return failed(code, code === 'mcp_auth_failed'
         ? 'MT5 拒绝当前 MCP 密钥；本机候选凭据未通过认证。主 Agent 可用 mt5_update_configuration 直接保存用户已提供的有效 token，或复用 pendingImports，再核验连接；只有仍缺有效凭据时才询问用户，无需强制导出'
-        : code === 'terminal_not_running' ? '交易终端 MCP 尚未启动；先按 connection/dependencies 指南核对所选安装与已有进程并恢复该服务，不另开一个终端代替发现' : 'MT5 MCP 暂不可用，请检查原生 MCP 服务与本机连接', steps, { started });
+        : code === 'terminal_not_running' ? '已确认所选 MT5 终端未运行；先用 mt5_start_terminal 打开该终端，再核验 MCP；不要把端口未监听当作账户未登录'
+          : terminalProcess.running === true ? '所选 MT5 终端已运行，但 MCP 暂不可用；检查该终端的 MCP 开关、监听地址和读取权限。连接恢复后再核验券商状态，不重复启动或索取账户密码'
+            : '无法确认所选终端进程，且 MCP 暂不可用；先核对该终端是否开启，再检查 MCP 监听。当前没有账户未登录或密钥错误的证据，不重复启动或循环重试', { started });
     }
     steps.push({ step: 'authenticate', source: chosen.source, status: 'verified' });
     // Connecting to MCP is not proof of a broker connection. Allow saved-login recovery a short bounded wait.
@@ -128,11 +154,11 @@ export async function ensureMT5Connection(mt5, { start_if_needed = true } = {}, 
       await sleep(pollIntervalMs, undefined, { signal: combined });
       proof = await probe(chosen);
     }
-    if (!proof.terminal.server_connected) return unavailable('broker_offline', 'MCP 已连接，但 MT5 尚未连上券商；请核对终端中保存的登录、服务器和网络', steps, { started, mcp_connected: true });
+    if (!proof.terminal.server_connected) return failed('broker_offline', 'MCP 已连接，但 MT5 尚未连上券商；请核对终端中保存的登录、服务器和网络', { started, mcp_connected: true });
     const actual = { login: String(proof.account?.login ?? ''), server: proof.account?.server ?? '' };
     requireValue(/^[1-9][0-9]{0,19}$/.test(actual.login) && typeof actual.server === 'string' && actual.server.length > 0 && actual.server.length <= 200 && !/[\r\n\0]/.test(actual.server), 'MT5 未返回有效账户身份', 502, 'mt5_invalid_account');
     if (original.account.login && actual.login !== original.account.login || original.account.server && actual.server !== original.account.server) {
-      return unavailable('mt5_account_mismatch', 'MT5 当前账户与 Sesame 绑定账户不同；请在 MT5 登录绑定账户，或由用户修改账户绑定', steps, { started, mcp_connected: true, account: actual });
+      return failed('mt5_account_mismatch', 'MT5 当前账户与 Sesame 绑定账户不同；请在 MT5 登录绑定账户，或由用户修改账户绑定', { started, mcp_connected: true, account: actual });
     }
     return await exclusive(async () => {
       combined.throwIfAborted();
@@ -145,14 +171,14 @@ export async function ensureMT5Connection(mt5, { start_if_needed = true } = {}, 
       if (Object.keys(changes).length) await official.configure({ expected_version: original.version, ...changes });
       else { official.clients.get('terminal')?.close(); official.clients.delete('terminal'); }
       steps.push({ step: 'verify_account', status: 'verified' });
-      return { server: 'terminal', status: 'connected', code: null, reason: null, account: actual, mcp_connected: true, broker_connected: true, settings_version: official.config.version, started, steps };
+      return { server: 'terminal', status: 'connected', code: null, reason: null, account: actual, mcp_connected: true, broker_connected: true, terminal_process: terminalProcess, settings_version: official.config.version, started, steps };
     });
   } catch (error) {
     signal?.throwIfAborted();
-    if (proof && !proof.terminal.server_connected && deadline.aborted) return unavailable('broker_offline', 'MCP 已连接，但等待期间券商连接未恢复；请核对 MT5 保存的登录和网络', steps, { started, mcp_connected: true });
+    if (proof && !proof.terminal.server_connected && deadline.aborted) return failed('broker_offline', 'MCP 已连接，但等待期间券商连接未恢复；请核对 MT5 保存的登录和网络', { started, mcp_connected: true });
     let reason = official.redact(error.message);
     for (const { token } of candidates) reason = reason.replaceAll(token, '[redacted]');
-    return unavailable(typeof error.code === 'string' ? error.code : 'mcp_unreachable', reason, steps, { started });
+    return failed(typeof error.code === 'string' ? error.code : 'mcp_unreachable', reason, { started });
   } finally {
     if (startupFile) await fs.rm(startupFile, { force: true });
   }

@@ -1,0 +1,1961 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "capabilities": [
+    {
+      "id": "trading_decision_models",
+      "kind": "function",
+      "description": "List configured model descriptors and the default manager/executor roles. Use exact provider/id for the default or role override; optional reviewer IDs come from the selected workflow plan.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "models": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "configurationDigest": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "provider",
+                "id",
+                "configurationDigest"
+              ],
+              "additionalProperties": true
+            }
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "manager",
+                "executor"
+              ]
+            }
+          }
+        },
+        "required": [
+          "models",
+          "roles"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [],
+      "binding": {
+        "type": "native",
+        "name": "trading_decision_models"
+      },
+      "usage": {
+        "purpose": "List configured model descriptors and the default manager/executor roles. Use exact provider/id for the default or role override; optional reviewer IDs come from the selected workflow plan.",
+        "inputs": "{}.",
+        "outputs": "{models:[{provider,id,configurationDigest,...}],roles:[role names]}; copy a configured model descriptor into plan.model or agent_models.",
+        "prerequisites": [],
+        "limitations": [
+          "A configured model is not evidence that a particular workflow succeeded."
+        ]
+      }
+    },
+    {
+      "id": "trading_decision_plan",
+      "kind": "function",
+      "description": "List, save, pause or resume an authorized trading-decision plan. The manager consumes fixed research results, the actual account and personal risk rules; the executor applies its frozen target when execution is enabled and no review blocks it. An enabled schedule runs only within already user-approved continuing scope; saving a plan does not grant new authorization.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "list"
+              }
+            },
+            "required": [
+              "action"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "save"
+              },
+              "plan": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "execution",
+                  "model"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80,
+                    "description": "Existing plan ID for update; omit for a new plan"
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80,
+                    "description": "User-visible plan name"
+                  },
+                  "execution": {
+                    "type": "object",
+                    "required": [
+                      "plugin_id",
+                      "context_tool",
+                      "apply_tool"
+                    ],
+                    "properties": {
+                      "plugin_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200,
+                        "description": "Explicitly selected execution capability plugin"
+                      },
+                      "context_tool": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200,
+                        "description": "Declared composition identity/snapshot capability returning account, tools, readTools, taskContext and quantityRules; use the producer-returned reference."
+                      },
+                      "apply_tool": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200,
+                        "description": "Declared target-portfolio apply capability from the same execution reference; a native order_send tool is not interchangeable."
+                      },
+                      "arguments": {
+                        "type": "object",
+                        "properties": {},
+                        "additionalProperties": true,
+                        "description": "Opaque binding arguments returned by the execution capability"
+                      }
+                    },
+                    "additionalProperties": false,
+                    "description": "Use the exact execution reference returned by a composition implementation. sesame/portfolio-execution provides portfolio_execution_configure({backend:\"mt5\"|\"qmt\",id?}) and portfolio_execution_context({binding_id,action:\"identity\"}); other implementations of COMPOSITION.md are supported. MT5 native identity is only an account, not this execution contract."
+                  },
+                  "model": {
+                    "type": "object",
+                    "required": [
+                      "provider",
+                      "id"
+                    ],
+                    "properties": {
+                      "provider": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200,
+                        "description": "Configured provider ID"
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200,
+                        "description": "Configured model ID"
+                      },
+                      "configurationDigest": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200,
+                        "description": "Digest returned by trading_decision_models"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "agent_models": {
+                    "type": "object",
+                    "properties": {
+                      "manager": {
+                        "type": "object",
+                        "required": [
+                          "provider",
+                          "id"
+                        ],
+                        "properties": {
+                          "provider": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200,
+                            "description": "Configured provider ID"
+                          },
+                          "id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200,
+                            "description": "Configured model ID"
+                          },
+                          "configurationDigest": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200,
+                            "description": "Digest returned by trading_decision_models"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "executor": {
+                        "type": "object",
+                        "required": [
+                          "provider",
+                          "id"
+                        ],
+                        "properties": {
+                          "provider": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200,
+                            "description": "Configured provider ID"
+                          },
+                          "id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200,
+                            "description": "Configured model ID"
+                          },
+                          "configurationDigest": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200,
+                            "description": "Digest returned by trading_decision_models"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "additionalProperties": {
+                      "type": "object",
+                      "required": [
+                        "provider",
+                        "id"
+                      ],
+                      "properties": {
+                        "provider": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200,
+                          "description": "Configured provider ID"
+                        },
+                        "id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200,
+                          "description": "Configured model ID"
+                        },
+                        "configurationDigest": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200,
+                          "description": "Digest returned by trading_decision_models"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "description": "Each named Agent may select a different configured provider/model; omitted roles inherit model"
+                  },
+                  "symbols": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100,
+                      "description": "Exact broker symbol"
+                    },
+                    "maxItems": 30
+                  },
+                  "interval_minutes": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 5,
+                    "maximum": 43200,
+                    "description": "Recurring execution cadence in minutes; null means no interval. Independent of analysis timeframe (H1 does not imply 60 here)."
+                  },
+                  "event_keys": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100,
+                      "description": "Event key configured by the user"
+                    },
+                    "maxItems": 20
+                  },
+                  "account_events": {
+                    "type": "boolean",
+                    "description": "Subscribe to available account position/order events; unsupported providers report unavailable"
+                  },
+                  "event_cooldown_seconds": {
+                    "type": "integer",
+                    "minimum": 5,
+                    "maximum": 86400
+                  },
+                  "slippage_bps": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 500,
+                    "description": "Fresh executable quote boundary; market fills may still slip"
+                  },
+                  "enabled": {
+                    "type": "boolean",
+                    "description": "Defaults true. false saves a paused draft with no scheduled execution; resume is a separate control."
+                  },
+                  "instructions": {
+                    "type": "string",
+                    "maxLength": 6000
+                  },
+                  "research_refs": {
+                    "type": "array",
+                    "maxItems": 30,
+                    "description": "Complete fixed research result data ArtifactRefs, such as investment_research_analyze.result_ref. The manager consumes these without rerunning research. Omit only when the authorized decision does not require new research, e.g. reducing exposure.",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "revision",
+                        "digest",
+                        "kind",
+                        "schemaVersion"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "revision": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "digest": {
+                          "type": "string",
+                          "pattern": "^sha256:[a-f0-9]{64}$"
+                        },
+                        "kind": {
+                          "const": "data"
+                        },
+                        "schemaVersion": {
+                          "const": "1.0.0"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "workflow": {
+                    "type": "object",
+                    "properties": {
+                      "reviews": {
+                        "type": "array",
+                        "maxItems": 12,
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                            },
+                            "title": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "instructions": {
+                              "type": "string",
+                              "maxLength": 6000
+                            }
+                          },
+                          "required": [
+                            "id"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "execute": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": false,
+                    "description": "Optional frozen workflow. reviews run in order before manager; each saves an immutable allow/block check and has no trading or decision-write authority. execute:false produces a saved decision and report only; apply is rejected even from the owner. Omitted keeps manager then executor."
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "action",
+              "plan"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "pause"
+              },
+              "plan_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Existing plan ID"
+              }
+            },
+            "required": [
+              "action",
+              "plan_id"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "resume"
+              },
+              "plan_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Existing plan ID"
+              }
+            },
+            "required": [
+              "action",
+              "plan_id"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "outputSchema": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "plans": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "enabled": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "enabled"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            },
+            "required": [
+              "plans"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "enabled": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "enabled"
+            ],
+            "additionalProperties": true
+          }
+        ]
+      },
+      "execution": "immediate",
+      "effects": [
+        "write:plans",
+        "manage:subscriptions",
+        "cancel:workflow"
+      ],
+      "binding": {
+        "type": "native",
+        "name": "trading_decision_plan"
+      },
+      "usage": {
+        "purpose": "List, save, pause or resume an authorized trading-decision plan. The manager consumes fixed research results, the actual account and personal risk rules; the executor applies its frozen target when execution is enabled and no review blocks it. An enabled schedule runs only within already user-approved continuing scope; saving a plan does not grant new authorization.",
+        "inputs": "action=list returns plans; save takes plan:{title,execution,model,research_refs?:[complete kind:data ArtifactRef],symbols?,instructions?,enabled?,interval_minutes?,event_keys?,account_events?,agent_models?:{manager?,executor?}}; pause/resume takes plan_id. Obtain research result_ref from a selected research workflow such as investment_research_analyze. No mode, analyst team, research plugin selection or debate configuration exists here. Optional plan.workflow:{reviews:[{id:\"risk_check\",instructions:\"Check concentration\"}],execute:false}. Reviews run sequentially before manager, block verdicts prevent execution; execute:false never starts executor. agent_models can name review IDs.",
+        "outputs": "list => {plans}; save/pause/resume => persisted plan with id, account, fixed researchRefs, execution/model descriptors, enabled and scheduling state. A saved plan or target is not a fill.",
+        "prerequisites": [
+          "Main conversation and explicit user trading scope; scheduling requires authorization for recurring decisions and execution.",
+          "Use an execution binding returned by portfolio_execution_configure({backend:\"mt5\"|\"qmt\"}) or another COMPOSITION.md implementation; native account identity alone is insufficient.",
+          "Manager requires enabled sesame/memory with memory_trading_context/memory_read and sesame/data-access with data_read, plus the execution binding's declared account/contract reads. Configure broker/model access in their owning plugins; this plugin stores no API keys.",
+          "research_refs names existing complete data ArtifactRefs. The main Agent first selects and runs the appropriate research workflow; the trading manager reads its fixed output and never starts another research team. Existing authorized risk reduction need not wait for unrelated new research."
+        ],
+        "limitations": [
+          "The default plan uses manager and executor; optional workflow.reviews adds ordered read-only checks before the manager. execute:false or any block verdict prevents executor dispatch and target execution. The manager checks applicable confirmed risk rules, research scope/time/limitations and the current account before saving a target. Missing necessary evidence interrupts for the main Agent; changing a plan requires stopping its current execution first.",
+          "Increasing risk requires applicable confirmed risk rules and verifiable contract/account inputs. Recommendations, accepted orders and strategy pauses do not prove fills or protective stops.",
+          "Pausing cancels future/active decisions but cannot undo broker effects. Unknown execution results require reconciliation of original operation IDs."
+        ]
+      }
+    },
+    {
+      "id": "trading_decision_run",
+      "kind": "function",
+      "description": "Queue one run of a saved enabled plan. Stable request_id deduplicates retries. Returns immediately; read trading_decision_runs for actual targets, role reports, execution receipts and daily-report path.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "plan_id",
+          "request_id"
+        ],
+        "properties": {
+          "plan_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Saved trading plan ID"
+          },
+          "request_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Stable ID for this requested run"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "write:trading-checkpoints",
+        "start:workflow"
+      ],
+      "binding": {
+        "type": "native",
+        "name": "trading_decision_run"
+      },
+      "usage": {
+        "purpose": "Queue one run of a saved enabled plan. Stable request_id deduplicates retries. Returns immediately; read trading_decision_runs for actual targets, role reports, execution receipts and daily-report path.",
+        "inputs": "{plan_id,request_id}; retain request_id for an identical retry.",
+        "outputs": "The persisted business run with id/status and workflow reference when admitted; initially queued/running, not completed. trading_decision_runs(action:\"read\",run_id:id) exposes the actual decision/execution/report.",
+        "prerequisites": [
+          "An owned, enabled saved plan whose frozen execution, fixed research and model inputs remain available."
+        ],
+        "limitations": [
+          "Starting a run can execute its target portfolio. An accepted/queued run is not a broker receipt."
+        ]
+      }
+    },
+    {
+      "id": "trading_decision_event",
+      "kind": "function",
+      "description": "Deliver a named event to enabled trading plans subscribed to that event key. Event data is untrusted research input, not trading authority. Stable event_id deduplicates delivery; rapid events coalesce before account execution.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "key",
+          "event_id"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Configured event key"
+          },
+          "event_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Stable upstream event ID"
+          },
+          "observed_at": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "data": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "runs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "status"
+              ],
+              "additionalProperties": true
+            }
+          }
+        },
+        "required": [
+          "runs"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "write:trading-checkpoints",
+        "start:workflow"
+      ],
+      "binding": {
+        "type": "native",
+        "name": "trading_decision_event"
+      },
+      "usage": {
+        "purpose": "Deliver a named event to enabled trading plans subscribed to that event key. Event data is untrusted research input, not trading authority. Stable event_id deduplicates delivery; rapid events coalesce before account execution.",
+        "inputs": "{key,event_id,observed_at?,data?}; key must match the subscribed event_keys, observed_at is epoch milliseconds, data is bounded untrusted context.",
+        "outputs": "{runs:[admitted or existing business runs]}; a stable event_id deduplicates delivery and rapid events may coalesce.",
+        "prerequisites": [
+          "Main conversation only; task/tool names do not grant a delegated Agent this authority.",
+          "Matching owned enabled plans; each retains its own execution authorization."
+        ],
+        "limitations": [
+          "Event text cannot alter authority, models or frozen bindings; delivery does not prove an executed trade."
+        ]
+      }
+    },
+    {
+      "id": "trading_decision_runs",
+      "kind": "function",
+      "description": "Read saved trading runs including all shared team reports, target portfolios, mounted-strategy stop results, actual order receipts and report paths; cancel an active/queued run without undoing broker effects.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "list"
+              },
+              "plan_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Filter plan ID"
+              },
+              "offset": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              }
+            },
+            "required": [
+              "action"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "read"
+              },
+              "run_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Trading run ID"
+              }
+            },
+            "required": [
+              "action",
+              "run_id"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "cancel"
+              },
+              "run_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Trading run ID"
+              }
+            },
+            "required": [
+              "action",
+              "run_id"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "outputSchema": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "status"
+                  ],
+                  "additionalProperties": true
+                }
+              },
+              "total": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "nextOffset": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "items",
+              "total",
+              "nextOffset"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "status"
+            ],
+            "additionalProperties": true
+          }
+        ]
+      },
+      "execution": "immediate",
+      "effects": [
+        "cancel:workflow",
+        "write:trading-checkpoints"
+      ],
+      "binding": {
+        "type": "native",
+        "name": "trading_decision_runs"
+      },
+      "usage": {
+        "purpose": "Read saved trading runs including all shared team reports, target portfolios, mounted-strategy stop results, actual order receipts and report paths; cancel an active/queued run without undoing broker effects.",
+        "inputs": "action=list with plan_id?/offset?/limit?; read or cancel with run_id. Use the business run id returned by trading_decision_run, not the host workflow Run ID.",
+        "outputs": "list => {items,total,nextOffset}; read => persisted run with plan, trigger, current tasks/reports, decision, execution, report and error. workflow identifies the original host Run; runs.read(workflow) supplies pending interrupt IDs/reasons/requirements. Interrupted retains unfinished work; after resolving and verifying selected items, runs.resume continues the same Run with explicit interruptIds under the host control contract.",
+        "prerequisites": [
+          "Main conversation only; task/tool names do not grant a delegated Agent this authority."
+        ],
+        "limitations": [
+          "Cancellation stops work but cannot undo fills. Preserve operation IDs in execution receipts and query the selected execution implementation for uncertain outcomes."
+        ]
+      }
+    },
+    {
+      "id": "trading_decision_activity",
+      "kind": "function",
+      "description": "Open the actual trading workflow Run graph with its child Agents and final report.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "run_id"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "open:native-run-view"
+      ],
+      "binding": {
+        "type": "native",
+        "name": "trading_decision_activity"
+      },
+      "usage": {
+        "purpose": "Open the actual trading workflow Run graph with its child Agents and final report.",
+        "inputs": "{run_id:<business run id>}.",
+        "outputs": "Host view-open receipt for run.workflow.id; the view displays real child Runs and the final artifact.",
+        "prerequisites": [
+          "Main conversation only; task/tool names do not grant a delegated Agent this authority.",
+          "The saved run has a workflow reference; queued work without it returns NOT_STARTED."
+        ],
+        "limitations": [
+          "Opening the view does not start or complete the workflow."
+        ]
+      }
+    },
+    {
+      "id": "trading_decision_context",
+      "kind": "function",
+      "description": "Read the shared frozen account and paginated peer evidence for this workflow. Reuse prior observations and method findings before collecting a concrete gap; all position origins are included. Sections expose account facts, history, team findings and prior decision reflections.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "run_id"
+        ],
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Persisted trading decision run ID from this task input"
+          },
+          "section": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "all"
+              },
+              {
+                "type": "string",
+                "const": "account"
+              },
+              {
+                "type": "string",
+                "const": "history"
+              },
+              {
+                "type": "string",
+                "const": "team"
+              },
+              {
+                "type": "string",
+                "const": "memory"
+              }
+            ]
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "plan": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "capturedAt": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "runId",
+          "plan"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "read:selected-account",
+        "write:context-checkpoint"
+      ],
+      "binding": {
+        "type": "native",
+        "name": "trading_decision_context"
+      },
+      "usage": {
+        "purpose": "Read the shared frozen account and paginated peer evidence for this workflow. Reuse prior observations and method findings before collecting a concrete gap; all position origins are included. Sections expose account facts, history, team findings and prior decision reflections.",
+        "inputs": "{run_id,section?:\"all\"|\"account\"|\"history\"|\"team\"|\"memory\",offset?,limit?}; use the business runId from the assigned task.",
+        "outputs": "Frozen plan/account evidence and section pages with items,total,nextOffset, plus available peer outputs and prior decision memory. section=team reads saved peer reports without fetching an account snapshot; capturedAt is present only when that snapshot exists. Page until nextOffset=null when complete evidence is needed. plan.researchRefs contains the exact fixed research result references supplied by the main Agent; consume them through data_read. Context does not fetch external research.",
+        "prerequisites": [
+          "Owning main conversation or a registered role task for this exact run."
+        ],
+        "limitations": [
+          "This reads an already admitted run; it does not create a portfolio execution binding or obtain current market prices. The snapshot includes all position origins. account/history/memory/all require the full snapshot; memory includes actual held symbols as well as plan symbols.",
+          "When the execution provider explicitly reports error.details.retryable=false, the same run retains and returns that failure without querying again. Follow its recovery diagnosis, verify the connection/account, then resume the original host Run. The resumed attempt clears the unavailable context cache and rechecks the connection; repeating context before repair does not help. team remains available."
+        ]
+      }
+    },
+    {
+      "id": "trading_decision_check",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Save the current registered pre-decision reviewer’s immutable allow/block result. This records evidence only and cannot submit orders or change target quantities.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "verdict": {
+            "enum": [
+              "allow",
+              "block"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          }
+        },
+        "required": [
+          "run_id",
+          "verdict",
+          "reason"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "verdict": {
+            "enum": [
+              "allow",
+              "block"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "verdict",
+          "reason"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "write:review-checkpoint"
+      ],
+      "binding": {
+        "type": "native",
+        "name": "trading_decision_check"
+      },
+      "usage": {
+        "purpose": "Freeze the current pre-decision review outcome.",
+        "inputs": "{run_id,verdict:\"allow\"|\"block\",reason}; role identity comes only from the trusted registered Agent.",
+        "outputs": "The immutable verdict and reason; identical retries return the same check.",
+        "prerequisites": [
+          "A running reviewer listed in the frozen workflow, before manager saves a decision."
+        ],
+        "limitations": [
+          "No main-conversation impersonation, decision changes or order authority. Any block withholds this run’s execution; a different review requires a new run."
+        ]
+      }
+    },
+    {
+      "id": "trading_decision_decide",
+      "kind": "function",
+      "description": "Save one immutable target portfolio from the registered manager task or the owning main conversation using the selected execution capability’s quantity rules. Explicit zero closes all positions for that symbol, including quantitative-strategy positions; omitted symbols stay unchanged. Stop extremely risky mounted strategies by ID with a concrete reason.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "run_id",
+          "decision"
+        ],
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Persisted trading decision run ID from this task input"
+          },
+          "decision": {
+            "type": "object",
+            "required": [
+              "unchanged",
+              "rationale",
+              "targets"
+            ],
+            "properties": {
+              "unchanged": {
+                "type": "boolean"
+              },
+              "rationale": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 8000,
+                "description": "Evidence, disagreement, risk and invalidation rationale"
+              },
+              "targets": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "symbol",
+                    "quantity",
+                    "unit"
+                  ],
+                  "properties": {
+                    "symbol": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100,
+                      "description": "Watched or currently held symbol"
+                    },
+                    "quantity": {
+                      "type": "string",
+                      "pattern": "^-?(0|[1-9]\\d*)(\\.\\d+)?$",
+                      "maxLength": 40
+                    },
+                    "unit": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 40,
+                      "description": "Exact unit from execution.quantityRules"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "maxItems": 100
+              },
+              "pause_strategies": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "deployment_id",
+                    "reason"
+                  ],
+                  "properties": {
+                    "deployment_id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 200,
+                      "description": "Observed mounted strategy ID"
+                    },
+                    "reason": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000,
+                      "description": "Extreme risk of keeping the strategy mounted"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "maxItems": 30
+              },
+              "evidence_dataset_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "description": "Observed research dataset ID"
+                },
+                "maxItems": 30
+              },
+              "evidence_sources": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "datasetId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 200
+                    },
+                    "source": {
+                      "type": "object",
+                      "properties": {
+                        "providerId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "revision": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "binding": {
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "providerId",
+                        "revision"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "query": {
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "datasetId",
+                    "source",
+                    "query"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxItems": 30
+              },
+              "evidence_artifacts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "revision": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "digest": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$"
+                    },
+                    "kind": {
+                      "const": "data"
+                    },
+                    "schemaVersion": {
+                      "const": "1.0.0"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "revision",
+                    "digest",
+                    "kind",
+                    "schemaVersion"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxItems": 30
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "write:decision-checkpoint",
+        "read:datasets"
+      ],
+      "binding": {
+        "type": "native",
+        "name": "trading_decision_decide"
+      },
+      "usage": {
+        "purpose": "Save one immutable target portfolio from the registered manager task or the owning main conversation using the selected execution capability’s quantity rules. Explicit zero closes all positions for that symbol, including quantitative-strategy positions; omitted symbols stay unchanged. Stop extremely risky mounted strategies by ID with a concrete reason.",
+        "inputs": "{run_id,decision:{unchanged,targets,pause_strategies,rationale,...evidence references}}; targets use exact symbol and quantity strings in the selected quantityRules unit. unchanged:true requires targets:[]; explicit zero closes that symbol, omitted symbols are untouched. Rationale synthesizes method applicability, decisive evidence and counterevidence; correlated indicators or role votes are not independent confirmation.",
+        "outputs": "The saved immutable decision attached to the business run, with frozen evidence. Identical retry retains it; a conflicting replacement is rejected. The saved decision automatically includes research_refs copied from the frozen plan; complete published research and its source tree stay in their immutable artifacts rather than being copied or truncated in this trade.",
+        "prerequisites": [
+          "Current registered manager task or owning main conversation for this authorized trading run, with its account context read. The main Agent may use retained analysis to repair a missing structured decision before resuming the same workflow. Selected execution identity supplies units/signedness/integer rules."
+        ],
+        "limitations": [
+          "Saving a target does not submit an order. A strategy pause and its position closure are separate outcomes."
+        ]
+      }
+    },
+    {
+      "id": "trading_decision_apply",
+      "kind": "function",
+      "description": "Pass the fixed target to the explicitly selected execution capability for this registered executor task and preserve its actual receipt. That capability enforces account, native order and strategy controls. Never infer fills or profit from targets.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "run_id"
+        ],
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Persisted trading decision run ID from this task input"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "orders": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "pauses": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        },
+        "required": [
+          "status",
+          "orders",
+          "pauses"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "invoke:selected-execution",
+        "write:execution-receipt"
+      ],
+      "binding": {
+        "type": "native",
+        "name": "trading_decision_apply"
+      },
+      "usage": {
+        "purpose": "Pass the fixed target to the explicitly selected execution capability for this registered executor task and preserve its actual receipt. That capability enforces account, native order and strategy controls. Never infer fills or profit from targets.",
+        "inputs": "{run_id:<current business runId>}; no raw native order fields.",
+        "outputs": "Actual execution receipt from the frozen implementation, retained on the run: inspect status, orders, after and targetReached rather than inferring success from the target.",
+        "prerequisites": [
+          "Current registered executor task; a saved decision and frozen execution binding are required."
+        ],
+        "limitations": [
+          "The model calls this workflow capability; it must not call portfolio_execution_apply directly. Unknown/partial results remain evidence, never replacement orders."
+        ]
+      }
+    },
+    {
+      "id": "trading_decision_report",
+      "kind": "function",
+      "description": "Read the final report artifact already published by this workflow. Report publication happens inside the workflow after its actual child Runs settle; this read never recreates moved, edited or deleted user files.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "run_id"
+        ],
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Persisted trading decision run ID from this task input"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [],
+      "binding": {
+        "type": "native",
+        "name": "trading_decision_report"
+      },
+      "usage": {
+        "purpose": "Read the final report artifact already published by this workflow. Report publication happens inside the workflow after its actual child Runs settle; this read never recreates moved, edited or deleted user files.",
+        "inputs": "{run_id:<business run id>}.",
+        "outputs": "{ref:<published report ArtifactRef>,receipt,entry:\"report.html\",attachments:[{path:\"run.json\",mediaType:\"application/json\"}],state:\"published\"}. HTML contains only the manager summary; frozen run.json retains fixed research, account, target and actual execution evidence. REPORT_UNAVAILABLE means no completed artifact was published.",
+        "prerequisites": [
+          "Owning main or authorized task; the workflow must have produced its final report."
+        ],
+        "limitations": [
+          "Reading cannot restore user-deleted files; verify actual artifact/render receipts separately from generation."
+        ]
+      }
+    },
+    {
+      "id": "trading_decision_review",
+      "kind": "function",
+      "description": "Attach a reflection to a previous same-account decision using registered external evidence observed after that decision. Reviews preserve source rows and hashes; targets and quotes are not fills, and returns are never invented.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "current_run_id",
+          "run_id",
+          "evidence",
+          "reflection"
+        ],
+        "properties": {
+          "current_run_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Current task trading run ID"
+          },
+          "run_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Previous decision run ID"
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "datasetId",
+                "observedAtField"
+              ],
+              "properties": {
+                "datasetId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "description": "Registered external dataset ID"
+                },
+                "rowIndex": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "kind": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "observation"
+                    },
+                    {
+                      "type": "string",
+                      "const": "market"
+                    },
+                    {
+                      "type": "string",
+                      "const": "execution"
+                    }
+                  ]
+                },
+                "observedAtField": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "description": "Actual source-row timestamp field"
+                },
+                "symbolField": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "description": "Source-row symbolField"
+                },
+                "accountIdField": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "description": "Source-row accountIdField"
+                },
+                "executionIdField": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "description": "Source-row executionIdField"
+                },
+                "quantityField": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "description": "Source-row quantityField"
+                },
+                "priceField": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "description": "Source-row priceField"
+                },
+                "runIdField": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "description": "Source-row runIdField"
+                },
+                "source": {
+                  "type": "object",
+                  "properties": {
+                    "providerId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "revision": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "binding": {
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "providerId",
+                    "revision"
+                  ],
+                  "additionalProperties": false
+                },
+                "query": {
+                  "type": "object"
+                },
+                "artifact": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "revision": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "digest": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$"
+                    },
+                    "kind": {
+                      "const": "data"
+                    },
+                    "schemaVersion": {
+                      "const": "1.0.0"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "revision",
+                    "digest",
+                    "kind",
+                    "schemaVersion"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false,
+              "dependentRequired": {
+                "source": [
+                  "query"
+                ],
+                "query": [
+                  "source"
+                ]
+              },
+              "allOf": [
+                {
+                  "not": {
+                    "required": [
+                      "artifact",
+                      "source"
+                    ]
+                  }
+                },
+                {
+                  "not": {
+                    "required": [
+                      "artifact",
+                      "query"
+                    ]
+                  }
+                }
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 16
+          },
+          "reflection": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 6000,
+            "description": "Evidence-grounded review and lesson; distinguish unconfirmed execution"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "read:datasets",
+        "write:review-memory"
+      ],
+      "binding": {
+        "type": "native",
+        "name": "trading_decision_review"
+      },
+      "usage": {
+        "purpose": "Attach a reflection to a previous same-account decision using registered external evidence observed after that decision. Reviews preserve source rows and hashes; targets and quotes are not fills, and returns are never invented.",
+        "inputs": "{current_run_id,run_id:<earlier decision>,evidence:[{datasetId,observedAtField,rowIndex?,kind?,symbolField?,accountIdField?,executionIdField?,quantityField?,priceField?,runIdField?,source?,query?,artifact?}],reflection}; observedAtField names the actual later timestamp column. Use producer-returned source/query together or an exact data ArtifactRef.",
+        "outputs": "Saved review with frozen source rows/hashes attached to the prior same-account decision.",
+        "prerequisites": [
+          "An authorized task in current_run_id; prior run belongs to the same account and has a decision."
+        ],
+        "limitations": [
+          "Targets, old quotes and synthetic data do not establish realized returns; missing future evidence remains unresolved."
+        ]
+      }
+    },
+    {
+      "id": "activate",
+      "kind": "function",
+      "description": "Start private plan recovery and scheduler without replaying interrupted execution.",
+      "consumers": [
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "read:trading-checkpoints",
+        "manage:scheduler"
+      ],
+      "binding": {
+        "type": "native",
+        "name": "activate"
+      },
+      "usage": {
+        "purpose": "Start private plan recovery and scheduler without replaying interrupted execution.",
+        "inputs": "Host lifecycle activation payload; no Agent input.",
+        "outputs": "Initialization/recovery acknowledgement; reconciles retained plans and enables the existing scheduler.",
+        "prerequisites": [
+          "Host lifecycle only."
+        ],
+        "limitations": [
+          "Does not replay interrupted execution."
+        ]
+      }
+    },
+    {
+      "id": "dispose",
+      "kind": "function",
+      "description": "Cancel unfinished Runs and close subscriptions and private databases.",
+      "consumers": [
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "cancel:workflow",
+        "close:private-stores"
+      ],
+      "binding": {
+        "type": "native",
+        "name": "dispose"
+      },
+      "usage": {
+        "purpose": "Cancel unfinished Runs and close subscriptions and private databases.",
+        "inputs": "Host lifecycle disposal payload.",
+        "outputs": "Cleanup acknowledgement after cancelling active work and closing subscriptions/storage.",
+        "prerequisites": [
+          "Host lifecycle only."
+        ],
+        "limitations": [
+          "Cleanup retains execution receipts and cannot reverse broker effects."
+        ]
+      }
+    },
+    {
+      "id": "trading_decision_workflow_execute",
+      "kind": "workflow",
+      "description": "Execute an admitted authorized trading decision: consume fixed research, verify account/risk rules, freeze target, execute and retain actual receipts.",
+      "consumers": [
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "runId"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "report": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "runId",
+          "status",
+          "report"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "run",
+      "effects": [
+        "start:agents",
+        "invoke:selected-execution",
+        "publish:report",
+        "write:trading-checkpoints"
+      ],
+      "binding": {
+        "type": "native",
+        "name": "trading_decision_workflow_execute"
+      },
+      "usage": {
+        "purpose": "Execute an admitted authorized trading decision: consume fixed research, verify account/risk rules, freeze target, execute and retain actual receipts.",
+        "inputs": "{runId:<already admitted business run>}.",
+        "outputs": "Accepted host Run; missing dependencies interrupt before Agent dispatch. Resume retains the same Run/session, actual member identities, frozen target and actual execution receipts. Result: {runId,status,report} after the round and archival, including decision-only or review-blocked rounds. Report delivery requires the published artifact; pending or failed archival is not delivery.",
+        "prerequisites": [
+          "Host workflow admission only; no direct Agent invocation."
+        ],
+        "limitations": [
+          "Host Run cancellation and broker-order cancellation are different operations.",
+          "Interruptions preserve checkpoints and do not publish a final failure report. Unknown external execution outcomes require reconciliation and are never resent automatically."
+        ]
+      },
+      "resumable": true,
+      "requires": [
+        {
+          "id": "selected-workflow-dependencies",
+          "capability": "sesame/trading-decision#trading_decision_workflow_dependencies",
+          "input": {
+            "runId": {
+              "$ref": "input#/runId"
+            }
+          },
+          "reason": "Check frozen declarations and local state before workflow admission or resume; live native observation is performed and validated during workflow execution."
+        }
+      ]
+    },
+    {
+      "id": "trading_decision_workflow_dependencies",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Check frozen model/plugin declarations, retained execution state, memory/fixed-data capabilities and pinned research artifacts. This read-only readiness probe does not observe a live account or invoke its native transport.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "runId"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "available"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "read"
+      ],
+      "binding": {
+        "type": "native",
+        "name": "trading_decision_workflow_dependencies"
+      },
+      "usage": {
+        "purpose": "Check frozen model/plugin declarations, retained execution state, memory/fixed-data capabilities and pinned research artifacts. This read-only readiness probe does not observe a live account or invoke its native transport.",
+        "inputs": "{runId:<saved business run ID>}; the host maps this from the workflow input.",
+        "outputs": "{available,reason?,details?}; availability applies only to frozen declarations and local state. details.liveObservation is not-probed; no native adapter/evaluator, model call or business mutation is performed.",
+        "prerequisites": [
+          "Saved business run with frozen configuration; called by the host before workflow execution."
+        ],
+        "limitations": [
+          "This probe never calls a live snapshot. The actual workflow validates native account/coverage before pending decision work or writes; an already sent execution without a saved receipt remains blocked for reconciliation."
+        ]
+      }
+    }
+  ],
+  "sources": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "instructions",
+      "path": "prompt.md",
+      "description": "Fixed research consumption, personal risk rules, authorized target decisions and actual execution.",
+      "kind": "prompt"
+    },
+    {
+      "id": "README.md",
+      "path": "README.md",
+      "description": "README.md",
+      "kind": "reference"
+    },
+    {
+      "id": "PROVENANCE.md",
+      "path": "PROVENANCE.md",
+      "description": "PROVENANCE.md",
+      "kind": "reference"
+    },
+    {
+      "id": "COMPOSITION.md",
+      "path": "COMPOSITION.md",
+      "description": "COMPOSITION.md",
+      "kind": "reference"
+    },
+    {
+      "id": "skills-trading-decision-SKILL.md",
+      "path": "skills/trading-decision/SKILL.md",
+      "description": "skills/trading-decision/SKILL.md",
+      "kind": "skill"
+    }
+  ],
+  "stateCollections": [],
+  "views": [],
+  "hooks": [
+    {
+      "id": "activate",
+      "contract": "sesame.lifecycle/1",
+      "event": "lifecycle.activate",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "operations": {
+        "handle": "activate"
+      }
+    },
+    {
+      "id": "dispose",
+      "contract": "sesame.lifecycle/1",
+      "event": "lifecycle.dispose",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "operations": {
+        "handle": "dispose"
+      }
+    }
+  ],
+  "artifactSchemas": [
+    {
+      "kind": "report",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "required": [
+          "schemaVersion",
+          "title",
+          "summary",
+          "entry",
+          "runtime",
+          "runtimeRevision",
+          "data",
+          "related",
+          "features",
+          "locale",
+          "provenance"
+        ],
+        "properties": {
+          "schemaVersion": {
+            "const": "1.0.0"
+          },
+          "title": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "entry": {
+            "const": "report.html"
+          },
+          "runtime": {
+            "const": "sesame-report/1"
+          },
+          "runtimeRevision": {
+            "const": "1.0.0"
+          },
+          "data": {
+            "type": "array"
+          },
+          "related": {
+            "type": "array"
+          },
+          "features": {
+            "type": "array"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "provenance": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": false
+      },
+      "id": "workflow-report"
+    }
+  ]
+}

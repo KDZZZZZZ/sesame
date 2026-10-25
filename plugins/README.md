@@ -2,10 +2,10 @@
 
 [Browse plugins](https://sesame.bot/plugins/) · [中文插件库](https://sesame.bot/zh/plugins/) · [Historical machine-readable catalog](catalog.json)
 
-For current hosts, use the [Plugin API 1 catalog](api-v1/CATALOG.md): 32 packages,
-including nine core and twenty-three optional plugins. Compatibility is checked
-per package; `sesame/manual-trading` requires Sesame 0.2.1, while the other
-selected packages support 0.2.0. The instructions below describe the fixed 0.1.4 catalog.
+For current source and publication guidance, use the [API 2 documentation](api-v1/CATALOG.md)
+and [development inventory](api-v1/inventory.json). Installable versions come from
+the actual published directory, with compatibility checked per package.
+The instructions below describe the fixed 0.1.4 catalog.
 
 Copy an exact name, for example `sesame/web-extract`, into Sesame 0.1.4:
 

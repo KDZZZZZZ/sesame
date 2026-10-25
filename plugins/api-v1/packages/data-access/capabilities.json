@@ -1162,19 +1162,19 @@
     {
       "id": "resource.1",
       "path": "prompt.md",
-      "description": "随包资源 prompt.md",
+      "description": "信息层的数据源、行情与固定证据接口；按来源/时间/覆盖复用输入，交给分析方法和工作流。",
       "kind": "prompt"
     },
     {
       "id": "resource.2",
       "path": "skills/analyze-data/SKILL.md",
-      "description": "随包资源 skills/analyze-data/SKILL.md",
+      "description": "读取已登记输入或固定DataRef，执行有输入谱系的计算并登记可复核结果；不把预览当全文。",
       "kind": "skill"
     },
     {
       "id": "resource.3",
       "path": "skills/market-discovery/SKILL.md",
-      "description": "随包资源 skills/market-discovery/SKILL.md",
+      "description": "查找真实行情来源、品种、周期和字段，再读取符合范围的冻结行情；标明单位、时点和缺口。",
       "kind": "skill"
     }
   ],

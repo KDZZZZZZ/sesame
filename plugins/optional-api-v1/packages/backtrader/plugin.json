@@ -1,11 +1,11 @@
 {
   "id": "sesame/backtrader",
   "title": "BACKTRADER optional backend",
-  "description": "Native fixed-data Cerebro backtests; no live broker",
-  "version": "2.0.0",
+  "description": "计算验证能力：消费固定数据与已编写策略运行一次Cerebro回测，保留输入与结果引用；候选比较由工作流负责，不连接实盘。",
+  "version": "2.0.2",
   "apiVersion": "2",
   "engines": {
-    "sesame": ">=0.2.3"
+    "sesame": ">=0.3.0-dev.1 <0.4.0"
   },
   "default_state": "discoverable",
   "entry": "index.js",
@@ -23,5 +23,13 @@
   "resources": [
     "PROVENANCE.md"
   ],
-  "capability_manifest": "capabilities.json"
+  "capability_manifest": "capabilities.json",
+  "permissions": {
+    "scopes": [
+      "process.execute"
+    ],
+    "calls": [
+      "host.process.exec"
+    ]
+  }
 }

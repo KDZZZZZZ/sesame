@@ -1,0 +1,1101 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "capabilities": [
+    {
+      "id": "ultra_start",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "开始持续协作目标并创建真实规划工作流；同会话已有任务返回现有状态，不重复开工。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "objective": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16000
+          },
+          "context": {
+            "type": "string",
+            "maxLength": 60000
+          },
+          "mode": {
+            "enum": [
+              "auto",
+              "research",
+              "monitor",
+              "trade"
+            ]
+          },
+          "max_parallel": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16
+          },
+          "plugins": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "maxItems": 64,
+            "uniqueItems": true
+          },
+          "success_criteria": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            "maxItems": 32,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "objective"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "state.write",
+        "start:workflow"
+      ],
+      "usage": {
+        "purpose": "开始持续协作目标并创建真实规划工作流；同会话已有任务返回现有状态，不重复开工。",
+        "inputs": "Use the current user's accepted objective and scope. id may be omitted by owner controls.",
+        "outputs": "Durable goal status and actual Run references. Run acceptance is not task completion; inspect real outputs. Completed native cycles wake the main Agent through the host's existing notification queue.",
+        "prerequisites": [
+          "Configured model for planning; selected capabilities remain enabled and locally authorized."
+        ],
+        "limitations": [
+          "Only the owning main conversation controls the goal. Ultra adds no trading authorization and does not replay unknown side effects.",
+          "No fixed number of rounds. A user stop ends continuation; missing input and host restart retain explicit recovery state."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "ultra_start"
+      }
+    },
+    {
+      "id": "ultra_status",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "查看当前会话 Ultra 的目标、分支、真实 Run、等待和完成证据，读取不会启动研究。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "branch_key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "state.read",
+        "state.write",
+        "read"
+      ],
+      "usage": {
+        "purpose": "查看当前会话 Ultra 的目标、分支、真实 Run、等待和完成证据，读取不会启动研究。",
+        "inputs": "Use the current user's accepted objective and scope. id may be omitted by owner controls.",
+        "outputs": "Durable goal status and real Run references, plus enabled, continuation (active/draining/closed), active_work, accepted_work and queued_work. Reading never starts research or advances user authority. guidance contains the current mode instructions for model-only context assembly; never append it to visible user messages.",
+        "prerequisites": [
+          "Configured model for planning; selected capabilities remain enabled and locally authorized."
+        ],
+        "limitations": [
+          "Only the owning main conversation controls the goal. Ultra adds no trading authorization and does not replay unknown side effects.",
+          "No fixed number of rounds. A user stop ends continuation; missing input and host restart retain explicit recovery state."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "ultra_status"
+      }
+    },
+    {
+      "id": "ultra_dispatch",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "从主会话并行派发精确的研究/工作流能力；保存稳定分支键和实际 Run。超出当前并发容量的工作排队；使用空 branches 填充空余槽位。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "branches": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 96
+                },
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                },
+                "capability": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "input": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "task": {
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 120
+                    },
+                    "output": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "const": "none"
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "const": "report"
+                            },
+                            "space": {
+                              "enum": [
+                                "research",
+                                "strategy"
+                              ]
+                            },
+                            "path": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 512
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "space",
+                            "path"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  },
+                  "required": [],
+                  "additionalProperties": false
+                },
+                "exclusive": {
+                  "type": "boolean"
+                },
+                "stop": {
+                  "type": "object",
+                  "properties": {
+                    "capability": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "input": {
+                      "type": "object",
+                      "additionalProperties": true
+                    }
+                  },
+                  "required": [
+                    "capability",
+                    "input"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "key",
+                "title",
+                "capability",
+                "input"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 64
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 4000
+          }
+        },
+        "required": [
+          "branches"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "state.write",
+        "declared-calls",
+        "start:workflow"
+      ],
+      "usage": {
+        "purpose": "从主会话并行派发精确的研究/工作流能力；保存稳定分支键和实际 Run。超出当前并发容量的工作排队；使用空 branches 填充空余槽位。",
+        "inputs": "Each branch has stable key/title/capability/input and optional task report binding. Discover exact schemas first. Use existing workflows and publish actual reports. Never place credentials in inputs. No generic recursive Agent grants; assign exact business tools. A persistent scheduler/subscription needs its exact stop action.",
+        "outputs": "Durable goal status and actual Run references. Run acceptance is not task completion; inspect real outputs. Completed native cycles wake the main Agent through the host's existing notification queue.",
+        "prerequisites": [
+          "Configured model for planning; selected capabilities remain enabled and locally authorized."
+        ],
+        "limitations": [
+          "Only the owning main conversation controls the goal. Ultra adds no trading authorization and does not replay unknown side effects.",
+          "No fixed number of rounds. A user stop ends continuation; missing input and host restart retain explicit recovery state."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "ultra_dispatch"
+      }
+    },
+    {
+      "id": "ultra_wait",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "保存真实下一次唤醒：已注册 Run、新来源事件、明确时间点；缺少必要用户信息则显式等待输入，不忙轮询。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "kind": {
+            "enum": [
+              "runs",
+              "time",
+              "event",
+              "input"
+            ]
+          },
+          "until": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          },
+          "source": {
+            "type": "object",
+            "properties": {
+              "providerId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "binding": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "required": [
+              "providerId",
+              "revision"
+            ],
+            "additionalProperties": false
+          },
+          "operation": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "input": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "state.write",
+        "start:workflow"
+      ],
+      "usage": {
+        "purpose": "保存真实下一次唤醒：已注册 Run、新来源事件、明确时间点；缺少必要用户信息则显式等待输入，不忙轮询。",
+        "inputs": "Use the current user's accepted objective and scope. id may be omitted by owner controls.",
+        "outputs": "Durable goal status and actual Run references. Run acceptance is not task completion; inspect real outputs. Completed native cycles wake the main Agent through the host's existing notification queue.",
+        "prerequisites": [
+          "Configured model for planning; selected capabilities remain enabled and locally authorized."
+        ],
+        "limitations": [
+          "Only the owning main conversation controls the goal. Ultra adds no trading authorization and does not replay unknown side effects.",
+          "No fixed number of rounds. A user stop ends continuation; missing input and host restart retain explicit recovery state."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "ultra_wait"
+      }
+    },
+    {
+      "id": "ultra_resume",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "明确恢复本 Ultra 已保留的中断 Run 与继续状态，不重做完成操作或自动重放结果未知的交易。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "response": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "state.write",
+        "execution"
+      ],
+      "usage": {
+        "purpose": "明确恢复本 Ultra 已保留的中断 Run 与继续状态，不重做完成操作或自动重放结果未知的交易。",
+        "inputs": "Use the current user's accepted objective and scope. id may be omitted by owner controls.",
+        "outputs": "Durable goal status and actual Run references. Run acceptance is not task completion; inspect real outputs. Completed native cycles wake the main Agent through the host's existing notification queue.",
+        "prerequisites": [
+          "Configured model for planning; selected capabilities remain enabled and locally authorized."
+        ],
+        "limitations": [
+          "Only the owning main conversation controls the goal. Ultra adds no trading authorization and does not replay unknown side effects.",
+          "No fixed number of rounds. A user stop ends continuation; missing input and host restart retain explicit recovery state."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "ultra_resume"
+      }
+    },
+    {
+      "id": "ultra_close",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "关闭 Ultra 主动拓展，保留已经开始的研究、Run 和订阅自然收尾；不取消、不恢复已有任务，也不表示目标已完成。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "state.read",
+        "state.write",
+        "read"
+      ],
+      "usage": {
+        "purpose": "关闭 Ultra 主动拓展，保留已经开始的研究、Run 和订阅自然收尾；不取消、不恢复已有任务，也不表示目标已完成。",
+        "inputs": "Owning main conversation; optional id and reason. UI close and /ultra off use this operation.",
+        "outputs": "Persistent enabled=false; continuation is draining while finite accepted work remains, then closed. Existing work and its completion notices are retained.",
+        "prerequisites": [
+          "Existing owning main conversation."
+        ],
+        "limitations": [
+          "Does not cancel accepted Runs or call domain stop actions. Unstarted queued work is withdrawn. New expansion requires an explicit new user request to start or resume Ultra."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "ultra_close"
+      }
+    },
+    {
+      "id": "ultra_stop",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "停止当前会话 Ultra，取消全部登记的真实 Run 及子树，并执行已登记的领域停止动作；已成交订单不会回滚。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "state.write",
+        "execution",
+        "declared-calls"
+      ],
+      "usage": {
+        "purpose": "停止当前会话 Ultra，取消全部登记的真实 Run 及子树，并执行已登记的领域停止动作；已成交订单不会回滚。",
+        "inputs": "Use the current user's accepted objective and scope. id may be omitted by owner controls.",
+        "outputs": "Durable goal status and actual Run references. Run acceptance is not task completion; inspect real outputs. Completed native cycles wake the main Agent through the host's existing notification queue.",
+        "prerequisites": [
+          "Configured model for planning; selected capabilities remain enabled and locally authorized."
+        ],
+        "limitations": [
+          "Only the owning main conversation controls the goal. Ultra adds no trading authorization and does not replay unknown side effects.",
+          "No fixed number of rounds. A user stop ends continuation; missing input and host restart retain explicit recovery state."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "ultra_stop"
+      }
+    },
+    {
+      "id": "ultra_finish",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "当用户目标有实际完成证据且所有分支已结算时结束 Ultra；不要把完成一轮误当作长期目标已达成。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8000
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            "minItems": 1,
+            "maxItems": 64
+          }
+        },
+        "required": [
+          "summary",
+          "evidence"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "state.write",
+        "execution"
+      ],
+      "usage": {
+        "purpose": "当用户目标有实际完成证据且所有分支已结算时结束 Ultra；不要把完成一轮误当作长期目标已达成。",
+        "inputs": "Use the current user's accepted objective and scope. id may be omitted by owner controls.",
+        "outputs": "Durable goal status and actual Run references. Run acceptance is not task completion; inspect real outputs. Completed native cycles wake the main Agent through the host's existing notification queue.",
+        "prerequisites": [
+          "Configured model for planning; selected capabilities remain enabled and locally authorized."
+        ],
+        "limitations": [
+          "Only the owning main conversation controls the goal. Ultra adds no trading authorization and does not replay unknown side effects.",
+          "No fixed number of rounds. A user stop ends continuation; missing input and host restart retain explicit recovery state."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "ultra_finish"
+      }
+    },
+    {
+      "id": "ultra_cycle",
+      "kind": "workflow",
+      "consumers": [
+        "host"
+      ],
+      "description": "内部持久周期：一次规划或等待真实 Run/时间/数据事件，完成后利用宿主原生通知续办主 Agent。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "number": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "mode": {
+            "enum": [
+              "plan",
+              "runs",
+              "time",
+              "event"
+            ]
+          },
+          "refs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "kind": {
+                  "enum": [
+                    "agent",
+                    "workflow",
+                    "process",
+                    "function"
+                  ]
+                },
+                "revision": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "required": [
+                "id"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 256,
+            "minItems": 1
+          },
+          "until": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          },
+          "source": {
+            "type": "object",
+            "properties": {
+              "providerId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "binding": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "required": [
+              "providerId",
+              "revision"
+            ],
+            "additionalProperties": false
+          },
+          "operation": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "input": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "mode"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "resumable": true,
+      "effects": [
+        "state.write",
+        "execution",
+        "data.subscribe"
+      ],
+      "usage": {
+        "purpose": "内部持久周期：一次规划或等待真实 Run/时间/数据事件，完成后利用宿主原生通知续办主 Agent。",
+        "inputs": "Use the current user's accepted objective and scope. id may be omitted by owner controls.",
+        "outputs": "Durable goal status and actual Run references. Run acceptance is not task completion; inspect real outputs. Completed native cycles wake the main Agent through the host's existing notification queue.",
+        "prerequisites": [
+          "Configured model for planning; selected capabilities remain enabled and locally authorized."
+        ],
+        "limitations": [
+          "Only the owning main conversation controls the goal. Ultra adds no trading authorization and does not replay unknown side effects.",
+          "No fixed number of rounds. A user stop ends continuation; missing input and host restart retain explicit recovery state."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "ultra_cycle"
+      }
+    },
+    {
+      "id": "ultra_before_turn",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "execution": "immediate",
+      "description": "Keep trusted human-input authority and explicit Ultra reopen intent without modifying visible message content.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "string"
+          },
+          "conversation": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "source": {},
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "messageId",
+          "conversation",
+          "parts"
+        ],
+        "additionalProperties": true
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "parts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        },
+        "required": [
+          "parts"
+        ],
+        "additionalProperties": false
+      },
+      "effects": [
+        "state.write"
+      ],
+      "usage": {
+        "purpose": "Keep a durable human-input boundary and explicit Ultra reopening intent.",
+        "inputs": "Trusted host lifecycle metadata and message parts. Only real human input advances authority; explicit Ultra restart intent is retained as a boolean, never message text.",
+        "outputs": "Unchanged message parts; visible user content never receives internal mode instructions.",
+        "prerequisites": [
+          "Trusted beforeAgentTurn lifecycle."
+        ],
+        "limitations": [
+          "Automatic/delegated input never advances user authority. Closed mode does not disable normal collaboration capabilities."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "ultra_before_turn"
+      }
+    },
+    {
+      "id": "ultra_after_turn",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "execution": "immediate",
+      "description": "Continue an unfinished Ultra goal after its owning main Agent turn settles, using queued work or a real exploration cycle.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "conversationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "responseId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "string",
+            "minLength": 1
+          },
+          "scope": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "conversationId",
+          "responseId",
+          "status",
+          "scope"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "effects": [
+        "state.write",
+        "declared-calls",
+        "start:workflow"
+      ],
+      "usage": {
+        "purpose": "Prevent a completed main reply from leaving an unfinished Ultra goal without real continuation.",
+        "inputs": "Host afterAgentTurn conversationId, responseId, status and scope; owner must match the bound main context.",
+        "outputs": "Retained goal state or a newly accepted real cycle. An unchanged non-executed plan becomes a concrete scheduler interruption rather than an empty loop.",
+        "prerequisites": [
+          "Trusted afterAgentTurn lifecycle; an existing active Ultra goal."
+        ],
+        "limitations": [
+          "Stopped, completed, interrupted and explicitly waiting goals do not auto-restart. No new authorization or message impersonation."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "ultra_after_turn"
+      }
+    }
+  ],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "hooks": [
+    {
+      "id": "beforeAgentTurn",
+      "event": "lifecycle.beforeAgentTurn",
+      "contract": "sesame.lifecycle/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "operations": {
+        "handle": "ultra_before_turn"
+      }
+    },
+    {
+      "id": "afterAgentTurn",
+      "event": "lifecycle.afterAgentTurn",
+      "contract": "sesame.lifecycle/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "operations": {
+        "handle": "ultra_after_turn"
+      }
+    }
+  ],
+  "knowledge": [
+    {
+      "id": "ultra-provenance",
+      "path": "PROVENANCE.md",
+      "kind": "reference",
+      "description": "Original implementation, MIT license and design-reference boundaries."
+    },
+    {
+      "id": "ultra-prompt",
+      "path": "prompt.md",
+      "kind": "prompt",
+      "description": "Persistent parallel research and monitoring control, command use and continuation rules."
+    },
+    {
+      "id": "ultra-guide",
+      "path": "README.md",
+      "kind": "reference",
+      "description": "Public command contract, durable state, recovery and verification."
+    }
+  ],
+  "stateCollections": [
+    {
+      "name": "human_inputs",
+      "schemaVersion": "1",
+      "mode": "document",
+      "access": "private",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "owner": {
+            "type": "string"
+          },
+          "messageId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "owner",
+          "messageId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "authorities",
+      "schemaVersion": "1",
+      "mode": "document",
+      "access": "private",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "owner": {
+            "type": "string"
+          },
+          "messageId": {
+            "type": "string"
+          },
+          "counter": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "ultraRequested": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "owner",
+          "messageId",
+          "counter"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "owners",
+      "schemaVersion": "1",
+      "mode": "document",
+      "access": "private",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "closeGeneration": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "closeAuthority": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "closeRequestedAt": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "sessions",
+      "schemaVersion": "1",
+      "mode": "document",
+      "access": "private",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "status": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "id",
+          "owner",
+          "status"
+        ],
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "branches",
+      "schemaVersion": "1",
+      "mode": "document",
+      "access": "private",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "session": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96
+          },
+          "status": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "session",
+          "key",
+          "status"
+        ],
+        "additionalProperties": true
+      }
+    }
+  ],
+  "artifactSchemas": [],
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  }
+}

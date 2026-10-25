@@ -88,6 +88,28 @@ test('new package passes actual registration, executes a native eight-Agent work
     assert.ok(packet.members.every(member => !member.markdown.includes('sha256:')), 'Real tool evidence survives even when final Markdown contains no reference JSON');
     assert.equal(done.output.report_ref, undefined); assert.equal(observations.length, 8); assert.deepEqual(failures, []);
     assert.equal(observations.at(-1).research.members.length, 7);
+    const custom = await host.capabilities.invoke('sesame/investment-research#investment_research_analyze', {
+      title: 'Custom installed research', question: 'Use the selected fictional facts and one independent challenge.', subjects: ['FICTIONAL'],
+      model: { provider: 'fixture', id: 'fixture' }, research: { plugins: [] }, evidence_refs: [sourceRef],
+      workflow: { stages: [[{id:'facts',role:'fundamentals'}],[{id:'challenge',role:'custom',instructions:'Check the strongest alternative explanation.'}],[{id:'editor',role:'manager'}]],synthesis:'editor' },
+    }, { operationId:'custom-research-host-fixture',task:{output:{type:'none'}} });
+    const customDone=(await host.runs.wait(custom.run,{until:'settled',timeoutMs:30000})).run;
+    assert.equal(customDone.status,'completed',JSON.stringify({error:customDone.error,interrupts:customDone.interrupts}));
+    assert.deepEqual(customDone.task.collaboration.agents.map(member=>member.id),['facts','challenge','editor']);
+    assert.deepEqual(app.runtime.runs.descendants(customDone.id).filter(run=>run.kind==='agent').map(run=>run.task.agentId),['facts','challenge','editor']);
+    const customPacket=await readPacket(host,customDone.output.result_ref);
+    assert.equal(customPacket.workflow.synthesis,'editor');assert.equal(customPacket.members.length,3);
+    assert.deepEqual(Object.keys(observations.find(member=>member.role==='editor').qa_context.members),['facts','challenge']);
+    const suffix=await host.capabilities.invoke('sesame/investment-research#investment_research_analyze',{
+      start_from:{result_ref:customDone.output.result_ref,role:'editor'},model:{provider:'fixture',id:'fixture'},research:{plugins:[]},
+    },{operationId:'custom-research-no-horizon-suffix',task:{output:{type:'none'}}});
+    const suffixDone=(await host.runs.wait(suffix.run,{until:'settled',timeoutMs:30000})).run;
+    assert.equal(suffixDone.status,'completed',JSON.stringify({error:suffixDone.error,interrupts:suffixDone.interrupts}));
+    const suffixPacket=await readPacket(host,suffixDone.output.result_ref);
+    assert.equal(Object.hasOwn(suffixPacket,'horizon'),false);
+    assert.deepEqual(suffixPacket.members.slice(0,2),customPacket.members.slice(0,2));
+    assert.deepEqual(app.runtime.runs.descendants(suffixDone.id).filter(run=>run.kind==='agent').map(run=>run.task.agentId),['editor']);
+    assert.deepEqual(failures,[]);
     t.diagnostic(JSON.stringify({ installation: 'actual-package-manager', kind: done.kind, models: 'local-SSE-fixture', agents: children.length, resultArtifact: packet.type, accountRequired: false, brokerCalls: 0 }));
   } finally { await app.dispose(); }
 });

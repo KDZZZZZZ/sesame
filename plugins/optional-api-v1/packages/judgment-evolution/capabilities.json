@@ -577,7 +577,7 @@
       ],
       "usage": {
         "purpose": "在发表每个未来可验证判断之前登记：明确条件成立的概率、期限、对象与固定证据口径。来源、窗口、原概率不可事后修改；历史判断不能回填成前瞻样本。",
-        "inputs": "{command_id,claim,topic,regime,rationale,probability,due_at,verification:{provider,metric,observed_at_field,op,target,upper?,window_start?,selector?},baseline_probability?,rule_predictions?}. Probability is 0..1; dates include a timezone. Example criterion: metric=\"close\", observed_at_field=\"time\", op=\"gt\", target=100, selector={symbol:\"XAUUSD\"}.",
+        "inputs": "{command_id,claim,topic,regime,rationale,probability,due_at,verification:{provider,metric,observed_at_field,op,target,upper?,window_start?,selector?},baseline_probability?,rule_predictions?}. Probability is 0..1; dates include a timezone. Example criterion: metric=\"close\", observed_at_field=\"time\", op=\"gt\", target=100, selector={symbol:\"XAUUSD\"}. Use a source/metric/window that an information capability actually supplies. Method findings may support rationale but cannot serve as the later observed outcome.",
         "outputs": "Immutable prediction {id,status:\"pending\",created_at,due_at,verification,probability,baseline_probability,rule_predictions,...}; same command_id + same input returns the same record.",
         "prerequisites": [
           "Main conversation only; task/tool names do not grant a delegated Agent this authority."
@@ -1163,7 +1163,7 @@
       ],
       "usage": {
         "purpose": "使用真实数据集按事前冻结条件核验到期判断。服务读取数据字段并计算结果与 Brier 分数，不接受手填命中、结果值或分数。数据缺失时使用 judgment_defer。",
-        "inputs": "{judgment_id,dataset_id,source?,query?,artifact?,reflection?}; source/query must be producer-returned public evidence descriptors, or artifact an exact published data reference.",
+        "inputs": "{judgment_id,dataset_id,source?,query?,artifact?,reflection?}; source/query must be producer-returned public evidence descriptors, or artifact an exact published data reference. Reuse matching frozen observations from the selected source; ask the source layer only for missing observations. A method interpretation, vote or report is not a replacement for the required observed field.",
         "outputs": "Updated prediction status=resolved with review.evidence, observed value/time, row/hash/source chain, brier and baseline_brier computed by the service.",
         "prerequisites": [
           "Main conversation only; task/tool names do not grant a delegated Agent this authority."
@@ -1471,7 +1471,7 @@
       ],
       "usage": {
         "purpose": "完成已核验判断的语义复盘：说明证据、成败归因、适用边界和后续验证。关联据此形成的候选准则；若无需新准则，明确原因。自动评分不等于完成复盘。",
-        "inputs": "{judgment_id,analysis,rule_ids?:[],no_change_reason?}; analysis connects evidence, cause, boundaries and a testable next hypothesis. If no rule is linked, give no_change_reason.",
+        "inputs": "{judgment_id,analysis,rule_ids?:[],no_change_reason?}; analysis connects evidence, cause, boundaries and a testable next hypothesis. If no rule is linked, give no_change_reason. Distinguish source/timing quality, method assumptions and actual outcome; reuse the saved calculation instead of building a second scorer.",
         "outputs": "Resolved prediction with immutable review.semantic containing analysis, rule_ids/no_change_reason and completed_at.",
         "prerequisites": [
           "Main conversation only; task/tool names do not grant a delegated Agent this authority."
@@ -1789,12 +1789,12 @@
       "usage": {
         "purpose": "读取专属准则、候选及前瞻验证状态；criteria 是可共享读取的 CRITERIA.md 固定 ArtifactRef。",
         "inputs": "{}.",
-        "outputs": "{items,policy,criteria}; criteria is the immutable published CRITERIA.md reference. host.resources.read(ref,{part:\"content\",entry:\"CRITERIA.md\"}) reads it.",
+        "outputs": "{items,policy,criteria}; criteria is the immutable published CRITERIA.md reference. The Agent reads it with host_resources_read({ref,part:\"content\",entry:\"CRITERIA.md\",encoding:\"utf8\"}); the plugin SDK uses host.resources.read(ref,options). These are prospective judgment criteria, not confirmed personal trading-risk red lines; those belong to the memory policy.",
         "prerequisites": [
           "Main conversation only; task/tool names do not grant a delegated Agent this authority."
         ],
         "limitations": [
-          "The live main-only tools are not delegated by sharing the document. A subagent may read the artifact only with host.resources.read in its allowlist."
+          "The live main-only tools are not delegated by sharing the document. Standard host.agent.run grants exact-reference resource reads by default; pass the returned criteria ref explicitly. Additional business capabilities still require an explicit allowedCalls grant."
         ]
       },
       "binding": {

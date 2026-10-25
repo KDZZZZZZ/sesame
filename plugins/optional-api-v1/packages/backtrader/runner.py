@@ -167,7 +167,6 @@ def main(request):
 
 if __name__ == "__main__":
     output = Path(sys.argv[2])
-    exit_code = 0
     try:
         result = main(json.loads(Path(sys.argv[1]).read_text()))
     # Explicit strategy exits are controlled failures, not missing receipts.
@@ -180,6 +179,7 @@ if __name__ == "__main__":
             "orders": [],
             "trades": [],
         }
-        exit_code = 1
     output.write_text(json.dumps(result, allow_nan=False))
-    sys.exit(exit_code)
+    # A written failed result is a confirmed business outcome. A nonzero process
+    # exit is reserved for an interrupted runner with no confirmed receipt;
+    # the host propagates those failures through the owning Run tree.

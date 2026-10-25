@@ -1,8 +1,8 @@
 import { REPORT_CALLS } from './team.js';
 
-export const check = (condition, code, message) => { if (!condition) throw Object.assign(new Error(message), { code }); };
-const blockedEffect = /^(?:broker\.(?:write|trade)|external-trading|external-strategy-operation|application-configuration|invoke:selected-execution|(?:write:plans|manage:|start:|cancel:workflow|control:workflow)|native-(?:connection|process-start|state\.write)|may-(?:start|resume)-|process\.(?:exec|cancel)|plugin\.(?:install|update|remove|policy)|workspace\.write)/;
-const readOnly = cap => cap.kind === 'function' && !(cap.effects ?? []).some(effect => blockedEffect.test(effect));
+import { check, configuredModel as selectModel, uniqueCalls, verifyRevisions, researchSafeCapability } from './workflow-mechanics.js';
+export { check } from './workflow-mechanics.js';
+const readOnly = researchSafeCapability;
 
 async function plugin(host, id) {
   let value;
@@ -19,12 +19,7 @@ async function catalog(host, pluginId) {
   } while (cursor);
   return items.filter(cap => cap.consumers.includes('agent'));
 }
-export function configuredModel(host, selection) {
-  const model = host.context.models.find(value => value.provider === selection?.provider && value.id === selection?.id);
-  check(model, 'DEPENDENCY_UNAVAILABLE', `Configure the selected model ${selection?.provider}/${selection?.id} before running research.`);
-  check(!selection.configurationDigest || selection.configurationDigest === model.configurationDigest, 'DEPENDENCY_UNAVAILABLE', 'The explicitly selected model configuration has changed.');
-  return structuredClone(model);
-}
+export const configuredModel = (host, selection) => selectModel(host, selection, { required: 'DEPENDENCY_UNAVAILABLE', unavailable: 'DEPENDENCY_UNAVAILABLE', changed: 'DEPENDENCY_UNAVAILABLE' });
 export async function selectResearch(host, selection) {
   const entries = await Promise.all(selection.plugins.map(id => plugin(host, id)));
   const declarations = (await Promise.all(entries.map(entry => catalog(host, entry.id)))).flat()
@@ -48,16 +43,13 @@ async function freezeSelection(host, plugins, calls) {
       check(declared.some(cap => cap.localId === call.capabilityId) && entry.delegatable_tools?.includes(call.capabilityId), 'DEPENDENCY_UNAVAILABLE', `Required Agent capability ${entry.id}#${call.capabilityId} is unavailable.`);
     }
   }
-  const allowedCalls = [...new Map(calls.map(call => [`${call.pluginId}#${call.capabilityId}`, call])).values()];
+  const allowedCalls = uniqueCalls(calls);
   return { plugins, allowedCalls, revisions: entries.map(entry => ({ id: entry.id, digest: entry.digest })) };
 }
 export const reportSelection = host => freezeSelection(host, [...new Set(REPORT_CALLS.map(call => call.pluginId))], REPORT_CALLS);
 export const synthesisSelection = (host, research) => freezeSelection(host, research.plugins,
   research.allowedCalls.filter(call => call.pluginId === 'sesame/plugin-manager' && call.capabilityId === 'plugin_read'));
 export async function verifySelection(host, selection) {
-  for (const revision of selection.revisions) {
-    const current = await plugin(host, revision.id);
-    check(current.digest === revision.digest, 'DEPENDENCY_UNAVAILABLE', `Selected plugin changed during this research: ${revision.id}. Restore its selected revision before resuming.`);
-  }
+  await verifyRevisions(selection.revisions, id => plugin(host, id), { code: 'DEPENDENCY_UNAVAILABLE' });
   await freezeSelection(host, selection.plugins, selection.allowedCalls);
 }

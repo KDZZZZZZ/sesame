@@ -30,7 +30,7 @@
           },
           "dataset_id": {
             "type": "string",
-            "description": "Existing registered dataset ID",
+            "description": "Existing dataset ID registered in host#datasets only. For a plugin receipt's dataset_id, use that plugin's declared SourceRef with input:{datasetId} and title instead of this shortcut.",
             "minLength": 1,
             "maxLength": 20000
           },
@@ -160,13 +160,13 @@
       ],
       "usage": {
         "purpose": "Freeze a registered host dataset or explicitly selected declared source query into a fixed DataRef. Preserve actual rows and provenance; demo remains demo.",
-        "inputs": "operation_id 固定采集；选择 dataset_id，或明确 source+input+title（二者互斥）；provenance_kind 仅在来源缺失时补充；dependencies 为固定引用。",
+        "inputs": "operation_id 固定采集；裸 dataset_id 仅指 host#datasets 中的宿主登记数据。MT5 等插件回执的 dataset_id 须选择其原数据来源 SourceRef，传 source+input:{datasetId:<原ID>}+title，不传顶层 dataset_id；两种形状互斥，source 使用来源目录返回的精确 providerId/revision/binding。provenance_kind 仅在来源缺失时补充；dependencies 为固定引用。",
         "outputs": "data_snapshot 的 {ref,evidence,rowCount,columns,sample,provenance,receipt}；ref 可直接绑定报告。",
         "prerequisites": [
           "sesame/data-access 已安装可用；已得到固定 DataRef 时无需再冻结。"
         ],
         "limitations": [
-          "不生成数据或计算统计；demo 永远保留 demo。未登记文件可通过真实来源/计算能力生成数据成果。"
+          "不生成数据或计算统计；demo 永远保留 demo。裸 dataset_id 不会跨来源搜索，也不会把插件数据登记到宿主；资源不存在时核对 ID 所属来源，不能猜换 ID、复制注册或伪造空数据。未登记文件可通过真实来源/计算能力生成数据成果。"
         ]
       },
       "binding": {
@@ -181,7 +181,7 @@
         "agent",
         "host"
       ],
-      "description": "Write an editable report/1 HTML scaffold with Sesame’s original typography, conclusion, numbered evidence and folded methods. Optional comparison, distribution, temporal and relationship charts use the same style. Read report-design for chart field mappings; all chart data comes from named fixed bindings.",
+      "description": "Write a unified editable report/1 scaffold. Prefer existing charts: line, bar, scatter, matrix, units, waterfall, dumbbell, strip, histogram, boxplot, ridgeline, violin, calendar, parallel, bump, lifecycle, treemap, threads, flow, network-circular, network-force, decision-tree, candlestick. Candlestick reuses the market workbench's default Lightweight Charts style. Read report-design/chart-catalog.md for fields and reportKit-only area/hbar/heatmap. All data uses fixed bindings.",
       "inputSchema": {
         "type": "object",
         "required": [
@@ -324,6 +324,14 @@
               {
                 "type": "string",
                 "const": "network-force"
+              },
+              {
+                "type": "string",
+                "const": "decision-tree"
+              },
+              {
+                "type": "string",
+                "const": "candlestick"
               }
             ]
           },
@@ -437,6 +445,72 @@
       "binding": {
         "type": "native",
         "name": "report_template"
+      }
+    },
+    {
+      "id": "report_document_template",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Write an editable prose-only report/1 document using the shared editorial layout. Preserve authored body HTML, including legitimate inline styles and offline interactions. No fabricated chart, data, publication or render claim.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "output_path",
+          "title",
+          "body_html"
+        ],
+        "properties": {
+          "output_path": {
+            "type": "string",
+            "description": "Workspace HTML path to create",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "title": {
+            "type": "string",
+            "description": "Report title",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "locale": {
+            "type": "string",
+            "description": "BCP 47 language, defaults to en",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "body_html": {
+            "type": "string",
+            "description": "Authored report body HTML. Escape prose before interpolating; inline offline styles/scripts remain subject to publish and runtime policy.",
+            "minLength": 1,
+            "maxLength": 1048576
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "workspace.write"
+      ],
+      "usage": {
+        "purpose": "Write an editable prose-only report/1 document using the shared editorial layout. Preserve authored body HTML, including legitimate inline styles and offline interactions. No fabricated chart, data, publication or render claim.",
+        "inputs": "output_path/title/body_html；locale 可选。使用已转义 Markdown 或可信作者 HTML，保留实际结论与离线交互，不为套模板编造图表或数据。",
+        "outputs": "{path,bytes,runtime,runtimeRevision,editable:true}；共享报告样式的工作区 HTML，尚未发布或渲染验收。",
+        "prerequisites": [
+          "workspace 可写；已有真实报告正文。"
+        ],
+        "limitations": [
+          "不清洗或执行作者脚本，不证明交互/导出成功。发布与 report_check 分别完成固定引用与渲染验收；静态导出另用 report_export_check。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "report_document_template"
       }
     },
     {
@@ -746,12 +820,84 @@
           "宿主报告渲染器可用；已发布该 ref。"
         ],
         "limitations": [
-          "rendered 才证明本次检查通过；失败根据具体诊断修 HTML/数据，发布新 revision 再检查。无渲染器时明确未验证。"
+          "rendered 才证明本次检查通过；失败根据具体诊断修 HTML/数据，发布新 revision 再检查。无渲染器时明确未验证。",
+          "rendered 不等于可导出；receipt.exportability 是源级建议，真实静态准备检查另用 report_export_check。"
         ]
       },
       "binding": {
         "type": "native",
         "name": "report_check"
+      }
+    },
+    {
+      "id": "report_export_check",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Preflight PDF and PNG for an exact published report revision without creating output files. Return supported formats and actionable reasons. Interactive publication/render success is independent; preflight does not verify final exported bytes or guarantee identical later output.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "ref"
+        ],
+        "properties": {
+          "ref": {
+            "type": "object",
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string",
+                "const": "report"
+              },
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "presentation.render"
+      ],
+      "usage": {
+        "purpose": "Preflight PDF and PNG for an exact published report revision without creating output files. Return supported formats and actionable reasons. Interactive publication/render success is independent; preflight does not verify final exported bytes or guarantee identical later output.",
+        "inputs": "ref 为完整固定 report ArtifactRef；不按标题猜版本。",
+        "outputs": "{checked:\"rendered-preflight\",outputVerified:false,supportedFormats,formats,limits,binding}；每格式含 status/reasons；不返回 PDF/PNG 字节，不保存 rendered 验收回执。",
+        "prerequisites": [
+          "宿主报告渲染器及 report-export 检查接口可用。"
+        ],
+        "limitations": [
+          "最终导出仍会检查内容/尺寸/32 MiB 预算；检查后的运行时状态可能不同。PDF 拒绝 shadow DOM、音视频/动画 SVG、不能忠实复制的字体/画布/资源。PNG 只保存静态视图，不保留交互。不能为通过导出而静默删掉证据或媒体。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "report_export_check"
       }
     },
     {
@@ -761,7 +907,7 @@
         "agent",
         "host"
       ],
-      "description": "Publish Agent-authored HTML and packaged assets as an immutable report/1 artifact. All data and related artifacts are fixed references; report code gets only the read-only bridge. Publication does not claim successful rendering.",
+      "description": "Publish Agent-authored HTML and packaged assets as an immutable report/1 artifact. All data and related artifacts are fixed references; report code gets only the read-only bridge. Publication does not claim successful rendering. Source exportability advice is advisory only; use report_export_check for runtime PDF/PNG preflight.",
       "inputSchema": {
         "type": "object",
         "required": [
@@ -1094,6 +1240,14 @@
             "description": "Exact current revision when updating",
             "minLength": 1,
             "maxLength": 20000
+          },
+          "space": {
+            "type": "string",
+            "enum": [
+              "research",
+              "strategy"
+            ],
+            "description": "Initial destination for a new unbound report: strategy for strategy design, factor combinations, backtests and optimization; research for market, macro and source research. An existing report location or bound task output takes precedence. Does not require an SVL strategy source."
           }
         },
         "additionalProperties": false
@@ -1108,14 +1262,15 @@
         "state.write"
       ],
       "usage": {
-        "purpose": "Publish Agent-authored HTML and packaged assets as an immutable report/1 artifact. All data and related artifacts are fixed references; report code gets only the read-only bridge. Publication does not claim successful rendering.",
-        "inputs": "operation_id/title/summary/html_path/provenance_kind/data 必填；data=[{id,ref,...}] 将 HTML 的 bindingId 对应完整 DataRef。assets 打包本地资源；已有报告更新提供 artifact_id+expected_revision；strategy_source 将策略报告关联 SVL。",
-        "outputs": "{ref,title,data,runtime,runtimeRevision,renderStatus:\"not_checked\"}；不可变报告已发布，尚无渲染成功证据。",
+        "purpose": "Publish Agent-authored HTML and packaged assets as an immutable report/1 artifact. All data and related artifacts are fixed references; report code gets only the read-only bridge. Publication does not claim successful rendering. Source exportability advice is advisory only; use report_export_check for runtime PDF/PNG preflight.",
+        "inputs": "operation_id/title/summary/html_path/provenance_kind/data 必填；data=[{id,ref,...}] 将 HTML 的 bindingId 对应完整 DataRef。assets 打包本地资源；已有报告更新提供 artifact_id+expected_revision；strategy_source 将策略报告关联 SVL。 新报告用 space 明确分类：策略设计、因子组合、回测与优化为 strategy，市场/宏观/资料研究为 research；已有任务绑定和报告位置优先。仅真实 SVL 回测填写 strategy_source，原生/Python 回测无须为归类制造策略引用。",
+        "outputs": "{ref,title,data,runtime,runtimeRevision,renderStatus:\"not_checked\",exportability}；不可变报告已发布；exportability.checked=\"source\" 只给格式候选/限制，不证明渲染或导出成功。",
         "prerequisites": [
           "workspace 可读；所有引用已发布；HTML≤1MiB、打包总量≤16MiB；报告 API 与模板见公开 skills。"
         ],
         "limitations": [
-          "同一 operation_id 对应同一固定内容；修改后用新 ID 和当前 revision。资源须打包，demo 输入必须保持 demo；渲染验收使用 report_check(ref)。"
+          "同一 operation_id 对应同一固定内容；修改后用新 ID 和当前 revision。资源须打包，demo 输入必须保持 demo；渲染验收使用 report_check(ref)。",
+          "可交互发布与静态导出能力不同；不支持 PDF 的有效交互报告仍可发布。需要静态交付时用 report_export_check 检查该固定 ref，不自动生成 PDF，也不静默展平媒体。"
         ]
       },
       "binding": {
@@ -1235,6 +1390,12 @@
       "path": "skills/report-writing/SKILL.md",
       "description": "随包资源 skills/report-writing/SKILL.md",
       "kind": "skill"
+    },
+    {
+      "id": "resource.document-template",
+      "path": "templates/document.html",
+      "description": "共享样式的纯正文报告模板，不需要占位图表或数据",
+      "kind": "reference"
     }
   ],
   "hooks": [],
@@ -1501,6 +1662,13 @@
               "references"
             ],
             "additionalProperties": false
+          },
+          "space": {
+            "type": "string",
+            "enum": [
+              "research",
+              "strategy"
+            ]
           }
         },
         "required": [

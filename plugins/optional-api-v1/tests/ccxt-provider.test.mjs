@@ -5,7 +5,9 @@ import { join, resolve, sep } from "node:path";
 import { closeRecords } from "../packages/ccxt/records.js";
 import assert from "node:assert/strict";
 import { setImmediate } from "node:timers/promises";
-import { CCXTProvider, displayDecimals } from "../packages/ccxt/provider.js";
+import { CCXTProvider, descriptor, displayDecimals } from "../packages/ccxt/provider.js";
+import { createCapabilities } from "../packages/ccxt/index.js";
+import { POLL_INTERVAL } from "../packages/ccxt/stream.js";
 const instrument = { sourceId: "ccxt:kraken:spot", instrumentId: "BTC/USD" },
   spec = {
     timeframe: "1m",
@@ -163,6 +165,29 @@ test("Display decimals use exact source precision, never a blanket eight", () =>
   );
 });
 
+test("Exact public routes survive private database reopening without guessing a route or accepting aliases", async t => {
+  const f = providerFixture(t, () => { throw new Error("Binding never dispatches a public request"); });
+  const configuration = { exchange: "kraken", publicProxy: "http://127.0.0.1:7897" };
+  const selected = f.provider.bind({ configuration }, { bindingId: "selected" });
+  const direct = f.provider.bind({ configuration: { exchange: "kraken" } }, { bindingId: "direct" });
+  assert.notEqual(selected.connection.revision, direct.connection.revision);
+  await f.provider.dispose();
+  closeRecords(f.provider.host);
+  const reopened = new CCXTProvider(f.provider.host);
+  t.after(() => reopened.dispose());
+  assert.deepEqual(reopened.bind({ connection: selected.connection }, { bindingId: "restored" }), selected);
+  assert.equal(reopened.bound({ bindingId: "restored" }).proxy, configuration.publicProxy);
+  assert.equal(reopened.bind({ connection: direct.connection }, { bindingId: "restored-direct" }).connection.revision, direct.connection.revision);
+  for (const input of [
+    { configuration: { exchange: "kraken", proxy: configuration.publicProxy } },
+    { configuration: { exchange: "kraken", publicProxy: "http://name:password@localhost:7897" } },
+    { configuration: { exchange: "kraken", publicProxy: null } },
+  ]) assert.throws(() => reopened.bind(input, { bindingId: "bad" }), { code: "INVALID_ARGUMENT" });
+  assert.throws(() => reopened.bind({ connection: selected.connection, configuration: { exchange: "kraken" } }, { bindingId: "mismatch" }), { code: "CONNECTION_CHANGED" });
+  assert.throws(() => reopened.bind({ connection: { ...selected.connection, revision: "unknown" } }, { bindingId: "missing" }), { code: "CONNECTION_CHANGED" });
+  assert.equal(reopened.bindings.size, 2);
+});
+
 function cappedPublicExchange(t, now, exchange = "coinbase", availableFrom = -Infinity) {
   const requests = [];
   const f = providerFixture(t, async payload => {
@@ -197,7 +222,16 @@ test("Backward Coinbase window honors its native 300 candle cap and reaches the 
   await f.provider.unbind(f.context);
 });
 
-test("Live initial tail reaches now and one-second refresh queries only the recent window", async t => {
+test("Catalog and descriptor expose the same one-second public REST cadence", t => {
+  const f = providerFixture(t, () => assert.fail("Catalog does not request public data"));
+  const catalog = createCapabilities(f.provider.host).find(item => item.name === "ccxt_catalog").execute({});
+  assert.equal(POLL_INTERVAL, 1000);
+  assert.equal(catalog.pollIntervalMs, POLL_INTERVAL);
+  assert.equal(descriptor.limits.minPollIntervalMs, POLL_INTERVAL);
+  assert.equal(descriptor.limits.transportMode, "poll");
+});
+
+test("Live initial tail is immediate and the one-second refresh queries only the recent window", async t => {
   const now = Date.UTC(2026, 9, 10, 8, 23), duration = 3600000;
   t.mock.timers.enable({ apis: ["Date", "setTimeout"], now });
   const f = cappedPublicExchange(t, () => Date.now());
@@ -210,15 +244,81 @@ test("Live initial tail reaches now and one-second refresh queries only the rece
   assert.equal(handle.snapshot.bars.at(-1).openTime.unixMs, currentOpen);
   assert.equal(f.requests.length, 2, "Only the initial snapshot backfills its native-capped tail");
   handle.ready(() => {});
-  t.mock.timers.tick(1000);
+  t.mock.timers.tick(999);
+  await setImmediate();
+  assert.equal(f.requests.length, 2, "No normal refresh starts before one second");
+  t.mock.timers.tick(1);
   await setImmediate();
   assert.equal(f.requests.length, 3);
   assert.equal(f.requests[2].since, currentOpen - 2 * duration);
   await handle.close();
-  t.mock.timers.tick(10000);
+  t.mock.timers.tick(POLL_INTERVAL * 2);
   await setImmediate();
   assert.equal(f.requests.length, 3, "Closing a chart stops only its polling");
   await f.provider.unbind(f.context);
+});
+
+test("An in-flight public read never overlaps and the next poll waits from its completion", async t => {
+  const now = Date.UTC(2026, 9, 10, 8, 23);
+  t.mock.timers.enable({ apis: ["Date", "setTimeout"], now });
+  const f = cappedPublicExchange(t, () => Date.now());
+  const handle = await f.provider.subscribeBars({
+    instrument: { sourceId: "ccxt:coinbase:spot", instrumentId: "BTC/USD" },
+    spec: { ...spec, timeframe: "1h" }, includeForming: true, tailLimit: 20,
+  }, f.context);
+  const read = f.read;
+  let release, calls = 0, active = 0, maxActive = 0;
+  const pending = new Promise(resolve => { release = resolve; });
+  f.read = async payload => {
+    calls++; maxActive = Math.max(maxActive, ++active);
+    try { if (calls === 1) await pending; return await read(payload); }
+    finally { active--; }
+  };
+  try {
+    handle.ready(() => {});
+    t.mock.timers.tick(POLL_INTERVAL); await setImmediate();
+    assert.equal(calls, 1); assert.equal(active, 1);
+    t.mock.timers.tick(POLL_INTERVAL * 3); await setImmediate();
+    assert.equal(calls, 1, "Elapsed timer periods cannot overlap a pending request");
+    release(); await setImmediate();
+    assert.equal(active, 0);
+    t.mock.timers.tick(POLL_INTERVAL - 1); await setImmediate();
+    assert.equal(calls, 1, "The next interval starts after the previous read completes");
+    t.mock.timers.tick(1); await setImmediate();
+    assert.equal(calls, 2); assert.equal(maxActive, 1);
+  } finally { release(); await handle.close(); }
+});
+
+test("Unbind releases only its frozen pages and polling; dispose clears the single provider state", async t => {
+  const now = Date.UTC(2026, 9, 10, 8, 23), duration = 3600000;
+  t.mock.timers.enable({ apis: ["Date", "setTimeout"], now });
+  const f = cappedPublicExchange(t, () => Date.now()), other = { bindingId: "second-chart" };
+  f.provider.bind({ configuration: { exchange: "coinbase" } }, other);
+  const input = {
+    instrument: { sourceId: "ccxt:coinbase:spot", instrumentId: "BTC/USD" },
+    spec: { ...spec, timeframe: "1h" }, includeForming: true, tailLimit: 20,
+  };
+  const first = await f.provider.subscribeBars(input, f.context), second = await f.provider.subscribeBars(input, other);
+  const query = { ...input, range: { from: { basis: "utc", unixMs: now - 3 * duration }, to: { basis: "utc", unixMs: now } }, page: { limit: 1 } };
+  const firstPage = await f.provider.queryBars(query, f.context), secondPage = await f.provider.queryBars(query, other);
+  const events = [];
+  first.ready(event => events.push(event)); second.ready(event => events.push(event));
+  assert.equal(f.provider.streams.size, 2); assert.equal(f.provider.pages.size, 2);
+  await f.provider.unbind(f.context);
+  assert.equal(f.provider.pages.has(firstPage.data.page.nextCursor), false);
+  assert.equal(f.provider.pages.has(secondPage.data.page.nextCursor), true);
+  assert.equal(f.provider.streams.size, 1);
+  const before = f.requests.length;
+  t.mock.timers.tick(POLL_INTERVAL); await setImmediate();
+  assert.equal(f.requests.length, before + 1, "The other chart continues its existing poll");
+  assert.throws(() => f.provider.bound(f.context), { code: "CONNECTION_CHANGED" });
+  await f.provider.dispose();
+  for (const field of ["bindings", "pages", "revisions", "closedThrough", "streams"]) assert.equal(f.provider[field].size, 0, field);
+  const stopped = f.requests.length, emitted = events.length;
+  t.mock.timers.tick(POLL_INTERVAL * 2); await setImmediate();
+  assert.equal(f.requests.length, stopped); assert.equal(events.length, emitted);
+  assert.throws(() => f.provider.bound(other), { code: "CONNECTION_CHANGED" });
+  await Promise.all([first.close(), second.close()]);
 });
 
 test("A completed-bar tail includes a real source successor even for tailLimit one", async t => {
@@ -273,7 +373,7 @@ for (const exchange of ["kraken", "coinbase", "okx"]) {
         assert.equal(stream.snapshot.meta.freshness, "unknown");
         const events = [];
         stream.ready(event => events.push(event));
-        t.mock.timers.tick(1000);
+        t.mock.timers.tick(POLL_INTERVAL);
         await setImmediate();
         assert.equal(f.requests.length, initialReads + 1, "Live refresh never repeats the initial backfill");
         assert.equal(f.requests.at(-1).since, currentOpen - (includeForming ? 2 : 3) * duration);
@@ -351,7 +451,7 @@ for (const available of [0, 3, 400]) {
         : null);
       assert.equal(f.requests.length, 2, "Missing source history does not trigger unbounded backfill");
       stream.ready(() => {});
-      t.mock.timers.tick(1000);
+      t.mock.timers.tick(POLL_INTERVAL);
       await setImmediate();
       assert.equal(f.requests.length, 3, "Polling resumes with only one recent-window read");
     });
@@ -368,7 +468,7 @@ test("A transient read reports a recoverable gap and the same binding can immedi
   const original = f.read;
   f.read = async () => { throw Object.assign(Error("temporary network failure"), { code: "SOURCE_UNAVAILABLE" }); };
   first.ready(event => events.push(event));
-  t.mock.timers.tick(1000);
+  t.mock.timers.tick(POLL_INTERVAL);
   await setImmediate();
   assert.equal(events[0].type, "stream.gap");
   assert.equal(events[0].payload.recovery, "snapshot");
@@ -397,7 +497,7 @@ test("A suspended process requires a fresh snapshot instead of silently skipping
   await handle.close();
 });
 
-for (const elapsed of [1000, 5 * 3600000]) {
+for (const elapsed of [POLL_INTERVAL, 5 * 3600000]) {
   test(`Empty public windows preserve the last observation when recovering after ${elapsed}ms`, async t => {
     t.mock.timers.enable({ apis: ["Date", "setTimeout"], now: Date.UTC(2026, 9, 10, 8, 23) });
     const f = cappedPublicExchange(t, () => Date.now()), input = {
@@ -418,7 +518,7 @@ for (const elapsed of [1000, 5 * 3600000]) {
     };
     handle.ready(event => events.push(event));
     for (let i = 0; i < 2; i++) {
-      t.mock.timers.tick(1000);
+      t.mock.timers.tick(POLL_INTERVAL);
       await setImmediate();
       assert.deepEqual(events, [], "An empty source window must not invent updates or removals");
       assert.deepEqual(handle.snapshot, snapshot, "The initial observation remains immutable");
@@ -427,7 +527,7 @@ for (const elapsed of [1000, 5 * 3600000]) {
     t.mock.timers.tick(elapsed);
     await setImmediate();
     assert.equal(events.length, 1);
-    if (elapsed === 1000) {
+    if (elapsed === POLL_INTERVAL) {
       assert.equal(events[0].type, "bars.upsert");
       assert.equal(events[0].payload.bars.length, 1, "Unchanged candles are not replayed after an empty window");
       assert.equal(events[0].payload.bars[0].id, snapshot.bars.at(-1).id);
@@ -436,7 +536,7 @@ for (const elapsed of [1000, 5 * 3600000]) {
       assert.equal(events[0].type, "stream.gap");
       assert.equal(events[0].payload.reason.code, "GAP_DETECTED");
       assert.equal(events[0].payload.recovery, "snapshot");
-      t.mock.timers.tick(10000);
+      t.mock.timers.tick(POLL_INTERVAL * 2);
       await setImmediate();
       assert.equal(events.length, 1, "A gap stops deltas until the host requests a fresh snapshot");
       const recovered = await f.provider.subscribeBars(input, f.context);

@@ -9,3 +9,5 @@ export function createCapabilities(host) {
     capability('investment_research_ask', researchQuestion.bind(null, host)),
   ];
 }
+
+export { readPacket, checkedReport } from './src/artifacts.js';

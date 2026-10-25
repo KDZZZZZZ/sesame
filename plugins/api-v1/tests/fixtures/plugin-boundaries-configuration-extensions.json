@@ -1,0 +1,2973 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Explicit additive rollout of the user-requested shared configuration entry and consuming-capability associations. The original 252 capability contracts and historical planning baseline are not replaced.",
+  "plugins": [
+    {
+      "pluginId": "sesame/mt5",
+      "fields": [
+        {
+          "id": "terminal_directory",
+          "title": "MT5 安装目录",
+          "description": "可选本机绝对路径；留空使用已有自动发现，清除恢复自动发现。保存只更新已有路径设置，不安装依赖或启动终端。",
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^[^\\r\\n\\u0000]*$"
+          },
+          "binding": {
+            "type": "capability",
+            "read": "dependencies.read",
+            "update": "dependencies.configure",
+            "valuePath": "/settings/terminal_directory",
+            "writePath": "/changes/terminal_directory",
+            "versionPath": "/version",
+            "clearValue": null
+          }
+        },
+        {
+          "id": "data_directory",
+          "title": "MT5 数据目录",
+          "description": "可选本机绝对路径；留空使用已有自动发现，清除恢复自动发现。保存只更新已有路径设置，不安装依赖或启动终端。",
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^[^\\r\\n\\u0000]*$"
+          },
+          "binding": {
+            "type": "capability",
+            "read": "dependencies.read",
+            "update": "dependencies.configure",
+            "valuePath": "/settings/data_directory",
+            "writePath": "/changes/data_directory",
+            "versionPath": "/version",
+            "clearValue": null
+          }
+        },
+        {
+          "id": "python",
+          "title": "Windows Python 程序",
+          "description": "可选本机绝对路径；留空使用已有自动发现，清除恢复自动发现。保存只更新已有路径设置，不安装依赖或启动终端。",
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^[^\\r\\n\\u0000]*$"
+          },
+          "binding": {
+            "type": "capability",
+            "read": "dependencies.read",
+            "update": "dependencies.configure",
+            "valuePath": "/settings/python",
+            "writePath": "/changes/python",
+            "versionPath": "/version",
+            "clearValue": null
+          }
+        },
+        {
+          "id": "wine",
+          "title": "Wine 程序",
+          "description": "可选本机绝对路径；留空使用已有自动发现，清除恢复自动发现。保存只更新已有路径设置，不安装依赖或启动终端。",
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^[^\\r\\n\\u0000]*$"
+          },
+          "binding": {
+            "type": "capability",
+            "read": "dependencies.read",
+            "update": "dependencies.configure",
+            "valuePath": "/settings/wine",
+            "writePath": "/changes/wine",
+            "versionPath": "/version",
+            "clearValue": null
+          }
+        },
+        {
+          "id": "wine_prefix",
+          "title": "Wine 前缀目录",
+          "description": "可选本机绝对路径；留空使用已有自动发现，清除恢复自动发现。保存只更新已有路径设置，不安装依赖或启动终端。",
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^[^\\r\\n\\u0000]*$"
+          },
+          "binding": {
+            "type": "capability",
+            "read": "dependencies.read",
+            "update": "dependencies.configure",
+            "valuePath": "/settings/wine_prefix",
+            "writePath": "/changes/wine_prefix",
+            "versionPath": "/version",
+            "clearValue": null
+          }
+        }
+      ],
+      "requirements": {
+        "mt5_call": [
+          {
+            "field": "terminal_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "terminal"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "terminal_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "terminal"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "metaeditor_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "metaeditor"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "metaeditor_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "metaeditor"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "marketdata_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "marketdata"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "marketdata_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "marketdata"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "terminal_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "python"
+                },
+                "tool": {
+                  "enum": [
+                    "order_calc_profit",
+                    "order_calc_margin"
+                  ]
+                }
+              },
+              "required": [
+                "server",
+                "tool"
+              ]
+            }
+          },
+          {
+            "field": "data_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "python"
+                },
+                "tool": {
+                  "enum": [
+                    "order_calc_profit",
+                    "order_calc_margin"
+                  ]
+                }
+              },
+              "required": [
+                "server",
+                "tool"
+              ]
+            }
+          },
+          {
+            "field": "python",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "python"
+                },
+                "tool": {
+                  "enum": [
+                    "order_calc_profit",
+                    "order_calc_margin"
+                  ]
+                }
+              },
+              "required": [
+                "server",
+                "tool"
+              ]
+            }
+          },
+          {
+            "field": "wine",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "python"
+                },
+                "tool": {
+                  "enum": [
+                    "order_calc_profit",
+                    "order_calc_margin"
+                  ]
+                }
+              },
+              "required": [
+                "server",
+                "tool"
+              ]
+            }
+          },
+          {
+            "field": "wine_prefix",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "python"
+                },
+                "tool": {
+                  "enum": [
+                    "order_calc_profit",
+                    "order_calc_margin"
+                  ]
+                }
+              },
+              "required": [
+                "server",
+                "tool"
+              ]
+            }
+          }
+        ],
+        "mt5_cache": [
+          {
+            "field": "terminal_url",
+            "reason": "实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "enum": [
+                    "sync",
+                    "sync_trades"
+                  ]
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          },
+          {
+            "field": "terminal_enabled",
+            "reason": "实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "enum": [
+                    "sync",
+                    "sync_trades"
+                  ]
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          },
+          {
+            "field": "terminal_token",
+            "reason": "实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "enum": [
+                    "sync",
+                    "sync_trades"
+                  ]
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          }
+        ],
+        "mt5_chart": [
+          {
+            "field": "terminal_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "terminal"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "terminal_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "terminal"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "metaeditor_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "metaeditor"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "metaeditor_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "metaeditor"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "marketdata_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "marketdata"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "marketdata_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "marketdata"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          }
+        ],
+        "mt5_edit": [
+          {
+            "field": "terminal_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "terminal"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "terminal_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "terminal"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "metaeditor_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "metaeditor"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "metaeditor_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "metaeditor"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "marketdata_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "marketdata"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "marketdata_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "marketdata"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "terminal_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "launcher"
+                },
+                "tool": {
+                  "const": "start_editor"
+                }
+              },
+              "required": [
+                "server",
+                "tool"
+              ]
+            }
+          },
+          {
+            "field": "data_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "launcher"
+                },
+                "tool": {
+                  "const": "start_editor"
+                }
+              },
+              "required": [
+                "server",
+                "tool"
+              ]
+            }
+          },
+          {
+            "field": "wine",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "launcher"
+                },
+                "tool": {
+                  "const": "start_editor"
+                }
+              },
+              "required": [
+                "server",
+                "tool"
+              ]
+            }
+          },
+          {
+            "field": "wine_prefix",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "launcher"
+                },
+                "tool": {
+                  "const": "start_editor"
+                }
+              },
+              "required": [
+                "server",
+                "tool"
+              ]
+            }
+          }
+        ],
+        "mt5_python": [
+          {
+            "field": "terminal_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "terminal"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "terminal_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "terminal"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "metaeditor_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "metaeditor"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "metaeditor_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "metaeditor"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "marketdata_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "marketdata"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "marketdata_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "marketdata"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "terminal_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "python"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "data_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "python"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "python",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "python"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "wine",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "python"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "wine_prefix",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "python"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          }
+        ],
+        "mt5_system": [
+          {
+            "field": "terminal_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "terminal"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "terminal_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "terminal"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "metaeditor_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "metaeditor"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "metaeditor_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "metaeditor"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "marketdata_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "marketdata"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "marketdata_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "marketdata"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "terminal_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "launcher"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "data_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "launcher"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "wine",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "launcher"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "wine_prefix",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "launcher"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "tester_address",
+            "reason": "MetaTester 代理命令使用已配置地址和端口；help 不需要该设置。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "launcher"
+                },
+                "tool": {
+                  "pattern": "^tester_agent_(?!help$)"
+                }
+              },
+              "required": [
+                "server",
+                "tool"
+              ]
+            }
+          },
+          {
+            "field": "tester_port",
+            "reason": "MetaTester 代理命令使用已配置地址和端口；help 不需要该设置。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "launcher"
+                },
+                "tool": {
+                  "pattern": "^tester_agent_(?!help$)"
+                }
+              },
+              "required": [
+                "server",
+                "tool"
+              ]
+            }
+          },
+          {
+            "field": "tester_password",
+            "reason": "安装 MetaTester 代理服务时使用该密码。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "launcher"
+                },
+                "tool": {
+                  "const": "tester_agent_install"
+                }
+              },
+              "required": [
+                "server",
+                "tool"
+              ]
+            }
+          },
+          {
+            "field": "allow_host_operations",
+            "reason": "原生网络、shell 与 MetaTester 代理操作由已有宿主权限策略检查。",
+            "optional": true,
+            "when": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "server": {
+                      "const": "launcher"
+                    },
+                    "tool": {
+                      "pattern": "^tester_agent_"
+                    }
+                  },
+                  "required": [
+                    "server",
+                    "tool"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "server": {
+                      "enum": [
+                        "terminal",
+                        "metaeditor",
+                        "marketdata"
+                      ]
+                    },
+                    "tool": {
+                      "enum": [
+                        "shell",
+                        "send_web_request"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "server",
+                    "tool"
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "mt5_test": [
+          {
+            "field": "terminal_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "terminal"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "terminal_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "terminal"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "metaeditor_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "metaeditor"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "metaeditor_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "metaeditor"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "marketdata_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "marketdata"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "marketdata_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "marketdata"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          }
+        ],
+        "mt5_backtest": [
+          {
+            "field": "terminal_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "const": "start"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          },
+          {
+            "field": "data_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "const": "start"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          },
+          {
+            "field": "python",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "const": "start"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          },
+          {
+            "field": "wine",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "const": "start"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          },
+          {
+            "field": "wine_prefix",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "const": "start"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          }
+        ],
+        "mt5_trade": [
+          {
+            "field": "terminal_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "terminal"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "terminal_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "terminal"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "metaeditor_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "metaeditor"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "metaeditor_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "metaeditor"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "marketdata_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "marketdata"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "marketdata_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "marketdata"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "terminal_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "enum": [
+                    "python",
+                    "launcher"
+                  ]
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "data_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "enum": [
+                    "python",
+                    "launcher"
+                  ]
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "wine",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "enum": [
+                    "python",
+                    "launcher"
+                  ]
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "wine_prefix",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "enum": [
+                    "python",
+                    "launcher"
+                  ]
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "python",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "python"
+                }
+              },
+              "required": [
+                "server"
+              ]
+            }
+          },
+          {
+            "field": "allow_trading",
+            "reason": "原生交易及程序启动权限由已有策略按具体工具检查。",
+            "optional": true
+          },
+          {
+            "field": "account_login",
+            "reason": "Python 初始化或登录使用已保存券商账户配置，实际身份与连接由原操作核验。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "python"
+                },
+                "tool": {
+                  "enum": [
+                    "initialize",
+                    "login"
+                  ]
+                }
+              },
+              "required": [
+                "server",
+                "tool"
+              ]
+            }
+          },
+          {
+            "field": "account_server",
+            "reason": "Python 初始化或登录使用已保存券商账户配置，实际身份与连接由原操作核验。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "python"
+                },
+                "tool": {
+                  "enum": [
+                    "initialize",
+                    "login"
+                  ]
+                }
+              },
+              "required": [
+                "server",
+                "tool"
+              ]
+            }
+          },
+          {
+            "field": "account_password",
+            "reason": "Python 初始化或登录使用已保存券商账户配置，实际身份与连接由原操作核验。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "server": {
+                  "const": "python"
+                },
+                "tool": {
+                  "enum": [
+                    "initialize",
+                    "login"
+                  ]
+                }
+              },
+              "required": [
+                "server",
+                "tool"
+              ]
+            }
+          }
+        ],
+        "mt5_deployment": [
+          {
+            "field": "terminal_url",
+            "reason": "实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "enum": [
+                    "check",
+                    "mount",
+                    "stop"
+                  ]
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          },
+          {
+            "field": "terminal_enabled",
+            "reason": "实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "enum": [
+                    "check",
+                    "mount",
+                    "stop"
+                  ]
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          },
+          {
+            "field": "terminal_token",
+            "reason": "实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "enum": [
+                    "check",
+                    "mount",
+                    "stop"
+                  ]
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          }
+        ],
+        "mt5_compile": [
+          {
+            "field": "terminal_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "data_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "python",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "wine",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "wine_prefix",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          }
+        ],
+        "mt5_start_terminal": [
+          {
+            "field": "terminal_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "data_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "wine",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "wine_prefix",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "allow_trading",
+            "reason": "启动终端时由已有交易及程序启动权限策略检查。",
+            "optional": true
+          }
+        ],
+        "mt5_trading_context": [
+          {
+            "field": "terminal_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "const": "snapshot"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          },
+          {
+            "field": "data_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "const": "snapshot"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          },
+          {
+            "field": "python",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "const": "snapshot"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          },
+          {
+            "field": "wine",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "const": "snapshot"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          },
+          {
+            "field": "wine_prefix",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "const": "snapshot"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          }
+        ],
+        "mt5_trading_pause": [
+          {
+            "field": "account_login",
+            "reason": "保留原操作的账户身份及历史回执边界，执行时核验当前账户。",
+            "optional": true
+          },
+          {
+            "field": "account_server",
+            "reason": "保留原操作的账户身份及历史回执边界，执行时核验当前账户。",
+            "optional": true
+          },
+          {
+            "field": "terminal_url",
+            "reason": "实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。",
+            "optional": true
+          },
+          {
+            "field": "terminal_enabled",
+            "reason": "实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。",
+            "optional": true
+          },
+          {
+            "field": "terminal_token",
+            "reason": "实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。",
+            "optional": true
+          }
+        ],
+        "mt5_trading_order": [
+          {
+            "field": "terminal_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "data_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "python",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "wine",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "wine_prefix",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "allow_trading",
+            "reason": "提交原生交易前由已有交易权限策略检查。",
+            "optional": true
+          },
+          {
+            "field": "account_login",
+            "reason": "保留原操作的账户身份及历史回执边界，执行时核验当前账户。",
+            "optional": true
+          },
+          {
+            "field": "account_server",
+            "reason": "保留原操作的账户身份及历史回执边界，执行时核验当前账户。",
+            "optional": true
+          }
+        ],
+        "mt5_trading_command": [
+          {
+            "field": "account_login",
+            "reason": "保留原操作的账户身份及历史回执边界，执行时核验当前账户。",
+            "optional": true
+          },
+          {
+            "field": "account_server",
+            "reason": "保留原操作的账户身份及历史回执边界，执行时核验当前账户。",
+            "optional": true
+          }
+        ],
+        "market.searchInstruments": [
+          {
+            "field": "terminal_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true
+          },
+          {
+            "field": "terminal_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true
+          }
+        ],
+        "market.describeInstrument": [
+          {
+            "field": "terminal_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true
+          },
+          {
+            "field": "terminal_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true
+          }
+        ],
+        "market.subscribeBars": [
+          {
+            "field": "terminal_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true
+          },
+          {
+            "field": "terminal_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true
+          }
+        ],
+        "account.listAccounts": [
+          {
+            "field": "terminal_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true
+          },
+          {
+            "field": "terminal_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true
+          }
+        ],
+        "account.snapshot": [
+          {
+            "field": "terminal_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true
+          },
+          {
+            "field": "terminal_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true
+          }
+        ],
+        "account.queryPositions": [
+          {
+            "field": "terminal_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true
+          },
+          {
+            "field": "terminal_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true
+          }
+        ],
+        "account.queryOrders": [
+          {
+            "field": "terminal_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true
+          },
+          {
+            "field": "terminal_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true
+          }
+        ],
+        "account.queryFills": [
+          {
+            "field": "terminal_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true
+          },
+          {
+            "field": "terminal_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true
+          }
+        ],
+        "account.queryHistory": [
+          {
+            "field": "terminal_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true
+          },
+          {
+            "field": "terminal_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true
+          }
+        ],
+        "account.subscribeAccount": [
+          {
+            "field": "terminal_url",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true
+          },
+          {
+            "field": "terminal_enabled",
+            "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+            "optional": true
+          }
+        ],
+        "positions_close": [
+          {
+            "field": "terminal_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "data_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "python",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "wine",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "wine_prefix",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "allow_trading",
+            "reason": "提交原生交易前由已有交易权限策略检查。",
+            "optional": true
+          },
+          {
+            "field": "account_login",
+            "reason": "保留原操作的账户身份及历史回执边界，执行时核验当前账户。",
+            "optional": true
+          },
+          {
+            "field": "account_server",
+            "reason": "保留原操作的账户身份及历史回执边界，执行时核验当前账户。",
+            "optional": true
+          }
+        ],
+        "positions_read_receipt": [
+          {
+            "field": "terminal_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "data_directory",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "python",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "wine",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "wine_prefix",
+            "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+            "optional": true
+          },
+          {
+            "field": "account_login",
+            "reason": "保留原操作的账户身份及历史回执边界，执行时核验当前账户。",
+            "optional": true
+          },
+          {
+            "field": "account_server",
+            "reason": "保留原操作的账户身份及历史回执边界，执行时核验当前账户。",
+            "optional": true
+          }
+        ]
+      },
+      "capabilities": [
+        {
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate",
+          "id": "dependencies.read",
+          "description": "Read the persisted optional MT5 native path overrides and their original dependency version without discovery, process probes or credential access.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "terminal_directory": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096,
+                        "pattern": "^[^\\r\\n\\u0000]*$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "data_directory": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096,
+                        "pattern": "^[^\\r\\n\\u0000]*$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "python": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096,
+                        "pattern": "^[^\\r\\n\\u0000]*$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "wine": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096,
+                        "pattern": "^[^\\r\\n\\u0000]*$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "wine_prefix": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096,
+                        "pattern": "^[^\\r\\n\\u0000]*$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "terminal_directory",
+                  "data_directory",
+                  "python",
+                  "wine",
+                  "wine_prefix"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "version",
+              "settings"
+            ],
+            "additionalProperties": false
+          },
+          "effects": [
+            "read-only"
+          ],
+          "usage": {
+            "purpose": "Expose the original dependency configuration authority to the shared settings catalog.",
+            "inputs": "Empty object {}.",
+            "outputs": "{version,settings:{terminal_directory,data_directory,python,wine,wine_prefix}}; null retains automatic discovery.",
+            "prerequisites": [],
+            "limitations": [
+              "Path presence does not verify native readiness. This read does not probe, download or start a native process."
+            ]
+          },
+          "binding": {
+            "type": "native",
+            "name": "dependencies.read"
+          }
+        },
+        {
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate",
+          "id": "dependencies.configure",
+          "description": "Update optional MT5 native paths through the existing dependency command, concurrency and validation path; main conversation only.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "command_id": {
+                "type": "string",
+                "minLength": 16,
+                "maxLength": 128,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              },
+              "expected_version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "changes": {
+                "type": "object",
+                "properties": {
+                  "terminal_directory": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096,
+                        "pattern": "^[^\\r\\n\\u0000]*$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "data_directory": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096,
+                        "pattern": "^[^\\r\\n\\u0000]*$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "python": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096,
+                        "pattern": "^[^\\r\\n\\u0000]*$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "wine": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096,
+                        "pattern": "^[^\\r\\n\\u0000]*$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "wine_prefix": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096,
+                        "pattern": "^[^\\r\\n\\u0000]*$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false,
+                "minProperties": 1
+              }
+            },
+            "required": [
+              "command_id",
+              "expected_version",
+              "changes"
+            ],
+            "additionalProperties": false
+          },
+          "outputSchema": {
+            "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
+            "type": [
+              "object",
+              "array"
+            ],
+            "additionalProperties": true
+          },
+          "effects": [
+            "plugin.state.write",
+            "application-configuration"
+          ],
+          "usage": {
+            "purpose": "Forward shared configuration edits to the existing MT5 dependency authority.",
+            "inputs": "{command_id,expected_version,changes:{terminal_directory?,data_directory?,python?,wine?,wine_prefix?}}; null clears an override.",
+            "outputs": "The original dependency settings and version, with the existing command receipt preserved.",
+            "prerequisites": [
+              "Main conversation; the expected_version comes from dependencies.read or mt5_dependencies inspect."
+            ],
+            "limitations": [
+              "Reuses the existing idempotency receipts and busy/path validation. Saving does not download dependencies or launch a terminal."
+            ]
+          },
+          "binding": {
+            "type": "native",
+            "name": "dependencies.configure"
+          }
+        }
+      ]
+    },
+    {
+      "pluginId": "sesame/qmt",
+      "configurationTitle": "QMT 行情与股票账户",
+      "fields": [
+        {
+          "id": "python_path",
+          "title": "Windows Python",
+          "description": "已有兼容 Windows Python 可执行文件的绝对路径；保存不会验证、安装或启动 Python。",
+          "schema": {
+            "type": "string",
+            "minLength": 1
+          },
+          "binding": {
+            "type": "capability",
+            "read": "configuration.read",
+            "update": "configuration.update",
+            "valuePath": "/configuration/python_path",
+            "writePath": "/changes/python_path",
+            "versionPath": "/configuration/version",
+            "clearValue": null
+          }
+        },
+        {
+          "id": "userdata_directory",
+          "title": "MiniQMT 账户目录",
+          "description": "已有券商 userdata_mini 目录；仅账户读取与交易需要，行情可单独配置。",
+          "schema": {
+            "type": "string",
+            "minLength": 1
+          },
+          "binding": {
+            "type": "capability",
+            "read": "configuration.read",
+            "update": "configuration.update",
+            "valuePath": "/configuration/userdata_directory",
+            "writePath": "/changes/userdata_directory",
+            "versionPath": "/configuration/version",
+            "clearValue": null
+          }
+        },
+        {
+          "id": "account_id",
+          "title": "股票账户",
+          "description": "券商授权的 STOCK 账户标识，按原始字符串保留前导零；填写不代表交易授权。",
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "binding": {
+            "type": "capability",
+            "read": "configuration.read",
+            "update": "configuration.update",
+            "valuePath": "/configuration/account_id",
+            "writePath": "/changes/account_id",
+            "versionPath": "/configuration/version",
+            "clearValue": null
+          }
+        },
+        {
+          "id": "broker",
+          "title": "券商名称",
+          "description": "可选的账户展示名称；未填写时继续使用现有默认名称。",
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "binding": {
+            "type": "capability",
+            "read": "configuration.read",
+            "update": "configuration.update",
+            "valuePath": "/configuration/broker",
+            "writePath": "/changes/broker",
+            "versionPath": "/configuration/version",
+            "clearValue": null
+          }
+        },
+        {
+          "id": "market_port",
+          "title": "MiniQMT 行情端口",
+          "description": "已有 MiniQMT 的实际 localhost 行情端口；保存不会启动或连接终端。",
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "binding": {
+            "type": "capability",
+            "read": "configuration.read",
+            "update": "configuration.update",
+            "valuePath": "/configuration/market_port",
+            "writePath": "/changes/market_port",
+            "versionPath": "/configuration/version",
+            "clearValue": null
+          }
+        },
+        {
+          "id": "sector",
+          "title": "股票目录板块",
+          "description": "股票搜索使用的已有本地板块，默认沪深京A股；原接口不允许清空。",
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "binding": {
+            "type": "capability",
+            "read": "configuration.read",
+            "update": "configuration.update",
+            "valuePath": "/configuration/sector",
+            "writePath": "/changes/sector",
+            "versionPath": "/configuration/version"
+          }
+        }
+      ],
+      "requirements": {
+        "qmt_environment": [
+          {
+            "field": "python_path",
+            "reason": "The saved Python is an optional candidate; an explicit input, environment or managed candidate can be selected.",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "enum": [
+                    "verify",
+                    "prepare"
+                  ]
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          }
+        ],
+        "qmt_read": [
+          {
+            "field": "python_path",
+            "reason": "Native QMT calls use the saved existing Windows Python executable."
+          },
+          {
+            "field": "market_port",
+            "reason": "Native market reads use the explicitly configured MiniQMT localhost port.",
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "enum": [
+                    "search",
+                    "describe",
+                    "quotes"
+                  ]
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          },
+          {
+            "field": "account_id",
+            "reason": "Account reads and commands target the explicitly configured STOCK account.",
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "enum": [
+                    "asset",
+                    "positions",
+                    "orders",
+                    "fills"
+                  ]
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          },
+          {
+            "field": "userdata_directory",
+            "reason": "Account access uses the existing broker MiniQMT userdata_mini directory.",
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "enum": [
+                    "asset",
+                    "positions",
+                    "orders",
+                    "fills"
+                  ]
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          },
+          {
+            "field": "sector",
+            "reason": "Stock search uses the configured catalog sector, whose existing default is 沪深京A股.",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "enum": [
+                    "search"
+                  ]
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          }
+        ],
+        "qmt_download_history": [
+          {
+            "field": "python_path",
+            "reason": "Native QMT calls use the saved existing Windows Python executable."
+          },
+          {
+            "field": "market_port",
+            "reason": "Native market reads use the explicitly configured MiniQMT localhost port."
+          }
+        ],
+        "qmt_order": [
+          {
+            "field": "python_path",
+            "reason": "Native QMT calls use the saved existing Windows Python executable."
+          },
+          {
+            "field": "account_id",
+            "reason": "Account reads and commands target the explicitly configured STOCK account."
+          },
+          {
+            "field": "userdata_directory",
+            "reason": "Account access uses the existing broker MiniQMT userdata_mini directory."
+          },
+          {
+            "field": "market_port",
+            "reason": "A new order validates the instrument and quote through this port; an existing operation returns its retained receipt without reconnecting.",
+            "optional": true
+          }
+        ],
+        "qmt_cancel": [
+          {
+            "field": "python_path",
+            "reason": "Native QMT calls use the saved existing Windows Python executable."
+          },
+          {
+            "field": "account_id",
+            "reason": "Account reads and commands target the explicitly configured STOCK account."
+          },
+          {
+            "field": "userdata_directory",
+            "reason": "Account access uses the existing broker MiniQMT userdata_mini directory."
+          }
+        ],
+        "qmt_trading_context": [
+          {
+            "field": "account_id",
+            "reason": "Account reads and commands target the explicitly configured STOCK account."
+          },
+          {
+            "field": "python_path",
+            "reason": "Native QMT calls use the saved existing Windows Python executable.",
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "enum": [
+                    "snapshot"
+                  ]
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          },
+          {
+            "field": "userdata_directory",
+            "reason": "Account access uses the existing broker MiniQMT userdata_mini directory.",
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "enum": [
+                    "snapshot"
+                  ]
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          },
+          {
+            "field": "market_port",
+            "reason": "Native market reads use the explicitly configured MiniQMT localhost port.",
+            "optional": true,
+            "when": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "enum": [
+                    "snapshot"
+                  ]
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          }
+        ],
+        "qmt_trading_order": [
+          {
+            "field": "python_path",
+            "reason": "Native QMT calls use the saved existing Windows Python executable."
+          },
+          {
+            "field": "account_id",
+            "reason": "Account reads and commands target the explicitly configured STOCK account."
+          },
+          {
+            "field": "userdata_directory",
+            "reason": "Account access uses the existing broker MiniQMT userdata_mini directory."
+          },
+          {
+            "field": "market_port",
+            "reason": "A new order validates the instrument and quote through this port; an existing operation returns its retained receipt without reconnecting.",
+            "optional": true
+          }
+        ],
+        "qmt_trading_cancel": [
+          {
+            "field": "python_path",
+            "reason": "Native QMT calls use the saved existing Windows Python executable."
+          },
+          {
+            "field": "account_id",
+            "reason": "Account reads and commands target the explicitly configured STOCK account."
+          },
+          {
+            "field": "userdata_directory",
+            "reason": "Account access uses the existing broker MiniQMT userdata_mini directory."
+          }
+        ],
+        "qmt_trading_command": [
+          {
+            "field": "python_path",
+            "reason": "Native QMT calls use the saved existing Windows Python executable."
+          },
+          {
+            "field": "account_id",
+            "reason": "Account reads and commands target the explicitly configured STOCK account."
+          }
+        ],
+        "market_bind": [
+          {
+            "field": "python_path",
+            "reason": "Native QMT calls use the saved existing Windows Python executable."
+          }
+        ],
+        "market_searchInstruments": [
+          {
+            "field": "python_path",
+            "reason": "Native QMT calls use the saved existing Windows Python executable."
+          },
+          {
+            "field": "market_port",
+            "reason": "Native market reads use the explicitly configured MiniQMT localhost port."
+          },
+          {
+            "field": "sector",
+            "reason": "Stock search uses the saved sector and preserves its existing 沪深京A股 default.",
+            "optional": true
+          }
+        ],
+        "market_describeInstrument": [
+          {
+            "field": "python_path",
+            "reason": "Native QMT calls use the saved existing Windows Python executable."
+          },
+          {
+            "field": "market_port",
+            "reason": "Native market reads use the explicitly configured MiniQMT localhost port."
+          }
+        ],
+        "market_queryBars": [
+          {
+            "field": "python_path",
+            "reason": "Native QMT calls use the saved existing Windows Python executable."
+          },
+          {
+            "field": "market_port",
+            "reason": "Native market reads use the explicitly configured MiniQMT localhost port."
+          }
+        ],
+        "market_subscribeBars": [
+          {
+            "field": "python_path",
+            "reason": "Native QMT calls use the saved existing Windows Python executable."
+          },
+          {
+            "field": "market_port",
+            "reason": "Native market reads use the explicitly configured MiniQMT localhost port."
+          }
+        ],
+        "market_subscribeQuotes": [
+          {
+            "field": "python_path",
+            "reason": "Native QMT calls use the saved existing Windows Python executable."
+          },
+          {
+            "field": "market_port",
+            "reason": "Native market reads use the explicitly configured MiniQMT localhost port."
+          }
+        ],
+        "account_bind": [
+          {
+            "field": "python_path",
+            "reason": "Native QMT calls use the saved existing Windows Python executable."
+          }
+        ],
+        "account_listAccounts": [
+          {
+            "field": "python_path",
+            "reason": "Native QMT calls use the saved existing Windows Python executable."
+          },
+          {
+            "field": "account_id",
+            "reason": "Account reads and commands target the explicitly configured STOCK account."
+          },
+          {
+            "field": "userdata_directory",
+            "reason": "Account access uses the existing broker MiniQMT userdata_mini directory."
+          },
+          {
+            "field": "broker",
+            "reason": "The account display uses this optional broker label and keeps the existing fallback when absent.",
+            "optional": true
+          }
+        ],
+        "account_snapshot": [
+          {
+            "field": "python_path",
+            "reason": "Native QMT calls use the saved existing Windows Python executable."
+          },
+          {
+            "field": "account_id",
+            "reason": "Account reads and commands target the explicitly configured STOCK account."
+          },
+          {
+            "field": "userdata_directory",
+            "reason": "Account access uses the existing broker MiniQMT userdata_mini directory."
+          },
+          {
+            "field": "broker",
+            "reason": "The account display uses this optional broker label and keeps the existing fallback when absent.",
+            "optional": true
+          }
+        ],
+        "account_queryPositions": [
+          {
+            "field": "python_path",
+            "reason": "Native QMT calls use the saved existing Windows Python executable."
+          },
+          {
+            "field": "account_id",
+            "reason": "Account reads and commands target the explicitly configured STOCK account."
+          },
+          {
+            "field": "userdata_directory",
+            "reason": "Account access uses the existing broker MiniQMT userdata_mini directory."
+          },
+          {
+            "field": "market_port",
+            "reason": "Native market reads use the explicitly configured MiniQMT localhost port.",
+            "optional": true
+          }
+        ],
+        "positions_close": [
+          {
+            "field": "python_path",
+            "reason": "Native QMT calls use the saved existing Windows Python executable. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.",
+            "optional": true
+          },
+          {
+            "field": "account_id",
+            "reason": "Account reads and commands target the explicitly configured STOCK account. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.",
+            "optional": true
+          },
+          {
+            "field": "userdata_directory",
+            "reason": "Account access uses the existing broker MiniQMT userdata_mini directory. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.",
+            "optional": true
+          },
+          {
+            "field": "market_port",
+            "reason": "Native market reads use the explicitly configured MiniQMT localhost port. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.",
+            "optional": true
+          }
+        ],
+        "positions_read_receipt": [
+          {
+            "field": "python_path",
+            "reason": "Native QMT calls use the saved existing Windows Python executable. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.",
+            "optional": true
+          },
+          {
+            "field": "account_id",
+            "reason": "Account reads and commands target the explicitly configured STOCK account. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.",
+            "optional": true
+          },
+          {
+            "field": "userdata_directory",
+            "reason": "Account access uses the existing broker MiniQMT userdata_mini directory. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.",
+            "optional": true
+          },
+          {
+            "field": "market_port",
+            "reason": "Native market reads use the explicitly configured MiniQMT localhost port. Retained receipts remain readable without a fresh native call; the existing operation guards apply when a native call is needed.",
+            "optional": true
+          }
+        ]
+      },
+      "capabilities": [
+        {
+          "id": "configuration.read",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "description": "Read only the saved QMT configuration for the shared settings catalog. No path discovery, SDK probe, process, terminal or broker connection is performed.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false
+          },
+          "outputSchema": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "execution": "immediate",
+          "effects": [],
+          "usage": {
+            "purpose": "统一配置入口读取现有 QMT 配置。",
+            "inputs": "{}",
+            "outputs": "{configuration:{id,version,connection_id,python_path,userdata_directory,account_id,broker,market_port,sector}}",
+            "prerequisites": [],
+            "limitations": [
+              "配置存在不代表 SDK、行情或账户已经连接；读取不会发现 Python 候选或执行健康探测。"
+            ]
+          },
+          "binding": {
+            "type": "native",
+            "name": "configuration.read"
+          }
+        },
+        {
+          "id": "configuration.update",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "description": "Main-conversation immediate adapter for shared QMT settings. Maps command_id to the existing operation_id and preserves the original configuration CAS, validation and receipt authority.",
+          "inputSchema": {
+            "type": "object",
+            "required": [
+              "command_id",
+              "expected_version",
+              "changes"
+            ],
+            "properties": {
+              "expected_version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "changes": {
+                "type": "object",
+                "properties": {
+                  "python_path": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "userdata_directory": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "account_id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "broker": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "market_port": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 65535
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "sector": {
+                    "type": "string",
+                    "description": "Existing native stock catalog sector; default 沪深京A股",
+                    "minLength": 1,
+                    "maxLength": 20000
+                  }
+                },
+                "additionalProperties": false
+              },
+              "command_id": {
+                "type": "string",
+                "minLength": 16,
+                "maxLength": 128,
+                "pattern": "^[A-Za-z0-9_-]+$",
+                "description": "Stable command identity, mapped unchanged to the existing QMT configuration operation ID"
+              }
+            },
+            "additionalProperties": false
+          },
+          "outputSchema": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "execution": "immediate",
+          "effects": [
+            "plugin.state.write"
+          ],
+          "usage": {
+            "purpose": "统一配置入口沿用原 QMT 配置保存流程。",
+            "inputs": "{command_id,expected_version,changes}；changes 与 qmt_configure 相同。",
+            "outputs": "原 qmt_configure 保存结果；相同 command_id 和输入复用原回执。",
+            "prerequisites": [
+              "主会话即时执行；使用当前配置版本和已存在的路径。"
+            ],
+            "limitations": [
+              "不安装 SDK、不启动终端、不登录或下单；保存配置不构成交易授权。原 qmt_configure 与 qmt_environment 接口保持不变。"
+            ]
+          },
+          "binding": {
+            "type": "native",
+            "name": "configuration.update"
+          }
+        }
+      ]
+    }
+  ]
+}

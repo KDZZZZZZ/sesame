@@ -18,10 +18,56 @@ test('v2 workflow uses real evaluator scores, declared Agent calls and native fi
  assert.equal(f.requests.find(request=>request.input.role==='reviewer').model.id,'review');
  assert.ok(f.requests.every(request=>request.allowedCalls.every(call=>['auto_factor_context','auto_factor_submit'].includes(call.capabilityId))));
  assert.equal(done.reportPending,false,JSON.stringify(done.reportError));assert.equal(done.report.ref.kind,'report');
- const html=await f.main.resources.read(done.report.ref,{part:'content',entry:'report.html'});
+ const html=await f.main.resources.read(done.report.ref,{part:'content',entry:done.report.entry});
  assert.match(Buffer.from(html.content,'base64').toString(),/SIMULATED/);
  assert.equal((await f.runtime.create(f.main,input())).id,run.id);
  await assert.rejects(f.runtime.create(f.main,{...input(),goal:'changed'}),/different frozen inputs/);
+});
+
+test('custom factor assignments omit advisory stages while retaining real evaluation, selection and holdout', async t => {
+ const f=own(t,await fixture()),args=input();
+ args.config.workflow={plan:null,hypothesis:{id:'quant',instructions:'Use only the frozen development evidence.'},code:{id:'quant'},review:null,reflection:null,selection:{id:'lead'}};
+ const run=await f.runtime.create(f.main,args),done=await finished(f,run.id);
+ assert.equal(done.status,'completed',JSON.stringify(done.error));
+ assert.deepEqual(f.requests.map(request=>[request.input.role,request.input.mode]),[['quant','hypothesis'],['quant','code'],['lead','selection']]);
+ assert.match(f.requests[0].instructions,/Use only the frozen development evidence/);
+ assert.equal(done.trials[0].metrics.validation.rankIC,1);assert.equal(done.trials[0].review.source,'evaluator');
+ assert.equal(done.trials[0].status,'accepted');assert.ok(done.selection.digest);assert.equal(Object.keys(done.holdout).length,1);
+ const workflow=[...f.jobs.values()].find(job=>job.capability.endsWith('#auto_factor_workflow'));
+ assert.deepEqual(workflow.options.task.collaboration.agents.map(member=>member.id),['quant','lead']);
+ assert.equal(done.reflections.length,0);assert.deepEqual(done.completedRounds,[0]);
+ assert.equal((await f.runtime.create(f.main,args)).id,run.id);assert.equal(f.requests.length,3);
+ f.runtime.update(run.id,{config:{...done.config,workflow:{...done.config.workflow,reflection:{id:'added',title:'added',instructions:''}}}});
+ assert.equal(f.runtime.dependencies(f.main,run.id).details.cause.code,'FROZEN_WORKFLOW_CHANGED');
+});
+
+test('omitting a factor reviewer never promotes a candidate rejected by the actual evaluator', async t => {
+ const f=own(t,await fixture({onTask:async ({request,child,execution,runtime,job})=>{
+  if(request.input.mode!=='code')return;
+  await runtime.submit(child,request.input.runId,{candidate:{op:'constant',value:1},explanation:'A constant cannot pass real IC eligibility.'},new AbortController().signal,execution);
+  job.finish({status:'completed',output:{text:'Constant candidate submitted.',model:request.model}});return 'hold';
+ }})),args=input();args.config.workflow={review:null,reflection:null};
+ const run=await f.runtime.create(f.main,args),done=await finished(f,run.id);
+ assert.equal(done.status,'completed',JSON.stringify(done.error));assert.equal(done.trials[0].eligible,false);
+ assert.equal(done.trials[0].status,'rejected');assert.deepEqual(done.selection.trialIds,[]);
+});
+
+test('merged factor members retain distinct step identities and frozen assignments across Store reopen', async t => {
+ let held=false;
+ const f=own(t,await fixture({onTask:({request})=>{if(request.input.mode==='code'){held=true;return 'hold';}}})),args=input();
+ args.config.workflow={plan:null,hypothesis:{id:'quant'},code:{id:'quant'},review:{id:'quant'},reflection:null,selection:{id:'lead'}};
+ const run=await f.runtime.create(f.main,args);await poll(()=>held);await f.runtime.control(f.main,run.id,'pause');
+ const original=f.runtime.get(run.id),coder=original.tasks.find(task=>task.mode==='code');
+ const g=own(t,await fixture({storage:f.saved}));assert.equal(g.requests.length,0);
+ await resume(g,run.id);const done=await finished(g,run.id);
+ assert.equal(done.status,'completed',JSON.stringify(done.error));
+ assert.deepEqual(done.config.workflow,original.config.workflow);assert.equal(done.workflow.id,original.workflow.id);
+ assert.equal(done.tasks.find(task=>task.mode==='code').runRef.id,coder.runRef.id);
+ assert.deepEqual(done.tasks.map(task=>[task.role,task.mode]),[['quant','hypothesis'],['quant','code'],['quant','review'],['lead','selection']]);
+ assert.equal(new Set(done.tasks.map(task=>task.id)).size,4);assert.equal(new Set(done.tasks.map(task=>task.runRef.id)).size,4);
+ assert.equal(g.requests.some(request=>request.input.mode==='hypothesis'),false);assert.ok(done.selection.digest);assert.equal(Object.keys(done.holdout).length,1);
+ const graph=g.jobs.get(done.workflow.id).options.task.collaboration,pairs=graph.relationships.map(edge=>`${edge.from}:${edge.to}`);
+ assert.equal(new Set(pairs).size,pairs.length);
 });
 test('PIT-invalid rows are rejected before any Agent dispatch',async t=>{
  const f=own(t,await fixture());f.datasets.get('data').rows[0].availableAt=iso(2);
@@ -102,6 +148,42 @@ test('selected qualified research capability IDs are frozen and disable holdout 
  f.datasets.get('data').rows=rows.filter(row=>row.time<=iso(9));const args=input();args.config.research={plugins:['third-party/research'],tools:['third-party/research#search']};
  const run=await f.runtime.create(f.main,args),done=await finished(f,run.id);assert.equal(done.status,'completed',JSON.stringify(done.error));assert.equal(done.data.holdoutMode,'none');assert.deepEqual(done.holdout,{});
  assert.ok(f.requests.every(request=>request.allowedCalls.some(call=>call.pluginId==='third-party/research'&&call.capabilityId==='search')));
+});
+
+test('selected knowledge-only methods reach all roles without granting a callable evaluator or extra tools',async t=>{
+ const f=own(t,await fixture());
+ f.manifests.set('third-party/factor-method',{id:'third-party/factor-method',version:'1',revision:'method-v1',capabilities:[],knowledge:[{id:'method',kind:'prompt',path:'prompt.md'}]});
+ const args=input();args.config.research={plugins:['third-party/factor-method'],tools:[]};
+ const run=await f.runtime.create(f.main,args),done=await finished(f,run.id);
+ assert.equal(done.status,'completed',JSON.stringify(done.error));assert.equal(done.data.holdoutMode,'workflow-isolated');
+ assert.equal(done.finalEvaluation.holdoutStatus,'evaluated');assert.equal(Object.keys(done.holdout).length,1);
+ assert.equal(f.requests.length,6);
+ for(const request of f.requests){
+  assert.deepEqual(request.plugins,['third-party/factor-method','sesame/plugin-manager']);
+  assert.deepEqual(request.allowedCalls.map(call=>call.capabilityId),['auto_factor_context','auto_factor_submit','plugin_read']);
+ }
+});
+
+test('an explicitly selected public knowledge reader does not expose holdout observations',async t=>{
+ const f=own(t,await fixture()),args=input();
+ args.config.research={plugins:['sesame/plugin-manager'],tools:['sesame/plugin-manager#plugin_read']};
+ const run=await f.runtime.create(f.main,args),done=await finished(f,run.id);
+ assert.equal(done.status,'completed',JSON.stringify(done.error));assert.equal(done.data.holdoutMode,'workflow-isolated');
+ assert.equal(done.finalEvaluation.holdoutStatus,'evaluated');
+ assert.ok(f.requests.every(request=>request.allowedCalls.filter(call=>call.capabilityId==='plugin_read').length===1));
+});
+
+test('missing knowledge reader interrupts before member dispatch and its repair resumes retained evaluator work',async t=>{
+ let prepares=0;const f=own(t,await fixture({onEvaluate:args=>{if(args.action==='prepare')prepares++;}}));
+ const reader=f.manifests.get('sesame/plugin-manager');f.manifests.delete('sesame/plugin-manager');
+ f.manifests.set('third-party/method',{id:'third-party/method',version:'1',revision:'method-v1',capabilities:[]});
+ const args=input();args.config.research={plugins:['third-party/method'],tools:[]};
+ const run=await f.runtime.create(f.main,args),paused=await finished(f,run.id);
+ assert.equal(paused.status,'interrupted');assert.equal(f.requests.length,0);assert.equal(paused.report,undefined);
+ assert.match(f.runtime.dependencies(f.main,run.id).reason,/sesame\/plugin-manager/);
+ f.manifests.set('sesame/plugin-manager',reader);await resume(f,run.id);
+ const done=await finished(f,run.id);assert.equal(done.status,'completed');assert.equal(prepares,1);
+ assert.equal(done.workflow.id,paused.workflow.id);assert.equal(done.data.holdoutMode,'workflow-isolated');
 });
 test('factory is pure and its bindings exactly match the sole manifest',()=>{
  const manifest=JSON.parse(readFileSync(new URL('../packages/auto-factor-mining/capabilities.json',import.meta.url)));
@@ -209,4 +291,26 @@ test('a completed role missing structured output remains a specific preflight bl
  assert.match(readiness.reason,/auto_factor_submit/);assert.match(readiness.reason,/main Agent cannot submit/);
  const calls=f.requests.length;await resume(f,created.id);
  assert.equal(f.runtime.get(created.id).status,'interrupted');assert.equal(f.requests.length,calls);assert.equal(f.runtime.get(created.id).workflow.id,paused.workflow.id);
+});
+
+test('factor inspector retry retains exact publication and evaluator selection without new Agents', async t => {
+ const f=own(t,await fixture()); f.saved.reportState.inspectionStatus='failed';
+ const created=await f.runtime.create(f.main,input()),paused=await finished(f,created.id),requests=f.requests.length;
+ assert.equal(paused.status,'interrupted');assert.equal(paused.report,undefined);assert.ok(paused.reportPublication.ref);assert.ok(paused.finalEvaluation);
+ const ref=structuredClone(paused.reportPublication.ref),selection=structuredClone(paused.selection),final=structuredClone(paused.finalEvaluation);
+ f.saved.reportState.inspectionStatus='rendered';await resume(f,created.id);const done=await finished(f,created.id);
+ assert.equal(done.status,'completed');assert.deepEqual(done.report.ref,ref);assert.equal(done.report.renderStatus,'rendered');
+ assert.equal(f.requests.length,requests);assert.deepEqual(done.selection,selection);assert.deepEqual(done.finalEvaluation,final);
+ assert.equal(f.saved.reportState.calls.filter(call=>call.id.endsWith('#report_publish')).length,1);
+});
+
+test('factor requires probe reads frozen local evidence without invoking or preparing the evaluator', async t => {
+ let evaluatorCalls=0;
+ const f=own(t,await fixture({onEvaluate:()=>{evaluatorCalls++;},onTask:({request})=>request.input.mode==='plan'?'hold':undefined}));
+ const created=await f.runtime.create(f.main,input());await poll(()=>f.requests.some(request=>request.input.mode==='plan'));
+ const before=structuredClone(f.runtime.get(created.id)),calls=evaluatorCalls,agents=f.requests.length;
+ const probeHost={...f.main,capabilities:{invoke:()=>assert.fail('Readiness must not invoke an evaluator or Agent')},plugins:{...f.main.plugins,setEnabled:()=>assert.fail('Readiness must not load/configure an evaluator')},data:{query:()=>assert.fail('Readiness must not acquire live evaluation input')}};
+ const result=f.runtime.dependencies(probeHost,created.id);
+ assert.equal(result.available,true);assert.equal(result.details.frozenDataVerified,true);assert.match(result.details.evaluatorSessionProbe,/next requested operation/);
+ assert.equal(evaluatorCalls,calls);assert.equal(f.requests.length,agents);assert.deepEqual(f.runtime.get(created.id),before);
 });

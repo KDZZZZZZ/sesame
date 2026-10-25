@@ -471,7 +471,7 @@ export class ReplayService {
     const interval = this.intervalHours(d);
     const request = { requestId, title: `久留美 · 第${view.chapter}章 · ${new Date(view.asOf).toISOString()} H1决定${interval===4?'（4小时模式）':''}`, kind: 'strategy', instructions: (interval===4?PLAYER_INSTRUCTIONS+PLAYER_4H_SUFFIX:PLAYER_INSTRUCTIONS)+`当前冻结profile=${view.rules.experimentProfile}，本章杠杆${view.rules.leverage}x，强平比例${view.rules.stopOutRatio}。${view.rules.experimentInterpretation}。不得更改杠杆、费用或FX60秒。`,
       input: { authorization, snapshot: view,...(d.generalMethodBrief?{generalMethodBrief:clone(d.generalMethodBrief)}:{}) }, model: d.model, lane: `kurumi:${d.engine.id}`, queue: 'fifo',
-      tools: [...PLAYER_TOOLS], maxTurns: 6, maxToolCalls: 4, timeoutMs: 900000 };
+      tools: [...PLAYER_TOOLS] };
     assert(Buffer.byteLength(JSON.stringify(request))<=40000,'角色请求超过真实宿主40000字节预算；暂停，不截断决定或私自重付费','ROLE_INPUT_LIMIT');
     // 关键输入提交前落盘：完整请求（含 instructions/快照/模型/工具预算）先入归档，失败则不提交。
     await this.archiveSafe('role_request', { request, intervalHours: interval, note: '提交前完整角色输入落盘；角色输入不含未来' });

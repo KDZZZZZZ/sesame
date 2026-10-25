@@ -9,7 +9,7 @@
     {
       "id": "knowledge-0",
       "path": "prompt.md",
-      "description": "策略实验流程 — prompt.md",
+      "description": "Strategy workflow knowledge: compose sourced inputs and complementary methods into comparable experiments; no registered data or backtest function.",
       "kind": "prompt"
     },
     {
@@ -39,8 +39,38 @@
     {
       "id": "knowledge-5",
       "path": "skills/strategy-research/SKILL.md",
-      "description": "策略实验流程 — skills/strategy-research/SKILL.md",
+      "description": "Strategy workflow knowledge: compose sourced inputs and complementary methods into comparable experiments; no registered data or backtest function.",
       "kind": "skill"
+    },
+    {
+      "id": "scripts-experiment-mjs",
+      "path": "scripts/experiment.mjs",
+      "description": "Optional reference CLI, executed only through a declared workspace process capability; not a registered plugin function.",
+      "kind": "reference"
+    },
+    {
+      "id": "examples-plan-demo-json",
+      "path": "examples/plan.demo.json",
+      "description": "Synthetic CLI input example; not an observed market dataset.",
+      "kind": "reference"
+    },
+    {
+      "id": "examples-input-demo-json",
+      "path": "examples/input.demo.json",
+      "description": "Synthetic CLI input example; not an observed market dataset.",
+      "kind": "reference"
+    },
+    {
+      "id": "examples-timing-demo-json",
+      "path": "examples/timing.demo.json",
+      "description": "Synthetic CLI input example; not an observed market dataset.",
+      "kind": "reference"
+    },
+    {
+      "id": "examples-trials-demo-json",
+      "path": "examples/trials.demo.json",
+      "description": "Synthetic CLI input example; not an observed market dataset.",
+      "kind": "reference"
     }
   ],
   "hooks": [],

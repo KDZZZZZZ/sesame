@@ -44,7 +44,8 @@
               },
               "as_of": {
                 "type": "string",
-                "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+                "description": "本次输入的真实截止 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒），不能从日期标签编造。",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
               },
               "parameters": {
                 "type": "object",
@@ -110,7 +111,7 @@
                     "default": 5,
                     "minimum": 2,
                     "maximum": 250,
-                    "description": "简单 ATR 窗口"
+                    "description": "有效 TR 的简单均值窗口 N；至少 N+1 根输入才产生首个 ATR，不使用 Wilder 平滑。"
                   },
                   "max_bars": {
                     "type": "integer",
@@ -130,11 +131,16 @@
                   "properties": {
                     "time": {
                       "type": "string",
-                      "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+                      "pattern": "^\\d{4}-\\d{2}-\\d{2}(?:T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z)?$",
+                      "description": "同一序列全部使用来源日历日期 YYYY-MM-DD，或全部使用实际收盘 UTC YYYY-MM-DDTHH:mm:ss.sssZ；不混用精度。日期保持为日期，不补造午夜、收盘时刻或时区。"
                     },
                     "available_at": {
-                      "type": "string",
-                      "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+                      "description": "该行首次可用的真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ；未知可省略或为 null，输出保留 null。已知值须满足 time <= available_at <= as_of；日历日期按日期比较，不证明日内可见性。"
                     },
                     "open": {
                       "type": "number"
@@ -155,7 +161,6 @@
                   "additionalProperties": true,
                   "required": [
                     "time",
-                    "available_at",
                     "open",
                     "high",
                     "low",
@@ -165,7 +170,7 @@
                 },
                 "maxItems": 10000,
                 "minItems": 1,
-                "description": "bars 是 1..10000 条已知 OHLCV，按收盘 time 严格递增且不重复；每行含 time、available_at、open/high/low/close、volume。time <= available_at <= as_of，价格为正且 high/low 覆盖 open/close，volume >= 0。"
+                "description": "bars 是 1..10000 条 OHLCV，time 严格递增且不重复，全部为日期或全部为 UTC 时刻；不能包含晚于 as_of 的观测。每行含 time、open/high/low/close、volume；available_at 未知可省略或为 null，已知时满足 time <= available_at <= as_of（日历日期按日期比较）。价格为正且 high/low 覆盖 open/close，volume >= 0。"
               }
             },
             "additionalProperties": true,
@@ -181,7 +186,51 @@
         "required": [
           "input"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "examples": [
+          {
+            "input": {
+              "schema_version": 1,
+              "source": {
+                "id": "synthetic-abu-indicators-daily-demo",
+                "kind": "synthetic"
+              },
+              "as_of": "2026-10-14T00:00:00.000Z",
+              "parameters": {
+                "atr_window": 2
+              },
+              "bars": [
+                {
+                  "time": "2026-10-09",
+                  "available_at": null,
+                  "open": 100,
+                  "high": 101,
+                  "low": 99,
+                  "close": 100,
+                  "volume": 1000
+                },
+                {
+                  "time": "2026-10-12",
+                  "available_at": null,
+                  "open": 107,
+                  "high": 108,
+                  "low": 106,
+                  "close": 107,
+                  "volume": 1200
+                },
+                {
+                  "time": "2026-10-13",
+                  "available_at": null,
+                  "open": 108,
+                  "high": 109,
+                  "low": 105,
+                  "close": 106,
+                  "volume": 1100
+                }
+              ]
+            }
+          }
+        ]
       },
       "outputSchema": {
         "type": "object",
@@ -199,7 +248,7 @@
             "type": "object"
           },
           "observations": {
-            "description": "observations.rows 为行数，latest/series 为最新/完整指标，baseline_note 说明公式差异；预热不足的指标为 null。"
+            "description": "observations.rows 为行数，latest/series 为最新/完整指标，baseline_note 说明公式差异；预热不足的指标为 null。 latest/series 同时返回 true_range、atr、atr_percent；未知 available_at 保留 null。TR = max(high-low, abs(high-previousClose), abs(low-previousClose))，包含前收盘价到本根高低价的跳空，不能仅以 high-low 替代。输入第一根没有前收盘价时 true_range=null；atr_window=N 时需要 N 个有效 TR，即至少 N+1 根连续输入，ATR 为这 N 个 TR 的简单算术均值，atr_percent=100*atr/close。未满窗口时 atr、atr_percent 为 null；此口径不是 Wilder 平滑 ATR。"
           },
           "limitations": {
             "type": "array",
@@ -239,14 +288,15 @@
       },
       "usage": {
         "purpose": "在固定 OHLCV 上计算 SMA、EMA、MACD、RSI、布林带与 ATR，提供可复核的指标基线。",
-        "inputs": "调用形状为 {input:{schema_version:1,source:{id,kind},as_of,parameters?,...}}，不是文件路径或数据 ID。source.id 为 1..500 字符，kind 为 synthetic/historical/live；as_of 及全部时间字段使用真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒）。输入限 2MiB 有限 JSON，不接收代码。parameters 只支持列出的字段。 bars 是 1..10000 条已知 OHLCV，按收盘 time 严格递增且不重复；每行含 time、available_at、open/high/low/close、volume。time <= available_at <= as_of，价格为正且 high/low 覆盖 open/close，volume >= 0。 可按任务覆盖 parameters 中的窗口；省略的参数使用 Schema 中默认值。macd_fast < macd_slow，bars 数量 <= max_bars。",
-        "outputs": "observations.rows 为行数，latest/series 为最新/完整指标，baseline_note 说明公式差异；预热不足的指标为 null。 立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。",
+        "inputs": "调用形状为 {input:{schema_version:1,source:{id,kind},as_of,parameters?,bars}}，不是文件路径或数据 ID。source.id 为 1..500 字符，kind 为 synthetic/historical/live；as_of 保留真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒）。输入限 2MiB 有限 JSON，不接收代码。parameters 只支持列出的字段。 bars 是 1..10000 条 OHLCV，time 严格递增且不重复，全部为日期或全部为 UTC 时刻；不能包含晚于 as_of 的观测。每行含 time、open/high/low/close、volume；available_at 未知可省略或为 null，已知时满足 time <= available_at <= as_of（日历日期按日期比较）。价格为正且 high/low 覆盖 open/close，volume >= 0。 FMP 行情行显式转换为 {time:row.data.date,open:row.data.adjOpen,high:row.data.adjHigh,low:row.data.adjLow,close:row.data.adjClose,volume:row.data.volume,available_at:null}，按 time 排序；保留供应商价格调整警告，adj* 字段名本身不能证明已经复权。首次可用时间未知不妨碍历史样本计算，但不能宣称结果已通过历史点时有效性验证。 可按任务覆盖 parameters 中的窗口；省略的参数使用 Schema 中默认值。macd_fast < macd_slow，bars.length <= max_bars。",
+        "outputs": "observations.rows 为行数，latest/series 为最新/完整指标，baseline_note 说明公式差异；预热不足的指标为 null。 latest/series 同时返回 true_range、atr、atr_percent；未知 available_at 保留 null。TR = max(high-low, abs(high-previousClose), abs(low-previousClose))，包含前收盘价到本根高低价的跳空，不能仅以 high-low 替代。输入第一根没有前收盘价时 true_range=null；atr_window=N 时需要 N 个有效 TR，即至少 N+1 根连续输入，ATR 为这 N 个 TR 的简单算术均值，atr_percent=100*atr/close。未满窗口时 atr、atr_percent 为 null；此口径不是 Wilder 平滑 ATR。 立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。 交给调用者时保留上述固定引用、source/as_of、实际参数和 limitations。把 observations.latest/series 的必要字段交给解释方法；只需简单 ATR 时可复用 abu-volatility 中同样本、同 atr_window 的结果，均线值也不另算一份独立趋势证据。",
         "prerequisites": [
           "提供与任务相符的已知输入；本能力不联网取数，不需要 Python、ABU 安装或券商账户。"
         ],
         "limitations": [
           "EMA 由首个可见 close 初始化；ATR 使用简单滚动均值，不能声称与 Wilder 或其他平台数值完全一致。指标本身不证明收益。",
-          "来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。"
+          "来源与 available_at 是调用方声明，能力不会独立验证供应商历史；未知首次可用时间在输出中保留 null，不能据此宣称历史点时有效。日期精度不代表精确收盘时刻。synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。",
+          "复用前核对输入版本、参数、截止时间与实现口径；已有匹配结果可直接引用。同源价格、成交或统计派生结果不能重复计为独立证据；计算只回答本项局部问题，方法解释与最终综合由调用者负责。"
         ]
       }
     }
@@ -264,7 +314,7 @@
     {
       "id": "knowledge-1",
       "path": "prompt.md",
-      "description": "技术指标基线 — prompt.md",
+      "description": "abu_indicators_analyze 的局部目标、解释边界和跨方法交接。",
       "kind": "prompt"
     },
     {
@@ -282,13 +332,13 @@
     {
       "id": "knowledge-4",
       "path": "skills/abu-indicators/references/method.md",
-      "description": "技术指标基线 — skills/abu-indicators/references/method.md",
+      "description": "abu_indicators_analyze 的公式、参数口径与基线差异；核对是否可以复用其他已计算结果。",
       "kind": "reference"
     },
     {
       "id": "knowledge-5",
       "path": "skills/abu-indicators/SKILL.md",
-      "description": "技术指标基线 — skills/abu-indicators/SKILL.md",
+      "description": "数值方法：在固定 OHLCV 上计算 SMA、EMA、MACD、RSI、布林带与 ATR，提供可复核的指标基线。 输入为已固定证据；输出为 observations 与输入/结果工件，供方法解释或工作流复用。",
       "kind": "skill"
     }
   ],

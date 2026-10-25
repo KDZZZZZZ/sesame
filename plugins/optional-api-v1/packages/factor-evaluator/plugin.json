@@ -1,9 +1,9 @@
 {
   "id": "sesame/factor-evaluator",
   "apiVersion": "2",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "title": "因子数值评估",
-  "description": "可独立选择的确定性因子 AST 评估器，保存输入、候选和冻结选择回执；不编排 Agent、不连接交易账户。",
+  "description": "因子数值评估：单品种时序或多品种截面关联；按需选择安慰剂、蒙特卡洛 Monte Carlo、样本外 OOS、walk-forward、参数敏感性、市场状态分层和 bootstrap 置信区间。单项不适用或不可测不阻塞其余评估，保存固定输入与选择回执。",
   "author": {
     "name": "Sesame contributors"
   },
@@ -12,7 +12,13 @@
   "agent_scope": "all",
   "entry": "index.js",
   "engines": {
-    "sesame": ">=0.2.3"
+    "sesame": ">=0.3.0-dev.1 <0.4.0"
   },
-  "capability_manifest": "capabilities.json"
+  "capability_manifest": "capabilities.json",
+  "permissions": {
+    "scopes": [],
+    "calls": [
+      "host.datasets.query"
+    ]
+  }
 }

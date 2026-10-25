@@ -86,7 +86,7 @@
         "additionalProperties": false
       },
       "id": "investment_research_analyze",
-      "description": "Research one investment question with selected sources and methods. Analysts, bull/bear, risk and manager share standards for a scoped main judgment, testable mechanisms, relevant theory and comparisons, competing explanations and evidence limits; methods and inquiry order follow the question. Targeted follow-up answers and fixed evidence remain in the result. No account or trading dependency. All downstream roles (bull, bear, risk, manager) can query the original analysts. start_from reruns a suffix from a completed fixed result without changing the original.",
+      "description": "Research one investment question with selected sources and methods. All participating members share standards for a scoped main judgment, testable mechanisms, relevant theory and comparisons, competing explanations and evidence limits; methods and inquiry order follow the question. Targeted follow-up answers and fixed evidence remain in the result. No account or trading dependency. Authorized downstream members can query the completed predecessors listed in their QA context; the default bull/bear/risk/manager query the original analysts. start_from reruns a suffix from a completed fixed result without changing the original.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -171,186 +171,29 @@
           },
           "agent_models": {
             "type": "object",
-            "properties": {
-              "market": {
-                "type": "object",
-                "properties": {
-                  "provider": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "id": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "configurationDigest": {
-                    "type": "string",
-                    "minLength": 1
-                  }
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string",
+                  "minLength": 1
                 },
-                "required": [
-                  "provider",
-                  "id"
-                ],
-                "additionalProperties": false
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "configurationDigest": {
+                  "type": "string",
+                  "minLength": 1
+                }
               },
-              "fundamentals": {
-                "type": "object",
-                "properties": {
-                  "provider": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "id": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "configurationDigest": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                },
-                "required": [
-                  "provider",
-                  "id"
-                ],
-                "additionalProperties": false
-              },
-              "news": {
-                "type": "object",
-                "properties": {
-                  "provider": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "id": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "configurationDigest": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                },
-                "required": [
-                  "provider",
-                  "id"
-                ],
-                "additionalProperties": false
-              },
-              "sentiment": {
-                "type": "object",
-                "properties": {
-                  "provider": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "id": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "configurationDigest": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                },
-                "required": [
-                  "provider",
-                  "id"
-                ],
-                "additionalProperties": false
-              },
-              "bull": {
-                "type": "object",
-                "properties": {
-                  "provider": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "id": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "configurationDigest": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                },
-                "required": [
-                  "provider",
-                  "id"
-                ],
-                "additionalProperties": false
-              },
-              "bear": {
-                "type": "object",
-                "properties": {
-                  "provider": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "id": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "configurationDigest": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                },
-                "required": [
-                  "provider",
-                  "id"
-                ],
-                "additionalProperties": false
-              },
-              "risk": {
-                "type": "object",
-                "properties": {
-                  "provider": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "id": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "configurationDigest": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                },
-                "required": [
-                  "provider",
-                  "id"
-                ],
-                "additionalProperties": false
-              },
-              "manager": {
-                "type": "object",
-                "properties": {
-                  "provider": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "id": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "configurationDigest": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                },
-                "required": [
-                  "provider",
-                  "id"
-                ],
-                "additionalProperties": false
-              }
+              "required": [
+                "provider",
+                "id"
+              ],
+              "additionalProperties": false
             },
-            "required": [],
-            "additionalProperties": false
+            "maxProperties": 32
           },
           "evidence_refs": {
             "type": "array",
@@ -424,13 +267,9 @@
                 "description": "Exact complete result_ref produced by investment_research_analyze (one sesame.investment-research.result data row)."
               },
               "role": {
-                "enum": [
-                  "bull",
-                  "bear",
-                  "risk",
-                  "manager"
-                ],
-                "description": "First role to rerun. For after bull/bear use risk."
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+                "description": "First downstream member id to rerun; custom plans inherit the original workflow when workflow is omitted. Changed upstream members require a fresh run."
               }
             },
             "required": [
@@ -438,6 +277,66 @@
               "role"
             ],
             "additionalProperties": false
+          },
+          "workflow": {
+            "type": "object",
+            "properties": {
+              "stages": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 32,
+                "items": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 32,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                      },
+                      "role": {
+                        "enum": [
+                          "market",
+                          "fundamentals",
+                          "news",
+                          "sentiment",
+                          "bull",
+                          "bear",
+                          "risk",
+                          "manager",
+                          "custom"
+                        ]
+                      },
+                      "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      },
+                      "instructions": {
+                        "type": "string",
+                        "maxLength": 6000
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "synthesis": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+              }
+            },
+            "required": [
+              "stages",
+              "synthesis"
+            ],
+            "additionalProperties": false,
+            "description": "Optional executable task plan. Every member id occurs once; stages run in order and members within a stage run in parallel. The final stage contains only synthesis. Custom roles require instructions. Omit for the existing eight-member workflow; no duplicate task.collaboration is needed. Source permissions and immutable evidence rules remain enforced."
           }
         },
         "required": [
@@ -469,8 +368,8 @@
       ],
       "usage": {
         "purpose": "Combine source facts and complementary methods to answer a research question without entering a trading plan.",
-        "inputs": "Use title, question, subjects, research:{plugins,tools?}, model:{provider,id}, optional as_of/horizon/evidence_refs/agent_models. Models come from the host model catalog. Invoke with a stable host operationId; optional task.output:{type:'report',space:'research',path:'...html'} binds the manager report. Omit output or use none for research data and Markdown only. The capability declares its collaboration; do not copy it into separate Agent roots. To rerun from an existing completed result, pass {start_from:{result_ref,role},research,model,agent_models?}; role is bull, bear, risk or manager. Original research metadata and earlier member/QA results are inherited, so omit title/question/subjects/as_of/horizon/evidence_refs. New report output uses a new path.",
-        "outputs": "Accepted native workflow Run. Its final output is {result_ref,summary,report_ref?}. result_ref is one fixed json-rows data artifact containing schemaVersion/type/status/title/question/subjects/as_of/horizon?, complete members[{role,markdown,run_ref,source_refs}], qa[{from,to,question,markdown,run_ref,qa_run_ref,source_refs}], manager summary, source_refs and optional report_ref. Use host Run read/wait/interrupt/resume/cancel; no second business-run API. Suffix reruns include start_from and retained member RunRefs; evidence_refs records the original input evidence separately.",
+        "inputs": "Use title, question, subjects, research:{plugins,tools?}, model:{provider,id}, optional as_of/horizon/evidence_refs/agent_models. Models come from the host model catalog. Invoke with a stable host operationId. Research stages and data-heavy or complex analysis require task.output:{type:'report',space:'research',path:'...html'} and actual delivery at the bound destination, even without a separate report request. An explicit report request or path always requires that delivery. Omitted output or none produces reusable data only and cannot satisfy a research-stage report deliverable; internal data and chat summaries do not replace the report. The capability declares its collaboration; do not copy it into separate Agent roots. To rerun from an existing completed result, pass {start_from:{result_ref,role},research,model,agent_models?}; role names a member of the original custom plan, or bull/bear/risk/manager in the default plan. Original research metadata and earlier member/QA results are inherited, so omit title/question/subjects/as_of/horizon/evidence_refs. New report output uses a new path. Optional workflow:{stages:[[{id:\"facts\",role:\"fundamentals\"}],[{id:\"editor\",role:\"manager\"}]],synthesis:\"editor\"} selects actual members and order. agent_models keys may name these member ids. The host derives collaboration from this plan; do not duplicate it in task options.",
+        "outputs": "Accepted native workflow Run. Its final output is {result_ref,summary,report_ref?}. result_ref is one fixed json-rows data artifact containing schemaVersion/type/status/title/question/subjects/as_of/horizon?, complete members[{role,markdown,run_ref,source_refs}], qa[{from,to,question,markdown,run_ref,qa_run_ref,source_refs}], the designated synthesis summary, source_refs and optional report_ref. This data artifact is not a report file. Requested reports require the actual published revision and rendered receipt; report a failed or missing delivery instead of claiming completion. Use host Run read/wait/interrupt/resume/cancel; no second business-run API. Suffix reruns include start_from and retained member RunRefs; evidence_refs records the original input evidence separately.",
         "prerequisites": [
           "Selected models and research plugins must be configured and available. Source-specific credentials/readiness remain declared by the selected source capabilities.",
           "Report output additionally requires sesame/reports, sesame/data-access, sesame/workspace and sesame/plugin-manager. Without a report these report dependencies are not required."
@@ -478,8 +377,8 @@
         "limitations": [
           "No broker/account binding, target portfolio, order, strategy change or schedule is created.",
           "Necessary missing evidence interrupts the same Run and retains accepted child identities and checkpoints; only unresolved members continue after resume.",
-          "Only the manager publishes a requested report using existing evidence and the reports design rules. A completed result is reusable independently of its HTML.",
-          "Bull, bear, risk and manager may ask original analysts targeted questions when answers can change the interpretation. Follow-up work reuses the analyst identity, selected model and frozen source permissions; no fixed count or forced consensus. Risk QA reaches manager, and manager QA remains in the final result.",
+          "Only the designated synthesis member (manager by default) publishes a requested report using existing evidence and the reports design rules. A completed data result is reusable independently of its HTML but does not prove report delivery.",
+          "Authorized downstream members may ask completed predecessors listed in qa_context.members targeted questions when answers can change the interpretation. Use their exact member IDs; do not assume the default roles participated. Follow-up work reuses the original member identity, selected model and frozen source permissions; no fixed count or forced consensus. Answers reach later members and the final result.",
           "When a missing fact materially limits the judgment, use an existing verification outcome or a concrete capability/coverage limit to explain the boundary. If applicable analyst capabilities remain and no check was attempted, ask a targeted question; an inherited unknown is not proof of unavailability. Do not repeat failed acquisition without a new path or pursue nonessential completeness."
         ]
       },
@@ -798,7 +697,7 @@
         "additionalProperties": false
       },
       "id": "investment_research_report",
-      "description": "Regenerate only the manager presentation from one complete fixed investment-research result. Starts one manager, preserves the original research result, and uses Sesame reports visuals and actual rendering checks. Does not restart analysts or acquire new information.",
+      "description": "Regenerate only the synthesis presentation from one complete fixed investment-research result. Starts the original plan's designated synthesis member (manager by default), preserves the original research result, and uses Sesame reports visuals and actual rendering checks. Does not restart analysts or acquire new information.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -868,17 +767,17 @@
         "publish:report"
       ],
       "usage": {
-        "purpose": "Improve or regenerate the manager report from retained research, without another research cycle. The manager may reweigh the same evidence rather than inherit the old conclusion: state an overall thesis, use conclusion-led subheadings and explain how evidence supports, qualifies or challenges it. Separate inclination from confidence; abstaining from judgment also requires reasoning. Preserve the original packet and evidence dates.",
+        "purpose": "Improve or regenerate the synthesis report from retained research, without another research cycle. The designated synthesis member may reweigh the same evidence rather than inherit the old conclusion: state an overall thesis, use conclusion-led subheadings and explain how evidence supports, qualifies or challenges it. Separate inclination from confidence; abstaining from judgment also requires reasoning. Preserve the original packet and evidence dates.",
         "inputs": "{result_ref:<full fixed data ArtifactRef>,model:{provider,id}}. Invoke with task.output:{type:'report',space:'research',path:'...html'} (or the host parent report target when nested), and a stable operationId. The original packet must contain complete member Markdown, RunRefs, summary and source_refs; a plain Markdown file is not this contract.",
-        "outputs": "Accepted native Run. Final {result_ref,summary,report_ref} retains the original result_ref and returns the manager's exact published, actually rendered report revision. Only one child manager is created; no multi-Agent collaboration graph is declared.",
+        "outputs": "Accepted native Run. Final {result_ref,summary,report_ref} retains the original result_ref and returns the designated synthesis member's exact published, actually rendered report revision. Only one child synthesis member is created; no multi-Agent collaboration graph is declared. Acceptance alone is not report delivery.",
         "prerequisites": [
           "Original result_ref and its fixed source_refs remain readable.",
           "Configured model; available sesame/reports, sesame/data-access, sesame/workspace and sesame/plugin-manager. Original source/method plugins and a trading account are not required."
         ],
         "limitations": [
-          "Manager has report/data/file-editing/knowledge-reading tools only, no source querying or trading capability.",
+          "The synthesis member has report/data/file-editing/knowledge-reading tools only, no source querying or trading capability.",
           "The published report must have a successful report_check receipt for its exact revision; a chat answer or unchecked HTML is not accepted as the report.",
-          "Uses the same host checkpoint/interrupt/resume contract. Existing completed manager and report artifacts are retained; no repeated paid Agent after a checkpoint or render dependency interruption."
+          "Uses the same host checkpoint/interrupt/resume contract. Existing completed synthesis and report artifacts are retained; no repeated paid Agent after a checkpoint or render dependency interruption."
         ]
       },
       "binding": {
@@ -895,18 +794,14 @@
       ],
       "execution": "run",
       "resumable": true,
-      "description": "Ask an original analyst a targeted evidence or method question from bull, bear, risk or manager in investment_research_analyze. Trusted context supplies the selected research tools/model. Returns a resumable Run; read/wait for its full Markdown answer and fixed source references.",
+      "description": "Ask a completed predecessor a targeted evidence or method question from an authorized downstream member of investment_research_analyze. Use an exact member ID from qa_context.members; the default bull/bear/risk/manager query the original analysts. Trusted context supplies the selected research tools/model. Returns a resumable Run; read/wait for its full Markdown answer and fixed source references.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "analyst": {
-            "enum": [
-              "market",
-              "fundamentals",
-              "news",
-              "sentiment"
-            ],
-            "description": "market: price/volume/volatility; fundamentals: business, valuation and macro mechanisms; news: events/policy and original sources; sentiment: opinions, expectations and sample limitations."
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+            "description": "An exact completed preceding member id listed in trusted qa_context.members; default workflows use market/fundamentals/news/sentiment."
           },
           "question": {
             "type": "string",
@@ -925,20 +820,14 @@
         "type": "object",
         "properties": {
           "from": {
-            "enum": [
-              "bull",
-              "bear",
-              "risk",
-              "manager"
-            ]
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+            "description": "Actual requester or preceding member ID from the frozen research plan."
           },
           "to": {
-            "enum": [
-              "market",
-              "fundamentals",
-              "news",
-              "sentiment"
-            ]
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+            "description": "Actual requester or preceding member ID from the frozen research plan."
           },
           "question": {
             "type": "string",
@@ -1022,19 +911,19 @@
         "resources.publish"
       ],
       "usage": {
-        "purpose": "Resolve a specific evidence gap with the responsible original analyst so any downstream reviewer can revise its judgment.",
-        "inputs": "Only analyst and question. The host supplies the trusted original research context, configured analyst model and frozen capability selection; do not pass workflow IDs, credentials or reconstructed prompts.",
-        "outputs": "Accepted Run: use host_runs_wait/read. Completed run.output contains {from,to,question,markdown,run_ref,source_refs}. Read the complete answer before relying on it. Further material questions may call again; completed answers reach later roles and the final result, including answers requested by the manager.",
+        "purpose": "Resolve a specific evidence gap with the responsible original member so an authorized downstream member can revise its judgment.",
+        "inputs": "Only analyst and question; analyst is the exact target member ID from qa_context.members. The host supplies the trusted original research context, configured member model and frozen capability selection; do not pass workflow IDs, credentials or reconstructed prompts.",
+        "outputs": "Accepted Run: use host_runs_wait/read. Completed run.output contains {from,to,question,markdown,run_ref,source_refs}. Read the complete answer before relying on it. Further material questions may call again; completed answers reach later members and the final result, including answers requested by the designated synthesis member.",
         "prerequisites": [
-          "Caller must be a bull, bear, risk or manager member of investment_research_analyze; report-only rewriting does not acquire new evidence.",
+          "Caller must be an authorized investment_research_analyze member with trusted qa_context, and the requested target must be among its declared completed predecessors. Report-only rewriting does not acquire new evidence.",
           "The originally selected model and source/method capabilities remain configured at their frozen revisions."
         ],
         "limitations": [
           "No fixed round count. Ask only when further evidence or clarification can materially change the judgment; unresolved differences are valid results.",
-          "Only one original analyst is assigned per call. Independent questions may be asked separately; each answer remains on the same analyst node.",
+          "Only one original member is assigned per call. Independent questions may be asked separately; each answer remains on that member's node.",
           "Does not wake a completed Run, start a new team, widen source permissions, publish reports or perform trading. A follow-up is a new native Agent Run bound to the original member.",
           "Access restrictions and missing evidence are reported honestly. A question is not proof that its proposed causal explanation is true.",
-          "When a missing fact materially limits the judgment, use an existing verification outcome or a concrete capability/coverage limit to explain the boundary. If applicable analyst capabilities remain and no check was attempted, ask a targeted question; an inherited unknown is not proof of unavailability. Do not repeat failed acquisition without a new path or pursue nonessential completeness."
+          "When a missing fact materially limits the judgment, use an existing verification outcome or a concrete capability/coverage limit to explain the boundary. If an authorized original member retains applicable capabilities and no check was attempted, ask a targeted question; an inherited unknown is not proof of unavailability. Do not repeat failed acquisition without a new path or pursue nonessential completeness."
         ]
       },
       "binding": {

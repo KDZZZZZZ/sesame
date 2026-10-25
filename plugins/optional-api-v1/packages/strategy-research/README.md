@@ -1,6 +1,6 @@
 # Strategy research
 
-An optional, method-neutral experiment workflow for Sesame API 1 (`>=0.2.0-0`).
+An optional, method-neutral experiment workflow guide for Sesame API 2 (`>=0.2.3`).
 It does not select a theory, create another engine, expand SVL, or send orders.
 There are no new model tools: load the skill and use the existing workspace,
 data, strategy-authoring, selected backend and report tools.

@@ -56,13 +56,14 @@ Native 调用立即返回实际计算结果及 `input_artifact`、`result_artifa
 CLI `node scripts/baseline.mjs input.json --out result.json` 仅创建新结果文件，不覆盖已有
 文件，也不自动发布工件、联网或下单。算法变更的发布保留出处、GPL 声明、独立版本和验证。
 
-## 手工交易引用
+## 研究与交易组合
 
-研究 Agent 可以调用已加载的 ABU 能力，将完整 `result_artifact` 作为决策的
-`evidence_artifacts` 保存；`evidence_dataset_ids` 只接受登记数据集 ID，不能放入
-ArtifactRef.id 冒充同一种引用。可用研究能力和工作流依赖以 manual-trading 当前能力声明为准。
-ABU 观察不会自动替换策略、启动交易计划或批准执行；team 交易工作流的执行职责也不会因
-研究插件只读而消失。模型可由工作流现有模型配置接口选择。
+`investment-research` 的成员按研究问题调用选定的 ABU 能力，保留完整
+`input_artifact` / `result_artifact` 及其参数口径，交接为固定研究成果 `result_ref`。
+`trading-decision` 通过 `research_refs` 消费这些成果，不再派研究员或重复运行分析方法。
+直接证据仍可用完整 `evidence_artifacts`；`evidence_dataset_ids` 只接受登记数据集 ID，
+不能用 ArtifactRef.id 冒充。ABU 观察不创建交易授权或执行计划；真实账户执行由
+`portfolio-execution` 和明确选择的原生后端负责。
 
 ## 来源与维护
 

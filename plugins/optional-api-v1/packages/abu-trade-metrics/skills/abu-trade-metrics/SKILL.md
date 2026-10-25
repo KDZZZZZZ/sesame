@@ -5,14 +5,16 @@ description: Summarize supplied equity and closed-trade evidence with an ABU-ins
 
 # 交易绩效基线
 
-这是可修改、可验证的研究基线，不是标准答案。改进公式或参数时保留原结果、修改假设和对照证据。
+用 `abu_trade_metrics_analyze` 汇总给定权益与已结束交易的收益、回撤、风险和成本，解释数值对应的统计口径。
 
-能力 `abu_trade_metrics_analyze`：从固定权益曲线和已平仓交易计算回撤、收益风险与交易归因，保留成本口径。
+CAGR 使用实际日历时长，Sharpe 使用声明的年内期数。资金进出和权益调整会改变收益解释，不能在缺少证据时声称没有外部现金流；本能力不重建券商账单。
 
-调用形状为 {input:{schema_version:1,source:{id,kind},as_of,parameters?,...}}，不是文件路径或数据 ID。source.id 为 1..500 字符，kind 为 synthetic/historical/live；as_of 及全部时间字段使用真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒）。输入限 2MiB 有限 JSON，不接收代码。parameters 只支持列出的字段。 portfolio:{currency,basis:"adjusted_equity"|"closed_trade_equity",no_external_flows:true}；equity_curve 至少 2 条 {time,available_at,equity>0}，time 严格递增且 time <= available_at <= as_of。closed_trades 可省略，每项含 id?、strategy?、entry_time、exit_time、available_at、gross_pnl、net_pnl、cost；entry <= exit <= available_at <= as_of，id 唯一，cost 必须与 gross_pnl-net_pnl 一致。
+## 输入与交接
 
-observations.equity 为权益、回撤与收益风险统计，closed_trades 为交易和策略归因；parameters 记录年化与无风险利率口径。 立即返回 {schema_version:1,baseline:true,status:"research_baseline",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。
+本能力属于数值方法层，消费调用者提供的已知输入。把 equity 回撤/收益统计及 closed_trades 归因交回策略或账户复盘；保留币种、资金流和年化口径，不另行重建交易或把同一权益曲线的多个比率当独立盈利证明。复用前核对输入版本、参数、截止时间与实现口径；已有匹配结果可直接引用。同源价格、成交或统计派生结果不能重复计为独立证据；计算只回答本项局部问题，方法解释与最终综合由调用者负责。缺少已声明的必需字段或真实时序时，交回具体缺口，不补造数据以通过校验。
 
-只有已扣除外部资金流影响的曲线才可声明 no_external_flows:true；未知资金流不能为了通过校验而改写声明。 不重建券商账单；CAGR 使用实际日历时长，Sharpe 使用声明的 periods_per_year。输入来源与曲线口径仍需证据。 来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。
+工具 abu_trade_metrics_analyze 的已注册 inputSchema 和 usage 给出准确字段、参数、返回路径与错误条件，不要求先阅读示例或运行教学演练。保留 input_artifact、result_artifact、source/as_of、实际参数和 limitations；原始工件可用 data_read({ref}) 按完整引用再次读取。其他方法需要不同输入形状时按其已声明接口显式转换，不把一个结果对象直接冒充另一个工具的输入。
 
-`references/method.md` 解释公式和原版差异；包根目录 `examples/input.json` 提供合成样例。两者用于需要时核对，不是调用前的固定步骤。
+## 可选改进
+
+这是可修改、可验证的研究基线；只有任务需要比较公式或参数时才开展改进，保留原结果、修改假设与同一输入上的对照。references/method.md 解释公式和原版差异；examples/input.json 是合成教学输入。两者按需读取，合成结果保持演示身份。

@@ -174,7 +174,7 @@ export class MT5ConfigImports {
     this.pending();
     const page = await this.host.data.query({ source: { providerId: 'host#messages', revision: 'host:2' }, operation: 'query', input: { sessionId: conversationId, ids: [messageId] }, limit: 1 });
     const message = page.items[0];
-    requireValue(message?.role === 'user' && !message.source_conversation_id && !message.system_generated && message.origin !== 'automation' && (message.sessionId ?? message.conversation_id) === conversationId,
+    requireValue(message?.role === 'user' && !message.sourceSessionId && !message.systemGenerated && message.origin !== 'automation' && message.sessionId === conversationId,
       '只能导入本次主会话用户直接提供的配置', 403);
     let record;
     try { const path = this.path(messageId); requireValue(!lstatSync(path).isSymbolicLink(), '配置引用无效'); record = JSON.parse(readFileSync(path, 'utf8')); }

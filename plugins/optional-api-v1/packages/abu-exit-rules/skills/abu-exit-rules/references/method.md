@@ -6,7 +6,10 @@ True range:
 
 `max(high-low, abs(high-prev_close), abs(low-prev_close))`
 
-ATR 为最近 `atr_window` 个 true range 的简单平均。long 和 short 的 stop loss / stop win / trailing stop 按方向反转。
+有前收盘价时使用上述公式；首根输入没有前收盘价，本基线用 `high-low` 初始化 TR。ATR 为最近
+`atr_window` 个 TR 的简单平均，累计 N 根输入即可得首个 N 期 ATR；不足时为 null。
+abu-indicators/abu-volatility 的首根 TR 为 null，需 N+1 根输入，不能把这两种初始窗口口径混用。
+long 和 short 的 stop loss / stop win / trailing stop 按方向反转。
 
 限制：
 

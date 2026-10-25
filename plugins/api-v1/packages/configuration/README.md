@@ -1,5 +1,9 @@
 # 配置助手
 
+“用户设置 → 配置与密钥”统一列出插件声明的配置、是否已配置及依赖它的能力。`configuration_integration_catalog` 返回同一目录，`configuration_integration_check` 检查指定字段，`configuration_integration_apply` 保存最小修改，`configuration_integration_open` 打开设置页。现有模型、环境、偏好配置入口继续可用。
+
+统一保存使用 `{plugin_id,command_id,expected_version?,values}`，字段 ID 来自目录；未修改的字段省略，`null` 明确清除。仅在目录提供版本时传入读取时的 `expected_version`，冲突后重新读取并合并。密钥不回显、不进入 Run；连接配置仍由原插件保存。能力的 `configurationRequirements` 将缺项绑定到实际使用它的调用，条件不匹配或读取本地历史证据时不阻塞无关能力。
+
 主 Agent 通过现有 `configuration_read`、`configuration_update` 完成应用配置。用户直接提供的 API Key 可以由 Agent 保存，无需导入、手工编辑环境变量或打开设置窗口。秘密由宿主私有持久保存，读取和修改回执不返回原文。
 
 | 配置目标 | `configuration_update` 输入 | 生效方式 |

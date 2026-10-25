@@ -2,19 +2,21 @@ import test, { after } from 'node:test';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { records, closeRecords } from '../packages/portfolio-execution/records.js';
+import { closeRecords } from '../packages/portfolio-execution/records.js';
 import assert from 'node:assert/strict';
-import { createExecution, migrateLegacy, PLUGIN, CONTEXT, APPLY } from '../packages/portfolio-execution/bindings.js';
+import { createExecution, PLUGIN, CONTEXT, APPLY } from '../packages/portfolio-execution/bindings.js';
+import { declaredPlugins } from './portfolio-adapter-fixture.mjs';
 
 const clone = value => value === undefined ? undefined : structuredClone(value);
 const fixtures = [];
-after(() => { for (const { host, root } of fixtures) { closeRecords({ context: { storageRoot: root } }); rmSync(root, { recursive: true, force: true }); } });
+after(() => { for (const { root } of fixtures) { closeRecords({ context: { storageRoot: root } }); rmSync(root, { recursive: true, force: true }); } });
 function fixture({ backend = 'mt5', apply } = {}) {
   const calls = [], time = 1800000000000, root = mkdtempSync(join(tmpdir(), 'portfolio-api2-'));
   const controller = new AbortController();
   const account = backend === 'mt5' ? { accountId: '123', server: 'broker', revision: '1' } : { accountId: '123', connectionId: 'route', revision: '1' };
-  const host = { context: { kind: 'main', sessionId: 'owner', storageRoot: root }, plugins: { read: async id => id === 'sesame/manual-trading' ? undefined : { version: id === 'sesame/mt5' ? '2.1.0' : '1.4.0', state: 'discoverable' } },
-    capabilities: { invoke: async (id, input) => { calls.push({ pluginId: id.split('#')[0], name: id.split('#')[1], arguments: clone(input) }); return { type: 'result', value: { account: clone(account), positions: [], orders: [], deployments: [] } }; } } };
+  const host = { context: { kind: 'main', sessionId: 'owner', storageRoot: root }, plugins: { read: async id => ({ version: id === 'sesame/mt5' ? '2.1.0' : '1.4.0', state: 'discoverable' }) },
+    capabilities: { invoke: async (id, input) => { calls.push({ pluginId: id.split('#')[0], name: id.split('#')[1], arguments: clone(input) }); return { type: 'result', value: { contract: 'sesame.execution-adapter/1', backend, account: clone(account), positions: [], orders: [], deployments: [], projection: { positions: [], orders: [] } } }; } } };
+  host.plugins.read = declaredPlugins(host.plugins.read);
   const provenance = { get agent() { return host.task && { pluginId: host.task.pluginId, taskId: host.task.id, sessionId: host.task.conversationId, input: clone(host.task.input) }; }, get chain() { return clone(host.chain)?.map(item => ({ pluginId: item.pluginId, capabilityId: `${item.pluginId}#${item.toolName}` })); } };
   fixtures.push({ host, root });
   const run = { id: 'run', plan: { id: 'plan', account: clone(account), ownerConversationId: 'owner', slippageBps: 50 }, decidedAt: time,
@@ -40,7 +42,7 @@ test('binding freezes native identity and declares complete composable execution
     const identity = await f.execution.context({ binding_id: 'binding', action: 'identity' });
     assert(identity.tools.includes(APPLY)); assert(!identity.readTools.includes(APPLY));
     assert(identity.readTools.every(name => identity.tools.includes(name)));
-    if (backend === 'mt5') assert.deepEqual(identity.readTools, [CONTEXT, 'mt5_trading_context', 'mt5_catalog', 'mt5_call']);
+    if (backend === 'mt5') assert.deepEqual(identity.readTools, [CONTEXT, 'mt5_execution_identity', 'mt5_execution_snapshot', 'mt5_execution_recover', 'mt5_execution_command', 'mt5_catalog', 'mt5_call']);
     assert.equal(identity.quantityRules.integer, backend === 'qmt');
     assert.deepEqual(identity.fillSources, backend === 'mt5' ? [{ pluginId: 'sesame/mt5', provider: 'mt5/python/history_deals_get' }] : []);
     f.account.revision = '2';
@@ -50,11 +52,23 @@ test('binding freezes native identity and declares complete composable execution
   }
 });
 
+test('execution setup depends only on its backend, without a research or decision plugin', async () => {
+  const f = fixture(), inspected = [];
+  f.host.plugins.read = declaredPlugins(async id => {
+    inspected.push(id);
+    assert.equal(id, 'sesame/mt5');
+    return { version: '2.1.0', state: 'discoverable' };
+  });
+  await f.execution.configure({ id: 'standalone', backend: 'mt5' });
+  assert.ok(inspected.length > 0);
+  assert.ok(f.calls.every(call => call.pluginId === 'sesame/mt5'));
+});
+
 test('different workflow identities can apply unchanged targets; every direct/forged/stale execution path fails', async () => {
   for (const workflow of ['fixture/first-workflow', 'fixture/other-workflow']) {
     const f = fixture(); await f.delegated(workflow);
     assert.equal((await f.execution.apply(f.args)).status, 'unchanged');
-    assert(f.calls.every(call => call.name.endsWith('_trading_context')));
+    assert(f.calls.every(call => /_execution_(identity|snapshot)$/.test(call.name)));
   }
   for (const change of [
     f => { f.host.chain = f.host.chain.slice(1); },
@@ -87,7 +101,7 @@ test('bindings cannot be read or reused by another main owner or an unrelated ch
 test('an older native plugin is rejected while binding, before a workflow can schedule incompatible execution', async () => {
   const f = fixture();
   for (const version of ['1.5.0', '1.6.0', '2.0.9']) {
-    f.host.plugins.read = id => id === 'sesame/manual-trading' ? undefined : { version };
+    f.host.plugins.read = () => ({ version });
     await assert.rejects(f.execution.configure({ id: 'binding', backend: 'mt5' }), error => {
       assert.equal(error.code, 'PREREQUISITE_REQUIRED'); assert.match(error.message, /2\.1\.0\+/); return true;
     });
@@ -138,30 +152,4 @@ test('two workflow runs on the same account serialize the complete target batch'
   const second = g.execution.apply(g.args);
   await new Promise(resolve => setImmediate(resolve)); assert.equal(starts, 1);
   release(); await Promise.all([first, second]); assert.equal(starts, 2);
-});
-
-test('legacy import keeps exact owner receipts and foreign unknown blockers; repeats preserve newer recovery evidence', async () => {
-  const f = fixture(), legacy = { id: 'old', conversationId: 'owner', fingerprint: 'fingerprint', kind: 'order', status: 'outcome_unknown', account: f.account, backend: 'mt5' };
-  f.host.plugins.read = () => ({ tools: ['manual_trading_execution_export'] });
-  f.host.capabilities.invoke = async () => ({ type: 'result', value: ({ source: 'sesame/manual-trading', items: [legacy], unresolved: [{ ...legacy, id: 'foreign', conversationId: 'other' }], nextOffset: null, complete: true }) });
-  await migrateLegacy(f.host);
-  assert.deepEqual(records(f.host).get('commands', 'old'), legacy);
-  assert.equal(records(f.host).list('legacy_blocks')[0].originalOperationId, 'foreign');
-  records(f.host).put('commands', { ...legacy, status: 'execution_observed' });
-  await migrateLegacy(f.host);
-  assert.equal(records(f.host).get('commands', 'old').status, 'execution_observed');
-  assert.equal(records(f.host).list('legacy_blocks').length, 1);
-  f.host.plugins.read = () => ({ state: 'disabled', tools: ['manual_trading_execution_export'] });
-  await assert.rejects(migrateLegacy(f.host), { code: 'PREREQUISITE_REQUIRED' });
-  f.host.plugins.read = () => ({ tools: [] });
-  await assert.rejects(migrateLegacy(f.host), { code: 'PREREQUISITE_REQUIRED' });
-});
-
-test('legacy import rejects conflicting IDs and never treats a broken export as an empty account', async () => {
-  const f = fixture(); f.host.plugins.read = () => ({ tools: ['manual_trading_execution_export'] });
-  f.host.capabilities.invoke = async () => ({ type: 'result', value: ({ source: 'sesame/manual-trading', items: [{ id: 'old', conversationId: 'wrong', fingerprint: 'fp' }], unresolved: [], complete: true }) });
-  await assert.rejects(migrateLegacy(f.host), { code: 'SOURCE_DATA_INVALID' });
-  assert.equal(records(f.host).list('migrations').length, 0);
-  f.host.capabilities.invoke = async () => ({ type: 'result', value: ({ source: 'sesame/manual-trading', items: [], unresolved: [], complete: false, nextOffset: 0 }) });
-  await assert.rejects(migrateLegacy(f.host), { code: 'SOURCE_DATA_INVALID' });
 });
