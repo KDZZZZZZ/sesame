@@ -12,7 +12,7 @@ import { validateRepository } from './validate-catalog.mjs';
 
 const json = (path, value) => writeFileSync(path, JSON.stringify(value, null, 2) + '\n');
 const git = (root, ...args) => execFileSync('git', ['-C', root, '-c', 'core.autocrlf=false', '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', ...args], { encoding: 'utf8' }).trim();
-function fixture(t) {
+function fixture(t, { taxonomy = false } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'sesame-api2-inventory-'));
   t.after(() => { assert.equal(dirname(resolve(root)), resolve(tmpdir())); rmSync(root, { recursive: true, force: true }); });
   const policy = {};
@@ -21,7 +21,8 @@ function fixture(t) {
     mkdirSync(pkg, { recursive: true });
     json(join(directory, 'bundle-profile.json'), { schemaVersion: 1, kind, engines: { sesame: '>=0.2.0-0' }, packages: [`sesame/${name}`] });
     json(join(pkg, 'plugin.json'), { id: `sesame/${name}`, apiVersion: '2', version: '1.0.0', license: 'MIT', default_state: kind === 'core' ? 'mounted' : 'discoverable',
-      entry: 'index.js', capability_manifest: 'capabilities.json', engines: { sesame: '>=0.2.3' } });
+      entry: 'index.js', capability_manifest: 'capabilities.json', engines: { sesame: taxonomy ? '>=0.3.0-dev.1 <0.4.0' : '>=0.2.3' },
+      ...(taxonomy ? { permissions: { scopes: [], calls: ['host.resources.read'] } } : {}) });
     json(join(pkg, 'package.json'), { version: '1.0.0', type: 'module', license: 'MIT' });
     json(join(pkg, 'capabilities.json'), { schemaVersion: 1, apiVersion: '2', capabilities: [{ id: 'read', kind: 'function', consumers: ['agent', 'host'], execution: 'immediate',
       inputSchema: {}, outputSchema: {}, binding: { type: 'native', name: 'read' }, usage: { purpose: 'Read fixture', inputs: 'Empty object', outputs: 'Fixture record', prerequisites: [], limitations: [] } }],
@@ -29,9 +30,12 @@ function fixture(t) {
     writeFileSync(join(pkg, 'LICENSE'), 'MIT\n');
     writeFileSync(join(pkg, 'index.js'), "throw new Error('candidate plugin must never execute');\n");
     json(join(directory, 'official-plugins.lock.json'), buildLock(directory));
-    policy[name] = { category: 'research', title: { en: name, zh: '示例' }, summary: { en: 'Fixture data', zh: '示例数据' }, dependencies: { en: 'None', zh: '无' } };
+    policy[name] = { category: 'research', ...(taxonomy ? { functionalCategory: 'analysis', implementationKinds: ['function'] } : {}),
+      title: { en: name, zh: '示例' }, summary: { en: 'Fixture data', zh: '示例数据' }, dependencies: { en: 'None', zh: '无' } };
   }
   const core = join(root, 'plugins/api-v1');
+  mkdirSync(join(core, 'scripts'));
+  for (const name of ['plugin-taxonomy.mjs', 'inventory.mjs']) writeFileSync(join(core, 'scripts', name), "throw new Error('candidate validator must never execute');\n");
   json(join(core, 'inventory-policy.json'), policy);
   json(join(core, 'inventory.json'), buildInventory(core));
   mkdirSync(join(root, '.github'));
@@ -48,6 +52,34 @@ test('current API 2 inventory validates without Git ancestors, legacy catalogs o
   assert.equal(validateRepository(root).inventory, 2);
   const result = spawnSync(process.execPath, [fileURLToPath(new URL('./validate-catalog.mjs', import.meta.url)), root], { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr); assert.match(result.stdout, /"remoteChecked":false/);
+});
+
+test('legacy projection retains its exact format while taxonomy projection derives only source facts', t => {
+  for (const taxonomy of [false, true]) {
+    const { root, core } = fixture(t, { taxonomy });
+    const inventory = JSON.parse(readFileSync(join(core, 'inventory.json')));
+    assert.equal(Object.hasOwn(inventory, 'taxonomy'), taxonomy);
+    assert.deepEqual(inventory.packages.map(pkg => pkg.engines.sesame), Array(2).fill(taxonomy ? '>=0.3.0-dev.1 <0.4.0' : '>=0.2.3'));
+    for (const pkg of inventory.packages) {
+      assert.equal(Object.hasOwn(pkg, 'permissions'), taxonomy);
+      assert.equal(Object.hasOwn(pkg, 'functionalCategory'), taxonomy);
+      assert.equal(Object.hasOwn(pkg, 'implementationKinds'), taxonomy);
+      if (taxonomy) {
+        assert.deepEqual(pkg.permissions, { scopes: [], calls: ['host.resources.read'] });
+        assert.deepEqual(pkg.implementationKinds, ['function']);
+      }
+    }
+    if (taxonomy) {
+      assert.deepEqual(inventory.taxonomy.functionalCategories.map(item => item.id), ['business', 'analysis', 'integration', 'presentation', 'platform']);
+      assert.deepEqual(inventory.taxonomy.implementationKinds.map(item => item.id), ['knowledge', 'function', 'adapter', 'workflow', 'service']);
+      assert.match(inventory.notice, /honor each package engines range/);
+    } else {
+      assert.equal(inventory.notice, 'This descriptive inventory is not an installation catalog. It has no source commits or package digests. Installable entries are generated separately only from fixed, actually published releases.');
+    }
+    assert.equal(validateRepository(root).inventory, 2);
+    const result = spawnSync(process.execPath, [fileURLToPath(new URL('./validate-catalog.mjs', import.meta.url)), root], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+  }
 });
 
 test('missing current metadata is rejected rather than treated as historical or optional', t => {
@@ -75,15 +107,76 @@ test('stale locks, source bytes and display metadata cannot pass inventory valid
 });
 
 test('descriptive policy cannot override source identities or omit explanations', t => {
-  for (const field of ['id', 'version', 'license', 'engines', 'author', 'state']) {
-    const { root, core, policy } = fixture(t);
+  for (const taxonomy of [false, true]) for (const field of ['id', 'version', 'license', 'engines', 'author', 'state', 'permissions']) {
+    const { root, core, policy } = fixture(t, { taxonomy });
     policy['core-one'][field] = 'invented'; json(join(core, 'inventory-policy.json'), policy);
-    json(join(core, 'inventory.json'), buildInventory(core));
-    assert.throws(() => validateRepository(root), /cannot override package facts/);
+    assert.throws(() => buildInventory(core), /Unknown policy field/);
+    assert.throws(() => validateRepository(root), /Unknown policy field/);
   }
-  const { root, core, policy } = fixture(t); policy['core-one'].summary.zh = '';
-  json(join(core, 'inventory-policy.json'), policy); json(join(core, 'inventory.json'), buildInventory(core));
-  assert.throws(() => validateRepository(root), /explicit English and Chinese/);
+  for (const taxonomy of [false, true]) for (const [mutate, message] of [
+    [policy => { policy['core-one'].summary.zh = ''; }, /explicit English and Chinese/],
+    [policy => { policy['core-one'].summary.en = 'x'.repeat(2001); }, /explicit English and Chinese/],
+    [policy => { policy['core-one'].title.extra = 'unexpected'; }, /explicit English and Chinese/],
+    [policy => { delete policy['core-one'].dependencies; }, /missing required descriptive/],
+    [policy => { policy['core-one'].category = 'unknown'; }, /invalid legacy category/],
+    [policy => { delete policy['optional-one']; }, /Missing reviewed package/],
+    [policy => { policy.absent = structuredClone(policy['core-one']); }, /absent packages/],
+  ]) {
+    const { root, core, policy } = fixture(t, { taxonomy }); mutate(policy); json(join(core, 'inventory-policy.json'), policy);
+    assert.throws(() => validateRepository(root), message);
+  }
+});
+
+test('taxonomy requires a complete consistent format and does not silently accept partial migration', t => {
+  for (const [mutate, message] of [
+    [policy => { policy['core-one'].functionalCategory = 'unknown'; }, /invalid functional category/],
+    [policy => { delete policy['core-one'].functionalCategory; }, /invalid functional category/],
+    [policy => { delete policy['core-one'].implementationKinds; }, /unique supported/],
+    [policy => { policy['core-one'].implementationKinds = ['workflow', 'workflow']; }, /unique supported/],
+    [policy => { policy['core-one'].implementationKinds = ['script']; }, /unique supported/],
+    [policy => { policy['core-one'].implementationKinds = []; }, /unique supported/],
+    [policy => { policy['core-one'].implementationReason = 'brief'; }, /explain the curated exception/],
+    [policy => { delete policy['core-one'].functionalCategory; delete policy['core-one'].implementationKinds; }, /cannot mix legacy and taxonomy/],
+  ]) {
+    const { root, core, policy } = fixture(t, { taxonomy: true }); mutate(policy); json(join(core, 'inventory-policy.json'), policy);
+    assert.throws(() => validateRepository(root), message);
+  }
+  const { root, core, policy } = fixture(t);
+  policy['core-one'].implementationReason = 'A reason alone is not a complete taxonomy classification.';
+  json(join(core, 'inventory-policy.json'), policy);
+  assert.throws(() => validateRepository(root), /invalid functional category/);
+});
+
+test('taxonomy cannot manufacture knowledge-only packages or hide exposed workflow and source capabilities', t => {
+  for (const kind of ['knowledge', 'workflow', 'source']) {
+    const { root, core, policy } = fixture(t, { taxonomy: true });
+    const path = join(core, 'packages/core-one/capabilities.json'), declaration = JSON.parse(readFileSync(path));
+    policy['core-one'].implementationReason = 'A candidate explanation cannot remove an exposed implementation.';
+    if (kind === 'knowledge') policy['core-one'].implementationKinds = ['knowledge'];
+    if (kind === 'workflow') declaration.capabilities[0].kind = 'workflow';
+    if (kind === 'source') declaration.sources.push({ id: 'fixture-source', contract: 'fixture/1', operations: {} });
+    json(path, declaration); json(join(core, 'official-plugins.lock.json'), buildLock(core));
+    json(join(core, 'inventory-policy.json'), policy);
+    assert.throws(() => validateRepository(root), /cannot create or hide exposed execution|cannot hide a declared/);
+  }
+  const { root, core, policy } = fixture(t, { taxonomy: true });
+  policy['core-one'].implementationReason = 'No implementation exception exists for this matching native function.';
+  json(join(core, 'inventory-policy.json'), policy);
+  assert.throws(() => validateRepository(root), /stale implementation exception/);
+});
+
+test('the projected inventory cannot mix formats or hide source permissions by removing policy labels', t => {
+  for (const taxonomy of [false, true]) {
+    const { root, core } = fixture(t, { taxonomy });
+    const path = join(core, 'inventory.json'), inventory = JSON.parse(readFileSync(path));
+    if (taxonomy) delete inventory.taxonomy;
+    else inventory.taxonomy = {};
+    json(path, inventory); assert.throws(() => validateRepository(root), /inventory differs/);
+  }
+  const { root, core, policy } = fixture(t, { taxonomy: true });
+  for (const entry of Object.values(policy)) { delete entry.functionalCategory; delete entry.implementationKinds; }
+  json(join(core, 'inventory-policy.json'), policy);
+  assert.throws(() => validateRepository(root), /inventory differs/);
 });
 
 test('new API 2 plans reconstruct exact source and reject changed digests after a fresh root commit', t => {
