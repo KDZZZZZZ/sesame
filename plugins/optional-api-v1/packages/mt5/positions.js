@@ -5,15 +5,13 @@ import { Decimal } from '@sesame/plugin-sdk/decimal';
 import { records } from './backend/records.js';
 import { accountIdentity, sourceIdentity, mapPosition, decimal, nativeId } from './backend/contract-mapping.js';
 import { verifiedQuoteClock } from './backend/quote-clock-proof.js';
+import { acceptedRetcodes as successCodes, rejectedRetcodes as rejectedCodes, exactOrderEvidence, pythonEnvelope } from './backend/execution-evidence.js';
 
 const locks = new Map();
 const same = (a, b) => canonical(a) === canonical(b);
 const pending = receipt => ['submitted', 'partially_filled', 'outcome_unknown'].includes(receipt.status);
 const quantity = value => ({ value, unit: 'lot' });
 const failure = error => ({ code: error.code ?? 'OUTCOME_UNKNOWN', message: String(error.message).slice(0, 4000) });
-const successCodes = new Set([10008, 10009, 10010]);
-// Timeout, generic error, locked and connection loss deliberately remain unknown.
-const rejectedCodes = new Set([10004, 10006, 10007, 10013, 10014, 10015, 10016, 10017, 10018, 10019, 10020, 10021, 10022, 10024, 10026, 10027, 10029, 10030, 10032, 10033, 10034, 10035, 10036, 10038, 10039, 10040, 10041, 10042, 10043, 10044, 10045, 10046]);
 const ticket = value => { const id = nativeId(value); check(/^[1-9]\d*$/.test(id) && BigInt(id) < 2n ** 64n, 'Native ticket is invalid', 'SOURCE_DATA_INVALID'); return id; };
 const maybeTicket = value => value === undefined || value === null || String(value) === '0' ? null : ticket(value);
 async function serial(host, fn) {
@@ -36,8 +34,7 @@ export function createPositionManager(host, mt5, { now = Date.now } = {}) {
     target(binding, execution); signal?.throwIfAborted();
     const command = await official.call({ server: 'python', tool, arguments: args, command_id: `positions-read-${randomUUID()}` }, host.context.sessionId, signal);
     target(binding, execution); signal?.throwIfAborted();
-    check(command.status === 'returned' && !command.result?.error && command.result?.result !== null && command.result?.result !== undefined, `MT5 ${tool} did not return a confirmed native result`, 'SOURCE_UNAVAILABLE');
-    return command.result;
+    return pythonEnvelope(command, tool, null, value => official.redact(value));
   }
   const read = async (...args) => (await readEnvelope(...args)).result;
   async function account(binding, signal, execution, trading = false) {
@@ -146,14 +143,12 @@ export function createPositionManager(host, mt5, { now = Date.now } = {}) {
         const volume = decimal(deal.volume); check(Decimal.compare(volume, '0') > 0, 'Native fill volume must be positive', 'SOURCE_DATA_INVALID'); filled = Decimal.add(filled, volume);
       }
       check(Decimal.compare(filled, record.requested.value) <= 0, 'Native fill exceeds the retained close quantity', 'SOURCE_DATA_INVALID');
-      const [activeOrders, historyOrders, current] = await Promise.all([
+      const [activeOrders, current] = await Promise.all([
         read('orders_get', { ticket: orderId }, args.binding, signal, execution),
-        read('history_orders_get', { ticket: orderId }, args.binding, signal, execution),
         positions(args.binding, signal, execution),
       ]);
-      check(Array.isArray(activeOrders) && Array.isArray(historyOrders), 'Native order history is unavailable', 'SOURCE_DATA_INVALID');
-      const orders = [...activeOrders, ...historyOrders].filter(row => nativeId(row.ticket) === orderId);
-      check(orders.length <= 1, 'Native order identity is ambiguous', 'SOURCE_DATA_INVALID');
+      const evidence = await exactOrderEvidence((method, input) => read(method, input, args.binding, signal, execution), orderId, activeOrders, record.symbol);
+      const orders = [...evidence.current, ...evidence.history];
       for (const order of orders) check(order.symbol === record.symbol && order.type === (record.side === 'sell' ? 1 : 0)
         && Decimal.compare(decimal(order.volume_initial), record.requested.value) === 0, 'Native order differs from the retained close', 'SOURCE_DATA_INVALID');
       const remainingRows = current.filter(row => nativeId(row.ticket) === record.ticket || nativeId(row.identifier ?? row.ticket) === record.identifier);

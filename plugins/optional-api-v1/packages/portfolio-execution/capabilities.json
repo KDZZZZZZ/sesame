@@ -9,7 +9,7 @@
     {
       "id": "portfolio_execution_configure",
       "kind": "function",
-      "description": "Bind an already configured execution adapter to its exact account and revision. Returns the execution capability reference for any workflow. Does not load, configure or connect a backend, or place an order. Imports legacy receipts when the old manual-trading package is installed.",
+      "description": "Bind an already configured execution adapter to its exact account and revision. Returns the execution capability reference for any workflow. Does not load, configure or connect a backend, or place an order.",
       "consumers": [
         "agent",
         "host"
@@ -48,12 +48,12 @@
         "state.write"
       ],
       "usage": {
-        "purpose": "Bind an already configured execution adapter to its exact account and revision. Returns the execution capability reference for any workflow. Does not load, configure or connect a backend, or place an order. Imports legacy receipts when the old manual-trading package is installed.",
+        "purpose": "Bind an already configured execution adapter to its exact account and revision. Returns the execution capability reference for any workflow. Does not load, configure or connect a backend, or place an order.",
         "inputs": "{backend:\"mt5\"|\"qmt\",id?:<stable binding ID>}; e.g. {backend:\"mt5\",id:\"my-account\"}. The backend must already be configured; this does not accept login credentials.",
         "outputs": "{plugin_id:\"sesame/portfolio-execution\",context_tool:\"portfolio_execution_context\",apply_tool:\"portfolio_execution_apply\",arguments:{binding_id}}; pass this entire object as a workflow execution reference.",
         "prerequisites": [
           "Main conversation only; task/tool names do not grant a delegated Agent this authority.",
-          "Loaded MT5 >=2.1.0 (read-only catalog, market/indicator reads and profit/margin calculations via mt5_call) or QMT >=1.4.0 with an existing exact account/revision. If manual-trading is installed it must expose manual_trading_execution_export for safe migration.",
+          "Declared sesame.execution-adapter/1 read/write operations plus historical delegated safety floors MT5 >=2.1.0 / QMT >=1.4.0. Manual execution uses MT5 >=2.1.7 / QMT >=1.2.0; version alone never proves a final-mile guard or readiness.",
           "Installed implementations: plugin_discover and host.capabilities.list. Published optional packages: plugin_catalog({plugin_id}); installation/loading is a separate public operation."
         ],
         "limitations": [
@@ -115,9 +115,9 @@
         "backend.read"
       ],
       "usage": {
-        "purpose": "Read the bound account identity/capability contract, or its full account snapshot including strategy positions, retained history and mounted strategies. Delegated reads require the frozen execution binding.",
+        "purpose": "Provide exact-account identity or observed facts to methods/workflows. Preserve capture time, native units and history coverage; reading does not authorize execution or choose a strategy.",
         "inputs": "{binding_id:<configure result arguments.binding_id>,action:\"identity\"|\"snapshot\",history_days?:1..90}.",
-        "outputs": "identity => {account,tools,readTools,taskContext,accountProvider,fillSources,quantityRules}; snapshot => the native full-account snapshot with positions, history and mounts. MT5 quantity unit is signed lots; QMT is nonnegative integer shares.",
+        "outputs": "identity => {account,tools,readTools,taskContext,accountProvider,fillSources,quantityRules}; snapshot => versioned native execution adapter projection and original account/history arrays, with explicit unavailable historical coverage. Frozen tools include the selected native execution service read/write operations.",
         "prerequisites": [
           "Owned configure binding, or a delegated workflow task carrying that exact frozen execution binding."
         ],
@@ -372,7 +372,7 @@
         "inputs": "{binding_id,run:{id,decidedAt,plan:{id,account,ownerConversationId,slippageBps},decision:{unchanged,targets,pause_strategies,...}}}; all values come from the frozen workflow, not a model-composed authorization object.",
         "outputs": "Host Run whose output is the durable application receipt {status,orders,pauses,after,targetReached,...}; retain per-order operation IDs and actual native receipts.",
         "prerequisites": [
-          "Nested call from a live workflow tool for its matching registered executor task. Models use that workflow's apply capability (e.g. manual_trading_apply), not this adapter directly."
+          "Nested call from a live workflow tool for its matching registered executor task. Models use that workflow's apply capability (e.g. trading_decision_apply), not this adapter directly."
         ],
         "limitations": [
           "Capability visibility is not callable authority. Identical saved run reuses its receipt; changed intent conflicts; unknown/interrupted sends are never replayed."
@@ -465,7 +465,7 @@
         "state.write"
       ],
       "usage": {
-        "purpose": "Read current account, symbol conditions, positions and a source-timestamped executable quote from an already loaded MT5/QMT backend. Returns an observation_id that starts the model decision clock; no order is sent.",
+        "purpose": "Provide fresh exact-account, quote and position facts for an already authorized decision path. This observation is evidence, not a strategy recommendation or order authorization.",
         "inputs": "{backend:\"mt5\"|\"qmt\",symbol:<exact broker symbol>}.",
         "outputs": "{observation_id,backend,symbol,account,accountSummary,quote,positions,orders?,spec,capturedAt,expiresAt,policy,...}; times are epoch milliseconds. Use the returned observation_id for one intent.",
         "prerequisites": [

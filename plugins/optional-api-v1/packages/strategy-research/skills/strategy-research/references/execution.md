@@ -38,5 +38,10 @@ completed 必须有 kind=`strategy.result` 的真实引擎结果；失败可用 
 holdout 记录必须最后且只能一项（失败/未知也视为已暴露）。审计无法阻止另写文件隐藏试验；
 需要把计划/选择/账本保存为不可变成果并保留以前所有实验记录。
 
-将输出交给核心 `research_register` 或已有成果接口，再交 reports。不要编造 DataRef；使用真实
-工具返回的 ref。资源 CLI 输出自己的结构，不是假冒 `strategy.result` 原生回测收据。
+需要将诊断登记为数据时，把 CLI 的 JSON 对象包装为对象数组，并在本会话的 workspace `bash`
+执行中写出。输入固定引用先用 `data_read` 导出到同一 `directory`/`bash.cwd`，再将成功执行返回的
+`executionId`、冻结输出 `path`、实际 `inputRefs` 或 `inputIds`、`operationId`、`title`、
+`description` 与已冻结的 `recipePaths` 传给 `research_register`。普通路径或独立进程退出码不能
+替代宿主执行凭据。工具已直接返回不可变 `ref` 与 `evidence`，交给调用工作流复用并按任务生成报告，
+无需为同一结果再调 `report_data` 冻结。资源 CLI 输出自己的结构，不是假冒 `strategy.result`
+原生回测收据；不要编造 DataRef。

@@ -1,7 +1,7 @@
 {
   "id": "sesame/abu-position-sizing",
   "apiVersion": "2",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "title": "仓位计算基线",
   "description": "ATR风险预算、分数凯利和价格分位仓位比较。这是可改进基线而非标准答案；输入显式来源和截止时点，输出可复核研究结果。 自动冻结输入与结果数据工件，用户可复核。",
   "author": {

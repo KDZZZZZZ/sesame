@@ -181,7 +181,7 @@
           const item = seen.get(date), status = item?.status ?? 'missing', slot = offset + number - 1, cx = x + slot % 7 * cell, cy = y + 50 + (Math.floor(slot / 7) - firstWeek) * cell;
           const opacity = status === 'observed' ? .22 + .68 * Math.abs(item.value) / max : 1;
           const group = node('g', { 'data-date': date, 'data-state': item ? status : 'no-source-row' });
-          group.append(node('rect', { x: cx + 2, y: cy + 2, width: cell - 4, height: cell - 4, rx: 3, fill: status === 'observed' ? item.value < 0 ? 'var(--danger,var(--report-default-danger))' : color(1) : 'none', opacity, stroke: status === 'observed' ? 'none' : line, 'stroke-dasharray': status === 'missing' ? '2 3' : 'none' }));
+          group.append(node('rect', { x: cx + 2, y: cy + 2, width: cell - 4, height: cell - 4, rx: 3, fill: status === 'observed' ? item.value < 0 ? 'var(--danger,var(--report-default-danger))' : 'var(--success,var(--report-default-success))' : 'none', opacity, stroke: status === 'observed' ? 'none' : line, 'stroke-dasharray': status === 'missing' ? '2 3' : 'none' }));
           group.append(node('text', { x: cx + 6, y: cy + 14, class: `sc-axis${status === 'observed' ? ` sc-cell-value${opacity > .6 ? ' sc-cell-inverse' : ''}` : ''}`, stroke: 'none' }, number));
           if (status !== 'observed' || item.value === 0) group.append(node('text', { x: cx + cell / 2, y: cy + cell - 8, 'text-anchor': 'middle', class: 'sc-cell-value', stroke: 'none' }, status === 'closed' ? '×' : status === 'missing' ? '—' : '0'));
           if (item) addMark(ctx, marks, group, item.row, item.index, label(item.row));

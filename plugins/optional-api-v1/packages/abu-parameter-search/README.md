@@ -32,3 +32,23 @@ node scripts/baseline.mjs examples/input.json --out holdout-result.json
 observations.development_rank 是仅按开发指标排序的排名；frozen_selection 含 parameters、selected_at 和全部核验哈希；fixed_holdout_evidence 仅含选中参数的留出期指标；grid_points 是网格组合数。 立即返回 {schema_version:1,baseline:true,status:"research_baseline",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。
 
 留出验证依赖先前真实的开发选型记录；若只有一阶段的证据，结果只支持该阶段的结论。缺少选型时不要编造哈希或把留出结果改标为开发结果。 哈希只能核对记录内一致性；外部固定保存的开发工件才支持先选型后验证的时序证据。传入的是已有指标，本能力不会执行任意策略或表达式。 来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。
+
+## 文件与能力边界
+
+`abu_parameter_search_analyze` 声明 `researchDataAccess:{schemaVersion:1,reads:"input-only",writes:"derived-artifacts-only"}`，可与 factor-research 等方法知识一起用于 auto-factor-mining 的 restricted 研究角色。只传入该角色已获得的开发试验；不为了调用本工具开放完整面板、data_read 或外部来源。留出证据仍由工作流冻结选择后评价。
+
+原生路径只消费 args.input；其中的 ID、Ref、路径只作为来源标签保存，均不解引用。唯一文件读取是固定的本包 baseline.mjs 和 runtime.mjs 实现摘要；不取行情、账户或保留状态，不调用其他能力。create/publish 只保存本次输入及结果，并在发布后清理本次新建临时 blob，不能读写或删除已有资源。CLI 读取显式文件路径是独立入口，未作为研究工具授权。该约定由代码审计和真实执行回归支持，不是沙箱；修改数据访问路径时须重新声明并由新运行核对。
+
+本包属于 `analysis / function`，提供给定证据上的局部确定性处理。算法和调用身份保持独立；研究目标、方法组合、数据来源、原生回测及交易交由调用方选择。
+
+| 文件 | 职责 |
+| --- | --- |
+| `index.js` | 绑定现有能力，处理调用前取消，委托计算和成果登记 |
+| `scripts/baseline.mjs` | 本包算法、参数约束、观察值和局限；保留原 CLI 入口 |
+| `scripts/runtime.mjs` | 输入/时间校验、证据摘要、固定成果和 CLI 协议，独立包内交付 |
+| `skills/abu-parameter-search/` | 用法与按需公式参考，不重复实现算法或调度研究 |
+| `examples/input.json`、`tests/baseline.test.mjs` | 合成输入、手算预期与异常回归 |
+
+共用 runtime 的源码在仓库 `plugins/optional-api-v1/scripts/abu-runtime.mjs` 维护，以 `sync-abu-runtime.mjs --check/--write` 核验或同步。安装包只导入自己的副本，不相对引用其它插件；公式只在本包 baseline 修改。`implementation_sha256` 继续包含原算法和 runtime 字节，既有固定成果不会重绑。
+
+无需额外配置、API Key 或账户连接；计算参数仍是本次输入，不能移成全局配置。已有固定输入和输出由宿主资源接口管理，无私有研究调度器或交易状态。

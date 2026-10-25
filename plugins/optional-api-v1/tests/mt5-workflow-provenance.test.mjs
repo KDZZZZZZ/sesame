@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { verifyExecutionAuthorization } from '../packages/mt5/tools/trading-context.js';
 
-const task = { pluginId: 'sesame/manual-trading', input: { execution: { pluginId: 'sesame/portfolio-execution', applyTool: 'portfolio_execution_apply' } } };
+const task = { pluginId: 'sesame/trading-decision', input: { execution: { pluginId: 'sesame/portfolio-execution', applyTool: 'portfolio_execution_apply' } } };
 const chain = [
-  { pluginId: 'sesame/manual-trading', capabilityId: 'sesame/manual-trading#manual_trading_apply' },
+  { pluginId: 'sesame/trading-decision', capabilityId: 'sesame/trading-decision#trading_decision_apply' },
   { pluginId: 'sesame/portfolio-execution', capabilityId: 'sesame/portfolio-execution#portfolio_execution_apply' },
   { pluginId: 'sesame/mt5', capabilityId: 'sesame/mt5#mt5_trading_order' },
 ];

@@ -6,7 +6,15 @@ import { createServer } from 'node:http';
 import { setTimeout as delay } from 'node:timers/promises';
 import { createSourceFetcher } from '../../optional-api-v1/packages/web-sources/fetch.js';
 
-const code = value => error => error.code === value;
+function unavailable(result, code, httpStatus) {
+  assert.equal(result.status, 'unavailable');
+  assert.equal(result.error.code, code);
+  assert.equal(result.error.http_status, httpStatus);
+  assert.ok(result.error.message);
+  assert.ok(result.url);
+  for (const key of ['text', 'bytes', 'ref', 'provenance']) assert.equal(result[key], undefined);
+  return result;
+}
 
 function fixture(handler = () => ({ body: 'page' }), options = {}) {
   const calls = [];
@@ -64,15 +72,18 @@ test('HTTP and HTTPS allow private, loopback, IPv6 and proxy Fake-IP addresses w
   }
 });
 
-test('unsupported protocols and embedded credentials remain rejected, including after redirects', async () => {
+test('invalid caller URLs remain rejected but invalid remote redirects are unavailable without leaking credentials', async () => {
   const f = fixture();
   for (const url of ['file:///etc/passwd', 'ftp://example.com/', 'https://user:password@example.com/', 'http://user@localhost/']) {
     await assert.rejects(f.fetch(url), /HTTP\/HTTPS|凭据/);
   }
   assert.equal(f.calls.length, 0);
-  for (const location of ['file:///etc/passwd', 'http://secret@localhost/']) {
+  for (const location of ['file:///etc/passwd', 'http://secret@localhost/', 'https://secret:password@example.com/', 'https://[invalid']) {
     const redirect = fixture(() => ({ status: 302, headers: { location } }));
-    await assert.rejects(redirect.fetch('https://example.com/'), /HTTP\/HTTPS|凭据/);
+    const result = unavailable(await redirect.fetch('https://example.com/'), 'source_redirect_error');
+    assert.equal(result.url, 'https://example.com/');
+    assert.ok(!JSON.stringify(result).includes('secret'));
+    assert.ok(!JSON.stringify(result).includes('password'));
     assert.equal(redirect.calls.length, 1);
   }
 });
@@ -85,17 +96,19 @@ test('cross-origin private redirects work and redirect loops remain bounded', as
   assert.equal(result.url, 'http://10.0.0.1:9000/result');
   assert.deepEqual(f.calls.map(c => c.hostname), ['example.com', '10.0.0.1']);
   const loop = fixture(() => ({ status: 302, headers: { location: '/again' } }));
-  await assert.rejects(loop.fetch('https://example.com/'), code('source_redirect_error'));
+  unavailable(await loop.fetch('https://example.com/'), 'source_redirect_error');
   assert.equal(loop.calls.length, 4);
 });
 
 test('HTTP, DNS and connection failures retain diagnostics without replaying the request', async () => {
-  const denied = fixture(() => ({ status: 403 }));
-  await assert.rejects(denied.fetch('https://example.com/'), error => error.code === 'source_http_error' && /403/.test(error.message));
-  assert.equal(denied.calls.length, 1);
+  for (const status of [403, 404, 429, 500]) {
+    const denied = fixture(() => ({ status }));
+    unavailable(await denied.fetch('https://example.com/'), 'source_http_error', status);
+    assert.equal(denied.calls.length, 1);
+  }
   for (const [failure, expected] of [['ENOTFOUND', 'source_dns_error'], ['EAI_AGAIN', 'source_dns_error'], ['ECONNRESET', 'source_network_error']]) {
     const f = fixture(() => ({ error: Object.assign(new Error('connection failed'), { code: failure }) }));
-    await assert.rejects(f.fetch('https://example.com/'), code(expected));
+    unavailable(await f.fetch('https://example.com/'), expected);
     assert.equal(f.calls.length, 1);
   }
 });
@@ -121,7 +134,7 @@ test('certificate verification failures retain TLS diagnostics and never retry',
     [undefined, 'certificate verification failed'],
   ]) {
     const f = fixture(() => ({ error: Object.assign(new Error(message), { code: codeValue }) }));
-    await assert.rejects(f.fetch('https://example.com/'), code('source_tls_error'));
+    unavailable(await f.fetch('https://example.com/'), 'source_tls_error');
     assert.equal(f.calls.length, 1, message);
   }
 });
@@ -133,26 +146,35 @@ test('native HTTPS proxy CONNECT delegates hostname resolution to the configured
   proxy.listen(0, '127.0.0.1'); await once(proxy, 'listening');
   try {
     const fetch = createSourceFetcher({ env: { HTTPS_PROXY: 'http://127.0.0.1:' + proxy.address().port } });
-    await assert.rejects(fetch('https://example.com:8443/'));
+    unavailable(await fetch('https://example.com:8443/'), 'source_network_error');
     assert.deepEqual(targets, ['example.com:8443']);
   } finally { await new Promise(resolve => proxy.close(resolve)); }
 });
 
 test('response size is bounded without connection retries', async () => {
   const f = fixture(() => ({ chunks: [Buffer.alloc(2 * 1024 * 1024), Buffer.from('overflow')] }));
-  await assert.rejects(f.fetch('https://example.com/'), code('source_too_large'));
+  unavailable(await f.fetch('https://example.com/'), 'source_too_large');
   assert.equal(f.calls.length, 1);
 });
 
 test('deadline bounds the request and cancellation preserves the caller reason', async () => {
   const f = fixture(async () => { await delay(50); return { body: 'late' }; }, { timeoutMs: 10 });
-  await assert.rejects(f.fetch('https://example.com/'), code('source_timeout'));
+  unavailable(await f.fetch('https://example.com/'), 'source_timeout');
   assert.equal(f.calls.length, 1);
   const controller = new AbortController(), reason = new Error('caller canceled');
   const canceled = fixture(async () => { await delay(50); return { body: 'late' }; });
   const pending = canceled.fetch('https://example.com/', controller.signal);
   setTimeout(() => controller.abort(reason), 5);
   await assert.rejects(pending, error => error === reason);
+});
+
+test('invalid source encodings are unavailable but unknown implementation errors still throw', async () => {
+  const badText = fixture(() => ({ chunks: [Buffer.from([0xff])], headers: { 'content-type': 'text/plain; charset=utf-8' } }));
+  unavailable(await badText.fetch('https://example.com/'), 'source_encoding_error');
+  const reason = new TypeError('Unexpected implementation defect');
+  const broken = fixture(() => { throw reason; });
+  await assert.rejects(broken.fetch('https://example.com/'), error => error === reason);
+  await assert.rejects(broken.fetch('not a URL'), { code: 'ERR_INVALID_URL' });
 });
 
 test('default sources allow real local HTTP and ignore obsolete restricted options', async () => {

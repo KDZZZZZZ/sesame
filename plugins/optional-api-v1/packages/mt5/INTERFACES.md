@@ -13,6 +13,18 @@
 
 幂等与失败：同命令并发调用共享准备，成功后再次调用重新读事实，权限副作用不重复。可选 expected_account 在任何权限副作用前校验，准备过程中账户或配置变化立即拒绝；自身开启应用许可后返回新 revision。保留取消、原生错误和失败阶段，不返回虚假 ready、不下单、不重放旧订单。券商限制、MCP AI Assistant Trading 授权和 Python API 禁用分别报明实际缺项；不猜未公开的配置项。
 
+## mt5_trading_permissions
+
+调用者：主Agent、host。区分插件许可、账户只读状态、MCP许可与终端算法交易开关；按已有用户授权准备当前绑定终端，不修改宿主接口。
+
+输入：`{action:"read"}`，或`{action:"enable",command_id:<稳定16–128字符>,expected_version:<读回configuration_version>}`。不接受账户、路径、密码或自定义INI覆盖。
+
+输出：read返回`{checked_at,configuration_version,account:{login,server,type,read_only},application:{allow_trading},terminal:{connected,experts_trade_allowed,mcp_trade_allowed}}`；未知布尔为null。enable返回持久的`configuration_change`回执，含`status/result:{before,after,restarted,verified}/error?`；只有配置版本与账户保持一致、真实终端权限回读通过才`applied`。准备途中失败且无法确定重启状态时，`restarted=null`，不猜成false。
+
+依赖与副作用：沿用统一配置声明的Terminal MCP、绑定账户和已有安装发现。read仅取状态；enable复用`prepareTerminal`，仅在无活动终端任务、持仓、挂单或EA时正常重启精确终端，写私有临时启动配置并清理；失败时尝试恢复原账户连接并禁用算法交易，恢复也可能失败，以实际回读和错误为准。已启用无需重启。重启配置保持DLL关闭；不重启路径仅核验既有状态。不下单、不自动挂载。
+
+恢复：同命令ID/输入/会话返回原回执，冲突拒绝；失败、running或unknown不得自动重新执行，先read真实状态。旧用户授权继续有效；权限修复不自动重放旧订单，不代表报价新鲜、订单成交或策略可用。本入口不改变原生MCP授权、Python API禁用或券商限制，具体缺项须分别说明。
+
 ## mt5_catalog
 调用者：agent、host。取得当前原生方法定义、归属工具及不可用原因。
 
@@ -207,6 +219,15 @@
 副作用：process、plugin.state.write、private-filesystem
 
 边界与恢复：冻结SDK/本机标准库后运行真实编译器，可能启动原生进程；不执行EA。诊断可指导修改checkout并save新revision，不能改旧构建冒充成功。
+
+## configuration.read
+调用者：host。供统一配置入口及能力依赖检查读取已声明的公开配置与凭据存在状态，支持服务和子任务上下文。
+
+输入：{}。
+
+输出：{settings:{version,servers,account,tester_agent,allow_trading,allow_host_operations}}。服务器仅含url/enabled/authenticated，账户及Tester代理密码仅以password_configured布尔值表示；不返回待导入凭据、连接诊断或私密值。
+
+副作用：只读，无原生网络调用或配置变更。存在状态不证明远端鉴权与连接成功；原有mt5_settings及配置写入仍只允许主会话。
 
 ## mt5_settings
 调用者：agent、host。读取脱敏配置、待导入引用和连接观察。

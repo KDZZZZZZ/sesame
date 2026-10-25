@@ -113,7 +113,12 @@ export async function drainWeeklyQueue(host,service,options={},signal){
   check(options.authorizeGeneration===true,'Weekly generation requires later acceptance authorization','GENERATION_NOT_AUTHORIZED');
   return serial(host,async()=>{const results=[];
     for(let job of listWeeklyJobs(host)){
-      signal?.throwIfAborted();if(['sealed','failed','unknown','cancelled','interrupted'].includes(job.status)){results.push({id:job.id,status:job.status});continue;}
+      signal?.throwIfAborted();
+      if(job.status==='interrupted'&&job.transport==='agents'&&job.taskId){
+        const existing=roleTask(host,job.taskId);
+        if(['queued','running','completed'].includes(existing.status))job=cas(host,job.id,job.revision,{status:'submitted',taskReceipt:copy(existing),error:null});
+      }
+      if(['sealed','failed','unknown','cancelled','interrupted'].includes(job.status)){results.push({id:job.id,status:job.status});continue;}
       if(['input_frozen','input_archive_failed'].includes(job.status))job=await archive(host,service,job);
       if(job.status==='submitting'){job=cas(host,job.id,job.revision,{status:'unknown',error:{code:'SUBMISSION_UNKNOWN',message:'Restart/lost reply; reconcile existing request; never auto-resubmit inference'}});results.push({id:job.id,status:job.status});continue;}
       if(job.status==='queued'){
@@ -121,7 +126,7 @@ export async function drainWeeklyQueue(host,service,options={},signal){
         const model=options.model,configured=host.context.models;check(configured.some(m=>canonical(m)===canonical(model)),'Exact configured model descriptor required','MODEL_UNAVAILABLE');
         const transport=options.transport??'inference';check(['inference','agents'].includes(transport),'Unsupported transport');
         if(transport==='agents')check(typeof options.collectFullAgentOutput==='function','Public complete final-output collector required','FULL_AGENT_OUTPUT_REQUIRED');
-        const requestId=job.id+'_generation',request=transport==='inference'?{requestId,model,systemPrompt:instructions,input:weeklyGenerationInput(job),maxTokens:options.maxTokens??32768,timeoutMs:options.timeoutMs??900000}:{requestId,model,title:'模拟UTC投资周报',kind:'research',instructions,input:weeklyGenerationInput(job),tools:[],lane:`weekly:${job.input.opening.runId}`,queue:'fifo',maxTurns:12,maxToolCalls:32};
+        const requestId=job.id+'_generation',request=transport==='inference'?{requestId,model,systemPrompt:instructions,input:weeklyGenerationInput(job),maxTokens:options.maxTokens??32768,timeoutMs:options.timeoutMs??900000}:{requestId,model,title:'模拟UTC投资周报',kind:'research',instructions,input:weeklyGenerationInput(job),tools:[],lane:`weekly:${job.input.opening.runId}`,queue:'fifo'};
         check(Buffer.byteLength(JSON.stringify(request)) <= (transport==='agents'?40000:1024*1024), 'Complete fixed input exceeds model transport budget; partition explicitly before generation', 'RESOURCE_EXHAUSTED');
         job=cas(host,job.id,job.revision,{status:'request_archive_pending',transport,request,requestId,generationTrigger:options.generationTrigger??{kind:'explicit_worker',automatic:false}});
       }
@@ -148,10 +153,16 @@ export async function drainWeeklyQueue(host,service,options={},signal){
         }catch(e){const status=signal?.aborted?'cancelled':e.code==='MODEL_REJECTED'?'failed':'unknown';job=cas(host,job.id,job.revision,{status,error:{code:e.code??'SUBMISSION_UNKNOWN',message:e.message}});results.push({id:job.id,status});continue;}
       }
       if(job.status==='submitted'){
-        try{const inspected=roleTask(host,job.taskId);if(['failed','interrupted','cancelled'].includes(inspected.status)){job=cas(host,job.id,job.revision,{status:inspected.status,taskReceipt:copy(inspected)});results.push({id:job.id,status:job.status});continue;}
+        try{const inspected=roleTask(host,job.taskId);if(['interrupted','cancelled'].includes(inspected.status)){job=cas(host,job.id,job.revision,{status:inspected.status,taskReceipt:copy(inspected),error:copy(inspected.error??null)});results.push({id:job.id,status:job.status});continue;}
           const result=await waitRole(host,job.taskId,signal),full=await options.collectFullAgentOutput(job.taskId,result,signal);
           check(full?.complete===true&&full.output!==undefined&&Array.isArray(full.artifactRefs),'Task summary is not full Agent output','FULL_AGENT_OUTPUT_REQUIRED');job=cas(host,job.id,job.revision,{status:'output_saved',output:copy(full),taskReceipt:copy(result)});
-        }catch(e){if(signal?.aborted){await host.runs.cancel({id:job.taskId},{reason:'Weekly worker cancelled'});job=cas(host,job.id,job.revision,{status:'cancelled',error:{message:e.message}});}else job=cas(host,job.id,job.revision,{status:'unknown',error:{code:e.code??'WAIT_UNKNOWN',message:e.message}});results.push({id:job.id,status:job.status});continue;}
+        }catch(e){
+          const interrupted=[e.code,signal?.reason?.code].includes('RUN_INTERRUPTED');
+          if(interrupted)job=cas(host,job.id,job.revision,{status:'interrupted',error:{code:e.code??'RUN_INTERRUPTED',message:e.message,...(e.details?{details:copy(e.details)}:{})}});
+          else if(signal?.aborted){if(!['completed','cancelled'].includes(roleTask(host,job.taskId).status))await host.runs.cancel({id:job.taskId},{reason:'Weekly worker cancelled'});job=cas(host,job.id,job.revision,{status:'cancelled',error:{message:e.message}});}
+          else job=cas(host,job.id,job.revision,{status:'unknown',error:{code:e.code??'WAIT_UNKNOWN',message:e.message}});
+          results.push({id:job.id,status:job.status});continue;
+        }
       }
       if(['output_saved','output_archive_failed','publishing','publish_failed'].includes(job.status)){
         try{signal?.throwIfAborted();const outputArchive=await service.archiveFileSafe(`weekly/${job.id}/full-output.json`,JSON.stringify(job.output));check(outputArchive,'Full output archive unavailable','ARCHIVE_UNAVAILABLE');

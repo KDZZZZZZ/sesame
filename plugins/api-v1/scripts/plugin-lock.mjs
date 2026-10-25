@@ -11,33 +11,41 @@ export const treeDigest = files => `sha256:${sha256(JSON.stringify([...files].so
 const safePath = path => typeof path === 'string' && path.length > 0 && path.length <= 512 && !/[\x00-\x1f\\:]/.test(path) && !path.startsWith('/') && path.split('/').every(part => part && part !== '.' && part !== '..' && !/[. ]$/.test(part) && !/^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part));
 const semver = value => typeof value === 'string' && /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(value);
 
-/** A package may require a newer host than its bundle profile. Keep the source
- * format deliberately narrow (one SemVer lower bound); compound ranges and
- * widened alternatives need a separate review rather than a guessed subset. */
+/** Source engine policy supports a lower bound and an optional exclusive upper
+ * bound. No alternatives/caret/implicit widening: both endpoints must fit the
+ * distribution profile. Compare prereleases like host includePrerelease:true. */
 export function engineWithinProfile(range, profileRange) {
-  const lower = value => {
-    const match = typeof value === 'string' && /^>=(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/.exec(value);
+  const version = value => {
+    const match = typeof value === 'string' && /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/.exec(value);
     if (!match) return null;
     const pre = match[4]?.split('.') ?? null;
     if (pre?.some(part => /^\d+$/.test(part) && !/^(0|[1-9]\d*)$/.test(part))) return null;
     return { numbers: match.slice(1, 4).map(BigInt), pre };
   };
-  const requested = lower(range), minimum = lower(profileRange);
-  if (!requested || !minimum) return false;
-  // Host package validation uses semver.satisfies with includePrerelease:true.
-  // Compare lower bounds with that same policy, including later dev hosts.
-  for (let i = 0; i < 3; i++) if (requested.numbers[i] !== minimum.numbers[i]) return requested.numbers[i] > minimum.numbers[i];
-  if (!requested.pre || !minimum.pre) return !requested.pre;
-  for (let i = 0; i < Math.max(requested.pre.length, minimum.pre.length); i++) {
-    const a = requested.pre[i], b = minimum.pre[i];
-    if (a === b) continue;
-    if (a === undefined || b === undefined) return b === undefined;
-    const an = /^\d+$/.test(a), bn = /^\d+$/.test(b);
-    if (an && bn) return BigInt(a) > BigInt(b);
-    if (an !== bn) return !an;
-    return a > b;
-  }
-  return true;
+  const compare = (a, b) => {
+    for (let i = 0; i < 3; i++) if (a.numbers[i] !== b.numbers[i]) return a.numbers[i] > b.numbers[i] ? 1 : -1;
+    if (!a.pre || !b.pre) return a.pre === b.pre ? 0 : !a.pre ? 1 : -1;
+    for (let i = 0; i < Math.max(a.pre.length, b.pre.length); i++) {
+      const left = a.pre[i], right = b.pre[i];
+      if (left === right) continue;
+      if (left === undefined || right === undefined) return left === undefined ? -1 : 1;
+      const ln = /^\d+$/.test(left), rn = /^\d+$/.test(right);
+      if (ln && rn) return BigInt(left) > BigInt(right) ? 1 : -1;
+      if (ln !== rn) return ln ? -1 : 1;
+      return left > right ? 1 : -1;
+    }
+    return 0;
+  };
+  const bounds = value => {
+    const match = typeof value === 'string' && value.trim() === value && /^>=(\S+)(?: <(\S+))?$/.exec(value);
+    if (!match) return null;
+    const minimum = version(match[1]), maximum = match[2] === undefined ? null : version(match[2]);
+    if (!minimum || match[2] !== undefined && !maximum || maximum && compare(minimum, maximum) >= 0) return null;
+    return { minimum, maximum };
+  };
+  const requested = bounds(range), profile = bounds(profileRange);
+  return Boolean(requested && profile && compare(requested.minimum, profile.minimum) >= 0
+    && (!profile.maximum || requested.maximum && compare(requested.maximum, profile.maximum) <= 0));
 }
 
 // A fixed gzip header and RFC 1951 stored blocks make archive bytes independent

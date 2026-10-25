@@ -1,0 +1,67 @@
+[
+  {
+    "server": "analysis",
+    "tool": "parse_fx_json",
+    "arguments": {
+      "file_path": "sample_fx.json",
+      "codes": [
+        "EUR",
+        "JPY",
+        "GBP",
+        "CNY"
+      ]
+    },
+    "expected": {
+      "format": "exchangerate-json",
+      "provider": "https://www.exchangerate-api.com",
+      "base": "USD",
+      "date": "2026-10-03",
+      "total_currencies": 166,
+      "returned_currencies": 4,
+      "rates": {
+        "EUR": 0.889,
+        "JPY": 157.82,
+        "GBP": 0.756,
+        "CNY": 6.71
+      },
+      "source": "sample_fx.json",
+      "version": "3.0.2"
+    }
+  },
+  {
+    "server": "analysis",
+    "tool": "parse_fx_xml",
+    "arguments": {
+      "file_path": "sample_fx.xml",
+      "codes": [
+        "USD",
+        "EUR"
+      ]
+    },
+    "expected": {
+      "format": "tcmb-xml",
+      "date": "10/02/2026",
+      "bulletin_no": "2026/186",
+      "total_currencies": 22,
+      "returned_currencies": 2,
+      "currencies": [
+        {
+          "code": "USD",
+          "name": "US DOLLAR",
+          "unit": "1",
+          "forex_buying": "48.9699",
+          "forex_selling": "49.0582"
+        },
+        {
+          "code": "EUR",
+          "name": "EURO",
+          "unit": "1",
+          "forex_buying": "55.0826",
+          "forex_selling": "55.1819"
+        }
+      ],
+      "source": "sample_fx.xml",
+      "version": "3.0.2"
+    }
+  }
+]

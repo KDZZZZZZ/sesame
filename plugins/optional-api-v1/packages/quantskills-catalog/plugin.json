@@ -1,7 +1,7 @@
 {
   "id": "sesame/quantskills-catalog",
   "apiVersion": "2",
-  "version": "3.0.0",
+  "version": "3.0.2",
   "title": "QuantSkills 目录",
   "description": "查询固定 QuantSkills 元数据，按需求选择去重后的 Sesame 方法流程和可选后端；安装与可用性另行核验。",
   "license": "MIT",
@@ -18,7 +18,7 @@
   ],
   "resources": [],
   "engines": {
-    "sesame": ">=0.2.3"
+    "sesame": ">=0.3.0-dev.1 <0.4.0"
   },
   "tests": [
     {
@@ -79,7 +79,7 @@
           }
         ],
         "total_items": 214,
-        "version": "3.0.0"
+        "version": "3.0.2"
       }
     },
     {
@@ -103,7 +103,7 @@
         ],
         "count": 1,
         "query": "alpha191",
-        "version": "3.0.0"
+        "version": "3.0.2"
       }
     },
     {
@@ -166,7 +166,7 @@
           "category": "02 因子研发工具箱",
           "limit": 5
         },
-        "version": "3.0.0"
+        "version": "3.0.2"
       }
     },
     {
@@ -198,7 +198,7 @@
           "verification_level": "pending_review",
           "workflow_stage": "研究信号 / Research signal"
         },
-        "version": "3.0.0"
+        "version": "3.0.2"
       }
     },
     {
@@ -266,7 +266,7 @@
           "Read the selected SKILL and retain its sources; directory references are not imported implementations or proof of trading performance."
         ],
         "snapshot_date": "2026-10-03T14:34:06.311Z",
-        "version": "3.0.0"
+        "version": "3.0.2"
       }
     }
   ]

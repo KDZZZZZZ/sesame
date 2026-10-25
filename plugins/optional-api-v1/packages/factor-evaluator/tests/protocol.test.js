@@ -78,3 +78,48 @@ test('parallel candidates keep both receipts without losing state or bypassing C
   assert.deepEqual(Object.keys(f.db.get(`sessions:${session_id}`).value.refs.candidates).sort(), ['negative', 'positive']);
   assert.deepEqual(await f.call('candidate', { session_id, trial_id: 'positive', candidate, accepted_ids: [] }), positive);
 });
+
+test('thresholds are opt-in, and unavailable optional diagnostics cannot veto a measured candidate', async () => {
+  const f = fixture(), prepared = await f.call('prepare', { dataset_id: 'data', access: 'restricted',
+    options: { ...options, diagnostics: { regimes: { field: 'absent' }, sensitivity: true, placebo: { samples: -1 } } } });
+  const session_id = prepared.sessionId;
+  const negative = await f.call('candidate', { session_id, trial_id: 'negative', candidate: { op: 'neg', args: [candidate] } });
+  assert.equal(negative.metrics.validation.rankIC, -1);
+  assert.equal(negative.eligible, true);
+  assert.equal(negative.metrics.diagnostics.regimes.status, 'unavailable');
+  assert.equal(negative.metrics.diagnostics.sensitivity.status, 'not-applicable');
+  assert.equal(negative.metrics.diagnostics.placebo.status, 'error');
+  const positive = await f.call('candidate', { session_id, trial_id: 'positive', candidate });
+  assert.equal(positive.eligible, true);
+  const selection = await f.call('select', { session_id, trial_ids: ['negative', 'positive'] });
+  assert.deepEqual(selection.trialIds, ['negative', 'positive']);
+
+  const gated = fixture();
+  const gateSession = await gated.call('prepare', { dataset_id: 'data', access: 'restricted', options: { ...options, minRankIC: 0, maxCorrelation: .5 } });
+  const measured = await gated.call('candidate', { session_id: gateSession.sessionId, trial_id: 'negative', candidate: { op: 'neg', args: [candidate] } });
+  assert.equal(measured.eligible, false);
+  await assert.rejects(gated.call('select', { session_id: gateSession.sessionId, trial_ids: ['negative'] }), /eligible/);
+});
+
+test('all unmeasurable candidates allow empty completion without claiming any holdout evaluation', async () => {
+  const f = fixture(), prepared = await f.call('prepare', { dataset_id: 'data', access: 'restricted', options });
+  const session_id = prepared.sessionId;
+  const measured = await f.call('candidate', { session_id, trial_id: 'constant', candidate: { op: 'constant', value: 1 } });
+  assert.equal(measured.eligible, false);
+  assert.equal(measured.metrics.validation.rankIC, null);
+  const selection = await f.call('select', { session_id, trial_ids: [] });
+  const final = await f.call('finalize', { session_id, selection_digest: selection.selectionDigest });
+  assert.equal(final.holdoutStatus, 'not-requested');
+  assert.deepEqual(final.holdout, {});
+});
+
+test('selected out-of-sample diagnostic changes from deferred to measured only in frozen finalize', async () => {
+  const f = fixture(), prepared = await f.call('prepare', { dataset_id: 'data', access: 'restricted', options: { ...options, diagnostics: { outOfSample: true } } });
+  const session_id = prepared.sessionId;
+  const measured = await f.call('candidate', { session_id, trial_id: 'one', candidate });
+  assert.equal(measured.metrics.diagnostics.outOfSample.holdout.status, 'deferred');
+  const selection = await f.call('select', { session_id, trial_ids: ['one'] });
+  const final = await f.call('finalize', { session_id, selection_digest: selection.selectionDigest });
+  assert.equal(final.holdout.one.diagnostics.outOfSample.holdout.status, 'evaluated');
+  assert.equal(final.holdout.one.diagnostics.outOfSample.holdout.rankIC, 1);
+});

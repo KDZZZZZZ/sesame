@@ -2,7 +2,7 @@
   "id": "sesame/memory",
   "title": "长期记忆",
   "description": "保存有来源的长期记忆；区分个人交易风格、经确认的风险红线与策略认知，自动整理只提出风险候选，主 Agent 管理正式规则。",
-  "version": "3.1.0",
+  "version": "3.1.2",
   "default_state": "mounted",
   "entry": "index.js",
   "prompts": [
@@ -14,11 +14,22 @@
   "apiVersion": "2",
   "license": "MIT",
   "engines": {
-    "sesame": ">=0.2.3"
+    "sesame": ">=0.3.0-dev.1 <0.4.0"
   },
   "execution": "native",
   "main_tool_names": [
     "memory_manage"
   ],
-  "capability_manifest": "capabilities.json"
+  "capability_manifest": "capabilities.json",
+  "permissions": {
+    "scopes": [
+      "workspace.messages.read"
+    ],
+    "calls": [
+      "host.messages.query",
+      "host.sessions.query",
+      "host.artifacts.query",
+      "host.model.complete"
+    ]
+  }
 }

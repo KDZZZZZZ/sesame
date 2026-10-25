@@ -84,6 +84,33 @@ def bars(**fields):
 
 
 class PublicBridgeTests(unittest.TestCase):
+    def test_kraken_directory_symbols_and_history_share_one_native_limiter(self):
+        session = bridge.PublicSession()
+        before = len(instances)
+        directory = session.read({'exchange': 'kraken', 'action': 'markets'})
+        exchange = session.exchange
+        first = session.read({**bars(), 'exchange': 'kraken', 'limit': 500})
+        second = session.read({**bars(), 'exchange': 'kraken', 'symbol': 'ETH/USD', 'limit': 3})
+        self.assertEqual(len(instances), before + 1)
+        self.assertIs(session.exchange, exchange)
+        self.assertNotIn('rateLimit', exchange.settings)
+        self.assertTrue(exchange.settings['enableRateLimit'])
+        self.assertEqual(exchange.loads, 1)
+        self.assertEqual(exchange.fetches, [('BTC/USD', '1h', 0, 500), ('ETH/USD', '1h', 0, 3)])
+        self.assertEqual(directory['sessionId'], first['sessionId'])
+        self.assertEqual(first['sessionId'], second['sessionId'])
+        self.assertEqual(second['requestNumber'], 3)
+        session.close()
+
+    def test_all_exchanges_keep_their_native_rate_limits(self):
+        for name in ['kraken', 'coinbase', 'okx']:
+            with self.subTest(exchange=name):
+                session = bridge.PublicSession()
+                session.read({**bars(), 'exchange': name})
+                self.assertNotIn('rateLimit', session.exchange.settings)
+                self.assertTrue(session.exchange.settings['enableRateLimit'])
+                session.close()
+
     def test_reuse_session_markets_rate_limiter_and_native_limit(self):
         session = bridge.PublicSession()
         first = session.read(bars())

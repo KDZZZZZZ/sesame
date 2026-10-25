@@ -10,6 +10,7 @@ import { createService, POLICY } from '../packages/portfolio-execution/service.j
 import { createAdapters } from '../packages/portfolio-execution/adapters.js';
 import { createCapabilities } from '../packages/portfolio-execution/index.js';
 import { records, closeRecords } from '../packages/portfolio-execution/records.js';
+import { nativeAdapterFixture } from './portfolio-adapter-fixture.mjs';
 
 const fixtures = [];
 after(() => {
@@ -55,7 +56,7 @@ function fixture() {
           account: structuredClone(account),
           summary: { login: Number(account.accountId), server: account.server, balance: 10000, equity: 10000, currency: 'USD', trade_allowed: true, trade_expert: true },
           terminal: { connected: true, trade_allowed: true, tradeapi_disabled: false },
-          spec: { name: args.symbol, volume_min: 0.01, volume_max: 10, volume_step: 0.01, filling_mode: 2, trade_exemode: 2 },
+          spec: { name: args.symbol, point: 0.01, volume_min: 0.01, volume_max: 10, volume_step: 0.01, filling_mode: 2, trade_exemode: 2 },
           positions: [], orders: [], tick: { time_msc: time+10800000, bid: 100, ask: 101 }, quote_clock: quoteClock(account,time),
           readStartedAt: began, capturedAt: time,
           preparation: { commandId: args.command_id, status: 'ready', applicationPermissionChanged: account.revision !== '1', restarted: time - began >= 90000, initialized: false },
@@ -80,6 +81,7 @@ function fixture() {
       throw new Error(`Unexpected preparation call: ${name}`);
     } },
   };
+  nativeAdapterFixture(host, { now: () => time });
   fixtures.push(host);
   const create = options => createService(host, { now: () => time, ...options });
   return { host, account, calls, hooks, create, service: create(), advance: ms => { time += ms; }, get time() { return time; }, names: () => calls.map(row => row.name) };
@@ -130,7 +132,7 @@ test('total request timing includes initial identity latency rather than just th
   const prepared = await f.service.prepare(preparation());
   assert.equal(prepared.timing.preparation_request_ms, 200); assert.equal(prepared.timing.total_request_ms, 300);
   const executed = await f.service.execute(intent());
-  assert.equal(executed.timing.preparation_request_ms, 200); assert.equal(executed.timing.wrapper_to_receipt_ms, 400);
+  assert.equal(executed.timing.preparation_request_ms, 200); assert.equal(executed.timing.wrapper_to_receipt_ms, 500);
   assert.equal(executed.timing.model_round_trip_ms, 0);
 });
 
@@ -143,11 +145,11 @@ test('fast execution prepares then submits within one call, freezes original int
   assert.equal(result.fingerprint, digest(args)); assert.equal(result.signalSourceAt, began + 95000);
   assert.equal(result.timing.model_round_trip_ms, 0); assert.equal(result.timing.preparation_request_ms, 95000);
   assert.equal(result.timing.signal_age_at_start_ms, 0); assert.equal(result.timing.quote_to_send_ms, 1);
-  assert.deepEqual(f.names(), ['mt5_settings', 'mt5_trading_prepare', 'mt5_settings', 'mt5_trade']);
+  assert.deepEqual(f.names(), ['mt5_settings', 'mt5_trading_prepare', 'mt5_settings', 'mt5_settings', 'mt5_trade']);
   assert.deepEqual(result.intent, { priceLimit: '102', limitPrice: null, positionId: null, stopLoss: null, takeProfit: null });
   assert.equal(f.calls.at(-1).args.arguments.request.volume, 0.1);
   closeRecords(f.host);
-  assert.deepEqual(await f.create().execute(args), result); assert.equal(f.calls.length, 4);
+  assert.deepEqual(await f.create().execute(args), result); assert.equal(f.calls.length, 5);
   await assert.rejects(f.service.execute({ ...args, quantity: '0.2' }), { code: 'IDEMPOTENCY_CONFLICT' });
 });
 
@@ -162,7 +164,7 @@ test('concurrent identical fast requests share one preparation and one submit wi
   assert.equal(a.status, 'execution_reported'); assert.deepEqual(a, b);
   assert.equal(f.names().filter(name => name === 'mt5_trading_prepare').length, 1);
   assert.equal(f.names().filter(name => name === 'mt5_trade').length, 1);
-  assert.deepEqual(f.names(), ['mt5_settings', 'mt5_trading_prepare', 'mt5_settings', 'mt5_trade']);
+  assert.deepEqual(f.names(), ['mt5_settings', 'mt5_trading_prepare', 'mt5_settings', 'mt5_settings', 'mt5_trade']);
 });
 
 test('simultaneous prepare calls return the same saved observation and do not repeat permission work', async () => {
@@ -198,6 +200,15 @@ test('cross-account preparation or a configuration change after preparation reje
   const changed = await g.service.execute(intent());
   assert.equal(changed.status, 'rejected'); assert.equal(changed.submission_attempted, false);
   assert.equal(changed.error.code, 'CONNECTION_CHANGED'); assert.equal(g.names().includes('mt5_trade'), false);
+});
+
+test('native adapter independently rejects a change after the portfolio identity guard', async () => {
+  const f = fixture(); let reads = 0;
+  f.hooks.identity = () => { if (++reads === 3) f.account.revision = '2'; };
+  const result = await f.service.execute(intent());
+  assert.equal(result.status, 'rejected'); assert.equal(result.submission_attempted, false);
+  assert.equal(result.error.code, 'CONNECTION_CHANGED'); assert.equal(reads, 3);
+  assert.equal(f.names().includes('mt5_trade'), false);
 });
 
 test('an unknown prior same-account order blocks permission preparation and native dispatch even after revision changes', async () => {
@@ -261,9 +272,10 @@ test('pure observation consumes the provider clock envelope without modifying th
     if(name==='mt5_settings')return {type:'result',value:{settings:{version:1,account:{login:f.account.accountId,server:f.account.server}}}};
     if(name==='mt5_catalog')return {type:'result',value:{items:[{server:'python',tools:[{name:'order_send',callable:true,inputSchema:{properties:{execution_guard:{}}}}]}]}};
     assert.equal(name,'mt5_python');
-    const values={account_info:{login:f.account.accountId,server:f.account.server},terminal_info:{connected:true},symbol_info:{name:'FIXTURE'},positions_get:[],symbol_info_tick:tick};
+    const values={account_info:{login:f.account.accountId,server:f.account.server},terminal_info:{connected:true},symbol_info:{name:'FIXTURE',point:0.01},positions_get:[],orders_get:[],symbol_info_tick:tick};
     return {type:'result',value:{status:'returned',result:{result:values[args.tool],...(args.tool==='symbol_info_tick'?{quote_clock:proof}:{})}}};
   }}};
+  nativeAdapterFixture(host,{now:()=>f.time});
   const result=await createAdapters(host,{now:()=>f.time}).snapshot('mt5','FIXTURE');
   assert.equal(result.quote.sourceTimeMs,f.time);assert.deepEqual(result.quote.clock,proof);assert.deepEqual(tick,before);
   assert.equal(calls.filter(c=>c.args.tool==='symbol_info_tick').length,1);
@@ -312,6 +324,18 @@ test('raw native rejection preserves the final quote guard instead of claiming s
   assert.equal(brokerRejected.receipt.result.result.retcode, 10006);
 });
 
+test('ambiguous MT5 10025 and 10028 retain raw receipts and block replacement operations', async () => {
+  for (const retcode of [10025, 10028]) {
+    const f = fixture(); f.hooks.trade = () => ({ status: 'returned', result: { result: { retcode, order: '0', deal: '0' } } });
+    const args = intent(), original = await f.service.execute(args);
+    assert.equal(original.status, 'outcome_unknown'); assert.equal(original.receipt.result.result.retcode, retcode);
+    assert.deepEqual(await f.service.execute(args), original);
+    const replacement = await f.service.execute(intent('replacement'));
+    assert.equal(replacement.status, 'rejected'); assert.equal(replacement.error.code, 'UNRESOLVED_ORDER');
+    assert.equal(f.names().filter(name => name === 'mt5_trade').length, 1);
+  }
+});
+
 test('incomplete or conflicting fast input is rejected before any backend preparation', async () => {
   const f = fixture();
   for (const args of [
@@ -333,10 +357,11 @@ test('QMT preparation uses only its existing read-only snapshot and cannot chang
     const connection = { id: account.connectionId, revision: account.revision };
     const value = args.action === 'describe' ? { items: [{ symbol: '600000.SH', detail: {} }] }
       : args.action === 'asset' ? { asset: { account_id: account.accountId } }
-        : args.action === 'positions' ? { items: [], nextCursor: null }
+        : args.action === 'positions' || args.action === 'orders' ? { items: [], nextCursor: null }
           : args.action === 'quotes' ? { items: [{ symbol: '600000.SH', tick: { time: f.time, bidPrice: [100], askPrice: [101] } }] } : undefined;
     assert.ok(value); return { type: 'result', value: { connection, ...value } };
   };
+  nativeAdapterFixture(f.host, { now: () => f.time });
   const result = await f.create().prepare({ ...preparation(), backend: 'qmt', symbol: '600000.SH' });
   assert.equal(result.status, 'prepared'); assert.deepEqual(result.preparation, { backend: 'qmt', mode: 'read-only', permissionsChanged: false });
   assert.equal(reads.every(([name, action]) => name === 'qmt_read' || name === 'qmt_environment' && action === 'inspect'), true);
@@ -352,7 +377,7 @@ test('observe remains a pure snapshot read and an observed execution never calls
   assert.equal(snapshots, 1); assert.equal(f.calls.length, 0);
   const { backend: _backend, symbol: _symbol, ...args } = intent();
   const result = await service.execute({ ...args, observation_id: observed.observation_id });
-  assert.equal(result.status, 'execution_reported'); assert.deepEqual(f.names(), ['mt5_settings', 'mt5_trade']);
+  assert.equal(result.status, 'execution_reported'); assert.deepEqual(f.names(), ['mt5_settings', 'mt5_settings', 'mt5_trade']);
 });
 
 test('public declarations expose prepare and enforce exactly one execution source', () => {

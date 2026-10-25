@@ -24,7 +24,7 @@ function candidate(name, optional = false) {
 }
 
 test('catalog API 2 projects only explicit capabilities for native, MCP and knowledge-only packages', () => {
-  for (const [name, optional] of [['workspace', false], ['manual-trading', true], ['market-data-parser', true], ['behavioral-finance', true]]) {
+  for (const [name, optional] of [['workspace', false], ['investment-research', true], ['trading-decision', true], ['market-data-parser', true], ['behavioral-finance', true]]) {
     const f = candidate(name, optional);
     assert.equal(f.entry.apiVersion, '2'); assert.equal(f.entry.capabilityManifest, f.manifest.capability_manifest);
     assert.deepEqual(f.entry.tools, f.declaration.capabilities.filter(cap => cap.consumers.includes('agent')).map(cap => cap.id));
@@ -48,6 +48,27 @@ test('API 1 manifests, mismatched declarations and undeclared capability files c
   ]) assert.throws(() => catalogPackage(f.pkg, manifest, declaration, f.release), /API 2|capability manifest/);
 });
 
+test('optional catalog labels preserve legacy bytes and never replace package authority', () => {
+  const f = candidate('workspace'), baseline = JSON.stringify(f.entry);
+  const project = classification => catalogPackage(f.pkg, f.manifest, f.declaration, f.release, { classification });
+  for (const classification of [undefined, {}, { category: 'workspace', title: { en: 'Historical', zh: '历史' } }]) {
+    assert.equal(JSON.stringify(project(classification)), baseline);
+  }
+  const classified = project({ functionalCategory: 'platform', implementationKinds: ['service', 'function'],
+    id: 'invented', version: '0.0.0', package: {}, source: {}, capabilities: [], engines: {}, status: 'withdrawn' });
+  assert.equal(classified.functionalCategory, 'platform');
+  assert.deepEqual(classified.implementationKinds, ['service', 'function']);
+  const { functionalCategory, implementationKinds, ...unchanged } = classified;
+  assert.equal(JSON.stringify(unchanged), baseline);
+  assert.equal(project({ functionalCategory: 'platform' }).implementationKinds, undefined);
+  assert.equal(project({ implementationKinds: ['knowledge'] }).functionalCategory, undefined);
+  for (const classification of [{ functionalCategory: 'unknown' }, { functionalCategory: null },
+    { implementationKinds: [] }, { implementationKinds: ['adapter', 'adapter'] },
+    { implementationKinds: ['script'] }, { implementationKinds: 'service' }]) {
+    assert.throws(() => project(classification), /Catalog policy/);
+  }
+});
+
 test('the current reader consumes generated API 2 summaries and rejects an API 1 directory or entry', async () => {
   const f = candidate('workspace'), catalog = { schemaVersion: 1, apiVersion: '2', channel: 'development', releases: [f.release], plugins: [f.entry] };
   const fetcher = value => async () => new Response(JSON.stringify(value));
@@ -61,11 +82,12 @@ test('the current reader consumes generated API 2 summaries and rejects an API 1
 const hostRoot = process.env.SESAME_HOST_ROOT;
 test('real package admission enforces the declared host minimum for current API 2 source', { skip: !hostRoot }, async () => {
   const { inspectPackage } = await import(pathToFileURL(join(hostRoot, 'modules/agent/plugin-system/package.js')));
-  const f = candidate('manual-trading', true);
+  const f = candidate('trading-decision', true);
   const files = Object.fromEntries(f.pkg.files.map(file => [file.path, readFileSync(join(root, f.entry.source.path, file.path))]));
   assert.throws(() => inspectPackage(files, { applicationVersion: '0.2.0' }), { code: 'plugin_host_incompatible' });
   assert.throws(() => inspectPackage(files, { applicationVersion: '0.2.2' }), { code: 'plugin_host_incompatible' });
-  const inspected = inspectPackage(files, { applicationVersion: '0.2.3' });
+  assert.throws(() => inspectPackage(files, { applicationVersion: '0.2.3' }), { code: 'plugin_host_incompatible' });
+  const inspected = inspectPackage(files, { applicationVersion: '0.2.4' });
   assert.equal(inspected.apiVersion, '2'); assert.equal(inspected.id, f.pkg.id); assert.equal(inspected.digest, f.pkg.treeDigest);
   assert.deepEqual(inspected.engines, f.manifest.engines);
 });

@@ -18,251 +18,13 @@
   },
   "capabilities": [
     {
-      "id": "mt5_trading_prepare",
-      "kind": "function",
-      "consumers": [
-        "agent",
-        "host"
-      ],
-      "description": "主 Agent 按已有用户交易授权集中准备准确品种：同账户许可、必要的一次 Python IPC 恢复、账户核验、规格/持仓/挂单一并调度及最新原始报价。正常连接不重启或初始化；不下单、不切换账户，无需模型逐项检查或先读 catalog。",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "symbol": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 128,
-            "pattern": "^[^\\r\\n\\u0000]+$"
-          },
-          "command_id": {
-            "type": "string",
-            "minLength": 16,
-            "maxLength": 128,
-            "pattern": "^[A-Za-z0-9_-]+$"
-          },
-          "user_authorized": {
-            "type": "boolean",
-            "const": true,
-            "description": "用户现有指令已授权该账户的交易准备；不是要求另发确认问题。"
-          },
-          "expected_account": {
-            "type": "object",
-            "properties": {
-              "accountId": {
-                "type": "string",
-                "minLength": 1
-              },
-              "server": {
-                "type": "string",
-                "minLength": 1
-              },
-              "revision": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "accountId",
-              "server",
-              "revision"
-            ],
-            "additionalProperties": false,
-            "description": "可选的组合调用账户锁；主 Agent 可省略，直接使用当前精确绑定账户。"
-          }
-        },
-        "required": [
-          "symbol",
-          "command_id",
-          "user_authorized"
-        ],
-        "additionalProperties": false
-      },
-      "outputSchema": {
-        "type": "object",
-        "required": [
-          "account",
-          "summary",
-          "terminal",
-          "spec",
-          "positions",
-          "orders",
-          "tick",
-          "readStartedAt",
-          "capturedAt",
-          "preparation",
-          "quote_clock"
-        ],
-        "properties": {
-          "account": {
-            "type": "object",
-            "additionalProperties": true
-          },
-          "summary": {
-            "type": "object",
-            "additionalProperties": true
-          },
-          "terminal": {
-            "type": "object",
-            "additionalProperties": true
-          },
-          "spec": {
-            "type": "object",
-            "additionalProperties": true
-          },
-          "positions": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "additionalProperties": true
-            }
-          },
-          "orders": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "additionalProperties": true
-            }
-          },
-          "tick": {
-            "type": "object",
-            "additionalProperties": true
-          },
-          "readStartedAt": {
-            "type": "integer"
-          },
-          "capturedAt": {
-            "type": "integer"
-          },
-          "preparation": {
-            "type": "object",
-            "additionalProperties": true
-          },
-          "quote_clock": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "status": {
-                "type": "string",
-                "const": "verified"
-              },
-              "source": {
-                "type": "string",
-                "const": "mt5/python/symbol_info_tick"
-              },
-              "accountId": {
-                "type": "string",
-                "minLength": 1
-              },
-              "server": {
-                "type": "string",
-                "minLength": 1
-              },
-              "rawTimeMs": {
-                "type": "integer",
-                "minimum": 1
-              },
-              "sourceTimeMs": {
-                "type": "integer",
-                "minimum": 1
-              },
-              "basis": {
-                "type": "string",
-                "enum": [
-                  "utc",
-                  "server-wall"
-                ]
-              },
-              "offsetMinutes": {
-                "type": "integer",
-                "minimum": -840,
-                "maximum": 840
-              },
-              "ruleId": {
-                "type": "string",
-                "minLength": 1
-              },
-              "ruleRevision": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128
-              }
-            },
-            "required": [
-              "status",
-              "source",
-              "accountId",
-              "server",
-              "rawTimeMs",
-              "sourceTimeMs",
-              "basis",
-              "offsetMinutes",
-              "ruleId",
-              "ruleRevision"
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
-      "execution": "immediate",
-      "effects": [
-        "network",
-        "process",
-        "application-configuration",
-        "may-restart-terminal",
-        "plugin.state.write"
-      ],
-      "usage": {
-        "purpose": "把授权后必要的技术准备收敛到一次调用，缩短手动交易关键路径；业务意图、数量、限价和末端执行由 portfolio-execution 负责。",
-        "inputs": "{symbol:<准确品种>,command_id:<稳定16–128位ID>,user_authorized:true,expected_account?:{accountId,server,revision}}。直接复用用户已有授权，无需先读配置版本或目录。",
-        "outputs": "{account:{accountId,server,revision},summary,terminal,spec,positions,orders,tick,quote_clock,readStartedAt,capturedAt,preparation:{commandId,status,applicationPermissionChanged,algorithmPermissionChanged,restarted,initialized,stages,readScheduling}}。原生数组限定当前品种，原始报价时间不改写；readStartedAt/capturedAt为宿主UTC epoch毫秒。 quote_clock保留实际账户/服务器、rawTimeMs、sourceTimeMs、basis、offsetMinutes、ruleId与ruleRevision；未知时间域拒绝ready，sourceTimeMs才供UTC验龄。",
-        "prerequisites": [
-          "仅主会话；已有交易授权与准确品种，当前配置绑定的账户和终端可验证。expected_account如提供，任何权限副作用前精确匹配；内部授权许可更新可递增revision，但不改变账户域。",
-          "终端权限确需准备时沿用现有空闲检查，无活动持仓、挂单、EA或终端任务才正常重启；正常连接跳过该路径。"
-        ],
-        "limitations": [
-          "只对明确nativeCode=-10004尝试一次配置终端的initialize，绝不login、改绑定、循环恢复或自动重放订单。只读账户、券商权限与Python API禁用返回具体缺项，不猜原生AI Assistant Trading设置。",
-          "规格/持仓/挂单请求一起调度，但Python worker保持串行SDK调用；任一读失败整批settle后拒绝，不返回伪造空仓或部分ready。最终读取tick后复核账户与配置。",
-          "同command_id副作用幂等，同时请求合并；后续重复重新读取事实与报价，不用旧快照冒充ready。输入冲突、配置/账户变更、取消均拒绝。ready不证明行情新鲜、实际方法授权或成交，执行入口仍校验价格、时效与真实回执。",
-          "时钟转换只发生在MT5原生桥接的已验证年度规则内；原始tick不变。规则外服务器/日期或不确定DST时段返回QUOTE_CLOCK_UNVERIFIED，既有观察的规则版本变化由发送前guard拒绝。不得拟合当前差值、用接收时间替代源时间或调整历史API的UTC请求。"
-        ]
-      },
-      "binding": {
-        "type": "native",
-        "name": "mt5_trading_prepare"
-      },
-      "configurationRequirements": [
-        {
-          "field": "terminal_token",
-          "reason": "核验绑定终端与必要的权限准备。"
-        },
-        {
-          "field": "account_login",
-          "reason": "准备不切换账户，必须绑定明确登录号。"
-        },
-        {
-          "field": "account_server",
-          "reason": "核验精确券商服务器。"
-        },
-        {
-          "field": "allow_trading",
-          "optional": true,
-          "reason": "已有用户授权时入口内部使用当前版本开启。"
-        },
-        {
-          "field": "python",
-          "optional": true,
-          "reason": "复用已有Python发现与连接，实际可用性以原生回执为准。"
-        }
-      ]
-    },
-    {
       "id": "mt5_catalog",
       "kind": "function",
       "consumers": [
         "agent",
         "host"
       ],
-      "description": "读取 MT5 官方能力的当前目录、inputSchema、工作区权限及不可用原因。先发现后调用；query 可过滤方法名。Python 仅提供官方 API，不能执行任意代码。 server:\"tester\" 是 terminal Tester 方法的发现别名，实际调用使用返回的 server。",
+      "description": "读取MT5当前明确声明的原生方法、inputSchema、调用入口与不可用原因。缺少有效方法声明时按server/query读取；已有当前声明可直接复用。Python只提供官方API，不能执行任意代码；server:\"tester\"是terminal Tester发现别名，实际调用使用返回的server。",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -413,7 +175,7 @@
         "process"
       ],
       "usage": {
-        "purpose": "读取原生行情、账户和指标，或计算利润/保证金，并保留原生回执。",
+        "purpose": "按已声明原生方法取得行情/账户事实或进行单项利润/保证金计算；交付证据，不代替方法选择与交易决策。",
         "inputs": "{server,tool,arguments,command_id,save_as?}；从 mt5_catalog.items[].tools 取 agent_tool=\"mt5_call\" 且 callable:true 的具体方法。最小调用形状：{server:item.server,tool:method.name,arguments:<该方法声明的业务参数>,command_id:\"native-operation-unique-01\"}；server 取包含该方法的目录项，arguments 按该方法 inputSchema 与说明填写，不把其他组的方法当例子重试。command_id 稳定16–128字符；save_as 为工作区JSON路径。",
         "outputs": "{id,conversation_id,server,tool,operation_class,status,result,dataset_id,error,created_at,completed_at}；status=returned|failed|unknown（运行中可为running）。returned只说明收到响应，实际操作还要读result.isError/error/retcode或业务status；dataset_id是本插件保存证据。save_as时省略result并返回saved_to。",
         "prerequisites": [
@@ -427,7 +189,265 @@
       "binding": {
         "type": "native",
         "name": "mt5_call"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "terminal_token",
+          "reason": "调用所选 terminal MCP 服务。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "terminal"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "metaeditor_token",
+          "reason": "调用所选 metaeditor MCP 服务。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "metaeditor"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "marketdata_token",
+          "reason": "调用所选 marketdata MCP 服务。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "marketdata"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "terminal_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "terminal"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "terminal_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "terminal"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "metaeditor_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "metaeditor"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "metaeditor_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "metaeditor"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "marketdata_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "marketdata"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "marketdata_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "marketdata"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "terminal_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "python"
+              },
+              "tool": {
+                "enum": [
+                  "order_calc_profit",
+                  "order_calc_margin"
+                ]
+              }
+            },
+            "required": [
+              "server",
+              "tool"
+            ]
+          }
+        },
+        {
+          "field": "data_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "python"
+              },
+              "tool": {
+                "enum": [
+                  "order_calc_profit",
+                  "order_calc_margin"
+                ]
+              }
+            },
+            "required": [
+              "server",
+              "tool"
+            ]
+          }
+        },
+        {
+          "field": "python",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "python"
+              },
+              "tool": {
+                "enum": [
+                  "order_calc_profit",
+                  "order_calc_margin"
+                ]
+              }
+            },
+            "required": [
+              "server",
+              "tool"
+            ]
+          }
+        },
+        {
+          "field": "wine",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "python"
+              },
+              "tool": {
+                "enum": [
+                  "order_calc_profit",
+                  "order_calc_margin"
+                ]
+              }
+            },
+            "required": [
+              "server",
+              "tool"
+            ]
+          }
+        },
+        {
+          "field": "wine_prefix",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "python"
+              },
+              "tool": {
+                "enum": [
+                  "order_calc_profit",
+                  "order_calc_margin"
+                ]
+              }
+            },
+            "required": [
+              "server",
+              "tool"
+            ]
+          }
+        }
+      ]
     },
     {
       "id": "mt5_cache",
@@ -539,7 +559,66 @@
       "binding": {
         "type": "native",
         "name": "mt5_cache"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "terminal_url",
+          "reason": "实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "enum": [
+                  "sync",
+                  "sync_trades"
+                ]
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        },
+        {
+          "field": "terminal_enabled",
+          "reason": "实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "enum": [
+                  "sync",
+                  "sync_trades"
+                ]
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        },
+        {
+          "field": "terminal_token",
+          "reason": "实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "enum": [
+                  "sync",
+                  "sync_trades"
+                ]
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        }
+      ]
     },
     {
       "id": "mt5_command",
@@ -686,7 +765,150 @@
       "binding": {
         "type": "native",
         "name": "mt5_chart"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "terminal_token",
+          "reason": "调用所选 terminal MCP 服务。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "terminal"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "metaeditor_token",
+          "reason": "调用所选 metaeditor MCP 服务。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "metaeditor"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "marketdata_token",
+          "reason": "调用所选 marketdata MCP 服务。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "marketdata"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "terminal_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "terminal"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "terminal_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "terminal"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "metaeditor_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "metaeditor"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "metaeditor_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "metaeditor"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "marketdata_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "marketdata"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "marketdata_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "marketdata"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        }
+      ]
     },
     {
       "id": "mt5_edit",
@@ -786,7 +1008,230 @@
       "binding": {
         "type": "native",
         "name": "mt5_edit"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "terminal_token",
+          "reason": "调用所选 terminal MCP 服务。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "terminal"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "metaeditor_token",
+          "reason": "调用所选 metaeditor MCP 服务。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "metaeditor"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "marketdata_token",
+          "reason": "调用所选 marketdata MCP 服务。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "marketdata"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "terminal_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "terminal"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "terminal_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "terminal"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "metaeditor_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "metaeditor"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "metaeditor_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "metaeditor"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "marketdata_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "marketdata"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "marketdata_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "marketdata"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "terminal_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "launcher"
+              },
+              "tool": {
+                "const": "start_editor"
+              }
+            },
+            "required": [
+              "server",
+              "tool"
+            ]
+          }
+        },
+        {
+          "field": "data_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "launcher"
+              },
+              "tool": {
+                "const": "start_editor"
+              }
+            },
+            "required": [
+              "server",
+              "tool"
+            ]
+          }
+        },
+        {
+          "field": "wine",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "launcher"
+              },
+              "tool": {
+                "const": "start_editor"
+              }
+            },
+            "required": [
+              "server",
+              "tool"
+            ]
+          }
+        },
+        {
+          "field": "wine_prefix",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "launcher"
+              },
+              "tool": {
+                "const": "start_editor"
+              }
+            },
+            "required": [
+              "server",
+              "tool"
+            ]
+          }
+        }
+      ]
     },
     {
       "id": "mt5_python",
@@ -885,7 +1330,230 @@
       "binding": {
         "type": "native",
         "name": "mt5_python"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "terminal_token",
+          "reason": "调用所选 terminal MCP 服务。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "terminal"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "metaeditor_token",
+          "reason": "调用所选 metaeditor MCP 服务。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "metaeditor"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "marketdata_token",
+          "reason": "调用所选 marketdata MCP 服务。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "marketdata"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "terminal_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "terminal"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "terminal_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "terminal"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "metaeditor_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "metaeditor"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "metaeditor_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "metaeditor"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "marketdata_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "marketdata"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "marketdata_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "marketdata"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "terminal_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "python"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "data_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "python"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "python",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "python"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "wine",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "python"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "wine_prefix",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "python"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        }
+      ]
     },
     {
       "id": "mt5_system",
@@ -986,7 +1654,320 @@
       "binding": {
         "type": "native",
         "name": "mt5_system"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "terminal_token",
+          "reason": "调用所选 terminal MCP 服务。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "terminal"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "metaeditor_token",
+          "reason": "调用所选 metaeditor MCP 服务。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "metaeditor"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "marketdata_token",
+          "reason": "调用所选 marketdata MCP 服务。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "marketdata"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "terminal_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "terminal"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "terminal_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "terminal"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "metaeditor_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "metaeditor"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "metaeditor_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "metaeditor"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "marketdata_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "marketdata"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "marketdata_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "marketdata"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "terminal_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "launcher"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "data_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "launcher"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "wine",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "launcher"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "wine_prefix",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "launcher"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "tester_address",
+          "reason": "MetaTester 代理命令使用已配置地址和端口；help 不需要该设置。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "launcher"
+              },
+              "tool": {
+                "pattern": "^tester_agent_(?!help$)"
+              }
+            },
+            "required": [
+              "server",
+              "tool"
+            ]
+          }
+        },
+        {
+          "field": "tester_port",
+          "reason": "MetaTester 代理命令使用已配置地址和端口；help 不需要该设置。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "launcher"
+              },
+              "tool": {
+                "pattern": "^tester_agent_(?!help$)"
+              }
+            },
+            "required": [
+              "server",
+              "tool"
+            ]
+          }
+        },
+        {
+          "field": "tester_password",
+          "reason": "安装 MetaTester 代理服务时使用该密码。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "launcher"
+              },
+              "tool": {
+                "const": "tester_agent_install"
+              }
+            },
+            "required": [
+              "server",
+              "tool"
+            ]
+          }
+        },
+        {
+          "field": "allow_host_operations",
+          "reason": "原生网络、shell 与 MetaTester 代理操作由已有宿主权限策略检查。",
+          "optional": true,
+          "when": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "server": {
+                    "const": "launcher"
+                  },
+                  "tool": {
+                    "pattern": "^tester_agent_"
+                  }
+                },
+                "required": [
+                  "server",
+                  "tool"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "server": {
+                    "enum": [
+                      "terminal",
+                      "metaeditor",
+                      "marketdata"
+                    ]
+                  },
+                  "tool": {
+                    "enum": [
+                      "shell",
+                      "send_web_request"
+                    ]
+                  }
+                },
+                "required": [
+                  "server",
+                  "tool"
+                ]
+              }
+            ]
+          }
+        }
+      ]
     },
     {
       "id": "mt5_test",
@@ -1086,7 +2067,150 @@
       "binding": {
         "type": "native",
         "name": "mt5_test"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "terminal_token",
+          "reason": "调用所选 terminal MCP 服务。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "terminal"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "metaeditor_token",
+          "reason": "调用所选 metaeditor MCP 服务。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "metaeditor"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "marketdata_token",
+          "reason": "调用所选 marketdata MCP 服务。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "marketdata"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "terminal_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "terminal"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "terminal_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "terminal"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "metaeditor_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "metaeditor"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "metaeditor_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "metaeditor"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "marketdata_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "marketdata"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "marketdata_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "marketdata"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        }
+      ]
     },
     {
       "id": "mt5_backtest",
@@ -1297,7 +2421,134 @@
       "binding": {
         "type": "native",
         "name": "mt5_backtest"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "account_login",
+          "reason": "使用已绑定的券商账户身份。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "start"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        },
+        {
+          "field": "account_server",
+          "reason": "使用已绑定的券商服务器身份。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "start"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        },
+        {
+          "field": "account_password",
+          "reason": "独立 Tester 启动使用已绑定券商账户的密码。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "start"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        },
+        {
+          "field": "terminal_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "start"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        },
+        {
+          "field": "data_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "start"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        },
+        {
+          "field": "python",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "start"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        },
+        {
+          "field": "wine",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "start"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        },
+        {
+          "field": "wine_prefix",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "start"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        }
+      ]
     },
     {
       "id": "mt5_trade",
@@ -1398,7 +2649,316 @@
       "binding": {
         "type": "native",
         "name": "mt5_trade"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "terminal_token",
+          "reason": "调用所选 terminal MCP 服务。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "terminal"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "metaeditor_token",
+          "reason": "调用所选 metaeditor MCP 服务。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "metaeditor"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "marketdata_token",
+          "reason": "调用所选 marketdata MCP 服务。",
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "marketdata"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "terminal_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "terminal"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "terminal_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "terminal"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "metaeditor_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "metaeditor"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "metaeditor_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "metaeditor"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "marketdata_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "marketdata"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "marketdata_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "marketdata"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "terminal_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "enum": [
+                  "python",
+                  "launcher"
+                ]
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "data_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "enum": [
+                  "python",
+                  "launcher"
+                ]
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "wine",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "enum": [
+                  "python",
+                  "launcher"
+                ]
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "wine_prefix",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "enum": [
+                  "python",
+                  "launcher"
+                ]
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "python",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "python"
+              }
+            },
+            "required": [
+              "server"
+            ]
+          }
+        },
+        {
+          "field": "allow_trading",
+          "reason": "原生交易及程序启动权限由已有策略按具体工具检查。",
+          "optional": true
+        },
+        {
+          "field": "account_login",
+          "reason": "Python 初始化或登录使用已保存券商账户配置，实际身份与连接由原操作核验。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "python"
+              },
+              "tool": {
+                "enum": [
+                  "initialize",
+                  "login"
+                ]
+              }
+            },
+            "required": [
+              "server",
+              "tool"
+            ]
+          }
+        },
+        {
+          "field": "account_server",
+          "reason": "Python 初始化或登录使用已保存券商账户配置，实际身份与连接由原操作核验。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "python"
+              },
+              "tool": {
+                "enum": [
+                  "initialize",
+                  "login"
+                ]
+              }
+            },
+            "required": [
+              "server",
+              "tool"
+            ]
+          }
+        },
+        {
+          "field": "account_password",
+          "reason": "Python 初始化或登录使用已保存券商账户配置，实际身份与连接由原操作核验。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "const": "python"
+              },
+              "tool": {
+                "enum": [
+                  "initialize",
+                  "login"
+                ]
+              }
+            },
+            "required": [
+              "server",
+              "tool"
+            ]
+          }
+        }
+      ]
     },
     {
       "id": "mt5_deployment",
@@ -1499,7 +3059,69 @@
       "binding": {
         "type": "native",
         "name": "mt5_deployment"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "terminal_url",
+          "reason": "实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "enum": [
+                  "check",
+                  "mount",
+                  "stop"
+                ]
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        },
+        {
+          "field": "terminal_enabled",
+          "reason": "实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "enum": [
+                  "check",
+                  "mount",
+                  "stop"
+                ]
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        },
+        {
+          "field": "terminal_token",
+          "reason": "实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "enum": [
+                  "check",
+                  "mount",
+                  "stop"
+                ]
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        }
+      ]
     },
     {
       "id": "mt5_project",
@@ -1786,6 +3408,210 @@
       "binding": {
         "type": "native",
         "name": "mt5_compile"
+      },
+      "configurationRequirements": [
+        {
+          "field": "terminal_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "data_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "python",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "wine",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "wine_prefix",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "id": "configuration.read",
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "description": "Read only the declared public MT5 settings and credential presence for host configuration and capability readiness; available to service and task contexts without changing main-session configuration permissions.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "settings": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "allow_trading": {
+                "type": "boolean"
+              },
+              "allow_host_operations": {
+                "type": "boolean"
+              },
+              "servers": {
+                "type": "object",
+                "properties": {
+                  "terminal": {
+                    "type": "object",
+                    "properties": {
+                      "url": {
+                        "type": "string"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "authenticated": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "url",
+                      "enabled",
+                      "authenticated"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "metaeditor": {
+                    "type": "object",
+                    "properties": {
+                      "url": {
+                        "type": "string"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "authenticated": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "url",
+                      "enabled",
+                      "authenticated"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "marketdata": {
+                    "type": "object",
+                    "properties": {
+                      "url": {
+                        "type": "string"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "authenticated": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "url",
+                      "enabled",
+                      "authenticated"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "terminal",
+                  "metaeditor",
+                  "marketdata"
+                ],
+                "additionalProperties": false
+              },
+              "account": {
+                "type": "object",
+                "properties": {
+                  "login": {
+                    "type": "string"
+                  },
+                  "server": {
+                    "type": "string"
+                  },
+                  "password_configured": {
+                    "type": "boolean",
+                    "writeOnly": false
+                  }
+                },
+                "required": [
+                  "login",
+                  "server",
+                  "password_configured"
+                ],
+                "additionalProperties": false
+              },
+              "tester_agent": {
+                "type": "object",
+                "properties": {
+                  "address": {
+                    "type": "string"
+                  },
+                  "port": {
+                    "type": "integer"
+                  },
+                  "password_configured": {
+                    "type": "boolean",
+                    "writeOnly": false
+                  }
+                },
+                "required": [
+                  "address",
+                  "port",
+                  "password_configured"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "version",
+              "allow_trading",
+              "allow_host_operations",
+              "servers",
+              "account",
+              "tester_agent"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "settings"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "read-only"
+      ],
+      "usage": {
+        "purpose": "Provide a public configuration projection to the host without pending imports or diagnostic content.",
+        "inputs": "Empty object {}.",
+        "outputs": "{settings:{version,servers,account,tester_agent,allow_trading,allow_host_operations}}; credentials are represented only by booleans.",
+        "prerequisites": [],
+        "limitations": [
+          "Presence does not verify remote authentication or connectivity; configuration writes and the existing mt5_settings tool retain main-conversation permissions."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "configuration.read"
       }
     },
     {
@@ -2008,12 +3834,355 @@
         "additionalProperties": false
       },
       "outputSchema": {
-        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
-        "type": [
-          "object",
-          "array"
+        "type": "object",
+        "description": "Public configuration receipt. Submitted credentials remain private; result contains only settings and credential-presence flags.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "conversation_id": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string",
+            "const": "mt5"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "applied",
+              "failed"
+            ]
+          },
+          "changes": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "import_native"
+                ],
+                "properties": {
+                  "import_native": {
+                    "type": "boolean",
+                    "const": true
+                  }
+                },
+                "additionalProperties": false,
+                "minProperties": 1
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "allow_trading": {
+                    "type": "boolean"
+                  },
+                  "allow_host_operations": {
+                    "type": "boolean"
+                  },
+                  "servers": {
+                    "type": "object",
+                    "properties": {
+                      "terminal": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string",
+                            "maxLength": 2048,
+                            "pattern": "^[^\\r\\n\\u0000]*$"
+                          },
+                          "enabled": {
+                            "type": "boolean"
+                          },
+                          "token": {
+                            "type": "string",
+                            "maxLength": 8192,
+                            "pattern": "^[^\\r\\n\\u0000]*$",
+                            "writeOnly": true,
+                            "description": "用户提供的 MCP API Key 原文；省略保留现有值，空字符串清除。保存后立即生效，回执不返回密钥。"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "minProperties": 1
+                      },
+                      "metaeditor": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string",
+                            "maxLength": 2048,
+                            "pattern": "^[^\\r\\n\\u0000]*$"
+                          },
+                          "enabled": {
+                            "type": "boolean"
+                          },
+                          "token": {
+                            "type": "string",
+                            "maxLength": 8192,
+                            "pattern": "^[^\\r\\n\\u0000]*$",
+                            "writeOnly": true,
+                            "description": "用户提供的 MCP API Key 原文；省略保留现有值，空字符串清除。保存后立即生效，回执不返回密钥。"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "minProperties": 1
+                      },
+                      "marketdata": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string",
+                            "maxLength": 2048,
+                            "pattern": "^[^\\r\\n\\u0000]*$"
+                          },
+                          "enabled": {
+                            "type": "boolean"
+                          },
+                          "token": {
+                            "type": "string",
+                            "maxLength": 8192,
+                            "pattern": "^[^\\r\\n\\u0000]*$",
+                            "writeOnly": true,
+                            "description": "用户提供的 MCP API Key 原文；省略保留现有值，空字符串清除。保存后立即生效，回执不返回密钥。"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "minProperties": 1
+                      }
+                    },
+                    "additionalProperties": false,
+                    "minProperties": 1
+                  },
+                  "account": {
+                    "type": "object",
+                    "properties": {
+                      "login": {
+                        "type": "string",
+                        "pattern": "^(|[1-9][0-9]{0,19})$"
+                      },
+                      "server": {
+                        "type": "string",
+                        "maxLength": 200,
+                        "pattern": "^[^\\r\\n\\u0000]*$"
+                      },
+                      "password": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "pattern": "^[^\\r\\n\\u0000]*$",
+                        "writeOnly": true,
+                        "description": "用户提供的券商账户密码；省略保留现有值，空字符串清除。账户改变时需明确提供对应密码。"
+                      }
+                    },
+                    "additionalProperties": false,
+                    "minProperties": 1
+                  },
+                  "tester_agent": {
+                    "type": "object",
+                    "properties": {
+                      "address": {
+                        "type": "string",
+                        "maxLength": 15,
+                        "pattern": "^[^\\r\\n\\u0000]*$"
+                      },
+                      "port": {
+                        "type": "integer",
+                        "minimum": 1024,
+                        "maximum": 65535
+                      },
+                      "password": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "pattern": "^[^\\r\\n\\u0000]*$",
+                        "writeOnly": true,
+                        "description": "用户提供的 MetaTester 代理密码；省略保留现有值，空字符串清除。"
+                      }
+                    },
+                    "additionalProperties": false,
+                    "minProperties": 1
+                  }
+                },
+                "additionalProperties": false,
+                "minProperties": 1
+              }
+            ]
+          },
+          "result": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "allow_trading": {
+                "type": "boolean"
+              },
+              "allow_host_operations": {
+                "type": "boolean"
+              },
+              "servers": {
+                "type": "object",
+                "properties": {
+                  "terminal": {
+                    "type": "object",
+                    "properties": {
+                      "url": {
+                        "type": "string"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "authenticated": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "url",
+                      "enabled",
+                      "authenticated"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "metaeditor": {
+                    "type": "object",
+                    "properties": {
+                      "url": {
+                        "type": "string"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "authenticated": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "url",
+                      "enabled",
+                      "authenticated"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "marketdata": {
+                    "type": "object",
+                    "properties": {
+                      "url": {
+                        "type": "string"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "authenticated": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "url",
+                      "enabled",
+                      "authenticated"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "terminal",
+                  "metaeditor",
+                  "marketdata"
+                ],
+                "additionalProperties": false
+              },
+              "account": {
+                "type": "object",
+                "properties": {
+                  "login": {
+                    "type": "string"
+                  },
+                  "server": {
+                    "type": "string"
+                  },
+                  "password_configured": {
+                    "type": "boolean",
+                    "writeOnly": false
+                  }
+                },
+                "required": [
+                  "login",
+                  "server",
+                  "password_configured"
+                ],
+                "additionalProperties": false
+              },
+              "tester_agent": {
+                "type": "object",
+                "properties": {
+                  "address": {
+                    "type": "string"
+                  },
+                  "port": {
+                    "type": "integer"
+                  },
+                  "password_configured": {
+                    "type": "boolean",
+                    "writeOnly": false
+                  }
+                },
+                "required": [
+                  "address",
+                  "port",
+                  "password_configured"
+                ],
+                "additionalProperties": false
+              },
+              "startup_configured": {
+                "type": "boolean"
+              },
+              "python_installed": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "version",
+              "allow_trading",
+              "allow_host_operations",
+              "servers",
+              "account",
+              "tester_agent",
+              "startup_configured",
+              "python_installed"
+            ],
+            "additionalProperties": false
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "completed_at": {
+            "type": "string"
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "conversation_id",
+          "target",
+          "status",
+          "changes",
+          "created_at"
         ],
-        "additionalProperties": true
+        "additionalProperties": false
       },
       "execution": "immediate",
       "effects": [
@@ -2237,7 +4406,34 @@
       "binding": {
         "type": "native",
         "name": "mt5_start_terminal"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "terminal_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "data_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "wine",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "wine_prefix",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "allow_trading",
+          "reason": "启动终端时由已有交易及程序启动权限策略检查。",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "mt5_connect",
@@ -2294,6 +4490,460 @@
         "type": "native",
         "name": "mt5_connect"
       }
+    },
+    {
+      "id": "mt5_trading_prepare",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "主 Agent 按已有用户交易授权集中准备准确品种：同账户许可、必要的一次 Python IPC 恢复、账户核验、规格/持仓/挂单一并调度及最新原始报价。正常连接不重启或初始化；不下单、不切换账户，无需模型逐项检查或先读 catalog。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[^\\r\\n\\u0000]+$"
+          },
+          "command_id": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "user_authorized": {
+            "type": "boolean",
+            "const": true,
+            "description": "用户现有指令已授权该账户的交易准备；不是要求另发确认问题。"
+          },
+          "expected_account": {
+            "type": "object",
+            "properties": {
+              "accountId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "server": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "accountId",
+              "server",
+              "revision"
+            ],
+            "additionalProperties": false,
+            "description": "可选的组合调用账户锁；主 Agent 可省略，直接使用当前精确绑定账户。"
+          }
+        },
+        "required": [
+          "symbol",
+          "command_id",
+          "user_authorized"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": [
+          "account",
+          "summary",
+          "terminal",
+          "spec",
+          "positions",
+          "orders",
+          "tick",
+          "readStartedAt",
+          "capturedAt",
+          "preparation",
+          "quote_clock"
+        ],
+        "properties": {
+          "account": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "summary": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "terminal": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "spec": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "positions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "orders": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "tick": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "readStartedAt": {
+            "type": "integer"
+          },
+          "capturedAt": {
+            "type": "integer"
+          },
+          "preparation": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "quote_clock": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "status": {
+                "type": "string",
+                "const": "verified"
+              },
+              "source": {
+                "type": "string",
+                "const": "mt5/python/symbol_info_tick"
+              },
+              "accountId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "server": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rawTimeMs": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "sourceTimeMs": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "basis": {
+                "type": "string",
+                "enum": [
+                  "utc",
+                  "server-wall"
+                ]
+              },
+              "offsetMinutes": {
+                "type": "integer",
+                "minimum": -840,
+                "maximum": 840
+              },
+              "ruleId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "ruleRevision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "status",
+              "source",
+              "accountId",
+              "server",
+              "rawTimeMs",
+              "sourceTimeMs",
+              "basis",
+              "offsetMinutes",
+              "ruleId",
+              "ruleRevision"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "network",
+        "process",
+        "application-configuration",
+        "may-restart-terminal",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "把授权后必要的技术准备收敛到一次调用，缩短手动交易关键路径；业务意图、数量、限价和末端执行由 portfolio-execution 负责。",
+        "inputs": "{symbol:<准确品种>,command_id:<稳定16–128位ID>,user_authorized:true,expected_account?:{accountId,server,revision}}。直接复用用户已有授权，无需先读配置版本或目录。",
+        "outputs": "{account:{accountId,server,revision},summary,terminal,spec,positions,orders,tick,quote_clock,readStartedAt,capturedAt,preparation:{commandId,status,applicationPermissionChanged,algorithmPermissionChanged,restarted,initialized,stages,readScheduling}}。原生数组限定当前品种，原始报价时间不改写；readStartedAt/capturedAt为宿主UTC epoch毫秒。 quote_clock保留实际账户/服务器、rawTimeMs、sourceTimeMs、basis、offsetMinutes、ruleId与ruleRevision；未知时间域拒绝ready，sourceTimeMs才供UTC验龄。",
+        "prerequisites": [
+          "仅主会话；已有交易授权与准确品种，当前配置绑定的账户和终端可验证。expected_account如提供，任何权限副作用前精确匹配；内部授权许可更新可递增revision，但不改变账户域。",
+          "终端权限确需准备时沿用现有空闲检查，无活动持仓、挂单、EA或终端任务才正常重启；正常连接跳过该路径。"
+        ],
+        "limitations": [
+          "只对明确nativeCode=-10004尝试一次配置终端的initialize，绝不login、改绑定、循环恢复或自动重放订单。只读账户、券商权限与Python API禁用返回具体缺项，不猜原生AI Assistant Trading设置。",
+          "规格/持仓/挂单请求一起调度，但Python worker保持串行SDK调用；任一读失败整批settle后拒绝，不返回伪造空仓或部分ready。最终读取tick后复核账户与配置。",
+          "同command_id副作用幂等，同时请求合并；后续重复重新读取事实与报价，不用旧快照冒充ready。输入冲突、配置/账户变更、取消均拒绝。ready不证明行情新鲜、实际方法授权或成交，执行入口仍校验价格、时效与真实回执。",
+          "时钟转换只发生在MT5原生桥接的已验证年度规则内；原始tick不变。规则外服务器/日期或不确定DST时段返回QUOTE_CLOCK_UNVERIFIED，既有观察的规则版本变化由发送前guard拒绝。不得拟合当前差值、用接收时间替代源时间或调整历史API的UTC请求。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_trading_prepare"
+      },
+      "configurationRequirements": [
+        {
+          "field": "terminal_token",
+          "reason": "核验绑定终端与必要的权限准备。"
+        },
+        {
+          "field": "account_login",
+          "reason": "准备不切换账户，必须绑定明确登录号。"
+        },
+        {
+          "field": "account_server",
+          "reason": "核验精确券商服务器。"
+        },
+        {
+          "field": "allow_trading",
+          "optional": true,
+          "reason": "已有用户授权时入口内部使用当前版本开启。"
+        },
+        {
+          "field": "python",
+          "optional": true,
+          "reason": "复用已有Python发现与连接，实际可用性以原生回执为准。"
+        }
+      ]
+    },
+    {
+      "id": "mt5_trading_permissions",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "分层读取 MT5 真实交易权限，或按已有用户授权自动准备当前绑定终端的算法交易权限。可能正常重启空闲终端；回读验证后才成功，不下单、不重放旧交易。",
+      "inputSchema": {
+        "type": "object",
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "read",
+                "type": "string"
+              }
+            },
+            "required": [
+              "action"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "enable",
+                "type": "string"
+              },
+              "command_id": {
+                "type": "string",
+                "minLength": 16,
+                "maxLength": 128,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              },
+              "expected_version": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "action",
+              "command_id",
+              "expected_version"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "application-configuration",
+        "may-restart-terminal",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "把账户、MCP、终端算法交易和 Sesame 插件权限分开诊断，按已授权范围自行解决算法交易开关关闭。",
+        "inputs": "{action:\"read\"}；或 {action:\"enable\",command_id:\"enable-algo-trading-01\",expected_version:读回的configuration_version}。主Agent复用现有用户授权，无需另发确认问题。",
+        "outputs": "read返回checked_at、configuration_version、account、application.allow_trading及terminal.connected/experts_trade_allowed/mcp_trade_allowed；enable返回持久命令回执，result含before、after、restarted、verified。status=applied且verified=true才证明同一账户算法权限已生效。",
+        "prerequisites": [
+          "主会话、已连接的精确绑定账户；enable需要既有用户交易或权限配置授权，以及插件allow_trading、账户非只读和原生MCP交易许可。",
+          "需要重启时沿用现有空闲检查：无终端任务、持仓、挂单或已有EA；已启用直接核验，不重复重启。"
+        ],
+        "limitations": [
+          "此入口自动准备终端算法交易权限；不修改券商权限、原生MCP授权或Python API禁用设置，不将这些缺项说成账户无法手动交易。",
+          "同command_id与输入只返回原回执；失败、running或unknown先read实际状态，不能换ID盲目重复。结果不证明行情时效、成交或策略就绪。原订单不自动重放。",
+          "配置/账户变动、忙碌或未生效均保留具体错误。使用插件选定的终端和原数据，临时启动配置不回显凭据；重启配置保持DLL关闭，不重启路径仅核验既有状态。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_trading_permissions"
+      },
+      "configurationRequirements": [
+        {
+          "field": "terminal_token",
+          "reason": "读取当前绑定终端的真实权限并核验准备结果。"
+        },
+        {
+          "field": "account_login",
+          "reason": "权限操作必须核对已绑定的精确账户。"
+        },
+        {
+          "field": "account_server",
+          "reason": "权限操作必须核对已绑定的精确券商服务器。"
+        },
+        {
+          "field": "terminal_url",
+          "optional": true,
+          "reason": "沿用已选Terminal MCP连接，实际可用性由原生通道核验。"
+        },
+        {
+          "field": "terminal_enabled",
+          "optional": true,
+          "reason": "沿用已选Terminal MCP连接，实际可用性由原生通道核验。"
+        },
+        {
+          "field": "allow_trading",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "enable"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          },
+          "reason": "算法交易准备复用既有许可、安装发现、数据目录及已保存登录；未填写覆盖值不增加新门槛。"
+        },
+        {
+          "field": "terminal_directory",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "enable"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          },
+          "reason": "算法交易准备复用既有许可、安装发现、数据目录及已保存登录；未填写覆盖值不增加新门槛。"
+        },
+        {
+          "field": "data_directory",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "enable"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          },
+          "reason": "算法交易准备复用既有许可、安装发现、数据目录及已保存登录；未填写覆盖值不增加新门槛。"
+        },
+        {
+          "field": "python",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "enable"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          },
+          "reason": "算法交易准备复用既有许可、安装发现、数据目录及已保存登录；未填写覆盖值不增加新门槛。"
+        },
+        {
+          "field": "wine",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "enable"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          },
+          "reason": "算法交易准备复用既有许可、安装发现、数据目录及已保存登录；未填写覆盖值不增加新门槛。"
+        },
+        {
+          "field": "wine_prefix",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "enable"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          },
+          "reason": "算法交易准备复用既有许可、安装发现、数据目录及已保存登录；未填写覆盖值不增加新门槛。"
+        },
+        {
+          "field": "account_password",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "enable"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          },
+          "reason": "算法交易准备复用既有许可、安装发现、数据目录及已保存登录；未填写覆盖值不增加新门槛。"
+        }
+      ]
     },
     {
       "id": "mt5_report_data",
@@ -3303,12 +5953,154 @@
         "additionalProperties": false
       },
       "outputSchema": {
-        "description": "Domain result: native responses retain explicit status/errors, actual identities, provenance and availability; command outputs depend on the selected declared operation.",
-        "type": [
-          "object",
-          "array"
-        ],
-        "additionalProperties": true
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "account": {
+                "type": "object",
+                "properties": {
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "server": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "accountId",
+                  "server",
+                  "revision"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "account"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "account": {
+                "type": "object",
+                "properties": {
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "server": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "accountId",
+                  "server",
+                  "revision"
+                ],
+                "additionalProperties": false
+              },
+              "summary": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "positions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "orders": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "fills": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "historicalOrders": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "deployments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "historyCoverage": {
+                "type": "object",
+                "properties": {
+                  "requestedFrom": {
+                    "type": "integer"
+                  },
+                  "requestedTo": {
+                    "type": "integer"
+                  },
+                  "scope": {
+                    "const": "native_requested_range"
+                  },
+                  "complete": {
+                    "const": false
+                  },
+                  "limitations": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                "required": [
+                  "requestedFrom",
+                  "requestedTo",
+                  "scope",
+                  "complete",
+                  "limitations"
+                ],
+                "additionalProperties": false
+              },
+              "capturedAt": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "account",
+              "summary",
+              "positions",
+              "orders",
+              "fills",
+              "historicalOrders",
+              "deployments",
+              "historyCoverage",
+              "capturedAt"
+            ],
+            "additionalProperties": false
+          }
+        ]
       },
       "execution": "immediate",
       "effects": [
@@ -3322,18 +6114,108 @@
         "outputs": "identity:{account:{accountId,server,revision}}；snapshot:{account,summary,positions,orders,fills,historicalOrders,deployments,historyCoverage:{requestedFrom,requestedTo,scope:\"native_requested_range\",complete:false,limitations},capturedAt}。summary和四个账户数组保留Python原生字段，时间范围是UTC毫秒；成功的空数组才表示本次未见记录。原生调用失败抛{code,message,details:{transport:\"python\",requiredTransport:\"python\",method,commandId,commandStatus?,nativeCode?,nativeMessage?,retryable?,recovery?}}；身份/连接/数据形状核验失败保留各自code和message。失败不返回部分或伪造空仓快照。",
         "prerequisites": [
           "主会话或宿主证明的匹配工作流上下文；账户和配置revision来自identity/mt5_settings，不猜账号。identity不要求原生通道在线；snapshot需要同一已配置账户的Python IPC和券商连接。",
-          "mt5_settings说明已有配置；mt5_catalog({server:\"python\"})提供Python可用方法、参数及调用路由。mt5_connect核验的是Terminal MCP，不能作为Python已连接的证据。initialize/login沿用mt5_trade的现有权限，不是snapshot自动执行的恢复动作。"
+          "mt5_settings说明已有配置；mt5_catalog({server:\"python\"})提供Python可用方法、参数及调用路由。mt5_connect核验的是Terminal MCP，不能作为Python已连接的证据。Python IPC属于worker进程，宿主或worker重启后首次使用需要显式initialize，普通读取和snapshot不会自动初始化或登录。主Agent可在既有授权覆盖连接恢复、原配置终端及同一账户、现有权限允许的范围内，通过mt5_trade显式initialize；初始化使用已保存账户配置，不更换账户、不放开用户关闭的交易开关、不绕过权限。成功后仍需核验实际账户和券商连接；失败或unknown保留原生回执，不循环尝试。login沿用独立的mt5_trade权限，不由snapshot自动执行。"
         ],
         "limitations": [
           "snapshot先核验原生账户与连接，再读取全账户当前仓位、订单和请求范围内历史；每次读取核对配置revision，失败或取消立即停止，不按magic/comment隐藏全账户风险。Terminal MCP的字段和券商墙时不替代这里的Python/UTC契约。",
-          "确认原生last_error=[-10004,\"No IPC connection\"]时code=MT5_PYTHON_UNAVAILABLE，details保留nativeCode/nativeMessage、method和commandId，并给retryable:false。恢复条件是重新连接已配置的Python终端、核验同一账户后启动新工作流；环境未变时重复快照或仅重连Terminal MCP不会恢复Python IPC。其他错误保留实际code/原生证据，不一概判为不可重试。",
+          "确认原生last_error=[-10004,\"No IPC connection\"]时code=MT5_PYTHON_UNAVAILABLE，details保留nativeCode/nativeMessage、method和commandId，并给retryable:false。这里仅禁止环境未恢复时重复快照，不禁止既有授权及现有权限内的显式IPC恢复。原配置终端的Python IPC恢复并核验同一账户和券商连接后，原主任务可继续并重新取得快照；已终止的冻结工作流须按现有授权及执行契约创建新Run，不重放终态Run。recovery提示中的新工作流要求适用于后一种情况。重复快照或仅重连Terminal MCP不会恢复Python IPC。其他错误保留实际code/原生证据，不一概判为不可重试。",
           "historyCoverage.complete:false表示券商保留历史的请求范围不代表完整历史；失败不能当空仓，身份不符不能自动切换账号。"
         ]
       },
       "binding": {
         "type": "native",
         "name": "mt5_trading_context"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "account_login",
+          "reason": "使用已绑定的券商账户身份。"
+        },
+        {
+          "field": "account_server",
+          "reason": "使用已绑定的券商服务器身份。"
+        },
+        {
+          "field": "terminal_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "snapshot"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        },
+        {
+          "field": "data_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "snapshot"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        },
+        {
+          "field": "python",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "snapshot"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        },
+        {
+          "field": "wine",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "snapshot"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        },
+        {
+          "field": "wine_prefix",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true,
+          "when": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "const": "snapshot"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          }
+        }
+      ]
     },
     {
       "id": "mt5_trading_pause",
@@ -3440,7 +6322,34 @@
       "binding": {
         "type": "native",
         "name": "mt5_trading_pause"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "account_login",
+          "reason": "保留原操作的账户身份及历史回执边界，执行时核验当前账户。",
+          "optional": true
+        },
+        {
+          "field": "account_server",
+          "reason": "保留原操作的账户身份及历史回执边界，执行时核验当前账户。",
+          "optional": true
+        },
+        {
+          "field": "terminal_url",
+          "reason": "实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。",
+          "optional": true
+        },
+        {
+          "field": "terminal_enabled",
+          "reason": "实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。",
+          "optional": true
+        },
+        {
+          "field": "terminal_token",
+          "reason": "实时同步或受管理 EA 操作使用 Terminal MCP；历史读取和原诊断/清理语义保持不变。",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "mt5_trading_order",
@@ -3525,7 +6434,49 @@
       "binding": {
         "type": "native",
         "name": "mt5_trading_order"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "terminal_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "data_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "python",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "wine",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "wine_prefix",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "allow_trading",
+          "reason": "提交原生交易前由已有交易权限策略检查。",
+          "optional": true
+        },
+        {
+          "field": "account_login",
+          "reason": "保留原操作的账户身份及历史回执边界，执行时核验当前账户。",
+          "optional": true
+        },
+        {
+          "field": "account_server",
+          "reason": "保留原操作的账户身份及历史回执边界，执行时核验当前账户。",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "mt5_trading_command",
@@ -3574,7 +6525,19 @@
       "binding": {
         "type": "native",
         "name": "mt5_trading_command"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "account_login",
+          "reason": "保留原操作的账户身份及历史回执边界，执行时核验当前账户。",
+          "optional": true
+        },
+        {
+          "field": "account_server",
+          "reason": "保留原操作的账户身份及历史回执边界，执行时核验当前账户。",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "activate",
@@ -3929,7 +6892,17 @@
       "binding": {
         "type": "native",
         "name": "market.bind"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "account_login",
+          "reason": "使用已绑定的券商账户身份。"
+        },
+        {
+          "field": "account_server",
+          "reason": "使用已绑定的券商服务器身份。"
+        }
+      ]
     },
     {
       "id": "market.unbind",
@@ -4059,7 +7032,31 @@
       "binding": {
         "type": "native",
         "name": "market.searchInstruments"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "account_login",
+          "reason": "使用已绑定的券商账户身份。"
+        },
+        {
+          "field": "account_server",
+          "reason": "使用已绑定的券商服务器身份。"
+        },
+        {
+          "field": "terminal_token",
+          "reason": "通过已配置的 Terminal MCP 读取当前券商数据。"
+        },
+        {
+          "field": "terminal_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true
+        },
+        {
+          "field": "terminal_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "market.describeInstrument",
@@ -4143,7 +7140,31 @@
       "binding": {
         "type": "native",
         "name": "market.describeInstrument"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "account_login",
+          "reason": "使用已绑定的券商账户身份。"
+        },
+        {
+          "field": "account_server",
+          "reason": "使用已绑定的券商服务器身份。"
+        },
+        {
+          "field": "terminal_token",
+          "reason": "通过已配置的 Terminal MCP 读取当前券商数据。"
+        },
+        {
+          "field": "terminal_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true
+        },
+        {
+          "field": "terminal_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "market.queryBars",
@@ -4228,7 +7249,17 @@
       "binding": {
         "type": "native",
         "name": "market.queryBars"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "account_login",
+          "reason": "使用已绑定的券商账户身份。"
+        },
+        {
+          "field": "account_server",
+          "reason": "使用已绑定的券商服务器身份。"
+        }
+      ]
     },
     {
       "id": "market.subscribeBars",
@@ -4308,7 +7339,31 @@
       "binding": {
         "type": "native",
         "name": "market.subscribeBars"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "account_login",
+          "reason": "使用已绑定的券商账户身份。"
+        },
+        {
+          "field": "account_server",
+          "reason": "使用已绑定的券商服务器身份。"
+        },
+        {
+          "field": "terminal_token",
+          "reason": "通过已配置的 Terminal MCP 读取当前券商数据。"
+        },
+        {
+          "field": "terminal_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true
+        },
+        {
+          "field": "terminal_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "account.bind",
@@ -4353,7 +7408,17 @@
       "binding": {
         "type": "native",
         "name": "account.bind"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "account_login",
+          "reason": "使用已绑定的券商账户身份。"
+        },
+        {
+          "field": "account_server",
+          "reason": "使用已绑定的券商服务器身份。"
+        }
+      ]
     },
     {
       "id": "account.unbind",
@@ -4482,7 +7547,31 @@
       "binding": {
         "type": "native",
         "name": "account.listAccounts"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "account_login",
+          "reason": "使用已绑定的券商账户身份。"
+        },
+        {
+          "field": "account_server",
+          "reason": "使用已绑定的券商服务器身份。"
+        },
+        {
+          "field": "terminal_token",
+          "reason": "通过已配置的 Terminal MCP 读取当前券商数据。"
+        },
+        {
+          "field": "terminal_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true
+        },
+        {
+          "field": "terminal_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "account.snapshot",
@@ -4566,7 +7655,31 @@
       "binding": {
         "type": "native",
         "name": "account.snapshot"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "account_login",
+          "reason": "使用已绑定的券商账户身份。"
+        },
+        {
+          "field": "account_server",
+          "reason": "使用已绑定的券商服务器身份。"
+        },
+        {
+          "field": "terminal_token",
+          "reason": "通过已配置的 Terminal MCP 读取当前券商数据。"
+        },
+        {
+          "field": "terminal_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true
+        },
+        {
+          "field": "terminal_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "account.queryPositions",
@@ -4650,7 +7763,31 @@
       "binding": {
         "type": "native",
         "name": "account.queryPositions"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "account_login",
+          "reason": "使用已绑定的券商账户身份。"
+        },
+        {
+          "field": "account_server",
+          "reason": "使用已绑定的券商服务器身份。"
+        },
+        {
+          "field": "terminal_token",
+          "reason": "通过已配置的 Terminal MCP 读取当前券商数据。"
+        },
+        {
+          "field": "terminal_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true
+        },
+        {
+          "field": "terminal_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "account.queryOrders",
@@ -4734,7 +7871,31 @@
       "binding": {
         "type": "native",
         "name": "account.queryOrders"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "account_login",
+          "reason": "使用已绑定的券商账户身份。"
+        },
+        {
+          "field": "account_server",
+          "reason": "使用已绑定的券商服务器身份。"
+        },
+        {
+          "field": "terminal_token",
+          "reason": "通过已配置的 Terminal MCP 读取当前券商数据。"
+        },
+        {
+          "field": "terminal_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true
+        },
+        {
+          "field": "terminal_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "account.queryFills",
@@ -4818,7 +7979,31 @@
       "binding": {
         "type": "native",
         "name": "account.queryFills"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "account_login",
+          "reason": "使用已绑定的券商账户身份。"
+        },
+        {
+          "field": "account_server",
+          "reason": "使用已绑定的券商服务器身份。"
+        },
+        {
+          "field": "terminal_token",
+          "reason": "通过已配置的 Terminal MCP 读取当前券商数据。"
+        },
+        {
+          "field": "terminal_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true
+        },
+        {
+          "field": "terminal_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "account.queryHistory",
@@ -4902,7 +8087,31 @@
       "binding": {
         "type": "native",
         "name": "account.queryHistory"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "account_login",
+          "reason": "使用已绑定的券商账户身份。"
+        },
+        {
+          "field": "account_server",
+          "reason": "使用已绑定的券商服务器身份。"
+        },
+        {
+          "field": "terminal_token",
+          "reason": "通过已配置的 Terminal MCP 读取当前券商数据。"
+        },
+        {
+          "field": "terminal_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true
+        },
+        {
+          "field": "terminal_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "account.subscribeAccount",
@@ -4981,7 +8190,31 @@
       "binding": {
         "type": "native",
         "name": "account.subscribeAccount"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "account_login",
+          "reason": "使用已绑定的券商账户身份。"
+        },
+        {
+          "field": "account_server",
+          "reason": "使用已绑定的券商服务器身份。"
+        },
+        {
+          "field": "terminal_token",
+          "reason": "通过已配置的 Terminal MCP 读取当前券商数据。"
+        },
+        {
+          "field": "terminal_url",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true
+        },
+        {
+          "field": "terminal_enabled",
+          "reason": "所选 MCP 服务使用此连接设置；启用状态和实际连接由原服务检查。",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "datasets.query",
@@ -5619,7 +8852,49 @@
       "binding": {
         "type": "native",
         "name": "positions_close"
-      }
+      },
+      "configurationRequirements": [
+        {
+          "field": "terminal_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "data_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "python",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "wine",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "wine_prefix",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "allow_trading",
+          "reason": "提交原生交易前由已有交易权限策略检查。",
+          "optional": true
+        },
+        {
+          "field": "account_login",
+          "reason": "保留原操作的账户身份及历史回执边界，执行时核验当前账户。",
+          "optional": true
+        },
+        {
+          "field": "account_server",
+          "reason": "保留原操作的账户身份及历史回执边界，执行时核验当前账户。",
+          "optional": true
+        }
+      ]
     },
     {
       "id": "positions_read_receipt",
@@ -5838,6 +9113,1898 @@
       "binding": {
         "type": "native",
         "name": "positions_read_receipt"
+      },
+      "configurationRequirements": [
+        {
+          "field": "terminal_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "data_directory",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "python",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "wine",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "wine_prefix",
+          "reason": "本机原生操作使用该路径覆盖；未填写时保留自动发现，实际可用性由原操作检查。",
+          "optional": true
+        },
+        {
+          "field": "account_login",
+          "reason": "保留原操作的账户身份及历史回执边界，执行时核验当前账户。",
+          "optional": true
+        },
+        {
+          "field": "account_server",
+          "reason": "保留原操作的账户身份及历史回执边界，执行时核验当前账户。",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "execution": "immediate",
+      "id": "dependencies.read",
+      "description": "Read the persisted optional MT5 native path overrides and their original dependency version without discovery, process probes or credential access.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "settings": {
+            "type": "object",
+            "properties": {
+              "terminal_directory": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096,
+                    "pattern": "^[^\\r\\n\\u0000]*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "data_directory": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096,
+                    "pattern": "^[^\\r\\n\\u0000]*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "python": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096,
+                    "pattern": "^[^\\r\\n\\u0000]*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "wine": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096,
+                    "pattern": "^[^\\r\\n\\u0000]*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "wine_prefix": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096,
+                    "pattern": "^[^\\r\\n\\u0000]*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "terminal_directory",
+              "data_directory",
+              "python",
+              "wine",
+              "wine_prefix"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "version",
+          "settings"
+        ],
+        "additionalProperties": false
+      },
+      "effects": [
+        "read-only"
+      ],
+      "usage": {
+        "purpose": "Expose the original dependency configuration authority to the shared settings catalog.",
+        "inputs": "Empty object {}.",
+        "outputs": "{version,settings:{terminal_directory,data_directory,python,wine,wine_prefix}}; null retains automatic discovery.",
+        "prerequisites": [],
+        "limitations": [
+          "Path presence does not verify native readiness. This read does not probe, download or start a native process."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "dependencies.read"
+      }
+    },
+    {
+      "kind": "function",
+      "consumers": [
+        "host"
+      ],
+      "execution": "immediate",
+      "id": "dependencies.configure",
+      "description": "Update optional MT5 native paths through the existing dependency command, concurrency and validation path; main conversation only.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "changes": {
+            "type": "object",
+            "properties": {
+              "terminal_directory": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096,
+                    "pattern": "^[^\\r\\n\\u0000]*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "data_directory": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096,
+                    "pattern": "^[^\\r\\n\\u0000]*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "python": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096,
+                    "pattern": "^[^\\r\\n\\u0000]*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "wine": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096,
+                    "pattern": "^[^\\r\\n\\u0000]*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "wine_prefix": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096,
+                    "pattern": "^[^\\r\\n\\u0000]*$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false,
+            "minProperties": 1
+          }
+        },
+        "required": [
+          "command_id",
+          "expected_version",
+          "changes"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "description": "Saved public native-dependency paths and the resulting version. This receipt contains no connection credentials.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "terminal_directory": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "pattern": "^[^\\r\\n\\u0000]*$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "data_directory": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "pattern": "^[^\\r\\n\\u0000]*$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "python": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "pattern": "^[^\\r\\n\\u0000]*$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "wine": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "pattern": "^[^\\r\\n\\u0000]*$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "wine_prefix": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "pattern": "^[^\\r\\n\\u0000]*$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "version",
+          "terminal_directory",
+          "data_directory",
+          "python",
+          "wine",
+          "wine_prefix"
+        ],
+        "additionalProperties": false
+      },
+      "effects": [
+        "plugin.state.write",
+        "application-configuration"
+      ],
+      "usage": {
+        "purpose": "Forward shared configuration edits to the existing MT5 dependency authority.",
+        "inputs": "{command_id,expected_version,changes:{terminal_directory?,data_directory?,python?,wine?,wine_prefix?}}; null clears an override.",
+        "outputs": "The original dependency settings and version, with the existing command receipt preserved.",
+        "prerequisites": [
+          "Main conversation; the expected_version comes from dependencies.read or mt5_dependencies inspect."
+        ],
+        "limitations": [
+          "Reuses the existing idempotency receipts and busy/path validation. Saving does not download dependencies or launch a terminal."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "dependencies.configure"
+      }
+    },
+    {
+      "id": "mt5_execution_identity",
+      "kind": "function",
+      "description": "Guarded native execution adapter identity. Retains raw audit receipts; unknown outcomes never authorize resend.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "sesame.execution-adapter/1",
+            "type": "string"
+          },
+          "backend": {
+            "const": "mt5",
+            "type": "string"
+          },
+          "account": {
+            "type": "object",
+            "properties": {
+              "accountId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "server": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "accountId",
+              "server",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "contract",
+          "backend",
+          "account"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "state.read"
+      ],
+      "usage": {
+        "purpose": "sesame.execution-adapter/1 identity; native SDK mechanics stay in this adapter.",
+        "inputs": "Use the declared normalized operation input, exact account/revision and retained operation IDs.",
+        "outputs": "Versioned adapter projection plus unchanged raw native evidence. Snapshot/identity do not establish permission or broker readiness.",
+        "prerequisites": [
+          "Delegated access requires a matching frozen execution task; writes additionally require a live workflow-to-portfolio apply invocation chain."
+        ],
+        "limitations": [
+          "No broker acceptance is inferred from a declaration. Missing history never proves no submission."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_execution_identity"
+      }
+    },
+    {
+      "id": "mt5_execution_snapshot",
+      "kind": "function",
+      "description": "Guarded native execution adapter snapshot. Retains raw audit receipts; unknown outcomes never authorize resend.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "history_days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 90
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "sesame.execution-adapter/1",
+            "type": "string"
+          },
+          "backend": {
+            "const": "mt5",
+            "type": "string"
+          },
+          "account": {
+            "type": "object",
+            "properties": {
+              "accountId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "server": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "accountId",
+              "server",
+              "revision"
+            ],
+            "additionalProperties": false
+          },
+          "symbol": {
+            "type": "string",
+            "minLength": 1
+          },
+          "projection": {
+            "type": "object",
+            "properties": {
+              "positions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "symbol": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "side": {
+                      "enum": [
+                        "buy",
+                        "sell"
+                      ]
+                    },
+                    "quantity": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$"
+                    },
+                    "availableQuantity": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "symbol",
+                    "side",
+                    "quantity",
+                    "availableQuantity"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "orders": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "symbol": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "working": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "symbol",
+                    "working"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "priceStep": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$"
+              }
+            },
+            "required": [
+              "positions",
+              "orders"
+            ],
+            "additionalProperties": false
+          },
+          "capturedAt": {
+            "type": "integer"
+          },
+          "readStartedAt": {
+            "type": "integer"
+          },
+          "captureMs": {
+            "type": "integer"
+          },
+          "quote": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "spec": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "positions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "orders": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "fills": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "historicalOrders": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "deployments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "historyCoverage": {
+            "type": "object",
+            "properties": {
+              "requestedFrom": {
+                "type": "integer"
+              },
+              "requestedTo": {
+                "type": "integer"
+              },
+              "scope": {
+                "const": "native_requested_range"
+              },
+              "complete": {
+                "const": false
+              },
+              "limitations": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [
+              "requestedFrom",
+              "requestedTo",
+              "scope",
+              "complete",
+              "limitations"
+            ],
+            "additionalProperties": false
+          },
+          "accountSummary": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "permissions": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "raw": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "preparation": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "backendCapturedAt": {
+            "type": "integer"
+          },
+          "summary": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "contract",
+          "backend",
+          "account",
+          "projection",
+          "capturedAt"
+        ],
+        "additionalProperties": true,
+        "oneOf": [
+          {
+            "required": [
+              "symbol",
+              "spec",
+              "quote",
+              "positions",
+              "orders",
+              "readStartedAt",
+              "captureMs",
+              "accountSummary",
+              "permissions"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "symbol"
+              ]
+            },
+            "required": [
+              "summary",
+              "positions",
+              "orders",
+              "fills",
+              "historicalOrders",
+              "deployments",
+              "historyCoverage"
+            ]
+          }
+        ]
+      },
+      "execution": "immediate",
+      "effects": [
+        "backend.read",
+        "network",
+        "process",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "sesame.execution-adapter/1 snapshot; native SDK mechanics stay in this adapter.",
+        "inputs": "Use the declared normalized operation input, exact account/revision and retained operation IDs.",
+        "outputs": "Versioned adapter projection plus unchanged raw native evidence. Snapshot/identity do not establish permission or broker readiness.",
+        "prerequisites": [
+          "Delegated access requires a matching frozen execution task; writes additionally require a live workflow-to-portfolio apply invocation chain."
+        ],
+        "limitations": [
+          "No broker acceptance is inferred from a declaration. Missing history never proves no submission."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_execution_snapshot"
+      }
+    },
+    {
+      "id": "mt5_execution_prepare",
+      "kind": "function",
+      "description": "Guarded native execution adapter prepare. Retains raw audit receipts; unknown outcomes never authorize resend.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "account": {
+            "type": "object",
+            "properties": {
+              "accountId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "server": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "accountId",
+              "server",
+              "revision"
+            ],
+            "additionalProperties": false
+          },
+          "commandId": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_-]{16,128}$"
+          },
+          "userAuthorized": {
+            "type": "boolean",
+            "const": true
+          }
+        },
+        "required": [
+          "symbol",
+          "account",
+          "commandId",
+          "userAuthorized"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "sesame.execution-adapter/1",
+            "type": "string"
+          },
+          "backend": {
+            "const": "mt5",
+            "type": "string"
+          },
+          "account": {
+            "type": "object",
+            "properties": {
+              "accountId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "server": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "accountId",
+              "server",
+              "revision"
+            ],
+            "additionalProperties": false
+          },
+          "symbol": {
+            "type": "string",
+            "minLength": 1
+          },
+          "projection": {
+            "type": "object",
+            "properties": {
+              "positions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "symbol": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "side": {
+                      "enum": [
+                        "buy",
+                        "sell"
+                      ]
+                    },
+                    "quantity": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$"
+                    },
+                    "availableQuantity": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "symbol",
+                    "side",
+                    "quantity",
+                    "availableQuantity"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "orders": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "symbol": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "working": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "symbol",
+                    "working"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "priceStep": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d+)?$"
+              }
+            },
+            "required": [
+              "positions",
+              "orders"
+            ],
+            "additionalProperties": false
+          },
+          "capturedAt": {
+            "type": "integer"
+          },
+          "readStartedAt": {
+            "type": "integer"
+          },
+          "captureMs": {
+            "type": "integer"
+          },
+          "quote": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "spec": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "positions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "orders": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "fills": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "historicalOrders": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "deployments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "historyCoverage": {
+            "type": "object",
+            "properties": {
+              "requestedFrom": {
+                "type": "integer"
+              },
+              "requestedTo": {
+                "type": "integer"
+              },
+              "scope": {
+                "const": "native_requested_range"
+              },
+              "complete": {
+                "const": false
+              },
+              "limitations": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [
+              "requestedFrom",
+              "requestedTo",
+              "scope",
+              "complete",
+              "limitations"
+            ],
+            "additionalProperties": false
+          },
+          "accountSummary": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "permissions": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "raw": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "preparation": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "backendCapturedAt": {
+            "type": "integer"
+          },
+          "summary": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "contract",
+          "backend",
+          "account",
+          "projection",
+          "capturedAt",
+          "symbol",
+          "preparation"
+        ],
+        "additionalProperties": true,
+        "oneOf": [
+          {
+            "required": [
+              "symbol",
+              "spec",
+              "quote",
+              "positions",
+              "orders",
+              "readStartedAt",
+              "captureMs",
+              "accountSummary",
+              "permissions"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "symbol"
+              ]
+            },
+            "required": [
+              "summary",
+              "positions",
+              "orders",
+              "fills",
+              "historicalOrders",
+              "deployments",
+              "historyCoverage"
+            ]
+          }
+        ]
+      },
+      "execution": "immediate",
+      "effects": [
+        "network",
+        "process",
+        "application-configuration",
+        "may-restart-terminal",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "sesame.execution-adapter/1 prepare; native SDK mechanics stay in this adapter.",
+        "inputs": "Use the declared normalized operation input, exact account/revision and retained operation IDs.",
+        "outputs": "Versioned adapter projection plus unchanged raw native evidence. Snapshot/identity do not establish permission or broker readiness.",
+        "prerequisites": [
+          "Main conversation and existing explicit user instruction only."
+        ],
+        "limitations": [
+          "No broker acceptance is inferred from a declaration. Missing history never proves no submission."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_execution_prepare"
+      }
+    },
+    {
+      "id": "mt5_execution_submit",
+      "kind": "function",
+      "description": "Guarded native execution adapter submit. Retains raw audit receipts; unknown outcomes never authorize resend.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "observation": {
+            "type": "object",
+            "properties": {
+              "backend": {
+                "const": "mt5"
+              },
+              "account": {
+                "type": "object",
+                "properties": {
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "server": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "accountId",
+                  "server",
+                  "revision"
+                ],
+                "additionalProperties": false
+              },
+              "symbol": {
+                "type": "string",
+                "minLength": 1
+              },
+              "spec": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "positions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "quote": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "expiresAt": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "backend",
+              "account",
+              "symbol",
+              "spec",
+              "positions",
+              "quote",
+              "expiresAt"
+            ],
+            "additionalProperties": true
+          },
+          "intent": {
+            "type": "object",
+            "properties": {
+              "operation_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "user_authorized": {
+                "const": true,
+                "type": "boolean"
+              },
+              "backendCommandId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "remark": {
+                "type": "string",
+                "minLength": 1
+              },
+              "quantity": {
+                "type": "string",
+                "minLength": 1
+              },
+              "price_limit": {
+                "type": "string",
+                "minLength": 1
+              },
+              "side": {
+                "enum": [
+                  "buy",
+                  "sell"
+                ]
+              },
+              "action": {
+                "enum": [
+                  "market",
+                  "limit",
+                  "close"
+                ]
+              },
+              "limit_price": {
+                "type": "string",
+                "minLength": 1
+              },
+              "position_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "stop_loss": {
+                "type": "string",
+                "minLength": 1
+              },
+              "take_profit": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "operation_id",
+              "user_authorized",
+              "backendCommandId",
+              "remark",
+              "quantity",
+              "price_limit",
+              "side",
+              "action"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "observation",
+          "intent"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "sesame.execution-adapter/1",
+            "type": "string"
+          },
+          "backend": {
+            "const": "mt5",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "submitted",
+              "cancel_requested",
+              "rejected",
+              "partially_filled",
+              "execution_reported",
+              "outcome_unknown"
+            ]
+          },
+          "submissionAttempted": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "raw": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "timing": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "contract",
+          "backend",
+          "status",
+          "submissionAttempted",
+          "raw"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "external-trading",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "sesame.execution-adapter/1 submit; native SDK mechanics stay in this adapter.",
+        "inputs": "Use the declared normalized operation input, exact account/revision and retained operation IDs.",
+        "outputs": "Versioned adapter projection plus unchanged raw native evidence. Snapshot/identity do not establish permission or broker readiness.",
+        "prerequisites": [
+          "Delegated access requires a matching frozen execution task; writes additionally require a live workflow-to-portfolio apply invocation chain."
+        ],
+        "limitations": [
+          "No broker acceptance is inferred from a declaration. Missing history never proves no submission."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_execution_submit"
+      }
+    },
+    {
+      "id": "mt5_execution_recover",
+      "kind": "function",
+      "description": "Guarded native execution adapter recover. Retains raw audit receipts; unknown outcomes never authorize resend.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "record": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "backend": {
+                "const": "mt5"
+              },
+              "account": {
+                "type": "object",
+                "properties": {
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "server": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "accountId",
+                  "server",
+                  "revision"
+                ],
+                "additionalProperties": false
+              },
+              "backendCommandId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "symbol": {
+                "type": "string",
+                "minLength": 1
+              },
+              "action": {
+                "enum": [
+                  "market",
+                  "limit",
+                  "close"
+                ]
+              },
+              "side": {
+                "enum": [
+                  "buy",
+                  "sell"
+                ]
+              },
+              "createdAt": {
+                "type": "integer"
+              },
+              "remark": {
+                "type": "string",
+                "minLength": 1
+              },
+              "quantity": {
+                "type": "string",
+                "minLength": 1
+              },
+              "planExecution": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "backend",
+              "account"
+            ],
+            "additionalProperties": true
+          },
+          "expectedCurrent": {
+            "type": "object",
+            "properties": {
+              "accountId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "server": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "accountId",
+              "server",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "record"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "sesame.execution-adapter/1",
+            "type": "string"
+          },
+          "backend": {
+            "const": "mt5",
+            "type": "string"
+          },
+          "command": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "receipt": {
+            "type": "object",
+            "properties": {
+              "contract": {
+                "const": "sesame.execution-adapter/1",
+                "type": "string"
+              },
+              "backend": {
+                "const": "mt5",
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "submitted",
+                  "cancel_requested",
+                  "rejected",
+                  "partially_filled",
+                  "execution_reported",
+                  "outcome_unknown"
+                ]
+              },
+              "submissionAttempted": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "raw": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "timing": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "required": [
+              "contract",
+              "backend",
+              "status",
+              "submissionAttempted",
+              "raw"
+            ],
+            "additionalProperties": false
+          },
+          "orders": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "historicalOrders": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "deals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "positions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "coverage": {
+            "type": "string",
+            "minLength": 1
+          },
+          "complete": {
+            "type": "boolean",
+            "const": false
+          },
+          "historyCoverage": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "contract",
+          "backend",
+          "command",
+          "receipt",
+          "orders",
+          "historicalOrders",
+          "deals",
+          "positions",
+          "coverage",
+          "complete"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "backend.read",
+        "network",
+        "process",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "sesame.execution-adapter/1 recover; native SDK mechanics stay in this adapter.",
+        "inputs": "Use the declared normalized operation input, exact account/revision and retained operation IDs.",
+        "outputs": "Versioned adapter projection plus unchanged raw native evidence. Snapshot/identity do not establish permission or broker readiness.",
+        "prerequisites": [
+          "Delegated access requires a matching frozen execution task; writes additionally require a live workflow-to-portfolio apply invocation chain."
+        ],
+        "limitations": [
+          "No broker acceptance is inferred from a declaration. Missing history never proves no submission."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_execution_recover"
+      }
+    },
+    {
+      "id": "mt5_execution_command",
+      "kind": "function",
+      "description": "Guarded native execution adapter command. Retains raw audit receipts; unknown outcomes never authorize resend.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "record": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "backend": {
+                "const": "mt5"
+              },
+              "account": {
+                "type": "object",
+                "properties": {
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "server": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "accountId",
+                  "server",
+                  "revision"
+                ],
+                "additionalProperties": false
+              },
+              "backendCommandId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "symbol": {
+                "type": "string",
+                "minLength": 1
+              },
+              "action": {
+                "enum": [
+                  "market",
+                  "limit",
+                  "close"
+                ]
+              },
+              "side": {
+                "enum": [
+                  "buy",
+                  "sell"
+                ]
+              },
+              "createdAt": {
+                "type": "integer"
+              },
+              "remark": {
+                "type": "string",
+                "minLength": 1
+              },
+              "quantity": {
+                "type": "string",
+                "minLength": 1
+              },
+              "planExecution": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "backend",
+              "account"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "record"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "sesame.execution-adapter/1",
+            "type": "string"
+          },
+          "backend": {
+            "const": "mt5",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "submitted",
+              "cancel_requested",
+              "rejected",
+              "partially_filled",
+              "execution_reported",
+              "outcome_unknown"
+            ]
+          },
+          "submissionAttempted": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "raw": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "timing": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "contract",
+          "backend",
+          "status",
+          "submissionAttempted",
+          "raw"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "state.read"
+      ],
+      "usage": {
+        "purpose": "sesame.execution-adapter/1 command; native SDK mechanics stay in this adapter.",
+        "inputs": "Use the declared normalized operation input, exact account/revision and retained operation IDs.",
+        "outputs": "Versioned adapter projection plus unchanged raw native evidence. Snapshot/identity do not establish permission or broker readiness.",
+        "prerequisites": [
+          "Delegated access requires a matching frozen execution task; writes additionally require a live workflow-to-portfolio apply invocation chain."
+        ],
+        "limitations": [
+          "No broker acceptance is inferred from a declaration. Missing history never proves no submission."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_execution_command"
+      }
+    },
+    {
+      "id": "mt5_execution_cancel",
+      "kind": "function",
+      "description": "Guarded native execution adapter cancel. Retains raw audit receipts; unknown outcomes never authorize resend.",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "record": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "backend": {
+                "const": "mt5"
+              },
+              "account": {
+                "type": "object",
+                "properties": {
+                  "accountId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "server": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "accountId",
+                  "server",
+                  "revision"
+                ],
+                "additionalProperties": false
+              },
+              "backendCommandId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "symbol": {
+                "type": "string",
+                "minLength": 1
+              },
+              "action": {
+                "enum": [
+                  "market",
+                  "limit",
+                  "close"
+                ]
+              },
+              "side": {
+                "enum": [
+                  "buy",
+                  "sell"
+                ]
+              },
+              "createdAt": {
+                "type": "integer"
+              },
+              "remark": {
+                "type": "string",
+                "minLength": 1
+              },
+              "quantity": {
+                "type": "string",
+                "minLength": 1
+              },
+              "planExecution": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "backend",
+              "account"
+            ],
+            "additionalProperties": true
+          },
+          "operationId": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "record",
+          "operationId"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "const": "sesame.execution-adapter/1",
+            "type": "string"
+          },
+          "backend": {
+            "const": "mt5",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "submitted",
+              "cancel_requested",
+              "rejected",
+              "partially_filled",
+              "execution_reported",
+              "outcome_unknown"
+            ]
+          },
+          "submissionAttempted": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "raw": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "timing": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "contract",
+          "backend",
+          "status",
+          "submissionAttempted",
+          "raw"
+        ],
+        "additionalProperties": false
+      },
+      "execution": "immediate",
+      "effects": [
+        "external-trading",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "sesame.execution-adapter/1 cancel; native SDK mechanics stay in this adapter.",
+        "inputs": "Use the declared normalized operation input, exact account/revision and retained operation IDs.",
+        "outputs": "Versioned adapter projection plus unchanged raw native evidence. Snapshot/identity do not establish permission or broker readiness.",
+        "prerequisites": [
+          "Delegated access requires a matching frozen execution task; writes additionally require a live workflow-to-portfolio apply invocation chain."
+        ],
+        "limitations": [
+          "No broker acceptance is inferred from a declaration. Missing history never proves no submission."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_execution_cancel"
       }
     }
   ],
@@ -6009,6 +11176,26 @@
       "operations": {
         "close": "positions_close",
         "readReceipt": "positions_read_receipt"
+      }
+    },
+    {
+      "id": "execution",
+      "contract": "sesame.execution-adapter/1",
+      "consumer": "host",
+      "configSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "operations": {
+        "identity": "mt5_execution_identity",
+        "snapshot": "mt5_execution_snapshot",
+        "prepare": "mt5_execution_prepare",
+        "submit": "mt5_execution_submit",
+        "recover": "mt5_execution_recover",
+        "command": "mt5_execution_command",
+        "cancel": "mt5_execution_cancel"
       }
     }
   ],
@@ -6517,5 +11704,402 @@
         "additionalProperties": true
       }
     }
-  ]
+  ],
+  "configuration": {
+    "title": "MetaTrader 5 连接与凭据",
+    "fields": [
+      {
+        "id": "terminal_url",
+        "title": "MT5 Terminal MCP 地址",
+        "schema": {
+          "type": "string",
+          "maxLength": 2048,
+          "pattern": "^[^\\r\\n\\u0000]*$"
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "mt5_update_configuration",
+          "valuePath": "/settings/servers/terminal/url",
+          "writePath": "/changes/servers/terminal/url",
+          "versionPath": "/settings/version"
+        }
+      },
+      {
+        "id": "terminal_enabled",
+        "title": "启用 MT5 Terminal",
+        "schema": {
+          "type": "boolean"
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "mt5_update_configuration",
+          "valuePath": "/settings/servers/terminal/enabled",
+          "writePath": "/changes/servers/terminal/enabled",
+          "versionPath": "/settings/version"
+        }
+      },
+      {
+        "id": "terminal_token",
+        "title": "MT5 Terminal MCP 密钥",
+        "description": "仅显示是否已保存；实际认证以对应能力的连接结果为准。",
+        "schema": {
+          "type": "string",
+          "maxLength": 8192,
+          "pattern": "^[^\\r\\n\\u0000]*$",
+          "writeOnly": true,
+          "description": "用户提供的 MCP API Key 原文；省略保留现有值，空字符串清除。保存后立即生效，回执不返回密钥。"
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "mt5_update_configuration",
+          "configuredPath": "/settings/servers/terminal/authenticated",
+          "writePath": "/changes/servers/terminal/token",
+          "versionPath": "/settings/version"
+        }
+      },
+      {
+        "id": "metaeditor_url",
+        "title": "MetaEditor MCP 地址",
+        "schema": {
+          "type": "string",
+          "maxLength": 2048,
+          "pattern": "^[^\\r\\n\\u0000]*$"
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "mt5_update_configuration",
+          "valuePath": "/settings/servers/metaeditor/url",
+          "writePath": "/changes/servers/metaeditor/url",
+          "versionPath": "/settings/version"
+        }
+      },
+      {
+        "id": "metaeditor_enabled",
+        "title": "启用 MetaEditor",
+        "schema": {
+          "type": "boolean"
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "mt5_update_configuration",
+          "valuePath": "/settings/servers/metaeditor/enabled",
+          "writePath": "/changes/servers/metaeditor/enabled",
+          "versionPath": "/settings/version"
+        }
+      },
+      {
+        "id": "metaeditor_token",
+        "title": "MetaEditor MCP 密钥",
+        "description": "仅显示是否已保存；实际认证以对应能力的连接结果为准。",
+        "schema": {
+          "type": "string",
+          "maxLength": 8192,
+          "pattern": "^[^\\r\\n\\u0000]*$",
+          "writeOnly": true,
+          "description": "用户提供的 MCP API Key 原文；省略保留现有值，空字符串清除。保存后立即生效，回执不返回密钥。"
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "mt5_update_configuration",
+          "configuredPath": "/settings/servers/metaeditor/authenticated",
+          "writePath": "/changes/servers/metaeditor/token",
+          "versionPath": "/settings/version"
+        }
+      },
+      {
+        "id": "marketdata_url",
+        "title": "MetaTrader.com MCP 地址",
+        "schema": {
+          "type": "string",
+          "maxLength": 2048,
+          "pattern": "^[^\\r\\n\\u0000]*$",
+          "const": "https://www.metatrader.com/mcp"
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "mt5_update_configuration",
+          "valuePath": "/settings/servers/marketdata/url",
+          "writePath": "/changes/servers/marketdata/url",
+          "versionPath": "/settings/version"
+        }
+      },
+      {
+        "id": "marketdata_enabled",
+        "title": "启用 MetaTrader.com",
+        "schema": {
+          "type": "boolean"
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "mt5_update_configuration",
+          "valuePath": "/settings/servers/marketdata/enabled",
+          "writePath": "/changes/servers/marketdata/enabled",
+          "versionPath": "/settings/version"
+        }
+      },
+      {
+        "id": "marketdata_token",
+        "title": "MetaTrader.com MCP 密钥",
+        "description": "仅显示是否已保存；实际认证以对应能力的连接结果为准。",
+        "schema": {
+          "type": "string",
+          "maxLength": 8192,
+          "pattern": "^[^\\r\\n\\u0000]*$",
+          "writeOnly": true,
+          "description": "用户提供的 MCP API Key 原文；省略保留现有值，空字符串清除。保存后立即生效，回执不返回密钥。"
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "mt5_update_configuration",
+          "configuredPath": "/settings/servers/marketdata/authenticated",
+          "writePath": "/changes/servers/marketdata/token",
+          "versionPath": "/settings/version"
+        }
+      },
+      {
+        "id": "account_login",
+        "title": "券商账户登录号",
+        "schema": {
+          "type": "string",
+          "pattern": "^(|[1-9][0-9]{0,19})$"
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "mt5_update_configuration",
+          "valuePath": "/settings/account/login",
+          "writePath": "/changes/account/login",
+          "versionPath": "/settings/version"
+        }
+      },
+      {
+        "id": "account_server",
+        "title": "券商服务器",
+        "schema": {
+          "type": "string",
+          "maxLength": 200,
+          "pattern": "^[^\\r\\n\\u0000]*$"
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "mt5_update_configuration",
+          "valuePath": "/settings/account/server",
+          "writePath": "/changes/account/server",
+          "versionPath": "/settings/version"
+        }
+      },
+      {
+        "id": "account_password",
+        "title": "券商账户密码",
+        "schema": {
+          "type": "string",
+          "maxLength": 1024,
+          "pattern": "^[^\\r\\n\\u0000]*$",
+          "writeOnly": true,
+          "description": "用户提供的券商账户密码；省略保留现有值，空字符串清除。账户改变时需明确提供对应密码。"
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "mt5_update_configuration",
+          "configuredPath": "/settings/account/password_configured",
+          "writePath": "/changes/account/password",
+          "versionPath": "/settings/version"
+        }
+      },
+      {
+        "id": "tester_address",
+        "title": "MetaTester 代理地址",
+        "schema": {
+          "type": "string",
+          "maxLength": 15,
+          "pattern": "^[^\\r\\n\\u0000]*$"
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "mt5_update_configuration",
+          "valuePath": "/settings/tester_agent/address",
+          "writePath": "/changes/tester_agent/address",
+          "versionPath": "/settings/version"
+        }
+      },
+      {
+        "id": "tester_port",
+        "title": "MetaTester 代理端口",
+        "schema": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 65535
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "mt5_update_configuration",
+          "valuePath": "/settings/tester_agent/port",
+          "writePath": "/changes/tester_agent/port",
+          "versionPath": "/settings/version"
+        }
+      },
+      {
+        "id": "tester_password",
+        "title": "MetaTester 代理密码",
+        "schema": {
+          "type": "string",
+          "maxLength": 1024,
+          "pattern": "^[^\\r\\n\\u0000]*$",
+          "writeOnly": true,
+          "description": "用户提供的 MetaTester 代理密码；省略保留现有值，空字符串清除。"
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "mt5_update_configuration",
+          "configuredPath": "/settings/tester_agent/password_configured",
+          "writePath": "/changes/tester_agent/password",
+          "versionPath": "/settings/version"
+        }
+      },
+      {
+        "id": "allow_trading",
+        "title": "允许原生交易操作",
+        "schema": {
+          "type": "boolean"
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "mt5_update_configuration",
+          "valuePath": "/settings/allow_trading",
+          "writePath": "/changes/allow_trading",
+          "versionPath": "/settings/version"
+        }
+      },
+      {
+        "id": "allow_host_operations",
+        "title": "允许原生宿主操作",
+        "schema": {
+          "type": "boolean"
+        },
+        "binding": {
+          "type": "capability",
+          "read": "configuration.read",
+          "update": "mt5_update_configuration",
+          "valuePath": "/settings/allow_host_operations",
+          "writePath": "/changes/allow_host_operations",
+          "versionPath": "/settings/version"
+        }
+      },
+      {
+        "id": "terminal_directory",
+        "title": "MT5 安装目录",
+        "description": "可选本机绝对路径；留空使用已有自动发现，清除恢复自动发现。保存只更新已有路径设置，不安装依赖或启动终端。",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "pattern": "^[^\\r\\n\\u0000]*$"
+        },
+        "binding": {
+          "type": "capability",
+          "read": "dependencies.read",
+          "update": "dependencies.configure",
+          "valuePath": "/settings/terminal_directory",
+          "writePath": "/changes/terminal_directory",
+          "versionPath": "/version",
+          "clearValue": null
+        }
+      },
+      {
+        "id": "data_directory",
+        "title": "MT5 数据目录",
+        "description": "可选本机绝对路径；留空使用已有自动发现，清除恢复自动发现。保存只更新已有路径设置，不安装依赖或启动终端。",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "pattern": "^[^\\r\\n\\u0000]*$"
+        },
+        "binding": {
+          "type": "capability",
+          "read": "dependencies.read",
+          "update": "dependencies.configure",
+          "valuePath": "/settings/data_directory",
+          "writePath": "/changes/data_directory",
+          "versionPath": "/version",
+          "clearValue": null
+        }
+      },
+      {
+        "id": "python",
+        "title": "Windows Python 程序",
+        "description": "可选本机绝对路径；留空使用已有自动发现，清除恢复自动发现。保存只更新已有路径设置，不安装依赖或启动终端。",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "pattern": "^[^\\r\\n\\u0000]*$"
+        },
+        "binding": {
+          "type": "capability",
+          "read": "dependencies.read",
+          "update": "dependencies.configure",
+          "valuePath": "/settings/python",
+          "writePath": "/changes/python",
+          "versionPath": "/version",
+          "clearValue": null
+        }
+      },
+      {
+        "id": "wine",
+        "title": "Wine 程序",
+        "description": "可选本机绝对路径；留空使用已有自动发现，清除恢复自动发现。保存只更新已有路径设置，不安装依赖或启动终端。",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "pattern": "^[^\\r\\n\\u0000]*$"
+        },
+        "binding": {
+          "type": "capability",
+          "read": "dependencies.read",
+          "update": "dependencies.configure",
+          "valuePath": "/settings/wine",
+          "writePath": "/changes/wine",
+          "versionPath": "/version",
+          "clearValue": null
+        }
+      },
+      {
+        "id": "wine_prefix",
+        "title": "Wine 前缀目录",
+        "description": "可选本机绝对路径；留空使用已有自动发现，清除恢复自动发现。保存只更新已有路径设置，不安装依赖或启动终端。",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "pattern": "^[^\\r\\n\\u0000]*$"
+        },
+        "binding": {
+          "type": "capability",
+          "read": "dependencies.read",
+          "update": "dependencies.configure",
+          "valuePath": "/settings/wine_prefix",
+          "writePath": "/changes/wine_prefix",
+          "versionPath": "/version",
+          "clearValue": null
+        }
+      }
+    ]
+  }
 }

@@ -2,7 +2,7 @@
   "id": "sesame/configuration",
   "title": "配置助手",
   "description": "主 Agent 直接保存模型认证、兼容接口、插件环境凭据和应用偏好；私有持久保存并返回脱敏状态，无需手工导入。",
-  "version": "3.1.0",
+  "version": "3.1.3",
   "default_state": "discoverable",
   "agent_scope": "main",
   "entry": "index.js",
@@ -15,10 +15,22 @@
   "apiVersion": "2",
   "license": "MIT",
   "engines": {
-    "sesame": ">=0.2.4"
+    "sesame": ">=0.3.0-dev.1 <0.4.0"
   },
   "capability_manifest": "capabilities.json",
   "resources": [
     "README.md"
-  ]
+  ],
+  "permissions": {
+    "scopes": [
+      "application.configure"
+    ],
+    "calls": [
+      "host.configuration.read",
+      "host.configuration.update",
+      "host.configuration.catalog",
+      "host.configuration.check",
+      "host.configuration.apply"
+    ]
+  }
 }

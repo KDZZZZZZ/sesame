@@ -238,10 +238,13 @@ test('aborted reads cannot produce a prepared session', async () => {
 });
 
 test('portable archive reproduction includes complete input reference identity', async () => {
-  const f = fixture(), prepared = await f.prepare(), session_id = prepared.sessionId;
+  const f = fixture(), prepared = await f.prepare({ options: { dataset, inputRef: f.inputRef,
+    diagnostics: { placebo: { samples: 20, seed: 7 }, outOfSample: true } } }), session_id = prepared.sessionId;
   const measured = await f.call('candidate', { session_id, trial_id: 'one', candidate, accepted_ids: [] });
   const selection = await f.call('select', { session_id, trial_ids: ['one'] });
   const final = await f.call('finalize', { session_id, selection_digest: selection.selectionDigest });
+  assert.equal(measured.metrics.diagnostics.placebo.status, 'completed');
+  assert.equal(final.holdout.one.diagnostics.outOfSample.holdout.status, 'evaluated');
   const run = { id: 'fixed-panel', data: prepared.data, trials: [{ id: 'one', candidate, metrics: measured.metrics }], selection: { trialIds: ['one'] }, holdout: final.holdout };
   const frozen = { dataDigest: prepared.data.digest, holdoutSealed: false, dataset: final.archive };
   const prefix = join(resolve(tmpdir()), 'sesame-factor-input-'), directory = await mkdtemp(prefix);

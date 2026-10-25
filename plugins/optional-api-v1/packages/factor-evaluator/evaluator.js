@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { prepareDataset, evaluateFactor, compareFactors, validateExpression, EVALUATOR_VERSION } from './engine.js';
+import { DIAGNOSTICS, evaluateCandidate, evaluateDiagnostics } from './diagnostics.js';
 export const PROTOCOL = 'sesame.factor-evaluator/v1';
 export const canonical = value => JSON.stringify(normalize(value));
 function normalize(value) { return Array.isArray(value) ? value.map(normalize) : value && typeof value === 'object' ? Object.fromEntries(Object.keys(value).sort().map(key => [key, normalize(value[key])])) : value; }
@@ -8,7 +9,7 @@ export function check(ok, message, code = 'EVALUATION_REJECTED') { if (!ok) thro
 const receipt = value => ({ ...value, receiptDigest: digest(value) });
 const bounded = (value, label) => { check(typeof value === 'string' && value.length > 0 && value.length <= 200, `${label} is required`); return value; };
 const candidateExample = { op: 'delta', args: [{ op: 'field', name: 'close' }], window: 5 };
-const instructions = 'This explicitly selected evaluator accepts a factor AST. Operators: field(name), constant(value), add/sub/mul/div(2 args), neg/abs/log/rank/zscore(1 arg), lag/delta/mean/std/sum(1 arg, window 1..252). It computes train/validation Rank IC, coverage, non-overlapping long-short return after costs and train-only redundancy. Submit the AST as candidate; never supply measured metrics.';
+const instructions = 'This evaluator accepts a factor AST: field(name), constant(value), add/sub/mul/div(2 args), neg/abs/log/rank/zscore(1 arg), lag/delta/mean/std/sum(1 arg, window 1..252). Read contract.dataset.mode: cross-sectional means per-date Spearman (4+ assets); time-series means per-symbol temporal Spearman (single assets supported), then equal-weight symbol aggregation. rank/zscore remain cross-sectional AST operators, so use rolling operators or arithmetic for a single symbol. Direction-return diagnostics are idealized nonoverlapping close returns after costs, not actual trade win rates or per-trade R. Optional diagnostics are chosen by the task in options.diagnostics; unrequested, inapplicable or unavailable checks do not block the others. Only explicitly supplied minRankIC/minCoverage/maxCorrelation are selection thresholds; otherwise an actual finite validation association is sufficient for eligibility, including a negative relationship worth further research. A status of completed means computation ran, not scientific success. Submit the AST itself; never supply measured metrics.';
 const MAX_INPUT_BYTES = 4 * 1024 * 1024;
 const hashBytes = bytes => `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
 export const inputDigest = (dataset, data) => digest({ dataset, sourceId: data.sourceId, ...(data.inputRefs ? { inputRefs: data.inputRefs } : {}) });
@@ -108,9 +109,19 @@ async function saveSession(host, session, signal) {
   await host.state.commit([{ op: 'put', key: { collection: 'sessions', key: session.id }, expectedVersion: _stateVersion ?? 0, value: { ...metadata, refs } }], { signal });
 }
 function options(value = {}) {
-  check(value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).every(key => ['dataset', 'inputRef', 'minRankIC', 'minCoverage', 'maxCorrelation'].includes(key)), 'Unknown evaluator option');
-  const number = (value, fallback, min, max) => { const n = value ?? fallback; check(Number.isFinite(n) && n >= min && n <= max, 'Invalid evaluator threshold'); return n; };
-  return { dataset: value.dataset, ...(value.inputRef === undefined ? {} : { inputRef: structuredClone(value.inputRef) }), minRankIC: number(value.minRankIC, 0, -1, 1), minCoverage: number(value.minCoverage, .6, 0, 1), maxCorrelation: number(value.maxCorrelation, .95, 0, 1) };
+  check(value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).every(key => ['dataset', 'inputRef', 'minRankIC', 'minCoverage', 'maxCorrelation', 'diagnostics'].includes(key)), 'Unknown evaluator option');
+  const result = { dataset: value.dataset, ...(value.inputRef === undefined ? {} : { inputRef: structuredClone(value.inputRef) }) };
+  for (const [key, min] of [['minRankIC', -1], ['minCoverage', 0], ['maxCorrelation', 0]]) if (value[key] !== undefined) {
+    check(Number.isFinite(value[key]) && value[key] >= min && value[key] <= 1, `Invalid evaluator threshold ${key}`);
+    result[key] = value[key];
+  }
+  if (value.diagnostics !== undefined) {
+    check(value.diagnostics && typeof value.diagnostics === 'object' && !Array.isArray(value.diagnostics)
+      && Object.keys(value.diagnostics).every(key => Object.hasOwn(DIAGNOSTICS, key))
+      && Buffer.byteLength(JSON.stringify(value.diagnostics)) <= 12000, 'Use known diagnostic names and a plan within 12KB');
+    result.diagnostics = structuredClone(value.diagnostics);
+  }
+  return result;
 }
 const sessions = new Map();
 export async function evaluate(host, args, signal, execution) {
@@ -150,7 +161,9 @@ async function evaluateSession(host, args, signal, execution) {
         fields: dataset.summary.fields, range: { start: dataset.summary.start, end: dataset.summary.end }, provenance,
         synthetic: /demo|synthetic|fixture/i.test([source.source_kind, provenance.kind, provenance.source_kind].join(' ')),
         scope: 'development', holdoutMode: args.access === 'restricted' ? 'workflow-isolated' : 'none' },
-      contract: { candidateExample, instructions, dataset: dataset.config, metricColumns: [{ key: 'rankIC', label: 'Rank IC' }, { key: 'coverage', label: '覆盖率' }, { key: 'netReturn', label: '净收益' }] }, development });
+      contract: { candidateExample, instructions, dataset: dataset.config, diagnostics: DIAGNOSTICS,
+        diagnosticPlan: config.diagnostics ?? {}, selectionThresholds: Object.fromEntries(['minRankIC', 'minCoverage', 'maxCorrelation'].filter(key => config[key] !== undefined).map(key => [key, config[key]])),
+        metricColumns: [{ key: 'rankIC', label: dataset.config.mode === 'time-series' ? '时序 Rank IC' : '截面 Rank IC' }, { key: 'coverage', label: '覆盖率' }, { key: 'netReturn', label: '方向诊断收益' }] }, development });
     await saveSession(host, { id, runId, workflowPluginId, ownerConversationId: host.context.sessionId, fingerprint, dataset, config, prepared, candidates: {} }, signal);
     return prepared;
   }
@@ -182,10 +195,14 @@ async function evaluateSession(host, args, signal, execution) {
     check(!Object.values(session.candidates).some(value => value.candidateDigest === candidateDigest), 'Duplicate candidate formula');
     const accepted = args.accepted_ids ?? [];
     check(Array.isArray(accepted) && accepted.length <= 40 && accepted.every(id => Object.hasOwn(session.candidates, id)), 'Unknown comparison candidate');
-    const metrics = evaluateFactor(dataset, candidate), validation = metrics.validation;
-    const eligible = Number.isFinite(validation.rankIC) && validation.rankIC >= session.config.minRankIC && validation.coverage >= session.config.minCoverage;
+    const metrics = await evaluateCandidate(dataset, candidate, session.config, signal), validation = metrics.validation;
+    const measured = Number.isFinite(validation.rankIC);
+    const eligible = measured && (session.config.minRankIC === undefined || validation.rankIC >= session.config.minRankIC)
+      && (session.config.minCoverage === undefined || validation.coverage >= session.config.minCoverage);
     const result = receipt({ ...common, trialId, candidate, candidateDigest, metrics, eligible,
-      gate: eligible ? 'validation threshold passed; not proof of tradability' : 'validation rankIC/coverage threshold not met',
+      gate: !measured ? 'validation association unavailable; retain as unmeasured evidence and continue other candidates'
+        : eligible ? 'measured validation association; explicit selection thresholds satisfied; optional diagnostics do not gate selection'
+          : 'measured validation association does not meet the explicitly requested rankIC/coverage threshold',
       redundancy: accepted.map(id => ({ trialId: id, ...compareFactors(dataset, candidate, session.candidates[id].candidate) })) });
     session.candidates[trialId] = result; await saveSession(host, session, signal); return result;
   }
@@ -193,7 +210,7 @@ async function evaluateSession(host, args, signal, execution) {
     const ids = args.trial_ids;
     check(Array.isArray(ids) && ids.length <= 20 && new Set(ids).size === ids.length && ids.every(id => session.candidates[id]?.eligible), 'Select unique eligible measured candidates');
     if (session.selection) { check(canonical(session.selection.trialIds) === canonical(ids), 'Selection is frozen'); return session.selection; }
-    for (let a = 0; a < ids.length; a++) for (let b = a + 1; b < ids.length; b++) {
+    for (let a = 0; session.config.maxCorrelation !== undefined && a < ids.length; a++) for (let b = a + 1; b < ids.length; b++) {
       const corr = compareFactors(dataset, session.candidates[ids[a]].candidate, session.candidates[ids[b]].candidate);
       check(corr.correlation !== null && Math.abs(corr.correlation) <= session.config.maxCorrelation, 'Selected factors are redundant or have insufficient train overlap');
     }
@@ -204,7 +221,14 @@ async function evaluateSession(host, args, signal, execution) {
   check(session.selection && args.selection_digest === session.selection.selectionDigest, 'Final evaluation requires the exact frozen selection');
   if (session.final) return session.final;
   const holdout = {};
-  if (dataset.access !== 'development-only') for (const id of session.selection.trialIds) holdout[id] = evaluateFactor(dataset, session.candidates[id].candidate, { holdout: true }).holdout;
-  session.final = receipt({ ...common, selectionDigest: session.selection.selectionDigest, holdout, holdoutStatus: dataset.access === 'development-only' ? 'not-requested' : 'evaluated', archive: dataset });
+  if (dataset.access !== 'development-only') for (const id of session.selection.trialIds) {
+    holdout[id] = evaluateFactor(dataset, session.candidates[id].candidate, { holdout: true }).holdout;
+    if (session.config.diagnostics?.outOfSample) {
+      holdout[id].diagnostics = { outOfSample: (await evaluateDiagnostics(dataset, session.candidates[id].candidate,
+        { outOfSample: session.config.diagnostics.outOfSample }, { signal, finalized: true })).outOfSample };
+    }
+  }
+  session.final = receipt({ ...common, selectionDigest: session.selection.selectionDigest, holdout,
+    holdoutStatus: dataset.access === 'development-only' || !session.selection.trialIds.length ? 'not-requested' : 'evaluated', archive: dataset });
   await saveSession(host, session, signal); return session.final;
 }

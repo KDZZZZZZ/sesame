@@ -3,17 +3,12 @@ import { randomUUID } from 'node:crypto';
 import { canonical, digest } from '@sesame/plugin-sdk/protocol';
 import { createAdapters, check, decimal, sameAccount } from './adapters.js';
 import { withAccountLock } from './execution-lock.js';
+import { EXECUTION_CONTRACT, ADAPTER_FLOORS } from './adapter-contract.js';
 
 export const POLICY=Object.freeze({minimumTimeframe:'5m',maxDecisionAgeMs:60000,maxQuoteAgeMs:5000,maxQuoteToSendMs:1000,maxReadMs:10000,maxPreparationMs:180000,maxReceiptWaitMs:10000,m1Verified:false});
-const accepted=new Set([10008,10009,10010]);
-const rejected=new Set([10004,10006,10007,10013,10014,10015,10016,10017,10018,10019,10020,10021,10022,10024,10025,10026,10027,10028,10029,10030,10032,10033,10034,10035,10036,10038,10039,10040,10041,10042,10043,10044,10045,10046]);
-export function outcome(backend,receipt) {
-  if(backend==='qmt') return receipt?.status==='submitted'?'submitted':receipt?.status==='cancel_requested'?'cancel_requested':receipt?.status==='rejected'?'rejected':'outcome_unknown';
-  const native=receipt?.result;
-  if(native?.submission_attempted===false) return 'rejected';
-  if(receipt?.status!=='returned' || !native?.result) return 'outcome_unknown';
-  const retcode=Number(native.result.retcode);
-  return accepted.has(retcode)?(retcode===10010?'partially_filled':retcode===10009?'execution_reported':'submitted'):rejected.has(retcode)?'rejected':'outcome_unknown';
+export function outcome(backend, receipt) {
+  return receipt?.contract === EXECUTION_CONTRACT && receipt.backend === backend && ['submitted', 'cancel_requested', 'rejected', 'partially_filled', 'execution_reported', 'outcome_unknown'].includes(receipt.status)
+    ? receipt.status : 'outcome_unknown';
 }
 export function createService(host,{now=Date.now,authorizeRequest,adapters=createAdapters(host,{now,authorizeRequest}),authorize,ownerConversationId}={}) {
   const stored=(kind,id)=>records(host).get(kind,id,true);
@@ -47,7 +42,7 @@ export function createService(host,{now=Date.now,authorizeRequest,adapters=creat
     for(const prior of records(host).list('observations')) if(!prior.consumedBy && prior.expiresAt<now()-86400000) records(host).delete('observations',prior.id);
     records(host).put('observations',record);return record;
   }
-  const observationResult=record=>({observation_id:record.id,backend:record.backend,symbol:record.symbol,account:record.account,accountSummary:record.accountSummary,quote:record.quote,positions:record.positions,...(record.orders ? {orders:record.orders} : {}),spec:record.spec,capturedAt:record.capturedAt,expiresAt:record.expiresAt,observation_request_ms:record.captureMs,...(record.preparation?{preparation:record.preparation}:{}),...(record.backendCapturedAt===undefined?{}:{backendCapturedAt:record.backendCapturedAt}),policy:POLICY});
+  const observationResult=record=>({observation_id:record.id,backend:record.backend,symbol:record.symbol,account:record.account,accountSummary:record.accountSummary,quote:record.quote,positions:record.positions,projection:record.projection,permissions:record.permissions,...(record.orders ? {orders:record.orders} : {}),spec:record.spec,capturedAt:record.capturedAt,expiresAt:record.expiresAt,observation_request_ms:record.captureMs,...(record.preparation?{preparation:record.preparation}:{}),...(record.backendCapturedAt===undefined?{}:{backendCapturedAt:record.backendCapturedAt}),policy:POLICY});
   async function capturePrepared(args,account,signal,backendCommandId) {
     manual();
     const observation=await adapters.prepare(args.backend,args.symbol,{account,commandId:backendCommandId,userAuthorized:true},preparing(signal));
@@ -75,15 +70,15 @@ export function createService(host,{now=Date.now,authorizeRequest,adapters=creat
       // its native process immediately before the one possible broker send.
       main();record=save({...record,status:'submitting',submission_attempted:null,dispatchAt:now()});
       const receipt=await adapters.submit(observation,request,bounded(signal));
-      const timing=receipt?.result?.execution_timing;
-      return save({...record,status:outcome(record.backend,receipt),submission_attempted:receipt?.result?.submission_attempted===false?false:record.backend==='qmt'?receipt?.status==='submitted'?true:null:receipt?.status==='returned'&&receipt.result?.result?true:null,receipt,completedAt:now(),timing:{...record.timing,wrapper_to_receipt_ms:now()-(initial?.requestStartedAt??began),...timing},recovery:'manual_trade_status; never resubmit an unknown result under a new ID'});
+      const timing=receipt.timing;
+      return save({...record,status:outcome(record.backend,receipt),submission_attempted:receipt.submissionAttempted,receipt:receipt.raw,adapterReceipt:receipt,completedAt:now(),timing:{...record.timing,wrapper_to_receipt_ms:now()-(initial?.requestStartedAt??began),...timing},recovery:'manual_trade_status; never resubmit an unknown result under a new ID'});
     } catch(error) {
       const notSent=record.status==='preparing' || error.details?.submission_attempted===false;
       return save({...record,status:notSent?'rejected':'outcome_unknown',submission_attempted:notSent?false:null,completedAt:now(),error:failure(error,notSent),timing:{...record.timing,wrapper_to_receipt_ms:now()-(initial?.requestStartedAt??began)}});
     }
   }
   return {
-    inspect() {main();return {policy:POLICY,compositionAvailable:typeof host.capabilities.invoke==='function',backends:[{id:'mt5',plugin:'sesame/mt5',minimumPluginVersion:'2.1.7',channel:'Configured official Python SDK',actions:['prepare','market','limit','close','cancel','status'],requires:'Configured account, mt5_trading_prepare and verified quote_clock; raw tick.time_msc is retained, normalized UTC age must satisfy the final freshness guard'},{id:'qmt',plugin:'sesame/qmt',minimumPluginVersion:'1.2.0',channel:'Configured Windows MiniQMT STOCK',actions:['prepare','limit','cancel','status'],requires:'Existing broker-authorized native Windows session; preparation is read-only and no native broker acceptance has been tested'}],unavailable:[{id:'ccxt',reason:'Existing plugin is public market data only'},{id:'akshare',reason:'Research/market data only'},{id:'vnpy',reason:'Current plugin provides backtesting, no live gateway'},{id:'backtrader',reason:'Current plugin provides backtesting, no broker bridge'}],note:'M5+ is the default decision cadence, not a promise of profitability or fills. API timing alone does not measure model reasoning latency.'};},
+    inspect() {main();return {policy:POLICY,compositionAvailable:typeof host.capabilities.invoke==='function',backends:[{id:'mt5',plugin:'sesame/mt5',minimumPluginVersion:ADAPTER_FLOORS.mt5.manual,channel:'Configured official Python SDK',actions:['prepare','market','limit','close','cancel','status'],requires:'Configured account, mt5_trading_prepare and verified quote_clock; raw tick.time_msc is retained, normalized UTC age must satisfy the final freshness guard'},{id:'qmt',plugin:'sesame/qmt',minimumPluginVersion:ADAPTER_FLOORS.qmt.manual,channel:'Configured Windows MiniQMT STOCK',actions:['prepare','limit','cancel','status'],requires:'Existing broker-authorized native Windows session; preparation is read-only and no native broker acceptance has been tested'}],unavailable:[{id:'ccxt',reason:'Existing plugin is public market data only'},{id:'akshare',reason:'Research/market data only'},{id:'vnpy',reason:'Current plugin provides backtesting, no live gateway'},{id:'backtrader',reason:'Current plugin provides backtesting, no broker bridge'}],note:'M5+ is the default decision cadence, not a promise of profitability or fills. API timing alone does not measure model reasoning latency.'};},
     async observe(args,signal) {
       main();source(args);
       return observationResult(saveObservation(await adapters.snapshot(args.backend,args.symbol,bounded(signal)),args.backend));
@@ -181,11 +176,11 @@ export function createService(host,{now=Date.now,authorizeRequest,adapters=creat
         const original=recordFor(record.originalOperationId),evidence=await adapters.status(original,bounded(signal),current),receipt=await adapters.command(record,bounded(signal));
         await verifyCurrent();
         const result=outcome(record.backend,receipt),status=result==='rejected'?'rejected':['submitted','execution_reported','cancel_requested'].includes(result)?'cancel_requested':record.status;
-        return save({...record,status,receipt,evidence,checkedAccount:current,checkedAt:now(),note:'This is original-order evidence. A cancel request/absence is not confirmation; inspect native final status and fills.'});
+        return save({...record,status,receipt:record.receipt??receipt.raw,adapterReceipt:receipt,evidence,checkedAccount:current,checkedAt:now(),note:'This is original-order evidence. A cancel request/absence is not confirmation; inspect native final status and fills.'});
       }
       const evidence=await adapters.status(record,bounded(signal),current);
       await verifyCurrent();
-      const confirmed=outcome(record.backend,evidence.command);
+      const confirmed=outcome(record.backend,evidence.receipt);
       let status=record.status;
       if(['submitting','outcome_unknown'].includes(status)) {
         if(confirmed!=='outcome_unknown')status=confirmed;
@@ -206,8 +201,8 @@ export function createService(host,{now=Date.now,authorizeRequest,adapters=creat
         const previous=stored('commands',args.operation_id);if(previous){owner(previous);check(previous.fingerprint===fingerprint,'IDEMPOTENCY_CONFLICT','Cancellation ID already used');return previous;}
         const original=recordFor(args.original_operation_id);requireOpen(original);
         check(!records(host).list('commands').some(x=>x.kind==='cancel' && x.originalOperationId===original.id && ['submitting','outcome_unknown'].includes(x.status)),'UNRESOLVED_CANCEL','An earlier cancellation result is unknown; query that operation instead of replacing its ID');
-        let record={id:args.operation_id,fingerprint,kind:'cancel',backend:original.backend,account:original.account,symbol:original.symbol,conversationId:ownerId(),originalOperationId:original.id,backendCommandId,createdAt:now(),status:'submitting'};save(record);
-        try {const receipt=await adapters.cancel(original,original.backend==='qmt'?args.operation_id:backendCommandId,bounded(signal));record={...record,receipt,status:outcome(original.backend,receipt),completedAt:now()};if(['execution_reported','submitted'].includes(record.status))record.status='cancel_requested';}
+        let record={id:args.operation_id,fingerprint,kind:'cancel',backend:original.backend,account:original.account,symbol:original.symbol,conversationId:ownerId(),originalOperationId:original.id,backendCommandId,...(authorize?{planExecution:true}:{}),createdAt:now(),status:'submitting'};save(record);
+        try {const receipt=await adapters.cancel(original,original.backend==='qmt'?args.operation_id:backendCommandId,bounded(signal));record={...record,receipt:receipt.raw,adapterReceipt:receipt,status:outcome(original.backend,receipt),completedAt:now()};if(['execution_reported','submitted'].includes(record.status))record.status='cancel_requested';}
         catch(error){const notSent=error.details?.submission_attempted===false;record={...record,status:notSent?'rejected':'outcome_unknown',error:{code:error.code??'SOURCE_UNAVAILABLE',message:notSent?'Cancellation preflight rejected before native dispatch.':'Cancellation unconfirmed; inspect the original order and fills'},completedAt:now()};}
         return save(record);
       });

@@ -47,11 +47,12 @@ unavailable，但它不会进入统计。所有价格/因子原值是十进制�
 `select` 写出的 JSON 对象仍是可写文件。先固定它，再用 `data_read` 导出留出数据，不把
 本地 `--out` 等同不可变发布。使用现有工具即可，无需另一个研究服务：
 
-1. 开发数据已由 `data_read` 导出，计划记录该导出文件的实际字节摘要；数据重排或缩进也会
+1. 开发数据已由 `data_read` 导出；其 `directory` 必须等于后续 `bash.cwd`，以便冻结
+   `inputs/` 中的原始数据。计划记录该导出文件的实际字节摘要；数据重排或缩进也会
    改变摘要，不能把同义 JSON 的其它序列化摘要代入。留出摘要由数据准备步骤固定，不通过
    筛选脚本预读留出内容来生成。
 2. 把下面脚本保存为 `seal-selection.mjs`，在实际工作区用 `bash` 执行 Node.js，保留成功的
-   `execution_id`；脚本只将现有选择包装成登记工具要求的对象数组：
+   `executionId`；脚本只将现有选择包装成登记工具要求的对象数组：
 
    ```js
    import fs from 'node:fs';
@@ -60,13 +61,15 @@ unavailable，但它不会进入统计。所有价格/因子原值是十进制�
    fs.writeFileSync('output/selection.rows.json', JSON.stringify([selection]));
    ```
 
-3. `research_register` 使用该真实执行 ID、`path:"output/selection.rows.json"`、开发数据的
-   `input_ids`，并在 `recipe_paths` 保留 `factor.mjs`、`plan.json`、`screen.json`、
-   `selection.json`、`seal-selection.mjs`。然后对返回的 dataset_id 调 `report_data`，
-   `operation_id` 标识这一次选择；已有开发 DataRef 放 `dependencies`。记录返回的完整
-   ref 和选择内容摘要，demo 仍为 demo。
+3. `research_register` 使用该成功执行的 `executionId`、`path:"output/selection.rows.json"`、
+   描述本次选择的 `operationId`、`title`、`description`，以及开发数据的 `inputRefs:[完整DataRef]`
+   或实际已登记数据集的 `inputIds`。`recipePaths` 列出已由该次执行冻结的 `factor.mjs`、
+   `plan.json`、`screen.json`、`selection.json`、`seal-selection.mjs`；路径相对 `bash.cwd`。
+   工具直接返回不可变数据 `ref`、证据 `evidence` 和发布回执；保留完整引用及选择内容摘要，
+   无需再调用 `report_data` 冻结同一选择。`ref.id` 不能冒充旧宿主数据集 ID，demo 仍为 demo。
 4. 确认本地选择与固定成果一致，才导出留出文件并执行 `holdout`。将本次暴露写入试验账本；
-   最终曲线登记后用 `report_data` 引用这个固定选择与留出输入。修改选择需新实验及新的
+   最终曲线用对应成功执行的 `research_register` 登记，在 `inputRefs` 中引用固定选择及留出输入，
+   并先用同一执行目录的 `data_read` 导出这些引用，以绑定实际输入字节。修改选择需新实验及新的
    未使用留出样本，不能覆盖原成果、换操作 ID 后称为首次评估。
 
 这是一种可复查的本地文件协议，不是不可篡改账户账本。发布到宿主不可变成果后再打开留出，

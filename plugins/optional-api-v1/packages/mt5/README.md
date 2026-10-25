@@ -2,6 +2,37 @@
 
 本插件提供 MT5 行情、账户、MQL5 工程、编译、Tester、交易与持久运行观察。能力及输入输出由 `capabilities.json` 明确声明；完整用法见 [INTERFACES.md](INTERFACES.md)。Agent 可以直接保存连接配置和用户提供的凭据，无需导入文件、打开 Sesame 设置页或重启应用。
 
+已授权手动交易通过 `mt5_trading_prepare({symbol, command_id, user_authorized:true})` 集中准备，无需模型先逐项检查配置、权限、账户、目录和历史。它只在必要时开启 Sesame 交易许可、复用原终端权限准备和一次 Python IPC 初始化；正常连接跳过初始化与重启。账户核验后一起调度品种规格、持仓和挂单，再读取最新原始 tick，最后复核账户与配置。Python worker 仍按队列串行调用 SDK，不宣称原生并发。返回 `account/summary/terminal/spec/positions/orders/tick/readStartedAt/capturedAt/preparation`；可选 `expected_account:{accountId,server,revision}` 用于组合入口的精确账户锁。
+
+同一命令不重复配置或重启，重复请求重新读取事实而不复用旧报价；该入口不下单、不切账户，也不判断业务数量和价格界限。`mt5_trading_permissions` 保留单独诊断用途。券商、只读账户、Python API禁用及原生 MCP 操作权限分别返回实际限制；不猜测 AI Assistant Trading 的配置键。技术准备成功不代表报价有效或实际订单成功，执行入口仍核验时效、价格与真实回执。
+
+## 适配型插件试点
+
+本次整理先验证既有工厂纯度、配置凭据、数据源及安装激活回归，再将入口中的生命周期和分发代码移入 `backend/plugin-runtime.js`。`index.js` 只将声明绑定到实现；已有 `backend/`、`tools/`、`skills/` 保留各自职责，不搬动原生 SDK、Python bridge 或工具实现。
+
+插件 ID、已有能力 ID、输入输出 Schema、状态目录和公开工具保持原状。统一配置入口通过新增的宿主只读 `configuration.read` 投影读取公开设置与凭据存在状态，写入沿用 `mt5_update_configuration`。服务和子任务可检查依赖，原有 `mt5_settings` 和配置写入仍只允许主会话。依赖只绑定到实际使用对应配置的能力。行情和账户 source 将已知的原生连接故障转换为宿主可识别的错误码；断线和超时可重取快照，认证错误保留配置提示，未知实现错误不自动重试。
+
+### 工程与编译边界
+
+`backend/service.js` 保留 `MT5` 类和既有方法入口，统一拥有 host、私有记录存储、official 连接、编译 jobs/tail 及关闭生命周期。包内模块按职责实现原方法：
+
+| 模块 | 职责 |
+| --- | --- |
+| `backend/projects.js` | 读取包内模板与 SDK；工程及 revision、风险配置、源码契约校验、checkout/save 和 SDK 一致性检查 |
+| `backend/compiler.js` | 编译依赖发现、冻结构建、单队列调度、取消与结果记录；在初始化时处理被中断的构建 |
+
+两个模块使用同一个 `MT5` 实例及 `mt5.sqlite`，不另建数据库、连接或编译队列。项目、checkout、编译产物和 SDK 的相对路径不变；同一个 build 重复启动仍返回已有任务，排队编译串行执行。重启时 `queued`、`compiling` 构建仍转为 `failed`，不会自动重放；原生清理无法确认仍记录 `unknown`。
+
+`plugins/api-v1/tests/mt5-project-compiler.test.js` 覆盖 SQLite 真重开、模板与 revision 保留、单队列及重复启动、等待中的取消、关闭清理和缺依赖诊断。编译测试以受控 worker 回执验证冻结文件和 owner，不替代真实 MetaEditor/MT5 原生验收。
+
+### 2026-10-19 行情订阅验证
+
+- 运行中应用的实际图表回执为 `status:error`、`feed_status:stale`、`bar_count:0`，诊断为 `INTERNAL: sesame/mt5#market subscribeBars (sesame/mt5#market.subscribeBars): The provider could not complete this request`。
+- 使用原已配置本机服务进行只读验证，终端在线且账户匹配；安装包的行情 provider 与开发源码当时一致，同一图表请求及宿主输入输出校验均成功。该错误已丢失原始底层原因，不能据此断言最初的故障是认证、会话失效或断线。
+- 回归测试确认已知原生临时读故障会被映射为不可恢复的 `INTERNAL`。修复在 MT5 source 边界保留宿主支持的错误分类，认证错误与未知实现错误不作为临时断线重试。
+- 对已打开图表通过应用画布接口释放并原样恢复绑定。实际回执恢复为 `status:rendered`、`feed_status:live`、`bar_count:346`；绑定、品种、周期、图表选项和布局保持一致。未安装新插件、重启应用或修改账户及交易配置。源码修复需随正常发布生效。
+- 试点基线 44 项测试通过；变更后 54 项通过，包含凭据回执脱敏、配置输入兼容、依赖条件、行情恢复、工厂纯度和临时宿主安装验证。
+
 ## 配置与对应能力
 
 | 配置 | 什么时候需要 | 如何设置和验证 |

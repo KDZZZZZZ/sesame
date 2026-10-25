@@ -5,14 +5,16 @@ description: Rank supplied development trials over a finite grid and preserve a 
 
 # 参数实验基线
 
-这是可修改、可验证的研究基线，不是标准答案。改进公式或参数时保留原结果、修改假设和对照证据。
+用 `abu_parameter_search_analyze` 比较已完成实验的开发期指标，冻结选型，再用独立留出证据评价同一组合的稳定性。
 
-能力 `abu_parameter_search_analyze`：对已完成实验的有限网格指标排序，冻结开发期选型，再核对该固定选型的留出期证据；不运行策略。
+选型依据与留出验证分离，避免把留出期也变成调参数据。验证使用实际返回的 frozen_selection；哈希只证明记录内一致，固定保存的开发工件才支持先选型后验证的时序。本能力不运行策略或表达式。
 
-调用形状为 {input:{schema_version:1,source:{id,kind},as_of,parameters?,...}}，不是文件路径或数据 ID。source.id 为 1..500 字符，kind 为 synthetic/historical/live；as_of 及全部时间字段使用真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒）。输入限 2MiB 有限 JSON，不接收代码。parameters 只支持列出的字段。 grid 是 1..10 个任意参数名到候选数组的映射，每数组 1..100 个有限数值/字符串/布尔值，组合数 <= max_grid_points。trials:[{split:"development"|"holdout",available_at,parameters,metrics}]，每个 parameters 必须精确对应某个网格点，metrics[objective_metric] 为有限值。development 阶段至少 1 条开发试验，不接受 holdout 或 frozen_selection。holdout 阶段传回开发运行的完整 frozen_selection、相同 grid/目标/开发 trials，加上只属于选中参数的 holdout trials；保持选型和哈希原值，selected_at 必须早于 holdout.available_at <= as_of。
+## 输入与交接
 
-observations.development_rank 是仅按开发指标排序的排名；frozen_selection 含 parameters、selected_at 和全部核验哈希；fixed_holdout_evidence 仅含选中参数的留出期指标；grid_points 是网格组合数。 立即返回 {schema_version:1,baseline:true,status:"research_baseline",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。
+本能力属于数值方法层，消费调用者提供的已知输入。把 development_rank 和 frozen_selection 交回实验流程，留出核验传回同一完整 frozen_selection；该工具只比较已有试验指标，不负责取数、运行试验或提出新的调参方向。复用前核对输入版本、参数、截止时间与实现口径；已有匹配结果可直接引用。同源价格、成交或统计派生结果不能重复计为独立证据；计算只回答本项局部问题，方法解释与最终综合由调用者负责。缺少已声明的必需字段或真实时序时，交回具体缺口，不补造数据以通过校验。
 
-留出验证依赖先前真实的开发选型记录；若只有一阶段的证据，结果只支持该阶段的结论。缺少选型时不要编造哈希或把留出结果改标为开发结果。 哈希只能核对记录内一致性；外部固定保存的开发工件才支持先选型后验证的时序证据。传入的是已有指标，本能力不会执行任意策略或表达式。 来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。
+工具 abu_parameter_search_analyze 的已注册 inputSchema 和 usage 给出准确字段、参数、返回路径与错误条件，不要求先阅读示例或运行教学演练。保留 input_artifact、result_artifact、source/as_of、实际参数和 limitations；原始工件可用 data_read({ref}) 按完整引用再次读取。其他方法需要不同输入形状时按其已声明接口显式转换，不把一个结果对象直接冒充另一个工具的输入。
 
-`references/method.md` 解释公式和原版差异；包根目录 `examples/input.json` 提供合成样例。两者用于需要时核对，不是调用前的固定步骤。
+## 可选改进
+
+这是可修改、可验证的研究基线；只有任务需要比较公式或参数时才开展改进，保留原结果、修改假设与同一输入上的对照。references/method.md 解释公式和原版差异；examples/input.json 是合成教学输入。两者按需读取，合成结果保持演示身份。

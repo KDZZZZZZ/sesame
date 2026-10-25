@@ -114,7 +114,7 @@ for line in sys.stdin:
             credentials = {k: account[k] for k in ['password', 'server'] if account.get(k)}
             if account.get('login'):
                 credentials['login'] = int(account['login'])
-            result = mt5.initialize(command['terminal'], timeout=15000, **credentials)
+            result = mt5.initialize(command['terminal'], timeout=15000, portable=command['portable'], **credentials)
         elif name == 'login':
             account = command.get('account') or {}
             credentials = {k: account[k] for k in ['password', 'server'] if account.get(k)}

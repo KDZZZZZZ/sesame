@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildLock, sha256 } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
+import { catalogPackage, readCatalogPolicy } from '../../plugins/api-v1/scripts/catalog.mjs';
 import { buildR2Publication, buildR2Profile, checkR2Plans, prepareR2Release, validateR2Plan } from './plugin-r2.mjs';
 import { readCatalog } from '../../plugins/api-v1/packages/plugin-manager/catalog.js';
 
@@ -37,12 +38,13 @@ function sourceRoot(root, sourceRoot, kind, packages) {
   json(join(root, sourceRoot, 'official-plugins.lock.json'), buildLock(join(root, sourceRoot)));
 }
 
-function fixture(t) {
+function fixture(t, policy) {
   const root = mkdtempSync(join(tmpdir(), 'sesame-r2-test-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   git(root, ['init', '-q']);
   sourceRoot(root, 'plugins/api-v1', 'core', ['core-one', 'core-two']);
   sourceRoot(root, 'plugins/optional-api-v1', 'optional', ['optional-one', 'excluded']);
+  if (policy !== undefined) json(join(root, 'plugins/api-v1/inventory-policy.json'), policy);
   git(root, ['add', '.']);
   git(root, ['commit', '-qm', 'fixed source']);
   const sourceCommit = git(root, ['rev-parse', 'HEAD']);
@@ -91,6 +93,73 @@ test('publication emits API 2 capabilities, R2 catalog and immutable package fil
   assert.equal(sha256(publication.objects.get('plugins/api-v1/releases/dev.9/review.json')), publication.catalog.releases[0].review.sha256);
   const downloaded = await readCatalog(undefined, async () => new Response(JSON.stringify(publication.catalog)));
   assert.deepEqual(downloaded.catalog, publication.catalog);
+});
+
+test('publication carries fixed reviewed labels while package files, locks and pins keep their authority', async t => {
+  const policy = { 'core-one': { functionalCategory: 'platform', implementationKinds: ['service'] },
+    'optional-one': { functionalCategory: 'business', implementationKinds: ['knowledge', 'workflow'] } };
+  const { root, plan } = fixture(t, policy), options = { releaseCommit: 'b'.repeat(40), review: Buffer.from('{"ok":true}\n') };
+  const first = buildR2Publication(root, plan, options);
+  for (const plugin of first.catalog.plugins) {
+    assert.equal(plugin.functionalCategory, policy[plugin.name].functionalCategory);
+    assert.deepEqual(plugin.implementationKinds, policy[plugin.name].implementationKinds);
+    assert.equal(plugin.source.commit, plan.sourceCommit);
+    const profile = first.profiles.find(item => item.profile === plugin.distribution);
+    const indexed = profile.lock.packages.find(item => item.id === plugin.id);
+    assert.equal(plugin.version, indexed.version);
+    assert.equal(plugin.package.treeDigest, indexed.treeDigest);
+    assert.deepEqual(plugin.package.files, indexed.files);
+    assert.equal('functionalCategory' in indexed, false);
+    assert.equal('implementationKinds' in profile.pin.packages.find(item => item.id === plugin.id), false);
+    assert.equal(profile.archiveSha256, plan.profiles.find(item => item.profile === profile.profile).archiveSha256);
+    assert.equal(profile.lockSha256, plan.profiles.find(item => item.profile === profile.profile).lockSha256);
+  }
+  const downloaded = await readCatalog(undefined, async () => new Response(JSON.stringify(first.catalog)));
+  assert.deepEqual(downloaded.catalog, first.catalog);
+  // Neither a moved HEAD nor executable candidate validators can alter fixed metadata.
+  json(join(root, 'plugins/api-v1/inventory-policy.json'), { 'core-one': { functionalCategory: 'unreviewed' } });
+  mkdirSync(join(root, 'plugins/api-v1/scripts'));
+  writeFileSync(join(root, 'plugins/api-v1/scripts/plugin-taxonomy.mjs'), "throw new Error('candidate taxonomy executed');\n");
+  git(root, ['add', '.']); git(root, ['commit', '-qm', 'unreviewed policy']);
+  assert.deepEqual(buildR2Publication(root, plan, options).objects, first.objects);
+  assert.throws(() => readCatalogPolicy(root, git(root, ['rev-parse', 'HEAD'])), /invalid functional category/);
+});
+
+test('missing and legacy policies retain original catalog serialization and immutable publication objects', t => {
+  for (const policy of [undefined, { 'core-one': { category: 'workspace', title: { en: 'Legacy', zh: '历史' } } }]) {
+    const { root, plan } = fixture(t, policy), options = { releaseCommit: 'b'.repeat(40), review: Buffer.from('{"ok":true}\n') };
+    const publication = buildR2Publication(root, plan, options);
+    const originalPlugins = publication.catalog.plugins.map(plugin => {
+      const profile = publication.profiles.find(item => item.profile === plugin.distribution);
+      const pkg = profile.lock.packages.find(item => item.id === plugin.id);
+      const path = join(root, profile.sourceRoot, 'packages', pkg.directory);
+      const entry = catalogPackage(pkg, JSON.parse(readFileSync(join(path, 'plugin.json'))), JSON.parse(readFileSync(join(path, 'capabilities.json'))),
+        publication.catalog.releases.find(item => item.tag === plugin.release));
+      assert.equal(Object.hasOwn(plugin, 'functionalCategory'), false);
+      assert.equal(Object.hasOwn(plugin, 'implementationKinds'), false);
+      return { ...entry, package: { ...entry.package, baseUrl: plugin.package.baseUrl } };
+    });
+    const originalBytes = Buffer.from(JSON.stringify({ ...publication.catalog, plugins: originalPlugins }, null, 2) + '\n');
+    assert.deepEqual(publication.objects.get('plugins/api-v1/releases/dev.9/catalog.json'), originalBytes);
+    json(join(root, 'plugins/api-v1/inventory-policy.json'), { 'core-one': { functionalCategory: 'platform', implementationKinds: ['service'] } });
+    assert.deepEqual(buildR2Publication(root, plan, options).objects, publication.objects);
+  }
+});
+
+test('fixed policy reading rejects floating sources, malformed data and Git links without executing code', t => {
+  const { root, sourceCommit } = fixture(t);
+  assert.deepEqual(readCatalogPolicy(root, sourceCommit), {});
+  assert.throws(() => readCatalogPolicy(root, 'HEAD'), /fixed source commit/);
+  const path = 'plugins/api-v1/inventory-policy.json';
+  for (const [value, message] of [['{invalid json', /JSON/], ['[]', /must be an object/],
+    ['{"core-one":{"implementationKinds":["adapter","adapter"]}}', /unique supported/]]) {
+    writeFileSync(join(root, path), value); git(root, ['add', path]); git(root, ['commit', '-qm', 'invalid policy data']);
+    assert.throws(() => readCatalogPolicy(root, git(root, ['rev-parse', 'HEAD'])), message);
+  }
+  const oid = git(root, ['hash-object', '-w', path]);
+  git(root, ['update-index', '--add', '--cacheinfo', `120000,${oid},${path}`]);
+  git(root, ['commit', '-qm', 'linked policy data']);
+  assert.throws(() => readCatalogPolicy(root, git(root, ['rev-parse', 'HEAD'])), /ordinary Git file/);
 });
 
 test('plans reject duplicate identities, wrong roots, bad paths and digest drift', t => {

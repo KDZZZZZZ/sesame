@@ -1,0 +1,18 @@
+{
+  "id": "sesame/ultra",
+  "apiVersion": "2",
+  "version": "1.0.2",
+  "title": "Ultra 持续协作",
+  "description": "把当前用户目标组织成持久、并行、可恢复的研究和盯盘交易周期，组合现有工作流、知识与数据插件；真实任务完成后续办，达到目标或用户停止后结束。",
+  "license": "MIT",
+  "author": { "name": "Sesame contributors" },
+  "default_state": "discoverable",
+  "agent_scope": "all",
+  "entry": "index.js",
+  "engines": { "sesame": ">=0.3.0-dev.1 <0.4.0" },
+  "capability_manifest": "capabilities.json",
+  "permissions": {
+    "scopes": ["capabilities.compose"],
+    "calls": ["host.agent.run", "host.capabilities.list", "host.sessions.query", "host.runs.read", "host.runs.wait", "host.runs.cancel", "host.runs.resume", "host.resources.read", "sesame/plugin-manager#plugin_discover", "sesame/plugin-manager#plugin_read"]
+  }
+}

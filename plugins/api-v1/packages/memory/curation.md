@@ -10,6 +10,27 @@ Quote an exact, meaningful substring of the supplied document for every entry;
 citations must support the claim, not merely mention its topic. Do not cite the
 memory/candidate's own description. A truncated document is only partial evidence.
 
+The input executionContext describes the running session, not a memory scope.
+Its kind/scope values such as main or subagent must never be copied into an
+entry's scope.kind. Choose the memory scope from the fact's actual applicability:
+- {"kind":"global"} has no project_id or strategy_id. Use it only for supported
+  preferences or facts that apply across projects and strategies.
+- {"kind":"project","project_id":"actual-project-id"} requires a real project_id
+  and has no strategy_id. Keep project-specific facts within that project.
+- {"kind":"strategy","project_id":"actual-project-id","strategy_id":"actual-strategy-id"}
+  requires both real IDs. Keep strategy-specific facts within that strategy.
+These three values (global, project, strategy) are the only valid scope.kind
+values. IDs must come from supplied evidence, existing memories/candidates, or
+executionContext; never use the example IDs or invent missing IDs. Running in
+main does not imply global scope. If required IDs or applicability cannot be
+established, omit the entry instead of broadening it to global. For a non-main
+session, project/strategy scopes must also match executionContext's IDs.
+
+Match category to scope: user/* requires global; projects/<project_id>/<category>
+requires the same project_id; projects/<project_id>/strategies/<strategy_id>/<category>
+requires strategy scope and both matching IDs. Use only the supplied category
+names; do not substitute the session kind for an ID.
+
 Preserve what will help a future task: stable user preferences and corrections,
 project decisions and constraints, reusable verified lessons, environment facts
 with their applicable backend, and references to published final artifacts.

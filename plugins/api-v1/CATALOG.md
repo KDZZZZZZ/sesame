@@ -134,8 +134,7 @@ it has no caller-selected file resolver.
 
 The nine core and twenty-three optional entries expose `distribution` and the minimum
 `engines.sesame` range. MT5 and all other market/execution backends are optional.
-`sesame/manual-trading` requires Sesame 0.2.1 or newer; the other selected packages
-support Sesame 0.2.0 or newer, including their declared compatible development builds.
+The independent `sesame/investment-research` and `sesame/trading-decision` packages replace the combined manual-trading package in development sources. Each package declares its exact host requirement.
 Always check the individual entry instead of assuming one minimum for the catalog.
 The old `host-files`, `user-guide` and `research` names were merged into
 `workspace`, `orchestration` and `data-access`, respectively; no installer aliases
@@ -146,8 +145,7 @@ Installing `sesame/ict` does not install another technical method. CCXT provides
 explicit-source public spot data; Backtrader runs a selected authored strategy
 against fixed data. They do not add a default broker or trading authorization.
 Backtrader's package and engine retain GPL-3.0-or-later licensing.
-Agent manual trading coordinates explicit user instructions with an existing
-supported trading backend; installing it does not grant ongoing trading authorization.
+Investment research produces fixed evidence without a trading account. Trading decisions consume research and risk rules; portfolio-execution handles authorized account operations. Installing these packages does not grant ongoing trading authorization.
 
 Catalog updates are independent of application installers. The application release record
 [`RELEASE-ASSETS.json`](../../RELEASE-ASSETS.json) records the archives associated

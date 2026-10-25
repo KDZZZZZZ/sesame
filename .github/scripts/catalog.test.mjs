@@ -5,8 +5,9 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildLock } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
+import { buildLock, createArchive, sha256 } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
 import { buildInventory } from '../../plugins/api-v1/scripts/inventory.mjs';
+import { buildCatalog } from '../../plugins/api-v1/scripts/catalog.mjs';
 import { buildR2Profile } from './plugin-r2.mjs';
 import { validateRepository } from './validate-catalog.mjs';
 
@@ -29,9 +30,12 @@ function fixture(t) {
     writeFileSync(join(pkg, 'LICENSE'), 'MIT\n');
     writeFileSync(join(pkg, 'index.js'), "throw new Error('candidate plugin must never execute');\n");
     json(join(directory, 'official-plugins.lock.json'), buildLock(directory));
-    policy[name] = { category: 'research', title: { en: name, zh: '示例' }, summary: { en: 'Fixture data', zh: '示例数据' }, dependencies: { en: 'None', zh: '无' } };
+    policy[name] = { category: 'research', functionalCategory: 'analysis', implementationKinds: ['function'],
+      title: { en: name, zh: '示例' }, summary: { en: 'Fixture data', zh: '示例数据' }, dependencies: { en: 'None', zh: '无' } };
   }
   const core = join(root, 'plugins/api-v1');
+  mkdirSync(join(core, 'scripts'));
+  writeFileSync(join(core, 'scripts/plugin-taxonomy.mjs'), "throw new Error('candidate taxonomy must never execute');\n");
   json(join(core, 'inventory-policy.json'), policy);
   json(join(core, 'inventory.json'), buildInventory(core));
   mkdirSync(join(root, '.github'));
@@ -78,12 +82,28 @@ test('descriptive policy cannot override source identities or omit explanations'
   for (const field of ['id', 'version', 'license', 'engines', 'author', 'state']) {
     const { root, core, policy } = fixture(t);
     policy['core-one'][field] = 'invented'; json(join(core, 'inventory-policy.json'), policy);
-    json(join(core, 'inventory.json'), buildInventory(core));
-    assert.throws(() => validateRepository(root), /cannot override package facts/);
+    assert.throws(() => validateRepository(root), /Unknown policy field/);
   }
   const { root, core, policy } = fixture(t); policy['core-one'].summary.zh = '';
-  json(join(core, 'inventory-policy.json'), policy); json(join(core, 'inventory.json'), buildInventory(core));
-  assert.throws(() => validateRepository(root), /explicit English and Chinese/);
+  json(join(core, 'inventory-policy.json'), policy);
+  assert.throws(() => validateRepository(root), /English and Chinese/);
+});
+
+test('trusted taxonomy rejects unsupported, missing and repeated labels while preserving description limits', t => {
+  for (const [mutate, message] of [
+    [policy => { policy['core-one'].functionalCategory = 'unknown'; }, /invalid functional category/],
+    [policy => { delete policy['core-one'].functionalCategory; }, /invalid functional category/],
+    [policy => { policy['core-one'].implementationKinds = ['workflow', 'workflow']; }, /unique supported/],
+    [policy => { policy['core-one'].implementationKinds = ['script']; }, /unique supported/],
+    [policy => { policy['core-one'].implementationKinds = []; }, /unique supported/],
+    [policy => { delete policy['optional-one']; }, /Missing reviewed package/],
+    [policy => { policy.absent = structuredClone(policy['core-one']); }, /absent packages/],
+    [policy => { policy['core-one'].summary.en = 'x'.repeat(2001); }, /explicit English and Chinese/],
+    [policy => { policy['core-one'].title.extra = 'unexpected'; }, /explicit English and Chinese/],
+  ]) {
+    const { root, core, policy } = fixture(t); mutate(policy); json(join(core, 'inventory-policy.json'), policy);
+    assert.throws(() => validateRepository(root), message);
+  }
 });
 
 test('new API 2 plans reconstruct exact source and reject changed digests after a fresh root commit', t => {
@@ -100,4 +120,36 @@ test('new API 2 plans reconstruct exact source and reject changed digests after 
   assert.equal(validateRepository(root).r2Plans, 1);
   plan.profiles[0].archiveSha256 = '0'.repeat(64); json(path, plan);
   assert.throws(() => validateRepository(root), /archive digest differs/);
+});
+
+test('GitHub catalog projects taxonomy from each fixed source without changing release or package identities', t => {
+  const { root, core, policy } = fixture(t);
+  git(root, 'init', '-q'); git(root, 'add', '.'); git(root, 'commit', '-qm', 'fixed API 2 source');
+  const sourceCommit = git(root, 'rev-parse', 'HEAD');
+  const plans = [['api-v1', 'core'], ['optional-api-v1', 'optional']].map(([directory, profile]) => {
+    const sourceRoot = `plugins/${directory}`, source = join(root, sourceRoot), lock = buildLock(source);
+    const tag = `plugins-${profile === 'optional' ? 'optional-' : ''}api-v1-dev.999999`;
+    return { schemaVersion: 1, tag, sourceCommit, sourceRoot, profile, pullRequest: 100, title: 'Fixed catalog fixture',
+      archive: { name: `sesame-${profile === 'optional' ? 'optional' : 'official'}-plugins-api-v1-dev.999999.tar.gz`, sha256: sha256(createArchive(source, lock)) },
+      lockSha256: sha256(readFileSync(join(source, 'official-plugins.lock.json'))) };
+  });
+  mkdirSync(join(root, '.github/plugin-releases'));
+  for (const plan of plans) json(join(root, `.github/plugin-releases/${plan.tag}.json`), plan);
+  git(root, 'add', '.'); git(root, 'commit', '-qm', 'reviewed publication plans');
+  const releaseCommit = git(root, 'rev-parse', 'HEAD');
+  const sources = { schemaVersion: 1, releases: plans.map(plan => ({ tag: plan.tag, releaseCommit, reviewSha256: 'a'.repeat(64) })) };
+  const catalog = buildCatalog(root, sources);
+  for (const plugin of catalog.plugins) {
+    assert.equal(plugin.functionalCategory, policy[plugin.name].functionalCategory);
+    assert.deepEqual(plugin.implementationKinds, policy[plugin.name].implementationKinds);
+    assert.equal(plugin.source.commit, sourceCommit);
+    assert.equal(plugin.engines.sesame, '>=0.2.3');
+    const plan = plans.find(item => item.tag === plugin.release);
+    const indexed = buildLock(join(root, plan.sourceRoot)).packages.find(item => item.id === plugin.id);
+    assert.equal(plugin.version, indexed.version);
+    assert.deepEqual(plugin.package, { treeDigest: indexed.treeDigest, files: indexed.files });
+    assert.equal(catalog.releases.find(item => item.tag === plan.tag).archive.sha256, plan.archive.sha256);
+  }
+  json(join(core, 'inventory-policy.json'), { 'core-one': { functionalCategory: 'unreviewed' } });
+  assert.equal(JSON.stringify(buildCatalog(root, sources)), JSON.stringify(catalog));
 });

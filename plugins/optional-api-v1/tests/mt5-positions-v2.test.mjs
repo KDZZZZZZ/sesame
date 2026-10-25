@@ -31,7 +31,7 @@ async function fixture(t) {
     else if (tool === 'orders_get') result = structuredClone(state.orders.filter(row => [1, 3].includes(row.state)));
     else if (tool === 'symbol_info') result = { volume_min: 0.01, volume_max: 100, volume_step: 0.01, filling_mode: 3, trade_exemode: 2 };
     else if (tool === 'symbol_info_tick') { result = structuredClone(state.tick); await state.afterTick?.(); }
-    else if (tool === 'history_orders_get') result = structuredClone(state.orders.filter(row => ![1, 3].includes(row.state)));
+    else if (tool === 'history_orders_get') { if (state.historyError) throw state.historyError; result = structuredClone(state.orders.filter(row => ![1, 3].includes(row.state))); }
     else if (tool === 'history_deals_get') result = structuredClone(state.deals);
     else if (tool === 'order_send') {
       state.sends++;
@@ -194,5 +194,28 @@ test('MT5 maps explicit native guard rejection separately from broker timeout an
       assert.equal((await manager.readReceipt({ binding: f.input.binding, operationId: f.input.operationId }, undefined, execution)).status, expectedStatus);
       assert.equal(f.state.sends, 1);
     } finally { await restored.close(); }
+  });
+});
+
+test('MT5 exact reduction reuses active-first evidence and does not invoke broken history for a live order', async t => {
+  const f = await fixture(t);
+  await f.invoke('close', f.input);
+  f.state.orders = [{ ticket: '9007199254741001', symbol: 'EURUSD', type: 1, state: 1, volume_initial: 0.5, volume_current: 0.5 }];
+  f.state.historyError = new Error('Fixture: history(ticket) rejects a live order');
+  const receipt = await f.invoke('readReceipt', { binding: f.input.binding, operationId: f.input.operationId });
+  assert.equal(receipt.status, 'submitted');
+  assert.equal(f.state.requests.some(row => row.tool === 'history_orders_get'), false);
+  assert.equal(f.state.sends, 1);
+});
+
+test('MT5 10025 and 10028 remain unresolved for position reduction and cannot unlock a replacement close', async t => {
+  for (const retcode of [10025, 10028]) await t.test(String(retcode), async child => {
+    const f = await fixture(child); f.state.result = { retcode, order: '0', deal: '0', volume: 0 };
+    const first = await f.invoke('close', f.input);
+    assert.equal(first.status, 'outcome_unknown');
+    assert.equal((await f.invoke('readReceipt', { binding: f.input.binding, operationId: f.input.operationId })).status, 'outcome_unknown');
+    const replacement = await f.invoke('close', { ...f.input, operationId: 'replacement' });
+    assert.equal(replacement.status, 'rejected'); assert.equal(replacement.error.code, 'POSITION_OPERATION_PENDING');
+    assert.equal(f.state.sends, 1);
   });
 });

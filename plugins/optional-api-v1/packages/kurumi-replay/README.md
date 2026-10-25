@@ -1,5 +1,8 @@
 本目录已迁移为 Host API 2；唯一接口声明是 `capabilities.json`，入口仅导出 `createCapabilities`。角色授权使用宿主提供的 `executionContext.provenance.agent.runId`，不接受调用参数伪造身份。私有 SQLite 保存账本与幂等回执，公开证据通过资源发布，图表使用静态 SourceRef。激活和恢复不会自动请求模型或安装依赖。
 
+本插件负责固定历史中的模拟时间、模拟账户与回放决策。investment-research 负责现实研究，trading-decision 负责获授权的真实账户决策，portfolio-execution 负责实盘操作；回放结果只可作为标明样本和时点的研究证据，不能直接接成实盘指令。
+
+
 固定 Nautilus 环境仍要求 macOS arm64 / Python 3.13；不支持的平台明确返回不可用。Windows 可读取、展示和归档历史证据；文件执行 fsync，目录 fsync 不受 Node 支持，归档回执中 `durability.directorySync` 明确为 `unsupported`。以下历史撮合验收不等于当前平台真实撮合验收。
 
 # 久留美 · 原生回放体验 (`sesame/kurumi-replay` 0.1.3-dev.3.8)

@@ -3,7 +3,11 @@ name: report-design
 description: 延续 Sesame 原版 reportKit 的结论、指标、图表章节与折叠方法，按问题选择统计对照、分布、时序、结构图并下钻真实记录；编写或更新研究、策略报告时使用。
 ---
 
-默认从 `report_template` 起步，保留原版 reportKit 的字体、留白、无框图表和章节层级，再按研究问题编辑 outline。模板会将 `assets/editorial.css`、`assets/report-kit.js`、`assets/editorial-charts.js` 及三个可选图表模块内联，报告可独立运行。宿主提供数据桥与主题；reportKit 是本插件的组件，不是宿主自动注入的全局能力。从零写 HTML 时可复用这些资产并随成果打包。
+默认从 `report_template` 起步，保留原版 reportKit 的字体、背景、留白、无框图表和章节层级，再按研究问题编辑 outline。模板会将 `assets/editorial.css`、`assets/report-kit.js`、`assets/editorial-charts.js` 及统计、时序、结构、决策树模块内联，报告可独立运行。宿主提供数据桥与主题；reportKit 是本插件的组件，不是宿主自动注入的全局能力。纯文档用 `report_document_template`，旧报告可直接在已有统一骨架内更新。
+
+选型、配色与版式参见 [图型选择与蓝灰视觉](visual-design.md)：趋势、区间、事件、分布和条件决策采用适合各自问题的表达。新研究模板使用蓝色重点、灰色参照，继续沿用当前背景。用户明确提出的视觉要求在统一骨架内实现。
+
+**先读 [现成图表完整目录](chart-catalog.md)**：26 种不同图型已列出调用入口、字段和用途。优先使用默认组件，不重画已有图型；OHLC 直接使用 `candlestick`，与行情工作台使用相同的默认蜡烛运行时，参数见 [行情图](market-charts.md)。`report_template(kind:'candlestick')` 会额外内联本地行情资产；多图报告仅加载一次，不使用 CDN。
 
 ## 页面骨架
 
@@ -22,6 +26,8 @@ window.report.track(initialize()).catch(error => {
 ```
 
 建议顺序是「核心判断 → 支持判断的数字 → 证据章节 → 方法与来源」。这是原版的起点，不是只能使用的布局。章节数量、文字长度和自定义呈现不作主观硬限制；真正不同的问题可调整结构，避免填充空洞章节。
+
+正文只保留帮助理解市场、比较方案或决定下一步的章节。默认不另设“时效与覆盖”“数据质量”“研究局限”等检查汇报：截止时间与时区归入元信息，关键假设和业务失效条件贴近结论或情景，其余必要的来源与口径放折叠方法区。通篇删除无实际作用的免责声明、适用范围、重复否定句和过程描述，图注、节点说明与折叠区同样精简；每句话提供事实、判断或下一步，不把废话搬进折叠区。用户明确要求审计或覆盖本身影响决策时，按实际问题展开，不以标题黑名单或渲染校验强制删除内容。
 
 ## outline 数据结构
 
@@ -86,6 +92,7 @@ block 类型：
 
 | 要回答的问题 | `kind` | 字段和数据要求 |
 |---|---|---|
+| 每个周期的开高低收如何变化 | `candlestick` | [默认行情图](market-charts.md)：固定 time/open/high/low/close，保留原始时间口径及涨跌红绿 |
 | 净收益被哪些成本改变 | `waterfall` | [统计对照](statistical-charts.md)：起点、增减、终点必须对账 |
 | 优化前后、样本内外差在哪 | `dumbbell` | 同口径、同单位的一对值 |
 | 哪些交易撑起收益或造成尾部损失 | `strip`、`histogram`、`boxplot` | 逐笔原值或已登记的分箱、分位统计 |
@@ -98,16 +105,17 @@ block 类型：
 | 一笔信号怎样走到订单和成交 | `threads` | 有关联 ID 的真实记录链，缺项不补造 |
 | 多少信号通过过滤并成交 | `flow` | 同批次流向，显式起终点，数量守恒 |
 | 资产或因子怎样相连 | `network-circular`、`network-force` | 真实节点和边；布局距离不代表相关强度或因果 |
+| 哪个条件触发下一步，何时失效 | `decision-tree` | [条件决策树](decision-tree.md)：紧凑横向布局，缩放、拖拽、双击实际尺寸与全图适配；仅保留简洁图标，判断节点和分支承载逻辑，叶子只写结果或行动，不制造概率 |
 
 使用 `report_template(kind, chart_options)` 可直接生成上述图形的可编辑骨架。`chart_options` 只放字段映射、统计方法说明及显示选项；主数据自动来自 `data_id`。关系图的节点另有固定绑定时，用 `chart_data:[{property:'nodes',data_id:'nodes-binding'}]`，并把两个 binding 都传给 `report_publish.data`。高级交互继续在 `custom` 中直接调用 `SesameCharts.chart`，不要求重写页面或改变宿主协议。
 
-各图支持鼠标、键盘选中原始记录；`onSelect(row,index)` 的节点选择可能来自另一个绑定，此时 index 为 -1，应按 ID 或直接展示 row，不能误选第一个表格行。`parallel` 的 `onFilter(rows,indices)` 用于联动明细。模板搜索只筛选明细，不丢弃瀑布步骤或资金流向，保证图的含义完整。一次最多呈现 2,500 行；过大数据先保留来源地聚合或分组展示。
+SVG 图支持鼠标、键盘选中原始记录；默认 Canvas 蜡烛支持点击与十字线，键盘阅读使用明细表。`onSelect(row,index)` 的节点选择可能来自另一个绑定，此时 index 为 -1，应按 ID 或直接展示 row，不能误选第一个表格行。`parallel` 的 `onFilter(rows,indices)` 用于联动明细。模板搜索只筛选明细，不丢弃瀑布步骤或资金流向，保证图的含义完整。一次最多呈现 2,500 行；过大数据先保留来源地聚合或分组展示。
 
 `reportKit.destroy(container)` 会同时释放其中的可选图表；独立使用时也可调用 `SesameCharts.destroy(container)` 或返回句柄的 `destroy()`。当前组件列表可读 `SesameCharts.kinds()`。可读实例见 `examples/editorial-demo.html` 和 `examples/chart-gallery.md` 图集索引；插件还包含可在浏览器打开的完整离线演示 `examples/chart-gallery.html`。样本均明确为虚构演示，不能用于金融结论。不为了增加花样重复画同一组证据；仍可自主实现适合问题的新表达。Lieflat 上游当前为 PolyForm Noncommercial，不能把受限模板或资产直接拷入 MIT 成果。
 
 ## 视觉与本地化
 
-保持原版的无框版式：层级靠字号、字重、颜色与留白；少量细线用于指标上方、表格行、证据列表和折叠区；图表直接画在页面。默认主题字体和背景沿用 Sesame，系列色由 `--chart-series-1…6` 提供，正负色用 `--success` / `--danger`。不把每张图再包一层大卡片。
+保持原版的无框版式：层级靠字号、字重、颜色与留白；少量细线用于指标上方、表格行、证据列表和折叠区；图表直接画在页面。默认字体和背景沿用 Sesame；默认前两个系列为蓝色重点与灰色参照，更多类别用直接标签、形状或分面区分，不能将有序蓝阶当作无序类别色。正负和状态色用 `--success` / `--danger` 并配文字或形状。不把每张图再包一层大卡片。
 
 自定义内容优先使用 `--foreground`、`--muted`、`--surface-secondary`、`--border`、`--sans`、`--serif`、`--mono` 等语义变量，不重新定义整页字体和背景。用户指定的主题、专门的色彩编码、不同版式和交互可局部扩展；这不是拒绝任意颜色或 HTML 的校验规则。
 

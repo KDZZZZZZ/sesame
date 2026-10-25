@@ -6,7 +6,7 @@
 
 输入：{action:"inspect",python_path?} 检查给定/已选/私有/宿主/PATH Python；{action:"prepare",python_path?} 在无兼容环境时创建私有 venv。最小例 {action:"inspect"}。
 
-输出与状态：ready:true 返回 python、实际 Python/库版本、reused、origin、downloads/audit；inspect 成功会保存私有 selection，随即可用。ready:false 返回 required 和 failures[{python,code}]。
+输出与状态：ready:true 返回 python、实际 Python/库版本、reused、origin、downloads/audit；inspect 成功会保存私有 selection。ready:false 返回 required 和 failures[{python,code}]；缺少可选库是正常检查结果。ready 仅证明依赖就绪，不证明交易所网络连通。
 
 依赖入口：本机64位 Python>=3.11；库固定 ccxt 4.5.85。已有路径可直接传 python_path，不必先扫描磁盘。
 
@@ -30,7 +30,7 @@
 ## market_bind
 调用者：host。为宿主建立精确行情来源会话；不代表已取得报价。
 
-输入：{binding:{configuration:{exchange:"kraken"}}}；exchange=kraken|coinbase|okx。可加 credential-free HTTP(S) publicProxy；后续可用原样 connection:{id,revision} 恢复已保存路由。
+输入：{binding:{configuration:{exchange:"kraken"}}}；exchange=kraken|coinbase|okx。可加 credential-free HTTP(S) publicProxy；此插件不继承系统 HTTPS_PROXY，网络需要已有授权代理时显式填写该地址。后续可用原样 connection:{id,revision} 恢复已保存路由。
 
 输出与状态：{bindingId,connection:{id:"ccxt:kraken",revision:"4.5.85"},sourceId:"ccxt:kraken:spot",health:"configured",limitations}；代理路由 revision 为其摘要。只保存路由，不验证网络。
 
@@ -103,7 +103,7 @@
 
 副作用：process、network、plugin.session.write
 
-边界与恢复：每次请求结束后至少1秒的公开轮询；不是交易所逐笔推送。 订阅由宿主绑定、取消和释放，Agent 不持有 bindingId。stream.gap/RESYNC_REQUIRED 可按同一来源重新取得快照；具体 SCHEMA_MISMATCH 或首帧 position 缺失是协议问题，反复重绑、新建图或启用无关服务不能修复。 coverage.complete:false 表示覆盖未获证明，可使用已返回的真实行并保留限制，不能改成 true 或当作空数据/请求失败。历史查询成功不证明实时订阅或图表渲染成功。
+边界与恢复：初始快照立即读取，后续每次请求结束后至少1秒的公开轮询；不是交易所逐笔推送。同一路由的图表、历史和内部品种目录请求共享交易所原生的 CCXT 限速。 订阅由宿主绑定、取消和释放，Agent 不持有 bindingId。stream.gap/RESYNC_REQUIRED 可按同一来源重新取得快照；具体 SCHEMA_MISMATCH 或首帧 position 缺失是协议问题，反复重绑、新建图或启用无关服务不能修复。 coverage.complete:false 表示覆盖未获证明，可使用已返回的真实行并保留限制，不能改成 true 或当作空数据/请求失败。历史查询成功不证明实时订阅或图表渲染成功。
 
 ## ccxt_dispose
 调用者：host。关闭插件自有资源。

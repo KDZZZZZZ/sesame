@@ -6,6 +6,7 @@ import {tmpdir} from 'node:os';
 import {createAdapters} from '../packages/portfolio-execution/adapters.js';
 import {createService} from '../packages/portfolio-execution/service.js';
 import {records,closeRecords} from '../packages/portfolio-execution/records.js';
+import {nativeAdapterFixture} from './portfolio-adapter-fixture.mjs';
 
 function backendHost(execute){
   return {context:{kind:'main',sessionId:'fixture-clock-receipt'},plugins:{read:async()=>({state:'mounted',runtime_status:'ready'})},
@@ -40,6 +41,7 @@ function fixture(){
     assert.ok(Object.hasOwn(values,args.tool),'Unexpected native method '+args.tool);
     return {status:'returned',result:{result:structuredClone(values[args.tool]),last_error:[1,'Success']}};
   });
+  nativeAdapterFixture(host,{now:()=>now});
   return {host,state,record,fill,historyOrder,queries:tool=>state.calls.filter(call=>call.tool===tool).map(call=>call.arguments),
     status:signal=>createAdapters(host,{now:()=>now}).status(record,signal)};
 }
@@ -94,6 +96,7 @@ test('known order resolves a different native position ID and returns only that 
   const f=fixture();
   f.state.deals.push({...f.fill,ticket:'9007199254740999',order:'9007199254741001',comment:f.record.remark});
   f.state.deals.push({...f.fill,ticket:'9007199254741003',type:2});
+  f.state.deals.push({...f.fill,ticket:'9007199254741005',position_id:'9007199254741007'});
   const result=await f.status();
   assert.deepEqual(f.queries('history_orders_get'),[{ticket:orderId}]);
   assert.deepEqual(f.queries('history_deals_get'),[{position:positionId}]);assert.notEqual(positionId,orderId);

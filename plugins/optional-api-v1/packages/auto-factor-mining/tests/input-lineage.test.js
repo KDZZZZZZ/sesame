@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { archiveReport } from '../archive.js';
 import { MiningRuntime } from '../runtime.js';
+import { fixture } from './host-fixture.js';
 
 const inputRef = { id: 'artifact_sealed_panel', revision: 'revision_frozen', digest: `sha256:${'a'.repeat(64)}`, kind: 'data', schemaVersion: '1.0.0' };
 const source = () => ({
@@ -13,31 +14,30 @@ const source = () => ({
   tasks: [], trials: [], memory: [], reflections: [], events: [],
 });
 
+async function reportFixture() {
+  const f = await fixture(), host = f.main;
+  const root = await host.resources.create({ kind: 'directory', lifetime: 'durable', name: 'actual-input' });
+  await host.resources.create({ kind: 'file', lifetime: 'durable', parent: root, name: 'rows.json', source: { content: '[{"fixture":true}]' } });
+  const { ref } = await host.resources.publish(root, { kind: 'data', schemaVersion: '1.0.0', content: { format: 'json-rows', path: 'rows.json', rowCount: 1, columns: ['fixture'], provenance: { kind: 'demo' } }, dependencies: [], blobs: [{ path: 'rows.json', mediaType: 'application/json' }] }, { operationId: 'lineage-input' });
+  await f.runtime.dispose();
+  return { host, ref };
+}
 test('published factor report declares the exact frozen input as data and provenance dependency', async () => {
-  const run = source(), original = structuredClone(run), published = [];
-  let serial = 0;
-  const host = { resources: {
-    create: async spec => ({ id: `resource_${++serial}`, kind: spec.kind, version: 1 }),
-    publish: async (_resource, manifest) => { published.push(manifest); return { ref: { kind: 'report', id: 'report_1' }, receipt: {} }; },
-  } };
-  await archiveReport(host, run, { rows: [] });
-  assert.equal(published.length, 1);
-  assert.deepEqual(published[0].dependencies, [inputRef]);
-  assert.deepEqual(published[0].content.provenance.references, [inputRef]);
-  assert.deepEqual(published[0].content.data, [{ id: 'input-1', ref: inputRef, usage: 'Frozen factor evaluation input' }]);
-  assert.deepEqual(run, original);
+  const { host, ref } = await reportFixture(), run = source();
+  run.data = { ...run.data, inputRefs: [ref], synthetic: true, sourceId: ref.id, dependencies: [ref], provenance: { kind: 'demo', references: [ref] } };
+  run.config.evaluator.arguments.inputRef = ref;
+  const original = structuredClone(run), report = await archiveReport(host, run, { rows: [] });
+  const published = await host.resources.read(report.ref, { part: 'manifest' });
+  assert.deepEqual(published.dependencies, [ref]);
+  assert.deepEqual(published.content.provenance.references, [ref]);
+  assert.deepEqual(published.content.data, [{ id: 'input-1', ref, usage: 'Frozen factor evaluation input' }]);
+  assert.deepEqual(run, original); assert.equal(report.renderStatus, 'rendered');
 });
-
 test('registered datasets without an artifact input retain an empty dependency list', async () => {
-  const run = source(); delete run.data.inputRefs;
-  let manifest;
-  const host = { resources: {
-    create: async spec => ({ id: 'resource', kind: spec.kind, version: 1 }),
-    publish: async (_resource, value) => { manifest = value; return { ref: { kind: 'report', id: 'report_1' }, receipt: {} }; },
-  } };
-  await archiveReport(host, run, { rows: [] });
-  assert.deepEqual(manifest.dependencies, []);
-  assert.deepEqual(manifest.content.data, []);
+  const { host } = await reportFixture(), run = source(); delete run.data.inputRefs;
+  const report = await archiveReport(host, run, { rows: [] });
+  const manifest = await host.resources.read(report.ref, { part: 'manifest' });
+  assert.deepEqual(manifest.dependencies, []); assert.deepEqual(manifest.content.data, []);
 });
 
 function context(run, task, section) {

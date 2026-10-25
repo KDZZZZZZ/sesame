@@ -23,6 +23,9 @@ for (const [name, version, environment, selected] of [
   ['backtrader', '1.9.78.123', backtraderEnvironment, backtraderSelected],
 ]) test(`${name}: explicit existing interpreter discovery persists a reusable selection without installation`, async t => {
   const root = await directory(t), python = join(root, 'existing-python'), calls = [];
+  // CCXT rejects missing absolute interpreter candidates before its process port.
+  // This file only models discovery; processHost intercepts every execution.
+  if (name === 'ccxt') await writeFile(python, 'Synthetic interpreter path; never executed');
   // A controlled interpreter port models a real successful import. Any install,
   // download or unexpected command fails; no user environment is inspected.
   const host = processHost({ storageRoot: root }, async ({ argv, cwd }) => {
@@ -41,6 +44,7 @@ for (const [name, version, environment, selected] of [
   assert.equal((await selected(reopened)).python, python);
   assert.equal((await environment(reopened, { action: 'prepare' })).reused, true);
   assert.equal(calls.length, 3);
+  if (name === 'ccxt') await rm(python);
   assert.deepEqual(await readdir(root), ['selection.json']);
 });
 

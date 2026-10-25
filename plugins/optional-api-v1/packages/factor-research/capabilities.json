@@ -9,7 +9,7 @@
     {
       "id": "knowledge-0",
       "path": "prompt.md",
-      "description": "因子研究 — prompt.md",
+      "description": "Factor research workflow guide: organize hypotheses, candidate evaluation, frozen selection and holdout evidence; no registered source or evaluator function.",
       "kind": "prompt"
     },
     {
@@ -39,8 +39,32 @@
     {
       "id": "knowledge-5",
       "path": "skills/factor-research/SKILL.md",
-      "description": "因子研究 — skills/factor-research/SKILL.md",
+      "description": "Factor research workflow guide: organize hypotheses, candidate evaluation, frozen selection and holdout evidence; no registered source or evaluator function.",
       "kind": "skill"
+    },
+    {
+      "id": "scripts-factor-mjs",
+      "path": "scripts/factor.mjs",
+      "description": "Optional reference CLI, executed only through a declared workspace process capability; not a registered plugin function.",
+      "kind": "reference"
+    },
+    {
+      "id": "examples-plan-demo-json",
+      "path": "examples/plan.demo.json",
+      "description": "Synthetic CLI input example; not an observed market dataset.",
+      "kind": "reference"
+    },
+    {
+      "id": "examples-development-demo-json",
+      "path": "examples/development.demo.json",
+      "description": "Synthetic CLI input example; not an observed market dataset.",
+      "kind": "reference"
+    },
+    {
+      "id": "examples-holdout-demo-json",
+      "path": "examples/holdout.demo.json",
+      "description": "Synthetic CLI input example; not an observed market dataset.",
+      "kind": "reference"
     }
   ],
   "hooks": [],

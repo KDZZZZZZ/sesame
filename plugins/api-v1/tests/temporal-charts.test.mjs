@@ -68,9 +68,12 @@ test('temporal charts preserve source semantics through real browser interaction
         assert.ok(result.rankAxis.slice(1).every((box, i) => box.x > result.rankAxis[i].end), 'time labels must not overlap on mobile');
       }
       const before = await page.locator('#calendar [data-row-index="0"] rect').evaluate(n => getComputedStyle(n).fill);
+      assert.equal(before,'rgb(36, 115, 74)','Calendar gains keep the financial green, independent of theme accents');
+      assert.equal(await page.locator('#calendar [data-row-index="5"] rect').evaluate(n=>getComputedStyle(n).fill),'rgb(178, 67, 67)');
       await page.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
       const after = await page.locator('#calendar [data-row-index="0"] rect').evaluate(n => getComputedStyle(n).fill);
-      assert.notEqual(after, before);
+      assert.equal(after,'rgb(95, 227, 169)');
+      assert.equal(await page.locator('#calendar [data-row-index="5"] rect').evaluate(n=>getComputedStyle(n).fill),'rgb(255, 122, 143)');
       for (const { id, spec } of fixture.charts) {
         const mark = page.locator(`#${id} [data-row-index="0"]`);
         // A multi-axis SVG group's bounding-box center need not be on its

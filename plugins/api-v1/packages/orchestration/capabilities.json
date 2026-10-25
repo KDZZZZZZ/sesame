@@ -15,7 +15,7 @@
     {
       "id": "resource.1",
       "path": "prompt.md",
-      "description": "随包资源 prompt.md",
+      "description": "按目标委派普通Agent或显式协作工作流：选择知识方法与调用能力，传递证据并管理同一Run的暂停/恢复。",
       "kind": "prompt"
     },
     {

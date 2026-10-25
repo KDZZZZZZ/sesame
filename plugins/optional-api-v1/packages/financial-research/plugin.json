@@ -1,9 +1,9 @@
 {
   "id": "sesame/financial-research",
   "apiVersion": "2",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "title": "金融研究工具",
-  "description": "供用户和交易 Agent 共同使用的金融研究证据：行情、财报、新闻、SEC 公告、分析师、内部人、宏观和讨论；保留来源、获取时间和可见性边界。",
+  "description": "信息获取能力：取得并复用SEC/FMP/FRED/Reddit/CFTC来源证据，保留固定引用、来源、获取/可用时间及覆盖；单项解释与综合由方法和工作流负责。",
   "license": "MIT",
   "default_state": "discoverable",
   "entry": "index.js",
@@ -18,7 +18,15 @@
     "PROVENANCE.md"
   ],
   "engines": {
-    "sesame": ">=0.2.4"
+    "sesame": ">=0.3.0-dev.1 <0.4.0"
   },
-  "capability_manifest": "capabilities.json"
+  "capability_manifest": "capabilities.json",
+  "permissions": {
+    "scopes": [
+      "application.configure"
+    ],
+    "calls": [
+      "host.configuration.update"
+    ]
+  }
 }
