@@ -11,8 +11,18 @@ test('a package may narrow a reviewed profile to require newer host features', (
   assert.equal(engineWithinProfile('>=0.2.1-beta.2.1','>=0.2.1-beta.2'),true);
 });
 
+test('bounded development engine bands narrow rather than widen either profile endpoint', () => {
+  assert.equal(engineWithinProfile('>=0.2.1 <0.3.0', '>=0.2.0-0'), true);
+  assert.equal(engineWithinProfile('>=0.3.0-dev.1 <0.4.0', '>=0.2.0-0'), true);
+  assert.equal(engineWithinProfile('>=0.3.0-dev.2 <0.3.1', '>=0.3.0-dev.1 <0.4.0'), true);
+  assert.equal(engineWithinProfile('>=0.3.0-dev.1 <0.4.0', '>=0.3.0-dev.1 <0.4.0'), true);
+  for (const range of ['>=0.2.4 <0.4.0', '>=0.3.0-dev.1', '>=0.3.0-dev.1 <0.5.0', '>=0.4.0 <0.4.0', '>=0.5.0 <0.4.0', '>=0.3.0-dev.1 <invalid', '>=0.3.0-dev.1 <0.4.0 || >=0.2.4']) {
+    assert.equal(engineWithinProfile(range, '>=0.3.0-dev.1 <0.4.0'), false, range);
+  }
+});
+
 test('the validator refuses widened, unsupported and malformed engine ranges', () => {
-  for (const range of ['>=0.1.9','>=0.1.999','>=0.0.0','*','^0.2.1','>=0.2.1 || >=0.1.0','>=0.2.1 <0.3.0','>=0.02.1','>=0.2.1-01','>=0.2.1-',null,{},'>=0.2.1\n']) {
+  for (const range of ['>=0.1.9','>=0.1.999','>=0.0.0','*','^0.2.1','>=0.2.1 || >=0.1.0','>=0.2.1 <=0.3.0','>=0.02.1','>=0.2.1-01','>=0.2.1-',null,{},'>=0.2.1\n']) {
     assert.equal(engineWithinProfile(range,'>=0.2.0-0'),false,String(range));
   }
   assert.equal(engineWithinProfile('>=0.2.1-beta.2','>=0.2.1-beta.10'),false);
