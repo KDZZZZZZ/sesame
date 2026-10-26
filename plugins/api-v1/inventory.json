@@ -6721,7 +6721,7 @@
     },
     {
       "id": "sesame/user-guide",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "distribution": "core",
       "state": "mounted",
       "engines": {

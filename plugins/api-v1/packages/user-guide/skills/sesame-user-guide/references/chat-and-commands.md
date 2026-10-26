@@ -10,6 +10,14 @@
 
 分析本机数据也可提供普通文件的绝对路径或公开数据网址。没有内容时显示 Open Sesame；输入框提示“发送消息，@ 引用报告，/ 使用命令…”。
 
+## 思考、用时与最终回答
+
+当前轮底部显示进度和本轮用时。有模型实际返回的思考内容时，在这里流式展示并可滚动；思考结束后显示最近的摘要标题，没有标题则取首段首句。尚未收到思考内容时，按当前活动显示“正在思考”或“正在使用工具”，不会凭空补写思考。回复结束后计时停止。
+
+有最终回答的已完成轮次将中间文字和工具操作默认收进“查看过程”，可按需展开；最终回答和用户插入的消息保留。展开某项操作只查看该项细节。
+
+回答下方的复制按钮在生成中复制当前已输出正文，完成后优先复制最终回答；不带思考、工具标签或报告按钮，成功后短暂显示“已复制”。输入框的模型选择只列出已配置项，新增配置从“模型与运行状态”进入。
+
 ## @ 引用的是什么
 
 `@` 打开 **Research / Strategy 报告选择器**，输入报告名称片段筛选；不是 @某个 Agent、@品种 或通用 @文件 命令。
@@ -34,6 +42,8 @@
 | `/ultra stop` | 停止 Ultra 登记的工作。 | 即时控制，取消不会回滚已经发生的外部操作。 |
 | `/skill:名称 你的要求` | 把当前已加载 skill 的说明带给 Agent，让它按这个流程处理要求。 | 名称必须与本会话已加载 Skills 一致；不是执行系统命令，不自动启用被禁用的插件。 |
 
+Ultra 由默认插件 `sesame/ultra` 提供，用持久状态记录是否开启，生命周期独立于一次模型回复。主会话输入框上方的流光徽章只在实际开启时显示；发送 `/ultra` 不代表 Agent 已完成启动。点击徽章的关闭按钮或发送 `/ultra off`，成功后徽章消失，已启动的研究继续；后续不再强制最大化并行，但仍可按需使用 subagent 和工作流。状态同步失败时可点“刷新状态”。未安装或不可使用时，先解决插件状态，不能仅凭聊天文字声称已开启。
+
 `/clear 请忘记之前的内容` **不是** `/clear` 命令。想让 Agent 忘记一条长期记忆，请明确告诉 Sesame 要忘记哪条，由它读取并修改对应记忆；清屏不能代替遗忘。清屏后更早记录仍保存在数据中，但不再由当前可见历史继续翻出。
 
 可直接使用：
@@ -54,9 +64,12 @@
 | --- | --- |
 | sesame/user-guide / `sesame-user-guide` | 产品上手与操作说明。 |
 | sesame/orchestration / `coordinate-research` | 组织研究阶段、工作流与并行子 Agent，接续并核验成果。 |
+| sesame/plugin-manager / `manage-plugins`、`develop-plugins` | 发现与管理已有插件，或开发、测试和维护新插件。 |
+| sesame/workspace / `prepare-environment` | 检查并复用本机环境，按任务准备依赖和工作文件。 |
 | sesame/configuration / `configure-application` | 读取模型与通用偏好设置，核对版本后修改。具体后端连接由相应插件管理。 |
+| sesame/canvas-control / `market-chart` | 按目标布置工作台、添加行情图并叠加曲线。 |
 | sesame/memory / `manage-memory` | 整理长期偏好、研究结论和纠错经验。 |
-| sesame/data-access / `analyze-data` | 依据数据分析问题。 |
+| sesame/data-access / `market-discovery`、`analyze-data` | 寻找合适的数据来源、取得可复用输入并完成分析。 |
 | sesame/reports / `report-writing`、`report-design`、`interactive-report` | 把研究写成可阅读、可交互的报告。 |
 | sesame/mt5 / `mt5-official` | 按当前终端支持情况使用 MT5。 |
 | sesame/strategy-authoring / `strategy-authoring` | 编写 SVL 源、检查图与固定输入演算，再交给目标插件翻译和验证。 |
@@ -66,6 +79,6 @@
 | sesame/rss-collect / `rss-collect` | 整理 RSS/Atom 订阅内容。 |
 | sesame/market-data-parser / `market-data-parser` | 整理支持格式的市场数据。 |
 
-外部插件还可能增加 skill。不是每个插件都有 skill；内部工具名也不是 `/命令`。配置助手只对主 Agent 开放；本指南由独立的 `sesame/user-guide` 提供。subagent 的实际可用列表仍以其已加载插件和作用域为准。
+外部插件还可能增加 skill。不是每个插件都有 skill；例如 `sesame/ultra` 提供 `/ultra` 命令，没有同名 `/skill:`。内部工具名也不是 `/命令`。配置助手只对主 Agent 开放；本指南由独立的 `sesame/user-guide` 提供。subagent 的实际可用列表仍以其已加载插件和作用域为准。
 
-维护依据：`composer.tsx`、`composer-add-menu.tsx`、`mention-editor.tsx`、`slash-commands.ts`、`lib/mentions.ts`、`message-queue.js`、`message-history.js`、`conversation-commands.js`、`message-attachments.js`；`runtime.js` 将用户文本交给 Pi 的 `session.prompt`，已安装 Pi SDK 的 skill 展开使用 `/skill:`，`PluginRegistry.loader` 仅提供本会话活动的 Skills，不加载 CLI 内置命令或模板。
+维护依据：前端 `features/conversation` 的 `composer.tsx`、`composer-add-menu.tsx`、`mention-editor.tsx`、`slash-commands.ts`、`turn-progress.tsx`、`transcript-intent.mjs`、`transcript-grouping.mjs`、`reply-copy-button.tsx`、`ultra-status.tsx`，以及 `lib/mentions.ts`、宿主 `message-queue.js`、`message-history.js`、`conversation-commands.js`、`message-attachments.js`；`runtime.js` 将用户文本交给 Pi 的 `session.prompt`，已安装 Pi SDK 的 skill 展开使用 `/skill:`，`PluginRegistry.loader` 仅提供本会话活动的 Skills，不加载 CLI 内置命令或模板。

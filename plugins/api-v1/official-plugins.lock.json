@@ -1022,9 +1022,9 @@
     },
     {
       "id": "sesame/user-guide",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "directory": "user-guide",
-      "treeDigest": "sha256:d347f26ad4d88470ababb40963abb41f286c2f31208e88026bee0cbd9cf06652",
+      "treeDigest": "sha256:613829fe9866c79989db07c6a9852c129bd3a84024fca0aeadf20c3e39470d8b",
       "files": [
         {
           "path": "LICENSE",
@@ -1038,58 +1038,58 @@
         },
         {
           "path": "package.json",
-          "sha256": "8586f5631b13b9e37a08f6b6fb90c71219ceffbefda82bd790676102e6dbe218",
+          "sha256": "0ee30a8f0dd41d08e84a6f6730e796ab7049aaad8ff163a90f6277f90de77fea",
           "bytes": 104
         },
         {
           "path": "plugin.json",
-          "sha256": "39886750bd7baef64075f0d8b4fa45216c95c344e31042852876e07011a71068",
+          "sha256": "08427f6a35ad12128cd9e2a065c87b75562400a998e1f4b24ea7aa15d6c21e15",
           "bytes": 914
         },
         {
           "path": "prompt.md",
-          "sha256": "8e68234d083a2c297ad045b5c4417da0c1e39b382085ec4e54dcadb676b2b56d",
-          "bytes": 1015
+          "sha256": "cfc3fe8e96f42be54c0195a9c01d415d4794792f1a86481d97c05e3eb3265edd",
+          "bytes": 1072
         },
         {
           "path": "skills/sesame-user-guide/SKILL.md",
-          "sha256": "baac911a6a9cf9b8bb4bd26656ebe2ce1427a6a3d0298dbfbd8c9fcda82ead03",
-          "bytes": 4267
+          "sha256": "d5cf3bebd7c04e7498dadecab4dbfa4a0ad63bce45dae021e58f63498fc4b0da",
+          "bytes": 4429
         },
         {
           "path": "skills/sesame-user-guide/references/chat-and-commands.md",
-          "sha256": "179071affc77165019e450d486191bee8f92f0b3dde2e7abca19050730fbb08b",
-          "bytes": 7541
+          "sha256": "aaeaddf40e962035fe58ef177e22556545da59999e2e69490c87ea9531db87d6",
+          "bytes": 9669
         },
         {
           "path": "skills/sesame-user-guide/references/dashboard.md",
-          "sha256": "146d116d07f4a510623e9d6815da43208b066f1ebd93bd719fad9705ab107ac3",
-          "bytes": 8280
+          "sha256": "94b5120da03ba0f8d4e855458e2b1bbf5a9e26fd5684e799c3671271343f7095",
+          "bytes": 9736
         },
         {
           "path": "skills/sesame-user-guide/references/installation.md",
-          "sha256": "695a5a337a5f31ee47166b8eb9e94a837db64ac32a116cca98b2b8d9263a2384",
-          "bytes": 1982
+          "sha256": "512c2d279117d755d38427e325a83582e38cba3357c4dfa137d0144382be96dc",
+          "bytes": 3191
         },
         {
           "path": "skills/sesame-user-guide/references/settings.md",
-          "sha256": "1af326fd1a17c3f7f10d9f74664618fe7558dbc72966df16f83643ad06d20a7b",
-          "bytes": 3521
+          "sha256": "03f18b5fd2ebf04840a7f513d48448fa20b9babc6d8ecc201d3101efe18e03c1",
+          "bytes": 3424
         },
         {
           "path": "skills/sesame-user-guide/references/troubleshooting.md",
-          "sha256": "32ddaec1f234bf49c5ffd4628421143a1233243fd755720b9f6b4f9b40a3ce0e",
-          "bytes": 4219
+          "sha256": "38e5edf1e3b74a9b8936c0b57c46da307b754972dbd3237f014ca23c176b8563",
+          "bytes": 5618
         },
         {
           "path": "skills/sesame-user-guide/references/website-docs.md",
-          "sha256": "45bab3b614f63d84d2ab1f423c6d49762754b38288be1833194fbf558e0e9418",
-          "bytes": 1080
+          "sha256": "af9076910e7f552b55d89b1215a1fb3e8f7ffeb67dd550c1c3d9aecfb6884b05",
+          "bytes": 1173
         },
         {
           "path": "skills/sesame-user-guide/references/workflows.md",
-          "sha256": "e0683869c3a63f484a22d15b9a65917fa33099de3254cc184a0b013af69d26f3",
-          "bytes": 9083
+          "sha256": "04e5d32531c1098aff3428d65b3a14d22112f08105be5cf44b406b244fa199a4",
+          "bytes": 9880
         }
       ]
     },
