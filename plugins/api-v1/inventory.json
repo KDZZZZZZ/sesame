@@ -4954,7 +4954,7 @@
     },
     {
       "id": "sesame/plugin-manager",
-      "version": "3.1.1",
+      "version": "3.1.2",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -6541,9 +6541,9 @@
     },
     {
       "id": "sesame/ultra",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "distribution": "core",
-      "state": "discoverable",
+      "state": "mounted",
       "engines": {
         "sesame": ">=0.3.0-dev.1 <0.4.0"
       },

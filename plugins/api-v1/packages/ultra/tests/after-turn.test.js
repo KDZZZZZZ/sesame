@@ -14,6 +14,17 @@ async function started(t) {
 const settled = (f, task) => until(() => f.store.runs.get(task.cycle.id)?.value.status === 'completed');
 const planners = f => f.store.calls.filter(call => call.capability === 'host.agent.run');
 
+test('ordinary turns leave an available Ultra plugin off until a goal is explicitly started', async t => {
+  const f = fixture(); t.after(() => f.close());
+  const initial = await status(f.host, {});
+  assert.equal(initial.enabled, false);
+  await beforeTurn(f.host, { conversation: { id: 'conv_main' }, messageId: 'ordinary-question', parts: [{ type: 'text', text: '解释一下成交量。' }] });
+  assert.deepEqual(await afterTurn(f.host, ended()), { continued: false });
+  assert.deepEqual(await status(f.host, {}), initial);
+  assert.equal(f.store.runs.size, 0);
+  assert.equal(f.store.calls.length, 0);
+});
+
 test('a completed main turn with a pending goal launches a real new exploration using prior outcomes', async t => {
   const f = await started(t);
   const branch = await dispatch(f.host, { branches: [work('initial-data')] });

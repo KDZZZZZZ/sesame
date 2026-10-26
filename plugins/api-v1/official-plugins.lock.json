@@ -934,9 +934,9 @@
     },
     {
       "id": "sesame/ultra",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "directory": "ultra",
-      "treeDigest": "sha256:b679bec5ac89de21cea05d1bbdd502541c91c20002158c51053c2c6c15bab75b",
+      "treeDigest": "sha256:9c24efbfbdf2637dcd507449c6a2bf8c81befc4e556cd1bc72cca11980e7b466",
       "files": [
         {
           "path": "LICENSE",
@@ -965,13 +965,13 @@
         },
         {
           "path": "package.json",
-          "sha256": "63150534f853f16175f160829feb5f70c7561bc9fbe9fa3591bd993adbc892a6",
+          "sha256": "be1fb32f752604eb0c8a7ffdab0dcf3a6a53922c855ec99dd718683a3cad428b",
           "bytes": 167
         },
         {
           "path": "plugin.json",
-          "sha256": "e23df27ff94cfbaf9daa3e92228c460224a5c960fe4ef8673ab071c0edb9272c",
-          "bytes": 899
+          "sha256": "fbff1903f72fe1fdd1e9f93c81deed09585af63c2bdba383f3930e03f4658bec",
+          "bytes": 894
         },
         {
           "path": "prompt.md",
@@ -995,8 +995,8 @@
         },
         {
           "path": "tests/after-turn.test.js",
-          "sha256": "876e2bfe600df8bd2356327597c9be5dba74bc4a05f68703b5c838bd94340544",
-          "bytes": 9193
+          "sha256": "b96e70d806ad1c632327e89c21cb14688e0542758b4ddb37b012f7e52b777c09",
+          "bytes": 9808
         },
         {
           "path": "tests/close.test.js",
