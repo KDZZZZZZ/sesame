@@ -395,9 +395,9 @@
     },
     {
       "id": "sesame/plugin-manager",
-      "version": "3.1.1",
+      "version": "3.1.2",
       "directory": "plugin-manager",
-      "treeDigest": "sha256:0a7bae17225511597179f0697fdf9a3919ffbff0b5d84b22c6818ee497ba3845",
+      "treeDigest": "sha256:8cb449f67723528430103f898d719d109e649cceb63eac9f9cbb7629a6a5fd93",
       "files": [
         {
           "path": "LICENSE",
@@ -431,12 +431,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "4b584cf5e394502769d47c3037cc0d8dc994487b46a65faa9de25c6f360c225e",
+          "sha256": "5422d8457ca2eb9d3b47c30454d6a3242de2859a4dd09db663ac7133e2a2a643",
           "bytes": 108
         },
         {
           "path": "plugin.json",
-          "sha256": "70f0dc02a1487839e91e60fc08ea902ca3cf733ee2882367b30dc4e0484c7461",
+          "sha256": "db009d38f53b8757dcd9ed060bcbb0dece494a030dc5a08761f60151f1bb43b4",
           "bytes": 977
         },
         {
@@ -456,13 +456,13 @@
         },
         {
           "path": "skills/develop-plugins/SKILL.md",
-          "sha256": "f279360d2e150f81a7a05a2d7e571e1f64136fcfa2d71cbb7cb404162ef5b8b9",
-          "bytes": 2559
+          "sha256": "166110e05bcdb6531f86c09fda1754911cda5c3f5910d35a19235cdacdbff863",
+          "bytes": 2759
         },
         {
           "path": "skills/develop-plugins/references/authoring.md",
-          "sha256": "9e2a31057d0f103696adad038c67478276f329a37921e85c921e38ac751efb2b",
-          "bytes": 15346
+          "sha256": "71750d2d62f35d8423f94e2eaef94e171118e430be7a84f1a928d02607c8cff2",
+          "bytes": 16354
         },
         {
           "path": "skills/develop-plugins/references/host-api.md",

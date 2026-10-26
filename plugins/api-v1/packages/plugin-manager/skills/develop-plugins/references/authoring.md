@@ -21,7 +21,7 @@
 
 plugin.json 必须 apiVersion:"2"、execution:"native"（或包的实际 MCP 执行方式）、capability_manifest:"capabilities.json"。不再声明 tool_names、tool_definitions 或 createTools。
 
-capabilities.json 包含 schemaVersion:1、apiVersion:"2"、configSchema，以及显式数组 capabilities、sources、views、services、knowledge、hooks、stateCollections、artifactSchemas。能力的 id、kind、consumers、description、inputSchema、outputSchema、execution、effects、usage、binding 都必填。usage 包含 purpose、inputs、outputs、prerequisites、limitations，可加惰性 examples（input/output）和 references。examples 只校验，不执行。
+capabilities.json 包含 schemaVersion:1、apiVersion:"2"、configSchema，以及显式数组 capabilities、sources、views、services、knowledge、hooks、stateCollections、artifactSchemas。能力的 id、kind、consumers、description、inputSchema、outputSchema、execution、effects、usage、binding 都必填。usage 的 purpose、inputs、outputs 是字符串；prerequisites、limitations 是字符串数组，没有条目时填 []。可选 examples 是 {input,output,description?} 对象数组，只校验、不执行。可选 references 是 {title,url,version?} 对象数组，url 必须是完整 HTTP(S) 地址；包内文档用 knowledge 声明，不把本地路径字符串填进 usage.references。
 
 ## 功能分类与文件组织
 
@@ -39,7 +39,7 @@ implementationKinds 可使用 knowledge、function、adapter、workflow、servic
 
 脚手架的 native 和 skill 参数保持兼容。knowledge 生成方法与验证参考；function 生成 src/analyze.js 和可验证的求和示例；adapter、workflow、service 分别生成 src/source.js、src/runtime.js、src/service.js，业务未实现前明确抛出 NOT_IMPLEMENTED。workflow 声明 kind:workflow、execution:run，不预先宣称可恢复。按实际需要再拆 market/account/trading、members/composition/artifacts 或 state 模块，不补空层次。
 
-index.js 只负责注册；全部资源通过 knowledge 显式声明。跨包复用使用 host.capabilities.invoke，禁止相对导入另一个插件的实现。发布前选择许可证、补全 LICENSE/PROVENANCE.md、对齐包版本并更新固定文件摘要。
+index.js 只负责注册；供 Agent 读取的知识正文通过 knowledge 显式声明。knowledge 是知识入口清单，不是完整包文件清单。跨包复用使用 host.capabilities.invoke，禁止相对导入另一个插件的实现。发布前选择许可证、补全 LICENSE/PROVENANCE.md、对齐包版本并更新固定文件摘要。
 
 ## 配置与密钥绑定
 
@@ -91,6 +91,8 @@ sources/views/services/hooks 的元素是 {id,contract,consumer:"host",configSch
 stateCollections:{name,schemaVersion,schema,mode:"document"|"log",access:"private"|"workspace"}。artifactSchemas:{id,kind,schemaVersion,schema}；发布使用实际字节和固定来源引用。不要把声明中的“成功”字段作为宿主证明。
 
 knowledge 的每项显式写 {id,kind:"reference"|"prompt"|"skill",path,description}。prompt 和 skill 入口正文在默认装配或本会话明确加载后进入模型上下文；skill 指向有合法 frontmatter 的 SKILL.md。reference 保持按需读取，不因文件名而自动变成指令。知识路径必须属于包内，不能依赖 Agent 扫描未声明文件来补全用法。入口应简洁，长手册、样本和细节放 reference。
+
+knowledge、plugin.json 的 resources/prompts 以及 SKILL.md 中每份正文最多 128 KiB，按 UTF-8 字节计，不按字符计；这不是所有包文件的大小上限。完整测试数据、预期结果、审计日志和实现文件可以作为普通包文件保留，不必注册为知识资源。例如 tests/fixtures.json 超过此限制时，保留原文件及测试引用，移除其 knowledge/resources 声明，用小型参考文档说明样例和验证结果；不截断或拆坏测试数据。确需给 Agent 阅读的大篇幅手册可按主题拆成多个 reference。未声明的包文件仍参与包摘要与安装，仅不会作为 plugin_read 的知识正文暴露。
 
 按能力划分层次，不要求一个插件只有一种层次。信息获取与解析提供来源、时点、覆盖、字段及固定证据引用；方法消费已有证据，回答一个局部问题并给出假设、支持/反证和失效条件；工作流负责选择互补方法、补齐具体缺口和综合分歧。同源派生结果不是多份独立证据。交易执行消费明确决策和授权，不能由读取操作隐式升级。
 
