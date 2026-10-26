@@ -2,7 +2,7 @@
   "id": "sesame/reports",
   "title": "交互报告",
   "description": "统一风格的交互研究与策略报告，含 SVL 逻辑图、回测选优热力图、全部参数组与敏感性分析。",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "default_state": "mounted",
   "prompts": [
     "prompt.md"
@@ -42,7 +42,8 @@
     "assets/backtest-explorer.js",
     "assets/backtest.css",
     "templates/backtest.html",
-    "skills/report-writing/backtest.md"
+    "skills/report-writing/backtest.md",
+    "skills/report-design/components.md"
   ],
   "templates": {
     "report_repair": "repair.md"

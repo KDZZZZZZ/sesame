@@ -1286,7 +1286,7 @@
     {
       "id": "resource.1",
       "path": "prompt.md",
-      "description": "随包资源 prompt.md",
+      "description": "报告职责、证据、真实交付与统一视觉验收原则；详细设计参数按需读取。",
       "kind": "prompt"
     },
     {
@@ -1382,7 +1382,7 @@
     {
       "id": "resource.17",
       "path": "skills/report-design/SKILL.md",
-      "description": "随包资源 skills/report-design/SKILL.md",
+      "description": "选统一模板与现成图表，核对主题和语义色，检查当前发布修订的实际渲染及视觉一致性。",
       "kind": "skill"
     },
     {
@@ -1395,6 +1395,12 @@
       "id": "resource.document-template",
       "path": "templates/document.html",
       "description": "共享样式的纯正文报告模板，不需要占位图表或数据",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.report-components",
+      "path": "skills/report-design/components.md",
+      "description": "reportKit 页面骨架、outline 与图表参数、明细联动、规模限制、资源释放和本地化。",
       "kind": "reference"
     }
   ],

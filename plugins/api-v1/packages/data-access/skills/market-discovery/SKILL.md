@@ -1,23 +1,35 @@
 ---
 name: market-discovery
-description: Discover declared market sources and exact instruments, then freeze actual paged history or bind a chart.
+description: 根据任务发现数据来源、缓存和精确品种，选择一般查询、固定历史或图表显示入口，并核对实际结果。
 ---
 
-已知有效的 SourceRef 和 InstrumentRef 可直接复用，无需重复发现。缺少来源时 data_providers({contract:"sesame.market/1"}) 返回 ref={providerId,revision}；available=false 表示所属插件需加载。binding 的可用字段来自 configSchema。
+# 发现与获取数据
 
-缺少精确品种身份时 market_instruments({action:"search",source,query}) 返回真实分页与 InstrumentRef；需要周期、价格、复权、时段或时间口径时 describe 提供相应声明。metadata.connection 的实际 {id,revision} 可固定到 source.binding.connection。游标续页保持同一查询与 limit。
+## 1. 复用已有证据，定位缺口
 
-显示任务可用 canvas_binding 生成 chart，再让 canvas_apply 接受它；已有匹配绑定不必重建。成功证据来自 canvas_inspect 当前版本的目标图表 rendered 与实际 bar_count，feed_status 独立反映实时流。warning 是历史覆盖等非阻断限制，不等于 error；无回执只能说明尚无显示证据。明确协议错误应保留来源和操作信息，重复重绑相同身份不能修复协议。
+已有适用的 DataRef、SourceRef 和 InstrumentRef 可直接复用，不重复发现。明确缺少的是来源、品种、时间范围、周期还是字段，再查询相应目录或插件能力。
 
-历史数据调用 market_read：
-- operation_id、title 是此次精确快照的稳定身份。
-- source 为固定 SourceRef；instrument 为发现得到的精确标识。
-- spec={timeframe,priceBasis,adjustment,session,calendarRevision}，只选真实声明值；唯一选项可由 canvas_binding 选择。
-- range={from:SourceTime,to:SourceTime} 是含头不含尾范围；UTC 使用 {basis:"utc",unixMs}，wall 使用 {basis:"wall",authority,value}，不向未知时区添加 Z。
-- include_forming 明确是否包含形成中 K 线，volume_kind 必须为 real、tick 或 none；max_rows 默认 10000，上限 100000。
+data_sources 查全部声明来源；data_providers 只保留市场与账户来源，不能用于寻找所有数据集或原生缓存。列表缺项时继续查适配器的公开能力和资源。例如 MT5 有 mt5_cache 与 bars 数据源，具体操作和账户范围按其声明选择；不能因没有通用 cache 工具就放弃本机缓存。
 
-返回 ref 是固定行 DataRef，evidence 是公开原始 Bar 页、来源元数据和覆盖证据；rowCount、columns、sample 是实际投影摘要。data_read({ref}) 可将这些行写入执行目录。没有短期 query_id 或新注册 dataset_id。配置和凭据不会写入市场快照；临时 host cursor 也不作为证据。
+## 2. 确认身份与可用性
 
-Decimal 和 SourceTime 原样保留。unknown 或 none 的 volume 为 null，real 的单位和 tick 计数不同。status:partial 或 coverage.complete:false 不证明完整市场历史，即使分页已结束。demo 输入始终保留 demo。DST fold 无内置解歧义能力，遇到显式 fold 报错，不能移除字段强行通过。
+行情缺少精确品种时使用 market_instruments search，需核对周期、价格、复权、时段或时间口径时再 describe。使用返回的 ref，展示 symbol 不能替代 InstrumentRef；连接修订与来源修订分别保留。
 
-同一 operation_id 重试读取已冻结结果；新观察使用新 ID。失败发生在完整读取之后时复用保存的字节。中途网络错误、快照漂移、max_rows/200 页/16 MiB 超限都不发布截断结果。数据源自己的缺口声明与宿主分页完成是两个独立事实。
+available 不是连接健康或会话加载状态。为 false 时通过 plugin_inspect 查实际禁用、运行失败及依赖诊断；按原因处理，而不是一律 plugin_load。配置交给来源插件与统一配置入口，SourceRef.binding 只接受来源 configSchema 明示的配置。
+
+## 3. 按任务选择入口
+
+| 任务 | 入口与交付 |
+| --- | --- |
+| 查看一般来源的一页数据 | data_query；需要后续页时沿用 nextCursor。 |
+| 固定一般来源的完整查询结果 | data_snapshot；自动分页，返回固定 DataRef 与证据。 |
+| 取得研究用历史 K 线 | market_read；固定精确品种、spec 和区间。 |
+| 显示行情或指标 | 画布插件的 canvas_binding → canvas_apply；已有匹配绑定直接复用。 |
+
+一般来源、查询、缓存、分页和失败恢复见 [来源查询](references/source-queries.md)。行情的完整参数、时间与成交量语义见 [历史与显示](references/market-history.md)。不要把来源 operations 的宿主内部能力当成 Agent 工具直接调用。
+
+## 4. 核对实际结果并交接
+
+历史结果用 ref、evidence、实际行数和来源元数据核对，交给方法、工作流或 analyze-data。保留 Decimal、SourceTime 与真实来源标记；预算超限、快照漂移或中途失败不发布截断结果。同一操作重试保持输入与 ID，新观察用新 ID。
+
+显示结果检查 canvas_inspect 当前版本的目标图表状态、bar_count 与 feed_status。历史读取成功不证明实时流或浏览器显示正常；warning 不等于 error。订阅错误以底层来源诊断为准，不把指标缺少输入另判为新的来源故障。协议错误不能靠重复重绑或新建探针图消除。

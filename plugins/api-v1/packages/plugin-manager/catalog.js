@@ -119,7 +119,7 @@ export async function catalogQuery(args, signal, fetcher) {
   const items = catalog.plugins.filter(entry => entry.status === 'active' && (!args.plugin_id || entry.id === args.plugin_id) && `${entry.id} ${entry.title} ${entry.description}`.toLowerCase().includes(query));
   return { catalog_url: CATALOG_URL, legacy_catalog_url: LEGACY_CATALOG_URL, catalog_digest: digest, schemaVersion: catalog.schemaVersion, apiVersion: '2', channel: 'development', releases: catalog.releases,
     items: items.map(({ package: pkg, ...entry }) => ({ ...entry, package: { treeDigest: normalize(pkg.treeDigest), files: pkg.files.length, bytes: pkg.files.reduce((sum, file) => sum + file.bytes, 0), ...(pkg.baseUrl ? { baseUrl: pkg.baseUrl } : {}) } })),
-    next: 'Use exact plugin_id and catalog_digest with plugin_install_catalog. For a newer catalog version, inspect the installed digest and explicitly choose action:update with expected_digest. Keep a newer installed version or use explicit rollback for an older version. The host enforces update versions and permissions. Identical bytes return already-installed; disabled plugins stay disabled. Only API 2 packages are accepted.' };
+    next: 'Use exact plugin_id and catalog_digest with plugin_install_catalog. For a newer catalog version, inspect the installed digest and explicitly choose action:update with expected_digest. Keep a newer installed version when the catalog is older; this interface does not support downgrades. The host enforces update versions and permissions. Identical bytes return already-installed; disabled plugins stay disabled. Only API 2 packages are accepted.' };
 }
 
 async function installed(host, id) {
@@ -149,7 +149,7 @@ export async function installCatalog(host, args, signal, fetcher = globalThis.fe
       check(present.digest === expected, 'The same version has different bytes; refusing replacement', 'CATALOG_VERSION_CONFLICT');
       return { installed: present, status: 'already-installed', reused: true, catalog_digest: digest };
     }
-    if (action === 'install') check(!present, 'A different version is installed; inspect it. Only a newer catalog version can use action:update with expected_digest; older versions require explicit rollback', 'CATALOG_UPDATE_REQUIRED');
+    if (action === 'install') check(!present, 'A different version is installed; inspect it. Only a newer catalog version can use action:update with expected_digest; keep a newer installed version because this interface does not support downgrades', 'CATALOG_UPDATE_REQUIRED');
     else check(present && present.digest === args.expected_digest, 'Installed digest changed or the plugin is absent; inspect it again', 'CATALOG_INSTALLED_CHANGED');
     check(host.context.workspaceRoot, 'A workspace is required');
     const parent = join(host.context.workspaceRoot, 'plugin-drafts'); await mkdir(parent, { recursive: true });

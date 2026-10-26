@@ -4,6 +4,8 @@
 
 开发流程：plugin_create → 实现业务和测试 → plugin_install → 实际能力验收。更新先 plugin_inspect，再 plugin_update(expectedRevision)。工具返回的是实际运行结果，不提供虚构的兼容导出、回滚或测试通过标志。
 
+管理已有插件见 [manage-plugins](skills/manage-plugins/SKILL.md)；开发实现见 [develop-plugins](skills/develop-plugins/SKILL.md)。prompt 只保留职责和原则，两份技能提供操作步骤，接口细节按需读取 reference。原生包安装检查不代替包内业务测试。
+
 独立创建草稿可运行 scripts/create-plugin.mjs。既有 native 与 skill 参数继续可用；新增 knowledge、function、adapter、workflow、service 模板，均生成完整 API 2 声明及与其对应的薄入口。
 
 | 模板 | 生成内容与真实行为 |

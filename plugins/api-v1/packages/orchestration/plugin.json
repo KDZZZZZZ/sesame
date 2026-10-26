@@ -2,7 +2,7 @@
   "id": "sesame/orchestration",
   "title": "Agent 与工作流编排",
   "description": "研究协作知识：选择工作流、组织阶段和子 Agent、传递证据与能力、管理同一 Run 并验收阶段成果；运行由宿主提供。",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "default_state": "mounted",
   "apiVersion": "2",
   "capability_manifest": "capabilities.json",

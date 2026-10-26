@@ -34,11 +34,12 @@ test('internal and external authoring install, load, execute and reopen on the m
     assert.equal(runtime.plugins.entry('sesame/plugin-manager').runtime_status, 'ready');
     const call = async (name, args) => {
       const descriptor = runtime.capabilities.descriptors().find(item => item.localId === name); assert.ok(descriptor, name);
-      const result = await runtime.capabilities.invoke(descriptor.id, args, {}, { kind: 'main', sessionId: 'conv_main', pluginId: 'host' });
+      const actor = runtime.authority.bind({ kind: 'main', sessionId: 'conv_main', pluginId: 'host' }, runtime.capabilities.hostEntry);
+      const result = await runtime.capabilities.invoke(descriptor.id, args, {}, actor);
       assert.equal(result.type, 'result'); return result.value;
     };
     await t.test('the installed skill, API reference and portable CLI are readable by the Agent', async () => {
-      for (const path of ['skills/develop-plugins/SKILL.md', 'skills/develop-plugins/references/host-api.md', 'skills/develop-plugins/references/authoring.md', 'scripts/create-plugin.mjs']) {
+      for (const path of ['skills/manage-plugins/SKILL.md', 'skills/manage-plugins/references/operations.md', 'skills/develop-plugins/SKILL.md', 'skills/develop-plugins/references/host-api.md', 'skills/develop-plugins/references/authoring.md', 'scripts/create-plugin.mjs']) {
         const resource = await call('plugin_read', { pluginId: 'sesame/plugin-manager', part: 'resource', path });
         assert.ok(resource.content.length > 100, path);
       }

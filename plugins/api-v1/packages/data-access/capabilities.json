@@ -467,7 +467,7 @@
         "outputs": "{items,nextCursor?}；每项有 ref={providerId,revision}、contract、operations、configSchema、available。",
         "prerequisites": [],
         "limitations": [
-          "available 仅表示来源插件可用；不可用时用 plugin_load 加载其所属插件，不猜连接 ID。"
+          "available 表示来源插件未禁用且未运行失败，不等于会话已加载或外部已连通；false 时用 plugin_inspect 按实际状态处理。全部来源用 data_sources，缓存和数据集可另有适配器专用入口。"
         ]
       },
       "binding": {
@@ -1162,20 +1162,38 @@
     {
       "id": "resource.1",
       "path": "prompt.md",
-      "description": "信息层的数据源、行情与固定证据接口；按来源/时间/覆盖复用输入，交给分析方法和工作流。",
+      "description": "提供可复用真实输入与可复查计算证据的职责、来源复用原则和任务入口选择。",
       "kind": "prompt"
     },
     {
       "id": "resource.2",
       "path": "skills/analyze-data/SKILL.md",
-      "description": "读取已登记输入或固定DataRef，执行有输入谱系的计算并登记可复核结果；不把预览当全文。",
+      "description": "读取完整固定输入、在独立目录计算、登记冻结执行证据并交付可复查结果。",
       "kind": "skill"
     },
     {
       "id": "resource.3",
       "path": "skills/market-discovery/SKILL.md",
-      "description": "查找真实行情来源、品种、周期和字段，再读取符合范围的冻结行情；标明单位、时点和缺口。",
+      "description": "按任务复用证据、发现来源和缓存、选择查询/固定历史/显示入口并核对实际结果。",
       "kind": "skill"
+    },
+    {
+      "id": "resource.4",
+      "path": "skills/market-discovery/references/source-queries.md",
+      "description": "来源发现、缓存入口、通用查询与固定快照的参数、分页和恢复规则。",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.5",
+      "path": "skills/market-discovery/references/market-history.md",
+      "description": "精确品种、历史K线参数、来源时间与量单位，以及显示和订阅的验收证据。",
+      "kind": "reference"
+    },
+    {
+      "id": "resource.6",
+      "path": "skills/analyze-data/references/execution-evidence.md",
+      "description": "登记输入与DataRef、计算目录、executionId和冻结输入输出的登记示例。",
+      "kind": "reference"
     }
   ],
   "hooks": [],

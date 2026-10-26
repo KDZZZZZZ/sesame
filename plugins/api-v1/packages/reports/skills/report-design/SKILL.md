@@ -1,128 +1,34 @@
 ---
 name: report-design
-description: 延续 Sesame 原版 reportKit 的结论、指标、图表章节与折叠方法，按问题选择统计对照、分布、时序、结构图并下钻真实记录；编写或更新研究、策略报告时使用。
+description: 用 Sesame 统一模板与现成图表组织报告，并在交付前核对统一视觉、当前修订的渲染和可读性；完整组件参数按需读取。
 ---
 
-默认从 `report_template` 起步，保留原版 reportKit 的字体、背景、留白、无框图表和章节层级，再按研究问题编辑 outline。模板会将 `assets/editorial.css`、`assets/report-kit.js`、`assets/editorial-charts.js` 及统计、时序、结构、决策树模块内联，报告可独立运行。宿主提供数据桥与主题；reportKit 是本插件的组件，不是宿主自动注入的全局能力。纯文档用 `report_document_template`，旧报告可直接在已有统一骨架内更新。
+# 报告呈现与验收
 
-选型、配色与版式参见 [图型选择与蓝灰视觉](visual-design.md)：趋势、区间、事件、分布和条件决策采用适合各自问题的表达。新研究模板使用蓝色重点、灰色参照，继续沿用当前背景。用户明确提出的视觉要求在统一骨架内实现。
+## 1. 选择统一起点
 
-**先读 [现成图表完整目录](chart-catalog.md)**：26 种不同图型已列出调用入口、字段和用途。优先使用默认组件，不重画已有图型；OHLC 直接使用 `candlestick`，与行情工作台使用相同的默认蜡烛运行时，参数见 [行情图](market-charts.md)。`report_template(kind:'candlestick')` 会额外内联本地行情资产；多图报告仅加载一次，不使用 CDN。
+图文研究用 report_template，纯正文或决策说明用 report_document_template，已有同源 SVL 的回测可用 report_backtest_template；旧报告在原模板上编辑。模板内联本地样式与组件，保留宿主字体、背景、主题和无框层级。已有 Markdown 先安全渲染为 body_html，纯文档不虚构图表数据；用户明确的布局与图型要求在统一骨架内实现。
 
-## 页面骨架
+## 2. 选图并绑定证据
 
-```html
-<main id="report"></main>
-<!-- 使用 report_template 时组件已内联。以下内容替换模板中的 initialize。 -->
-<script>
-async function initialize() {
-  const rows = await reportKit.rows('binding-id'); // 精确绑定 ID，读取全部分页
-  reportKit.render('#report', { title, verdict, metrics, sections, method });
-}
-window.report.track(initialize()).catch(error => {
-  document.getElementById('report').textContent = error.message;
-});
-</script>
-```
+先查 [现成图表完整目录](chart-catalog.md)，按本节要回答的问题选图，不把所有内容变成折线，也不为多样性重复证据。26 种现成图型的入口、字段与用途均在目录；默认蜡烛直接使用 candlestick，不重新手画。特殊表达可用 custom，不必另做整页或联网加载图表库。
 
-建议顺序是「核心判断 → 支持判断的数字 → 证据章节 → 方法与来源」。这是原版的起点，不是只能使用的布局。章节数量、文字长度和自定义呈现不作主观硬限制；真正不同的问题可调整结构，避免填充空洞章节。
+普通重点与参照用蓝灰，盈亏、涨跌沿用红绿；自定义图也保留语义。条件情景使用 [决策树](decision-tree.md) 时，把判断与条件展开成节点和分支，叶子只留结果或行动；保留全树、完整文字与缩放拖拽，不虚构概率。
 
-正文只保留帮助理解市场、比较方案或决定下一步的章节。默认不另设“时效与覆盖”“数据质量”“研究局限”等检查汇报：截止时间与时区归入元信息，关键假设和业务失效条件贴近结论或情景，其余必要的来源与口径放折叠方法区。通篇删除无实际作用的免责声明、适用范围、重复否定句和过程描述，图注、节点说明与折叠区同样精简；每句话提供事实、判断或下一步，不把废话搬进折叠区。用户明确要求审计或覆盖本身影响决策时，按实际问题展开，不以标题黑名单或渲染校验强制删除内容。
+只使用真实固定输入及登记统计结果。来源时间、单位、缺失与精度不因呈现改变，示例数值不进入用户结论。图题、图注和操作提示只补充图中没有的必要信息；正文不解释主题、组件或校验过程。数据绑定和发布按 interactive-report，文字按 report-writing。
 
-## outline 数据结构
+## 3. 按需查参数
 
-| 字段 | 内容 |
-|---|---|
-| `title` | 研究对象 |
-| `eyebrow?` | `Research · 主题` 或 `Strategy · 品种 周期` |
-| `subtitle?` | 数据、区间与方法的一句话范围 |
-| `meta?` | `[{label, value}]`：区间、样本量、单位、时区 |
-| `verdict` | `{tone, headline, detail?}`：核心判断与可信度说明 |
-| `metrics?` | `[{label, value, format?, digits?, unit?, tone?, delta?, hint?}]` |
-| `sections` | `[{title, takeaway, blocks}]`，按论证顺序 |
-| `method?` | `{steps[], limits[], sources[{label, value}]}`，默认折叠 |
+- [页面与组件参数](components.md)：outline、reportKit.chart、补充图形、明细联动、资源释放、规模限制与本地化。
+- [图型选择与蓝灰视觉](visual-design.md)：选型、语义色和样式细则。
+- [行情图](market-charts.md)、[统计对照](statistical-charts.md)、[时序比较](temporal-charts.md)、[结构与关系](structural-charts.md)：对应类型的字段与真实数据要求。
+- [回测写作契约](../report-writing/backtest.md)：同源策略逻辑、选优矩阵、全部试验和三项敏感性。原生回测使用真实源码及运行证据，无需另造 SVL。
 
-block 类型：
+## 4. 交付前核验统一视觉
 
-- `{type:'chart', …}`：见下文。
-- `{type:'findings', items:[{claim, evidence, tone?, caveat?}]}`：evidence 为 `[{label, value, format?, digits?, unit?, tone?}]` 或一句话。
-- `{type:'metrics', items}`：节内局部指标。
-- `{type:'table', columns, rows, limit?, caption?}`：columns 是字段名或 `{key, label, format, digits, unit, tone}`；默认显示 8 行，其余可展开。
-- `{type:'note', text, tone?}`：影响解读的一条说明。
-- `{type:'custom', render(el)}`：自定义可视化或交互，使用同一主题。也可直接组合组件，不用整页 render。
+1. 核对 HTML 确实由统一模板生成或延续其骨架，保留模板标记或 reportKit.render；不能只加标记冒充使用了统一样式。检查自定义样式没有意外替换整页字体、背景与语义色，默认图型沿用内置组件。
+2. 用 report_publish 固定内容，以返回的完整 ref 调用 report_check。核对本次 receipt.status、checks 和 diagnostics；当前实现检查 1000px/390px 视口、初始化/数据/脚本、可见正文、溢出及抽样控件。失败按实际诊断修复，首屏过长时保留结论与关键证据，把必要明细放折叠区。
+3. 核对实际预览的字体、背景、蓝灰强调与盈亏红绿、长中文与坐标标签、图表尺寸和控件可用性；自定义布局或样式还要查看明暗主题。report_check 不会自动完成全部主题和审美核验，rendered 不能代替这一步。用户明确的局部自定义保留，不按固定章节数或图型偏好判错。
+4. 未通过时修原 HTML，用新 operation_id 与当前 artifact_id/expected_revision 发布新修订，再检查新 ref。没有实际预览时记录未验收项，不编造“统一视觉已通过”。正常交付只汇报研究结果与报告入口，不另写设计说明或检查章节。
 
-`tone`：`positive` / `negative` / `caution` / `neutral`；metric 和 evidence 可用 `'auto'` 按数值正负着色。`format`：`number`、`integer`、`percent`（数值 12.5 → 12.5%）、`ratio`（数值 0.125 → 12.5%）、`currency`（配合 unit）、`text`。`reportKit.format` 使用同一规则。原始字符串不会自动改写精度；金额等字符串请明确 unit，百分比字符串可用 unit:'%'。
-
-## 图表
-
-原版 `reportKit.chart` 支持 `line`、`area`、`bar`、`hbar`、`scatter`、`heatmap`。字段包括 `title`、`caption`（比较对象、读法、单位与时区）、`data`、`x`、`y`（一个字段或数组）、`series?`（分组字段，需单个 y）、`xType?`（time / number / category）、`format?` / `digits?` / `unit?`、`labels?`、`baseline?`、`marks?:[{x,label}]`、`tone:'signed'`、`height?`。heatmap 用 x/y/value 三个字段。
-
-按问题选图：
-
-- 权益、逐日统计、累计量随时间变化 → line；强调一个累积序列 → area。
-- 类别或参数组比较 → bar；名称较长、需要排名 → hbar，明确排序规则。
-- 盈亏、差值 → bar/hbar 加 `tone:'signed'`；多序列用系列色，保持图例一致。
-- 两个连续量的关系 → scatter；两个参数网格或品种 × 区间 → heatmap。
-- 构成可用 hbar 表达绝对量。其他更适合问题的图形可在 custom 中实现。
-- 一图回答一个问题；同一指标保持单位、精度和顺序一致。时间缺失留缺口，不用零值伪补；网格重复先明确聚合。
-
-图例可开关序列，悬停查看原值。SVG 数值坐标会转 Number；精确字符串保留在提示和表格。过大数据应先登记有来历的聚合结果。chart 最多 20,000 行、8 个序列以免卡住页面；更多数据可分图、筛选或自定义渐进绘制。重新渲染自定义容器前调用 `reportKit.destroy(container)` 释放旧图的 resize observer。
-
-## 在原版基础上补充的图表与交互
-
-借鉴 Lieflat 的「看得见的数据单位」与「概览 → 明细」思路，保留 Sesame 的页面视觉。以下是本插件独立实现的可选补充，不是必须全部使用：
-
-- `SesameCharts.chart(el,{kind:'units',rows,x,y,unitValue,unit,title,onSelect})`：每个圆点对应实际数量。适合样本、事件或交易计数；只接受非负、完整单位，不能靠四舍五入生成虚假圆点，最多 1,000 点。
-- `kind:'matrix'`：x/y/value 网格，缺失格显式留空，可键盘选择查看准确数值。适合需要逐格追问的少量分类，原版 heatmap 仍可直接使用。
-- line/bar/scatter/matrix/units 的 mark 可以点击或键盘 Enter/Space 选中；`onSelect(row,index)` 连接 `SesameCharts.table(...).select(index)`，让概览和原始明细对应。不要把所有明细常驻主叙事。
-
-```js
-{ type:'custom', render(el) {
-  const plot = document.createElement('div'), detail = document.createElement('div');
-  el.append(plot, detail);
-  const table = SesameCharts.table(detail, rows, ['period','trade_count']);
-  SesameCharts.chart(plot, {
-    kind:'units', rows, x:'period', y:'trade_count', unitValue:1,
-    unit:'trades', title:'Trades by period', onSelect:(_,index)=>table.select(index)
-  });
-} }
-```
-
-## 按研究问题选择补充图形
-
-| 要回答的问题 | `kind` | 字段和数据要求 |
-|---|---|---|
-| 每个周期的开高低收如何变化 | `candlestick` | [默认行情图](market-charts.md)：固定 time/open/high/low/close，保留原始时间口径及涨跌红绿 |
-| 净收益被哪些成本改变 | `waterfall` | [统计对照](statistical-charts.md)：起点、增减、终点必须对账 |
-| 优化前后、样本内外差在哪 | `dumbbell` | 同口径、同单位的一对值 |
-| 哪些交易撑起收益或造成尾部损失 | `strip`、`histogram`、`boxplot` | 逐笔原值或已登记的分箱、分位统计 |
-| 市况或因子组的分布怎么不同 | `ridgeline`、`violin` | 已登记密度网格、样本数与方法；不在报告估计 KDE |
-| 亏损、休市和缺数据发生在哪天 | `calendar` | [时序比较](temporal-charts.md)：日期、明确时区与覆盖状态 |
-| 如何同时比较参数、收益、回撤、换手 | `parallel` | 3–6 个维度，按真实字段筛选，无隐藏综合评分 |
-| 排名是否稳定 | `bump` | 固定比较全集、并列规则、缺失保留断线 |
-| 策略或判断准则何时验证、停用、恢复 | `lifecycle` | 真实状态事件、版本 ID 和证据链接 |
-| 仓位集中在哪里 | `treemap` | [结构与关系](structural-charts.md)：非负敞口，层级不重复计入 |
-| 一笔信号怎样走到订单和成交 | `threads` | 有关联 ID 的真实记录链，缺项不补造 |
-| 多少信号通过过滤并成交 | `flow` | 同批次流向，显式起终点，数量守恒 |
-| 资产或因子怎样相连 | `network-circular`、`network-force` | 真实节点和边；布局距离不代表相关强度或因果 |
-| 哪个条件触发下一步，何时失效 | `decision-tree` | [条件决策树](decision-tree.md)：紧凑横向布局，缩放、拖拽、双击实际尺寸与全图适配；仅保留简洁图标，判断节点和分支承载逻辑，叶子只写结果或行动，不制造概率 |
-
-使用 `report_template(kind, chart_options)` 可直接生成上述图形的可编辑骨架。`chart_options` 只放字段映射、统计方法说明及显示选项；主数据自动来自 `data_id`。关系图的节点另有固定绑定时，用 `chart_data:[{property:'nodes',data_id:'nodes-binding'}]`，并把两个 binding 都传给 `report_publish.data`。高级交互继续在 `custom` 中直接调用 `SesameCharts.chart`，不要求重写页面或改变宿主协议。
-
-SVG 图支持鼠标、键盘选中原始记录；默认 Canvas 蜡烛支持点击与十字线，键盘阅读使用明细表。`onSelect(row,index)` 的节点选择可能来自另一个绑定，此时 index 为 -1，应按 ID 或直接展示 row，不能误选第一个表格行。`parallel` 的 `onFilter(rows,indices)` 用于联动明细。模板搜索只筛选明细，不丢弃瀑布步骤或资金流向，保证图的含义完整。一次最多呈现 2,500 行；过大数据先保留来源地聚合或分组展示。
-
-`reportKit.destroy(container)` 会同时释放其中的可选图表；独立使用时也可调用 `SesameCharts.destroy(container)` 或返回句柄的 `destroy()`。当前组件列表可读 `SesameCharts.kinds()`。可读实例见 `examples/editorial-demo.html` 和 `examples/chart-gallery.md` 图集索引；插件还包含可在浏览器打开的完整离线演示 `examples/chart-gallery.html`。样本均明确为虚构演示，不能用于金融结论。不为了增加花样重复画同一组证据；仍可自主实现适合问题的新表达。Lieflat 上游当前为 PolyForm Noncommercial，不能把受限模板或资产直接拷入 MIT 成果。
-
-## 视觉与本地化
-
-保持原版的无框版式：层级靠字号、字重、颜色与留白；少量细线用于指标上方、表格行、证据列表和折叠区；图表直接画在页面。默认字体和背景沿用 Sesame；默认前两个系列为蓝色重点与灰色参照，更多类别用直接标签、形状或分面区分，不能将有序蓝阶当作无序类别色。正负和状态色用 `--success` / `--danger` 并配文字或形状。不把每张图再包一层大卡片。
-
-自定义内容优先使用 `--foreground`、`--muted`、`--surface-secondary`、`--border`、`--sans`、`--serif`、`--mono` 等语义变量，不重新定义整页字体和背景。用户指定的主题、专门的色彩编码、不同版式和交互可局部扩展；这不是拒绝任意颜色或 HTML 的校验规则。
-
-任务语言写进 `<html lang>` 和 report_publish.locale。reportKit 的通用标签及数字跟随 document.lang；长篇结论按用户任务语言编写，界面切换不会自动翻译固定研究结果。来源时间先明确时区，不把券商墙上时间默认当 UTC。
-
-## 发布检查
-
-`report_publish` 固定 HTML、数据和资源；随后 `report_check` 才会检查实际桌面/窄屏、脚本、数据和交互。修复真实失败后发布新 revision 并检查。美学选择、章节数和字数不作为发布硬门槛。只有当前版本 receipt 为 rendered，才宣告渲染通过。
-
-回测/优化使用 report_backtest_template 或自由编写等价交互；[回测写作契约](../report-writing/backtest.md) 的真实同源策略逻辑、品种×周期选优矩阵、全部试验下钻和三项参数敏感性不可省略。实际使用 SVL 时提供同源 SVL 逻辑图；Python、MT5 等原生回测用真实原生源码与运行证据表达策略逻辑，无需另造 SVL。布局可改，视觉继续沿用本篇规范。
+需要 PDF/PNG 时另做 report_export_check 并核对成品；深决策树、长表与自定义交互尤其检查静态文字和内容完整性。交互渲染通过、统一视觉核对、静态导出成功分别保留真实证据。

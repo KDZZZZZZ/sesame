@@ -76,11 +76,27 @@ configSchema 保持既有插件配置契约。顶层可选 configuration 声明�
 }
 ```
 
-统一入口由 host.configuration.catalog/check/apply 提供，分别发现字段与消费能力、检查配置状态、写入配置；apply 不回显写入值。environment 绑定沿用环境配置源；其它既有配置源使用宿主支持的插件本地读取/更新绑定，避免平行保存。不要把真实密钥写进提示词、日志、示例、固定成果或诊断。writeOnly 字段只展示已配置/未配置状态。
+统一入口由 host.configuration.catalog/check/apply 提供，分别发现字段与消费能力、检查配置状态、写入配置。这些是能力 ID，插件代码通过 host.capabilities.invoke 调用，不是额外的 host.configuration 端口；Agent 使用 sesame/configuration 的 configuration_integration_catalog/check/apply。apply 不回显写入值。environment 绑定沿用环境配置源；其它既有配置源使用宿主支持的插件本地读取/更新绑定，避免平行保存。不要把真实密钥写进提示词、日志、示例、固定成果或诊断。writeOnly 字段只展示已配置/未配置状态。
 
 能力确实使用但有默认值或运行时发现路径的字段，用 `configurationRequirements` 的 `optional:true` 关联；缺项不拦截调用，必需密钥仍按 `when` 分支检查。一个插件可保留多组原读取/更新/版本，目录按 `authority` 分组；一次保存只更新同组字段并传该组原 `expected_version`，不能合造版本或跨组部分写入。清除遵守目录的 `clearable` 和原适配器规则。
 
 字段已配置不表示外部连通或业务成功；保留实际执行检查。已有 requires 可用于只读环境或依赖探测，configurationRequirements 负责字段依赖；两者不应凭空扩大工具权限。生成模板中的配置示例仅为说明，只有实际实现使用该字段后才加入声明。
+
+已有本地配置可使用 capability 绑定。例如秘密字段可绑定 `{"type":"capability","read":"local_config_read","update":"local_config_update","configuredPath":"/has_token","writePath":"/token","versionPath":"/version"}`。read/update 是本包实际声明、host 可见的即时 JSON function；路径取真实结果结构。秘密字段用 configuredPath，不用 valuePath；读取状态不能再依赖自己正要检查的密钥。
+
+## 包依赖、调用权限与成员权限
+
+这些声明承担不同职责，不能相互替代：
+
+| 声明 | 用途 |
+| --- | --- |
+| plugin.json.dependencies | 必需的已安装包及版本范围，例如 `[{"name":"sesame/workspace","version":">=3.0.0"}]`。 |
+| plugin.json.permissions | 插件可使用的宿主端口操作与跨能力调用范围。脚手架默认 scopes/calls 为空，需要实际调用时再声明。 |
+| capability.requires | 能力就绪依赖，结构为 `{id,capability,input?,reason,optional?}`；带 input 的探测须为即时只读 JSON 能力，模板只引用 input# 路径。 |
+| configurationRequirements | 能力实际依赖的本包配置字段，按 when 分支和 optional 控制就绪检查。 |
+| Agent.allowedCalls / plugins | 分配成员可调用的能力和额外知识包；不扩大父任务、插件或用户授权。 |
+
+例如只需要读取固定数据的插件，可在 plugin.json 声明 `"permissions":{"scopes":[],"calls":["sesame/data-access#data_read"]}`，并声明所需包依赖。调用 ID 使用 host.name 或 publisher/name#name；也支持 `{pluginId,serviceId,operation}` 命名服务选择器，不使用通配符。按需要声明本地 scopes，保存的用户权限选择随更新保留；effects、配置字段和功能分类都不授予调用权限。动态组合能力需要单独的 capabilities.compose 范围，不要给每个静态小插件默认开启。端口权限不是操作系统沙箱，原生 JavaScript 仍以宿主进程权限运行。
 
 ## 能力与宿主贡献
 
@@ -100,7 +116,7 @@ description 和 knowledge.description 应足以判断“解决什么问题、需
 
 通过 host.agent.run 委派时，allowedCalls 只授予需要的调用能力，plugins 补充已选知识包。工具所属插件自动装载；纯知识包需显式列入 plugins；已选 SKILL 入口自动装配，读取 references 需授予 sesame/plugin-manager#plugin_read。加载知识不等于执行算法，也不授予该插件其它工具。用真实宿主验证所选知识能到达成员、正文可读、结果能交给下一层；用合成证据验证组合时应明确来源为 synthetic，不声称实盘效果。
 
-安装检查会聚合缺字段、schema/example、重复ID、绑定漂移与宿主引用错误。输出可确实是宽结构时写出宽schema并解释局限；不要用虚假的固定输出掩盖差异。
+安装检查会聚合缺字段、schema/example、重复ID、绑定漂移与宿主引用错误；原生包的语法和工厂预检不执行任意包内业务测试，作者应先自行验证业务。输出可确实是宽结构时写出宽schema并解释局限；不要用虚假的固定输出掩盖差异。
 
 ## 可调整流程与长期偏好
 

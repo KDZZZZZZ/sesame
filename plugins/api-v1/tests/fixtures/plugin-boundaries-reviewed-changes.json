@@ -38,7 +38,7 @@
     {
       "pluginId": "sesame/data-access",
       "before": "3.0.0",
-      "after": "3.0.2"
+      "after": "3.0.3"
     },
     {
       "pluginId": "sesame/factor-research",
@@ -73,12 +73,12 @@
     {
       "pluginId": "sesame/orchestration",
       "before": "3.1.1",
-      "after": "3.2.0"
+      "after": "3.2.1"
     },
     {
       "pluginId": "sesame/plugin-manager",
       "before": "3.0.1",
-      "after": "3.1.1"
+      "after": "3.1.3"
     },
     {
       "pluginId": "sesame/portfolio-execution",
@@ -98,7 +98,7 @@
     {
       "pluginId": "sesame/reports",
       "before": "3.0.0",
-      "after": "3.3.1"
+      "after": "3.3.2"
     },
     {
       "pluginId": "sesame/strategy-research",
@@ -3045,9 +3045,9 @@
       "sourcePath": "plugins/api-v1/packages/data-access",
       "component": "plugin.json",
       "beforeDigest": "sha256:dc33ab3a84e937d0588cd1d171d6531fc2c5fb91ec8d74fabe69eb70584e2b93",
-      "afterDigest": "sha256:ca86b4e2156a6edfdea95824022141edeaa4dff73d244ece7cebaaff10bfe62e",
+      "afterDigest": "sha256:3b4ac7b1d9c053c043cc3ce1224a6f348adf35fce07b6b7a713332286bbcc86e",
       "decision": "approved",
-      "reason": "Automated exact-hash engineering acceptance: New-host compatibility and explicit request-only permission migration, with exact calls/service selectors and no automatic grants. Candidate versions are separate from prior installed/published bytes; this is not a backward-compatible metadata assertion. No human/release/broker acceptance is implied.",
+      "reason": "Automated exact-hash engineering acceptance: New-host compatibility and explicit request-only permission migration, with exact calls/service selectors and no automatic grants. Candidate versions are separate from prior installed/published bytes; this is not a backward-compatible metadata assertion. No human/release/broker acceptance is implied.\n2026-10-26 user-requested guide cleanup: keep principles and operational steps separate, move parameter details into three declared references; correct available versus session-loading semantics. All eight execution/input/output contracts remain unchanged; actual schema examples and existing data regressions verified.",
       "deltas": [
         {
           "path": "/engines/sesame",
@@ -3071,6 +3071,17 @@
             ]
           },
           "impact": "authorization-restriction"
+        },
+        {
+          "path": "/resources",
+          "beforePresent": false,
+          "afterPresent": true,
+          "after": [
+            "skills/market-discovery/references/source-queries.md",
+            "skills/market-discovery/references/market-history.md",
+            "skills/analyze-data/references/execution-evidence.md"
+          ],
+          "impact": "declaration-contract-review"
         }
       ],
       "findings": []
@@ -6183,9 +6194,9 @@
       "sourcePath": "plugins/api-v1/packages/plugin-manager",
       "component": "plugin.json",
       "beforeDigest": "sha256:b18dce07f3ab94e09a7c560ffa1d5966738fcc5ec4d567799763fa0a24b0bd66",
-      "afterDigest": "sha256:bd4edd7de09e59c90b7c136b690eecccfe29114edac1b872d31d899a4f77f0c6",
+      "afterDigest": "sha256:ded29b5598bcae7356ab57fb2781a3e0c9fc3a332f8ac77f2d8f71ad10e053a5",
       "decision": "approved",
-      "reason": "Automated exact-hash engineering acceptance: New-host compatibility and explicit request-only permission migration, with exact calls/service selectors and no automatic grants. Candidate versions are separate from prior installed/published bytes; this is not a backward-compatible metadata assertion. No human/release/broker acceptance is implied.",
+      "reason": "Automated exact-hash engineering acceptance: New-host compatibility and explicit request-only permission migration, with exact calls/service selectors and no automatic grants. Candidate versions are separate from prior installed/published bytes; this is not a backward-compatible metadata assertion. No human/release/broker acceptance is implied.\n2026-10-26 user-requested guide cleanup: separate management/development skills and declare their resource; align command_id and conditional catalog/resource arguments with existing runtime checks (invalid inputs previously failed later); clarify true loading/configuration/install-check semantics. Native factories and valid runtime inputs are unchanged. Focused regression, documented-example and real isolated-host installation tests pass.",
       "deltas": [
         {
           "path": "/engines/sesame",
@@ -6206,6 +6217,29 @@
             "calls": []
           },
           "impact": "authorization-restriction"
+        },
+        {
+          "path": "/resources",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": [
+            "README.md",
+            "scaffold.js",
+            "scripts/create-plugin.mjs",
+            "skills/develop-plugins/references/authoring.md",
+            "skills/develop-plugins/references/host-api.md",
+            "skills/develop-plugins/references/recovery.md"
+          ],
+          "after": [
+            "README.md",
+            "scaffold.js",
+            "scripts/create-plugin.mjs",
+            "skills/develop-plugins/references/authoring.md",
+            "skills/develop-plugins/references/host-api.md",
+            "skills/develop-plugins/references/recovery.md",
+            "skills/manage-plugins/references/operations.md"
+          ],
+          "impact": "declaration-contract-review"
         }
       ],
       "findings": []
@@ -6215,9 +6249,9 @@
       "sourcePath": "plugins/api-v1/packages/plugin-manager",
       "component": "capability:plugin_discover",
       "beforeDigest": "sha256:376777ac3ffa54be17f2fa621cfe67b89389cf007b824f82c334a3a6efd7edad",
-      "afterDigest": "sha256:9edb3d62ff4595239659e359edf06e673b4a475ce6e980727194670e7ef60c28",
+      "afterDigest": "sha256:fba5f2fa4267c926b79911a093e9f57e03d6b4e55397f8f73c83ced758904f7b",
       "decision": "approved",
-      "reason": "Automated exact-hash engineering acceptance: Discover provider by declared plugin-management/1 service mapped to existing operations; retain HTTP administration semantics, local grant/CAS/package integrity and exact lifecycle contracts. No human/release/broker acceptance is implied.",
+      "reason": "Automated exact-hash engineering acceptance: Discover provider by declared plugin-management/1 service mapped to existing operations; retain HTTP administration semantics, local grant/CAS/package integrity and exact lifecycle contracts. No human/release/broker acceptance is implied.\n2026-10-26 user-requested guide cleanup: separate management/development skills and declare their resource; align command_id and conditional catalog/resource arguments with existing runtime checks (invalid inputs previously failed later); clarify true loading/configuration/install-check semantics. Native factories and valid runtime inputs are unchanged. Focused regression, documented-example and real isolated-host installation tests pass.",
       "deltas": [
         {
           "path": "/description",
@@ -6233,6 +6267,18 @@
           "afterPresent": true,
           "before": "query 按名称/能力搜索，ids 可选精确插件 ID；cursor/limit 用于分页。空输入列出已安装插件。",
           "after": "query 对插件 id/title/description 做不区分大小写的子串匹配，不搜索能力 ID 或能力描述；ids 可选精确插件 ID，cursor/limit 用于分页。空输入列出当前可发现的已安装插件。",
+          "impact": "documentation"
+        },
+        {
+          "path": "/usage/limitations",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": [
+            "未启用的已安装插件可 plugin_load；本机没有的包才查 plugin_catalog 或使用已准备的本地包。"
+          ],
+          "after": [
+            "已安装且可发现的包可用 plugin_load 加入当前会话；工作区 disabled 需先按任务启用，运行失败先查 plugin_inspect。本机没有的包再查 plugin_catalog 或准备本地包。"
+          ],
           "impact": "documentation"
         },
         {
@@ -9991,9 +10037,9 @@
       "sourcePath": "plugins/api-v1/packages/reports",
       "component": "plugin.json",
       "beforeDigest": "sha256:7492d5dfbe21238816a2343cfefc1005204b9149688b8e66223a27b41496852f",
-      "afterDigest": "sha256:2d062076c89828cf904df95b03f41e68012afa49b46f37484aabc83c925acff9",
+      "afterDigest": "sha256:9ded5df33d792820a7198bb0ce7201e5fd1b2a8b2aafa72c70c026f4e9e6c0d6",
       "decision": "approved",
-      "reason": "Exact report migration review: new-host engine and explicit data_snapshot/workspace write calls, plus additive built-in decision-tree and market-chart scripts, vendor license metadata and design/catalog documentation resources. Existing resources and callable APIs are retained; no wildcard permissions.",
+      "reason": "Exact report migration review: new-host engine and explicit data_snapshot/workspace write calls, plus additive built-in decision-tree and market-chart scripts, vendor license metadata and design/catalog documentation resources. Existing resources and callable APIs are retained; no wildcard permissions.\n2026-10-26 user-requested visual guidance cleanup: move component parameter details into an explicitly declared reference and require actual template/theme/preview plus current-revision render verification. No invented visual-pass field and no runtime or input/output contract change; template/contrast/export tests pass.",
       "deltas": [
         {
           "path": "/engines/sesame",
@@ -10078,7 +10124,8 @@
             "assets/backtest-explorer.js",
             "assets/backtest.css",
             "templates/backtest.html",
-            "skills/report-writing/backtest.md"
+            "skills/report-writing/backtest.md",
+            "skills/report-design/components.md"
           ],
           "impact": "declaration-contract-review"
         }
@@ -10399,9 +10446,9 @@
       "sourcePath": "plugins/api-v1/packages/reports",
       "component": "capabilities.json/knowledge",
       "beforeDigest": "sha256:655c426f06e28590106bfa9192637368384fd986890967cbc5e710f93e363d99",
-      "afterDigest": "sha256:9399b0d160e27d7a0e599ff5ffd1437b9ba58fe2545eb8b080b620ce4f6d34e5",
+      "afterDigest": "sha256:7a44e4dfc6d30e4f4963491ef0d42979755f111afb6ad022d700e8314b6df57c",
       "decision": "approved",
-      "reason": "Automated exact-hash engineering acceptance: Separate frozen data, report publication, exact-revision inspection, authoring template and static export preflight. Document creation writes workspace; preflight is rendering with outputVerified:false, never publication or final-byte success. No human/release/broker acceptance is implied.",
+      "reason": "Automated exact-hash engineering acceptance: Separate frozen data, report publication, exact-revision inspection, authoring template and static export preflight. Document creation writes workspace; preflight is rendering with outputVerified:false, never publication or final-byte success. No human/release/broker acceptance is implied.\n2026-10-26 user-requested visual guidance cleanup: move component parameter details into an explicitly declared reference and require actual template/theme/preview plus current-revision render verification. No invented visual-pass field and no runtime or input/output contract change; template/contrast/export tests pass.",
       "deltas": [
         {
           "path": "/",
@@ -10521,7 +10568,7 @@
             {
               "id": "resource.1",
               "path": "prompt.md",
-              "description": "随包资源 prompt.md",
+              "description": "报告职责、证据、真实交付与统一视觉验收原则；详细设计参数按需读取。",
               "kind": "prompt"
             },
             {
@@ -10617,7 +10664,7 @@
             {
               "id": "resource.17",
               "path": "skills/report-design/SKILL.md",
-              "description": "随包资源 skills/report-design/SKILL.md",
+              "description": "选统一模板与现成图表，核对主题和语义色，检查当前发布修订的实际渲染及视觉一致性。",
               "kind": "skill"
             },
             {
@@ -10630,6 +10677,12 @@
               "id": "resource.document-template",
               "path": "templates/document.html",
               "description": "共享样式的纯正文报告模板，不需要占位图表或数据",
+              "kind": "reference"
+            },
+            {
+              "id": "resource.report-components",
+              "path": "skills/report-design/components.md",
+              "description": "reportKit 页面骨架、outline 与图表参数、明细联动、规模限制、资源释放和本地化。",
               "kind": "reference"
             }
           ],
@@ -12601,6 +12654,515 @@
           "before": true,
           "after": false,
           "impact": "breaking-path-removal"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/data-access",
+      "sourcePath": "plugins/api-v1/packages/data-access",
+      "component": "capability:data_sources",
+      "beforeDigest": "sha256:d78cc22fa8d961dd70c74d28dffc614e2174c4284afe5852329d2d5d96670810",
+      "afterDigest": "sha256:582c53c1895198101562a28a8c3155983b4caddd105df7b8677a99a753a5fbb3",
+      "decision": "approved",
+      "reason": "2026-10-26 user-requested guide cleanup: keep principles and operational steps separate, move parameter details into three declared references; correct available versus session-loading semantics. All eight execution/input/output contracts remain unchanged; actual schema examples and existing data regressions verified.",
+      "deltas": [
+        {
+          "path": "/usage/limitations",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": [
+            "available 仅表示来源插件可用；不可用时用 plugin_load 加载其所属插件，不猜连接 ID。"
+          ],
+          "after": [
+            "available 表示来源插件未禁用且未运行失败，不等于会话已加载或外部已连通；false 时用 plugin_inspect 按实际状态处理。全部来源用 data_sources，缓存和数据集可另有适配器专用入口。"
+          ],
+          "impact": "documentation"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/data-access",
+      "sourcePath": "plugins/api-v1/packages/data-access",
+      "component": "capabilities.json/knowledge",
+      "beforeDigest": "sha256:bd1891721776e698bd17e719e9c8f2f10bd20c9d034da918d629311793d52115",
+      "afterDigest": "sha256:1ebe0051b59e63cd9e281741f7f39addaa3825b8f85cc7a59d70914237263071",
+      "decision": "approved",
+      "reason": "2026-10-26 user-requested guide cleanup: keep principles and operational steps separate, move parameter details into three declared references; correct available versus session-loading semantics. All eight execution/input/output contracts remain unchanged; actual schema examples and existing data regressions verified.",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": [
+            {
+              "id": "resource.1",
+              "path": "prompt.md",
+              "description": "信息层的数据源、行情与固定证据接口；按来源/时间/覆盖复用输入，交给分析方法和工作流。",
+              "kind": "prompt"
+            },
+            {
+              "id": "resource.2",
+              "path": "skills/analyze-data/SKILL.md",
+              "description": "读取已登记输入或固定DataRef，执行有输入谱系的计算并登记可复核结果；不把预览当全文。",
+              "kind": "skill"
+            },
+            {
+              "id": "resource.3",
+              "path": "skills/market-discovery/SKILL.md",
+              "description": "查找真实行情来源、品种、周期和字段，再读取符合范围的冻结行情；标明单位、时点和缺口。",
+              "kind": "skill"
+            }
+          ],
+          "after": [
+            {
+              "id": "resource.1",
+              "path": "prompt.md",
+              "description": "提供可复用真实输入与可复查计算证据的职责、来源复用原则和任务入口选择。",
+              "kind": "prompt"
+            },
+            {
+              "id": "resource.2",
+              "path": "skills/analyze-data/SKILL.md",
+              "description": "读取完整固定输入、在独立目录计算、登记冻结执行证据并交付可复查结果。",
+              "kind": "skill"
+            },
+            {
+              "id": "resource.3",
+              "path": "skills/market-discovery/SKILL.md",
+              "description": "按任务复用证据、发现来源和缓存、选择查询/固定历史/显示入口并核对实际结果。",
+              "kind": "skill"
+            },
+            {
+              "id": "resource.4",
+              "path": "skills/market-discovery/references/source-queries.md",
+              "description": "来源发现、缓存入口、通用查询与固定快照的参数、分页和恢复规则。",
+              "kind": "reference"
+            },
+            {
+              "id": "resource.5",
+              "path": "skills/market-discovery/references/market-history.md",
+              "description": "精确品种、历史K线参数、来源时间与量单位，以及显示和订阅的验收证据。",
+              "kind": "reference"
+            },
+            {
+              "id": "resource.6",
+              "path": "skills/analyze-data/references/execution-evidence.md",
+              "description": "登记输入与DataRef、计算目录、executionId和冻结输入输出的登记示例。",
+              "kind": "reference"
+            }
+          ],
+          "impact": "resource-declaration-review"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/plugin-manager",
+      "sourcePath": "plugins/api-v1/packages/plugin-manager",
+      "component": "capability:plugin_load",
+      "beforeDigest": "sha256:c58824ae620e77493cc653786c9c7e7c3adaf5f7b8deb1bdea5a336b76abcbb5",
+      "afterDigest": "sha256:0dafcc847b721200463886c31967d5d929739c5e4e747c9f69c51172922a4aab",
+      "decision": "approved",
+      "reason": "2026-10-26 user-requested guide cleanup: separate management/development skills and declare their resource; align command_id and conditional catalog/resource arguments with existing runtime checks (invalid inputs previously failed later); clarify true loading/configuration/install-check semantics. Native factories and valid runtime inputs are unchanged. Focused regression, documented-example and real isolated-host installation tests pass.",
+      "deltas": [
+        {
+          "path": "/usage/limitations",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": [
+            "不会安装依赖或修改连接；失败用 plugin_inspect 看 runtime_status/diagnostics，不反复加载。",
+            "plugin_load_failed 时用 plugin_inspect 的 diagnostics 定位装载失败；公开资源路径使用 plugin_read(manifest) 返回的声明，不猜测未公开文件。"
+          ],
+          "after": [
+            "工作区 disabled 不能用 plugin_load 绕过；运行失败应先 plugin_inspect 读取诊断。加载成功不证明外部连接或业务执行成功。"
+          ],
+          "impact": "documentation"
+        },
+        {
+          "path": "/usage/purpose",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": "在当前会话启用允许使用的插件并刷新工具。",
+          "after": "将已安装、可发现且策略允许的插件加载到当前会话；不改变工作区挂载状态。",
+          "impact": "documentation"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/plugin-manager",
+      "sourcePath": "plugins/api-v1/packages/plugin-manager",
+      "component": "capability:plugin_catalog",
+      "beforeDigest": "sha256:d58c3df4c93fc8a161c98b5c6538efc40e9ee59dc4b50926c8d1a2eec02366da",
+      "afterDigest": "sha256:2712bdd43d24f805494aa81e2b2d467c537ebac4593c1338adf65f3812e1bbf6",
+      "decision": "approved",
+      "reason": "2026-10-26 user-requested guide cleanup: separate management/development skills and declare their resource; align command_id and conditional catalog/resource arguments with existing runtime checks (invalid inputs previously failed later); clarify true loading/configuration/install-check semantics. Native factories and valid runtime inputs are unchanged. Focused regression, documented-example and real isolated-host installation tests pass.",
+      "deltas": [
+        {
+          "path": "/usage/limitations",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": [
+            "目录必须 API2；版本不匹配/目录下载失败应保留原错误，不把失败当无插件。已安装状态用 plugin_discover。"
+          ],
+          "after": [
+            "目录必须 API2；版本不匹配或下载失败保留真实错误，不当成无插件。当前安装摘要和诊断用 plugin_inspect。"
+          ],
+          "impact": "documentation"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/plugin-manager",
+      "sourcePath": "plugins/api-v1/packages/plugin-manager",
+      "component": "capability:plugin_install_catalog",
+      "beforeDigest": "sha256:8d061165d3d8010413e2716fa6f749264f1c3f8b60077774e47679ee5e7514c9",
+      "afterDigest": "sha256:b7dc4a03a2d806ffa5d4186d895c68a0a787ce57aba4f17d43ee7ca299389604",
+      "decision": "approved",
+      "reason": "2026-10-26 user-requested guide cleanup: separate management/development skills and declare their resource; align command_id and conditional catalog/resource arguments with existing runtime checks (invalid inputs previously failed later); clarify true loading/configuration/install-check semantics. Native factories and valid runtime inputs are unchanged. Focused regression, documented-example and real isolated-host installation tests pass.",
+      "deltas": [
+        {
+          "path": "/inputSchema/anyOf",
+          "beforePresent": false,
+          "afterPresent": true,
+          "after": [
+            {
+              "properties": {
+                "action": {
+                  "const": "update"
+                }
+              },
+              "required": [
+                "action",
+                "expected_digest"
+              ]
+            },
+            {
+              "properties": {
+                "action": {
+                  "const": "install"
+                }
+              },
+              "not": {
+                "required": [
+                  "expected_digest"
+                ]
+              }
+            }
+          ],
+          "impact": "input-contract-review"
+        },
+        {
+          "path": "/inputSchema/properties/command_id/description",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": "稳定操作 ID，重试保持不变",
+          "after": "16–128 位字母、数字、下划线或连字符；同一请求重试保持不变",
+          "impact": "documentation"
+        },
+        {
+          "path": "/inputSchema/properties/command_id/minLength",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": 1,
+          "after": 16,
+          "impact": "breaking-input-restriction"
+        },
+        {
+          "path": "/inputSchema/properties/command_id/pattern",
+          "beforePresent": false,
+          "afterPresent": true,
+          "after": "^[A-Za-z0-9_-]+$",
+          "impact": "input-contract-review"
+        },
+        {
+          "path": "/usage/inputs",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": "plugin_id/catalog_digest 取自同一次 plugin_catalog；command_id 固定此次请求。action 默认 install；更新用 update 并传 plugin_inspect.digest 为 expected_digest。",
+          "after": "plugin_id/catalog_digest 取自同一次 plugin_catalog；command_id 为 16–128 位字母、数字、下划线或连字符，固定此次请求。action 默认 install 且不传 expected_digest；更新用 update 并传 plugin_inspect.digest 为 expected_digest。",
+          "impact": "documentation"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/plugin-manager",
+      "sourcePath": "plugins/api-v1/packages/plugin-manager",
+      "component": "capability:plugin_read",
+      "beforeDigest": "sha256:fbc2a8423f7ee98f9524a3fadbcf5c2f27b98114aa421048e20f51e7b9810285",
+      "afterDigest": "sha256:68269b8e23de1958b37389dbee2f64846372a071e0365753fa17a1c505235a54",
+      "decision": "approved",
+      "reason": "2026-10-26 user-requested guide cleanup: separate management/development skills and declare their resource; align command_id and conditional catalog/resource arguments with existing runtime checks (invalid inputs previously failed later); clarify true loading/configuration/install-check semantics. Native factories and valid runtime inputs are unchanged. Focused regression, documented-example and real isolated-host installation tests pass.",
+      "deltas": [
+        {
+          "path": "/inputSchema/anyOf",
+          "beforePresent": false,
+          "afterPresent": true,
+          "after": [
+            {
+              "properties": {
+                "part": {
+                  "const": "manifest"
+                }
+              }
+            },
+            {
+              "properties": {
+                "part": {
+                  "const": "resource"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          ],
+          "impact": "input-contract-review"
+        },
+        {
+          "path": "/usage/inputs",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": "pluginId 为已安装 ID；part=manifest 返回静态声明；part=resource 时 path 必须在其 knowledge 中，例如 prompt.md 或 skills/.../SKILL.md。",
+          "after": "pluginId 为已安装 ID；part=manifest 返回静态声明；part=resource 时 path 必须是公开资源清单或技能链接中的真实路径，例如 prompt.md 或 skills/.../SKILL.md。",
+          "impact": "documentation"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/plugin-manager",
+      "sourcePath": "plugins/api-v1/packages/plugin-manager",
+      "component": "capability:plugin_create",
+      "beforeDigest": "sha256:09c4f5219bc755996953119ddea746a9d00f76253d37e5ca726712730617b876",
+      "afterDigest": "sha256:da244a354d77d4fa82cbe6f709bf9626eabc0c066f352ba92b3c7923259d6952",
+      "decision": "approved",
+      "reason": "2026-10-26 user-requested guide cleanup: separate management/development skills and declare their resource; align command_id and conditional catalog/resource arguments with existing runtime checks (invalid inputs previously failed later); clarify true loading/configuration/install-check semantics. Native factories and valid runtime inputs are unchanged. Focused regression, documented-example and real isolated-host installation tests pass.",
+      "deltas": [
+        {
+          "path": "/inputSchema/properties/command_id/description",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": "稳定操作 ID，重试保持不变",
+          "after": "16–128 位字母、数字、下划线或连字符；同一请求重试保持不变",
+          "impact": "documentation"
+        },
+        {
+          "path": "/inputSchema/properties/command_id/minLength",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": 1,
+          "after": 16,
+          "impact": "breaking-input-restriction"
+        },
+        {
+          "path": "/inputSchema/properties/command_id/pattern",
+          "beforePresent": false,
+          "afterPresent": true,
+          "after": "^[A-Za-z0-9_-]+$",
+          "impact": "input-contract-review"
+        },
+        {
+          "path": "/usage/inputs",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": "command_id 稳定；name/publisher 用小写连字符 slug，description 描述业务；template 支持 native、skill、knowledge、function、adapter、workflow、service，version 默认0.1.0。",
+          "after": "command_id 为 16–128 位字母、数字、下划线或连字符，同一请求保持稳定；name/publisher 用小写连字符 slug，description 描述业务；template 支持 native、skill、knowledge、function、adapter、workflow、service，version 默认0.1.0。",
+          "impact": "documentation"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/plugin-manager",
+      "sourcePath": "plugins/api-v1/packages/plugin-manager",
+      "component": "capability:plugin_install",
+      "beforeDigest": "sha256:61312f2120f4b673aa45992dca9d0f2f9e64ea5c70a314a66c718d42a593d5df",
+      "afterDigest": "sha256:fe42d1a9566480ce7298b815b76869b0e0e7f3f78b7269a935e50be4dc860332",
+      "decision": "approved",
+      "reason": "2026-10-26 user-requested guide cleanup: separate management/development skills and declare their resource; align command_id and conditional catalog/resource arguments with existing runtime checks (invalid inputs previously failed later); clarify true loading/configuration/install-check semantics. Native factories and valid runtime inputs are unchanged. Focused regression, documented-example and real isolated-host installation tests pass.",
+      "deltas": [
+        {
+          "path": "/usage/outputs",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": "{plugin,...} 安装回执；宿主在一次调用中做静态声明、绑定和包测试，失败带 diagnostics。",
+          "after": "{plugin,...} 安装回执；宿主检查静态声明、语法和实际绑定，MCP 核对工具目录及适用的声明安装测试；失败带 diagnostics。原生包内业务测试需作者另行执行。",
+          "impact": "documentation"
+        },
+        {
+          "path": "/usage/purpose",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": "由宿主校验、测试并安装指定 API 2 包，一次返回完整诊断或安装结果。",
+          "after": "由宿主检查并安装指定 API 2 包，一次返回完整诊断或安装结果。",
+          "impact": "documentation"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/plugin-manager",
+      "sourcePath": "plugins/api-v1/packages/plugin-manager",
+      "component": "capability:plugin_set_state",
+      "beforeDigest": "sha256:a79dc5a9f584f802ff512ffb89ad9f295d1520ea418799f74add8e3a9e0d6acb",
+      "afterDigest": "sha256:a628377045520a093146bf0c42ea879697f011dc8258a9277475c14ea5f4d11c",
+      "decision": "approved",
+      "reason": "2026-10-26 user-requested guide cleanup: separate management/development skills and declare their resource; align command_id and conditional catalog/resource arguments with existing runtime checks (invalid inputs previously failed later); clarify true loading/configuration/install-check semantics. Native factories and valid runtime inputs are unchanged. Focused regression, documented-example and real isolated-host installation tests pass.",
+      "deltas": [
+        {
+          "path": "/usage/inputs",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": "pluginId、enabled、scope=session或workspace；工作区修改按当前状态提供 expectedVersion。",
+          "after": "pluginId/enabled/scope；session 管理当前会话 loadout，workspace 的 true/false 对应 mounted/disabled。expectedVersion 为工作区策略版本，不是安装 digest。",
+          "impact": "documentation"
+        },
+        {
+          "path": "/usage/limitations",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": [
+            "disabled 可能影响其他会话；版本冲突重读状态，卸载或连接问题不能靠反复切换开关修复。"
+          ],
+          "after": [
+            "当前布尔工具不能设置 discoverable，完整三态由客户端设置提供。"
+          ],
+          "impact": "documentation"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/plugin-manager",
+      "sourcePath": "plugins/api-v1/packages/plugin-manager",
+      "component": "capabilities.json/knowledge",
+      "beforeDigest": "sha256:ccb3a2c1485d0e19deca49fb30ad3b677e25a340837ac3941628f2e0f51ca1f1",
+      "afterDigest": "sha256:8db2bed1d5023a1991186b0f4f8f54726e478b72af2f6dc9ca45d81876514d75",
+      "decision": "approved",
+      "reason": "2026-10-26 user-requested guide cleanup: separate management/development skills and declare their resource; align command_id and conditional catalog/resource arguments with existing runtime checks (invalid inputs previously failed later); clarify true loading/configuration/install-check semantics. Native factories and valid runtime inputs are unchanged. Focused regression, documented-example and real isolated-host installation tests pass.",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": [
+            {
+              "id": "resource.1",
+              "path": "prompt.md",
+              "description": "按已声明的用途与前提发现、读取、安装和管理API2插件；区分知识选择与工具授权。",
+              "kind": "prompt"
+            },
+            {
+              "id": "resource.2",
+              "path": "README.md",
+              "description": "随包资源 README.md",
+              "kind": "reference"
+            },
+            {
+              "id": "resource.3",
+              "path": "scaffold.js",
+              "description": "随包资源 scaffold.js",
+              "kind": "reference"
+            },
+            {
+              "id": "resource.4",
+              "path": "scripts/create-plugin.mjs",
+              "description": "随包资源 scripts/create-plugin.mjs",
+              "kind": "reference"
+            },
+            {
+              "id": "resource.5",
+              "path": "skills/develop-plugins/SKILL.md",
+              "description": "开发显式声明的API2能力与知识包：界定分层职责、输入输出和配置，并验证真实宿主调用。",
+              "kind": "skill"
+            },
+            {
+              "id": "resource.6",
+              "path": "skills/develop-plugins/references/authoring.md",
+              "description": "声明格式与组合原则：信息/方法/工作流的交接、配置和Schema、知识资源可读性、Agent的plugins与allowedCalls。",
+              "kind": "reference"
+            },
+            {
+              "id": "resource.7",
+              "path": "skills/develop-plugins/references/host-api.md",
+              "description": "随包资源 skills/develop-plugins/references/host-api.md",
+              "kind": "reference"
+            },
+            {
+              "id": "resource.8",
+              "path": "skills/develop-plugins/references/recovery.md",
+              "description": "随包资源 skills/develop-plugins/references/recovery.md",
+              "kind": "reference"
+            }
+          ],
+          "after": [
+            {
+              "id": "resource.1",
+              "path": "prompt.md",
+              "description": "按已声明的用途与前提发现、读取、安装和管理API2插件；区分知识选择与工具授权。",
+              "kind": "prompt"
+            },
+            {
+              "id": "resource.2",
+              "path": "README.md",
+              "description": "插件管理流程、脚手架和固定目录发行规则。",
+              "kind": "reference"
+            },
+            {
+              "id": "resource.3",
+              "path": "scaffold.js",
+              "description": "脚手架实际实现；核对模板生成和安装草稿行为。",
+              "kind": "reference"
+            },
+            {
+              "id": "resource.4",
+              "path": "scripts/create-plugin.mjs",
+              "description": "独立创建插件草稿的 CLI 实现与参数。",
+              "kind": "reference"
+            },
+            {
+              "id": "resource.5",
+              "path": "skills/develop-plugins/SKILL.md",
+              "description": "开发显式声明的API2能力与知识包：界定分层职责、输入输出和配置，并验证真实宿主调用。",
+              "kind": "skill"
+            },
+            {
+              "id": "resource.6",
+              "path": "skills/develop-plugins/references/authoring.md",
+              "description": "插件职责、显式声明、权限、配置依赖、知识分层和验证要求。",
+              "kind": "reference"
+            },
+            {
+              "id": "resource.7",
+              "path": "skills/develop-plugins/references/host-api.md",
+              "description": "八个宿主端口、能力与 Run、资源和入站消息的真实调用约定。",
+              "kind": "reference"
+            },
+            {
+              "id": "resource.8",
+              "path": "skills/develop-plugins/references/recovery.md",
+              "description": "安装失败、摘要冲突、未知结果及草稿恢复。",
+              "kind": "reference"
+            },
+            {
+              "id": "manage-plugins",
+              "path": "skills/manage-plugins/SKILL.md",
+              "kind": "skill",
+              "description": "发现、读取、加载、安装、更新和验收已有插件，区分状态、配置与业务成功。"
+            },
+            {
+              "id": "management-operations",
+              "path": "skills/manage-plugins/references/operations.md",
+              "kind": "reference",
+              "description": "11 个插件管理工具的参数、版本字段、三态、配置入口和安装检查范围。"
+            }
+          ],
+          "impact": "resource-declaration-review"
         }
       ],
       "findings": []

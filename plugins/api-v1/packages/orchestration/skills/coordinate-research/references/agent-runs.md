@@ -2,9 +2,12 @@
 
 本指南不提供工具。普通 Agent 和工作流使用同一套宿主 Run 生命周期，工具是否可用以当前工具列表和明确授予的能力为准。
 
+这些工具内置于宿主；停用编排知识插件不会卸载宿主执行器。使用插件是为了把目标落实成合理的分工、实际调用和成果交付，不能只读完指南就称编排已启动。
+
 | 能力 ID | Agent 工具名 | 输入与结果 |
 | --- | --- | --- |
 | `host.agent.run` | `host_agent_run` | `title/instructions/objective/input/allowedCalls` 定义任务，返回受理的 Run 引用。`plugins` 选择知识包，`model` 和 `output` 可选。 |
+| `host.capabilities.invoke` | `host_capabilities_invoke` | `id/input` 调用已注册能力；外层 `operationId` 标识一次操作，`task` 传报告或协作声明。不是创建任意新能力的入口。 |
 | `host.runs.list` | `host_runs_list` | 用 `sessionId/parentRunId/capabilityId/status` 等筛选运行，返回分页概要；不创建任务。 |
 | `host.runs.read` | `host_runs_read` | `runId` 读取真实状态；可用 `include/cursor/limit` 读取消息、调用、事件、输出和资源。 |
 | `host.runs.wait` | `host_runs_wait` | `runId` 配合 `until:"settled"` 等待最终结果；`until:"changed"`、`afterVersion` 用于观察变化。返回等待原因与最新 Run。 |
@@ -27,3 +30,38 @@
 受理返回的 `run.id` 是后续控制和读取的身份；只有 `completed` 的 `run.output` 才是最终结果，包含 `text/sessionId/model/turns/toolCalls`。等待超时只结束本次等待，不取消任务；`changed` 可因细小进度提前返回，不适合反复轮询最终成果。依赖缺失时暂停并报告具体需求，等待返回 `reason:"interrupted"` 后由主 Agent 核验并处理具体阻碍；已授权范围内可修复的依赖不要求新的用户回复。恢复前从同一 Run 读取待处理中断，明确选择实际解决的 `interruptIds`，是否需要用户输入遵循宿主控制契约，不默认把一个答复套到全部中断。正常结束由宿主收尾，无需另行完成调用；取消不回滚已发生的外部副作用，结果未知时读取 Run 与对应后端状态。
 
 完成通知携带原 Run 身份，主 Agent 读取真实结果并核对报告文件当前路径、发布状态与该版本渲染回执，向用户简要汇报阶段发现、主要边界及报告位置。不能仅凭 Run completed 宣称报告可见；未交付时说明具体诊断并处理可修复的阻碍，不重做已完成的研究。若还有能推进原问题、价值明确且在已有授权内的下一阶段，实际创建对应 Run 后再说明已经在进行什么，不能把计划说成已启动。没有独立工作时可结束回复等待下一次完成通知，无需反复轮询来唤醒自己；通知不提供新的用户要求或权限，仍尊重明确暂停和取消。
+
+### 单阶段调用：host_agent_run
+
+下面是交付一个研究阶段的参数骨架。先把 `<...>` 替换成真实输入；示例中的知识包与工具需已发现且当前可用。省略 `model` 表示复用宿主配置，不能把示例路径或数据标识说成已经存在的成果。
+
+```json
+{
+  "title": "价格结构研究",
+  "objective": "基于给定固定数据，归纳结构判断、证据与待验证问题，并交付可读报告。",
+  "instructions": "阅读所选 ICT 方法，使用给定数据与既有证据完成本阶段；用统一报告模板实际发布并检查本次报告，不再委派。",
+  "input": {
+    "dataset_id": "<真实固定数据集 ID>",
+    "question": "<用户已经提出的研究问题>"
+  },
+  "plugins": ["sesame/ict"],
+  "allowedCalls": [
+    {"pluginId": "sesame/data-access", "capabilityId": "data_read"},
+    {"pluginId": "sesame/plugin-manager", "capabilityId": "plugin_read"},
+    {"pluginId": "sesame/reports", "capabilityId": "report_template"},
+    {"pluginId": "sesame/reports", "capabilityId": "report_publish"},
+    {"pluginId": "sesame/reports", "capabilityId": "report_check"},
+    {"pluginId": "sesame/reports", "capabilityId": "report_read"},
+    {"pluginId": "sesame/workspace", "capabilityId": "read"},
+    {"pluginId": "sesame/workspace", "capabilityId": "write"},
+    {"pluginId": "sesame/workspace", "capabilityId": "edit"}
+  ],
+  "output": {"type": "report", "space": "research", "path": "price-structure.html"}
+}
+```
+
+这是基础能力组合；需要数值计算、额外来源或原生回测时，把对应的真实能力一并授予，不能把缺少能力留给子 Agent 猜。回测/策略报告按任务使用 `space:"strategy"`。
+
+收到受理结果后保存其真实 `run.id`。独立阶段可以继续创建；有依赖时先读取该 Run 的 completed 输出，再将实际结果和固定成果引用放入下一任务的 `input`。`host_agent_run` 没有 `dependsOn`、`nodes`、`edges` 等任务字段，不能用未声明参数表达自动调度。
+
+要给已有任务补充信息，调用 `host_runs_message({runId,text})`；要恢复中断，先 `host_runs_read({runId})` 读取实际中断，再 `host_runs_resume({runId,interruptIds,response})`。不要为了补充、恢复或取得结果重新创建原任务。
