@@ -125,4 +125,4 @@ SVG 图支持鼠标、键盘选中原始记录；默认 Canvas 蜡烛支持点�
 
 `report_publish` 固定 HTML、数据和资源；随后 `report_check` 才会检查实际桌面/窄屏、脚本、数据和交互。修复真实失败后发布新 revision 并检查。美学选择、章节数和字数不作为发布硬门槛。只有当前版本 receipt 为 rendered，才宣告渲染通过。
 
-回测/优化使用 report_backtest_template 或自由编写等价交互；[回测写作契约](../report-writing/backtest.md) 的同源 SVL 逻辑图、品种×周期选优矩阵、全部试验下钻和三项参数敏感性不可省略。布局可改，视觉继续沿用本篇规范。
+回测/优化使用 report_backtest_template 或自由编写等价交互；[回测写作契约](../report-writing/backtest.md) 的真实同源策略逻辑、品种×周期选优矩阵、全部试验下钻和三项参数敏感性不可省略。实际使用 SVL 时提供同源 SVL 逻辑图；Python、MT5 等原生回测用真实原生源码与运行证据表达策略逻辑，无需另造 SVL。布局可改，视觉继续沿用本篇规范。

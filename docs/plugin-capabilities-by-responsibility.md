@@ -4,7 +4,7 @@
 
 共 257 个声明入口：169 个可供 Agent 调用，88 个仅供宿主调用。本轮保持冻结的 252 个原能力契约，另为统一配置新增 MT5、QMT 各两个宿主适配器。数量按插件 ID 与能力 ID 的组合计算；实际权限、配置条件和运行结果沿用原契约。
 
-factor-research、strategy-research、orchestration 没有执行入口，其能力由知识指南提供。
+factor-research、strategy-research、orchestration、user-guide 没有执行入口，其能力由知识指南提供。2026-10-26 新增独立默认 user-guide 并迁移产品帮助，orchestration 专注协作编排；上文执行能力数字保留历史核查口径，当前包数见功能架构与 inventory。
 
 ## 总览
 
@@ -31,7 +31,8 @@ factor-research、strategy-research、orchestration 没有执行入口，其能�
 | 交互呈现 | [reports](../plugins/api-v1/packages/reports/capabilities.json) | 冻结报告数据；生成通用或回测报告模板；展示已有策略、优化、敏感性结果；发布不可变 HTML 报告与资源；读取报告版本；实际渲染检查及诊断。 | 6 | 0 |
 | 平台管理 | [configuration](../plugins/api-v1/packages/configuration/capabilities.json) | 读取和修改应用设置；统一管理插件声明的连接信息与密钥，按原配置版本分组保存，并显示必需、条件和可选的消费能力关联。 | 7 | 0 |
 | 平台管理 | [memory](../plugins/api-v1/packages/memory/capabilities.json) | 搜索和读取长期记忆；取得交易风格、风险红线和策略认知；提出候选、核验合并、记录实际采用、修订、归档、恢复或遗忘。宿主接口提供分类树、索引、维护状态、保留策略和生命周期整理。 | 6 | 8 |
-| 平台管理 | [orchestration](../plugins/api-v1/packages/orchestration/capabilities.json) | 知识指南：安装上手、工作台和图表操作、聊天与命令、用户设置、Agent/Run 使用、研究和策略任务用法、排障。自身不注册执行入口，编排执行由宿主承担。 | 0 | 0 |
+| 平台管理 | [orchestration](../plugins/api-v1/packages/orchestration/capabilities.json) | 研究阶段、工作流和子 Agent 编排，证据与能力传递、Run 接续和成果验收。 | 0 | 0 |
+| 平台管理 | [user-guide](../plugins/api-v1/packages/user-guide/capabilities.json) | 产品上手、工作台、聊天命令、设置、任务示例与排障。 | 0 | 0 |
 | 平台管理 | [plugin-manager](../plugins/api-v1/packages/plugin-manager/capabilities.json) | 发现已安装插件和能力，按需加载；读取发布目录并校验安装；读取知识资源、检查状态；生成插件草稿；安装、启停、版本检查更新和卸载。 | 11 | 0 |
 | 平台管理 | [workspace](../plugins/api-v1/packages/workspace/capabilities.json) | 读取、写入和精确编辑工作区文件，运行受管理命令；列出、搜索、分页读取或导入宿主文件；写文件、建目录、移动及删除普通文件或空目录；运行宿主命令并保留执行结果。 | 13 | 0 |
 
@@ -488,21 +489,34 @@ factor-research、strategy-research、orchestration 没有执行入口，其能�
 
 ### sesame/orchestration
 
-知识指南：安装上手、工作台和图表操作、聊天与命令、用户设置、Agent/Run 使用、研究和策略任务用法、排障。自身不注册执行入口，编排执行由宿主承担。
+组织研究阶段、工作流与子 Agent，传递证据与能力，接续任务并验收成果。 本包不注册执行入口。
 
 来源：[capabilities.json](../plugins/api-v1/packages/orchestration/capabilities.json)。Agent 可调用 0 项，仅宿主 0 项。
 
-无执行入口。已声明的知识与参考资源：
+职责原则在 prompt，具体任务步骤在 skill，详细参考按需读取：
 
 - [prompt.md](../plugins/api-v1/packages/orchestration/prompt.md)
-- [skills/sesame-user-guide/SKILL.md](../plugins/api-v1/packages/orchestration/skills/sesame-user-guide/SKILL.md)
-- [skills/sesame-user-guide/references/installation.md](../plugins/api-v1/packages/orchestration/skills/sesame-user-guide/references/installation.md)
-- [skills/sesame-user-guide/references/dashboard.md](../plugins/api-v1/packages/orchestration/skills/sesame-user-guide/references/dashboard.md)
-- [skills/sesame-user-guide/references/chat-and-commands.md](../plugins/api-v1/packages/orchestration/skills/sesame-user-guide/references/chat-and-commands.md)
-- [skills/sesame-user-guide/references/settings.md](../plugins/api-v1/packages/orchestration/skills/sesame-user-guide/references/settings.md)
-- [skills/sesame-user-guide/references/workflows.md](../plugins/api-v1/packages/orchestration/skills/sesame-user-guide/references/workflows.md)
-- [skills/sesame-user-guide/references/troubleshooting.md](../plugins/api-v1/packages/orchestration/skills/sesame-user-guide/references/troubleshooting.md)
-- [skills/sesame-user-guide/references/website-docs.md](../plugins/api-v1/packages/orchestration/skills/sesame-user-guide/references/website-docs.md)
+- [skills/coordinate-research/SKILL.md](../plugins/api-v1/packages/orchestration/skills/coordinate-research/SKILL.md)
+- [skills/coordinate-research/references/agent-runs.md](../plugins/api-v1/packages/orchestration/skills/coordinate-research/references/agent-runs.md)
+- [skills/coordinate-research/references/workflow-plans.md](../plugins/api-v1/packages/orchestration/skills/coordinate-research/references/workflow-plans.md)
+
+### sesame/user-guide
+
+解释产品上手、工作台、聊天命令、设置、任务示例与排障。 本包不注册执行入口。
+
+来源：[capabilities.json](../plugins/api-v1/packages/user-guide/capabilities.json)。Agent 可调用 0 项，仅宿主 0 项。
+
+职责原则在 prompt，具体任务步骤在 skill，详细参考按需读取：
+
+- [prompt.md](../plugins/api-v1/packages/user-guide/prompt.md)
+- [skills/sesame-user-guide/SKILL.md](../plugins/api-v1/packages/user-guide/skills/sesame-user-guide/SKILL.md)
+- [skills/sesame-user-guide/references/installation.md](../plugins/api-v1/packages/user-guide/skills/sesame-user-guide/references/installation.md)
+- [skills/sesame-user-guide/references/dashboard.md](../plugins/api-v1/packages/user-guide/skills/sesame-user-guide/references/dashboard.md)
+- [skills/sesame-user-guide/references/chat-and-commands.md](../plugins/api-v1/packages/user-guide/skills/sesame-user-guide/references/chat-and-commands.md)
+- [skills/sesame-user-guide/references/settings.md](../plugins/api-v1/packages/user-guide/skills/sesame-user-guide/references/settings.md)
+- [skills/sesame-user-guide/references/workflows.md](../plugins/api-v1/packages/user-guide/skills/sesame-user-guide/references/workflows.md)
+- [skills/sesame-user-guide/references/troubleshooting.md](../plugins/api-v1/packages/user-guide/skills/sesame-user-guide/references/troubleshooting.md)
+- [skills/sesame-user-guide/references/website-docs.md](../plugins/api-v1/packages/user-guide/skills/sesame-user-guide/references/website-docs.md)
 
 ### sesame/plugin-manager
 

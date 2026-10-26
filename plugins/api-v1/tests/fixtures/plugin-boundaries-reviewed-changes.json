@@ -73,7 +73,7 @@
     {
       "pluginId": "sesame/orchestration",
       "before": "3.1.1",
-      "after": "3.1.6"
+      "after": "3.2.0"
     },
     {
       "pluginId": "sesame/plugin-manager",
@@ -98,7 +98,7 @@
     {
       "pluginId": "sesame/reports",
       "before": "3.0.0",
-      "after": "3.3.0"
+      "after": "3.3.1"
     },
     {
       "pluginId": "sesame/strategy-research",
@@ -12294,6 +12294,313 @@
             }
           ],
           "impact": "artifact-contract-review"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/orchestration",
+      "sourcePath": "plugins/api-v1/packages/orchestration",
+      "component": "plugin.json",
+      "beforeDigest": "sha256:8bb880264ef2ad5c825b1dfbdd3ca39db5d4fd4a706c640fbd00be44b920cc83",
+      "afterDigest": "sha256:3ba83a985ca14fde047546846869f7d3a180f5d3fde5886d9055c8ac664417de",
+      "decision": "approved",
+      "reason": "User-requested responsibility split on 2026-10-26: orchestration 3.2.0 retains collaboration principles, the coordinate-research skill and host-owned Agent/Run references. Product help moves to independent default sesame/user-guide 3.0.0. Both packages remain knowledge-only; no execution capability, permission or host interface is changed.",
+      "deltas": [
+        {
+          "path": "/description",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": "纯知识指南：介绍 Sesame 工作台与宿主统一 Agent/Run 接口，不注册运行工具。",
+          "after": "研究协作知识：选择工作流、组织阶段和子 Agent、传递证据与能力、管理同一 Run 并验收阶段成果；运行由宿主提供。",
+          "impact": "documentation"
+        },
+        {
+          "path": "/resources",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": [
+            "skills/sesame-user-guide/references/installation.md",
+            "skills/sesame-user-guide/references/dashboard.md",
+            "skills/sesame-user-guide/references/chat-and-commands.md",
+            "skills/sesame-user-guide/references/settings.md",
+            "skills/sesame-user-guide/references/workflows.md",
+            "skills/sesame-user-guide/references/troubleshooting.md",
+            "skills/sesame-user-guide/references/website-docs.md"
+          ],
+          "after": [
+            "skills/coordinate-research/references/agent-runs.md",
+            "skills/coordinate-research/references/workflow-plans.md"
+          ],
+          "impact": "declaration-contract-review"
+        },
+        {
+          "path": "/title",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": "Sesame 使用与编排指南",
+          "after": "Agent 与工作流编排",
+          "impact": "documentation"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/orchestration",
+      "sourcePath": "plugins/api-v1/packages/orchestration",
+      "component": "capabilities.json/knowledge",
+      "beforeDigest": "sha256:27b93f04d1d4f1e76d79abc8e8c5b233855c29d26e50876f133eeec015692002",
+      "afterDigest": "sha256:43909303ea249243f1eedb8ecaa7235a0ae678ed786e4558751d14abafc42762",
+      "decision": "approved",
+      "reason": "User-requested responsibility split on 2026-10-26: orchestration 3.2.0 retains collaboration principles, the coordinate-research skill and host-owned Agent/Run references. Product help moves to independent default sesame/user-guide 3.0.0. Both packages remain knowledge-only; no execution capability, permission or host interface is changed.",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": [
+            {
+              "id": "resource.1",
+              "path": "prompt.md",
+              "description": "按目标委派普通Agent或显式协作工作流：选择知识方法与调用能力，传递证据并管理同一Run的暂停/恢复。",
+              "kind": "prompt"
+            },
+            {
+              "id": "resource.2",
+              "path": "skills/sesame-user-guide/SKILL.md",
+              "description": "随包资源 skills/sesame-user-guide/SKILL.md",
+              "kind": "skill"
+            },
+            {
+              "id": "resource.3",
+              "path": "skills/sesame-user-guide/references/installation.md",
+              "description": "随包资源 skills/sesame-user-guide/references/installation.md",
+              "kind": "reference"
+            },
+            {
+              "id": "resource.4",
+              "path": "skills/sesame-user-guide/references/dashboard.md",
+              "description": "随包资源 skills/sesame-user-guide/references/dashboard.md",
+              "kind": "reference"
+            },
+            {
+              "id": "resource.5",
+              "path": "skills/sesame-user-guide/references/chat-and-commands.md",
+              "description": "随包资源 skills/sesame-user-guide/references/chat-and-commands.md",
+              "kind": "reference"
+            },
+            {
+              "id": "resource.6",
+              "path": "skills/sesame-user-guide/references/settings.md",
+              "description": "随包资源 skills/sesame-user-guide/references/settings.md",
+              "kind": "reference"
+            },
+            {
+              "id": "resource.7",
+              "path": "skills/sesame-user-guide/references/workflows.md",
+              "description": "随包资源 skills/sesame-user-guide/references/workflows.md",
+              "kind": "reference"
+            },
+            {
+              "id": "resource.8",
+              "path": "skills/sesame-user-guide/references/troubleshooting.md",
+              "description": "随包资源 skills/sesame-user-guide/references/troubleshooting.md",
+              "kind": "reference"
+            },
+            {
+              "id": "resource.9",
+              "path": "skills/sesame-user-guide/references/website-docs.md",
+              "description": "随包资源 skills/sesame-user-guide/references/website-docs.md",
+              "kind": "reference"
+            }
+          ],
+          "after": [
+            {
+              "id": "resource.1",
+              "path": "prompt.md",
+              "description": "编排职责与通用原则",
+              "kind": "prompt"
+            },
+            {
+              "id": "resource.2",
+              "path": "skills/coordinate-research/SKILL.md",
+              "description": "知识资料 skills/coordinate-research/SKILL.md",
+              "kind": "skill"
+            },
+            {
+              "id": "resource.3",
+              "path": "skills/coordinate-research/references/agent-runs.md",
+              "description": "知识资料 skills/coordinate-research/references/agent-runs.md",
+              "kind": "reference"
+            },
+            {
+              "id": "resource.4",
+              "path": "skills/coordinate-research/references/workflow-plans.md",
+              "description": "工作流计划与可调整阶段",
+              "kind": "reference"
+            }
+          ],
+          "impact": "resource-declaration-review"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/orchestration",
+      "sourcePath": "plugins/api-v1/packages/orchestration",
+      "component": "removed path:skills/sesame-user-guide/SKILL.md",
+      "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
+      "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
+      "decision": "approved",
+      "reason": "User-requested responsibility split on 2026-10-26: this product-help resource now belongs to the default sesame/user-guide 3.0.0 package at the same relative path. The sesame-user-guide skill name remains available. Host Agent/Run and detailed workflow contracts move to orchestration references; callers use the new owner instead of a compatibility alias.",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": true,
+          "after": false,
+          "impact": "breaking-path-removal"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/orchestration",
+      "sourcePath": "plugins/api-v1/packages/orchestration",
+      "component": "removed path:skills/sesame-user-guide/references/chat-and-commands.md",
+      "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
+      "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
+      "decision": "approved",
+      "reason": "User-requested responsibility split on 2026-10-26: this product-help resource now belongs to the default sesame/user-guide 3.0.0 package at the same relative path. The sesame-user-guide skill name remains available. Host Agent/Run and detailed workflow contracts move to orchestration references; callers use the new owner instead of a compatibility alias.",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": true,
+          "after": false,
+          "impact": "breaking-path-removal"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/orchestration",
+      "sourcePath": "plugins/api-v1/packages/orchestration",
+      "component": "removed path:skills/sesame-user-guide/references/dashboard.md",
+      "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
+      "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
+      "decision": "approved",
+      "reason": "User-requested responsibility split on 2026-10-26: this product-help resource now belongs to the default sesame/user-guide 3.0.0 package at the same relative path. The sesame-user-guide skill name remains available. Host Agent/Run and detailed workflow contracts move to orchestration references; callers use the new owner instead of a compatibility alias.",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": true,
+          "after": false,
+          "impact": "breaking-path-removal"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/orchestration",
+      "sourcePath": "plugins/api-v1/packages/orchestration",
+      "component": "removed path:skills/sesame-user-guide/references/installation.md",
+      "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
+      "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
+      "decision": "approved",
+      "reason": "User-requested responsibility split on 2026-10-26: this product-help resource now belongs to the default sesame/user-guide 3.0.0 package at the same relative path. The sesame-user-guide skill name remains available. Host Agent/Run and detailed workflow contracts move to orchestration references; callers use the new owner instead of a compatibility alias.",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": true,
+          "after": false,
+          "impact": "breaking-path-removal"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/orchestration",
+      "sourcePath": "plugins/api-v1/packages/orchestration",
+      "component": "removed path:skills/sesame-user-guide/references/settings.md",
+      "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
+      "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
+      "decision": "approved",
+      "reason": "User-requested responsibility split on 2026-10-26: this product-help resource now belongs to the default sesame/user-guide 3.0.0 package at the same relative path. The sesame-user-guide skill name remains available. Host Agent/Run and detailed workflow contracts move to orchestration references; callers use the new owner instead of a compatibility alias.",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": true,
+          "after": false,
+          "impact": "breaking-path-removal"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/orchestration",
+      "sourcePath": "plugins/api-v1/packages/orchestration",
+      "component": "removed path:skills/sesame-user-guide/references/troubleshooting.md",
+      "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
+      "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
+      "decision": "approved",
+      "reason": "User-requested responsibility split on 2026-10-26: this product-help resource now belongs to the default sesame/user-guide 3.0.0 package at the same relative path. The sesame-user-guide skill name remains available. Host Agent/Run and detailed workflow contracts move to orchestration references; callers use the new owner instead of a compatibility alias.",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": true,
+          "after": false,
+          "impact": "breaking-path-removal"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/orchestration",
+      "sourcePath": "plugins/api-v1/packages/orchestration",
+      "component": "removed path:skills/sesame-user-guide/references/website-docs.md",
+      "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
+      "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
+      "decision": "approved",
+      "reason": "User-requested responsibility split on 2026-10-26: this product-help resource now belongs to the default sesame/user-guide 3.0.0 package at the same relative path. The sesame-user-guide skill name remains available. Host Agent/Run and detailed workflow contracts move to orchestration references; callers use the new owner instead of a compatibility alias.",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": true,
+          "after": false,
+          "impact": "breaking-path-removal"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/orchestration",
+      "sourcePath": "plugins/api-v1/packages/orchestration",
+      "component": "removed path:skills/sesame-user-guide/references/workflows.md",
+      "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
+      "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
+      "decision": "approved",
+      "reason": "User-requested responsibility split on 2026-10-26: this product-help resource now belongs to the default sesame/user-guide 3.0.0 package at the same relative path. The sesame-user-guide skill name remains available. Host Agent/Run and detailed workflow contracts move to orchestration references; callers use the new owner instead of a compatibility alias.",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": true,
+          "after": false,
+          "impact": "breaking-path-removal"
         }
       ],
       "findings": []

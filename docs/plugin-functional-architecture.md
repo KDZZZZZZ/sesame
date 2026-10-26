@@ -1,6 +1,6 @@
 # 插件功能架构与分批验收
 
-本说明适用于当前 Plugin API 2 源码：58 个插件，其中 10 个核心、48 个可选。主分类按插件在实际任务中的职责划分，用于发现和导航；实现类型独立记录它如何实现，用于选择包内结构。两者不改变插件 ID、调用权限或发行成员。
+本说明适用于当前 Plugin API 2 源码：59 个插件，其中 11 个核心、48 个可选。主分类按插件在实际任务中的职责划分，用于发现和导航；实现类型独立记录它如何实现，用于选择包内结构。分类本身不改变调用权限；2026-10-26 将产品帮助从编排中独立为默认核心插件 `sesame/user-guide`。
 
 ## 分类与清单
 
@@ -41,11 +41,11 @@ policy 中的类型是可校验的审阅预期，不是分类真相。只有声�
 | analysis：评估、表达与解析（5） | factor-evaluator、strategy-authoring、market-data-parser、rss-collect、web-extract |
 | integration（11） | data-access、web-sources、financial-research、akshare、ccxt、binance、mt5、qmt、backtrader、vnpy、quantskills-catalog |
 | presentation（2） | canvas-control、reports |
-| platform（5） | configuration、memory、orchestration、plugin-manager、workspace |
+| platform（6） | configuration、memory、orchestration、plugin-manager、user-guide、workspace |
 
 binance 专注 Binance Spot 的公开行情、账户余额及订单操作，生产与测试网身份独立；ccxt 继续负责其已声明交易所的公开行情聚合。现货余额和交易数量使用原生资产单位，不套用 MT5 持仓票据或 QMT 整数股语义。
 
-其中 strategy-authoring 处理已明确的策略逻辑、表达与求值，不负责选择研究方向；三个解析器消费已经提供的内容，不负责联网获取。portfolio-execution 对已有账户执行获授权目标，交易目标由 trading-decision 决定。judgment-evolution 组织事前登记、结果核验、复盘与前瞻验证；kurumi-replay 负责完整的历史角色模拟任务。orchestration 主要提供产品使用与宿主 Agent/Run 指南，因此保留在平台管理。quantskills-catalog 提供资源发现，不实现目录收录的方法。
+其中 strategy-authoring 处理已明确的策略逻辑、表达与求值，不负责选择研究方向；三个解析器消费已经提供的内容，不负责联网获取。portfolio-execution 对已有账户执行获授权目标，交易目标由 trading-decision 决定。judgment-evolution 组织事前登记、结果核验、复盘与前瞻验证；kurumi-replay 负责完整的历史角色模拟任务。orchestration 提供 Agent/Run 协作编排方法，user-guide 提供产品操作帮助；两者都是平台知识，默认挂载且不注册运行入口。quantskills-catalog 提供资源发现，不实现目录收录的方法。
 
 [分类定义与校验](../plugins/api-v1/scripts/plugin-taxonomy.mjs) 集中维护枚举；[inventory 生成器](../plugins/api-v1/scripts/inventory.mjs) 从实际声明投影能力和版本，检查缺失、重复和过期条目。生成清单仅作描述，安装授权仍来自既有固定发布目录。
 

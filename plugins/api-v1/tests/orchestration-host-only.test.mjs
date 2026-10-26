@@ -13,21 +13,21 @@ test('orchestration declares knowledge without duplicate callable or native entr
   for (const key of ['sources', 'views', 'services', 'hooks', 'stateCollections', 'artifactSchemas']) assert.deepEqual(declarations[key], [], key);
   assert.equal(manifest.entry, undefined);
   assert.equal(manifest.execution, undefined);
-  assert.equal(manifest.version, '3.1.1');
   assert.equal((await json('package.json')).version, manifest.version);
   const files = await readdir(root);
   for (const path of ['index.js', 'tools.js', 'support.js']) assert.ok(!files.includes(path), `${path} is not part of a knowledge-only guide`);
 });
 
-test('the guide retains all seven linked reference chapters and declared prompt and skill', async () => {
-  const manifest = await json('plugin.json'), declarations = await json('capabilities.json');
-  const route = 'skills/sesame-user-guide/SKILL.md', body = await read(route);
+test('the separate product guide retains all seven linked reference chapters and declared prompt and skill', async () => {
+  const guideRead = path => readFile(new URL(`../user-guide/${path}`, root), 'utf8');
+  const manifest = JSON.parse(await guideRead('plugin.json')), declarations = JSON.parse(await guideRead('capabilities.json'));
+  const route = 'skills/sesame-user-guide/SKILL.md', body = await guideRead(route);
   const links = [...body.matchAll(/\]\((references\/[^)]+\.md)\)/g)].map(match => posix.join(posix.dirname(route), match[1]));
   assert.equal(links.length, 7);
   assert.equal(new Set(links).size, 7);
   assert.deepEqual([...manifest.resources].sort(), [...links].sort());
   assert.deepEqual(declarations.knowledge.map(item => item.path).sort(), ['prompt.md', route, ...links].sort());
-  for (const path of links) assert.ok((await read(path)).length > 100, path);
+  for (const path of links) assert.ok((await guideRead(path)).length > 100, path);
 });
 
 test('the published guidance uses the host names and preserves execution boundaries', async () => {

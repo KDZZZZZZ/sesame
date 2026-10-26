@@ -22,21 +22,21 @@ test('task responsibility groups guides with workflows and knowledge with reusab
     assert.equal(byId[`sesame/${name}`].functionalCategory, 'integration', name);
   }
   for (const name of ['canvas-control', 'reports']) assert.equal(byId[`sesame/${name}`].functionalCategory, 'presentation', name);
-  for (const name of ['configuration', 'plugin-manager', 'workspace', 'memory', 'orchestration']) assert.equal(byId[`sesame/${name}`].functionalCategory, 'platform', name);
+  for (const name of ['configuration', 'plugin-manager', 'workspace', 'memory', 'orchestration', 'user-guide']) assert.equal(byId[`sesame/${name}`].functionalCategory, 'platform', name);
   assert.deepEqual(byId['sesame/ict'].implementationKinds, ['knowledge']);
   assert.deepEqual(byId['sesame/factor-research'].implementationKinds, ['knowledge']);
   assert.deepEqual(byId['sesame/auto-factor-mining'].implementationKinds, ['workflow']);
   assert.deepEqual(byId['sesame/abu-trend'].implementationKinds, ['function']);
 });
 
-test('all 58 plugins have one reviewed functional group and valid implementation kinds without replacing legacy categories', () => {
+test('all 59 plugins have one reviewed functional group and valid implementation kinds without replacing legacy categories', () => {
   const inventory = buildInventory();
-  assert.equal(inventory.packages.length, 58);
-  assert.equal(new Set(inventory.packages.map(item => item.id)).size, 58);
+  assert.equal(inventory.packages.length, 59);
+  assert.equal(new Set(inventory.packages.map(item => item.id)).size, 59);
   assert.deepEqual(inventory.taxonomy, { functionalCategories: FUNCTIONAL_CATEGORIES, implementationKinds: IMPLEMENTATION_KINDS });
   const counts = field => Object.fromEntries([...new Set(inventory.packages.map(item => item[field]))].sort().map(value => [value, inventory.packages.filter(item => item[field] === value).length]));
-  assert.deepEqual(counts('functionalCategory'), { analysis: 31, business: 9, integration: 11, platform: 5, presentation: 2 });
-  assert.deepEqual(counts('category'), { backend: 7, data: 6, research: 33, strategy: 6, workspace: 6 });
+  assert.deepEqual(counts('functionalCategory'), { analysis: 31, business: 9, integration: 11, platform: 6, presentation: 2 });
+  assert.deepEqual(counts('category'), { backend: 7, data: 6, research: 33, strategy: 6, workspace: 7 });
   for (const item of inventory.packages) {
     assert.equal(item.category, policy[item.id.slice('sesame/'.length)].category);
     assert.ok(item.implementationKinds.length > 0);
@@ -49,6 +49,7 @@ test('all 58 plugins have one reviewed functional group and valid implementation
   assert.deepEqual(byId['sesame/investment-research'].implementationKinds, ['workflow']);
   assert.deepEqual(byId['sesame/ultra'].implementationKinds, ['workflow', 'service']);
   assert.deepEqual(byId['sesame/orchestration'].implementationKinds, ['knowledge']);
+  assert.deepEqual(byId['sesame/user-guide'].implementationKinds, ['knowledge']);
 });
 
 test('inventory projects current declared abilities and versions, including research follow-up questions', () => {

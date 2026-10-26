@@ -4,7 +4,7 @@
 
 本文给出已经落实到当前源码的职责，承接源码审查与[边界方案](../.omx/plans/plugin-boundaries-2026-10-19-plan.md)。24 个包保持原身份、252 个原有能力契约、权限与状态归属；统一配置另新增 MT5、QMT 各两个仅宿主适配器。当前共 256 个能力入口，168 个可供 Agent 调用、88 个仅宿主使用，见[逐项能力清单](plugin-capabilities-by-responsibility.md)。实施与验证证据见[边界实施记录](plans/2026-10-19-plugin-boundaries-implementation.md)；源码状态与已发行、已安装版本分别核对。
 
-开发者从[统一开发指南](plugin-development.md)选择最小接口、硬性约束和同类参考实现；用户入口与使用方式由 orchestration 的 Sesame 使用指南维护。
+开发者从[统一开发指南](plugin-development.md)选择最小接口、硬性约束和同类参考实现；用户入口与使用方式由独立的 user-guide 维护，orchestration 负责协作编排方法。2026-10-26 的此次拆分保留两者纯知识身份，新增默认包不改变上文历史冻结的可调用能力契约；当前全量计数见[功能架构](plugin-functional-architecture.md)。
 
 ## 分类口径
 
@@ -77,7 +77,8 @@
 | [memory](../plugins/api-v1/packages/memory/capabilities.json) | 管理个人长期记忆、偏好、交易风格和风险约束；支持候选、来源核验、采用记录、修订、归档、恢复、遗忘及维护 | 个人记忆与候选、确认来源、版本/生命周期、适用的交易风险上下文；拥有个人记忆库 | 正式风险规则遵循真实用户确认；交易决策复盘归 trading-decision，统计判断与准则验证归 judgment-evolution |
 | [plugin-manager](../plugins/api-v1/packages/plugin-manager/capabilities.json) | 发现和加载插件/知识，读取可信发布目录与状态，校验并执行安装、启停、更新和卸载，生成插件开发脚手架 | 插件及能力目录、知识资源读取、生命周期回执、版本/摘要状态、插件草稿 | 实际安装权限和生命周期由宿主执行；参考资料推荐归 quantskills-catalog。保留原发行校验和主会话权限 |
 | [workspace](../plugins/api-v1/packages/workspace/capabilities.json) | 提供工作区编辑、宿主文件访问和受管理进程执行：列出/搜索/读取/导入，写入/编辑/移动/删除，执行命令与取消 | 文件内容与操作回执、变更版本/哈希、进程 Run 和输出 | 共用原 FileAccess 与进程桥接；工作区编辑和显式宿主文件操作保留各自路径、分页及覆盖语义。专属环境与依赖版本由对应适配器定义 |
-| [orchestration](../plugins/api-v1/packages/orchestration/capabilities.json) | 提供 Sesame 产品使用与任务协作指南：安装上手、工作台、聊天/命令、设置、Agent/Run、研究与策略用法、排障 | 可加载的产品与协作知识文档 | 本包没有执行入口；Agent 调度、Run 状态、暂停/恢复、取消及权限等运行机制由现有宿主负责 |
+| [orchestration](../plugins/api-v1/packages/orchestration/capabilities.json) | 组织研究阶段、选择工作流、委派子 Agent、传递证据与能力、接续任务并验收成果 | prompt 职责原则、coordinate-research skill、Agent/Run 与工作流计划参考 | 本包没有执行入口；Agent 调度、Run 状态、暂停/恢复、取消及权限等运行机制由现有宿主负责 |
+| [user-guide](../plugins/api-v1/packages/user-guide/capabilities.json) | 提供产品上手、工作台、聊天与命令、设置、任务示例和排障帮助 | prompt 职责原则、sesame-user-guide skill、七篇产品参考 | 本包没有执行入口；实际配置和业务操作交给对应插件，帮助文档不扩大权限 |
 
 ## 配置与能力依赖的统一责任
 

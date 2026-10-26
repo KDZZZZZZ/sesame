@@ -85,16 +85,33 @@
       "knowledge"
     ],
     "title": {
-      "en": "Sesame user guide",
-      "zh": "Sesame 使用指南"
+      "en": "Agent and workflow coordination",
+      "zh": "Agent 与工作流编排"
     },
     "summary": {
-      "en": "Read product guidance and the host's unified Agent and Run capabilities; this package registers no execution tools.",
-      "zh": "查阅产品用法与宿主统一的 Agent、Run 能力；本包不注册执行工具。"
+      "en": "Organize research stages, workflows and agents, pass evidence and capabilities, and verify deliverables through host-owned Runs.",
+      "zh": "组织研究阶段、工作流和子 Agent，传递证据与能力，并通过宿主 Run 核验成果。"
     },
     "dependencies": {
       "en": "Reading the guide needs no model or trading backend. Agent execution is provided by the host.",
       "zh": "读取指南无需模型或交易后端；Agent 执行由宿主提供。"
+    }
+  },
+  "user-guide": {
+    "category": "workspace",
+    "functionalCategory": "platform",
+    "implementationKinds": ["knowledge"],
+    "title": {
+      "en": "Sesame user guide",
+      "zh": "Sesame 使用指南"
+    },
+    "summary": {
+      "en": "Explain product setup, workspace, chat, settings and task examples through readable guidance without execution tools.",
+      "zh": "提供安装上手、工作台、聊天、设置和任务示例等产品操作知识，不注册执行工具。"
+    },
+    "dependencies": {
+      "en": "Reading product help needs no model or trading backend; actual operations use the relevant capabilities.",
+      "zh": "读取产品帮助无需模型或交易后端；实际操作使用对应业务能力。"
     }
   },
   "plugin-manager": {

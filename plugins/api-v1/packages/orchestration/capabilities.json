@@ -15,55 +15,25 @@
     {
       "id": "resource.1",
       "path": "prompt.md",
-      "description": "按目标委派普通Agent或显式协作工作流：选择知识方法与调用能力，传递证据并管理同一Run的暂停/恢复。",
+      "description": "编排职责与通用原则",
       "kind": "prompt"
     },
     {
       "id": "resource.2",
-      "path": "skills/sesame-user-guide/SKILL.md",
-      "description": "随包资源 skills/sesame-user-guide/SKILL.md",
+      "path": "skills/coordinate-research/SKILL.md",
+      "description": "知识资料 skills/coordinate-research/SKILL.md",
       "kind": "skill"
     },
     {
       "id": "resource.3",
-      "path": "skills/sesame-user-guide/references/installation.md",
-      "description": "随包资源 skills/sesame-user-guide/references/installation.md",
+      "path": "skills/coordinate-research/references/agent-runs.md",
+      "description": "知识资料 skills/coordinate-research/references/agent-runs.md",
       "kind": "reference"
     },
     {
       "id": "resource.4",
-      "path": "skills/sesame-user-guide/references/dashboard.md",
-      "description": "随包资源 skills/sesame-user-guide/references/dashboard.md",
-      "kind": "reference"
-    },
-    {
-      "id": "resource.5",
-      "path": "skills/sesame-user-guide/references/chat-and-commands.md",
-      "description": "随包资源 skills/sesame-user-guide/references/chat-and-commands.md",
-      "kind": "reference"
-    },
-    {
-      "id": "resource.6",
-      "path": "skills/sesame-user-guide/references/settings.md",
-      "description": "随包资源 skills/sesame-user-guide/references/settings.md",
-      "kind": "reference"
-    },
-    {
-      "id": "resource.7",
-      "path": "skills/sesame-user-guide/references/workflows.md",
-      "description": "随包资源 skills/sesame-user-guide/references/workflows.md",
-      "kind": "reference"
-    },
-    {
-      "id": "resource.8",
-      "path": "skills/sesame-user-guide/references/troubleshooting.md",
-      "description": "随包资源 skills/sesame-user-guide/references/troubleshooting.md",
-      "kind": "reference"
-    },
-    {
-      "id": "resource.9",
-      "path": "skills/sesame-user-guide/references/website-docs.md",
-      "description": "随包资源 skills/sesame-user-guide/references/website-docs.md",
+      "path": "skills/coordinate-research/references/workflow-plans.md",
+      "description": "工作流计划与可调整阶段",
       "kind": "reference"
     }
   ],

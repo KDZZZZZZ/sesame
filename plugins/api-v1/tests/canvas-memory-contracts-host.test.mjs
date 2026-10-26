@@ -22,7 +22,7 @@ async function fixture(t) {
   const runtime = await new Runtime(store, { piDir: join(directory, 'empty-models'), officialPluginsDirectory: join(directory, 'empty-official') }).init();
   t.after(async () => { await runtime.close(); store.close(); await rm(directory, { recursive: true, force: true }); });
   const main = createHostContextV2(runtime, runtime.capabilities.hostEntry, 'conv_main'), groups = {}, declarations = {};
-  for (const name of ['canvas-control', 'memory', 'orchestration']) {
+  for (const name of ['canvas-control', 'memory', 'orchestration', 'user-guide']) {
     const target = join(runtime.workspaces.root('conv_main'), name);
     await cp(join(packages, name), target, { recursive: true });
     await main.plugins.install({ path: target });
@@ -265,10 +265,14 @@ integration('the knowledge-only guide loads without aliases and host Run tools s
   assert.deepEqual(f.groups.orchestration, []);
   for (const name of ['agent_list', 'agent_delegate', 'agent_inspect', 'agent_stop']) assert.equal(f.tool(name), undefined);
   assert.ok(registry.loader('conv_main').getSkills().skills.some(item => item.name === 'sesame-user-guide'));
-  assert.match(registry.read('conv_main', entry.id, 'skills/sesame-user-guide/references/workflows.md').content, /host\.agent\.run/);
+  assert.ok(registry.loader('conv_main').getSkills().skills.some(item => item.name === 'coordinate-research'));
+  assert.match(registry.read('conv_main', entry.id, 'skills/coordinate-research/references/agent-runs.md').content, /host\.agent\.run/);
   const hostTools = ['host_agent_run', ...['list', 'read', 'wait', 'interrupt', 'resume', 'message', 'cancel'].map(action => `host_runs_${action}`)];
   for (const name of hostTools) assert.ok(registry.hostTools('conv_main').includes(name), name);
   await registry.configure(entry.id, 'disabled', registry.policy().version);
+  assert.ok(!registry.loader('conv_main').getSkills().skills.some(item => item.name === 'coordinate-research'));
+  assert.ok(registry.loader('conv_main').getSkills().skills.some(item => item.name === 'sesame-user-guide'));
+  await registry.configure('sesame/user-guide', 'disabled', registry.policy().version);
   assert.ok(!registry.loader('conv_main').getSkills().skills.some(item => item.name === 'sesame-user-guide'));
   for (const name of hostTools) assert.ok(registry.activeTools('conv_main').includes(name), name);
 });
