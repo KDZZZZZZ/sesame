@@ -139,10 +139,12 @@ integration('drawing Agent tools share persisted source, geometry and revision w
   const binding = { source: { providerId: 'example/market#prices', revision: 'source-v1', binding: { connection: { id: 'market', revision: 'connection-v1' } } }, instrument: { sourceId: 'prices', instrumentId: 'XAUUSD' }, spec: { timeframe: '1h', priceBasis: 'bid', adjustment: 'none', session: 'all', calendarRevision: { status: 'unknown' } } };
   const scene = await f.call('canvas_apply', { command_id: crypto.randomUUID(), expected_version: 1, operations: [{ op: 'update', id: 'chart_main', chart: { symbol: 'XAUUSD', binding } }] });
   const spec = { schemaVersion: 'sesame-drawing/1', kind: 'horizontal', title: '研究参考价位', anchors: [{ time: 1792400400, price: 3000 }], style: { color: '#24866e', width: 2, lineStyle: 'solid', fillOpacity: .12 } };
-  const input = { action: 'put', command_id: crypto.randomUUID(), expected_version: scene.version, expected_revision: null, chart_id: 'chart_main', binding, drawing: spec };
+  const input = { action: 'put', command_id: crypto.randomUUID(), expected_version: scene.version, expected_revision: null, expected_attachment: null, chart_id: 'chart_main', binding, drawing: spec };
   assert.equal(f.Check(schema, input), true);
-  const missingRevision = structuredClone(input); delete missingRevision.expected_revision;
-  assert.equal(f.Check(schema, missingRevision), false);
+  for (const field of ['expected_revision', 'expected_attachment']) {
+    const missing = structuredClone(input); delete missing[field];
+    assert.equal(f.Check(schema, missing), false, `${field} is required for drawing mutations`);
+  }
   assert.equal(f.Check(schema, { ...input, source: 'also present' }), false);
   assert.equal(f.Check(schema, { ...input, drawing: { ...spec, anchors: [...spec.anchors, ...spec.anchors] } }), false);
   const created = await f.call('chart_drawing', input), record = created.scripts.find(script => script.drawing);
@@ -154,16 +156,16 @@ integration('drawing Agent tools share persisted source, geometry and revision w
   assert.equal(read.source, record.source); assert.equal(read.drawing.revision, record.drawing.revision);
   const { compute } = await import(`data:text/javascript,${encodeURIComponent(read.source)}`);
   assert.deepEqual(compute().drawings, [spec]);
-  const changed = await f.call('chart_drawing', { action: 'put', command_id: crypto.randomUUID(), expected_version: created.version, chart_id: 'chart_main', drawing_id: record.drawing.id, expected_revision: record.drawing.revision, binding, source: read.source.replace('"price": 3000', '"price": 3015') });
+  const changed = await f.call('chart_drawing', { action: 'put', command_id: crypto.randomUUID(), expected_version: created.version, chart_id: 'chart_main', drawing_id: record.drawing.id, expected_revision: record.drawing.revision, expected_attachment: record.id, binding, source: read.source.replace('"price": 3000', '"price": 3015') });
   const latest = changed.scripts.find(script => script.drawing);
   assert.equal(latest.drawing.id, record.drawing.id); assert.notEqual(latest.id, record.id); assert.notEqual(latest.drawing.revision, record.drawing.revision);
   assert.equal(latest.drawing.spec.anchors[0].price, 3015);
-  await assert.rejects(f.call('chart_drawing', { action: 'remove', command_id: crypto.randomUUID(), expected_version: changed.version, chart_id: 'chart_main', drawing_id: record.drawing.id, expected_revision: record.drawing.revision, binding }), { code: 'drawing_conflict' });
+  await assert.rejects(f.call('chart_drawing', { action: 'remove', command_id: crypto.randomUUID(), expected_version: changed.version, chart_id: 'chart_main', drawing_id: record.drawing.id, expected_revision: record.drawing.revision, expected_attachment: record.id, binding }), { code: 'drawing_conflict' });
   assert.equal(f.runtime.canvas.inspect().scripts[0].drawing.spec.anchors[0].price, 3015);
-  const removeInput = { action: 'remove', command_id: crypto.randomUUID(), expected_version: changed.version, chart_id: 'chart_main', drawing_id: latest.drawing.id, expected_revision: latest.drawing.revision, binding };
+  const removeInput = { action: 'remove', command_id: crypto.randomUUID(), expected_version: changed.version, chart_id: 'chart_main', drawing_id: latest.drawing.id, expected_revision: latest.drawing.revision, expected_attachment: latest.id, binding };
   assert.equal(f.Check(schema, { ...removeInput, drawing: spec }), false);
   assert.equal(f.Check(schema, { ...removeInput, source: read.source }), false);
-  const removed = await f.call('chart_drawing', { action: 'remove', command_id: crypto.randomUUID(), expected_version: changed.version, chart_id: 'chart_main', drawing_id: latest.drawing.id, expected_revision: latest.drawing.revision, binding });
+  const removed = await f.call('chart_drawing', removeInput);
   assert.equal(removed.scripts.length, 0);
   assert.equal(f.runtime.contractArtifacts.read(record.artifact).ref.revision, record.artifact.revision, 'prior code remains immutable');
 });
