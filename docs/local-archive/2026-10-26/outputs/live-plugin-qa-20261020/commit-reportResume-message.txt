@@ -1,0 +1,10 @@
+fix(workflow): restore a missing report binding when resuming
+
+A report-name collision can fail after an execution session has been saved.
+Resuming then skipped report reservation, leaving downstream parent report
+delivery unbound. Check the actual report binding before reusing that session.
+Preserve an existing binding even when its report has moved.
+
+Regression coverage reproduces the initial collision and verifies recovery,
+report publication, moved-file identity, and reuse of a completed model member.
+The targeted real-runtime fixture suite passes 21 tests without live data.

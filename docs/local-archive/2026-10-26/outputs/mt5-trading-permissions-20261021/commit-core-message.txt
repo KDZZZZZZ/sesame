@@ -1,0 +1,14 @@
+fix(mt5): add verified terminal trading permission preparation
+
+Allow the main agent to inspect the separate application, account and
+terminal permission states and prepare algorithmic trading through the
+existing terminal lifecycle. Bind commands to the account and configuration
+version, persist outcomes, and return the same receipt on retries.
+
+Add 18 regressions for permission checks, idempotency, account/configuration
+changes, failures and delegated-context rejection. Isolated HEAD validation
+passes 30 tests; the integrated working tree passes 51 targeted tests.
+
+This commit records the independently applicable backend and unit tests.
+Public capability registration remains with the existing uncommitted plugin
+architecture work; its exact task delta is retained in the QA evidence.

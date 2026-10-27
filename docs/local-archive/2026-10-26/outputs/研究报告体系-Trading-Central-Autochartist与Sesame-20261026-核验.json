@@ -1,0 +1,32 @@
+{
+  "field_groups": 244,
+  "categories": 13,
+  "raw_api_groups": 22,
+  "cited_sources": 49,
+  "html_tables": 36,
+  "statuses": {
+    "呈": 25,
+    "取": 49,
+    "源": 84,
+    "编": 166,
+    "算": 48,
+    "授": 77
+  },
+  "files": [
+    {
+      "name": "研究报告体系-Trading-Central-Autochartist与Sesame-20261026.md",
+      "bytes": 107406,
+      "sha256": "61a7544bcf71c2ef86d9e41ffa28a078a698f9793a0c60f3eb93fd5270038508"
+    },
+    {
+      "name": "研究报告体系-Trading-Central-Autochartist与Sesame-20261026.html",
+      "bytes": 196808,
+      "sha256": "9ff8f7e4370303b80711d07ddfa9f9eb43904b6a3175e0e98b893e030e458c4f"
+    },
+    {
+      "name": "研究报告体系-Trading-Central-Autochartist与Sesame-20261026-字段字典.csv",
+      "bytes": 42791,
+      "sha256": "21e2f8c8e5ee10e17265864c6b8434133f4e0d2198ccf3963f6dd3dc803b3eaf"
+    }
+  ]
+}

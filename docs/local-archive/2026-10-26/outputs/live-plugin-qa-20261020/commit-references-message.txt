@@ -1,0 +1,13 @@
+fix(chat): show the final report revision once per assistant reply
+
+Publishing v4 and then v5 in one response appended two visually identical
+report chips. Project each original assistant message to its newest revision
+per report ID and label the visible chip with its fixed version.
+
+Keep stored messages, report history, user and delegation references, different
+report IDs with the same title, and revisions from separate replies intact.
+Only the report-reference hunk is staged from message-item.tsx; unrelated
+channel-source changes remain outside this commit.
+
+Validation: 9 conversation-reply regressions passed, including non-adjacent
+publications and continuation boundaries; TypeScript and targeted lint passed.

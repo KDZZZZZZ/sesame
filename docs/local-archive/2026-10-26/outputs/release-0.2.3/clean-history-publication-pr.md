@@ -1,0 +1,3 @@
+Publish the Sesame 0.2.3 API 2 plugins from the rebuilt public history: nine core and 45 optional plugins, excluding Kurumi. Source `635b367105b4b824fcb92e176c14818ac6976e0b` preserves the previously verified package bytes and versions; the new `dev.5` release records the new source identity.
+
+The final plan will reference this publishing PR, then receive fresh independent review, the required static checks and the trusted pre-merge semantic gate. R2 publication verifies immutable objects before advancing the catalog. Application versions and installer assets remain on GitHub Releases; this plugin publication does not create a GitHub Release.

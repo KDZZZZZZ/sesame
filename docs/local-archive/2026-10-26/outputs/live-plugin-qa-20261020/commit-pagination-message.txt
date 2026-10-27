@@ -1,0 +1,18 @@
+fix(reports): paginate a frozen document without slicing PDF glyphs
+
+Chromium printed the expanded full-height report iframe as a sliced surface,
+splitting text glyphs and charts at page boundaries. Freeze the settled
+report into an inert top-level document before PDF pagination while preserving
+SVG, CSSOM, fonts, form state and canvas/blob image pixels.
+
+Install the snapshot through trusted parsing in a fresh opaque realm. Remove
+scripts, navigation and event attributes, revoke the old data bridge, and keep
+network blocking, cancellation and existing memory/output/layout budgets.
+Reject unsupported state and any text or layout mismatch explicitly.
+PNG keeps the existing capture path unchanged.
+
+Validation: 21 Playwright and 20 Electron checks passed. Real frozen reports
+retained all text/table cells with no blank tail; all three quant PNG hashes
+were unchanged. The 230-line red/green fixture went from duplicated boundary
+glyphs to exactly 2760 characters. Oversized evidence remained rejected.
+The test additions also preserve earlier export and utility-IPC regressions.

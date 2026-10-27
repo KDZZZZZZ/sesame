@@ -1,0 +1,11 @@
+fix(ccxt): back off all queued reads after upstream rate limits
+
+History and sibling chart requests could bypass a subscription's retry delay
+because the shared public worker dispatched its next queued read immediately.
+Retain a bounded cooldown per route, preserve it across cancellations, and
+reset recovery only after a successful upstream bars or ticker request.
+
+Validation: 10 worker, 30 provider, 5 host stream and 1 staged contract checks
+passed. Includes the reproduced queued-sibling failure and cancellation,
+route isolation, disposal, repeated limits and cached-directory regressions.
+Live exchange recovery is pending deployment; upstream limits can still apply.

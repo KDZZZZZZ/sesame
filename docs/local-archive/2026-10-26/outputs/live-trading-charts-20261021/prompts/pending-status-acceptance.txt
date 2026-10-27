@@ -1,0 +1,9 @@
+继续用户已授权的模拟盘验收，独立批次 QA20261021-STATUS。当前 MT5 2.1.10 / portfolio-execution 2.0.5 已就绪。本轮只测试挂单状态修复和新版撤单说明；不启动研究、团队、工作流或定时任务，不更改风险规则、模型、配置、插件、旧计划、旧14个暂停Run或画布。
+
+先只读调用 manual_trade_status(operation_id="QA20261021-PYPENDING-place-02", refresh=true)，核验旧测试订单REDACTED_IDENTIFIER的历史撤单终态是否出现在 evidence.historicalOrders，原始提交回执保持原义。保存完整回执；空数组不能证明已撤单。
+
+然后用 USDJPY 当前最小允许手数创建一个远离实时报价、不以成交为目的的限价挂单，备注 QA20261021-STATUS，包含有效SL/TP，操作ID和命令ID须属于本批次。具体方向、价格和保护值由你依据实时报价与完整合约规格决定。使用 manual_trade_execute 完整意图快捷入口，权限和准备在现有接口内完成，不重复上一轮MCP拒绝入口或改其权限。只操作本批次新订单。
+
+创建回执确认后，立即通过 manual_trade_status(refresh=true)回读活动订单，必须能看到同ticket、品种、剩余数量及原生状态；这是本轮关键验收。随后读取最新版公开 order_send 目录说明，通过原生 cancellation_guard 精确撤销该订单一次，以验证Agent能按新版契约直接构造请求。不要移除守卫。再刷新原创建 operation_id，核验历史订单 CANCELED 终态与当前挂单/持仓。未知回执按原ID查询，不重复下单。如本轮意外成交，只处理本轮可证明属于自己的持仓并核验清理，不碰其他订单。
+
+保存完整工具回执至 QA20261021/pending-status-acceptance（使用 save_as 等现成入口，文件平铺），并写唯一一份简短 summary.json，说明成功、失败和遗留对象。不要创建额外脚本、哈希归档、额外宿主进程或大报告；已保存的原始回执不要重复抄写。完成后简短回复。

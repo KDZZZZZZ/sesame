@@ -1,0 +1,9 @@
+Publish all pending development plugins through the immutable R2 `dev.3` release. The catalog selects 54 packages (9 core and 45 optional); Kurumi is excluded from archives, downloadable package objects and catalog entries.
+
+The 10 changed packages are manual-trading 3.0.0, portfolio-execution 1.0.0, auto-factor-mining 1.0.0-dev.2, factor-evaluator 1.0.0-dev.1, MT5 1.6.0, QMT 1.4.0, AKShare 1.0.8, and web-extract/rss-collect/market-data-parser 2.0.3. Trading scheduling, execution and factor evaluation can be selected independently. The live collaboration panel uses actual task events and each run produces one final report. Old trading plans retain history and pause until explicitly rebound.
+
+The six composition-dependent packages require Sesame 0.2.3-dev.8, including invocation-lifetime validation. Older hosts reject installation. A dev8 candidate installer has been built and 155 runtime files compared by SHA-256; this publication does not replace the user's running application. Core package bytes, Kurumi source, and previously published MT5 backend repairs are unchanged.
+
+Validation passed: 168 trading/execution/Electron checks, 70 factor workflow/evaluator checks, 33 native adapter/lock fixtures, 9 host invocation/lifecycle checks, 11 package/archive/asset checks, 7 report checks and the MCP sample test with 10 exact responses. Independent review also ran 87 targeted checks and 3 isolated host fixtures. Models/prices are local fixtures; no real trades or paid model calls were made. QMT native broker acceptance and profit attribution remain outside this validation.
+
+Source is fixed to `5c44877c13618905cc85b820e21a8fd51a1d3684`; `.github/plugin-r2/dev.3.json` pins both deterministic archives and locks to this PR. The completed review on the final PR head and trusted pre-merge semantic gate are required before merge. Publication is complete only after the R2 workflow succeeds and public assets are read back and checked.

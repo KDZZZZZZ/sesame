@@ -1,0 +1,4 @@
+plugins/optional-api-v1/packages/factor-evaluator/evaluator.js:99:11: warning eslint(no-unused-vars): Variable 'dataset' is declared but never used. Unused variables should start with a '_'. help: Consider removing this declaration.
+plugins/optional-api-v1/packages/factor-evaluator/evaluator.js:99:20: warning eslint(no-unused-vars): Variable 'prepared' is declared but never used. Unused variables should start with a '_'. help: Consider removing this declaration.
+plugins/optional-api-v1/packages/factor-evaluator/evaluator.js:99:30: warning eslint(no-unused-vars): Variable 'candidates' is declared but never used. Unused variables should start with a '_'. help: Consider removing this declaration.
+plugins/optional-api-v1/packages/factor-evaluator/evaluator.js:99:42: warning eslint(no-unused-vars): Variable 'final' is declared but never used. Unused variables should start with a '_'. help: Consider removing this declaration.
