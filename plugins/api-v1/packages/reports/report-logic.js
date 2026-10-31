@@ -19,7 +19,7 @@ export function renderLogicDiagram(logic) {
   }
   const edges = new Set();
   for (const edge of logic.edges) {
-    check(object(edge) && Object.keys(edge).every(k => ['from', 'to', 'label'].includes(k)), 'unknown edge property');
+    check(object(edge) && Object.keys(edge).every(k => Object.hasOwn({ from: true, to: true, label: true }, k)), 'unknown edge property');
     check(nodes.has(edge.from) && nodes.has(edge.to) && edge.from !== edge.to, 'each connection must name two existing nodes');
     check(edge.label === undefined || text(edge.label), 'connection labels must be text');
     const key = JSON.stringify([edge.from, edge.to]); check(!edges.has(key), 'duplicate connection'); edges.add(key);
