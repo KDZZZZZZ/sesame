@@ -1,4 +1,6 @@
-# Independent optional research methods — author validation
+# Historical evidence: independent optional research methods — 2026-10-10
+
+This is the retained API 1 validation record. On 2026-10-28 the two independent source packages were retired; their knowledge and reference CLIs are now part of `auto-factor-mining`. The current tests validate that integrated package. The original commands and results below describe the historical checkout only.
 
 Validated 2026-10-10 on macOS arm64 with Node.js 25.2.1 and a matching local
 Sesame API 1 development host. Both packages declare `engines.sesame >=0.2.0-0`.

@@ -1,0 +1,5 @@
+/* Report theme bindings only. Node geometry, edges and controls use the application's CSS. */
+[data-report-svl]{min-width:0;max-width:100%;margin:1rem 0;--foreground:var(--report-ink);--muted:var(--report-muted);--subtle:var(--report-muted);--blue:var(--report-accent);--orange:var(--report-context,var(--report-accent));--border:var(--report-line);--border-secondary:var(--report-line);--surface:var(--report-paper);--surface-secondary:var(--report-paper);--surface-hover:color-mix(in srgb,var(--report-accent) 6%,var(--report-paper));--focus:var(--report-accent);--mono:var(--report-mono);--ease:ease;--ink-rgb:32,37,46;color:var(--report-ink);font-family:var(--serif)}
+.report-svl-canvas{min-width:0;max-width:100%}
+.backtest-node{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.6 var(--report-mono);max-height:240px;overflow:auto}
+.backtest-handler{padding:.65rem 0;border-bottom:1px solid var(--report-line)}.backtest-handler strong{font-size:.85rem}.backtest-flow{display:flex;flex-wrap:wrap;gap:.6rem;color:var(--report-muted);font-size:.8rem}

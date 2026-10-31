@@ -23,6 +23,15 @@ test('does not use a bar whose available_at is after decision time', () => {
   assert.equal(out.observations[0].source_until, '2026-01-08T20:01:00.000Z');
 });
 
+test('requires the extra visible bar for TR and rejects a partially warmed query batch', () => {
+  const input = structuredClone(fixture);
+  input.decision_times = [input.bars[3].available_at];
+  const row = analyze(input).observations[0];
+  assert.equal(row.atr, (4 + 4 + 6) / 3);
+  input.decision_times.push(input.bars[2].available_at);
+  assert.throws(() => analyze(input), /Not enough prior visible bars/);
+});
+
 test('source_until records latest availability among all used rows', () => {
   const input = structuredClone(fixture);
   input.bars[3].available_at = '2026-01-09T20:30:00.000Z';

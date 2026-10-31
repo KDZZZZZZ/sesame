@@ -1,0 +1,2075 @@
+{
+  "schemaVersion": 1,
+  "policy": {
+    "advisory": "tc_alignment.fields 是已核实TC对应部分的默认基准问题，问题与含义应一致；questions 仅作可选细化或Sesame扩展，不能替代TC基准。用户删改优先；这不是新增必填schema或固定研究流程。不适用或没有结果时说明具体原因，不为填满字段编造分析。",
+    "user_override": "用户对问题、范围、期限、方法、字段、顺序和展示的删改优先于本清单；已删除的问题或字段不自动补回。用户可自由拼接模块、自建章节或使用原生报告。",
+    "judgment_first": "先明确本次需要判断什么、从哪些角度判断，再选择数据和方法。正文按问题的重要性组织：先给通俗、明确且有依据的判断或倾向，再给关键依据、相反证据和改判条件。事实与图表用于回答这些问题，不以数据罗列、两面可能或继续观察代替结论；信息不足时说清已经能判断的范围及尚不能判断的部分。",
+    "method_freedom": "角度不是指定理论、指标、模型、参数、阈值或检验门槛。方法按用户任务自由选择，记录实际使用的版本、数据和结果；不要求每项研究通过同一套检验，也不由报告渲染层补算或选择方法。",
+    "field_references": "suggested_fields 引用现有模块字段，供 Agent 查阅字段含义和寻找结果位置，不代表全部必须显示。按所选字段的语义保留对象、单位、期限、数据截点与证据；独立问题应有可辨认的独立判断，不能由一句泛泛 summary 代替。修改字段含义后不沿用不相符的默认指导。",
+    "historical_reference": "可检验判断关联实际历史结果、可比基准、反例及适用范围；尚未检索、不可取得和检索后零匹配分别说明。历史条件频率、原预测概率、校准结果、模型定价概率和当前预测概率分别表达，不相互替代；不为给出倾向制造概率或主观置信度。",
+    "time_scope": "各问题采用用户指定的观察或决策期限，区分bar周期、观察窗口、预测期限和评价窗口。R01资产概览默认分别回答短、中、长期技术状态，具体期限按用户用途或研究方法定义并说明；用户可删改。其他模板不机械增加三档期限，也不继承供应商默认天数。",
+    "one_final_scenario_tree": "整份报告至多保留一个最终情景树；需要主备情景时优先由 M15.scenario_terms 与 M15.action_chart 汇总。前文各项分析给依据和改判条件，引用同一情景，不在 M02、M14、M15 重复展示树。事后路径分类不冒充事前预测条件；不涉及情景决策的任务不强行生成树。",
+    "custom": "默认将TC对应字段作为模板应回答的问题，保持问题与原义一致；分析方法、呈现和共享上下文自由，用户删改优先。自定义报告可组合这些问题或增加明确标为Sesame扩展的内容；局部对应不冒称整份同题对齐，不把Sesame结果说成TC原结果。",
+    "native_reports": "原生 backtest、signal-study 或 document 可沿用相关业务问题并使用各自的结果与呈现位置，不要求转换为 modules。仅修改模块字段不代表原生报告已完成这些判断；应检查用户最终能读到的结论与证据。",
+    "tc_alignment": "tc_field 沿用本地已核实对照材料的中文字段名；direct表示字段问题原义直接对应，不表示相同资产、日期、模型或量表。partial只覆盖部分含义或有限适用范围。sesame_extension不是已核实TC字段，tc_field为null。match_type保留原reference的type；原记录没有type时保留kind。历史实例中的数值、标的与方法不成为本次默认结论。",
+    "optional_questions": "原questions保留为可选的细化与扩展；先回答适用的tc_alignment字段问题，已有分析围绕这些结论展开，不逐项重复对象、期限或整套判断栏目。"
+  },
+  "templates": {
+    "R01": {
+      "purpose": "回答资产目前处于什么状态、相对谁更强或更弱，以及哪些变化值得用户关注。",
+      "questions": [
+        {
+          "id": "R01_state",
+          "question": "按用户关心的期限，这个资产目前是什么状态，最明显的变化是什么？",
+          "angles": [
+            "资产概览默认分别判断短、中、长期的趋势、区间、动能或其他适用技术状态；具体期限按用户用途或研究方法定义并说明，不同期限允许结论不同。",
+            "把当前状态与上一可比时点或区间比较，指出变化是否足以改变原判断。",
+            "观察到的价格表现与对状态的解释分开；说明采用的数据截点和 bar 周期。"
+          ],
+          "suggested_fields": [
+            "M01.timeframe_states",
+            "M01.trend",
+            "M01.changes",
+            "M01.price_performance",
+            "M01.price_chart"
+          ],
+          "scope_note": "默认覆盖短、中、长期技术状态，用户可删改；具体天数由本次研究说明，资产概览不自动扩展为价格预测。"
+        },
+        {
+          "id": "R01_relative_strength",
+          "question": "相对合适的市场、同类资产或用户基准，它更强还是更弱，这种差别意味着什么？",
+          "angles": [
+            "在同一窗口和可比价格口径下判断领先、落后或差异有限，说明比较对象为何相关。",
+            "结合波动和主要风险解释收益差异，不把涨幅最大直接等同于最有吸引力。",
+            "区分资产自身变化与整体市场共同变化。"
+          ],
+          "suggested_fields": [
+            "M01.timeframe_states",
+            "M01.relative_strength",
+            "M01.relative_chart",
+            "M01.volatility",
+            "M01.instrument_context"
+          ],
+          "scope_note": "比较对象由用户或所选方法确定；没有可比数据时不制造排名。"
+        },
+        {
+          "id": "R01_drivers",
+          "question": "哪些新信息最能解释当前变化，哪些只是热度或重复消息？",
+          "angles": [
+            "从事件结果、经营变化或新闻新意中选择与本次价格和关注变化相关的解释。",
+            "明确目前更有力的机制及其支持证据，同时指出相反证据或其他合理解释。",
+            "消息数量说明关注变化，不能单独证明影响方向或价格因果。"
+          ],
+          "suggested_fields": [
+            "M01.timeframe_states",
+            "M06.impact_judgments",
+            "M07.news_judgments",
+            "M06.event",
+            "M06.release",
+            "M06.reaction",
+            "M07.novelty",
+            "M07.impact",
+            "M07.attention",
+            "M01.evidence"
+          ],
+          "scope_note": "仅展开影响概览判断的驱动；不要求把每条新闻变成预测。"
+        },
+        {
+          "id": "R01_review_conditions",
+          "question": "接下来最值得关注什么，出现什么变化会使当前状态判断改变？",
+          "angles": [
+            "将最重要的待观察事项与具体判断对应，解释为何值得关注。",
+            "给出可观察的改判条件或复核时间，避免只说持续跟踪。",
+            "说明当前概览适用的范围；用户需要行动计划时再展开条件选择。"
+          ],
+          "suggested_fields": [
+            "M01.timeframe_states",
+            "M06.impact_judgments",
+            "M15.actions",
+            "M01.changes",
+            "M06.updates",
+            "M15.watchlist",
+            "M15.review_at",
+            "M15.constraints"
+          ],
+          "scope_note": "M15 为可选；用户只要概览时可用简短文字，不补交易方案或重复情景树。"
+        },
+        {
+          "id": "R01_tc_overview_states",
+          "question": "价值投资特征、新闻情绪与最近24小时关注度分别如何？",
+          "angles": [
+            "价值状态回答符合价值投资条件的程度，保留实际方法与原尺度，不冒充TC分数。",
+            "新闻情绪回答语气偏正或偏负；关注度回答24小时内的关注多少，不用价格影响替代。"
+          ],
+          "suggested_fields": [
+            "M03.factor_results",
+            "M03.source_scales",
+            "M08.sentiment",
+            "M07.attention",
+            "M07.coverage_details"
+          ],
+          "scope_note": "是TC概览字段的同义补充；共享对象与截点，不适用的价值方法说明原因。"
+        }
+      ],
+      "tc_alignment": {
+        "match_type": "structure",
+        "match_type_source": "type",
+        "reference_context": "TC Panoramic View · 官方产品结构",
+        "scope_note": "官方股票全景结构；对齐价值、技术、新闻情绪与关注程度的问题，不复用供应商专有评分。",
+        "sources": [
+          {
+            "label": "Panoramic View 官方说明",
+            "url": "https://www.tradingcentral.com/blog/trading-central-releases-summary-scores-in-panoramic-view"
+          },
+          {
+            "label": "三个技术期限的官方说明",
+            "url": "https://www.tradingcentral.com/blog/webull-launches-trading-central-panoramic-view"
+          }
+        ],
+        "fields": [
+          {
+            "tc_field": "研究对象",
+            "question": "每组判断对应哪一项资产？",
+            "suggested_fields": [
+              "M01.instrument_context"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "价值状态",
+            "question": "按实际采用的价值投资方法，这项资产符合价值投资条件的程度如何？",
+            "suggested_fields": [
+              "M03.factor_results",
+              "M03.source_scales"
+            ],
+            "relation": "partial",
+            "scope_note": "承接价值投资特征及实际方法、原尺度；不是公允价值数字或普通经营质量。不伪造TC Value Score，非股票不适用时明确说明。"
+          },
+          {
+            "tc_field": "技术方向",
+            "question": "短期、中期和长期的技术方向分别如何？",
+            "suggested_fields": [
+              "M01.timeframe_states"
+            ],
+            "relation": "direct",
+            "scope_note": "默认覆盖短、中、长期，用户可删改；具体期限由研究说明，共享资产与截点，不把bar周期当研究期限。"
+          },
+          {
+            "tc_field": "新闻情绪",
+            "question": "相关新闻的总体情绪偏正还是偏负？",
+            "suggested_fields": [
+              "M08.sentiment",
+              "M08.sentiment_judgments",
+              "M08.coverage"
+            ],
+            "relation": "direct",
+            "scope_note": "这里回答新闻语气，不用消息对价格的影响替代。"
+          },
+          {
+            "tc_field": "关注程度",
+            "question": "最近24小时，相关新闻受到多少关注？",
+            "suggested_fields": [
+              "M07.attention",
+              "M07.attention_chart",
+              "M07.coverage_details"
+            ],
+            "relation": "direct",
+            "scope_note": "保留24小时窗口和来源覆盖；关注量不等于情绪或价格方向。"
+          },
+          {
+            "tc_field": "详细研究",
+            "question": "从摘要去哪里查看详细研究与具体依据？",
+            "suggested_fields": [
+              "M01.evidence",
+              "M03.evidence",
+              "M07.evidence",
+              "M08.evidence"
+            ],
+            "relation": "direct"
+          }
+        ]
+      }
+    },
+    "R02": {
+      "purpose": "对用户指定资产和目标期限给出综合行情判断，说明依据、历史参照及切换条件。",
+      "questions": [
+        {
+          "id": "R02_outlook",
+          "question": "在这次指定的目标期限内，更支持哪一种行情走势或状态，判断有多明确？",
+          "angles": [
+            "先明确要预测的对象、结果和截止时间，再给出有依据的倾向，避免只罗列可能方向。",
+            "区分当前状态、未来倾向与结论的可靠程度；有倾向不代表已有可用概率。",
+            "说明最关键的支持和反对理由，以及目前为何更支持这一判断。"
+          ],
+          "suggested_fields": [
+            "M14.target",
+            "M14.summary",
+            "M14.supporting",
+            "M14.opposing",
+            "M14.confidence",
+            "M01.timeframe_states"
+          ],
+          "scope_note": "不强制点位目标、概率分布或短中长三档；用户给定一个期限就围绕该期限回答。"
+        },
+        {
+          "id": "R02_evidence_weights",
+          "question": "技术状态、事件和信息变化分别支持什么，冲突时应该更相信哪些依据？",
+          "angles": [
+            "逐项判断特征意味着方向、强弱、风险尺度还是背景，避免把波动变化直接当成方向信号。",
+            "比较各解释与当前行情的贴合程度和历史实际结果，给出取舍理由。",
+            "辨认重复或相关证据，不把多个同源指标当独立投票，也不预设固定权重。"
+          ],
+          "suggested_fields": [
+            "M02.feature_signals",
+            "M02.events",
+            "M02.key_levels",
+            "M06.surprise",
+            "M06.reaction_windows",
+            "M07.novelty",
+            "M07.impact",
+            "M14.overlap",
+            "M14.inference_evidence"
+          ],
+          "scope_note": "按本次任务选择相关方法和驱动；没有使用的模块不为凑齐角度而补做。"
+        },
+        {
+          "id": "R02_historical_support",
+          "question": "历史上相同或可比情景后来怎样，是否真的加强了这次综合判断？",
+          "angles": [
+            "将同类情景的实际后续结果与同目标、同期限的基准比较，指出支持、削弱或无明显帮助。",
+            "解释当前与历史案例的相同点、差别、反例及适用范围。",
+            "分别交代单项特征与综合方法的历史依据；样本重叠、近期样本少或方法选择会影响判断力度。"
+          ],
+          "suggested_fields": [
+            "M13.feature",
+            "M13.matching",
+            "M13.sample",
+            "M13.outcomes",
+            "M13.baseline",
+            "M13.applicability",
+            "M13.inference_evidence",
+            "M14.inference_evidence"
+          ],
+          "scope_note": "历史条件频率不直接写成当前预测概率；历史参照不足时保留能支持的定性判断及具体缺口。"
+        },
+        {
+          "id": "R02_final_scenarios",
+          "question": "什么条件下保持主判断，什么条件下切换到备选判断，何时到期复核？",
+          "angles": [
+            "将主情景、备选情景和边界条件集中到一个最终情景树，分清触发、确认、撤回与期限。",
+            "说明用户应观察什么，以及观察结果如何改变判断；观点失效与交易止损分别表达。",
+            "若任务包含交易研究，再关联已研究的入场、目标、成本和盈亏条件；没有依据时不填虚构数值。"
+          ],
+          "suggested_fields": [
+            "M15.scenario_terms",
+            "M15.action_chart",
+            "M15.watchlist",
+            "M15.review_at",
+            "M15.constraints",
+            "M02.invalidation",
+            "M02.valid_until"
+          ],
+          "scope_note": "最终树由整份报告共同完成；M15 已承担主备及切换时，不要求 M14 再展示一组情景。"
+        }
+      ],
+      "tc_alignment": {
+        "match_type": "technical",
+        "match_type_source": "kind",
+        "reference_context": "TC / ErisX · 2022 年 4 月 25 日 · BTC/USD · 短期",
+        "scope_note": "官方历史技术情景。对齐对象、期限、主判断、分界、目标、备用情景和理由，不沿用示例价格或指标。",
+        "sources": [
+          {
+            "label": "TC 官方历史周报",
+            "url": "https://newsletters.tradingcentral.com/ErisX/index_en.html"
+          },
+          {
+            "label": "Technical Views 官方说明",
+            "url": "https://investor.tradingcentral.com/tutorials/getting-started-with-technical-views"
+          }
+        ],
+        "fields": [
+          {
+            "tc_field": "对象与期限",
+            "question": "判断针对什么资产和哪一段时间？",
+            "suggested_fields": [
+              "M14.target",
+              "M02.research_horizons"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "主判断",
+            "question": "当前条件下，更倾向哪一种走法？",
+            "suggested_fields": [
+              "M14.summary",
+              "M15.scenario_terms"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "分界价（Pivot）",
+            "question": "价格跨过哪个分界位后切换到备用情景？",
+            "suggested_fields": [
+              "M02.key_levels",
+              "M15.scenario_terms"
+            ],
+            "relation": "direct",
+            "scope_note": "切换规则进入同一个最终情景树，不重复绘树。"
+          },
+          {
+            "tc_field": "主情景目标",
+            "question": "主情景成立时，重点关注的两个价位是什么？",
+            "suggested_fields": [
+              "M02.targets",
+              "M15.scenario_terms"
+            ],
+            "relation": "direct",
+            "scope_note": "仅填实际方法支持的目标；缺少结果时说明，不把分界位冒充目标。用户可调整目标数量。"
+          },
+          {
+            "tc_field": "备用情景",
+            "question": "原条件改变后，如何调整判断和目标？",
+            "suggested_fields": [
+              "M15.scenario_terms",
+              "M15.action_chart"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "判断理由",
+            "question": "哪些可以在图上辨认的依据支持判断？",
+            "suggested_fields": [
+              "M02.feature_signals",
+              "M02.price_chart",
+              "M14.supporting"
+            ],
+            "relation": "direct"
+          }
+        ]
+      }
+    },
+    "R03": {
+      "purpose": "判断某个事件改变了什么、市场如何反应，以及这种影响在什么条件下值得参考。",
+      "questions": [
+        {
+          "id": "R03_event_surprise",
+          "question": "事件真正带来的新信息是什么，相比当时预期有多大变化？",
+          "angles": [
+            "区分事件身份、实际发布时间、前值、当时可得预期与公布结果。",
+            "判断意外程度及其可能影响的机制；实际变化幅度不等于超预期幅度。",
+            "尚未公布时只研究明确的条件假设，公布后再用实际结果更新。"
+          ],
+          "suggested_fields": [
+            "M06.impact_judgments",
+            "M06.event",
+            "M06.expectations",
+            "M06.release",
+            "M06.previous_values",
+            "M06.surprise"
+          ],
+          "scope_note": "无可靠事前预期时仍可判断事件内容的变化，但不能把实际值命名为意外程度。"
+        },
+        {
+          "id": "R03_market_reaction",
+          "question": "事件前后市场向哪边走、波动有多大，反应是延续、反转还是已经消退？",
+          "angles": [
+            "在同一事件锚点和明确起止窗口下，同时判断净方向、净变化和窗口内振幅或真实波幅。",
+            "用实际路径区分终点收益与过程风险，指出是否存在先涨后跌、先跌后涨或明显回吐。",
+            "将事件前变化、事件后变化和未结束窗口分开；日线包含发布前行情时明确其限制。"
+          ],
+          "suggested_fields": [
+            "M01.timeframe_states",
+            "M06.impact_judgments",
+            "M06.reaction_windows",
+            "M06.reaction",
+            "M06.event_price_chart",
+            "M06.reaction_chart",
+            "M01.relative_strength"
+          ],
+          "scope_note": "窗口由用户或研究方法选择；方向与幅度应来自同一已计算窗口，不由报告层补算。"
+        },
+        {
+          "id": "R03_explanation",
+          "question": "事件是否是这次市场变化的有力解释，还有哪些因素会改变这个判断？",
+          "angles": [
+            "结合发布时间、影响机制、反应路径和可比资产表现，明确目前更支持的解释。",
+            "检查预先反应、同期消息和原有趋势等其他解释，说明它们增强或削弱了什么。",
+            "区分有依据的解释与已识别的因果贡献；没有严格因果估计不等于可以省略机制判断。"
+          ],
+          "suggested_fields": [
+            "M06.impact_judgments",
+            "M07.news_judgments",
+            "M06.summary",
+            "M06.evidence",
+            "M07.novelty",
+            "M07.impact",
+            "M14.supporting",
+            "M14.opposing",
+            "M14.inference_evidence"
+          ],
+          "scope_note": "不强行给单一事件分配贡献百分比；可给限定范围的解释判断。"
+        },
+        {
+          "id": "R03_historical_transfer",
+          "question": "同类事件过去的反应是否一致，哪些条件决定这些经验能否用于这一次？",
+          "angles": [
+            "按实际事件类型、预期差异和市场背景比较后续结果，而非只挑结果相同的案例。",
+            "与同期限基准和失败案例对照，分别判断方向一致性、幅度和持续性。",
+            "说明事件数量、重复观察窗口及可比性；多个窗口不能当成多次独立事件。"
+          ],
+          "suggested_fields": [
+            "M13.matching",
+            "M13.sample",
+            "M13.outcomes",
+            "M13.baseline",
+            "M13.uncertainty",
+            "M13.applicability",
+            "M13.cases_chart"
+          ],
+          "scope_note": "历史反应频率只是历史参照；回看报告不自动转化为下一次事件的预测。"
+        },
+        {
+          "id": "R03_next_decision",
+          "question": "根据这次事件研究，应该保留哪项判断，下一步什么观测会使它改变？",
+          "angles": [
+            "事件回看给出影响是否持续、解释适用到哪里以及可迁移的观察条件。",
+            "用户要求事件前瞻时，再把待公布内容和市场确认条件组织为主备判断。",
+            "指定复核窗口及改判依据，区分事后结果分类与事前可用条件。"
+          ],
+          "suggested_fields": [
+            "M06.impact_judgments",
+            "M15.actions",
+            "M06.conditional_outlook",
+            "M06.updates",
+            "M15.watchlist",
+            "M15.review_at",
+            "M15.scenario_terms",
+            "M15.action_chart"
+          ],
+          "scope_note": "仅在确有条件决策时保留一个最终树；不为纯回看报告强填预测概率或交易目标。"
+        }
+      ],
+      "tc_alignment": {
+        "match_type": "event",
+        "match_type_source": "kind",
+        "reference_context": "TC Economic Insight · 2023 年 2 月 21 日 · FOMC 纪要 → EUR/USD",
+        "scope_note": "官方事件历史实例。对齐事件、观察窗口、样本、方向、振幅、预期与实际、净变化和价格路径。",
+        "sources": [
+          {
+            "label": "TC 官方事件周报",
+            "url": "https://www.tradingcentral.com/blog/tc-economic-insight-the-week-ahead-february-20-24"
+          },
+          {
+            "label": "Economic Insight 官方说明",
+            "url": "https://investor.tradingcentral.com/tutorials/getting-started-with-economic-insight"
+          }
+        ],
+        "fields": [
+          {
+            "tc_field": "事件与资产",
+            "question": "研究的是哪件事件、哪个资产的反应？",
+            "suggested_fields": [
+              "M06.event",
+              "M06.instrument_context"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "观察时间",
+            "question": "公布后的观察窗口从何时到何时，历史比较是否一致？",
+            "suggested_fields": [
+              "M06.reaction_windows",
+              "M06.data_times"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "历史样本",
+            "question": "参考了多少次历史公布？",
+            "suggested_fields": [
+              "M13.sample"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "方向统计",
+            "question": "这组历史记录中有多少次上涨，占全部样本多少？",
+            "suggested_fields": [
+              "M13.outcomes"
+            ],
+            "relation": "direct",
+            "scope_note": "分子、分母和窗口同时保留；历史频率不是当前预测概率。"
+          },
+          {
+            "tc_field": "波动幅度",
+            "question": "同一观察窗口内，价格活动范围或交易区间有多大？",
+            "suggested_fields": [
+              "M06.reaction_windows"
+            ],
+            "relation": "direct",
+            "scope_note": "区间幅度与终点净涨跌分别回答，不相互替代。"
+          },
+          {
+            "tc_field": "实际与预期",
+            "question": "实际公布结果高于、符合还是低于当时预期？",
+            "suggested_fields": [
+              "M06.expectations",
+              "M06.release",
+              "M06.surprise"
+            ],
+            "relation": "direct",
+            "scope_note": "原参照来自教程；适用于有可核实预期的数值事件，不能以实际变动冒充预期差。"
+          },
+          {
+            "tc_field": "净涨跌",
+            "question": "观察期终点相对事件时点，净涨跌是多少？",
+            "suggested_fields": [
+              "M06.reaction_windows",
+              "M06.reaction"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "价格路径",
+            "question": "价格反应何时发生，途中是否反转？",
+            "suggested_fields": [
+              "M06.event_price_chart",
+              "M06.reaction_chart"
+            ],
+            "relation": "direct"
+          }
+        ]
+      }
+    },
+    "R04": {
+      "purpose": "判断公司经营质量、价格所隐含的要求及未来催化，形成与用户期限一致的价值看法。",
+      "questions": [
+        {
+          "id": "R04_business_quality",
+          "question": "公司的增长和盈利是否值得信任，最主要的经营优势或薄弱点在哪里？",
+          "angles": [
+            "把增长、盈利质量、现金流和资产负债表联系起来，判断表现是否相互支持。",
+            "与适当同业和自身历史比较，说明差异来自业务优势、周期还是一次性因素。",
+            "若股息是用户目标，判断现金覆盖和可持续性，不只列股息率。"
+          ],
+          "suggested_fields": [
+            "M03.fundamental_judgments",
+            "M03.growth",
+            "M03.earnings_quality",
+            "M03.cash_flow",
+            "M03.balance_sheet",
+            "M03.peers",
+            "M03.income",
+            "M03.cycle_context"
+          ],
+          "scope_note": "采用适合公司和用户问题的经营指标，不强制统一因子评分。"
+        },
+        {
+          "id": "R04_valuation",
+          "question": "相对于合理假设，当前价格偏贵、偏便宜还是差异有限，最依赖哪项假设？",
+          "angles": [
+            "比较同口径现价与所选估值方法的结果，给出明确且有条件的价值判断。",
+            "反推或解释当前价格要求的经营表现，判断这些要求是否合理。",
+            "通过已有敏感性结果说明哪些假设最容易改变结论。"
+          ],
+          "suggested_fields": [
+            "M04.valuation_judgments",
+            "M04.valuation",
+            "M04.market_comparison",
+            "M04.assumptions",
+            "M04.implied_assumptions",
+            "M04.sensitivity",
+            "M04.sensitivity_chart"
+          ],
+          "scope_note": "公允价值不是未来市场成交价；不指定估值模型或统一安全边际。"
+        },
+        {
+          "id": "R04_expectations",
+          "question": "市场预期正在改善还是恶化，与本次研究判断的主要分歧是什么？",
+          "angles": [
+            "用相同财期和目标的预期修正判断变化方向及幅度，检查覆盖是否改变。",
+            "解释共识分歧体现的关键经营假设，不把分析师人数或一致性当准确率。",
+            "将分析师目标、公允价值和本次模型目标分别表达，并说明日期与期限差异。"
+          ],
+          "suggested_fields": [
+            "M04.valuation_judgments",
+            "M05.consensus_judgments",
+            "M05.consensus",
+            "M05.revisions",
+            "M05.dispersion",
+            "M05.coverage",
+            "M05.target_dates",
+            "M05.target_prices",
+            "M04.model_target"
+          ],
+          "scope_note": "没有自有价格预测时不补模型目标；共识只代表实际覆盖范围内的预期。"
+        },
+        {
+          "id": "R04_catalysts",
+          "question": "什么经营结果或事件会兑现、加强或推翻这份价值判断？",
+          "angles": [
+            "把催化事件与收入、利润、现金流或估值假设连接起来，明确预期如何被检验。",
+            "区分长期业务判断与近期事件反应，按用户投资期限说明哪个更重要。",
+            "给出复核条件和有依据的选择；需要情景时集中为一个最终树。"
+          ],
+          "suggested_fields": [
+            "M04.valuation_judgments",
+            "M06.impact_judgments",
+            "M15.actions",
+            "M06.event",
+            "M06.release",
+            "M06.surprise",
+            "M04.update_schedule",
+            "M15.watchlist",
+            "M15.review_at",
+            "M15.scenario_terms",
+            "M15.action_chart"
+          ],
+          "scope_note": "中长期长度服从用户定义；没有用户交易目标时无需强加买卖指令。"
+        }
+      ],
+      "tc_alignment": {
+        "match_type": "adjacent",
+        "match_type_source": "type",
+        "reference_context": "TC Fair Value / Analyst Consensus · 相近估值组件",
+        "scope_note": "公允价值与机构共识组件的字段对应；两类判断分别回答，不把目标价当模型公允价值。",
+        "sources": [
+          {
+            "label": "Fair Value 官方说明",
+            "url": "https://www.tradingcentral.com/blog/tc-fair-value-available-by-trading-central"
+          },
+          {
+            "label": "分析师共识官方说明",
+            "url": "https://www.tradingcentral.com/blog/analyst-consensus-rating-target-price"
+          }
+        ],
+        "fields": [
+          {
+            "tc_field": "公允价值",
+            "question": "模型估计的股票公允价值是多少？",
+            "suggested_fields": [
+              "M04.valuation"
+            ],
+            "relation": "direct",
+            "scope_note": "公允价值与分析师目标价、未来市场价格预测分开。"
+          },
+          {
+            "tc_field": "估值方法",
+            "question": "用什么估值方法，盈利与要求回报如何进入模型？",
+            "suggested_fields": [
+              "M04.assumptions",
+              "M04.evidence"
+            ],
+            "relation": "direct",
+            "scope_note": "原参照使用两阶段剩余收益模型；对齐方法说明这一问题，不强制沿用其算法。"
+          },
+          {
+            "tc_field": "估值更新",
+            "question": "估值何时更新，更新节奏是什么？",
+            "suggested_fields": [
+              "M04.update_schedule"
+            ],
+            "relation": "direct",
+            "scope_note": "TC参照为每月15日；本报告记录实际更新安排，不照抄日期。"
+          },
+          {
+            "tc_field": "分析师评级",
+            "question": "分析师的买入、持有、卖出等评级如何分布？",
+            "suggested_fields": [
+              "M05.rating_distribution",
+              "M05.coverage"
+            ],
+            "relation": "direct",
+            "scope_note": "保留实际评级体系、覆盖与截点。"
+          },
+          {
+            "tc_field": "平均目标价",
+            "question": "分析师平均目标价处于什么水平？",
+            "suggested_fields": [
+              "M05.target_prices"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "目标价分歧",
+            "question": "最低和最高目标价相差多少？",
+            "suggested_fields": [
+              "M05.target_prices",
+              "M05.dispersion"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "共识更新",
+            "question": "分析师共识何时更新，节奏是否不同于公允价值？",
+            "suggested_fields": [
+              "M05.target_dates"
+            ],
+            "relation": "direct",
+            "scope_note": "TC说明为每日更新；本报告保留实际共识更新时点。"
+          }
+        ]
+      }
+    },
+    "R05": {
+      "purpose": "帮助用户快速识别本期最重要的市场变化、事件和研究候选，并明确优先顺序。",
+      "questions": [
+        {
+          "id": "R05_market_priority",
+          "question": "本期市场最值得注意的变化是什么，为什么它比其他变化重要？",
+          "angles": [
+            "在指定市场和观察窗口内识别主要强弱变化，说明影响范围和相对基准。",
+            "区分普遍变化与少数资产的异常表现，避免用单一涨跌代表全市场。",
+            "按用户关心的资产或目标给出关注优先级，而非仅按涨幅排序。"
+          ],
+          "suggested_fields": [
+            "M01.timeframe_states",
+            "M01.changes",
+            "M01.relative_strength",
+            "M01.relative_chart",
+            "M01.price_performance",
+            "M01.summary"
+          ],
+          "scope_note": "日报可只回答当期变化，不要求每个资产都有方向预测。"
+        },
+        {
+          "id": "R05_information_value",
+          "question": "哪些消息或事件真正带来新信息，哪些变化可能影响后续判断？",
+          "angles": [
+            "区分首次披露、实际结果、预期变化与重复传播，选出影响最大的新增信息。",
+            "结合机制和已观察反应判断影响，不把热度直接当利好或利空。",
+            "明确消息覆盖变化是否导致看起来更热，避免把来源增加误认成关注激增。"
+          ],
+          "suggested_fields": [
+            "M06.impact_judgments",
+            "M07.news_judgments",
+            "M06.event",
+            "M06.surprise",
+            "M06.reaction",
+            "M07.novelty",
+            "M07.impact",
+            "M07.themes",
+            "M07.coverage_details"
+          ],
+          "scope_note": "只展开影响当期阅读优先级的信息；事实来源和长新闻列表可进入附录。"
+        },
+        {
+          "id": "R05_candidates",
+          "question": "哪些候选最值得继续研究，入选依据和主要疑点分别是什么？",
+          "angles": [
+            "按实际筛选范围、条件和排序规则解释候选优先级，指出与用户目标的关系。",
+            "比较候选的优势、代价和关键反证，不把通过筛选直接写成适合买入。",
+            "给出候选下一步最值得验证的问题，缺失数据影响优先级时明确说明。"
+          ],
+          "suggested_fields": [
+            "M11.candidate_judgments",
+            "M11.universe",
+            "M11.criteria",
+            "M11.selection_logic",
+            "M11.rank_rules",
+            "M11.candidates",
+            "M11.candidate_details",
+            "M11.coverage_gaps",
+            "M11.follow_up"
+          ],
+          "scope_note": "不在报告层重排或重算分数；没有回测时不把筛选结果称为已验证策略。"
+        },
+        {
+          "id": "R05_next_updates",
+          "question": "接下来哪些已知事件或观察结果最可能改变今天的关注顺序？",
+          "angles": [
+            "从日历中选出与候选或主要市场判断相关的事件，说明关注原因。",
+            "列出需要确认的新信息及何时可得，区别计划时间与已公布结果。",
+            "把后续研究入口连到具体候选或判断，避免无差别列出全部事件。"
+          ],
+          "suggested_fields": [
+            "M06.impact_judgments",
+            "M11.candidate_judgments",
+            "M17.event_priorities",
+            "M17.events",
+            "M17.timeline_chart",
+            "M17.schedule_changes",
+            "M17.coverage",
+            "M06.updates",
+            "M11.follow_up"
+          ],
+          "scope_note": "关注优先级不是事件方向预测；无需为每个日历事件绘制情景树。"
+        }
+      ],
+      "tc_alignment": {
+        "match_type": "example",
+        "match_type_source": "type",
+        "reference_context": "TC Daily Market Newsletter · 2022 年 12 月 9 日",
+        "scope_note": "官方市场简报样刊；对齐市场回顾、重要消息、跨资产状态、单资产判断、备用情景和日历。",
+        "sources": [
+          {
+            "label": "TC 官方日报样刊",
+            "url": "https://newsletters.tradingcentral.com/acmarkets/index_mb_en.html"
+          },
+          {
+            "label": "Market Buzz 官方说明",
+            "url": "https://www.tradingcentral.com/tc-products/tc-market-buzz"
+          }
+        ],
+        "fields": [
+          {
+            "tc_field": "报告日期",
+            "question": "这份市场回顾对应哪一天？",
+            "suggested_fields": [
+              "M01.data_times",
+              "M17.scope"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "市场回顾",
+            "question": "当天指数、行业和主要市场发生了什么整体变化？",
+            "suggested_fields": [
+              "M01.price_performance",
+              "M01.changes"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "重要消息",
+            "question": "哪些公司与政策消息构成理解市场变化的背景？",
+            "suggested_fields": [
+              "M07.news",
+              "M07.novelty",
+              "M06.event"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "跨资产状态",
+            "question": "外汇、商品和加密资产等相关市场分别处于什么状态？",
+            "suggested_fields": [
+              "M01.timeframe_states",
+              "M01.relative_strength"
+            ],
+            "relation": "direct",
+            "scope_note": "按用户指定资产范围回答，不为复刻样刊扩大市场范围。"
+          },
+          {
+            "tc_field": "单资产判断",
+            "question": "每个资产的主观点和关键价位是什么？",
+            "suggested_fields": [
+              "M14.summary",
+              "M02.key_levels"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "备用情景",
+            "question": "关键条件改变后，如何调整原观点？",
+            "suggested_fields": [
+              "M15.scenario_terms",
+              "M15.action_chart"
+            ],
+            "relation": "direct",
+            "scope_note": "只在整份报告最后汇总一个情景树。"
+          },
+          {
+            "tc_field": "经济日历",
+            "question": "接下来有哪些经济事件，其时间、预期与重要性是什么？",
+            "suggested_fields": [
+              "M17.events",
+              "M17.economic_releases",
+              "M17.event_priorities"
+            ],
+            "relation": "direct"
+          }
+        ]
+      }
+    },
+    "R06": {
+      "purpose": "判断期权定价和策略结构是否适合用户的目标、期限与风险条件。",
+      "questions": [
+        {
+          "id": "R06_volatility_value",
+          "question": "相关期限和行权价的波动定价偏高、偏低还是缺乏明显优势，主要贵在哪里？",
+          "angles": [
+            "在可比期限、年化和报价口径下比较隐含波动、实际波动与历史参照。",
+            "判断期限结构、偏斜或事件溢价说明的风险需求，解释与用户持有期的关系。",
+            "区分波动水平、历史分位和预期价格范围，避免把范围直接变成方向目标。"
+          ],
+          "suggested_fields": [
+            "M09.pricing_judgments",
+            "M09.implied_volatility",
+            "M09.realized_volatility",
+            "M09.iv_history",
+            "M09.iv_rank",
+            "M09.iv_percentile",
+            "M09.term_structure",
+            "M09.skew",
+            "M09.event_premium"
+          ],
+          "scope_note": "不指定统一定价模型或买卖波动阈值；缺少可比参照时不擅定贵便宜。"
+        },
+        {
+          "id": "R06_structure_fit",
+          "question": "哪种结构更适合用户要表达的方向、波动或保护目标，为什么？",
+          "angles": [
+            "用用户目标、持有期限和可承受风险比较实际研究过的结构。",
+            "解释各合约腿如何共同实现目标，以及相对替代方案的代价。",
+            "分清到期收益结构与持有期间的价格、波动和时间风险。"
+          ],
+          "suggested_fields": [
+            "M10.structure_judgments",
+            "M15.actions",
+            "M10.objective",
+            "M10.legs",
+            "M10.alternatives",
+            "M10.greeks",
+            "M10.risks",
+            "M15.constraints"
+          ],
+          "scope_note": "不强制推荐某一种策略；有依据时可判断暂不采用或仅在明确条件下使用。"
+        },
+        {
+          "id": "R06_payoff_risk",
+          "question": "计入成本后，什么情况下赚钱或亏钱，主要损失是否值得承担？",
+          "angles": [
+            "说明净成本、盈亏平衡点、最大或未限定损失以及收益上限对目标的影响。",
+            "检查提前行权、交割、尾部变化和到期前退出如何改变损益判断。",
+            "有真实方法结果时再讨论净盈利概率或期望收益，区分定价分布与实际发生频率。"
+          ],
+          "suggested_fields": [
+            "M10.structure_judgments",
+            "M10.costs",
+            "M10.payoff",
+            "M10.breakevens",
+            "M10.max_profit",
+            "M10.max_loss",
+            "M10.settlement",
+            "M10.profit_probability",
+            "M10.expected_profit"
+          ],
+          "scope_note": "损益图不隐含情景发生概率；不为所有结构强填盈利概率。"
+        },
+        {
+          "id": "R06_feasibility",
+          "question": "报价、流动性和资金条件是否允许合理使用这个结构，哪些限制会消除优势？",
+          "angles": [
+            "判断同步报价、价差、成交量与持仓量对估计成本和可成交性的影响。",
+            "将保证金、单单位损失、仓位和用户风险预算联系起来，指出主要约束。",
+            "说明成本或执行条件恶化到什么程度会改变采用判断。"
+          ],
+          "suggested_fields": [
+            "M09.pricing_judgments",
+            "M10.structure_judgments",
+            "M12.risk_judgments",
+            "M09.quote_context",
+            "M09.liquidity",
+            "M10.liquidity",
+            "M12.execution_costs",
+            "M12.margin",
+            "M12.position_size",
+            "M12.budget"
+          ],
+          "scope_note": "没有账户资料时只给明确标注的条件分析，不编造实际仓位或执行能力。"
+        },
+        {
+          "id": "R06_review_conditions",
+          "question": "采用后需要观察什么，何时调整、退出或重新研究？",
+          "angles": [
+            "把价格、波动、事件和剩余期限变化与原结构的适用判断对应。",
+            "区分观点失效、风险控制和合约到期安排，给出可观察条件。",
+            "需要情景表达时，将最终选择集中到一个树并保留成本与期限依据。"
+          ],
+          "suggested_fields": [
+            "M06.impact_judgments",
+            "M10.structure_judgments",
+            "M15.actions",
+            "M06.event",
+            "M10.risks",
+            "M10.settlement",
+            "M15.watchlist",
+            "M15.review_at",
+            "M15.scenario_terms",
+            "M15.action_chart"
+          ],
+          "scope_note": "只呈现用户授权范围内的研究计划，方案不代表已安排或已执行交易。"
+        }
+      ],
+      "tc_alignment": {
+        "match_type": "example",
+        "match_type_source": "type",
+        "reference_context": "TC Options Insight · WDC · 2024 年 5 月 7 日",
+        "scope_note": "官方美股期权实例；对齐结构与替代选择、风险偏好、损益和概率的问题，结算和费用按实际市场研究。",
+        "sources": [
+          {
+            "label": "WDC 官方期权案例",
+            "url": "https://www.tradingcentral.com/blog/western-digital-technical-breakout-provides-bullish-options"
+          },
+          {
+            "label": "Options Insight 官方说明",
+            "url": "https://www.tradingcentral.com/tc-products/tc-options-insight"
+          }
+        ],
+        "fields": [
+          {
+            "tc_field": "标的与到期日",
+            "question": "比较的是哪个标的、哪一个到期日？",
+            "suggested_fields": [
+              "M10.legs",
+              "M10.settlement"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "行权价组合",
+            "question": "期权组合包含哪些行权价和合约腿？",
+            "suggested_fields": [
+              "M10.legs"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "首选与替代",
+            "question": "首选结构与替代结构分别是什么，怎样比较？",
+            "suggested_fields": [
+              "M10.alternatives",
+              "M10.structure_judgments"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "风险偏好",
+            "question": "预期价格变化和愿意承担的风险分别是什么？",
+            "suggested_fields": [
+              "M10.objective",
+              "M12.budget"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "最大损益",
+            "question": "各结构到期时的最大收益和最大亏损是多少？",
+            "suggested_fields": [
+              "M10.max_profit",
+              "M10.max_loss"
+            ],
+            "relation": "direct",
+            "scope_note": "与净成本、合约乘数和结算条件一起解释。"
+          },
+          {
+            "tc_field": "盈利概率",
+            "question": "各结构的盈利概率是多少，数值对应什么定义？",
+            "suggested_fields": [
+              "M10.profit_probability"
+            ],
+            "relation": "direct",
+            "scope_note": "保留实际提供者或方法及真实依据；没有本次结果时说明缺口，不沿用WDC示例的44%/37%。"
+          },
+          {
+            "tc_field": "损益图与波动区间",
+            "question": "不同价格结果下如何盈亏，所示波动区间是什么？",
+            "suggested_fields": [
+              "M10.payoff_chart",
+              "M09.expected_move",
+              "M09.expected_move_chart"
+            ],
+            "relation": "direct",
+            "scope_note": "损益与波动区间分别说明，不把价格范围当方向目标。"
+          }
+        ]
+      }
+    },
+    "R07": {
+      "purpose": "判断用户现有组合的主要风险、与目标的匹配程度，以及最值得优先处理的问题。",
+      "questions": [
+        {
+          "id": "R07_main_risks",
+          "question": "组合真正集中在哪些风险上，哪些持仓看似分散却可能一起受损？",
+          "angles": [
+            "从资产、行业、币种或适用因子暴露中识别主要损失来源。",
+            "结合集中度和依赖关系判断分散是否有效，说明比较窗口和市场背景。",
+            "区分单项持仓风险与对整个组合的影响。"
+          ],
+          "suggested_fields": [
+            "M12.risk_judgments",
+            "M12.portfolio",
+            "M12.exposures",
+            "M12.concentration",
+            "M12.dependence",
+            "M12.exposure_chart",
+            "M12.dependence_chart"
+          ],
+          "scope_note": "实际组合判断需要真实持仓和口径；资料不足时明确当前可判断范围，不猜权重。"
+        },
+        {
+          "id": "R07_goal_fit",
+          "question": "当前风险是否符合用户的目标、期限和承受能力，最需要担心哪种损失？",
+          "angles": [
+            "将已有压力或情景损失与用户风险预算、资金需求和投资期限比较。",
+            "判断主要问题是损失规模、流动性、杠杆、币种错配还是其他适用风险。",
+            "用户条件未知时明确条件性判断，不把默认风险预算当作用户偏好。"
+          ],
+          "suggested_fields": [
+            "M12.risk_judgments",
+            "M15.actions",
+            "M12.stress",
+            "M12.budget",
+            "M12.margin",
+            "M12.execution_costs",
+            "M15.objective",
+            "M15.constraints"
+          ],
+          "scope_note": "目标与风险预算是决策条件，不作为市场方向证据。"
+        },
+        {
+          "id": "R07_priorities",
+          "question": "最值得优先保留、降低或重新研究的暴露是什么，改变它会付出什么代价？",
+          "angles": [
+            "按对组合目标的影响比较可能选择，明确目前更倾向哪种处理及原因。",
+            "把风险改善与机会成本、换手、税费或流动性等实际相关代价放在一起判断。",
+            "需要具体新权重时衔接组合构建研究，不把诊断意见直接写成已执行变更。"
+          ],
+          "suggested_fields": [
+            "M12.risk_judgments",
+            "M15.actions",
+            "M19.allocation_judgments",
+            "M12.summary",
+            "M12.exposures",
+            "M12.stress",
+            "M12.execution_costs",
+            "M15.constraints",
+            "M19.changes"
+          ],
+          "scope_note": "不要求每次组合诊断都重做优化或给出全部目标权重。"
+        },
+        {
+          "id": "R07_review_conditions",
+          "question": "哪些可观察变化会改变现有持仓判断，何时需要复核？",
+          "angles": [
+            "将风险预算、集中程度、基本假设或市场条件的变化对应到具体复核事项。",
+            "解释继续持有、调整或暂停新增的条件，不只给泛泛监测列表。",
+            "涉及多个条件选择时使用同一个最终情景树。"
+          ],
+          "suggested_fields": [
+            "M12.risk_judgments",
+            "M15.actions",
+            "M15.watchlist",
+            "M15.monitor_chart",
+            "M15.review_at",
+            "M15.scenario_terms",
+            "M15.action_chart",
+            "M12.stop_variants"
+          ],
+          "scope_note": "不预设统一止损算法；用户没有要求的执行动作不自动加入。"
+        }
+      ],
+      "tc_alignment": {
+        "match_type": "adjacent",
+        "match_type_source": "type",
+        "reference_context": "TC Panoramic View · 相近持仓研究组件",
+        "scope_note": "官方单只持仓研究摘要。组合集中度与整体风险是本产品扩展，不能用它们代替持仓条目的价值、技术和新闻问题。",
+        "sources": [
+          {
+            "label": "Panoramic View 官方说明",
+            "url": "https://www.tradingcentral.com/blog/trading-central-releases-summary-scores-in-panoramic-view"
+          }
+        ],
+        "fields": [
+          {
+            "tc_field": "持仓条目",
+            "question": "研究摘要对应哪一项持仓证券？",
+            "suggested_fields": [
+              "M12.portfolio",
+              "M01.instrument_context"
+            ],
+            "relation": "direct",
+            "scope_note": "这是单项持仓摘要，不是整个组合的穿透风险。"
+          },
+          {
+            "tc_field": "价值状态",
+            "question": "该证券符合价值投资条件的程度如何？",
+            "suggested_fields": [
+              "M03.factor_results",
+              "M03.source_scales"
+            ],
+            "relation": "partial",
+            "scope_note": "保留实际价值投资方法和原尺度，不等同公允价值或经营质量，不伪造TC分数。"
+          },
+          {
+            "tc_field": "技术方向",
+            "question": "该持仓近期和较长时间的技术方向分别如何？",
+            "suggested_fields": [
+              "M01.timeframe_states"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "新闻情绪",
+            "question": "该持仓相关新闻的总体情绪及其变化如何？",
+            "suggested_fields": [
+              "M08.sentiment",
+              "M08.changes",
+              "M08.coverage"
+            ],
+            "relation": "direct",
+            "scope_note": "情绪语气与消息价格影响分开。"
+          },
+          {
+            "tc_field": "新闻关注",
+            "question": "最近24小时，哪些持仓相关新闻更受关注？",
+            "suggested_fields": [
+              "M07.attention",
+              "M07.coverage_details"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": null,
+            "question": "用户持仓组合的集中度、行业暴露及风险分布如何？",
+            "suggested_fields": [
+              "M12.concentration",
+              "M12.exposures",
+              "M12.risk_judgments"
+            ],
+            "relation": "sesame_extension",
+            "sesame_field": "本报告的组合部分",
+            "scope_note": "原对照明确这是Sesame的组合分析；未找到TC持仓穿透与集中度的公开同题报告。"
+          }
+        ]
+      }
+    },
+    "R08": {
+      "purpose": "判断原预测或历史研究分数在哪些条件下有用、偏差在哪里，以及应如何调整和使用。",
+      "questions": [
+        {
+          "id": "R08_original_results",
+          "question": "原来具体判断了什么，哪些已经被实际结果支持，哪些已经失败？",
+          "angles": [
+            "按原对象、目标、期限和版本逐项对照实际结果，不在看到结果后改结算定义。",
+            "分别评价方向、幅度、时间或其他原本承诺的内容，指出主要成功与失败。",
+            "区分真实事前发布记录与事后重放分数，保留未结算和无法评价的项目。"
+          ],
+          "suggested_fields": [
+            "M16.use_judgments",
+            "M16.original",
+            "M16.settlement",
+            "M16.actual",
+            "M16.evaluation",
+            "M16.evaluation_chart"
+          ],
+          "scope_note": "用户研究历史重放时可以做复盘，但不能把它称为当时已发布预测的实绩。"
+        },
+        {
+          "id": "R08_conditional_usefulness",
+          "question": "这套预测或分数在哪些资产、情景或分组中比基准更有用，在哪些情况下不值得依赖？",
+          "angles": [
+            "在同一目标、评价窗口和样本覆盖下比较原结果与合适基准，给出分条件的有效或失效判断。",
+            "解释整体平均是否掩盖不同情景的相反表现，保留失败案例和未覆盖部分。",
+            "区分已经有历史支持的适用条件与仍需验证的解释，避免事后只挑赢家。"
+          ],
+          "suggested_fields": [
+            "M16.use_judgments",
+            "M16.evaluation",
+            "M16.explanation",
+            "M13.matching",
+            "M13.outcomes",
+            "M13.baseline",
+            "M13.validation",
+            "M13.applicability"
+          ],
+          "scope_note": "不指定统一指标或通过门槛；分数有区分价值与概率已准确校准是不同判断。"
+        },
+        {
+          "id": "R08_calibration_value",
+          "question": "校准或修正是否真的改善了结果，哪些映射值得保留，哪些应停止使用？",
+          "angles": [
+            "在可比较的评价样本上分别比较原结果、修正结果和基准，明确改善或恶化发生在哪些分组。",
+            "结合拟合与评价边界、覆盖率和实际结算结果判断映射的适用范围。",
+            "校准变差时不直接认定原分数毫无价值；原分数有用也不代表所有校准映射都可采用。"
+          ],
+          "suggested_fields": [
+            "M16.use_judgments",
+            "M16.calibration",
+            "M16.calibration_chart",
+            "M16.evaluation",
+            "M16.original",
+            "M16.actual",
+            "M16.explanation"
+          ],
+          "scope_note": "仅在存在校准或修正研究时回答；历史分组频率不自动成为当前预测概率。"
+        },
+        {
+          "id": "R08_adjustments",
+          "question": "主要偏差更可能来自哪里，现有证据支持怎样调整，而不是事后美化结果？",
+          "angles": [
+            "比较目标定义、数据可得性、样本条件、模型或映射适用范围等实际相关解释，指出更有力的原因。",
+            "把保留原规则、收窄用途、暂停某映射或研究新版本与对应证据连接起来。",
+            "区分已经验证有效的调整与待验证的改进假说；新版本保留原记录及独立评价边界。"
+          ],
+          "suggested_fields": [
+            "M16.use_judgments",
+            "M16.explanation",
+            "M16.follow_up",
+            "M16.evidence",
+            "M13.validation",
+            "M13.applicability"
+          ],
+          "scope_note": "方法可自由调整，但不能用评价期反复选优后继续称其为未参与选择的结果。"
+        },
+        {
+          "id": "R08_adoption",
+          "question": "现在应采用、限制、暂停还是仅保留研究用途，什么新结果会改变这个决定？",
+          "angles": [
+            "对实际研究的不同方法、分组或映射分别作使用判断，不用一条总评掩盖差异。",
+            "明确有条件使用的对象、用途、期限与已知限制；没有当前预测能力时仍可保留具体历史研究价值。",
+            "给出后续需要验证的具体问题和改判依据，避免只写扩大样本或继续观察。"
+          ],
+          "suggested_fields": [
+            "M15.actions",
+            "M16.use_judgments",
+            "M16.follow_up",
+            "M16.evaluation",
+            "M16.calibration",
+            "M15.constraints",
+            "M15.watchlist",
+            "M15.review_at"
+          ],
+          "scope_note": "复盘不必产生新行情预测；采用判断依任务目的与证据而定，不要求全部检验通过。"
+        }
+      ],
+      "tc_alignment": {
+        "match_type": "adjacent",
+        "match_type_source": "type",
+        "reference_context": "TC Economic Insight · 历史统计的部分对应",
+        "scope_note": "官方事件历史统计只对应样本与结果部分；概率校准是本产品扩展，未找到直接对应的TC校准模板。",
+        "sources": [
+          {
+            "label": "TC 官方历史统计实例",
+            "url": "https://www.tradingcentral.com/blog/tc-economic-insight-the-week-ahead-february-20-24"
+          },
+          {
+            "label": "Economic Insight 官方说明",
+            "url": "https://investor.tradingcentral.com/tutorials/getting-started-with-economic-insight"
+          }
+        ],
+        "fields": [
+          {
+            "tc_field": "事件与资产",
+            "question": "历史统计绑定什么事件与资产？",
+            "suggested_fields": [
+              "M06.event",
+              "M13.feature",
+              "M13.instrument_context"
+            ],
+            "relation": "partial",
+            "scope_note": "只对齐适用的统计对象；纯概率回放无对应事件时，不追加FOMC事件研究。"
+          },
+          {
+            "tc_field": "观察时间",
+            "question": "历史结果使用多长的观察窗口，比较是否一致？",
+            "suggested_fields": [
+              "M13.feature",
+              "M06.reaction_windows"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "样本与方向",
+            "question": "历史样本中有多少次上涨，全部样本有多少？",
+            "suggested_fields": [
+              "M13.outcomes",
+              "M13.sample"
+            ],
+            "relation": "direct",
+            "scope_note": "这是历史分子与分母，不是校准概率。"
+          },
+          {
+            "tc_field": "波动幅度",
+            "question": "事件观察期内的平均交易区间有多大？",
+            "suggested_fields": [
+              "M06.reaction_windows"
+            ],
+            "relation": "partial",
+            "scope_note": "仅为事件历史统计的局部对应，不能用校准误差替代振幅，也不扩展纯校准任务。"
+          },
+          {
+            "tc_field": "事件结果分组",
+            "question": "有数值的事件结果是高于、符合还是低于预期？",
+            "suggested_fields": [
+              "M06.expectations",
+              "M06.release",
+              "M06.surprise"
+            ],
+            "relation": "partial",
+            "scope_note": "教程中的事件分组；高低波动分组不等于预期差分组，不为纯概率回放新增事件研究。"
+          },
+          {
+            "tc_field": null,
+            "question": "分数与实际结果是否匹配，校准是否改善？",
+            "suggested_fields": [
+              "M16.original",
+              "M16.actual",
+              "M16.calibration",
+              "M16.evaluation",
+              "M16.use_judgments"
+            ],
+            "relation": "sesame_extension",
+            "sesame_field": "校准结果",
+            "scope_note": "所查TC实例没有分数与概率校准的直接对应；这是Sesame的原任务。"
+          }
+        ]
+      }
+    },
+    "R09": {
+      "purpose": "判断指定日历窗口中哪些事件最值得关注、何时可确认，以及什么信息会改变优先级。",
+      "questions": [
+        {
+          "id": "R09_event_priority",
+          "question": "这段时间哪些事件对用户最重要，为什么应优先关注？",
+          "angles": [
+            "根据用户资产、持仓或研究目标判断事件相关性，不仅复述提供方的重要性标签。",
+            "指出事件集中、相互关联或可能改变核心假设的时间段。",
+            "区分重要程度与方向预测，事件多不等于风险一定更高。"
+          ],
+          "suggested_fields": [
+            "M06.impact_judgments",
+            "M17.event_priorities",
+            "M17.scope",
+            "M17.events",
+            "M17.timeline_chart",
+            "M17.summary",
+            "M06.event_importance"
+          ],
+          "scope_note": "日历首先服务关注顺序，不要求每个事件都预测市场方向。"
+        },
+        {
+          "id": "R09_schedule_reliability",
+          "question": "哪些时间和事项已经确认，哪些仍可能变动或来源尚未覆盖？",
+          "angles": [
+            "明确当地时间与时区、计划和实际公布状态，判断哪些安排可以依赖。",
+            "指出改期、取消、待确认或覆盖不足如何影响用户安排。",
+            "按事件性质区分财报、会议、除息、支付或拆股生效日，避免误用日期。"
+          ],
+          "suggested_fields": [
+            "M17.event_priorities",
+            "M17.events",
+            "M17.earnings",
+            "M17.dividends",
+            "M17.splits",
+            "M17.meetings",
+            "M17.schedule_changes",
+            "M17.coverage"
+          ],
+          "scope_note": "空白日不等于已确认没有事件；时间核对是事实工作，不编造倾向。"
+        },
+        {
+          "id": "R09_information_to_watch",
+          "question": "重点事件公布时应该看哪项信息，它可能怎样改变已有判断？",
+          "angles": [
+            "指出关键指标、前值或预期及其业务含义，说明为何这一差异值得关注。",
+            "已公布事件用实际结果判断变化；未公布事件只保留当时可得预期和条件。",
+            "需要深入研究时关联事件影响分析，不用日历标签代替机制和历史依据。"
+          ],
+          "suggested_fields": [
+            "M06.impact_judgments",
+            "M17.event_priorities",
+            "M17.economic_releases",
+            "M17.earnings",
+            "M06.expectations",
+            "M06.release",
+            "M06.surprise",
+            "M06.conditional_outlook"
+          ],
+          "scope_note": "M06 为可选展开；用户只要日程时不扩写完整冲击预测。"
+        },
+        {
+          "id": "R09_updates",
+          "question": "什么时候需要更新日历或重排关注顺序，哪些事项值得进一步研究？",
+          "angles": [
+            "把时间确认、数据公布、修订或取消与具体更新事项对应。",
+            "指出哪些结果会使事件重要性或已有判断改变。",
+            "为重点事件给出清楚的后续研究入口或复核时点。"
+          ],
+          "suggested_fields": [
+            "M06.impact_judgments",
+            "M15.actions",
+            "M17.event_priorities",
+            "M17.schedule_changes",
+            "M17.coverage",
+            "M06.updates",
+            "M15.watchlist",
+            "M15.review_at"
+          ],
+          "scope_note": "监测计划不表示已创建提醒或安排执行；无需自动生成最终情景树。"
+        }
+      ],
+      "tc_alignment": {
+        "match_type": "structure",
+        "match_type_source": "type",
+        "reference_context": "TC Economic Calendar + Corporate Calendar · 官方结构",
+        "scope_note": "官方经济与公司事件日历结构；对齐栏目含义，具体事件和时间按本次用户市场与日期取得。",
+        "sources": [
+          {
+            "label": "Economic Calendar 官方教程",
+            "url": "https://investor.tradingcentral.com/tutorials/follow-market-moving-events-2b558"
+          },
+          {
+            "label": "Corporate Calendar 官方说明",
+            "url": "https://www.tradingcentral.com/tc-products/tc-corporate-calendar"
+          }
+        ],
+        "fields": [
+          {
+            "tc_field": "事件与对象",
+            "question": "将发生什么经济或公司事件，涉及哪个国家或公司？",
+            "suggested_fields": [
+              "M17.events"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "发布时间",
+            "question": "事件何时公布，使用什么时区？",
+            "suggested_fields": [
+              "M17.events",
+              "M17.scope"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "重要性",
+            "question": "宏观事件的影响级别是什么，应如何安排关注？",
+            "suggested_fields": [
+              "M17.events",
+              "M17.event_priorities"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "预期与实际",
+            "question": "公布前预期与实际结果分别是多少？",
+            "suggested_fields": [
+              "M17.economic_releases"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "上期与修订",
+            "question": "上期结果是多少，后来是否修订？",
+            "suggested_fields": [
+              "M17.economic_releases",
+              "M06.previous_values"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "指标说明",
+            "question": "这个指标表示什么，相关价格图显示怎样的市场反应？",
+            "suggested_fields": [
+              "M17.events",
+              "M06.event_price_chart"
+            ],
+            "relation": "partial",
+            "scope_note": "指标说明由实际事件资料承接；只有日历时不冒称已做完整事件冲击研究。"
+          },
+          {
+            "tc_field": "公司事件",
+            "question": "有哪些已披露的财报、股息及其他公司事件？",
+            "suggested_fields": [
+              "M17.earnings",
+              "M17.dividends",
+              "M17.splits",
+              "M17.meetings"
+            ],
+            "relation": "direct"
+          }
+        ]
+      }
+    },
+    "R10": {
+      "purpose": "判断实际策略是否优于可比选择、在哪些条件下有效或失效，以及如何有条件地使用。",
+      "questions": [
+        {
+          "id": "R10_strategy_hypothesis",
+          "question": "这套规则想利用什么行为，实际运行的规则是否真的检验了这个想法？",
+          "angles": [
+            "用通俗语言连接投资池、筛选、入退场或换仓规则与预期获益机制。",
+            "区分筛选候选、特征验证、信号研究和可成交策略回测，明确实际运行到哪一层。",
+            "确认结论对应实际冻结的规则、参数和执行假设，不能把文字设想当运行结果。"
+          ],
+          "suggested_fields": [
+            "M11.candidate_judgments",
+            "M18.strategy_judgments",
+            "M11.selection_logic",
+            "M11.backtest_refs",
+            "M18.hypothesis",
+            "M18.selection",
+            "M18.simulation",
+            "M18.logic_graph",
+            "M18.artifacts"
+          ],
+          "scope_note": "不要求重写已有真实策略或使用特定引擎；原生策略图和固定运行结果可直接引用。"
+        },
+        {
+          "id": "R10_net_performance",
+          "question": "计入实际研究的成本后，策略相对持有、现金或其他合适基准是否更值得使用？",
+          "angles": [
+            "按资产和可比评价窗口分别判断净收益、损失过程和风险代价，而非只看最好的一组。",
+            "说明表现差异来自收益、回撤、市场参与时间或其他实际相关因素。",
+            "保留失败区间、交易数量和成本范围；不同长度累计收益不直接比较优劣。"
+          ],
+          "suggested_fields": [
+            "M18.strategy_judgments",
+            "M18.metrics",
+            "M18.benchmark",
+            "M18.window",
+            "M18.costs",
+            "M18.equity_chart",
+            "M18.drawdown_chart",
+            "M18.trades",
+            "M18.positions"
+          ],
+          "scope_note": "单项特征命中率、信号理想收益和策略净收益分别判断；不能相互替代。"
+        },
+        {
+          "id": "R10_effective_conditions",
+          "question": "策略在哪些可识别条件下有效，在哪些情况下容易失效，证据是否足以支持有条件使用？",
+          "angles": [
+            "联系实际盈利与亏损案例，判断规则适合的市场行为以及最常见的失败机制。",
+            "用于未来选择的条件应能在决策当时识别；事后按盈亏贴上的标签只能解释结果，不能直接成为使用规则。",
+            "将已验证条件、证据有限但有依据的适用倾向和未检验假说分开，明确每种结论能支持什么用途。"
+          ],
+          "suggested_fields": [
+            "M18.strategy_judgments",
+            "M18.hypothesis",
+            "M18.validation",
+            "M18.trades",
+            "M18.positions",
+            "M18.metrics",
+            "M13.matching",
+            "M13.outcomes",
+            "M13.applicability"
+          ],
+          "scope_note": "不固定趋势或震荡等状态理论；没有检验过状态分类时应明确缺口，但仍要说明现有结果支持的具体判断。"
+        },
+        {
+          "id": "R10_robustness",
+          "question": "优势依赖少数交易、特定参数或选样吗，换一个合理条件后还剩多少依据？",
+          "angles": [
+            "结合完整已运行参数、失败试验和选优规则，判断优势是广泛存在还是集中于少数选择。",
+            "检查收益集中、样本边界、成本和执行假设等实际敏感项，解释它们如何改变可信范围。",
+            "区分开发、验证、留出和已知历史重放；没有完成的检验明确为未检验，不伪称通过。"
+          ],
+          "suggested_fields": [
+            "M18.strategy_judgments",
+            "M18.parameter_trials",
+            "M18.selection_rule",
+            "M18.parameter_sensitivity_chart",
+            "M18.validation",
+            "M18.window",
+            "M18.costs",
+            "M18.assumptions"
+          ],
+          "scope_note": "按任务选择有价值的验证，不把所有可能检验变成统一准入门槛，也不使用留出结果重新挑参。"
+        },
+        {
+          "id": "R10_conditional_use",
+          "question": "对每个实际研究的策略或资产，现在应采用、限制、停用还是继续作为候选，什么结果会改变决定？",
+          "angles": [
+            "分别作出明确使用判断，连接净表现、有效条件、失败风险和用户目标。",
+            "说明有条件使用的规则版本、适用对象、成本与风险边界；限制或暂缓也要给具体原因。",
+            "指出下一步要验证的实质问题和停用或改判条件，不以继续观察作为唯一结论。"
+          ],
+          "suggested_fields": [
+            "M12.risk_judgments",
+            "M15.actions",
+            "M18.strategy_judgments",
+            "M18.summary",
+            "M18.validation",
+            "M12.budget",
+            "M12.execution_costs",
+            "M15.constraints",
+            "M15.watchlist",
+            "M15.review_at"
+          ],
+          "scope_note": "回测和表现两种呈现共用业务职责；原生 backtest 或 document 中也应能读到分项判断，不要求所有策略一律做当前行情预测。"
+        }
+      ],
+      "tc_alignment": {
+        "match_type": "example",
+        "match_type_source": "type",
+        "reference_context": [
+          {
+            "key": "R10-backtest",
+            "context": "TC Strategy Builder · 美国科技股 · 2019 年 10 月 28 日",
+            "scope_note": "独立历史实例，仅对齐所列问题，不复用其市场、规则或结果。"
+          },
+          {
+            "key": "R10-performance",
+            "context": "TC Strategy Builder · 美国消费股 · 2017 年 4 月 3 日",
+            "scope_note": "独立历史实例，仅对齐所列问题，不复用其市场、规则或结果。"
+          }
+        ],
+        "scope_note": "回测与表现参考两个独立股票历史实例；对齐规则、时间、持仓、成本、收益和基准，完整风险与条件使用是本产品扩展。",
+        "sources": [
+          {
+            "label": "TC 官方科技股回测实例",
+            "url": "https://www.tradingcentral.com/blog/these-six-tech-stocks-could-fuel-a-market-breakout"
+          },
+          {
+            "label": "Strategy Builder 方法说明",
+            "url": "https://employee.tradingcentral.com/resources/strategy-builder"
+          },
+          {
+            "label": "TC 官方消费股回测实例",
+            "url": "https://www.tradingcentral.com/blog/seeking-lower-volatility-u-s-consumer-stocks"
+          },
+          {
+            "label": "Strategy Builder 官方教程",
+            "url": "https://investor.tradingcentral.com/tutorials/build-your-investing-strategy-with-strategy-builder-bb010"
+          }
+        ],
+        "fields": [
+          {
+            "tc_field": "选择规则",
+            "question": "什么筛选规则决定哪些资产进入候选？",
+            "suggested_fields": [
+              "M11.criteria",
+              "M11.selection_logic",
+              "M18.selection"
+            ],
+            "relation": "direct",
+            "reference_key": "R10-backtest"
+          },
+          {
+            "tc_field": "回测时间",
+            "question": "回测覆盖哪段时期，策略与基准是否一致？",
+            "suggested_fields": [
+              "M18.window",
+              "M18.benchmark"
+            ],
+            "relation": "direct",
+            "reference_key": "R10-backtest"
+          },
+          {
+            "tc_field": "选股时能知道的信息",
+            "question": "选择资产时实际能知道哪些信息？",
+            "suggested_fields": [
+              "M18.universe",
+              "M18.assumptions"
+            ],
+            "relation": "direct",
+            "reference_key": "R10-backtest"
+          },
+          {
+            "tc_field": "持仓数量与权重",
+            "question": "选中多少资产，资金如何分配？",
+            "suggested_fields": [
+              "M18.selection",
+              "M18.simulation"
+            ],
+            "relation": "direct",
+            "reference_key": "R10-backtest"
+          },
+          {
+            "tc_field": "调整周期",
+            "question": "按什么周期重新筛选和换仓？",
+            "suggested_fields": [
+              "M18.simulation"
+            ],
+            "relation": "direct",
+            "reference_key": "R10-backtest",
+            "scope_note": "原参照每13周；本报告说明实际规则，不照抄周期。"
+          },
+          {
+            "tc_field": "成交规则",
+            "question": "按什么时点和价格计算买卖成交？",
+            "suggested_fields": [
+              "M18.simulation",
+              "M18.assumptions"
+            ],
+            "relation": "direct",
+            "reference_key": "R10-backtest"
+          },
+          {
+            "tc_field": "历史结果",
+            "question": "策略与基准在同一尺度上的历史表现各是多少？",
+            "suggested_fields": [
+              "M18.metrics",
+              "M18.benchmark",
+              "M18.equity_chart"
+            ],
+            "relation": "direct",
+            "reference_key": "R10-backtest"
+          },
+          {
+            "tc_field": "策略对象",
+            "question": "被评价的策略针对哪类资产？",
+            "suggested_fields": [
+              "M18.universe"
+            ],
+            "relation": "direct",
+            "reference_key": "R10-performance"
+          },
+          {
+            "tc_field": "评价时间",
+            "question": "表现评价覆盖哪段相同的观察时期？",
+            "suggested_fields": [
+              "M18.window"
+            ],
+            "relation": "direct",
+            "reference_key": "R10-performance"
+          },
+          {
+            "tc_field": "年化表现",
+            "question": "策略的年化历史表现是多少？",
+            "suggested_fields": [
+              "M18.metrics"
+            ],
+            "relation": "direct",
+            "reference_key": "R10-performance",
+            "scope_note": "说明实际年化定义，不把累计收益冒充年化表现。"
+          },
+          {
+            "tc_field": "基准表现",
+            "question": "可比基准同期表现是多少？",
+            "suggested_fields": [
+              "M18.benchmark",
+              "M18.metrics",
+              "M18.equity_chart"
+            ],
+            "relation": "direct",
+            "reference_key": "R10-performance"
+          },
+          {
+            "tc_field": "换仓规则",
+            "question": "这些收益对应什么换仓和持有规则？",
+            "suggested_fields": [
+              "M18.simulation"
+            ],
+            "relation": "direct",
+            "reference_key": "R10-performance"
+          },
+          {
+            "tc_field": "风险筛选",
+            "question": "选择资产时使用什么风险筛选条件？",
+            "suggested_fields": [
+              "M11.criteria",
+              "M18.selection"
+            ],
+            "relation": "direct",
+            "reference_key": "R10-performance",
+            "scope_note": "TC示例为个股Beta 0–0.75，不是组合实际波动率或回撤。"
+          },
+          {
+            "tc_field": null,
+            "question": "回撤、尾部变化和成本怎样影响策略取舍？",
+            "suggested_fields": [
+              "M18.drawdown_chart",
+              "M18.costs",
+              "M18.strategy_judgments",
+              "M12.stress"
+            ],
+            "relation": "sesame_extension",
+            "reference_key": "R10-performance",
+            "sesame_field": "进一步的风险内容",
+            "scope_note": "所查TC案例未给出这些完整风险结果；按Sesame实际研究回答。"
+          }
+        ]
+      }
+    },
+    "R11": {
+      "purpose": "判断组合调整方案如何服务用户目标、改善了什么、付出什么代价，以及何时适合实施或复核。",
+      "questions": [
+        {
+          "id": "R11_goal_fit",
+          "question": "目标组合要解决什么具体问题，所选权重为什么适合用户目标？",
+          "angles": [
+            "将目标、投资期限、比较基准和实际约束联系起来，明确优先改善的事项。",
+            "解释所选权重规则如何服务目标，哪些约束限制了方案。",
+            "区分用户偏好与研究推断，不把优化结果自动视为唯一正确方案。"
+          ],
+          "suggested_fields": [
+            "M19.allocation_judgments",
+            "M19.objective",
+            "M19.constraints",
+            "M19.weighting_rules",
+            "M19.target_weights",
+            "M19.benchmark"
+          ],
+          "scope_note": "不指定等权、风险平价或其他固定优化方法；用户可直接给定权重。"
+        },
+        {
+          "id": "R11_changes",
+          "question": "相对当前组合，应该增减什么，哪些变化最重要？",
+          "angles": [
+            "逐项解释主要新增、移除或调整的理由，与当前权重和目标权重对应。",
+            "区分风险调整、目标变化和对资产的研究判断，不把减仓一律解读为看空。",
+            "比较变化带来的收益机会、分散效果与换手代价。"
+          ],
+          "suggested_fields": [
+            "M12.risk_judgments",
+            "M19.allocation_judgments",
+            "M19.current_weights",
+            "M19.target_weights",
+            "M19.changes",
+            "M19.weights_chart",
+            "M19.changes_chart",
+            "M12.execution_costs"
+          ],
+          "scope_note": "当前持仓未知时不能生成伪装成真实差额的变更表；假设组合应清楚标注。"
+        },
+        {
+          "id": "R11_risk_tradeoff",
+          "question": "新方案改善了哪些风险，又增加了哪些代价或新的集中问题？",
+          "angles": [
+            "在可比截点和方法下对照当前与目标组合的暴露、集中、依赖和压力结果。",
+            "判断改善是否符合用户预算，同时说明流动性、保证金、费用或其他适用约束。",
+            "目标组合风险尚未研究时明确未知，不能把原组合风险结果当成新方案的改善证据。"
+          ],
+          "suggested_fields": [
+            "M12.risk_judgments",
+            "M19.allocation_judgments",
+            "M19.risk_refs",
+            "M12.exposures",
+            "M12.concentration",
+            "M12.dependence",
+            "M12.stress",
+            "M12.budget",
+            "M12.margin",
+            "M12.execution_costs"
+          ],
+          "scope_note": "不同风险维度可以有取舍；不要求所有指标同时改善。"
+        },
+        {
+          "id": "R11_performance_support",
+          "question": "已有历史结果能支持新方案到什么程度，哪些优势仍只是方案假设？",
+          "angles": [
+            "辨认业绩属于原组合、目标组合还是另一规则版本，并判断与当前方案的可比性。",
+            "有同规则结果时比较净表现、风险和基准；只有原组合历史时只据此判断原组合。",
+            "把真实实绩、模拟结果和未经评价的新权重分开，明确采用判断的证据边界。"
+          ],
+          "suggested_fields": [
+            "M18.strategy_judgments",
+            "M19.allocation_judgments",
+            "M19.performance_refs",
+            "M18.window",
+            "M18.metrics",
+            "M18.benchmark",
+            "M18.costs",
+            "M18.validation",
+            "M18.artifacts"
+          ],
+          "scope_note": "不把原组合净值贴到新权重下作为证明；没有新方案回测不等于无法讨论其目标与条件价值。"
+        },
+        {
+          "id": "R11_rebalance_conditions",
+          "question": "什么条件下值得实施或复核这份方案，哪些变化会使它不再合适？",
+          "angles": [
+            "明确再平衡日期或触发、允许偏离、成本条件及用户约束，解释为何这样安排。",
+            "指出目标变化、风险超限、数据更新或市场条件如何改变方案判断。",
+            "区分建议、待确认、已安排和已执行；需要多分支决策时只保留一个最终情景树。"
+          ],
+          "suggested_fields": [
+            "M15.actions",
+            "M19.allocation_judgments",
+            "M19.rebalance",
+            "M19.action_status",
+            "M19.constraints",
+            "M15.watchlist",
+            "M15.review_at",
+            "M15.scenario_terms",
+            "M15.action_chart"
+          ],
+          "scope_note": "报告不下单或自动安排再平衡；实际动作遵循用户授权。"
+        }
+      ],
+      "tc_alignment": {
+        "match_type": "adjacent",
+        "match_type_source": "type",
+        "reference_context": "TC Quant Indices / Strategy Builder · 股票规则参考",
+        "scope_note": "股票指数与组合规则的部分对应；资产配置目标、约束和再平衡取舍按用户任务研究。",
+        "sources": [
+          {
+            "label": "Quant Indices 官方方法",
+            "url": "https://www.tradingcentral.com/financial-products/methodology"
+          },
+          {
+            "label": "Strategy Builder 方法说明",
+            "url": "https://employee.tradingcentral.com/resources/strategy-builder"
+          }
+        ],
+        "fields": [
+          {
+            "tc_field": "投资范围",
+            "question": "组合允许选择哪些资产？",
+            "suggested_fields": [
+              "M18.universe",
+              "M19.constraints"
+            ],
+            "relation": "direct"
+          },
+          {
+            "tc_field": "选择依据",
+            "question": "依据哪些规则选择这些资产？",
+            "suggested_fields": [
+              "M11.criteria",
+              "M18.selection"
+            ],
+            "relation": "direct",
+            "scope_note": "Quant指数五因子与Builder用户筛选是两套规则，不合成一种方法。"
+          },
+          {
+            "tc_field": "入选数量",
+            "question": "组合包含多少个标的？",
+            "suggested_fields": [
+              "M18.selection",
+              "M19.target_weights"
+            ],
+            "relation": "direct",
+            "scope_note": "原参照分别为50只与最多10只；本报告记录实际数量。"
+          },
+          {
+            "tc_field": "资金分配",
+            "question": "资金怎样分配，权重规则是什么？",
+            "suggested_fields": [
+              "M19.weighting_rules",
+              "M19.target_weights"
+            ],
+            "relation": "direct",
+            "scope_note": "回答权重问题，不强制等权或初始等额。"
+          },
+          {
+            "tc_field": "行业分散",
+            "question": "行业是否分散，资产数量是否掩盖风险集中？",
+            "suggested_fields": [
+              "M12.exposures",
+              "M12.concentration"
+            ],
+            "relation": "direct",
+            "scope_note": "这一项来自Quant指数；按用户指定资产的适用性回答，不把股票行业规则强加到其他资产。"
+          },
+          {
+            "tc_field": "调整时间",
+            "question": "什么时候调整组合，各规则的周期是什么？",
+            "suggested_fields": [
+              "M19.rebalance"
+            ],
+            "relation": "direct",
+            "scope_note": "Quant每月与Builder每13周分开保留，本报告方法自由。"
+          },
+          {
+            "tc_field": null,
+            "question": "用户指定资产如何配置，什么条件触发调整？",
+            "suggested_fields": [
+              "M19.target_weights",
+              "M19.constraints",
+              "M19.rebalance",
+              "M19.allocation_judgments"
+            ],
+            "relation": "sesame_extension",
+            "sesame_field": "本报告的配置条件",
+            "scope_note": "这是Sesame本次任务的配置条件，未找到TC同题配置报告。"
+          }
+        ]
+      }
+    }
+  }
+}

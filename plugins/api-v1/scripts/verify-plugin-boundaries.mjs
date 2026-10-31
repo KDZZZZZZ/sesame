@@ -8,6 +8,7 @@ const publicRoot = fileURLToPath(new URL('../../../', import.meta.url));
 const baselinePath = join(publicRoot, 'plugins/api-v1/tests/fixtures/plugin-boundaries-baseline.json');
 const extensionsPath = join(publicRoot, 'plugins/api-v1/tests/fixtures/plugin-boundaries-configuration-extensions.json');
 const reviewedPath = join(publicRoot, 'plugins/api-v1/tests/fixtures/plugin-boundaries-reviewed-changes.json');
+const retirementsPath = join(publicRoot, 'plugins/api-v1/tests/fixtures/plugin-boundaries-retirements.json');
 const json = path => JSON.parse(readFileSync(path, 'utf8'));
 const canonical = value => JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item) ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
 
@@ -84,6 +85,37 @@ export function applyConfigurationExtensions(baseline, extensions) {
 }
 
 const reviewDigest = value => `sha256:${createHash('sha256').update(canonical({ present: value !== undefined, value })).digest('hex')}`;
+const defaultRetirements = root => root === publicRoot && existsSync(retirementsPath) ? json(retirementsPath) : undefined;
+
+/** Retiring a knowledge package is an explicit scope change, never a new golden
+ * snapshot. Keep the historical contract and verify its replacement resources. */
+export function applyApprovedRetirements(root, baseline, retirements = defaultRetirements(root)) {
+  if (retirements === undefined) return structuredClone(baseline);
+  if (retirements.schemaVersion !== 1 || retirements.status !== 'approved' || retirements.baselineDigest !== reviewDigest(baseline) || !Array.isArray(retirements.entries)) throw new Error('Retirements require explicit approval against the immutable baseline');
+  const retired = new Set();
+  for (const item of retirements.entries) {
+    const expected = baseline.packages.find(entry => entry.manifest.id === item.pluginId);
+    if (!expected || retired.has(item.pluginId) || item.sourcePath !== expected.sourcePath || expected.declaration.capabilities.length || typeof item.reason !== 'string' || item.reason.trim().length < 20) throw new Error(`Invalid knowledge-package retirement: ${item.pluginId}`);
+    if (existsSync(join(root, item.sourcePath))) throw new Error(`Retired package is still present: ${item.pluginId}`);
+    const distribution = item.sourcePath.split('/').slice(0, 2).join('/'), profile = join(root, distribution, 'bundle-profile.json');
+    if (existsSync(profile) && json(profile).packages.includes(item.pluginId)) throw new Error(`Retired package remains in distribution profile: ${item.pluginId}`);
+    const policy = join(root, 'plugins/api-v1/inventory-policy.json');
+    if (existsSync(policy) && Object.hasOwn(json(policy), item.sourcePath.split('/').at(-1))) throw new Error(`Retired package remains in inventory policy: ${item.pluginId}`);
+    if (!/^plugins\/(?:api-v1|optional-api-v1)\/packages\/[a-z][a-z0-9-]*$/.test(item.replacementSourcePath) || item.replacementPluginId === item.pluginId) throw new Error('Retirement requires a distinct current replacement package');
+    const replacement = readBoundary(root, item.replacementSourcePath);
+    if (replacement.manifest.id !== item.replacementPluginId || !Array.isArray(item.retainedResources) || !item.retainedResources.length) throw new Error('Retirement requires declared retained resources');
+    const paths = new Set();
+    for (const resource of item.retainedResources) {
+      if (!/^(?:[A-Za-z0-9_.-]+\/)*[A-Za-z0-9_.-]+$/.test(resource.path) || resource.path.split('/').includes('..') || paths.has(resource.path)
+        || !replacement.declaration.knowledge?.some(entry => entry.path === resource.path)) throw new Error(`Retained resource is not a unique declared path: ${resource.path}`);
+      const actual = `sha256:${createHash('sha256').update(readFileSync(join(root, item.replacementSourcePath, resource.path))).digest('hex')}`;
+      if (resource.sha256 !== actual) throw new Error(`Retained resource changed: ${resource.path}`);
+      paths.add(resource.path);
+    }
+    retired.add(item.pluginId);
+  }
+  return { ...structuredClone(baseline), packages: baseline.packages.filter(entry => !retired.has(entry.manifest.id)).map(entry => structuredClone(entry)) };
+}
 const plain = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const pointer = value => value.replaceAll('~', '~0').replaceAll('/', '~1');
 function valueDeltas(before, after, path = '') {
@@ -165,8 +197,8 @@ function conditionalInputRestrictions(before, after) {
 
 /** Exact, reviewable deltas; impact labels are conservative review hints, not an
  * automatic claim of semantic compatibility. Historical bytes remain untouched. */
-export function createBoundaryReview(root = publicRoot, baseline = json(baselinePath), extensions = existsSync(extensionsPath) ? json(extensionsPath) : undefined) {
-  const expectedBaseline = applyConfigurationExtensions(baseline, extensions), entries = [], versions = [];
+export function createBoundaryReview(root = publicRoot, baseline = json(baselinePath), extensions = existsSync(extensionsPath) ? json(extensionsPath) : undefined, retirements = defaultRetirements(root)) {
+  const expectedBaseline = applyConfigurationExtensions(applyApprovedRetirements(root, baseline, retirements), extensions), entries = [], versions = [];
   for (const expected of expectedBaseline.packages) {
     const actual = readBoundary(root, expected.sourcePath);
     if (expected.manifest.version !== actual.manifest.version) versions.push({ pluginId: expected.manifest.id, before: expected.manifest.version, after: actual.manifest.version });
@@ -199,21 +231,21 @@ export function applyApprovedBoundaryReview(failures, actual, reviewed) {
   return failures.filter(failure => !accepted.has(failure));
 }
 
-export function boundaryReport(root = publicRoot, baseline = json(baselinePath), extensions = existsSync(extensionsPath) ? json(extensionsPath) : undefined) {
-  const expectedBaseline = applyConfigurationExtensions(baseline, extensions);
+export function boundaryReport(root = publicRoot, baseline = json(baselinePath), extensions = existsSync(extensionsPath) ? json(extensionsPath) : undefined, retirements = defaultRetirements(root)) {
+  const expectedBaseline = applyConfigurationExtensions(applyApprovedRetirements(root, baseline, retirements), extensions);
   const failures = [], versions = [];
   for (const expected of expectedBaseline.packages) {
     const actual = readBoundary(root, expected.sourcePath);
     if (expected.manifest.version !== actual.manifest.version) versions.push({ pluginId: expected.manifest.id, before: expected.manifest.version, after: actual.manifest.version });
     for (const change of compareBoundary(expected, actual)) failures.push(`${expected.manifest.id}: ${change}`);
   }
-  return { packages: baseline.packages.length, declarations: baseline.packages.length * 2,
+  return { packages: expectedBaseline.packages.length, declarations: expectedBaseline.packages.length * 2,
     capabilities: expectedBaseline.packages.reduce((sum, item) => sum + item.declaration.capabilities.length, 0), versions, failures };
 }
 
-export function checkBoundaries(root = publicRoot, baseline = json(baselinePath), extensions = existsSync(extensionsPath) ? json(extensionsPath) : undefined, reviewed = root === publicRoot && existsSync(reviewedPath) ? json(reviewedPath) : undefined) {
-  const report = boundaryReport(root, baseline, extensions);
-  if (reviewed !== undefined) report.failures = applyApprovedBoundaryReview(report.failures, createBoundaryReview(root, baseline, extensions), reviewed);
+export function checkBoundaries(root = publicRoot, baseline = json(baselinePath), extensions = existsSync(extensionsPath) ? json(extensionsPath) : undefined, reviewed = root === publicRoot && existsSync(reviewedPath) ? json(reviewedPath) : undefined, retirements = defaultRetirements(root)) {
+  const report = boundaryReport(root, baseline, extensions, retirements);
+  if (reviewed !== undefined) report.failures = applyApprovedBoundaryReview(report.failures, createBoundaryReview(root, baseline, extensions, retirements), reviewed);
   if (report.failures.length) throw Object.assign(new Error(`Plugin boundary drift (requires contract review, not a version-label update):\n${report.failures.join('\n')}`), { report });
   const { packages, declarations, capabilities } = report;
   return { packages, declarations, capabilities };
@@ -223,10 +255,10 @@ export function checkBoundaries(root = publicRoot, baseline = json(baselinePath)
  * Scope comes from the checked-in fixture; no local planning directory is used.
  * Explicit output and exclusive creation prevent accidental golden recapture.
  */
-export function captureBoundaryCandidate(output, root = publicRoot, baseline = json(baselinePath)) {
+export function captureBoundaryCandidate(output, root = publicRoot, baseline = json(baselinePath), retirements = defaultRetirements(root)) {
   if (!output || resolve(output) === resolve(baselinePath)) throw new Error('Choose a new candidate path; the compatibility baseline is immutable');
   const ids = new Set(), paths = new Set();
-  const packages = baseline.packages.map(expected => {
+  const packages = applyApprovedRetirements(root, baseline, retirements).packages.map(expected => {
     if (ids.has(expected.manifest.id) || paths.has(expected.sourcePath)) throw new Error('Duplicate baseline package scope');
     ids.add(expected.manifest.id); paths.add(expected.sourcePath);
     if (!/^plugins\/(?:api-v1|optional-api-v1)\/packages\/[a-z][a-z0-9-]*$/.test(expected.sourcePath)) throw new Error(`Invalid baseline source path: ${expected.sourcePath}`);

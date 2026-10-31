@@ -1,0 +1,44 @@
+✔ fixed DataRef prepares, measures and freezes without dataset registration (10.9417ms)
+✔ registered dataset identity and input digest remain unchanged (2.7098ms)
+✔ DataRef remains immutable across retries and complete revision identity is frozen (9.2056ms)
+✔ two input sources conflict and missing input remains an error before I/O (0.3013ms)
+▶ only complete fixed data references are accepted
+  ✔ wrong kind (0.4941ms)
+  ✔ missing revision (0.2139ms)
+  ✔ missing digest (0.1893ms)
+  ✔ extra path (0.1805ms)
+  ✔ resource handle (0.1676ms)
+  ✔ wrong version (0.1776ms)
+  ✔ path string (0.1399ms)
+✔ only complete fixed data references are accepted (2.2561ms)
+▶ source manifest, bytes, reference and pagination are independently checked
+  ✔ manifest digest (0.2573ms)
+  ✔ blob digest (0.721ms)
+  ✔ returned reference (0.2351ms)
+  ✔ nonadvancing cursor (0.2223ms)
+  ✔ truncated stream (0.2361ms)
+✔ source manifest, bytes, reference and pagination are independently checked (2.0331ms)
+▶ manifest schema, provenance, row count and input bounds reject before session save
+  ✔ format (0.1909ms)
+  ✔ schema version (0.1533ms)
+  ✔ provenance (0.1496ms)
+  ✔ row count mismatch (0.988ms)
+  ✔ more than 20000 rows (0.1603ms)
+  ✔ larger than 4 MiB (0.1608ms)
+  ✔ missing entry (0.1639ms)
+✔ manifest schema, provenance, row count and input bounds reject before session save (2.3375ms)
+✔ fixed input preserves development-only and PIT gates without inventing fields (4.9664ms)
+✔ aborted reads cannot produce a prepared session (0.2781ms)
+✔ separate evaluator produces real immutable candidate, selection and final receipts (12.7694ms)
+✔ direct calls and other caller plugins cannot read a workflow session (2.1361ms)
+✔ workflow sessions follow the trusted original owner across resumed execution sessions (2.7934ms)
+✔ general research tools use genuine development-only input with no holdout claim (3.6494ms)
+✔ parallel candidates keep both receipts without losing state or bypassing CAS (3.8093ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 33
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 109.5122

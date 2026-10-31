@@ -1,0 +1,25 @@
+✖ fixed DataRef prepares, measures and freezes without dataset registration (1.9108ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 64.9575
+
+✖ failing tests:
+
+test at plugins\optional-api-v1\packages\factor-evaluator\tests\input-ref.test.js:81:1
+✖ fixed DataRef prepares, measures and freezes without dataset registration (1.9108ms)
+  Error: dataset_id is required
+      at check (file:///E:/brief2great/sesame/sesame/plugins/optional-api-v1/packages/factor-evaluator/evaluator.js:7:97)
+      at bounded (file:///E:/brief2great/sesame/sesame/plugins/optional-api-v1/packages/factor-evaluator/evaluator.js:9:37)
+      at evaluateSession (file:///E:/brief2great/sesame/sesame/plugins/optional-api-v1/packages/factor-evaluator/evaluator.js:83:22)
+      at file:///E:/brief2great/sesame/sesame/plugins/optional-api-v1/packages/factor-evaluator/evaluator.js:72:84
+      at async evaluate (file:///E:/brief2great/sesame/sesame/plugins/optional-api-v1/packages/factor-evaluator/evaluator.js:74:16)
+      at async TestContext.<anonymous> (file:///E:/brief2great/sesame/sesame/plugins/optional-api-v1/packages/factor-evaluator/tests/input-ref.test.js:82:35)
+      at async Test.run (node:internal/test_runner/test:1332:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    code: 'EVALUATION_REJECTED'
+  }

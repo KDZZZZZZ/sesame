@@ -20,31 +20,41 @@ test('search is a supported functional category while unknown categories remain 
 
 test('task responsibility groups guides with workflows and knowledge with reusable analysis independently of implementation', () => {
   const byId = Object.fromEntries(buildInventory().packages.map(item => [item.id, item]));
-  for (const name of ['ict', 'price-action', 'abu-trend', 'factor-evaluator', 'strategy-authoring', 'web-extract', 'rss-collect', 'market-data-parser']) {
+  for (const name of ['ict', 'price-action', 'abu-trend', 'factor-evaluator', 'strategy-authoring', 'market-data-parser']) {
     assert.equal(byId[`sesame/${name}`].functionalCategory, 'analysis', name);
   }
-  for (const name of ['factor-research', 'strategy-research', 'auto-factor-mining', 'investment-research', 'trading-decision', 'portfolio-execution', 'judgment-evolution', 'kurumi-replay', 'ultra']) {
+  for (const name of ['auto-factor-mining', 'investment-research', 'trading-decision', 'portfolio-execution', 'judgment-evolution', 'kurumi-replay', 'ultra']) {
     assert.equal(byId[`sesame/${name}`].functionalCategory, 'business', name);
   }
-  for (const name of ['mt5', 'qmt', 'binance', 'web-sources', 'financial-research', 'backtrader', 'vnpy', 'data-access', 'quantskills-catalog']) {
+  for (const name of ['mt5', 'qmt', 'binance', 'backtrader', 'vnpy', 'data-access', 'quantskills-catalog']) {
     assert.equal(byId[`sesame/${name}`].functionalCategory, 'integration', name);
   }
+  for (const name of ['web-sources', 'rss-collect', 'web-extract', 'financial-research']) {
+    assert.equal(byId[`sesame/${name}`].functionalCategory, 'search', name);
+    assert.equal(byId[`sesame/${name}`].category, 'data', 'search navigation preserves the legacy category');
+    assert.equal(byId[`sesame/${name}`].distribution, 'optional');
+  }
+  assert.deepEqual(byId['sesame/rss-collect'].hostContributions.sources, [], 'feed parsing does not acquire a source');
+  assert.deepEqual(byId['sesame/web-extract'].hostContributions.sources, [], 'HTML parsing does not acquire a source');
+  assert.deepEqual(byId['sesame/rss-collect'].implementationKinds, ['function']);
+  assert.deepEqual(byId['sesame/web-extract'].implementationKinds, ['function']);
+  assert.deepEqual(byId['sesame/web-sources'].implementationKinds, ['adapter']);
+  assert.deepEqual(byId['sesame/financial-research'].implementationKinds, ['adapter']);
   for (const name of ['canvas-control', 'reports']) assert.equal(byId[`sesame/${name}`].functionalCategory, 'presentation', name);
-  for (const name of ['configuration', 'plugin-manager', 'workspace', 'memory', 'orchestration']) assert.equal(byId[`sesame/${name}`].functionalCategory, 'platform', name);
+  for (const name of ['configuration', 'plugin-manager', 'workspace', 'memory', 'orchestration', 'user-guide']) assert.equal(byId[`sesame/${name}`].functionalCategory, 'platform', name);
   assert.deepEqual(byId['sesame/ict'].implementationKinds, ['knowledge']);
-  assert.deepEqual(byId['sesame/factor-research'].implementationKinds, ['knowledge']);
   assert.deepEqual(byId['sesame/auto-factor-mining'].implementationKinds, ['workflow']);
   assert.deepEqual(byId['sesame/abu-trend'].implementationKinds, ['function']);
 });
 
-test('all 58 plugins have one reviewed functional group and valid implementation kinds without replacing legacy categories', () => {
+test('all 57 plugins have one reviewed functional group and valid implementation kinds without replacing legacy categories', () => {
   const inventory = buildInventory();
-  assert.equal(inventory.packages.length, 58);
-  assert.equal(new Set(inventory.packages.map(item => item.id)).size, 58);
-  assert.deepEqual(inventory.taxonomy, { functionalCategories: FUNCTIONAL_CATEGORIES.filter(category => inventory.packages.some(entry => entry.functionalCategory === category.id)), implementationKinds: IMPLEMENTATION_KINDS });
+  assert.equal(inventory.packages.length, 57);
+  assert.equal(new Set(inventory.packages.map(item => item.id)).size, 57);
+  assert.deepEqual(inventory.taxonomy, { functionalCategories: FUNCTIONAL_CATEGORIES, implementationKinds: IMPLEMENTATION_KINDS });
   const counts = field => Object.fromEntries([...new Set(inventory.packages.map(item => item[field]))].sort().map(value => [value, inventory.packages.filter(item => item[field] === value).length]));
-  assert.deepEqual(counts('functionalCategory'), { analysis: 31, business: 9, integration: 11, platform: 5, presentation: 2 });
-  assert.deepEqual(counts('category'), { backend: 7, data: 6, research: 33, strategy: 6, workspace: 6 });
+  assert.deepEqual(counts('functionalCategory'), { analysis: 29, business: 7, integration: 9, platform: 6, presentation: 2, search: 4 });
+  assert.deepEqual(counts('category'), { backend: 7, data: 6, research: 32, strategy: 5, workspace: 7 });
   for (const item of inventory.packages) {
     assert.equal(item.category, policy[item.id.slice('sesame/'.length)].category);
     assert.ok(item.implementationKinds.length > 0);
@@ -57,6 +67,7 @@ test('all 58 plugins have one reviewed functional group and valid implementation
   assert.deepEqual(byId['sesame/investment-research'].implementationKinds, ['workflow']);
   assert.deepEqual(byId['sesame/ultra'].implementationKinds, ['workflow', 'service']);
   assert.deepEqual(byId['sesame/orchestration'].implementationKinds, ['knowledge']);
+  assert.deepEqual(byId['sesame/user-guide'].implementationKinds, ['knowledge']);
 });
 
 test('inventory projects current declared abilities and versions, including research follow-up questions', () => {
@@ -71,6 +82,23 @@ test('inventory projects current declared abilities and versions, including rese
     assert.deepEqual(item.capabilities, declaration.capabilities.map(({ id, kind, consumers, execution }) => ({ id, kind, consumers, execution })));
   }
   assert.ok(inventory.packages.find(item => item.id === 'sesame/investment-research').tools.includes('investment_research_ask'));
+});
+
+test('ABU navigation covers every real capability, including both independent trade-result computations', () => {
+  const entries = JSON.parse(readFileSync(join(root, '../optional-api-v1/abu-plugins.json')));
+  const actual = buildInventory().packages.filter(item => item.id.startsWith('sesame/abu-'));
+  assert.equal(entries.length, 17);
+  assert.equal(entries.reduce((count, entry) => count + entry.tools.length, 0), 18);
+  assert.deepEqual(entries.map(entry => entry.id).sort(), actual.map(entry => entry.id).sort());
+  for (const entry of entries) {
+    assert.equal(entry.tool, undefined, 'navigation must enumerate all capabilities rather than a one-tool assumption');
+    assert.deepEqual(entry.tools, actual.find(item => item.id === entry.id).tools);
+    const manifest = JSON.parse(readFileSync(join(root, '../optional-api-v1/packages', entry.directory, 'plugin.json')));
+    assert.equal(entry.title, manifest.title);
+  }
+  const diagnostics = actual.find(item => item.id === 'sesame/abu-trade-metrics');
+  assert.deepEqual(diagnostics.tools, ['abu_trade_metrics_analyze', 'abu_trade_results_audit']);
+  assert.ok(!actual.some(item => item.tools.includes('abu_backtest_lab_analyze')));
 });
 
 test('remediation version pairs exceed documented installed QA floors without reading live state', () => {
@@ -121,7 +149,7 @@ test('permission requests follow actual privileged ports, not category or native
   const expectedScopes = {
     ultra: ['capabilities.compose'],
     'canvas-control': ['capabilities.compose'], configuration: ['application.configure'], 'data-access': ['capabilities.compose'], memory: ['workspace.messages.read'], 'plugin-manager': ['plugins.manage'], workspace: ['process.execute'],
-    'auto-factor-mining': ['capabilities.compose', 'plugins.manage'], backtrader: ['process.execute'], ccxt: ['process.execute'], 'financial-research': ['application.configure'], 'investment-research': ['capabilities.compose'],
+    'auto-factor-mining': ['capabilities.compose', 'plugins.manage', 'process.execute'], backtrader: ['process.execute'], ccxt: ['process.execute'], 'financial-research': ['application.configure'], 'investment-research': ['capabilities.compose'],
     'judgment-evolution': ['capabilities.compose', 'workspace.messages.read'], 'kurumi-replay': ['plugins.manage', 'workspace.messages.read'], 'market-data-parser': ['process.execute'], mt5: ['workspace.messages.read'], 'rss-collect': ['process.execute'], 'trading-decision': ['capabilities.compose'], vnpy: ['process.execute'], 'web-extract': ['process.execute'],
   };
   const packages = buildInventory().packages, byId = new Map(packages.map(item => [item.id, item]));
@@ -139,7 +167,7 @@ test('permission requests follow actual privileged ports, not category or native
   // calls; neither requires a blanket composition scope or an automatic grant.
   const reports = byId.get('sesame/reports');
   assert.deepEqual(reports.permissions.scopes, []);
-  assert.deepEqual(reports.permissions.calls, ['host.artifacts.query', 'host.records.query', 'sesame/data-access#data_snapshot', 'sesame/workspace#write']);
+  assert.deepEqual(reports.permissions.calls, ['host.artifacts.query', 'host.records.query', 'sesame/data-access#data_snapshot', 'sesame/workspace#write', 'host.reports.publish']);
   // Portfolio supports exactly the declared MT5/QMT adapter services, not any
   // dynamically selected publisher. Raw SDK subprocesses are not host.exec.
   const portfolio = byId.get('sesame/portfolio-execution');

@@ -6,21 +6,22 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { buildLock } from '../../api-v1/scripts/plugin-lock.mjs';
+import { abuPackages } from './abu-test-cases.mjs';
 
 const hostRoot = process.env.SESAME_HOST_ROOT;
-test('18 ABU plugins formally install, isolate skills, compute and persist identical user evidence across restart', { skip: !hostRoot, timeout: 600000 }, async t => {
+test('all ABU source packages formally install, isolate skills, execute every capability and persist evidence across restart', { skip: !hostRoot, timeout: 600000 }, async t => {
   const load = path => import(pathToFileURL(join(hostRoot, path)));
   const { Store } = await load('modules/agent/store.js'), { Runtime } = await load('modules/agent/runtime.js');
   const { ModelRuntime } = await load('node_modules/@earendil-works/pi-coding-agent/dist/index.js');
   const root = await realpath(await mkdtemp(join(tmpdir(), 'sesame-abu-host-'))), bundle = join(root, 'bundle');
   const source = new URL('../', import.meta.url), core = fileURLToPath(new URL('../../api-v1/', import.meta.url));
-  const catalog = JSON.parse(await readFile(new URL('abu-plugins.json', source)));
+  const catalog = abuPackages;
   const names = catalog.map(p => p.directory), frozen = [], outputs = [], requests = [];
   const originalFetch = globalThis.fetch; let store, runtime;
   const close = async () => { await runtime?.close(); runtime = null; store?.close(); store = null; };
   try {
     await mkdir(bundle); const lock = buildLock(core);
-    assert.equal(lock.packages.length, 9);
+    assert.ok(lock.packages.some(pkg => pkg.id === 'sesame/plugin-manager'), 'Use the actual current core bundle with its plugin manager');
     for (const pkg of lock.packages) await cp(join(core, 'packages', pkg.directory), join(bundle, pkg.directory), { recursive: true });
     await writeFile(join(bundle, 'official-plugins.lock.json'), JSON.stringify(lock, null, 2) + '\n');
     const models = await ModelRuntime.create({ authPath: join(root, 'auth.json'), modelsPath: null, modelsStorePath: join(root, 'models.json'), refreshOnCreate: false });
@@ -52,10 +53,11 @@ test('18 ABU plugins formally install, isolate skills, compute and persist ident
         assert.equal(resource.content, await readFile(new URL(`packages/${item.directory}/${path}`, source), 'utf8'));
       }
       const other = catalog[(i + 1) % catalog.length];
-      assert.throws(() => runtime.plugins.assertTool(conversation, other.tool), /未挂载|不可使用/);
+      assert.throws(() => runtime.plugins.assertTool(conversation, other.cases[0].tool), /未挂载|不可使用/);
       assert.ok((await call(conversation, 'plugin_read', { pluginId: other.id, part: 'resource', path: 'README.md' })).content, 'declared reference text is readable without enabling executable capabilities');
-      const input = JSON.parse((await call(conversation, 'plugin_read', { pluginId: item.id, part: 'resource', path: 'examples/input.json' })).content);
-      const result = await call(conversation, item.tool, { input });
+      for (const method of item.cases) {
+      const input = JSON.parse((await call(conversation, 'plugin_read', { pluginId: item.id, part: 'resource', path: method.example })).content);
+      const result = await call(conversation, method.tool, { input });
       assert.equal(result.baseline, true);
       const { input_artifact, result_artifact, ...calculated } = result;
       outputs.push(calculated); frozen.push(result_artifact);
@@ -65,12 +67,13 @@ test('18 ABU plugins formally install, isolate skills, compute and persist ident
       assert.equal(artifactManifest.content.provenance.kind, 'demo');
       assert.deepEqual(artifactManifest.dependencies, [input_artifact]);
       assert.match(runtime.contractArtifacts.read(input_artifact).manifest.content.title, / \/ 固定输入$/, 'display titles retain separators while actual resources use a valid basename');
+      }
     }
     await close(); await open();
     for (const [i, item] of catalog.entries()) {
       assert.deepEqual((await runtime.session(`conv_abu_${i}`)).resourceLoader.getSkills().skills.filter(skill => names.includes(skill.name)).map(skill => skill.name), [item.directory]);
-      assert.deepEqual(runtime.contractArtifacts.data(frozen[i]).rows, [outputs[i]]);
     }
+    for (const [i, ref] of frozen.entries()) assert.deepEqual(runtime.contractArtifacts.data(ref).rows, [outputs[i]]);
     assert.deepEqual(requests, []);
     t.diagnostic(JSON.stringify({ installed: catalog.length, isolatedSkills: catalog.length, nativeComputations: outputs.length, frozenResults: frozen.length, reopened: true, modelCalls: 0, vendorCalls: 0, brokerCalls: 0 }));
   } finally { await close(); globalThis.fetch = originalFetch; await rm(root, { recursive: true, force: true }); }

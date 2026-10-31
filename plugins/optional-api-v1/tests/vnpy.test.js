@@ -26,7 +26,7 @@ test('vn.py declares three real tools and explicit decimal/matching inputs', asy
   const declaration = JSON.parse(await readFile(new URL('../packages/vnpy/capabilities.json', import.meta.url)));
   assert.equal(declaration.apiVersion, '2');
   assert.deepEqual(definitions.map(item => item.name).sort(), declaration.capabilities.map(item => item.id).sort());
-  assert.equal(declaration.capabilities.filter(item => item.consumers.includes('agent')).length, 3);
+  assert.deepEqual(declaration.capabilities.filter(item => item.consumers.includes('agent')).map(item => item.id).sort(), ['vnpy_backtest', 'vnpy_environment', 'vnpy_operation', 'vnpy_result']);
   const schema = declaration.capabilities.find(item => item.id === 'vnpy_backtest').inputSchema;
   const args = { operation_id: 'once', title: 'Fictional', data: ref, strategy_path: 'strategy.py', class_name: 'TestStrategy', config: { vt_symbol: 'DEMO.LOCAL', interval: 'd', rate: '0', slippage: '0', size: '1', pricetick: '1', capital: '10000' } };
   await validateSchemas([{ schema, value: args }]);

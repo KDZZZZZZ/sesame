@@ -8,8 +8,11 @@ skills, templates, resources and platform integrations live here and are assembl
 into application distributions from a fixed, reviewed archive.
 
 The defaults are `canvas-control`, `configuration`, `data-access`, `memory`,
-`orchestration`, `plugin-manager`, `reports`, `strategy-authoring`, `ultra` and `workspace`.
-Canvas, settings and Ultra are discoverable; the other seven are mounted. Ultra
+`orchestration`, `plugin-manager`, `reports`, `strategy-authoring`, `ultra`, `user-guide` and `workspace`.
+Canvas and settings are discoverable; the other nine are mounted. Product help
+belongs to `user-guide`; research coordination and host Run guidance belong to
+`orchestration`. Each keeps its role and general rules in `prompt.md`, task
+procedures in `SKILL.md`, and detailed reference material loaded on demand. Ultra
 ships with the built-in `/ultra` command while retaining its business workflow
 responsibility and public plugin interfaces. No market,
 account or native strategy backend is required to author sources, run fixed
@@ -95,7 +98,7 @@ the SDK with a copied or guessed implementation. No private host path is fixed i
 this repository. The application also runs report, strategy and cleanup integration
 tests against its verified assembled bundle.
 `SESAME_HOST_ROOT=/path/to/matching/host node --import "$SESAME_PLUGIN_SDK_LOADER" --test tests/core-host.test.mjs`
-uses temporary state to check the nine defaults, backend-free source/graph/replay/report
+uses temporary state to check the core packages, backend-free source/graph/replay/report
 creation and fresh optional MT5/judgment installation. `SESAME_REPORT_INSPECT=1`
 also runs the real report inspector. It does not operate a terminal or account.
 With the same environment and loader, `tests/plugin-authoring-host.test.mjs` checks
@@ -120,7 +123,7 @@ range before testing or activation. The reviewed profile validator additionally
 requires the exact package set, private storage with no legacy grants and optional
 packages in discoverable state. Historical fixed releases without profiles retain
 their original build semantics and hashes. A new profiled release plan must name
-`profile:"core"` or `profile:"optional"`; the core archive physically contains only nine packages.
+`profile:"core"` or `profile:"optional"`; the current core archive physically contains eleven packages.
 
 Tree hashes deliberately use the same algorithm as the released catalog:
 

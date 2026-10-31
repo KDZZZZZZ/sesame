@@ -51,3 +51,11 @@ test('source validation rejects symlinks, private imports, stale metadata and un
   mkdirSync(join(f.root, 'node_modules')); assert.throws(() => buildLock(f.directory), /Local or generated/); rmSync(join(f.root, 'node_modules'), { recursive: true });
   writeFileSync(join(f.root, 'package.json'), JSON.stringify({ version: '9.0.0', type: 'module', license: 'MIT' })); assert.throws(() => buildLock(f.directory), /version/);
 });
+
+test('quoted relationship keys do not become dependencies; real imports still do', t => {
+  const f = source(t), file = join(f.root, 'index.js');
+  writeFileSync(file, "const keys = ['from', 'to', 'label'];\nimport { readFile } from 'node:fs/promises';");
+  assert.doesNotThrow(() => buildLock(f.directory));
+  writeFileSync(file, "const keys = ['from', 'to'];\nimport value from 'unlisted-package';");
+  assert.throws(() => buildLock(f.directory), /undeclared dependency unlisted-package/);
+});

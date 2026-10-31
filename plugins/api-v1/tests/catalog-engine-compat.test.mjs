@@ -79,6 +79,23 @@ test('the current reader consumes generated API 2 summaries and rejects an API 1
   }
 });
 
+test('search classification reaches the catalog reader and keyword discovery without changing package authority', async () => {
+  const f = candidate('web-sources', true);
+  const entry = catalogPackage(f.pkg, f.manifest, f.declaration, f.release, { classification: { functionalCategory: 'search', implementationKinds: ['adapter'] } });
+  const catalog = { schemaVersion: 1, apiVersion: '2', channel: 'development', releases: [f.release], plugins: [entry] };
+  const fetcher = async () => new Response(JSON.stringify(catalog));
+  for (const query of ['search', '搜索与来源']) {
+    const result = await catalogQuery({ query }, undefined, fetcher);
+    assert.equal(result.items.length, 1);
+    assert.equal(result.items[0].id, f.entry.id);
+    assert.equal(result.items[0].functionalCategory, 'search');
+    assert.deepEqual(result.items[0].capabilities, f.entry.capabilities);
+    assert.deepEqual(result.items[0].source, f.entry.source);
+    assert.equal(result.items[0].package.treeDigest, f.entry.package.treeDigest);
+  }
+  assert.equal((await catalogQuery({ query: '平台管理' }, undefined, fetcher)).items.length, 0);
+});
+
 const hostRoot = process.env.SESAME_HOST_ROOT;
 test('real package admission enforces the declared host minimum for current API 2 source', { skip: !hostRoot }, async () => {
   const { inspectPackage } = await import(pathToFileURL(join(hostRoot, 'modules/agent/plugin-system/package.js')));
@@ -87,7 +104,8 @@ test('real package admission enforces the declared host minimum for current API 
   assert.throws(() => inspectPackage(files, { applicationVersion: '0.2.0' }), { code: 'plugin_host_incompatible' });
   assert.throws(() => inspectPackage(files, { applicationVersion: '0.2.2' }), { code: 'plugin_host_incompatible' });
   assert.throws(() => inspectPackage(files, { applicationVersion: '0.2.3' }), { code: 'plugin_host_incompatible' });
-  const inspected = inspectPackage(files, { applicationVersion: '0.2.4' });
+  assert.throws(() => inspectPackage(files, { applicationVersion: '0.2.4' }), { code: 'plugin_host_incompatible' });
+  const inspected = inspectPackage(files, { applicationVersion: '0.3.0-dev.1' });
   assert.equal(inspected.apiVersion, '2'); assert.equal(inspected.id, f.pkg.id); assert.equal(inspected.digest, f.pkg.treeDigest);
   assert.deepEqual(inspected.engines, f.manifest.engines);
 });

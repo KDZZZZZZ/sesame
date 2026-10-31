@@ -1,0 +1,24 @@
+✔ runtime persists distinct assistant/tool segments, authoritative final and report references (6802.0794ms)
+✔ runtime keeps partial aborted output without claiming a final answer (6166.3188ms)
+✔ runtime keeps partial error output without claiming a final answer (5982.0754ms)
+✔ runtime keeps partial length output without claiming a final answer (5961.6277ms)
+✔ runtime startup preserves partial text and interrupts running tools and streaming public summaries (11716.5066ms)
+✔ assistant boundaries survive tools and only the last successful assistant is final (1.313ms)
+✔ non-streamed assistant output is retained and tool-only completion has no invented final (0.5046ms)
+✔ canceled, failed and truncated replies keep useful text without a final marker (0.1993ms)
+✔ an interrupted tool is not reported as completed or silently left running (0.1231ms)
+✔ text blocks get paragraph boundaries while code, tables and split tokens stay intact (0.1303ms)
+✔ thinking never enters visible segments and prior snapshots do not mutate (0.1445ms)
+✔ public summary streams, reconciles final text and multiple parts without replay duplicates (1.2997ms)
+✔ only explicit public summary fields survive, including final-only provider output (0.3473ms)
+✔ answer/tool boundaries finish summaries and interrupted work never acquires a final answer (0.2934ms)
+✔ session facades isolate cache warming, compaction, concurrent replies and late callbacks (0.7031ms)
+✔ real SDK persists public summaries, steers at tool boundary and interrupts a canceled summary (6968.2118ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 45826.3927

@@ -1,0 +1,16 @@
+fix(mt5): normalize verified broker quote time before freshness checks
+
+Preserve raw ticks and add account-bound, versioned current-quote clock proof.
+Resolve FTMO-Demo 2026 server time in the native bridge, bind guard revisions,
+and recheck normalized source age and monotonic quote-to-send limits.
+Record the existing preparation contract with its required clock proof.
+
+Validation: 46 Python, 60 MT5 JavaScript, 60 portfolio and 28 isolated host
+checks passed in the current workspace. Real gpt-6.1-sol demo cycle opened
+EURUSD 0.01, amended SL/TP and closed; exact exit deals and zero remaining
+cycle positions were verified. Source quote ages were 2760/2499 ms.
+
+The order-ID history selector exposed a native Invalid params failure in
+SDK 5.0.6231; position-based native reads verified fills. This separate
+status-refresh defect remains under diagnosis, not classified as passing.
+Unrelated working-tree architecture changes are intentionally unstaged.

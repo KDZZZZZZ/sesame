@@ -43,11 +43,12 @@ test('optional observation scripts use current public evidence and execution fie
 test('all numerical methods declare how to reuse evidence and return it without duplicate independent votes', async () => {
   for (const { directory } of abu) {
     const declaration = JSON.parse(await read(directory, 'capabilities.json'));
-    const { usage } = declaration.capabilities[0];
-    assert.match(usage.outputs, /调用者/);
-    assert.match(usage.outputs, /input_artifact/);
-    assert.match(usage.outputs, /result_artifact/);
-    assert.match(usage.limitations.join('\n'), /同源.*独立证据/);
+    for (const { usage } of declaration.capabilities) {
+      assert.match(usage.outputs, /调用者/);
+      assert.match(usage.outputs, /input_artifact/);
+      assert.match(usage.outputs, /result_artifact/);
+      assert.match(usage.limitations.join('\n'), /同源.*独立证据/);
+    }
     assert.match(await read(directory, 'prompt.md'), /复用/);
   }
 });

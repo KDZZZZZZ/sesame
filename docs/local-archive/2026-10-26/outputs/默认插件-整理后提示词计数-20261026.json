@@ -1,0 +1,171 @@
+{
+  "plugins": {
+    "sesame/data-access": {
+      "version": "3.0.3",
+      "files": [
+        {
+          "path": "prompt.md",
+          "kind": "prompt",
+          "characters": 521
+        },
+        {
+          "path": "skills/analyze-data/SKILL.md",
+          "kind": "skill",
+          "characters": 1059
+        },
+        {
+          "path": "skills/market-discovery/SKILL.md",
+          "kind": "skill",
+          "characters": 1377
+        }
+      ],
+      "characters": 2957
+    },
+    "sesame/memory": {
+      "version": "3.1.2",
+      "files": [
+        {
+          "path": "prompt.md",
+          "kind": "prompt",
+          "characters": 2620
+        },
+        {
+          "path": "skills/manage-memory/SKILL.md",
+          "kind": "skill",
+          "characters": 5205
+        },
+        {
+          "path": "skills/personal-trading-memory/SKILL.md",
+          "kind": "skill",
+          "characters": 6493
+        }
+      ],
+      "characters": 14318
+    },
+    "sesame/orchestration": {
+      "version": "3.2.1",
+      "files": [
+        {
+          "path": "prompt.md",
+          "kind": "prompt",
+          "characters": 750
+        },
+        {
+          "path": "skills/coordinate-research/SKILL.md",
+          "kind": "skill",
+          "characters": 5047
+        }
+      ],
+      "characters": 5797
+    },
+    "sesame/plugin-manager": {
+      "version": "3.1.3",
+      "files": [
+        {
+          "path": "prompt.md",
+          "kind": "prompt",
+          "characters": 546
+        },
+        {
+          "path": "skills/develop-plugins/SKILL.md",
+          "kind": "skill",
+          "characters": 1861
+        },
+        {
+          "path": "skills/manage-plugins/SKILL.md",
+          "kind": "skill",
+          "characters": 1508
+        }
+      ],
+      "characters": 3915
+    },
+    "sesame/reports": {
+      "version": "3.3.2",
+      "files": [
+        {
+          "path": "prompt.md",
+          "kind": "prompt",
+          "characters": 2009
+        },
+        {
+          "path": "skills/interactive-report/SKILL.md",
+          "kind": "skill",
+          "characters": 3867
+        },
+        {
+          "path": "skills/report-design/SKILL.md",
+          "kind": "skill",
+          "characters": 1765
+        },
+        {
+          "path": "skills/report-writing/SKILL.md",
+          "kind": "skill",
+          "characters": 2935
+        }
+      ],
+      "characters": 10576
+    },
+    "sesame/strategy-authoring": {
+      "version": "3.0.1",
+      "files": [
+        {
+          "path": "prompt.md",
+          "kind": "prompt",
+          "characters": 1246
+        },
+        {
+          "path": "skills/strategy-authoring/SKILL.md",
+          "kind": "skill",
+          "characters": 3199
+        }
+      ],
+      "characters": 4445
+    },
+    "sesame/ultra": {
+      "version": "1.0.3",
+      "files": [
+        {
+          "path": "prompt.md",
+          "kind": "prompt",
+          "characters": 2837
+        }
+      ],
+      "characters": 2837
+    },
+    "sesame/user-guide": {
+      "version": "3.0.1",
+      "files": [
+        {
+          "path": "prompt.md",
+          "kind": "prompt",
+          "characters": 430
+        },
+        {
+          "path": "skills/sesame-user-guide/SKILL.md",
+          "kind": "skill",
+          "characters": 1899
+        }
+      ],
+      "characters": 2329
+    },
+    "sesame/workspace": {
+      "version": "3.0.2",
+      "files": [
+        {
+          "path": "prompt.md",
+          "kind": "prompt",
+          "characters": 409
+        },
+        {
+          "path": "skills/prepare-environment/SKILL.md",
+          "kind": "skill",
+          "characters": 689
+        }
+      ],
+      "characters": 1098
+    }
+  },
+  "files": 22,
+  "skills": 13,
+  "characters": 48272
+}

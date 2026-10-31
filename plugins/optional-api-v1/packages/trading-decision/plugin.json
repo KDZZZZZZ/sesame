@@ -1,0 +1,37 @@
+{
+  "id": "sesame/trading-decision",
+  "apiVersion": "2",
+  "version": "3.3.5",
+  "title": "交易决策",
+  "description": "消费固定研究成果、当前账户与用户风险规则，冻结目标仓位并取得真实执行回执；支持明确授权的周期或事件调度。",
+  "license": "MIT",
+  "default_state": "discoverable",
+  "entry": "index.js",
+  "engines": {
+    "sesame": ">=0.3.0-dev.2 <0.4.0"
+  },
+  "capability_manifest": "capabilities.json",
+  "main_tool_names": [
+    "trading_decision_plan",
+    "trading_decision_run",
+    "trading_decision_event",
+    "trading_decision_runs",
+    "trading_decision_activity"
+  ],
+  "permissions": {
+    "scopes": [
+      "capabilities.compose"
+    ],
+    "calls": [
+      "host.agent.run",
+      "host.runs.read",
+      "host.runs.wait",
+      "host.runs.interrupt",
+      "host.resources.read",
+      "sesame/reports#report_publish",
+      "sesame/reports#report_check",
+      "sesame/workspace#write",
+      "host.reports.describe"
+    ]
+  }
+}

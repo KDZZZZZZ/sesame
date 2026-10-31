@@ -6,15 +6,73 @@ import { createCapabilities } from '../packages/investment-research/index.js';
 import { PACKET_TYPE, publishPacket, readPacket, readRows } from '../packages/investment-research/src/artifacts.js';
 import { ASK_CALL, COLLABORATION, REPORT_CALLS, ROLES, SYSTEM, roleInstructions } from '../packages/investment-research/src/team.js';
 import { researchQuestion } from '../packages/investment-research/src/qa.js';
+import { researchBrief } from '../packages/investment-research/src/report-research.js';
+import { readOnly, selectResearch, reportSelection } from '../packages/investment-research/src/composition.js';
 
 const clone = value => structuredClone(value);
+test('report brief supports distinct result cases and explicit user fields without choosing methods', () => {
+  assert.equal(researchBrief({case:'calendar'}).template_id, 'R09');
+  assert.equal(researchBrief({case:'outlook',template_id:'M02'}).template_id, 'M02');
+  const sections=[{id:'my_section',title:'User result',fields:[{key:'user_field',meaning:'User-defined outcome'}]}];
+  assert.deepEqual(researchBrief({case:'outlook',sections,adjustments:'No forecast'}), {case:'outlook',sections,adjustments:'No forecast'});
+  assert.equal(researchBrief().template_id, undefined);
+  assert.throws(()=>researchBrief({method:'ATR'}),{code:'INVALID_REPORT_BRIEF'});
+  assert.throws(()=>researchBrief({case:'toString'}),{code:'INVALID_REPORT_BRIEF'});
+});
+test('reviewed source parsing/cache functions retain their bounded effects without allowing a generic process or credential writer', () => {
+  assert.equal(readOnly({id:'sesame/rss-collect#parse_feed',kind:'function',effects:['resources.read','process','filesystem','resources.publish']}),true);
+  assert.equal(readOnly({id:'custom/source#run',kind:'function',effects:['process','filesystem']}),false);
+  assert.equal(readOnly({id:'sesame/rss-collect#parse_feed',kind:'function',effects:['resources.read','process','filesystem','resources.publish','application-configuration']}),false);
+  assert.equal(readOnly({id:'sesame/financial-research#financial_research_query',kind:'function',effects:['network','resources.publish','plugin.state.write']}),true);
+  assert.equal(readOnly({id:'sesame/financial-research#financial_research_configure',kind:'function',effects:['application-configuration','plugin.state.write']}),false);
+  const fixedHistory = {id:'sesame/historical-evidence#historical_evidence_from_ref',kind:'function',effects:['resources.read','resources.create','resources.publish']};
+  assert.equal(readOnly(fixedHistory),true);
+  assert.equal(readOnly({...fixedHistory,effects:[...fixedHistory.effects,'process']}),false);
+  assert.equal(readOnly({...fixedHistory,effects:[...fixedHistory.effects,'application-configuration']}),false);
+});
+test('real data-access capture declarations reach research members through explicit and default selection', async () => {
+  const manifest = JSON.parse(await readFile(new URL('../../api-v1/packages/data-access/capabilities.json', import.meta.url), 'utf8'));
+  const ids = ['data_snapshot', 'market_read', 'research_register'];
+  const capabilities = ids.map(id => {
+    const cap = manifest.capabilities.find(value => value.id === id);
+    assert.ok(cap, `The actual data-access manifest must declare ${id}`);
+    assert.equal(readOnly({ ...cap, id: `sesame/data-access#${id}` }), true);
+    return cap;
+  });
+  for (const tools of [ids.map(id => `sesame/data-access#${id}`), undefined]) {
+    const f = fixture(); f.addPlugin('sesame/data-access', capabilities);
+    await f.run(f.input({ research: { plugins: ['sesame/data-access'], ...(tools ? { tools } : {}) } }));
+    assert.deepEqual(f.requests[0].request.allowedCalls.filter(call => call.pluginId === 'sesame/data-access').map(call => call.capabilityId), ids);
+    assert.equal(f.requests.length, ROLES.length, 'Evidence capture selection must not interrupt the workflow before its members start');
+  }
+});
+test('reviewed data capture does not authorize unknown writers or expanded trading and execution effects', async () => {
+  const manifest = JSON.parse(await readFile(new URL('../../api-v1/packages/data-access/capabilities.json', import.meta.url), 'utf8'));
+  for (const id of ['data_snapshot', 'market_read', 'research_register']) {
+    const cap = manifest.capabilities.find(value => value.id === id);
+    assert.ok(cap);
+    assert.equal(readOnly({ ...cap, id: 'sesame/data-access#unreviewed_capture' }), false, 'State-writing exceptions belong only to reviewed capabilities');
+    for (const addedEffect of ['unknown.write', 'trade', 'application-configuration', 'process.exec', 'filesystem.write']) {
+      const expanded = { ...cap, effects: [...cap.effects, addedEffect] };
+      const f = fixture(); f.addPlugin('sesame/data-access', [expanded]);
+      await assert.rejects(f.run(f.input({ research: { plugins: ['sesame/data-access'], tools: [`sesame/data-access#${id}`] } })),
+        error => error.code === 'RUN_INTERRUPTED' && error.requirements[0].id === 'READ_ONLY_RESEARCH', `${id} must reject ${addedEffect}`);
+      assert.equal(f.requests.length, 0, 'Rejected capabilities must never reach a research member');
+    }
+  }
+});
 test('research report instructions use research naming and preserve the parent destination', async () => {
+  assert.ok(REPORT_CALLS.some(call => call.pluginId === 'host' && call.capabilityId === 'reports.describe'));
+  assert.ok(REPORT_CALLS.some(call => call.pluginId === 'host' && call.capabilityId === 'reports.publish'));
+  assert.ok(REPORT_CALLS.some(call => call.pluginId === 'sesame/reports' && call.capabilityId === 'report_styles'));
+  assert.ok(REPORT_CALLS.some(call => call.pluginId === 'sesame/reports' && call.capabilityId === 'report_style_save'));
   const instructions = roleInstructions('manager', true);
   assert.match(instructions, /新研究的标题与文件名表达研究主题/);
   assert.match(instructions, /不使用“手工交易日报”或“交易决策日报”/);
   assert.match(instructions, /绑定父工作流的唯一报告位置/);
   const prompt = await readFile(new URL('../packages/investment-research/prompt.md', import.meta.url), 'utf8');
-  assert.match(prompt, /只有一个 HTML 时直接使用该文件路径/);
+  assert.match(prompt, /host_reports_describe.*inputSchema.*host_reports_publish/);
+  assert.match(prompt, /不把默认 Reports 的 content\/style 当宿主通用格式/);
   assert.match(prompt, /task\.output:\{type:"report",space:"research",path:"\.\.\.html"\}.*实际交付/);
   assert.match(prompt, /task\.output:\{type:"none"\}.*仅保留完整成员 Markdown.*不会创建报告文件/);
   assert.match(prompt, /日常问答可直接回复.*无需.*启动本工作流或生成报告/);
@@ -32,7 +90,7 @@ function fixture({ reports = false, text = role => `## ${role}\nActual fixture f
   f.addPlugin = (id, capabilities) => f.entries.set(id, { id, state: 'mounted', runtime_status: 'ready', agent_scope: 'all', digest: digest(id), delegatable_tools: capabilities.map(cap => cap.id), capabilities });
   f.addPlugin('sesame/plugin-manager', [{ id: 'plugin_read', effects: [] }]);
   if (reports) {
-    for (const id of new Set(REPORT_CALLS.map(call => call.pluginId))) f.addPlugin(id, REPORT_CALLS.filter(call => call.pluginId === id).map(call => ({ id: call.capabilityId, effects: [] })));
+    for (const id of new Set(REPORT_CALLS.map(call => call.pluginId).filter(id => id !== 'host'))) f.addPlugin(id, REPORT_CALLS.filter(call => call.pluginId === id).map(call => ({ id: call.capabilityId, effects: [] })));
   }
   f.artifact = (kind, rows, content = {}, supplied) => {
     const bytes = JSON.stringify(rows);
@@ -65,7 +123,7 @@ function fixture({ reports = false, text = role => `## ${role}\nActual fixture f
     context: { pluginId: 'sesame/investment-research', models: f.models }, resources,
     plugins: { read: async id => { const entry = f.entries.get(id); if (!entry) throw new Error(`Missing ${id}`); return clone(entry); } },
     capabilities: {
-      list: async ({ pluginId }) => ({ items: (f.entries.get(pluginId)?.capabilities ?? []).map(cap => ({ ...cap, id: `${pluginId}#${cap.id}`, localId: cap.id, pluginId, kind: cap.kind ?? 'function', consumers: ['agent', 'host'] })) }),
+      list: async ({ pluginId }) => ({ items: (pluginId === 'host' ? [{ id: 'reports.describe', effects: ['state.read'] }, { id: 'reports.publish', effects: ['artifact.write'] }] : f.entries.get(pluginId)?.capabilities ?? []).map(cap => ({ ...cap, id: pluginId === 'host' ? `host.${cap.id}` : `${pluginId}#${cap.id}`, localId: cap.id, pluginId, kind: cap.kind ?? 'function', consumers: ['agent', 'host'] })) }),
       invoke: async (id, request, options) => {
         assert.equal(id, 'host.agent.run', 'The workflow never directly invokes a source or broker');
         const existing = f.operations.get(options.operationId);
@@ -442,14 +500,17 @@ test('large complete handoffs use a fixed data reference, never a silently trunc
   assert.equal(packet.members.length, 8); assert.equal(packet.members[0].markdown.length, f.requests[0].output.result.text.length);
 });
 
-test('two public workflows and one scoped question function declare collaboration without duplicate Run controls', async () => {
+test('workflows, scoped questions and deterministic event outcomes retain separate public contracts', async () => {
   const manifest = JSON.parse(await readFile(new URL('../packages/investment-research/capabilities.json', import.meta.url)));
-  assert.deepEqual(manifest.capabilities.map(cap => cap.id), ['investment_research_analyze', 'investment_research_report', 'investment_research_ask']);
-  assert.ok(manifest.capabilities.every(cap => cap.resumable && cap.execution === 'run'));
-  assert.ok(manifest.capabilities.slice(0, 2).every(cap => cap.kind === 'workflow'));
-  assert.equal(manifest.capabilities[2].kind, 'function');
-  assert.deepEqual(manifest.capabilities[0].collaboration, COLLABORATION);
-  assert.equal(manifest.capabilities[1].collaboration, undefined);
+  assert.deepEqual(manifest.capabilities.map(cap => cap.id), ['investment_research_start', 'investment_research_analyze', 'investment_research_report', 'investment_research_ask', 'investment_research_event_outcomes']);
+  assert.ok(manifest.capabilities.slice(0, 4).every(cap => cap.resumable && cap.execution === 'run'));
+  assert.ok(manifest.capabilities.slice(0, 3).every(cap => cap.kind === 'workflow'));
+  assert.equal(manifest.capabilities[3].kind, 'function');
+  assert.equal(manifest.capabilities[4].kind, 'function');
+  assert.equal(manifest.capabilities[4].execution, 'immediate');
+  assert.deepEqual(manifest.capabilities[4].effects, ['resources.read', 'resources.write']);
+  assert.deepEqual(manifest.capabilities[1].collaboration, COLLABORATION);
+  assert.equal(manifest.capabilities[0].collaboration, undefined);
   for (const cap of manifest.capabilities) for (const field of ['execution', 'backend', 'account', 'interval_minutes', 'report']) assert.equal(cap.inputSchema.properties[field], undefined);
 });
 
@@ -496,4 +557,88 @@ test('empty and unknown effects are not silently accepted as research-safe decla
     await assert.rejects(f.run(f.input({ research: { plugins: ['custom/source'], tools: ['opaque'] } })), error => error.code === 'RUN_INTERRUPTED' && error.requirements[0].id === 'READ_ONLY_RESEARCH');
     assert.equal(f.requests.length, 0);
   }
+});
+
+test('explicit history selection grants only reviewed arithmetic/read capabilities and carries fixed refs through Research stages', async () => {
+  const f = fixture({ reports: true }), seed = f.artifact('data', [{ fixture: true, input: 'fixed-history-envelope' }]);
+  f.addPlugin('sesame/historical-evidence', [
+    { id: 'historical_evidence_match', effects: [] },
+    { id: 'historical_evidence_calibrate', effects: [] },
+    { id: 'historical_evidence_from_ref', effects: ['resources.read'] },
+  ]);
+  const result = await f.run(f.input({ evidence_refs: [seed], research: { plugins: ['sesame/historical-evidence'] } }), 'start');
+  const selected = role => f.requests.find(job => job.role === role).request.allowedCalls.filter(call => call.pluginId === 'sesame/historical-evidence').map(call => call.capabilityId);
+  assert.deepEqual(selected('analysis'), ['historical_evidence_match', 'historical_evidence_calibrate', 'historical_evidence_from_ref']);
+  assert.deepEqual(selected('scope'), []); assert.deepEqual(selected('synthesis'), []);
+  const analysis = f.requests.find(job => job.role === 'analysis');
+  assert.match(analysis.request.instructions, /exploratory/);
+  assert.match(analysis.request.instructions, /禁止回填虚构旧日期/);
+  assert.match(analysis.request.instructions, /无需所有检验同时通过/);
+  assert.ok((await readPacket(f.host, result.result_ref)).source_refs.some(ref => ref.id === seed.id && ref.digest === seed.digest));
+  assert.equal(readOnly({ id: 'sesame/historical-evidence#historical_evidence_calibrate', kind: 'function', effects: ['application-configuration'] }), false);
+  assert.equal(readOnly({ id: 'custom/method#historical_evidence_calibrate', kind: 'function', effects: [] }), false);
+});
+
+test('Research start executes report-driven stages with separate actual permissions and frozen user brief', async () => {
+  const f=fixture({reports:true});
+  f.workflow.capabilityId='sesame/investment-research#investment_research_start';
+  f.addPlugin('custom/source',[{id:'query',effects:['network','resources.publish']}]);
+  f.addPlugin('custom/method',[{id:'calculate',effects:['resources.read','resources.publish']}]);
+  f.addPlugin('sesame/rss-collect',[{id:'parse_feed',effects:['resources.read','process','filesystem','resources.publish']}]);
+  const report_brief={case:'calendar',adjustments:'Only factual schedule; no directional prediction.'};
+  const input=f.input({report_brief,research:{plugins:['custom/source','custom/method','sesame/rss-collect']}});
+  const result=await f.run(input,'start');
+  assert.deepEqual(f.requests.map(job=>job.role),['scope','evidence','analysis','synthesis']);
+  const calls=role=>f.requests.find(job=>job.role===role).request.allowedCalls.map(call=>`${call.pluginId}#${call.capabilityId}`);
+  assert.deepEqual(calls('scope'),['host#reports.describe','sesame/plugin-manager#plugin_read','sesame/reports#report_structure']);
+  assert.ok(calls('evidence').includes('custom/source#query'));
+  assert.ok(calls('evidence').includes('sesame/rss-collect#parse_feed'));
+  assert.ok(calls('analysis').includes('custom/method#calculate'));
+  assert.equal(calls('analysis').includes('custom/source#query'),false);
+  assert.ok(calls('synthesis').includes('sesame/reports#report_compose'));
+  assert.equal(calls('synthesis').includes('custom/source#query'),false);
+  assert.equal(f.requests.filter(job=>job.task.output.type==='report').length,1);
+  assert.ok(result.report_ref);
+  const packet=await readPacket(f.host,result.result_ref);
+  assert.deepEqual(packet.report_brief,{...report_brief,template_id:'R09'});
+  assert.deepEqual(packet.members.map(m=>m.role),['scope','evidence','analysis','synthesis']);
+  assert.ok(f.requests.every(job=>job.request.input.research.report_brief.template_id==='R09'));
+  await f.run(input,'start');
+  assert.equal(f.requests.length,4,'Resume never restarts completed stages');
+  await assert.rejects(f.run({...input,report_brief:{case:'outlook'}},'start'),/frozen input/);
+});
+
+test('Research start honors custom members and user sections and requires actual report delivery', async () => {
+  const f=fixture({reports:true});
+  const sections=[{id:'custom',title:'Only the requested result',fields:['summary']}];
+  const workflow={stages:[[{id:'facts',role:'custom',instructions:'Read supplied evidence only.'}],[{id:'editor',role:'manager'}]],synthesis:'editor'};
+  const result=await f.run(f.input({report_brief:{case:'outlook',sections},workflow}),'start');
+  assert.deepEqual(f.requests.map(job=>job.role),['facts','editor']);
+  const packet=await readPacket(f.host,result.result_ref);
+  assert.equal(packet.report_brief.template_id,undefined);
+  assert.deepEqual(packet.report_brief.sections,sections);
+  const withoutReport=fixture();
+  await assert.rejects(withoutReport.run(withoutReport.input(),'start'),{code:'REPORT_OUTPUT_REQUIRED'});
+  assert.equal(withoutReport.requests.length,0);
+});
+
+
+test('explicit public plugin_read has the same permission as automatic knowledge reading, without granting installation or configuration', async () => {
+  const f = fixture();
+  f.addPlugin('sesame/plugin-manager', ['plugin_read', 'plugin_install', 'plugin_configure'].map(id => ({ id, effects: [] })));
+  const selection = await selectResearch(f.host, { plugins: ['sesame/plugin-manager'], tools: ['sesame/plugin-manager#plugin_read'] });
+  assert.deepEqual(selection.allowedCalls, [{ pluginId: 'sesame/plugin-manager', capabilityId: 'plugin_read' }]);
+  for (const id of ['plugin_install', 'plugin_configure']) await assert.rejects(selectResearch(f.host, { plugins: ['sesame/plugin-manager'], tools: [`sesame/plugin-manager#${id}`] }), { code: 'READ_ONLY_RESEARCH' });
+  assert.equal(readOnly({ id: 'sesame/plugin-manager#plugin_read', kind: 'function', effects: ['application-configuration'] }), false);
+});
+
+test('host report grants are explicitly validated and are not treated as an installed plugin or revision', async () => {
+  const f = fixture({ reports: true });
+  const selection = await reportSelection(f.host);
+  assert.ok(selection.allowedCalls.some(call => call.pluginId === 'host' && call.capabilityId === 'reports.publish'));
+  assert.equal(selection.plugins.includes('host'), false);
+  assert.equal(selection.revisions.some(revision => revision.id === 'host'), false);
+  const list = f.host.capabilities.list;
+  f.host.capabilities.list = input => input.pluginId === 'host' ? { items: [] } : list(input);
+  await assert.rejects(reportSelection(f.host), error => error.code === 'DEPENDENCY_UNAVAILABLE' && /Sesame >=0.3.0-dev.2/.test(error.message));
 });

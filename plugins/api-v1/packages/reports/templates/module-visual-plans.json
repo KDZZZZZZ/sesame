@@ -1,0 +1,1967 @@
+{
+  "schemaVersion": "1.0.0",
+  "policy": {
+    "status": "suggestions_only",
+    "user_override": "用户可完全替换模块、顺序、字段、图型和布局，也可只保留自定义字段或纯文本；本文件不新增必填项。",
+    "methods": "分析、选样、评分、预测、选优和聚合由用户选定的方法独立完成；视觉方案只消费已经登记的结果。",
+    "field_contract": "所有 Mxx.field 引用对应 module-catalog.json；图表列、单位、尺度与证据要求以该字段的实际契约为准。",
+    "chart_priority": "优先选择能回答本节问题的内置 K 线或其他图表；图表不适合时才以研究摘要卡为主。",
+    "history": "M14 负责综合结论摘要，M13 集中历史同类情景和逐项特征证据。R02/R03 默认只有末尾 M15 的一个综合情景树。"
+  },
+  "defaults": {
+    "reading_order": [
+      "判断与关键证据",
+      "主图",
+      "补充对照",
+      "末尾附录：折叠明细和来源"
+    ],
+    "summary_fallback": {
+      "parts": [
+        "有明确单位的大数字",
+        "原量表因子横条",
+        "有真实上下界的价格范围",
+        "判断和下一步观察条件"
+      ],
+      "rule": "按已有字段取用，允许只出现其中一项；不为凑齐卡片推导分数、区间、概率或评级。"
+    },
+    "visual_language": "无框排版：沿用 Sesame 字体、页面底色与蓝灰重点/参照；涨跌和盈亏继续用红绿并配文字。图表与摘要直接落在页面，以留白、字号、对齐和少量细线分组，不层层套卡片。",
+    "writing": "正文只保留判断、精简读图注解和可核查的推理步骤。重复图注省略；长定义、完整方法口径、原始记录和来源统一收进报告末尾附录。单位、时点和改变判断的条件仍须可见。",
+    "interaction": "原始记录、键盘选择和展开明细必须能承载 hover 中的重要信息；窄屏保留坐标、完整值与横向查看能力。 正文小锚点打开对应附录并可返回；参数切换保留当前记录，清理失效锚点。",
+    "missing": "未知、失败、未运行和零分别显示；不画空图，不补造价格点或样本。",
+    "chart_count": "主图与辅助图都是候选，按研究问题选用；没有最低图数，不重复同一结论。",
+    "appendix": "正文保留判断、主要 K 线/热力图/统计图、关键数字、精简读图说明、推理步骤与影响决策的条件。来源、真实原始数据、样本清单、复核计算、参数和完整方法细节统一集中在报告末尾可折叠附录；正文只留小锚点，点击展开对应附录并可返回。不要把主图或全部指标移入附录，不改变研究方法、数据或结果。"
+  },
+  "modules": [
+    {
+      "id": "M01",
+      "reading_question": "当前价格处于什么状态，相对同一窗口内的比较对象有多强？",
+      "layout": "先给状态句与报价时点，宽幅 K 线为主体；相对表现紧随其后，不把多个周期状态塞进价格轴。",
+      "primary_charts": [
+        {
+          "field": "M01.price_chart",
+          "role": "在完整时间和价格轴上观察实际 OHLC、波动与当前位置。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M01.relative_chart",
+          "role": "同观察窗口的资产收益横向比较，保留方法给定顺序。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M01.timeframe_states"
+          ],
+          "kind": "judgment",
+          "rule": "分别回答本次要判断的问题：明确倾向、对象期限、关键依据和改判条件，不用一句总评代替。"
+        },
+        {
+          "fields": [
+            "M01.reference_price"
+          ],
+          "kind": "metric",
+          "rule": "突出价格与报价时间、币种；不得用生成时间代替。"
+        },
+        {
+          "fields": [
+            "M01.timeframe_states",
+            "M01.trend",
+            "M01.volatility"
+          ],
+          "kind": "judgment",
+          "rule": "区分 bar 周期和研究期限，状态来自对应方法。"
+        }
+      ],
+      "details": [
+        "M01.price_performance",
+        "M01.relative_strength",
+        "M01.changes",
+        "M01.evidence",
+        "M01.instrument_context",
+        "M01.data_times",
+        "M01.source_scales"
+      ],
+      "interactions": [
+        "复用 K 线十字线、缩放和价格轴；同一行明细保留完整时区与价格精度。",
+        "相对表现选择项显示该资产、窗口和原值，不自动改变比较样本。"
+      ],
+      "no_chart": [
+        "没有完整 OHLC 时保留参考价格和状态，不把单点价格补成 K 线。",
+        "比较窗口、币种或复权口径不可比时用分别标注的结果卡。"
+      ]
+    },
+    {
+      "id": "M02",
+      "reading_question": "哪些技术方法与当前行情特征相关，事件是否确认，价格条件在哪里改变判断？",
+      "layout": "方法扫描摘要后放宽幅 K 线；价格区间和事件状态贴近主图；独立技术报告才按需要追加条件树。",
+      "primary_charts": [
+        {
+          "field": "M02.price_chart",
+          "role": "展示所选方法所依据的真实 OHLC，几何只使用方法给出的坐标。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M02.method_comparison_chart",
+          "role": "复用生命周期图排列方法扫描的事件时间与状态，保留无信号、不可运行和证据引用，不制造可比较的分数。"
+        },
+        {
+          "field": "M02.lifecycle_chart",
+          "role": "区分检测、确认、完成和失效的实际时间。"
+        },
+        {
+          "field": "M02.scenario_chart",
+          "role": "独立模块中呈现条件路径；R02/R03 默认由结尾 M15.action_chart 统一表达。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M02.method_scan",
+            "M02.feature_signals"
+          ],
+          "kind": "judgment",
+          "rule": "先说明可适用方法与实际识别特征，再呈现方法结论；不把方法票数当置信度。"
+        },
+        {
+          "fields": [
+            "M02.entry_zone",
+            "M02.targets",
+            "M02.stop_plan"
+          ],
+          "kind": "range",
+          "rule": "同价格轴但清楚区分入场参考、目标和止损；没有上下界时保留单值或文字。"
+        },
+        {
+          "fields": [
+            "M02.reward_risk",
+            "M02.research_horizons",
+            "M02.valid_until"
+          ],
+          "kind": "metric",
+          "rule": "盈亏比附入场、止损、目标和成本条件，与胜率分开。"
+        }
+      ],
+      "details": [
+        "M02.events",
+        "M02.key_levels",
+        "M02.invalidation",
+        "M02.event_identity",
+        "M02.event_times",
+        "M02.event_lifecycle",
+        "M02.geometry",
+        "M02.scenarios",
+        "M02.evidence",
+        "M02.source_scales"
+      ],
+      "interactions": [
+        "K 线与生命周期保留原事件 ID；选择事件后查看方法、形成和确认状态。",
+        "内置条件树支持缩放、拖拽、适配全图和完整节点文字；用户可替换树或删除它。"
+      ],
+      "no_chart": [
+        "方法结果只有定性判断、量表不一致或尚未识别事件时使用方法摘要，不制造比较分数。",
+        "没有实际几何坐标不画支撑线；没有条件结构不造情景分叉。"
+      ]
+    },
+    {
+      "id": "M03",
+      "reading_question": "增长是否转化成现金，哪些基本面因子支持或拖累当前评价？",
+      "layout": "先展示财务趋势或因子比较中与问题最相关的一张；现金流对账独立一行，综合评价作为结论卡。",
+      "primary_charts": [
+        {
+          "field": "M03.growth_chart",
+          "role": "同财期、币种和单位的收入与经营现金流趋势。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M03.factor_chart",
+          "role": "同量表因子横条，保留原始标签，不合成总分。"
+        },
+        {
+          "field": "M03.cash_bridge_chart",
+          "role": "用可对账的增减解释经营现金流如何到达自由现金流。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M03.fundamental_judgments"
+          ],
+          "kind": "judgment",
+          "rule": "分别回答本次要判断的问题：明确倾向、对象期限、关键依据和改判条件，不用一句总评代替。"
+        },
+        {
+          "fields": [
+            "M03.composite_assessment",
+            "M03.period"
+          ],
+          "kind": "judgment",
+          "rule": "综合评价使用方法原值、标签、日期和财期。"
+        },
+        {
+          "fields": [
+            "M03.factor_results"
+          ],
+          "kind": "scores",
+          "rule": "仅同尺度因子能共享横条；不同尺度分别呈现。"
+        },
+        {
+          "fields": [
+            "M03.income"
+          ],
+          "kind": "metric",
+          "rule": "股息、支付率和现金覆盖附各自期间与单位。"
+        }
+      ],
+      "details": [
+        "M03.growth",
+        "M03.earnings_quality",
+        "M03.cash_flow",
+        "M03.balance_sheet",
+        "M03.peers",
+        "M03.cycle_context",
+        "M03.evidence",
+        "M03.source_scales"
+      ],
+      "interactions": [
+        "切换已登记财务序列与查看原始财期；重述值与原版本可追溯。",
+        "因子选择项展示原量表、同业范围和方法版本。"
+      ],
+      "no_chart": [
+        "只有一个财期时用核心金额与判断卡；财务期间或币种未对齐时不连线。",
+        "现金流组成无法对账时用明细表，不把缺项当零画瀑布。"
+      ]
+    },
+    {
+      "id": "M04",
+      "reading_question": "现价与不同性质的估计相距多远，结论对哪些假设最敏感？",
+      "layout": "价值与两类目标分组并列，共用可比价格轴；敏感性网格为第二层，同业估值只用于同口径对照。",
+      "primary_charts": [
+        {
+          "field": "M04.price_estimates_chart",
+          "role": "并列现价、公允价值、模型目标和分析师目标，标记性质、日期和期限。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M04.sensitivity_chart",
+          "role": "展示方法已计算的假设网格，不在前端重新估值。"
+        },
+        {
+          "field": "M04.peer_chart",
+          "role": "比较同口径、同期间的同业倍数。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M04.valuation_judgments"
+          ],
+          "kind": "judgment",
+          "rule": "分别回答本次要判断的问题：明确倾向、对象期限、关键依据和改判条件，不用一句总评代替。"
+        },
+        {
+          "fields": [
+            "M04.valuation",
+            "M04.model_target"
+          ],
+          "kind": "range",
+          "rule": "有上下界时画范围；单值保留大数字。公允价值与未来价格目标不得平均。"
+        },
+        {
+          "fields": [
+            "M04.market_comparison"
+          ],
+          "kind": "judgment",
+          "rule": "价差与隐含判断来自研究结果，显示参照价格截点。"
+        }
+      ],
+      "details": [
+        "M04.assumptions",
+        "M04.sensitivity",
+        "M04.implied_assumptions",
+        "M04.update_schedule",
+        "M04.evidence",
+        "M04.source_scales"
+      ],
+      "interactions": [
+        "点击热力格查看确切假设、模型版本和估值结果；色阶跨当前网格固定。",
+        "展开目标价说明查看预测起点与期限，不把交互切换当作新模型运行。"
+      ],
+      "no_chart": [
+        "估值只有一个结果且无可比参照时使用价值卡。",
+        "假设网格未计算、估值币种不一致或同业口径不同，则保留分组摘要。"
+      ]
+    },
+    {
+      "id": "M05",
+      "reading_question": "市场预期如何修正，覆盖与分歧足以支持怎样的共识判断？",
+      "layout": "修正哑铃在前，评级数量和估计分歧作为不同维度；目标价格范围卡保留发布日期与目标期。",
+      "primary_charts": [
+        {
+          "field": "M05.revision_chart",
+          "role": "同目标、同样本的前后预期，不补造中间路径。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M05.ratings_chart",
+          "role": "评级原始数量，明确不同机构评级映射。"
+        },
+        {
+          "field": "M05.dispersion_chart",
+          "role": "比较实际估计的分散程度与覆盖，点可追溯来源。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M05.consensus_judgments"
+          ],
+          "kind": "judgment",
+          "rule": "分别回答本次要判断的问题：明确倾向、对象期限、关键依据和改判条件，不用一句总评代替。"
+        },
+        {
+          "fields": [
+            "M05.target_prices",
+            "M05.target_dates"
+          ],
+          "kind": "range",
+          "rule": "目标区间、均值和现价的性质明确，缺少区间不补造。"
+        },
+        {
+          "fields": [
+            "M05.analyst_count",
+            "M05.coverage",
+            "M05.consensus"
+          ],
+          "kind": "metric",
+          "rule": "覆盖数量不是独立证据数量或预测置信度。"
+        }
+      ],
+      "details": [
+        "M05.revisions",
+        "M05.dispersion",
+        "M05.actual_comparison",
+        "M05.rating_distribution",
+        "M05.evidence",
+        "M05.source_scales"
+      ],
+      "interactions": [
+        "选择某个目标查看前后值、采集日期与对应机构。",
+        "评级或分析师明细展开保留来源原标签。"
+      ],
+      "no_chart": [
+        "没有可比较的前后样本时改用当前共识卡。",
+        "只提供聚合区间而没有逐条估计时不画逐分析师散点。"
+      ]
+    },
+    {
+      "id": "M06",
+      "reading_question": "公布值相对当时预期有何变化，价格在明确的事件窗口中怎样反应？",
+      "layout": "事件身份和实际/预期数字在顶部，实际事件窗口 K 线为主；对齐路径另起一图并标明观察窗口。",
+      "primary_charts": [
+        {
+          "field": "M06.event_price_chart",
+          "role": "观察真实公布前后 OHLC，事件时间与 bar 时间分别保留。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M06.reaction_chart",
+          "role": "方法已对齐的本次与参照反应，不用连线暗示因果。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M06.impact_judgments"
+          ],
+          "kind": "judgment",
+          "rule": "分别回答本次要判断的问题：明确倾向、对象期限、关键依据和改判条件，不用一句总评代替。"
+        },
+        {
+          "fields": [
+            "M06.event",
+            "M06.expectations",
+            "M06.release",
+            "M06.surprise"
+          ],
+          "kind": "metric",
+          "rule": "实际值、当时预期和意外幅度并列，附单位与首次可得时间。"
+        },
+        {
+          "fields": [
+            "M06.event_importance"
+          ],
+          "kind": "judgment",
+          "rule": "重要性保持来源/方法原尺度。"
+        }
+      ],
+      "details": [
+        "M06.previous_values",
+        "M06.reaction_windows",
+        "M06.reaction",
+        "M06.conditional_outlook",
+        "M06.updates",
+        "M06.evidence",
+        "M06.data_times"
+      ],
+      "interactions": [
+        "K 线选择对应事件窗；路径点展示相对事件时间和实际观察值。",
+        "修订前值与最新值可展开对照，不覆盖当时可得数据。"
+      ],
+      "no_chart": [
+        "事件尚未公布时呈现日程和预期卡，实际值与反应保持未知。",
+        "没有精确事件时间或可比价格窗口时不画伪事件路径。"
+      ]
+    },
+    {
+      "id": "M07",
+      "reading_question": "哪些主题新增或升温，它们的覆盖和新信息分别是什么？",
+      "layout": "一条主题判断配关注时间序列，主题横条紧随；逐篇新闻按证据和新颖性展开。",
+      "primary_charts": [
+        {
+          "field": "M07.attention_chart",
+          "role": "同覆盖口径下去重新闻数量随时间变化。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M07.themes_chart",
+          "role": "主题覆盖数量对比，不把主题热度当作收益概率。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M07.news_judgments"
+          ],
+          "kind": "judgment",
+          "rule": "分别回答本次要判断的问题：明确倾向、对象期限、关键依据和改判条件，不用一句总评代替。"
+        },
+        {
+          "fields": [
+            "M07.attention",
+            "M07.novelty",
+            "M07.impact"
+          ],
+          "kind": "judgment",
+          "rule": "新增信息、报道数量和影响解释各自标注。"
+        }
+      ],
+      "details": [
+        "M07.news",
+        "M07.themes",
+        "M07.coverage_details",
+        "M07.source_mix",
+        "M07.evidence",
+        "M07.source_scales"
+      ],
+      "interactions": [
+        "时间点与主题可查看对应去重记录和来源集合。",
+        "展开原文证据时保留发布日期、首次可得时间和重复报道关系。"
+      ],
+      "no_chart": [
+        "仅有少量文本或采集覆盖变化无法校正时使用主题摘要卡。",
+        "没有稳定去重口径时不绘制可比较的热度趋势。"
+      ]
+    },
+    {
+      "id": "M08",
+      "reading_question": "情绪、主观性与拥挤分别处于哪里，它们有没有相互背离？",
+      "layout": "情绪历史是主视图；恐惧和主观性各自分面，避免不同量表叠在同轴；样本覆盖作为邻近数字。",
+      "primary_charts": [
+        {
+          "field": "M08.sentiment_chart",
+          "role": "同口径情绪与参照序列的历史变化。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M08.fear_chart",
+          "role": "来源原量表上的恐惧历史，标明数值方向。"
+        },
+        {
+          "field": "M08.subjectivity_chart",
+          "role": "主观性历史，保持与方向情绪的含义区别。"
+        },
+        {
+          "field": "M08.crowding_chart",
+          "role": "实际拥挤观测与后续已结算结果的关系，附样本和方法。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M08.sentiment_judgments"
+          ],
+          "kind": "judgment",
+          "rule": "分别回答本次要判断的问题：明确倾向、对象期限、关键依据和改判条件，不用一句总评代替。"
+        },
+        {
+          "fields": [
+            "M08.fear_index",
+            "M08.subjectivity",
+            "M08.evidence_volume"
+          ],
+          "kind": "metric",
+          "rule": "指数、主观性和文本数分别显示原尺度；文本数不转换成置信度。"
+        },
+        {
+          "fields": [
+            "M08.crowding",
+            "M08.divergence",
+            "M08.trend_indicator"
+          ],
+          "kind": "judgment",
+          "rule": "保留方法给出的状态和分歧解释。"
+        }
+      ],
+      "details": [
+        "M08.coverage",
+        "M08.sentiment",
+        "M08.changes",
+        "M08.evidence",
+        "M08.source_scales"
+      ],
+      "interactions": [
+        "每个分面切换或选择记录时保留其尺度、覆盖和日期。",
+        "拥挤散点选择后可查看历史结果与匹配条件。"
+      ],
+      "no_chart": [
+        "只有当期评分时使用研究摘要卡，说明量表和日期。",
+        "量表定义发生变化或缺少已结算结果时不连成可比较趋势或拥挤收益图。"
+      ]
+    },
+    {
+      "id": "M09",
+      "reading_question": "波动定价在期限、偏斜和自身历史中处于哪里，对应怎样的价格范围？",
+      "layout": "期限和偏斜为并列但独立坐标图；历史 IV/HV 放下一层；预期变动范围与报价截点贴近展示。",
+      "primary_charts": [
+        {
+          "field": "M09.term_chart",
+          "role": "同截点期限结构，读出到期维度的定价差异。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M09.skew_chart",
+          "role": "同到期、同报价口径的偏斜。"
+        },
+        {
+          "field": "M09.iv_history_chart",
+          "role": "历史 IV/HV 比较，区分隐含与已实现。"
+        },
+        {
+          "field": "M09.expected_move_chart",
+          "role": "方法已给定的各期限价格上下界，不自动解释为命中概率。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M09.pricing_judgments"
+          ],
+          "kind": "judgment",
+          "rule": "分别回答本次要判断的问题：明确倾向、对象期限、关键依据和改判条件，不用一句总评代替。"
+        },
+        {
+          "fields": [
+            "M09.iv_rank",
+            "M09.iv_percentile",
+            "M09.iv_history"
+          ],
+          "kind": "metric",
+          "rule": "Rank 和 percentile 分开，标明窗口、次数与定义。"
+        },
+        {
+          "fields": [
+            "M09.expected_move",
+            "M09.event_premium"
+          ],
+          "kind": "range",
+          "rule": "价格范围附参考价、期限、单位和验证状态。"
+        }
+      ],
+      "details": [
+        "M09.implied_volatility",
+        "M09.realized_volatility",
+        "M09.term_structure",
+        "M09.skew",
+        "M09.tails",
+        "M09.quote_context",
+        "M09.volatility_surface",
+        "M09.volatility_cone",
+        "M09.liquidity",
+        "M09.evidence"
+      ],
+      "interactions": [
+        "选择期限或报价点查看实际到期日、报价时间、流动性和原值。",
+        "分面切换只呈现已登记结果，不在浏览器拟合波动曲面。"
+      ],
+      "no_chart": [
+        "只有一个有效到期或单一快照时用 IV 与价格范围卡。",
+        "报价不同步、流动性不足或缺少同口径结果时保留缺口，不插值补线。"
+      ]
+    },
+    {
+      "id": "M10",
+      "reading_question": "这个期权结构在不同终值下的净损益是什么，成本与风险来自哪里？",
+      "layout": "净损益曲线占主体并显示零损益线；最大收益、最大损失和盈亏平衡紧贴图；成本瀑布另行对账。",
+      "primary_charts": [
+        {
+          "field": "M10.payoff_chart",
+          "role": "所选方法计算的净损益对标的终值，不把到期图当作盘中估值。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M10.cost_chart",
+          "role": "费用、权利金与净成本的明确增减关系。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M10.structure_judgments"
+          ],
+          "kind": "judgment",
+          "rule": "分别回答本次要判断的问题：明确倾向、对象期限、关键依据和改判条件，不用一句总评代替。"
+        },
+        {
+          "fields": [
+            "M10.max_profit",
+            "M10.max_loss",
+            "M10.breakevens"
+          ],
+          "kind": "metric",
+          "rule": "标明每组、乘数、币种和达到该值的条件；无界风险不填有限数字。"
+        },
+        {
+          "fields": [
+            "M10.profit_probability",
+            "M10.expected_profit"
+          ],
+          "kind": "judgment",
+          "rule": "概率使用本结构的已结算净损益历史依据，不能借用方向胜率。"
+        }
+      ],
+      "details": [
+        "M10.objective",
+        "M10.legs",
+        "M10.costs",
+        "M10.payoff",
+        "M10.risks",
+        "M10.alternatives",
+        "M10.greeks",
+        "M10.liquidity",
+        "M10.settlement",
+        "M10.evidence"
+      ],
+      "interactions": [
+        "选定终值点查看该点净损益、单位与到期假设；原始结果表可读。",
+        "展开各腿、交割和希腊值，保留独立报价时间。"
+      ],
+      "no_chart": [
+        "缺少各腿、到期规则或成本口径时先给结构与缺项摘要。",
+        "只有文字策略描述不生成曲线；未验证盈利概率保留未知。"
+      ]
+    },
+    {
+      "id": "M11",
+      "reading_question": "哪些候选满足当前条件，排序依据和需要继续核实的差异是什么？",
+      "layout": "候选排名为主图，风险收益取舍图作第二维度；筛选宇宙与缺失覆盖靠近结果，不做装饰漏斗。",
+      "primary_charts": [
+        {
+          "field": "M11.ranking_chart",
+          "role": "使用方法给出的排序指标与顺序，长名称横排。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M11.tradeoff_chart",
+          "role": "同口径候选风险收益或其他连续特征比较。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M11.candidate_judgments"
+          ],
+          "kind": "judgment",
+          "rule": "分别回答本次要判断的问题：明确倾向、对象期限、关键依据和改判条件，不用一句总评代替。"
+        },
+        {
+          "fields": [
+            "M11.universe",
+            "M11.criteria",
+            "M11.follow_up"
+          ],
+          "kind": "judgment",
+          "rule": "先交代范围、条件和下一步核实事项，数字只取已登记数量。"
+        }
+      ],
+      "details": [
+        "M11.candidates",
+        "M11.coverage_gaps",
+        "M11.selection_logic",
+        "M11.rank_rules",
+        "M11.candidate_details",
+        "M11.backtest_refs",
+        "M11.evidence"
+      ],
+      "interactions": [
+        "选择候选展开完整条件命中、数据截点和排除原因。",
+        "表格可按用户阅读需求查看；展示排序不得覆盖方法登记的排名规则。"
+      ],
+      "no_chart": [
+        "候选只有少量定性条件或指标不可比时使用候选摘要卡和明细表。",
+        "筛选没有通过项时说明排除结果，不造零值排名图。"
+      ]
+    },
+    {
+      "id": "M12",
+      "reading_question": "风险集中在哪里，依赖关系和止损距离如何影响已给定的预算？",
+      "layout": "敞口与依赖两图分工：前者看构成、后者看联系；止损距离和规模在单独风险预算段落。",
+      "primary_charts": [
+        {
+          "field": "M12.exposure_chart",
+          "role": "非负敞口层级构成，父子不重复计数。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M12.dependence_chart",
+          "role": "同方法、同窗口的完整依赖矩阵。"
+        },
+        {
+          "field": "M12.stop_chart",
+          "role": "已计算的距离与规模取舍，保留风险金额和单位。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M12.risk_judgments"
+          ],
+          "kind": "judgment",
+          "rule": "分别回答本次要判断的问题：明确倾向、对象期限、关键依据和改判条件，不用一句总评代替。"
+        },
+        {
+          "fields": [
+            "M12.concentration",
+            "M12.budget",
+            "M12.position_size"
+          ],
+          "kind": "metric",
+          "rule": "风险预算、集中度和规模附口径，数值来自方法而非图形。"
+        },
+        {
+          "fields": [
+            "M12.stress"
+          ],
+          "kind": "judgment",
+          "rule": "压力情景结果与现实损失分开。"
+        }
+      ],
+      "details": [
+        "M12.portfolio",
+        "M12.exposures",
+        "M12.dependence",
+        "M12.stop_variants",
+        "M12.stop_distances",
+        "M12.execution_costs",
+        "M12.margin",
+        "M12.evidence"
+      ],
+      "interactions": [
+        "矩阵选格展示资产对、样本窗口与依赖定义。",
+        "止损方案选择项显示对应成本、保证金和规模的实际计算结果。"
+      ],
+      "no_chart": [
+        "净敞口有负值时不塞入矩形树图，改用分组敞口卡或用户指定的有符号图。",
+        "矩阵缺项或只有一个资产时保留风险摘要，不把未知相关性写成零。"
+      ]
+    },
+    {
+      "id": "M13",
+      "reading_question": "同类情景和每项特征在可比历史中怎样表现，证据的不确定性有多大？",
+      "layout": "样本范围与匹配条件先行，结果分布和基准对照为主体；逐项推断及原始案例集中在本节。",
+      "primary_charts": [
+        {
+          "field": "M13.outcome_chart",
+          "role": "方法登记分箱下的已结算实际结果，标明样本量和观察期限。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M13.baseline_chart",
+          "role": "相同目标和期限的条件结果与基准比较。"
+        },
+        {
+          "field": "M13.cases_chart",
+          "role": "小样本优先显示逐案例原值与尾部，不用平滑密度掩盖数量。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M13.sample",
+            "M13.uncertainty",
+            "M13.validation"
+          ],
+          "kind": "metric",
+          "rule": "匹配、已结算、待结算和排除数分开；区间与验证等级使用方法结果。"
+        },
+        {
+          "fields": [
+            "M13.feature",
+            "M13.matching",
+            "M13.applicability"
+          ],
+          "kind": "judgment",
+          "rule": "先当前品种近期检索；替代样本说明范围与可比性。"
+        }
+      ],
+      "details": [
+        "M13.inference_evidence",
+        "M13.baseline",
+        "M13.outcomes",
+        "M13.evidence",
+        "M13.source_scales"
+      ],
+      "interactions": [
+        "选择分箱或案例查看原始历史事件、结果和固定引用。",
+        "逐项推断可展开各自匹配方法、样本、基准与不确定性；组合报告从 M14 摘要定位到本节。"
+      ],
+      "no_chart": [
+        "没有可比历史样本时显示检索状态与不可用原因。",
+        "样本很少时用 cases_chart 或逐次结果表；缺少基准不补出基准线。"
+      ]
+    },
+    {
+      "id": "M14",
+      "reading_question": "综合各项证据后，本次目标、期限与总体判断是什么？",
+      "layout": "只保留综合判断、目标、核心概率或区间以及支持/反对摘要；完整历史分布和逐项推断由 M13 承载。",
+      "primary_charts": [
+        {
+          "field": "M14.outlook_chart",
+          "role": "有完整历史依据的同目标互斥结果概率，做紧凑总览。"
+        }
+      ],
+      "supporting_charts": [],
+      "excluded_by_default_charts": [
+        {
+          "field": "M14.evidence_chart",
+          "reason": "逐项条件结果和基准属于 M13；用户显式要求独立 M14 的证据对照时仍可选用该字段。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M14.confidence",
+            "M14.target"
+          ],
+          "kind": "metric",
+          "rule": "展示定义、估计或评价、区间与目标期限，不平均各特征置信度。"
+        },
+        {
+          "fields": [
+            "M14.summary",
+            "M14.supporting",
+            "M14.opposing",
+            "M14.overlap"
+          ],
+          "kind": "judgment",
+          "rule": "综合解释保留支持、反对和重复证据处理的关键结论。"
+        }
+      ],
+      "details": [
+        "M14.probabilities",
+        "M14.scenarios",
+        "M14.invalidation",
+        "M14.evidence",
+        "M14.source_scales"
+      ],
+      "interactions": [
+        "摘要中的历史依据入口定位到同报告实际存在的 M13，不复制一整份案例。",
+        "概率项可查看定义和依据摘要；完整明细在历史章节展开。"
+      ],
+      "no_chart": [
+        "只有定性综合判断或概率缺少历史依据时使用判断摘要，不填 50% 或主观分。",
+        "结论只有一个有效数值时用大数字与定义；不为了填版生成多柱。"
+      ]
+    },
+    {
+      "id": "M15",
+      "reading_question": "接下来观测到哪些条件时，应该采取什么行动或重新评估？",
+      "layout": "目标、约束和监测快照简短在前，完整综合情景树作为报告最后的主体；后面仅放折叠口径与来源。",
+      "primary_charts": [
+        {
+          "field": "M15.action_chart",
+          "role": "判断在内部节点，条件在分支，叶子只写结果或行动。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M15.monitor_chart",
+          "role": "同单位当前值与阈值的距离，用于已有监测项。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M15.actions"
+          ],
+          "kind": "judgment",
+          "rule": "分别回答本次要判断的问题：明确倾向、对象期限、关键依据和改判条件，不用一句总评代替。"
+        },
+        {
+          "fields": [
+            "M15.objective",
+            "M15.constraints",
+            "M15.review_at"
+          ],
+          "kind": "judgment",
+          "rule": "保留用户约束与明确复核时点或触发条件。"
+        }
+      ],
+      "details": [
+        "M15.watchlist",
+        "M15.scenarios",
+        "M15.scenario_terms",
+        "M15.evidence",
+        "M15.source_scales"
+      ],
+      "interactions": [
+        "内置树支持缩放、拖拽、适配全图和键盘/明细入口；窄屏保留全树而不是截断节点。",
+        "监测项选择后查看当前值、阈值、时点与对应行动。"
+      ],
+      "no_chart": [
+        "只有单条观察任务或线性计划时用判断/任务卡，不制造分叉。",
+        "没有同单位阈值时使用条件文字，不把定性条件编码为数值距离。"
+      ]
+    },
+    {
+      "id": "M16",
+      "reading_question": "冻结预测与实际结果相差多少，方法在同口径样本中是否校准？",
+      "layout": "先并列原始预测和结算状态，再展示校准与基准比较；解释在结果之后，不改写原预测。",
+      "primary_charts": [
+        {
+          "field": "M16.calibration_chart",
+          "role": "冻结预测分组与实际频率，附每组样本量和理想参照。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M16.evaluation_chart",
+          "role": "同指标方法与基准表现对照。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M16.use_judgments"
+          ],
+          "kind": "judgment",
+          "rule": "分别回答本次要判断的问题：明确倾向、对象期限、关键依据和改判条件，不用一句总评代替。"
+        },
+        {
+          "fields": [
+            "M16.original",
+            "M16.actual",
+            "M16.settlement"
+          ],
+          "kind": "metric",
+          "rule": "原始预测、观察结果和是否已结算分开。"
+        },
+        {
+          "fields": [
+            "M16.explanation",
+            "M16.follow_up"
+          ],
+          "kind": "judgment",
+          "rule": "解释只引用本次可观察证据，改进建议不修改冻结记录。"
+        }
+      ],
+      "details": [
+        "M16.evaluation",
+        "M16.calibration",
+        "M16.evidence",
+        "M16.data_times",
+        "M16.source_scales"
+      ],
+      "interactions": [
+        "选择校准组查看其中预测、实际值与样本数。",
+        "原始预测引用与结算引用独立展开，便于复核修订。"
+      ],
+      "no_chart": [
+        "单次预测只做原值对照卡，不称为整体校准。",
+        "大量样本未结算时只展示已结算部分和待结算数，缺组不补零频率。"
+      ]
+    },
+    {
+      "id": "M17",
+      "reading_question": "在明确时区内，哪些事件即将发生或已经公布，日程有何变化？",
+      "layout": "事件时间线为主要阅读路径，月/周密度日历作为定位辅助；计划、实际、取消和改期用文字状态。",
+      "primary_charts": [
+        {
+          "field": "M17.timeline_chart",
+          "role": "保留实际事件 ID、计划/实际时间、状态和引用。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M17.calendar_chart",
+          "role": "按已声明 IANA 时区聚合的每日事件数，零与未覆盖不同。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M17.event_priorities"
+          ],
+          "kind": "judgment",
+          "rule": "分别回答本次要判断的问题：明确倾向、对象期限、关键依据和改判条件，不用一句总评代替。"
+        },
+        {
+          "fields": [
+            "M17.scope",
+            "M17.coverage",
+            "M17.schedule_changes"
+          ],
+          "kind": "judgment",
+          "rule": "范围、时区与改期信息贴近日程；未来结果保持未知。"
+        }
+      ],
+      "details": [
+        "M17.events",
+        "M17.economic_releases",
+        "M17.earnings",
+        "M17.dividends",
+        "M17.splits",
+        "M17.meetings",
+        "M17.data_times",
+        "M17.source_scales"
+      ],
+      "interactions": [
+        "点击事件或日期查看本地时间、原始时区、计划与实际状态。",
+        "明细展开显示已知预期和未知实际值；同一事件以 ID 对应改期记录。"
+      ],
+      "no_chart": [
+        "只有一两项且精确时刻未知时用日期范围卡。",
+        "采集未覆盖的日期保持缺失，不在日历写成零事件。"
+      ]
+    },
+    {
+      "id": "M18",
+      "reading_question": "冻结策略在什么样本与成本条件下表现如何，跨市场与参数的稳健性是否成立？",
+      "layout": "先交代策略版本、样本与选优规则；净值和回撤成对阅读，稳健性、成本和运行漏斗分层；完整策略检查进入原生浏览器。",
+      "primary_charts": [
+        {
+          "field": "M18.equity_chart",
+          "role": "同基数、同期策略与基准净值。"
+        },
+        {
+          "field": "M18.drawdown_chart",
+          "role": "同一冻结净值对应的回撤路径，与收益并读。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M18.market_matrix_chart",
+          "role": "品种×周期矩阵，每格只展示已登记选中组的同样本指标。"
+        },
+        {
+          "field": "M18.parameter_heatmap",
+          "role": "固定其他参数后的双参数网格，未测试格保留缺失。"
+        },
+        {
+          "field": "M18.parameter_sensitivity_chart",
+          "role": "参数变化对已登记指标的影响，每点追溯完整试验，不静默平均重叠参数值。"
+        },
+        {
+          "field": "M18.validation_chart",
+          "role": "冻结策略的训练与独立留出结果，标注期间长度与可比限制。"
+        },
+        {
+          "field": "M18.funnel_chart",
+          "role": "同一运行的去重阶段计数与排除原因，数量不作为命中率。"
+        },
+        {
+          "field": "M18.pnl_chart",
+          "role": "毛损益、费用与净损益对账，避免重复扣费。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M18.strategy_judgments"
+          ],
+          "kind": "judgment",
+          "rule": "分别回答本次要判断的问题：明确倾向、对象期限、关键依据和改判条件，不用一句总评代替。"
+        },
+        {
+          "fields": [
+            "M18.metrics",
+            "M18.window",
+            "M18.costs",
+            "M18.validation"
+          ],
+          "kind": "metric",
+          "rule": "收益、回撤和其他指标使用原始单位，附样本、观察频率与成本。"
+        },
+        {
+          "fields": [
+            "M18.hypothesis",
+            "M18.selection_rule"
+          ],
+          "kind": "judgment",
+          "rule": "策略假设与预先声明的选优规则分开；留出样本不参与选优。"
+        }
+      ],
+      "details": [
+        "M18.universe",
+        "M18.selection",
+        "M18.simulation",
+        "M18.benchmark",
+        "M18.positions",
+        "M18.trades",
+        "M18.assumptions",
+        "M18.artifacts",
+        "M18.logic_graph",
+        "M18.parameter_trials",
+        "M18.source_scales"
+      ],
+      "interactions": [
+        "模块图支持原行检查；完整原生回测保留品种×周期热力图、颜色指标切换、点格下钻与参数选择。",
+        "颜色指标切换只改变显示值和色阶，不重新选优；每格试验列表保留全部参数、失败状态、分页与逐条明细。",
+        "原生策略图可选中操作节点和展开函数、事件处理器及循环；来源必须匹配真实源码修订。",
+        "原生敏感性保持 Sharpe、最大回撤、净利润三项结果与参数名同名指标隔离。"
+      ],
+      "no_chart": [
+        "只有汇总统计而无净值路径时使用表现卡，不从累计收益反推平滑净值。",
+        "只有叙述而没有真实源码/运行证据时不编造策略逻辑图；没有参数试验不生成参数面。",
+        "不同样本或长度的累计收益未经方法处理不能画成可直接排名的优劣。"
+      ],
+      "native_preservation": {
+        "renderer": "backtest-template.js + assets/backtest-explorer.js",
+        "data_contract": "真实 strategy.source/图/sourceDigest 与固定试验结果一致；本文件不替换原生渲染器。",
+        "required_behaviors": [
+          "真实逻辑节点与函数展开",
+          "品种×周期矩阵",
+          "显示指标切换不重选优",
+          "点格后全部参数试验分页",
+          "试验原值与失败/缺失状态",
+          "参数敏感性",
+          "跨分页固定色阶",
+          "桌面与窄屏键盘可达"
+        ],
+        "synthetic_preview": "测试和预览只证明交互与呈现未丢失，虚构样本不是实际策略收益，不代表宿主发布或真实 source 验证。"
+      }
+    },
+    {
+      "id": "M19",
+      "reading_question": "当前组合要如何调整到目标权重，约束、换手和执行状态分别是什么？",
+      "layout": "当前/目标哑铃为主体；增减横条解释变更，目标与状态放在顶部，成本和复核条件贴近计划。",
+      "primary_charts": [
+        {
+          "field": "M19.weights_chart",
+          "role": "同一分母下的当前与目标权重，保留零权重与现金。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M19.changes_chart",
+          "role": "权重增减百分点，正负代表增减而非盈利亏损。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M19.allocation_judgments"
+          ],
+          "kind": "judgment",
+          "rule": "分别回答本次要判断的问题：明确倾向、对象期限、关键依据和改判条件，不用一句总评代替。"
+        },
+        {
+          "fields": [
+            "M19.objective",
+            "M19.action_status",
+            "M19.rebalance"
+          ],
+          "kind": "judgment",
+          "rule": "建议、待确认、已安排和已执行依据分开；显示字段不触发交易。"
+        },
+        {
+          "fields": [
+            "M19.constraints",
+            "M19.weighting_rules"
+          ],
+          "kind": "metric",
+          "rule": "展示方法实际给定的权重、换手或成本值，不固定优化器。"
+        }
+      ],
+      "details": [
+        "M19.current_weights",
+        "M19.target_weights",
+        "M19.changes",
+        "M19.benchmark",
+        "M19.performance_refs",
+        "M19.risk_refs",
+        "M19.instrument_context",
+        "M19.source_scales"
+      ],
+      "interactions": [
+        "选择资产查看当前至目标差异、理由和估计成本。",
+        "历史表现与风险引用按对应规则版本打开，当前组合与目标组合分开。"
+      ],
+      "no_chart": [
+        "目标权重尚未计算时使用目标和约束摘要。",
+        "当前/目标分母不同或多空口径未统一时不画成可直接比较的变化。"
+      ]
+    }
+  ],
+  "compositions": [
+    {
+      "id": "R01",
+      "reading_question": "快速了解一个资产，现在是什么状态，主要变化来自哪里？",
+      "layout": "先回答本次要判断的问题，再用本模板的主图与比较支撑，只展开影响判断的依据和改判条件；章节按用户目的重排。",
+      "primary_charts": [
+        {
+          "field": "M01.price_chart",
+          "role": "统一当前价格观察窗口。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M01.relative_chart",
+          "role": "交代相对强弱。"
+        },
+        {
+          "field": "M07.attention_chart",
+          "role": "呈现新闻关注变化。"
+        },
+        {
+          "field": "M06.reaction_chart",
+          "role": "有明确事件时补充实际反应。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M01.timeframe_states",
+            "M07.news_judgments",
+            "M08.sentiment_judgments",
+            "M06.impact_judgments"
+          ],
+          "kind": "judgment",
+          "rule": "判断在前，关键图和事实紧随其后；按用户问题的重要性组织，不按数据取得次序堆章节。"
+        },
+        {
+          "fields": [
+            "M01.reference_price",
+            "M06.event",
+            "M06.surprise",
+            "M07.novelty"
+          ],
+          "kind": "judgment",
+          "rule": "价格、事件事实和主题新信息分别说明。"
+        }
+      ],
+      "details": [
+        "M06.reaction_windows",
+        "M07.news",
+        "M07.source_mix"
+      ],
+      "interactions": [
+        "从图中记录定位到对应行情、事件或新闻明细。"
+      ],
+      "no_chart": [
+        "只有资产快照时以参考价、状态和最新事实构成摘要卡。"
+      ]
+    },
+    {
+      "id": "R02",
+      "reading_question": "本次行情综合判断是什么，技术与事件证据如何被历史验证，哪些条件会改变结论？",
+      "layout": "M14 综合摘要 → 行情与技术价格证据 → 事件/新闻驱动 → M13 完整历史证据 → 末尾 M15 综合情景。",
+      "primary_charts": [
+        {
+          "field": "M02.price_chart",
+          "role": "本次价格证据的主要视图。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M14.outlook_chart",
+          "role": "开头只显示综合概率摘要。"
+        },
+        {
+          "field": "M01.relative_chart",
+          "role": "补充横向相对强弱。"
+        },
+        {
+          "field": "M06.reaction_chart",
+          "role": "事件驱动的实际路径。"
+        },
+        {
+          "field": "M07.attention_chart",
+          "role": "去重关注趋势。"
+        },
+        {
+          "field": "M13.outcome_chart",
+          "role": "集中完整历史分布。"
+        },
+        {
+          "field": "M13.baseline_chart",
+          "role": "条件结果与基准。"
+        },
+        {
+          "field": "M15.action_chart",
+          "role": "结尾唯一默认综合情景树。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M14.summary",
+            "M14.confidence",
+            "M14.target",
+            "M02.key_levels",
+            "M13.sample"
+          ],
+          "kind": "judgment",
+          "rule": "综合结论有自身历史依据，技术价位与历史样本不再重复铺陈。"
+        }
+      ],
+      "details": [
+        "M02.event_lifecycle",
+        "M02.geometry",
+        "M06.previous_values",
+        "M07.source_mix",
+        "M13.inference_evidence",
+        "M15.scenario_terms"
+      ],
+      "interactions": [
+        "M14 历史依据摘要链接到实际 M13；不在开头重放完整验证记录。",
+        "M02 默认不画 scenario_chart，最终触发/失效/行动由 M15 统一串联。"
+      ],
+      "no_chart": [
+        "综合概率未获得支持时用判断摘要；有效行情与事件图仍按各自数据条件保留。"
+      ],
+      "history_owner": "M13",
+      "summary_module": "M14",
+      "default_scenario_tree": "M15.action_chart"
+    },
+    {
+      "id": "R03",
+      "reading_question": "这次事件相对预期的冲击有多大，历史同类事件支持什么后续观察？",
+      "layout": "先回答本次要判断的问题，再用本模板的主图与比较支撑，只展开影响判断的依据和改判条件；章节按用户目的重排。",
+      "primary_charts": [
+        {
+          "field": "M06.event_price_chart",
+          "role": "以实际事件窗口作为阅读主轴。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M06.reaction_chart",
+          "role": "本次与参照反应路径。"
+        },
+        {
+          "field": "M01.relative_chart",
+          "role": "市场范围的相对反应。"
+        },
+        {
+          "field": "M13.baseline_chart",
+          "role": "同类事件条件结果对照。"
+        },
+        {
+          "field": "M13.cases_chart",
+          "role": "少样本逐次结果。"
+        },
+        {
+          "field": "M14.outlook_chart",
+          "role": "已支持的综合概率摘要。"
+        },
+        {
+          "field": "M15.action_chart",
+          "role": "结尾唯一默认综合情景树。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M06.impact_judgments",
+            "M01.timeframe_states",
+            "M15.actions"
+          ],
+          "kind": "judgment",
+          "rule": "判断在前，关键图和事实紧随其后；按用户问题的重要性组织，不按数据取得次序堆章节。"
+        },
+        {
+          "fields": [
+            "M06.expectations",
+            "M06.release",
+            "M06.surprise",
+            "M13.sample",
+            "M14.target"
+          ],
+          "kind": "metric",
+          "rule": "实际/预期与历史频率分别表示当次事实和历史结果。"
+        }
+      ],
+      "details": [
+        "M06.previous_values",
+        "M06.reaction_windows",
+        "M13.inference_evidence",
+        "M15.scenario_terms"
+      ],
+      "interactions": [
+        "事件标识串联公布时间、K 线窗口与历史匹配明细。",
+        "完整历史依据留在 M13，M14 提供摘要链接，M15 树不重复展开统计。"
+      ],
+      "no_chart": [
+        "事件未公布时用预期和日程卡，后续反应与预测保持待更新。"
+      ],
+      "history_owner": "M13",
+      "summary_module": "M14",
+      "default_scenario_tree": "M15.action_chart"
+    },
+    {
+      "id": "R04",
+      "reading_question": "公司经营质量与价值估计是否相称，预期修正与催化会怎样改变观察重点？",
+      "layout": "先回答本次要判断的问题，再用本模板的主图与比较支撑，只展开影响判断的依据和改判条件；章节按用户目的重排。",
+      "primary_charts": [
+        {
+          "field": "M03.growth_chart",
+          "role": "经营与现金流的证据起点。"
+        },
+        {
+          "field": "M04.price_estimates_chart",
+          "role": "价值、模型目标与分析师目标独立比较。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M03.factor_chart",
+          "role": "原量表基本面因子。"
+        },
+        {
+          "field": "M04.sensitivity_chart",
+          "role": "关键估值假设。"
+        },
+        {
+          "field": "M05.revision_chart",
+          "role": "共识前后变化。"
+        },
+        {
+          "field": "M05.ratings_chart",
+          "role": "评级数量覆盖。"
+        },
+        {
+          "field": "M15.action_chart",
+          "role": "催化与失效后的条件计划。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M03.fundamental_judgments",
+            "M04.valuation_judgments",
+            "M05.consensus_judgments",
+            "M06.impact_judgments",
+            "M15.actions"
+          ],
+          "kind": "judgment",
+          "rule": "判断在前，关键图和事实紧随其后；按用户问题的重要性组织，不按数据取得次序堆章节。"
+        },
+        {
+          "fields": [
+            "M03.composite_assessment",
+            "M03.income",
+            "M04.valuation",
+            "M05.target_prices",
+            "M06.event"
+          ],
+          "kind": "range",
+          "rule": "综合评价、股息与价格估计保留各自尺度和时间。"
+        }
+      ],
+      "details": [
+        "M03.factor_results",
+        "M03.cycle_context",
+        "M04.assumptions",
+        "M04.update_schedule",
+        "M05.coverage",
+        "M06.release"
+      ],
+      "interactions": [
+        "选择估值格或目标价查看其方法与期限；财期和价格观察窗分别保留。"
+      ],
+      "no_chart": [
+        "财报历史不足时用财务质量摘要；没有模型网格时只保留估值假设与结果。"
+      ]
+    },
+    {
+      "id": "R05",
+      "reading_question": "今天最值得跟踪的市场变化、即将到来的事件和候选是什么？",
+      "layout": "先回答本次要判断的问题，再用本模板的主图与比较支撑，只展开影响判断的依据和改判条件；章节按用户目的重排。",
+      "primary_charts": [
+        {
+          "field": "M01.relative_chart",
+          "role": "快速比较同窗口市场变化。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M17.timeline_chart",
+          "role": "按时区安排观察顺序。"
+        },
+        {
+          "field": "M07.themes_chart",
+          "role": "主题覆盖与新增线索。"
+        },
+        {
+          "field": "M11.ranking_chart",
+          "role": "已完成筛选的候选。"
+        },
+        {
+          "field": "M01.price_chart",
+          "role": "聚焦一项关键资产时补充。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M01.timeframe_states",
+            "M17.event_priorities",
+            "M06.impact_judgments",
+            "M07.news_judgments",
+            "M11.candidate_judgments"
+          ],
+          "kind": "judgment",
+          "rule": "判断在前，关键图和事实紧随其后；按用户问题的重要性组织，不按数据取得次序堆章节。"
+        },
+        {
+          "fields": [
+            "M06.event",
+            "M06.surprise",
+            "M07.novelty",
+            "M11.follow_up"
+          ],
+          "kind": "judgment",
+          "rule": "每项事实配一个明确跟进重点，不合成方向评分。"
+        }
+      ],
+      "details": [
+        "M17.events",
+        "M07.coverage_details",
+        "M11.candidate_details",
+        "M11.selection_logic"
+      ],
+      "interactions": [
+        "从事件或候选选择项进入对应原始明细；列表保留完整名称与缺失状态。"
+      ],
+      "no_chart": [
+        "当日数据稀疏时用事件/候选摘要卡；没有可比全市场样本时不做市场排名。"
+      ]
+    },
+    {
+      "id": "R06",
+      "reading_question": "当前波动定价适合怎样的期权结构，该结构的损益和预算边界是什么？",
+      "layout": "先回答本次要判断的问题，再用本模板的主图与比较支撑，只展开影响判断的依据和改判条件；章节按用户目的重排。",
+      "primary_charts": [
+        {
+          "field": "M09.term_chart",
+          "role": "期限定价背景。"
+        },
+        {
+          "field": "M10.payoff_chart",
+          "role": "结构的净损益主体。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M09.skew_chart",
+          "role": "同到期偏斜。"
+        },
+        {
+          "field": "M09.iv_history_chart",
+          "role": "自身历史位置。"
+        },
+        {
+          "field": "M09.expected_move_chart",
+          "role": "方法给定的价格范围。"
+        },
+        {
+          "field": "M10.cost_chart",
+          "role": "成本对账。"
+        },
+        {
+          "field": "M12.stop_chart",
+          "role": "风险预算下的距离与规模。"
+        },
+        {
+          "field": "M15.action_chart",
+          "role": "最终观察和行动条件。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M09.pricing_judgments",
+            "M10.structure_judgments",
+            "M06.impact_judgments",
+            "M12.risk_judgments",
+            "M15.actions"
+          ],
+          "kind": "judgment",
+          "rule": "判断在前，关键图和事实紧随其后；按用户问题的重要性组织，不按数据取得次序堆章节。"
+        },
+        {
+          "fields": [
+            "M09.iv_rank",
+            "M09.iv_percentile",
+            "M10.max_profit",
+            "M10.max_loss",
+            "M10.profit_probability",
+            "M12.position_size"
+          ],
+          "kind": "metric",
+          "rule": "波动分位、盈利概率、损益与预算不相互替代。"
+        }
+      ],
+      "details": [
+        "M09.quote_context",
+        "M09.liquidity",
+        "M10.legs",
+        "M10.settlement",
+        "M10.greeks",
+        "M12.margin",
+        "M15.scenario_terms"
+      ],
+      "interactions": [
+        "通过已登记期限和结构结果查看明细，不用界面滑块伪装实时重定价。"
+      ],
+      "no_chart": [
+        "期权报价或成本缺项时保留结构说明与待核实项，不生成可执行损益结论。"
+      ]
+    },
+    {
+      "id": "R07",
+      "reading_question": "当前持仓的主要集中与关联风险是什么，哪项条件最应监测？",
+      "layout": "先回答本次要判断的问题，再用本模板的主图与比较支撑，只展开影响判断的依据和改判条件；章节按用户目的重排。",
+      "primary_charts": [
+        {
+          "field": "M12.exposure_chart",
+          "role": "显示当前组合的实际构成。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M12.dependence_chart",
+          "role": "同窗口依赖。"
+        },
+        {
+          "field": "M01.relative_chart",
+          "role": "持仓相关资产相对表现。"
+        },
+        {
+          "field": "M15.monitor_chart",
+          "role": "当前值与监测阈值。"
+        },
+        {
+          "field": "M15.action_chart",
+          "role": "约束下的条件行动。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M12.risk_judgments",
+            "M01.timeframe_states",
+            "M15.actions"
+          ],
+          "kind": "judgment",
+          "rule": "判断在前，关键图和事实紧随其后；按用户问题的重要性组织，不按数据取得次序堆章节。"
+        },
+        {
+          "fields": [
+            "M12.concentration",
+            "M12.budget",
+            "M12.stress",
+            "M15.review_at"
+          ],
+          "kind": "judgment",
+          "rule": "当前暴露、假设压力和复核计划分别呈现。"
+        }
+      ],
+      "details": [
+        "M12.portfolio",
+        "M12.exposures",
+        "M12.dependence",
+        "M15.watchlist",
+        "M15.constraints"
+      ],
+      "interactions": [
+        "资产和矩阵格可展开风险结果；计划字段不触发交易。"
+      ],
+      "no_chart": [
+        "没有完整持仓或权重分母时用风险问题摘要，明确可覆盖部分。"
+      ]
+    },
+    {
+      "id": "R08",
+      "reading_question": "已冻结的预测兑现了什么，在哪些目标或概率区间需要改进？",
+      "layout": "先回答本次要判断的问题，再用本模板的主图与比较支撑，只展开影响判断的依据和改判条件；章节按用户目的重排。",
+      "primary_charts": [
+        {
+          "field": "M16.calibration_chart",
+          "role": "已结算样本中的概率校准。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M16.evaluation_chart",
+          "role": "同口径方法/基准比较。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M16.use_judgments"
+          ],
+          "kind": "judgment",
+          "rule": "判断在前，关键图和事实紧随其后；按用户问题的重要性组织，不按数据取得次序堆章节。"
+        },
+        {
+          "fields": [
+            "M16.original",
+            "M16.actual",
+            "M16.settlement",
+            "M16.follow_up"
+          ],
+          "kind": "judgment",
+          "rule": "单次结果与整体方法评价分开。"
+        }
+      ],
+      "details": [
+        "M16.evaluation",
+        "M16.calibration",
+        "M16.explanation",
+        "M16.evidence"
+      ],
+      "interactions": [
+        "组内样本明细连接原预测和结算证据；不会用最新观点覆盖冻结记录。"
+      ],
+      "no_chart": [
+        "只有一条预测或尚未结算时用原值/实际/状态卡，暂不绘制校准曲线。"
+      ]
+    },
+    {
+      "id": "R09",
+      "reading_question": "未来一周需要在哪些时点关注经济和公司事件，哪些安排发生了变化？",
+      "layout": "先回答本次要判断的问题，再用本模板的主图与比较支撑，只展开影响判断的依据和改判条件；章节按用户目的重排。",
+      "primary_charts": [
+        {
+          "field": "M17.timeline_chart",
+          "role": "按已知时点组织日程。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M17.calendar_chart",
+          "role": "发现事件集中的日期。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M17.event_priorities"
+          ],
+          "kind": "judgment",
+          "rule": "判断在前，关键图和事实紧随其后；按用户问题的重要性组织，不按数据取得次序堆章节。"
+        },
+        {
+          "fields": [
+            "M17.scope",
+            "M17.schedule_changes",
+            "M17.coverage"
+          ],
+          "kind": "judgment",
+          "rule": "明确改期、取消、未知时间与未覆盖日期。"
+        }
+      ],
+      "details": [
+        "M17.economic_releases",
+        "M17.earnings",
+        "M17.dividends",
+        "M17.splits",
+        "M17.meetings",
+        "M17.events"
+      ],
+      "interactions": [
+        "事件/日期选择可查看原始时区、预期和状态；未来实际值留空。"
+      ],
+      "no_chart": [
+        "日程只有少量或日期区间不确定时用日程卡和表格。"
+      ]
+    },
+    {
+      "id": "R10",
+      "reading_question": "筛选规则形成了哪些候选，同一策略的历史收益、成本和稳健性是否支持继续研究？",
+      "layout": "先回答本次要判断的问题，再用本模板的主图与比较支撑，只展开影响判断的依据和改判条件；章节按用户目的重排。",
+      "primary_charts": [
+        {
+          "field": "M18.equity_chart",
+          "role": "策略与基准的同期路径。"
+        },
+        {
+          "field": "M18.drawdown_chart",
+          "role": "与收益配对的风险路径。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M11.ranking_chart",
+          "role": "筛选输入和候选结果。"
+        },
+        {
+          "field": "M18.market_matrix_chart",
+          "role": "品种×周期的预选组表现。"
+        },
+        {
+          "field": "M18.parameter_heatmap",
+          "role": "完整网格存在时查看局部结构。"
+        },
+        {
+          "field": "M18.parameter_sensitivity_chart",
+          "role": "参数变化与指标变化。"
+        },
+        {
+          "field": "M18.validation_chart",
+          "role": "独立留出结果。"
+        },
+        {
+          "field": "M18.funnel_chart",
+          "role": "运行阶段计数。"
+        },
+        {
+          "field": "M18.pnl_chart",
+          "role": "毛/净损益与费用对账。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M11.candidate_judgments",
+            "M18.strategy_judgments"
+          ],
+          "kind": "judgment",
+          "rule": "判断在前，关键图和事实紧随其后；按用户问题的重要性组织，不按数据取得次序堆章节。"
+        },
+        {
+          "fields": [
+            "M11.criteria",
+            "M18.hypothesis",
+            "M18.selection_rule",
+            "M18.metrics",
+            "M18.costs"
+          ],
+          "kind": "judgment",
+          "rule": "筛选命中、单项历史频率与策略收益分别展示。"
+        }
+      ],
+      "details": [
+        "M11.selection_logic",
+        "M11.candidate_details",
+        "M18.simulation",
+        "M18.logic_graph",
+        "M18.parameter_trials",
+        "M18.validation",
+        "M18.artifacts"
+      ],
+      "interactions": [
+        "原生策略浏览器承担真实逻辑/函数、矩阵指标切换、点格全部参数分页与敏感性。",
+        "模块图只展示固定摘要；切换显示指标不改变已登记获胜组。"
+      ],
+      "no_chart": [
+        "只有候选筛选结果而无策略运行证据时完成筛选部分，回测保留未完成状态。",
+        "没有真实源码与运行引用时不把策略叙述画成已执行逻辑。"
+      ]
+    },
+    {
+      "id": "R11",
+      "reading_question": "目标权重具体要改哪些资产，当前组合的风险和历史表现对该方案提供什么背景？",
+      "layout": "先回答本次要判断的问题，再用本模板的主图与比较支撑，只展开影响判断的依据和改判条件；章节按用户目的重排。",
+      "primary_charts": [
+        {
+          "field": "M19.weights_chart",
+          "role": "直接呈现当前至目标。"
+        }
+      ],
+      "supporting_charts": [
+        {
+          "field": "M19.changes_chart",
+          "role": "增减百分点。"
+        },
+        {
+          "field": "M12.exposure_chart",
+          "role": "当前组合暴露背景。"
+        },
+        {
+          "field": "M12.dependence_chart",
+          "role": "当前组合依赖。"
+        },
+        {
+          "field": "M18.equity_chart",
+          "role": "对应已运行规则版本的历史。"
+        },
+        {
+          "field": "M18.drawdown_chart",
+          "role": "同一原组合的历史回撤。"
+        }
+      ],
+      "key_cards": [
+        {
+          "fields": [
+            "M19.allocation_judgments",
+            "M12.risk_judgments",
+            "M18.strategy_judgments"
+          ],
+          "kind": "judgment",
+          "rule": "判断在前，关键图和事实紧随其后；按用户问题的重要性组织，不按数据取得次序堆章节。"
+        },
+        {
+          "fields": [
+            "M19.objective",
+            "M19.action_status",
+            "M19.rebalance",
+            "M12.budget",
+            "M18.window"
+          ],
+          "kind": "judgment",
+          "rule": "新方案、当前风险和旧组合历史表现保持清楚身份，不暗示新权重已回测或执行。"
+        }
+      ],
+      "details": [
+        "M19.constraints",
+        "M19.weighting_rules",
+        "M19.performance_refs",
+        "M19.risk_refs",
+        "M18.costs",
+        "M18.validation"
+      ],
+      "interactions": [
+        "选择变更查看原因、成本和状态；风险与表现入口显示其真实组合/规则版本。"
+      ],
+      "no_chart": [
+        "尚无目标权重时用目标/约束摘要；没有新权重回测时不得把旧净值重新标成新方案表现。"
+      ]
+    }
+  ]
+}

@@ -1,9 +1,11 @@
-# 修复 report/1 报告
+# 修复已发布报告
 
-读取实际失败诊断和原报告完整 ArtifactRef；报告使用固定 revision，不能按标题猜身份。用 report_read 查看 entry、data、related、资源清单，保留原绑定。
+先读取实际失败诊断和原报告完整 ArtifactRef；报告使用固定 revision，不能按标题猜身份。用 report_read 查看 entry、data、related、资源清单和检查回执，保留全部原绑定。
 
-优先保留原版 reportKit 的视觉与现有交互，检查 `window.report.track(initialize())` 中的错误、固定数据 ID、分页、实际列名、缺失值和 HTML 资源路径。只读桥为 `report.ready`、`readData(id,{cursor,limit})`、`readArtifact(ref)`、`readRun(id,version)`、`getContext()` 和 `subscribeContext(fn)`；reportKit 由报告插件资产提供，只有模板或 HTML 已打包加载 assets/report-kit.js 才可使用。旧 reportData/reportI18n 不存在，也不要调用宿主交易接口。
+先调用 host_reports_describe 确认宿主所选提供者及 inputSchema。Report 5 记录完整提供者输入；优先从原报告的 sesame-report-input.json 或原固定 inputRef 读取 input，编辑必要内容或用户要求的样式。旧报告的冻结 HTML 仍可读；旧成果没有结构化输入时，用已保存的真实结果重建相同展示，不重新做研究，不编辑 HTML 后上传。
 
-HTML/JS/CSS/图片须随成果发布，不能用 CDN。修复未打包资源或未声明依赖，不能用空数组、演示数据或 try/catch 隐藏真实加载失败。渲染错误应可见且继续传给 `report.track`。
+固定数据 ID、分页、实际列名、单位、缺失值与精确字符串按原结果核对。引用不存在、缺少列或不支持的组件不能用空数组、演示数据或伪造 SVL 遮盖。已有图表与主要交互保留；组件本身的错误交由插件维护者修复，不给报告提交脚本或 CSS。
 
-在原 artifact_id 上带 expected_revision 和新 operation_id 发布修订。保留数据来历与 demo 标签。随后对新完整 ref 调用 report_check，直到实际 receipt 为 rendered 或明确报告仍存在的诊断；用 report_read.include_checks 可复核历史检查。保存成功不等于渲染成功，旧 revision 的成功记录不覆盖新 revision。
+长内容先把整个 input 原样写为 UTF-8 JSON，登记固定 ArtifactRef，再向 host_reports_publish 提供 inputRef:{ref,entry}。元数据和 data/related/references 仍在发布外壳，不重新抄写整段 JSON 或公式。只修排版时，原数字、选择、留出结果、时点与绑定证据不得变化。
+
+用原 artifactId、当前 expectedRevision 和新 operationId 发布同一报告的新修订。对新完整 ref 调用 report_check，只有本次 receipt 为 rendered 才说明渲染检查完成；不能引用旧修订的通过记录。另核对保存输入与准备稿是否一致，检查公式、数字、引用、桌面/窄屏、关键交互及附录往返。渲染通过不等于内容正确，亦不证明 PDF/PNG 已导出。

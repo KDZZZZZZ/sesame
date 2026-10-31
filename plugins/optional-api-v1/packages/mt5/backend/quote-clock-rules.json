@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "rules": [
+    {
+      "id": "ftmo-demo-current-tick-2026",
+      "revision": "ftmo-demo-current-tick-2026-v1",
+      "source": "mt5/python/symbol_info_tick",
+      "server": "FTMO-Demo",
+      "basis": "server-wall",
+      "intervals": [
+        { "from": "2026-01-01T00:00:00", "until": "2026-03-08T09:00:00", "offsetMinutes": 120 },
+        { "from": "2026-03-08T09:00:00", "until": "2026-03-08T10:00:00", "reason": "DST_SPRING_GAP" },
+        { "from": "2026-03-08T10:00:00", "until": "2026-11-01T00:00:00", "offsetMinutes": 180 },
+        { "from": "2026-11-01T00:00:00", "until": "2026-11-02T00:00:00", "reason": "DST_AUTUMN_TRANSITION_UNVERIFIED" },
+        { "from": "2026-11-02T00:00:00", "until": "2027-01-01T00:00:00", "offsetMinutes": 120 }
+      ],
+      "evidence": {
+        "reviewedAt": "2026-10-21",
+        "scope": "Annual 2026 inference for this exact server and current-tick API only. Half-open intervals are encoded server wall time, not UTC. No permanent DST recurrence or historical-API conversion is claimed.",
+        "basis": "FTMO's standing specification says MetaTrader is GMT+2 plus DST; dated 2026 notices establish the March US-aligned change and the October GMT+3 period, with normal schedules restored on 2 November. The exact 2026 autumn instant is not established, so the entire 1 November server day is excluded. Winter offsets outside the cited current period are annual-policy inference.",
+        "liveFieldVerification": "Three FTMO-Demo samples on 2026-10-21 with Python SDK 5.0.6231 and terminal build 6230 showed current-tick raw server wall time about three hours ahead of independently checked UTC. Example raw time_msc=1792585999508 versus host capture range 1792575202219..1792575204240. This establishes the field domain for the sampled route, not quote freshness.",
+        "sources": [
+          "https://ftmo.com/en/faq/what-are-the-account-specifications/",
+          "https://ftmo.com/en/blog/trading-updates/trading-update-26-feb-2026/",
+          "https://ftmo.com/en/blog/trading-updates/trading-update-15-oct-2026/",
+          "https://www.mql5.com/en/docs/python_metatrader5/mt5symbolinfotick_py",
+          "https://www.mql5.com/en/book/common/timing/timing_local_server"
+        ]
+      }
+    }
+  ]
+}

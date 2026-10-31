@@ -1,0 +1,13 @@
+请执行用户刚提出的报告视觉改版：按照我提供的《全部图型与配色指南》优化目前打开的《黄金下周走势研究报告》的图表多样性和视觉设计，背景保持现有颜色，重新生成一次报告，最后的条件情景做成可视化决策树。
+
+这是已有报告的视觉改版，复用固定证据和原研究观察时点即可，不需要重新研究、刷新行情或改动账户。你来实际编写、发布并验收，Codex 仅更新了报告插件的组件和指引。
+
+当前报告：rep_bec19e63-ded1-4d20-a2b0-3a0934e7fe54，revision 1，Research / 黄金下周走势研究报告.html。原 artifactRef：{"id":"artifact_3e92276c-fce4-4f39-8e6f-dcc3417cfa5a","revision":"revision_ea3a59c3-87f6-40c8-a150-6c58a62202f7","digest":"sha256:3befcd23755a27ae012aeea0343e80baabdd87acfd013ac982dff866e3861a3b","kind":"report","schemaVersion":"1.0.0"}。请读取现有报告和绑定，保留结论、数值、关键条件、来源、观测时点与必要限制，直接编辑现有统一报告骨架。完整指南已放到你的主工作区 work/report-visual-reference/图型与配色指南.md；同目录 report-v1.html 和 report-v1.json 是原报告源码及元数据的只读参考副本。
+
+sesame/reports 已更新为 3.2.0，先按需读它的 skills/report-design/visual-design.md、decision-tree.md。新版 assets/editorial.css 提供蓝灰语义色，assets/charts-decision.js 在 editorial-charts.js 之后内联可用；report_template 已打包它。复用旧源码时务必替换为当前 editorial.css 并加载新决策树组件。html 设置 data-report-palette="blue-gray"，背景保留当前 #FAFAFA 及宿主暗色，不采用指南中的 #F0EFEB，不改应用主题或行情 K 线颜色。
+
+建议按实际内容选择：日线价格与均线保留清楚的趋势线并简化日期标签；H4 原数据有 open/high/low/close，可用真正的价格区间/蜡烛表达；关键价位可用共同价格轴的区间/点标记；已核实宏观日程可以做日期/事件轴。仅在确实回答不同问题时增加图，不凑数量，不用新图重复同一结论。没有原始字段或精确时间不要编造。价格/时期/单位可读，不能只藏在 hover。图形用蓝色重点、灰色参照；深浅蓝仅表示有序大小，数字和文字使用正文色。
+
+最后主体章节的条件情景使用 SesameCharts.chart(...,{kind:'decision-tree', rows:[{id,parentId,label,condition,detail},...]})，将原有基准/修复/走弱的完整进入条件、后续观察和失效条件组织成树，保留未确认路径，不写未经估计的概率，不能简化掉“两根已收盘 H4”、回踩/回抽等关键条件。阈值来自原报告，3907.02 仍仅为压力测试值。方法与来源可继续折叠在树之后。保留相同内容的折叠表格供核对。新组件会在窄屏改为纵向，勿额外设固定大宽度。
+
+请更新同一报告：report_publish 填原 artifact_id=artifact_3e92276c-fce4-4f39-8e6f-dcc3417cfa5a 和 expected_revision=revision_ea3a59c3-87f6-40c8-a150-6c58a62202f7，保留完整固定 data 绑定；不要新建同名报告或额外套文件夹。此轮是现有报告呈现重绘，可直接完成；如委派，只使用能沿用原报告归属与交付位置的方式。发布后对当前 ref 做 report_check 和 report_export_check；修复实际渲染问题后再发布并检查新的 ref。完成后简要汇报新版本和实际图型，打开新版报告，勿把预检通过声称为已生成 PDF/PNG。

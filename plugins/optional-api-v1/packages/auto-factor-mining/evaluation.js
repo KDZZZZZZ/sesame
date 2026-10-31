@@ -9,7 +9,7 @@ export async function callEvaluator(host, selected, request, signal) {
     (!request.session_id || value.sessionId === request.session_id), 'EVALUATOR_PROTOCOL', 'Evaluator returned an incompatible or unrelated receipt');
   const { receiptDigest, ...body } = value;
   check(receiptDigest === digest(body), 'EVALUATOR_PROTOCOL', 'Evaluator receipt digest differs');
-  const limit = ['prepare', 'finalize'].includes(request.action) ? 5 * 1024 * 1024 : 64 * 1024;
+  const limit = ['prepare', 'finalize'].includes(request.action) ? 5 * 1024 * 1024 : request.action === 'select' ? 512 * 1024 : 64 * 1024;
   check(Buffer.byteLength(JSON.stringify(value)) <= limit, 'EVALUATOR_PROTOCOL', `Evaluator receipt exceeds ${limit} bytes`);
   return structuredClone(value);
 }

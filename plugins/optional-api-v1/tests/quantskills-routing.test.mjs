@@ -37,29 +37,49 @@ test('invalid JSON and invalid limits return errors without terminating the MCP 
   assert.equal(responses.at(-1).result.structuredContent.total_items, 214);
 });
 
-test('workflow routing keeps factor research separate from general strategy experiments', () => {
-  const [factor, strategy, backtest] = exchange([
-    call(1, 'catalog_recommend', { need: 'factor-research' }),
-    call(2, 'catalog_recommend', { need: 'strategy-research' }),
+test('research routing exposes investment-research and one strategy need, and rejects retired aliases', () => {
+  const [strategy, research, backtest] = exchange([
+    call(1, 'catalog_recommend', { need: 'strategy' }),
+    call(2, 'catalog_recommend', { need: 'investment-research' }),
     call(3, 'catalog_recommend', { need: 'native-backtest' }),
   ]).map(response => response.result.structuredContent);
-  assert.deepEqual(factor.workflow.primary_plugins, ['sesame/factor-research']);
-  assert.deepEqual(strategy.workflow.primary_plugins, ['sesame/strategy-research']);
+  assert.deepEqual(strategy.workflow.primary_plugins, ['sesame/auto-factor-mining']);
+  assert.deepEqual(research.workflow.primary_plugins, ['sesame/investment-research']);
+  const guidance = json('capabilities.json').capabilities.find(item => item.id === 'catalog_recommend').usage;
+  assert.match(guidance.outputs, /need:strategy/);
+  assert.doesNotMatch(JSON.stringify(guidance), /factor-research|strategy-research|accepted as aliases/);
+  for (const response of exchange(['factor-research', 'strategy-research', 'research'].map((need, i) => call(i, 'catalog_recommend', { need })))) {
+    assert.equal(response.error.code, -32602);
+  }
+  for (const route of Object.values(json('workflows.json').workflows)) {
+    assert.ok(!route.primary_plugins.some(id => ['sesame/factor-research', 'sesame/strategy-research'].includes(id)));
+  }
   assert.deepEqual(backtest.workflow.primary_plugins, []);
   assert.ok(backtest.workflow.backend_choices.includes('sesame/backtrader'));
-  for (const response of [factor, strategy, backtest]) {
+  for (const response of [strategy, research, backtest]) {
     assert.equal(response.availability, 'not_checked');
     assert.ok(response.next_steps.some(step => step.includes('capabilities')));
     assert.ok(response.references.length > 0);
     assert.equal(response.snapshot_date, json('catalog.json').meta.snapshot_date);
   }
+  assert.ok(strategy.references.some(item => item.name === 'skill-factor-mine'));
+  assert.ok(strategy.references.some(item => item.name === 'skill-backtest-overfit'));
+});
+
+test('historical evidence routes to an independent computational package', () => {
+  const [response] = exchange([call(1, 'catalog_recommend', { need: 'historical-evidence' })]);
+  const result = response.result.structuredContent;
+  assert.deepEqual(result.workflow.primary_plugins, ['sesame/historical-evidence']);
+  assert.equal(result.availability, 'not_checked');
+  assert.equal(result.selection_required, false);
+  assert.ok(result.references.length > 0);
 });
 
 test('selecting only ICT returns no other theory, and does not mutate later choices', () => {
   const [ict, all, mismatch] = exchange([
     call(1, 'catalog_recommend', { need: 'technical-analysis', method: 'ict' }),
     call(2, 'catalog_recommend', { need: 'technical-analysis' }),
-    call(3, 'catalog_recommend', { need: 'factor-research', method: 'ict' }),
+    call(3, 'catalog_recommend', { need: 'strategy', method: 'ict' }),
   ]);
   assert.deepEqual(ict.result.structuredContent.workflow.primary_plugins, ['sesame/ict']);
   assert.equal(ict.result.structuredContent.selection_required, false);

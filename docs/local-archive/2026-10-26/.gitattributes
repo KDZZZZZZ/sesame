@@ -1,0 +1,2 @@
+# Preserve archived bytes so manifest SHA-256 values survive checkout on every platform.
+* -text

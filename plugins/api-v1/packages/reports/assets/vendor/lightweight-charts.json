@@ -1,0 +1,7 @@
+{
+  "name": "lightweight-charts",
+  "version": "5.2.1",
+  "license": "Apache-2.0",
+  "source": "https://github.com/tradingview/lightweight-charts",
+  "distribution": "dist/lightweight-charts.standalone.production.js"
+}

@@ -1,0 +1,4 @@
+用户澄清：代表盈亏、涨跌的红绿色必须保持原样，只将原先作为主题色的深浅绿改为蓝色。请对你刚发布的《黄金下周走势研究报告》v4 做一次很小的呈现修正，并实际发布到同一文件。
+已定位问题：自定义 H4 蜡烛的 candles.forEach 里 c=up?blue:gray，把涨跌语义色改成了蓝灰。请恢复使用宿主 --chart-up / --chart-down（离线可回退到 --report-default-chart-up / --report-default-chart-down），保留空心/实心的辅助区分；同步修正对应图注/图例中的颜色说明。原来的涨为绿、跌为红，明暗主题都沿用原值。核对任何明确表示盈利或亏损的颜色也应沿用 --success / --danger。
+普通趋势/均线参照、价位、事件、决策树、文字强调仍保持当前蓝灰，不刷新数据，不改研究结论、价格、时点、来源或原文件位置。读取当前 report artifact 后以相同 artifact_id=artifact_3e92276c-fce4-4f39-8e6f-dcc3417cfa5a、expected_revision=revision_760688bf-34f4-4285-a670-8eb9b3678515 发布新修订，保留所有固定 data 绑定；不要新建同名报告。
+这只是已有报告的局部配色修正，直接完成即可。对新 ref 做 report_check 并检查实际 DOM 中 H4 蜡烛 stroke 使用涨跌红绿。Codex 会另外修正报告插件中的相关主题规则和组件。

@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "reviewedAt": "2026-10-29",
+  "baselineSha256": "sha256:d81b8b0e33ae5c1cbac9e255131d6f139a094f01d146cf96dc90e6d19d29a04c",
+  "pluginId": "sesame/data-access",
+  "sourcePath": "plugins/api-v1/packages/data-access/capture.js",
+  "before": {
+    "version": "3.0.3",
+    "sha256": "sha256:087e47fd0a160f9cbd7f741df21db2c228dd05084e1eddd0dfa0e66f108c54d9",
+    "manifestDigest": "sha256:3234cae716fc36cb0a41b99813fbdc17cde6f8110b219123049ef7a832b9f151",
+    "gitCommit": "8e2a5c7bc8765825849653cf7eff1092997dcb04",
+    "gitMatches": true
+  },
+  "after": {
+    "version": "3.0.4",
+    "sha256": "sha256:06ede75709c800c0b4d43ed4eea2f3c165f97f94711e62c58c7b9d24b68cf0b2",
+    "manifestDigest": "sha256:b447e7a6c14669014cb855bfb40bcfa4dc3bdb2d1496f664bb6c593fa67cb0bf"
+  },
+  "declarationSha256Unchanged": "sha256:8ed9303626c1f7067f778c266969b8b08cfdb17811c8c4971532bbef2b7f3b7e",
+  "decision": "approved",
+  "reason": "User-authorized interoperability repair: new captures directly pin already-verified inputRefs alongside capture evidence so strict historical-evidence readers can validate plan/source/prediction/replay dependencies. Preserve exact input/output evidence, original provenance labels and references, and old completed or unknown-publication idempotent recovery. No added capability, data fetch or authority.",
+  "approvedSourceEdits": [
+    {
+      "before": "export const publicSource = ({ providerId, revision }) => ({ providerId, revision });\nconst pending = new Map(), MAX_BYTES = 16 * 1024 * 1024;\n\nexport async function readBytes(host, ref, entry, signal) {\n",
+      "after": "export const publicSource = ({ providerId, revision }) => ({ providerId, revision });\nconst pending = new Map(), MAX_BYTES = 16 * 1024 * 1024;\nconst DIRECT_INPUTS = 'direct-inputs-v1', MAX_DEPENDENCIES = 256;\nconst uniqueRefs = refs => [...new Map(refs.map(ref => [digest(ref), ref])).values()];\n\nexport async function readBytes(host, ref, entry, signal) {\n"
+    },
+    {
+      "before": "    if (!captured) {\n      const value = await capture(); signal?.throwIfAborted();\n      const rows = JSON.stringify(value.rows), evidence = JSON.stringify(value.evidence);\n      check(Buffer.byteLength(rows) <= MAX_BYTES && Buffer.byteLength(evidence) <= MAX_BYTES, 'Snapshot byte budget exceeded', 'RESOURCE_EXHAUSTED');\n",
+      "after": "    if (!captured) {\n      const value = await capture(); signal?.throwIfAborted();\n      check(uniqueRefs(value.dependencies ?? []).length < MAX_DEPENDENCIES, 'Snapshot dependencies exceed the 256-reference publication budget including evidence', 'RESOURCE_EXHAUSTED');\n      const rows = JSON.stringify(value.rows), evidence = JSON.stringify(value.evidence);\n      check(Buffer.byteLength(rows) <= MAX_BYTES && Buffer.byteLength(evidence) <= MAX_BYTES, 'Snapshot byte budget exceeded', 'RESOURCE_EXHAUSTED');\n"
+    },
+    {
+      "before": "      for (const row of value.rows.slice(0, 5)) { if (Buffer.byteLength(JSON.stringify([...sample, row])) > 32768) break; sample.push(row); }\n      check(Buffer.byteLength(JSON.stringify(value.summary)) <= 128 * 1024, 'Snapshot metadata exceeds 128 KiB', 'RESOURCE_EXHAUSTED');\n      captured = { rowResource, evidenceResource, columns, rowCount: value.rows.length, sample, summary: value.summary, dependencies: value.dependencies ?? [] };\n      const saved = await host.state.commit([{ op: 'put', key: address, expectedVersion: 0, value: { fingerprint, capture: captured } }], { operationId: `${key}:capture`, signal });\n      stored = saved.entries[0];\n",
+      "after": "      for (const row of value.rows.slice(0, 5)) { if (Buffer.byteLength(JSON.stringify([...sample, row])) > 32768) break; sample.push(row); }\n      check(Buffer.byteLength(JSON.stringify(value.summary)) <= 128 * 1024, 'Snapshot metadata exceeds 128 KiB', 'RESOURCE_EXHAUSTED');\n      captured = { rowResource, evidenceResource, columns, rowCount: value.rows.length, sample, summary: value.summary, dependencies: value.dependencies ?? [], publicationDependencyMode: DIRECT_INPUTS };\n      const saved = await host.state.commit([{ op: 'put', key: address, expectedVersion: 0, value: { fingerprint, capture: captured } }], { operationId: `${key}:capture`, signal });\n      stored = saved.entries[0];\n"
+    },
+    {
+      "before": "    const origin = captured.summary.origin;\n    check(['observed', 'derived', 'user_input', 'demo'].includes(origin), 'Snapshot requires explicit source provenance');\n    const evidenceProvenance = { kind: origin, references: captured.dependencies };\n    const evidence = await host.resources.publish(captured.evidenceResource, { kind: 'resource', schemaVersion: '1.0.0', content: { type: 'captured-data-evidence', path: 'evidence.json', ...captured.summary, provenance: evidenceProvenance }, dependencies: captured.dependencies, blobs: [{ path: 'evidence.json', mediaType: 'application/json' }], provenance: evidenceProvenance }, { operationId: `${key}:publish-evidence`, signal });\n    const provenance = { kind: origin === 'demo' ? 'demo' : 'derived', references: [evidence.ref], ...captured.summary };\n    const published = await host.resources.publish(captured.rowResource, { kind: 'data', schemaVersion: '1.0.0', content: { format: 'json-rows', path: 'rows.json', columns: captured.columns, rowCount: captured.rowCount, provenance }, dependencies: [evidence.ref], blobs: [{ path: 'rows.json', mediaType: 'application/json' }], provenance }, { operationId: `${key}:publish-data`, signal });\n    const result = { ref: published.ref, evidence: evidence.ref, rowCount: captured.rowCount, columns: captured.columns, sample: captured.sample, provenance, receipt: published.receipt };\n    await host.state.commit([{ op: 'put', key: address, expectedVersion: stored.version, value: { fingerprint, capture: captured, result } }], { operationId: `${key}:complete`, signal });\n",
+      "after": "    const origin = captured.summary.origin;\n    check(['observed', 'derived', 'user_input', 'demo'].includes(origin), 'Snapshot requires explicit source provenance');\n    check(captured.publicationDependencyMode === undefined || captured.publicationDependencyMode === DIRECT_INPUTS, 'Unknown frozen publication dependency mode');\n    const evidenceProvenance = { kind: origin, references: captured.dependencies };\n    const evidence = await host.resources.publish(captured.evidenceResource, { kind: 'resource', schemaVersion: '1.0.0', content: { type: 'captured-data-evidence', path: 'evidence.json', ...captured.summary, provenance: evidenceProvenance }, dependencies: captured.dependencies, blobs: [{ path: 'evidence.json', mediaType: 'application/json' }], provenance: evidenceProvenance }, { operationId: `${key}:publish-evidence`, signal });\n    const provenance = { kind: origin === 'demo' ? 'demo' : 'derived', references: [evidence.ref], ...captured.summary };\n    // Only already-verified inputs are promoted, never refs found inside result\n    // rows. Freeze the mode with capture: old in-flight publications may already\n    // have committed the legacy manifest under this exact idempotency key.\n    const dependencies = captured.publicationDependencyMode === DIRECT_INPUTS ? uniqueRefs([evidence.ref, ...captured.dependencies]) : [evidence.ref];\n    check(dependencies.length <= MAX_DEPENDENCIES, 'Snapshot dependency budget exceeded', 'RESOURCE_EXHAUSTED');\n    const published = await host.resources.publish(captured.rowResource, { kind: 'data', schemaVersion: '1.0.0', content: { format: 'json-rows', path: 'rows.json', columns: captured.columns, rowCount: captured.rowCount, provenance }, dependencies, blobs: [{ path: 'rows.json', mediaType: 'application/json' }], provenance }, { operationId: `${key}:publish-data`, signal });\n    const result = { ref: published.ref, evidence: evidence.ref, rowCount: captured.rowCount, columns: captured.columns, sample: captured.sample, provenance, receipt: published.receipt };\n    await host.state.commit([{ op: 'put', key: address, expectedVersion: stored.version, value: { fingerprint, capture: captured, result } }], { operationId: `${key}:complete`, signal });\n"
+    }
+  ],
+  "boundaries": {
+    "directEdges": "Stable first-seen identity order, full fixed Ref canonical identity, maximum256 including evidence. Only verified captured dependencies; no discovery from output rows.",
+    "newCaptureMode": "direct-inputs-v1 saved before publication",
+    "legacyCaptureMode": "Missing mode keeps exact legacy evidence-only manifest, even after a committed publication with missing completion receipt.",
+    "oldArtifacts": "Never rewritten; new operationId needed to create the new graph.",
+    "publicContracts": "Input/output schemas, effects, permission requests and state-collection schema unchanged.",
+    "sourceProvenance": "Observed provider origin cannot be relabelled derived; demo inputs remain demo.",
+    "historyValidation": "historical-evidence package and strict direct-dependency checks untouched."
+  },
+  "tests": [
+    "plugins/api-v1/tests/data-capture-dependencies.test.mjs",
+    "plugins/api-v1/tests/research-native.test.js",
+    "plugins/api-v1/tests/core-v2-data.test.js",
+    "plugins/api-v1/tests/research-history-dependencies-host.test.mjs"
+  ],
+  "receipt": "output/research-register-dependencies-20261029/host-receipt.json"
+}

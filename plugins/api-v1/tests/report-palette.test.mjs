@@ -34,7 +34,7 @@ test('report blue-gray data roles preserve the host backgrounds and readable lig
     assert.equal(colors.background,original.background,`${theme} background must remain unchanged`);
     assert.equal(colors.success,original.success,'status meaning is outside the report data palette');
     assert.equal(colors.data,theme==='light'?'rgb(51, 78, 172)':'rgb(155, 179, 255)');
-    assert.equal(colors.context,theme==='light'?'rgb(120, 120, 120)':'rgb(165, 165, 173)');
+    assert.equal(colors.context,theme==='light'?'rgb(52, 52, 52)':'rgb(228, 228, 231)');
     for(const role of ['ink','muted','data']) assert.ok(contrast(colors[role],colors.background)>=4.5,`${theme} ${role} text contrast`);
     assert.ok(contrast(colors.context,colors.background)>=3,`${theme} context graphical contrast`);
   }

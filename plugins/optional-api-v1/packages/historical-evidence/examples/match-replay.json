@@ -1,0 +1,314 @@
+{
+  "as_of": "2026-10-29T02:00:00Z",
+  "source_refs": [
+    {
+      "id": "synthetic-fixed-input",
+      "revision": "v1",
+      "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "kind": "data",
+      "schemaVersion": "1.0.0"
+    }
+  ],
+  "plan": {
+    "ref": {
+      "id": "synthetic-fixed-input",
+      "revision": "v1",
+      "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "kind": "data",
+      "schemaVersion": "1.0.0"
+    },
+    "frozen_at": "2026-10-29T00:00:00Z",
+    "target": {
+      "id": "positive-next-day",
+      "horizon_seconds": 86400,
+      "description": "Caller supplied binary label: fixed next-day outcome is positive."
+    },
+    "independence": {
+      "gap_seconds": 0,
+      "assumption": "Synthetic observations separated by more than one day; real financial independence is not established."
+    },
+    "confidence_level": 0.95,
+    "conditions": [
+      "Example calm regime only; feature units unchanged."
+    ],
+    "failure_conditions": [
+      "Changed publication timing or target definition."
+    ],
+    "monitoring": [
+      "Track subsequent out-of-fit frequencies and new counterexamples."
+    ],
+    "regime_definition": "Caller-supplied pre-outcome calm/shock condition, not derived from the later label.",
+    "mode": "exploratory",
+    "features": [
+      {
+        "key": "custom_feature",
+        "kind": "numeric",
+        "scale": 1,
+        "weight": 1,
+        "definition": "User-selected fictional numeric feature known at the observation."
+      },
+      {
+        "key": "custom_state",
+        "kind": "categorical",
+        "weight": 1,
+        "definition": "User-selected fictional categorical condition known at the observation."
+      }
+    ],
+    "matching": {
+      "method": "distance",
+      "max_distance": 0.3,
+      "max_matches": 100
+    },
+    "cohorts": {
+      "recent_seconds": 2592000,
+      "minimum_samples": 3,
+      "comparables": [
+        {
+          "instrument": "COMPARABLE",
+          "condition": "Explicit fictional same unit, horizon and exposure comparison for software test.",
+          "available_at": "2025-01-01T00:00:00Z"
+        }
+      ]
+    }
+  },
+  "query": {
+    "id": "current-query",
+    "instrument": "SYNTHETIC",
+    "regime_id": "calm",
+    "at": "2026-01-01T00:00:00Z",
+    "features": {
+      "custom_feature": {
+        "value": 1,
+        "available_at": "2025-12-31T00:00:00Z"
+      },
+      "custom_state": {
+        "value": "expansion",
+        "available_at": "2025-12-31T00:00:00Z"
+      }
+    },
+    "regime_available_at": "2026-01-01T00:00:00Z",
+    "replay": {
+      "feature_cutoff": "2026-01-01T00:00:00Z"
+    }
+  },
+  "cases": [
+    {
+      "id": "recent-positive",
+      "instrument": "SYNTHETIC",
+      "regime_id": "calm",
+      "at": "2025-12-20T00:00:00Z",
+      "features": {
+        "custom_feature": {
+          "value": 1,
+          "available_at": "2025-12-20T00:00:00Z"
+        },
+        "custom_state": {
+          "value": "expansion",
+          "available_at": "2025-12-20T00:00:00Z"
+        }
+      },
+      "outcome": {
+        "target_id": "positive-next-day",
+        "horizon_seconds": 86400,
+        "end_at": "2025-12-21T00:00:00Z",
+        "available_at": "2026-10-29T00:30:00Z",
+        "label": 1
+      },
+      "regime_available_at": "2025-12-20T00:00:00Z",
+      "replay": {
+        "feature_cutoff": "2025-12-20T00:00:00Z",
+        "outcome_available_at": "2025-12-21T00:00:00Z"
+      }
+    },
+    {
+      "id": "recent-counterexample",
+      "instrument": "SYNTHETIC",
+      "regime_id": "calm",
+      "at": "2025-12-22T00:00:00Z",
+      "features": {
+        "custom_feature": {
+          "value": 1.1,
+          "available_at": "2025-12-22T00:00:00Z"
+        },
+        "custom_state": {
+          "value": "expansion",
+          "available_at": "2025-12-22T00:00:00Z"
+        }
+      },
+      "outcome": {
+        "target_id": "positive-next-day",
+        "horizon_seconds": 86400,
+        "end_at": "2025-12-23T00:00:00Z",
+        "available_at": "2026-10-29T00:30:00Z",
+        "label": 0
+      },
+      "regime_available_at": "2025-12-22T00:00:00Z",
+      "replay": {
+        "feature_cutoff": "2025-12-22T00:00:00Z",
+        "outcome_available_at": "2025-12-23T00:00:00Z"
+      }
+    },
+    {
+      "id": "unmatched-baseline",
+      "instrument": "SYNTHETIC",
+      "regime_id": "calm",
+      "at": "2025-12-24T00:00:00Z",
+      "features": {
+        "custom_feature": {
+          "value": 5,
+          "available_at": "2025-12-24T00:00:00Z"
+        },
+        "custom_state": {
+          "value": "expansion",
+          "available_at": "2025-12-24T00:00:00Z"
+        }
+      },
+      "outcome": {
+        "target_id": "positive-next-day",
+        "horizon_seconds": 86400,
+        "end_at": "2025-12-25T00:00:00Z",
+        "available_at": "2026-10-29T00:30:00Z",
+        "label": 0
+      },
+      "regime_available_at": "2025-12-24T00:00:00Z",
+      "replay": {
+        "feature_cutoff": "2025-12-24T00:00:00Z",
+        "outcome_available_at": "2025-12-25T00:00:00Z"
+      }
+    },
+    {
+      "id": "older-positive",
+      "instrument": "SYNTHETIC",
+      "regime_id": "calm",
+      "at": "2025-06-01T00:00:00Z",
+      "features": {
+        "custom_feature": {
+          "value": 1,
+          "available_at": "2025-06-01T00:00:00Z"
+        },
+        "custom_state": {
+          "value": "expansion",
+          "available_at": "2025-06-01T00:00:00Z"
+        }
+      },
+      "outcome": {
+        "target_id": "positive-next-day",
+        "horizon_seconds": 86400,
+        "end_at": "2025-06-02T00:00:00Z",
+        "available_at": "2026-10-29T00:30:00Z",
+        "label": 1
+      },
+      "regime_available_at": "2025-06-01T00:00:00Z",
+      "replay": {
+        "feature_cutoff": "2025-06-01T00:00:00Z",
+        "outcome_available_at": "2025-06-02T00:00:00Z"
+      }
+    },
+    {
+      "id": "cross-positive",
+      "instrument": "COMPARABLE",
+      "regime_id": "calm",
+      "at": "2025-12-12T00:00:00Z",
+      "features": {
+        "custom_feature": {
+          "value": 1,
+          "available_at": "2025-12-12T00:00:00Z"
+        },
+        "custom_state": {
+          "value": "expansion",
+          "available_at": "2025-12-12T00:00:00Z"
+        }
+      },
+      "outcome": {
+        "target_id": "positive-next-day",
+        "horizon_seconds": 86400,
+        "end_at": "2025-12-13T00:00:00Z",
+        "available_at": "2026-10-29T00:30:00Z",
+        "label": 1
+      },
+      "regime_available_at": "2025-12-12T00:00:00Z",
+      "replay": {
+        "feature_cutoff": "2025-12-12T00:00:00Z",
+        "outcome_available_at": "2025-12-13T00:00:00Z"
+      }
+    },
+    {
+      "id": "undeclared-cross",
+      "instrument": "UNDECLARED",
+      "regime_id": "calm",
+      "at": "2025-12-10T00:00:00Z",
+      "features": {
+        "custom_feature": {
+          "value": 1,
+          "available_at": "2025-12-10T00:00:00Z"
+        },
+        "custom_state": {
+          "value": "expansion",
+          "available_at": "2025-12-10T00:00:00Z"
+        }
+      },
+      "outcome": {
+        "target_id": "positive-next-day",
+        "horizon_seconds": 86400,
+        "end_at": "2025-12-11T00:00:00Z",
+        "available_at": "2026-10-29T00:30:00Z",
+        "label": 1
+      },
+      "regime_available_at": "2025-12-10T00:00:00Z",
+      "replay": {
+        "feature_cutoff": "2025-12-10T00:00:00Z",
+        "outcome_available_at": "2025-12-11T00:00:00Z"
+      }
+    },
+    {
+      "id": "shock-counterexample",
+      "instrument": "SYNTHETIC",
+      "regime_id": "shock",
+      "at": "2025-12-16T00:00:00Z",
+      "features": {
+        "custom_feature": {
+          "value": 1,
+          "available_at": "2025-12-16T00:00:00Z"
+        },
+        "custom_state": {
+          "value": "expansion",
+          "available_at": "2025-12-16T00:00:00Z"
+        }
+      },
+      "outcome": {
+        "target_id": "positive-next-day",
+        "horizon_seconds": 86400,
+        "end_at": "2025-12-17T00:00:00Z",
+        "available_at": "2026-10-29T00:30:00Z",
+        "label": 0
+      },
+      "regime_available_at": "2025-12-16T00:00:00Z",
+      "replay": {
+        "feature_cutoff": "2025-12-16T00:00:00Z",
+        "outcome_available_at": "2025-12-17T00:00:00Z"
+      }
+    }
+  ],
+  "origin": "historical_replay",
+  "replay": {
+    "generated_at": "2026-10-29T01:00:00Z",
+    "observed_at": "2026-10-29T00:30:00Z",
+    "code_ref": {
+      "id": "synthetic-fixed-input",
+      "revision": "v1",
+      "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "kind": "data",
+      "schemaVersion": "1.0.0"
+    },
+    "data_refs": [
+      {
+        "id": "synthetic-fixed-input",
+        "revision": "v1",
+        "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "kind": "data",
+        "schemaVersion": "1.0.0"
+      }
+    ],
+    "source_vintage": "current_snapshot_not_point_in_time"
+  }
+}

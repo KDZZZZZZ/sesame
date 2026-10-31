@@ -13,6 +13,8 @@
     "sesame/plugin-manager",
     "sesame/reports",
     "sesame/strategy-authoring",
+    "sesame/ultra",
+    "sesame/user-guide",
     "sesame/workspace"
   ]
 }

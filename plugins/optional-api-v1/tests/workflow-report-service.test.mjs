@@ -37,7 +37,7 @@ async function fixture(t) {
     calls.push({ id, input: structuredClone(input) });
     if (id === 'sesame/workspace#write') {
       const path = join(directory, input.path); await mkdir(dirname(path), { recursive: true }); await writeFile(path, input.content);
-      return { type: 'result', value: { path: input.path } };
+      return { type: 'result', value: { path } };
     }
     assert.ok(id.startsWith('sesame/reports#'));
     const handler = handlers.find(value => value.name === id.split('#')[1]); assert.ok(handler);
@@ -48,14 +48,38 @@ async function fixture(t) {
 const decisionRun = () => ({ id: 'direct-service-decision', createdAt: 1, plan: { title: 'Fixed decision', reportFolder: 'Retained-plan-location', researchRefs: [] }, status: 'completed', executionDisposition: 'withheld_by_review',
   reports: [{ role: 'manager', status: 'completed', text: '# Frozen decision\n\nNo trade after the blocked review.' }], decision: { unchanged: true, targets: [] }, reviewChecks: { reviewer: { verdict: 'block' } } });
 
-test('native decision report uses the actual common template/publication service without another Agent', async t => {
+test('native decision report sends content directly through the common publication service without another Agent', async t => {
   const f = await fixture(t), run = decisionRun(), report = await writeDailyReport(f.host, run);
   const html = (await f.host.resources.read(report.ref, { part: 'content', entry: report.entry })).content;
   assert.match(html, /data-sesame-report-template="report\/1"/); assert.match(html, /--report-/);
   assert.match(html, /<h1>Frozen decision<\/h1>/); assert.match(html, /复核阻止本轮执行/);
   assert.equal(report.renderStatus, 'rendered'); assert.equal(report.inspection.renderer.name, 'sesame-report-inspector');
   assert.deepEqual(JSON.parse((await f.host.resources.read(report.ref, { part: 'content', entry: 'run.json' })).content), run);
-  assert.deepEqual(f.calls.filter(call => call.id.startsWith('sesame/reports#')).map(call => call.id.split('#')[1]), ['report_document_template', 'report_publish', 'report_check']);
+  assert.deepEqual(f.calls.filter(call => call.id.startsWith('sesame/reports#')).map(call => call.id.split('#')[1]), ['report_publish', 'report_check']);
+  const publication = f.calls.find(call => call.id.endsWith('#report_publish')).input;
+  assert.equal(publication.content.kind, 'document');
+  assert.equal(Object.hasOwn(publication, 'html_path'), false);
+  assert.equal(Object.hasOwn(publication, 'body_html'), false);
+  assert.deepEqual(publication.style, { theme: 'blue' });
+  assert.equal(f.calls.filter(call => call.id === 'sesame/workspace#write').length, 1, 'Only raw run evidence is written, never an intermediate HTML page');
+});
+
+test('untrusted attachment write return paths never become report sources or intermediate HTML templates', async t => {
+  for (const mismatch of ['different-file', 'outside-workspace']) {
+    const f = await fixture(t), invoke = f.host.capabilities.invoke;
+    f.host.capabilities.invoke = async (id, input, options) => {
+      const result = await invoke(id, input, options);
+      if (id === 'sesame/workspace#write') result.value.path = mismatch === 'different-file' ? result.value.path + '.other' : join(f.host.context.workspaceRoot, '..', 'outside-report.html');
+      return result;
+    };
+    const run = decisionRun(), report = await writeDailyReport(f.host, run);
+    const publication = f.calls.find(call => call.id.endsWith('#report_publish')).input;
+    const write = f.calls.find(call => call.id === 'sesame/workspace#write').input;
+    assert.deepEqual(publication.assets, [{ path: 'run.json', source_path: write.path, media_type: 'application/json' }]);
+    assert.equal(Object.hasOwn(publication, 'html_path'), false);
+    assert.equal(f.calls.some(call => call.id.endsWith('#report_document_template')), false);
+    assert.deepEqual(JSON.parse((await f.host.resources.read(report.ref, { part: 'content', entry: 'run.json' })).content), run);
+  }
 });
 
 test('export preflight or another report revision cannot satisfy actual workflow publication inspection', async t => {
@@ -72,17 +96,25 @@ test('export preflight or another report revision cannot satisfy actual workflow
   }
 });
 
-test('factor report keeps native evidence and interactions inside the common service document', async t => {
+test('factor report uses the central signal-study layout and keeps the exact original evidence', async t => {
   const f = await fixture(t);
   const run = { id: 'direct-factor', title: 'Synthetic factor fixture', goal: 'No measured performance is invented', status: 'completed', config: { evaluator: { plugin_id: 'fixture/evaluator', tool: 'evaluate' } }, data: { digest: 'fixture-input', synthetic: true, holdoutMode: 'none', inputRefs: [] }, tasks: [], trials: [], reflections: [], events: [], selection: { trialIds: [], reason: 'No accepted candidates', digest: 'fixture-selection' } };
   const report = await archiveReport(f.host, run, { rows: [] });
   const html = (await f.host.resources.read(report.ref, { part: 'content', entry: report.entry })).content;
-  assert.match(html, /data-sesame-report-template="report\/1"/); assert.match(html, /id="status-filter"/); assert.match(html, /id="run-snapshot"/); assert.match(html, /本次仅使用开发集/);
+  assert.match(html, /data-sesame-report-template="report\/1"/); assert.match(html, /id="factor-focus"/); assert.match(html, /id="run-snapshot"/);
+  assert.match(html, /<dt>后续行情<\/dt><dd>未完成<\/dd>/);
   assert.equal((html.match(/<h1\b/g) ?? []).length, 1, 'The common service owns the single report heading.');
   assert.equal((html.match(/<main\b/g) ?? []).length, 1, 'Factor controls do not nest another page document.');
-  assert.match(html, /@scope \(\.factor-report\)/); assert.match(html, /--paper:var\(--report-paper\)/);
+  assert.match(html, /class="report-signal-study"/);
+  assert.doesNotMatch(html, /@scope \(\.factor-report\)/);
+  assert.equal(f.calls.find(call => call.id.endsWith('#report_publish')).input.content.kind, 'signal-study');
+  assert.deepEqual(f.calls.filter(call => call.id.startsWith('sesame/reports#')).map(call => call.id.split('#')[1]), ['report_publish', 'report_check']);
   assert.equal((await f.host.resources.read(report.ref, { part: 'manifest' })).content.provenance.kind, 'demo');
   assert.deepEqual(JSON.parse((await f.host.resources.read(report.ref, { part: 'content', entry: 'run.json' })).content), run);
+  assert.deepEqual(JSON.parse(html.match(/<script[^>]*id="run-snapshot"[^>]*>([\s\S]*?)<\/script>/)[1]), run);
+  const dataset = JSON.parse((await f.host.resources.read(report.ref, { part: 'content', entry: 'dataset.json' })).content);
+  assert.equal(dataset.holdoutStatus, 'not-requested');
+  assert.equal(dataset.holdoutSealed, false);
 });
 
 test('raw report evidence preserves inert HTML examples without authorizing executable report markup', async t => {

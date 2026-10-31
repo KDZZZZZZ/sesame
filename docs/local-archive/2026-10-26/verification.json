@@ -1,0 +1,24 @@
+{
+  "manifest_hashes_passed": 572,
+  "current_report_rows": 244,
+  "companion_links": [
+    "Trading-Central-非技术领域核对-20261026.md",
+    "Sesame-研究字段能力核对-20261026.md",
+    "Sesame-研究字段能力核对-20261026.md",
+    "Autochartist-官方核对-20261026.md",
+    "Trading-Central-非技术领域核对-20261026.md"
+  ],
+  "dependency_files_verified": 8,
+  "portable_scripts_compile": true,
+  "max_file_bytes": 2082582,
+  "privacy": {
+    "credential_values_logged": false,
+    "sensitive_identifier_groups_removed": 17,
+    "remaining_text_matches": 0,
+    "raw_runtime_logs_and_configuration_excluded": true,
+    "pdf_text_inspected": 14
+  },
+  "source_snapshot_paths_absent": true,
+  "removed_stale_copies": 7,
+  "archive_bytes": 32300929
+}

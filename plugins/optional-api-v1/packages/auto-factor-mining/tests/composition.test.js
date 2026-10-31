@@ -63,8 +63,8 @@ test('resume verifies the exact frozen plugin implementation and tool delegation
   assert.throws(() => verifyResearch(host, selection), error => error.code === 'RESEARCH_TOOL_MAIN_ONLY');
 });
 
-test('the evaluator plus research union allows 32 distinct plugins, counting overlaps once', () => {
-  const evaluator = { plugin_id: 'custom/evaluator' }, plugins = Array.from({ length: 31 }, (_, i) => `custom/skill-${i}`);
+test('the evaluator, knowledge reader and research union allows 32 distinct plugins, counting overlaps once', () => {
+  const evaluator = { plugin_id: 'custom/evaluator' }, plugins = Array.from({ length: 30 }, (_, i) => `custom/skill-${i}`);
   assert.equal(taskPlugins(evaluator, { plugins }).length, 32);
   assert.equal(taskPlugins(evaluator, { plugins: [...plugins, evaluator.plugin_id] }).length, 32);
   assert.throws(() => taskPlugins(evaluator, { plugins: [...plugins, 'custom/extra'] }), error => error.code === 'PLUGIN_BUDGET_EXCEEDED');

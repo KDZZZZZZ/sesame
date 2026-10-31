@@ -4,16 +4,20 @@ description: 市场相似性研究基线，计算对齐收益相关、秩相关�
 license: GPL-3.0-only
 ---
 
-# 市场相似性基线
+# 同期收益相似性基线
 
-这是可修改、可验证的研究基线，不是标准答案。改进公式或参数时保留原结果、修改假设和对照证据。
+比较同一区间的标的收益，不检索历史特征/结果案例。historical-evidence 的固定情景匹配与因子 evaluator 的候选冗余使用不同输入和目标，不能用此处相关系数替代；也不为统一流程强制调用多个同源统计。
 
-能力 `abu_similarity_analyze`：比较已提供标的在相同相邻时间区间的收益相关、秩相关和方向相似性。
+用 `abu_similarity_analyze` 比较给定标的收益的相关性和方向一致性，结合实际重叠数量评价证据强弱。
 
-调用形状为 {input:{schema_version:1,source:{id,kind},as_of,parameters?,...}}，不是文件路径或数据 ID。source.id 为 1..500 字符，kind 为 synthetic/historical/live；as_of 及全部时间字段使用真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒）。输入限 2MiB 有限 JSON，不接收代码。parameters 只支持列出的字段。 bars 是 1..10000 条已知 OHLCV，按收盘 time 严格递增且不重复；每行含 time、available_at、open/high/low/close、volume。time <= available_at <= as_of，价格为正且 high/low 覆盖 open/close，volume >= 0。 instruments 至少 2 个且 <= max_instruments，每项 {id,bars}；id 唯一、1..80 字符且只含字母数字 _ . : -。每个 bars 遵循 OHLCV 契约且不超过 max_bars_per_instrument。仅起止时点都相同的相邻收益对可对齐。
+仅比较起止时点都一致的收益区间；不靠前向填充或推断交易日历补出观测。相关性不证明因果关系，也不是下一时段同涨概率。
 
-observations.instruments 为输入概况，pairs 为逐对重叠样本数和相似指标；不足 min_overlap 的指标保留空缺及诊断。 立即返回 {schema_version:1,baseline:true,status:"research_baseline",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。
+## 输入与交接
 
-不前向填充、不推断交易日历或补造缺失收益。相关性既不是因果关系，也不是下一时段同涨概率。 来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。
+本能力属于数值方法层，消费调用者提供的已知输入。把 pairs 的重叠数、相关和方向相似指标交给暴露或冗余分析；这些量不等同因果、预测概率或 Dow Theory 的双指数收盘确认。复用前核对输入版本、参数、截止时间与实现口径；已有匹配结果可直接引用。同源价格、成交或统计派生结果不能重复计为独立证据；计算只回答本项局部问题，方法解释与最终综合由调用者负责。缺少已声明的必需字段或真实时序时，交回具体缺口，不补造数据以通过校验。
 
-`references/method.md` 解释公式和原版差异；包根目录 `examples/input.json` 提供合成样例。两者用于需要时核对，不是调用前的固定步骤。
+工具 abu_similarity_analyze 的已注册 inputSchema 和 usage 给出准确字段、参数、返回路径与错误条件，不要求先阅读示例或运行教学演练。保留 input_artifact、result_artifact、source/as_of、实际参数和 limitations；原始工件可用 data_read({ref}) 按完整引用再次读取。其他方法需要不同输入形状时按其已声明接口显式转换，不把一个结果对象直接冒充另一个工具的输入。
+
+## 可选改进
+
+这是可修改、可验证的研究基线；只有任务需要比较公式或参数时才开展改进，保留原结果、修改假设与同一输入上的对照。references/method.md 解释公式和原版差异；examples/input.json 是合成教学输入。两者按需读取，合成结果保持演示身份。

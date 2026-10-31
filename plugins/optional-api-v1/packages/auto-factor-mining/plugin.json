@@ -1,9 +1,9 @@
 {
   "id": "sesame/auto-factor-mining",
   "apiVersion": "2",
-  "version": "1.1.0",
-  "title": "自动因子挖掘",
-  "description": "以任意已选研究能力和独立评估工具编排因子研究；不绑定执行后端，每次工作结束统一产出一份总结。",
+  "version": "1.4.9",
+  "title": "因子与策略研究",
+  "description": "因子、候选信号与策略研究实验工作流：融合因子/策略证据指南，提供真正单 Agent 和默认多 Agent 模式；实际 evaluator 计算、冻结选择和隔离留出验证，交付 Strategy 报告。统计诊断不代替真实交易规则回测。",
   "author": {
     "name": "Sesame contributors"
   },
@@ -12,7 +12,25 @@
   "agent_scope": "all",
   "entry": "index.js",
   "engines": {
-    "sesame": ">=0.2.4"
+    "sesame": ">=0.3.0-dev.2 <0.4.0"
   },
-  "capability_manifest": "capabilities.json"
+  "capability_manifest": "capabilities.json",
+  "permissions": {
+    "scopes": [
+      "capabilities.compose",
+      "plugins.manage",
+      "process.execute"
+    ],
+    "calls": [
+      "host.agent.run",
+      "host.runs.read",
+      "host.runs.wait",
+      "host.runs.interrupt",
+      "host.resources.read",
+      "sesame/reports#report_publish",
+      "sesame/reports#report_check",
+      "sesame/workspace#write",
+      "host.reports.describe"
+    ]
+  }
 }

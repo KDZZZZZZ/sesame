@@ -32,7 +32,7 @@ CExpertSignal 方向、强度、权重与阈值不是简单 AND。Advance 推进
 
 通过工作区 read/write/edit/bash 修改 checkout，mt5_project save 保存不可变 revision；revision_conflict 时重新 checkout 并合并。使用明确 revision 调用 mt5_compile，按真实诊断修复工具返回的可恢复问题。可用后使用同包的 mt5_backtest，运行真实 Tester，核对实际参数、原生指标、成交和 trace；编译成功不能写成已经验证的策略。
 
-实际回测结果通过 mt5_report_data 返回 sourceRef/query，经 data_snapshot({source:sourceRef,input:query,operationId,title}) 冻结为 DataRef，按 reports skill 编写 HTML 与数据绑定，report_publish 后调用 report_check。报告不会自动插入 MT5 组件；旧原生工程不能附会为 SVL RunRecord。已有无 strategy.json 的工程按其原语言维护，不自动重写历史研究或冻结结果。
+实际回测结果通过mt5_report_data返回sourceRef/query，可经data_snapshot({source:sourceRef,input:query,operationId,title})冻结为DataRef；已有固定结果直接复用。交给工作流的是源码版本、真实结果、原始输入及局限，不因完成单项验证另开报告。任务确需展示成果时使用reports声明的绑定与校验能力；旧原生工程不能附会为SVL RunRecord。已有无strategy.json的工程按其原语言维护，不自动重写历史研究或冻结结果。
 
 原生参考：https://www.mql5.com/en/docs/standardlibrary/expertclasses/expertbaseclasses/cexpert
 处理顺序：https://www.mql5.com/en/docs/standardlibrary/expertclasses/expertbaseclasses/cexpert/cexpertprocessing

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-import { bars, parameters, integer, finite, check, mean, std, runCli } from './runtime.mjs';
+import { bars, trueRange, parameters, integer, finite, check, mean, std, runCli } from './runtime.mjs';
 
 const iso = ms => new Date(ms).toISOString();
 const round = value => value === null ? null : Math.round(value * 1e10) / 1e10;
@@ -11,11 +11,6 @@ function slice(values, end, size) {
 function ema(prev, value, span) {
   const alpha = 2 / (span + 1);
   return prev === null ? value : alpha * value + (1 - alpha) * prev;
-}
-
-function trueRange(rows, i) {
-  if (i === 0) return rows[0].high - rows[0].low;
-  return Math.max(rows[i].high - rows[i].low, Math.abs(rows[i].high - rows[i - 1].close), Math.abs(rows[i].low - rows[i - 1].close));
 }
 
 export function analyze(input) {
@@ -33,17 +28,17 @@ export function analyze(input) {
     max_bars: integer(p.max_bars ?? 5000, 'max_bars', 10, 10000),
   };
   check(effective.macd_fast < effective.macd_slow, 'macd_fast must be smaller than macd_slow');
-  const rows = bars(input);
+  const rows = bars(input, 'bars', { allowSnapshot: true });
   check(rows.length <= effective.max_bars, 'bars exceeds max_bars');
 
   const closes = rows.map(row => row.close);
-  const trueRanges = rows.map((_, i) => trueRange(rows, i));
+  const trueRanges = rows.map((row, i) => trueRange(row, rows[i - 1]?.close));
   const series = [];
   let emaValue = null, macdFast = null, macdSlow = null, macdSignal = null;
   let runningAvailableAt = -Infinity;
 
   for (let i = 0; i < rows.length; i += 1) {
-    runningAvailableAt = Math.max(runningAvailableAt, Date.parse(rows[i].available_at));
+    runningAvailableAt = rows[i].available_at == null ? NaN : Math.max(runningAvailableAt, Date.parse(rows[i].available_at));
     emaValue = ema(emaValue, closes[i], effective.ema_span);
     macdFast = ema(macdFast, closes[i], effective.macd_fast);
     macdSlow = ema(macdSlow, closes[i], effective.macd_slow);
@@ -54,6 +49,7 @@ export function analyze(input) {
     const rsiWindow = i >= effective.rsi_window ? closes.slice(i - effective.rsi_window, i + 1) : null;
     const bollWindow = slice(closes, i, effective.bollinger_window);
     const atrWindow = slice(trueRanges, i, effective.atr_window);
+    const atr = atrWindow?.every(Number.isFinite) ? mean(atrWindow) : null;
 
     let rsi = null;
     if (rsiWindow) {
@@ -73,14 +69,16 @@ export function analyze(input) {
 
     series.push({
       time: rows[i].time,
-      available_at: iso(runningAvailableAt),
+      available_at: Number.isFinite(runningAvailableAt) ? iso(runningAvailableAt) : null,
       close: closes[i],
       sma: round(smaWindow ? mean(smaWindow) : null),
       ema: round(emaValue),
       macd: { line: round(macdLine), signal: round(macdSignal), histogram: round(macdLine - macdSignal) },
       rsi: round(rsi),
       bollinger: Object.fromEntries(Object.entries(bollinger).map(([k, v]) => [k, round(v)])),
-      atr: round(atrWindow ? mean(atrWindow) : null),
+      true_range: round(trueRanges[i]),
+      atr: round(atr),
+      atr_percent: round(atr === null ? null : 100 * atr / closes[i]),
     });
   }
 
@@ -95,7 +93,9 @@ export function analyze(input) {
     limitations: [
       'EMA/MACD seed at the first visible close; this is simple and reproducible, not ABU equivalence.',
       'ATR uses a simple rolling mean of true range rather than Wilder smoothing.',
-      'Historical row availability is the maximum available_at of observations used up to that row.',
+      'N true ranges need N+1 bars; the first range and incomplete ATR windows are null without a preceding close.',
+      'Historical row availability is the maximum available_at of observations used up to that row, or null if any is unknown.',
+      ...(rows.some(row => row.time.length === 10 || row.available_at == null) ? ['Calendar dates and unknown historical availability are preserved; snapshot calculations do not establish historical point-in-time availability.'] : []),
     ],
   };
 }

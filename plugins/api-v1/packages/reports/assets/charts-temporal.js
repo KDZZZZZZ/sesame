@@ -8,6 +8,7 @@
   const line = 'var(--border,var(--report-default-border))';
   const color = index => `var(--chart-series-${index % 6 + 1},var(--report-default-chart-series-${index % 6 + 1}))`;
   const short = (value, limit = 18) => String(value).length > limit ? String(value).slice(0, limit - 1) + '…' : String(value);
+  const language = (en, zh) => /^zh(?:-|$)/i.test(document.documentElement.lang) ? zh : en;
   const views = new WeakMap();
   const listen = (ctx, target, event, handler) => { target.addEventListener(event, handler); ctx.onCleanup(() => target.removeEventListener(event, handler)); };
   function rememberView(ctx, saved) {
@@ -108,12 +109,12 @@
     };
   }
   function evidencePanel(ctx, observations) {
-    const panel = ctx.html('p', 'report-source', 'Select an event to inspect its evidence.');
+    const panel = ctx.html('p', 'report-source', language('Select an event to inspect its evidence.', '选择事件，查看依据。'));
     panel.setAttribute('aria-live', 'polite'); panel.style.overflowWrap = 'anywhere'; ctx.frame.append(panel);
     listen(ctx, ctx.target, 'chartselect', event => {
       const { row, index } = event.detail || {}, item = observations[index];
       if (!item || item.row !== row) return;
-      panel.replaceChildren(ctx.html('span', null, `${item.item} · ${item.state}${item.links.length ? ' · ' : ' · No attached evidence link.'}`));
+      panel.replaceChildren(ctx.html('span', null, `${item.item} · ${item.state}${item.links.length ? ' · ' : language(' · No attached evidence link.', ' · 未附带依据链接。')}`));
       for (const entry of item.links) { const anchor = ctx.html('a', null, entry.label); anchor.href = entry.href; anchor.rel = 'noopener noreferrer'; anchor.style.marginRight = '16px'; panel.append(anchor); }
     });
   }
@@ -181,7 +182,7 @@
           const item = seen.get(date), status = item?.status ?? 'missing', slot = offset + number - 1, cx = x + slot % 7 * cell, cy = y + 50 + (Math.floor(slot / 7) - firstWeek) * cell;
           const opacity = status === 'observed' ? .22 + .68 * Math.abs(item.value) / max : 1;
           const group = node('g', { 'data-date': date, 'data-state': item ? status : 'no-source-row' });
-          group.append(node('rect', { x: cx + 2, y: cy + 2, width: cell - 4, height: cell - 4, rx: 3, fill: status === 'observed' ? item.value < 0 ? 'var(--danger,var(--report-default-danger))' : color(1) : 'none', opacity, stroke: status === 'observed' ? 'none' : line, 'stroke-dasharray': status === 'missing' ? '2 3' : 'none' }));
+          group.append(node('rect', { x: cx + 2, y: cy + 2, width: cell - 4, height: cell - 4, rx: 3, fill: status === 'observed' ? item.value === 0 ? 'var(--report-muted)' : item.value < 0 ? 'var(--danger,var(--report-default-danger))' : 'var(--success,var(--report-default-success))' : 'none', opacity, stroke: status === 'observed' ? 'none' : line, 'stroke-dasharray': status === 'missing' ? '2 3' : 'none' }));
           group.append(node('text', { x: cx + 6, y: cy + 14, class: `sc-axis${status === 'observed' ? ` sc-cell-value${opacity > .6 ? ' sc-cell-inverse' : ''}` : ''}`, stroke: 'none' }, number));
           if (status !== 'observed' || item.value === 0) group.append(node('text', { x: cx + cell / 2, y: cy + cell - 8, 'text-anchor': 'middle', class: 'sc-cell-value', stroke: 'none' }, status === 'closed' ? '×' : status === 'missing' ? '—' : '0'));
           if (item) addMark(ctx, marks, group, item.row, item.index, label(item.row));
@@ -370,11 +371,29 @@
       const observation = { row, index, item, state, time: times[index], links }; duplicate.get(key).push(observation); return observation;
     });
     const left = Math.min(105, Math.max(64, width * .2)), right = width - 25, min = Math.min(...times), max = Math.max(...times), sx = scale(min === max ? [min - 1, max + 1] : [min, max], [left, right]);
-    const offsets = new Map(); let height = 40;
-    items.forEach(item => { const count = Math.max(1, ...[...duplicate.values()].filter(values => values[0].item === item).map(values => values.length)); const lane = Math.max(72, count * 24 + 24); offsets.set(item, height + lane / 2); height += lane; });
-    ctx.setHeight(height + 44);
-    items.forEach(item => { const y = offsets.get(item); axisText(ctx, left - 12, y + 4, item, 'end'); svg.append(node('line', { x1: left, x2: right, y1: y, y2: y, stroke: line, 'stroke-dasharray': '2 5' })); });
-    const marks = new Map(), label = item => `${timeLabel(item.row[timeKey], zone)} (${zone}) · ${item.item} · ${item.state} · ${item.links.length} evidence links · source time: ${item.row[timeKey]}`;
+    // Names occupy their own band above each lane, not a fixed-width gutter.
+    // Measure complete text at the displayed font size; wrapping only changes
+    // lane height, so source time positions and coincident-event offsets stay intact.
+    const probe = node('text', { class: 'sc-axis', style: 'font-size:12px', visibility: 'hidden' }); svg.append(probe);
+    const measure = value => { probe.textContent = value; return probe.getComputedTextLength(); };
+    const offsets = new Map(); let height = 12;
+    items.forEach(item => {
+      const lines = []; let current = '';
+      for (const character of Array.from(item)) {
+        if (current && measure(current + character) > width - 24) { lines.push(current); current = ''; }
+        current += character;
+      }
+      lines.push(current);
+      const name = node('text', { class: 'sc-axis', style: 'font-size:12px', 'aria-label': item, 'data-lifecycle-label': '' });
+      lines.forEach((value, index) => name.append(node('tspan', { x: 12, y: height + 12 + index * 18 }, value)));
+      name.append(node('title', {}, item)); svg.append(name);
+      const count = Math.max(1, ...[...duplicate.values()].filter(values => values[0].item === item).map(values => values.length));
+      const y = height + lines.length * 18 + 30 + (count - 1) * 12;
+      offsets.set(item, y); height += lines.length * 18 + count * 24 + 30;
+      svg.append(node('line', { x1: left, x2: right, y1: y, y2: y, stroke: line, 'stroke-dasharray': '2 5' }));
+    });
+    probe.remove(); ctx.setHeight(Math.max(120, height + 44));
+    const marks = new Map(), label = item => `${timeLabel(item.row[timeKey], zone)} (${zone}) · ${item.item} · ${item.state} · ${language(`${item.links.length} evidence links · source time: ${item.row[timeKey]}`, `${item.links.length} 个依据链接 · 来源时间：${item.row[timeKey]}`)}`;
     observations.forEach(item => {
       const peers = duplicate.get(JSON.stringify([item.item, item.time])), y = offsets.get(item.item) + (peers.indexOf(item) - (peers.length - 1) / 2) * 24, x = sx(item.time);
       const group = node('g', { 'data-lifecycle-state': item.state });
@@ -387,7 +406,10 @@
     inspector(ctx, marks, (_row, index) => label(observations[index]), (_row, index) => observations[index].links);
     if (!spec.inspector) evidencePanel(ctx, observations);
     const unsupported = observations.filter(item => !item.links.length).length;
-    ctx.note(`${zone} · recorded events only; spacing represents recorded time, not duration or causality. Select a source row to inspect its supplied evidence/report links.${unsupported ? ` ${unsupported} events have no attached evidence link.` : ''}`);
+    ctx.note(language(
+      `${zone} · recorded events only; spacing represents recorded time, not duration or causality. Select a source row to inspect its supplied evidence/report links.${unsupported ? ` ${unsupported} events have no attached evidence link.` : ''}`,
+      `${zone} · 只显示已记录事件；间距表示记录时间，不表示持续时长或因果关系。选择事件可查看附带的依据或报告链接。${unsupported ? ` ${unsupported} 个事件未附带依据链接。` : ''}`
+    ));
   }
   for (const [kind, renderer] of Object.entries({ calendar, parallel, bump, lifecycle })) global.SesameCharts.register(kind, renderer);
 })(window);

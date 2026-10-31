@@ -5,14 +5,16 @@ description: ABU-inspired trend pullback and optional 0.382 retracement baseline
 
 # 趋势回撤基线
 
-这是可修改、可验证的研究基线，不是标准答案。改进公式或参数时保留原结果、修改假设和对照证据。
+用 `abu_trend_pullback_analyze` 检查长趋势中的短回撤与反弹条件，明确各项条件为何成立或未成立。
 
-能力 `abu_trend_pullback_analyze`：组合长趋势、短回撤及反弹条件，输出趋势中回撤的研究观察。
+长期方向与短期回撤应分别解释，不能由单个条件替代组合证据。该形态启发式不识别市场状态、流动性或订单可执行性，也不证明后续反弹。
 
-调用形状为 {input:{schema_version:1,source:{id,kind},as_of,parameters?,...}}，不是文件路径或数据 ID。source.id 为 1..500 字符，kind 为 synthetic/historical/live；as_of 及全部时间字段使用真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒）。输入限 2MiB 有限 JSON，不接收代码。parameters 只支持列出的字段。 bars 是 1..10000 条已知 OHLCV，按收盘 time 严格递增且不重复；每行含 time、available_at、open/high/low/close、volume。time <= available_at <= as_of，价格为正且 high/low 覆盖 open/close，volume >= 0。 pullback_window < trend_window，min_pullback <= max_pullback；比例使用小数，例如 0.05 表示 5%。
+## 输入与交接
 
-observations.latest/series 为条件和触发观察，decision_available_at 为最新证据可用时点。 立即返回 {schema_version:1,baseline:true,status:"research_baseline",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。
+本能力属于数值方法层，消费调用者提供的已知输入。把趋势、回撤、反弹分项条件及 latest/series 交给价格行为解释；这是一个组合形态判据，三个条件不等于三份独立市场证据。复用前核对输入版本、参数、截止时间与实现口径；已有匹配结果可直接引用。同源价格、成交或统计派生结果不能重复计为独立证据；计算只回答本项局部问题，方法解释与最终综合由调用者负责。缺少已声明的必需字段或真实时序时，交回具体缺口，不补造数据以通过校验。
 
-这是历史形态启发式，不识别市场状态、流动性或订单可执行性，不证明后续反弹。 来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。
+工具 abu_trend_pullback_analyze 的已注册 inputSchema 和 usage 给出准确字段、参数、返回路径与错误条件，不要求先阅读示例或运行教学演练。保留 input_artifact、result_artifact、source/as_of、实际参数和 limitations；原始工件可用 data_read({ref}) 按完整引用再次读取。其他方法需要不同输入形状时按其已声明接口显式转换，不把一个结果对象直接冒充另一个工具的输入。
 
-`references/method.md` 解释公式和原版差异；包根目录 `examples/input.json` 提供合成样例。两者用于需要时核对，不是调用前的固定步骤。
+## 可选改进
+
+这是可修改、可验证的研究基线；只有任务需要比较公式或参数时才开展改进，保留原结果、修改假设与同一输入上的对照。references/method.md 解释公式和原版差异；examples/input.json 是合成教学输入。两者按需读取，合成结果保持演示身份。

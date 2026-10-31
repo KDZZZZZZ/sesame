@@ -9,43 +9,43 @@
     {
       "id": "knowledge-0",
       "path": "examples/expected.md",
-      "description": "市场叙事研究 — examples/expected.md",
+      "description": "市场叙事研究的合成教学反例与预期局部结论，不是真实市场结果。",
       "kind": "reference"
     },
     {
       "id": "knowledge-1",
       "path": "prompt.md",
-      "description": "市场叙事研究 — prompt.md",
+      "description": "市场叙事研究的方法边界与组合入口：实际资料支持哪些市场命题、传播关系和竞争解释，下一项观察如何区分它们；复用固定证据并向调用者交回局部结论。",
       "kind": "prompt"
     },
     {
       "id": "knowledge-2",
       "path": "PROVENANCE.md",
-      "description": "市场叙事研究 — PROVENANCE.md",
+      "description": "市场叙事研究采用资料的出处、实际访问范围与许可，不是当前市场证据。",
       "kind": "reference"
     },
     {
       "id": "knowledge-3",
       "path": "README.md",
-      "description": "市场叙事研究 — README.md",
+      "description": "市场叙事研究的输入、输出、方法边界和按需参考说明。",
       "kind": "reference"
     },
     {
       "id": "knowledge-4",
       "path": "skills/narrative-analysis/references/evidence.md",
-      "description": "市场叙事研究 — skills/narrative-analysis/references/evidence.md",
+      "description": "市场叙事研究输入证据的来源、版本、可得时间和局部结论引用要求。",
       "kind": "reference"
     },
     {
       "id": "knowledge-5",
       "path": "skills/narrative-analysis/references/method.md",
-      "description": "市场叙事研究 — skills/narrative-analysis/references/method.md",
+      "description": "市场叙事研究的操作定义、因果边界与反证；用于核对本次具体判据。",
       "kind": "reference"
     },
     {
       "id": "knowledge-6",
       "path": "skills/narrative-analysis/SKILL.md",
-      "description": "市场叙事研究 — skills/narrative-analysis/SKILL.md",
+      "description": "分析方法：实际资料支持哪些市场命题、传播关系和竞争解释，下一项观察如何区分它们。输入：已有的原稿或已提取正文、标题/作者/URL、发布及采集时间、转述关系、地区/语言/平台/样本窗口和截止时间。输出：命题与 source_cluster 表、支持/反对/缺失事实、竞争情景、触发与反证及更新条件。",
       "kind": "skill"
     }
   ],

@@ -1,3 +1,4 @@
+import { workflowReports } from './workflow-report-fixture.mjs';
 import { MiningRuntime } from '../runtime.js';
 import { digest, ID } from '../shared.js';
 
@@ -12,6 +13,7 @@ export async function fixture({ storage, onTask, onEvaluate, beforeResource, eva
   saved.emitted ??= []; saved.artifactRecords ??= new Map();
   const datasets = new Map([['data', { id: 'data', rows: structuredClone(rows), provenance: { source_kind: 'synthetic' } }]]);
   const manifests = new Map([['sesame/factor-evaluator', { id: 'sesame/factor-evaluator', version: '1', revision: 'fixture-evaluator', capabilities: [{ id: 'factor_evaluate', consumers: ['host','agent'] }] }]]);
+  manifests.set('sesame/plugin-manager', { id: 'sesame/plugin-manager', version: '1', revision: 'reader-v1', capabilities: ['plugin_read', 'plugin_install', 'plugin_load'].map(id => ({ id, consumers: ['agent','host'] })) });
   let runtime;
   function hostFor(context, agent, workflow) {
     const host = { context: { pluginId: ID, storageRoot: 'fixture-storage', pluginRevision: 'fixture', models, ...context } };
@@ -39,7 +41,7 @@ export async function fixture({ storage, onTask, onEvaluate, beforeResource, eva
         saved.resources.set(ref.id,value); if (opts.operationId) saved.operations.set(key,ref); return structuredClone(ref);
       },
       read: async (ref, { part, offset = 0, entry }) => {
-        if (saved.artifactRecords.has(ref.id)) { const a=saved.artifactRecords.get(ref.id); if(part==='manifest')return structuredClone(a.manifest); if(part==='metadata')return {ref}; ref=a.resource; }
+        if (saved.artifactRecords.has(ref.id)) { const a=saved.artifactRecords.get(ref.id); if(part==='manifest')return structuredClone(a.manifest); if(part==='metadata')return {ref,producer:{id:owner,version:'fixture',digest:'fixture'}}; ref=a.resource; }
         const item = resource(ref); if (part === 'metadata') return structuredClone(item);
         if (item.deleted) throw error('NOT_FOUND','Removed resource');
         const selected = entry ? [...saved.resources.values()].find(value => value.parent === ref.id && value.name === entry) : item;
@@ -92,6 +94,7 @@ export async function fixture({ storage, onTask, onEvaluate, beforeResource, eva
       jobs.set(ref.id,job);launch(job,options.signal);
       return { type:'run',run:ref,receipt:{} };
     } };
+    saved.reportState = workflowReports(host, saved.reportState);
     return host;
   }
   function launch(job, signal) {

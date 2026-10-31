@@ -158,12 +158,38 @@
     const { spec, rows, pad } = ctx, x = field(spec, 'x', 'label'), before = field(spec, 'before', 'before'), after = field(spec, 'after', 'after');
     if (rows.length > 40) fail('more than 40 comparisons; filter or split this fixed dataset');
     const values = rows.flatMap(r => [ctx.numeric(r[before]), ctx.numeric(r[after])]).filter(v => v !== null);
-    const height = Math.max(ctx.height, pad.top + pad.bottom + rows.length * 46);ctx.setHeight(height);
-    const sx = xAxis(ctx, domain(values), height), band = (height - pad.top - pad.bottom) / rows.length;
+    // Measure with the actual axis font. Reserve a bounded label column and
+    // wrap complete text, so narrow views keep both labels and numeric space.
+    const probe = ctx.node('text', { class: 'sc-axis', visibility: 'hidden' });ctx.svg.append(probe);
+    const measure = text => { probe.textContent = text;return probe.getComputedTextLength(); };
+    const names = rows.map(row => String(row[x] ?? ''));
+    const labelWidth = Math.min(240, Math.max(80, ctx.width * .34), Math.max(0, ...names.map(measure)));
+    pad.left = Math.max(pad.left, Math.ceil(labelWidth) + 18);
+    const wrapped = names.map(name => {
+      const lines = [];let current = '';
+      for (const part of name.match(/\s+|\S+/gu) ?? ['']) {
+        if (measure(current + part) <= labelWidth) { current += part;continue; }
+        if (current) { lines.push(current);current = ''; }
+        if (measure(part) <= labelWidth) { current = part;continue; }
+        for (const character of Array.from(part)) {
+          if (current && measure(current + character) > labelWidth) { lines.push(current);current = ''; }
+          current += character;
+        }
+      }
+      lines.push(current);return lines;
+    });
+    probe.remove();
+    const bands = wrapped.map(lines => Math.max(46, lines.length * 14 + 18)), minimum = bands.reduce((a, b) => a + b, 0);
+    const height = Math.max(ctx.height, pad.top + pad.bottom + minimum);ctx.setHeight(height);
+    const sx = xAxis(ctx, domain(values), height), extra = (height - pad.top - pad.bottom - minimum) / rows.length;
+    let rowTop = pad.top;
     let missing = 0;
     rows.forEach((row, index) => {
-      const a = ctx.numeric(row[before]), b = ctx.numeric(row[after]), cy = pad.top + (index + .5) * band, g = ctx.node('g', { 'data-stat-mark': 'dumbbell' });
-      label(ctx, pad.left - 10, cy + 4, row[x] ?? '', 'end');
+      const a = ctx.numeric(row[before]), b = ctx.numeric(row[after]), cy = rowTop + (bands[index] + extra) / 2, g = ctx.node('g', { 'data-stat-mark': 'dumbbell' });
+      rowTop += bands[index] + extra;
+      const name = ctx.node('text', { 'text-anchor': 'end', class: 'sc-axis', 'data-dumbbell-label': index, 'aria-label': names[index] });
+      wrapped[index].forEach((text, line) => name.append(ctx.node('tspan', { x: pad.left - 12, y: cy + 4 + (line - (wrapped[index].length - 1) / 2) * 14 }, text)));
+      name.append(ctx.node('title', {}, names[index]));ctx.svg.append(name);
       if (a !== null && b !== null) g.append(ctx.node('line', { x1: sx(a), x2: sx(b), y1: cy, y2: cy, stroke: color, 'stroke-width': 1.5 }));
       if (a !== null) g.append(ctx.node('circle', { cx: sx(a), cy, r: 5, fill: 'var(--surface-secondary,#fff)', stroke: color, 'stroke-width': 1.5, 'data-endpoint': 'before' }));
       if (b !== null) g.append(ctx.node('circle', { cx: sx(b), cy, r: 5, fill: color, 'data-endpoint': 'after' }));
@@ -171,7 +197,9 @@
       if (a === null || b === null) { missing++; if (a === null && b === null) { missingMark(ctx, row, index, pad.left + 8, cy, description);return; } g.append(ctx.node('text', { x: ctx.width - pad.right, y: cy - 8, 'text-anchor': 'end', class: 'sc-axis' }, `${a === null ? spec.beforeLabel || before : spec.afterLabel || after}: —`)); }
       ctx.mark(g, row, index, description);
     });
-    metadata(ctx, `Hollow = ${spec.beforeLabel || before}; filled = ${spec.afterLabel || after}.${missing ? ` ${missing} incomplete comparison(s); missing endpoints are not connected.` : ''}`);
+    const zh = /^zh(?:-|$)/i.test(document.documentElement.lang);
+    metadata(ctx, zh ? `空心：${spec.beforeLabel || before}；实心：${spec.afterLabel || after}。${missing ? ` ${missing} 组有缺失，缺失端点不连线。` : ''}`
+      : `Hollow = ${spec.beforeLabel || before}; filled = ${spec.afterLabel || after}.${missing ? ` ${missing} incomplete comparison(s); missing endpoints are not connected.` : ''}`);
   });
 
   api.register('strip', ctx => {
@@ -190,7 +218,9 @@
         ctx.mark(ctx.node('circle', { cx: sx(value), cy: cy + offset, r: 3.5, class: 'sc-point', 'data-stat-mark': 'strip' }), row, index, `${group.name} · ${y}: ${exact(row[y])}${spec.unit ? ` ${spec.unit}` : ''}${spec.id ? ` · ${exact(row[spec.id])}` : ''}`);
       });
     });
-    metadata(ctx, `One point = one registered row; vertical offset only separates overlapping points.${missing ? ` ${missing} missing value(s) are omitted, not plotted at zero.` : ''}`);
+    const zh = /^zh(?:-|$)/i.test(document.documentElement.lang);
+    metadata(ctx, zh ? `每个点代表一条原始记录；上下错开仅为避免重叠。${missing ? ` ${missing} 条记录缺少数值，未画成零。` : ''}`
+      : `One point = one registered row; vertical offset only separates overlapping points.${missing ? ` ${missing} missing value(s) are omitted, not plotted at zero.` : ''}`);
   });
 
   api.register('histogram', ctx => {

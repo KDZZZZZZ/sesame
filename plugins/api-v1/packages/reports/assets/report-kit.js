@@ -183,6 +183,13 @@
   let gradientId = 0;
   // SVG presentation attributes accept CSS variables, so a theme switch keeps chart selections intact.
   const css = name => `var(${name},var(--report-default-${name.slice(2)}))`;
+  // Financial direction is separate from the blue/grey comparison palette.
+  // Financial colour selection is explicit; data signs never choose the palette.
+  const financialTones = ['signed', 'positive', 'negative'];
+  const reportValueColor = (value, tone = 'signed') => value === 0
+    ? css('--muted')
+    : css(tone === 'negative' || tone === 'signed' && value < 0 ? '--chart-down' : '--chart-up');
+  const valueColor = (model, value, fallback) => financialTones.includes(model.tone) ? reportValueColor(value, model.tone) : fallback;
   const palette = () => [1, 2, 3, 4, 5, 6].map(i => css(`--chart-series-${i}`));
   const niceStep = (span, count) => { const raw = span / Math.max(1, count), power = 10 ** Math.floor(Math.log10(raw || 1)), n = raw / power; return (n >= 7.5 ? 10 : n >= 3.5 ? 5 : n >= 1.5 ? 2 : 1) * power; };
   const interpolate = (low, high, t) => t === 0 ? low : t === 1 ? high : low * (1 - t) + high * t;
@@ -229,6 +236,7 @@
   function normalizeChart(spec, path) {
     if (!isObject(spec)) fail(`${path} must be an object.`);
     if (!kinds.includes(spec.kind)) fail(`${path}.kind must be one of ${kinds.join(', ')}.`);
+    if (spec.tone != null && !['neutral', ...financialTones].includes(spec.tone)) fail(`${path}.tone must be neutral, signed, positive or negative.`);
     const data = list(spec.data, `${path}.data`, 0, true);
     if (data.length > 20000) fail(`${path}: aggregate data before drawing more than 20000 rows.`);
     const chart = { ...spec, path, data };
@@ -277,7 +285,9 @@
     const figure = h('figure', { class: 'kit-chart', 'data-kind': model.kind });
     const head = h('figcaption', { class: 'kit-chart-head' }, h('strong', { text: model.title }), h('span', { class: 'kit-chart-caption', text: model.caption }));
     const legend = model.kind !== 'heatmap' && model.series.length > 1 ? h('div', { class: 'kit-legend' }, model.series.map((series, i) => {
-      const button = h('button', { type: 'button', 'data-kit-control': '', 'aria-pressed': 'true', style: `--swatch:${colors[i % colors.length]}` }, h('i'), series.name);
+      // Financial colours describe direction, so numbered keys identify series.
+      const key = financialTones.includes(model.tone) ? h('span', { class: 'kit-series-key', text: String(i + 1) }) : h('i');
+      const button = h('button', { type: 'button', 'data-kit-control': '', 'aria-pressed': 'true', style: `--swatch:${colors[i % colors.length]}` }, key, series.name);
       button.addEventListener('click', () => { hidden.has(series.name) ? hidden.delete(series.name) : hidden.add(series.name); button.setAttribute('aria-pressed', String(!hidden.has(series.name))); draw(); });
       return button;
     })) : null;
@@ -369,8 +379,16 @@
     }
     model.series.forEach((series, i) => {
       if (hidden.has(series.name)) return;
-      const color = colors[i % colors.length], pts = series.points.filter(p => p.y != null);
-      if (model.kind === 'scatter') { for (const p of pts) svg.append(selectable(s('circle', { cx: x(p.x), cy: y(p.y), r: 3.5, fill: color, class: 'kit-dot' }), model, p)); return; }
+      let color = valueColor(model, 1, colors[i % colors.length]);
+      const pts = series.points.filter(p => p.y != null);
+      if (model.kind === 'scatter') { for (const p of pts) svg.append(selectable(s('circle', { cx: x(p.x), cy: y(p.y), r: 3.5, fill: valueColor(model, p.y, color), class: 'kit-dot' }), model, p)); return; }
+      if (model.tone === 'signed' && pts.every(p => p.y === 0)) color = reportValueColor(0);
+      else if (model.tone === 'signed') {
+        const id = `kit-sign-${++gradientId}`, defs = s('defs'), gradient = s('linearGradient', { id, gradientUnits: 'userSpaceOnUse', x1: 0, x2: 0, y1: top, y2: bottom });
+        const zero = Math.max(0, Math.min(1, (y(0) - top) / (bottom - top)));
+        gradient.append(s('stop', { offset: zero, 'stop-color': reportValueColor(1) }), s('stop', { offset: zero, 'stop-color': reportValueColor(-1) }));
+        defs.append(gradient); svg.append(defs); color = `url(#${id})`;
+      }
       const segments = []; let segment = [];
       for (const p of series.points) { if (p.y == null) { if (segment.length) segments.push(segment); segment = []; } else segment.push(p); }
       if (segment.length) segments.push(segment);
@@ -378,13 +396,14 @@
       const line = segments.map(lineOf).join('');
       if (model.kind === 'area' && pts.length > 1) {
         const id = `kit-grad-${++gradientId}`, defs = s('defs'), grad = s('linearGradient', { id, x1: 0, x2: 0, y1: 0, y2: 1 });
-        grad.append(s('stop', { offset: '0%', 'stop-color': color, 'stop-opacity': visible.length > 1 ? 0.14 : 0.26 }), s('stop', { offset: '100%', 'stop-color': color, 'stop-opacity': 0 }));
+        const areaColor = model.tone === 'signed' ? css('--chart-series-2') : color;
+        grad.append(s('stop', { offset: '0%', 'stop-color': areaColor, 'stop-opacity': visible.length > 1 ? 0.14 : 0.26 }), s('stop', { offset: '100%', 'stop-color': areaColor, 'stop-opacity': 0 }));
         defs.append(grad); svg.append(defs);
         const floor = y(Math.max(yTicks[0], Math.min(model.baseline ?? yTicks[0], yTicks.at(-1))));
         for (const segment of segments) if (segment.length > 1) svg.append(s('path', { d: `${lineOf(segment)}L${x(segment.at(-1).x).toFixed(1)},${floor}L${x(segment[0].x).toFixed(1)},${floor}Z`, fill: `url(#${id})` }));
       }
-      svg.append(s('path', { d: line, fill: 'none', stroke: color, class: 'kit-line' }));
-      if (pts.length <= 24) for (const p of pts) svg.append(selectable(s('circle', { cx: x(p.x), cy: y(p.y), r: 2.5, fill: color, class: 'kit-dot' }), model, p));
+      svg.append(s('path', { d: line, fill: 'none', stroke: color, ...(financialTones.includes(model.tone) && i ? { 'stroke-dasharray': `${i + 2} 3` } : {}), class: 'kit-line' }));
+      if (pts.length <= 24) for (const p of pts) svg.append(selectable(s('circle', { cx: x(p.x), cy: y(p.y), r: 2.5, fill: valueColor(model, p.y, color), class: 'kit-dot' }), model, p));
     });
     // Hover: nearest x (lines) or nearest point (scatter), values for every visible series.
     const cross = s('line', { class: 'kit-crosshair', y1: top, y2: bottom, visibility: 'hidden' }), hot = s('g'); svg.append(cross, hot);
@@ -405,8 +424,9 @@
         if (hidden.has(series.name)) return;
         const hit = model.kind === 'scatter' ? (series.points.includes(anchor) ? anchor : null) : series.points.find(p => p.x === anchor.x || (categories && p.x === anchor.x));
         if (!hit || hit.y == null) return;
-        hot.append(s('circle', { cx: x(hit.x), cy: y(hit.y), r: 4.5, fill: colors[i % colors.length], class: 'kit-hot' }));
-        rows.push([series.name, formatValue(hit.rawValue, unitOf), colors[i % colors.length]]);
+        const color = valueColor(model, hit.y, colors[i % colors.length]);
+        hot.append(s('circle', { cx: x(hit.x), cy: y(hit.y), r: 4.5, fill: color, class: 'kit-hot' }));
+        rows.push([series.name, formatValue(hit.rawValue, unitOf), color]);
         if (model.kind === 'scatter') rows.push([model.x, model.xType === 'time' ? String(hit.raw) : formatValue(hit.raw, {})]);
       });
       showTip(tip, svg, ax / width * box.width, y(anchor.y) / height * box.height, model.xType === 'time' ? String(anchor.raw) : xLabel(anchor.x), rows);
@@ -427,15 +447,14 @@
     const svg = s('svg', { viewBox: `0 0 ${width} ${height}`, class: 'kit-svg' });
     yAxis(svg, y, yTicks, left, right, format);
     const band = (right - left) / Math.max(1, categories.length), inner = Math.min(band * 0.72, 56), bar = inner / Math.max(1, visible.length);
-    // Gain/loss colouring only for a single series; several series keep their legend colours.
-    const signed = model.tone === 'signed' && model.series.length === 1, unitOf = { format: model.format, digits: model.digits, unit: model.unit };
+    const unitOf = { format: model.format, digits: model.digits, unit: model.unit };
     const labelEvery = Math.ceil(categories.length / Math.max(1, Math.floor((right - left) / 64)));
     categories.forEach((category, c) => {
       const cx = left + band * c + band / 2;
       if (c % labelEvery === 0) svg.append(axisLabel({ class: 'kit-axis', x: cx, y: height - 8, 'text-anchor': 'middle' }, category, band * labelEvery - 6));
       visible.forEach((series, i) => {
         const p = series.points.find(point => point.x === category); if (!p || p.y == null) return;
-        const color = signed ? css(p.y >= 0 ? '--chart-up' : '--chart-down') : colors[model.series.indexOf(series) % colors.length];
+        const color = valueColor(model, p.y, colors[model.series.indexOf(series) % colors.length]);
         const bx = cx - inner / 2 + bar * i, top0 = Math.min(y(p.y), y(0)), hgt = Math.max(1, Math.abs(y(p.y) - y(0)));
         const rect = s('rect', { x: bx + 1, y: top0, width: Math.max(2, bar - 2), height: hgt, rx: Math.min(4, bar / 4), fill: color, class: 'kit-bar' });
         selectable(rect, model, p);
@@ -460,17 +479,18 @@
     const values = shown.flatMap(series => series.points.map(p => p.y)).filter(v => v != null).concat(0), lo = Math.min(...values), hi = Math.max(...values);
     const labelRoom = Math.min(width * 0.4, Math.max(...categories.map(c => labelWidth(c, 11.5))) + 4);
     const bar = shown.length > 1 ? 12 : 16, gap = 3, row = Math.max(30, shown.length * (bar + gap) + 12);
-    const height = model.height ?? categories.length * row + 12;
+    // An authored height is a minimum; keep every category and grouped bar visible.
+    const height = Math.max(model.height ?? 0, categories.length * row + 12);
     const left = labelRoom + 12, right = width - 74;
     const x = v => position(v, lo, hi, left, right);
     const svg = s('svg', { viewBox: `0 0 ${width} ${height}`, class: 'kit-svg' });
-    const signed = model.tone === 'signed' && model.series.length === 1, unitOf = { format: model.format, digits: model.digits, unit: model.unit };
+    const unitOf = { format: model.format, digits: model.digits, unit: model.unit };
     categories.forEach((category, c) => {
       const top = 6 + c * row, start = top + (row - (shown.length * (bar + gap) - gap)) / 2;
       svg.append(axisLabel({ class: 'kit-axis kit-category', x: left - 10, y: top + row / 2 + 4, 'text-anchor': 'end' }, category, labelRoom, 11.5));
       shown.forEach((series, i) => {
         const p = series.points.find(point => point.x === category); if (!p || p.y == null) return;
-        const color = signed ? css(p.y >= 0 ? '--chart-up' : '--chart-down') : colors[model.series.indexOf(series) % colors.length];
+        const color = valueColor(model, p.y, colors[model.series.indexOf(series) % colors.length]);
         const x0 = Math.min(x(p.y), x(0)), w = Math.max(2, Math.abs(x(p.y) - x(0))), y0 = start + i * (bar + gap);
         const rect = s('rect', { x: x0, y: y0, width: w, height: bar, rx: Math.min(4, bar / 3), fill: color, class: 'kit-bar' });
         selectable(rect, model, p);
@@ -496,11 +516,12 @@
     const cell = Math.max(18, Math.min(56, (width - left - 8) / xs.length));
     const height = ys.length * cell + 30;
     const svg = s('svg', { viewBox: `0 0 ${width} ${height}`, class: 'kit-svg' });
-    const up = css('--chart-up'), down = css('--chart-down'), seq = css('--violet');
+    // Only financial heatmaps opt into red/green; ordinary comparisons stay blue/grey.
     const fill = v => {
       if (v == null || !Number.isFinite(v)) return css('--heat-neutral');
-      const t = diverging ? Math.abs(v) / extent : (v - lo) / (hi - lo || 1);
-      const base = diverging ? (v >= 0 ? up : down) : seq;
+      if (v === 0 && financialTones.includes(model.tone)) return css('--heat-neutral');
+      const t = diverging || financialTones.includes(model.tone) ? Math.abs(v) / extent : (v - lo) / (hi - lo || 1);
+      const base = valueColor(model, v, v < 0 ? `var(--report-context,${css('--chart-series-2')})` : `var(--report-accent,${css('--chart-series-1')})`);
       return `color-mix(in srgb, ${base} ${Math.round(12 + t * 48)}%, ${css('--surface-tertiary')})`;
     };
     const unitOf = { format: model.format, digits: model.digits, unit: model.unit };
@@ -567,7 +588,7 @@
       };
       const sources = list(method.sources, 'method.sources', 12);
       root.append(h('details', { class: 'kit-appendix' },
-        h('summary', {}, h('span', { text: tr('方法、限制与来源', 'Method, limits and sources') })),
+        h('summary', {}, h('span', { text: tr('方法与来源', 'Method and sources') })),
         h('div', { class: 'kit-appendix-body' },
           group('steps', tr('方法', 'Method')), group('limits', tr('限制', 'Limits')),
           sources.length ? h('div', { class: 'kit-method-group' }, h('h3', { text: tr('来源', 'Sources') }), h('dl', { class: 'kit-sources' }, sources.flatMap((item, i) => {

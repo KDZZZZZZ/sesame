@@ -9,6 +9,105 @@ const assets = new URL('../packages/reports/assets/', import.meta.url);
 const fixture = JSON.parse(await readFile(new URL('../packages/reports/examples/temporal-fixtures.json', import.meta.url), 'utf8'));
 const [css, core, temporal] = await Promise.all(['editorial.css', 'editorial-charts.js', 'charts-temporal.js'].map(file => readFile(new URL(file, assets), 'utf8')));
 
+test('lifecycle long labels stay readable on fresh widths and resize without changing R09 events', { skip: !host && 'Set SESAME_HOST_ROOT to an application checkout with Playwright installed', timeout: 60000 }, async () => {
+  // Exact five public schedule rows from R09 revision_814b3365-5e8e-4180-9b20-cb41efecc372.
+  // This is a renderer regression, not a new source fetch, research run or publication.
+  const rows = [
+    { evidence: [{ href: 'https://www.federalreserve.gov/newsevents/2026-october.htm', label: 'Fed' }], id: 'fed-2026-10-29-H.4.1', item: '美联储资产负债表（H.4.1）', state: '预定', time: '2026-10-29T20:30:00Z' },
+    { evidence: [{ href: 'https://events-delivery.apple.com/15pijbsdfvpiqhb10/js_files/event/url.json', label: 'Apple IR' }], id: 'apple-q4-2026', item: 'Apple 2026财年第四季度电话会', state: '预定', time: '2026-11-02T22:00:00Z' },
+    { evidence: [{ href: 'https://www.bls.gov/schedule/2026/11_sched.htm', label: 'BLS · 浏览文字记录' }], id: 'bls-visible-1', item: '职位空缺与劳动力流动（9月JOLTS）', state: '预定', time: '2026-11-03T15:00:00Z' },
+    { evidence: [{ href: 'https://www.bea.gov/news/schedule/ics/online-calendar-subscription.ics', label: 'BEA / Census' }], id: 'bea-a270c9cd-70a1-48d2-8924-cdebab79dc9a', item: '美国货物与服务贸易（9月）', state: '预定', time: '2026-11-04T13:30:00Z' },
+    { evidence: [{ href: 'https://www.bls.gov/schedule/2026/11_sched.htm', label: 'BLS · 浏览文字记录' }], id: 'bls-visible-2', item: '生产率与成本（第三季度初值）', state: '预定', time: '2026-11-05T13:30:00Z' },
+  ];
+  const require = createRequire(join(resolve(host), 'package.json'));
+  const { chromium } = require('playwright');
+  const browser = await chromium.launch({ headless: true });
+  const errors = [];
+  const draw = async (page, sourceRows, lang = 'zh-CN') => {
+    await page.evaluate(({ rows, lang }) => {
+      const freeze = value => { if (value && typeof value === 'object') { Object.values(value).forEach(freeze); Object.freeze(value); } return value; };
+      document.documentElement.lang = lang;
+      window.timelineRows = freeze(rows); window.timelineSelection = null;
+      window.timeline = SesameCharts.chart(document.querySelector('#timeline'), { kind: 'lifecycle', timezone: 'America/New_York', rows: timelineRows,
+        onSelect: (row, index) => { timelineSelection = { row, index, same: row === timelineRows[index] }; },
+      });
+    }, { rows: sourceRows, lang });
+  };
+  const inspect = async (page, sourceRows) => {
+    await page.waitForFunction(() => Math.abs(document.querySelector('#timeline').clientWidth - document.querySelector('#timeline svg').viewBox.baseVal.width) <= 2);
+    const result = await page.evaluate(() => {
+      const svg = document.querySelector('#timeline svg'), width = svg.viewBox.baseVal.width, height = svg.viewBox.baseVal.height;
+      const box = node => { const b = node.getBBox(); return { x: b.x, y: b.y, right: b.x + b.width, bottom: b.y + b.height }; };
+      const labels = [...svg.querySelectorAll('text')].filter(n => timelineRows.some(r => n.querySelector('title')?.textContent === r.item));
+      const texts = [...svg.querySelectorAll('text')].map(node => ({ text: node.textContent, ...box(node) }));
+      const overlaps = [];
+      for (let i = 0; i < texts.length; i++) for (let j = i + 1; j < texts.length; j++) {
+        const a = texts[i], b = texts[j];
+        if (Math.min(a.right, b.right) - Math.max(a.x, b.x) > .5 && Math.min(a.bottom, b.bottom) - Math.max(a.y, b.y) > .5) overlaps.push([a.text, b.text]);
+      }
+      return { width, height, scroll: document.documentElement.scrollWidth, viewport: innerWidth, overlaps,
+        texts, labels: labels.map(n => ({ text: [...n.childNodes].filter(c => c.nodeType === Node.TEXT_NODE || c.nodeName === 'tspan').map(c => c.textContent).join(''), font: parseFloat(getComputedStyle(n).fontSize), ...box(n), lines: n.querySelectorAll('tspan').length })),
+        marks: [...svg.querySelectorAll('[data-row-index]')].map(n => ({ index: Number(n.dataset.rowIndex), x: Number(n.querySelector('circle').getAttribute('cx')), aria: n.getAttribute('aria-label'), title: n.querySelector('title').textContent })),
+        rows: timelineRows,
+      };
+    });
+    assert.equal(result.scroll, result.viewport, 'no page overflow');
+    assert.equal(result.labels.length, sourceRows.length);
+    assert.deepEqual(result.labels.map(n => n.text), sourceRows.map(r => r.item), 'every event name is complete, never ellipsized');
+    for (const label of result.labels) assert.ok(label.font >= 12, 'event names remain at least 12px');
+    for (const label of result.texts) assert.ok(label.x >= -.5 && label.right <= result.width + .5 && label.y >= -.5 && label.bottom <= result.height + .5, `text stays inside SVG: ${JSON.stringify(label)}`);
+    assert.deepEqual(result.overlaps, [], 'name, state and date labels do not overlap');
+    assert.deepEqual(result.rows, sourceRows, 'source rows remain unchanged');
+    assert.deepEqual(result.marks.map(m => m.index), sourceRows.map((_, i) => i));
+    const min = Math.min(...sourceRows.map(r => Date.parse(r.time))), max = Math.max(...sourceRows.map(r => Date.parse(r.time)));
+    const left = Math.min(105, Math.max(64, result.width * .2)), right = result.width - 25;
+    for (const mark of result.marks) {
+      const time = Date.parse(sourceRows[mark.index].time), expected = min === max ? (left + right) / 2 : left + (time - min) / (max - min) * (right - left);
+      assert.ok(Math.abs(mark.x - expected) < 1e-7, 'recorded time retains the original scale and x position');
+      assert.equal(mark.title, mark.aria);
+      assert.ok(mark.aria.endsWith(sourceRows[mark.index].time), 'original source timestamp is preserved');
+    }
+    return result;
+  };
+  try {
+    for (const width of [1000, 720, 390]) {
+      const context = await browser.newContext({ viewport: { width, height: 900 } });
+      const page = await context.newPage(); page.on('pageerror', error => errors.push(error.message));
+      try {
+        await page.setContent(`<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><style>${css}body{margin:0;padding:18px}.plot{min-width:0}</style></head><body><div id="timeline" class="plot"></div><script>${core}</script><script>${temporal}</script></body></html>`);
+        await page.evaluate(() => document.fonts.ready);
+        await draw(page, rows);
+        const initial = await inspect(page, rows);
+        for (const mark of initial.marks) {
+          assert.match(mark.aria, /1 个依据链接 · 来源时间：/);
+          assert.doesNotMatch(mark.aria, /evidence links|source time/);
+        }
+        for (let i = 0; i < rows.length; i++) {
+          await page.locator(`#timeline [data-row-index="${i}"] circle`).click();
+          assert.deepEqual(await page.evaluate(() => timelineSelection), { row: rows[i], index: i, same: true });
+          assert.equal(await page.locator('#timeline .report-source a').getAttribute('href'), rows[i].evidence[0].href);
+        }
+        if (width === 390) {
+          for (const resized of [1000, 720, 390]) { await page.setViewportSize({ width: resized, height: 900 }); await inspect(page, rows); }
+          await draw(page, rows, 'en');
+          const english = await inspect(page, rows);
+          assert.deepEqual(english.marks.map(m => m.x), initial.marks.map(m => m.x));
+          assert.ok(english.marks.every(m => /1 evidence links · source time:/.test(m.aria)), 'English remains available');
+          // Longer synthetic name exercises measured multiline wrapping without
+          // representing another real calendar event or changing the five rows.
+          const longRows = [{ ...rows[0], item: rows[2].item.repeat(5) }];
+          await draw(page, longRows);
+          const wrapped = await inspect(page, longRows);
+          assert.ok(wrapped.labels[0].lines > 1, 'long names increase lane height instead of clipping');
+          await page.locator('#timeline [data-row-index="0"] circle').click();
+          assert.deepEqual(await page.evaluate(() => timelineSelection), { row: longRows[0], index: 0, same: true });
+        }
+      } finally { await context.close(); }
+    }
+    assert.deepEqual(errors, []);
+  } finally { await browser.close(); }
+});
+
 test('temporal charts preserve source semantics through real browser interaction', { skip: !host && 'Set SESAME_HOST_ROOT to an application checkout with Playwright installed', timeout: 90000 }, async t => {
   const require = createRequire(join(resolve(host), 'package.json'));
   const { chromium } = require('playwright');
@@ -262,6 +361,41 @@ test('temporal charts preserve source semantics through real browser interaction
       });
       assert.match(result.rejected[0], /unique/);assert.match(result.rejected[1], /HTTP\(S\)/);assert.match(result.rejected[2], /explicit UTC offset/);assert.match(result.rejected[3], /nonempty/);
       assert.match(result.label, /2026-01-01 05:00:00 \(America\/New_York\)/);assert.match(result.label, /source time: 2026-01-01T10:00:00Z/);
+    });
+
+    await t.test('lifecycle reader prompts follow locale without moving events or changing evidence', async subtest => {
+      subtest.after(() => page.evaluate(() => { document.documentElement.lang = 'en'; }));
+      let geometry;
+      for (const lang of ['zh-CN', 'en']) {
+        const initial = await page.evaluate(lang => {
+          document.documentElement.lang = lang;
+          const base = fixture.charts.find(c => c.id === 'lifecycle').spec;
+          window.localeSelection = null;
+          drawScratch({ ...base, timezone: 'America/New_York', onSelect: (row, index) => { window.localeSelection = { index, row, same: row === base.rows[index] }; } });
+          return {
+            prompt: document.querySelector('#scratch .report-source').textContent,
+            note: document.querySelector('#scratch .sc-missing-note').textContent,
+            geometry: [...document.querySelectorAll('#scratch [data-row-index]')].map(mark => ({ index: mark.dataset.rowIndex, cx: mark.querySelector('circle').getAttribute('cx'), cy: mark.querySelector('circle').getAttribute('cy') })),
+          };
+        }, lang);
+        if (lang === 'zh-CN') {
+          assert.equal(initial.prompt, '选择事件，查看依据。');
+          assert.match(initial.note, /^America\/New_York · 只显示已记录事件；间距表示记录时间，不表示持续时长或因果关系。选择事件可查看附带的依据或报告链接。/);
+          assert.match(initial.note, /\d+ 个事件未附带依据链接/);
+          assert.doesNotMatch(initial.note, /recorded events|Select a source row/);
+          geometry = initial.geometry;
+        } else {
+          assert.equal(initial.prompt, 'Select an event to inspect its evidence.');
+          assert.match(initial.note, /recorded events only; spacing represents recorded time, not duration or causality/);
+          assert.deepEqual(initial.geometry, geometry);
+        }
+        await page.locator('#scratch [data-row-index="4"]').focus();
+        await page.keyboard.press(' ');
+        const selected = await page.evaluate(() => localeSelection);
+        assert.equal(selected.same, true); assert.deepEqual(selected.row, fixture.charts.find(c => c.id === 'lifecycle').spec.rows[4]);
+        assert.match(await page.locator('#scratch .report-source').innerText(), lang === 'zh-CN' ? /未附带依据链接/ : /No attached evidence link/);
+        assert.equal(await page.evaluate(() => originalJSON === JSON.stringify(fixture)), true);
+      }
     });
 
     await t.test('empty and invalid datasets remain honest, and optional inspector retains exact fields', async () => {

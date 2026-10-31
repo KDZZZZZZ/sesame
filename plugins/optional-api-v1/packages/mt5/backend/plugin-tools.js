@@ -7,7 +7,8 @@ export function officialTool(host, mt5, group) {
   const conversationId = host.context.sessionId;
   const official = mt5.official;
   return capability(groupTool(group), async ({ save_as, ...args }, signal) => {
-    requireValue(official.route(args.server, args.tool).group === group, '该方法属于其他插件，请按目录中的 agent_tool 调用', 403, 'mt5_wrong_plugin');
+    const route = official.route(args.server, args.tool);
+    requireValue(route.group === group, `该 MT5 方法应通过 ${route.agent_tool ?? 'mt5_catalog 返回的 agent_tool'} 调用`, 403, 'mt5_wrong_plugin');
     const command = await official.call(args, conversationId, signal);
     if (!save_as) return command;
     await writeWorkspace(host, save_as, JSON.stringify(command, null, 2), signal);

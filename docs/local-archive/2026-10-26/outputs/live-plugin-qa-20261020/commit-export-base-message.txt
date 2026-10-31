@@ -1,0 +1,16 @@
+feat(reports): record the verified PDF and PNG rendering foundation
+
+Record the existing export renderer foundation separately so the subsequent
+static PDF pagination fix has an accurate, reviewable parent.
+
+Add scoped export queries and PNG ZIP output, a shared bounded renderer and
+Electron/Playwright export adapters, including the utility-process bridge.
+The export-only frame expands disclosures and scrolling tables, uses print
+layout for PDF, preserves literal report titles, and captures all PNG slices.
+Keep cancellation, output/pixel/height limits and the Windows private-memory
+watchdog with a resident fallback.
+
+This is the previously deployed and verified rendering baseline, before the
+static-document pagination repair. Earlier QA verified 19 shared/HTTP and
+16 Electron checks; later static pagination regressions are a separate change.
+HTTP routes and UI wiring remain outside this internal rendering commit.

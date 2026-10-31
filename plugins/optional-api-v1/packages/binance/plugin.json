@@ -1,0 +1,24 @@
+{
+  "id": "sesame/binance",
+  "title": "Binance Spot backend",
+  "description": "币安现货与 Spot Testnet 后端：公开行情与共享实时订阅、账户余额、订单成交、幂等下单/减量改单/撤单与未知结果恢复；统一配置密钥。",
+  "version": "1.0.1",
+  "apiVersion": "2",
+  "engines": { "sesame": ">=0.3.0-dev.1 <0.4.0" },
+  "default_state": "discoverable",
+  "entry": "index.js",
+  "capability_manifest": "capabilities.json",
+  "mcp_export": [
+    "binance_catalog",
+    "binance_account",
+    "binance_execution_identity",
+    "binance_execution_snapshot",
+    "binance_order_status"
+  ],
+  "prompts": ["prompt.md"],
+  "skills": ["skills"],
+  "resources": ["README.md", "INTERFACES.md", "PROVENANCE.md", "VALIDATION.md"],
+  "permissions": { "scopes": [], "calls": [] },
+  "license": "MIT",
+  "author": { "name": "Sesame contributors", "url": "https://github.com/KDZZZZZZ/sesame" }
+}

@@ -229,15 +229,288 @@
       "usage": {
         "purpose": "从固定权益曲线和已平仓交易计算回撤、收益风险与交易归因，保留成本口径。",
         "inputs": "调用形状为 {input:{schema_version:1,source:{id,kind},as_of,parameters?,...}}，不是文件路径或数据 ID。source.id 为 1..500 字符，kind 为 synthetic/historical/live；as_of 及全部时间字段使用真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒）。输入限 2MiB 有限 JSON，不接收代码。parameters 只支持列出的字段。 portfolio:{currency,basis:\"adjusted_equity\"|\"closed_trade_equity\",no_external_flows:true}；equity_curve 至少 2 条 {time,available_at,equity>0}，time 严格递增且 time <= available_at <= as_of。closed_trades 可省略，每项含 id?、strategy?、entry_time、exit_time、available_at、gross_pnl、net_pnl、cost；entry <= exit <= available_at <= as_of，id 唯一，cost 必须与 gross_pnl-net_pnl 一致。",
-        "outputs": "observations.equity 为权益、回撤与收益风险统计，closed_trades 为交易和策略归因；parameters 记录年化与无风险利率口径。 立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。",
+        "outputs": "observations.equity 为权益、回撤与收益风险统计，closed_trades 为交易和策略归因；parameters 记录年化与无风险利率口径。 立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。 交给调用者时保留上述固定引用、source/as_of、实际参数和 limitations。把 equity 回撤/收益统计及 closed_trades 归因交回策略或账户复盘；保留币种、资金流和年化口径，不另行重建交易或把同一权益曲线的多个比率当独立盈利证明。",
         "prerequisites": [
           "提供与任务相符的已知输入；本能力不联网取数，不需要 Python、ABU 安装或券商账户。",
           "只有已扣除外部资金流影响的曲线才可声明 no_external_flows:true；未知资金流不能为了通过校验而改写声明。"
         ],
         "limitations": [
           "不重建券商账单；CAGR 使用实际日历时长，Sharpe 使用声明的 periods_per_year。输入来源与曲线口径仍需证据。",
-          "来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。"
+          "来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。",
+          "复用前核对输入版本、参数、截止时间与实现口径；已有匹配结果可直接引用。同源价格、成交或统计派生结果不能重复计为独立证据；计算只回答本项局部问题，方法解释与最终综合由调用者负责。"
         ]
+      },
+      "researchDataAccess": {
+        "schemaVersion": 1,
+        "reads": "input-only",
+        "writes": "derived-artifacts-only"
+      }
+    },
+    {
+      "id": "abu_trade_results_audit",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "交易结果诊断：审计已提供订单和成交的时序、限价、数量、标的一致性和显式成本；bars可省略，不要求权益曲线，不执行回测。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "schema_version": {
+                "const": 1
+              },
+              "as_of": {
+                "type": "string",
+                "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+              },
+              "source": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "kind": {
+                    "enum": [
+                      "synthetic",
+                      "historical",
+                      "live"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "kind"
+                ],
+                "additionalProperties": true,
+                "description": "Caller-declared provenance; synthetic remains synthetic in output artifacts."
+              },
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "expected_engine": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500,
+                    "description": "预期引擎名称；默认 engine.name，未声明则 native-engine。"
+                  }
+                },
+                "additionalProperties": false,
+                "description": "Optional overrides. Defaults and limits match the existing calculation."
+              },
+              "engine": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "bars": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "time": {
+                      "type": "string",
+                      "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+                    },
+                    "available_at": {
+                      "type": "string",
+                      "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+                    },
+                    "open": {
+                      "type": "number"
+                    },
+                    "high": {
+                      "type": "number"
+                    },
+                    "low": {
+                      "type": "number"
+                    },
+                    "close": {
+                      "type": "number"
+                    },
+                    "volume": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": true,
+                  "required": [
+                    "time",
+                    "available_at",
+                    "open",
+                    "high",
+                    "low",
+                    "close",
+                    "volume"
+                  ]
+                },
+                "maxItems": 10000,
+                "minItems": 1,
+                "description": "bars 是 1..10000 条已知 OHLCV，按收盘 time 严格递增且不重复；每行含 time、available_at、open/high/low/close、volume。time <= available_at <= as_of，价格为正且 high/low 覆盖 open/close，volume >= 0。"
+              },
+              "orders": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "time": {
+                      "type": "string",
+                      "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+                    },
+                    "available_at": {
+                      "type": "string",
+                      "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+                    },
+                    "symbol": {
+                      "type": "string"
+                    },
+                    "side": {
+                      "type": "string"
+                    },
+                    "quantity": {
+                      "type": "number"
+                    },
+                    "limit_price": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "maxItems": 10000
+              },
+              "trades": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "order_id": {
+                      "type": "string"
+                    },
+                    "time": {
+                      "type": "string",
+                      "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+                    },
+                    "available_at": {
+                      "type": "string",
+                      "description": "Canonical UTC YYYY-MM-DDTHH:mm:ss.sssZ, including milliseconds; preserve actual evidence time."
+                    },
+                    "symbol": {
+                      "type": "string"
+                    },
+                    "quantity": {
+                      "type": "number"
+                    },
+                    "price": {
+                      "type": "number"
+                    },
+                    "cost": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "maxItems": 10000
+              }
+            },
+            "additionalProperties": true,
+            "required": [
+              "schema_version",
+              "source",
+              "as_of"
+            ],
+            "description": "固定的订单/成交证据；examples/audit-input.json为合成格式例。bars可省略，不为审计补造市场或权益数据。"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "schema_version": {
+            "const": 1
+          },
+          "baseline": {
+            "const": true
+          },
+          "status": {
+            "const": "research_baseline"
+          },
+          "parameters": {
+            "type": "object"
+          },
+          "observations": {
+            "description": "observations.evidence_counts 给出输入条数，audit 是逐项审计结论，fills/fills_by_symbol 为成交汇总，native_engine_handoff 为引擎交接信息。audit 中失败项是研究结果，不是能力调用失败。"
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "input_artifact": {
+            "type": "object",
+            "description": "立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。"
+          },
+          "result_artifact": {
+            "type": "object",
+            "description": "立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。"
+          }
+        },
+        "required": [
+          "schema_version",
+          "baseline",
+          "status",
+          "parameters",
+          "observations",
+          "limitations",
+          "input_artifact",
+          "result_artifact"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "resources.create",
+        "resources.publish"
+      ],
+      "binding": {
+        "type": "native",
+        "name": "abu_trade_results_audit"
+      },
+      "usage": {
+        "purpose": "交易结果诊断：审计已提供订单和成交的时序、限价、数量、标的一致性和显式成本；bars可省略，不要求权益曲线，不执行回测。",
+        "inputs": "调用形状为 {input:{schema_version:1,source:{id,kind},as_of,parameters?,...}}，不是文件路径或数据 ID。source.id 为 1..500 字符，kind 为 synthetic/historical/live；as_of 及全部时间字段使用真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒）。输入限 2MiB 有限 JSON，不接收代码。parameters 只支持列出的字段。 bars 可省略，审计仅有订单和成交的证据时无需补造 K 线。若提供，bars 是 1..10000 条已知 OHLCV，按收盘 time 严格递增且不重复；每行含 time、available_at、open/high/low/close、volume。time <= available_at <= as_of，价格为正且 high/low 覆盖 open/close，volume >= 0。 可选 engine:{name}；orders:[{id,symbol,side,time,available_at,quantity,limit_price?}] 和 trades:[{id,order_id,symbol,time,available_at,quantity,price,cost}] 默认空。数量和价格为正，cost 非负，各列表 id 唯一；time <= available_at <= as_of。expected_engine 若提供须与 engine.name 一致。",
+        "outputs": "observations.evidence_counts 给出输入条数，audit 是逐项审计结论，fills/fills_by_symbol 为成交汇总，native_engine_handoff 为引擎交接信息。audit 中失败项是研究结果，不是能力调用失败。 立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。 交给调用者时保留上述固定引用、source/as_of、实际参数和 limitations。把 audit、evidence_counts 和 fills_by_symbol 交回策略验证流程，用异常定位需要补齐的引擎证据；它审计已有执行材料，不承担策略生成或撮合。",
+        "prerequisites": [
+          "提供与任务相符的已知输入；本能力不联网取数，不需要 Python、ABU 安装或券商账户。"
+        ],
+        "limitations": [
+          "只审计输入证据，不能证明策略生成过程、券商可成交性或复现真实回测。不同标的数量不能相加当作统一仓位。",
+          "来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。",
+          "复用前核对输入版本、参数、截止时间与实现口径；已有匹配结果可直接引用。同源价格、成交或统计派生结果不能重复计为独立证据；计算只回答本项局部问题，方法解释与最终综合由调用者负责。"
+        ]
+      },
+      "researchDataAccess": {
+        "schemaVersion": 1,
+        "reads": "input-only",
+        "writes": "derived-artifacts-only"
       }
     }
   ],
@@ -248,38 +521,56 @@
     {
       "id": "knowledge-0",
       "path": "examples/input.json",
-      "description": "交易绩效基线 — examples/input.json",
+      "description": "交易结果诊断 — examples/input.json",
       "kind": "reference"
     },
     {
       "id": "knowledge-1",
       "path": "prompt.md",
-      "description": "交易绩效基线 — prompt.md",
+      "description": "abu_trade_metrics_analyze 的局部目标、解释边界和跨方法交接。",
       "kind": "prompt"
     },
     {
       "id": "knowledge-2",
       "path": "PROVENANCE.md",
-      "description": "交易绩效基线 — PROVENANCE.md",
+      "description": "交易结果诊断 — PROVENANCE.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-3",
       "path": "README.md",
-      "description": "交易绩效基线 — README.md",
+      "description": "交易结果诊断 — README.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-4",
       "path": "skills/abu-trade-metrics/references/method.md",
-      "description": "交易绩效基线 — skills/abu-trade-metrics/references/method.md",
+      "description": "abu_trade_metrics_analyze 的公式、参数口径与基线差异；核对是否可以复用其他已计算结果。",
       "kind": "reference"
     },
     {
       "id": "knowledge-5",
       "path": "skills/abu-trade-metrics/SKILL.md",
-      "description": "交易绩效基线 — skills/abu-trade-metrics/SKILL.md",
+      "description": "数值方法：从固定权益曲线和已平仓交易计算回撤、收益风险与交易归因，保留成本口径。 输入为已固定证据；输出为 observations 与输入/结果工件，供方法解释或工作流复用。",
       "kind": "skill"
+    },
+    {
+      "id": "audit-input",
+      "path": "examples/audit-input.json",
+      "kind": "reference",
+      "description": "逐笔订单/成交审计合成算例；无需权益曲线。"
+    },
+    {
+      "id": "audit-method",
+      "path": "skills/abu-trade-metrics/references/audit.md",
+      "kind": "reference",
+      "description": "abu_trade_results_audit规则、原有数值口径及原生引擎边界。"
+    },
+    {
+      "id": "audit-provenance",
+      "path": "AUDIT-PROVENANCE.md",
+      "kind": "reference",
+      "description": "迁入审计方法的原始ABU来源、固定提交与GPL-3.0-only许可。"
     }
   ],
   "hooks": [],

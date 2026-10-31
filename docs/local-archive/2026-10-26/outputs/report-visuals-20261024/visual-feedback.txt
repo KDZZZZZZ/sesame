@@ -1,0 +1,7 @@
+请继续当前报告修正，以下是独立真实浏览器和截图复核发现的具体问题，合并在本次同一版本修复中，不新增报告或研究任务：
+1. 蓝灰尚未实际生效。源码根 html 虽有 data-report-palette="blue-gray"，但现有宿主 report/1 iframe 会重新构造 html，只保留其 lang/theme，丢弃这个自定义根属性。实际日线仍是黑/绿，决策树强调也仍是绿，自定义 --report-data/--report-context 为空。请在报告 initialize 开始显式执行 document.documentElement.dataset.reportPalette='blue-gray'，从而使已内联的当前 CSS 角色生效。不要改背景。Codex 将在模板层补上这一启动行为，不需要你改宿主或插件。
+2. 实测曾捕获 ResizeObserver loop completed with undelivered notifications；自定义 canvas 中 paint();const ro=new ResizeObserver(paint) 同步改变布局。只在实际宽度改变时用 requestAnimationFrame 重绘、排除纯高度通知，释放时取消 frame/observer；初始隐藏后能恢复。
+3. 所有折叠明细在截图中显示英文“Details”，原中文标题消失。原因是 disclosure 将 details 自己传给 SesameCharts.table，而 table.replaceChildren 会移除 summary。请在 summary 后放独立 div 再将这个 div 传给表格，保持中文标题。
+4. 继续你已发现的导出长表格换行修正。不要压缩原文或删掉条件。
+5. 首页指标的 USD/盎司与大号数字挤在一起拆行，建议把单位放小号说明/指标标签，保留原值和单位含义。
+最后检查实际运行 DOM 的 --report-data 为浅色 #334EAC（深色对应浅蓝）、--report-context 已定义，日线蓝/灰与图注一致；决策树连接/文字完整，背景仍 #FAFAFA。同一 artifact 发布新 revision，检查桌面/窄屏与 PDF/PNG 预检，不把预检当实际导出。

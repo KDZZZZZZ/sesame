@@ -40,6 +40,18 @@
 
 边界与恢复：读取不重跑回测；统计与输入范围、成本和demo标签一同解释。
 
+## backtrader_optimize
+
+调用者：agent、host。在固定开发数据上实际调用原生 `Cerebro.optstrategy`，不实现另一套优化算法。
+
+输入沿用 backtrader_backtest，另必需 `parameter_space:{参数名:[实际候选值]}`；最多 12 个参数、64 个组合、总计 200000 pass-bars。固定 parameters 被同名搜索向量覆盖。必须使用开发数据，holdout 单独用固定参数调用 backtrader_backtest。环境和代码要求不变。
+
+输出：固定 strategy.result、rawResult、passes DataRef、optimizer 声明及各组 parameters/statistics/status。completed 只代表搜索计划完成；策略异常时 status=failed，已完成组保留，其余 not-completed，没有伪造收益。原生单进程运行，maxcpus=1，所有成本/浮点/无broker/非OS沙箱边界不变。选参目标、并列规则和独立验证由工作流先冻结。
+
+## backtrader_operation
+
+调用者：agent、host。`{operation_id}` 只读原生操作记录，返回原 status/result 或 not-found，不启动进程。恢复 unknown/running 先读此原收据；not-found 不证明一个不确定 dispatch 没有执行，不能自动换 ID 重发。
+
 ## backtrader_dispose
 调用者：host。关闭插件自有资源。
 

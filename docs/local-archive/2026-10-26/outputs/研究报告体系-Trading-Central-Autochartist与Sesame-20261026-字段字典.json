@@ -1,0 +1,2198 @@
+[
+  {
+    "category": "01 身份、时间、单位与来源",
+    "key": "report.id",
+    "label": "报告ID、report_uid",
+    "nature": "管理",
+    "status": "呈",
+    "example": "demo-eurusd-01",
+    "route": "reports ArtifactRef；与供应商结果ID分开"
+  },
+  {
+    "category": "01 身份、时间、单位与来源",
+    "key": "report.kind",
+    "label": "报告种类、report_type",
+    "nature": "管理",
+    "status": "呈",
+    "example": "technical_scenario",
+    "route": "新增业务模块目录，映射现有outline"
+  },
+  {
+    "category": "01 身份、时间、单位与来源",
+    "key": "report.provider",
+    "label": "机构、产品、publisher",
+    "nature": "来源",
+    "status": "取/呈",
+    "example": "Sesame / 自有技术研究",
+    "route": "取真实来源；自研结果不标为TC/AC"
+  },
+  {
+    "category": "01 身份、时间、单位与来源",
+    "key": "instrument.id",
+    "label": "Instrument、symbol、ticker、标的",
+    "nature": "事实",
+    "status": "取",
+    "example": "EURUSD / broker-symbol",
+    "route": "data-access + 对应market source；保留来源标识"
+  },
+  {
+    "category": "01 身份、时间、单位与来源",
+    "key": "instrument.name",
+    "label": "公司名、资产名、logo",
+    "nature": "事实",
+    "status": "取/源",
+    "example": "示例公司；logo未提供",
+    "route": "行情目录可取名称；公司品牌/标识需资产主数据"
+  },
+  {
+    "category": "01 身份、时间、单位与来源",
+    "key": "instrument.market",
+    "label": "市场、exchange、region、asset_class",
+    "nature": "事实",
+    "status": "取/源",
+    "example": "FX / broker / USD报价",
+    "route": "market source；区域和上市地需主数据补全"
+  },
+  {
+    "category": "01 身份、时间、单位与来源",
+    "key": "instrument.sector",
+    "label": "行业、sector、industry",
+    "nature": "事实",
+    "status": "源",
+    "example": "示例半导体行业",
+    "route": "当前财务工具未建立统一公司行业主表"
+  },
+  {
+    "category": "01 身份、时间、单位与来源",
+    "key": "instrument.currency",
+    "label": "报价/报表/账户币种",
+    "nature": "事实",
+    "status": "取",
+    "example": "quote=USD，account=USD",
+    "route": "各源分别取；不能用报价币种替代财务币种"
+  },
+  {
+    "category": "01 身份、时间、单位与来源",
+    "key": "instrument.contract",
+    "label": "tick/pip、lot步长、乘数、合约类型",
+    "nature": "事实",
+    "status": "取/源",
+    "example": "pip=0.0001；标准手100000",
+    "route": "MT5/Binance/QMT已部分覆盖；pip需明确定义"
+  },
+  {
+    "category": "01 身份、时间、单位与来源",
+    "key": "scope.horizon",
+    "label": "Investment/Holding Horizon、forecast_minutes",
+    "nature": "定义",
+    "status": "呈",
+    "example": "未来4小时",
+    "route": "与K线周期、回测区间分别保存"
+  },
+  {
+    "category": "01 身份、时间、单位与来源",
+    "key": "scope.bar_size",
+    "label": "Bar Size、interval/granularity",
+    "nature": "事实",
+    "status": "取",
+    "example": "1h",
+    "route": "data-access spec；不要从持有期反推"
+  },
+  {
+    "category": "01 身份、时间、单位与来源",
+    "key": "scope.universe",
+    "label": "投资范围、同业范围、国家与筛选池",
+    "nature": "定义",
+    "status": "编/源",
+    "example": "同行业40家公司",
+    "route": "固定证券全集及纳入/退市规则"
+  },
+  {
+    "category": "01 身份、时间、单位与来源",
+    "key": "time.as_of",
+    "label": "as_of、data_as_of、Report Time",
+    "nature": "来源",
+    "status": "取/呈",
+    "example": "2026-10-26T12:00:00Z",
+    "route": "拆成数据截点与报告生成时间"
+  },
+  {
+    "category": "01 身份、时间、单位与来源",
+    "key": "time.observed_at",
+    "label": "价格/指标实际观察时刻",
+    "nature": "来源",
+    "status": "取",
+    "example": "2026-10-26T11:59:00Z",
+    "route": "各适配器源时间；未知时不冒充UTC"
+  },
+  {
+    "category": "01 身份、时间、单位与来源",
+    "key": "time.available_at",
+    "label": "首次可得/披露时间、acceptanceDateTime",
+    "nature": "来源",
+    "status": "取/源",
+    "example": "财报11月5日才可得",
+    "route": "financial-research已有外壳；缺原始发布档案需补"
+  },
+  {
+    "category": "01 身份、时间、单位与来源",
+    "key": "time.retrieved_at",
+    "label": "采集时间",
+    "nature": "来源",
+    "status": "取",
+    "example": "2026-10-26T12:01:00Z",
+    "route": "DataRef来源；不等于历史首次发布时间"
+  },
+  {
+    "category": "01 身份、时间、单位与来源",
+    "key": "time.timezone",
+    "label": "市场时区、session、calendarRevision",
+    "nature": "来源",
+    "status": "取/源",
+    "example": "UTC；EU session",
+    "route": "券商墙钟需明确转换；未知日历保留未知"
+  },
+  {
+    "category": "01 身份、时间、单位与来源",
+    "key": "source.refs",
+    "label": "source_refs、URL、raw_ref、原文",
+    "nature": "来源",
+    "status": "取/呈",
+    "example": "固定DataRef + URL",
+    "route": "data-access / financial-research；报告绑定引用"
+  },
+  {
+    "category": "01 身份、时间、单位与来源",
+    "key": "source.version",
+    "label": "provider/version/endpoint/path、model_version",
+    "nature": "来源",
+    "status": "取/编",
+    "example": "method=sesame.breakout.v1",
+    "route": "现有hash/版本复用；新增供应商字段路径映射"
+  },
+  {
+    "category": "01 身份、时间、单位与来源",
+    "key": "source.status",
+    "label": "缺失状态、覆盖、许可、修订",
+    "nature": "来源",
+    "status": "取/编",
+    "example": "unknown / not_applicable",
+    "route": "已有coverage/status；许可与字段级状态需补"
+  },
+  {
+    "category": "01 身份、时间、单位与来源",
+    "key": "value.unit_scale",
+    "label": "单位、精度、score scale",
+    "nature": "定义",
+    "status": "取/编",
+    "example": "0.72 fraction；72 percent",
+    "route": "同时保留raw值与原尺度，禁止凭数值猜尺度"
+  },
+  {
+    "category": "02 行情、技术指标与市场状态",
+    "key": "price.reference",
+    "label": "Current/Reference Price、closing_price",
+    "nature": "事实",
+    "status": "取",
+    "example": "1.1000 USD/EUR",
+    "route": "同一来源和价格基准；market_read"
+  },
+  {
+    "category": "02 行情、技术指标与市场状态",
+    "key": "price.ohlcv",
+    "label": "OHLCV、时间、闭合状态",
+    "nature": "事实",
+    "status": "取",
+    "example": "H1收盘1.1000；tick volume",
+    "route": "market_read；volume类型与单位单列"
+  },
+  {
+    "category": "02 行情、技术指标与市场状态",
+    "key": "price.bid_ask",
+    "label": "bid、ask、spread",
+    "nature": "事实/计算",
+    "status": "取/编",
+    "example": "1.0999/1.1001；2 pip",
+    "route": "MT5/Binance/QMT报价；ask-bid后换单位"
+  },
+  {
+    "category": "02 行情、技术指标与市场状态",
+    "key": "price.return",
+    "label": "涨跌额、涨跌幅、Price Performance",
+    "nature": "计算",
+    "status": "算/编",
+    "example": "100→103；+3%",
+    "route": "ABU收益/波动；基准与复权须一致"
+  },
+  {
+    "category": "02 行情、技术指标与市场状态",
+    "key": "price.relative_strength",
+    "label": "相对板块/指数强弱",
+    "nature": "计算",
+    "status": "编/源",
+    "example": "20日资产+4%，行业+1%",
+    "route": "两条同口径序列；额外行业/基准来源"
+  },
+  {
+    "category": "02 行情、技术指标与市场状态",
+    "key": "market.trend",
+    "label": "trend、短/中/长期方向",
+    "nature": "判断",
+    "status": "编",
+    "example": "日内偏弱；长期上升",
+    "route": "指标/确认拐点可用；固定判定方法"
+  },
+  {
+    "category": "02 行情、技术指标与市场状态",
+    "key": "market.volatility_regime",
+    "label": "volatility_regime、低/高波动状态",
+    "nature": "模型",
+    "status": "编",
+    "example": "波动处于自身历史第80百分位",
+    "route": "现有波动值+训练窗分位阈值"
+  },
+  {
+    "category": "02 行情、技术指标与市场状态",
+    "key": "market.liquidity",
+    "label": "liquidity、成交活跃度/深度",
+    "nature": "事实/模型",
+    "status": "取/编/源",
+    "example": "点差2pip；深度未取",
+    "route": "报价可取部分；完整深度与冲击历史缺"
+  },
+  {
+    "category": "02 行情、技术指标与市场状态",
+    "key": "indicator.ma",
+    "label": "SMA/EMA、MA20/MA50",
+    "nature": "计算",
+    "status": "算",
+    "example": "SMA20=102；SMA50=100",
+    "route": "abu-indicators；显式算法/初始化"
+  },
+  {
+    "category": "02 行情、技术指标与市场状态",
+    "key": "indicator.rsi",
+    "label": "RSI",
+    "nature": "计算",
+    "status": "算",
+    "example": "RSI14=58",
+    "route": "当前实现均值法，不能默认为Wilder"
+  },
+  {
+    "category": "02 行情、技术指标与市场状态",
+    "key": "indicator.macd",
+    "label": "MACD、signal、histogram",
+    "nature": "计算",
+    "status": "算",
+    "example": "DIF=0.5；signal=0.3",
+    "route": "abu-indicators；参数与预热一致"
+  },
+  {
+    "category": "02 行情、技术指标与市场状态",
+    "key": "indicator.stochastic",
+    "label": "随机指标、K/D",
+    "nature": "计算",
+    "status": "编",
+    "example": "K14=70，D3=65",
+    "route": "需补版本化计算与平滑参数"
+  },
+  {
+    "category": "02 行情、技术指标与市场状态",
+    "key": "indicator.bollinger",
+    "label": "Bollinger上下轨与带宽",
+    "nature": "计算",
+    "status": "算",
+    "example": "中轨100；上104；下96",
+    "route": "abu-indicators；ddof/窗口固定"
+  },
+  {
+    "category": "02 行情、技术指标与市场状态",
+    "key": "indicator.tr_atr",
+    "label": "True Range、ATR、ATR%",
+    "nature": "计算",
+    "status": "算",
+    "example": "TR=60pip；ATR14=35pip",
+    "route": "ABU各基线首TR不同；方法ID锁定"
+  },
+  {
+    "category": "02 行情、技术指标与市场状态",
+    "key": "indicator.vwap",
+    "label": "VWAP",
+    "nature": "计算",
+    "status": "算",
+    "example": "样本累计VWAP=100.4",
+    "route": "abu-volatility；不是默认交易所当日VWAP"
+  },
+  {
+    "category": "02 行情、技术指标与市场状态",
+    "key": "indicator.hv",
+    "label": "收益标准差、年化HV",
+    "nature": "计算",
+    "status": "算",
+    "example": "日频HV=24%",
+    "route": "abu-volatility；交易日数/收益定义固定"
+  },
+  {
+    "category": "02 行情、技术指标与市场状态",
+    "key": "indicator.gap",
+    "label": "跳空幅度与标记",
+    "nature": "计算",
+    "status": "算",
+    "example": "开盘较前收+1.2%",
+    "route": "abu-volatility；公司行为与停市先解释"
+  },
+  {
+    "category": "02 行情、技术指标与市场状态",
+    "key": "indicator.adc",
+    "label": "Adaptive Divergence Convergence",
+    "nature": "专有",
+    "status": "授/编",
+    "example": "原厂值缺；自研另命名",
+    "route": "TC公开框架但自适应周期不完整"
+  },
+  {
+    "category": "02 行情、技术指标与市场状态",
+    "key": "market.snapshot",
+    "label": "指数/板块/商品/FX/加密表现",
+    "nature": "事实/汇总",
+    "status": "取/编/源",
+    "example": "指数+0.6%；能源领先",
+    "route": "行情可拼接；跨市场全集/行业源待补"
+  },
+  {
+    "category": "02 行情、技术指标与市场状态",
+    "key": "market.risk_gauges",
+    "label": "VIX、国债收益率、DXY等",
+    "nature": "事实",
+    "status": "取/源",
+    "example": "10Y收益率4.0%",
+    "route": "FRED/行情按实际series与授权；无统一实时包"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "event.id",
+    "label": "result_uid、技术事件ID",
+    "nature": "管理",
+    "status": "取/编/授",
+    "example": "demo-pattern-01",
+    "route": "现有计算生成事件；原厂结果须接入；大ID用字符串"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "event.type",
+    "label": "Event Type、pattern_name、形态名称",
+    "nature": "判断",
+    "status": "算/编/授",
+    "example": "已确认前高收盘突破",
+    "route": "已有突破/有限PA/ICT；完整形态库未有"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "event.direction",
+    "label": "Idea Direction、bullish/bearish",
+    "nature": "判断",
+    "status": "算/编/授",
+    "example": "forecast=up",
+    "route": "历史走势方向与预测方向分开"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "event.stage",
+    "label": "emerging/complete/failed/expired",
+    "nature": "判断/管理",
+    "status": "编/授",
+    "example": "forming；尚未突破",
+    "route": "现有confirmed事件基础；需机会生命周期"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "event.detected_at",
+    "label": "Detection/identified",
+    "nature": "来源",
+    "status": "算/编/授",
+    "example": "10:00检测，11:00确认",
+    "route": "AC内部found应忽略；检测时间不等于实际可行动时间"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "event.confirmed_at",
+    "label": "确认时间",
+    "nature": "来源",
+    "status": "算",
+    "example": "右侧第3根闭合后确认",
+    "route": "PA/ICT源bar结束仅为确认下界；不证明当时已送达"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "event.earliest_action",
+    "label": "earliest_action、最早可行动时间",
+    "nature": "来源/方法",
+    "status": "取/编",
+    "example": "bar确认后，数据实际可得且市场可交易",
+    "route": "ABU依赖输入available_at；真实延迟/会话需补，未知不填确认时间"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "event.age_length",
+    "label": "age、length、形态起止",
+    "nature": "事实",
+    "status": "算/编/授",
+    "example": "长40根；年龄2根",
+    "route": "起止时间、长度单位与更新事件独立"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "event.expiry",
+    "label": "expires_at、relevant、失效原因",
+    "nature": "管理/判断",
+    "status": "编/授",
+    "example": "16:00到期；未达标",
+    "route": "需设超时/破坏/替代事件规则"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "event.history",
+    "label": "事件历史、bullish/bearish计数",
+    "nature": "统计",
+    "status": "编/源",
+    "example": "近30日8多5空",
+    "route": "先固定检测器与去重，再积累事件库"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "pattern.anchors",
+    "label": "摆动点、A/B/C/D/X、时间价位",
+    "nature": "计算",
+    "status": "算/编/授",
+    "example": "高点A=103；确认时刻已记录",
+    "route": "ABU/PA提供拐点；谐波组合另算"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "pattern.point_count",
+    "label": "图形qty_tp、Fibonacci qtyTP",
+    "nature": "计算",
+    "status": "算/编/授",
+    "example": "5个形态转折点",
+    "route": "按端点和路径解释；不当作水平位触碰次数"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "pattern.boundaries",
+    "label": "支撑/阻力线端点、几何边界",
+    "nature": "计算",
+    "status": "编/授",
+    "example": "resistance=(t1,103)-(t2,103)",
+    "route": "趋势线拟合/容差需新增；绘图只呈现"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "pattern.height",
+    "label": "形态高度",
+    "nature": "计算",
+    "status": "编",
+    "example": "区间57−47=10",
+    "route": "明确形态/基底；不能对所有事件套高度法"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "pattern.ratios",
+    "label": "Fibonacci比例与阶梯",
+    "nature": "计算",
+    "status": "算/编/授",
+    "example": "回撤0.618；target10=1.2800",
+    "route": "ABU有最近高低点水平；完整ABCD/Gartley需补"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "pattern.continuation",
+    "label": "Continuation/Reversal、trend_change",
+    "nature": "判断",
+    "status": "编/授",
+    "example": "continuation",
+    "route": "以前置趋势和形态定义判定"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "levels.values",
+    "label": "Key Levels、support/resistance",
+    "nature": "计算",
+    "status": "算/编",
+    "example": "支撑98、阻力103/110",
+    "route": "ABU聚类水平；原厂值需授权"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "levels.significance",
+    "label": "Level Significance、星级/重要性",
+    "nature": "判断",
+    "status": "编/授",
+    "example": "强/中/弱；自有规则v1",
+    "route": "触碰数/距离可算；TC星级精确规则未公开"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "levels.touches",
+    "label": "Key Level qtyTP、触碰时刻",
+    "nature": "计算",
+    "status": "算/编/授",
+    "example": "4次确认触碰",
+    "route": "ABU聚类已有；仅水平位路径适用，图形/Fib点数另存"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "levels.approach",
+    "label": "接近区、approachingTime/Price",
+    "nature": "判断",
+    "status": "编/授",
+    "example": "距150阻力0.15",
+    "route": "需定义阈值；接近不等于反转"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "levels.round",
+    "label": "整数关口与穿越状态",
+    "nature": "判断",
+    "status": "编/授",
+    "example": "BTC接近100000",
+    "route": "自有粒度规则；AC专属raw schema待验"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "quality.overall",
+    "label": "Technical Score、quality、averageQuality",
+    "nature": "专有/模型",
+    "status": "授/编",
+    "example": "AC原始quality=0.70",
+    "route": "自研质量必须另命名；不是70%胜率"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "quality.components",
+    "label": "clarity/uniformity/initial_trend/breakout/volume",
+    "nature": "专有",
+    "status": "授/编",
+    "example": "clarity=0.80；breakout不适用",
+    "route": "原厂0–1；子项公式未完整公开"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "quality.fibonacci",
+    "label": "ratioQuality、timeQuality",
+    "nature": "专有",
+    "status": "授/编",
+    "example": "ratioQuality=0.84",
+    "route": "几何拟合；不能转换成交易成功率"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "anomaly.movement",
+    "label": "from/to_price、movement",
+    "nature": "计算",
+    "status": "编/授",
+    "example": "1.1000→1.1060，60pip",
+    "route": "现有价格输入可算；检测/分位需固定窗口"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "anomaly.consecutive",
+    "label": "qty_candles、连续方向",
+    "nature": "计算",
+    "status": "编/授",
+    "example": "连续6根上涨",
+    "route": "doji/平价定义与样本窗明确"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "anomaly.percentile",
+    "label": "异常百分位、统计基准",
+    "nature": "统计",
+    "status": "编/源/授",
+    "example": "历史第98百分位",
+    "route": "≥95与0.98端点尺度不同；不是反转概率"
+  },
+  {
+    "category": "03 技术事件、几何、质量与生命周期",
+    "key": "chart.annotations",
+    "label": "Annotated/Reference Chart、drawing",
+    "nature": "展示",
+    "status": "呈/编",
+    "example": "K线+拐点+目标区域",
+    "route": "reports内置candlestick；图元来自真实计算"
+  },
+  {
+    "category": "04 观点、情景与执行计划",
+    "key": "thesis.summary",
+    "label": "thesis.summary、Comment、Market Outlook",
+    "nature": "判断",
+    "status": "编",
+    "example": "突破前等待确认",
+    "route": "基于已取证据与方法；不是取数结果"
+  },
+  {
+    "category": "04 观点、情景与执行计划",
+    "key": "thesis.direction",
+    "label": "Strategy、Long/Short/Neutral",
+    "nature": "判断",
+    "status": "编/授",
+    "example": "conditional-long",
+    "route": "条件未成立时不写已触发"
+  },
+  {
+    "category": "04 观点、情景与执行计划",
+    "key": "thesis.status",
+    "label": "thesis.status、Decision、Value Status",
+    "nature": "判断",
+    "status": "编",
+    "example": "watching",
+    "route": "区分观点状态与实际订单状态"
+  },
+  {
+    "category": "04 观点、情景与执行计划",
+    "key": "scenario.primary",
+    "label": "Preferred Scenario、primary_scenario",
+    "nature": "判断",
+    "status": "编/授",
+    "example": "收盘突破103后观察回踩",
+    "route": "原厂情景授权；自有规则可组合"
+  },
+  {
+    "category": "04 观点、情景与执行计划",
+    "key": "scenario.alternative",
+    "label": "Alternative Scenario、trigger/action",
+    "nature": "判断",
+    "status": "编/授",
+    "example": "跌破98后退出原多头观点",
+    "route": "条件是业务信息，避免无意义免责声明"
+  },
+  {
+    "category": "04 观点、情景与执行计划",
+    "key": "scenario.entry",
+    "label": "Entry Price/reference/zone/condition",
+    "nature": "判断",
+    "status": "编/授",
+    "example": "103确认；候选入场103–104",
+    "route": "价格、区域、触发、执行方式分开"
+  },
+  {
+    "category": "04 观点、情景与执行计划",
+    "key": "scenario.invalidation",
+    "label": "Pivot、invalidation_price",
+    "nature": "判断",
+    "status": "编/授",
+    "example": "98失效",
+    "route": "技术失效位不等于传统OHLC Pivot点"
+  },
+  {
+    "category": "04 观点、情景与执行计划",
+    "key": "scenario.stop",
+    "label": "Stop Price/stop_loss",
+    "nature": "判断/计算",
+    "status": "算/编",
+    "example": "计划止损98",
+    "route": "已有ATR退出；结构止损规则需定"
+  },
+  {
+    "category": "04 观点、情景与执行计划",
+    "key": "scenario.targets",
+    "label": "Target1/2、target_level",
+    "nature": "判断/计算",
+    "status": "编/授",
+    "example": "110/115",
+    "route": "来源可为结构/高度/原厂；保存期限"
+  },
+  {
+    "category": "04 观点、情景与执行计划",
+    "key": "scenario.target_region",
+    "label": "预测价格范围与期限",
+    "nature": "模型",
+    "status": "编/源/授",
+    "example": "未来4h目标110–112",
+    "route": "双侧波动区间另列；概率区间需校准"
+  },
+  {
+    "category": "04 观点、情景与执行计划",
+    "key": "scenario.expected_action",
+    "label": "Expected Price Action、Signal Rationale",
+    "nature": "判断",
+    "status": "编/授",
+    "example": "趋势延续；先确认再执行",
+    "route": "含证据与条件，避免仅报“看多”"
+  },
+  {
+    "category": "04 观点、情景与执行计划",
+    "key": "scenario.reward_risk",
+    "label": "reward_risk_at_entry_reference",
+    "nature": "计算",
+    "status": "编",
+    "example": "entry103，stop98，T1=113→2R",
+    "route": "(target-entry)/(entry-stop)，费用另计"
+  },
+  {
+    "category": "04 观点、情景与执行计划",
+    "key": "evidence.supporting",
+    "label": "evidence[].type/finding/source/timeframe",
+    "nature": "来源/判断",
+    "status": "取/编",
+    "example": "H1收盘突破；固定数据引用",
+    "route": "分离原始事实与解释"
+  },
+  {
+    "category": "04 观点、情景与执行计划",
+    "key": "evidence.conflicts",
+    "label": "conflicting_evidence、evidence_conflicts",
+    "nature": "判断",
+    "status": "编",
+    "example": "H1强、D1仍受阻",
+    "route": "不同周期不必视为数据错误"
+  },
+  {
+    "category": "04 观点、情景与执行计划",
+    "key": "evidence.independence",
+    "label": "同源/独立证据与共振",
+    "nature": "定义/统计",
+    "status": "编",
+    "example": "RSI和MACD来自同一价格序列",
+    "route": "不简单累加或相乘“概率”"
+  },
+  {
+    "category": "04 观点、情景与执行计划",
+    "key": "monitoring.recheck",
+    "label": "monitoring.recheck_on、提醒条件",
+    "nature": "管理/判断",
+    "status": "呈/编",
+    "example": "突破103/事件公布后复查",
+    "route": "由编排/监控实现；报告保存条件"
+  },
+  {
+    "category": "05 波动、账户风险与规模",
+    "key": "risk.account",
+    "label": "equity/balance、currency、margin",
+    "nature": "事实",
+    "status": "取",
+    "example": "权益10000USD",
+    "route": "MT5/QMT；Binance未换汇资产余额不冒充净值"
+  },
+  {
+    "category": "05 波动、账户风险与规模",
+    "key": "risk.position",
+    "label": "side/quantity/averagePrice/PnL",
+    "nature": "事实",
+    "status": "取",
+    "example": "多头0.2手",
+    "route": "对应账户source；PnL维持原红绿色义"
+  },
+  {
+    "category": "05 波动、账户风险与规模",
+    "key": "risk.budget_fraction",
+    "label": "max_portfolio_risk_fraction",
+    "nature": "决策",
+    "status": "编",
+    "example": "0.005，即0.5%",
+    "route": "用户/策略预算；不是供应商默认授权"
+  },
+  {
+    "category": "05 波动、账户风险与规模",
+    "key": "risk.cash",
+    "label": "account_risk、risk_amount",
+    "nature": "计算",
+    "status": "算",
+    "example": "10000×0.5%=50USD",
+    "route": "ABU sizing；金额与比例不同字段"
+  },
+  {
+    "category": "05 波动、账户风险与规模",
+    "key": "risk.stop_variants",
+    "label": "Tight/Medium/Loose、trailing offset",
+    "nature": "计算",
+    "status": "算/编",
+    "example": "ATR×1/2/3（自有示例）",
+    "route": "ABU已有ATR退出；三档参数另定，非TC系数"
+  },
+  {
+    "category": "05 波动、账户风险与规模",
+    "key": "risk.stop_distance",
+    "label": "risk_in_pips、ATR stop distance",
+    "nature": "计算",
+    "status": "算/编",
+    "example": "入场1.1000至1.0950=50pip",
+    "route": "合约单位/币种转换需一致"
+  },
+  {
+    "category": "05 波动、账户风险与规模",
+    "key": "risk.quantity",
+    "label": "lot_size、quantity_estimate",
+    "nature": "计算",
+    "status": "算/编",
+    "example": "风险100USD、50pip→0.20手",
+    "route": "ABU需point_value/quantity_unit；MT5可算单量盈亏；统一跨币种/任意止损/步长衔接需补"
+  },
+  {
+    "category": "05 波动、账户风险与规模",
+    "key": "risk.profit_margin_calc",
+    "label": "order_calc_profit/margin",
+    "nature": "计算",
+    "status": "算",
+    "example": "0.2手50pip风险100USD",
+    "route": "MT5原生只计算；不等于发单"
+  },
+  {
+    "category": "05 波动、账户风险与规模",
+    "key": "risk.costs",
+    "label": "点差、佣金、滑点、融资/借券",
+    "nature": "事实/模型",
+    "status": "取/编/源",
+    "example": "双边成本8USD",
+    "route": "历史成交部分可取；冲击/未来滑点需模型与样本"
+  },
+  {
+    "category": "05 波动、账户风险与规模",
+    "key": "risk.event",
+    "label": "event_risk、跳空/财报等风险",
+    "nature": "判断",
+    "status": "取/编/源",
+    "example": "1小时后就业数据",
+    "route": "结构化未来日历需补源"
+  },
+  {
+    "category": "05 波动、账户风险与规模",
+    "key": "risk.expected_ranges",
+    "label": "low/high_15/30/60/240/1440",
+    "nature": "模型",
+    "status": "编/源/授",
+    "example": "H1范围1.0985–1.1015",
+    "route": "自研需历史分布和回测；不是方向目标"
+  },
+  {
+    "category": "05 波动、账户风险与规模",
+    "key": "risk.seasonality",
+    "label": "日内/周内波动",
+    "nature": "统计",
+    "status": "编/源/授",
+    "example": "纽约开盘时段较活跃",
+    "route": "时区/DST/交易日历与半年以上样本"
+  },
+  {
+    "category": "05 波动、账户风险与规模",
+    "key": "risk.relative_volatility",
+    "label": "rank/rank_rounded、标的相对波动排序",
+    "nature": "统计",
+    "status": "编/源/授",
+    "example": "当前返回集合中排名第3",
+    "route": "保留排名集合与时刻；不是星期或日内季节性"
+  },
+  {
+    "category": "05 波动、账户风险与规模",
+    "key": "risk.stress",
+    "label": "压力情景、组合损失/敞口",
+    "nature": "模型",
+    "status": "编/源",
+    "example": "跳空2ATR时损失150USD",
+    "route": "同步持仓/相关资产/跨币种风险源"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "fund.period",
+    "label": "报告期、fiscalYear/period、TTM",
+    "nature": "事实/计算",
+    "status": "取/编",
+    "example": "2026Q2；TTM由4季相加",
+    "route": "SEC/FMP原始期可取；TTM需处理年度/累计口径"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "fund.filing",
+    "label": "accession、form、filingDate、公告链接",
+    "nature": "事实",
+    "status": "取",
+    "example": "10-Q / 原始文档URL",
+    "route": "financial-research SEC索引；正文需另读"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "fund.revenue",
+    "label": "营收、revenue",
+    "nature": "事实",
+    "status": "取",
+    "example": "1000M USD",
+    "route": "SEC/FMP实际返回，币种/财期明确"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "fund.net_income",
+    "label": "净利润、EPS、稀释股数",
+    "nature": "事实",
+    "status": "取/源",
+    "example": "净利100M；EPS2.0",
+    "route": "SEC/FMP；股数概念/稀释口径需映射"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "fund.balance",
+    "label": "资产/负债/权益/现金/债务",
+    "nature": "事实",
+    "status": "取",
+    "example": "资产2000M；权益1000M",
+    "route": "SEC/FMP三表原料"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "fund.cashflow",
+    "label": "经营现金流、资本开支、FCF",
+    "nature": "事实/计算",
+    "status": "取/编",
+    "example": "CFO150M；capex50M；FCF100M",
+    "route": "FCF定义明确；原表符号先标准化"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "fund.market_cap",
+    "label": "Market Cap",
+    "nature": "计算/事实",
+    "status": "编/源",
+    "example": "50M股×100=5000M",
+    "route": "当前源未保证profile市值；点时流通/总股数"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "fund.pe",
+    "label": "P/E、Trailing P/E",
+    "nature": "计算",
+    "status": "编",
+    "example": "price100/EPS5=20",
+    "route": "TTM/forward分开；负EPS不硬填正常倍数"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "fund.pb",
+    "label": "P/B",
+    "nature": "计算",
+    "status": "编",
+    "example": "市值5000M/权益2500M=2",
+    "route": "权益归属和价格时间一致"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "fund.ps",
+    "label": "Price/Sales",
+    "nature": "计算",
+    "status": "编",
+    "example": "市值5000M/营收2500M=2",
+    "route": "TTM和稀释股本口径固定"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "fund.fcf_yield",
+    "label": "自由现金流收益率",
+    "nature": "计算",
+    "status": "编",
+    "example": "FCF250M/市值5000M=5%",
+    "route": "CFO-capex、企业/股权口径不能混"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "fund.growth",
+    "label": "Revenue/EPS增长",
+    "nature": "计算",
+    "status": "编",
+    "example": "营收1000→1100M，+10%",
+    "route": "同比可比期；基数为负另处理"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "fund.margins",
+    "label": "利润率/现金转化率",
+    "nature": "计算",
+    "status": "编",
+    "example": "净利100/营收1000=10%",
+    "route": "研发/一次性项等调整单独版本"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "fund.roe",
+    "label": "ROE、ROA、质量指标",
+    "nature": "计算",
+    "status": "编",
+    "example": "净利100/平均权益1000=10%",
+    "route": "平均期初期末权益；不使用期末替代未说明"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "fund.leverage",
+    "label": "杠杆、偿债能力、利息覆盖",
+    "nature": "计算",
+    "status": "编",
+    "example": "净债务/EBITDA=2",
+    "route": "所需EBITDA/利息实际字段映射"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "fund.dividend",
+    "label": "股息、Dividend Yield、Payout",
+    "nature": "事实/计算",
+    "status": "源/编",
+    "example": "年股息2/价格100=2%",
+    "route": "独立股息/公司行为源待补；比率方法可算"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "fund.revisions",
+    "label": "分析师盈利预测及修正",
+    "nature": "事实/统计",
+    "status": "源/编",
+    "example": "EPS预期2.0→2.2",
+    "route": "grades不是盈利预期数据"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "fund.insiders",
+    "label": "内部人交易/持股变动",
+    "nature": "事实",
+    "status": "取",
+    "example": "申报买入1000股",
+    "route": "FMP insider事件；不推断内幕动机"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "fund.peer_rank",
+    "label": "Peer Comparison、Sector Ranking",
+    "nature": "统计",
+    "status": "编/源",
+    "example": "同业40家中第8",
+    "route": "行业全集+点时比较口径"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "macro.series",
+    "label": "FRED序列值/单位/频率/季调",
+    "nature": "事实",
+    "status": "取",
+    "example": "实际GDP、季度、季调年率",
+    "route": "FRED series+observations；不是事件共识日历"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "macro.vintage",
+    "label": "realtime_start/end、修订版本",
+    "nature": "来源",
+    "status": "取/源",
+    "example": "当时可见vintage",
+    "route": "FRED保守as_of已有；精确发布时间仍需源"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "macro.cycle",
+    "label": "Nowcasting、经济阶段/风格适配",
+    "nature": "模型",
+    "status": "编/源/授",
+    "example": "增长放缓、质量风格适配",
+    "route": "原厂周期模型未全公开；自有方法另标"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "cot.positions",
+    "label": "CFTC各类多空/OI/交易者数",
+    "nature": "事实",
+    "status": "取",
+    "example": "M-money long10000/short8000",
+    "route": "Disaggregated Futures Only；公布时刻需补"
+  },
+  {
+    "category": "06 财务事实、比率与周期",
+    "key": "cot.net",
+    "label": "净仓、占OI、历史分位",
+    "nature": "计算",
+    "status": "编",
+    "example": "净多2000；占OI10%",
+    "route": "相同合约/周度/历史窗口；不是散户投票"
+  },
+  {
+    "category": "07 综合评分、估值与共识",
+    "key": "score.quantamental",
+    "label": "Quantamental Rating、综合信号",
+    "nature": "专有/模型",
+    "status": "授/编",
+    "example": "自有68/100",
+    "route": "原厂需授权；自有权重/标准化/缺失规则公开"
+  },
+  {
+    "category": "07 综合评分、估值与共识",
+    "key": "score.factors",
+    "label": "Value/Growth/Momentum/Income/Quality",
+    "nature": "专有/模型",
+    "status": "授/编",
+    "example": "自有82/54/63/43/71",
+    "route": "现有因子工具可测，不是现成TC评分"
+  },
+  {
+    "category": "07 综合评分、估值与共识",
+    "key": "score.labels",
+    "label": "六个*Label、评级解释",
+    "nature": "专有/判断",
+    "status": "授/编",
+    "example": "valuationLabel=very-strong",
+    "route": "TC标签存在；阈值未全公开；自有映射另定义"
+  },
+  {
+    "category": "07 综合评分、估值与共识",
+    "key": "score.technical",
+    "label": "Technical Summary、趋势评分",
+    "nature": "专有/模型",
+    "status": "授/编",
+    "example": "short=bullish；long=neutral",
+    "route": "原厂版本/期限保留，不与五因子硬均分"
+  },
+  {
+    "category": "07 综合评分、估值与共识",
+    "key": "valuation.fair_value",
+    "label": "Fair Value",
+    "nature": "模型",
+    "status": "编/源/授",
+    "example": "120USD",
+    "route": "自研剩余收益/DCF需假设；TC输出需授权"
+  },
+  {
+    "category": "07 综合评分、估值与共识",
+    "key": "valuation.gap",
+    "label": "Valuation Gap、折价/上行空间",
+    "nature": "计算",
+    "status": "编",
+    "example": "现价100对FV120：上行20%，折价16.67%",
+    "route": "分母明确：相对现价 vs 相对公允值"
+  },
+  {
+    "category": "07 综合评分、估值与共识",
+    "key": "valuation.target",
+    "label": "TC Target Price 12M、自有模型目标",
+    "nature": "模型",
+    "status": "编/源/授",
+    "example": "12月目标112",
+    "route": "估值不自动等于12月市场价格模型"
+  },
+  {
+    "category": "07 综合评分、估值与共识",
+    "key": "valuation.target_return",
+    "label": "Target Return、目标上行",
+    "nature": "计算",
+    "status": "编",
+    "example": "112/100−1=12%",
+    "route": "目标与参考价各有时刻；是否含股息"
+  },
+  {
+    "category": "07 综合评分、估值与共识",
+    "key": "valuation.assumptions",
+    "label": "盈利预测、资本成本、增长/终值",
+    "nature": "模型输入",
+    "status": "编/源",
+    "example": "k=10%；永续g=3%",
+    "route": "自有假设可设，但须标假设并做敏感性"
+  },
+  {
+    "category": "07 综合评分、估值与共识",
+    "key": "valuation.sensitivity",
+    "label": "牛/基/熊估值区间",
+    "nature": "模型",
+    "status": "编",
+    "example": "95/120/145",
+    "route": "不叫统计置信区间；DCF/剩余收益情景"
+  },
+  {
+    "category": "07 综合评分、估值与共识",
+    "key": "valuation.update",
+    "label": "更新频率、模型日期",
+    "nature": "来源",
+    "status": "授/编",
+    "example": "FV月15日；模型目标月更",
+    "route": "各产品不同；不统一为实时"
+  },
+  {
+    "category": "07 综合评分、估值与共识",
+    "key": "analyst.grade_events",
+    "label": "评级变动、机构、新旧评级",
+    "nature": "事实",
+    "status": "取",
+    "example": "Hold→Buy",
+    "route": "financial-research FMP grades"
+  },
+  {
+    "category": "07 综合评分、估值与共识",
+    "key": "analyst.consensus",
+    "label": "Analyst Consensus、总体Buy/Hold/Sell",
+    "nature": "统计",
+    "status": "源/编/授",
+    "example": "Buy",
+    "route": "新增共识端点；事件列表不能替代当前持有评级"
+  },
+  {
+    "category": "07 综合评分、估值与共识",
+    "key": "analyst.counts",
+    "label": "Buy/Hold/Sell人数、样本数",
+    "nature": "统计",
+    "status": "源",
+    "example": "12/6/2，共20",
+    "route": "去重机构/分析师、最新日期/覆盖"
+  },
+  {
+    "category": "07 综合评分、估值与共识",
+    "key": "analyst.targets",
+    "label": "mean/high/low target",
+    "nature": "统计",
+    "status": "源/编/授",
+    "example": "115/145/85",
+    "route": "FMP目标共识端点待接；不是TC模型目标"
+  },
+  {
+    "category": "07 综合评分、估值与共识",
+    "key": "analyst.dispersion",
+    "label": "目标分歧、修订趋势/期限",
+    "nature": "统计",
+    "status": "编/源",
+    "example": "高低差60；期限未提供",
+    "route": "需要逐条预期或供应商汇总；不默认12月"
+  },
+  {
+    "category": "08 经济、公司事件与历史冲击",
+    "key": "calendar.identity",
+    "label": "event_uid/name/type、country/currency",
+    "nature": "事实",
+    "status": "源/取",
+    "example": "US就业 / USD",
+    "route": "FRED有观测；未来结构化事件表缺，网页可补证"
+  },
+  {
+    "category": "08 经济、公司事件与历史冲击",
+    "key": "calendar.release",
+    "label": "Release Time、盘前/盘后、确认状态",
+    "nature": "事实",
+    "status": "源",
+    "example": "2026-11-06 13:30Z，confirmed",
+    "route": "日历源/DST；预计日期与正式日期分开"
+  },
+  {
+    "category": "08 经济、公司事件与历史冲击",
+    "key": "calendar.importance",
+    "label": "Importance、事件类别/频率",
+    "nature": "供应商判断",
+    "status": "源/编/授",
+    "example": "high / monthly",
+    "route": "供应商分档或明确自有规则；不是概率"
+  },
+  {
+    "category": "08 经济、公司事件与历史冲击",
+    "key": "calendar.values",
+    "label": "Actual/Forecast/Previous、单位",
+    "nature": "事实",
+    "status": "取/源",
+    "example": "90k/70k/60k",
+    "route": "实际宏观序列部分可取；共识/首发/前值同表缺"
+  },
+  {
+    "category": "08 经济、公司事件与历史冲击",
+    "key": "calendar.surprise",
+    "label": "actual−forecast、above/below/inline",
+    "nature": "计算",
+    "status": "编/源",
+    "example": "+20k，above",
+    "route": "来源齐备才算；等于容差/修订固定"
+  },
+  {
+    "category": "08 经济、公司事件与历史冲击",
+    "key": "calendar.corporate",
+    "label": "earnings/meeting/dividend/split",
+    "nature": "事实",
+    "status": "源",
+    "example": "财报盘后；拆股2:1",
+    "route": "SEC索引不是完整未来公司日历"
+  },
+  {
+    "category": "08 经济、公司事件与历史冲击",
+    "key": "calendar.earnings",
+    "label": "fiscal quarter、EPS consensus/actual",
+    "nature": "事实",
+    "status": "源/取",
+    "example": "预期1.20；实际未公布",
+    "route": "实际报表部分已取；预期与未来时间需新源"
+  },
+  {
+    "category": "08 经济、公司事件与历史冲击",
+    "key": "calendar.dividend",
+    "label": "除息/登记/支付日、每股金额",
+    "nature": "事实",
+    "status": "源",
+    "example": "每股0.50USD；除息11月10日",
+    "route": "公司行动专用源，避免从报道拼完整全集"
+  },
+  {
+    "category": "08 经济、公司事件与历史冲击",
+    "key": "calendar.split",
+    "label": "拆股生效日/比例、复权因子",
+    "nature": "事实",
+    "status": "源",
+    "example": "2:1",
+    "route": "要与行情复权统一"
+  },
+  {
+    "category": "08 经济、公司事件与历史冲击",
+    "key": "impact.window",
+    "label": "5m/15m/30m/1h/4h、trend_length",
+    "nature": "定义",
+    "status": "编/授",
+    "example": "事件后60分钟",
+    "route": "固定t0、交易日历/价格基准"
+  },
+  {
+    "category": "08 经济、公司事件与历史冲击",
+    "key": "impact.move",
+    "label": "价格净变动、方向、pips",
+    "nature": "计算",
+    "status": "编",
+    "example": "1.1000→1.0970，−30pip",
+    "route": "同一来源事件窗行情"
+  },
+  {
+    "category": "08 经济、公司事件与历史冲击",
+    "key": "impact.true_range",
+    "label": "事件TR、历史平均TR、ATR-based",
+    "nature": "计算/统计",
+    "status": "算/编",
+    "example": "前收1.1000、高1.1020、低1.0960，TR60pip",
+    "route": "TR基础已有；事件样本匹配与聚合需新增"
+  },
+  {
+    "category": "08 经济、公司事件与历史冲击",
+    "key": "impact.condition",
+    "label": "delta_sign、趋势方向",
+    "nature": "定义/判断",
+    "status": "编/授",
+    "example": "actual>forecast，价格趋势向下",
+    "route": "不能把经济数字高低当资产利好利空"
+  },
+  {
+    "category": "08 经济、公司事件与历史冲击",
+    "key": "impact.sample",
+    "label": "sample_size、条件样本/历史窗口",
+    "nature": "统计",
+    "status": "编/源/授",
+    "example": "总12；above组8",
+    "route": "总样本和条件样本分别统计"
+  },
+  {
+    "category": "08 经济、公司事件与历史冲击",
+    "key": "impact.frequency",
+    "label": "历史涨跌频次、probability",
+    "nature": "统计/专有",
+    "status": "编/源/授",
+    "example": "above组6/8下跌=75%",
+    "route": "条件频次，不是本次实际高于预期概率"
+  },
+  {
+    "category": "08 经济、公司事件与历史冲击",
+    "key": "impact.distributions",
+    "label": "正常/事件min/p25/median/p75/max/mean/std",
+    "nature": "统计",
+    "status": "编/源/授",
+    "example": "正常中位12pip；事件30pip",
+    "route": "成对同时间窗样本；n与单位随分布保存"
+  },
+  {
+    "category": "08 经济、公司事件与历史冲击",
+    "key": "impact.difference",
+    "label": "volatility_diff/percent/value",
+    "nature": "计算",
+    "status": "编/授",
+    "example": "(30−12)/12=150%",
+    "route": "标注比较统计量；差值std可为负"
+  },
+  {
+    "category": "08 经济、公司事件与历史冲击",
+    "key": "impact.money",
+    "label": "mean_mov_value、pip_value、换汇时刻",
+    "nature": "计算",
+    "status": "编/授",
+    "example": "18pip×每pip10USD=180USD/手",
+    "route": "合约/账户币种/汇率时刻"
+  },
+  {
+    "category": "08 经济、公司事件与历史冲击",
+    "key": "impact.history",
+    "label": "历次date/expected/actual/delta/trend",
+    "nature": "事实/统计",
+    "status": "源/编",
+    "example": "12次首发事件及1h路径",
+    "route": "必须点时版本，当前修订宏观值不替代"
+  },
+  {
+    "category": "08 经济、公司事件与历史冲击",
+    "key": "impact.concurrent",
+    "label": "同时事件、样本排除/对照",
+    "nature": "方法",
+    "status": "编/源",
+    "example": "同时发布失业率；无法单因果归因",
+    "route": "事件研究设计，记录混杂因素"
+  },
+  {
+    "category": "09 新闻、情绪、关注度与传播",
+    "key": "news.article",
+    "label": "headline/title、URL、正文/摘要",
+    "nature": "事实",
+    "status": "取",
+    "example": "某公司发布新订单",
+    "route": "FMP stock news、web、RSS；摘要非全文"
+  },
+  {
+    "category": "09 新闻、情绪、关注度与传播",
+    "key": "news.source",
+    "label": "source_info、来源/类型/作者",
+    "nature": "来源",
+    "status": "取/编",
+    "example": "新闻社 / news",
+    "route": "原文归属与转载聚类需补"
+  },
+  {
+    "category": "09 新闻、情绪、关注度与传播",
+    "key": "news.published",
+    "label": "publication time、语言、版本",
+    "nature": "来源",
+    "status": "取",
+    "example": "2026-10-26T09:00Z",
+    "route": "原始发布时间/采集时间分开"
+  },
+  {
+    "category": "09 新闻、情绪、关注度与传播",
+    "key": "news.entity_topic",
+    "label": "资产实体、topic、event type",
+    "nature": "模型",
+    "status": "编/授",
+    "example": "DEMO / 订单 / 监管",
+    "route": "需要实体链接/去重/分类规则"
+  },
+  {
+    "category": "09 新闻、情绪、关注度与传播",
+    "key": "news.mentions",
+    "label": "News Volume、Buzz Volume、total_mentions",
+    "nature": "统计",
+    "status": "编/源/授",
+    "example": "24h去重提及320",
+    "route": "当前有限分页≠全网统计；限定语料范围"
+  },
+  {
+    "category": "09 新闻、情绪、关注度与传播",
+    "key": "news.baseline",
+    "label": "基准量、volume_ratio、Buzz Score",
+    "nature": "统计/专有",
+    "status": "编/源/授",
+    "example": "320/80=4倍",
+    "route": "自有量比可算，不能叫TC原厂Buzz公式"
+  },
+  {
+    "category": "09 新闻、情绪、关注度与传播",
+    "key": "news.channels",
+    "label": "news/web/social来源占比",
+    "nature": "统计",
+    "status": "编/源",
+    "example": "news70%、blog20%、social10%",
+    "route": "源全集与同一窗口；社交是否计分按产品"
+  },
+  {
+    "category": "09 新闻、情绪、关注度与传播",
+    "key": "sentiment.score",
+    "label": "Sentiment Score、News Sentiment",
+    "nature": "模型/专有",
+    "status": "编/授",
+    "example": "原厂72/100",
+    "route": "NLP模型/语料/尺度版本须记录"
+  },
+  {
+    "category": "09 新闻、情绪、关注度与传播",
+    "key": "sentiment.signal",
+    "label": "Bullish/Bearish/Neutral",
+    "nature": "判断",
+    "status": "编/授",
+    "example": "bullish",
+    "route": "阈值依模型，不自动来自市场收益"
+  },
+  {
+    "category": "09 新闻、情绪、关注度与传播",
+    "key": "sentiment.subjectivity",
+    "label": "Subjectivity Score",
+    "nature": "专有",
+    "status": "授/编",
+    "example": "81/100",
+    "route": "文本主观性不是新闻真假"
+  },
+  {
+    "category": "09 新闻、情绪、关注度与传播",
+    "key": "sentiment.confidence",
+    "label": "Confidence Index、证据量等级",
+    "nature": "专有/统计",
+    "status": "授/编",
+    "example": "Average",
+    "route": "不同于预测置信区间或上涨概率"
+  },
+  {
+    "category": "09 新闻、情绪、关注度与传播",
+    "key": "sentiment.trend",
+    "label": "Sentiment Trend/Monitor/Histogram",
+    "nature": "模型",
+    "status": "编/源/授",
+    "example": "强弱72，趋势直方图46",
+    "route": "近期/历史情绪；TC直方图50阈值只属该指标"
+  },
+  {
+    "category": "09 新闻、情绪、关注度与传播",
+    "key": "sentiment.history",
+    "label": "情绪/价格历史、sentiment_change",
+    "nature": "统计",
+    "status": "编/源/授",
+    "example": "365日序列；70→65",
+    "route": "缺历史语料/旧分数时不能回填伪历史"
+  },
+  {
+    "category": "09 新闻、情绪、关注度与传播",
+    "key": "sentiment.fear",
+    "label": "Fear Index、市场比较",
+    "nature": "专有",
+    "status": "授/编",
+    "example": "90交易日历史；原值待取",
+    "route": "TC Fear不等于VIX；未公开阈值不捏造"
+  },
+  {
+    "category": "09 新闻、情绪、关注度与传播",
+    "key": "sentiment.peer",
+    "label": "Peer Comparison、sector sentiment",
+    "nature": "统计",
+    "status": "编/源/授",
+    "example": "同业中位情绪55",
+    "route": "同一模型、语料时间与行业全集"
+  },
+  {
+    "category": "09 新闻、情绪、关注度与传播",
+    "key": "social.sample",
+    "label": "Reddit score/comments/upvote_ratio",
+    "nature": "事实",
+    "status": "取",
+    "example": "30帖；单帖42评论",
+    "route": "当前有限社区样本；不代表全市场散户态度"
+  },
+  {
+    "category": "09 新闻、情绪、关注度与传播",
+    "key": "media.asset",
+    "label": "视频/文章标题、语言、时间、URL/稿",
+    "nature": "事实/展示",
+    "status": "取/呈/源",
+    "example": "3分钟市场短评及文字稿",
+    "route": "网页媒体引用；商业媒体全文/分发许可另核"
+  },
+  {
+    "category": "10 期权合约、波动率与组合",
+    "key": "option.contract",
+    "label": "代码、call/put、strike、expiry、乘数",
+    "nature": "事实",
+    "status": "源",
+    "example": "DEMO call K100，乘数100",
+    "route": "当前无结构化期权链；不能从现货推出"
+  },
+  {
+    "category": "10 期权合约、波动率与组合",
+    "key": "option.quote",
+    "label": "bid/ask/last、报价时刻、volume/OI",
+    "nature": "事实",
+    "status": "源",
+    "example": "3.0/3.2；OI1000",
+    "route": "同步underlying；低流动性报价过滤"
+  },
+  {
+    "category": "10 期权合约、波动率与组合",
+    "key": "option.exercise",
+    "label": "美/欧式、结算、交割与公司行为",
+    "nature": "事实",
+    "status": "源",
+    "example": "美式、实物交割",
+    "route": "决定提前行权和模型，链源需明确"
+  },
+  {
+    "category": "10 期权合约、波动率与组合",
+    "key": "option.iv",
+    "label": "IV、Volatility Levels",
+    "nature": "模型",
+    "status": "源/编/授",
+    "example": "30%年化",
+    "route": "真实权利金+合约+利率股息+定价模型"
+  },
+  {
+    "category": "10 期权合约、波动率与组合",
+    "key": "option.iv_history",
+    "label": "历史IV、HV比较",
+    "nature": "事实/模型",
+    "status": "源/编",
+    "example": "过去252交易日IV",
+    "route": "今日链不能还原历史报价与IV"
+  },
+  {
+    "category": "10 期权合约、波动率与组合",
+    "key": "option.iv_rank",
+    "label": "IV Rank、IV Percentile",
+    "nature": "统计",
+    "status": "源/编/授",
+    "example": "IVR75；IV百分位另存",
+    "route": "100×(IV-min)/(max-min)；max=min未定义；历史窗与可比IV序列固定，百分位另算"
+  },
+  {
+    "category": "10 期权合约、波动率与组合",
+    "key": "option.skew",
+    "label": "上/下行偏斜、期限偏斜",
+    "nature": "模型",
+    "status": "源/编/授",
+    "example": "同到期90%put IV35%，110%call IV28%",
+    "route": "执行价偏斜用同到期；期限结构固定delta/moneyness再跨到期"
+  },
+  {
+    "category": "10 期权合约、波动率与组合",
+    "key": "option.surface_cone",
+    "label": "IV曲面、期限结构、波动锥",
+    "nature": "模型/统计",
+    "status": "源/编/授",
+    "example": "strike×expiry矩阵",
+    "route": "需真实链和历史；插值方法与空洞保留"
+  },
+  {
+    "category": "10 期权合约、波动率与组合",
+    "key": "option.expected_move",
+    "label": "预期波动范围/到期价格区间",
+    "nature": "模型",
+    "status": "源/编/授",
+    "example": "30日±8.6%（自有近似）",
+    "route": "σ√T需假设；不是原厂区间/确定目标"
+  },
+  {
+    "category": "10 期权合约、波动率与组合",
+    "key": "option.greeks",
+    "label": "Delta/Gamma/Vega/Theta/Rho",
+    "nature": "模型",
+    "status": "源/编",
+    "example": "Delta=0.55",
+    "route": "非本次证实TC必返字段；自有扩展"
+  },
+  {
+    "category": "10 期权合约、波动率与组合",
+    "key": "option.preference",
+    "label": "方向、幅度、目标、风险偏好",
+    "nature": "决策输入",
+    "status": "呈",
+    "example": "温和看涨、限定最大损失",
+    "route": "由需求给出，不从分数推断用户权限"
+  },
+  {
+    "category": "10 期权合约、波动率与组合",
+    "key": "option.strategies",
+    "label": "首选/替代策略、排名理由",
+    "nature": "判断/模型",
+    "status": "编/源/授",
+    "example": "bull call spread / long call",
+    "route": "需真实可成交价格、事件和成本后比较"
+  },
+  {
+    "category": "10 期权合约、波动率与组合",
+    "key": "option.legs",
+    "label": "每腿方向、类型、执行价、到期、数量",
+    "nature": "计划",
+    "status": "编/源",
+    "example": "买100call，卖110call，同到期",
+    "route": "组合乘数一致、合约标识唯一"
+  },
+  {
+    "category": "10 期权合约、波动率与组合",
+    "key": "option.premium",
+    "label": "净付/净收权利金",
+    "nature": "计算",
+    "status": "编/源",
+    "example": "debit3/股，合计300",
+    "route": "mid估值与可成交bid/ask分开"
+  },
+  {
+    "category": "10 期权合约、波动率与组合",
+    "key": "option.max_loss",
+    "label": "最大亏损",
+    "nature": "计算",
+    "status": "编/源",
+    "example": "300USD",
+    "route": "到期结构的确定性计算；裸卖可能无界"
+  },
+  {
+    "category": "10 期权合约、波动率与组合",
+    "key": "option.max_profit",
+    "label": "最大收益",
+    "nature": "计算",
+    "status": "编/源",
+    "example": "700USD",
+    "route": "不等于期望收益"
+  },
+  {
+    "category": "10 期权合约、波动率与组合",
+    "key": "option.breakeven",
+    "label": "到期盈亏平衡",
+    "nature": "计算",
+    "status": "编/源",
+    "example": "103USD",
+    "route": "到期前还受IV/时间影响"
+  },
+  {
+    "category": "10 期权合约、波动率与组合",
+    "key": "option.payoff",
+    "label": "到期损益曲线/情景损益",
+    "nature": "计算",
+    "status": "编/源/呈",
+    "example": "S=108时净收益500USD",
+    "route": "明确到期/估值时点；reports展示"
+  },
+  {
+    "category": "10 期权合约、波动率与组合",
+    "key": "option.pop",
+    "label": "Probability of Profit",
+    "nature": "模型/专有",
+    "status": "编/源/授",
+    "example": "P(净损益>0)=0.60（合成概率）",
+    "route": "需分布/风险中性或真实概率区分、成本与验证；不是期望利润"
+  },
+  {
+    "category": "10 期权合约、波动率与组合",
+    "key": "option.expected_profit",
+    "label": "Expected Profit、期望利润",
+    "nature": "模型",
+    "status": "编/源/授",
+    "example": "0.6×100+0.4×(−200)=−20USD",
+    "route": "E[净损益]以金额/收益率表示；高胜率仍可负期望"
+  },
+  {
+    "category": "11 筛选、策略、组合与回测",
+    "key": "screen.name",
+    "label": "Strategy Name/Description/Objective",
+    "nature": "定义",
+    "status": "呈",
+    "example": "零售价值筛选",
+    "route": "将目的与实际规则分开"
+  },
+  {
+    "category": "11 筛选、策略、组合与回测",
+    "key": "screen.conditions",
+    "label": "Filters、逻辑组合",
+    "nature": "定义",
+    "status": "编",
+    "example": "marketCap≥300M AND P/S≤1",
+    "route": "当前自有筛选可写；TC任意OR未证实"
+  },
+  {
+    "category": "11 筛选、策略、组合与回测",
+    "key": "screen.matches",
+    "label": "匹配数、名单、TopN",
+    "nature": "计算",
+    "status": "编/源",
+    "example": "18匹配，选10",
+    "route": "证券全集与缺失排除可追溯"
+  },
+  {
+    "category": "11 筛选、策略、组合与回测",
+    "key": "screen.rank",
+    "label": "rank、score、排序/并列规则",
+    "nature": "模型",
+    "status": "编",
+    "example": "归一化因子均值排序",
+    "route": "factor-evaluator可测因子；非现成选股器"
+  },
+  {
+    "category": "11 筛选、策略、组合与回测",
+    "key": "portfolio.constituents",
+    "label": "当前/新增/移除成分及权重",
+    "nature": "事实/计算",
+    "status": "取/编/源",
+    "example": "10股等权；两只替换",
+    "route": "实际持仓与模拟组合分开；指数方案可复用"
+  },
+  {
+    "category": "11 筛选、策略、组合与回测",
+    "key": "portfolio.rebalance",
+    "label": "换仓频率/日期、权重约束",
+    "nature": "定义",
+    "status": "编",
+    "example": "每13周换仓（TC筛选示例）",
+    "route": "TC指数月调50股与筛选回测不同"
+  },
+  {
+    "category": "11 筛选、策略、组合与回测",
+    "key": "portfolio.exposure",
+    "label": "行业/资产/币种/相关性敞口",
+    "nature": "计算",
+    "status": "编/源",
+    "example": "科技40%、USD80%",
+    "route": "真实持仓+资产主数据+汇率/相关历史"
+  },
+  {
+    "category": "11 筛选、策略、组合与回测",
+    "key": "backtest.window",
+    "label": "Start/End、训练/验证/留出区间",
+    "nature": "定义",
+    "status": "算/编",
+    "example": "2021–2025训练，2026留出",
+    "route": "evaluator固定计划；样本可得时间需成立"
+  },
+  {
+    "category": "11 筛选、策略、组合与回测",
+    "key": "backtest.equity",
+    "label": "Equity Curve、Historical Performance",
+    "nature": "计算",
+    "status": "算",
+    "example": "初值1，5年终值1.8",
+    "route": "回测引擎输出；清楚现金/保证金模型"
+  },
+  {
+    "category": "11 筛选、策略、组合与回测",
+    "key": "backtest.return",
+    "label": "Total Return、CAGR",
+    "nature": "计算",
+    "status": "算",
+    "example": "1.8^(1/5)−1=12.47%",
+    "route": "ABU trade-metrics；实际期限不是行数"
+  },
+  {
+    "category": "11 筛选、策略、组合与回测",
+    "key": "backtest.benchmark",
+    "label": "Benchmark、超额收益",
+    "nature": "计算",
+    "status": "算/编/源",
+    "example": "基准CAGR9.86%，差2.61pp",
+    "route": "收益差不称风险调整alpha"
+  },
+  {
+    "category": "11 筛选、策略、组合与回测",
+    "key": "backtest.drawdown",
+    "label": "Max Drawdown、回撤路径",
+    "nature": "计算",
+    "status": "算",
+    "example": "最大回撤−15%",
+    "route": "ABU metrics/evaluator；值域与符号明确"
+  },
+  {
+    "category": "11 筛选、策略、组合与回测",
+    "key": "backtest.sharpe",
+    "label": "Sharpe、波动风险",
+    "nature": "统计",
+    "status": "算",
+    "example": "Sharpe0.9",
+    "route": "频率、无风险率和自相关假设"
+  },
+  {
+    "category": "11 筛选、策略、组合与回测",
+    "key": "backtest.trades",
+    "label": "成交/交易数、win rate、profit factor",
+    "nature": "统计",
+    "status": "算",
+    "example": "100笔、55盈利；PF1.3",
+    "route": "必须真实模拟成交日志；因子IC不替代"
+  },
+  {
+    "category": "11 筛选、策略、组合与回测",
+    "key": "backtest.costs",
+    "label": "费用、滑点、换手与融资",
+    "nature": "模型/统计",
+    "status": "算/编/源",
+    "example": "毛收益12%，成本2%，净10%",
+    "route": "引擎实际设定与数据；缺成本不默认完备"
+  },
+  {
+    "category": "11 筛选、策略、组合与回测",
+    "key": "backtest.assumptions",
+    "label": "成交价/停牌/退市/股息/复权",
+    "nature": "方法",
+    "status": "编/源",
+    "example": "次根开盘成交；股息再投",
+    "route": "点时全集/公司行为源是关键"
+  },
+  {
+    "category": "11 筛选、策略、组合与回测",
+    "key": "backtest.attribution",
+    "label": "逐策略/因子/资产收益贡献",
+    "nature": "计算",
+    "status": "算/编",
+    "example": "趋势+6%，均值回归−1%",
+    "route": "ABU有策略归因；因子归因需额外模型"
+  },
+  {
+    "category": "11 筛选、策略、组合与回测",
+    "key": "backtest.update",
+    "label": "报告更新、Daily/Weekly/Monthly alerts",
+    "nature": "管理",
+    "status": "呈/编",
+    "example": "每周五更新",
+    "route": "调度通知与投资指标分开"
+  },
+  {
+    "category": "11 筛选、策略、组合与回测",
+    "key": "idea.card",
+    "label": "Headline/Idea Details、候选机会",
+    "nature": "判断/展示",
+    "status": "编/呈/授",
+    "example": "H1三角突破候选",
+    "route": "组合事件+理由+时间；未触发不叫已下单"
+  },
+  {
+    "category": "11 筛选、策略、组合与回测",
+    "key": "idea.watch_trade",
+    "label": "Watchlist Status、Trade Action/URL",
+    "nature": "管理/展示",
+    "status": "呈/编",
+    "example": "加入观察；打开交易计划",
+    "route": "UI操作入口不视作已成交或交易授权"
+  },
+  {
+    "category": "12 统计验证、概率与结果跟踪",
+    "key": "stats.sample",
+    "label": "total/correct、样本/分组/起止",
+    "nature": "统计",
+    "status": "算/编/源/授",
+    "example": "200事件、140达标",
+    "route": "evaluator能评诊断；形态事件库需另建"
+  },
+  {
+    "category": "12 统计验证、概率与结果跟踪",
+    "key": "stats.hit_rate",
+    "label": "percentage、历史目标触及率",
+    "nature": "统计",
+    "status": "编/源/授",
+    "example": "140/200=70%",
+    "route": "不含止损先后/成本则不叫盈利率"
+  },
+  {
+    "category": "12 统计验证、概率与结果跟踪",
+    "key": "stats.favorites",
+    "label": "percent、hod/symbol/pattern分组统计",
+    "nature": "专有",
+    "status": "授/编",
+    "example": "percent=68.5；分组各有n",
+    "route": "AC总值组合未公开；自研不反推等价"
+  },
+  {
+    "category": "12 统计验证、概率与结果跟踪",
+    "key": "stats.correlating",
+    "label": "Correlating Alerts percent_probability",
+    "nature": "专有",
+    "status": "授/编",
+    "example": "同向聚合原厂值72%",
+    "route": "与Favorites分开；完整共振算法未公开，不用两个概率相乘"
+  },
+  {
+    "category": "12 统计验证、概率与结果跟踪",
+    "key": "stats.confidence_interval",
+    "label": "bootstrap/Wilson区间",
+    "nature": "统计",
+    "status": "算/编",
+    "example": "140/200的Wilson95%约63.3–75.9%",
+    "route": "evaluator有bootstrap；比例Wilson需新增"
+  },
+  {
+    "category": "12 统计验证、概率与结果跟踪",
+    "key": "factor.ic",
+    "label": "IC、rank IC、coverage、net return",
+    "nature": "统计",
+    "status": "算",
+    "example": "time-series IC0.04",
+    "route": "factor-evaluator/CLI；单资产可做时序"
+  },
+  {
+    "category": "12 统计验证、概率与结果跟踪",
+    "key": "factor.redundancy",
+    "label": "因子相关/冗余、选择回执",
+    "nature": "统计",
+    "status": "算",
+    "example": "训练集相关0.92，保留一项",
+    "route": "train-only筛选；不能用留出集调阈值"
+  },
+  {
+    "category": "12 统计验证、概率与结果跟踪",
+    "key": "validation.placebo",
+    "label": "安慰剂测试",
+    "nature": "统计",
+    "status": "算",
+    "example": "打乱标签对照",
+    "route": "evaluator已有；检验何种null需明确"
+  },
+  {
+    "category": "12 统计验证、概率与结果跟踪",
+    "key": "validation.monte_carlo",
+    "label": "蒙特卡洛模拟",
+    "nature": "统计",
+    "status": "算",
+    "example": "经验分块重采样诊断收益路径",
+    "route": "当前不是交易执行顺序仿真；其他生成机制需另实现"
+  },
+  {
+    "category": "12 统计验证、概率与结果跟踪",
+    "key": "validation.out_of_sample",
+    "label": "样本外测试",
+    "nature": "统计",
+    "status": "算",
+    "example": "冻结后评未参与选择的数据",
+    "route": "holdout需真正未使用"
+  },
+  {
+    "category": "12 统计验证、概率与结果跟踪",
+    "key": "validation.walk_forward",
+    "label": "滚动前推测试",
+    "nature": "统计",
+    "status": "算",
+    "example": "固定候选在前推窗评估，阈值来自训练期",
+    "route": "当前不等于每窗重新训练/选参；不能全样本先选参再伪前推"
+  },
+  {
+    "category": "12 统计验证、概率与结果跟踪",
+    "key": "validation.sensitivity",
+    "label": "参数敏感性",
+    "nature": "统计",
+    "status": "算",
+    "example": "窗口10/15/20",
+    "route": "关注稳定区间，避免只报最好点"
+  },
+  {
+    "category": "12 统计验证、概率与结果跟踪",
+    "key": "validation.regimes",
+    "label": "市场状态分层",
+    "nature": "统计",
+    "status": "算/源",
+    "example": "高波动/低波动分别评估",
+    "route": "regime标签必须点时可得"
+  },
+  {
+    "category": "12 统计验证、概率与结果跟踪",
+    "key": "validation.bootstrap",
+    "label": "bootstrap置信区间",
+    "nature": "统计",
+    "status": "算",
+    "example": "分块重采样收益均值区间",
+    "route": "样本依赖决定重采样单元"
+  },
+  {
+    "category": "12 统计验证、概率与结果跟踪",
+    "key": "forecast.probability",
+    "label": "事前概率、基准概率",
+    "nature": "模型/判断",
+    "status": "编/呈",
+    "example": "P=0.65；base=0.5",
+    "route": "概率由研究方法产生；judgment登记而不估计事前概率"
+  },
+  {
+    "category": "12 统计验证、概率与结果跟踪",
+    "key": "outcome.definition",
+    "label": "outcome、期限、标量/路径判据",
+    "nature": "定义",
+    "status": "呈/编",
+    "example": "4h内先触110还是98",
+    "route": "当前judgment只核验窗口内最新标量；路径需补"
+  },
+  {
+    "category": "12 统计验证、概率与结果跟踪",
+    "key": "outcome.realized",
+    "label": "实际结果、MAE/MFE、达标/到期",
+    "nature": "统计",
+    "status": "算/编/源",
+    "example": "先止损；随后才达目标",
+    "route": "回测路径层生成；同bar双触需更细数据/明确规则"
+  },
+  {
+    "category": "12 统计验证、概率与结果跟踪",
+    "key": "outcome.calibration",
+    "label": "Brier、baseline_Brier、confidence_calibration",
+    "nature": "统计",
+    "status": "算/编",
+    "example": "n=100，Brier0.22",
+    "route": "judgment有Brier/5档校准；不能声称已有成熟历史库"
+  },
+  {
+    "category": "12 统计验证、概率与结果跟踪",
+    "key": "outcome.attribution",
+    "label": "原因归因、模型/数据/执行差异",
+    "nature": "判断/统计",
+    "status": "编",
+    "example": "方向对，成本后亏损",
+    "route": "固定原判断，不能事后改目标与期限"
+  },
+  {
+    "category": "13 叙述、展示与交付",
+    "key": "report.modules",
+    "label": "一个或多个报告模块、sections",
+    "nature": "管理",
+    "status": "呈/编",
+    "example": "技术情景+事件影响+风险",
+    "route": "需新增业务recipe；复用reports outline"
+  },
+  {
+    "category": "13 叙述、展示与交付",
+    "key": "report.summary",
+    "label": "简明结论、Market Commentary/Wrap",
+    "nature": "判断/展示",
+    "status": "编/呈",
+    "example": "先说机会与触发条件",
+    "route": "主agent综合固定研究结果"
+  },
+  {
+    "category": "13 叙述、展示与交付",
+    "key": "report.story",
+    "label": "FIBI各Story、自然语言解释",
+    "nature": "展示/判断",
+    "status": "编/授",
+    "example": "技术/基本面/新闻故事",
+    "route": "自有agent可综合；TC FIBI需授权"
+  },
+  {
+    "category": "13 叙述、展示与交付",
+    "key": "report.charts",
+    "label": "图表/Reference Chart/Payoff等",
+    "nature": "展示",
+    "status": "呈",
+    "example": "candlestick / decision-tree / boxplot",
+    "route": "reports已有26种图型；图表不创造数据"
+  },
+  {
+    "category": "13 叙述、展示与交付",
+    "key": "report.details",
+    "label": "Research Detail、关联报告/组合上下文",
+    "nature": "管理",
+    "status": "呈",
+    "example": "引用估值报告与实际持仓",
+    "route": "ArtifactRef去重；避免相同报告重复出现"
+  },
+  {
+    "category": "13 叙述、展示与交付",
+    "key": "report.risk_text",
+    "label": "原稿Risk Disclosure/风险披露",
+    "nature": "文案",
+    "status": "呈",
+    "example": "仅保留影响决策的具体事件风险",
+    "route": "供应商必要署名/许可文本按合同；不默认生成空泛章节"
+  },
+  {
+    "category": "13 叙述、展示与交付",
+    "key": "report.publish",
+    "label": "生成/发布版本、文件路径、状态",
+    "nature": "管理",
+    "status": "呈",
+    "example": "单文件HTML；固定revision",
+    "route": "reports publish/check，报告存在才可引用"
+  },
+  {
+    "category": "13 叙述、展示与交付",
+    "key": "report.export",
+    "label": "PDF/PNG导出与状态",
+    "nature": "管理",
+    "status": "呈",
+    "example": "导出成功短提示",
+    "route": "已有export检查；本研究交付HTML/MD/CSV"
+  },
+  {
+    "category": "13 叙述、展示与交付",
+    "key": "report.delivery",
+    "label": "channel/language/frequency/session",
+    "nature": "管理",
+    "status": "呈/编",
+    "example": "EU早报 / zh / daily",
+    "route": "邮件、视频、Portal是交付形式，不新增信号"
+  }
+]

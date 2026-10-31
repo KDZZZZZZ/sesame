@@ -9,43 +9,43 @@
     {
       "id": "knowledge-0",
       "path": "examples/expected.md",
-      "description": "Wyckoff 量价与阶段研究 — examples/expected.md",
+      "description": "Wyckoff 量价与阶段研究的合成教学反例与预期局部结论，不是真实市场结果。",
       "kind": "reference"
     },
     {
       "id": "knowledge-1",
       "path": "prompt.md",
-      "description": "Wyckoff 量价与阶段研究 — prompt.md",
+      "description": "Wyckoff 量价与阶段研究的方法边界与组合入口：固定区间中的价格推进与成交量是否支持某个阶段候选，以及什么替代解释仍成立；复用固定证据并向调用者交回局部结论。",
       "kind": "prompt"
     },
     {
       "id": "knowledge-2",
       "path": "PROVENANCE.md",
-      "description": "Wyckoff 量价与阶段研究 — PROVENANCE.md",
+      "description": "Wyckoff 量价与阶段研究采用资料的出处、实际访问范围与许可，不是当前市场证据。",
       "kind": "reference"
     },
     {
       "id": "knowledge-3",
       "path": "README.md",
-      "description": "Wyckoff 量价与阶段研究 — README.md",
+      "description": "Wyckoff 量价与阶段研究的输入、输出、方法边界和按需参考说明。",
       "kind": "reference"
     },
     {
       "id": "knowledge-4",
       "path": "skills/wyckoff/references/method.md",
-      "description": "Wyckoff 量价与阶段研究 — skills/wyckoff/references/method.md",
+      "description": "Wyckoff 量价与阶段研究的操作定义、因果边界与反证；用于核对本次具体判据。",
       "kind": "reference"
     },
     {
       "id": "knowledge-5",
       "path": "skills/wyckoff/references/validation.md",
-      "description": "Wyckoff 量价与阶段研究 — skills/wyckoff/references/validation.md",
+      "description": "Wyckoff 量价与阶段研究从解释候选到可重复规则的验证前提、时间与样本外边界。",
       "kind": "reference"
     },
     {
       "id": "knowledge-6",
       "path": "skills/wyckoff/SKILL.md",
-      "description": "Wyckoff 量价与阶段研究 — skills/wyckoff/SKILL.md",
+      "description": "分析方法：固定区间中的价格推进与成交量是否支持某个阶段候选，以及什么替代解释仍成立。输入：已有固定价格与量、DataRef、量单位/种类、复权、时段、SourceTime、覆盖、区间边界及确认时间。输出：价格事实/量证据/阶段或事件候选对照、替代解释、待确认资料、反证与硬失效条件。",
       "kind": "skill"
     }
   ],

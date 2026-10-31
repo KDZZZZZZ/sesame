@@ -1,0 +1,181 @@
+{
+  "language": "svl/1",
+  "schemaVersion": "1.0.0",
+  "strategyId": "example.close-threshold",
+  "semantics": {
+    "numeric": {
+      "precision": 34,
+      "rounding": "half_even"
+    },
+    "missing": "not_ready",
+    "onError": "pause",
+    "eventOrdering": "input_sequence",
+    "duplicateEvent": "ignore",
+    "stateCommit": "per_event"
+  },
+  "parameters": {
+    "instrument": {
+      "type": "instrument"
+    },
+    "threshold": {
+      "type": "decimal",
+      "default": "100",
+      "min": "0"
+    }
+  },
+  "inputs": {
+    "bars": {
+      "kind": "bars",
+      "instrument": {
+        "parameter": "instrument"
+      },
+      "timeframe": "1m",
+      "barPolicy": "closed",
+      "priceBasis": "last",
+      "adjustment": "none",
+      "session": "regular",
+      "lookback": 2
+    }
+  },
+  "state": {
+    "lastClose": {
+      "type": {
+        "kind": "decimal"
+      },
+      "initial": "0"
+    },
+    "lastAbove": {
+      "type": {
+        "kind": "boolean"
+      },
+      "initial": false
+    }
+  },
+  "nodes": [
+    {
+      "id": "latest",
+      "op": "series.value",
+      "inputs": {
+        "series": {
+          "input": "bars",
+          "field": "close"
+        },
+        "offset": 0
+      }
+    },
+    {
+      "id": "above",
+      "op": "compare.gt",
+      "inputs": {
+        "left": {
+          "node": "latest"
+        },
+        "right": {
+          "parameter": "threshold"
+        }
+      }
+    },
+    {
+      "id": "remember-close",
+      "op": "state.set",
+      "inputs": {
+        "stateId": "lastClose",
+        "value": {
+          "node": "latest"
+        }
+      }
+    },
+    {
+      "id": "remember-above",
+      "op": "state.set",
+      "inputs": {
+        "stateId": "lastAbove",
+        "value": true
+      }
+    },
+    {
+      "id": "remember-below",
+      "op": "state.set",
+      "inputs": {
+        "stateId": "lastAbove",
+        "value": false
+      }
+    }
+  ],
+  "handlers": [
+    {
+      "id": "on-close",
+      "event": {
+        "type": "bar.closed",
+        "input": "bars"
+      },
+      "steps": [
+        {
+          "id": "remember-threshold",
+          "when": "above",
+          "actions": [
+            "remember-close",
+            "remember-above"
+          ],
+          "elseActions": [
+            "remember-close",
+            "remember-below"
+          ]
+        }
+      ]
+    }
+  ],
+  "functions": [],
+  "extensions": [],
+  "comments": {
+    "nodes": {
+      "latest": {
+        "label": "本期收盘价"
+      },
+      "above": {
+        "label": "收盘价高于阈值",
+        "description": "严格大于时成立，相等时不成立。",
+        "inputs": {
+          "left": "本期收盘价",
+          "right": "比较阈值"
+        }
+      },
+      "remember-close": {
+        "label": "保存本期收盘价"
+      },
+      "remember-above": {
+        "label": "记录为高于阈值"
+      },
+      "remember-below": {
+        "label": "记录为未高于阈值"
+      }
+    },
+    "parameters": {
+      "instrument": {
+        "label": "研究品种"
+      },
+      "threshold": {
+        "label": "比较阈值",
+        "description": "与收盘价使用同一单位。"
+      }
+    },
+    "inputs": {
+      "bars": {
+        "label": "分钟K线"
+      }
+    },
+    "state": {
+      "lastClose": {
+        "label": "上次收盘价"
+      },
+      "lastAbove": {
+        "label": "上次是否高于阈值"
+      }
+    },
+    "steps": {
+      "remember-threshold": {
+        "label": "记录本次判断"
+      }
+    }
+  }
+}

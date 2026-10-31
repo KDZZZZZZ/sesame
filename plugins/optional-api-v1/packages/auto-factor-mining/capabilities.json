@@ -92,7 +92,7 @@
         "agent",
         "host"
       ],
-      "description": "Start a workflow with an explicitly selected independent evaluator {plugin_id,tool,arguments?}, configured role models and arbitrary selected research plugins/tools. No evaluator or execution backend is implicit. Evaluator owns data format, calculations and gates. With general research capabilities only development-only evidence is accepted; no holdout claim. Each task run produces one final summary.",
+      "description": "Start factor and strategy research with explicit single-Agent or compatible multi-Agent execution, independent measured evaluation, durable experiment records and a Strategy report; factor diagnostics do not establish trading backtest validity.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -274,7 +274,31 @@
                   }
                 },
                 "required": [],
-                "additionalProperties": false
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "provider": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 200
+                    },
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 200
+                    },
+                    "configurationDigest": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 200
+                    }
+                  },
+                  "required": [
+                    "provider",
+                    "id"
+                  ],
+                  "additionalProperties": false
+                }
               },
               "directions": {
                 "type": "array",
@@ -355,6 +379,298 @@
                   "tool"
                 ],
                 "additionalProperties": false
+              },
+              "workflow": {
+                "type": "object",
+                "properties": {
+                  "plan": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                          },
+                          "title": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "instructions": {
+                            "type": "string",
+                            "maxLength": 6000
+                          }
+                        },
+                        "required": [
+                          "id"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "hypothesis": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                      },
+                      "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      },
+                      "instructions": {
+                        "type": "string",
+                        "maxLength": 6000
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "code": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                      },
+                      "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      },
+                      "instructions": {
+                        "type": "string",
+                        "maxLength": 6000
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "review": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                          },
+                          "title": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "instructions": {
+                            "type": "string",
+                            "maxLength": 6000
+                          }
+                        },
+                        "required": [
+                          "id"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "reflection": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                          },
+                          "title": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "instructions": {
+                            "type": "string",
+                            "maxLength": 6000
+                          }
+                        },
+                        "required": [
+                          "id"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "selection": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                      },
+                      "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      },
+                      "instructions": {
+                        "type": "string",
+                        "maxLength": 6000
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": false,
+                "description": "Executable assignments, frozen with the run. Omitted fields keep existing roles. Member={id,title?,instructions?}; a shared id may perform several duties. plan/review/reflection may be null: use configured directions, evaluator eligibility without a prose review, or no reflection respectively. hypothesis/code/selection and real evaluation, selection freeze and holdout isolation remain required. In executionMode single all six stages are required and must use the same member ID. A merged multi plan still remains multiple stage Agent Runs and is not the explicit single mode."
+              },
+              "executionMode": {
+                "enum": [
+                  "multi",
+                  "single"
+                ],
+                "description": "Omitted/multi preserves the existing multi-Agent workflow. single runs one actual Agent conversation through all six duties, serially, with durable step_id submissions; evaluator and holdout remain independent native operations."
+              },
+              "strategyValidation": {
+                "type": "object",
+                "properties": {
+                  "intendedPlatform": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "requestedEngine": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "dataSource": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "contract": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "calendarSessions": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "spreadCommissionSwap": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "executionRules": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "granularity": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "notes": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  }
+                },
+                "additionalProperties": false,
+                "description": "Frozen downstream real-backtest intent and assumptions, not execution evidence (max 12 KiB). User engine choice > intended trading platform native engine > matching data/contract engine > documented substitute. Native optimizer preferred; hypothesis-driven custom parameter groups are allowed. This factor workflow does not silently launch an unregistered trading engine."
+              },
+              "nativeValidation": {
+                "type": "object",
+                "description": "Optional frozen native validation plan, executed after factor selection and every research Agent has ended. See references/native-validation.md. Actual native local processes are outside the evaluator sealed boundary.",
+                "properties": {
+                  "engine": {
+                    "type": "string",
+                    "enum": [
+                      "backtrader",
+                      "vnpy",
+                      "mt5"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000
+                  },
+                  "development": {
+                    "type": "object",
+                    "description": "Frozen input [start,end) window. vnpy alone also accepts tradingStart inside that window: preceding supplied bars are available for warmup, with at least two bars at or after tradingStart. See references/native-validation.md.",
+                    "additionalProperties": true
+                  },
+                  "holdout": {
+                    "type": "object",
+                    "description": "Independent frozen input [start,end) window at or after development.end, including its own optional vnpy tradingStart and warmup prefix. Warmup does not permit overlapping input windows.",
+                    "additionalProperties": true
+                  },
+                  "strategy": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "config": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "parameters": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "columns": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "search": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "timeout": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 600
+                  },
+                  "environment": {
+                    "type": "object",
+                    "properties": {
+                      "pythonPath": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "reason",
+                  "development",
+                  "strategy",
+                  "config"
+                ],
+                "additionalProperties": false
               }
             },
             "required": [
@@ -428,20 +744,27 @@
       "effects": [
         "write:research-checkpoints",
         "invoke:selected-evaluator",
-        "start:workflow"
+        "start:workflow",
+        "filesystem.read",
+        "resources.read"
       ],
       "usage": {
-        "purpose": "Start a workflow with an explicitly selected independent evaluator {plugin_id,tool,arguments?}, configured role models and arbitrary selected research plugins/tools. No evaluator or execution backend is implicit. Evaluator owns data format, calculations and gates. With general research capabilities only development-only evidence is accepted; no holdout claim. Each task run produces one final summary.",
-        "inputs": "{request_id,title,goal,dataset_id?,config:{model,evaluator:{plugin_id,tool,arguments?},research:{plugins,tools?},...bounded research limits}}. Known evaluator: {plugin_id:\"sesame/factor-evaluator\",tool:\"factor_evaluate\",arguments:{dataset:{trainEnd,validationEnd,holdoutEnd,horizon,costBps,quantile},minRankIC,minCoverage,maxCorrelation}}. Its registered dataset rows are {time,symbol,availableAt,fields:{close,...numeric features}}; other protocol implementations may declare other formats.",
-        "outputs": "Saved business run with id/status, frozen evaluator/input digest/development contract and workflow Run reference when admitted. Stable request_id and identical input reuse the run. auto_factor_runs(action:\"read\",run_id:id) supplies actual progress/result.",
+        "purpose": "Start iterative factor discovery, candidate-signal search and factor-combination experiments. This public function starts a tracked workflow Run and composes research knowledge, source/calculation tools and an independent evaluator. Match the evaluator to the data and goal: the bundled evaluator supports single-symbol time-series and multi-asset cross-sectional factor diagnostics. Select optional robustness tests for the research question; an unavailable optional test does not block the others. Factor diagnostics do not replace trade-fill backtesting.",
+        "inputs": "{request_id,title,goal,dataset_id?,config:{model,evaluator:{plugin_id,tool,arguments?},research:{plugins,tools?},...bounded research limits}}. Known evaluator: {plugin_id:\"sesame/factor-evaluator\",tool:\"factor_evaluate\",arguments:{dataset:{mode,trainEnd,validationEnd,holdoutEnd,horizon,costBps,quantile},diagnostics?,minRankIC?,minCoverage?,maxCorrelation?}}. Its registered dataset rows are {time,symbol,availableAt,fields:{close,...numeric features}}; other protocol implementations may declare other formats. research.plugins includes knowledge-only methods; selected knowledge reaches each member and the workflow additionally grants only sesame/plugin-manager#plugin_read for public method text. Sources provide observations, methods interpret or calculate them, evaluator supplies measurements, and this workflow compares/synthesizes the retained results. Optional config.workflow maps plan/hypothesis/code/review/reflection/selection to {id,title?,instructions?}; null skips plan/review/reflection. Agent model overrides use actual member IDs, not per-task assignmentId values. This changes actual member dispatch; omitted workflow preserves the original process. Set config.executionMode:\"single\" for one actual Agent Run with all six stages and parallelism:1; model may be overridden only for its one member ID (default researcher). Omitted/multi retains existing behavior. config.strategyValidation records requested engine, intended trading platform and data/contract/cost/session/execution/granularity assumptions for later real validation. Optional config.nativeValidation chooses an existing engine with a frozen authored source/build, fixed development and optional holdout windows, native config and search plan; it is never added to research-role tools. See declared native-validation knowledge.",
+        "outputs": "Saved business run with id/status, frozen evaluator/input digest/development contract and an actual workflow Run reference when admitted. Discovery/loading alone is not workflow startup. Stable request_id and identical input reuse the run; auto_factor_runs(action:\"read\",run_id:id) reads actual progress/result. New workflows bind their stage report in Strategy; existing accepted output locations stay fixed.",
         "prerequisites": [
           "Main conversation only; task/tool names do not grant a delegated Agent this authority.",
           "Explicitly enabled evaluator implementing sesame.factor-evaluator/v1 and configured role models. This plugin does not provide a dataset or silently select/install an evaluator.",
-          "Installed implementations: plugin_discover and host.capabilities.list. Published optional packages: plugin_catalog({plugin_id}); installation/loading is a separate public operation."
+          "Match the evaluator protocol, input mode and measured objective to the task. The bundled evaluator uses dataset.mode auto|cross-sectional|time-series and options.diagnostics for selected robustness tests; inspect its current schema. Read relevant knowledge and pass it with needed source/calculation plugins in config.research.plugins. Preserve each diagnostic status/reason: omitted or unavailable tests are not failed evidence, and all-unmeasured results are not a pass. Do not change the user account or asset universe to fit an implementation.",
+          "Installed implementations: plugin_discover and host.capabilities.list. Published optional packages: plugin_catalog({plugin_id}); installation/loading is a separate public operation.",
+          "When research plugins are selected, sesame/plugin-manager#plugin_read must be available for reading declared knowledge; install/load/update capabilities are not added."
         ],
         "limitations": [
-          "Any general research tools imply development-only access; the bundled evaluator then rejects rows beyond validationEnd and makes no holdout claim.",
-          "Starting schedules real Agent calls for the selected research rounds and maximum candidate count. Queued/running is not research completion."
+          "Knowledge-only plugins, the exact sesame/plugin-manager#plugin_read text reader and native immediate input-only calculators with a compatible researchDataAccess contract retain restricted access. For example the integrated research guide and abu-parameter-search can cooperate without disabling tools. General data readers, subprocess/Agent calls and unknown or conflicting declarations require development-only input through validationEnd; an empty effects list alone does not qualify a tool. Classification is not evidence of observed leakage; declarations and plugin revisions remain frozen per run.",
+          "Starting schedules real Agent calls for the selected research rounds and maximum candidate count. Queued/running is not research completion.",
+          "Single-Agent mode cannot omit plan/review/reflection, dispatch parallel branches or change models between duties. Its one Agent ends after frozen selection; native finalization then opens evaluator-isolated holdout. No Agent sees final holdout for this selection.",
+          "strategyValidation remains intent only; nativeValidation optionally executes a real declared engine after research Agents end and factor selection freezes. Native local execution is not the evaluator sealed environment. Missing engine or unsupported optimizer is recorded and does not block factor research. No live orders.",
+          "Diagnostics and Agent-selected thresholds are advisory unless the evaluator records an explicit user hard requirement. Conditional use requires measured evidence plus applicable/invalid scenarios, limits and monitoring; no threshold override creates evidence."
         ]
       },
       "binding": {
@@ -635,7 +958,7 @@
         "agent",
         "host"
       ],
-      "description": "Read the current assigned role, output contract, frozen dataset description, paginated development rows, peer outputs, experiments and reflections. Research roles never receive holdout observations. Follow nextOffset for complete evidence.",
+      "description": "Read the current role/output contract, frozen development data, peer hypotheses, measured trials and reflections. Reuse shared evidence and existing evaluation receipts; follow pagination for the evidence needed by this assignment. No holdout observations are exposed.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -679,9 +1002,9 @@
         "write:consumed-output-checkpoint"
       ],
       "usage": {
-        "purpose": "Read the current assigned role, output contract, frozen dataset description, paginated development rows, peer outputs, experiments and reflections. Research roles never receive holdout observations. Follow nextOffset for complete evidence.",
+        "purpose": "Read the current role/output contract, frozen development data, peer hypotheses, measured trials and reflections. Reuse shared evidence and existing evaluation receipts; follow pagination for the evidence needed by this assignment. No holdout observations are exposed.",
         "inputs": "{run_id,section?:\"team\"|\"data\"|\"memory\",offset?:0,limit?:20}; use the business run ID in task input.",
-        "outputs": "{runId,goal,status,config,data,assignment:{role,mode,expectedOutput,...},evaluator,holdoutMode,...}; data rows, trials/team or memory have {items,total,nextOffset}. expectedOutput is the current submission shape.",
+        "outputs": "{runId,goal,status,config,data,assignment:{role,mode,expectedOutput,...},evaluator,holdoutMode,...}; data rows, trials/team or memory have {items,total,nextOffset}. expectedOutput is the current submission shape. Single mode assignment additionally has executionMode, step_id, instructions, retryOutput and complete; team is the paginated durable stage ledger of the same Agent.",
         "prerequisites": [
           "Owning main or registered role task for this run."
         ],
@@ -714,6 +1037,12 @@
             "type": "object",
             "description": "Role output as JSON, at most 16000 UTF-8 bytes. Reflection accepts {summary:string,lessons:string[],stop?:boolean}: summary is nonempty and at most 4000 characters; lessons may be empty, with each nonempty string at most 1000 characters and no item-count limit. Omitted reflection stop defaults to false; only true ends later research rounds. The plan role still requires its explicit stop boolean. Other role shapes are described in usage.inputs and assignment.expectedOutput.",
             "additionalProperties": true
+          },
+          "step_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "description": "Required only in explicit single-Agent mode: exact assignment.step_id from auto_factor_context. Accepted steps are immutable and exact retries return the stored output."
           }
         },
         "required": [
@@ -735,14 +1064,14 @@
       ],
       "usage": {
         "purpose": "Save one immutable role output. Candidates are opaque JSON defined by the selected evaluator. Candidate and selection submissions invoke that evaluator and save its actual receipt; Agent-supplied metrics are never accepted.",
-        "inputs": "{run_id,output:<assignment.expectedOutput>}; plan={directions:string[],stop:boolean,reason:string}; hypothesis={hypothesis:string,rationale:string,parentId?:string} or {skip:true,reason:string}. parentId may only reference an existing trial from an earlier round; omit it in round 0 or for an independent hypothesis, never use the current trial ID. code={candidate,explanation:string}; review={verdict:\"accept\"|\"reject\",reason:string}; reflection={summary:string,lessons:string[],stop?:boolean}: summary is required, nonempty and at most 4000 characters; lessons is a required array (possibly empty), each nonempty string at most 1000 characters, with no item-count limit. Reflection stop defaults to false when omitted, continuing within the configured research rounds; only explicit true stops later research. selection={trialIds:string[],reason:string}. Every output is limited to 16000 UTF-8 bytes of JSON. Candidate format comes from context.evaluator/expectedOutput.",
-        "outputs": "Saved immutable role output; reflection includes stop:false when omitted and retains every submitted lesson. code/selection additionally contain the actual evaluator receipt in evaluation, including measured metrics/eligibility or exact selected IDs/digest.",
+        "inputs": "{run_id,output:<assignment.expectedOutput>}; plan={directions:string[],stop:boolean,reason:string}; hypothesis={hypothesis:string,rationale:string,parentId?:string} or {skip:true,reason:string}. parentId may only reference an existing trial from an earlier round; omit it in round 0 or for an independent hypothesis, never use the current trial ID. code={candidate,explanation:string}; review={verdict:\"accept\"|\"conditional\"|\"reject\",reason:string,applicability?:object}; reflection={summary:string,lessons:string[],stop?:boolean}: summary is required, nonempty and at most 4000 characters; lessons is a required array (possibly empty), each nonempty string at most 1000 characters, with no item-count limit. Reflection stop defaults to false when omitted, continuing within the configured research rounds; only explicit true stops later research. selection={trialIds:string[],reason:string,applicability?:object}. Every output is limited to 16000 UTF-8 bytes of JSON. Candidate format comes from context.evaluator/expectedOutput. Within the existing explanation/rationale/reason/summary fields, identify the method, input references and timing, measured evidence, counterevidence and limitations relevant to the role. Optional applicability contains bounded string arrays valid_when, invalid_when, evidence, limitations, monitor, stop_when, counterexamples. Conditional review requires the first six nonempty; real counterexamples are retained when available. In executionMode single also pass step_id from context.assignment; continue until the response complete:true. The original multi-Agent input remains unchanged.",
+        "outputs": "Saved immutable role output; reflection includes stop:false when omitted and retains every submitted lesson. code/selection additionally contain the actual evaluator receipt in evaluation, including measured metrics/eligibility or exact selected IDs/digest. Single mode returns {step_id,output,next_step,complete,reused?}; output contains the same validated submission and real evaluator receipt.",
         "prerequisites": [
           "Current registered role task; active run and matching assignment mode."
         ],
         "limitations": [
           "Select only accepted eligible trials; [] is valid if none qualifies. Metrics supplied by a model are not measurement.",
-          "EVALUATION_REJECTED permits correcting an uncommitted proposal. Unknown/interrupted evaluation keeps the original pending input for identical retry."
+          "EVALUATION_REJECTED or HARD_REQUIREMENT_UNMET permits correcting an uncommitted proposal without bypassing user hard requirements. Unknown/interrupted evaluation keeps the original pending input for identical retry."
         ]
       },
       "binding": {
@@ -889,7 +1218,9 @@
         "write:research-checkpoints",
         "start:agents",
         "invoke:selected-evaluator",
-        "publish:report"
+        "publish:report",
+        "invoke:selected-execution",
+        "private-filesystem"
       ],
       "usage": {
         "purpose": "Execute the saved factor workflow. Research roles use host.agent.run; evaluation and publication use native code.",
@@ -1061,7 +1392,9 @@
         "additionalProperties": false
       },
       "execution": "immediate",
-      "effects": [],
+      "effects": [
+        "read"
+      ],
       "binding": {
         "type": "native",
         "name": "auto_factor_dependencies"
@@ -1161,6 +1494,102 @@
       "path": "examples/report.demo.html",
       "description": "Synthetic final static report example, not a live workflow view.",
       "kind": "reference"
+    },
+    {
+      "id": "integrated-references-research-guide-md",
+      "path": "references/research-guide.md",
+      "kind": "reference",
+      "description": "Integrated factor/strategy research guidance or explicit synthetic reference input."
+    },
+    {
+      "id": "integrated-references-factor-method-md",
+      "path": "references/factor-method.md",
+      "kind": "reference",
+      "description": "Integrated factor/strategy research guidance or explicit synthetic reference input."
+    },
+    {
+      "id": "integrated-references-factor-cli-md",
+      "path": "references/factor-cli.md",
+      "kind": "reference",
+      "description": "Integrated factor/strategy research guidance or explicit synthetic reference input."
+    },
+    {
+      "id": "integrated-references-strategy-evidence-md",
+      "path": "references/strategy-evidence.md",
+      "kind": "reference",
+      "description": "Integrated factor/strategy research guidance or explicit synthetic reference input."
+    },
+    {
+      "id": "integrated-references-strategy-cli-md",
+      "path": "references/strategy-cli.md",
+      "kind": "reference",
+      "description": "Integrated factor/strategy research guidance or explicit synthetic reference input."
+    },
+    {
+      "id": "integrated-scripts-reference-factor-mjs",
+      "path": "scripts/reference-factor.mjs",
+      "kind": "reference",
+      "description": "Optional local CLI reference, not a registered capability or automatic workflow step."
+    },
+    {
+      "id": "integrated-scripts-reference-experiment-mjs",
+      "path": "scripts/reference-experiment.mjs",
+      "kind": "reference",
+      "description": "Optional local CLI reference, not a registered capability or automatic workflow step."
+    },
+    {
+      "id": "integrated-examples-reference-factor-development-demo-json",
+      "path": "examples/reference-factor/development.demo.json",
+      "kind": "reference",
+      "description": "Integrated factor/strategy research guidance or explicit synthetic reference input."
+    },
+    {
+      "id": "integrated-examples-reference-factor-holdout-demo-json",
+      "path": "examples/reference-factor/holdout.demo.json",
+      "kind": "reference",
+      "description": "Integrated factor/strategy research guidance or explicit synthetic reference input."
+    },
+    {
+      "id": "integrated-examples-reference-factor-plan-demo-json",
+      "path": "examples/reference-factor/plan.demo.json",
+      "kind": "reference",
+      "description": "Integrated factor/strategy research guidance or explicit synthetic reference input."
+    },
+    {
+      "id": "integrated-examples-reference-strategy-input-demo-json",
+      "path": "examples/reference-strategy/input.demo.json",
+      "kind": "reference",
+      "description": "Integrated factor/strategy research guidance or explicit synthetic reference input."
+    },
+    {
+      "id": "integrated-examples-reference-strategy-plan-demo-json",
+      "path": "examples/reference-strategy/plan.demo.json",
+      "kind": "reference",
+      "description": "Integrated factor/strategy research guidance or explicit synthetic reference input."
+    },
+    {
+      "id": "integrated-examples-reference-strategy-timing-demo-json",
+      "path": "examples/reference-strategy/timing.demo.json",
+      "kind": "reference",
+      "description": "Integrated factor/strategy research guidance or explicit synthetic reference input."
+    },
+    {
+      "id": "integrated-examples-reference-strategy-trials-demo-json",
+      "path": "examples/reference-strategy/trials.demo.json",
+      "kind": "reference",
+      "description": "Integrated factor/strategy research guidance or explicit synthetic reference input."
+    },
+    {
+      "id": "native-validation",
+      "path": "references/native-validation.md",
+      "kind": "reference",
+      "description": "Optional real native validation contract, boundaries, conditional use and fixed-ref example."
+    },
+    {
+      "id": "native-roundtrip-example",
+      "path": "examples/native-roundtrip.py",
+      "kind": "reference",
+      "description": "Explicit software-only authored Backtrader example for optional native integration tests; not a recommended method."
     }
   ],
   "views": [],

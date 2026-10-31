@@ -1,0 +1,25 @@
+✔ desktop report assets load only on demand and concurrent jobs share one renderer (1.325ms)
+✔ close or cancellation during lazy initialization does not launch an abandoned report job (0.6213ms)
+✔ frame policy follows the authenticated origin established after the local startup page (0.2722ms)
+✔ desktop opens a local splash immediately but waits for its private cookie before workspace navigation (4.9789ms)
+✔ desktop rejects invalid private IPC identities and leaves actionable startup UI without exposing credentials (2.9971ms)
+✔ desktop cookie initialization failure remains on the local error screen without exposing the bearer (0.938ms)
+✔ closing the main window keeps the backend alive and the tray reopens the same workspace (1.0006ms)
+✔ without a system tray, close minimizes instead of leaving an unreachable background window (0.9035ms)
+✔ startup close stays hidden when preparation finishes and second launch restores it (0.9922ms)
+✔ slow startup exposes recovery actions without stopping the backend, then can finish normally (1.4609ms)
+✔ failed startup supports explicit restart and quit without posting to a dead worker (0.9108ms)
+✔ explicit quit during startup repeats shutdown when the worker begins listening (0.9537ms)
+✔ ready updates do not install on a normal quit (0.8978ms)
+✔ explicit update shutdown waits for acknowledged clean backend exit without forced-kill quit path (0.9777ms)
+✔ expired update reservation keeps the desktop alive, while unclean shutdown relaunches it (1.5511ms)
+✔ stalled update shutdown reports failure without installing or killing stores, and late exit restores the app (1.323ms)
+✔ normal quit after an update timeout still closes the backend gracefully without relaunching (1.4571ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 88.1849

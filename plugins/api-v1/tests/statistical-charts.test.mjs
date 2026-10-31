@@ -191,6 +191,66 @@ test('statistical charts render and select real fixed rows in Chromium', { skip:
       });
       assert.match(result.empty, /No observations/);assert.equal(result.missing.marks, 0);assert.match(result.missing.note, /2 missing/);
       assert.ok(result.finite);assert.ok(result.centers[0] < result.centers[1]);assert.equal(result.resized, 300);assert.equal(result.children, 0);
+
+      // Reuse this page to exercise real ResizeObserver redraws with full CJK
+      // labels, one missing endpoint, two missing endpoints and a real zero.
+      const rows = [
+        { label: '全部既有历史 · 低波', before: '0.52000000000000001', after: 0.55 },
+        { label: '近90日 · 高波：无匹配', before: 0.75, after: null },
+        { label: '没有任何已登记样本的较长中文分组标签', before: null, after: null },
+        { label: '[0.8,1] · n=26', before: 0, after: 1 },
+      ];
+      await page.evaluate(rows => {
+        document.documentElement.lang = 'zh-CN';document.getElementById('scratch').style.width = '';
+        window.longLabels = { kind: 'dumbbell', title: '合成中文标签', beforeLabel: '同组基线', afterLabel: '匹配样本', unit: '频率（0–1）', rows };
+        window.originalLongLabels = JSON.stringify(rows);drawScratch(longLabels);
+      }, rows);
+      for (const width of [1000, 390]) {
+        await page.setViewportSize({ width, height: 850 });
+        await page.waitForFunction(() => Math.abs(document.getElementById('scratch').clientWidth - scratchHandle.svg.viewBox.baseVal.width) <= 2);
+        const state = await page.evaluate(() => {
+          const target = document.getElementById('scratch'), svg = target.querySelector('svg');
+          const labels = [...svg.querySelectorAll('[data-dumbbell-label]')].map(n => {
+            const bounds = n.getBBox();return { text: [...n.querySelectorAll('tspan')].map(s => s.textContent).join(''),
+              x: bounds.x, right: bounds.x + bounds.width, y: bounds.y, bottom: bounds.y + bounds.height, lines: n.querySelectorAll('tspan').length };
+          });
+          const marks = [...svg.querySelectorAll('[data-row-index]')].map(n => ({ index: Number(n.dataset.rowIndex), label: n.getAttribute('aria-label'),
+            before: n.querySelectorAll('[data-endpoint="before"]').length, after: n.querySelectorAll('[data-endpoint="after"]').length,
+            lines: n.querySelectorAll('line').length, missing: n.dataset.missing === 'true' }));
+          return { labels, marks, plotStart: Math.min(...[...svg.querySelectorAll('line.sc-grid')].map(n => Number(n.getAttribute('x1')))),
+            note: target.querySelector('.sc-missing-note').textContent, notes: target.querySelectorAll('.sc-missing-note').length,
+            unchanged: JSON.stringify(longLabels.rows) === originalLongLabels, width: innerWidth, scroll: document.documentElement.scrollWidth };
+        });
+        assert.deepEqual(state.labels.map(n => n.text), rows.map(row => row.label));
+        assert.ok(state.labels.every(n => n.x >= 0 && n.right + 8 <= state.plotStart), 'Complete labels fit their own column');
+        assert.ok(state.labels.slice(1).every((n, i) => n.y >= state.labels[i].bottom + 8), 'Wrapped labels never overlap adjacent rows');
+        if (width === 390) assert.ok(state.labels.some(n => n.lines > 1), 'Narrow views wrap instead of truncating');
+        assert.match(state.marks[0].label, /0\.52000000000000001/);
+        assert.deepEqual(state.marks.map(n => [n.before, n.after, n.lines, n.missing]), [[1, 1, 1, false], [1, 0, 0, false], [0, 0, 0, true], [1, 1, 1, false]]);
+        assert.match(state.marks[3].label, /同组基线: 0;/);
+        assert.equal(state.note, '空心：同组基线；实心：匹配样本。 2 组有缺失，缺失端点不连线。');
+        assert.equal(state.notes, 1);assert.equal(state.unchanged, true);assert.equal(state.scroll, state.width);
+        if (screenshots) await page.locator('#scratch').screenshot({ path: join(screenshots, `statistics-dumbbell-${width}-zh.png`) });
+      }
+      await page.evaluate(() => { document.documentElement.lang = 'en';drawScratch(longLabels); });
+      assert.match(await page.locator('#scratch .sc-missing-note').textContent(), /Hollow = .*filled = .*2 incomplete comparison\(s\)/);
+      await page.evaluate(() => scratchHandle.destroy());
+    });
+    await t.test('strip readout explains original points and missingness in the report locale', async () => {
+      const rows=[{group:'Same condition',value:'1.2408098449819225'},{group:'Same condition',value:null},{group:'Baseline',value:'-0.8425153843437879'}];
+      const states=[];
+      for(const locale of ['zh-CN','en']){
+        const state=await page.evaluate(({locale,rows})=>{
+          document.documentElement.lang=locale;
+          drawScratch({kind:'strip',x:'group',y:'value',rows,jitter:.15});
+          return {note:document.querySelector('#scratch .sc-missing-note').textContent,marks:[...document.querySelectorAll('#scratch [data-stat-mark="strip"]')].map(e=>({index:e.dataset.rowIndex,x:e.getAttribute('cx'),y:e.getAttribute('cy'),label:e.getAttribute('aria-label')}))};
+        },{locale,rows});
+        states.push(state);assert.deepEqual(state.marks.map(m=>m.index),['0','2']);
+        assert.match(state.marks[0].label,/1\.2408098449819225/);
+      }
+      assert.equal(states[0].note,'每个点代表一条原始记录；上下错开仅为避免重叠。 1 条记录缺少数值，未画成零。');
+      assert.equal(states[1].note,'One point = one registered row; vertical offset only separates overlapping points. 1 missing value(s) are omitted, not plotted at zero.');
+      assert.deepEqual(states[0].marks,states[1].marks,'Language changes only the explanatory note');
     });
     assert.deepEqual(errors, []);
   } finally { await page.close();await browser.close(); }

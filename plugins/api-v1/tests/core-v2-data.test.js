@@ -55,9 +55,17 @@ test('generic snapshots pin declared dependencies and cannot relabel demo source
   const input = { source: { providerId: 'host#datasets', revision: 'host:2' }, operationId: 'sample', title: 'Sample', input: { datasetId: 'sample' }, dependencies: [dependency] };
   const result = await sourceSnapshot(f.host, input); assert.equal(result.provenance.kind, 'demo');
   assert.deepEqual(f.artifacts.get(result.evidence.id).manifest.dependencies, [dependency]);
+  assert.deepEqual(f.artifacts.get(result.ref.id).manifest.dependencies, [result.evidence, dependency]);
   assert.equal(f.rows(result.ref)[0].exact, '9007199254740993.1');
   await assert.rejects(sourceSnapshot(f.host, { ...input, operationId: 'incorrect', provenanceKind: 'observed' }), /Provenance differs/);
   assert.equal(reads, 2);
+});
+
+test('observed source registration cannot be relabelled derived to manufacture an input dependency graph', async () => {
+  const f = resourceHost();
+  f.host.data = { query: async () => ({ items: [{ value: 1 }], metadata: { provenance: { kind: 'observed' } } }) };
+  await assert.rejects(sourceSnapshot(f.host, { source: { providerId: 'host#datasets', revision: 'host:2' }, operationId: 'no-relabel', input: {}, title: 'Observed', provenanceKind: 'derived' }), /Provenance differs/);
+  assert.equal(f.publications.length, 0);
 });
 
 test('generic snapshot maxRows cannot silently publish a preview as a complete dataset', async () => {

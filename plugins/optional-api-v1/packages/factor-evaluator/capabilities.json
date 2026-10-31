@@ -14,7 +14,7 @@
         "agent",
         "host"
       ],
-      "description": "确定性因子评估：冻结数据、计算实测候选指标、冻结选择并仅对该选择评估留出集。仅接受可信工作流嵌套调用。",
+      "description": "可信工作流调用的因子数值计算，支持时序与截面。九项诊断按任务选择，包括 DSR 和完整试验收益矩阵的 CSCV/PBO；只让用户明确的硬要求限制选择，保留条件证据、失败试验与不可算原因。",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -55,7 +55,377 @@
           },
           "options": {
             "type": "object",
-            "additionalProperties": true
+            "properties": {
+              "inputRef": {
+                "type": "object",
+                "description": "Exact published data ArtifactRef returned by a declared capability. Alternative to dataset_id; no paths, mutable heads or guessed IDs.",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[a-f0-9]{64}$"
+                  },
+                  "kind": {
+                    "const": "data"
+                  },
+                  "schemaVersion": {
+                    "const": "1.0.0"
+                  }
+                },
+                "required": [
+                  "id",
+                  "revision",
+                  "digest",
+                  "kind",
+                  "schemaVersion"
+                ],
+                "additionalProperties": false
+              },
+              "dataset": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Chronological splits, optional mode:auto|cross-sectional|time-series (auto selects time-series for one symbol), horizon, costBps and quantile. Time-series metrics average per-symbol correlations equally; direction diagnostics use training-only quantiles."
+              },
+              "minRankIC": {
+                "type": "number",
+                "minimum": -1,
+                "maximum": 1,
+                "description": "Legacy advisory threshold in 1.2.0; supplying an Agent argument is not a user hard requirement. Use evaluationPlan.thresholds with source:user AND mode:required only when the user explicitly requires a gate."
+              },
+              "minCoverage": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Legacy advisory threshold in 1.2.0; supplying an Agent argument is not a user hard requirement. Use evaluationPlan.thresholds with source:user AND mode:required only when the user explicitly requires a gate."
+              },
+              "maxCorrelation": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Legacy advisory threshold in 1.2.0; supplying an Agent argument is not a user hard requirement. Use evaluationPlan.thresholds with source:user AND mode:required only when the user explicitly requires a gate."
+              },
+              "diagnostics": {
+                "type": "object",
+                "description": "Choose only diagnostics relevant to the task. Omitted/false items are not-requested; individual inapplicable, unavailable or erroneous diagnostics do not block the others or candidate selection. This is not a mandatory checklist.",
+                "properties": {
+                  "placebo": {
+                    "description": "Optional null control. true or {samples:20..999,seed:uint32}; per-date label permutation or per-symbol circular shift.",
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    ]
+                  },
+                  "monteCarlo": {
+                    "description": "Optional empirical return-path simulation. true or {samples:20..999,seed:uint32,blockSize:integer}. Reports path return/drawdown dispersion, not significance.",
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    ]
+                  },
+                  "outOfSample": {
+                    "description": "Optional train/validation summary and sealed holdout status; true or {}. development-only has no sealed holdout; restricted holdout is deferred until finalize.",
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    ]
+                  },
+                  "walkForward": {
+                    "description": "Optional fixed-candidate expanding-window evaluation. true or {folds:2..8,minTrain:8..20000,minTest:4..20000,gap:>=horizon}. No repeated candidate discovery claim.",
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    ]
+                  },
+                  "sensitivity": {
+                    "description": "Optional local one-parameter AST neighborhood. true or {maxVariants:2..16,windowStep:1..20,constantFraction:>0..1}. No adjustable parameters is not-applicable.",
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    ]
+                  },
+                  "regimes": {
+                    "description": "Optional PIT state-field strata. {field:numericFieldName,bins:2..5,minObservations:4..20000}; missing field is unavailable. Quantile thresholds fit training only.",
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    ]
+                  },
+                  "bootstrap": {
+                    "description": "Optional block/paired percentile confidence intervals. true or {samples:20..999,seed:uint32,blockSize:integer,confidence:0.5..0.999}. Not an IID or BCa claim.",
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    ]
+                  },
+                  "dsr": {
+                    "description": "Optional DSR at select, using every registered trial return series. true or {independentTrials:integer,reason:string}; override requires a reason, otherwise independence of all trials is an explicit assumption. Candidate status deferred. No winner-only fallback.",
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    ]
+                  },
+                  "pbo": {
+                    "description": "Optional exact CSCV/PBO at select on the complete synchronous trial return matrix. true or {blocks:even integer 2..16}; equal blocks must exactly divide periods with 2+ rows each. Missing/failed/nonaligned trials remain unavailable, not dropped.",
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              },
+              "evaluationPlan": {
+                "type": "object",
+                "description": "Frozen task-selected plan. tests overrides diagnostics item by item. Defaults are advisory. Only an explicitly user-sourced required threshold gates; do not relabel an Agent preference as user. No holdout metrics or aggregate score.",
+                "properties": {
+                  "tests": {
+                    "type": "object",
+                    "description": "Choose only diagnostics relevant to the task. Omitted/false items are not-requested; individual inapplicable, unavailable or erroneous diagnostics do not block the others or candidate selection. This is not a mandatory checklist.",
+                    "properties": {
+                      "placebo": {
+                        "description": "Optional null control. true or {samples:20..999,seed:uint32}; per-date label permutation or per-symbol circular shift.",
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "object",
+                            "additionalProperties": true
+                          }
+                        ]
+                      },
+                      "monteCarlo": {
+                        "description": "Optional empirical return-path simulation. true or {samples:20..999,seed:uint32,blockSize:integer}. Reports path return/drawdown dispersion, not significance.",
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "object",
+                            "additionalProperties": true
+                          }
+                        ]
+                      },
+                      "outOfSample": {
+                        "description": "Optional train/validation summary and sealed holdout status; true or {}. development-only has no sealed holdout; restricted holdout is deferred until finalize.",
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "object",
+                            "additionalProperties": true
+                          }
+                        ]
+                      },
+                      "walkForward": {
+                        "description": "Optional fixed-candidate expanding-window evaluation. true or {folds:2..8,minTrain:8..20000,minTest:4..20000,gap:>=horizon}. No repeated candidate discovery claim.",
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "object",
+                            "additionalProperties": true
+                          }
+                        ]
+                      },
+                      "sensitivity": {
+                        "description": "Optional local one-parameter AST neighborhood. true or {maxVariants:2..16,windowStep:1..20,constantFraction:>0..1}. No adjustable parameters is not-applicable.",
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "object",
+                            "additionalProperties": true
+                          }
+                        ]
+                      },
+                      "regimes": {
+                        "description": "Optional PIT state-field strata. {field:numericFieldName,bins:2..5,minObservations:4..20000}; missing field is unavailable. Quantile thresholds fit training only.",
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "object",
+                            "additionalProperties": true
+                          }
+                        ]
+                      },
+                      "bootstrap": {
+                        "description": "Optional block/paired percentile confidence intervals. true or {samples:20..999,seed:uint32,blockSize:integer,confidence:0.5..0.999}. Not an IID or BCa claim.",
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "object",
+                            "additionalProperties": true
+                          }
+                        ]
+                      },
+                      "dsr": {
+                        "description": "Optional DSR at select, using every registered trial return series. true or {independentTrials:integer,reason:string}; override requires a reason, otherwise independence of all trials is an explicit assumption. Candidate status deferred. No winner-only fallback.",
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "object",
+                            "additionalProperties": true
+                          }
+                        ]
+                      },
+                      "pbo": {
+                        "description": "Optional exact CSCV/PBO at select on the complete synchronous trial return matrix. true or {blocks:even integer 2..16}; equal blocks must exactly divide periods with 2+ rows each. Missing/failed/nonaligned trials remain unavailable, not dropped.",
+                        "anyOf": [
+                          {
+                            "type": "boolean"
+                          },
+                          {
+                            "type": "object",
+                            "additionalProperties": true
+                          }
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "reasons": {
+                    "type": "object",
+                    "propertyNames": {
+                      "enum": [
+                        "placebo",
+                        "monteCarlo",
+                        "outOfSample",
+                        "walkForward",
+                        "sensitivity",
+                        "regimes",
+                        "bootstrap",
+                        "dsr",
+                        "pbo"
+                      ]
+                    },
+                    "additionalProperties": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1000
+                    }
+                  },
+                  "thresholds": {
+                    "type": "array",
+                    "maxItems": 40,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "metric": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200,
+                          "description": "Numeric path from metrics: validation.rankIC, diagnostics.dsr.probability, diagnostics.pbo.probability, diagnostics.regimes.strata.0.rankIC, or redundancy.absoluteCorrelation. No holdout paths."
+                        },
+                        "value": {
+                          "type": "number"
+                        },
+                        "operator": {
+                          "enum": [
+                            "gte",
+                            "lte",
+                            "gt",
+                            "lt",
+                            "eq"
+                          ]
+                        },
+                        "mode": {
+                          "enum": [
+                            "advisory",
+                            "required"
+                          ],
+                          "default": "advisory"
+                        },
+                        "source": {
+                          "enum": [
+                            "agent",
+                            "user"
+                          ],
+                          "default": "agent"
+                        },
+                        "reason": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1000
+                        }
+                      },
+                      "required": [
+                        "metric",
+                        "value",
+                        "operator",
+                        "reason"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
           },
           "trial_id": {
             "type": "string",
@@ -137,7 +507,11 @@
           },
           "eligible": {
             "type": "boolean",
-            "description": "For candidate receipts: whether observed development metrics satisfy the frozen thresholds; only eligible:true candidates may be selected."
+            "description": "Measurable validation or identified development-subset evidence and no explicit user hard failure; conditional does not imply global validity. Required search diagnostics defer to select."
+          },
+          "evaluation": {
+            "type": "object",
+            "description": "status measured|conditional|not-evaluable, measuredEvidence, conditions, limitations, thresholdResults, compact hardRequirementFailures/pendingHardRequirements/advisoryFindings and planDigest. Finding thresholdIndex points to the full thresholdResults entry. Development conditions are exploratory, not independently validated; invalidations retains missing subsets and unmet-threshold references."
           }
         },
         "additionalProperties": true
@@ -145,6 +519,7 @@
       "execution": "run",
       "effects": [
         "read:saved-datasets",
+        "read:fixed-data-artifacts",
         "write:private-state",
         "write:durable-resources"
       ],
@@ -153,16 +528,20 @@
         "name": "factor_evaluate"
       },
       "usage": {
-        "purpose": "确定性因子评估：冻结数据、计算实测候选指标、冻结选择并仅对该选择评估留出集。仅接受可信工作流嵌套调用。",
-        "inputs": "Every nested call uses {protocol:\"sesame.factor-evaluator/v1\",action,run_id}. prepare adds dataset_id,access and options; candidate adds session_id,trial_id,candidate,accepted_ids; select adds session_id,trial_ids; finalize adds session_id,selection_digest. Built-in candidate example: {op:\"field\",name:\"signal\"}; exact candidateExample and dataset contract are returned by prepare.",
-        "outputs": "Host Run output always has protocol/action/runId/sessionId/receiptDigest. prepare => inputDigest,data,development.rows,contract; candidate => trialId,candidate,candidateDigest,metrics,eligible,gate,redundancy; select => exact trialIds,selectionDigest; finalize => holdout,holdoutStatus,archive.",
+        "purpose": "可信工作流调用的因子数值计算，支持时序与截面。九项诊断按任务选择，包括 DSR 和完整试验收益矩阵的 CSCV/PBO；只让用户明确的硬要求限制选择，保留条件证据、失败试验与不可算原因。",
+        "inputs": "Every nested call uses {protocol:\"sesame.factor-evaluator/v1\",action,run_id}. prepare adds access,options.dataset and exactly one input: dataset_id or options.inputRef (complete fixed data ArtifactRef). auto_factor_start forwards config.evaluator.arguments as options; for a fixed Ref put inputRef there and omit dataset_id. candidate adds session_id,trial_id,candidate,accepted_ids; select adds session_id,trial_ids; finalize adds session_id,selection_digest. Candidate example: {op:\"field\",name:\"signal\"}; the exact contract is returned by prepare. options.dataset.mode supports auto, cross-sectional and time-series. options.diagnostics selects placebo, monteCarlo, outOfSample, walkForward, sensitivity, regimes, bootstrap, dsr and pbo; omitted items do not run. evaluationPlan:{tests,thresholds,reasons} overrides diagnostics by item. Threshold entries {metric,value,operator,mode,source,reason}; only mode:required AND source:user gates. Legacy thresholds are advisory. Keep plan within 12KB, threshold entries within 8KB.",
+        "outputs": "Host Run output always has protocol/action/runId/sessionId/receiptDigest. prepare => inputDigest,data,development.rows,contract; fixed input data retains full inputRefs,provenance,dependencies and incorporates the exact Ref into its frozen digest. candidate => trialId,candidate,candidateDigest,metrics,eligible,evaluation,gate,redundancy; select => exact trialIds,selectionDigest,diagnostics,evaluations,failedTrials,planDigest; finalize => holdout,holdoutStatus,archive. Return receipts and actual coverage/limitations for synthesis; same-dataset metrics are related evidence, not independent confirmations. metrics.diagnostics retains every requested result with status completed|partial|not-requested|not-applicable|unavailable|deferred|error and a reason when needed; completed means computed, not scientifically passed. metrics.diagnosticPlan makes the plan reproducible. See DIAGNOSTICS.md for configuration and assumptions.",
         "prerequisites": [
           "Trusted workflow nested invocation only; a direct Agent call is rejected. Public workflow entry: auto_factor_start with evaluator:{plugin_id:\"sesame/factor-evaluator\",tool:\"factor_evaluate\",arguments:<README dataset/gate options>}; another implementation of the same protocol is also valid.",
-          "Registered numeric dataset with {time,symbol,availableAt,fields:{close,...}}, no duplicate time/symbol, availableAt<=time, at most20000 rows/4MiB; at least4 aligned symbols for cross-sectional metrics."
+          "Registered dataset_id or complete fixed kind:data/schemaVersion:1.0.0 inputRef containing json-rows, exactly one. Rows are {time,symbol,availableAt,fields:{close,...finite numbers}}, no duplicate time/symbol, availableAt<=time, at most20000 rows/4MiB. A single symbol is valid for time-series mode; cross-sectional mode needs four aligned assets for its metrics."
         ],
         "limitations": [
           "Only eligible measured trial IDs can be selected; selection_digest is the exact select receipt, not a guessed hash. Same run/session/trial inputs are immutable and idempotent.",
-          "restricted isolates workflow holdout until selection; development-only rejects post-validation rows and returns holdoutStatus=not-requested. Built-in AST computation is not arbitrary code or broker backtesting."
+          "restricted isolates workflow holdout until selection; development-only rejects post-validation rows and returns holdoutStatus=not-requested. Built-in AST computation is not arbitrary code or broker backtesting.",
+          "DataRef is consumed without registering a new host dataset or converting raw market rows. The caller must preserve inputRefs as archive dependencies and keep complete source refs/provenance out of restricted research-role context before selection; published refs are readable through host.resources.read.",
+          "The evaluator owns numerical evidence and immutable receipts. The caller owns information acquisition, candidate generation, complementary method selection and the final report; same-input retries reuse receipts instead of duplicating trials.",
+          "Time-series Rank IC is predictive association, not realized win rate or per-trade R. For actual fills/TP/SL, combine an execution-aware backtester and suitable knowledge; do not reject the research goal because this numerical primitive has narrower metrics.",
+          "DSR/PBO use all registered session trial diagnostic-portfolio return series at select, never only selected winners or holdout. Failed attempts and nonaligned returns make the statistic unavailable. Independence is an explicit DSR assumption; PBO evaluates maximum-Sharpe selection, not arbitrary Agent judgment."
         ]
       }
     }
@@ -175,7 +554,7 @@
     {
       "id": "evaluator-guide",
       "path": "prompt.md",
-      "description": "因子评估口径和限制。",
+      "description": "工作流嵌套调用的计算原语：输入固定数据和因子 AST，输出实测/冗余/选择回执，明确由调用者负责综合。",
       "kind": "prompt"
     },
     {
@@ -188,6 +567,12 @@
       "id": "readme",
       "path": "README.md",
       "description": "评估器使用说明。",
+      "kind": "reference"
+    },
+    {
+      "id": "diagnostics",
+      "path": "DIAGNOSTICS.md",
+      "description": "按任务选择九项诊断和阈值；DSR/PBO原始论文、完整试验前提、条件证据与不可算状态。",
       "kind": "reference"
     }
   ],
@@ -346,6 +731,15 @@
               }
             },
             "additionalProperties": false
+          },
+          "failedTrials": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "lastSelectionReview": {
+            "type": "object"
           }
         },
         "additionalProperties": false

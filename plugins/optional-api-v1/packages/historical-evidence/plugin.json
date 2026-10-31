@@ -1,0 +1,27 @@
+{
+  "id": "sesame/historical-evidence",
+  "apiVersion": "2",
+  "version": "1.1.2",
+  "title": "历史同类情景与概率校准",
+  "description": "固定输入的历史匹配、条件频率与isotonic时间分割校准；真实预测日志和明确标记的历史回放分开，保留条件、反例、缺失与适用边界。",
+  "author": {
+    "name": "Sesame contributors"
+  },
+  "license": "MIT",
+  "execution": "native",
+  "default_state": "discoverable",
+  "agent_scope": "all",
+  "entry": "index.js",
+  "engines": {
+    "sesame": ">=0.3.0-dev.1 <0.4.0"
+  },
+  "capability_manifest": "capabilities.json",
+  "permissions": {
+    "scopes": [],
+    "calls": [
+      "host.resources.read",
+      "host.resources.create",
+      "host.resources.publish"
+    ]
+  }
+}
