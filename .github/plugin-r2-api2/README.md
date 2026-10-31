@@ -10,7 +10,7 @@ optional plugins for Sesame 0.2.3, excluding Kurumi. Its source is
 the previously verified API 2 payloads.
 
 `dev.7` selects eleven core and 45 optional plugins for Sesame 0.3.0 from
-`93baa1a597403b7ba371924227cb043c3eb279be`, excluding Kurumi. Its fixed package
+`e601157a9f55bd453c597856b776d62ef6e343d9`, excluding Kurumi. Its fixed package
 selection and archive/lock digests also supply the host's bundled plugin pins.
 The `dev.N` sequence identifies plugin publication; it does not select the
 application's stable or preview update channel.
