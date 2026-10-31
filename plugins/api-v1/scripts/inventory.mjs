@@ -27,7 +27,7 @@ export function buildInventory(directory = root) {
     notice: taxonomy
       ? 'This descriptive inventory is not an installation catalog. application.minimum is the distribution profile floor, not a promise that every package supports that host; honor each package engines range. It has no source commits or package digests. Installable entries are generated separately only from fixed, actually published releases.'
       : 'This descriptive inventory is not an installation catalog. It has no source commits or package digests. Installable entries are generated separately only from fixed, actually published releases.',
-    ...(taxonomy ? { taxonomy: { functionalCategories: FUNCTIONAL_CATEGORIES, implementationKinds: IMPLEMENTATION_KINDS } } : {}),
+    ...(taxonomy ? { taxonomy: { functionalCategories: FUNCTIONAL_CATEGORIES.filter(category => entries.some(entry => entry.functionalCategory === category.id)), implementationKinds: IMPLEMENTATION_KINDS } } : {}),
     packages: entries.sort((a, b) => a.id < b.id ? -1 : 1) };
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

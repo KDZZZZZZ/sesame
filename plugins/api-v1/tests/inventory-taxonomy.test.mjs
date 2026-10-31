@@ -10,6 +10,14 @@ import { FUNCTIONAL_CATEGORIES, IMPLEMENTATION_KINDS, validateInventoryPolicy, d
 const root = fileURLToPath(new URL('../', import.meta.url));
 const policy = JSON.parse(readFileSync(join(root, 'inventory-policy.json')));
 
+test('search is a supported functional category while unknown categories remain invalid', () => {
+  const selected = structuredClone(policy);
+  selected['web-sources'].functionalCategory = 'search';
+  assert.equal(validateInventoryPolicy(selected, Object.keys(selected)), 'taxonomy');
+  selected['web-sources'].functionalCategory = 'arbitrary-source';
+  assert.throws(() => validateInventoryPolicy(selected, Object.keys(selected)), /invalid functional category/);
+});
+
 test('task responsibility groups guides with workflows and knowledge with reusable analysis independently of implementation', () => {
   const byId = Object.fromEntries(buildInventory().packages.map(item => [item.id, item]));
   for (const name of ['ict', 'price-action', 'abu-trend', 'factor-evaluator', 'strategy-authoring', 'market-data-parser']) {
