@@ -5,14 +5,16 @@ description: Fit a train-only linear baseline and evaluate on later chronologica
 
 # 轻量模型基线
 
-这是可修改、可验证的研究基线，不是标准答案。改进公式或参数时保留原结果、修改假设和对照证据。
+用 `abu_model_lab_analyze` 拟合并评估透明的线性或逻辑模型，比较训练和评估样本数、实际误差或分类指标。
 
-能力 `abu_model_lab_analyze`：使用明确分离的训练/评估数据拟合小型线性回归或逻辑回归，并输出可解释的参数和时间顺序评估。
+缩放与拟合只使用训练样本，评估时保持训练得到的参数；时间顺序仍不能独立证明样本真正未见。当前基线不自动选择特征、部署模型或保证最优参数。
 
-调用形状为 {input:{schema_version:1,source:{id,kind},as_of,parameters?,...}}，不是文件路径或数据 ID。source.id 为 1..500 字符，kind 为 synthetic/historical/live；as_of 及全部时间字段使用真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒）。输入限 2MiB 有限 JSON，不接收代码。parameters 只支持列出的字段。 feature_names 为 1..50 个唯一名称；rows 含 time、available_at、label_available_at、split:"train"|"eval"、features:{各名称:有限数值}、label，可选唯一 id。至少 2 条 train 和 1 条 eval，time 不重复。当前契约要求 available_at == time <= label_available_at <= as_of；所有训练 time 和训练 label_available_at 必须早于第一条 eval.time。logistic 的 label 只能为 0/1。train 条数*(特征数+1)*iterations <= 5000000。
+## 输入与交接
 
-observations.train_rows/eval_rows 为样本数；scaler、coefficients 只由 train 拟合；chronological_eval 含 predictions、mse 和 accuracy（仅 logistic 非 null）。 立即返回 {schema_version:1,baseline:true,status:"research_baseline",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。
+本能力属于数值方法层，消费调用者提供的已知输入。把 scaler、coefficients、train_rows/eval_rows 和 chronological_eval 交给实验流程比较误差；特征生产、标签设计、参数选择和部署仍由调用者统筹，不能由本次评估结果倒选训练特征。复用前核对输入版本、参数、截止时间与实现口径；已有匹配结果可直接引用。同源价格、成交或统计派生结果不能重复计为独立证据；计算只回答本项局部问题，方法解释与最终综合由调用者负责。缺少已声明的必需字段或真实时序时，交回具体缺口，不补造数据以通过校验。
 
-时间顺序验证不独立证明输入是真正未见样本。小型模型是可改进基线，不提供自动特征选择、模型部署或最优参数保证。 来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。
+工具 abu_model_lab_analyze 的已注册 inputSchema 和 usage 给出准确字段、参数、返回路径与错误条件，不要求先阅读示例或运行教学演练。保留 input_artifact、result_artifact、source/as_of、实际参数和 limitations；原始工件可用 data_read({ref}) 按完整引用再次读取。其他方法需要不同输入形状时按其已声明接口显式转换，不把一个结果对象直接冒充另一个工具的输入。
 
-`references/method.md` 解释公式和原版差异；包根目录 `examples/input.json` 提供合成样例。两者用于需要时核对，不是调用前的固定步骤。
+## 可选改进
+
+这是可修改、可验证的研究基线；只有任务需要比较公式或参数时才开展改进，保留原结果、修改假设与同一输入上的对照。references/method.md 解释公式和原版差异；examples/input.json 是合成教学输入。两者按需读取，合成结果保持演示身份。

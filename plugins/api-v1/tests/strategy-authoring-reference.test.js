@@ -52,6 +52,15 @@ test('the stateful reference validates through the public tool and executes its 
   assert.deepEqual(svl.evaluateReplay(source, fixture), result);
 });
 
+test('the commented source validates through the public tool and preserves the original state decisions', async () => {
+  const source=bytes('examples/close-threshold-commented.svl.json').toString(), fixture=json('examples/close-threshold.replay.json');
+  const checked=await validateTool('examples/close-threshold-commented.svl.json'), result=svl.evaluateReplay(source,fixture), plain=svl.evaluateReplay(bytes('examples/close-threshold.svl.json').toString(),fixture);
+  assert.equal(checked.graph.nodes.find(node=>node.id==='above').label,'收盘价高于阈值');
+  assert.deepEqual(result.events.map(event=>[event.state,event.intents]),plain.events.map(event=>[event.state,event.intents]));
+  assert.notEqual(result.sourceDigest,plain.sourceDigest);
+  assert.ok(json('plugin.json').resources.includes('examples/close-threshold-commented.svl.json'));
+});
+
 test('the 1.1 function example preserves threshold decisions and exposes its body and call trace', async () => {
   const path = 'examples/function-threshold.svl.json', source = bytes(path).toString(), fixture = json('examples/function-threshold.replay.json');
   const checked = await validateTool(path), result = svl.evaluateReplay(source, fixture);

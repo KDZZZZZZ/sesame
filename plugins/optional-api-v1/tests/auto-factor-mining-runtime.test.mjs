@@ -18,8 +18,13 @@ test('v2 workflow uses real evaluator scores, declared Agent calls and native fi
  assert.equal(f.requests.find(request=>request.input.role==='reviewer').model.id,'review');
  assert.ok(f.requests.every(request=>request.allowedCalls.every(call=>['auto_factor_context','auto_factor_submit'].includes(call.capabilityId))));
  assert.equal(done.reportPending,false,JSON.stringify(done.reportError));assert.equal(done.report.ref.kind,'report');
+ const manifest=await f.main.resources.read(done.report.ref,{part:'manifest'});
+ assert.equal(manifest.provenance.kind,'demo');assert.equal(manifest.content.provenance.kind,'demo');
  const html=await f.main.resources.read(done.report.ref,{part:'content',entry:done.report.entry});
- assert.match(Buffer.from(html.content,'base64').toString(),/SIMULATED/);
+ // The protocol renderer retains structured evidence; display wording belongs to the renderer's tests.
+ const embedded=Buffer.from(html.content,'base64').toString().match(/<script type="application\/json" id="run-snapshot">([\s\S]*?)<\/script>/);
+ assert.ok(embedded,'The delivered report must retain its synthetic-data evidence');
+ const snapshot=JSON.parse(embedded[1]);assert.equal(snapshot.data.synthetic,true);assert.deepEqual(snapshot.data,done.data);
  assert.equal((await f.runtime.create(f.main,input())).id,run.id);
  await assert.rejects(f.runtime.create(f.main,{...input(),goal:'changed'}),/different frozen inputs/);
 });

@@ -49,6 +49,31 @@ test('structural charts preserve real records, exact conservation, selection, re
   await reject({ ...fixtures.treemap, rows: [{ id: 'too-small', value: '0.' + '0'.repeat(330) + '1' }] }, /too small/);
   await draw({ kind: 'treemap', rows: [{ id: 'p', value: '0.3' }, { id: 'a', parentId: 'p', value: '0.1' }, { id: 'b', parentId: 'p', value: '0.2' }] });
 
+  await t.test('treemap omits a redundant neutral category but preserves real directions and source rows', async subtest => {
+    subtest.after(()=>page.evaluate(()=>{document.documentElement.lang='en';}));
+    const rows=[{id:'a',label:'First',value:'343068583562.02'},{id:'b',label:'Second',value:'105112832346.70',side:'neutral'}];
+    const states=[];
+    for(const locale of ['zh-CN','en']){
+      await page.evaluate(locale=>{document.documentElement.lang=locale;},locale);
+      await draw({kind:'treemap',rows,unit:'USD'});
+      const state=await page.locator('#chart').evaluate(e=>({text:e.textContent,marks:[...e.querySelectorAll('[data-structure-kind="leaf"]')].map(g=>({label:g.getAttribute('aria-label'),side:g.dataset.side,rect:['x','y','width','height'].map(k=>g.querySelector('rect').getAttribute(k))}))}));
+      assert.doesNotMatch(state.text,/neutral|中性/);assert.ok(state.marks.every(m=>!m.label.includes('neutral')&&!m.label.includes('中性')));
+      assert.deepEqual(state.marks.map(m=>m.side),['neutral','neutral'],'Source directions are not relabeled as long');
+      await page.locator('[data-record-id=a]').click();assert.deepEqual((await page.evaluate(()=>structuralSelections.at(-1))).row,rows[0]);
+      states.push(state);
+      const mixed=rows.map((r,i)=>({...r,side:i?'short':'long'})).concat({id:'c',value:'1.00',side:'neutral'});
+      await draw({kind:'treemap',rows:mixed,unit:'USD'});
+      const labels=await page.locator('[data-structure-kind="leaf"]').evaluateAll(e=>e.map(g=>g.getAttribute('aria-label')));
+      const expected=locale==='en'?['long','short','neutral']:['多头','空头','中性'];
+      labels.forEach((label,i)=>assert.ok(label.includes(expected[i]),label));
+      const legend=await page.locator('#chart svg > text').allTextContents();assert.deepEqual(legend,expected);
+      await draw({kind:'treemap',rows:[{id:'only',value:'1',side:'long'}]});
+      assert.deepEqual(await page.locator('#chart svg > text').allTextContents(),[expected[0]],'A genuine single direction remains meaningful');
+    }
+    assert.deepEqual(states[0].marks,states[1].marks,'Neutral formatting preserves geometry and exact value labels');
+    await page.evaluate(()=>{document.documentElement.lang='en';});
+  });
+
   await draw(fixtures.threads);
   assert.equal(await page.locator('[data-structure-kind=thread]').count(), 4);
   assert.equal(await page.locator('[data-record-id=route-003] path').count(), 1, 'no fill is invented for an unfilled order');

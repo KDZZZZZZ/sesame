@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><title>QA20261021-R5 四币固定引用因子研究 · SESAME</title>
+<style>
+:root{--paper:#fafafa;--ink:#151515;--muted:#68717e;--rule:#e8e9ed;--orange:#d97757;--orange-ink:#a84d32;--light:#fafafa;--blue:#2563eb;--green:#168060;--red:#b85d55;--serif:var(--sans);--sans:"Segoe UI","Microsoft YaHei",ui-sans-serif,system-ui,sans-serif;--mono:"Cascadia Code",Consolas,monospace}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.7}button,select,input{font:inherit}button,select{color:inherit}button{cursor:pointer}a{color:inherit}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--orange-ink);outline-offset:5px}button:disabled{opacity:.45;cursor:default}[hidden]{display:none!important}.skip{position:absolute;top:-60px;left:16px;padding:8px;background:var(--ink);color:var(--paper)}.skip:focus{top:8px;z-index:9}.page{max-width:1110px;padding:36px 55px 24px;margin:auto}.masthead{display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:18px;gap:20px}.brand{font-family:var(--serif);font-size:54px;font-weight:900;letter-spacing:-3.5px;line-height:1}.edition{text-align:right;font-size:11px;letter-spacing:1.8px;line-height:1.9}.demo-banner{background:var(--ink);color:var(--paper);padding:12px 20px;margin-top:25px;font-size:12px;letter-spacing:.5px}.demo-banner strong{color:#ffad78;margin-right:12px}.hero{padding:50px 0 32px}.eyebrow{text-transform:uppercase;font-family:var(--mono);font-size:11px;letter-spacing:1.6px;color:var(--muted);display:block}.hero h1{font-family:var(--serif);font-size:clamp(28px,4.6vw,46px);line-height:1.35;font-weight:700;margin:15px 0 19px;letter-spacing:-1.2px;max-width:850px}.hero .goal{font-size:15px;max-width:760px;color:var(--muted);margin:0}.hero-meta{display:flex;align-items:center;flex-wrap:wrap;gap:10px 24px;margin-top:26px;font-size:12px;color:var(--muted)}.status{display:inline-block;border:1px solid var(--rule);padding:1px 7px;line-height:1.7;font-size:10px;font-weight:500;letter-spacing:.3px;white-space:nowrap;color:var(--muted);vertical-align:middle}.status.positive{color:var(--green);border-color:#7f9880}.status.negative{color:var(--red);border-color:#bd978b}.hero-meta>.status{font-size:11px}.numbers{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);margin:4px 0 38px}.numbers>div{padding:17px 20px 19px;border-right:1px solid var(--rule)}.numbers>div:first-child{padding-left:0}.numbers>div:last-child{border:0}.numbers dt{font-size:11px;letter-spacing:1px;color:var(--muted)}.numbers dd{font-family:var(--serif);font-size:38px;line-height:1.15;margin:5px 0 0}.numbers dd small{font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:6px}.index{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:44px}.index a{font-size:11px;text-decoration:none;padding:3px 0;margin-right:16px;border-bottom:1px solid transparent}.index a:hover{border-color:var(--orange-ink);color:var(--orange-ink)}.index span{font-family:var(--mono);color:var(--orange-ink);margin-right:6px}section{margin-top:44px}section>header{display:flex;gap:17px;align-items:baseline;padding-bottom:13px;border-bottom:1px solid var(--ink);margin-bottom:23px}.section-num{color:var(--orange-ink);font-family:var(--mono);font-size:12px}h2{font-family:var(--serif);font-weight:700;font-size:25px;line-height:1.2;margin:0;letter-spacing:-.3px}section>header>p{margin:0 0 0 auto;color:var(--muted);font-size:11px;text-align:right}h3{font-size:17px;margin:0;font-weight:600;line-height:1.6}p{overflow-wrap:anywhere}.team{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:18px}.role{border-left:2px solid var(--rule);padding-left:13px;min-width:0}.role:first-child{border-color:var(--orange)}.role-order{font-family:var(--mono);font-size:10px;color:var(--muted)}.role h3{font-size:13px;margin:8px 0 3px}.role p{font-size:11px;line-height:1.65;margin:0;color:var(--muted)}.role .model{margin-top:13px;color:var(--ink);font-family:var(--mono);font-size:10px}.role small{font-size:10px;color:var(--muted)}.split{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:26px 0 15px}.split>div{padding:12px 13px;border-top:4px solid var(--ink);background:#f1f3f7}.split>div:nth-child(2){border-color:var(--orange-ink)}.split>div:nth-child(3){border-color:var(--rule);background:transparent;outline:1px dashed var(--rule);outline-offset:-1px}.split strong{font-size:12px}.split span{display:block;font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:3px;overflow-wrap:anywhere}.round{display:grid;grid-template-columns:76px minmax(0,1fr);position:relative}.round:not(:last-child):before{content:"";position:absolute;left:31px;top:73px;bottom:0;width:1px;background:var(--rule)}.round-label{padding-top:2px}.round-label span,.round-label small{display:block;font-family:var(--mono);color:var(--muted);font-size:9px;letter-spacing:.8px}.round-label strong{font-family:var(--serif);font-size:38px;line-height:1.1;font-weight:500;display:block;margin:5px 0 10px}.round-body{padding-bottom:28px;min-width:0}.branches{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}.branch{border:0;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);background:transparent;text-align:left;padding:16px 15px;min-width:0;transition:background .18s}.branch:last-child{border-right:0}.branch:hover{background:#f1f3f7}.branch-direction{font-family:var(--mono);font-size:10px;color:var(--orange-ink);display:block;margin-bottom:8px;overflow-wrap:anywhere}.branch>strong{font-size:12px;line-height:1.8;display:block;font-weight:500;overflow-wrap:anywhere}.branch-footer{display:flex;gap:7px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-top:15px}.branch-footer>span:first-child{font-family:var(--mono);font-size:9px;color:var(--muted);overflow-wrap:anywhere}.reflection{padding:14px 0 0 16px;border-left:2px solid var(--orange-ink);margin-top:14px}.reflection p{margin:5px 0;font-size:12px}.reflection small{color:var(--muted);font-size:11px}.round-pending{font-size:11px;color:var(--muted);margin:12px 0}.filterbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:20px}.filterbar label{font-size:11px;color:var(--muted);display:flex;gap:7px;align-items:center}.filterbar select{border:0;border-bottom:1px solid var(--rule);background:transparent;padding:5px 16px 5px 3px;max-width:200px;font-size:12px}.filter-count{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--muted)}.evidence{display:grid;grid-template-columns:230px minmax(0,1fr);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);min-height:350px}.trial-list{border-right:1px solid var(--rule)}.trial-choice{display:block;width:100%;border:0;border-bottom:1px solid var(--rule);border-left:3px solid transparent;background:transparent;text-align:left;padding:15px 17px 15px 13px;min-width:0}.trial-choice[aria-pressed="true"]{background:#f1f3f7;border-left-color:var(--orange-ink)}.trial-choice:hover{background:#f1f3f7}.trial-choice>small{font-family:var(--mono);font-size:10px;color:var(--muted)}.trial-choice>strong{display:block;font-size:12px;font-weight:500;line-height:1.8;margin:6px 0 8px;overflow-wrap:anywhere}.trial-choice .choice-bottom{display:flex;gap:8px;align-items:center;justify-content:space-between}.trial-choice .ic{font-family:var(--mono);font-size:10px}.trial-detail{padding:23px 0 23px 28px;min-width:0}.detail-heading{display:flex;gap:15px;align-items:flex-start;justify-content:space-between}.detail-heading h3{margin-top:7px;font-size:18px}.rationale{font-size:12px;color:var(--muted);margin:14px 0 17px}.inline-meta{display:flex;gap:15px 30px;flex-wrap:wrap;margin:0 0 20px;font-size:11px}.inline-meta dt{color:var(--muted);font-size:10px}.inline-meta dd{margin:2px 0 0;font-family:var(--mono)}table{border-collapse:collapse;width:100%;font-size:12px;text-align:left}caption{text-align:left;font-size:10px;color:var(--muted);padding:0 0 8px;letter-spacing:.5px}th,td{padding:9px 10px;border-bottom:1px solid var(--rule);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left;padding-left:0}th{font-weight:400;color:var(--muted);font-size:11px}td{font-family:var(--mono)}thead th{border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);font-size:10px}.metrics td:last-child{color:var(--orange-ink)}.review{margin:20px 0;padding:12px 15px;border-left:2px solid var(--rule);background:#f1f3f7}.review.positive{border-left-color:var(--green)}.review.negative{border-left-color:var(--red)}.review p{font-size:12px;margin:5px 0 0}.error{color:var(--red);font-size:12px}.empty{padding:20px 0;color:var(--muted);font-size:12px}.detail-empty{padding:24px}details{font-size:12px}summary{cursor:pointer;padding:8px 0;list-style-position:inside;line-height:1.7}summary>span{color:var(--muted);font-size:10px;margin-left:10px}pre{font-family:var(--mono);font-size:11px;line-height:1.7;background:#f1f3f7;padding:14px;white-space:pre-wrap;overflow-wrap:anywhere;max-height:350px;overflow:auto}.digest{font-family:var(--mono);font-size:10px;color:var(--muted);overflow-wrap:anywhere}.task-log{list-style:none;padding:0}.task-log>li{border-top:1px solid var(--rule);padding:10px 0}.task-log>li>div{display:flex;justify-content:space-between;gap:10px}.task-log p{font-size:11px;margin:5px 0}.task-log small{font-size:10px;color:var(--muted);overflow-wrap:anywhere}.selection-pending,.selection-summary{display:flex;gap:24px;align-items:center;padding:10px 0 18px}.seal{font-size:12px;color:var(--orange-ink);border:1px solid var(--orange);min-width:72px;height:72px;display:grid;place-items:center;transform:rotate(-7deg);font-family:var(--serif)}.selection-summary p,.selection-pending p{font-size:12px;color:var(--muted);margin:7px 0}.mono{font-family:var(--mono)}.table-scroll{overflow:auto}.provenance{display:grid;grid-template-columns:1fr 1fr;gap:0 30px;margin:15px 0}.provenance>div{border-bottom:1px solid var(--rule);padding:11px 0;min-width:0}.provenance dt{font-size:10px;color:var(--muted)}.provenance dd{font-size:12px;margin:5px 0 0;overflow-wrap:anywhere}.events{list-style:none;margin:0;padding:0}.event{display:grid;grid-template-columns:150px 85px minmax(0,1fr);gap:16px;position:relative;padding:0 0 22px 18px;border-left:1px solid var(--rule);margin-left:4px;font-size:12px}.event:before{content:"";position:absolute;left:-3.5px;top:7px;width:6px;height:6px;background:var(--orange);border-radius:50%}.event:last-child{padding-bottom:0}.event time{color:var(--muted);font-family:var(--mono);font-size:10px;padding-top:2px;overflow-wrap:anywhere}.event .event-role{font-size:10px;color:var(--orange-ink);padding-top:2px;overflow-wrap:anywhere}.event p{margin:0;line-height:1.8}.event small{display:block;font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:3px}.footer{margin-top:44px;padding:18px 0 5px;border-top:2px solid var(--ink);display:flex;justify-content:space-between;gap:25px;font-size:10px;color:var(--muted)}.footer strong{font-family:var(--serif);font-size:19px;letter-spacing:-.8px;color:var(--ink)}.footer p{margin:0;max-width:650px;text-align:right}.no-js{padding:12px 0;font-size:12px;color:var(--orange-ink)}
+@media(min-width:800px){.hero{animation:appear .5s ease-out}.numbers{animation:appear .7s ease-out}@keyframes appear{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}}
+@media(max-width:760px){.page{padding:24px}.brand{font-size:42px}.edition{font-size:9px;letter-spacing:1px}.hero{padding-top:32px}.hero h1{font-size:32px;letter-spacing:-.5px}.hero .goal{font-size:13px}.team{grid-template-columns:repeat(3,minmax(0,1fr));gap:22px 16px}.branches{grid-template-columns:repeat(2,minmax(0,1fr))}.branch:nth-child(2n){border-right:0}.evidence{grid-template-columns:190px minmax(0,1fr)}.trial-detail{padding-left:20px}.detail-heading{display:block}.detail-heading>.status{margin-top:10px}.event{grid-template-columns:125px minmax(0,1fr);gap:3px 15px}.event p{grid-column:2}.event .event-role{grid-column:2;grid-row:auto}.event time{grid-row:span 2}.numbers dd{font-size:31px}.numbers>div{padding-left:15px;padding-right:15px}section>header>p{max-width:180px}}
+@media(max-width:530px){.page{padding:22px 20px}.masthead{padding-bottom:15px;gap:10px}.brand{font-size:39px;letter-spacing:-2.5px}.edition{font-size:8px}.demo-banner{font-size:10px;padding:10px 12px;line-height:1.8}.demo-banner strong{display:block}.hero h1{font-size:29px}.hero-meta{gap:8px 15px;font-size:10px}.numbers{grid-template-columns:1fr 1fr;margin-bottom:25px}.numbers>div{padding:15px 12px!important}.numbers>div:nth-child(2){border-right:0}.numbers>div:nth-child(-n+2){border-bottom:1px solid var(--rule)}.numbers dd{font-size:33px}.index{gap:6px;margin-bottom:30px}.index a{margin-right:8px;font-size:10px}section{margin-top:34px}section>header{gap:12px;align-items:center;margin-bottom:19px}h2{font-size:21px}section>header>p{display:none}.team{grid-template-columns:1fr 1fr;gap:23px 16px}.role:last-child{grid-column:1 / -1}.role .model{font-size:10px}.split{gap:3px}.split>div{padding:10px 8px}.split strong{font-size:10px}.split span{font-size:9px}.round{grid-template-columns:46px minmax(0,1fr)}.round:not(:last-child):before{left:17px}.round-label strong{font-size:29px}.round-label span,.round-label small{font-size:8px;letter-spacing:0}.branches{grid-template-columns:1fr}.branch{border-right:0;padding:12px}.branch>strong{font-size:12px}.reflection{padding-left:12px}.reflection p{font-size:11px}.filterbar{gap:8px}.filterbar label{font-size:10px}.filterbar select{max-width:128px;font-size:11px;padding-right:5px}.filter-count{width:100%;margin:3px 0 0}.evidence{display:block;min-height:0}.trial-list{display:grid;grid-template-columns:1fr 1fr;border-right:0;border-bottom:1px solid var(--ink);max-height:300px;overflow:auto}.trial-choice{padding:11px 8px}.trial-choice:nth-child(odd){border-right:1px solid var(--rule)}.trial-choice>strong{font-size:11px}.trial-choice .ic{font-size:9px}.trial-choice .choice-bottom{flex-wrap:wrap;gap:5px}.trial-detail{padding:22px 0}.detail-heading h3{font-size:17px}.inline-meta{gap:10px 22px}.metrics th,.metrics td{padding-right:5px;padding-left:5px;font-size:11px}.metrics th:first-child{padding-left:0}.selection-summary,.selection-pending{gap:20px;align-items:flex-start}.seal{min-width:58px;height:58px;font-size:11px}.selection-summary h3,.selection-pending h3{font-size:15px}.provenance{grid-template-columns:1fr}.event{grid-template-columns:1fr;gap:2px;padding-left:15px;padding-bottom:23px}.event time{grid-row:auto;font-size:9px}.event p,.event .event-role{grid-column:1}.event .event-role{font-size:9px}.event p{font-size:11px}.footer{display:block}.footer p{text-align:left;margin-top:8px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation:none!important;transition:none!important}}
+@media print{body{background:white}.page{max-width:none;padding:0}.index,.filterbar{display:none}.trial-list{display:none}.evidence{display:block}.trial-detail[hidden]{display:block!important}.trial-detail{padding-left:0;break-inside:avoid}.branch{break-inside:avoid}.hero{padding-top:25px}section{break-inside:auto}.demo-banner{-webkit-print-color-adjust:exact;print-color-adjust:exact}details>pre,details>.task-log,details>.digest{display:block}details{break-inside:avoid}}
+</style></head><body><a class="skip" href="#main">跳到研究报告</a><div class="page">
+<header class="masthead"><div class="brand">SESAME</div><div class="edition">研究总结</div></header>
+
+<main id="main"><div class="hero"><span class="eyebrow">AUTO FACTOR MINING / fm_1f92dfb506dff8474920e5ff02a508cf</span><h1>QA20261021-R5 四币固定引用因子研究</h1><p class="goal">验收真实固定数值DataRef→独立因子评估→工作流原生报告的完整业务链路。只检验一个相邻HTTP快照价格动量候选：上一观察期相对价格变化能否排序预测下一观察期四币相对收益。使用48行、4个品种、12次真实抓取（UTC 08:02:53.754至08:08:51.552）的冻结面板；训练/验证/留出为24/12/12行（标签purge前）。time和availableAt都是实际HTTP抓取时间，close仅为当次last-price；不是小时K线或可执行报价，观察间隔不均且样本极小，不宣称交易收益或普遍因子有效性。只用冻结开发上下文，不读留出地址，不扩展研究，不改模型、插件、账户、旧Run或旧报告。保留不合格候选和空选择；数值只采用evaluator实际回执。报告必须由该工作流正常归档发布，不由主Agent手工代写或代交角色输出。</p><div class="hero-meta"><span class="status positive">已完成</span><span>记录时间 2026-10-21 08:13:24 UTC</span></div></div>
+<dl class="numbers"><div><dt>研究轮次</dt><dd>1<small>/ 1</small></dd></div><div><dt>累计试验</dt><dd>1<small>/ 1</small></dd></div><div><dt>已接纳 / 已淘汰</dt><dd>1<small>/ 0</small></dd></div><div><dt>并行研究上限</dt><dd>1<small>条分支</small></dd></div></dl>
+<nav class="index" aria-label="报告目录"><a href="#team"><span>01</span>研究团队</a><a href="#rounds"><span>02</span>研究演进</a><a href="#evidence"><span>03</span>试验证据</a><a href="#selection"><span>04</span>最终选择</a><a href="#timeline"><span>05</span>协作记录</a><a href="#reproducibility"><span>06</span>复现依据</a></nav>
+<section id="team"><header><span class="section-num">01</span><h2>研究团队</h2></header><div class="team"><div class="role"><span class="role-order">01 / QUANT</span><h3>数值因子研究员</h3><p>hypothesis · code · selection</p><p class="model">openai / gpt-6.1-sol</p><small>3 项任务记录</small></div></div><details class="team-records"><summary>全部团队任务与结构化交接 <span>3 项记录</span></summary><ul class="task-log"><li><details><summary><strong>quant</strong> · trial_r0_7a7b7317c5f8 <span class="status positive">已完成</span></summary><p class="mono">assignment_6a5f0c2c14c36f8fc41ffb653460ee48 · openai / gpt-6.1-sol</p><p>尚未记录 → 2026-10-21 08:15:03 UTC</p><pre>{
+  &quot;hypothesis&quot;: &quot;固定正向的一阶相对价格动量假设：以同一品种按实际HTTP抓取时间排序的相邻观察为单位，在时点t取得本次last-price后，定义m(i,t)=close(i,t)/close(i,t-1)-1。对于BTCUSDT、ETHUSDT、SOLUSDT、XRPUSDT，上一观察期m较高的品种，下一观察期相对收益r(i,t+1)=close(i,t+1)/close(i,t)-1应较高，即开发集可评价验证截面的平均Rank IC应为正。仅检验这个固定正号、滞后1个观察步、预测1个观察步的候选，不取负、不换窗口、不搜索参数；相对价格变化指比例变化，不是绝对价格差，也不声称市场中性化。&quot;,
+  &quot;rationale&quot;: &quot;输入与时点：只使用auto_factor_context返回的冻结开发面板，digest=sha256:6f421bf3da5a53f018241c22e75f400f85309b605d1449689d2feaa654519ca2；字段仅close，36行、4个品种、9次观察，范围为2026-10-21T08:02:53.754Z至08:07:39.530Z。time与availableAt均为实际HTTP抓取时刻；close是当次last-price，不是K线收盘、成交发生时刻或可执行报价。训练截止08:06:28.961Z，验证截止08:07:39.530Z；切分前分别为24/12行，不能将其当作独立有效标签数。\n方法与经济含义：比例变化消除四币价格量级差异；逐品种lag=1限定信息只来自t及此前，截面排序检验相对强弱能否延续。潜在机制是短时订单流持续或信息消化不完全，但面板没有订单流、盘口或成交时间证据，机制仅是待检验解释。没有加载额外方法插件，也不把同一close的变换当作独立验证。\n实施交接：数学意图固定为close/lag(close,1)-1，首个观察缺少历史时不填造信号，不以未来数据补齐；下一观察收益仅作标签，不能进入t时信号。预测horizon=1是一个不等长观察步，不是固定分钟或小时，不插值或改为按时间归一化的另一候选。独立evaluator负责预热、缺失、跨切分标签purge、并列秩及真实评价；使用其冻结的horizon=1、quantile=0.25、costBps=10设置，不自行计算或填报Rank IC、覆盖率、净收益或资格。\n反证与决策条件：若实际验证Rank IC为零或负，则本实验不支持预先声明的正向排序关系；训练为正而验证不为正，也不能据训练表现接纳。若无法形成足够有效标签或覆盖不足，应记为证据不足/不合格，而非把缺测冒充负结果。即使排序指标为正，是否接纳仍以冻结evaluator的真实eligible结果为准；成本后净收益非正只否定该成本口径下的经济性，不能单独证明动量方向相反。任何负面结果均保留，不据此取负、换窗、改门槛或扩展研究。\n已有反向解释与限制：开发行中，08:06:28.961Z至08:06:53.955Z的BTC、ETH、XRP记录价格完全未变，提示零收益与并列秩是实际问题，但不足以判定价格停滞原因。微观结构反转、不同品种last-price更新不同步及采样噪声均可能解释后续排序，而非动量机制。四币、极短时段、非均匀观察且受同一市场影响，不构成独立市场验证；首次预热和标签purge会进一步缩小有效样本。此阶段尚无实测评价回执，不声称显著性、普遍预测能力、可交易收益或已完成留出验证；不读取留出观察或原始引用，留出不参与本轮假设或选择。&quot;
+}</pre></details></li><li><details><summary><strong>quant</strong> · trial_r0_7a7b7317c5f8 <span class="status positive">已完成</span></summary><p class="mono">assignment_b5fe00765f79943e11bc45964c4ae204 · openai / gpt-6.1-sol</p><p>尚未记录 → 2026-10-21 08:17:01 UTC</p><pre>{
+  &quot;candidate&quot;: {
+    &quot;op&quot;: &quot;sub&quot;,
+    &quot;args&quot;: [
+      {
+        &quot;op&quot;: &quot;div&quot;,
+        &quot;args&quot;: [
+          {
+            &quot;op&quot;: &quot;field&quot;,
+            &quot;name&quot;: &quot;close&quot;
+          },
+          {
+            &quot;op&quot;: &quot;lag&quot;,
+            &quot;args&quot;: [
+              {
+                &quot;op&quot;: &quot;field&quot;,
+                &quot;name&quot;: &quot;close&quot;
+              }
+            ],
+            &quot;window&quot;: 1
+          }
+        ]
+      },
+      {
+        &quot;op&quot;: &quot;constant&quot;,
+        &quot;value&quot;: 1
+      }
+    ]
+  },
+  &quot;explanation&quot;: &quot;方法与假设映射：按当前auto_factor_context的factor AST合同，以sub(div(field(close),lag(field(close),window=1)),constant(1))精确表达m(i,t)=close(i,t)/close(i,t-1)-1。沿用trial_r0_7a7b7317c5f8已保存的正向一阶相对价格动量假设；这是第0轮唯一候选，无父版本，不提交parentId，不引入新特征、取负、窗口搜索或门槛调整。lag是同一品种前一观察步，不是固定分钟或小时；比例变化并非绝对价格差。\n输入与时点：复用上下文冻结开发证据，digest=sha256:6f421bf3da5a53f018241c22e75f400f85309b605d1449689d2feaa654519ca2，字段仅close；开发集36行、4个品种、9次观察，范围2026-10-21T08:02:53.754Z至08:07:39.530Z。close为本次HTTP抓取的last-price，time与availableAt为实际抓取时刻，并非K线收盘、实际成交时点或可执行报价。信号仅使用t和t以前的close；下一观察期收益只作evaluator标签，不进入AST。使用冻结的horizon=1、quantile=0.25、costBps=10，训练截止08:06:28.961Z、验证截止08:07:39.530Z（均UTC）。评估能力为sesame/factor-evaluator 1.0.2、数据契约所示evaluatorVersion=sesame-factor-ast/1.0.0；不另写评价计算。\n缺失与预热：每个品种首次观察缺少lag=1历史，不能形成此比例信号；AST不作零填充、前后填充或未来补齐。若close或滞后价格缺失，或分母为零，不将其解释成零动量；具体缺失/非有限值处理和有效覆盖以evaluator实际回执为准。时序预热、跨切分标签purge及有效样本数亦由evaluator处理，不以切分前行数替代有效标签数。\n可证伪性及现有反证：正向假设要求验证截面平均Rank IC为正，若真实验证Rank IC为零或负则本实验不支持该方向；覆盖不足或有效标签过少应记录为证据不足/不合格。上游开发证据已记录相邻抓取中部分币种价格未变，提示零收益与并列秩问题，不据此猜测更新原因。资格只依据真实eligible，成本后非正结果不触发取负或改窗。提交前没有评价回执，未填报任何模型生成指标。\n局限与交接：仅四币、极短且不等间隔的HTTP观察，共同市场暴露、last-price不同步、并列秩、首次预热和标签purge均限制解释；样本不能支持显著性、普遍预测能力或可交易盈利结论。未读取留出观察或原始引用，留出不参与实现或选择；本候选及其实际评价回执交由后续固定选择阶段复用。&quot;,
+  &quot;evaluation&quot;: {
+    &quot;action&quot;: &quot;candidate&quot;,
+    &quot;candidate&quot;: {
+      &quot;args&quot;: [
+        {
+          &quot;args&quot;: [
+            {
+              &quot;name&quot;: &quot;close&quot;,
+              &quot;op&quot;: &quot;field&quot;
+            },
+            {
+              &quot;args&quot;: [
+                {
+                  &quot;name&quot;: &quot;close&quot;,
+                  &quot;op&quot;: &quot;field&quot;
+                }
+              ],
+              &quot;op&quot;: &quot;lag&quot;,
+              &quot;window&quot;: 1
+            }
+          ],
+          &quot;op&quot;: &quot;div&quot;
+        },
+        {
+          &quot;op&quot;: &quot;constant&quot;,
+          &quot;value&quot;: 1
+        }
+      ],
+      &quot;op&quot;: &quot;sub&quot;
+    },
+    &quot;candidateDigest&quot;: &quot;sha256:a0cfd4a431466abcc755945767feaf980cd4e5cd9daf629d40fb41609f46e11c&quot;,
+    &quot;eligible&quot;: true,
+    &quot;gate&quot;: &quot;validation threshold passed; not proof of tradability&quot;,
+    &quot;metrics&quot;: {
+      &quot;dataDigest&quot;: &quot;sha256:cafd223feded647bfa51d9e5fcfa39056d8e1cd03b31bef8a4dec68246dee9d0&quot;,
+      &quot;evaluatorVersion&quot;: &quot;sesame-factor-ast/1.0.0&quot;,
+      &quot;expression&quot;: {
+        &quot;args&quot;: [
+          {
+            &quot;args&quot;: [
+              {
+                &quot;name&quot;: &quot;close&quot;,
+                &quot;op&quot;: &quot;field&quot;
+              },
+              {
+                &quot;args&quot;: [
+                  {
+                    &quot;name&quot;: &quot;close&quot;,
+                    &quot;op&quot;: &quot;field&quot;
+                  }
+                ],
+                &quot;op&quot;: &quot;lag&quot;,
+                &quot;window&quot;: 1
+              }
+            ],
+            &quot;op&quot;: &quot;div&quot;
+          },
+          {
+            &quot;op&quot;: &quot;constant&quot;,
+            &quot;value&quot;: 1
+          }
+        ],
+        &quot;op&quot;: &quot;sub&quot;
+      },
+      &quot;expressionDigest&quot;: &quot;sha256:f09d00c9dad412ca8b53b46361ecc7dc30fa14613787942bffbe402a323895c8&quot;,
+      &quot;limitations&quot;: [
+        &quot;This AST evaluator is an editable research baseline, not a standard answer, a significance test, or a broker backtest.&quot;,
+        &quot;Availability timestamps are checked, not independently verified. Universe selection, corporate actions, delistings and vendor revisions require separate point-in-time evidence.&quot;,
+        &quot;Forward returns use supplied closes at aligned market timestamps. Entering at the observed close is an idealized assumption; latency, liquidity, short availability, impact and borrowing costs are not modeled.&quot;,
+        &quot;Portfolio diagnostics hold half long and half short with gross exposure one. Each nonoverlapping interval starts and ends flat, incurs absolute turnover two and fixed one-way costs twice.&quot;,
+        &quot;Rank IC is the mean per-date Spearman correlation with at least four paired assets. ICIR is mean divided by sample standard deviation, not annualized or adjusted for overlapping labels.&quot;,
+        &quot;Boundary-crossing labels are purged. Missing fields or endpoints are not imputed. Tied groups crossing a quantile cutoff are omitted; this can leave a date without a portfolio.&quot;,
+        &quot;Rolling windows count observations for each symbol; forward horizon counts distinct market timestamps. Missing bars can therefore affect the effective duration.&quot;,
+        &quot;This engine cannot enforce an untouched holdout outside its caller. The workflow must freeze candidate selection and record every holdout exposure before calling holdout evaluation.&quot;
+      ],
+      &quot;protocol&quot;: {
+        &quot;costBps&quot;: 10,
+        &quot;horizon&quot;: 1,
+        &quot;horizonUnit&quot;: &quot;distinct-market-timestamps&quot;,
+        &quot;minAssets&quot;: 4,
+        &quot;portfolio&quot;: &quot;gross-one-half-long-half-short-flat-to-flat&quot;,
+        &quot;portfolioSampling&quot;: &quot;nonoverlapping&quot;,
+        &quot;quantile&quot;: 0.25,
+        &quot;rankICIR&quot;: &quot;not-annualized&quot;,
+        &quot;splitEnds&quot;: &quot;inclusive&quot;
+      },
+      &quot;train&quot;: {
+        &quot;costPerPeriod&quot;: 0.002,
+        &quot;coverage&quot;: 0.8333333333333334,
+        &quot;dates&quot;: 6,
+        &quot;eligibleObservations&quot;: 16,
+        &quot;factorObservations&quot;: 20,
+        &quot;grossMaxDrawdown&quot;: 0.00003715814506533022,
+        &quot;grossReturn&quot;: 0.00018295540079416028,
+        &quot;insolvent&quot;: false,
+        &quot;insufficientCrossSections&quot;: 2,
+        &quot;labelCoverage&quot;: 0.8333333333333334,
+        &quot;labelObservations&quot;: 20,
+        &quot;maxDrawdown&quot;: 0.0077941721257668295,
+        &quot;meanGrossReturn&quot;: 0.00004573937185992084,
+        &quot;meanNetReturn&quot;: -0.001954260628140079,
+        &quot;missingForwardRows&quot;: 0,
+        &quot;netReturn&quot;: -0.0077941721257668295,
+        &quot;numericReturnFailures&quot;: 0,
+        &quot;overlapSkippedPeriods&quot;: 0,
+        &quot;portfolioPeriods&quot;: 4,
+        &quot;purgedBoundaryRows&quot;: 4,
+        &quot;rankIC&quot;: 0.1,
+        &quot;rankICIR&quot;: 0.1889822365046136,
+        &quot;rankICMean&quot;: 0.1,
+        &quot;rankICStd&quot;: 0.5291502622129182,
+        &quot;rows&quot;: 24,
+        &quot;tiedTails&quot;: 0,
+        &quot;totalTurnover&quot;: 8,
+        &quot;turnover&quot;: 2,
+        &quot;validICPeriods&quot;: 4
+      },
+      &quot;validation&quot;: {
+        &quot;costPerPeriod&quot;: 0.002,
+        &quot;coverage&quot;: 1,
+        &quot;dates&quot;: 3,
+        &quot;eligibleObservations&quot;: 8,
+        &quot;factorObservations&quot;: 12,
+        &quot;grossMaxDrawdown&quot;: 0,
+        &quot;grossReturn&quot;: 0.00017847783969893172,
+        &quot;insolvent&quot;: false,
+        &quot;insufficientCrossSections&quot;: 1,
+        &quot;labelCoverage&quot;: 0.6666666666666666,
+        &quot;labelObservations&quot;: 8,
+        &quot;maxDrawdown&quot;: 0.001821522160301181,
+        &quot;meanGrossReturn&quot;: 0.0001784778396988207,
+        &quot;meanNetReturn&quot;: -0.0018215221603011793,
+        &quot;missingForwardRows&quot;: 0,
+        &quot;netReturn&quot;: -0.001821522160301181,
+        &quot;numericReturnFailures&quot;: 0,
+        &quot;overlapSkippedPeriods&quot;: 0,
+        &quot;portfolioPeriods&quot;: 1,
+        &quot;purgedBoundaryRows&quot;: 4,
+        &quot;rankIC&quot;: 0.5290994448735805,
+        &quot;rankICIR&quot;: 1.38105957449055,
+        &quot;rankICMean&quot;: 0.5290994448735805,
+        &quot;rankICStd&quot;: 0.3831112391141827,
+        &quot;rows&quot;: 12,
+        &quot;tiedTails&quot;: 1,
+        &quot;totalTurnover&quot;: 2,
+        &quot;turnover&quot;: 2,
+        &quot;validICPeriods&quot;: 2
+      }
+    },
+    &quot;protocol&quot;: &quot;sesame.factor-evaluator/v1&quot;,
+    &quot;receiptDigest&quot;: &quot;sha256:5cc988c6e0b29dcd34494bc50e2cd36dd18f4820dc6bfa487daafdb29ec0a719&quot;,
+    &quot;redundancy&quot;: [],
+    &quot;runId&quot;: &quot;fm_1f92dfb506dff8474920e5ff02a508cf&quot;,
+    &quot;sessionId&quot;: &quot;fe_53cee6c8cf9938f52c9d46341636f93e&quot;,
+    &quot;trialId&quot;: &quot;trial_r0_7a7b7317c5f8&quot;
+  }
+}</pre></details></li><li><details><summary><strong>quant</strong> · 共享研究任务 <span class="status positive">已完成</span></summary><p class="mono">assignment_f5976192134a9ce867ebadb1825088e5 · openai / gpt-6.1-sol</p><p>尚未记录 → 2026-10-21 08:21:03 UTC</p><pre>{
+  &quot;trialIds&quot;: [
+    &quot;trial_r0_7a7b7317c5f8&quot;
+  ],
+  &quot;reason&quot;: &quot;冻结选择唯一候选trial_r0_7a7b7317c5f8，限定为本实验的合格研究候选，不认定其可交易或普遍有效。方法为预先固定的正向一阶相对价格动量close/lag(close,1)-1，预测下一观察步截面收益；不取负、不换窗口、不改门槛。依据auto_factor_context返回的真实trial及evaluationReceipt，而非角色赞同：status=accepted、eligible=true，实际gate为“validation threshold passed; not proof of tradability”。候选回执receiptDigest=sha256:5cc988c6e0b29dcd34494bc50e2cd36dd18f4820dc6bfa487daafdb29ec0a719，candidateDigest=sha256:a0cfd4a431466abcc755945767feaf980cd4e5cd9daf629d40fb41609f46e11c；评价版本sesame-factor-ast/1.0.0。\n实测取舍：训练Rank IC=0.1，验证Rank IC=0.5290994448735805，分别仅4、2个有效IC截面；因子coverage分别为0.8333333333333334、1，验证labelCoverage仅0.6666666666666666，不能把因子覆盖100%解释为标签完整。训练24行、验证12行，各purgedBoundaryRows=4；验证eligibleObservations=8，只有1个组合评价期且tiedTails=1。正向验证排序结果支持在冻结门槛内保留此研究候选，但不足以推断显著性或稳定性。反证必须同时保留：真实训练netReturn=-0.0077941721257668295、验证netReturn=-0.001821522160301181；验证grossReturn=0.00017847783969893172，未覆盖该回执的成本口径。固定horizon=1个不同观察时刻、quantile=0.25、单边costBps=10；评价器组合为总敞口1、半多半空、每期平仓再建，costPerPeriod=0.002。成本后诊断为负，不能声称盈利，也不据此把信号改为反向。\n相关性与适用边界：账本只有这1个候选，redundancy=[]，无候选间相关性可比较；空冗余记录不证明低相关、独立性或分散化。开发证据digest=sha256:6f421bf3da5a53f018241c22e75f400f85309b605d1449689d2feaa654519ca2，36行、4币、9次HTTP观察，UTC 2026-10-21T08:02:53.754Z至08:07:39.530Z；训练截止08:06:28.961Z，验证截止08:07:39.530Z。评价回执另记dataDigest=sha256:cafd223feded647bfa51d9e5fcfa39056d8e1cd03b31bef8a4dec68246dee9d0，原样保留，不与开发视图摘要混同。time/availableAt为实际抓取时刻，close仅为当次last-price，不是固定周期K线、实际成交时刻或可执行报价；不等长观察步、共同市场暴露、价格更新不同步及并列秩均限制外推。评价器仅检查可得时间戳，未独立核验，也未模拟延迟、流动性、冲击或借币成本；本结果不是显著性检验或券商回测。未读取或计算留出数据，不用留出结果选择或调参。提交后由独立evaluator复核选择资格与冗余，由原生工作流执行finalize和正常报告归档；本角色不代写报告、不声称已归档。&quot;,
+  &quot;evaluation&quot;: {
+    &quot;action&quot;: &quot;select&quot;,
+    &quot;protocol&quot;: &quot;sesame.factor-evaluator/v1&quot;,
+    &quot;receiptDigest&quot;: &quot;sha256:3878ff439ea292b5f15c150739d0d5925a01389d567d58eda9a00f49579e8de1&quot;,
+    &quot;runId&quot;: &quot;fm_1f92dfb506dff8474920e5ff02a508cf&quot;,
+    &quot;selectionDigest&quot;: &quot;sha256:e72872bdf347db915347189f69ad36a9beecba6d258369297b718ebadc7632b1&quot;,
+    &quot;sessionId&quot;: &quot;fe_53cee6c8cf9938f52c9d46341636f93e&quot;,
+    &quot;trialIds&quot;: [
+      &quot;trial_r0_7a7b7317c5f8&quot;
+    ]
+  }
+}</pre></details></li></ul></details><div class="split"><div><strong>训练集</strong><span>截至 2026-10-21T08:06:28.961Z</span></div><div><strong>验证集</strong><span>截至 2026-10-21T08:07:39.530Z</span></div><div><strong>留出集</strong><span>截至 2026-10-21T08:08:51.552Z</span></div></div></section>
+<section id="rounds"><header><span class="section-num">02</span><h2>研究演进</h2></header><article class="round"><div class="round-label"><span>ROUND</span><strong>01</strong><small>1 个试验</small></div><div class="round-body"><div class="branches"><button type="button" class="branch" data-open-trial="0" aria-label="查看试验 trial_r0_7a7b7317c5f8"><span class="branch-direction">相邻HTTP观察的一阶相对价格动量；预测下一观察期截面收益，禁止改符号或窗口搜索</span><strong>固定正向的一阶相对价格动量假设：以同一品种按实际HTTP抓取时间排序的相邻观察为单位，在时点t取得本次last-price后，定义m(i,t)=close(i,t)/close(i,t-1)-1。对于BTCUSDT、ETHUSDT、SOLUSDT、XRPUSDT，上一观察期m较高的品种，下一观察期相对收益r(i,t+1)=close(i,t+1)/close(i,t)-1应较高，即开发集可评价验证截面的平均Rank IC应为正。仅检验这个固定正号、滞后1个观察步、预测1个观察步的候选，不取负、不换窗口、不搜索参数；相对价格变化指比例变化，不是绝对价格差，也不声称市场中性化。</strong><span class="branch-footer"><span>trial_r0_7a7b7317c5f8</span><span class="status positive">已接纳</span></span></button></div><p class="round-pending">未记录本轮复盘</p></div></article></section>
+<section id="evidence"><header><span class="section-num">03</span><h2>试验证据</h2></header><noscript><p class="no-js">交互需要 JavaScript；所有试验内容仍保存在本文件中。打印此页可查看完整试验详情。</p></noscript><div class="filterbar"><label>评审结果<select id="status-filter"><option value="all">全部结果</option><option value="accepted">已接纳</option><option value="rejected">已淘汰</option><option value="other">其他状态</option></select></label><label>研究方向<select id="direction-filter"><option value="all">全部方向</option><option value="相邻HTTP观察的一阶相对价格动量；预测下一观察期截面收益，禁止改符号或窗口搜索">相邻HTTP观察的一阶相对价格动量；预测下一观察期截面收益，禁止改符号或窗口搜索</option></select></label><span class="filter-count" id="trial-count" aria-live="polite">1 / 1 个试验</span></div><div class="evidence"><div class="trial-list" aria-label="选择试验"><button type="button" class="trial-choice" data-trial-row="0" aria-pressed="true" aria-controls="trial-detail-0"><small>trial_r0_7a7b7317c5f8 · R1</small><strong>固定正向的一阶相对价格动量假设：以同一品种按实际HTTP抓取时间排序的相邻观察为单位，在时点t取得本次last-price后，定义m(i,t)=close(i,t)/close(i,t-1)-1。对于BTCUSDT、ETHUSDT、SOLUSDT、XRPUSDT，上一观察期m较高的品种，下一观察期相对收益r(i,t+1)=close(i,t+1)/close(i,t)-1应较高，即开发集可评价验证截面的平均Rank IC应为正。仅检验这个固定正号、滞后1个观察步、预测1个观察步的候选，不取负、不换窗口、不搜索参数；相对价格变化指比例变化，不是绝对价格差，也不声称市场中性化。</strong><span class="choice-bottom"><span class="status positive">已接纳</span><span class="ic">评估门槛通过</span></span></button></div><div id="trial-details"><article class="trial-detail" id="trial-detail-0" data-trial-detail="0"  aria-labelledby="trial-title-0">
+    <div class="detail-heading"><div><span class="eyebrow">TRIAL trial_r0_7a7b7317c5f8</span><h3 id="trial-title-0">固定正向的一阶相对价格动量假设：以同一品种按实际HTTP抓取时间排序的相邻观察为单位，在时点t取得本次last-price后，定义m(i,t)=close(i,t)/close(i,t-1)-1。对于BTCUSDT、ETHUSDT、SOLUSDT、XRPUSDT，上一观察期m较高的品种，下一观察期相对收益r(i,t+1)=close(i,t+1)/close(i,t)-1应较高，即开发集可评价验证截面的平均Rank IC应为正。仅检验这个固定正号、滞后1个观察步、预测1个观察步的候选，不取负、不换窗口、不搜索参数；相对价格变化指比例变化，不是绝对价格差，也不声称市场中性化。</h3></div><span class="status positive">已接纳</span></div>
+    <p class="rationale">输入与时点：只使用auto_factor_context返回的冻结开发面板，digest=sha256:6f421bf3da5a53f018241c22e75f400f85309b605d1449689d2feaa654519ca2；字段仅close，36行、4个品种、9次观察，范围为2026-10-21T08:02:53.754Z至08:07:39.530Z。time与availableAt均为实际HTTP抓取时刻；close是当次last-price，不是K线收盘、成交发生时刻或可执行报价。训练截止08:06:28.961Z，验证截止08:07:39.530Z；切分前分别为24/12行，不能将其当作独立有效标签数。
+方法与经济含义：比例变化消除四币价格量级差异；逐品种lag=1限定信息只来自t及此前，截面排序检验相对强弱能否延续。潜在机制是短时订单流持续或信息消化不完全，但面板没有订单流、盘口或成交时间证据，机制仅是待检验解释。没有加载额外方法插件，也不把同一close的变换当作独立验证。
+实施交接：数学意图固定为close/lag(close,1)-1，首个观察缺少历史时不填造信号，不以未来数据补齐；下一观察收益仅作标签，不能进入t时信号。预测horizon=1是一个不等长观察步，不是固定分钟或小时，不插值或改为按时间归一化的另一候选。独立evaluator负责预热、缺失、跨切分标签purge、并列秩及真实评价；使用其冻结的horizon=1、quantile=0.25、costBps=10设置，不自行计算或填报Rank IC、覆盖率、净收益或资格。
+反证与决策条件：若实际验证Rank IC为零或负，则本实验不支持预先声明的正向排序关系；训练为正而验证不为正，也不能据训练表现接纳。若无法形成足够有效标签或覆盖不足，应记为证据不足/不合格，而非把缺测冒充负结果。即使排序指标为正，是否接纳仍以冻结evaluator的真实eligible结果为准；成本后净收益非正只否定该成本口径下的经济性，不能单独证明动量方向相反。任何负面结果均保留，不据此取负、换窗、改门槛或扩展研究。
+已有反向解释与限制：开发行中，08:06:28.961Z至08:06:53.955Z的BTC、ETH、XRP记录价格完全未变，提示零收益与并列秩是实际问题，但不足以判定价格停滞原因。微观结构反转、不同品种last-price更新不同步及采样噪声均可能解释后续排序，而非动量机制。四币、极短时段、非均匀观察且受同一市场影响，不构成独立市场验证；首次预热和标签purge会进一步缩小有效样本。此阶段尚无实测评价回执，不声称显著性、普遍预测能力、可交易收益或已完成留出验证；不读取留出观察或原始引用，留出不参与本轮假设或选择。</p>
+    <dl class="inline-meta"><div><dt>研究方向</dt><dd>相邻HTTP观察的一阶相对价格动量；预测下一观察期截面收益，禁止改符号或窗口搜索</dd></div><div><dt>研究轮次</dt><dd>1</dd></div><div><dt>父试验</dt><dd>初始分支</dd></div></dl>
+    <details open><summary>选中评估能力的计算结果</summary><pre>{
+  &quot;dataDigest&quot;: &quot;sha256:cafd223feded647bfa51d9e5fcfa39056d8e1cd03b31bef8a4dec68246dee9d0&quot;,
+  &quot;evaluatorVersion&quot;: &quot;sesame-factor-ast/1.0.0&quot;,
+  &quot;expression&quot;: {
+    &quot;args&quot;: [
+      {
+        &quot;args&quot;: [
+          {
+            &quot;name&quot;: &quot;close&quot;,
+            &quot;op&quot;: &quot;field&quot;
+          },
+          {
+            &quot;args&quot;: [
+              {
+                &quot;name&quot;: &quot;close&quot;,
+                &quot;op&quot;: &quot;field&quot;
+              }
+            ],
+            &quot;op&quot;: &quot;lag&quot;,
+            &quot;window&quot;: 1
+          }
+        ],
+        &quot;op&quot;: &quot;div&quot;
+      },
+      {
+        &quot;op&quot;: &quot;constant&quot;,
+        &quot;value&quot;: 1
+      }
+    ],
+    &quot;op&quot;: &quot;sub&quot;
+  },
+  &quot;expressionDigest&quot;: &quot;sha256:f09d00c9dad412ca8b53b46361ecc7dc30fa14613787942bffbe402a323895c8&quot;,
+  &quot;limitations&quot;: [
+    &quot;This AST evaluator is an editable research baseline, not a standard answer, a significance test, or a broker backtest.&quot;,
+    &quot;Availability timestamps are checked, not independently verified. Universe selection, corporate actions, delistings and vendor revisions require separate point-in-time evidence.&quot;,
+    &quot;Forward returns use supplied closes at aligned market timestamps. Entering at the observed close is an idealized assumption; latency, liquidity, short availability, impact and borrowing costs are not modeled.&quot;,
+    &quot;Portfolio diagnostics hold half long and half short with gross exposure one. Each nonoverlapping interval starts and ends flat, incurs absolute turnover two and fixed one-way costs twice.&quot;,
+    &quot;Rank IC is the mean per-date Spearman correlation with at least four paired assets. ICIR is mean divided by sample standard deviation, not annualized or adjusted for overlapping labels.&quot;,
+    &quot;Boundary-crossing labels are purged. Missing fields or endpoints are not imputed. Tied groups crossing a quantile cutoff are omitted; this can leave a date without a portfolio.&quot;,
+    &quot;Rolling windows count observations for each symbol; forward horizon counts distinct market timestamps. Missing bars can therefore affect the effective duration.&quot;,
+    &quot;This engine cannot enforce an untouched holdout outside its caller. The workflow must freeze candidate selection and record every holdout exposure before calling holdout evaluation.&quot;
+  ],
+  &quot;protocol&quot;: {
+    &quot;costBps&quot;: 10,
+    &quot;horizon&quot;: 1,
+    &quot;horizonUnit&quot;: &quot;distinct-market-timestamps&quot;,
+    &quot;minAssets&quot;: 4,
+    &quot;portfolio&quot;: &quot;gross-one-half-long-half-short-flat-to-flat&quot;,
+    &quot;portfolioSampling&quot;: &quot;nonoverlapping&quot;,
+    &quot;quantile&quot;: 0.25,
+    &quot;rankICIR&quot;: &quot;not-annualized&quot;,
+    &quot;splitEnds&quot;: &quot;inclusive&quot;
+  },
+  &quot;train&quot;: {
+    &quot;costPerPeriod&quot;: 0.002,
+    &quot;coverage&quot;: 0.8333333333333334,
+    &quot;dates&quot;: 6,
+    &quot;eligibleObservations&quot;: 16,
+    &quot;factorObservations&quot;: 20,
+    &quot;grossMaxDrawdown&quot;: 0.00003715814506533022,
+    &quot;grossReturn&quot;: 0.00018295540079416028,
+    &quot;insolvent&quot;: false,
+    &quot;insufficientCrossSections&quot;: 2,
+    &quot;labelCoverage&quot;: 0.8333333333333334,
+    &quot;labelObservations&quot;: 20,
+    &quot;maxDrawdown&quot;: 0.0077941721257668295,
+    &quot;meanGrossReturn&quot;: 0.00004573937185992084,
+    &quot;meanNetReturn&quot;: -0.001954260628140079,
+    &quot;missingForwardRows&quot;: 0,
+    &quot;netReturn&quot;: -0.0077941721257668295,
+    &quot;numericReturnFailures&quot;: 0,
+    &quot;overlapSkippedPeriods&quot;: 0,
+    &quot;portfolioPeriods&quot;: 4,
+    &quot;purgedBoundaryRows&quot;: 4,
+    &quot;rankIC&quot;: 0.1,
+    &quot;rankICIR&quot;: 0.1889822365046136,
+    &quot;rankICMean&quot;: 0.1,
+    &quot;rankICStd&quot;: 0.5291502622129182,
+    &quot;rows&quot;: 24,
+    &quot;tiedTails&quot;: 0,
+    &quot;totalTurnover&quot;: 8,
+    &quot;turnover&quot;: 2,
+    &quot;validICPeriods&quot;: 4
+  },
+  &quot;validation&quot;: {
+    &quot;costPerPeriod&quot;: 0.002,
+    &quot;coverage&quot;: 1,
+    &quot;dates&quot;: 3,
+    &quot;eligibleObservations&quot;: 8,
+    &quot;factorObservations&quot;: 12,
+    &quot;grossMaxDrawdown&quot;: 0,
+    &quot;grossReturn&quot;: 0.00017847783969893172,
+    &quot;insolvent&quot;: false,
+    &quot;insufficientCrossSections&quot;: 1,
+    &quot;labelCoverage&quot;: 0.6666666666666666,
+    &quot;labelObservations&quot;: 8,
+    &quot;maxDrawdown&quot;: 0.001821522160301181,
+    &quot;meanGrossReturn&quot;: 0.0001784778396988207,
+    &quot;meanNetReturn&quot;: -0.0018215221603011793,
+    &quot;missingForwardRows&quot;: 0,
+    &quot;netReturn&quot;: -0.001821522160301181,
+    &quot;numericReturnFailures&quot;: 0,
+    &quot;overlapSkippedPeriods&quot;: 0,
+    &quot;portfolioPeriods&quot;: 1,
+    &quot;purgedBoundaryRows&quot;: 4,
+    &quot;rankIC&quot;: 0.5290994448735805,
+    &quot;rankICIR&quot;: 1.38105957449055,
+    &quot;rankICMean&quot;: 0.5290994448735805,
+    &quot;rankICStd&quot;: 0.3831112391141827,
+    &quot;rows&quot;: 12,
+    &quot;tiedTails&quot;: 1,
+    &quot;totalTurnover&quot;: 2,
+    &quot;turnover&quot;: 2,
+    &quot;validICPeriods&quot;: 2
+  }
+}</pre></details>
+    <div class="review positive"><span class="eyebrow">评审意见 · 接纳</span><p>Human-language review omitted by the frozen workflow; acceptance uses the actual evaluator eligibility gate.</p><p><strong>确定性门槛已通过：</strong>validation threshold passed; not proof of tradability</p></div>
+    <details><summary>评估口径、样本诊断与局限</summary><p class="digest">引擎 sesame-factor-ast/1.0.0 · 数据 sha256:cafd223feded647bfa51d9e5fcfa39056d8e1cd03b31bef8a4dec68246dee9d0</p><pre>{
+  &quot;metrics&quot;: {
+    &quot;dataDigest&quot;: &quot;sha256:cafd223feded647bfa51d9e5fcfa39056d8e1cd03b31bef8a4dec68246dee9d0&quot;,
+    &quot;evaluatorVersion&quot;: &quot;sesame-factor-ast/1.0.0&quot;,
+    &quot;expression&quot;: {
+      &quot;args&quot;: [
+        {
+          &quot;args&quot;: [
+            {
+              &quot;name&quot;: &quot;close&quot;,
+              &quot;op&quot;: &quot;field&quot;
+            },
+            {
+              &quot;args&quot;: [
+                {
+                  &quot;name&quot;: &quot;close&quot;,
+                  &quot;op&quot;: &quot;field&quot;
+                }
+              ],
+              &quot;op&quot;: &quot;lag&quot;,
+              &quot;window&quot;: 1
+            }
+          ],
+          &quot;op&quot;: &quot;div&quot;
+        },
+        {
+          &quot;op&quot;: &quot;constant&quot;,
+          &quot;value&quot;: 1
+        }
+      ],
+      &quot;op&quot;: &quot;sub&quot;
+    },
+    &quot;expressionDigest&quot;: &quot;sha256:f09d00c9dad412ca8b53b46361ecc7dc30fa14613787942bffbe402a323895c8&quot;,
+    &quot;limitations&quot;: [
+      &quot;This AST evaluator is an editable research baseline, not a standard answer, a significance test, or a broker backtest.&quot;,
+      &quot;Availability timestamps are checked, not independently verified. Universe selection, corporate actions, delistings and vendor revisions require separate point-in-time evidence.&quot;,
+      &quot;Forward returns use supplied closes at aligned market timestamps. Entering at the observed close is an idealized assumption; latency, liquidity, short availability, impact and borrowing costs are not modeled.&quot;,
+      &quot;Portfolio diagnostics hold half long and half short with gross exposure one. Each nonoverlapping interval starts and ends flat, incurs absolute turnover two and fixed one-way costs twice.&quot;,
+      &quot;Rank IC is the mean per-date Spearman correlation with at least four paired assets. ICIR is mean divided by sample standard deviation, not annualized or adjusted for overlapping labels.&quot;,
+      &quot;Boundary-crossing labels are purged. Missing fields or endpoints are not imputed. Tied groups crossing a quantile cutoff are omitted; this can leave a date without a portfolio.&quot;,
+      &quot;Rolling windows count observations for each symbol; forward horizon counts distinct market timestamps. Missing bars can therefore affect the effective duration.&quot;,
+      &quot;This engine cannot enforce an untouched holdout outside its caller. The workflow must freeze candidate selection and record every holdout exposure before calling holdout evaluation.&quot;
+    ],
+    &quot;protocol&quot;: {
+      &quot;costBps&quot;: 10,
+      &quot;horizon&quot;: 1,
+      &quot;horizonUnit&quot;: &quot;distinct-market-timestamps&quot;,
+      &quot;minAssets&quot;: 4,
+      &quot;portfolio&quot;: &quot;gross-one-half-long-half-short-flat-to-flat&quot;,
+      &quot;portfolioSampling&quot;: &quot;nonoverlapping&quot;,
+      &quot;quantile&quot;: 0.25,
+      &quot;rankICIR&quot;: &quot;not-annualized&quot;,
+      &quot;splitEnds&quot;: &quot;inclusive&quot;
+    },
+    &quot;train&quot;: {
+      &quot;costPerPeriod&quot;: 0.002,
+      &quot;coverage&quot;: 0.8333333333333334,
+      &quot;dates&quot;: 6,
+      &quot;eligibleObservations&quot;: 16,
+      &quot;factorObservations&quot;: 20,
+      &quot;grossMaxDrawdown&quot;: 0.00003715814506533022,
+      &quot;grossReturn&quot;: 0.00018295540079416028,
+      &quot;insolvent&quot;: false,
+      &quot;insufficientCrossSections&quot;: 2,
+      &quot;labelCoverage&quot;: 0.8333333333333334,
+      &quot;labelObservations&quot;: 20,
+      &quot;maxDrawdown&quot;: 0.0077941721257668295,
+      &quot;meanGrossReturn&quot;: 0.00004573937185992084,
+      &quot;meanNetReturn&quot;: -0.001954260628140079,
+      &quot;missingForwardRows&quot;: 0,
+      &quot;netReturn&quot;: -0.0077941721257668295,
+      &quot;numericReturnFailures&quot;: 0,
+      &quot;overlapSkippedPeriods&quot;: 0,
+      &quot;portfolioPeriods&quot;: 4,
+      &quot;purgedBoundaryRows&quot;: 4,
+      &quot;rankIC&quot;: 0.1,
+      &quot;rankICIR&quot;: 0.1889822365046136,
+      &quot;rankICMean&quot;: 0.1,
+      &quot;rankICStd&quot;: 0.5291502622129182,
+      &quot;rows&quot;: 24,
+      &quot;tiedTails&quot;: 0,
+      &quot;totalTurnover&quot;: 8,
+      &quot;turnover&quot;: 2,
+      &quot;validICPeriods&quot;: 4
+    },
+    &quot;validation&quot;: {
+      &quot;costPerPeriod&quot;: 0.002,
+      &quot;coverage&quot;: 1,
+      &quot;dates&quot;: 3,
+      &quot;eligibleObservations&quot;: 8,
+      &quot;factorObservations&quot;: 12,
+      &quot;grossMaxDrawdown&quot;: 0,
+      &quot;grossReturn&quot;: 0.00017847783969893172,
+      &quot;insolvent&quot;: false,
+      &quot;insufficientCrossSections&quot;: 1,
+      &quot;labelCoverage&quot;: 0.6666666666666666,
+      &quot;labelObservations&quot;: 8,
+      &quot;maxDrawdown&quot;: 0.001821522160301181,
+      &quot;meanGrossReturn&quot;: 0.0001784778396988207,
+      &quot;meanNetReturn&quot;: -0.0018215221603011793,
+      &quot;missingForwardRows&quot;: 0,
+      &quot;netReturn&quot;: -0.001821522160301181,
+      &quot;numericReturnFailures&quot;: 0,
+      &quot;overlapSkippedPeriods&quot;: 0,
+      &quot;portfolioPeriods&quot;: 1,
+      &quot;purgedBoundaryRows&quot;: 4,
+      &quot;rankIC&quot;: 0.5290994448735805,
+      &quot;rankICIR&quot;: 1.38105957449055,
+      &quot;rankICMean&quot;: 0.5290994448735805,
+      &quot;rankICStd&quot;: 0.3831112391141827,
+      &quot;rows&quot;: 12,
+      &quot;tiedTails&quot;: 1,
+      &quot;totalTurnover&quot;: 2,
+      &quot;turnover&quot;: 2,
+      &quot;validICPeriods&quot;: 2
+    }
+  },
+  &quot;redundancy&quot;: [],
+  &quot;receiptDigest&quot;: &quot;sha256:5cc988c6e0b29dcd34494bc50e2cd36dd18f4820dc6bfa487daafdb29ec0a719&quot;
+}</pre></details>
+    
+    <details><summary>因子表达式与执行记录 <span>2 项任务</span></summary><pre>{
+  &quot;args&quot;: [
+    {
+      &quot;args&quot;: [
+        {
+          &quot;name&quot;: &quot;close&quot;,
+          &quot;op&quot;: &quot;field&quot;
+        },
+        {
+          &quot;args&quot;: [
+            {
+              &quot;name&quot;: &quot;close&quot;,
+              &quot;op&quot;: &quot;field&quot;
+            }
+          ],
+          &quot;op&quot;: &quot;lag&quot;,
+          &quot;window&quot;: 1
+        }
+      ],
+      &quot;op&quot;: &quot;div&quot;
+    },
+    {
+      &quot;op&quot;: &quot;constant&quot;,
+      &quot;value&quot;: 1
+    }
+  ],
+  &quot;op&quot;: &quot;sub&quot;
+}</pre><p class="digest">候选指纹：sha256:a0cfd4a431466abcc755945767feaf980cd4e5cd9daf629d40fb41609f46e11c</p><ul class="task-log"><li><div><strong>quant</strong><span class="status positive">已完成</span></div><p>openai / gpt-6.1-sol</p><small>assignment_6a5f0c2c14c36f8fc41ffb653460ee48 · 2026-10-21 08:15:03 UTC</small><details><summary>查看结构化输出</summary><pre>{
+  &quot;hypothesis&quot;: &quot;固定正向的一阶相对价格动量假设：以同一品种按实际HTTP抓取时间排序的相邻观察为单位，在时点t取得本次last-price后，定义m(i,t)=close(i,t)/close(i,t-1)-1。对于BTCUSDT、ETHUSDT、SOLUSDT、XRPUSDT，上一观察期m较高的品种，下一观察期相对收益r(i,t+1)=close(i,t+1)/close(i,t)-1应较高，即开发集可评价验证截面的平均Rank IC应为正。仅检验这个固定正号、滞后1个观察步、预测1个观察步的候选，不取负、不换窗口、不搜索参数；相对价格变化指比例变化，不是绝对价格差，也不声称市场中性化。&quot;,
+  &quot;rationale&quot;: &quot;输入与时点：只使用auto_factor_context返回的冻结开发面板，digest=sha256:6f421bf3da5a53f018241c22e75f400f85309b605d1449689d2feaa654519ca2；字段仅close，36行、4个品种、9次观察，范围为2026-10-21T08:02:53.754Z至08:07:39.530Z。time与availableAt均为实际HTTP抓取时刻；close是当次last-price，不是K线收盘、成交发生时刻或可执行报价。训练截止08:06:28.961Z，验证截止08:07:39.530Z；切分前分别为24/12行，不能将其当作独立有效标签数。\n方法与经济含义：比例变化消除四币价格量级差异；逐品种lag=1限定信息只来自t及此前，截面排序检验相对强弱能否延续。潜在机制是短时订单流持续或信息消化不完全，但面板没有订单流、盘口或成交时间证据，机制仅是待检验解释。没有加载额外方法插件，也不把同一close的变换当作独立验证。\n实施交接：数学意图固定为close/lag(close,1)-1，首个观察缺少历史时不填造信号，不以未来数据补齐；下一观察收益仅作标签，不能进入t时信号。预测horizon=1是一个不等长观察步，不是固定分钟或小时，不插值或改为按时间归一化的另一候选。独立evaluator负责预热、缺失、跨切分标签purge、并列秩及真实评价；使用其冻结的horizon=1、quantile=0.25、costBps=10设置，不自行计算或填报Rank IC、覆盖率、净收益或资格。\n反证与决策条件：若实际验证Rank IC为零或负，则本实验不支持预先声明的正向排序关系；训练为正而验证不为正，也不能据训练表现接纳。若无法形成足够有效标签或覆盖不足，应记为证据不足/不合格，而非把缺测冒充负结果。即使排序指标为正，是否接纳仍以冻结evaluator的真实eligible结果为准；成本后净收益非正只否定该成本口径下的经济性，不能单独证明动量方向相反。任何负面结果均保留，不据此取负、换窗、改门槛或扩展研究。\n已有反向解释与限制：开发行中，08:06:28.961Z至08:06:53.955Z的BTC、ETH、XRP记录价格完全未变，提示零收益与并列秩是实际问题，但不足以判定价格停滞原因。微观结构反转、不同品种last-price更新不同步及采样噪声均可能解释后续排序，而非动量机制。四币、极短时段、非均匀观察且受同一市场影响，不构成独立市场验证；首次预热和标签purge会进一步缩小有效样本。此阶段尚无实测评价回执，不声称显著性、普遍预测能力、可交易收益或已完成留出验证；不读取留出观察或原始引用，留出不参与本轮假设或选择。&quot;
+}</pre></details></li><li><div><strong>quant</strong><span class="status positive">已完成</span></div><p>openai / gpt-6.1-sol</p><small>assignment_b5fe00765f79943e11bc45964c4ae204 · 2026-10-21 08:17:01 UTC</small><details><summary>查看结构化输出</summary><pre>{
+  &quot;candidate&quot;: {
+    &quot;op&quot;: &quot;sub&quot;,
+    &quot;args&quot;: [
+      {
+        &quot;op&quot;: &quot;div&quot;,
+        &quot;args&quot;: [
+          {
+            &quot;op&quot;: &quot;field&quot;,
+            &quot;name&quot;: &quot;close&quot;
+          },
+          {
+            &quot;op&quot;: &quot;lag&quot;,
+            &quot;args&quot;: [
+              {
+                &quot;op&quot;: &quot;field&quot;,
+                &quot;name&quot;: &quot;close&quot;
+              }
+            ],
+            &quot;window&quot;: 1
+          }
+        ]
+      },
+      {
+        &quot;op&quot;: &quot;constant&quot;,
+        &quot;value&quot;: 1
+      }
+    ]
+  },
+  &quot;explanation&quot;: &quot;方法与假设映射：按当前auto_factor_context的factor AST合同，以sub(div(field(close),lag(field(close),window=1)),constant(1))精确表达m(i,t)=close(i,t)/close(i,t-1)-1。沿用trial_r0_7a7b7317c5f8已保存的正向一阶相对价格动量假设；这是第0轮唯一候选，无父版本，不提交parentId，不引入新特征、取负、窗口搜索或门槛调整。lag是同一品种前一观察步，不是固定分钟或小时；比例变化并非绝对价格差。\n输入与时点：复用上下文冻结开发证据，digest=sha256:6f421bf3da5a53f018241c22e75f400f85309b605d1449689d2feaa654519ca2，字段仅close；开发集36行、4个品种、9次观察，范围2026-10-21T08:02:53.754Z至08:07:39.530Z。close为本次HTTP抓取的last-price，time与availableAt为实际抓取时刻，并非K线收盘、实际成交时点或可执行报价。信号仅使用t和t以前的close；下一观察期收益只作evaluator标签，不进入AST。使用冻结的horizon=1、quantile=0.25、costBps=10，训练截止08:06:28.961Z、验证截止08:07:39.530Z（均UTC）。评估能力为sesame/factor-evaluator 1.0.2、数据契约所示evaluatorVersion=sesame-factor-ast/1.0.0；不另写评价计算。\n缺失与预热：每个品种首次观察缺少lag=1历史，不能形成此比例信号；AST不作零填充、前后填充或未来补齐。若close或滞后价格缺失，或分母为零，不将其解释成零动量；具体缺失/非有限值处理和有效覆盖以evaluator实际回执为准。时序预热、跨切分标签purge及有效样本数亦由evaluator处理，不以切分前行数替代有效标签数。\n可证伪性及现有反证：正向假设要求验证截面平均Rank IC为正，若真实验证Rank IC为零或负则本实验不支持该方向；覆盖不足或有效标签过少应记录为证据不足/不合格。上游开发证据已记录相邻抓取中部分币种价格未变，提示零收益与并列秩问题，不据此猜测更新原因。资格只依据真实eligible，成本后非正结果不触发取负或改窗。提交前没有评价回执，未填报任何模型生成指标。\n局限与交接：仅四币、极短且不等间隔的HTTP观察，共同市场暴露、last-price不同步、并列秩、首次预热和标签purge均限制解释；样本不能支持显著性、普遍预测能力或可交易盈利结论。未读取留出观察或原始引用，留出不参与实现或选择；本候选及其实际评价回执交由后续固定选择阶段复用。&quot;,
+  &quot;evaluation&quot;: {
+    &quot;action&quot;: &quot;candidate&quot;,
+    &quot;candidate&quot;: {
+      &quot;args&quot;: [
+        {
+          &quot;args&quot;: [
+            {
+              &quot;name&quot;: &quot;close&quot;,
+              &quot;op&quot;: &quot;field&quot;
+            },
+            {
+              &quot;args&quot;: [
+                {
+                  &quot;name&quot;: &quot;close&quot;,
+                  &quot;op&quot;: &quot;field&quot;
+                }
+              ],
+              &quot;op&quot;: &quot;lag&quot;,
+              &quot;window&quot;: 1
+            }
+          ],
+          &quot;op&quot;: &quot;div&quot;
+        },
+        {
+          &quot;op&quot;: &quot;constant&quot;,
+          &quot;value&quot;: 1
+        }
+      ],
+      &quot;op&quot;: &quot;sub&quot;
+    },
+    &quot;candidateDigest&quot;: &quot;sha256:a0cfd4a431466abcc755945767feaf980cd4e5cd9daf629d40fb41609f46e11c&quot;,
+    &quot;eligible&quot;: true,
+    &quot;gate&quot;: &quot;validation threshold passed; not proof of tradability&quot;,
+    &quot;metrics&quot;: {
+      &quot;dataDigest&quot;: &quot;sha256:cafd223feded647bfa51d9e5fcfa39056d8e1cd03b31bef8a4dec68246dee9d0&quot;,
+      &quot;evaluatorVersion&quot;: &quot;sesame-factor-ast/1.0.0&quot;,
+      &quot;expression&quot;: {
+        &quot;args&quot;: [
+          {
+            &quot;args&quot;: [
+              {
+                &quot;name&quot;: &quot;close&quot;,
+                &quot;op&quot;: &quot;field&quot;
+              },
+              {
+                &quot;args&quot;: [
+                  {
+                    &quot;name&quot;: &quot;close&quot;,
+                    &quot;op&quot;: &quot;field&quot;
+                  }
+                ],
+                &quot;op&quot;: &quot;lag&quot;,
+                &quot;window&quot;: 1
+              }
+            ],
+            &quot;op&quot;: &quot;div&quot;
+          },
+          {
+            &quot;op&quot;: &quot;constant&quot;,
+            &quot;value&quot;: 1
+          }
+        ],
+        &quot;op&quot;: &quot;sub&quot;
+      },
+      &quot;expressionDigest&quot;: &quot;sha256:f09d00c9dad412ca8b53b46361ecc7dc30fa14613787942bffbe402a323895c8&quot;,
+      &quot;limitations&quot;: [
+        &quot;This AST evaluator is an editable research baseline, not a standard answer, a significance test, or a broker backtest.&quot;,
+        &quot;Availability timestamps are checked, not independently verified. Universe selection, corporate actions, delistings and vendor revisions require separate point-in-time evidence.&quot;,
+        &quot;Forward returns use supplied closes at aligned market timestamps. Entering at the observed close is an idealized assumption; latency, liquidity, short availability, impact and borrowing costs are not modeled.&quot;,
+        &quot;Portfolio diagnostics hold half long and half short with gross exposure one. Each nonoverlapping interval starts and ends flat, incurs absolute turnover two and fixed one-way costs twice.&quot;,
+        &quot;Rank IC is the mean per-date Spearman correlation with at least four paired assets. ICIR is mean divided by sample standard deviation, not annualized or adjusted for overlapping labels.&quot;,
+        &quot;Boundary-crossing labels are purged. Missing fields or endpoints are not imputed. Tied groups crossing a quantile cutoff are omitted; this can leave a date without a portfolio.&quot;,
+        &quot;Rolling windows count observations for each symbol; forward horizon counts distinct market timestamps. Missing bars can therefore affect the effective duration.&quot;,
+        &quot;This engine cannot enforce an untouched holdout outside its caller. The workflow must freeze candidate selection and record every holdout exposure before calling holdout evaluation.&quot;
+      ],
+      &quot;protocol&quot;: {
+        &quot;costBps&quot;: 10,
+        &quot;horizon&quot;: 1,
+        &quot;horizonUnit&quot;: &quot;distinct-market-timestamps&quot;,
+        &quot;minAssets&quot;: 4,
+        &quot;portfolio&quot;: &quot;gross-one-half-long-half-short-flat-to-flat&quot;,
+        &quot;portfolioSampling&quot;: &quot;nonoverlapping&quot;,
+        &quot;quantile&quot;: 0.25,
+        &quot;rankICIR&quot;: &quot;not-annualized&quot;,
+        &quot;splitEnds&quot;: &quot;inclusive&quot;
+      },
+      &quot;train&quot;: {
+        &quot;costPerPeriod&quot;: 0.002,
+        &quot;coverage&quot;: 0.8333333333333334,
+        &quot;dates&quot;: 6,
+        &quot;eligibleObservations&quot;: 16,
+        &quot;factorObservations&quot;: 20,
+        &quot;grossMaxDrawdown&quot;: 0.00003715814506533022,
+        &quot;grossReturn&quot;: 0.00018295540079416028,
+        &quot;insolvent&quot;: false,
+        &quot;insufficientCrossSections&quot;: 2,
+        &quot;labelCoverage&quot;: 0.8333333333333334,
+        &quot;labelObservations&quot;: 20,
+        &quot;maxDrawdown&quot;: 0.0077941721257668295,
+        &quot;meanGrossReturn&quot;: 0.00004573937185992084,
+        &quot;meanNetReturn&quot;: -0.001954260628140079,
+        &quot;missingForwardRows&quot;: 0,
+        &quot;netReturn&quot;: -0.0077941721257668295,
+        &quot;numericReturnFailures&quot;: 0,
+        &quot;overlapSkippedPeriods&quot;: 0,
+        &quot;portfolioPeriods&quot;: 4,
+        &quot;purgedBoundaryRows&quot;: 4,
+        &quot;rankIC&quot;: 0.1,
+        &quot;rankICIR&quot;: 0.1889822365046136,
+        &quot;rankICMean&quot;: 0.1,
+        &quot;rankICStd&quot;: 0.5291502622129182,
+        &quot;rows&quot;: 24,
+        &quot;tiedTails&quot;: 0,
+        &quot;totalTurnover&quot;: 8,
+        &quot;turnover&quot;: 2,
+        &quot;validICPeriods&quot;: 4
+      },
+      &quot;validation&quot;: {
+        &quot;costPerPeriod&quot;: 0.002,
+        &quot;coverage&quot;: 1,
+        &quot;dates&quot;: 3,
+        &quot;eligibleObservations&quot;: 8,
+        &quot;factorObservations&quot;: 12,
+        &quot;grossMaxDrawdown&quot;: 0,
+        &quot;grossReturn&quot;: 0.00017847783969893172,
+        &quot;insolvent&quot;: false,
+        &quot;insufficientCrossSections&quot;: 1,
+        &quot;labelCoverage&quot;: 0.6666666666666666,
+        &quot;labelObservations&quot;: 8,
+        &quot;maxDrawdown&quot;: 0.001821522160301181,
+        &quot;meanGrossReturn&quot;: 0.0001784778396988207,
+        &quot;meanNetReturn&quot;: -0.0018215221603011793,
+        &quot;missingForwardRows&quot;: 0,
+        &quot;netReturn&quot;: -0.001821522160301181,
+        &quot;numericReturnFailures&quot;: 0,
+        &quot;overlapSkippedPeriods&quot;: 0,
+        &quot;portfolioPeriods&quot;: 1,
+        &quot;purgedBoundaryRows&quot;: 4,
+        &quot;rankIC&quot;: 0.5290994448735805,
+        &quot;rankICIR&quot;: 1.38105957449055,
+        &quot;rankICMean&quot;: 0.5290994448735805,
+        &quot;rankICStd&quot;: 0.3831112391141827,
+        &quot;rows&quot;: 12,
+        &quot;tiedTails&quot;: 1,
+        &quot;totalTurnover&quot;: 2,
+        &quot;turnover&quot;: 2,
+        &quot;validICPeriods&quot;: 2
+      }
+    },
+    &quot;protocol&quot;: &quot;sesame.factor-evaluator/v1&quot;,
+    &quot;receiptDigest&quot;: &quot;sha256:5cc988c6e0b29dcd34494bc50e2cd36dd18f4820dc6bfa487daafdb29ec0a719&quot;,
+    &quot;redundancy&quot;: [],
+    &quot;runId&quot;: &quot;fm_1f92dfb506dff8474920e5ff02a508cf&quot;,
+    &quot;sessionId&quot;: &quot;fe_53cee6c8cf9938f52c9d46341636f93e&quot;,
+    &quot;trialId&quot;: &quot;trial_r0_7a7b7317c5f8&quot;
+  }
+}</pre></details></li></ul></details>
+  </article><p class="empty detail-empty" id="trial-empty" hidden>暂无匹配的试验。</p></div></div></section>
+<section id="selection"><header><span class="section-num">04</span><h2>最终选择与评估</h2></header><div class="selection-summary"><span class="seal">已冻结</span><div><h3>1 个最终候选</h3><p>冻结选择唯一候选trial_r0_7a7b7317c5f8，限定为本实验的合格研究候选，不认定其可交易或普遍有效。方法为预先固定的正向一阶相对价格动量close/lag(close,1)-1，预测下一观察步截面收益；不取负、不换窗口、不改门槛。依据auto_factor_context返回的真实trial及evaluationReceipt，而非角色赞同：status=accepted、eligible=true，实际gate为“validation threshold passed; not proof of tradability”。候选回执receiptDigest=sha256:5cc988c6e0b29dcd34494bc50e2cd36dd18f4820dc6bfa487daafdb29ec0a719，candidateDigest=sha256:a0cfd4a431466abcc755945767feaf980cd4e5cd9daf629d40fb41609f46e11c；评价版本sesame-factor-ast/1.0.0。
+实测取舍：训练Rank IC=0.1，验证Rank IC=0.5290994448735805，分别仅4、2个有效IC截面；因子coverage分别为0.8333333333333334、1，验证labelCoverage仅0.6666666666666666，不能把因子覆盖100%解释为标签完整。训练24行、验证12行，各purgedBoundaryRows=4；验证eligibleObservations=8，只有1个组合评价期且tiedTails=1。正向验证排序结果支持在冻结门槛内保留此研究候选，但不足以推断显著性或稳定性。反证必须同时保留：真实训练netReturn=-0.0077941721257668295、验证netReturn=-0.001821522160301181；验证grossReturn=0.00017847783969893172，未覆盖该回执的成本口径。固定horizon=1个不同观察时刻、quantile=0.25、单边costBps=10；评价器组合为总敞口1、半多半空、每期平仓再建，costPerPeriod=0.002。成本后诊断为负，不能声称盈利，也不据此把信号改为反向。
+相关性与适用边界：账本只有这1个候选，redundancy=[]，无候选间相关性可比较；空冗余记录不证明低相关、独立性或分散化。开发证据digest=sha256:6f421bf3da5a53f018241c22e75f400f85309b605d1449689d2feaa654519ca2，36行、4币、9次HTTP观察，UTC 2026-10-21T08:02:53.754Z至08:07:39.530Z；训练截止08:06:28.961Z，验证截止08:07:39.530Z。评价回执另记dataDigest=sha256:cafd223feded647bfa51d9e5fcfa39056d8e1cd03b31bef8a4dec68246dee9d0，原样保留，不与开发视图摘要混同。time/availableAt为实际抓取时刻，close仅为当次last-price，不是固定周期K线、实际成交时刻或可执行报价；不等长观察步、共同市场暴露、价格更新不同步及并列秩均限制外推。评价器仅检查可得时间戳，未独立核验，也未模拟延迟、流动性、冲击或借币成本；本结果不是显著性检验或券商回测。未读取或计算留出数据，不用留出结果选择或调参。提交后由独立evaluator复核选择资格与冗余，由原生工作流执行finalize和正常报告归档；本角色不代写报告、不声称已归档。</p><p class="mono">trial_r0_7a7b7317c5f8</p></div></div><p class="digest">选择指纹：sha256:e72872bdf347db915347189f69ad36a9beecba6d258369297b718ebadc7632b1</p><details open><summary>冻结后的最终评估回执</summary><pre>{
+  &quot;trial_r0_7a7b7317c5f8&quot;: {
+    &quot;costPerPeriod&quot;: 0.002,
+    &quot;coverage&quot;: 1,
+    &quot;dates&quot;: 3,
+    &quot;eligibleObservations&quot;: 8,
+    &quot;factorObservations&quot;: 12,
+    &quot;grossMaxDrawdown&quot;: 0.00008956740806664865,
+    &quot;grossReturn&quot;: 0.000012264115747617765,
+    &quot;insolvent&quot;: false,
+    &quot;insufficientCrossSections&quot;: 1,
+    &quot;labelCoverage&quot;: 0.6666666666666666,
+    &quot;labelObservations&quot;: 8,
+    &quot;maxDrawdown&quot;: 0.0039837604307270125,
+    &quot;meanGrossReturn&quot;: 0.000006136618675128825,
+    &quot;meanNetReturn&quot;: -0.0019938633813248712,
+    &quot;missingForwardRows&quot;: 0,
+    &quot;netReturn&quot;: -0.0039837604307270125,
+    &quot;numericReturnFailures&quot;: 0,
+    &quot;overlapSkippedPeriods&quot;: 0,
+    &quot;portfolioPeriods&quot;: 2,
+    &quot;purgedBoundaryRows&quot;: 4,
+    &quot;rankIC&quot;: 0,
+    &quot;rankICIR&quot;: 0,
+    &quot;rankICMean&quot;: 0,
+    &quot;rankICStd&quot;: 1.1313708498984762,
+    &quot;rows&quot;: 12,
+    &quot;tiedTails&quot;: 0,
+    &quot;totalTurnover&quot;: 4,
+    &quot;turnover&quot;: 2,
+    &quot;validICPeriods&quot;: 2
+  }
+}</pre></details></section>
+<section id="timeline"><header><span class="section-num">05</span><h2>协作记录</h2><p>10 条事件</p></header><ol class="events"><li class="event" data-event="0"><time>2026-10-21 08:13:24 UTC</time><span class="event-role">系统</span><p>固定输入、时间分割、模型和研究范围，开始因子研究<small>created</small></p></li><li class="event" data-event="1"><time>2026-10-21 08:14:41 UTC</time><span class="event-role">quant</span><p>quant 提交了结构化 hypothesis<small>submitted · trial_r0_7a7b7317c5f8</small></p></li><li class="event" data-event="2"><time>2026-10-21 08:15:03 UTC</time><span class="event-role">quant</span><p>quant 已保存 hypothesis<small>task_finished · trial_r0_7a7b7317c5f8</small></p></li><li class="event" data-event="3"><time>2026-10-21 08:15:59 UTC</time><span class="event-role">quant</span><p>quant 提交了结构化 code<small>submitted · trial_r0_7a7b7317c5f8</small></p></li><li class="event" data-event="4"><time>2026-10-21 08:17:01 UTC</time><span class="event-role">quant</span><p>quant 已保存 code<small>task_finished · trial_r0_7a7b7317c5f8</small></p></li><li class="event" data-event="5"><time>2026-10-21 08:17:01 UTC</time><span class="event-role">系统</span><p>选中的评估能力已返回计算回执<small>evaluated · trial_r0_7a7b7317c5f8</small></p></li><li class="event" data-event="6"><time>2026-10-21 08:20:30 UTC</time><span class="event-role">quant</span><p>quant 提交了结构化 selection<small>submitted</small></p></li><li class="event" data-event="7"><time>2026-10-21 08:21:03 UTC</time><span class="event-role">quant</span><p>quant 已保存 selection<small>task_finished</small></p></li><li class="event" data-event="8"><time>2026-10-21 08:21:03 UTC</time><span class="event-role">系统</span><p>冻结 1 个候选，交由所选评估能力完成最终评价<small>selection_frozen</small></p></li><li class="event" data-event="9"><time>2026-10-21 08:21:05 UTC</time><span class="event-role">系统</span><p>研究完成；候选与评估回执可复核<small>completed</small></p></li></ol></section>
+<section id="reproducibility"><header><span class="section-num">06</span><h2>复现依据</h2></header><dl class="provenance"><div><dt>运行标识</dt><dd class="mono">fm_1f92dfb506dff8474920e5ff02a508cf</dd></div><div><dt>创建时间</dt><dd>2026-10-21 08:13:24 UTC</dd></div><div><dt>数据指纹</dt><dd class="mono">sha256:6f421bf3da5a53f018241c22e75f400f85309b605d1449689d2feaa654519ca2</dd></div><div><dt>数据规模</dt><dd>36 行 / 4 个标的</dd></div><div><dt>可用字段</dt><dd class="mono">close</dd></div><div><dt>数据时间范围</dt><dd class="mono">{
+  &quot;end&quot;: &quot;2026-10-21T08:07:39.530Z&quot;,
+  &quot;start&quot;: &quot;2026-10-21T08:02:53.754Z&quot;
+}</dd></div><div><dt>选中的评估工具</dt><dd>sesame/factor-evaluator / factor_evaluate</dd></div><div><dt>报告目录</dt><dd class="mono">自动因子挖掘</dd></div></dl><details><summary>完整配置与数据身份</summary><pre>{
+  &quot;config&quot;: {
+    &quot;model&quot;: {
+      &quot;provider&quot;: &quot;openai&quot;,
+      &quot;id&quot;: &quot;gpt-6.1-sol&quot;,
+      &quot;configurationDigest&quot;: &quot;sha256:7d8a463df46283bf926cb1b7bdaa75754b08e61546163f271522c4c431feed49&quot;
+    },
+    &quot;agentModels&quot;: {
+      &quot;quant&quot;: {
+        &quot;provider&quot;: &quot;openai&quot;,
+        &quot;id&quot;: &quot;gpt-6.1-sol&quot;,
+        &quot;configurationDigest&quot;: &quot;sha256:7d8a463df46283bf926cb1b7bdaa75754b08e61546163f271522c4c431feed49&quot;
+      }
+    },
+    &quot;directions&quot;: [
+      &quot;相邻HTTP观察的一阶相对价格动量；预测下一观察期截面收益，禁止改符号或窗口搜索&quot;
+    ],
+    &quot;research&quot;: {
+      &quot;plugins&quot;: [],
+      &quot;tools&quot;: [],
+      &quot;descriptors&quot;: []
+    },
+    &quot;evaluator&quot;: {
+      &quot;plugin_id&quot;: &quot;sesame/factor-evaluator&quot;,
+      &quot;tool&quot;: &quot;factor_evaluate&quot;,
+      &quot;arguments&quot;: {
+        &quot;inputRef&quot;: {
+          &quot;id&quot;: &quot;artifact_41c6e8fa-dd3d-43b6-a81c-fd5d58897a5e&quot;,
+          &quot;revision&quot;: &quot;revision_df616f52-59fc-44f7-b39e-dfef813c5ff5&quot;,
+          &quot;digest&quot;: &quot;sha256:22715299d8f054325601533dfb6c09c05eafdf29ee9ebf1dc95a136fd519ef24&quot;,
+          &quot;kind&quot;: &quot;data&quot;,
+          &quot;schemaVersion&quot;: &quot;1.0.0&quot;
+        },
+        &quot;dataset&quot;: {
+          &quot;trainEnd&quot;: &quot;2026-10-21T08:06:28.961Z&quot;,
+          &quot;validationEnd&quot;: &quot;2026-10-21T08:07:39.530Z&quot;,
+          &quot;holdoutEnd&quot;: &quot;2026-10-21T08:08:51.552Z&quot;,
+          &quot;horizon&quot;: 1,
+          &quot;costBps&quot;: 10,
+          &quot;quantile&quot;: 0.25
+        },
+        &quot;minRankIC&quot;: 0,
+        &quot;minCoverage&quot;: 0.6,
+        &quot;maxCorrelation&quot;: 0.95
+      },
+      &quot;descriptor&quot;: {
+        &quot;id&quot;: &quot;sesame/factor-evaluator&quot;,
+        &quot;version&quot;: &quot;1.0.2&quot;,
+        &quot;digest&quot;: &quot;sha256:c1a5f054eebda68e4817829e99b931461b5be7d91ec0aeb0a1d3f5715334f167&quot;
+      }
+    },
+    &quot;workflow&quot;: {
+      &quot;plan&quot;: null,
+      &quot;hypothesis&quot;: {
+        &quot;id&quot;: &quot;quant&quot;,
+        &quot;title&quot;: &quot;数值因子研究员&quot;,
+        &quot;instructions&quot;: &quot;只用auto_factor_context提供的冻结开发证据，提出一个上一观察期相对价格动量预测下一观察期截面收益的可证伪假设。观察步长不是固定分钟/小时，样本极小。不读原始留出引用、不联网、不安装。务必读取当前assignment.expectedOutput，并在结束前由你本人调用auto_factor_submit保存该假设；只写文字不算提交。说明反证和限制，不代填测量指标。&quot;
+      },
+      &quot;code&quot;: {
+        &quot;id&quot;: &quot;quant&quot;,
+        &quot;title&quot;: &quot;数值因子研究员&quot;,
+        &quot;instructions&quot;: &quot;依据当前auto_factor_context的evaluator合同，把已提交的一阶相对价格动量假设表达成其合法AST；数学意图为close/lag(close,1)-1。不猜AST键，按当前合同形状提交candidate和explanation。只允许此一个候选，不按评价结果换窗口、取负或改门槛。你本人必须在结束前调用auto_factor_submit，并读取实际evaluation回执；模型给的数字不是评估。明确缺失/预热与小样本限制。&quot;
+      },
+      &quot;review&quot;: null,
+      &quot;reflection&quot;: null,
+      &quot;selection&quot;: {
+        &quot;id&quot;: &quot;quant&quot;,
+        &quot;title&quot;: &quot;数值因子研究员&quot;,
+        &quot;instructions&quot;: &quot;读取auto_factor_context中的真实trial/evaluation证据；只选择已接受且eligible为true的trialIds，不合格则提交trialIds=[]。由你本人在结束前调用auto_factor_submit冻结选择，说明实测指标及短样本、非均匀HTTP观察限制；不得自行计算留出、修改因子、代写报告或声称交易盈利。随后由原生工作流执行finalize与正常报告归档。&quot;
+      }
+    },
+    &quot;rounds&quot;: 1,
+    &quot;maxTrials&quot;: 1,
+    &quot;parallelism&quot;: 1,
+    &quot;reportFolder&quot;: &quot;自动因子挖掘&quot;
+  },
+  &quot;data&quot;: {
+    &quot;dependencies&quot;: [
+      {
+        &quot;digest&quot;: &quot;sha256:7aa8b14d195100056712820886d7e95cfb6dfb1f23787d8b906c2826d5e0c60e&quot;,
+        &quot;id&quot;: &quot;artifact_6d4f4afd-264c-4fa3-b088-bea613109e7a&quot;,
+        &quot;kind&quot;: &quot;resource&quot;,
+        &quot;revision&quot;: &quot;revision_1a48534d-4e96-40c2-ab24-3d24eec94ab8&quot;,
+        &quot;schemaVersion&quot;: &quot;1.0.0&quot;
+      }
+    ],
+    &quot;digest&quot;: &quot;sha256:6f421bf3da5a53f018241c22e75f400f85309b605d1449689d2feaa654519ca2&quot;,
+    &quot;evaluatorVersion&quot;: &quot;sesame-factor-ast/1.0.0&quot;,
+    &quot;fields&quot;: [
+      &quot;close&quot;
+    ],
+    &quot;holdoutMode&quot;: &quot;workflow-isolated&quot;,
+    &quot;inputRefs&quot;: [
+      {
+        &quot;digest&quot;: &quot;sha256:22715299d8f054325601533dfb6c09c05eafdf29ee9ebf1dc95a136fd519ef24&quot;,
+        &quot;id&quot;: &quot;artifact_41c6e8fa-dd3d-43b6-a81c-fd5d58897a5e&quot;,
+        &quot;kind&quot;: &quot;data&quot;,
+        &quot;revision&quot;: &quot;revision_df616f52-59fc-44f7-b39e-dfef813c5ff5&quot;,
+        &quot;schemaVersion&quot;: &quot;1.0.0&quot;
+      }
+    ],
+    &quot;provenance&quot;: {
+      &quot;description&quot;: &quot;48行=12个实际HTTP抓取时点×BTCUSDT/ETHUSDT/SOLUSDT/XRPUSDT。来源为Binance官方ticker/price多品种端点的12份不可变观测；价格单位USDT/基础资产，精确源十进制文本保留在输入。time与availableAt均为生产者返回的本次真实retrieval/as_of UTC，未将历史收盘或未知发布时间回填。fields.close是HTTP返回last-price的有限Number转换，不是OHLCV闭柱或可执行报价。范围2026-10-21T08:02:53.754Z至08:08:51.552Z。时间间隔不均，预测horizon=1表示下一次观察，不是固定分钟或小时；样本极短且相关，仅验收固定引用/隔离评价/原生报告链路，不能宣称交易收益或普遍因子有效性。历史OKX小时柱因首次可用时间未知未纳入。数据检查、原Ref及抓取时点、原字节hash、切分和限制见冻结脚本、quote-inventory.json与panel-audit.json。&quot;,
+      &quot;executionId&quot;: &quot;exec_96ff9b50-a5c7-42e7-9ea6-c9c5824fa1af&quot;,
+      &quot;inputIds&quot;: [
+        &quot;artifact_2f90be77-306e-4a52-8c8f-4d6ba14d40b8&quot;,
+        &quot;artifact_a0ded00a-ba2b-4320-bbe8-755aa5ce26da&quot;,
+        &quot;artifact_75f0ccdb-57a5-4d48-a531-798bbaf5fd31&quot;,
+        &quot;artifact_0fd3d21b-9a7e-4027-be35-67d9d69ec328&quot;,
+        &quot;artifact_23df2aa1-9f11-4a49-a373-06b630bf88e5&quot;,
+        &quot;artifact_b6803ef6-5e7e-4b60-a32d-3007a71dc118&quot;,
+        &quot;artifact_29ccaa76-b829-471a-acdf-cdba23f94a2b&quot;,
+        &quot;artifact_ad5442fb-49ab-42c1-a714-1c478262985c&quot;,
+        &quot;artifact_343b8e30-c85d-4f8c-aeb1-7e4ae15572e4&quot;,
+        &quot;artifact_9f8d1a17-1808-48c4-b2d3-74b4a39523e0&quot;,
+        &quot;artifact_30277011-bf6e-44ca-a8b2-f51dd4ff114e&quot;,
+        &quot;artifact_79b27c44-2b8c-4ba5-8ac3-b070a6530742&quot;
+      ],
+      &quot;kind&quot;: &quot;derived&quot;,
+      &quot;origin&quot;: &quot;derived&quot;,
+      &quot;outputDigest&quot;: &quot;sha256:241a50b50067931aa93bf7113308a71c696289081f104eb43ca2992d76d89bc2&quot;,
+      &quot;outputPath&quot;: &quot;panel.json&quot;,
+      &quot;recipePaths&quot;: [
+        &quot;build_panel.py&quot;,
+        &quot;quote-inventory.json&quot;
+      ],
+      &quot;references&quot;: [
+        {
+          &quot;digest&quot;: &quot;sha256:7aa8b14d195100056712820886d7e95cfb6dfb1f23787d8b906c2826d5e0c60e&quot;,
+          &quot;id&quot;: &quot;artifact_6d4f4afd-264c-4fa3-b088-bea613109e7a&quot;,
+          &quot;kind&quot;: &quot;resource&quot;,
+          &quot;revision&quot;: &quot;revision_1a48534d-4e96-40c2-ab24-3d24eec94ab8&quot;,
+          &quot;schemaVersion&quot;: &quot;1.0.0&quot;
+        }
+      ],
+      &quot;sessionId&quot;: &quot;conv_main&quot;,
+      &quot;title&quot;: &quot;QA20261021-R5 四币真实HTTP观察数值面板&quot;
+    },
+    &quot;range&quot;: {
+      &quot;end&quot;: &quot;2026-10-21T08:07:39.530Z&quot;,
+      &quot;start&quot;: &quot;2026-10-21T08:02:53.754Z&quot;
+    },
+    &quot;rowCount&quot;: 36,
+    &quot;scope&quot;: &quot;development&quot;,
+    &quot;sourceId&quot;: &quot;artifact_41c6e8fa-dd3d-43b6-a81c-fd5d58897a5e&quot;,
+    &quot;symbolCount&quot;: 4,
+    &quot;synthetic&quot;: false
+  }
+}</pre></details></section></main>
+<footer class="footer"><strong>SESAME</strong><p>研究总结</p></footer></div>
+<script type="application/json" id="run-snapshot">{"id":"fm_1f92dfb506dff8474920e5ff02a508cf","title":"QA20261021-R5 四币固定引用因子研究","goal":"验收真实固定数值DataRef→独立因子评估→工作流原生报告的完整业务链路。只检验一个相邻HTTP快照价格动量候选：上一观察期相对价格变化能否排序预测下一观察期四币相对收益。使用48行、4个品种、12次真实抓取（UTC 08:02:53.754至08:08:51.552）的冻结面板；训练/验证/留出为24/12/12行（标签purge前）。time和availableAt都是实际HTTP抓取时间，close仅为当次last-price；不是小时K线或可执行报价，观察间隔不均且样本极小，不宣称交易收益或普遍因子有效性。只用冻结开发上下文，不读留出地址，不扩展研究，不改模型、插件、账户、旧Run或旧报告。保留不合格候选和空选择；数值只采用evaluator实际回执。报告必须由该工作流正常归档发布，不由主Agent手工代写或代交角色输出。","fingerprint":"sha256:ee4cc3834ef8b4412359874e72576bbe280ff4f42909f6558d8c99fdccf23613","ownerConversationId":"conv_main","config":{"model":{"provider":"openai","id":"gpt-6.1-sol","configurationDigest":"sha256:7d8a463df46283bf926cb1b7bdaa75754b08e61546163f271522c4c431feed49"},"agentModels":{"quant":{"provider":"openai","id":"gpt-6.1-sol","configurationDigest":"sha256:7d8a463df46283bf926cb1b7bdaa75754b08e61546163f271522c4c431feed49"}},"directions":["相邻HTTP观察的一阶相对价格动量；预测下一观察期截面收益，禁止改符号或窗口搜索"],"research":{"plugins":[],"tools":[],"descriptors":[]},"evaluator":{"plugin_id":"sesame/factor-evaluator","tool":"factor_evaluate","arguments":{"inputRef":{"id":"artifact_41c6e8fa-dd3d-43b6-a81c-fd5d58897a5e","revision":"revision_df616f52-59fc-44f7-b39e-dfef813c5ff5","digest":"sha256:22715299d8f054325601533dfb6c09c05eafdf29ee9ebf1dc95a136fd519ef24","kind":"data","schemaVersion":"1.0.0"},"dataset":{"trainEnd":"2026-10-21T08:06:28.961Z","validationEnd":"2026-10-21T08:07:39.530Z","holdoutEnd":"2026-10-21T08:08:51.552Z","horizon":1,"costBps":10,"quantile":0.25},"minRankIC":0,"minCoverage":0.6,"maxCorrelation":0.95},"descriptor":{"id":"sesame/factor-evaluator","version":"1.0.2","digest":"sha256:c1a5f054eebda68e4817829e99b931461b5be7d91ec0aeb0a1d3f5715334f167"}},"workflow":{"plan":null,"hypothesis":{"id":"quant","title":"数值因子研究员","instructions":"只用auto_factor_context提供的冻结开发证据，提出一个上一观察期相对价格动量预测下一观察期截面收益的可证伪假设。观察步长不是固定分钟/小时，样本极小。不读原始留出引用、不联网、不安装。务必读取当前assignment.expectedOutput，并在结束前由你本人调用auto_factor_submit保存该假设；只写文字不算提交。说明反证和限制，不代填测量指标。"},"code":{"id":"quant","title":"数值因子研究员","instructions":"依据当前auto_factor_context的evaluator合同，把已提交的一阶相对价格动量假设表达成其合法AST；数学意图为close/lag(close,1)-1。不猜AST键，按当前合同形状提交candidate和explanation。只允许此一个候选，不按评价结果换窗口、取负或改门槛。你本人必须在结束前调用auto_factor_submit，并读取实际evaluation回执；模型给的数字不是评估。明确缺失/预热与小样本限制。"},"review":null,"reflection":null,"selection":{"id":"quant","title":"数值因子研究员","instructions":"读取auto_factor_context中的真实trial/evaluation证据；只选择已接受且eligible为true的trialIds，不合格则提交trialIds=[]。由你本人在结束前调用auto_factor_submit冻结选择，说明实测指标及短样本、非均匀HTTP观察限制；不得自行计算留出、修改因子、代写报告或声称交易盈利。随后由原生工作流执行finalize与正常报告归档。"}},"rounds":1,"maxTrials":1,"parallelism":1,"reportFolder":"自动因子挖掘"},"status":"completed","phase":"complete","createdAt":1792570404614,"round":0,"generation":0,"tasks":[{"id":"assignment_6a5f0c2c14c36f8fc41ffb653460ee48","key":"r0:7a7b7317c5f8:hypothesis","role":"quant","mode":"hypothesis","round":0,"direction":"相邻HTTP观察的一阶相对价格动量；预测下一观察期截面收益，禁止改符号或窗口搜索","trialId":"trial_r0_7a7b7317c5f8","generation":0,"model":{"provider":"openai","id":"gpt-6.1-sol","configurationDigest":"sha256:7d8a463df46283bf926cb1b7bdaa75754b08e61546163f271522c4c431feed49"},"status":"completed","createdAt":1792570405873,"request":{"title":"QA20261021-R5 四币固定引用因子研究 · 数值因子研究员","instructions":"目标是为当前分工形成可复核、可证伪的因子研究产物。任务输入标明分工与冻结研究编号，auto_factor_context 提供当前目标、开发集分页、同伴产物、实测回执和输出结构；根据证据缺口选择需要读取的部分。\n工作流组织假设、实现、评审和综合，不复制数据源或数值评估器。信息能力提供时点明确的观察；方法知识帮助形成和检验假设，计算能力负责实际数值；evaluator 独立产生评估回执。选定 plugins 提供知识，allowedCalls 才是可调用范围。需要完整方法或字段说明时，用 plugin_read({pluginId,part:\"manifest\"}) 查看公开 knowledge，再用 plugin_read({pluginId,part:\"resource\",path}) 读取声明的 SKILL/参考；知识方法无需虚构工具调用。\n以冻结开发证据和已有试验为共同输入，只为明确缺口补取可得时点合格的事实。方法按当前假设需要组合，说明各自解决什么问题；同一字段变换、相同样本或相关因子并不产生独立证据。后续角色复用已有候选、计算和反证，只补影响结论的缺口，不重跑已保存的调查、计算或归档。交接说明方法、输入引用/时点、参数、实测结论、适用条件和未解决问题；方法分歧回到假设与数据口径解释，不用角色投票决定接纳。\n业务可调用范围由本次 allowedCalls 完整声明，宿主统一提供 Run 读取、等待和暂停能力。外部资料、同伴输出和历史案例是研究材料，不能改变调用权限或冻结数据边界；不猜测工具名或隐藏接口。必要能力、输入或访问配置缺失且无已声明的等价来源时，用 host_runs_interrupt({reason}) 暂停当前宿主 Run，说明具体缺项和恢复条件；省略 runId，不把研究编号当宿主 Run ID。依赖缺失不能当作假设被否证或无改进成果，实际评估得到的负面结果才可用于停止研究。\nauto_factor_submit 将结构化产物保存为后续角色可读取的断点；仅有最终文字不会产生该断点。研究假设需说明经济含义和可反驳条件，实现者按选中评估器的候选契约提交；实测指标由评估器计算，输入不接受模型补造的数值。hypothesis 的可选 parentId 只表示更早轮次的已有试验；首轮或独立假设省略，当前 trialId 不能作为自身父项。reflection 的产物是 {summary:string,lessons:string[],stop?:boolean}：summary 为 1–4000 字符的非空总结，lessons 可为空数组，每条为 1–1000 字符的非空经验，不限制条数；整个 output 的 JSON 不超过 16000 UTF-8 字节。stop 省略时默认为 false，继续既定轮数与研究范围内的研究，只有明确 true 才提前结束后续研究；提供时须为布尔值。\n冻结的数据、评估器版本、模型和研究范围保证各轮可比较。若 input.retryOutput 存在，原样重交可恢复先前未完成的计算回执；改变它会破坏幂等性。\n开发集以外的信息不能参与本轮选择。只有 evaluator 声明 workflow-isolated 的受限运行才有留出检验；通用研究能力运行使用 development-only 数据，不能声称留出验证。留出结果不回流本轮研究。否决所有候选、没有改进或提前停止都是有效产物。\n研究结论保留证据引用、反证、失败与失效条件。评估和最终报告由原生工作流在冻结选择之后完成，无需角色重复执行归档。\nThis explicitly selected evaluator accepts a factor AST. Operators: field(name), constant(value), add/sub/mul/div(2 args), neg/abs/log/rank/zscore(1 arg), lag/delta/mean/std/sum(1 arg, window 1..252). It computes train/validation Rank IC, coverage, non-overlapping long-short return after costs and train-only redundancy. Submit the AST as candidate; never supply measured metrics.\n本任务具体职责：只用auto_factor_context提供的冻结开发证据，提出一个上一观察期相对价格动量预测下一观察期截面收益的可证伪假设。观察步长不是固定分钟/小时，样本极小。不读原始留出引用、不联网、不安装。务必读取当前assignment.expectedOutput，并在结束前由你本人调用auto_factor_submit保存该假设；只写文字不算提交。说明反证和限制，不代填测量指标。","objective":"研究员：复用已知事实，按适用的已选方法为本方向提出一个有经济机制与反证条件的假设，说明输入、时点和方法作用；可引用更早试验 parentId 改进。没有可检验假设则提交 {skip:true,reason:\"...\"}。","input":{"runId":"fm_1f92dfb506dff8474920e5ff02a508cf","assignmentId":"assignment_6a5f0c2c14c36f8fc41ffb653460ee48","generation":0,"role":"quant","mode":"hypothesis","round":0,"direction":"相邻HTTP观察的一阶相对价格动量；预测下一观察期截面收益，禁止改符号或窗口搜索","trialId":"trial_r0_7a7b7317c5f8"},"plugins":[],"allowedCalls":[{"pluginId":"sesame/auto-factor-mining","capabilityId":"auto_factor_context"},{"pluginId":"sesame/auto-factor-mining","capabilityId":"auto_factor_submit"}],"model":{"provider":"openai","id":"gpt-6.1-sol","configurationDigest":"sha256:7d8a463df46283bf926cb1b7bdaa75754b08e61546163f271522c4c431feed49"}},"requestDigest":"sha256:eb36cbabaca239e0ed99a108528ca733222648931ff566635e37dff6d87ce4c4","runRef":{"id":"run_ba4aed37-29f6-443f-b988-e78fe79f9145","kind":"agent","revision":1},"pendingOutput":{"hypothesis":"固定正向的一阶相对价格动量假设：以同一品种按实际HTTP抓取时间排序的相邻观察为单位，在时点t取得本次last-price后，定义m(i,t)=close(i,t)/close(i,t-1)-1。对于BTCUSDT、ETHUSDT、SOLUSDT、XRPUSDT，上一观察期m较高的品种，下一观察期相对收益r(i,t+1)=close(i,t+1)/close(i,t)-1应较高，即开发集可评价验证截面的平均Rank IC应为正。仅检验这个固定正号、滞后1个观察步、预测1个观察步的候选，不取负、不换窗口、不搜索参数；相对价格变化指比例变化，不是绝对价格差，也不声称市场中性化。","rationale":"输入与时点：只使用auto_factor_context返回的冻结开发面板，digest=sha256:6f421bf3da5a53f018241c22e75f400f85309b605d1449689d2feaa654519ca2；字段仅close，36行、4个品种、9次观察，范围为2026-10-21T08:02:53.754Z至08:07:39.530Z。time与availableAt均为实际HTTP抓取时刻；close是当次last-price，不是K线收盘、成交发生时刻或可执行报价。训练截止08:06:28.961Z，验证截止08:07:39.530Z；切分前分别为24/12行，不能将其当作独立有效标签数。\n方法与经济含义：比例变化消除四币价格量级差异；逐品种lag=1限定信息只来自t及此前，截面排序检验相对强弱能否延续。潜在机制是短时订单流持续或信息消化不完全，但面板没有订单流、盘口或成交时间证据，机制仅是待检验解释。没有加载额外方法插件，也不把同一close的变换当作独立验证。\n实施交接：数学意图固定为close/lag(close,1)-1，首个观察缺少历史时不填造信号，不以未来数据补齐；下一观察收益仅作标签，不能进入t时信号。预测horizon=1是一个不等长观察步，不是固定分钟或小时，不插值或改为按时间归一化的另一候选。独立evaluator负责预热、缺失、跨切分标签purge、并列秩及真实评价；使用其冻结的horizon=1、quantile=0.25、costBps=10设置，不自行计算或填报Rank IC、覆盖率、净收益或资格。\n反证与决策条件：若实际验证Rank IC为零或负，则本实验不支持预先声明的正向排序关系；训练为正而验证不为正，也不能据训练表现接纳。若无法形成足够有效标签或覆盖不足，应记为证据不足/不合格，而非把缺测冒充负结果。即使排序指标为正，是否接纳仍以冻结evaluator的真实eligible结果为准；成本后净收益非正只否定该成本口径下的经济性，不能单独证明动量方向相反。任何负面结果均保留，不据此取负、换窗、改门槛或扩展研究。\n已有反向解释与限制：开发行中，08:06:28.961Z至08:06:53.955Z的BTC、ETH、XRP记录价格完全未变，提示零收益与并列秩是实际问题，但不足以判定价格停滞原因。微观结构反转、不同品种last-price更新不同步及采样噪声均可能解释后续排序，而非动量机制。四币、极短时段、非均匀观察且受同一市场影响，不构成独立市场验证；首次预热和标签purge会进一步缩小有效样本。此阶段尚无实测评价回执，不声称显著性、普遍预测能力、可交易收益或已完成留出验证；不读取留出观察或原始引用，留出不参与本轮假设或选择。"},"output":{"hypothesis":"固定正向的一阶相对价格动量假设：以同一品种按实际HTTP抓取时间排序的相邻观察为单位，在时点t取得本次last-price后，定义m(i,t)=close(i,t)/close(i,t-1)-1。对于BTCUSDT、ETHUSDT、SOLUSDT、XRPUSDT，上一观察期m较高的品种，下一观察期相对收益r(i,t+1)=close(i,t+1)/close(i,t)-1应较高，即开发集可评价验证截面的平均Rank IC应为正。仅检验这个固定正号、滞后1个观察步、预测1个观察步的候选，不取负、不换窗口、不搜索参数；相对价格变化指比例变化，不是绝对价格差，也不声称市场中性化。","rationale":"输入与时点：只使用auto_factor_context返回的冻结开发面板，digest=sha256:6f421bf3da5a53f018241c22e75f400f85309b605d1449689d2feaa654519ca2；字段仅close，36行、4个品种、9次观察，范围为2026-10-21T08:02:53.754Z至08:07:39.530Z。time与availableAt均为实际HTTP抓取时刻；close是当次last-price，不是K线收盘、成交发生时刻或可执行报价。训练截止08:06:28.961Z，验证截止08:07:39.530Z；切分前分别为24/12行，不能将其当作独立有效标签数。\n方法与经济含义：比例变化消除四币价格量级差异；逐品种lag=1限定信息只来自t及此前，截面排序检验相对强弱能否延续。潜在机制是短时订单流持续或信息消化不完全，但面板没有订单流、盘口或成交时间证据，机制仅是待检验解释。没有加载额外方法插件，也不把同一close的变换当作独立验证。\n实施交接：数学意图固定为close/lag(close,1)-1，首个观察缺少历史时不填造信号，不以未来数据补齐；下一观察收益仅作标签，不能进入t时信号。预测horizon=1是一个不等长观察步，不是固定分钟或小时，不插值或改为按时间归一化的另一候选。独立evaluator负责预热、缺失、跨切分标签purge、并列秩及真实评价；使用其冻结的horizon=1、quantile=0.25、costBps=10设置，不自行计算或填报Rank IC、覆盖率、净收益或资格。\n反证与决策条件：若实际验证Rank IC为零或负，则本实验不支持预先声明的正向排序关系；训练为正而验证不为正，也不能据训练表现接纳。若无法形成足够有效标签或覆盖不足，应记为证据不足/不合格，而非把缺测冒充负结果。即使排序指标为正，是否接纳仍以冻结evaluator的真实eligible结果为准；成本后净收益非正只否定该成本口径下的经济性，不能单独证明动量方向相反。任何负面结果均保留，不据此取负、换窗、改门槛或扩展研究。\n已有反向解释与限制：开发行中，08:06:28.961Z至08:06:53.955Z的BTC、ETH、XRP记录价格完全未变，提示零收益与并列秩是实际问题，但不足以判定价格停滞原因。微观结构反转、不同品种last-price更新不同步及采样噪声均可能解释后续排序，而非动量机制。四币、极短时段、非均匀观察且受同一市场影响，不构成独立市场验证；首次预热和标签purge会进一步缩小有效样本。此阶段尚无实测评价回执，不声称显著性、普遍预测能力、可交易收益或已完成留出验证；不读取留出观察或原始引用，留出不参与本轮假设或选择。"},"submittedAt":1792570481024,"finishedAt":1792570503024,"conversationId":"conv_0ddf94e1-544c-44d3-b543-be098ae27618","text":"已读取当前 `assignment.expectedOutput`，并由本人调用 `auto_factor_submit` 保存假设，关联试验：`trial_r0_7a7b7317c5f8`。\n\n**唯一假设：**上一观察期相对价格动量\n\\[\nm_{i,t}=\\frac{close_{i,t}}{close_{i,t-1}}-1\n\\]\n越高，下一观察期四币截面收益应越高，预期验证集平均 Rank IC 为正。固定正向、窗口为一个观察步，不取负、不搜索窗口。\n\n- **经济机制：**短时订单流或信息消化可能使相对强弱延续；现有价格面板不能直接验证该机制。\n- **反证条件：**验证 Rank IC 为零或负则本实验不支持该假设；缺测或覆盖不足属于证据不足，不能冒充否证。\n- **关键限制：**开发集仅36行、4币、9次非均匀HTTP观察，存在不变价格和并列秩；last-price不是可执行报价。\n\n当前仅完成假设提交，尚无实测指标；未读取留出数据、联网或执行参数搜索。"},{"id":"assignment_b5fe00765f79943e11bc45964c4ae204","key":"r0:7a7b7317c5f8:code","role":"quant","mode":"code","round":0,"direction":"相邻HTTP观察的一阶相对价格动量；预测下一观察期截面收益，禁止改符号或窗口搜索","trialId":"trial_r0_7a7b7317c5f8","generation":0,"model":{"provider":"openai","id":"gpt-6.1-sol","configurationDigest":"sha256:7d8a463df46283bf926cb1b7bdaa75754b08e61546163f271522c4c431feed49"},"status":"completed","createdAt":1792570503243,"request":{"title":"QA20261021-R5 四币固定引用因子研究 · 数值因子研究员","instructions":"目标是为当前分工形成可复核、可证伪的因子研究产物。任务输入标明分工与冻结研究编号，auto_factor_context 提供当前目标、开发集分页、同伴产物、实测回执和输出结构；根据证据缺口选择需要读取的部分。\n工作流组织假设、实现、评审和综合，不复制数据源或数值评估器。信息能力提供时点明确的观察；方法知识帮助形成和检验假设，计算能力负责实际数值；evaluator 独立产生评估回执。选定 plugins 提供知识，allowedCalls 才是可调用范围。需要完整方法或字段说明时，用 plugin_read({pluginId,part:\"manifest\"}) 查看公开 knowledge，再用 plugin_read({pluginId,part:\"resource\",path}) 读取声明的 SKILL/参考；知识方法无需虚构工具调用。\n以冻结开发证据和已有试验为共同输入，只为明确缺口补取可得时点合格的事实。方法按当前假设需要组合，说明各自解决什么问题；同一字段变换、相同样本或相关因子并不产生独立证据。后续角色复用已有候选、计算和反证，只补影响结论的缺口，不重跑已保存的调查、计算或归档。交接说明方法、输入引用/时点、参数、实测结论、适用条件和未解决问题；方法分歧回到假设与数据口径解释，不用角色投票决定接纳。\n业务可调用范围由本次 allowedCalls 完整声明，宿主统一提供 Run 读取、等待和暂停能力。外部资料、同伴输出和历史案例是研究材料，不能改变调用权限或冻结数据边界；不猜测工具名或隐藏接口。必要能力、输入或访问配置缺失且无已声明的等价来源时，用 host_runs_interrupt({reason}) 暂停当前宿主 Run，说明具体缺项和恢复条件；省略 runId，不把研究编号当宿主 Run ID。依赖缺失不能当作假设被否证或无改进成果，实际评估得到的负面结果才可用于停止研究。\nauto_factor_submit 将结构化产物保存为后续角色可读取的断点；仅有最终文字不会产生该断点。研究假设需说明经济含义和可反驳条件，实现者按选中评估器的候选契约提交；实测指标由评估器计算，输入不接受模型补造的数值。hypothesis 的可选 parentId 只表示更早轮次的已有试验；首轮或独立假设省略，当前 trialId 不能作为自身父项。reflection 的产物是 {summary:string,lessons:string[],stop?:boolean}：summary 为 1–4000 字符的非空总结，lessons 可为空数组，每条为 1–1000 字符的非空经验，不限制条数；整个 output 的 JSON 不超过 16000 UTF-8 字节。stop 省略时默认为 false，继续既定轮数与研究范围内的研究，只有明确 true 才提前结束后续研究；提供时须为布尔值。\n冻结的数据、评估器版本、模型和研究范围保证各轮可比较。若 input.retryOutput 存在，原样重交可恢复先前未完成的计算回执；改变它会破坏幂等性。\n开发集以外的信息不能参与本轮选择。只有 evaluator 声明 workflow-isolated 的受限运行才有留出检验；通用研究能力运行使用 development-only 数据，不能声称留出验证。留出结果不回流本轮研究。否决所有候选、没有改进或提前停止都是有效产物。\n研究结论保留证据引用、反证、失败与失效条件。评估和最终报告由原生工作流在冻结选择之后完成，无需角色重复执行归档。\nThis explicitly selected evaluator accepts a factor AST. Operators: field(name), constant(value), add/sub/mul/div(2 args), neg/abs/log/rank/zscore(1 arg), lag/delta/mean/std/sum(1 arg, window 1..252). It computes train/validation Rank IC, coverage, non-overlapping long-short return after costs and train-only redundancy. Submit the AST as candidate; never supply measured metrics.\n本任务具体职责：依据当前auto_factor_context的evaluator合同，把已提交的一阶相对价格动量假设表达成其合法AST；数学意图为close/lag(close,1)-1。不猜AST键，按当前合同形状提交candidate和explanation。只允许此一个候选，不按评价结果换窗口、取负或改门槛。你本人必须在结束前调用auto_factor_submit，并读取实际evaluation回执；模型给的数字不是评估。明确缺失/预热与小样本限制。","objective":"实现者：把指定假设翻译为 evaluator 声明的候选格式，复用冻结数据和方法定义；说明表达式、字段时点及与父版本差别。数值评价由提交后的 evaluator 负责，避免另写一套口径；实测拒绝可修正候选，执行中断保留原任务。","input":{"runId":"fm_1f92dfb506dff8474920e5ff02a508cf","assignmentId":"assignment_b5fe00765f79943e11bc45964c4ae204","generation":0,"role":"quant","mode":"code","round":0,"direction":"相邻HTTP观察的一阶相对价格动量；预测下一观察期截面收益，禁止改符号或窗口搜索","trialId":"trial_r0_7a7b7317c5f8"},"plugins":[],"allowedCalls":[{"pluginId":"sesame/auto-factor-mining","capabilityId":"auto_factor_context"},{"pluginId":"sesame/auto-factor-mining","capabilityId":"auto_factor_submit"}],"model":{"provider":"openai","id":"gpt-6.1-sol","configurationDigest":"sha256:7d8a463df46283bf926cb1b7bdaa75754b08e61546163f271522c4c431feed49"}},"requestDigest":"sha256:151d2937913005b84f4db2dfb81e90d4ee10e470812b9a25be8bdbc9d9816251","runRef":{"id":"run_1db0c30c-87ce-4d31-868c-584a2f609039","kind":"agent","revision":1},"pendingOutput":{"candidate":{"op":"sub","args":[{"op":"div","args":[{"op":"field","name":"close"},{"op":"lag","args":[{"op":"field","name":"close"}],"window":1}]},{"op":"constant","value":1}]},"explanation":"方法与假设映射：按当前auto_factor_context的factor AST合同，以sub(div(field(close),lag(field(close),window=1)),constant(1))精确表达m(i,t)=close(i,t)/close(i,t-1)-1。沿用trial_r0_7a7b7317c5f8已保存的正向一阶相对价格动量假设；这是第0轮唯一候选，无父版本，不提交parentId，不引入新特征、取负、窗口搜索或门槛调整。lag是同一品种前一观察步，不是固定分钟或小时；比例变化并非绝对价格差。\n输入与时点：复用上下文冻结开发证据，digest=sha256:6f421bf3da5a53f018241c22e75f400f85309b605d1449689d2feaa654519ca2，字段仅close；开发集36行、4个品种、9次观察，范围2026-10-21T08:02:53.754Z至08:07:39.530Z。close为本次HTTP抓取的last-price，time与availableAt为实际抓取时刻，并非K线收盘、实际成交时点或可执行报价。信号仅使用t和t以前的close；下一观察期收益只作evaluator标签，不进入AST。使用冻结的horizon=1、quantile=0.25、costBps=10，训练截止08:06:28.961Z、验证截止08:07:39.530Z（均UTC）。评估能力为sesame/factor-evaluator 1.0.2、数据契约所示evaluatorVersion=sesame-factor-ast/1.0.0；不另写评价计算。\n缺失与预热：每个品种首次观察缺少lag=1历史，不能形成此比例信号；AST不作零填充、前后填充或未来补齐。若close或滞后价格缺失，或分母为零，不将其解释成零动量；具体缺失/非有限值处理和有效覆盖以evaluator实际回执为准。时序预热、跨切分标签purge及有效样本数亦由evaluator处理，不以切分前行数替代有效标签数。\n可证伪性及现有反证：正向假设要求验证截面平均Rank IC为正，若真实验证Rank IC为零或负则本实验不支持该方向；覆盖不足或有效标签过少应记录为证据不足/不合格。上游开发证据已记录相邻抓取中部分币种价格未变，提示零收益与并列秩问题，不据此猜测更新原因。资格只依据真实eligible，成本后非正结果不触发取负或改窗。提交前没有评价回执，未填报任何模型生成指标。\n局限与交接：仅四币、极短且不等间隔的HTTP观察，共同市场暴露、last-price不同步、并列秩、首次预热和标签purge均限制解释；样本不能支持显著性、普遍预测能力或可交易盈利结论。未读取留出观察或原始引用，留出不参与实现或选择；本候选及其实际评价回执交由后续固定选择阶段复用。"},"output":{"candidate":{"op":"sub","args":[{"op":"div","args":[{"op":"field","name":"close"},{"op":"lag","args":[{"op":"field","name":"close"}],"window":1}]},{"op":"constant","value":1}]},"explanation":"方法与假设映射：按当前auto_factor_context的factor AST合同，以sub(div(field(close),lag(field(close),window=1)),constant(1))精确表达m(i,t)=close(i,t)/close(i,t-1)-1。沿用trial_r0_7a7b7317c5f8已保存的正向一阶相对价格动量假设；这是第0轮唯一候选，无父版本，不提交parentId，不引入新特征、取负、窗口搜索或门槛调整。lag是同一品种前一观察步，不是固定分钟或小时；比例变化并非绝对价格差。\n输入与时点：复用上下文冻结开发证据，digest=sha256:6f421bf3da5a53f018241c22e75f400f85309b605d1449689d2feaa654519ca2，字段仅close；开发集36行、4个品种、9次观察，范围2026-10-21T08:02:53.754Z至08:07:39.530Z。close为本次HTTP抓取的last-price，time与availableAt为实际抓取时刻，并非K线收盘、实际成交时点或可执行报价。信号仅使用t和t以前的close；下一观察期收益只作evaluator标签，不进入AST。使用冻结的horizon=1、quantile=0.25、costBps=10，训练截止08:06:28.961Z、验证截止08:07:39.530Z（均UTC）。评估能力为sesame/factor-evaluator 1.0.2、数据契约所示evaluatorVersion=sesame-factor-ast/1.0.0；不另写评价计算。\n缺失与预热：每个品种首次观察缺少lag=1历史，不能形成此比例信号；AST不作零填充、前后填充或未来补齐。若close或滞后价格缺失，或分母为零，不将其解释成零动量；具体缺失/非有限值处理和有效覆盖以evaluator实际回执为准。时序预热、跨切分标签purge及有效样本数亦由evaluator处理，不以切分前行数替代有效标签数。\n可证伪性及现有反证：正向假设要求验证截面平均Rank IC为正，若真实验证Rank IC为零或负则本实验不支持该方向；覆盖不足或有效标签过少应记录为证据不足/不合格。上游开发证据已记录相邻抓取中部分币种价格未变，提示零收益与并列秩问题，不据此猜测更新原因。资格只依据真实eligible，成本后非正结果不触发取负或改窗。提交前没有评价回执，未填报任何模型生成指标。\n局限与交接：仅四币、极短且不等间隔的HTTP观察，共同市场暴露、last-price不同步、并列秩、首次预热和标签purge均限制解释；样本不能支持显著性、普遍预测能力或可交易盈利结论。未读取留出观察或原始引用，留出不参与实现或选择；本候选及其实际评价回执交由后续固定选择阶段复用。","evaluation":{"action":"candidate","candidate":{"args":[{"args":[{"name":"close","op":"field"},{"args":[{"name":"close","op":"field"}],"op":"lag","window":1}],"op":"div"},{"op":"constant","value":1}],"op":"sub"},"candidateDigest":"sha256:a0cfd4a431466abcc755945767feaf980cd4e5cd9daf629d40fb41609f46e11c","eligible":true,"gate":"validation threshold passed; not proof of tradability","metrics":{"dataDigest":"sha256:cafd223feded647bfa51d9e5fcfa39056d8e1cd03b31bef8a4dec68246dee9d0","evaluatorVersion":"sesame-factor-ast/1.0.0","expression":{"args":[{"args":[{"name":"close","op":"field"},{"args":[{"name":"close","op":"field"}],"op":"lag","window":1}],"op":"div"},{"op":"constant","value":1}],"op":"sub"},"expressionDigest":"sha256:f09d00c9dad412ca8b53b46361ecc7dc30fa14613787942bffbe402a323895c8","limitations":["This AST evaluator is an editable research baseline, not a standard answer, a significance test, or a broker backtest.","Availability timestamps are checked, not independently verified. Universe selection, corporate actions, delistings and vendor revisions require separate point-in-time evidence.","Forward returns use supplied closes at aligned market timestamps. Entering at the observed close is an idealized assumption; latency, liquidity, short availability, impact and borrowing costs are not modeled.","Portfolio diagnostics hold half long and half short with gross exposure one. Each nonoverlapping interval starts and ends flat, incurs absolute turnover two and fixed one-way costs twice.","Rank IC is the mean per-date Spearman correlation with at least four paired assets. ICIR is mean divided by sample standard deviation, not annualized or adjusted for overlapping labels.","Boundary-crossing labels are purged. Missing fields or endpoints are not imputed. Tied groups crossing a quantile cutoff are omitted; this can leave a date without a portfolio.","Rolling windows count observations for each symbol; forward horizon counts distinct market timestamps. Missing bars can therefore affect the effective duration.","This engine cannot enforce an untouched holdout outside its caller. The workflow must freeze candidate selection and record every holdout exposure before calling holdout evaluation."],"protocol":{"costBps":10,"horizon":1,"horizonUnit":"distinct-market-timestamps","minAssets":4,"portfolio":"gross-one-half-long-half-short-flat-to-flat","portfolioSampling":"nonoverlapping","quantile":0.25,"rankICIR":"not-annualized","splitEnds":"inclusive"},"train":{"costPerPeriod":0.002,"coverage":0.8333333333333334,"dates":6,"eligibleObservations":16,"factorObservations":20,"grossMaxDrawdown":0.00003715814506533022,"grossReturn":0.00018295540079416028,"insolvent":false,"insufficientCrossSections":2,"labelCoverage":0.8333333333333334,"labelObservations":20,"maxDrawdown":0.0077941721257668295,"meanGrossReturn":0.00004573937185992084,"meanNetReturn":-0.001954260628140079,"missingForwardRows":0,"netReturn":-0.0077941721257668295,"numericReturnFailures":0,"overlapSkippedPeriods":0,"portfolioPeriods":4,"purgedBoundaryRows":4,"rankIC":0.1,"rankICIR":0.1889822365046136,"rankICMean":0.1,"rankICStd":0.5291502622129182,"rows":24,"tiedTails":0,"totalTurnover":8,"turnover":2,"validICPeriods":4},"validation":{"costPerPeriod":0.002,"coverage":1,"dates":3,"eligibleObservations":8,"factorObservations":12,"grossMaxDrawdown":0,"grossReturn":0.00017847783969893172,"insolvent":false,"insufficientCrossSections":1,"labelCoverage":0.6666666666666666,"labelObservations":8,"maxDrawdown":0.001821522160301181,"meanGrossReturn":0.0001784778396988207,"meanNetReturn":-0.0018215221603011793,"missingForwardRows":0,"netReturn":-0.001821522160301181,"numericReturnFailures":0,"overlapSkippedPeriods":0,"portfolioPeriods":1,"purgedBoundaryRows":4,"rankIC":0.5290994448735805,"rankICIR":1.38105957449055,"rankICMean":0.5290994448735805,"rankICStd":0.3831112391141827,"rows":12,"tiedTails":1,"totalTurnover":2,"turnover":2,"validICPeriods":2}},"protocol":"sesame.factor-evaluator/v1","receiptDigest":"sha256:5cc988c6e0b29dcd34494bc50e2cd36dd18f4820dc6bfa487daafdb29ec0a719","redundancy":[],"runId":"fm_1f92dfb506dff8474920e5ff02a508cf","sessionId":"fe_53cee6c8cf9938f52c9d46341636f93e","trialId":"trial_r0_7a7b7317c5f8"}},"submittedAt":1792570559886,"finishedAt":1792570621479,"conversationId":"conv_ff87b9a8-17ab-40df-8ad8-c70361e28fd9","text":"已通过 `auto_factor_submit` 保存唯一候选，并读取了独立评估器的真实回执。\n\n### 实现\n- **试验**：`trial_r0_7a7b7317c5f8`\n- **表达式**：`close / lag(close, 1) - 1`\n- 使用合同声明的 `sub/div/field/lag/constant` AST；未改符号、窗口或门槛，也未生成其他候选。\n\n### 实测结果\n来源：`sesame-factor-ast/1.0.0` 评价回执。\n\n| 指标 | 训练集 | 验证集 |\n|---|---:|---:|\n| Rank IC | 0.100000 | 0.529099 |\n| 因子覆盖率 | 83.33%（20/24行） | 100%（12/12行） |\n| 因子与标签均有效的观察数 | 16 | 8 |\n| 有效 IC 截面数 | 4 | 2 |\n| 非重叠组合期数 | 4 | 1 |\n| 成本后累计诊断收益 | −0.779417% | −0.182152% |\n\n**评估器返回 `eligible=true`**，即通过冻结的验证门槛，不代表可交易性成立。验证组合的成本前收益约为 **0.017848%**，不足以覆盖该期模型成本 **0.2%**，成本后仍为负。\n\n### 限制与交接\n- 首个观察缺少滞后历史，不补值；训练因子可用20行。训练、验证各有4行跨边界标签被剔除。\n- 验证仅2个有效IC截面，且 `tiedTails=1`、组合期仅1个，结论对极小样本与并列排序敏感。\n- 输入是四币、不等间隔HTTP抓取的 last-price，不是可执行报价；上述收益仅为评估器诊断，不能视作实盘收益或显著性证据。\n- 未读取留出观察、未更改候选；本阶段未执行最终选择或报告归档。\n\n评价回执摘要：`sha256:5cc988c6e0b29dcd34494bc50e2cd36dd18f4820dc6bfa487daafdb29ec0a719`。候选及真实评价已保存，供后续固定选择阶段复用。"},{"id":"assignment_f5976192134a9ce867ebadb1825088e5","key":"selection","role":"quant","mode":"selection","round":0,"generation":0,"model":{"provider":"openai","id":"gpt-6.1-sol","configurationDigest":"sha256:7d8a463df46283bf926cb1b7bdaa75754b08e61546163f271522c4c431feed49"},"status":"completed","createdAt":1792570622053,"request":{"title":"QA20261021-R5 四币固定引用因子研究 · 数值因子研究员","instructions":"目标是为当前分工形成可复核、可证伪的因子研究产物。任务输入标明分工与冻结研究编号，auto_factor_context 提供当前目标、开发集分页、同伴产物、实测回执和输出结构；根据证据缺口选择需要读取的部分。\n工作流组织假设、实现、评审和综合，不复制数据源或数值评估器。信息能力提供时点明确的观察；方法知识帮助形成和检验假设，计算能力负责实际数值；evaluator 独立产生评估回执。选定 plugins 提供知识，allowedCalls 才是可调用范围。需要完整方法或字段说明时，用 plugin_read({pluginId,part:\"manifest\"}) 查看公开 knowledge，再用 plugin_read({pluginId,part:\"resource\",path}) 读取声明的 SKILL/参考；知识方法无需虚构工具调用。\n以冻结开发证据和已有试验为共同输入，只为明确缺口补取可得时点合格的事实。方法按当前假设需要组合，说明各自解决什么问题；同一字段变换、相同样本或相关因子并不产生独立证据。后续角色复用已有候选、计算和反证，只补影响结论的缺口，不重跑已保存的调查、计算或归档。交接说明方法、输入引用/时点、参数、实测结论、适用条件和未解决问题；方法分歧回到假设与数据口径解释，不用角色投票决定接纳。\n业务可调用范围由本次 allowedCalls 完整声明，宿主统一提供 Run 读取、等待和暂停能力。外部资料、同伴输出和历史案例是研究材料，不能改变调用权限或冻结数据边界；不猜测工具名或隐藏接口。必要能力、输入或访问配置缺失且无已声明的等价来源时，用 host_runs_interrupt({reason}) 暂停当前宿主 Run，说明具体缺项和恢复条件；省略 runId，不把研究编号当宿主 Run ID。依赖缺失不能当作假设被否证或无改进成果，实际评估得到的负面结果才可用于停止研究。\nauto_factor_submit 将结构化产物保存为后续角色可读取的断点；仅有最终文字不会产生该断点。研究假设需说明经济含义和可反驳条件，实现者按选中评估器的候选契约提交；实测指标由评估器计算，输入不接受模型补造的数值。hypothesis 的可选 parentId 只表示更早轮次的已有试验；首轮或独立假设省略，当前 trialId 不能作为自身父项。reflection 的产物是 {summary:string,lessons:string[],stop?:boolean}：summary 为 1–4000 字符的非空总结，lessons 可为空数组，每条为 1–1000 字符的非空经验，不限制条数；整个 output 的 JSON 不超过 16000 UTF-8 字节。stop 省略时默认为 false，继续既定轮数与研究范围内的研究，只有明确 true 才提前结束后续研究；提供时须为布尔值。\n冻结的数据、评估器版本、模型和研究范围保证各轮可比较。若 input.retryOutput 存在，原样重交可恢复先前未完成的计算回执；改变它会破坏幂等性。\n开发集以外的信息不能参与本轮选择。只有 evaluator 声明 workflow-isolated 的受限运行才有留出检验；通用研究能力运行使用 development-only 数据，不能声称留出验证。留出结果不回流本轮研究。否决所有候选、没有改进或提前停止都是有效产物。\n研究结论保留证据引用、反证、失败与失效条件。评估和最终报告由原生工作流在冻结选择之后完成，无需角色重复执行归档。\nThis explicitly selected evaluator accepts a factor AST. Operators: field(name), constant(value), add/sub/mul/div(2 args), neg/abs/log/rank/zscore(1 arg), lag/delta/mean/std/sum(1 arg, window 1..252). It computes train/validation Rank IC, coverage, non-overlapping long-short return after costs and train-only redundancy. Submit the AST as candidate; never supply measured metrics.\n本任务具体职责：读取auto_factor_context中的真实trial/evaluation证据；只选择已接受且eligible为true的trialIds，不合格则提交trialIds=[]。由你本人在结束前调用auto_factor_submit冻结选择，说明实测指标及短样本、非均匀HTTP观察限制；不得自行计算留出、修改因子、代写报告或声称交易盈利。随后由原生工作流执行finalize与正常报告归档。","objective":"监督者：比较已接受候选的真实指标、相关性与失效条件，冻结最终选择并简述取舍；独立评估能力复核门槛与冗余。允许空集合，不复述全部角色过程，不让最终留出结果回流本轮选择。","input":{"runId":"fm_1f92dfb506dff8474920e5ff02a508cf","assignmentId":"assignment_f5976192134a9ce867ebadb1825088e5","generation":0,"role":"quant","mode":"selection","round":0},"plugins":[],"allowedCalls":[{"pluginId":"sesame/auto-factor-mining","capabilityId":"auto_factor_context"},{"pluginId":"sesame/auto-factor-mining","capabilityId":"auto_factor_submit"}],"model":{"provider":"openai","id":"gpt-6.1-sol","configurationDigest":"sha256:7d8a463df46283bf926cb1b7bdaa75754b08e61546163f271522c4c431feed49"}},"requestDigest":"sha256:67d4c7b4df0790e69d623d48ff2216de9d867c9c55c931828b711a15ba0640da","runRef":{"id":"run_5653ea47-4523-4e22-b394-0ee12b8dce8f","kind":"agent","revision":1},"pendingOutput":{"trialIds":["trial_r0_7a7b7317c5f8"],"reason":"冻结选择唯一候选trial_r0_7a7b7317c5f8，限定为本实验的合格研究候选，不认定其可交易或普遍有效。方法为预先固定的正向一阶相对价格动量close/lag(close,1)-1，预测下一观察步截面收益；不取负、不换窗口、不改门槛。依据auto_factor_context返回的真实trial及evaluationReceipt，而非角色赞同：status=accepted、eligible=true，实际gate为“validation threshold passed; not proof of tradability”。候选回执receiptDigest=sha256:5cc988c6e0b29dcd34494bc50e2cd36dd18f4820dc6bfa487daafdb29ec0a719，candidateDigest=sha256:a0cfd4a431466abcc755945767feaf980cd4e5cd9daf629d40fb41609f46e11c；评价版本sesame-factor-ast/1.0.0。\n实测取舍：训练Rank IC=0.1，验证Rank IC=0.5290994448735805，分别仅4、2个有效IC截面；因子coverage分别为0.8333333333333334、1，验证labelCoverage仅0.6666666666666666，不能把因子覆盖100%解释为标签完整。训练24行、验证12行，各purgedBoundaryRows=4；验证eligibleObservations=8，只有1个组合评价期且tiedTails=1。正向验证排序结果支持在冻结门槛内保留此研究候选，但不足以推断显著性或稳定性。反证必须同时保留：真实训练netReturn=-0.0077941721257668295、验证netReturn=-0.001821522160301181；验证grossReturn=0.00017847783969893172，未覆盖该回执的成本口径。固定horizon=1个不同观察时刻、quantile=0.25、单边costBps=10；评价器组合为总敞口1、半多半空、每期平仓再建，costPerPeriod=0.002。成本后诊断为负，不能声称盈利，也不据此把信号改为反向。\n相关性与适用边界：账本只有这1个候选，redundancy=[]，无候选间相关性可比较；空冗余记录不证明低相关、独立性或分散化。开发证据digest=sha256:6f421bf3da5a53f018241c22e75f400f85309b605d1449689d2feaa654519ca2，36行、4币、9次HTTP观察，UTC 2026-10-21T08:02:53.754Z至08:07:39.530Z；训练截止08:06:28.961Z，验证截止08:07:39.530Z。评价回执另记dataDigest=sha256:cafd223feded647bfa51d9e5fcfa39056d8e1cd03b31bef8a4dec68246dee9d0，原样保留，不与开发视图摘要混同。time/availableAt为实际抓取时刻，close仅为当次last-price，不是固定周期K线、实际成交时刻或可执行报价；不等长观察步、共同市场暴露、价格更新不同步及并列秩均限制外推。评价器仅检查可得时间戳，未独立核验，也未模拟延迟、流动性、冲击或借币成本；本结果不是显著性检验或券商回测。未读取或计算留出数据，不用留出结果选择或调参。提交后由独立evaluator复核选择资格与冗余，由原生工作流执行finalize和正常报告归档；本角色不代写报告、不声称已归档。"},"output":{"trialIds":["trial_r0_7a7b7317c5f8"],"reason":"冻结选择唯一候选trial_r0_7a7b7317c5f8，限定为本实验的合格研究候选，不认定其可交易或普遍有效。方法为预先固定的正向一阶相对价格动量close/lag(close,1)-1，预测下一观察步截面收益；不取负、不换窗口、不改门槛。依据auto_factor_context返回的真实trial及evaluationReceipt，而非角色赞同：status=accepted、eligible=true，实际gate为“validation threshold passed; not proof of tradability”。候选回执receiptDigest=sha256:5cc988c6e0b29dcd34494bc50e2cd36dd18f4820dc6bfa487daafdb29ec0a719，candidateDigest=sha256:a0cfd4a431466abcc755945767feaf980cd4e5cd9daf629d40fb41609f46e11c；评价版本sesame-factor-ast/1.0.0。\n实测取舍：训练Rank IC=0.1，验证Rank IC=0.5290994448735805，分别仅4、2个有效IC截面；因子coverage分别为0.8333333333333334、1，验证labelCoverage仅0.6666666666666666，不能把因子覆盖100%解释为标签完整。训练24行、验证12行，各purgedBoundaryRows=4；验证eligibleObservations=8，只有1个组合评价期且tiedTails=1。正向验证排序结果支持在冻结门槛内保留此研究候选，但不足以推断显著性或稳定性。反证必须同时保留：真实训练netReturn=-0.0077941721257668295、验证netReturn=-0.001821522160301181；验证grossReturn=0.00017847783969893172，未覆盖该回执的成本口径。固定horizon=1个不同观察时刻、quantile=0.25、单边costBps=10；评价器组合为总敞口1、半多半空、每期平仓再建，costPerPeriod=0.002。成本后诊断为负，不能声称盈利，也不据此把信号改为反向。\n相关性与适用边界：账本只有这1个候选，redundancy=[]，无候选间相关性可比较；空冗余记录不证明低相关、独立性或分散化。开发证据digest=sha256:6f421bf3da5a53f018241c22e75f400f85309b605d1449689d2feaa654519ca2，36行、4币、9次HTTP观察，UTC 2026-10-21T08:02:53.754Z至08:07:39.530Z；训练截止08:06:28.961Z，验证截止08:07:39.530Z。评价回执另记dataDigest=sha256:cafd223feded647bfa51d9e5fcfa39056d8e1cd03b31bef8a4dec68246dee9d0，原样保留，不与开发视图摘要混同。time/availableAt为实际抓取时刻，close仅为当次last-price，不是固定周期K线、实际成交时刻或可执行报价；不等长观察步、共同市场暴露、价格更新不同步及并列秩均限制外推。评价器仅检查可得时间戳，未独立核验，也未模拟延迟、流动性、冲击或借币成本；本结果不是显著性检验或券商回测。未读取或计算留出数据，不用留出结果选择或调参。提交后由独立evaluator复核选择资格与冗余，由原生工作流执行finalize和正常报告归档；本角色不代写报告、不声称已归档。","evaluation":{"action":"select","protocol":"sesame.factor-evaluator/v1","receiptDigest":"sha256:3878ff439ea292b5f15c150739d0d5925a01389d567d58eda9a00f49579e8de1","runId":"fm_1f92dfb506dff8474920e5ff02a508cf","selectionDigest":"sha256:e72872bdf347db915347189f69ad36a9beecba6d258369297b718ebadc7632b1","sessionId":"fe_53cee6c8cf9938f52c9d46341636f93e","trialIds":["trial_r0_7a7b7317c5f8"]}},"submittedAt":1792570830413,"finishedAt":1792570863518,"conversationId":"conv_9f635246-c198-47d6-9c2f-8396abde7684","text":"已调用 `auto_factor_submit` **保存并冻结最终选择**，独立 evaluator 返回的选择回执确认：\n\n- **入选 trial：** `trial_r0_7a7b7317c5f8`\n- **因子：** `close / lag(close,1) - 1`\n- **资格：** `status=accepted`、`eligible=true`，通过既定验证门槛。\n\n### 实测依据与取舍\n\n| 指标 | 训练集 | 验证集 |\n|---|---:|---:|\n| Rank IC | 0.1000 | 0.5291 |\n| 有效 IC 截面数 | 4 | 2 |\n| 因子覆盖率 | 83.33% | 100% |\n| 成本后组合诊断收益 | -0.7794% | -0.1822% |\n| 组合评价期数 | 4 | 1 |\n\n保留理由是其正向排序结果通过冻结门槛，**并非证明可交易或盈利**。验证标签覆盖率仅66.67%，且只有2个有效IC截面、1个组合评价期；成本后结果为负，必须作为反证保留。\n\n本实验只有一个候选，`redundancy=[]` 不构成低相关性或独立性证明。开发证据仅为四币、9次不等间隔HTTP观察，`last-price`不是可执行报价，不能外推为稳定因子或固定周期交易结果。\n\n**选择摘要：**  \n`sha256:e72872bdf347db915347189f69ad36a9beecba6d258369297b718ebadc7632b1`\n\n本角色未读取或计算留出、未修改因子、未代写报告。后续 `finalize` 与报告归档交由原生工作流执行，当前未宣称这些阶段已完成。"}],"trials":[{"id":"trial_r0_7a7b7317c5f8","round":0,"direction":"相邻HTTP观察的一阶相对价格动量；预测下一观察期截面收益，禁止改符号或窗口搜索","status":"accepted","createdAt":1792570405871,"hypothesis":"固定正向的一阶相对价格动量假设：以同一品种按实际HTTP抓取时间排序的相邻观察为单位，在时点t取得本次last-price后，定义m(i,t)=close(i,t)/close(i,t-1)-1。对于BTCUSDT、ETHUSDT、SOLUSDT、XRPUSDT，上一观察期m较高的品种，下一观察期相对收益r(i,t+1)=close(i,t+1)/close(i,t)-1应较高，即开发集可评价验证截面的平均Rank IC应为正。仅检验这个固定正号、滞后1个观察步、预测1个观察步的候选，不取负、不换窗口、不搜索参数；相对价格变化指比例变化，不是绝对价格差，也不声称市场中性化。","rationale":"输入与时点：只使用auto_factor_context返回的冻结开发面板，digest=sha256:6f421bf3da5a53f018241c22e75f400f85309b605d1449689d2feaa654519ca2；字段仅close，36行、4个品种、9次观察，范围为2026-10-21T08:02:53.754Z至08:07:39.530Z。time与availableAt均为实际HTTP抓取时刻；close是当次last-price，不是K线收盘、成交发生时刻或可执行报价。训练截止08:06:28.961Z，验证截止08:07:39.530Z；切分前分别为24/12行，不能将其当作独立有效标签数。\n方法与经济含义：比例变化消除四币价格量级差异；逐品种lag=1限定信息只来自t及此前，截面排序检验相对强弱能否延续。潜在机制是短时订单流持续或信息消化不完全，但面板没有订单流、盘口或成交时间证据，机制仅是待检验解释。没有加载额外方法插件，也不把同一close的变换当作独立验证。\n实施交接：数学意图固定为close/lag(close,1)-1，首个观察缺少历史时不填造信号，不以未来数据补齐；下一观察收益仅作标签，不能进入t时信号。预测horizon=1是一个不等长观察步，不是固定分钟或小时，不插值或改为按时间归一化的另一候选。独立evaluator负责预热、缺失、跨切分标签purge、并列秩及真实评价；使用其冻结的horizon=1、quantile=0.25、costBps=10设置，不自行计算或填报Rank IC、覆盖率、净收益或资格。\n反证与决策条件：若实际验证Rank IC为零或负，则本实验不支持预先声明的正向排序关系；训练为正而验证不为正，也不能据训练表现接纳。若无法形成足够有效标签或覆盖不足，应记为证据不足/不合格，而非把缺测冒充负结果。即使排序指标为正，是否接纳仍以冻结evaluator的真实eligible结果为准；成本后净收益非正只否定该成本口径下的经济性，不能单独证明动量方向相反。任何负面结果均保留，不据此取负、换窗、改门槛或扩展研究。\n已有反向解释与限制：开发行中，08:06:28.961Z至08:06:53.955Z的BTC、ETH、XRP记录价格完全未变，提示零收益与并列秩是实际问题，但不足以判定价格停滞原因。微观结构反转、不同品种last-price更新不同步及采样噪声均可能解释后续排序，而非动量机制。四币、极短时段、非均匀观察且受同一市场影响，不构成独立市场验证；首次预热和标签purge会进一步缩小有效样本。此阶段尚无实测评价回执，不声称显著性、普遍预测能力、可交易收益或已完成留出验证；不读取留出观察或原始引用，留出不参与本轮假设或选择。","candidate":{"args":[{"args":[{"name":"close","op":"field"},{"args":[{"name":"close","op":"field"}],"op":"lag","window":1}],"op":"div"},{"op":"constant","value":1}],"op":"sub"},"candidateDigest":"sha256:a0cfd4a431466abcc755945767feaf980cd4e5cd9daf629d40fb41609f46e11c","explanation":"方法与假设映射：按当前auto_factor_context的factor AST合同，以sub(div(field(close),lag(field(close),window=1)),constant(1))精确表达m(i,t)=close(i,t)/close(i,t-1)-1。沿用trial_r0_7a7b7317c5f8已保存的正向一阶相对价格动量假设；这是第0轮唯一候选，无父版本，不提交parentId，不引入新特征、取负、窗口搜索或门槛调整。lag是同一品种前一观察步，不是固定分钟或小时；比例变化并非绝对价格差。\n输入与时点：复用上下文冻结开发证据，digest=sha256:6f421bf3da5a53f018241c22e75f400f85309b605d1449689d2feaa654519ca2，字段仅close；开发集36行、4个品种、9次观察，范围2026-10-21T08:02:53.754Z至08:07:39.530Z。close为本次HTTP抓取的last-price，time与availableAt为实际抓取时刻，并非K线收盘、实际成交时点或可执行报价。信号仅使用t和t以前的close；下一观察期收益只作evaluator标签，不进入AST。使用冻结的horizon=1、quantile=0.25、costBps=10，训练截止08:06:28.961Z、验证截止08:07:39.530Z（均UTC）。评估能力为sesame/factor-evaluator 1.0.2、数据契约所示evaluatorVersion=sesame-factor-ast/1.0.0；不另写评价计算。\n缺失与预热：每个品种首次观察缺少lag=1历史，不能形成此比例信号；AST不作零填充、前后填充或未来补齐。若close或滞后价格缺失，或分母为零，不将其解释成零动量；具体缺失/非有限值处理和有效覆盖以evaluator实际回执为准。时序预热、跨切分标签purge及有效样本数亦由evaluator处理，不以切分前行数替代有效标签数。\n可证伪性及现有反证：正向假设要求验证截面平均Rank IC为正，若真实验证Rank IC为零或负则本实验不支持该方向；覆盖不足或有效标签过少应记录为证据不足/不合格。上游开发证据已记录相邻抓取中部分币种价格未变，提示零收益与并列秩问题，不据此猜测更新原因。资格只依据真实eligible，成本后非正结果不触发取负或改窗。提交前没有评价回执，未填报任何模型生成指标。\n局限与交接：仅四币、极短且不等间隔的HTTP观察，共同市场暴露、last-price不同步、并列秩、首次预热和标签purge均限制解释；样本不能支持显著性、普遍预测能力或可交易盈利结论。未读取留出观察或原始引用，留出不参与实现或选择；本候选及其实际评价回执交由后续固定选择阶段复用。","metrics":{"dataDigest":"sha256:cafd223feded647bfa51d9e5fcfa39056d8e1cd03b31bef8a4dec68246dee9d0","evaluatorVersion":"sesame-factor-ast/1.0.0","expression":{"args":[{"args":[{"name":"close","op":"field"},{"args":[{"name":"close","op":"field"}],"op":"lag","window":1}],"op":"div"},{"op":"constant","value":1}],"op":"sub"},"expressionDigest":"sha256:f09d00c9dad412ca8b53b46361ecc7dc30fa14613787942bffbe402a323895c8","limitations":["This AST evaluator is an editable research baseline, not a standard answer, a significance test, or a broker backtest.","Availability timestamps are checked, not independently verified. Universe selection, corporate actions, delistings and vendor revisions require separate point-in-time evidence.","Forward returns use supplied closes at aligned market timestamps. Entering at the observed close is an idealized assumption; latency, liquidity, short availability, impact and borrowing costs are not modeled.","Portfolio diagnostics hold half long and half short with gross exposure one. Each nonoverlapping interval starts and ends flat, incurs absolute turnover two and fixed one-way costs twice.","Rank IC is the mean per-date Spearman correlation with at least four paired assets. ICIR is mean divided by sample standard deviation, not annualized or adjusted for overlapping labels.","Boundary-crossing labels are purged. Missing fields or endpoints are not imputed. Tied groups crossing a quantile cutoff are omitted; this can leave a date without a portfolio.","Rolling windows count observations for each symbol; forward horizon counts distinct market timestamps. Missing bars can therefore affect the effective duration.","This engine cannot enforce an untouched holdout outside its caller. The workflow must freeze candidate selection and record every holdout exposure before calling holdout evaluation."],"protocol":{"costBps":10,"horizon":1,"horizonUnit":"distinct-market-timestamps","minAssets":4,"portfolio":"gross-one-half-long-half-short-flat-to-flat","portfolioSampling":"nonoverlapping","quantile":0.25,"rankICIR":"not-annualized","splitEnds":"inclusive"},"train":{"costPerPeriod":0.002,"coverage":0.8333333333333334,"dates":6,"eligibleObservations":16,"factorObservations":20,"grossMaxDrawdown":0.00003715814506533022,"grossReturn":0.00018295540079416028,"insolvent":false,"insufficientCrossSections":2,"labelCoverage":0.8333333333333334,"labelObservations":20,"maxDrawdown":0.0077941721257668295,"meanGrossReturn":0.00004573937185992084,"meanNetReturn":-0.001954260628140079,"missingForwardRows":0,"netReturn":-0.0077941721257668295,"numericReturnFailures":0,"overlapSkippedPeriods":0,"portfolioPeriods":4,"purgedBoundaryRows":4,"rankIC":0.1,"rankICIR":0.1889822365046136,"rankICMean":0.1,"rankICStd":0.5291502622129182,"rows":24,"tiedTails":0,"totalTurnover":8,"turnover":2,"validICPeriods":4},"validation":{"costPerPeriod":0.002,"coverage":1,"dates":3,"eligibleObservations":8,"factorObservations":12,"grossMaxDrawdown":0,"grossReturn":0.00017847783969893172,"insolvent":false,"insufficientCrossSections":1,"labelCoverage":0.6666666666666666,"labelObservations":8,"maxDrawdown":0.001821522160301181,"meanGrossReturn":0.0001784778396988207,"meanNetReturn":-0.0018215221603011793,"missingForwardRows":0,"netReturn":-0.001821522160301181,"numericReturnFailures":0,"overlapSkippedPeriods":0,"portfolioPeriods":1,"purgedBoundaryRows":4,"rankIC":0.5290994448735805,"rankICIR":1.38105957449055,"rankICMean":0.5290994448735805,"rankICStd":0.3831112391141827,"rows":12,"tiedTails":1,"totalTurnover":2,"turnover":2,"validICPeriods":2}},"redundancy":[],"evaluationReceipt":{"action":"candidate","candidate":{"args":[{"args":[{"name":"close","op":"field"},{"args":[{"name":"close","op":"field"}],"op":"lag","window":1}],"op":"div"},{"op":"constant","value":1}],"op":"sub"},"candidateDigest":"sha256:a0cfd4a431466abcc755945767feaf980cd4e5cd9daf629d40fb41609f46e11c","eligible":true,"gate":"validation threshold passed; not proof of tradability","metrics":{"dataDigest":"sha256:cafd223feded647bfa51d9e5fcfa39056d8e1cd03b31bef8a4dec68246dee9d0","evaluatorVersion":"sesame-factor-ast/1.0.0","expression":{"args":[{"args":[{"name":"close","op":"field"},{"args":[{"name":"close","op":"field"}],"op":"lag","window":1}],"op":"div"},{"op":"constant","value":1}],"op":"sub"},"expressionDigest":"sha256:f09d00c9dad412ca8b53b46361ecc7dc30fa14613787942bffbe402a323895c8","limitations":["This AST evaluator is an editable research baseline, not a standard answer, a significance test, or a broker backtest.","Availability timestamps are checked, not independently verified. Universe selection, corporate actions, delistings and vendor revisions require separate point-in-time evidence.","Forward returns use supplied closes at aligned market timestamps. Entering at the observed close is an idealized assumption; latency, liquidity, short availability, impact and borrowing costs are not modeled.","Portfolio diagnostics hold half long and half short with gross exposure one. Each nonoverlapping interval starts and ends flat, incurs absolute turnover two and fixed one-way costs twice.","Rank IC is the mean per-date Spearman correlation with at least four paired assets. ICIR is mean divided by sample standard deviation, not annualized or adjusted for overlapping labels.","Boundary-crossing labels are purged. Missing fields or endpoints are not imputed. Tied groups crossing a quantile cutoff are omitted; this can leave a date without a portfolio.","Rolling windows count observations for each symbol; forward horizon counts distinct market timestamps. Missing bars can therefore affect the effective duration.","This engine cannot enforce an untouched holdout outside its caller. The workflow must freeze candidate selection and record every holdout exposure before calling holdout evaluation."],"protocol":{"costBps":10,"horizon":1,"horizonUnit":"distinct-market-timestamps","minAssets":4,"portfolio":"gross-one-half-long-half-short-flat-to-flat","portfolioSampling":"nonoverlapping","quantile":0.25,"rankICIR":"not-annualized","splitEnds":"inclusive"},"train":{"costPerPeriod":0.002,"coverage":0.8333333333333334,"dates":6,"eligibleObservations":16,"factorObservations":20,"grossMaxDrawdown":0.00003715814506533022,"grossReturn":0.00018295540079416028,"insolvent":false,"insufficientCrossSections":2,"labelCoverage":0.8333333333333334,"labelObservations":20,"maxDrawdown":0.0077941721257668295,"meanGrossReturn":0.00004573937185992084,"meanNetReturn":-0.001954260628140079,"missingForwardRows":0,"netReturn":-0.0077941721257668295,"numericReturnFailures":0,"overlapSkippedPeriods":0,"portfolioPeriods":4,"purgedBoundaryRows":4,"rankIC":0.1,"rankICIR":0.1889822365046136,"rankICMean":0.1,"rankICStd":0.5291502622129182,"rows":24,"tiedTails":0,"totalTurnover":8,"turnover":2,"validICPeriods":4},"validation":{"costPerPeriod":0.002,"coverage":1,"dates":3,"eligibleObservations":8,"factorObservations":12,"grossMaxDrawdown":0,"grossReturn":0.00017847783969893172,"insolvent":false,"insufficientCrossSections":1,"labelCoverage":0.6666666666666666,"labelObservations":8,"maxDrawdown":0.001821522160301181,"meanGrossReturn":0.0001784778396988207,"meanNetReturn":-0.0018215221603011793,"missingForwardRows":0,"netReturn":-0.001821522160301181,"numericReturnFailures":0,"overlapSkippedPeriods":0,"portfolioPeriods":1,"purgedBoundaryRows":4,"rankIC":0.5290994448735805,"rankICIR":1.38105957449055,"rankICMean":0.5290994448735805,"rankICStd":0.3831112391141827,"rows":12,"tiedTails":1,"totalTurnover":2,"turnover":2,"validICPeriods":2}},"protocol":"sesame.factor-evaluator/v1","receiptDigest":"sha256:5cc988c6e0b29dcd34494bc50e2cd36dd18f4820dc6bfa487daafdb29ec0a719","redundancy":[],"runId":"fm_1f92dfb506dff8474920e5ff02a508cf","sessionId":"fe_53cee6c8cf9938f52c9d46341636f93e","trialId":"trial_r0_7a7b7317c5f8"},"review":{"verdict":"accept","reason":"Human-language review omitted by the frozen workflow; acceptance uses the actual evaluator eligibility gate.","source":"evaluator"},"eligible":true,"gate":"validation threshold passed; not proof of tradability"}],"events":[{"at":1792570404656,"type":"created","message":"固定输入、时间分割、模型和研究范围，开始因子研究"},{"at":1792570481025,"type":"submitted","message":"quant 提交了结构化 hypothesis","role":"quant","trialId":"trial_r0_7a7b7317c5f8"},{"at":1792570503024,"type":"task_finished","message":"quant 已保存 hypothesis","role":"quant","taskId":"assignment_6a5f0c2c14c36f8fc41ffb653460ee48","trialId":"trial_r0_7a7b7317c5f8"},{"at":1792570559887,"type":"submitted","message":"quant 提交了结构化 code","role":"quant","trialId":"trial_r0_7a7b7317c5f8"},{"at":1792570621480,"type":"task_finished","message":"quant 已保存 code","role":"quant","taskId":"assignment_b5fe00765f79943e11bc45964c4ae204","trialId":"trial_r0_7a7b7317c5f8"},{"at":1792570621727,"type":"evaluated","message":"选中的评估能力已返回计算回执","trialId":"trial_r0_7a7b7317c5f8"},{"at":1792570830414,"type":"submitted","message":"quant 提交了结构化 selection","role":"quant"},{"at":1792570863519,"type":"task_finished","message":"quant 已保存 selection","role":"quant","taskId":"assignment_f5976192134a9ce867ebadb1825088e5"},{"at":1792570863760,"type":"selection_frozen","message":"冻结 1 个候选，交由所选评估能力完成最终评价"},{"at":1792570865540,"type":"completed","message":"研究完成；候选与评估回执可复核"}],"reflections":[],"memory":[],"data":{"dependencies":[{"digest":"sha256:7aa8b14d195100056712820886d7e95cfb6dfb1f23787d8b906c2826d5e0c60e","id":"artifact_6d4f4afd-264c-4fa3-b088-bea613109e7a","kind":"resource","revision":"revision_1a48534d-4e96-40c2-ab24-3d24eec94ab8","schemaVersion":"1.0.0"}],"digest":"sha256:6f421bf3da5a53f018241c22e75f400f85309b605d1449689d2feaa654519ca2","evaluatorVersion":"sesame-factor-ast/1.0.0","fields":["close"],"holdoutMode":"workflow-isolated","inputRefs":[{"digest":"sha256:22715299d8f054325601533dfb6c09c05eafdf29ee9ebf1dc95a136fd519ef24","id":"artifact_41c6e8fa-dd3d-43b6-a81c-fd5d58897a5e","kind":"data","revision":"revision_df616f52-59fc-44f7-b39e-dfef813c5ff5","schemaVersion":"1.0.0"}],"provenance":{"description":"48行=12个实际HTTP抓取时点×BTCUSDT/ETHUSDT/SOLUSDT/XRPUSDT。来源为Binance官方ticker/price多品种端点的12份不可变观测；价格单位USDT/基础资产，精确源十进制文本保留在输入。time与availableAt均为生产者返回的本次真实retrieval/as_of UTC，未将历史收盘或未知发布时间回填。fields.close是HTTP返回last-price的有限Number转换，不是OHLCV闭柱或可执行报价。范围2026-10-21T08:02:53.754Z至08:08:51.552Z。时间间隔不均，预测horizon=1表示下一次观察，不是固定分钟或小时；样本极短且相关，仅验收固定引用/隔离评价/原生报告链路，不能宣称交易收益或普遍因子有效性。历史OKX小时柱因首次可用时间未知未纳入。数据检查、原Ref及抓取时点、原字节hash、切分和限制见冻结脚本、quote-inventory.json与panel-audit.json。","executionId":"exec_96ff9b50-a5c7-42e7-9ea6-c9c5824fa1af","inputIds":["artifact_2f90be77-306e-4a52-8c8f-4d6ba14d40b8","artifact_a0ded00a-ba2b-4320-bbe8-755aa5ce26da","artifact_75f0ccdb-57a5-4d48-a531-798bbaf5fd31","artifact_0fd3d21b-9a7e-4027-be35-67d9d69ec328","artifact_23df2aa1-9f11-4a49-a373-06b630bf88e5","artifact_b6803ef6-5e7e-4b60-a32d-3007a71dc118","artifact_29ccaa76-b829-471a-acdf-cdba23f94a2b","artifact_ad5442fb-49ab-42c1-a714-1c478262985c","artifact_343b8e30-c85d-4f8c-aeb1-7e4ae15572e4","artifact_9f8d1a17-1808-48c4-b2d3-74b4a39523e0","artifact_30277011-bf6e-44ca-a8b2-f51dd4ff114e","artifact_79b27c44-2b8c-4ba5-8ac3-b070a6530742"],"kind":"derived","origin":"derived","outputDigest":"sha256:241a50b50067931aa93bf7113308a71c696289081f104eb43ca2992d76d89bc2","outputPath":"panel.json","recipePaths":["build_panel.py","quote-inventory.json"],"references":[{"digest":"sha256:7aa8b14d195100056712820886d7e95cfb6dfb1f23787d8b906c2826d5e0c60e","id":"artifact_6d4f4afd-264c-4fa3-b088-bea613109e7a","kind":"resource","revision":"revision_1a48534d-4e96-40c2-ab24-3d24eec94ab8","schemaVersion":"1.0.0"}],"sessionId":"conv_main","title":"QA20261021-R5 四币真实HTTP观察数值面板"},"range":{"end":"2026-10-21T08:07:39.530Z","start":"2026-10-21T08:02:53.754Z"},"rowCount":36,"scope":"development","sourceId":"artifact_41c6e8fa-dd3d-43b6-a81c-fd5d58897a5e","symbolCount":4,"synthetic":false},"evaluation":{"action":"prepare","contract":{"candidateExample":{"args":[{"name":"close","op":"field"}],"op":"delta","window":5},"dataset":{"costBps":10,"holdoutEnd":"2026-10-21T08:08:51.552Z","horizon":1,"quantile":0.25,"trainEnd":"2026-10-21T08:06:28.961Z","validationEnd":"2026-10-21T08:07:39.530Z"},"instructions":"This explicitly selected evaluator accepts a factor AST. Operators: field(name), constant(value), add/sub/mul/div(2 args), neg/abs/log/rank/zscore(1 arg), lag/delta/mean/std/sum(1 arg, window 1..252). It computes train/validation Rank IC, coverage, non-overlapping long-short return after costs and train-only redundancy. Submit the AST as candidate; never supply measured metrics.","metricColumns":[{"key":"rankIC","label":"Rank IC"},{"key":"coverage","label":"覆盖率"},{"key":"netReturn","label":"净收益"}]},"data":{"dependencies":[{"digest":"sha256:7aa8b14d195100056712820886d7e95cfb6dfb1f23787d8b906c2826d5e0c60e","id":"artifact_6d4f4afd-264c-4fa3-b088-bea613109e7a","kind":"resource","revision":"revision_1a48534d-4e96-40c2-ab24-3d24eec94ab8","schemaVersion":"1.0.0"}],"digest":"sha256:6f421bf3da5a53f018241c22e75f400f85309b605d1449689d2feaa654519ca2","evaluatorVersion":"sesame-factor-ast/1.0.0","fields":["close"],"holdoutMode":"workflow-isolated","inputRefs":[{"digest":"sha256:22715299d8f054325601533dfb6c09c05eafdf29ee9ebf1dc95a136fd519ef24","id":"artifact_41c6e8fa-dd3d-43b6-a81c-fd5d58897a5e","kind":"data","revision":"revision_df616f52-59fc-44f7-b39e-dfef813c5ff5","schemaVersion":"1.0.0"}],"provenance":{"description":"48行=12个实际HTTP抓取时点×BTCUSDT/ETHUSDT/SOLUSDT/XRPUSDT。来源为Binance官方ticker/price多品种端点的12份不可变观测；价格单位USDT/基础资产，精确源十进制文本保留在输入。time与availableAt均为生产者返回的本次真实retrieval/as_of UTC，未将历史收盘或未知发布时间回填。fields.close是HTTP返回last-price的有限Number转换，不是OHLCV闭柱或可执行报价。范围2026-10-21T08:02:53.754Z至08:08:51.552Z。时间间隔不均，预测horizon=1表示下一次观察，不是固定分钟或小时；样本极短且相关，仅验收固定引用/隔离评价/原生报告链路，不能宣称交易收益或普遍因子有效性。历史OKX小时柱因首次可用时间未知未纳入。数据检查、原Ref及抓取时点、原字节hash、切分和限制见冻结脚本、quote-inventory.json与panel-audit.json。","executionId":"exec_96ff9b50-a5c7-42e7-9ea6-c9c5824fa1af","inputIds":["artifact_2f90be77-306e-4a52-8c8f-4d6ba14d40b8","artifact_a0ded00a-ba2b-4320-bbe8-755aa5ce26da","artifact_75f0ccdb-57a5-4d48-a531-798bbaf5fd31","artifact_0fd3d21b-9a7e-4027-be35-67d9d69ec328","artifact_23df2aa1-9f11-4a49-a373-06b630bf88e5","artifact_b6803ef6-5e7e-4b60-a32d-3007a71dc118","artifact_29ccaa76-b829-471a-acdf-cdba23f94a2b","artifact_ad5442fb-49ab-42c1-a714-1c478262985c","artifact_343b8e30-c85d-4f8c-aeb1-7e4ae15572e4","artifact_9f8d1a17-1808-48c4-b2d3-74b4a39523e0","artifact_30277011-bf6e-44ca-a8b2-f51dd4ff114e","artifact_79b27c44-2b8c-4ba5-8ac3-b070a6530742"],"kind":"derived","origin":"derived","outputDigest":"sha256:241a50b50067931aa93bf7113308a71c696289081f104eb43ca2992d76d89bc2","outputPath":"panel.json","recipePaths":["build_panel.py","quote-inventory.json"],"references":[{"digest":"sha256:7aa8b14d195100056712820886d7e95cfb6dfb1f23787d8b906c2826d5e0c60e","id":"artifact_6d4f4afd-264c-4fa3-b088-bea613109e7a","kind":"resource","revision":"revision_1a48534d-4e96-40c2-ab24-3d24eec94ab8","schemaVersion":"1.0.0"}],"sessionId":"conv_main","title":"QA20261021-R5 四币真实HTTP观察数值面板"},"range":{"end":"2026-10-21T08:07:39.530Z","start":"2026-10-21T08:02:53.754Z"},"rowCount":36,"scope":"development","sourceId":"artifact_41c6e8fa-dd3d-43b6-a81c-fd5d58897a5e","symbolCount":4,"synthetic":false},"inputDigest":"sha256:6f421bf3da5a53f018241c22e75f400f85309b605d1449689d2feaa654519ca2","protocol":"sesame.factor-evaluator/v1","receiptDigest":"sha256:a7e4b1bd165584481c27803727f806def727ad0ef9d458f7c0c357dc9c616757","runId":"fm_1f92dfb506dff8474920e5ff02a508cf","sessionId":"fe_53cee6c8cf9938f52c9d46341636f93e"},"workflowDigest":"sha256:56eb6accebb94772460a1b143174b70e7bc6f55c2d9c1794180614c61129bdda","error":null,"executionAttempt":1,"completedRounds":[0],"selection":{"trialIds":["trial_r0_7a7b7317c5f8"],"reason":"冻结选择唯一候选trial_r0_7a7b7317c5f8，限定为本实验的合格研究候选，不认定其可交易或普遍有效。方法为预先固定的正向一阶相对价格动量close/lag(close,1)-1，预测下一观察步截面收益；不取负、不换窗口、不改门槛。依据auto_factor_context返回的真实trial及evaluationReceipt，而非角色赞同：status=accepted、eligible=true，实际gate为“validation threshold passed; not proof of tradability”。候选回执receiptDigest=sha256:5cc988c6e0b29dcd34494bc50e2cd36dd18f4820dc6bfa487daafdb29ec0a719，candidateDigest=sha256:a0cfd4a431466abcc755945767feaf980cd4e5cd9daf629d40fb41609f46e11c；评价版本sesame-factor-ast/1.0.0。\n实测取舍：训练Rank IC=0.1，验证Rank IC=0.5290994448735805，分别仅4、2个有效IC截面；因子coverage分别为0.8333333333333334、1，验证labelCoverage仅0.6666666666666666，不能把因子覆盖100%解释为标签完整。训练24行、验证12行，各purgedBoundaryRows=4；验证eligibleObservations=8，只有1个组合评价期且tiedTails=1。正向验证排序结果支持在冻结门槛内保留此研究候选，但不足以推断显著性或稳定性。反证必须同时保留：真实训练netReturn=-0.0077941721257668295、验证netReturn=-0.001821522160301181；验证grossReturn=0.00017847783969893172，未覆盖该回执的成本口径。固定horizon=1个不同观察时刻、quantile=0.25、单边costBps=10；评价器组合为总敞口1、半多半空、每期平仓再建，costPerPeriod=0.002。成本后诊断为负，不能声称盈利，也不据此把信号改为反向。\n相关性与适用边界：账本只有这1个候选，redundancy=[]，无候选间相关性可比较；空冗余记录不证明低相关、独立性或分散化。开发证据digest=sha256:6f421bf3da5a53f018241c22e75f400f85309b605d1449689d2feaa654519ca2，36行、4币、9次HTTP观察，UTC 2026-10-21T08:02:53.754Z至08:07:39.530Z；训练截止08:06:28.961Z，验证截止08:07:39.530Z。评价回执另记dataDigest=sha256:cafd223feded647bfa51d9e5fcfa39056d8e1cd03b31bef8a4dec68246dee9d0，原样保留，不与开发视图摘要混同。time/availableAt为实际抓取时刻，close仅为当次last-price，不是固定周期K线、实际成交时刻或可执行报价；不等长观察步、共同市场暴露、价格更新不同步及并列秩均限制外推。评价器仅检查可得时间戳，未独立核验，也未模拟延迟、流动性、冲击或借币成本；本结果不是显著性检验或券商回测。未读取或计算留出数据，不用留出结果选择或调参。提交后由独立evaluator复核选择资格与冗余，由原生工作流执行finalize和正常报告归档；本角色不代写报告、不声称已归档。","evaluation":{"action":"select","protocol":"sesame.factor-evaluator/v1","receiptDigest":"sha256:3878ff439ea292b5f15c150739d0d5925a01389d567d58eda9a00f49579e8de1","runId":"fm_1f92dfb506dff8474920e5ff02a508cf","selectionDigest":"sha256:e72872bdf347db915347189f69ad36a9beecba6d258369297b718ebadc7632b1","sessionId":"fe_53cee6c8cf9938f52c9d46341636f93e","trialIds":["trial_r0_7a7b7317c5f8"]},"frozenAt":1792570863759,"digest":"sha256:e72872bdf347db915347189f69ad36a9beecba6d258369297b718ebadc7632b1"},"holdout":{"trial_r0_7a7b7317c5f8":{"costPerPeriod":0.002,"coverage":1,"dates":3,"eligibleObservations":8,"factorObservations":12,"grossMaxDrawdown":0.00008956740806664865,"grossReturn":0.000012264115747617765,"insolvent":false,"insufficientCrossSections":1,"labelCoverage":0.6666666666666666,"labelObservations":8,"maxDrawdown":0.0039837604307270125,"meanGrossReturn":0.000006136618675128825,"meanNetReturn":-0.0019938633813248712,"missingForwardRows":0,"netReturn":-0.0039837604307270125,"numericReturnFailures":0,"overlapSkippedPeriods":0,"portfolioPeriods":2,"purgedBoundaryRows":4,"rankIC":0,"rankICIR":0,"rankICMean":0,"rankICStd":1.1313708498984762,"rows":12,"tiedTails":0,"totalTurnover":4,"turnover":2,"validICPeriods":2}},"finalEvaluation":{"action":"finalize","holdout":{"trial_r0_7a7b7317c5f8":{"costPerPeriod":0.002,"coverage":1,"dates":3,"eligibleObservations":8,"factorObservations":12,"grossMaxDrawdown":0.00008956740806664865,"grossReturn":0.000012264115747617765,"insolvent":false,"insufficientCrossSections":1,"labelCoverage":0.6666666666666666,"labelObservations":8,"maxDrawdown":0.0039837604307270125,"meanGrossReturn":0.000006136618675128825,"meanNetReturn":-0.0019938633813248712,"missingForwardRows":0,"netReturn":-0.0039837604307270125,"numericReturnFailures":0,"overlapSkippedPeriods":0,"portfolioPeriods":2,"purgedBoundaryRows":4,"rankIC":0,"rankICIR":0,"rankICMean":0,"rankICStd":1.1313708498984762,"rows":12,"tiedTails":0,"totalTurnover":4,"turnover":2,"validICPeriods":2}},"holdoutStatus":"evaluated","protocol":"sesame.factor-evaluator/v1","receiptDigest":"sha256:370ce500a2d1b97a20f73d4744e8e0c9bf7814d2b84336a4bd6b12b118680f71","runId":"fm_1f92dfb506dff8474920e5ff02a508cf","selectionDigest":"sha256:e72872bdf347db915347189f69ad36a9beecba6d258369297b718ebadc7632b1","sessionId":"fe_53cee6c8cf9938f52c9d46341636f93e"},"completedAt":1792570865536}</script>
+<script>
+(() => {
+  'use strict';
+  const run = JSON.parse(document.getElementById('run-snapshot').textContent);
+  const trials = Array.isArray(run.trials) ? run.trials : [];
+  const rows = [...document.querySelectorAll('[data-trial-row]')];
+  const details = [...document.querySelectorAll('[data-trial-detail]')];
+  const status = document.getElementById('status-filter');
+  const direction = document.getElementById('direction-filter');
+  const noTrial = document.getElementById('trial-empty');
+  function choose(index, focus) {
+    rows.forEach(row => row.setAttribute('aria-pressed', String(Number(row.dataset.trialRow) === index)));
+    details.forEach(detail => { detail.hidden = Number(detail.dataset.trialDetail) !== index; });
+    noTrial.hidden = index >= 0;
+    if (focus && index >= 0) {
+      document.getElementById('evidence').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+      rows[index].focus({ preventScroll: true });
+    }
+  }
+  function group(trial) {
+    const verdict = ['accepted', 'rejected', 'failed', 'cancelled', 'canceled'].includes(trial.status) ? trial.status : trial.review?.verdict || trial.status;
+    return ['accept', 'accepted'].includes(verdict) ? 'accepted' : ['reject', 'rejected'].includes(verdict) ? 'rejected' : 'other';
+  }
+  function filter() {
+    rows.forEach((row, i) => { row.hidden = (status.value !== 'all' && group(trials[i]) !== status.value) || (direction.value !== 'all' && trials[i].direction !== direction.value); });
+    const visible = rows.filter(row => !row.hidden);
+    const selected = visible.find(row => row.getAttribute('aria-pressed') === 'true') || visible[0];
+    choose(selected ? Number(selected.dataset.trialRow) : -1, false);
+    document.getElementById('trial-count').textContent = visible.length + ' / ' + trials.length + ' 个试验';
+  }
+  status.addEventListener('change', filter); direction.addEventListener('change', filter);
+  rows.forEach(row => row.addEventListener('click', () => choose(Number(row.dataset.trialRow), false)));
+  document.querySelectorAll('[data-open-trial]').forEach(button => button.addEventListener('click', () => {
+    status.value = 'all'; direction.value = 'all'; filter(); choose(Number(button.dataset.openTrial), true);
+  }));
+})();
+</script></body></html>

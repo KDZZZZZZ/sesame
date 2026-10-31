@@ -9,7 +9,7 @@ export function createCapabilities(host) {
     auto_factor_models: () => { runtime().main(host); return { models: host.context.models, roles: ROLES }; },
     auto_factor_start: (args, signal) => runtime().create(host, args, signal),
     auto_factor_context: async (args, _signal, execution) => { const value = runtime().context(host, args.run_id, args.section, args.offset, args.limit, execution); await runtime().checkpoints.flush(); return value; },
-    auto_factor_submit: (args, signal, execution) => runtime().submit(host, args.run_id, args.output, signal, execution),
+    auto_factor_submit: (args, signal, execution) => runtime().submit(host, args.run_id, args.output, signal, execution, args.step_id),
     auto_factor_report: args => runtime().report(host, args.run_id),
     auto_factor_activity: args => { const service = runtime(), run = service.get(args.run_id); service.main(host, run); check(run.workflow, 'NOT_STARTED', 'The workflow has no execution yet'); return host.views.open({ surface: 'run', runId: run.workflow.id }); },
     auto_factor_runs: async args => {

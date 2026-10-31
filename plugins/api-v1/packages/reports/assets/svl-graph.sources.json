@@ -1,0 +1,28 @@
+{
+  "renderer": "Sesame application SVL canvas",
+  "sources": {
+    "modules/frontend/src/features/strategy-projects/svl-graph-canvas.tsx": "cbd4e7a75ef95d148a3eed028ede5bcf825ce02635d024c3945cc8484951da79",
+    "modules/frontend/src/features/strategy-projects/svl-graph-canvas.css": "39b0fb4b1908229713e74b8c07b64158c3dab6ad2058316bfd09bc6b89f1b947",
+    "modules/frontend/src/features/strategy-projects/svl-layout.js": "d2219edf11339c49e15af2c1093b46ea37432a635f1544017c780c8ba22679ae",
+    "modules/frontend/src/features/strategy-projects/svl-logic-model.js": "80ae1756510a02a5626765b303672f7ad466364f563f46a58d97fd94dfe52282",
+    "modules/frontend/src/features/strategy-projects/svl-logic-view.tsx": "ad600a5fd2902fc9059d820ea5401540afbc1aa3fd3bbaacb8b2c5ea5e365bca",
+    "modules/frontend/src/features/strategy-projects/svl-logic-view.css": "bbf8864db68ccc93fe93953177b2d8c1673e192a3381b0da3a7d8a5378b7adb8",
+    "modules/frontend/src/features/strategy-projects/svl-expression-model.js": "da474394829659fdc7602c4c7900edd0320607767ef6ecefb727e8cff8a3c42c",
+    "modules/frontend/src/features/strategy-projects/svl-expression-tree.tsx": "6b89fae62d850e18c3cb87b5ef7b3fbe8500a9f2ed875266f5d4568858a49a51",
+    "modules/frontend/src/features/strategy-projects/svl-expression-tree.css": "8a752dc9ded28d64b19945cee1fde3d38bd8b61542786c2c22ac0ea327f96a96"
+  },
+  "dependencies": {
+    "react": {
+      "version": "19.3.0",
+      "license": "MIT"
+    },
+    "react-dom": {
+      "version": "19.3.0",
+      "license": "MIT"
+    },
+    "lucide-react": {
+      "version": "1.49.0",
+      "license": "ISC"
+    }
+  }
+}

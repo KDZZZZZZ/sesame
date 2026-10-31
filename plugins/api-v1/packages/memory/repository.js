@@ -119,7 +119,12 @@ export class MemoryRepository {
     requireValue(source?.type === 'user_message' && typeof source.id === 'string' && source.id !== previous?.confirmed_by?.id,
       riskConfirmationMessage, 422, 'memory_risk_confirmation_required');
     try { return await this.source(cid, source); }
-    catch { requireValue(false, riskConfirmationMessage, 422, 'memory_risk_confirmation_required'); }
+    catch (error) {
+      // Denied or unavailable evidence access is not a missing user confirmation.
+      // Only malformed or unauthentic source references become confirmation refusals.
+      if (!['invalid_request', 'INVALID_ARGUMENT', 'INVALID_INPUT', 'memory_source_invalid'].includes(error?.code)) throw error;
+      requireValue(false, riskConfirmationMessage, 422, 'memory_risk_confirmation_required');
+    }
   }
   confirmedSources(sources, confirmation, previousConfirmation) {
     // Previous confirmations remain in revision history, not an ever-growing
@@ -163,7 +168,7 @@ export class MemoryRepository {
     if (riskRule(value) && value.manually_archived) return 'archived';
     if (value.evidence === 'conflicted' || conflicts.length) return 'conflict';
     if (value.manually_archived) return 'archived';
-    if (riskRule(value) || value.pinned || value.category === 'user/constraints' && value.evidence === 'explicit') return 'hot';
+    if (riskRule(value) || value.pinned || ['user/constraints', 'user/workflow'].includes(value.category) && value.evidence === 'explicit') return 'hot';
     const days = (this.clock() - Math.max(Date.parse(value.last_used_at ?? value.created_at), value.restored_at ? Date.parse(value.restored_at) : 0)) / DAY;
     return days >= policy.archive_days ? 'archived' : days >= policy.hot_days ? 'warm' : 'hot';
   }

@@ -81,9 +81,9 @@
       "pluginId": "sesame/factor-evaluator",
       "component": "manifest",
       "beforeDigest": "sha256:ff62640e6084b044b4d2ea48f14ad584c7889b6b09523f01ee56c01ee5ac85ea",
-      "afterDigest": "sha256:e3335677c53f54b885330c2b5526b32b54f5ab0ad2c53c95eb46cc12dce89861",
+      "afterDigest": "sha256:5feadb2bc9e21d19c67247c03065af1a0bb63ce9ca9ade1926923a0b07b4d38d",
       "decision": "approved",
-      "reason": "Exact engineering review: retain the previously verified explicit new-host range and fixed host.datasets.query request with no broad scope; the only subsequent manifest change is the description of single-symbol/cross-sectional evaluation and seven optional diagnostics. Restoring the prior description, baseline version, old engine and absence of permissions reconstructs the original manifest; no runtime grant is created.",
+      "reason": "Exact engineering review for user-requested task-selected tests and conditional factor use: add complete-trial DSR/PBO and evaluationPlan; legacy and Agent thresholds become advisory, only explicit user required constraints gate. Unmeasurable data remains distinct from weak evidence. Existing fixed-ref, authority, isolated holdout and complete-trial tests pass; no immutable baseline or runtime authority is replaced.",
       "evidence": {
         "baselineReconstruction": "Restore the archived prior description, recorded baseline version, engines.sesame >=0.2.3, and absence of permissions; the complete original manifest digest matches.",
         "beforeEngine": ">=0.2.3",
@@ -95,16 +95,26 @@
           ]
         },
         "previousDescription": "可独立选择的确定性因子 AST 评估器，保存输入、候选和冻结选择回执；不编排 Agent、不连接交易账户。",
-        "previouslyReviewedDigest": "sha256:b52523be7795a4363e0bab8d5d22b1461ffb6f40da48487a4c4ca178c1c754f9"
+        "previouslyReviewedDigest": "sha256:b52523be7795a4363e0bab8d5d22b1461ffb6f40da48487a4c4ca178c1c754f9",
+        "researchValidation20261029": {
+          "previouslyReviewedDigest": "sha256:e3335677c53f54b885330c2b5526b32b54f5ab0ad2c53c95eb46cc12dce89861",
+          "receipt": "output/research-validation-20261029/evaluator/verification.json",
+          "changes": [
+            "Task-selected DSR/PBO from every registered measured trial; failed and missing returns preserved",
+            "Evaluation plan records threshold source/mode/reason; only user required gates",
+            "Measured conditional evidence permitted, development-discovered conditions exploratory",
+            "Factor evaluator authority and source-integrity boundaries preserved"
+          ]
+        }
       }
     },
     {
       "pluginId": "sesame/factor-evaluator",
       "component": "declaration",
       "beforeDigest": "sha256:53b08d7816ae14bbd7680c5a78c6eea75d9015ab2d8c20223c24757c594053ac",
-      "afterDigest": "sha256:1586b79c222ac68ff708f392a9e4a357d4707e10cb2dfb403334b927e3a14531",
+      "afterDigest": "sha256:4ecdf89365f3501bf70e9d047bbb02c8fb6272e785484b7cd967623545f20caf",
       "decision": "approved",
-      "reason": "Exact engineering review against recovered original declaration bytes whose full canonical digest matches the immutable baseline. Retain the previously reviewed fixed ArtifactRef input and bounded options, fixed-data read effect and provenance contract; add optional seven-diagnostic configuration and single-symbol/time-series descriptions. Diagnostic availability does not become a required selection gate; actual finite validation evidence and explicit thresholds still govern eligibility.",
+      "reason": "Exact engineering review for user-requested task-selected tests and conditional factor use: add complete-trial DSR/PBO and evaluationPlan; legacy and Agent thresholds become advisory, only explicit user required constraints gate. Unmeasurable data remains distinct from weak evidence. Existing fixed-ref, authority, isolated holdout and complete-trial tests pass; no immutable baseline or runtime authority is replaced.",
       "evidence": {
         "baselineReconstruction": "The archived workflow-split declaration reproduces the immutable baseline digest exactly; no baseline bytes or digest are changed.",
         "previouslyReviewedDigest": "sha256:e6fd47df5731d1c79ad99dfeec0ea84f765f28d1c794fe3e6e93d4a9cac91b70",
@@ -115,7 +125,17 @@
           "usage: fixed input provenance, one-symbol time-series support, actual workflow reports and distinct unavailable/not-applicable statuses",
           "knowledge: additive DIAGNOSTICS.md research/configuration guide"
         ],
-        "validation": "Existing fixed-ArtifactRef protocol/lineage, diagnostic, time-series and research-collaboration suites pass; seven diagnostics remain optional and isolated."
+        "validation": "Existing fixed-ArtifactRef protocol/lineage, diagnostic, time-series and research-collaboration suites pass; seven diagnostics remain optional and isolated.",
+        "researchValidation20261029": {
+          "previouslyReviewedDigest": "sha256:1586b79c222ac68ff708f392a9e4a357d4707e10cb2dfb403334b927e3a14531",
+          "receipt": "output/research-validation-20261029/evaluator/verification.json",
+          "changes": [
+            "Task-selected DSR/PBO from every registered measured trial; failed and missing returns preserved",
+            "Evaluation plan records threshold source/mode/reason; only user required gates",
+            "Measured conditional evidence permitted, development-discovered conditions exploratory",
+            "Factor evaluator authority and source-integrity boundaries preserved"
+          ]
+        }
       }
     },
     {
@@ -164,9 +184,9 @@
       "pluginId": "sesame/strategy-authoring",
       "component": "manifest",
       "beforeDigest": "sha256:51ce736f8a19110d0c71ef307e61042719d6189bcbf0808d246e063d2a25efeb",
-      "afterDigest": "sha256:69ef65a886563c46033cca7c953f0aed5cb88d16af6a7e3959b9712b303ad831",
+      "afterDigest": "sha256:e5b951218d98451fe4fdd94313fa2e740c9e27759abec52738902ae97b216e3a",
       "decision": "approved",
-      "reason": "Automated exact-hash engineering acceptance: Explicit new-host range and only actual host.models.query, host.model.complete and workspace#write calls. No wildcard/broad scope; inverse full-manifest reconstruction proves the bounded request migration. Not human/release/broker acceptance.",
+      "reason": "Engineering acceptance of the user-requested SVL annotation guidance and commented example resource used by automatic logic-tree rendering. Identity, API entry, permissions and bindings are unchanged; the original baseline digest is preserved.",
       "evidence": {
         "baselineReconstruction": "Restore the recorded baseline version, engines.sesame >=0.2.3, and absence of permissions; the complete original manifest digest matches.",
         "beforeEngine": ">=0.2.3",
@@ -206,16 +226,83 @@
       "pluginId": "sesame/abu-parameter-search",
       "component": "declaration",
       "beforeDigest": "sha256:ba6f914796b286820634bc4e4a85bd8f3efa98b5003e159cd548c52184abc968",
-      "afterDigest": "sha256:3c7836bc8cbae0dc2fcab85d39d7bffed1431977c3cfca1d911b896da0e7c635",
+      "afterDigest": "sha256:40adde5f5c317730635d13943db6e242fd0cf395d203868adbe435b2e64e3604",
       "decision": "approved",
-      "reason": "Exact engineering review of one additive researchDataAccess declaration: schemaVersion:1, reads:input-only, writes:derived-artifacts-only. Removing only that field reproduces the complete archived baseline declaration. Existing calculation schemas, effects and input/output behavior are unchanged; this enables the authorized knowledge/calculator collaboration without granting external reads.",
+      "reason": "Exact engineering review of user-authorized ABU consolidation: Clarify bounded input-only parameter-space and supplied-metric ranking; it never executes trials or a native optimizer. Preserve selected-only holdout checks and all existing mathematics/schema/effects.",
       "evidence": {
         "baselineReconstruction": "Remove exactly capabilities[0].researchDataAccess; the complete archived original declaration digest matches.",
         "addedContract": {
           "schemaVersion": 1,
           "reads": "input-only",
           "writes": "derived-artifacts-only"
+        },
+        "abuConsolidation20261029": {
+          "previouslyReviewedDigest": "sha256:3c7836bc8cbae0dc2fcab85d39d7bffed1431977c3cfca1d911b896da0e7c635",
+          "receipt": "output/abu-consolidation-20261029/verification-summary.json"
         }
+      },
+      "reviewHistory": [
+        {
+          "afterDigest": "sha256:3c7836bc8cbae0dc2fcab85d39d7bffed1431977c3cfca1d911b896da0e7c635",
+          "decision": "approved",
+          "reason": "Exact engineering review of one additive researchDataAccess declaration: schemaVersion:1, reads:input-only, writes:derived-artifacts-only. Removing only that field reproduces the complete archived baseline declaration. Existing calculation schemas, effects and input/output behavior are unchanged; this enables the authorized knowledge/calculator collaboration without granting external reads.",
+          "evidence": {
+            "baselineReconstruction": "Remove exactly capabilities[0].researchDataAccess; the complete archived original declaration digest matches.",
+            "addedContract": {
+              "schemaVersion": 1,
+              "reads": "input-only",
+              "writes": "derived-artifacts-only"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "pluginId": "sesame/abu-similarity",
+      "component": "manifest",
+      "beforeDigest": "sha256:f28458fb338cf42d2d28ac3c88247eefa1b95ade03b3a04543a4f48e3b4d188f",
+      "afterDigest": "sha256:65dad066500e38c3650091bd92fb08fcbac4187bf680bfd321b34e0ed7a81623",
+      "decision": "approved",
+      "reason": "Exact engineering review of user-authorized ABU consolidation: Clarify public title as concurrent return similarity, preserving actual source permissions/resources and implementation.",
+      "evidence": {
+        "receipt": "output/abu-consolidation-20261029/verification-summary.json",
+        "retirement": "plugins/api-v1/tests/fixtures/analysis-plugin-retirements.json"
+      }
+    },
+    {
+      "pluginId": "sesame/abu-similarity",
+      "component": "declaration",
+      "beforeDigest": "sha256:5e26e0c14e8fad50229dc7bbed9276401b2ec48a036c4b0bfd416b11ef4c357a",
+      "afterDigest": "sha256:86e3afc54067f5cb94751ff547f6196ba6f0703d2ec1609a3b2a5bc883c92eb7",
+      "decision": "approved",
+      "reason": "Exact engineering review of user-authorized ABU consolidation: Clarify exact return-start/end alignment and Pearson/Spearman/sign agreement; no historical scenario retrieval or predictive probability. Mathematics, data access and output unchanged.",
+      "evidence": {
+        "receipt": "output/abu-consolidation-20261029/verification-summary.json",
+        "retirement": "plugins/api-v1/tests/fixtures/analysis-plugin-retirements.json"
+      }
+    },
+    {
+      "pluginId": "sesame/abu-trade-metrics",
+      "component": "manifest",
+      "beforeDigest": "sha256:85b1a1429693c759f4388d3e68570129e51a30c01203b5fd068b012c9fb1cb79",
+      "afterDigest": "sha256:066db0219fd54eee9adb6a3f7d070aa6659b1f67b0cf5f1e1fe40a8029a0a53a",
+      "decision": "approved",
+      "reason": "Exact engineering review of user-authorized ABU consolidation: Rename the public package to trade-results diagnostics; expose the migrated audit method, example and provenance as declared package resources while preserving GPL and existing metrics.",
+      "evidence": {
+        "receipt": "output/abu-consolidation-20261029/verification-summary.json",
+        "retirement": "plugins/api-v1/tests/fixtures/analysis-plugin-retirements.json"
+      }
+    },
+    {
+      "pluginId": "sesame/abu-trade-metrics",
+      "component": "declaration",
+      "beforeDigest": "sha256:924ecaae9c013a373ee89de422a3d8b097655b739bb0b80b36727ccecbb5a030",
+      "afterDigest": "sha256:ac3779e3e52b846152f79662201ef5dee57b373c1b64304b53102ce1a7973058",
+      "decision": "approved",
+      "reason": "Exact engineering review of user-authorized ABU consolidation: Preserve equity-performance computation and add the independent actual abu_trade_results_audit binding/schema. Both input-only computations publish their own derived artifacts; no source dereference, native execution or retired alias. Seven audit numerical goldens and real API2 factory/host tests pass.",
+      "evidence": {
+        "receipt": "output/abu-consolidation-20261029/verification-summary.json",
+        "retirement": "plugins/api-v1/tests/fixtures/analysis-plugin-retirements.json"
       }
     }
   ]

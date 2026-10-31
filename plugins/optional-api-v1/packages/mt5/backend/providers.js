@@ -10,6 +10,28 @@ const within = (time, range) => timeKey(time) >= timeKey(range.from) && timeKey(
 const meta = (from, warnings = [], freshness = 'live') => ({ observedAt: Date.now(), freshness, origin: 'observed', consistency: 'bounded', samplingWindow: { from, to: Date.now() }, warnings });
 const nativeWarnings = [{ code: 'NATIVE_JSON_PRECISION', message: 'MT5 numeric JSON fields may already contain binary floating-point rounding; textual decimals are preserved.' }, { code: 'BROKER_WALL_TIME', message: 'Broker timestamps without offsets remain wall time; the adapter does not infer UTC.' }];
 const present = input => input !== undefined && input !== null && input !== '';
+const cacheFallback = cause => ['SOURCE_UNAVAILABLE', 'TIMEOUT', 'RATE_LIMITED'].includes(cause.code);
+// Native MCP failures must cross the source contract with its public error
+// codes. An opaque INTERNAL gap stops host recovery even after MT5 reconnects.
+function sourceReadError(cause, official) {
+  let code;
+  if (cause.name === 'TimeoutError' || cause.code === 'ETIMEDOUT') code = 'TIMEOUT';
+  else if (cause.code === 'mt5_mcp_http') {
+    const status = cause.upstreamStatus;
+    code = status === 401 ? 'AUTH_REQUIRED' : status === 403 ? 'FORBIDDEN' : status === 429 ? 'RATE_LIMITED'
+      : status === 408 || status === 504 ? 'TIMEOUT' : status === 404 || status >= 500 ? 'SOURCE_UNAVAILABLE' : 'INVALID_PROVIDER_DATA';
+  } else if (['terminal_preparing', 'mt5_read_unavailable', 'mt5_mcp_incomplete', 'mt5_offline'].includes(cause.code)) code = 'SOURCE_UNAVAILABLE';
+  else if (cause.code === 'mt5_not_configured') code = 'AUTH_REQUIRED';
+  else if (cause.code === 'mt5_permission_denied') code = 'FORBIDDEN';
+  else if (cause.code === 'mt5_account_mismatch') code = 'ACCOUNT_MISMATCH';
+  else {
+    const transport = [cause, cause.cause, ...(cause.cause?.errors ?? [])];
+    if (transport.some(error => ['ECONNREFUSED', 'ECONNRESET', 'EPIPE', 'UND_ERR_SOCKET', 'UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_HEADERS_TIMEOUT', 'UND_ERR_BODY_TIMEOUT'].includes(error?.code))) code = 'SOURCE_UNAVAILABLE';
+  }
+  if (!code) return cause;
+  const message = official.redact?.(String(cause.message)) ?? String(cause.message);
+  return Object.assign(new Error(message), { code });
+}
 // Real local evidence from MetaTrader 5 MCP 1.0 on 2026-10-14:
 // The read-only get_time_information response (fixture: mt5-account-mcp.test.js)
 // reported structuredContent
@@ -109,12 +131,15 @@ class NativeProvider {
         this.reads.set(key, entry);
       }
       return clone(result);
-    } finally { binding.readControllers.delete(controller); }
+    } catch (cause) { throw sourceReadError(cause, this.mt5.official); }
+    finally { binding.readControllers.delete(controller); }
   }
   async accountInfo(context) {
     const binding = this.binding(context), data = await this.read('get_trading_account_info', {}, context, 1000);
+    const matches = String(data.account?.login) === binding.login && data.account?.server === binding.server;
+    if (present(data.account?.login) || present(data.account?.server)) check(matches, 'ACCOUNT_MISMATCH', 'The terminal account differs from the bound account');
     check(data.terminal?.server_connected === true, 'SOURCE_UNAVAILABLE', 'MT5 is not connected to the broker');
-    check(String(data.account?.login) === binding.login && data.account?.server === binding.server, 'ACCOUNT_MISMATCH', 'The terminal account differs from the bound account');
+    check(matches, 'ACCOUNT_MISMATCH', 'The terminal account differs from the bound account');
     return data;
   }
   async currentBrokerTime(context, binding) {
@@ -174,28 +199,60 @@ function pollSubscription({ snapshot, read, events, intervalMs, context }) {
 
 export class MT5MarketProvider extends NativeProvider {
   async catalog(context) {
-    await this.accountInfo(context);
-    const data = await this.read('get_marketwatch_symbols', { include_hidden: true, limit: 10000 }, context, 30000);
-    check(Array.isArray(data.symbols) && data.symbols.length < 10000, 'RESOURCE_EXHAUSTED', 'The broker symbol catalog is missing or truncated');
-    return data.symbols;
+    const binding = this.binding(context);
+    try {
+      await this.accountInfo(context);
+      const data = await this.read('get_marketwatch_symbols', { include_hidden: true, limit: 10000 }, context, 30000);
+      check(Array.isArray(data.symbols) && data.symbols.length < 10000, 'RESOURCE_EXHAUSTED', 'The broker symbol catalog is missing or truncated');
+      return { items: data.symbols, observedAt: Date.now(), freshness: 'live', warnings: [] };
+    } catch (cause) {
+      this.binding(context);
+      if (!cacheFallback(cause) || context.signal?.aborted) throw cause;
+      const cached = this.mt5.market.cachedSymbols?.(binding.server);
+      if (!cached?.items.length) throw cause;
+      return { items: cached.items, observedAt: cached.observedAt, freshness: 'stale',
+        warnings: [{ code: 'OFFLINE_CACHE', message: 'Only retained broker symbols are available; this is not a complete or live instrument catalog.' },
+          ...(cached.observedAt === 0 ? [{ code: 'CACHE_OBSERVED_AT_UNKNOWN', message: 'The retained symbol observations have no recorded capture time.' }] : [])] };
+    }
   }
   async searchInstruments(input, context) {
     const from = Date.now(), binding = this.binding(context);
     const result = await this.pages.read(input, context.bindingId, async () => {
       const text = String(input.query ?? '').trim().toLowerCase(); check(text.length <= 200, 'INVALID_ARGUMENT', 'Instrument query is too long');
-      const all = (await this.catalog(context)).map(row => mapInstrument(row, binding));
+      const catalog = await this.catalog(context), all = catalog.items.map(row => mapInstrument(row, binding));
       const items = all.filter(row => (!text || `${row.symbol} ${row.name}`.toLowerCase().includes(text)) && (!input.assetClasses?.length || input.assetClasses.includes(row.assetClass)) && (!input.venues?.length || row.venue.status === 'value' && input.venues.includes(row.venue.value)))
         .sort((a, b) => Number(b.symbol.toLowerCase() === text) - Number(a.symbol.toLowerCase() === text) || a.symbol.localeCompare(b.symbol))
         .map(({ ref, symbol, name, assetClass, venue }) => ({ ref, symbol, name, assetClass, venue }));
-      return { items, observedAt: Date.now() };
+      return { items, observedAt: catalog.observedAt, freshness: catalog.freshness, warnings: catalog.warnings };
     });
-    return { data: result.page, meta: { ...meta(from), observedAt: result.observedAt } };
+    return { data: result.page, meta: { ...meta(from, result.warnings, result.freshness), observedAt: result.observedAt } };
   }
   async describeInstrument(input, context) {
     const from = Date.now(), binding = this.binding(context, null, input.instrument);
-    const row = (await this.catalog(context)).find(row => row.symbol === input.instrument.instrumentId);
+    const catalog = await this.catalog(context), row = catalog.items.find(row => row.symbol === input.instrument.instrumentId);
     check(row, 'NOT_FOUND', 'The bound broker did not return the requested instrument');
-    return { data: mapInstrument(row, binding), meta: meta(from, !Number.isInteger(row.digits) ? [{ code: 'DISPLAY_PRECISION_UNKNOWN', message: 'The broker did not report a display precision; no tick size is inferred.' }] : []) };
+    let time, freshness = catalog.freshness, observedAt = catalog.observedAt;
+    const warnings = [...catalog.warnings];
+    // Once the broker is known offline, no additional clock/network probe is
+    // needed to locate retained history. Only native observations can anchor it.
+    if (catalog.freshness === 'live') {
+      try { time = await this.currentBrokerTime(context, binding); }
+      catch (cause) {
+        this.binding(context, null, input.instrument);
+        if (!cacheFallback(cause) && cause.code !== 'UNSUPPORTED_CAPABILITY') throw cause;
+      }
+    }
+    if (!time) {
+      const cached = this.mt5.market.latestNativeBar?.(binding.server, input.instrument.instrumentId);
+      const retained = cached && sourceTime(cached.time, binding.server);
+      if (retained?.basis === 'wall' && retained.authority === binding.server) {
+        time = retained; freshness = 'stale'; observedAt = Math.min(observedAt, cached.observedAt);
+        warnings.push({ code: 'CACHED_SOURCE_TIME', message: 'Source time is the newest retained native bar opening time for this broker and instrument; it is not a live quote or evidence of complete history.' });
+      }
+    }
+    this.binding(context, null, input.instrument);
+    return { data: mapInstrument(row, binding), meta: { ...meta(from, [...warnings,
+      ...(!Number.isInteger(row.digits) ? [{ code: 'DISPLAY_PRECISION_UNKNOWN', message: 'The broker did not report a display precision; no tick size is inferred.' }] : [])], freshness), observedAt, ...(time ? { sourceTime: time } : {}) } };
   }
   validateSpec(spec) {
     check(spec && spec.priceBasis === 'bid' && spec.adjustment === 'none' && spec.session === 'all', 'UNSUPPORTED_CAPABILITY', 'This MT5 adapter supports broker bid bars, no adjustment, and the broker all-session history');
@@ -223,7 +280,7 @@ export class MT5MarketProvider extends NativeProvider {
     this.mt5.market.cacheNativeBars?.(binding.server, input.instrument.instrumentId, period, rows, observedAt);
     } catch (cause) {
       this.binding(context);
-      if (tail || ['ACCOUNT_MISMATCH', 'CONNECTION_CHANGED', 'INSTRUMENT_MISMATCH'].includes(cause.code) || context.signal?.aborted) throw cause;
+      if (tail || !cacheFallback(cause) || context.signal?.aborted) throw cause;
       const cached = this.mt5.market.nativeBars?.(binding.server, input.instrument.instrumentId, period, range.from, range.to);
       if (!cached?.rows.length) throw cause;
       rows.push(...cached.rows); observedAt = cached.observedAt; freshness = 'stale'; warnings = [{ code: 'OFFLINE_CACHE', message: 'Returning the retained native observations; the current terminal read failed and coverage is incomplete.' }];

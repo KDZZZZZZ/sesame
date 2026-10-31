@@ -1,6 +1,10 @@
 {
   "canvas-control": {
     "category": "workspace",
+    "functionalCategory": "presentation",
+    "implementationKinds": [
+      "service"
+    ],
     "title": {
       "en": "Canvas",
       "zh": "画布"
@@ -12,10 +16,15 @@
     "dependencies": {
       "en": "Charts need an explicitly selected market provider. Reports work without one.",
       "zh": "行情图需要明确选择市场提供方；报告无需行情后端。"
-    }
+    },
+    "implementationReason": "Host canvas commands provide presentation and persistent workspace behavior through functions, without owning a source or view contribution."
   },
   "configuration": {
     "category": "workspace",
+    "functionalCategory": "platform",
+    "implementationKinds": [
+      "service"
+    ],
     "title": {
       "en": "Settings",
       "zh": "设置"
@@ -25,12 +34,17 @@
       "zh": "通过带版本核验的操作读取和修改应用设置。"
     },
     "dependencies": {
-      "en": "Application settings only. Backend connections belong to their own plugins.",
-      "zh": "管理应用设置；后端连接由各自插件管理。"
-    }
+      "en": "Manage application settings and declared plugin fields through one entry point, preserving each existing configuration store. Requirements apply to consuming capabilities; saving does not verify external authentication or connectivity.",
+      "zh": "统一管理应用设置及插件声明的配置字段，沿用各自既有存储；按消费能力检查依赖，保存不代表外部认证或连接成功。"
+    },
+    "implementationReason": "Functions adapt the host application configuration authority; this package is a management service rather than a computation."
   },
   "data-access": {
     "category": "data",
+    "functionalCategory": "integration",
+    "implementationKinds": [
+      "service"
+    ],
     "title": {
       "en": "Data & research",
       "zh": "数据与研究"
@@ -42,10 +56,15 @@
     "dependencies": {
       "en": "Local datasets need no backend. Market reads require a chosen provider.",
       "zh": "本地数据无需后端；行情读取需要选择提供方。"
-    }
+    },
+    "implementationReason": "Functions adapt host data discovery and immutable dataset storage; persisted binding state is not a standalone calculation."
   },
   "memory": {
     "category": "workspace",
+    "functionalCategory": "platform",
+    "implementationKinds": [
+      "service"
+    ],
     "title": {
       "en": "Memory",
       "zh": "记忆"
@@ -61,21 +80,48 @@
   },
   "orchestration": {
     "category": "workspace",
+    "functionalCategory": "platform",
+    "implementationKinds": [
+      "knowledge"
+    ],
     "title": {
-      "en": "Sesame user guide",
-      "zh": "Sesame 使用指南"
+      "en": "Agent and workflow coordination",
+      "zh": "Agent 与工作流编排"
     },
     "summary": {
-      "en": "Read product guidance and the host's unified Agent and Run capabilities; this package registers no execution tools.",
-      "zh": "查阅产品用法与宿主统一的 Agent、Run 能力；本包不注册执行工具。"
+      "en": "Organize research stages, workflows and agents, pass evidence and capabilities, and verify deliverables through host-owned Runs.",
+      "zh": "组织研究阶段、工作流和子 Agent，传递证据与能力，并通过宿主 Run 核验成果。"
     },
     "dependencies": {
       "en": "Reading the guide needs no model or trading backend. Agent execution is provided by the host.",
       "zh": "读取指南无需模型或交易后端；Agent 执行由宿主提供。"
     }
   },
+  "user-guide": {
+    "category": "workspace",
+    "functionalCategory": "platform",
+    "implementationKinds": [
+      "knowledge"
+    ],
+    "title": {
+      "en": "Sesame user guide",
+      "zh": "Sesame 使用指南"
+    },
+    "summary": {
+      "en": "Explain product setup, workspace, chat, settings and task examples through readable guidance without execution tools.",
+      "zh": "提供安装上手、工作台、聊天、设置和任务示例等产品操作知识，不注册执行工具。"
+    },
+    "dependencies": {
+      "en": "Reading product help needs no model or trading backend; actual operations use the relevant capabilities.",
+      "zh": "读取产品帮助无需模型或交易后端；实际操作使用对应业务能力。"
+    }
+  },
   "plugin-manager": {
     "category": "workspace",
+    "functionalCategory": "platform",
+    "implementationKinds": [
+      "service"
+    ],
     "title": {
       "en": "Plugin manager",
       "zh": "插件管理"
@@ -91,21 +137,29 @@
   },
   "reports": {
     "category": "research",
+    "functionalCategory": "presentation",
+    "implementationKinds": [
+      "service"
+    ],
     "title": {
       "en": "Interactive reports",
       "zh": "交互报告"
     },
     "summary": {
-      "en": "Explore strategy logic, optimization heatmaps and parameter sensitivity in interactive reports.",
-      "zh": "交互查看策略逻辑、回测优化热力图、全部参数试验和敏感性分析。"
+      "en": "Render plugin-defined research and strategy content with one shared visual style, native market charts and interactive backtest views.",
+      "zh": "用统一样式呈现研究与策略报告，支持内置行情图、回测热力图和参数比较。"
     },
     "dependencies": {
-      "en": "No market backend. Bundled charts use SVG and require no CDN.",
-      "zh": "无需行情后端；内置图表使用 SVG，无需 CDN。"
+      "en": "Requires the host report service in Sesame 0.3.0-dev.2 or later. Visual assets are packaged; no CDN is required.",
+      "zh": "需要 Sesame 0.3.0-dev.2 或更新宿主；图表随插件提供，无需 CDN。"
     }
   },
   "strategy-authoring": {
     "category": "strategy",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "service"
+    ],
     "title": {
       "en": "SVL strategy authoring",
       "zh": "SVL 策略创作"
@@ -115,12 +169,16 @@
       "zh": "创作与重放 SVL，计算组合和风险、核验执行事件，并保存隔离的 Agent 判断。"
     },
     "dependencies": {
-      "en": "Sesame 0.2.2 or newer. Source, graph, functions and fixed replay need no target backend. Agent decisions use a configured model; native execution requires a compatible optional target.",
-      "zh": "需要 Sesame 0.2.2 或更新版本。源、图、函数与固定重放无需后端；Agent 判断使用已配置模型，原生执行需兼容的可选目标。"
+      "en": "Sesame 0.2.3 or newer. Source, graph, functions and fixed replay need no target backend. Agent decisions use a configured model; native execution requires a compatible optional target.",
+      "zh": "需要 Sesame 0.2.3 或更新版本。源、图、函数与固定重放无需后端；Agent 判断使用已配置模型，原生执行需兼容的可选目标。"
     }
   },
   "workspace": {
     "category": "workspace",
+    "functionalCategory": "platform",
+    "implementationKinds": [
+      "service"
+    ],
     "title": {
       "en": "Files & execution",
       "zh": "文件与执行"
@@ -132,10 +190,15 @@
     "dependencies": {
       "en": "Uses the current OS user's permissions and existing shell/runtime. Does not grant administrator rights.",
       "zh": "使用当前系统用户权限与已有 shell/环境，不自动提权。"
-    }
+    },
+    "implementationReason": "Functions adapt host workspace files and artifacts; the service boundary is the host port, not a declared source."
   },
   "mt5": {
     "category": "backend",
+    "functionalCategory": "integration",
+    "implementationKinds": [
+      "adapter"
+    ],
     "title": {
       "en": "MetaTrader 5",
       "zh": "MetaTrader 5"
@@ -151,6 +214,10 @@
   },
   "akshare": {
     "category": "backend",
+    "functionalCategory": "integration",
+    "implementationKinds": [
+      "adapter"
+    ],
     "title": {
       "en": "AKShare",
       "zh": "AKShare"
@@ -166,6 +233,10 @@
   },
   "qmt": {
     "category": "backend",
+    "functionalCategory": "integration",
+    "implementationKinds": [
+      "adapter"
+    ],
     "title": {
       "en": "QMT / MiniQMT",
       "zh": "QMT / MiniQMT"
@@ -181,6 +252,10 @@
   },
   "vnpy": {
     "category": "backend",
+    "functionalCategory": "integration",
+    "implementationKinds": [
+      "adapter"
+    ],
     "title": {
       "en": "vn.py backtesting",
       "zh": "vn.py 回测"
@@ -192,10 +267,15 @@
     "dependencies": {
       "en": "Compatible Python with pinned vn.py / CTA dependencies. This plugin does not connect a live trading account.",
       "zh": "需要兼容 Python 与固定 vn.py / CTA 依赖；此插件不连接实盘账户。"
-    }
+    },
+    "implementationReason": "The native entry adapts the external vn.py engine; its dispose hook manages that engine, not an independent host service."
   },
   "judgment-evolution": {
     "category": "research",
+    "functionalCategory": "business",
+    "implementationKinds": [
+      "service"
+    ],
     "title": {
       "en": "Judgment review",
       "zh": "判断复盘"
@@ -211,13 +291,17 @@
   },
   "web-sources": {
     "category": "data",
+    "functionalCategory": "search",
+    "implementationKinds": [
+      "adapter"
+    ],
     "title": {
-      "en": "Web sources",
-      "zh": "网页来源"
+      "en": "Web search and evidence",
+      "zh": "网页搜索与取证"
     },
     "summary": {
-      "en": "Fetch original web evidence into fixed datasets with source metadata.",
-      "zh": "将网页原始证据与来源信息保存为固定数据。"
+      "en": "Discover candidate links with keyless search, then fetch selected web evidence into fixed datasets with source metadata.",
+      "zh": "无需来源Key搜索候选链接，并将选定网页原始证据与来源信息保存为固定数据。"
     },
     "dependencies": {
       "en": "Network access to the selected source; parsing is provided by separate optional tools.",
@@ -226,6 +310,10 @@
   },
   "web-extract": {
     "category": "data",
+    "functionalCategory": "search",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
       "en": "Web extraction",
       "zh": "网页提取"
@@ -235,12 +323,16 @@
       "zh": "从提供的 HTML 提取可读内容并保留来源。"
     },
     "dependencies": {
-      "en": "Existing Python 3; standard-library MCP server. File inputs obey its declared path boundary.",
-      "zh": "已有 Python 3；使用标准库的 MCP 服务，文件输入遵守其声明路径边界。"
+      "en": "Existing Python 3 invoked by the native host.process.exec capability; standard-library HTML parsing of supplied evidence. Package sample paths retain their declared boundary.",
+      "zh": "通过原生 host.process.exec 能力调用已有 Python 3，以标准库解析已有 HTML 证据；包内样本路径保留原边界。"
     }
   },
   "rss-collect": {
     "category": "data",
+    "functionalCategory": "search",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
       "en": "RSS / Atom",
       "zh": "RSS / Atom"
@@ -250,12 +342,16 @@
       "zh": "将提供的订阅源解析成带来源的结构化条目。"
     },
     "dependencies": {
-      "en": "Existing Python 3; standard-library MCP server. Fetch feeds separately.",
-      "zh": "已有 Python 3；标准库 MCP 服务，订阅源另行获取。"
+      "en": "Existing Python 3 invoked by the native host.process.exec capability; standard-library RSS/Atom parsing. Retrieve feeds separately.",
+      "zh": "通过原生 host.process.exec 能力调用已有 Python 3，以标准库解析 RSS/Atom；获取订阅源由调用方另行选择。"
     }
   },
   "market-data-parser": {
     "category": "data",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
       "en": "Market document parser",
       "zh": "行情文档解析"
@@ -265,27 +361,36 @@
       "zh": "规范化提供的 JSON 或 XML 文档，不冒充实时行情源。"
     },
     "dependencies": {
-      "en": "Existing Python 3; standard-library MCP server. The source must establish units and freshness.",
-      "zh": "已有 Python 3；标准库 MCP 服务，单位与新鲜度需由来源说明。"
+      "en": "Existing Python 3 invoked by the native host.process.exec capability; standard-library JSON/XML parsing. Source evidence must establish units and freshness.",
+      "zh": "通过原生 host.process.exec 能力调用已有 Python 3，以标准库解析 JSON/XML；单位与新鲜度由来源证据说明。"
     }
   },
   "quantskills-catalog": {
     "category": "strategy",
+    "functionalCategory": "integration",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
       "en": "Quant skill references",
       "zh": "量化技能索引"
     },
     "summary": {
-      "en": "Discover curated research references and their preserved provenance.",
-      "zh": "发现研究参考材料并保留原始出处。"
+      "en": "Discover fixed QuantSkills references and route research to Research or Strategy; select methods and backends independently.",
+      "zh": "查询固定 QuantSkills 参考，综合投资研究推荐 Research，因子与策略研究推荐 Strategy。"
     },
     "dependencies": {
       "en": "Existing Python 3; this catalog is guidance, not an execution engine.",
       "zh": "已有 Python 3；这是指导索引，不是执行引擎。"
-    }
+    },
+    "implementationReason": "MCP transports deterministic queries over a bundled reference catalog, not a live data provider or an implementation of its listed methods."
   },
   "ccxt": {
     "category": "backend",
+    "functionalCategory": "integration",
+    "implementationKinds": [
+      "adapter"
+    ],
     "title": {
       "en": "CCXT public markets",
       "zh": "CCXT 公开行情"
@@ -299,8 +404,31 @@
       "zh": "复用或明确准备原生 Python 与 CCXT 4.5.85；仅公开读取；每次读取完成后间隔一秒轮询，受网络与交易所限速约束，不含账户或下单。"
     }
   },
+  "binance": {
+    "category": "backend",
+    "functionalCategory": "integration",
+    "implementationKinds": [
+      "adapter"
+    ],
+    "title": {
+      "en": "Binance Spot",
+      "zh": "币安现货"
+    },
+    "summary": {
+      "en": "Use Binance Spot market data, streams, balances and explicit order operations with separate production and testnet identities.",
+      "zh": "接入币安现货行情、订阅、余额及明确订单操作，区分生产环境和测试网身份。"
+    },
+    "dependencies": {
+      "en": "Public data needs network access. Private account and order capabilities use the unified API key/secret configuration. Native runtime; no Python dependency. Futures and margin are outside this Spot adapter.",
+      "zh": "公开行情需联网；账户与订单能力依赖统一配置中的 API 密钥。使用原生运行时，无 Python 依赖；本适配器负责现货。"
+    }
+  },
   "backtrader": {
     "category": "backend",
+    "functionalCategory": "integration",
+    "implementationKinds": [
+      "adapter"
+    ],
     "title": {
       "en": "Backtrader",
       "zh": "Backtrader 回测"
@@ -312,10 +440,15 @@
     "dependencies": {
       "en": "Native Python with Backtrader 1.9.78.123; GPL-3.0-or-later optional wrapper and engine. No live trading or SVL equivalence claim.",
       "zh": "需原生 Python 与 Backtrader 1.9.78.123；可选封装及引擎为 GPL-3.0-or-later。不含实盘，不声明 SVL 等价。"
-    }
+    },
+    "implementationReason": "The native entry adapts the external Backtrader engine; its dispose hook manages that engine, not an independent host service."
   },
   "ict": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "knowledge"
+    ],
     "title": {
       "en": "ICT",
       "zh": "ICT"
@@ -331,6 +464,10 @@
   },
   "price-action": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "knowledge"
+    ],
     "title": {
       "en": "Price Action",
       "zh": "Price Action 价格行为"
@@ -346,6 +483,10 @@
   },
   "elliott-wave": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "knowledge"
+    ],
     "title": {
       "en": "Elliott Wave",
       "zh": "艾略特波浪"
@@ -361,6 +502,10 @@
   },
   "wyckoff": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "knowledge"
+    ],
     "title": {
       "en": "Wyckoff",
       "zh": "威科夫"
@@ -376,6 +521,10 @@
   },
   "dow-theory": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "knowledge"
+    ],
     "title": {
       "en": "Dow Theory",
       "zh": "道氏理论"
@@ -391,6 +540,10 @@
   },
   "behavioral-finance": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "knowledge"
+    ],
     "title": {
       "en": "Behavioral finance",
       "zh": "行为金融"
@@ -406,6 +559,10 @@
   },
   "institutional-analysis": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "knowledge"
+    ],
     "title": {
       "en": "Institutional analysis",
       "zh": "制度分析"
@@ -421,6 +578,10 @@
   },
   "narrative-analysis": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "knowledge"
+    ],
     "title": {
       "en": "Narrative analysis",
       "zh": "叙事分析"
@@ -434,53 +595,12 @@
       "zh": "需可归属且有日期的文本证据；关注度与共同变化不证明因果。"
     }
   },
-  "strategy-research": {
-    "category": "strategy",
-    "title": {
-      "en": "Strategy research",
-      "zh": "策略研究"
-    },
-    "summary": {
-      "en": "Plan hypotheses, fixed trials and out-of-sample evaluation with an experiment ledger.",
-      "zh": "用实验账本组织假设、固定试验及样本外评估。"
-    },
-    "dependencies": {
-      "en": "Existing Node.js 22+; actual backtests require a separately selected engine. No algorithm is preselected.",
-      "zh": "需现有 Node.js 22+；真实回测需另选引擎，不预选策略算法。"
-    }
-  },
-  "factor-research": {
-    "category": "research",
-    "title": {
-      "en": "Factor research",
-      "zh": "因子研究"
-    },
-    "summary": {
-      "en": "Evaluate selected factor columns, redundancy, cost assumptions and held-out outcomes.",
-      "zh": "评估所选因子列、冗余、成本假设与留出样本结果。"
-    },
-    "dependencies": {
-      "en": "Existing Node.js 22+ and fixed point-in-time data; selection is frozen before OOS evaluation. No model family is preloaded.",
-      "zh": "需现有 Node.js 22+ 与固定时点数据，样本外评估前冻结选择；不预加载模型流派。"
-    }
-  },
-  "manual-trading": {
-    "category": "strategy",
-    "title": {
-      "en": "Agent manual trading",
-      "zh": "Agent 手动交易"
-    },
-    "summary": {
-      "en": "Coordinate market analysis, portfolio decisions and authorized execution in a native Run graph with one report.",
-      "zh": "在原生运行图中组织行情分析、组合决策与获授权执行，统一产出一份报告。"
-    },
-    "dependencies": {
-      "en": "Sesame 0.2.1+ and an existing supported trading backend. Read that backend's own account, platform and API requirements; use M5+ decisions. Prediction tracking and criteria use the separately enabled judgment-evolution plugin.",
-      "zh": "需要 Sesame 0.2.1+ 与已有可用交易后端；账户、平台与 API 前提见该后端自身资源，使用 M5+ 决策。预测跟踪和判断准则由另行启用的 judgment-evolution 提供。"
-    }
-  },
   "kurumi-replay": {
     "category": "strategy",
+    "functionalCategory": "business",
+    "implementationKinds": [
+      "adapter"
+    ],
     "title": {
       "en": "Kurumi replay",
       "zh": "久留美连续模拟"
@@ -494,23 +614,12 @@
       "zh": "需 Sesame 0.2.2+、OpenAI gpt-6.1-sol、历史 bid/ask 与私有 Nautilus 依赖；完整新安装和周报仍待验，见 VALIDATION.md。不连接真实券商。"
     }
   },
-  "abu-backtest-lab": {
-    "category": "research",
-    "title": {
-      "en": "Backtest diagnostics",
-      "zh": "回测诊断"
-    },
-    "summary": {
-      "en": "Inspect timing, cost, fill and position assumptions before handing fixed evidence to a native engine.",
-      "zh": "时序、成本、成交和持仓约束诊断及原生引擎交接。"
-    },
-    "dependencies": {
-      "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
-      "zh": "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
-    }
-  },
   "abu-breakout": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
       "en": "Breakout research",
       "zh": "突破研究"
@@ -526,6 +635,10 @@
   },
   "abu-exit-rules": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
       "en": "Exit-rule research",
       "zh": "退出规则"
@@ -541,6 +654,10 @@
   },
   "abu-indicators": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
       "en": "Indicator calculations",
       "zh": "指标计算"
@@ -556,6 +673,10 @@
   },
   "abu-ml-features": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
       "en": "Point-in-time features",
       "zh": "时点特征"
@@ -571,6 +692,10 @@
   },
   "abu-model-lab": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
       "en": "Prediction experiments",
       "zh": "预测实验"
@@ -586,6 +711,10 @@
   },
   "abu-moving-average": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
       "en": "Moving-average research",
       "zh": "均线研究"
@@ -601,13 +730,17 @@
   },
   "abu-parameter-search": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
-      "en": "Parameter search",
-      "zh": "参数搜索"
+      "en": "Parameter experiment evidence",
+      "zh": "参数试验证据"
     },
     "summary": {
-      "en": "Search a bounded grid and freeze development-period selections before out-of-sample evaluation.",
-      "zh": "有限网格、开发期排名与固定样本外选择记录。"
+      "en": "Enumerate a bounded input-only grid, rank supplied development metrics, freeze selections and check selected-only holdout evidence; does not execute trials or a native optimizer.",
+      "zh": "在输入内枚举有界网格，排名已提供开发指标、冻结选择并校验所选留出证据；不执行试验或原生优化器。"
     },
     "dependencies": {
       "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
@@ -616,6 +749,10 @@
   },
   "abu-position-sizing": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
       "en": "Position sizing",
       "zh": "仓位研究"
@@ -631,6 +768,10 @@
   },
   "abu-price-structure": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
       "en": "Price structure",
       "zh": "价格结构"
@@ -646,6 +787,10 @@
   },
   "abu-seasonality": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
       "en": "Seasonality research",
       "zh": "季节性研究"
@@ -661,13 +806,17 @@
   },
   "abu-similarity": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
-      "en": "Series similarity",
-      "zh": "序列相似性"
+      "en": "Concurrent return similarity",
+      "zh": "同期收益相似性"
     },
     "summary": {
-      "en": "Compare time-aligned return correlations, rank correlations and directional similarity.",
-      "zh": "时间对齐的收益相关、秩相关和方向相似性。"
+      "en": "Compare returns with exactly matching start/end timestamps using Pearson, Spearman and sign agreement; does not retrieve historical scenarios or predict probabilities.",
+      "zh": "以完全相同起止时点对齐收益，计算Pearson、Spearman与方向一致率；不检索历史情景或预测概率。"
     },
     "dependencies": {
       "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
@@ -676,6 +825,10 @@
   },
   "abu-stock-screening": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
       "en": "Stock screening",
       "zh": "股票筛选"
@@ -691,6 +844,10 @@
   },
   "abu-trade-judges": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
       "en": "Trade-neighbor evidence",
       "zh": "交易邻居证据"
@@ -706,13 +863,17 @@
   },
   "abu-trade-metrics": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
-      "en": "Trade metrics",
-      "zh": "交易指标"
+      "en": "Trade results diagnostics",
+      "zh": "交易结果诊断"
     },
     "summary": {
-      "en": "Calculate drawdown, attribution, return and risk metrics from supplied evidence.",
-      "zh": "权益回撤、交易归因、收益与风险指标。"
+      "en": "Calculate equity performance and independently audit supplied order/fill/replay timing, cost and constraints; both operations preserve fixed input and output artifacts.",
+      "zh": "计算权益绩效，并独立审计已提供订单/成交/回放的时序、成本与约束；两个能力分别留存固定输入和结果工件。"
     },
     "dependencies": {
       "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
@@ -721,6 +882,10 @@
   },
   "abu-trend": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
       "en": "Trend calculations",
       "zh": "趋势计算"
@@ -736,6 +901,10 @@
   },
   "abu-trend-pullback": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
       "en": "Trend pullbacks",
       "zh": "趋势回撤"
@@ -751,6 +920,10 @@
   },
   "abu-volatility": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
       "en": "Volatility calculations",
       "zh": "波动计算"
@@ -764,15 +937,40 @@
       "zh": "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
     }
   },
-  "auto-factor-mining": {
+  "ultra": {
     "category": "research",
+    "functionalCategory": "business",
+    "implementationKinds": [
+      "workflow",
+      "service"
+    ],
     "title": {
-      "en": "Factor research workflow",
-      "zh": "因子研究工作流"
+      "en": "Ultra continuous collaboration",
+      "zh": "Ultra 持续协作"
     },
     "summary": {
-      "en": "Coordinate configured role Agents and an explicitly selected evaluator in one native Run graph and final report.",
-      "zh": "用已配置角色 Agent 和明确选择的评估器组织研究，共用宿主运行图和最终报告。"
+      "en": "Coordinate persistent parallel research and monitoring goals using existing agents, workflows and domain plugins.",
+      "zh": "围绕用户目标持续并行协作，组合现有 Agent、工作流、知识、数据与执行插件。"
+    },
+    "dependencies": {
+      "en": "A configured model and the selected domain capabilities. Uses native Run checkpoints and completion notifications; trading follows the selected execution backend and existing user authorization.",
+      "zh": "需要已配置模型及所选领域能力；复用宿主 Run 检查点和完成通知，交易沿用执行后端与既有用户授权。"
+    },
+    "implementationReason": "A resumable native workflow owns planning and waits; function controls persist, dispatch and stop the same goal through public host ports."
+  },
+  "auto-factor-mining": {
+    "category": "research",
+    "functionalCategory": "business",
+    "implementationKinds": [
+      "workflow"
+    ],
+    "title": {
+      "en": "Strategy — factor and strategy research",
+      "zh": "Strategy · 因子与策略研究"
+    },
+    "summary": {
+      "en": "Run single- or multi-Agent factor and strategy experiments, retain conditional usefulness and counterevidence, optionally invoke native backtests and optimizers, and deliver Strategy.",
+      "zh": "以单 Agent 或多 Agent 研究因子与策略，保留条件用途与反例，可选接入原生回测和优化器并生成 Strategy。"
     },
     "dependencies": {
       "en": "A configured model, a selected evaluator and fixed evidence. No implicit trading backend.",
@@ -781,21 +979,48 @@
   },
   "factor-evaluator": {
     "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "function"
+    ],
     "title": {
       "en": "Deterministic factor evaluator",
       "zh": "确定性因子评估"
     },
     "summary": {
-      "en": "Evaluate factor expressions, retain measured candidate metrics, freeze selection and evaluate held-out data.",
-      "zh": "计算因子表达式，保留实测候选指标，冻结选择并评估留出数据。"
+      "en": "Compute factor association, task-selected diagnostics and complete-trial DSR/PBO evidence; support conditional use instead of requiring all tests to pass.",
+      "zh": "计算因子关联、按任务选择的检验及完整试验 DSR/PBO 证据；支持有条件使用，不要求所有检验通过。"
     },
     "dependencies": {
-      "en": "Fixed point-in-time data and a trusted workflow invocation; no broker connection.",
-      "zh": "需要固定时点数据和可信工作流调用，不连接券商。"
+      "en": "Fixed data and a trusted workflow. Agent thresholds are advisory; explicit user hard requirements gate selection. DSR/PBO require complete observed trial returns and stated assumptions.",
+      "zh": "需要固定数据和可信工作流；Agent 阈值用于判断，用户明确硬性要求才限制选择。DSR/PBO 需要完整试验收益及明确假设。"
+    }
+  },
+  "historical-evidence": {
+    "category": "research",
+    "functionalCategory": "analysis",
+    "implementationKinds": [
+      "function"
+    ],
+    "title": {
+      "en": "Historical scenarios and probability calibration",
+      "zh": "历史情景与概率校准"
+    },
+    "summary": {
+      "en": "Match fixed comparable historical situations and evaluate calibration with separate fit/evaluation evidence; explicitly labelled present-day historical replay remains exploratory and yields no current calibrated probability.",
+      "zh": "匹配固定历史同类情景，并分开拟合和评价证据；明确标注的今日历史回放仅作探索诊断，不输出当前校准概率。"
+    },
+    "dependencies": {
+      "en": "Supplied features, verified availability and matured outcomes; prospective calibration requires original timestamped predictions. Historical replay requires fixed code/data and distinct actual/virtual clocks. No network or broker.",
+      "zh": "需要已提供特征、可验证可见时间和到期结果；前瞻校准须原始带时间预测。历史回放须固定代码/数据并区分实际与虚拟时钟。不联网或连接券商。"
     }
   },
   "financial-research": {
     "category": "data",
+    "functionalCategory": "search",
+    "implementationKinds": [
+      "adapter"
+    ],
     "title": {
       "en": "Financial evidence",
       "zh": "金融研究证据"
@@ -811,6 +1036,10 @@
   },
   "portfolio-execution": {
     "category": "strategy",
+    "functionalCategory": "business",
+    "implementationKinds": [
+      "service"
+    ],
     "title": {
       "en": "Portfolio execution",
       "zh": "组合执行"
@@ -822,6 +1051,44 @@
     "dependencies": {
       "en": "An already configured supported trading adapter; native account and position checks remain authoritative.",
       "zh": "需要已配置且受支持的交易适配器，原生账户与持仓核验决定是否可执行。"
+    }
+  },
+  "investment-research": {
+    "category": "research",
+    "functionalCategory": "business",
+    "implementationKinds": [
+      "workflow"
+    ],
+    "title": {
+      "en": "Research — investment research",
+      "zh": "Research · 投资研究"
+    },
+    "summary": {
+      "en": "Organize requirements, evidence acquisition, analysis and report delivery for an investment question; adapt result forms without fixing methods.",
+      "zh": "围绕投资问题与结果需求组织获取、分析和报告，可调整结果形式，不固定研究方法。"
+    },
+    "dependencies": {
+      "en": "Configured model and selected research capabilities; no trading account or execution binding. Report output uses the reports plugin and the host Run.",
+      "zh": "需要已配置模型与明确选择的研究能力；不依赖交易账户或执行绑定。报告使用 reports 插件与宿主 Run。"
+    }
+  },
+  "trading-decision": {
+    "category": "strategy",
+    "functionalCategory": "business",
+    "implementationKinds": [
+      "workflow"
+    ],
+    "title": {
+      "en": "Trading decisions and plans",
+      "zh": "交易决策与计划"
+    },
+    "summary": {
+      "en": "Consume fixed research, current positions and personal risk rules to freeze portfolio decisions and coordinate authorized execution.",
+      "zh": "消费固定研究成果、当前持仓与个人风险规则，冻结目标仓位并协调授权执行。"
+    },
+    "dependencies": {
+      "en": "Configured model, memory, data-access and an exact execution binding. Research is supplied as fixed evidence; no embedded analyst team.",
+      "zh": "需要已配置模型、memory 风险记忆、data-access 和精确执行绑定。研究通过固定成果引用输入，不再内嵌分析师团队。"
     }
   }
 }

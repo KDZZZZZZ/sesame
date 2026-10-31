@@ -3,126 +3,157 @@
     "id": "sesame/abu-indicators",
     "directory": "abu-indicators",
     "title": "技术指标基线",
-    "tool": "abu_indicators_analyze",
-    "upstream": "IndicatorBu"
+    "upstream": "IndicatorBu",
+    "tools": [
+      "abu_indicators_analyze"
+    ]
   },
   {
     "id": "sesame/abu-trend",
     "directory": "abu-trend",
     "title": "趋势分析基线",
-    "tool": "abu_trend_analyze",
-    "upstream": "TLineBu"
+    "upstream": "TLineBu",
+    "tools": [
+      "abu_trend_analyze"
+    ]
   },
   {
     "id": "sesame/abu-price-structure",
     "directory": "abu-price-structure",
     "title": "价格结构基线",
-    "tool": "abu_price_structure_analyze",
-    "upstream": "TLineBu"
+    "upstream": "TLineBu",
+    "tools": [
+      "abu_price_structure_analyze"
+    ]
   },
   {
     "id": "sesame/abu-volatility",
     "directory": "abu-volatility",
     "title": "波动与跳空基线",
-    "tool": "abu_volatility_analyze",
-    "upstream": "TLineBu"
+    "upstream": "TLineBu",
+    "tools": [
+      "abu_volatility_analyze"
+    ]
   },
   {
     "id": "sesame/abu-similarity",
     "directory": "abu-similarity",
-    "title": "市场相似性基线",
-    "tool": "abu_similarity_analyze",
-    "upstream": "SimilarBu"
+    "title": "同期收益相似性基线",
+    "upstream": "SimilarBu",
+    "tools": [
+      "abu_similarity_analyze"
+    ]
   },
   {
     "id": "sesame/abu-stock-screening",
     "directory": "abu-stock-screening",
     "title": "股票筛选基线",
-    "tool": "abu_stock_screening_analyze",
-    "upstream": "PickStockBu"
+    "upstream": "PickStockBu",
+    "tools": [
+      "abu_stock_screening_analyze"
+    ]
   },
   {
     "id": "sesame/abu-breakout",
     "directory": "abu-breakout",
     "title": "突破信号基线",
-    "tool": "abu_breakout_analyze",
-    "upstream": "FactorBuyBu"
+    "upstream": "FactorBuyBu",
+    "tools": [
+      "abu_breakout_analyze"
+    ]
   },
   {
     "id": "sesame/abu-moving-average",
     "directory": "abu-moving-average",
     "title": "均线信号基线",
-    "tool": "abu_moving_average_analyze",
-    "upstream": "FactorBuyBu"
+    "upstream": "FactorBuyBu",
+    "tools": [
+      "abu_moving_average_analyze"
+    ]
   },
   {
     "id": "sesame/abu-trend-pullback",
     "directory": "abu-trend-pullback",
     "title": "趋势回撤基线",
-    "tool": "abu_trend_pullback_analyze",
-    "upstream": "FactorBuyBu"
+    "upstream": "FactorBuyBu",
+    "tools": [
+      "abu_trend_pullback_analyze"
+    ]
   },
   {
     "id": "sesame/abu-seasonality",
     "directory": "abu-seasonality",
     "title": "日历效应基线",
-    "tool": "abu_seasonality_analyze",
-    "upstream": "FactorBuyBu"
+    "upstream": "FactorBuyBu",
+    "tools": [
+      "abu_seasonality_analyze"
+    ]
   },
   {
     "id": "sesame/abu-exit-rules",
     "directory": "abu-exit-rules",
     "title": "退出规则基线",
-    "tool": "abu_exit_rules_analyze",
-    "upstream": "FactorSellBu"
+    "upstream": "FactorSellBu",
+    "tools": [
+      "abu_exit_rules_analyze"
+    ]
   },
   {
     "id": "sesame/abu-position-sizing",
     "directory": "abu-position-sizing",
     "title": "仓位计算基线",
-    "tool": "abu_position_sizing_analyze",
-    "upstream": "BetaBu"
+    "upstream": "BetaBu",
+    "tools": [
+      "abu_position_sizing_analyze"
+    ]
   },
   {
     "id": "sesame/abu-trade-metrics",
     "directory": "abu-trade-metrics",
-    "title": "交易绩效基线",
-    "tool": "abu_trade_metrics_analyze",
-    "upstream": "MetricsBu"
+    "title": "交易结果诊断",
+    "upstream": [
+      "MetricsBu",
+      "CoreBu"
+    ],
+    "tools": [
+      "abu_trade_metrics_analyze",
+      "abu_trade_results_audit"
+    ]
   },
   {
     "id": "sesame/abu-parameter-search",
     "directory": "abu-parameter-search",
     "title": "参数实验基线",
-    "tool": "abu_parameter_search_analyze",
-    "upstream": "MetricsBu"
+    "upstream": "MetricsBu",
+    "tools": [
+      "abu_parameter_search_analyze"
+    ]
   },
   {
     "id": "sesame/abu-ml-features",
     "directory": "abu-ml-features",
     "title": "交易特征基线",
-    "tool": "abu_ml_features_analyze",
-    "upstream": "TradeBu"
+    "upstream": "TradeBu",
+    "tools": [
+      "abu_ml_features_analyze"
+    ]
   },
   {
     "id": "sesame/abu-trade-judges",
     "directory": "abu-trade-judges",
     "title": "历史交易裁判基线",
-    "tool": "abu_trade_judges_analyze",
-    "upstream": "UmpBu"
+    "upstream": "UmpBu",
+    "tools": [
+      "abu_trade_judges_analyze"
+    ]
   },
   {
     "id": "sesame/abu-model-lab",
     "directory": "abu-model-lab",
     "title": "轻量模型基线",
-    "tool": "abu_model_lab_analyze",
-    "upstream": "MLBu"
-  },
-  {
-    "id": "sesame/abu-backtest-lab",
-    "directory": "abu-backtest-lab",
-    "title": "回测审计基线",
-    "tool": "abu_backtest_lab_analyze",
-    "upstream": "CoreBu"
+    "upstream": "MLBu",
+    "tools": [
+      "abu_model_lab_analyze"
+    ]
   }
 ]

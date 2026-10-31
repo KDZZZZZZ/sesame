@@ -1,8 +1,8 @@
 {
   "id": "sesame/orchestration",
-  "title": "Sesame 使用与编排指南",
-  "description": "纯知识指南：介绍 Sesame 工作台与宿主统一 Agent/Run 接口，不注册运行工具。",
-  "version": "3.1.1",
+  "title": "Agent 与工作流编排",
+  "description": "研究协作知识：选择工作流、组织阶段和子 Agent、传递证据与能力、管理同一 Run 并验收阶段成果；运行由宿主提供。",
+  "version": "3.2.1",
   "default_state": "mounted",
   "apiVersion": "2",
   "capability_manifest": "capabilities.json",
@@ -13,13 +13,8 @@
     "skills"
   ],
   "resources": [
-    "skills/sesame-user-guide/references/installation.md",
-    "skills/sesame-user-guide/references/dashboard.md",
-    "skills/sesame-user-guide/references/chat-and-commands.md",
-    "skills/sesame-user-guide/references/settings.md",
-    "skills/sesame-user-guide/references/workflows.md",
-    "skills/sesame-user-guide/references/troubleshooting.md",
-    "skills/sesame-user-guide/references/website-docs.md"
+    "skills/coordinate-research/references/agent-runs.md",
+    "skills/coordinate-research/references/workflow-plans.md"
   ],
   "license": "MIT",
   "engines": {

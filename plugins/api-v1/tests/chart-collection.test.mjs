@@ -43,29 +43,26 @@ test('all optional charts work through the authoring tool and real read-only bin
         await page.setViewportSize({ width, height: 1000 });
         await page.goto('about:blank');
         const bridge = `<script>window.bindings=${JSON.stringify(bindings).replace(/</g, '\\u003c')};window.reads=[];window.report={readData:async(id)=>{reads.push(id);if(!Object.hasOwn(bindings,id))throw Error('Unbound data');return{rows:bindings[id],page:{nextCursor:null}};},track:p=>{window.initialized=p;return p;}};</script>`;
-        await page.setContent(html.replace('<body>', '<body>' + bridge));
+        await page.setContent(html.replace('</head>', bridge + '</head>'));
         await page.evaluate(() => window.initialized);
         assert.equal(await page.locator('.status-error').count(), 0, `${kind} failed initialization`);
-        const geometry = await page.evaluate(() => ({ overflow: document.documentElement.scrollWidth > innerWidth + 1, invalid: /NaN|Infinity/.test(document.querySelector('#chart svg').outerHTML), calls: reads }));
+        const geometry = await page.evaluate(() => ({ overflow: document.documentElement.scrollWidth > innerWidth + 1, invalid: /NaN|Infinity/.test(document.querySelector('.module-chart-plot svg').outerHTML), calls: reads }));
         assert.equal(geometry.overflow, false, `${kind} at ${width}px`); assert.equal(geometry.invalid, false);
         assert.deepEqual(geometry.calls.sort(), Object.keys(bindings).sort());
-        const mark = page.locator('#chart [data-row-index]:not([data-row-index="-1"])').first();
+        const mark = page.locator('.module-chart-plot [data-row-index]:not([data-row-index="-1"])').first();
         assert.ok(await mark.count(), kind);
+        await page.evaluate(() => document.querySelector('.module-chart-plot').addEventListener('chartselect', event => { window.selectedObservation = event.detail; }));
         await mark.focus(); await page.keyboard.press('Enter');
-        assert.equal(await page.locator('details.report-inspect').evaluate(n => n.open), true);
-        assert.equal(await page.locator('#table .sc-row-selected').count(), 1);
-        const originalMarks = await page.locator('#chart [data-row-index]').count();
-        await page.locator('#filter').fill('no-such-fixture-value');
-        assert.equal(await page.locator('#table tbody tr').count(), 0);
-        assert.equal(await page.locator('#chart [data-row-index]').count(), originalMarks, 'Inspector search must not truncate chart data');
-        await mark.focus(); await page.keyboard.press('Enter');
-        assert.equal(await page.locator('#filter').inputValue(), '');
-        assert.equal(await page.locator('#table .sc-row-selected').count(), 1);
+        const selection = await page.evaluate(() => selectedObservation);
+        assert.deepEqual(selection.row, rows[selection.index], 'Selection retains the exact bound observation');
+        assert.equal(await page.locator('.module-chart-plot .sc-selected').count(), 1);
+        const evidence = await page.locator('[id$="-evidence"]').textContent();
+        assert.deepEqual(JSON.parse(evidence).rows, rows, 'The end appendix retains all original observations');
         if (nodes && kind.startsWith('network-')) {
-          const node = page.locator('#chart [data-row-index="-1"]').first();
+          const node = page.locator('.module-chart-plot [data-row-index="-1"]').first();
           await node.focus(); await page.keyboard.press('Enter');
-          assert.equal(await page.locator('#table .sc-row-selected').count(), 0);
-          assert.equal(await page.locator('.report-selected-record tbody tr').count(), 1);
+          assert.equal(await page.evaluate(() => selectedObservation.index), -1);
+          assert.ok(nodes.some(n=>n.id===selection.row.source||n.id===selection.row.target));
         }
         if (snapshots && ['waterfall', 'parallel', 'network-force'].includes(kind)) await page.screenshot({ path: join(snapshots, `collection-${kind}-${width}.png`), fullPage: true });
       }

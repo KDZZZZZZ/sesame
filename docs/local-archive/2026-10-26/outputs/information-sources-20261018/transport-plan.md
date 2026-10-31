@@ -1,0 +1,9 @@
+# Transport repair plan
+
+Keep the existing capability IDs and parser algorithms. Add one explicit `source_ref` input alternative to the four parser capabilities; a native adapter reads immutable source bytes via the existing `host.resources.read` port and invokes the existing Python parser with bounded private files through `host.process.exec`. No MCP limit is widened and no alternative fetch/parser tool is added.
+
+Store the original downloaded source alongside normalized `rows.json`, so JSON objects, XML, CSV and HTML retain a lossless parse input. Retain final URL, retrieval timestamp, content type and digest with parser output. Existing inline and bundled sample inputs remain available and must be unambiguous.
+
+Before implementation, add regression cases for raw JSON-object fetching, >1 MiB frozen HTML to parser without model copying, RSS source references, old text-row references, input ambiguity and traversal rejection. Then verify real official HTML/RSS/FX endpoints and record failures separately from local regression coverage. Document Python/API-key/proxy requirements and declaration changes. No release, lock edits or user-data changes.
+
+Output boundary follow-up: a new 2 MiB plain-body regression reproduced the large inline result, despite native validation already having a separate 64 MiB budget. For results above 24 KiB, retain the complete parsed object in a derived data artifact (rows.json) and HTML text separately (text.txt), return an explicitly truncated preview plus exact entries/ref/counts, and verify full rereads. Small sample results remain unchanged. Register resource publication effects and the existing json-rows artifact shape; keep the remote MCP limit unchanged. Verify once using isolated Runtime startup and the formal plugin installer, not only the fixture attachment path.

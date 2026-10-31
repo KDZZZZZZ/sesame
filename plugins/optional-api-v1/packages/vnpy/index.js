@@ -83,6 +83,10 @@ return [
     capability('vnpy_dispose',()=>{closeRecords(host);return{closed:true};}),
     capability('vnpy_environment', (args, signal) => environment(host, args, signal)),
     capability('vnpy_backtest', (args, signal) => backtest(host, args, signal)),
+    capability('vnpy_operation', args => {
+      const record = records(host).get('operations', `vnpy-backtest:${args.operation_id}`, true);
+      return record ? { operation_id: args.operation_id, ...record } : { operation_id: args.operation_id, status: 'not-found' };
+    }),
     capability('vnpy_result', async args => await readArtifact(host,args.ref)),
   ];
 }

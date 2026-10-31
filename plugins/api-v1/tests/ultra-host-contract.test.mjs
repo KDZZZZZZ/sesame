@@ -20,6 +20,7 @@ test('official Ultra package passes the actual host package/schema/native bindin
   const files = await filesAt(), manifest = JSON.parse(files['capabilities.json']);
   const parsed = inspectPackage(files, { applicationVersion: '0.3.0-dev.1' });
   assert.equal(parsed.id, 'sesame/ultra');
+  assert.equal(parsed.default_state, 'mounted');
   const checked = await validateCapabilityManifest(manifest, { pluginId: parsed.id, files });
   assert.equal(checked.valid, true, JSON.stringify(checked.diagnostics));
   const { createCapabilities } = await import('../packages/ultra/index.js');

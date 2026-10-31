@@ -1,10 +1,23 @@
 import { DatabaseSync } from 'node:sqlite';
-import { mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 // Order receipts are private business records. Commit them synchronously before
 // native dispatch so a crash can never turn an uncertain send into a new order.
 const databases = new Map();
+
+export function savedConnections(host) {
+  const path = join(resolve(host.context.storageRoot), 'public-connections.sqlite');
+  if (!existsSync(path)) return [];
+  const db = new DatabaseSync(path, { readOnly: true });
+  try {
+    return db.prepare('SELECT value FROM records WHERE collection=? ORDER BY id').all('public_connections').map(({ value }) => {
+      const { configuration, connection } = JSON.parse(value);
+      return { exchange: configuration.exchange, connection: { id: connection.id, revision: connection.revision } };
+    });
+  } finally { db.close(); }
+}
+
 export function records(host) {
   const root = resolve(host.context.storageRoot);
   if (databases.has(root)) return databases.get(root);

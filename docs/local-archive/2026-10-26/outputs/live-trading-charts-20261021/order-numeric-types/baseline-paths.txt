@@ -1,0 +1,2 @@
+plugins/optional-api-v1/packages/mt5/backend/python-worker.py
+plugins/optional-api-v1/packages/mt5/tests/python-worker-dispatch.test.py

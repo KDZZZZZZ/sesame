@@ -1,0 +1,3 @@
+plugins/optional-api-v1/packages/mt5/backend/execution_guard.py
+plugins/optional-api-v1/packages/mt5/backend/python-worker.py
+plugins/optional-api-v1/tests/execution_guard_test.py

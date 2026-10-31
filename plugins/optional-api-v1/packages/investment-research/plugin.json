@@ -1,0 +1,29 @@
+{
+  "id": "sesame/investment-research",
+  "apiVersion": "2",
+  "version": "3.5.5",
+  "title": "投资研究 · Research",
+  "description": "Research报告研究流程：需求与建议结果形式、消息与数据取证、自由组合分析与历史参照、图表报告；支持多种模板、自定义与仅改报告。",
+  "license": "MIT",
+  "default_state": "discoverable",
+  "agent_scope": "all",
+  "entry": "index.js",
+  "engines": {
+    "sesame": ">=0.3.0-dev.2 <0.4.0"
+  },
+  "capability_manifest": "capabilities.json",
+  "permissions": {
+    "scopes": [
+      "capabilities.compose"
+    ],
+    "calls": [
+      "host.agent.run",
+      "host.runs.read",
+      "host.runs.wait",
+      "host.runs.interrupt",
+      "host.resources.read",
+      "host.reports.describe",
+      "host.reports.publish"
+    ]
+  }
+}

@@ -1,0 +1,1894 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "2",
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "capabilities": [
+    {
+      "id": "historical_evidence_match",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "用调用方选定的特征/规则匹配固定历史情景；原始可知记录与显式历史回放分开，逐品种和条件组给计数、基线与反例，经验频率不是已校准概率。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "as_of": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source_refs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "revision": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^sha256:[a-f0-9]{64}$"
+                },
+                "kind": {
+                  "const": "data"
+                },
+                "schemaVersion": {
+                  "const": "1.0.0"
+                }
+              },
+              "required": [
+                "id",
+                "revision",
+                "digest",
+                "kind",
+                "schemaVersion"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 64
+          },
+          "plan": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[a-f0-9]{64}$"
+                  },
+                  "kind": {
+                    "const": "data"
+                  },
+                  "schemaVersion": {
+                    "const": "1.0.0"
+                  }
+                },
+                "required": [
+                  "id",
+                  "revision",
+                  "digest",
+                  "kind",
+                  "schemaVersion"
+                ],
+                "additionalProperties": false
+              },
+              "frozen_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Actual plan record timestamp supported by plan.ref, never invented or backfilled. Unknown prior selection must be exploratory."
+              },
+              "target": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "horizon_seconds": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 316224000
+                  },
+                  "description": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "id",
+                  "horizon_seconds",
+                  "description"
+                ],
+                "additionalProperties": false
+              },
+              "independence": {
+                "type": "object",
+                "properties": {
+                  "gap_seconds": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 316224000
+                  },
+                  "assumption": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "gap_seconds",
+                  "assumption"
+                ],
+                "additionalProperties": false
+              },
+              "confidence_level": {
+                "enum": [
+                  0.8,
+                  0.9,
+                  0.95,
+                  0.99,
+                  0.999
+                ]
+              },
+              "conditions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "minItems": 0,
+                "maxItems": 32
+              },
+              "failure_conditions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "minItems": 0,
+                "maxItems": 32
+              },
+              "monitoring": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "minItems": 0,
+                "maxItems": 32
+              },
+              "regime_definition": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "mode": {
+                "enum": [
+                  "prospective",
+                  "exploratory"
+                ]
+              },
+              "features": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    "kind": {
+                      "enum": [
+                        "numeric",
+                        "categorical"
+                      ]
+                    },
+                    "scale": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    "weight": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    "tolerance": {
+                      "type": "number",
+                      "minimum": 0,
+                      "description": "Required for numeric rules matching. Optional and unused for distance matching; never substitutes for max_distance."
+                    },
+                    "definition": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "kind",
+                    "weight",
+                    "definition"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 32
+              },
+              "matching": {
+                "type": "object",
+                "properties": {
+                  "method": {
+                    "enum": [
+                      "distance",
+                      "rules"
+                    ]
+                  },
+                  "max_distance": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "max_matches": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5000
+                  }
+                },
+                "required": [
+                  "method",
+                  "max_distance",
+                  "max_matches"
+                ],
+                "additionalProperties": false
+              },
+              "cohorts": {
+                "type": "object",
+                "properties": {
+                  "recent_seconds": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 316224000
+                  },
+                  "minimum_samples": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5000
+                  },
+                  "comparables": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "instrument": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 2000
+                        },
+                        "condition": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 2000
+                        },
+                        "available_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "instrument",
+                        "condition",
+                        "available_at"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 0,
+                    "maxItems": 128
+                  }
+                },
+                "required": [
+                  "recent_seconds",
+                  "minimum_samples",
+                  "comparables"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "ref",
+              "frozen_at",
+              "target",
+              "independence",
+              "confidence_level",
+              "conditions",
+              "failure_conditions",
+              "monitoring",
+              "regime_definition",
+              "mode",
+              "features",
+              "matching",
+              "cohorts"
+            ],
+            "additionalProperties": false
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "instrument": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "regime_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Decision cutoff: outcomes must already be mature and available at this time, even if as_of is later."
+              },
+              "features": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": [
+                        "number",
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "available_at": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "available_at"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "regime_available_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "replay": {
+                "type": "object",
+                "properties": {
+                  "feature_cutoff": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                "required": [
+                  "feature_cutoff"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "instrument",
+              "regime_id",
+              "at",
+              "features",
+              "regime_available_at"
+            ],
+            "additionalProperties": false
+          },
+          "cases": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "instrument": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "regime_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "features": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "type": [
+                          "number",
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "available_at": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "available_at"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "outcome": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "target_id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 2000
+                        },
+                        "horizon_seconds": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "end_at": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "available_at": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "label": {
+                          "enum": [
+                            0,
+                            1,
+                            null
+                          ]
+                        }
+                      },
+                      "required": [
+                        "target_id",
+                        "horizon_seconds",
+                        "end_at",
+                        "available_at",
+                        "label"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "source_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      },
+                      "revision": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      },
+                      "digest": {
+                        "type": "string",
+                        "pattern": "^sha256:[a-f0-9]{64}$"
+                      },
+                      "kind": {
+                        "const": "data"
+                      },
+                      "schemaVersion": {
+                        "const": "1.0.0"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "revision",
+                      "digest",
+                      "kind",
+                      "schemaVersion"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 1,
+                  "maxItems": 64
+                },
+                "regime_available_at": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "replay": {
+                  "type": "object",
+                  "properties": {
+                    "feature_cutoff": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "outcome_available_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "feature_cutoff",
+                    "outcome_available_at"
+                  ],
+                  "additionalProperties": false,
+                  "description": "Explicit virtual prefix and matured-outcome clocks; outcome.available_at retains actual observation time."
+                }
+              },
+              "required": [
+                "id",
+                "instrument",
+                "regime_id",
+                "at",
+                "features",
+                "outcome",
+                "regime_available_at"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 0,
+            "maxItems": 5000
+          },
+          "origin": {
+            "enum": [
+              "recorded_observation",
+              "historical_replay"
+            ],
+            "description": "Omission keeps original observation chronology. Historical replay is explicit, exploratory and uses separate real and virtual clocks."
+          },
+          "replay": {
+            "type": "object",
+            "properties": {
+              "generated_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "observed_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "code_ref": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[a-f0-9]{64}$"
+                  },
+                  "kind": {
+                    "const": "data"
+                  },
+                  "schemaVersion": {
+                    "const": "1.0.0"
+                  }
+                },
+                "required": [
+                  "id",
+                  "revision",
+                  "digest",
+                  "kind",
+                  "schemaVersion"
+                ],
+                "additionalProperties": false
+              },
+              "data_refs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    "revision": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    "digest": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$"
+                    },
+                    "kind": {
+                      "const": "data"
+                    },
+                    "schemaVersion": {
+                      "const": "1.0.0"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "revision",
+                    "digest",
+                    "kind",
+                    "schemaVersion"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 64
+              },
+              "source_vintage": {
+                "const": "current_snapshot_not_point_in_time"
+              }
+            },
+            "required": [
+              "generated_at",
+              "observed_at",
+              "code_ref",
+              "data_refs",
+              "source_vintage"
+            ],
+            "additionalProperties": false,
+            "description": "Actual generation and latest observation of all fixed inputs; code/data refs are required direct dependencies at the fixed-ref entrypoint."
+          }
+        },
+        "required": [
+          "as_of",
+          "source_refs",
+          "plan",
+          "query",
+          "cases"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "schemaVersion": {
+            "const": "1.0.0"
+          },
+          "status": {
+            "enum": [
+              "computed",
+              "insufficient_data"
+            ]
+          },
+          "input_digest": {
+            "type": "string",
+            "pattern": "^sha256:"
+          },
+          "source_refs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "revision": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^sha256:[a-f0-9]{64}$"
+                },
+                "kind": {
+                  "const": "data"
+                },
+                "schemaVersion": {
+                  "const": "1.0.0"
+                }
+              },
+              "required": [
+                "id",
+                "revision",
+                "digest",
+                "kind",
+                "schemaVersion"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 512
+          },
+          "decision_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "type",
+          "schemaVersion",
+          "status",
+          "input_digest",
+          "source_refs",
+          "decision_at"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "用调用方选定的特征/规则匹配固定历史情景，逐品种范围和条件组给出计数、基线、反例与经验频率。经验频率不是已校准概率。",
+        "inputs": "参数见已声明README.md、METHOD.md及examples中的完整算例；inline入口直接接收对应JSON对象，refs入口接收operation和固定input_ref。所有方法、阈值和适用条件由用户/Agent明确选择。 回看早于今天固定计划的历史query时，显式origin:historical_replay并按REPLAY.md提供真实生成/观察与虚拟cutoff；不要回填frozen_at或挪动query.at。",
+        "outputs": "完整JSON计算结果，含原计划、输入摘要、来源、样本筛选和缺失；match返回decision_at/cohorts/selection，经验频率不等于概率；calibrate返回groups/current_predictions/split/selection_status。今天选方法或原选择不明使用exploratory，只留回顾诊断，不给当前校准概率。没有通用研究合格判定或交易授权。",
+        "prerequisites": [],
+        "limitations": [
+          "只消费inline cases；source_refs与plan.ref只作来源标签，绝不读取。",
+          "按观察时点过滤特征available_at，并要求结果窗口已到期且可得。Prospective模式排除计划冻结前样本；exploratory不构成前瞻验证。",
+          "显式历史回放只限exploratory；核对双时钟和固定代码/输入引用，不认证当时数据版本，不产生实时预测概率。"
+        ],
+        "references": [
+          {
+            "title": "Probability calibration: disjoint fitting, Brier and reliability",
+            "url": "https://scikit-learn.org/stable/modules/calibration.html"
+          },
+          {
+            "title": "Wilson score interval",
+            "url": "https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm"
+          }
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "historical_evidence_match"
+      },
+      "researchDataAccess": {
+        "schemaVersion": 1,
+        "reads": "input-only",
+        "writes": "derived-artifacts-only"
+      }
+    },
+    {
+      "id": "historical_evidence_calibrate",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "用固定历史预测与实际标签做isotonic校准，过去拟合、后续独立时间评价，输出逐条件组Brier/可靠性/基线及无标签当前预测。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "as_of": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source_refs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "revision": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^sha256:[a-f0-9]{64}$"
+                },
+                "kind": {
+                  "const": "data"
+                },
+                "schemaVersion": {
+                  "const": "1.0.0"
+                }
+              },
+              "required": [
+                "id",
+                "revision",
+                "digest",
+                "kind",
+                "schemaVersion"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 64
+          },
+          "plan": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[a-f0-9]{64}$"
+                  },
+                  "kind": {
+                    "const": "data"
+                  },
+                  "schemaVersion": {
+                    "const": "1.0.0"
+                  }
+                },
+                "required": [
+                  "id",
+                  "revision",
+                  "digest",
+                  "kind",
+                  "schemaVersion"
+                ],
+                "additionalProperties": false
+              },
+              "frozen_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Actual plan record timestamp supported by plan.ref, never invented or backfilled. Unknown prior selection must be exploratory."
+              },
+              "target": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "horizon_seconds": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 316224000
+                  },
+                  "description": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "id",
+                  "horizon_seconds",
+                  "description"
+                ],
+                "additionalProperties": false
+              },
+              "independence": {
+                "type": "object",
+                "properties": {
+                  "gap_seconds": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 316224000
+                  },
+                  "assumption": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "gap_seconds",
+                  "assumption"
+                ],
+                "additionalProperties": false
+              },
+              "confidence_level": {
+                "enum": [
+                  0.8,
+                  0.9,
+                  0.95,
+                  0.99,
+                  0.999
+                ]
+              },
+              "conditions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "minItems": 0,
+                "maxItems": 32
+              },
+              "failure_conditions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "minItems": 0,
+                "maxItems": 32
+              },
+              "monitoring": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "minItems": 0,
+                "maxItems": 32
+              },
+              "regime_definition": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "method": {
+                "const": "isotonic"
+              },
+              "prediction_system": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "fit_end": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "evaluation_start": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "minimum_fit": {
+                "type": "integer",
+                "minimum": 2,
+                "maximum": 5000,
+                "description": "Explicit fit sample target; advisory unless sample_policy is user+required. At least 2 actual nonoverlapping fit records with class and score variation are structurally necessary."
+              },
+              "minimum_evaluation": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5000,
+                "description": "Explicit scored evaluation sample target; advisory unless sample_policy is user+required. At least 1 actual fit-disjoint scored record is structurally necessary."
+              },
+              "bins": {
+                "type": "integer",
+                "minimum": 2,
+                "maximum": 30
+              },
+              "out_of_bounds": {
+                "enum": [
+                  "unavailable",
+                  "clip"
+                ]
+              },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "prospective",
+                  "exploratory"
+                ],
+                "description": "prospective requires a genuinely prior recorded method plan. When selecting methods now on old logs, or original selection is unknown, use exploratory and the actual frozen_at; never backfill a fictional date."
+              },
+              "sample_policy": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "advisory",
+                      "required"
+                    ]
+                  },
+                  "source": {
+                    "type": "string",
+                    "enum": [
+                      "agent",
+                      "user"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "mode",
+                  "source",
+                  "reason"
+                ],
+                "additionalProperties": false,
+                "description": "Omit for agent advisory sample targets. Only an actual user instruction may set source:user plus mode:required; never downgrade that fixed requirement after seeing results. Advisory shortfalls produce limited point estimates with actual counts. Structural missing data still produces null."
+              }
+            },
+            "required": [
+              "ref",
+              "frozen_at",
+              "target",
+              "independence",
+              "confidence_level",
+              "conditions",
+              "failure_conditions",
+              "monitoring",
+              "regime_definition",
+              "method",
+              "prediction_system",
+              "fit_end",
+              "evaluation_start",
+              "minimum_fit",
+              "minimum_evaluation",
+              "bins",
+              "out_of_bounds",
+              "mode"
+            ],
+            "additionalProperties": false
+          },
+          "records": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "instrument": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "regime_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "probability": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "prediction_system": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "prediction_available_at": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "Actual original prediction availability; for historical_replay actual generated/published time >=replay.generated_at, never a backfilled historical date."
+                },
+                "model_trained_through": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "Original recorded model training cutoff; for explicit replay, virtual maximum training-data cutoff <=feature_cutoff and training_label_cutoff, not a claim the model physically ran then."
+                },
+                "prediction_ref": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    "revision": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    "digest": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$"
+                    },
+                    "kind": {
+                      "const": "data"
+                    },
+                    "schemaVersion": {
+                      "const": "1.0.0"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "revision",
+                    "digest",
+                    "kind",
+                    "schemaVersion"
+                  ],
+                  "additionalProperties": false
+                },
+                "outcome": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "target_id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 2000
+                        },
+                        "horizon_seconds": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "end_at": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "available_at": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "label": {
+                          "enum": [
+                            0,
+                            1,
+                            null
+                          ]
+                        }
+                      },
+                      "required": [
+                        "target_id",
+                        "horizon_seconds",
+                        "end_at",
+                        "available_at",
+                        "label"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "regime_available_at": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "origin": {
+                  "type": "string",
+                  "enum": [
+                    "recorded_prediction",
+                    "historical_replay"
+                  ],
+                  "description": "Omit for original recorded prediction semantics. historical_replay is exploratory only and requires decision_at plus full replay provenance; never mix origins."
+                },
+                "decision_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Replay virtual historical decision time, exactly equal to at; never the actual generation/publication time."
+                },
+                "replay": {
+                  "type": "object",
+                  "properties": {
+                    "generated_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Actual execution time, at/after the real frozen plan and after the historical decision."
+                    },
+                    "feature_cutoff": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Latest virtual information time used for features, no later than decision_at."
+                    },
+                    "training_label_cutoff": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Latest virtual availability time of training labels, no later than decision_at."
+                    },
+                    "outcome_available_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Explicit virtual information-clock availability for the target outcome, at/after its horizon end. Actual retrieval/observation stays in outcome.available_at."
+                    },
+                    "code_ref": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 2000
+                        },
+                        "revision": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 2000
+                        },
+                        "digest": {
+                          "type": "string",
+                          "pattern": "^sha256:[a-f0-9]{64}$"
+                        },
+                        "kind": {
+                          "const": "data"
+                        },
+                        "schemaVersion": {
+                          "const": "1.0.0"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "revision",
+                        "digest",
+                        "kind",
+                        "schemaVersion"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "data_refs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 2000
+                          },
+                          "revision": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 2000
+                          },
+                          "digest": {
+                            "type": "string",
+                            "pattern": "^sha256:[a-f0-9]{64}$"
+                          },
+                          "kind": {
+                            "const": "data"
+                          },
+                          "schemaVersion": {
+                            "const": "1.0.0"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "revision",
+                          "digest",
+                          "kind",
+                          "schemaVersion"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 1,
+                      "maxItems": 64
+                    },
+                    "source_vintage": {
+                      "const": "current_snapshot_not_point_in_time"
+                    }
+                  },
+                  "required": [
+                    "generated_at",
+                    "feature_cutoff",
+                    "training_label_cutoff",
+                    "outcome_available_at",
+                    "code_ref",
+                    "data_refs",
+                    "source_vintage"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "id",
+                "instrument",
+                "regime_id",
+                "at",
+                "probability",
+                "prediction_system",
+                "prediction_available_at",
+                "model_trained_through",
+                "prediction_ref",
+                "outcome",
+                "regime_available_at"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 0,
+            "maxItems": 5000
+          },
+          "queries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "instrument": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "regime_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "probability": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "regime_available_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "instrument",
+                "regime_id",
+                "at",
+                "probability",
+                "regime_available_at"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 0,
+            "maxItems": 128
+          }
+        },
+        "required": [
+          "as_of",
+          "source_refs",
+          "plan",
+          "records",
+          "queries"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "schemaVersion": {
+            "const": "1.0.0"
+          },
+          "status": {
+            "enum": [
+              "computed",
+              "insufficient_data",
+              "exploratory"
+            ]
+          },
+          "input_digest": {
+            "type": "string",
+            "pattern": "^sha256:"
+          },
+          "source_refs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "revision": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^sha256:[a-f0-9]{64}$"
+                },
+                "kind": {
+                  "const": "data"
+                },
+                "schemaVersion": {
+                  "const": "1.0.0"
+                }
+              },
+              "required": [
+                "id",
+                "revision",
+                "digest",
+                "kind",
+                "schemaVersion"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 512
+          }
+        },
+        "required": [
+          "type",
+          "schemaVersion",
+          "status",
+          "input_digest",
+          "source_refs"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [],
+      "usage": {
+        "purpose": "用固定历史预测与实际标签做isotonic校准，过去拟合、后续独立时间评价，输出逐条件组Brier/可靠性/基线及无标签当前预测。",
+        "inputs": "参数见已声明README.md、METHOD.md及examples中的完整算例；inline入口直接接收对应JSON对象，refs入口接收operation和固定input_ref。所有方法、阈值和适用条件由用户/Agent明确选择。 可显式使用origin:historical_replay+decision_at+replay来源对象，保存今天真实生成时间、历史prefix cutoff和固定代码/数据refs；仅exploratory，不修改原记录时间规则。",
+        "outputs": "完整JSON计算结果，含原计划、输入摘要、来源、样本筛选和缺失；match返回decision_at/cohorts/selection，经验频率不等于概率；calibrate返回groups/current_predictions/split/selection_status。今天选方法或原选择不明使用exploratory，只留回顾诊断，不给当前校准概率。没有通用研究合格判定或交易授权。 样本目标默认advisory，不足时当前估计标limited并给实际n/范围/理由；仅用户required阈值额外阻止输出，结构性无数据始终null。 回放仅称时间分割回放评价，保留真实生成/结果获取时刻与虚拟信息时钟；当前概率和可用校准grid始终null。",
+        "prerequisites": [],
+        "limitations": [
+          "只消费inline records；不得传Strategy隔离留出的未来行。",
+          "置信区间针对独立评估样本事件率，不是当前概率参数的置信区间。样本/支持不足返回null和原因，性能差仍保留条件结果。"
+        ],
+        "references": [
+          {
+            "title": "Probability calibration: disjoint fitting, Brier and reliability",
+            "url": "https://scikit-learn.org/stable/modules/calibration.html"
+          },
+          {
+            "title": "Wilson score interval",
+            "url": "https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm"
+          }
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "historical_evidence_calibrate"
+      },
+      "researchDataAccess": {
+        "schemaVersion": 1,
+        "reads": "input-only",
+        "writes": "derived-artifacts-only"
+      }
+    },
+    {
+      "id": "historical_evidence_from_ref",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "读取并验证固定单行输入，执行相同匹配/校准后发布完整原样JSON结果，返回紧凑摘要和result_ref供后续图表、分析与引用；不属于input-only能力。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "enum": [
+              "match",
+              "calibrate"
+            ]
+          },
+          "input_ref": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "const": "data"
+              },
+              "schemaVersion": {
+                "const": "1.0.0"
+              }
+            },
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "additionalProperties": false
+          },
+          "operation_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "可选稳定发布操作ID；重试保持相同ID和固定输入。省略时按操作、精确输入引用和版本派生。"
+          }
+        },
+        "required": [
+          "operation",
+          "input_ref"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "schemaVersion": {
+            "const": "1.0.0"
+          },
+          "status": {
+            "enum": [
+              "computed",
+              "insufficient_data",
+              "exploratory"
+            ]
+          },
+          "input_digest": {
+            "type": "string",
+            "pattern": "^sha256:"
+          },
+          "source_refs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "revision": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^sha256:[a-f0-9]{64}$"
+                },
+                "kind": {
+                  "const": "data"
+                },
+                "schemaVersion": {
+                  "const": "1.0.0"
+                }
+              },
+              "required": [
+                "id",
+                "revision",
+                "digest",
+                "kind",
+                "schemaVersion"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 512
+          },
+          "result_ref": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "const": "data"
+              },
+              "schemaVersion": {
+                "const": "1.0.0"
+              }
+            },
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "additionalProperties": false
+          },
+          "result_data": {
+            "type": "object",
+            "description": "完整单行json-rows结果的路径、字节数、内容摘要与complete标记。"
+          },
+          "summary": {
+            "type": "object",
+            "description": "最多8个条件组的展示摘要；完整样本、可靠性和逐行结果读取result_ref。"
+          }
+        },
+        "required": [
+          "type",
+          "schemaVersion",
+          "status",
+          "input_digest",
+          "source_refs",
+          "result_ref",
+          "result_data",
+          "summary"
+        ],
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "resources.read",
+        "resources.create",
+        "resources.publish"
+      ],
+      "usage": {
+        "purpose": "读取并验证固定单行输入，执行相同匹配/校准后发布完整原样JSON结果，返回紧凑摘要和result_ref供后续图表、分析与引用；不属于input-only能力。",
+        "inputs": "operation:match|calibrate、完整input_ref，可选operation_id；输入仍是固定单行JSON包。原方法、参数、时钟与证据不改，重复调用使用相同操作ID和输入。",
+        "outputs": "result_ref是已发布的完整单行json-rows DataRef，rows.json原样保留完整计算结果；result_data给出内容摘要/大小，summary只提供最多8组的精简预览。用data_read或resources.read按需读取完整结果，不把工具预览当全集。",
+        "prerequisites": [],
+        "limitations": [
+          "最多读取8 MiB固定输入，完整输出最多32 MiB，超过预算明确失败而不截断发布。",
+          "真实effects是resources.read/create/publish；没有网络、模型或状态集合，不属于隔离留出的input-only能力。",
+          "资源创建和发布复用宿主幂等operationId及事务/CAS机制；不修改旧成果，不从已知结果重选方法，不把经验频率当当前概率。"
+        ],
+        "references": [
+          {
+            "title": "Probability calibration: disjoint fitting, Brier and reliability",
+            "url": "https://scikit-learn.org/stable/modules/calibration.html"
+          },
+          {
+            "title": "Wilson score interval",
+            "url": "https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm"
+          }
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "historical_evidence_from_ref"
+      }
+    }
+  ],
+  "sources": [],
+  "views": [],
+  "services": [],
+  "knowledge": [
+    {
+      "id": "prompt",
+      "kind": "prompt",
+      "path": "prompt.md",
+      "description": "历史匹配和校准工具的适用范围、来源与权限边界。"
+    },
+    {
+      "id": "reference-0",
+      "kind": "reference",
+      "path": "README.md",
+      "description": "实际入口、固定输入和Research/Strategy组合方式。"
+    },
+    {
+      "id": "reference-1",
+      "kind": "reference",
+      "path": "METHOD.md",
+      "description": "匹配、PAVA、时间切分、概率与区间含义。"
+    },
+    {
+      "id": "reference-2",
+      "kind": "reference",
+      "path": "PROVENANCE.md",
+      "description": "一手文献依据与原创代码来源。"
+    },
+    {
+      "id": "reference-3",
+      "kind": "reference",
+      "path": "examples/match.json",
+      "description": "明确合成的匹配输入，包含反例与跨条件组。"
+    },
+    {
+      "id": "reference-4",
+      "kind": "reference",
+      "path": "examples/calibration.json",
+      "description": "明确合成的独立时间校准与无标签当前预测输入。"
+    },
+    {
+      "id": "reference-replay",
+      "kind": "reference",
+      "path": "REPLAY.md",
+      "description": "历史回放的真实生成时间、虚拟prefix时钟、固定代码/数据引用与探索性边界。"
+    },
+    {
+      "id": "example-replay",
+      "kind": "reference",
+      "path": "examples/calibration-replay.json",
+      "description": "明确合成的软件回放输入算例；不能替代真实行情和实际回放执行。"
+    },
+    {
+      "id": "example-match-replay",
+      "kind": "reference",
+      "path": "examples/match-replay.json",
+      "description": "明确合成的历史查询回放匹配；保留真实计划/观察/生成日期和虚拟决策截止。"
+    }
+  ],
+  "hooks": [],
+  "stateCollections": [],
+  "artifactSchemas": [
+    {
+      "id": "historical-evidence-result",
+      "kind": "data",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "const": "json-rows"
+          },
+          "path": {
+            "const": "rows.json"
+          },
+          "rowCount": {
+            "const": 1
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "provenance": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "format",
+          "path",
+          "rowCount",
+          "columns",
+          "provenance"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

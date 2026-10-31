@@ -22,7 +22,7 @@ async function fixture(t) {
   const runtime = await new Runtime(store, { piDir: join(directory, 'empty-models'), officialPluginsDirectory: join(directory, 'empty-official') }).init();
   t.after(async () => { await runtime.close(); store.close(); await rm(directory, { recursive: true, force: true }); });
   const main = createHostContextV2(runtime, runtime.capabilities.hostEntry, 'conv_main'), groups = {}, declarations = {};
-  for (const name of ['canvas-control', 'memory', 'orchestration']) {
+  for (const name of ['canvas-control', 'memory', 'orchestration', 'user-guide']) {
     const target = join(runtime.workspaces.root('conv_main'), name);
     await cp(join(packages, name), target, { recursive: true });
     await main.plugins.install({ path: target });
@@ -139,10 +139,12 @@ integration('drawing Agent tools share persisted source, geometry and revision w
   const binding = { source: { providerId: 'example/market#prices', revision: 'source-v1', binding: { connection: { id: 'market', revision: 'connection-v1' } } }, instrument: { sourceId: 'prices', instrumentId: 'XAUUSD' }, spec: { timeframe: '1h', priceBasis: 'bid', adjustment: 'none', session: 'all', calendarRevision: { status: 'unknown' } } };
   const scene = await f.call('canvas_apply', { command_id: crypto.randomUUID(), expected_version: 1, operations: [{ op: 'update', id: 'chart_main', chart: { symbol: 'XAUUSD', binding } }] });
   const spec = { schemaVersion: 'sesame-drawing/1', kind: 'horizontal', title: '研究参考价位', anchors: [{ time: 1792400400, price: 3000 }], style: { color: '#24866e', width: 2, lineStyle: 'solid', fillOpacity: .12 } };
-  const input = { action: 'put', command_id: crypto.randomUUID(), expected_version: scene.version, expected_revision: null, chart_id: 'chart_main', binding, drawing: spec };
+  const input = { action: 'put', command_id: crypto.randomUUID(), expected_version: scene.version, expected_revision: null, expected_attachment: null, chart_id: 'chart_main', binding, drawing: spec };
   assert.equal(f.Check(schema, input), true);
-  const missingRevision = structuredClone(input); delete missingRevision.expected_revision;
-  assert.equal(f.Check(schema, missingRevision), false);
+  for (const field of ['expected_revision', 'expected_attachment']) {
+    const missing = structuredClone(input); delete missing[field];
+    assert.equal(f.Check(schema, missing), false, `${field} is required for drawing mutations`);
+  }
   assert.equal(f.Check(schema, { ...input, source: 'also present' }), false);
   assert.equal(f.Check(schema, { ...input, drawing: { ...spec, anchors: [...spec.anchors, ...spec.anchors] } }), false);
   const created = await f.call('chart_drawing', input), record = created.scripts.find(script => script.drawing);
@@ -154,16 +156,16 @@ integration('drawing Agent tools share persisted source, geometry and revision w
   assert.equal(read.source, record.source); assert.equal(read.drawing.revision, record.drawing.revision);
   const { compute } = await import(`data:text/javascript,${encodeURIComponent(read.source)}`);
   assert.deepEqual(compute().drawings, [spec]);
-  const changed = await f.call('chart_drawing', { action: 'put', command_id: crypto.randomUUID(), expected_version: created.version, chart_id: 'chart_main', drawing_id: record.drawing.id, expected_revision: record.drawing.revision, binding, source: read.source.replace('"price": 3000', '"price": 3015') });
+  const changed = await f.call('chart_drawing', { action: 'put', command_id: crypto.randomUUID(), expected_version: created.version, chart_id: 'chart_main', drawing_id: record.drawing.id, expected_revision: record.drawing.revision, expected_attachment: record.id, binding, source: read.source.replace('"price": 3000', '"price": 3015') });
   const latest = changed.scripts.find(script => script.drawing);
   assert.equal(latest.drawing.id, record.drawing.id); assert.notEqual(latest.id, record.id); assert.notEqual(latest.drawing.revision, record.drawing.revision);
   assert.equal(latest.drawing.spec.anchors[0].price, 3015);
-  await assert.rejects(f.call('chart_drawing', { action: 'remove', command_id: crypto.randomUUID(), expected_version: changed.version, chart_id: 'chart_main', drawing_id: record.drawing.id, expected_revision: record.drawing.revision, binding }), { code: 'drawing_conflict' });
+  await assert.rejects(f.call('chart_drawing', { action: 'remove', command_id: crypto.randomUUID(), expected_version: changed.version, chart_id: 'chart_main', drawing_id: record.drawing.id, expected_revision: record.drawing.revision, expected_attachment: record.id, binding }), { code: 'drawing_conflict' });
   assert.equal(f.runtime.canvas.inspect().scripts[0].drawing.spec.anchors[0].price, 3015);
-  const removeInput = { action: 'remove', command_id: crypto.randomUUID(), expected_version: changed.version, chart_id: 'chart_main', drawing_id: latest.drawing.id, expected_revision: latest.drawing.revision, binding };
+  const removeInput = { action: 'remove', command_id: crypto.randomUUID(), expected_version: changed.version, chart_id: 'chart_main', drawing_id: latest.drawing.id, expected_revision: latest.drawing.revision, expected_attachment: latest.id, binding };
   assert.equal(f.Check(schema, { ...removeInput, drawing: spec }), false);
   assert.equal(f.Check(schema, { ...removeInput, source: read.source }), false);
-  const removed = await f.call('chart_drawing', { action: 'remove', command_id: crypto.randomUUID(), expected_version: changed.version, chart_id: 'chart_main', drawing_id: latest.drawing.id, expected_revision: latest.drawing.revision, binding });
+  const removed = await f.call('chart_drawing', removeInput);
   assert.equal(removed.scripts.length, 0);
   assert.equal(f.runtime.contractArtifacts.read(record.artifact).ref.revision, record.artifact.revision, 'prior code remains immutable');
 });
@@ -265,10 +267,14 @@ integration('the knowledge-only guide loads without aliases and host Run tools s
   assert.deepEqual(f.groups.orchestration, []);
   for (const name of ['agent_list', 'agent_delegate', 'agent_inspect', 'agent_stop']) assert.equal(f.tool(name), undefined);
   assert.ok(registry.loader('conv_main').getSkills().skills.some(item => item.name === 'sesame-user-guide'));
-  assert.match(registry.read('conv_main', entry.id, 'skills/sesame-user-guide/references/workflows.md').content, /host\.agent\.run/);
+  assert.ok(registry.loader('conv_main').getSkills().skills.some(item => item.name === 'coordinate-research'));
+  assert.match(registry.read('conv_main', entry.id, 'skills/coordinate-research/references/agent-runs.md').content, /host\.agent\.run/);
   const hostTools = ['host_agent_run', ...['list', 'read', 'wait', 'interrupt', 'resume', 'message', 'cancel'].map(action => `host_runs_${action}`)];
   for (const name of hostTools) assert.ok(registry.hostTools('conv_main').includes(name), name);
   await registry.configure(entry.id, 'disabled', registry.policy().version);
+  assert.ok(!registry.loader('conv_main').getSkills().skills.some(item => item.name === 'coordinate-research'));
+  assert.ok(registry.loader('conv_main').getSkills().skills.some(item => item.name === 'sesame-user-guide'));
+  await registry.configure('sesame/user-guide', 'disabled', registry.policy().version);
   assert.ok(!registry.loader('conv_main').getSkills().skills.some(item => item.name === 'sesame-user-guide'));
   for (const name of hostTools) assert.ok(registry.activeTools('conv_main').includes(name), name);
 });

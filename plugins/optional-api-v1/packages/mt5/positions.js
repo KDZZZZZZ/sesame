@@ -4,15 +4,14 @@ import { check, canonical, digest } from '@sesame/plugin-sdk/protocol';
 import { Decimal } from '@sesame/plugin-sdk/decimal';
 import { records } from './backend/records.js';
 import { accountIdentity, sourceIdentity, mapPosition, decimal, nativeId } from './backend/contract-mapping.js';
+import { verifiedQuoteClock } from './backend/quote-clock-proof.js';
+import { acceptedRetcodes as successCodes, rejectedRetcodes as rejectedCodes, exactOrderEvidence, pythonEnvelope } from './backend/execution-evidence.js';
 
 const locks = new Map();
 const same = (a, b) => canonical(a) === canonical(b);
 const pending = receipt => ['submitted', 'partially_filled', 'outcome_unknown'].includes(receipt.status);
 const quantity = value => ({ value, unit: 'lot' });
 const failure = error => ({ code: error.code ?? 'OUTCOME_UNKNOWN', message: String(error.message).slice(0, 4000) });
-const successCodes = new Set([10008, 10009, 10010]);
-// Timeout, generic error, locked and connection loss deliberately remain unknown.
-const rejectedCodes = new Set([10004, 10006, 10007, 10013, 10014, 10015, 10016, 10017, 10018, 10019, 10020, 10021, 10022, 10024, 10026, 10027, 10029, 10030, 10032, 10033, 10034, 10035, 10036, 10038, 10039, 10040, 10041, 10042, 10043, 10044, 10045, 10046]);
 const ticket = value => { const id = nativeId(value); check(/^[1-9]\d*$/.test(id) && BigInt(id) < 2n ** 64n, 'Native ticket is invalid', 'SOURCE_DATA_INVALID'); return id; };
 const maybeTicket = value => value === undefined || value === null || String(value) === '0' ? null : ticket(value);
 async function serial(host, fn) {
@@ -31,13 +30,13 @@ export function createPositionManager(host, mt5, { now = Date.now } = {}) {
       && same(binding.account, { connectionId: 'mt5-terminal', accountId: accountIdentity(server, login) }), 'Account or connection changed after confirmation', 'CONNECTION_CHANGED');
     return { login, server, account: binding.account, sourceId: sourceIdentity(server) };
   }
-  async function read(tool, args, binding, signal, execution) {
+  async function readEnvelope(tool, args, binding, signal, execution) {
     target(binding, execution); signal?.throwIfAborted();
     const command = await official.call({ server: 'python', tool, arguments: args, command_id: `positions-read-${randomUUID()}` }, host.context.sessionId, signal);
     target(binding, execution); signal?.throwIfAborted();
-    check(command.status === 'returned' && !command.result?.error && command.result?.result !== null && command.result?.result !== undefined, `MT5 ${tool} did not return a confirmed native result`, 'SOURCE_UNAVAILABLE');
-    return command.result.result;
+    return pythonEnvelope(command, tool, null, value => official.redact(value));
   }
+  const read = async (...args) => (await readEnvelope(...args)).result;
   async function account(binding, signal, execution, trading = false) {
     const identity = target(binding, execution);
     const summary = await read('account_info', {}, binding, signal, execution), terminal = await read('terminal_info', {}, binding, signal, execution);
@@ -91,9 +90,11 @@ export function createPositionManager(host, mt5, { now = Date.now } = {}) {
         check(Number.isInteger(flags) && [0, 1, 2, 3].includes(mode), 'Native order execution and filling modes are missing', 'SOURCE_DATA_INVALID');
         const filling = [0, 1].includes(mode) || flags & 1 ? 'ORDER_FILLING_FOK' : flags & 2 ? 'ORDER_FILLING_IOC' : mode !== 2 ? 'ORDER_FILLING_RETURN' : null;
         check(filling, 'Native market execution has no supported fill policy', 'UNSUPPORTED_CAPABILITY');
-        const tick = await read('symbol_info_tick', { symbol }, args.binding, signal, execution), observedAt = now(), side = actual.side === 'long' ? 'sell' : 'buy';
+        const quote = await readEnvelope('symbol_info_tick', { symbol }, args.binding, signal, execution), tick = quote.result;
+        const clock = verifiedQuoteClock(tick, quote.quote_clock, { accountId: identity.login, server: identity.server });
+        const observedAt = now(), side = actual.side === 'long' ? 'sell' : 'buy';
         const price = decimal(side === 'sell' ? tick.bid : tick.ask);
-        check(Number.isSafeInteger(tick.time_msc) && tick.time_msc <= observedAt && observedAt - tick.time_msc <= 5000 && Decimal.compare(price, '0') > 0, 'A fresh native UTC executable quote is required', 'STALE_QUOTE');
+        check(clock.sourceTimeMs <= observedAt && observedAt - clock.sourceTimeMs <= 5000 && Decimal.compare(price, '0') > 0, 'A fresh executable quote with a verified UTC clock is required', 'STALE_QUOTE');
         await account(args.binding, signal, execution, true); signal?.throwIfAborted();
         Object.assign(record, { ticket: ticket(raw.ticket), identifier: ticket(raw.identifier ?? raw.ticket), symbol, side,
           nativeOperationId: 'position-close-' + digest([args.binding, args.operationId]).slice(7) });
@@ -104,7 +105,7 @@ export function createPositionManager(host, mt5, { now = Date.now } = {}) {
           request: { action: 'TRADE_ACTION_DEAL', position: record.ticket, symbol, volume, type: side === 'sell' ? 'ORDER_TYPE_SELL' : 'ORDER_TYPE_BUY',
             type_filling: filling, type_time: 'ORDER_TIME_GTC', deviation: 0, comment: 'sesame-close-' + fingerprint.slice(7, 23) },
           execution_guard: { observed_at: observedAt, expires_at: observedAt + 60000, max_quote_age_ms: 5000, max_quote_to_send_ms: 1000,
-            price_limit: price, side, expected_account: identity.login, expected_server: identity.server,
+            price_limit: price, side, expected_account: identity.login, expected_server: identity.server, quote_clock_revision: clock.ruleRevision,
             expected_positions: rows.filter(row => row.symbol === symbol).map(row => ({ ticket: ticket(row.ticket), type: row.type, volume: decimal(row.volume) })) },
         } }, record.owner, signal);
         return submission(record, command);
@@ -142,14 +143,12 @@ export function createPositionManager(host, mt5, { now = Date.now } = {}) {
         const volume = decimal(deal.volume); check(Decimal.compare(volume, '0') > 0, 'Native fill volume must be positive', 'SOURCE_DATA_INVALID'); filled = Decimal.add(filled, volume);
       }
       check(Decimal.compare(filled, record.requested.value) <= 0, 'Native fill exceeds the retained close quantity', 'SOURCE_DATA_INVALID');
-      const [activeOrders, historyOrders, current] = await Promise.all([
+      const [activeOrders, current] = await Promise.all([
         read('orders_get', { ticket: orderId }, args.binding, signal, execution),
-        read('history_orders_get', { ticket: orderId }, args.binding, signal, execution),
         positions(args.binding, signal, execution),
       ]);
-      check(Array.isArray(activeOrders) && Array.isArray(historyOrders), 'Native order history is unavailable', 'SOURCE_DATA_INVALID');
-      const orders = [...activeOrders, ...historyOrders].filter(row => nativeId(row.ticket) === orderId);
-      check(orders.length <= 1, 'Native order identity is ambiguous', 'SOURCE_DATA_INVALID');
+      const evidence = await exactOrderEvidence((method, input) => read(method, input, args.binding, signal, execution), orderId, activeOrders, record.symbol);
+      const orders = [...evidence.current, ...evidence.history];
       for (const order of orders) check(order.symbol === record.symbol && order.type === (record.side === 'sell' ? 1 : 0)
         && Decimal.compare(decimal(order.volume_initial), record.requested.value) === 0, 'Native order differs from the retained close', 'SOURCE_DATA_INVALID');
       const remainingRows = current.filter(row => nativeId(row.ticket) === record.ticket || nativeId(row.identifier ?? row.ticket) === record.identifier);

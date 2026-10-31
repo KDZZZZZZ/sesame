@@ -1,7 +1,7 @@
 # Optional plugins / Plugin API 2
 
-The current development profile contains **48 optional packages**.
-`sesame/ultra` (1.0.1, Sesame >=0.3.0-dev.1 <0.4.0) ships in the default bundle
+The current development profile contains **46 optional packages**.
+`sesame/ultra` (1.0.4, Sesame >=0.3.0-dev.1 <0.4.0) ships in the default bundle
 with the built-in `/ultra` command. Ultra coordinates persistent
 parallel goals through existing workflows and domain plugins; it does not replace
 their research methods or execution backends. See its [controls and lifecycle](../api-v1/packages/ultra/README.md).
@@ -9,23 +9,17 @@ The published catalog described below is a separate release snapshot.
 
 **Installable entries are identified by the published catalog.** The
 optional packages declare their own compatible host ranges in `engines.sesame`.
-Current packages use Plugin API 2. The updated auto-factor-mining, financial-research,
-investment-research, trading-decision and MT5 packages require Sesame >=0.2.4; unchanged packages retain
->=0.2.3. This release selects
-45 optional plugins and excludes Kurumi. Source, published archives and the install catalog may select different
+Current source packages use Plugin API 2; use each exact manifest for its host range. The earlier published release described here selected 45 optional plugins and excluded Kurumi. Source, published archives and the install catalog may select different
 versions; use the manifest for the version being installed. Their reviewed
 archive identities remain fixed; application installers are listed on the
 [release page](https://github.com/KDZZZZZZ/sesame/releases/latest). They do not
-enter the nine-package default lock or the
+enter the current eleven-package core lock or the
 historical 0.1.4 catalog. Installation/inspection does not silently download a
 terminal or a large Python environment.
 
-The optional set contains six backends (MT5, AKShare, QMT, vn.py, CCXT and
-Backtrader), eight independent analysis methods, separate strategy and factor
-research guidance, investment research, trading decisions, judgment-evolution, four web/reference MCP packages and
-web-sources. Each method is its own installable package; selecting ICT does not
+The optional source set contains independently selected backends and methods, Research and Strategy workflows, reusable factor/historical evaluators, trading decisions, judgment evolution, and separate search/source tools. Factor and strategy knowledge now lives inside Strategy. Each method is its own installable package; selecting ICT does not
 load Price Action, Elliott Wave, Wyckoff or Dow Theory.
-The development sources additionally contain [18 independent ABU research baselines](ABU-BASELINES.md)
+The development sources additionally contain [17 ABU packages with 18 actual computations](ABU-BASELINES.md)
 with native analysis tools, reproducible CLI resources and per-topic Skills. Every
 implementation is explicitly an editable baseline, not a standard answer. These
 GPL-3.0-only packages reuse existing data/report/execution capabilities; they add no
@@ -44,7 +38,7 @@ host-readable without granting access to old mutable application collections.
 | `sesame/vnpy` | Actual CTA backtesting of authored Python against fixed DataRefs | Reuses native VeighNa 4.5.0 / CTA 1.4.1. Real macOS engine, simulated matching, errors, warmup and frozen artifacts verified. Not a broker bridge or SVL equivalence claim. |
 | `sesame/qmt` | MiniQMT daily market/account adapter and explicit stock order/cancel tools | Requires existing broker-authorized Windows MiniQMT and compatible Python/XtQuant. Contract/host fixtures are separate from native Windows broker acceptance, which has not occurred. Readiness never grants trading authorization. |
 | `sesame/mt5` | Native terminal, account, compiler, Tester and target workflows | Existing compatible terminal and explicit connection/configuration. No terminal distribution is embedded. |
-| `sesame/investment-research` | Account-independent multi-Agent research and manager-only visual report generation | Explicit model, evidence, source and method capabilities; host Runs/checkpoints. No trading authorization or execution binding. |
+| `sesame/investment-research` | Research: four-stage scope, evidence, analysis and report workflow with independent stage permissions | Explicit model, evidence, source and method capabilities; host Runs/checkpoints. No trading authorization or execution binding. |
 | `sesame/trading-decision` | Portfolio decision and authorized scheduled/event-driven execution plan | Fixed research references, current account, personal risk rules and explicit execution binding. No embedded analyst team. |
 | `sesame/portfolio-execution` | Independent target-portfolio execution and native order receipt recovery | Explicit MT5 >=2.1.0 or QMT >=1.4.0 account binding in this implementation. Same-account writes serialize; other accounts and research can proceed. No model-supplied execution authority. |
 | `sesame/judgment-evolution` | Private prediction/outcome ledger | Local SQLite; no default legacy-data import. |
@@ -55,16 +49,15 @@ host-readable without granting access to old mutable application collections.
 | `sesame/backtrader` | Real Cerebro with an authored native Strategy and fixed DataRef | Reuses or explicitly prepares Backtrader 1.9.78.123. Explicit feed timeframe/compression; stocklike cash simulation, no broker connection or SVL equivalence. Optional wrapper and engine are GPL-3.0-or-later. |
 | `sesame/ict`, `sesame/price-action`, `sesame/elliott-wave`, `sesame/wyckoff`, `sesame/dow-theory` | Five independently selected technical methods | Each retains its own sources, evidence rules and counterexamples. Only ICT/Price Action include bounded observation helpers; no performance claim. |
 | `sesame/behavioral-finance`, `sesame/institutional-analysis`, `sesame/narrative-analysis` | Three independently selected social and interpretive methods | Dated primary evidence, competing explanations and explicit limits; no automatic inference of motives or causation. |
-| `sesame/strategy-research` | Knowledge guidance for experiment planning and evidence ledgers | Existing Node.js 22+ for bounded resource checks; actual backtests use a separately selected engine. No algorithm is preselected. |
-| `sesame/factor-research` | Knowledge guidance for point-in-time factor diagnostics and fixed-selection holdout | Existing Node.js 22+; descriptive statistics, explicit cost assumptions and trial records. No significance or live execution claim. |
-| `sesame/auto-factor-mining` | Multi-Agent hypothesis, evaluation receipt, review and frozen-selection workflow; collaboration and one final summary | Compatible host, configured role models and an explicitly selected evaluator. Input-only research methods can preserve workflow isolation; capabilities that expose independent data access use development-only evidence. [Source](packages/auto-factor-mining/README.md). |
-| `sesame/factor-evaluator` | Independent AST factor calculation, numerical gates, redundancy checks and reproducibility artifacts | Frozen registered panel data. Restricted workflow isolation or explicit development-only evaluation; descriptive baseline, not a broker backtest. Other implementations can follow the [tool protocol](packages/factor-evaluator/PROTOCOL.md). |
+| `sesame/auto-factor-mining` | Strategy: single- or multi-Agent hypothesis, actual evaluator, review, frozen selection and holdout; optional native execution | Compatible host, configured role models and an explicitly selected evaluator. Input-only research methods can preserve workflow isolation; capabilities that expose independent data access use development-only evidence. [Source](packages/auto-factor-mining/README.md). |
+| `sesame/factor-evaluator` | Independent AST calculation, task-selected diagnostics, multiple-trial analysis, conditional selection and reproducibility artifacts | Frozen data and explicit test choices. Agent thresholds are advisory; user-required constraints are binding. Other implementations can follow the [tool protocol](packages/factor-evaluator/PROTOCOL.md). |
+| `sesame/historical-evidence` | Historical scenario matching and calibration; typed historical replay stays exploratory | Fixed timestamped features, matured outcomes and code/data evidence. Actual and virtual clocks stay distinct; historical replay yields no current calibrated probability. No network or broker dependency. |
+| `sesame/abu-trade-metrics` | Trade results diagnostics: performance plus independent order/fill/replay audit | Supplied data only; no native matching. The old backtest-lab package and entry are removed, with numerical source, license and examples retained. |
 
 ## Install through a compatible API 2 host
 
 The plugin manager reads `https://dl.sesame.bot/plugins/api-v1/catalog.json`,
-with schemaVersion 2 and apiVersion 2. It selects nine default and 45 optional
-plugins. Each entry fixes source, files, package tree and publication review.
+with schemaVersion 2 and apiVersion 2. The earlier published snapshot selected nine default and 45 optional plugins; this does not describe current source membership. Each entry fixes source, files, package tree and publication review.
 Repository-local API 1 catalogs are retired historical records. Check the
 application release page for installers; old API 1 hosts must upgrade first.
 
@@ -83,7 +76,7 @@ Dependencies, configuration and platform adapters live in each plugin. Check exi
 
 Use Node 24 and set `SESAME_PLUGIN_SDK_LOADER` to the matching public SDK loader, then `npm test`. `npm run test:python` runs controlled Python adapter checks; set `SESAME_VNPY_PYTHON` to an actual compatible environment to also run real engine tests. QMT has a separate explicit Windows native opt-in test; it never runs automatically against a brokerage account. The code and fixtures copy no private application implementation.
 
-`npm run lock` / `npm run check` use the shared data-only API 2 package validator. The separate optional archive uses the same deterministic lock/files structure as the core archive, but is never automatically assembled into the nine-package default set. Each package retains its declared license and dependency/source notices; Backtrader is GPL-3.0-or-later, the ABU baseline family is GPL-3.0-only, and the other current wrappers are MIT. This does not relicense third-party runtimes or the private application. See [ecosystem organization](ECOSYSTEM.md) and each package's provenance for the reviewed scope.
+`npm run lock` / `npm run check` use the shared data-only API 2 package validator. The separate optional archive uses the same deterministic lock/files structure as the core archive, but is never automatically assembled into the eleven-package core set. Each package retains its declared license and dependency/source notices; Backtrader is GPL-3.0-or-later, the ABU baseline family is GPL-3.0-only, and the other current wrappers are MIT. This does not relicense third-party runtimes or the private application. See [ecosystem organization](ECOSYSTEM.md) and each package's provenance for the reviewed scope.
 
 ## Historical release evidence
 

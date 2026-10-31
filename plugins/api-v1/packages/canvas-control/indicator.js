@@ -1,9 +1,11 @@
 import { check, digest } from '@sesame/plugin-sdk/protocol';
 import { publishIndicator } from './artifact-io.js';
+import { checkIndicatorInput } from './indicator-limits.js';
 
 export function indicatorTool(host) {
   return { name: 'indicator_publish', execute: async (args, signal) => {
     const value = args.definition, implementation = value.implementation;
+    for (const input of value.inputs) checkIndicatorInput(input);
     check(implementation.kind === 'code' && implementation.language === 'javascript' || implementation.kind === 'series' && implementation.updateMode === 'static', 'Indicator runtime does not support this implementation', 'UNSUPPORTED_CAPABILITY');
     check(value.panes.filter(pane => pane.placement === 'main').length <= 1 && new Set(value.panes.map(pane => pane.id)).size === value.panes.length, 'Indicator pane identities must be unique');
     check(new Set(value.series.map(series => series.id)).size === value.series.length && value.series.every(series => value.panes.some(pane => pane.id === series.paneId)), 'Indicator series must have unique IDs and declared panes');

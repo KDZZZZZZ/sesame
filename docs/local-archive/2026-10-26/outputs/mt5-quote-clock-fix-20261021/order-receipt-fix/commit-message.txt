@@ -1,0 +1,13 @@
+fix(portfolio): resolve fill history through native order position identity
+
+The observed terminal with Python SDK 5.0.6231 rejects deals-by-order
+queries even with literal keyword calls. Read the exact native order's
+position_id, then query position deals and retain only that order's fills.
+Do not assume order/position/deal IDs coincide or convert missing identity
+or a failed native read into evidence that nothing was submitted.
+
+Validation: 84 distinct related regression checks passed, lint clean.
+Real gpt-6.1-sol status refresh recovered the original entry 543833429 and
+exit 543835160 separately, with no new order or remaining cycle position.
+After hot update, one explicitly gated -10004 IPC initialization was needed.
+Install MT5 2.1.8 selector contracts and portfolio-execution 2.0.4.

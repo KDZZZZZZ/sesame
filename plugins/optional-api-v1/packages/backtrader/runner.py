@@ -5,6 +5,7 @@ import importlib.util
 import json
 import math
 import sys
+import itertools
 from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
@@ -134,13 +135,57 @@ def main(request):
     cerebro.adddata(FixedFeed(
         timeframe=timeframes[feed["timeframe"]], compression=feed["compression"]
     ))
-    cerebro.addstrategy(strategy, **request.get("parameters", {}))
+    optimization = request.get("optimization")
+    parameters = request.get("parameters", {})
+    completed = []
+    if optimization:
+        # Use the engine's optimizer. maxcpus=1 keeps ownership/cancellation in
+        # the one managed process and avoids pickling user-defined analyzers.
+        vectors = {key: [value] for key, value in parameters.items()}
+        vectors.update(optimization["parameter_space"])
+        cerebro.optstrategy(strategy, **vectors)
+
+        def observed(items):
+            item = items[0]
+            receipt = item.analyzers.receipt.get_analysis()
+            final = receipt["equity"][-1]
+            completed.append({
+                "index": len(completed), "status": "completed",
+                "parameters": {key: getattr(item.params, key) for key in vectors},
+                "statistics": {"finalEquity": final["value"], "finalCash": final["cash"],
+                               "closedTrades": len(receipt["trades"])},
+                **receipt,
+            })
+        cerebro.optcallback(observed)
+    else:
+        cerebro.addstrategy(strategy, **parameters)
     cerebro.addanalyzer(ReceiptAnalyzer, _name="receipt")
     cerebro.broker.setcash(float(config["capital"]))
     cerebro.broker.setcommission(
         commission=float(config["commission"]), stocklike=True, percabs=True
     )
     cerebro.broker.set_slippage_perc(float(config["slippage"]))
+    if optimization:
+        failure = None
+        try:
+            cerebro.run(runonce=False, maxcpus=1, optreturn=True)
+        except (Exception, SystemExit) as error:
+            failure = {"type": type(error).__name__, "message": str(error)}
+        planned = [dict(zip(vectors, values)) for values in itertools.product(*vectors.values())]
+        passes = completed + [{"index": i, "status": "not-completed", "parameters": values,
+                               "reason": "Optimizer stopped before a confirmed pass receipt."}
+                              for i, values in enumerate(planned) if i >= len(completed)]
+        return {
+            "status": "failed" if failure else "completed",
+            "engine": {"name": "Backtrader Cerebro.optstrategy", "version": importlib.metadata.version("backtrader")},
+            "optimizer": {"native": True, "method": "Cerebro.optstrategy", "maxcpus": 1},
+            "passes": passes, "statistics": {"plannedPasses": len(planned), "completedPasses": len(completed)},
+            "equity": [], "trades": [], "orders": [],
+            **({"error": failure} if failure else {}),
+            "limitations": ["Development-only parameter search; no holdout selection or probability is computed.",
+                            "Stocklike cash simulation with native floats; no live broker or OS sandbox.",
+                            "A strategy exception stops this optimizer; incomplete passes are retained without invented results."],
+        }
     strategies = cerebro.run(runonce=False)
     receipt = strategies[0].analyzers.receipt.get_analysis()
     return {
@@ -167,7 +212,6 @@ def main(request):
 
 if __name__ == "__main__":
     output = Path(sys.argv[2])
-    exit_code = 0
     try:
         result = main(json.loads(Path(sys.argv[1]).read_text()))
     # Explicit strategy exits are controlled failures, not missing receipts.
@@ -180,6 +224,7 @@ if __name__ == "__main__":
             "orders": [],
             "trades": [],
         }
-        exit_code = 1
     output.write_text(json.dumps(result, allow_nan=False))
-    sys.exit(exit_code)
+    # A written failed result is a confirmed business outcome. A nonzero process
+    # exit is reserved for an interrupted runner with no confirmed receipt;
+    # the host propagates those failures through the owning Run tree.

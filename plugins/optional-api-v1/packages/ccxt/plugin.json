@@ -1,11 +1,11 @@
 {
   "id": "sesame/ccxt",
   "title": "CCXT optional backend",
-  "description": "Public spot market data only",
-  "version": "2.0.0",
+  "description": "信息获取能力：Kraken/Coinbase/OKX公开现货目录与K线，经统一行情入口冻结证据供方法/工作流复用；无账户、交易或API Key。",
+  "version": "2.0.9",
   "apiVersion": "2",
   "engines": {
-    "sesame": ">=0.2.3"
+    "sesame": ">=0.3.0-dev.1 <0.4.0"
   },
   "default_state": "discoverable",
   "entry": "index.js",
@@ -24,5 +24,13 @@
     "PROVENANCE.md",
     "README.md"
   ],
-  "capability_manifest": "capabilities.json"
+  "capability_manifest": "capabilities.json",
+  "permissions": {
+    "scopes": [
+      "process.execute"
+    ],
+    "calls": [
+      "host.process.exec"
+    ]
+  }
 }

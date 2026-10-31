@@ -77,7 +77,7 @@
             "items": {
               "type": "object"
             },
-            "description": "当前图表挂载的固定指标成果及实例参数。"
+            "description": "当前图表挂载的固定指标成果及实例参数。 绘图实例另含drawing（稳定id、revision、binding、active、spec）和可执行source；同一代码随用户编辑实时保存。"
           },
           "render_status": {
             "type": "string",
@@ -378,7 +378,7 @@
           "来源插件可用，且提供 describeInstrument 和 K 线查询/订阅。"
         ],
         "limitations": [
-          "不会修改画布或读取 K 线。STALE_REVISION 重新发现；CONNECTION_CHANGED 核对真实连接；多选口径按目标明确选择，不反复试值。"
+          "不会修改画布或读取 K 线。STALE_REVISION 或画布 SOURCE_CHANGED 应重新发现同 providerId 的当前 revision，保留原 source.binding、instrument、spec，核验后 CAS 更新原图表；不迁移冻结 DataRef 或绘图。CONNECTION_CHANGED 核对原连接，不能静默换账户；未固定连接不证明历史账户一致。多选口径按目标明确选择，不反复试值。"
         ]
       },
       "binding": {
@@ -988,7 +988,7 @@
         "agent",
         "host"
       ],
-      "description": "读取、挂载或移除不可变指标成果。每张图保留独立实例和参数；仅支持宿主声明的代码语言及静态序列。先用 indicator_publish 交付标准成果，再指定 ArtifactRef 挂载。",
+      "description": "读取单个已挂载指标实例，或挂载、移除图表指标。枚举实例使用 canvas_inspect；read 必须提供实例 script_id。每张图保留独立实例和参数；仅支持宿主声明的代码语言及静态序列。先用 indicator_publish 交付标准成果，再指定 ArtifactRef 挂载。",
       "inputSchema": {
         "type": "object",
         "required": [
@@ -1025,13 +1025,13 @@
           },
           "chart_id": {
             "type": "string",
-            "description": "目标图表 ID",
+            "description": "put/remove 必填的目标图表 ID，取自 canvas_inspect.charts[].id",
             "minLength": 1,
             "maxLength": 100
           },
           "script_id": {
             "type": "string",
-            "description": "读取、替换或移除的指标实例 ID",
+            "description": "read/remove 必填，取自 canvas_inspect.scripts[].id；put 首次挂载省略，替换时使用目标图表现有实例 ID。无实例时不调用 read。",
             "minLength": 1,
             "maxLength": 100
           },
@@ -1093,9 +1093,9 @@
         "view.write"
       ],
       "usage": {
-        "purpose": "读取、挂载或移除不可变指标成果。每张图保留独立实例和参数；仅支持宿主声明的代码语言及静态序列。先用 indicator_publish 交付标准成果，再指定 ArtifactRef 挂载。",
-        "inputs": "action=read 可用 script_id 读取实例；action=put 要 command_id/expected_version/chart_id/artifact，可带实例 parameters；remove 指定 script_id。artifact 使用 indicator_publish 的完整引用。",
-        "outputs": "read 返回脚本与宿主支持的语言/参数信息；put/remove 返回画布状态及版本，绘制结果见当前渲染回执。",
+        "purpose": "读取单个已挂载指标实例，或挂载、移除图表指标。枚举实例使用 canvas_inspect；read 必须提供实例 script_id。每张图保留独立实例和参数；仅支持宿主声明的代码语言及静态序列。先用 indicator_publish 交付标准成果，再指定 ArtifactRef 挂载。",
+        "inputs": "action=read 必须提供 canvas_inspect.scripts[].id 作为 script_id；枚举用 canvas_inspect，无实例时不调用 read。put/remove 均需 command_id/expected_version/chart_id；put 还需 indicator_publish 返回的完整 artifact 引用，可带 parameters，首次挂载省略 script_id，替换时使用目标图表现有实例 ID；remove 必须提供目标图表的 script_id。",
+        "outputs": "read 返回指定实例的 definition、parameters、fixedInputs 和 source（代码）或 initial（静态序列）；put/remove 返回画布状态及版本，绘制结果见当前渲染回执。",
         "prerequisites": [
           "挂载前已有固定 indicator 成果；配置格式示例在 resources/close-line.json 和 close-line.js。"
         ],
@@ -1106,6 +1106,640 @@
       "binding": {
         "type": "native",
         "name": "chart_script"
+      }
+    },
+    {
+      "id": "canvas_recover_source",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "显式恢复同一行情来源的新修订。宿主核验图表快照、来源digest/实例、品种、规格、日历、时钟及连接，再CAS更新；不自动迁移绘图。",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "command_id",
+          "expected_version",
+          "chart_id",
+          "expected_chart"
+        ],
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]{1,100}$",
+            "minLength": 16
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "chart_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]{1,100}$"
+          },
+          "expected_chart": {
+            "type": "object",
+            "description": "canvas_inspect中完整且未修改的原图表快照。"
+          },
+          "time_basis": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "utc",
+                  "wall"
+                ]
+              },
+              "authority": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "view.write"
+      ],
+      "usage": {
+        "purpose": "核验后恢复现有图表，不替换来源/品种或自动改写历史坐标。",
+        "inputs": "原图表完整快照与画布CAS版本；已知历史时钟可额外传入time_basis。",
+        "outputs": "当前画布；仅更新来源revision和generation。",
+        "prerequisites": [
+          "先canvas_inspect，确认用户请求恢复该图表。"
+        ],
+        "limitations": [
+          "冲突、取消、身份不符都不重试或覆盖；绘图显式迁移是独立操作。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "canvas_recover_source"
+      }
+    },
+    {
+      "id": "chart_drawing",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "读取、创建、修改、清理或显式迁移图表绘图。声明式几何直接渲染，成果源码保持不可变；修改同时校验绘图修订与挂载ID。",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "action",
+          "chart_id"
+        ],
+        "properties": {
+          "action": {
+            "enum": [
+              "read",
+              "put",
+              "remove",
+              "migrate"
+            ]
+          },
+          "command_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]{1,100}$",
+            "minLength": 16
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "client_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]{1,100}$"
+          },
+          "chart_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]{1,100}$"
+          },
+          "drawing_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]{1,100}$"
+          },
+          "expected_revision": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "expected_attachment": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Exact attached canvas_script id; null only when creating a drawing."
+          },
+          "binding": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source",
+              "instrument",
+              "spec"
+            ],
+            "properties": {
+              "source": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "providerId",
+                  "revision"
+                ],
+                "properties": {
+                  "providerId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096,
+                    "pattern": "^.+#.+$"
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "binding": {
+                    "type": "object"
+                  }
+                }
+              },
+              "instrument": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "sourceId",
+                  "instrumentId"
+                ],
+                "properties": {
+                  "sourceId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "instrumentId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  }
+                }
+              },
+              "spec": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "timeframe",
+                  "priceBasis",
+                  "adjustment",
+                  "calendarRevision"
+                ],
+                "properties": {
+                  "timeframe": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "priceBasis": {
+                    "enum": [
+                      "bid",
+                      "ask",
+                      "mid",
+                      "last"
+                    ]
+                  },
+                  "adjustment": {
+                    "enum": [
+                      "none",
+                      "forward",
+                      "backward"
+                    ]
+                  },
+                  "session": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "calendarRevision": {
+                    "type": "object",
+                    "required": [
+                      "status"
+                    ],
+                    "properties": {
+                      "status": {
+                        "enum": [
+                          "value",
+                          "unknown",
+                          "not_applicable",
+                          "unsupported"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "target_binding": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source",
+              "instrument",
+              "spec"
+            ],
+            "properties": {
+              "source": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "providerId",
+                  "revision"
+                ],
+                "properties": {
+                  "providerId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096,
+                    "pattern": "^.+#.+$"
+                  },
+                  "revision": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "binding": {
+                    "type": "object"
+                  }
+                }
+              },
+              "instrument": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "sourceId",
+                  "instrumentId"
+                ],
+                "properties": {
+                  "sourceId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "instrumentId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  }
+                }
+              },
+              "spec": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "timeframe",
+                  "priceBasis",
+                  "adjustment",
+                  "calendarRevision"
+                ],
+                "properties": {
+                  "timeframe": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "priceBasis": {
+                    "enum": [
+                      "bid",
+                      "ask",
+                      "mid",
+                      "last"
+                    ]
+                  },
+                  "adjustment": {
+                    "enum": [
+                      "none",
+                      "forward",
+                      "backward"
+                    ]
+                  },
+                  "session": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "calendarRevision": {
+                    "type": "object",
+                    "required": [
+                      "status"
+                    ],
+                    "properties": {
+                      "status": {
+                        "enum": [
+                          "value",
+                          "unknown",
+                          "not_applicable",
+                          "unsupported"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "drawing": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schemaVersion",
+              "kind",
+              "title",
+              "anchors",
+              "style"
+            ],
+            "properties": {
+              "schemaVersion": {
+                "const": "sesame-drawing/1"
+              },
+              "kind": {
+                "enum": [
+                  "trend",
+                  "horizontal",
+                  "rectangle",
+                  "fibonacci"
+                ]
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80,
+                "pattern": "^(?=[^\\u0000-\\u001f]*$)(?=.*\\S).+$"
+              },
+              "anchors": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 2,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "time",
+                    "price"
+                  ],
+                  "properties": {
+                    "time": {
+                      "type": "number",
+                      "minimum": -8640000000000,
+                      "maximum": 8640000000000
+                    },
+                    "price": {
+                      "type": "number",
+                      "minimum": -1000000000000000,
+                      "maximum": 1000000000000000
+                    }
+                  }
+                }
+              },
+              "style": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "color",
+                  "width",
+                  "lineStyle",
+                  "fillOpacity"
+                ],
+                "properties": {
+                  "color": {
+                    "type": "string",
+                    "pattern": "^#[a-fA-F0-9]{6}$"
+                  },
+                  "width": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2,
+                      3,
+                      4
+                    ]
+                  },
+                  "lineStyle": {
+                    "enum": [
+                      "solid",
+                      "dashed",
+                      "dotted"
+                    ]
+                  },
+                  "fillOpacity": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 0.4
+                  }
+                }
+              }
+            },
+            "anyOf": [
+              {
+                "properties": {
+                  "kind": {
+                    "const": "horizontal"
+                  },
+                  "anchors": {
+                    "minItems": 1,
+                    "maxItems": 1
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "trend",
+                      "rectangle",
+                      "fibonacci"
+                    ]
+                  },
+                  "anchors": {
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                }
+              }
+            ]
+          },
+          "source": {
+            "type": "string",
+            "maxLength": 16384
+          }
+        },
+        "oneOf": [
+          {
+            "properties": {
+              "action": {
+                "const": "read"
+              }
+            },
+            "required": [
+              "drawing_id"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "drawing"
+                  ]
+                },
+                {
+                  "required": [
+                    "source"
+                  ]
+                },
+                {
+                  "required": [
+                    "target_binding"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "properties": {
+              "action": {
+                "const": "remove"
+              }
+            },
+            "required": [
+              "command_id",
+              "expected_version",
+              "binding",
+              "expected_revision",
+              "expected_attachment",
+              "drawing_id"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "drawing"
+                  ]
+                },
+                {
+                  "required": [
+                    "source"
+                  ]
+                },
+                {
+                  "required": [
+                    "target_binding"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "properties": {
+              "action": {
+                "const": "migrate"
+              }
+            },
+            "required": [
+              "command_id",
+              "expected_version",
+              "binding",
+              "expected_revision",
+              "expected_attachment",
+              "drawing_id",
+              "target_binding"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "drawing"
+                  ]
+                },
+                {
+                  "required": [
+                    "source"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "properties": {
+              "action": {
+                "const": "put"
+              }
+            },
+            "required": [
+              "command_id",
+              "expected_version",
+              "binding",
+              "expected_revision",
+              "expected_attachment"
+            ],
+            "oneOf": [
+              {
+                "required": [
+                  "drawing"
+                ]
+              },
+              {
+                "required": [
+                  "source"
+                ]
+              }
+            ],
+            "not": {
+              "required": [
+                "target_binding"
+              ]
+            }
+          }
+        ]
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "view.write"
+      ],
+      "usage": {
+        "purpose": "对用户的手工绘图和Agent绘图使用同一持久化代码与版本链。",
+        "inputs": "read需要chart_id/drawing_id。变更需要command_id/expected_version、保存的binding、expected_revision和expected_attachment（script.id）；新建二者为null。migrate另需当前target_binding，且can_migrate必须为true。",
+        "outputs": "read返回附着绘图，包括spec/source/revision/attachment/active/can_migrate。put/remove/migrate返回当前画布；修改保留旧成果与撤销历史。",
+        "prerequisites": [
+          "先canvas_inspect读取图表binding与绘图修订；只修改用户要求的对象。"
+        ],
+        "limitations": [
+          "每个当前绑定最多64幅活跃绘图，非活跃附着绘图可读取和删除，不占活跃配额。来源修订只能由宿主核验恢复，迁移必须单独显式请求；跨品种、规格、日历、时钟或连接不能迁移。缺失历史观测或未知日历不授权迁移。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "chart_drawing"
       }
     },
     {
@@ -1462,7 +2096,8 @@
                     "lookback": {
                       "type": "integer",
                       "minimum": 0,
-                      "maximum": 50000
+                      "maximum": 20000,
+                      "description": "最小预热样本数，0表示不要求预热而非空输入；不截断可见历史。所有输入合计最多100000行及8MiB。"
                     },
                     "forming": {
                       "anyOf": [
@@ -1475,6 +2110,12 @@
                           "const": "closed_only"
                         }
                       ]
+                    },
+                    "window": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 20000,
+                      "description": "可选固定样本窗口，必须>=lookback；只传最后N个符合forming策略的样本。不传则传完整的有界视窗或固定数据。"
                     }
                   },
                   "additionalProperties": false
@@ -2202,7 +2843,8 @@
                 "lookback": {
                   "type": "integer",
                   "minimum": 0,
-                  "maximum": 50000
+                  "maximum": 20000,
+                  "description": "最小预热样本数，0表示不要求预热而非空输入；不截断可见历史。所有输入合计最多100000行及8MiB。"
                 },
                 "forming": {
                   "anyOf": [
@@ -2215,6 +2857,12 @@
                       "const": "closed_only"
                     }
                   ]
+                },
+                "window": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 20000,
+                  "description": "可选固定样本窗口，必须>=lookback；只传最后N个符合forming策略的样本。不传则传完整的有界视窗或固定数据。"
                 }
               },
               "additionalProperties": false

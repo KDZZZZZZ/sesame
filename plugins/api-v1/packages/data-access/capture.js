@@ -6,6 +6,8 @@ export const digest = value => `sha256:${createHash('sha256').update(typeof valu
 export const systemSource = name => ({ providerId: `host#${name}`, revision: 'host:2' });
 export const publicSource = ({ providerId, revision }) => ({ providerId, revision });
 const pending = new Map(), MAX_BYTES = 16 * 1024 * 1024;
+const DIRECT_INPUTS = 'direct-inputs-v1', MAX_DEPENDENCIES = 256;
+const uniqueRefs = refs => [...new Map(refs.map(ref => [digest(ref), ref])).values()];
 
 export async function readBytes(host, ref, entry, signal) {
   const chunks = []; let offset = 0;
@@ -48,6 +50,7 @@ export function snapshotOperation(host, operationId, input, capture, signal) {
     let captured = stored?.value.capture;
     if (!captured) {
       const value = await capture(); signal?.throwIfAborted();
+      check(uniqueRefs(value.dependencies ?? []).length < MAX_DEPENDENCIES, 'Snapshot dependencies exceed the 256-reference publication budget including evidence', 'RESOURCE_EXHAUSTED');
       const rows = JSON.stringify(value.rows), evidence = JSON.stringify(value.evidence);
       check(Buffer.byteLength(rows) <= MAX_BYTES && Buffer.byteLength(evidence) <= MAX_BYTES, 'Snapshot byte budget exceeded', 'RESOURCE_EXHAUSTED');
       const rowResource = await host.resources.create({ kind: 'file', name: `${key.slice(7)}-rows.json`, lifetime: 'durable', source: { content: rows } }, { operationId: `${key}:rows`, signal });
@@ -57,17 +60,23 @@ export function snapshotOperation(host, operationId, input, capture, signal) {
       const sample = [];
       for (const row of value.rows.slice(0, 5)) { if (Buffer.byteLength(JSON.stringify([...sample, row])) > 32768) break; sample.push(row); }
       check(Buffer.byteLength(JSON.stringify(value.summary)) <= 128 * 1024, 'Snapshot metadata exceeds 128 KiB', 'RESOURCE_EXHAUSTED');
-      captured = { rowResource, evidenceResource, columns, rowCount: value.rows.length, sample, summary: value.summary, dependencies: value.dependencies ?? [] };
+      captured = { rowResource, evidenceResource, columns, rowCount: value.rows.length, sample, summary: value.summary, dependencies: value.dependencies ?? [], publicationDependencyMode: DIRECT_INPUTS };
       const saved = await host.state.commit([{ op: 'put', key: address, expectedVersion: 0, value: { fingerprint, capture: captured } }], { operationId: `${key}:capture`, signal });
       stored = saved.entries[0];
     }
     signal?.throwIfAborted();
     const origin = captured.summary.origin;
     check(['observed', 'derived', 'user_input', 'demo'].includes(origin), 'Snapshot requires explicit source provenance');
+    check(captured.publicationDependencyMode === undefined || captured.publicationDependencyMode === DIRECT_INPUTS, 'Unknown frozen publication dependency mode');
     const evidenceProvenance = { kind: origin, references: captured.dependencies };
     const evidence = await host.resources.publish(captured.evidenceResource, { kind: 'resource', schemaVersion: '1.0.0', content: { type: 'captured-data-evidence', path: 'evidence.json', ...captured.summary, provenance: evidenceProvenance }, dependencies: captured.dependencies, blobs: [{ path: 'evidence.json', mediaType: 'application/json' }], provenance: evidenceProvenance }, { operationId: `${key}:publish-evidence`, signal });
     const provenance = { kind: origin === 'demo' ? 'demo' : 'derived', references: [evidence.ref], ...captured.summary };
-    const published = await host.resources.publish(captured.rowResource, { kind: 'data', schemaVersion: '1.0.0', content: { format: 'json-rows', path: 'rows.json', columns: captured.columns, rowCount: captured.rowCount, provenance }, dependencies: [evidence.ref], blobs: [{ path: 'rows.json', mediaType: 'application/json' }], provenance }, { operationId: `${key}:publish-data`, signal });
+    // Only already-verified inputs are promoted, never refs found inside result
+    // rows. Freeze the mode with capture: old in-flight publications may already
+    // have committed the legacy manifest under this exact idempotency key.
+    const dependencies = captured.publicationDependencyMode === DIRECT_INPUTS ? uniqueRefs([evidence.ref, ...captured.dependencies]) : [evidence.ref];
+    check(dependencies.length <= MAX_DEPENDENCIES, 'Snapshot dependency budget exceeded', 'RESOURCE_EXHAUSTED');
+    const published = await host.resources.publish(captured.rowResource, { kind: 'data', schemaVersion: '1.0.0', content: { format: 'json-rows', path: 'rows.json', columns: captured.columns, rowCount: captured.rowCount, provenance }, dependencies, blobs: [{ path: 'rows.json', mediaType: 'application/json' }], provenance }, { operationId: `${key}:publish-data`, signal });
     const result = { ref: published.ref, evidence: evidence.ref, rowCount: captured.rowCount, columns: captured.columns, sample: captured.sample, provenance, receipt: published.receipt };
     await host.state.commit([{ op: 'put', key: address, expectedVersion: stored.version, value: { fingerprint, capture: captured, result } }], { operationId: `${key}:complete`, signal });
     return result;

@@ -1,0 +1,709 @@
+RESEARCH · 真实方法调用与回溯固定验证
+QA20261020 量化方法实验研究报告
+固定行情复用· 小预算反证实验· 不做交易批准
+BTC范围 2026-10-15T10:00:00.000Z — 2026-10-20T09:00:00.000Z BTC闭柱 120 黄金闭柱 114 计划冻结UTC 2026-10-20T10:36:30.299Z
+结论
+固定验证亏损-47.16 USD，未支持均线长仓
+假设
+16 笔回溯模拟，样本已被观察；方法运行成功不构成独立确认或团队复核通过。
+固定验证净盈亏
+-47.16 USD
+相对空仓，已扣预设费用与滑点
+固定验证收益率
+-0.47%
+假设初始权益；非账户实绩
+已平仓权益最大回撤
+-0.48%
+不包含盘中浮动亏损
+验证交易数
+16
+回溯模拟，样本较小
+01 固定验证与空仓基准
+开发两候选都为负；冻结的均线组合在固定验证仍亏损-47.16 USD，事前反证条件
+成立。
+只对开发段排序；验证只评估已冻结组合，不回看另一个候选。
+实验段与候选 模拟净盈亏 模拟交易数
+开发SMA3/8 -106.55 USD 29
+开发SMA5/8 -110.48 USD 29
+固定验证SMA3/8 -47.16 USD 16
+相对少亏不等于通过筛选。
+开发候选预算 2.00 实际开发候选 2.00 实际验证候选 1.00
+这是以前观察过样本上的回溯固定验证／伪样本外；没有新增未触碰盲测。
+开发候选与固定验证的净盈亏
+相同费用假设、USD；开发与验证时长及交易数不同，不把绝对值大小当作同样本优劣比较。空仓基准为零。
+开发SMA3/8 -106.55 USD
+开发SMA5/8 -110.48 USD
+固定验证SMA3/8 -47.16 USD
+02 成本与权益路径
+未扣费用滑点毛盈亏仅0.82 USD，小于滑点影响与手续费；预设摩擦足以否定本样
+本中的净收益假设。
+当前规则的收益空间不足以覆盖所声明的摩擦。
+滑点影响 15.99 USD 手续费 31.98 USD 单笔名义本金 1,000.00 USD
+费用与滑点是事前固定假设，不是券商实测；开盘价可成交、零延迟及容量未验证。
+逐笔模拟及机械年化诊断
+2026-10-18T23:00:00.000Z 2026-10-19T00:00:00.000Z 3.1291469255784063 2.0031291469255783 1.1260177786528278
+2026-10-19T00:00:00.000Z 2026-10-19T01:00:00.000Z 1.5357155322123943 2.001535715532212 -0.46582018331981817
+2026-10-19T01:00:00.000Z 2026-10-19T02:00:00.000Z 0.6531502609644846 2.0006531502609644 -1.34750288929648
+2026-10-19T02:00:00.000Z 2026-10-19T03:00:00.000Z 2.3112564044551362 2.002311256404455 0.3089451480506809
+2026-10-19T03:00:00.000Z 2026-10-19T04:00:00.000Z -3.3634217944750198 1.9966365782055249 -5.360058372680545
+2026-10-19T04:00:00.000Z 2026-10-19T05:00:00.000Z 2.1239102918467427 2.002123910291847 0.12178638155489581
+2026-10-19T05:00:00.000Z 2026-10-19T06:00:00.000Z -1.2363181251999842 1.9987636818748 -3.235081807074784
+2026-10-19T06:00:00.000Z 2026-10-19T07:00:00.000Z 0.10029729956567376 2.0001002972995656 -1.899802997733892
+2026-10-19T07:00:00.000Z 2026-10-19T08:00:00.000Z -2.3214325007090597 1.997678567499291 -4.3191110682083504
+固定验证的损益拆解
+USD；净盈亏等于毛盈亏减滑点影响和手续费。各条为对账项目，末项不可与前三项再相加。
+无费用滑点毛盈亏 0.82 USD
+滑点影响 -15.99 USD
+手续费 -31.98 USD
+净盈亏 -47.16 USD
+固定验证的已平仓模拟权益
+2026-10-18T18:00:00.000Z — 2026-10-20T09:00:00.000Z，UTC；USD；无交易时保持权益，不填造收益。
+9,950
+9,960
+9,970
+9,980
+9,990
+10,000
+10,010
+10-18 18:00 10-19 01:48 10-19 09:36 10-19 17:24 10-20 01:12 10-20 09:00
+ENTRY_TIME EXIT_TIME GROSS_PNL COST NET_PNL
+2026-10-19T08:00:00.000Z 2026-10-19T09:00:00.000Z 0.1307685843190625 2.0001307685843193 -1.8693621842652566
+2026-10-19T09:00:00.000Z 2026-10-19T10:00:00.000Z -1.7167419046280061 1.998283258095372 -3.715025162723378
+2026-10-19T10:00:00.000Z 2026-10-19T11:00:00.000Z -5.071628080728308 1.9949283719192716 -7.06655645264758
+2026-10-19T23:00:00.000Z 2026-10-20T00:00:00.000Z -2.4791380551075965 1.9975208619448923 -4.476658917052489
+2026-10-20T00:00:00.000Z 2026-10-20T01:00:00.000Z -3.564044621385164 1.9964359553786148 -5.560480576763779
+2026-10-20T05:00:00.000Z 2026-10-20T06:00:00.000Z -5.5187838732773855 1.9944812161267227 -7.513265089404108
+2026-10-20T06:00:00.000Z 2026-10-20T07:00:00.000Z 0.1143464083937996 2.000114346408394 -1.8857679380145942
+按39 个小时收益、年内8760 期机械换算：夏普-51.81，CAGR -65.44%。短时段年化不稳定，保留用于复核而非预测；无外部资金流只对这
+条已定义模拟成立。
+03 价格描述不构成独立确认
+尾窗快线低于慢线，且最新价格仍处于此前区间内；多项描述共享同一价格来源，
+不能计作多票批准。
+趋势与突破回答不同局部问题，而不是互相验证盈利。
+回归斜率 -50.47 USD/根 快均线 81,530.43 USD 慢均线 81,697.56 USD
+回归、均线、动量与拐点都从同一价格样本派生；没有基本面、独立成交或执行证据加入。
+简单ATR的一致只验证相同公式的实现口径。
+简单ATR 296.34 USD ATR占收盘价 0.36% 最新真实波幅 242.30 USD
+最小尾窗预热；简单均值不是Wilder平滑。退出与仓位包首根TR初始化不同，不能互换初始窗口。
+趋势回撤未触发；假设持仓首次退出原因为最长持有期。中性Kelly假设给出零分配；ATR预算数量0.042181 BTC 仅为数学情境，不是下单量或用
+户风险红线。
+04 时间、单位与黄金结构样本
+BTC仅能证明在采集时已可见；黄金保留券商墙时与报价币种未知，不能与BTC构
+造同步收益比较。
+不以SourceTime投影秒数推断黄金UTC；也不把tick量换算为真实交易量。
+ENTRY_TIME EXIT_TIME GROSS_PNL COST NET_PNL
+BTC收盘与快慢均线：同一尾窗
+USD；UTC收盘边界。空值保留预热缺口；历史边界不是首次可用时点。
+81,400
+81,500
+81,600
+81,700
+81,800
+81,900
+82,000
+82,100
+18:00 21:00 00:00 03:00 06:00 09:00
+固定样本 行数 时间口径 价格口径 量口径 覆盖证明
+BTC/USD 120 UTC；历史首次可用时间未知 last / USD real / BTC 未证明完整
+黄金 114 FTMO-Demo墙时；UTC偏移未知 bid / 来源币种未知 tick计数 未证明完整
+黄金只能支持本地顺序的报价范围描述。
+最近闭柱收盘 4168.75 报价点 尾窗最高价 4198.68 报价点 尾窗最低价 4147.15 报价点
+墙时从2026-10-12T01:00:00 至2026-10-16T23:00:00.000；报价点并未证实为美元。返回行中有4 处相邻墙时边界不连续，未推断其原因。
+BTC所用统一可得时间为2026-10-20T09:38:22.106Z，这是实际采集时的已可见上界，而非每根K线的首次可用时点。它支持采集后的回溯观
+察，不支持历史可交易性。
+05 方法执行与输入守卫
+按包计：成功15、调用失败2、输入不足未调用1、尚未运行0。成功指能力运行，
+不代表策略获批。
+实际ABU调用
+19
+含开发／固定验证两阶段及一次退出包
+修复
+成功调用
+16
+失败调用
+3
+其中一项已修复；原失败保留
+未修复守卫拒绝
+2
+模型实验没有完成拟合，近邻没有产出评分。
+实际采集／特征快照晚于历史决策；价格标签虽按时间隔离，仍不能消除特征可得性缺口。
+守卫拒绝是边界发现，不是拟合成功。未把可得时间改成历史收盘来换取通过。
+单标的排名与短时星期分组不具备选择力。
+筛选池标的数 1.00 当前星期分组小时对 8.00
+单标的总会排第一；同一天的小时收益不是跨周独立样本，均不支持全市场或星期效应结论。
+包执行状态 全部
+趋势回归— 已调用成功
+最近窗口回归斜率为负，路径效率亦负。
+16根尾窗、等间隔行回归；非预测或独立确认。
+{
+"plugin": "sesame/abu-trend",
+"capability": "abu_trend_analyze",
+"sample_rows": 16,
+"parameters": {
+"window": 8,
+"channel_stddev": 2,
+"max_bars": 16
+},
+"as_of": "2026-10-20T10:38:00.132Z",
+"input_ref": {
+"id": "artifact_f0d0e378-5c51-4c52-90aa-6b75c285dd64",
+"revision": "revision_bada7514-2326-4413-bc05-833b83bbcee2",
+"digest": "sha256:eb3da3c46393d13aa0ab2ed2b5cee4b61098955373a224e3e94d714bd8a94182",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"result_ref": {
+"id": "artifact_b5d9b72c-ee0e-4e38-a29c-d2eaadaf7b75",
+"revision": "revision_9ab4922d-e6eb-4ad9-9663-9fa1ca31b303",
+"digest": "sha256:a95dd5ff163eefc26bc938e98d90a4209dc8b1b35beec94195eda67de29f8fb6",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"implementation_sha256": "sha256:b4de5dc544e9f966c1ee5478db68602f14e24a04bcdc9dd6b029ac6e092987cd"
+}
+快慢均线— 已调用成功
+快线低于慢线；最新没有新交叉。
+尾窗交叉观察，不等于全样本策略成交；与回归同源。
+{
+"plugin": "sesame/abu-moving-average",
+"capability": "abu_moving_average_analyze",
+"sample_rows": 16,
+"parameters": {
+"fast_window": 3,
+"slow_window": 8
+},
+"as_of": "2026-10-20T10:38:00.132Z",
+"input_ref": {
+"id": "artifact_42db11ab-ecf9-4cc7-8d1c-4a89f3181d58",
+"revision": "revision_6ba1c662-b4b3-48e3-a763-5ed194c2dff5",
+"digest": "sha256:1409ccdf78801c5f71e098c817f809c802d1269d7554f10c9108ce33696823a2",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"result_ref": {
+"id": "artifact_864472ae-9e54-460c-b620-7d615eaa26d2",
+"revision": "revision_34718d75-3c7a-48c1-978f-1609d5ff2bd3",
+"digest": "sha256:6f0b4230ebbabd668dbc218e9020d7c57a3e32d88da00ac76b69bd7621b1e9c1",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"implementation_sha256": "sha256:c10117177c5a76b1aa5bb37c0f2a7cb7ca062492f974cc33f96d2e224638c7dc"
+}
+区间突破— 已调用成功
+最新收盘仍在此前区间内，没有突破。
+不模拟区间边界成交；只回答尾窗结构。
+{
+"plugin": "sesame/abu-breakout",
+"capability": "abu_breakout_analyze",
+"sample_rows": 16,
+"parameters": {
+"lookback": 8,
+"direction": "both"
+},
+"as_of": "2026-10-20T10:38:00.132Z",
+"input_ref": {
+"id": "artifact_5a095d6a-15cd-4774-8b42-fbb80e4b8e6f",
+"revision": "revision_88d559b9-a44c-4989-8bef-5879781ba46f",
+"digest": "sha256:1e937635a76e54a589a391b00a95bc236fdfd8fc7a9a2f472f9b3056254eb938",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"result_ref": {
+"id": "artifact_ffd3d75f-eb0a-432b-aefc-603ff4839b92",
+"revision": "revision_a4b7fa8f-01da-426a-87ba-d3532a83b7f7",
+"digest": "sha256:cb500f05c15990e955319781fa4a2b295dfc875333c6dbc86b207c7fcac69d5e",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"implementation_sha256": "sha256:28c80b943e1c129c40669fd752fb91c58878049c2978c7e1186e282994fc0512"
+}
+趋势回撤— 已调用成功
+趋势回撤组合没有触发，最新反弹条件为否。
+短样本与默认幅度门槛不相容也可产生无信号；不事后降低门槛。
+{
+"plugin": "sesame/abu-trend-pullback",
+"capability": "abu_trend_pullback_analyze",
+"sample_rows": 16,
+"parameters": {
+"trend_window": 8,
+"pullback_window": 3,
+"min_trend_return": 0.05,
+"min_pullback": 0.02,
+"max_pullback": 0.25,
+"golden_tolerance": 0.08
+},
+"as_of": "2026-10-20T10:38:00.132Z",
+"input_ref": {
+"id": "artifact_6d3c99e5-b030-4bfe-80a1-8eb6360951ba",
+"revision": "revision_dc4e80e1-1fc6-41a7-9a53-de9456788fdb",
+"digest": "sha256:9634e3bfabb797ceba68cced309f3ba213f9ed392ccf37fa673f81cc53c130bc",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"result_ref": {
+"id": "artifact_82a5d3cb-0639-4c8e-9574-415721758c25",
+"revision": "revision_87d072cc-20a2-47c3-9d96-c4547fca57fc",
+"digest": "sha256:e5a40c2b313820b5fa75b97ec90a74407c2deb63774f66469ab5593cf79b662f",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"implementation_sha256": "sha256:8786e9a8ea23c60563b3cbdd60ac15c856099b8053a1662bd85347c31ef6e874"
+}
+延迟确认结构— 已调用成功
+确认拐点与聚类水平已保留。
+统一到真实采集时可知，不能在拐点时刻提前使用；黄金墙时不进入本能力。
+{
+"plugin": "sesame/abu-price-structure",
+"capability": "abu_price_structure_analyze",
+"sample_rows": 16,
+"parameters": {
+"left": 2,
+"right": 2,
+"cluster_tolerance_pct": 0.002,
+"max_bars": 16,
+"max_pivots": 16
+},
+"as_of": "2026-10-20T10:38:00.132Z",
+"input_ref": {
+"id": "artifact_65eeb08e-2e54-469f-82f0-e66295e15ea2",
+"revision": "revision_c8b60f75-9d53-4b74-896a-6945d40368f6",
+"digest": "sha256:ec3b170f8f5b423fc97bcce861c00fc65cad0e4ef6002468808d3c679bffbd4f",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"result_ref": {
+"id": "artifact_56089d65-f013-466c-81ee-d22a26d26c57",
+"revision": "revision_102e0bc9-2044-4e78-b2ad-31fd93025c50",
+"digest": "sha256:c5a93a6488c474c42c63321011ee55aaaabfa13c5b751e48545e9ba183881a23",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"implementation_sha256": "sha256:c2e086dc8b9baa73d9f0b57af1ce10ae10a92805657ea625ea3c3afea5ccb69a"
+}
+波动与跳空— 已调用成功
+已获得简单ATR、收益波动和有限输入VWAP。
+6根预热最小窗；年化8760对应24/7小时，不是盘中实现波动。
+{
+"plugin": "sesame/abu-volatility",
+"capability": "abu_volatility_analyze",
+"sample_rows": 6,
+"parameters": {
+"return_window": 5,
+"atr_window": 5,
+"gap_threshold_pct": 0.001,
+"annualization": 8760,
+"max_bars": 16
+},
+"as_of": "2026-10-20T10:38:00.132Z",
+"input_ref": {
+"id": "artifact_c1ddb6f6-b065-4458-82f6-9b753a763944",
+"revision": "revision_58b39fc7-fd29-4900-b1f6-20d10c554d1d",
+"digest": "sha256:9e5273ff5c5cec0f0eec301345e234d61d475b4faa87ef9d28d0b746de1efc0f",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"result_ref": {
+"id": "artifact_c9827183-2a00-49e4-b811-32fad6401003",
+"revision": "revision_147a4124-0e13-475e-94c6-ae7ba6ec3704",
+"digest": "sha256:3d5ba35d5faa91bdd641de691e441d9ded2e3636c2847383c94c49023e4ed322",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"implementation_sha256": "sha256:75b80778a9cf7e3017c3b0f834c16334e405f97ac13e18ef7f462365abe99eb3"
+}
+技术指标— 已调用成功
+ATR与波动包同口径结果一致；其他指标保留短预热口径。
+重复ATR仅作实现一致性QA，不当两份市场证据；EMA从短窗首价初始化。
+{
+"plugin": "sesame/abu-indicators",
+"capability": "abu_indicators_analyze",
+"sample_rows": 6,
+"parameters": {
+"sma_window": 5,
+"ema_span": 5,
+"macd_fast": 3,
+"macd_slow": 6,
+"macd_signal": 3,
+"rsi_window": 5,
+"bollinger_window": 5,
+"bollinger_stddev": 2,
+"atr_window": 5,
+"max_bars": 16
+},
+"as_of": "2026-10-20T10:38:00.132Z",
+"input_ref": {
+"id": "artifact_dd00b3f0-9df5-402a-9dce-f11eb0276240",
+"revision": "revision_e6f535ff-8038-465a-bde7-b2338462e231",
+"digest": "sha256:4a48f9a06e6af2aa030e687d03afd74cdba5fb9c1e7cd7b46ea71f3dacc08b1b",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"result_ref": {
+"id": "artifact_1db05f68-3f91-47c5-84b3-4e0417f2c71a",
+"revision": "revision_9c3040c7-f77e-4afd-9b5e-94746803bb34",
+"digest": "sha256:cb3aa58a641274b698645916497b532b2758ef6a1131218fce33cfa4dde63f12",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"implementation_sha256": "sha256:fe205c52205110e8c8abd55ca02e2d74061cff5674c38ef3ba94758b3a3a6039"
+}
+UTC星期分组— 已调用成功
+小时收益可按UTC星期分组。
+仅跨相邻两天，同一天的多小时不是多个独立星期样本；不足以识别星期效应。
+{
+"plugin": "sesame/abu-seasonality",
+"capability": "abu_seasonality_analyze",
+"sample_rows": 16,
+"parameters": {
+"min_samples": 3,
+"calendar": "UTC bar close weekday; close-to-next-close return samples from strictly prior completed pairs only"
+},
+"as_of": "2026-10-20T10:38:00.132Z",
+"input_ref": {
+"id": "artifact_79bf3876-0a81-4a7e-ba48-c4747b193cf2",
+"revision": "revision_9d5bd90b-a205-4174-b534-5f0e266d8bec",
+"digest": "sha256:96454797f4a789d8da2a7d337aaf20489986985389a151e1bdf86991344f4cf2",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"result_ref": {
+"id": "artifact_98d7011a-9fad-417f-9705-b4f01a9a01d5",
+"revision": "revision_31edb2ae-94bc-44ee-8b74-25d3b717c401",
+"digest": "sha256:94cf0b4f9f444f58c9c4fa257530f2d6ab7ca352270ce5397511b92ef91f31d4",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"implementation_sha256": "sha256:0a463913d909276da17e03f0798155ae1b009b30c609042aa8ae57f4e9018942"
+}
+跨标的相似性— 合法输入不足未调用
+只有BTC可使用明确UTC；黄金墙时偏移未知，未伪造第二个同步标的。
+需要至少两个真实同起止UTC收益区间的标的；本轮不重新取数或猜黄金UTC。
+{
+"plugin": "sesame/abu-similarity",
+"capability": "abu_similarity_analyze",
+"sample_rows": 0,
+"parameters": null,
+"as_of": null,
+"input_ref": null,
+"result_ref": null,
+"implementation_sha256": null
+}
+有界标的筛选— 已调用成功
+单标的池合法执行，排名第一为退化结果。
+池中只有BTC，即使原始动量/趋势为负，各排名分仍为满分；绝非全市场选股。
+{
+"plugin": "sesame/abu-stock-screening",
+"capability": "abu_stock_screening_analyze",
+"sample_rows": 16,
+"parameters": {
+"momentum_window": 5,
+"trend_window": 8,
+"efficiency_window": 8,
+"price_window": 8,
+"top_n": 1,
+"max_instruments": 2,
+"max_bars_per_instrument": 16
+},
+"as_of": "2026-10-20T10:38:00.132Z",
+"input_ref": {
+"id": "artifact_04c39aa0-ad55-4d65-b595-ebd0d637633f",
+"revision": "revision_563b9e1b-3136-46f6-be09-4331e9710a49",
+"digest": "sha256:12045f4cc4f88e65605270193268481c74c76488e885636846b5d5647d11a4cf",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"result_ref": {
+"id": "artifact_a6c18f44-b1eb-4ee0-bd9e-8ab6ee66f633",
+"revision": "revision_1256d9f5-3ca6-4c45-9194-3cf13c354b15",
+"digest": "sha256:79b59f188d021afc5cd9a50217f02a7ab6063f5e52fbfe085ea7efe2b4ece1e3",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"implementation_sha256": "sha256:00702f8f0a49f03ce921b75852a55554b3a657b0349edabeabf0f386189efb3d"
+}
+假设持仓退出— 已调用成功
+假设多头最终只触及最长持有期条件。
+首次提交有OHLC抄录错误，按固定原行修复一次；无账户持仓，不是平仓记录。
+{
+"plugin": "sesame/abu-exit-rules",
+"capability": "abu_exit_rules_analyze",
+"sample_rows": 6,
+"parameters": {
+"atr_window": 5,
+"stop_loss_atr": 2,
+"stop_win_atr": 3,
+"trailing_atr": 2,
+"max_holding_bars": 3
+},
+"as_of": "2026-10-20T10:38:00.132Z",
+"input_ref": {
+"id": "artifact_236a2a9a-3123-49b7-95b5-0949d0a4b6b2",
+"revision": "revision_537bb18a-1e4c-453a-91d2-a5f5aea57e7a",
+"digest": "sha256:35082cb5c57b75381bb56215922e349b00f26630048ff8cf60300bc3d537354e",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"result_ref": {
+"id": "artifact_497197b5-c11a-4208-8808-bbb25169fbf0",
+"revision": "revision_6def1742-6ea3-4b5f-ad4c-8440e84f1f03",
+"digest": "sha256:b73e0cce5c04d051c3b3259bb1e6864a935507e715e5d08f2df95e9f056dc478",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"implementation_sha256": "sha256:4fe7464382fa1f5b25a92eecbb18f08b7fc50d45f76b9bce4a2bfe0675e747a4"
+}
+假设仓位预算— 已调用成功
+假设ATR预算得数学数量，事前中性Kelly假设给零分配。
+常量权益与风险比例仅本次假设，未保存用户风控设置；不含最小量、保证金或限额。
+{
+"plugin": "sesame/abu-position-sizing",
+"capability": "abu_position_sizing_analyze",
+"sample_rows": 8,
+"parameters": {
+"atr_window": 5,
+"atr_stop_multiple": 2,
+"risk_fraction": 0.0025,
+"kelly_win_probability": 0.5,
+"kelly_avg_win_loss_ratio": 1,
+"kelly_fraction_cap": 0.25,
+"kelly_fraction_multiplier": 0.5,
+"price_rank_window": 8
+},
+"as_of": "2026-10-20T10:38:00.132Z",
+"input_ref": {
+"id": "artifact_dd1816dc-4bbc-4d9f-afa2-b160c327c115",
+"revision": "revision_26590a74-7391-44e3-becd-41be5a6607fa",
+"digest": "sha256:a0af24b5425706c1c4ee3bdb09d89e006a098c5c5ca3a0856e195ffd6ec61f87",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"result_ref": {
+"id": "artifact_1f870d50-f932-4915-8319-764b09d00564",
+"revision": "revision_591ddc1c-0485-4c20-be92-67bf2726e1e9",
+"digest": "sha256:56ffe3857f04be002bf37c516a2d761f8b913c535d433bbb5179f991569264ef",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"implementation_sha256": "sha256:a9a3f1aee19a5bb6ab0246b59c5ccb46f335cd8fbcb8170d49a2e9a8e6f82658"
+}
+模拟执行证据审计— 已调用成功
+按时间取前两笔模拟交易的订单/成交审计未报异常。
+仅4订单/4成交，无K线；不审计完整16笔，不验证信号生成、可成交性或原生引擎。
+{
+"plugin": "sesame/abu-backtest-lab",
+"capability": "abu_backtest_lab_analyze",
+"sample_rows": 4,
+"parameters": {
+"expected_engine": "QA20261020-retrospective-arithmetic-simulator"
+},
+"as_of": "2026-10-20T10:41:17.568Z",
+"input_ref": {
+"id": "artifact_79a9d0c1-ae82-430d-8060-ef6fcf44b31f",
+"revision": "revision_6b2f81ce-a0bd-4d38-b12e-34d2c3610f2d",
+"digest": "sha256:69a3d8bd7c82bf6366307f5dec822bceca0c3089559def9381fe32cf0585ae43",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"result_ref": {
+"id": "artifact_dfd23e2a-93de-4b8c-8e08-427575750815",
+"revision": "revision_91ab900c-227f-4ea7-a91a-b56cc8a775d8",
+"digest": "sha256:078ec005f38864202ac34986fc3845967b3a223e3d6adc624cd4d516049edaa9",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"implementation_sha256": "sha256:dbcac049c495fb089bedad4208f678c2a31f106c5e1eace472e2b26314dfe2dd"
+}
+采集时点特征— 已调用成功
+仅在真实采集时点生成一条可见特征。
+不能扩写为历史时点训练面板；该ATR仍是同源描述。
+{
+"plugin": "sesame/abu-ml-features",
+"capability": "abu_ml_features_analyze",
+"sample_rows": 6,
+"parameters": {
+"window": 5,
+"atr_window": 5,
+"rank_window": 5
+},
+"as_of": "2026-10-20T10:38:00.132Z",
+"input_ref": {
+"id": "artifact_988ff065-5618-4ed1-b1ff-23b90c2c6619",
+"revision": "revision_5f0f0c6b-7543-46c4-8de0-164cbce18181",
+"digest": "sha256:9b998c793d8386e3992aebdba1ff35bc78fc56dfcd743c984152b4f2985fb012",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"result_ref": {
+"id": "artifact_2da3f9fa-71b1-4ae3-83be-b17d1dd87d41",
+"revision": "revision_7fbc7484-bc6b-4c02-b765-eb8b02f32e88",
+"digest": "sha256:e411ea04c455e4808044bb0fa1e0c71609a2a9ee2c8428bda58c3ecef474c145",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"implementation_sha256": "sha256:b64990c7d6185f27f488320566221e22a7af79f847336e559b3284e1a6aba9dd"
+}
+轻量模型实验— 调用失败／时序守卫拒绝
+rows[0]: feature available_at must be no later than row.time decision point
+Not retried: actual collection-time evidence cannot establish historical feature visibility; training label availability also exceeds first eval time despite nonoverlapping
+price labels.
+{
+"plugin": "sesame/abu-model-lab",
+"capability": "abu_model_lab_analyze",
+"sample_rows": 10,
+"parameters": {
+"task": "regression",
+"iterations": 300,
+"learning_rate": 0.05,
+"l2": 0.01
+},
+"as_of": null,
+"input_ref": null,
+"result_ref": null,
+"implementation_sha256": null
+}
+开发选型与固定验证— 已调用成功
+固定SMA3/8的回溯验证亏损；未重新选优。
+工具只核验供应的已有指标，不运行策略，不证明原生回测。
+{
+"plugin": "sesame/abu-parameter-search",
+"capability": "abu_parameter_search_analyze",
+"sample_rows": 3,
+"parameters": {
+"phase": "holdout",
+"objective_metric": "net_pnl_usd",
+"direction": "maximize",
+"max_grid_points": 2
+},
+"as_of": "2026-10-20T10:41:17.568Z",
+"input_ref": {
+"id": "artifact_3c10f7b5-7431-4092-9556-47ebaa728b13",
+"revision": "revision_f3c56c88-f0fc-44a2-b2cd-5a5188611d04",
+"digest": "sha256:646a1834a9222affb6668885157dcbfee13ba6655fff2b48e35fbd7bd09df2fa",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"result_ref": {
+"id": "artifact_a5db4582-a8c2-4b2e-88bd-80053d90c742",
+"revision": "revision_35c8531a-ea88-412a-b0a3-2718b8a211ff",
+"digest": "sha256:6d18d7087e24d99cd1a708400deeb3a27d733dde82b2c2bbbdb653f88235539d",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"implementation_sha256": "sha256:538170c2b145c0f70a797aad6ffc43b7292218ae4bed459708cb2cb7ea530006"
+}
+历史交易近邻— 调用失败／时序守卫拒绝
+completed_trades[0]: feature, decision and outcome chronology invalid or not known before query
+Not retried: feature snapshots computed after historical simulation decisions; outcome not strictly earlier than the query in this diagnostic. Moving query later alone
+cannot fix historical feature visibility.
+{
+"plugin": "sesame/abu-trade-judges",
+"capability": "abu_trade_judges_analyze",
+"sample_rows": 1,
+"parameters": {
+"k": 1,
+"distance_floor": 1e-9
+},
+"as_of": null,
+"input_ref": null,
+"result_ref": null,
+"implementation_sha256": null
+}
+模拟绩效统计— 已调用成功
+全验证权益及16笔已平仓模拟得到负收益和回撤。
+39小时年化率/夏普极不稳定，不作为预测或主结论；权益不含盘中浮亏。
+{
+"plugin": "sesame/abu-trade-metrics",
+"capability": "abu_trade_metrics_analyze",
+"sample_rows": 40,
+"parameters": {
+"periods_per_year": 8760,
+"risk_free_rate": 0
+},
+"as_of": "2026-10-20T10:41:17.568Z",
+"input_ref": {
+"id": "artifact_d83430b3-91ab-4bcd-999f-6f5d7109f023",
+"revision": "revision_fb7fff65-c033-4cc0-b18e-4cfe61bef2b4",
+"digest": "sha256:74a71c079eed8fdc4b7bb594b0e6e987ab5c53f926f01335554e8fb1a3ebed6f",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"result_ref": {
+"id": "artifact_6da07f57-1ab0-4e8c-9691-a5cd7aba6379",
+"revision": "revision_7a5a8e35-3877-4129-abbe-9d38d83db06e",
+"digest": "sha256:09d0adf518fc657d8f829bbe2000fa079dddcd70de35e5b93996857668db63ca",
+"kind": "data",
+"schemaVersion": "1.0.0"
+},
+"implementation_sha256": "sha256:178c7d0ed0743ce14b59ac1681e9968de894aa3c5e3f8737fcddbab6177a0a21"
+}
+失败原文、修复范围与证据打包诊断
+假设持仓退出
+bars[3]: invalid OHLC range
+Corrected accidental close transcription 817708.2 to exact fixed-source 81708.2, one retry only; retained failure.
+轻量模型实验
+rows[0]: feature available_at must be no later than row.time decision point
+Not retried: actual collection-time evidence cannot establish historical feature visibility; training label availability also exceeds first eval time
+despite nonoverlapping price labels.
+历史交易近邻
+completed_trades[0]: feature, decision and outcome chronology invalid or not known before query
+Not retried: feature snapshots computed after historical simulation decisions; outcome not strictly earlier than the query in this diagnostic.
+Moving query later alone cannot fix historical feature visibility.
+证据打包
+Recipe must be present in the frozen execution inputs
+Re-execute compile only after method-refs.json exists; list only actual pre-existing recipes. This is a provenance packaging repair, not a new
+strategy trial.
+执行审计按时间取验证前两笔，只检查4 条模拟订单与4 条模拟成交，发现0 项异常；该结果既不覆盖全部交易，也不重建信号逻辑或原生
+成交。
+06 下一步决策
+当前证据支持停止把这条小时均线长仓规则当作高信心信号；若继续研究，应先补
+时间与执行证据，而不是在同一验证段加候选。
+不继续消耗已固定验证段寻找“通过”。
+候选预算已用完，亏损及失败记录保留；验证段不参与重新选型。
+要开展有效模型比较，先获得历史首次可得时间。
+新来源需提供可核对的历史快照或到达日志，并在新时期保留未触碰样本。
+黄金跨品种研究仍需真实时区／报价单位依据。
+在依据补齐之前，保留墙时结构样本，不把报价名称或投影秒数当作UTC认证。
+本轮没有访问券商或检查交易开关，没有发单、恢复旧任务、安装依赖、切换模型，也没有修改共享输入或其他报告。
+方法、限制与来源
+方法
+事前计划在2026-10-20T10:36:30.299Z 冻结；开发按未取整净盈亏最大排序，并列取更小快窗口、再取更小慢窗口。
+开发信号索引20—77；隔离78、79；固定验证索引80—118。标签为下一根开到收收益，不跨边界。
+每信号名义本金1,000.00 USD，假设初始权益10,000.00 USD，单边费用10 bp、滑点5 bp。下一柱开盘入场、该柱收盘退出；策略模拟不使用止
+损止盈盘中顺序。
+固定选择完整哈希原值用于验证；方法能力只接收有界真实子样本，采集时点可得上界不回填成历史时点。
+统计推断未执行；未计算或宣称p值、DSR、PBO及独立显著性。
+限制
+固定行情的来源完整覆盖仍未证明；BTC返回行连续不等于供应商历史无缺口。
+方法窗口有限，数值受初始化与定义影响；ATR重复仅用于实现一致性QA。
+假设退出工具的OHLC无法证明盘中止损／止盈先后；与只用开收的主模拟分开。
+当前模型上下文未暴露可验证的LLM供应商或型号，不猜测；模型实验包因守卫拒绝未训练。
+来源
+事前计划完整固定引用 {"id":"artifact_5befe16a-42fe-42aa-90b7-997ae5e1db78","revision":"revision_92a5390c-3332-4809-b4d7-
+d6e5b9e809eb","digest":"sha256:f8b7cbcf08cb131e5cec5213aca6e5e7aae3f9533698e131a69617ea5d414034","kind":"data","schemaV
+ersion":"1.0.0"}
+开发段模拟固定引用 {"id":"artifact_f69e92a0-cabb-4dea-875d-33993ad9e49b","revision":"revision_7d2787cd-b657-40df-b152-
+a6e408648ed9","digest":"sha256:896639b930c9e409fd6771655c5a2f123401300041608154702aa079b5ccb455","kind":"data","sche
+maVersion":"1.0.0"}
+固定验证模拟完整引用 {"id":"artifact_39ad59a0-b6d3-408f-a697-241fc32754a4","revision":"revision_0c1a3759-058d-4471-ab9a-
+3e0dfb523369","digest":"sha256:fafaae3b9ee634eb0099ce526dcf164ca8b607dab9448fe606f6d3a4a6b231ca","kind":"data","schema
+Version":"1.0.0"}
+原始固定输入 [{"id":"artifact_a60bde0e-bb0a-4a64-89a8-19b6f109afa2","revision":"revision_0273880b-d539-4d9a-9ce8-
+560959555eed","digest":"sha256:6c07850306c52b25fcef7315b61a1c282022b326d69778460fb20bf4271b6cc9","kind":"data","schem
+aVersion":"1.0.0"},{"id":"artifact_30ee3656-79a8-4977-94a3-ac280c825459","revision":"revision_0d16102d-fe30-48a1-a089-
+4325034c965f","digest":"sha256:b38300a3d210aefdd1bfe2b2c2dbc1e5c573a201d45162a1c0dfff0eef081f2f","kind":"data","schemaVe
+rsion":"1.0.0"}]
+共享输入完整性 {"manifest":"sha256:69eb30ea81f3932f8fb3fd1a0f42376044d272c1299d36f5dd043cfce1909ae3","observations":"sha256:9a105f0fbb
+7e524b208292e7e2dd0e03202719509a64f0de6eb2d7d3018a017f"}
+研究方法版本及真实阅读路径 {"factor-research":{"revision":"sha256:17ca905fcb4344fa3f4f4cbaa0d3e7a4f45c9a11967f352e8e0a27d208e6082","read":
+["skills/factor-research/SKILL.md","skills/factor-research/references/method.md"],"application":"限定候选/方向；一标的不虚构横
+截面IC；保留失败；训练标签隔离但不抹除可得时点失败。"},"strategy-research":
+{"revision":"sha256:db3bfb202d9d17a4b96cf4b49c5bca093ae561c38e79ccfe81d97a6e81b68181","read":["skills/strategy-
+research/SKILL.md","skills/strategy-research/references/evidence.md"],"application":"事前计划/空仓基准/预算；开发固定后才算
+验证；订单模拟与原生引擎证据分开。"}}
+运行与实际模型可验证信息 {"product":"Sesame","host_run_id":"run_55cb3df2-fe34-4b64-8f3e-834e77dd31af","verified_execution":"Normal host.agent.run;
+numerical methods return implementation_sha256; no numerical model fit completed","llm_provider":"not exposed in verified
+runtime context","llm_model":"not exposed in verified runtime context","model_switch_performed":false}
+原生引擎状态 未执行；研究诊断不是原生MT5回测或可部署策略证明
+脚本与本地账本 QA20261020/quant-methods/{preregister.py,experiment.py,catalog.py,compile.py,plan.json,selection.json,method-
+refs.json,failures.json,ledger.json,result.json}；配方源码随固定账本保留，临时工作区路径不作为持久交付。
+

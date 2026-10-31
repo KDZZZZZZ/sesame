@@ -1,9 +1,9 @@
 {
   "id": "sesame/factor-evaluator",
   "apiVersion": "2",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "title": "因子数值评估",
-  "description": "可独立选择的确定性因子 AST 评估器，保存输入、候选和冻结选择回执；不编排 Agent、不连接交易账户。",
+  "description": "因子数值评估：单品种时序或多品种截面关联；按任务选择九项诊断，含 DSR 与全试验收益矩阵 CSCV/PBO。阈值默认提供证据，只有用户明确硬要求限制选择；支持有条件研究、固定输入与可复现回执。",
   "author": {
     "name": "Sesame contributors"
   },
@@ -12,7 +12,13 @@
   "agent_scope": "all",
   "entry": "index.js",
   "engines": {
-    "sesame": ">=0.2.3"
+    "sesame": ">=0.3.0-dev.1 <0.4.0"
   },
-  "capability_manifest": "capabilities.json"
+  "capability_manifest": "capabilities.json",
+  "permissions": {
+    "scopes": [],
+    "calls": [
+      "host.datasets.query"
+    ]
+  }
 }

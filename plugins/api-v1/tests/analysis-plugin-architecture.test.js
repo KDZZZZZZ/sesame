@@ -7,11 +7,21 @@ import { join, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { buildLock, createArchive, packageFiles, treeDigest } from '../scripts/plugin-lock.mjs';
+import { verifyAnalysisRetirements } from '../scripts/verify-analysis-retirements.mjs';
 
 const root = fileURLToPath(new URL('../../../', import.meta.url));
 const baselineBytes = readFileSync(new URL('./fixtures/analysis-plugin-contracts.json', import.meta.url));
 const baseline = JSON.parse(baselineBytes);
 const extensions = JSON.parse(readFileSync(new URL('./fixtures/analysis-plugin-contract-extensions.json', import.meta.url), 'utf8'));
+const additionBytes = readFileSync(new URL('./fixtures/analysis-plugin-additions.json', import.meta.url));
+const additions = JSON.parse(additionBytes);
+const additionExtensions = JSON.parse(readFileSync(new URL('./fixtures/analysis-plugin-addition-extensions.json', import.meta.url)));
+const retirements = JSON.parse(readFileSync(new URL('./fixtures/analysis-plugin-retirements.json', import.meta.url)));
+assert.equal(additions.schemaVersion, 1);
+assert.equal(additions.status, 'approved');
+assert.ok(additions.reason.length >= 20);
+assert.deepEqual(additions.packages.map(item => item.id), ['sesame/historical-evidence']);
+assert.ok(additions.packages.every(item => !baseline.packages.some(original => original.id === item.id)));
 const policy = JSON.parse(readFileSync(join(root, 'plugins/api-v1/inventory-policy.json'), 'utf8'));
 const digest = value => 'sha256:' + createHash('sha256').update(JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
   ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item)).digest('hex');
@@ -54,6 +64,15 @@ function assertFrozenContract(item, component, actual, extension, changes) {
     : 'all capability schemas, bindings, effects, state and configuration stay compatible or match an exact reviewed change');
 }
 const reviewedChanges = validateExtensions(baseline, baselineBytes, extensions);
+const reviewedAdditions = validateExtensions(additions, additionBytes, additionExtensions);
+const retiredIds = verifyAnalysisRetirements(root, baselineBytes, retirements);
+const currentContracts = [...baseline.packages, ...additions.packages].filter(item => !retiredIds.has(item.id));
+// The 2026-10-28 navigation change moves only these two parsers out of the
+// historical analysis set. Keep their frozen package contracts under test.
+const reclassifiedParsers = new Map([
+  ['sesame/rss-collect', 'search'],
+  ['sesame/web-extract', 'search'],
+]);
 
 function contractFixture() {
   const manifest = { id: 'fixture/analysis', version: '1.0.0', engines: { sesame: '>=0.2.3' }, resources: ['guide.md'], dependencies: [{ name: 'fixture/source', version: '1.0.0' }] };
@@ -105,21 +124,32 @@ test('semantic extensions require exact reviewed before/after hashes, not replac
   assert.throws(() => validateExtensions(f.snapshot, Buffer.concat([f.bytes, Buffer.from('\n')]), f.extension), /immutable analysis fixture bytes/);
 });
 
-test('the professional-capability contract covers every current analysis package and excludes other roles', () => {
+test('the immutable analysis contract plus explicit additions cover current analysis packages and reclassified search parsers', () => {
   assert.equal(baseline.packages.length, 31);
   assert.equal(baseline.packages.reduce((count, item) => count + item.capabilityIds.length, 0), 33);
-  assert.deepEqual(baseline.packages.map(item => item.id.split('/')[1]).sort(), Object.keys(policy).filter(name => policy[name].functionalCategory === 'analysis').sort());
+  assert.deepEqual([...retiredIds], ['sesame/abu-backtest-lab']);
+  assert.deepEqual(currentContracts.filter(item => !reclassifiedParsers.has(item.id)).map(item => item.id.split('/')[1]).sort(), Object.keys(policy).filter(name => policy[name].functionalCategory === 'analysis').sort());
+  for (const [id, category] of reclassifiedParsers) {
+    assert.equal(baseline.packages.find(item => item.id === id).functionalCategory, 'analysis');
+    assert.equal(policy[id.split('/')[1]].functionalCategory, category);
+    assert.equal(policy[id.split('/')[1]].category, 'data');
+  }
   assert.ok(!baseline.packages.some(item => item.id.includes('kurumi')));
 });
 
-for (const item of baseline.packages) {
+for (const item of currentContracts) {
   test(`${item.id}: preserves complete declarations and loads from its independently packaged archive`, async t => {
     const directory = join(root, item.sourcePath), name = item.id.split('/')[1];
     const manifest = JSON.parse(readFileSync(join(directory, 'plugin.json'), 'utf8'));
     const declaration = JSON.parse(readFileSync(join(directory, 'capabilities.json'), 'utf8'));
-    assertFrozenContract(item, 'manifest', manifest, extensions, reviewedChanges);
-    assertFrozenContract(item, 'declaration', declaration, extensions, reviewedChanges);
-    assert.equal(policy[name].functionalCategory, item.functionalCategory);
+    if (additions.packages.some(added => added.id === item.id)) {
+      assertFrozenContract(item, 'manifest', manifest, additionExtensions, reviewedAdditions);
+      assertFrozenContract(item, 'declaration', declaration, additionExtensions, reviewedAdditions);
+    } else {
+      assertFrozenContract(item, 'manifest', manifest, extensions, reviewedChanges);
+      assertFrozenContract(item, 'declaration', declaration, extensions, reviewedChanges);
+    }
+    assert.equal(policy[name].functionalCategory, reclassifiedParsers.get(item.id) ?? item.functionalCategory);
     assert.deepEqual(policy[name].implementationKinds, item.implementationKinds);
     for (const path of item.paths) assert.ok(existsSync(join(directory, path)), `Original package path remains available: ${path}`);
 

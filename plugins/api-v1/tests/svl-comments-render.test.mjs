@@ -1,0 +1,22 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import { join } from 'node:path';
+import { graph } from '@sesame/plugin-sdk/svl';
+const host=process.env.SESAME_HOST_ROOT;
+test('SVL source annotations render as text with real variables, responsive branches and original operator identities',{skip:!host,timeout:30000},async t=>{
+  const source=JSON.parse(await readFile(new URL('../packages/strategy-authoring/examples/close-threshold-commented.svl.json',import.meta.url),'utf8'));
+  source.comments.nodes.above.description='<img src=x onerror="window.COMMENT_EXECUTED=1">';
+  const assets=new URL('../packages/reports/assets/',import.meta.url),asset=path=>readFile(new URL(path,assets),'utf8');
+  const data=JSON.stringify({source,graph:graph(source)}).replace(/</g,'\\u003c');
+  const html=`<!doctype html><html lang="zh-CN"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${await asset('editorial.css')}${await asset('svl-graph.css')}</style><main><section data-report-svl><script type="application/json">${data}</script></section></main><script>${await asset('svl-graph.js')}</script><script>SesameSvlGraph.mount()</script></html>`;
+  const {chromium}=createRequire(join(host,'package.json'))('playwright'),browser=await chromium.launch({headless:true});t.after(()=>browser.close());
+  const page=await browser.newPage({viewport:{width:390,height:900}}),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.setContent(html);
+  await page.getByRole('button',{name:'看计算 ↗',exact:true}).click();
+  const tree=page.locator('.svl-expression-tree');assert.match(await tree.innerText(),/收盘价高于阈值.*compare.gt/s);assert.match(await tree.innerText(),/比较阈值 = 100/);
+  assert.equal(await tree.locator('img').count(),0);assert.equal(await page.evaluate(()=>window.COMMENT_EXECUTED),undefined);
+  assert.match(await tree.innerText(),/<img src=x/);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+  await page.getByRole('tab',{name:'节点连线',exact:true}).click();assert.match(await page.locator('.svl-node[data-node-id="above"]').textContent(),/收盘价高于阈值/);
+  assert.deepEqual(errors,[]);
+});

@@ -1,6 +1,7 @@
 import { capability,currentTask,currentExecution } from './execution.js';
 import { check } from '@sesame/plugin-sdk/protocol';
 import { configuration } from './configuration.js';
+import { historyCoverage, readAccountRows, sameConnection } from './execution-evidence.js';
 
 export const tradingAccount = host => {
   const c = configuration(host);
@@ -45,23 +46,15 @@ export function createTradingContext(host, service, { now = Date.now } = {}) {
     const account = tradingAccount(host); assertTradingTask(host, account, false, args.action === 'identity');
     if (args.action === 'identity') return { account };
     check(args.action === 'snapshot', 'Unsupported context action', 'INVALID_ARGUMENT');
+    const days = args.history_days ?? 7;
+    check(Number.isInteger(days) && days >= 1 && days <= 90, 'History days must be between 1 and 90', 'INVALID_ARGUMENT');
     const summary = await service.native('asset', {}, signal);
+    check(sameConnection(summary, account), 'QMT asset connection changed', 'CONNECTION_CHANGED');
     check(summary.asset?.account_id === account.accountId, 'Native asset belongs to another account', 'ACCOUNT_MISMATCH');
-    async function all(action) {
-      let cursor, rows = [];
-      do {
-        const result = await service.native(action, { page: { limit: 200, ...(cursor ? { cursor } : {}) } }, signal);
-        check(result.connection?.id === account.connectionId && result.connection.revision === account.revision && Array.isArray(result.items), 'Incomplete or changed QMT snapshot', 'CONNECTION_CHANGED');
-        rows.push(...result.items); cursor = result.nextCursor;
-        check(rows.length <= 20000, 'QMT account snapshot exceeds budget', 'RESOURCE_EXHAUSTED');
-      } while (cursor);
-      return rows;
-    }
-    const [positions, orders, fills] = await Promise.all(['positions', 'orders', 'fills'].map(all));
-    check(sameAccount(account, tradingAccount(host)), 'QMT configuration changed during the read', 'CONNECTION_CHANGED');
-    return { account, summary: summary.asset, positions, orders, fills, deployments: [], capturedAt: now(),
-      historyCoverage: { scope: 'current_native_trading_day', complete: false, requestedDays: args.history_days ?? 7,
-        limitations: ['XtQuant orders and fills are current-day only; no historical ledger or managed EA mounts are provided.'] } };
+    const assertCurrent = () => check(sameAccount(account, tradingAccount(host)), 'QMT configuration changed during the read', 'CONNECTION_CHANGED');
+    const [positions, orders, fills] = await Promise.all(['positions', 'orders', 'fills'].map(action => readAccountRows(service, action, account, signal, assertCurrent)));
+    assertCurrent();
+    return { account, summary: summary.asset, positions, orders, fills, historicalOrders: [], deployments: [], capturedAt: now(), historyCoverage: historyCoverage(days) };
   };
 }
 

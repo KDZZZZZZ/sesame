@@ -1,5 +1,7 @@
 # Historical plugin catalog / API 1
 
+Source update, 2026-10-26: product help is a separate default core package again, `sesame/user-guide` 3.0.0. `sesame/orchestration` 3.2.0 owns collaboration guidance. The earlier user-guide merge below describes historical publications; their fixed archives and catalog entries remain unchanged. See [current source responsibilities](../../docs/plugin-functional-architecture.md).
+
 Current development packages use API 2. This document and the committed catalog
 describe the immutable API 1 publication history, not the current development
 capability inventory. Development builds use a fixed API 2 source commit until

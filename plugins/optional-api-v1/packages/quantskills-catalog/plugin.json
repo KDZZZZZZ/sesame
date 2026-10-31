@@ -1,9 +1,9 @@
 {
   "id": "sesame/quantskills-catalog",
   "apiVersion": "2",
-  "version": "3.0.0",
+  "version": "4.2.0",
   "title": "QuantSkills 目录",
-  "description": "查询固定 QuantSkills 元数据，按需求选择去重后的 Sesame 方法流程和可选后端；安装与可用性另行核验。",
+  "description": "查询固定 QuantSkills 元数据；综合投资研究推荐 Research，因子与策略研究推荐 Strategy，具体方法与后端独立选择，安装可用性另行核验。",
   "license": "MIT",
   "author": {
     "name": "Sesame"
@@ -18,7 +18,7 @@
   ],
   "resources": [],
   "engines": {
-    "sesame": ">=0.2.3"
+    "sesame": ">=0.3.0-dev.1 <0.4.0"
   },
   "tests": [
     {
@@ -79,7 +79,7 @@
           }
         ],
         "total_items": 214,
-        "version": "3.0.0"
+        "version": "4.2.0"
       }
     },
     {
@@ -103,7 +103,7 @@
         ],
         "count": 1,
         "query": "alpha191",
-        "version": "3.0.0"
+        "version": "4.2.0"
       }
     },
     {
@@ -166,7 +166,7 @@
           "category": "02 因子研发工具箱",
           "limit": 5
         },
-        "version": "3.0.0"
+        "version": "4.2.0"
       }
     },
     {
@@ -198,7 +198,7 @@
           "verification_level": "pending_review",
           "workflow_stage": "研究信号 / Research signal"
         },
-        "version": "3.0.0"
+        "version": "4.2.0"
       }
     },
     {
@@ -266,7 +266,134 @@
           "Read the selected SKILL and retain its sources; directory references are not imported implementations or proof of trading performance."
         ],
         "snapshot_date": "2026-10-03T14:34:06.311Z",
-        "version": "3.0.0"
+        "version": "4.2.0"
+      }
+    },
+    {
+      "server": "analysis",
+      "tool": "catalog_recommend",
+      "arguments": {
+        "need": "trade-results"
+      },
+      "expected": {
+        "need": "trade-results",
+        "method": null,
+        "workflow": {
+          "purpose": "诊断已有交易结果：权益绩效与逐笔订单/成交审计独立计算。",
+          "primary_plugins": [
+            "sesame/abu-trade-metrics"
+          ],
+          "shared_plugins": [
+            "sesame/data-access",
+            "sesame/reports"
+          ],
+          "selection": "按输入选 abu_trade_metrics_analyze（权益/已平仓交易）或 abu_trade_results_audit（订单/成交/回放）。保留单位、时序、费用及真实源结果；不生成成交，不替代原生回测，不把审计通过当预测置信度。",
+          "reference_names": [
+            "skill-strategy-performance-report",
+            "skill-backtest-assumption-check"
+          ]
+        },
+        "selection_required": false,
+        "references": [
+          {
+            "name": "skill-backtest-assumption-check",
+            "repo_url": "https://github.com/quantskills/skill-backtest-assumption-check",
+            "category": "07 研究验证与质量工具",
+            "subcategory": "工作流审计（2）",
+            "stage": "reporting",
+            "asset_type": "skill",
+            "verification_level": "pending_review"
+          },
+          {
+            "name": "skill-strategy-performance-report",
+            "repo_url": "https://github.com/quantskills/skill-strategy-performance-report",
+            "category": "08 资讯搜索与知识分析",
+            "subcategory": "每日复盘（4）",
+            "stage": "reporting",
+            "asset_type": "skill",
+            "verification_level": "pending_review"
+          }
+        ],
+        "availability": "not_checked",
+        "next_steps": [
+          "Use the declared plugin catalog capability to inspect exact published IDs and versions.",
+          "Choose capabilities that meet the task objective; installation includes prerequisite checks.",
+          "Read the selected SKILL and retain its sources; directory references are not imported implementations or proof of trading performance."
+        ],
+        "snapshot_date": "2026-10-03T14:34:06.311Z",
+        "version": "4.2.0"
+      }
+    },
+    {
+      "server": "analysis",
+      "tool": "catalog_recommend",
+      "arguments": {
+        "need": "parameter-evidence"
+      },
+      "expected": {
+        "need": "parameter-evidence",
+        "method": null,
+        "workflow": {
+          "purpose": "整理已有参数试验的开发期排名、固定选择及所选留出证据。",
+          "primary_plugins": [
+            "sesame/abu-parameter-search"
+          ],
+          "shared_plugins": [],
+          "selection": "abu_parameter_search_analyze 是 input-only 搜索空间与证据校验工具，不运行策略或优化器。先按用户/未来交易平台选真实引擎；所选引擎有原生 optimizer 则优先，特殊参数组记录假说。只用开发结果选参，冻结后核对所选参数的独立留出结果。",
+          "reference_names": [
+            "skill-backtest-overfit"
+          ]
+        },
+        "selection_required": false,
+        "references": [
+          {
+            "name": "skill-backtest-overfit",
+            "repo_url": "https://github.com/quantskills/skill-backtest-overfit",
+            "category": "07 研究验证与质量工具",
+            "subcategory": "Walk-forward 与 OOS（2）",
+            "stage": "evaluation",
+            "asset_type": "skill",
+            "verification_level": "pending_review"
+          }
+        ],
+        "availability": "not_checked",
+        "next_steps": [
+          "Use the declared plugin catalog capability to inspect exact published IDs and versions.",
+          "Choose capabilities that meet the task objective; installation includes prerequisite checks.",
+          "Read the selected SKILL and retain its sources; directory references are not imported implementations or proof of trading performance."
+        ],
+        "snapshot_date": "2026-10-03T14:34:06.311Z",
+        "version": "4.2.0"
+      }
+    },
+    {
+      "server": "analysis",
+      "tool": "catalog_recommend",
+      "arguments": {
+        "need": "series-similarity"
+      },
+      "expected": {
+        "need": "series-similarity",
+        "method": null,
+        "workflow": {
+          "purpose": "比较同期收益序列的相关、秩相关与方向一致率。",
+          "primary_plugins": [
+            "sesame/abu-similarity"
+          ],
+          "shared_plugins": [],
+          "selection": "abu_similarity_analyze 只比较相同收益起止时点，不填补缺失交易日；相关和方向一致率不是历史同类事件检索、预测胜率或校准概率。需要历史情景结果时独立选择 historical-evidence；重叠收益证据不能重复计票。",
+          "reference_names": []
+        },
+        "selection_required": false,
+        "references": [],
+        "availability": "not_checked",
+        "next_steps": [
+          "Use the declared plugin catalog capability to inspect exact published IDs and versions.",
+          "Choose capabilities that meet the task objective; installation includes prerequisite checks.",
+          "Read the selected SKILL and retain its sources; directory references are not imported implementations or proof of trading performance."
+        ],
+        "snapshot_date": "2026-10-03T14:34:06.311Z",
+        "version": "4.2.0"
       }
     }
   ]

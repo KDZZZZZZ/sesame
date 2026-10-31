@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "introducedAt": "2026-10-29",
+  "reason": "User requested independent historical scenario matching and calibration. New package reviewed for time boundaries, truthful input-only versus fixed-ref access, source integrity, optional thresholds and original numerical implementation; this is an additive first contract, not replacement of the historical baseline.",
+  "packages": [
+    {
+      "id": "sesame/historical-evidence",
+      "sourcePath": "plugins/optional-api-v1/packages/historical-evidence",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:50ef940a20560641dffc5a248e02e36ef532eb971ad015e4ce9170c96408b568",
+      "declarationDigest": "sha256:9f83fab930065d8d65ebf2317c04793b9e37180ad2f9f7808172dbd8f78acb61",
+      "capabilityIds": [
+        "historical_evidence_match",
+        "historical_evidence_calibrate",
+        "historical_evidence_from_ref"
+      ],
+      "paths": [
+        "LICENSE",
+        "METHOD.md",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/calibration.json",
+        "examples/match.json",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "src/calibrate.js",
+        "src/common.js",
+        "src/match.js",
+        "src/ref-input.js",
+        "tests/evidence.test.js",
+        "tests/ref-input.test.js"
+      ]
+    }
+  ]
+}

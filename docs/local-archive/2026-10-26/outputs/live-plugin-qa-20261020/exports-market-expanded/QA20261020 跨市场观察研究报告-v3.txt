@@ -1,0 +1,409 @@
+RESEARCH · 针对性复验
+QA20261020 跨市场观察研究报告
+黄金本地闭柱样本已补齐；保留数字货币原样本、早先失败与最新显示限制。
+MT5来源 2.1.2 · 离线本地历史 CCXT来源 2.0.2 · Kraken现货 验收回执时间UTC 2026-10-20T10:16:48.681Z
+范围 黄金H1 / BTC一小时/ A股缺口沿用
+结论
+黄金历史读取已通过，黄金图显示与持续订阅
+仍未通过
+本地黄金闭柱、实例代码和标注保存均有真实证据；黄金图订阅仍报券商未连
+接。BTC曾显示有效柱，验收回执又出现明确限流。两项均不能升级为稳定实时
+通过。
+黄金冻结闭柱
+114 根
+本轮唯一黄金市场样本
+黄金样本末根收盘
+4168.75 价格
+来源报价币种未声明，不补写USD
+BTC复用闭柱
+120 根
+复用原固定引用，没有重新冻结
+BTC样本末根收盘
+81428.6 USD
+历史样本，不是当前可执行报价
+01 黄金历史已可复用，不能据此证明券商在线
+指定本地历史已返回闭柱数据；价格与tick计数保留原值，缺口证明和时区偏移仍
+未知。
+QA水平参考与端点连线来自同一黄金固定样本
+末根收盘参考 4168.75 价格 端点连线起点 4156.17 价格 末根开柱墙时 2026-10-16T22:00:00 闭柱边界墙时 2026-10-16T23:00:00.000
+端点连线只是可编辑的描述性标注，不是已确认的趋势、支撑阻力或交易建议。
+来源Decimal字符串不改写；tick计数不是实际成交量。
+开柱墙时 闭柱边界墙时 开盘价 最高价 最低价 收盘价 TICK计数
+2026-10-12T01:00:00 2026-10-12T02:00:00.000 4188.36 4192.58 4184.65 4186.22 3959
+2026-10-12T02:00:00 2026-10-12T03:00:00.000 4186.2 4199.26 4184.68 4190.42 6142
+2026 10 12T03:00:00 2026 10 12T04:00:00 000 4190 61 4210 43 4187 44 4208 92 11421
+黄金H1固定样本收盘价
+FTMO-Demo券商墙时；离散类别轴仅显示实际返回行，不代表连续覆盖，也不转换为UTC。报价币种未知。
+4,080
+4,100
+4,120
+4,140
+4,160
+4,180
+4,200
+4,220
+2026-10-12T01:…
+2026-10-12T15:… 2026-10-13T06:… 2026-10-13T20:… 2026-10-14T12:… 2026-10-15T03:… 2026-10-15T17:… 2026-10-16T08:…
+2026-10-16T22:…
+2026-10-12T03:00:00 2026-10-12T04:00:00.000 4190.61 4210.43 4187.44 4208.92 11421
+2026-10-12T04:00:00 2026-10-12T05:00:00.000 4208.88 4217.03 4200.12 4211.65 14378
+2026-10-12T05:00:00 2026-10-12T06:00:00.000 4211.66 4214.07 4203.29 4204.42 10571
+2026-10-12T06:00:00 2026-10-12T07:00:00.000 4204.45 4208.03 4201.45 4203.02 8847
+2026-10-12T07:00:00 2026-10-12T08:00:00.000 4202.95 4204.17 4193.61 4194.62 6642
+2026-10-12T08:00:00 2026-10-12T09:00:00.000 4194.44 4195.82 4179.14 4190.92 10061
+2026-10-12T09:00:00 2026-10-12T10:00:00.000 4190.9 4192.58 4181.19 4185.72 9875
+2026-10-12T10:00:00 2026-10-12T11:00:00.000 4185.78 4187.98 4179.47 4180.5 9539
+2026-10-12T11:00:00 2026-10-12T12:00:00.000 4180.57 4181.39 4172.7 4173.84 9954
+2026-10-12T12:00:00 2026-10-12T13:00:00.000 4173.82 4178.42 4168.67 4173.17 8800
+2026-10-12T13:00:00 2026-10-12T14:00:00.000 4173.12 4180 4172.01 4177.08 6811
+2026-10-12T14:00:00 2026-10-12T15:00:00.000 4177.25 4177.29 4167.29 4168.31 7685
+2026-10-12T15:00:00 2026-10-12T16:00:00.000 4168.3 4172.95 4154.51 4165.18 10544
+2026-10-12T16:00:00 2026-10-12T17:00:00.000 4165.14 4175.23 4162.82 4171.53 12959
+2026-10-12T17:00:00 2026-10-12T18:00:00.000 4171.44 4175.16 4158.66 4164.21 12371
+2026-10-12T18:00:00 2026-10-12T19:00:00.000 4164.22 4170.78 4162.96 4164.96 9662
+2026-10-12T19:00:00 2026-10-12T20:00:00.000 4164.9 4166.26 4159.93 4164.64 7531
+2026-10-12T20:00:00 2026-10-12T21:00:00.000 4164.6 4170.61 4164.07 4170.5 6264
+2026-10-12T21:00:00 2026-10-12T22:00:00.000 4170.57 4172.68 4166.37 4167.74 6136
+2026-10-12T22:00:00 2026-10-12T23:00:00.000 4167.75 4169.53 4163.28 4169.15 5703
+2026-10-12T23:00:00 2026-10-13T00:00:00.000 4169.16 4171.1 4167.28 4169.98 1870
+2026-10-13T01:00:00 2026-10-13T02:00:00.000 4174.2 4174.39 4168.6 4169.17 2374
+2026-10-13T02:00:00 2026-10-13T03:00:00.000 4169.19 4175.8 4166.57 4170.67 3866
+2026-10-13T03:00:00 2026-10-13T04:00:00.000 4170.65 4171.4 4153.45 4157.6 11707
+2026-10-13T04:00:00 2026-10-13T05:00:00.000 4157.61 4169.69 4150.57 4164.76 15042
+2026-10-13T05:00:00 2026-10-13T06:00:00.000 4164.75 4180.75 4163.55 4179.9 11748
+2026-10-13T06:00:00 2026-10-13T07:00:00.000 4179.87 4189.27 4175.68 4188.51 9638
+2026-10-13T07:00:00 2026-10-13T08:00:00.000 4188.5 4196.3 4187.23 4195.47 7460
+2026-10-13T08:00:00 2026-10-13T09:00:00.000 4195.52 4200.34 4189.21 4192.61 10243
+2026-10-13T09:00:00 2026-10-13T10:00:00.000 4192.58 4193.77 4183.95 4191.81 10216
+2026-10-13T10:00:00 2026-10-13T11:00:00.000 4191.82 4193.67 4183.41 4187.32 9869
+2026-10-13T11:00:00 2026-10-13T12:00:00.000 4187.37 4193.57 4184.5 4186.29 9316
+2026-10-13T12:00:00 2026-10-13T13:00:00.000 4186.36 4188.92 4180.79 4186.5 8252
+2026-10-13T13:00:00 2026-10-13T14:00:00.000 4186.49 4189.18 4179.62 4181.49 7165
+2026-10-13T14:00:00 2026-10-13T15:00:00.000 4181.48 4188.86 4179.7 4185.27 8191
+3 4 3 5 4 4 4 4 79 7 4 5 7 9
+2026-10-13T15:00:00 2026-10-13T16:00:00.000 4185.3 4190.54 4177.44 4179.39 11982
+2026-10-13T16:00:00 2026-10-13T17:00:00.000 4179.46 4189.52 4168.54 4169.02 15367
+2026-10-13T17:00:00 2026-10-13T18:00:00.000 4168.91 4173 4162.69 4166.79 14569
+2026-10-13T18:00:00 2026-10-13T19:00:00.000 4166.81 4168.42 4156.75 4158.97 12227
+2026-10-13T19:00:00 2026-10-13T20:00:00.000 4159.01 4160.49 4152.17 4152.56 9657
+2026-10-13T20:00:00 2026-10-13T21:00:00.000 4152.69 4157.78 4146.77 4148.38 8422
+2026-10-13T21:00:00 2026-10-13T22:00:00.000 4148.37 4164.16 4148.18 4163.35 10365
+2026-10-13T22:00:00 2026-10-13T23:00:00.000 4163.32 4166.28 4161.6 4163.26 6815
+2026-10-13T23:00:00 2026-10-14T00:00:00.000 4163.24 4163.92 4157.32 4159.51 2977
+2026-10-14T01:00:00 2026-10-14T02:00:00.000 4161 4162.75 4159.07 4161.12 2530
+2026-10-14T02:00:00 2026-10-14T03:00:00.000 4161.11 4161.64 4154.62 4154.98 4136
+2026-10-14T03:00:00 2026-10-14T04:00:00.000 4154.97 4163.47 4154.42 4154.89 8746
+2026-10-14T04:00:00 2026-10-14T05:00:00.000 4154.85 4166 4144.28 4154.73 13448
+2026-10-14T05:00:00 2026-10-14T06:00:00.000 4154.74 4167.71 4152.86 4167.62 9488
+2026-10-14T06:00:00 2026-10-14T07:00:00.000 4167.63 4170.28 4161.6 4162.43 6880
+2026-10-14T07:00:00 2026-10-14T08:00:00.000 4162.4 4166.92 4155.39 4165.56 5443
+2026-10-14T08:00:00 2026-10-14T09:00:00.000 4165.6 4165.99 4148.38 4148.63 9569
+2026-10-14T09:00:00 2026-10-14T10:00:00.000 4148.62 4163.65 4145.35 4147.44 11410
+2026-10-14T10:00:00 2026-10-14T11:00:00.000 4147.5 4151.7 4142.97 4149.36 9566
+2026-10-14T11:00:00 2026-10-14T12:00:00.000 4149.19 4157.5 4141.28 4143.12 8838
+2026-10-14T12:00:00 2026-10-14T13:00:00.000 4143.14 4145.51 4140.97 4143.6 7524
+2026-10-14T13:00:00 2026-10-14T14:00:00.000 4143.58 4145.43 4138.8 4140.71 7162
+2026-10-14T14:00:00 2026-10-14T15:00:00.000 4140.7 4143.36 4135.74 4139.16 9200
+2026-10-14T15:00:00 2026-10-14T16:00:00.000 4139.22 4155.33 4085.04 4097.66 18879
+2026-10-14T16:00:00 2026-10-14T17:00:00.000 4097.69 4107.26 4079.5 4088.09 21318
+2026-10-14T17:00:00 2026-10-14T18:00:00.000 4088.12 4105.87 4086.47 4093.45 20043
+2026-10-14T18:00:00 2026-10-14T19:00:00.000 4093.56 4095.56 4079.39 4080.17 16902
+2026-10-14T19:00:00 2026-10-14T20:00:00.000 4080.15 4083.94 4073.24 4083.43 14564
+2026-10-14T20:00:00 2026-10-14T21:00:00.000 4083.48 4090.49 4077.78 4084.26 12947
+2026-10-14T21:00:00 2026-10-14T22:00:00.000 4084.24 4097.32 4080.25 4096.47 12453
+2026-10-14T22:00:00 2026-10-14T23:00:00.000 4096.49 4106.48 4092.58 4101.5 11755
+2026-10-14T23:00:00 2026-10-15T00:00:00.000 4101.48 4103.28 4096.58 4099.99 4094
+2026-10-15T01:00:00 2026-10-15T02:00:00.000 4103.86 4111.71 4102.39 4106.47 5263
+2026-10-15T02:00:00 2026-10-15T03:00:00.000 4106.55 4112.57 4099.82 4111.77 6432
+2026-10-15T03:00:00 2026-10-15T04:00:00.000 4111.74 4146.37 4111.14 4139.46 14293
+2026-10-15T04:00:00 2026-10-15T05:00:00.000 4139.56 4151.27 4136.4 4138.9 15720
+2026-10-15T05:00:00 2026-10-15T06:00:00.000 4138.8 4160.8 4136.17 4159.61 13576
+2026-10-15T06:00:00 2026-10-15T07:00:00.000 4159.57 4161.64 4144.41 4145.61 10936
+2026-10-15T07:00:00 2026-10-15T08:00:00.000 4145.62 4147.7 4141.47 4145.13 9563
+2026-10-15T08:00:00 2026-10-15T09:00:00.000 4145.09 4147.32 4136.06 4138.26 12125
+2026-10-15T09:00:00 2026-10-15T10:00:00.000 4138.25 4139.65 4131.46 4136.01 12519
+2026-10-15T10:00:00 2026-10-15T11:00:00.000 4136 4145.96 4135.43 4145.96 11957
+2026-10-15T11:00:00 2026-10-15T12:00:00.000 4146.1 4158.73 4145.08 4151.39 11428
+2026-10-15T12:00:00 2026-10-15T13:00:00.000 4151.4 4160.45 4151.33 4156.93 9555
+2026-10-15T13:00:00 2026-10-15T14:00:00.000 4156.95 4158.74 4151.74 4154.79 7958
+2026-10-15T14:00:00 2026-10-15T15:00:00.000 4154.63 4159.14 4144.54 4144.95 10421
+2026-10-15T15:00:00 2026-10-15T16:00:00.000 4144.94 4159.26 4130.1 4152.03 16297
+2026-10-15T16:00:00 2026-10-15T17:00:00.000 4152.02 4168.43 4144.2 4154.54 19561
+2026-10-15T17:00:00 2026-10-15T18:00:00.000 4154.67 4164.74 4144.76 4157.74 17361
+2026-10-15T18:00:00 2026-10-15T19:00:00.000 4157.76 4159.15 4147.89 4149.55 14231
+2026-10-15T19:00:00 2026-10-15T20:00:00.000 4149.56 4152.74 4143.67 4147.3 10953
+2026-10-15T20:00:00 2026-10-15T21:00:00.000 4147.29 4154.67 4145.15 4153.26 8862
+2026-10-15T21:00:00 2026-10-15T22:00:00.000 4153.38 4158.74 4152.92 4157.64 8609
+2026-10-15T22:00:00 2026-10-15T23:00:00.000 4157.63 4176.36 4157.63 4175.53 10825
+2026-10-15T23:00:00 2026-10-16T00:00:00.000 4175.51 4177.23 4168.27 4169.16 4385
+2026-10-16T01:00:00 2026-10-16T02:00:00.000 4170.5 4172.37 4163.77 4164.55 2630
+2026-10-16T02:00:00 2026-10-16T03:00:00.000 4164.6 4165.03 4155.7 4155.86 4150
+2026-10-16T03:00:00 2026-10-16T04:00:00.000 4155.49 4157.79 4151.64 4156.17 9562
+2026-10-16T04:00:00 2026-10-16T05:00:00.000 4156.13 4160.69 4147.15 4152.93 13714
+2026-10-16T05:00:00 2026-10-16T06:00:00.000 4152.92 4179.53 4152.71 4176 11095
+2026-10-16T06:00:00 2026-10-16T07:00:00.000 4175.88 4183.55 4163 4183.29 11889
+2026-10-16T07:00:00 2026-10-16T08:00:00.000 4183.31 4186.21 4171.99 4174.23 9665
+2026-10-16T08:00:00 2026-10-16T09:00:00.000 4174.22 4176.98 4169.35 4174.71 9788
+2026-10-16T09:00:00 2026-10-16T10:00:00.000 4174.61 4180.62 4168.74 4177 11224
+2026-10-16T10:00:00 2026-10-16T11:00:00.000 4176.81 4189.59 4176.17 4187.09 11422
+2026-10-16T11:00:00 2026-10-16T12:00:00.000 4186.9 4189.09 4178.39 4188.9 9340
+2026-10-16T12:00:00 2026-10-16T13:00:00.000 4188.71 4192.05 4176.99 4177.11 9207
+2026-10-16T13:00:00 2026-10-16T14:00:00.000 4177.1 4185.12 4173.79 4174.16 8122
+2026-10-16T14:00:00 2026-10-16T15:00:00.000 4173.71 4181.77 4171.35 4171.84 8680
+2026-10-16T15:00:00 2026-10-16T16:00:00.000 4171.74 4181.44 4163.01 4166.65 11240
+2026-10-16T16:00:00 2026-10-16T17:00:00.000 4166.52 4189.75 4154.69 4185.04 16535
+2026-10-16T17:00:00 2026-10-16T18:00:00.000 4185.02 4198.68 4181.21 4185.2 16484
+2026-10-16T18:00:00 2026-10-16T19:00:00.000 4185.19 4187.34 4167.42 4167.7 14835
+2026-10-16T19:00:00 2026-10-16T20:00:00.000 4167.87 4169.81 4158.24 4161.5 15122
+2026-10-16T20:00:00 2026-10-16T21:00:00.000 4161.54 4167.8 4156.59 4163.65 13674
+2026-10-16T21:00:00 2026-10-16T22:00:00.000 4163.63 4167.59 4155.63 4159.99 12501
+2026-10-16T22:00:00 2026-10-16T23:00:00.000 4160.03 4172.42 4158.69 4168.75 11614
+显示其余106 行
+02 黄金实例和绘图已保存，实际显示尚未成功
+均线参数与完整代码、水平线和趋势线均已读回；但黄金图的首批可绘制行情没有
+到达。
+核验对象 实际证据 结论
+黄金QA可编辑SMA 复用已发布指标；当前参数与完整源码已读回；只消费闭柱，BigInt定点求均值与
+half-even舍入。
+保存与读回通过；不能宣称本次黄金图上均线已绘
+出。
+黄金QA水平线/ 趋
+势线
+几何、代码、固定修订均已读回，绑定匹配且active=true。 配置通过；active不是像素渲染证明。
+黄金图行情通道 浏览器回执：error / stale；可绘制K线0 根。 未通过：订阅报券商未连接，未进行重连、同步或
+交易操作。
+原US100图 原绑定、旧源修订与指标列表未改；回执显示源修订变化。 按用户要求保留原状，不将其失败当成本次修复对
+象。
+展开实例参数和完整JavaScript源码
+已读回对象： 黄金：QA可编辑SMA均线
+实例参数：{
+"period": 20
+}
+// QA20261020: editable closed-bar SMA; no network, files, orders or hidden state.
+function decimalMean(values) {
+const parts = values.map(value => {
+const match = /^(-?)([0-9]+)(?:\.([0-9]+))?$/.exec(String(value));
+if (!match) throw new Error('Invalid Decimal close; never replace missing input with zero');
+return {negative: match[1] === '-', whole: match[2], fraction: match[3] || ''};
+});
+const scale = Math.max(8, ...parts.map(part => part.fraction.length));
+const total = parts.reduce((sum, part) => {
+const amount = BigInt(part.whole + part.fraction.padEnd(scale, '0'));
+return sum + (part.negative ? -amount : amount);
+}, 0n);
+const denominator = BigInt(values.length);
+const negative = total < 0n;
+const absolute = negative ? -total : total;
+let quotient = absolute / denominator;
+const remainder = absolute % denominator;
+if (remainder * 2n > denominator || (remainder * 2n === denominator && quotient % 2n === 1n)) quotient += 1n;
+const digits = quotient.toString().padStart(scale + 1, '0');
+const fraction = digits.slice(-scale).replace(/0+$/, '');
+return (negative && quotient !== 0n ? '-' : '') + digits.slice(0, -scale) + (fraction ? '.' + fraction : '');
+}
+export function compute(input) {
+const period = input.parameters.period === undefined ? 20 : input.parameters.period;
+if (!Number.isInteger(period) || period < 2 || period > 100) throw new Error('period must be an integer from 2 to 100');
+const rows = input.inputs.price.rows.filter(bar => bar.isClosed === true);
+const points = [];
+for (let index = period - 1; index < rows.length; index += 1) {
+const bar = rows[index];
+const value = decimalMean(rows.slice(index - period + 1, index + 1).map(row => row.close));
+points.push({key: bar.id, time: bar.openTime, value: {status: 'value', value}});
+}
+return {status: points.length ? 'ready' : 'not_ready', series: [{seriesId: 'sma', points}], diagnostics: []};
+}
+报告中的黄金曲线直接读取固定历史，能离线复查，但不是主画布黄金订阅已经恢复的替代证据。
+03 BTC来源已恢复到新版，持续稳定仍未获证明
+绑定恢复后曾收到有效行情；验收回执已将交易所Too many requests明确分类为限
+流，不能沿用短暂live作为最终通过。
+观察 结果 边界
+新版来源绑定 已固定到当前CCXT来源修订，品种、既有代理及连接身份保持
+原选择。
+不改写原冻结数据的旧来源身份。
+先前显示回执 rendered / live / 500根 2026-10-20T10:14:51.229Z；仅一次显示观察。
+验收回执 error / stale / RATE_LIMITED EGeneral:Too many requests；保留500 根历史柱不代表通道持
+续在线。
+QA均线和两条新绑定标
+注
+均线实例继续复用；新绑定标注已读回代码和几何。 旧修订标注保留失活，不强行把旧对象迁移到另一来源身份。
+04 早先失败仍是历史证据，本轮只修正有新依据的结论
+黄金“没有指定样本”的旧结论已被本轮真实读取更新；A股、外网问题和已取消任务
+不重试。
+BTC/USD原固定闭柱样本
+UTC；价格USD；真实成交量单位BTC。原固定样本没有重新采集；工作台订阅窗口不是另一份固定研究样本。
+80,000
+80,500
+81,000
+81,500
+82,000
+82,500
+83,000
+10-15 10-16 10-17 10-18 10-19 10-20
+范围 保留的早先记录 本轮更新或边界
+黄金缓存 旧版读取曾返回空数组，未冻结黄金样本。 本轮最新来源已取得并冻结实际闭柱；不能继续把旧空结果解释为本地库确实没有行情。
+A股私有依
+赖
+私有准备中断，AKShare未安装，未查询上游股
+票数据。
+沿用缺口；不重复安装，不改共享环境，也不编造A股样本。
+数字货币外
+网
+曾出现Too many requests等访问限制。 保留历史失败；只观察本轮图表通道，未主动重试已记录的外网问题。
+写作任务恢
+复诊断
+宿主曾返回task_private；原任务后来已取消，报
+告由主会话完成。
+按用户本次说明，更正为宿主恢复误报掩盖插件版本变化；修复不取消版本锁。本轮没有恢
+复原取消任务，也没有用新恢复试验证明此修复。
+统一配置入
+口
+此前已打开入口；MT5有字段声明，AKShare和
+CCXT未声明统一字段。
+仅保留原观察，不检查交易开关、不索要凭据、不扩大字段覆盖结论。
+方法、限制与来源
+方法
+黄金只冻结一次实际本地H1样本；BTC原固定样本和核验结果全部复用。无合成行情、无账户或下单操作。
+黄金墙时原样保留；绘图使用墙时字段的秒数投影编码，绝不把该编码当作UTC瞬间。BTC保持原UTC时间轴。
+QA均线复用同一不可变代码成果，每张图保留独立实例参数；绘图代码和几何已通过公开读取能力核对。
+报告曲线和市场数值读取固定行情及对应核验DataRef；版本、实例与错误是本次公开工具回执观察，不是独立市场证据。
+限制
+两份样本均未获无缺口覆盖证明；黄金的UTC偏移、冻结券商日历和来源报价币种未知。
+黄金本地历史读取成功与实时券商连接无关；本次黄金主画布渲染没有通过。
+CCXT上游浮点已损失的精度不可恢复；公共OHLCV可能延迟。短暂live不证明持续稳定，验收回执仍限流。
+没有A股样本，不做三市场相关性、收益优劣或多空排名；同源均线和端点连线也不当作独立确认。
+旧任务的错误码保留；根因更正来自用户本次说明，并非本轮重新恢复任务所得。
+来源
+黄金固定DataRef {"id":"artifact_30ee3656-79a8-4977-94a3-ac280c825459","revision":"revision_0d16102d-fe30-48a1-a089-
+4325034c965f","digest":"sha256:b38300a3d210aefdd1bfe2b2c2dbc1e5c573a201d45162a1c0dfff0eef081f2f","kind":"data","schemaVe
+rsion":"1.0.0"}
+黄金原始页与核验证据 {"evidence":{"id":"artifact_6c20e313-16ff-49e3-a45b-ede0d4beb7c8","revision":"revision_4fa8615b-1032-47f7-83ad-
+f0da9084df46","digest":"sha256:8d9ed7bc3ec4c71381ac1c58509736869541205c349154666d4c73097ce9384c","kind":"resource","sc
+hemaVersion":"1.0.0"},"auditRef":{"id":"artifact_99f142f1-bbf6-4353-854f-8ef4bdf0d756","revision":"revision_adff329c-38f5-4c12-
+9627-
+b2d9961d880d","digest":"sha256:6148975a8f78fdee8a924f3e2524b73b1fda234a4a8345942ab4de137042cfd8","kind":"data","schem
+aVersion":"1.0.0"},"auditEvidence":{"id":"artifact_c5a8151d-81ab-41a7-bce7-d8f615e92efe","revision":"revision_c4d592cf-cb18-
+4fea-80c3-
+1bd018e0f883","digest":"sha256:11399686fb9e5d397dd7499e03a106a8880776e62ed788b527ef615b65ddfc88","kind":"resource","s
+chemaVersion":"1.0.0"},"executionId":"exec_193c8cee-631e-4466-b911-d932a54ac543"}
+黄金来源、口径和请求区间 {"binding":{"source":
+{"providerId":"sesame/mt5#market","revision":"sha256:051361e9ea63073b0dde4b197fb48c29cb932443379f0474dea79f52df5f4a8
+0"},"instrument":{"sourceId":"mt5-b7ba3c5a0dd25f52800d40d4","instrumentId":"XAUUSD"},"spec":
+{"timeframe":"1h","priceBasis":"bid","adjustment":"none","session":"all","calendarRevision":{"status":"unknown","reason":"No
+frozen broker calendar has been published"}}},"range":{"from":{"basis":"wall","authority":"FTMO-Demo","value":"2026-10-
+12T00:00:00"},"to":{"basis":"wall","authority":"FTMO-Demo","value":"2026-10-
+17T00:00:00"}},"includeForming":false,"volumeKind":"tick","coverageComplete":false}
+BTC原固定样本与来源 {"ref":{"id":"artifact_a60bde0e-bb0a-4a64-89a8-19b6f109afa2","revision":"revision_0273880b-d539-4d9a-9ce8-
+560959555eed","digest":"sha256:6c07850306c52b25fcef7315b61a1c282022b326d69778460fb20bf4271b6cc9","kind":"data","schem
+aVersion":"1.0.0"},"evidence":{"id":"artifact_f352c90a-7dc8-4297-a47a-0d31f9035851","revision":"revision_508b3caf-fe2f-43bf-
+a420-
+79c32bc4b51c","digest":"sha256:c04f28f262932718ef389091f87b89bb7c93bfb5dcadc6e3a602a08d8773416c","kind":"resource","sch
+emaVersion":"1.0.0"},"source":
+{"providerId":"sesame/ccxt#market","revision":"sha256:07f5747a62db288e9b3b055ab0c05e0fa5c8c67a4f161a39f53949bd4ffdf633
+","binding":{"connection":
+{"id":"ccxt:kraken","revision":"sha256:66a0b3fd2caab69abcf3ce8bccb719b7441248a877eab9d177ca395e0d951eda"}}},"instrument":
+{"sourceId":"ccxt:kraken:spot","instrumentId":"BTC/USD"},"spec":
+p / p
+{"timeframe":"1h","priceBasis":"last","adjustment":"none","session":"all","calendarRevision":{"status":"unknown","reason":"No
+fixed exchange calendar"}},"range":{"from":{"basis":"utc","unixMs":1792054800000},"to":
+{"basis":"utc","unixMs":1792486800000}},"rowCount":120,"observedAt":1792489102106,"includeForming":false,"allClosed":true,"c
+losure":"source","volumeKind":"real","volumeUnit":"BTC","priceUnit":"USD","coverageComplete":false,"paginationComplete":true,"
+warnings":["Public OHLCV can be delayed/partial","CCXT upstream floats cannot recover precision already lost"]}
+BTC复用核验 {"ref":{"id":"artifact_0e91a663-a887-45c8-a056-8b877238d00c","revision":"revision_88803bcd-1e56-43e8-821f-
+0e517ec68dd5","digest":"sha256:61eab49d21c8131e0a374c594e71eed4c3d2ba583d4a86c06b77f040ed5159eb","kind":"data","schem
+aVersion":"1.0.0"},"executionId":"exec_2c1a1f2e-2018-4f27-98ab-40fc3611d3f7","note":"Reuses the same sole market sample; not
+independent evidence"}
+当前绑定与完整画布验收观察 {"binding":{"source":
+{"providerId":"sesame/ccxt#market","revision":"sha256:cc8ad04b57095592653ef039a5b1b5368c638e18af0383ccca0c53a294912d5
+d","binding":{"configuration":{"exchange":"kraken","publicProxy":"http://127.0.0.1:11304"},"connection":
+{"id":"ccxt:kraken","revision":"sha256:66a0b3fd2caab69abcf3ce8bccb719b7441248a877eab9d177ca395e0d951eda"}}},"instrument":
+{"sourceId":"ccxt:kraken:spot","instrumentId":"BTC/USD"},"spec":
+{"timeframe":"1h","priceBasis":"last","adjustment":"none","session":"all","calendarRevision":{"status":"unknown","reason":"No
+fixed exchange calendar"}}},"canvas":{"version":31,"clientId":"8d030b09-53b3-45d8-a7e3-
+1e20836509da","receiptAt":1792491408681,"renderStatus":"reported","gold":
+{"id":"chart_QA20261020_gold","status":"error","barCount":0,"feedStatus":"stale","error":"SOURCE_UNAVAILABLE:
+sesame/mt5#market subscribeBars (sesame/mt5#market.subscribeBars): MT5 is not connected to the broker"},"btc":
+{"id":"chart_QA20261020_crypto","status":"error","barCount":500,"feedStatus":"stale","error":"RATE_LIMITED:
+sesame/ccxt#market subscribeBars (sesame/ccxt#market_subscribeBars): kraken {\"error\":[\"EGeneral:Too many
+requests\"]}"},"priorBtcReceipt":
+{"version":30,"at":1792491291229,"status":"rendered","barCount":500,"feedStatus":"live"},"mainChart":
+{"id":"chart_main","modified":false,"status":"error","barCount":0,"feedStatus":"paused","error":"Presentation source revision
+changed","note":"Existing US100 binding and source revision intentionally left unchanged"}}}
+黄金均线实例与源引用 {"ref":{"id":"artifact_659a036a-7151-4083-abda-567f2bd85e31","revision":"revision_285662c3-c434-4098-a246-
+fb53b6ae6a3e","digest":"sha256:06b244b1466c366f83154396f33a728157c5eb49e4ad88873fca9c8ff2b020fb","kind":"indicator","sch
+emaVersion":"1.0.0"},"scriptId":"plot_95db0f17-1d5b-44b9-b3c6-062e4d57db0f","parameters":{"period":20},"editablePeriod":
+{"min":2,"max":100},"closedOnly":true,"lookback":300,"sourceReadback":true,"source":"完整代码见正文折叠源码
+区","displayPassed":false,"sourceSha256":"sha256:069760e16de2a4045c826ba0855e6fe64e5c5cf432733ef739c1a76bef6fe126"}
+绘图精确身份与绑定 [{"id":"QA20261020_gold_reference","scriptId":"plot_7ad8a82e-4187-46b7-bf6d-21913eeb9c55","ref":{"id":"artifact_2ffc2c50-
+9f22-459c-a06f-852b60a2d675","revision":"revision_1b7a76fc-f1e2-4aad-ac86-
+13f6ed337282","digest":"sha256:7110ac463ba3bee7b707dc71c74487f9c027ecfd81408cd3eaa910eebff6f6e1","kind":"indicator","sche
+maVersion":"1.0.0"},"revision":"revision_1b7a76fc-f1e2-4aad-ac86-13f6ed337282","binding":{"source":
+{"providerId":"sesame/mt5#market","revision":"sha256:051361e9ea63073b0dde4b197fb48c29cb932443379f0474dea79f52df5f4a8
+0"},"instrument":{"sourceId":"mt5-b7ba3c5a0dd25f52800d40d4","instrumentId":"XAUUSD"},"spec":
+{"timeframe":"1h","priceBasis":"bid","adjustment":"none","session":"all","calendarRevision":{"status":"unknown","reason":"No
+frozen broker calendar has been published"}}},"spec":{"anchors":
+[{"price":4168.75,"time":1792188000}],"kind":"horizontal","schemaVersion":"sesame-drawing/1","style":
+{"color":"#24866e","fillOpacity":0,"lineStyle":"dashed","width":2},"title":"QA20261020 黄金闭柱参考
+4168.75"},"active":true,"parameters":{},"sourceReadback":true},{"id":"QA20261020_gold_trend","scriptId":"plot_11d6c464-1e2a-
+4e06-93d5-77d763971181","ref":{"id":"artifact_57781f60-c056-4468-ae79-e6073a678ea5","revision":"revision_acadaf1a-b813-44a9-
+af0a-
+156d48198f66","digest":"sha256:da7c8bcf6dccc01ffb812ad1d2452be293f9927029a78b759ffdeac98f89f599","kind":"indicator","sche
+maVersion":"1.0.0"},"revision":"revision_acadaf1a-b813-44a9-af0a-156d48198f66","binding":{"source":
+{"providerId":"sesame/mt5#market","revision":"sha256:051361e9ea63073b0dde4b197fb48c29cb932443379f0474dea79f52df5f4a8
+0"},"instrument":{"sourceId":"mt5-b7ba3c5a0dd25f52800d40d4","instrumentId":"XAUUSD"},"spec":
+{"timeframe":"1h","priceBasis":"bid","adjustment":"none","session":"all","calendarRevision":{"status":"unknown","reason":"No
+frozen broker calendar has been published"}}},"spec":{"anchors":[{"price":4156.17,"time":1792119600},
+{"price":4168.75,"time":1792188000}],"kind":"trend","schemaVersion":"sesame-drawing/1","style":
+{"color":"#c28b45","fillOpacity":0,"lineStyle":"solid","width":2},"title":"QA20261020 黄金最近20闭柱端点连
+线"},"active":true,"parameters":{},"sourceReadback":true},{"id":"QA20261020_btc_reference_v202","scriptId":"plot_30ed8598-
+5ae1-432f-809e-e6606da2e19f","ref":{"id":"artifact_e4c9e182-b27f-4c04-b5ee-c0434a9dddbd","revision":"revision_712faf48-b9cc-
+4ef6-8bc8-
+ff5f78965993","digest":"sha256:edfbb2860facd6d6d62c0304972e1245d9d0f5818881c939992e64b72928d0a0","kind":"indicator","s
+chemaVersion":"1.0.0"},"revision":"revision_712faf48-b9cc-4ef6-8bc8-ff5f78965993","binding":{"source":
+{"providerId":"sesame/ccxt#market","revision":"sha256:cc8ad04b57095592653ef039a5b1b5368c638e18af0383ccca0c53a294912d5
+d","binding":{"configuration":{"exchange":"kraken","publicProxy":"http://127.0.0.1:11304"},"connection":
+{"id":"ccxt:kraken","revision":"sha256:66a0b3fd2caab69abcf3ce8bccb719b7441248a877eab9d177ca395e0d951eda"}}},"instrument":
+{"sourceId":"ccxt:kraken:spot","instrumentId":"BTC/USD"},"spec":
+{"timeframe":"1h","priceBasis":"last","adjustment":"none","session":"all","calendarRevision":{"status":"unknown","reason":"No
+fixed exchange calendar"}}},"spec":{"anchors":
+[{"price":81428.6,"time":1792483200}],"kind":"horizontal","schemaVersion":"sesame-drawing/1","style":
+{"color":"#24866e","fillOpacity":0,"lineStyle":"dashed","width":2},"title":"QA20261020 BTC 闭柱参考81428.6
+USD"},"active":true,"parameters":{},"sourceReadback":true},{"id":"QA20261020_btc_trend_v202","scriptId":"plot_a9239f21-6371-
+420b-8b39-9f6e7b720908","ref":{"id":"artifact_8b435c78-5de7-4fe2-894d-5e947d8aeb4a","revision":"revision_0c3207a0-1b5d-
+4135-8931-
+9797b0a4c8ee","digest":"sha256:547a8f6dedddba7558bc432fceca44a6f355543d8b8112acdf6f12b88178052d","kind":"indicator","sc
+hemaVersion":"1.0.0"},"revision":"revision_0c3207a0-1b5d-4135-8931-9797b0a4c8ee","binding":{"source":
+{"providerId":"sesame/ccxt#market","revision":"sha256:cc8ad04b57095592653ef039a5b1b5368c638e18af0383ccca0c53a294912d5
+d","binding":{"configuration":{"exchange":"kraken","publicProxy":"http://127.0.0.1:11304"},"connection":
+{"id":"ccxt:kraken","revision":"sha256:66a0b3fd2caab69abcf3ce8bccb719b7441248a877eab9d177ca395e0d951eda"}}},"instrument":
+{"sourceId":"ccxt:kraken:spot","instrumentId":"BTC/USD"},"spec":
+{"timeframe":"1h","priceBasis":"last","adjustment":"none","session":"all","calendarRevision":{"status":"unknown","reason":"No
+fixed exchange calendar"}}},"spec":{"anchors":[{"price":82030.1,"time":1792414800},
+{"price":81428.6,"time":1792483200}],"kind":"trend","schemaVersion":"sesame-drawing/1","style":
+{"color":"#c28b45","fillOpacity":0,"lineStyle":"solid","width":2},"title":"QA20261020 BTC 最近20闭柱端点连
+线"},"active":true,"parameters":{},"sourceReadback":true}]
+旧版报告与早先缺口 {"report":{"ref":{"id":"artifact_ecea0caf-8ef1-47e4-9437-04696e81ce65","revision":"revision_e907836a-89ee-499a-bcf6-
+92437f503768","digest":"sha256:55ae178c469498f3ba4d279bc260f03bf80699c2df52ba0bf601b3359b423386","kind":"report","sch
+emaVersion":"1.0.0"},"space":"research","path":"reports/QA20261020-跨市场观察.html","fileId":"report_file_e55a24e1-31e8-4251-
+a81c-a9cd2371e912","fileVersion":65,"publishedRevision":2,"dirty":false,"renderCheck":{"id":"inspection_b1198549-b3f2-4350-
+867b-f3008d232648","status":"rendered","observedAt":1792489832724,"viewportWidths":[1000,390],"diagnostics":[]}},"gaps":
+{"gold":"Specified local XAUUSD H1 cache returned no bars; no frozen sample or new chart. Broker wall clock UTC offset unknown.
+No reconnect/sync/trade attempt.","ashares":"Private AKShare 1.19.1 preparation aborted; private Python exists but AKShare is not
+installed. No upstream stock query or frozen sample.","unifiedConfiguration":"Opened existing unified entry. MT5 declared field
+dependencies recorded; AKShare and CCXT declare no unified fields. No secrets displayed."}}
+旧诊断与本轮更正 {"prior":{"runId":"run_c94c9e64-f669-48a0-a6ca-1acb668fc7aa","resumeAttemptedOnce":true,"resumeFailure":"task_private
+before a new Agent turn","finalStatus":"cancelled","continuation":"Main conversation published and checked the requested report
+using the same fixed evidence. Only the canceled task's zero-byte unpublished placeholder was moved to recoverable trash, then the
+actual published report was moved to the exact requested path. No historical report changed."},"correction":{"origin":"User
+explanation in this targeted retest","previousDiagnostic":"task_private","correctedExplanation":"The prior task_private message was
+a host resume misreport masking a plugin-version change; user reports this has been fixed, while version locking remains
+enforced.","cancelledRun":"run_c94c9e64-f669-48a0-a6ca-
+1acb668fc7aa","cancelledRunResumed":false,"historicalPausedTasksResumed":false,"independentResumeVerificationPerformed":fa
+lse}}
+A股与操作边界 {"ashare":
+{"retested":false,"privateAkshareInstalled":false,"requiredVersion":"1.19.1","sharedVersion":"1.18.64","sharedEnvironmentChanged"
+:false,"sourceQueried":false},"boundaries":["No broker reconnect, sync, account/trading-switch inspection or order","No private
+database access or dependency reinstall","No new BTC frozen market sample and no explicit repeat of failed external source
+requests","No restart of cancelled or historical paused tasks","Gold history is offline, not a live quote; wall-clock offset and source
+currency remain unknown","Saved drawing active=true indicates binding match, not successful golden-chart rendering"]}
+

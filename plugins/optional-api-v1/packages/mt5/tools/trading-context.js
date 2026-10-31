@@ -2,7 +2,8 @@ import { capability } from '@sesame/plugin-sdk/capabilities';
 import { records } from '../backend/records.js';
 import { randomUUID } from 'node:crypto';
 import { digest } from '@sesame/plugin-sdk/protocol';
-import { ApiError, requireValue } from '../backend/support.js';
+import { requireValue } from '../backend/support.js';
+import { pythonEnvelope } from '../backend/execution-evidence.js';
 
 export function assertTradingTask(host, account, write = false, identity = false, executionContext) {
   if (host.context.kind === 'main') return null;
@@ -58,20 +59,7 @@ export function createTradingContext(host, mt5, { now = Date.now } = {}) {
       throw error;
     }
     signal?.throwIfAborted(); assertCurrent(account);
-    if (result?.status !== 'returned' || result.result?.error || result.result?.result === null || result.result?.result === undefined) {
-      const lastError = result?.result?.last_error;
-      const nativeCode = Array.isArray(lastError) ? lastError[0] : result?.result?.error ?? null;
-      const message = Array.isArray(lastError) ? lastError[1] : result?.result?.message ?? result?.error ?? 'No confirmed native result';
-      const nativeMessage = mt5.official.redact(String(message).slice(0, 1500));
-      const ipcUnavailable = nativeCode === -10004;
-      const error = new ApiError(503, ipcUnavailable ? 'MT5_PYTHON_UNAVAILABLE' : 'SOURCE_UNAVAILABLE',
-        `MT5 Python ${tool} failed${nativeCode === null ? '' : ` [${nativeCode}]`}: ${nativeMessage}`);
-      error.details = { transport: 'python', requiredTransport: 'python', method: tool, commandId: result?.id ?? null,
-        commandStatus: result?.status ?? 'unknown', nativeCode, nativeMessage,
-        ...(ipcUnavailable ? { retryable: false, recovery: 'Reconnect the configured MetaTrader 5 Python terminal, verify the same account, then start a new workflow run. Terminal MCP connectivity alone does not establish Python IPC.' } : {}) };
-      throw error;
-    }
-    return result.result.result;
+    return pythonEnvelope(result, tool, null, value => mt5.official.redact(value)).result;
   }
   return {
     async context(args, signal, executionContext) {
@@ -120,9 +108,9 @@ export function createTradingContext(host, mt5, { now = Date.now } = {}) {
         planId: task?.input.tradingPlan.id ?? null, runId: task?.input.runId ?? null, capturedAt: now(),
         limitation: 'Stops the EA without closing positions; there is no automatic resume or preserved runtime-state pause.' };
     },
-    async order(parameters, signal, executionContext) {
+    async order(parameters, signal, executionContext, authorizationAction = 'mt5_trading_order') {
       const account = accountOf(mt5), task = assertTradingTask(host, account, true, false, executionContext);
-      const args = verifyExecutionAuthorization(task, 'mt5_trading_order', parameters, now(), executionContext);
+      const args = verifyExecutionAuthorization(task, authorizationAction, parameters, now(), executionContext);
       requireValue(args.server === 'python' && args.tool === 'order_send', 'Only the guarded Python order_send path is supported');
       requireValue(!task || args.arguments?.execution_guard || args.arguments?.cancellation_guard, 'Plan orders require a native final-mile guard');
       requireValue(!task || args.arguments?.cancellation_guard || Array.isArray(args.arguments?.execution_guard?.expected_positions), 'Plan execution requires a full symbol position expectation');
@@ -131,7 +119,7 @@ export function createTradingContext(host, mt5, { now = Date.now } = {}) {
       requireValue(typeof args.command_id === 'string' && /^[a-zA-Z0-9_-]{16,128}$/.test(args.command_id), 'A stable command ID is required');
       const fingerprint = digest({ args, account, owner }), old = records(host).get('mt5_trading_commands', args.command_id, true);
       requireValue(!old || old.fingerprint === fingerprint && (!task || old.planId === task.input.tradingPlan.id && old.runId === task.input.runId && old.taskId === task.id), 'Command ID belongs to another signed intent', 409, 'IDEMPOTENCY_CONFLICT');
-      signal?.throwIfAborted(); assertCurrent(account); verifyExecutionAuthorization(assertTradingTask(host, account, true, false, executionContext), 'mt5_trading_order', parameters, now(), executionContext);
+      signal?.throwIfAborted(); assertCurrent(account); verifyExecutionAuthorization(assertTradingTask(host, account, true, false, executionContext), authorizationAction, parameters, now(), executionContext);
       if (!old) records(host).put('mt5_trading_commands', { id: args.command_id, account, owner, fingerprint, planId: task?.input.tradingPlan.id ?? null, runId: task?.input.runId ?? null, taskId: task?.id ?? null, createdAt: now() });
       return mt5.official.call(args, owner, signal);
     },

@@ -1,0 +1,11 @@
+fix(chart): allow explicit shared provider connection retries
+
+An established binding can retain a failed stream after an account configuration
+change without a plugin revision change. Expose a stable retry callback that
+releases the old binding once, preserves the original identity and listeners,
+and shares pending work across consumers. Keep automatic backoff and late-result
+cleanup from duplicating or resurrecting connections.
+
+Add six regression cases. Isolated HEAD candidate passes 14 tests; current
+workspace with its existing cache-grace changes passes all 16 binding tests.
+This commit excludes those pre-existing grace changes and chart UI edits.

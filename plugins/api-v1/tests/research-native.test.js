@@ -29,11 +29,16 @@ test('research publishes frozen output and rejects changed input, absent recipe 
  await assert.rejects(f.call('research_register',{...args,operationId:'recipe',recipePaths:['not-frozen.py']}),/frozen execution/);
  f.input.rows[0].value='100';await assert.rejects(f.call('research_register',{...args,operationId:'changed'}),/exact registered/);
 });
-test('fixed DataRef inputs bind actual frozen bytes and become evidence dependencies',async t=>{
+test('fixed DataRef inputs bind actual frozen bytes and become direct data dependencies without rewriting evidence',async t=>{
  const f=await fixture(t),raw=await f.host.resources.create({kind:'file',source:{content:'[{"x":"1.01"}]'}});
  const ref=(await f.host.resources.publish(raw,{kind:'data',schemaVersion:'1.0.0',content:{path:'rows.json',provenance:{kind:'observed'}},blobs:[{path:'rows.json'}]})).ref;
  const input=await f.call('data_read',{ref}),bytes=await readFile(input.path);
  f.executions.set('e',{id:'e',conversation_id:'main',status:'completed',workspace_path:f.root,code:{['inputs/'+ref.id+'.json']:digest(bytes)},files:{'out.json':Buffer.from('[{"answer":"2.02"}]').toString('base64')}});
- const result=await f.call('research_register',{operationId:'fixed-ref',executionId:'e',path:'out.json',inputRefs:[ref],title:'Result',description:'Exact input'});
- assert.deepEqual(f.artifacts.get(result.evidence.id).manifest.dependencies,[ref]);assert.deepEqual(f.rows(result.ref),[{answer:'2.02'}]);
+ const duplicate=Object.fromEntries(Object.entries(ref).reverse());
+ const result=await f.call('research_register',{operationId:'fixed-ref',executionId:'e',path:'out.json',inputRefs:[ref,duplicate],title:'Result',description:'Exact input'});
+ assert.deepEqual(f.artifacts.get(result.evidence.id).manifest.dependencies,[ref,duplicate]);
+ assert.deepEqual(f.artifacts.get(result.ref.id).manifest.dependencies,[result.evidence,ref]);
+ assert.deepEqual(result.provenance.references,[result.evidence]);assert.equal(result.provenance.kind,'derived');
+ assert.deepEqual(f.rows(result.evidence).inputs.map(input=>input.ref),[ref,duplicate]);
+ assert.deepEqual(f.rows(result.ref),[{answer:'2.02'}]);
 });

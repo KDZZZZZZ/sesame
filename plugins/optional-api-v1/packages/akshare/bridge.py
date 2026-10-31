@@ -48,5 +48,6 @@ def query(payload):
             row['volume']=format(decimal.Decimal(row['volume'])*100,'f')
             row['volume_normalization']='AKShare1.19.1 sz000 A-share native lot x100 to share'
     return {'ok':True,'rows':rows,'akshareVersion':ak.__version__,'interface':name,'observedAt':int(datetime.datetime.now(datetime.timezone.utc).timestamp()*1000)}
-try: print(json.dumps(query(json.load(sys.stdin)),ensure_ascii=False,allow_nan=False))
-except Exception as exc: print(json.dumps({'ok':False,'error':type(exc).__name__+': '+str(exc)},ensure_ascii=False))
+# JSON escapes preserve Unicode values across Windows redirected code pages.
+try: print(json.dumps(query(json.load(sys.stdin)),ensure_ascii=True,allow_nan=False))
+except Exception as exc: print(json.dumps({'ok':False,'error':type(exc).__name__+': '+str(exc)},ensure_ascii=True))

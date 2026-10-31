@@ -1,0 +1,1087 @@
+{
+  "schemaVersion": 1,
+  "catalogSchemaVersion": "1.3.0",
+  "modules": {
+    "M13": {
+      "title": {
+        "zh-CN": "历史同类特征验证",
+        "en": "Historical feature evidence"
+      },
+      "fields": {
+        "summary": {
+          "type": "text",
+          "catalog_meaning": "方法给出的本模块结论；保留事实、解释或预测的真实性质。",
+          "definition": "本模块对特征的历史匹配、实际结果和验证的核心回答，先给明确判断，最少给出有依据的倾向，不以数值列表或两面可能代替答案。",
+          "inputs": "关键结论、决定性事实/数值、比较对象、相反证据和适用条件；关联本模块实际采用的字段与固定成果。",
+          "unit_time": "概括时保留事件样本、结算目标/期限、当时信息可得性和基准；关键数值不省略单位、比较期间或预测期限。",
+          "interpretation": "明确观察事实、方法解释、条件假说、模拟结果与预测各自性质；摘要不产生新算法、综合评分或额外研究授权。涉及行情预测的结论应能追溯同类历史实际结果。",
+          "missing": "信息不全时先说已能支持的判断及范围，再说明具体未知；确实不能区分时说明原因。用户可省略该字段，不为凑结论补造方向、概率或中性评价。",
+          "lineage": {
+            "suggested_kind": "inferred",
+            "nature": "interpretation",
+            "meaning_note": "历史同类情景的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+          }
+        },
+        "outcome_chart": {
+          "type": "chart",
+          "catalog_meaning": "历史匹配样本的已登记分箱；结果提供 sampleCount、method、边界规则和收益单位。",
+          "definition": "历史匹配情景的实际已结算结果分箱计数。",
+          "inputs": "lower/upper/count、sampleCount、分箱方法、边界含义、逐案例与样本引用。",
+          "unit_time": "横轴说明收益/价格/其他结果单位，结果窗口一致，计数为已结算事件或规定单位。",
+          "interpretation": "直方图描述条件历史分布，不能直接称当前预测分布；重叠样本依赖需保留。",
+          "missing": "未结算不入已实现分箱；无样本不画平滑密度或虚构频率。",
+          "lineage": {
+            "suggested_kind": "derived",
+            "nature": "statistic",
+            "meaning_note": "对实际历史匹配后的结局分箱/计数，边界规则与样本量由真实研究记录提供，不是预测概率。"
+          },
+          "chart": {
+            "kind": "histogram",
+            "columns": [
+              "lower",
+              "upper",
+              "count"
+            ],
+            "evidence_role": "historical"
+          },
+          "historical": {
+            "rule": "凡字段承载行情预测、可检验方向/目标推断、概率、分布或置信度，须对照历史相同或可比情景的实际后续结果；仅有理论引用、供应商分数或匹配事件数不够。描述性事实不因此被强制改成预测。",
+            "sampling": "默认先查当前品种的近期同类情景；近期窗口由实际方法说明。只有完成该检索且确认 eligible_count 为 0 才跨品种，并记录可比性。检索不可用、未检索、样本少都不等于零匹配。用户明确改采样时记录 override_reason。",
+            "comparison": "每项推断保留知识假说与实际历史计数/结果、匹配/排除、未结算、重叠、基准、不确定性和反例的对照；综合判断另保留联合方法的历史检验，不强制一种匹配、统计或综合方法。",
+            "status": "行或逐项推断携带 method_ref、historical_basis 与真实 validation；固定引用和字段齐全只证明材料存在，不代表研究通过。缺少可比已结算结果用 unavailable/pending，不补 50%、零、主观置信度或暗示校准。"
+          }
+        },
+        "baseline_chart": {
+          "type": "chart",
+          "catalog_meaning": "同一目标与期限的条件统计及可比基准；样本量、重叠处理和不确定性来自研究结果。",
+          "definition": "同一目标与结算期限下条件样本和可比基准的结果对照。",
+          "inputs": "outcome、conditional/baseline、各自样本量、基准构造、依赖处理与不确定性。",
+          "unit_time": "频率使用同分母定义和尺度，收益同币种/口径，时间窗和目标一致。",
+          "interpretation": "差异是否有意义取决于样本与方法；观察差值不是特征因果贡献。",
+          "missing": "基准不可得时明确缺失，不用 50% 或零收益默认基准。",
+          "lineage": {
+            "suggested_kind": "derived",
+            "nature": "statistic",
+            "meaning_note": "条件样本统计和同目标基准各自计算，窗口/样本定义由研究决定，不在报告选择基准。"
+          },
+          "chart": {
+            "kind": "dumbbell",
+            "columns": [
+              "outcome",
+              "baseline",
+              "conditional"
+            ],
+            "evidence_role": "historical"
+          },
+          "historical": {
+            "rule": "凡字段承载行情预测、可检验方向/目标推断、概率、分布或置信度，须对照历史相同或可比情景的实际后续结果；仅有理论引用、供应商分数或匹配事件数不够。描述性事实不因此被强制改成预测。",
+            "sampling": "默认先查当前品种的近期同类情景；近期窗口由实际方法说明。只有完成该检索且确认 eligible_count 为 0 才跨品种，并记录可比性。检索不可用、未检索、样本少都不等于零匹配。用户明确改采样时记录 override_reason。",
+            "comparison": "每项推断保留知识假说与实际历史计数/结果、匹配/排除、未结算、重叠、基准、不确定性和反例的对照；综合判断另保留联合方法的历史检验，不强制一种匹配、统计或综合方法。",
+            "status": "行或逐项推断携带 method_ref、historical_basis 与真实 validation；固定引用和字段齐全只证明材料存在，不代表研究通过。缺少可比已结算结果用 unavailable/pending，不补 50%、零、主观置信度或暗示校准。"
+          }
+        },
+        "cases_chart": {
+          "type": "chart",
+          "catalog_meaning": "逐次历史匹配事件的 ID、情景及已结算结果；少样本时优先原始点，不制造平滑密度。",
+          "definition": "每次历史匹配事件及其实际后续结果的原始点展示。",
+          "inputs": "case_id、情景/特征标签、匹配时点、结算窗、结果与案例引用。",
+          "unit_time": "结果单位、价格口径和期限一致，记录可得时间与待结算状态。",
+          "interpretation": "多个点可能属于同一事件簇；少样本优先原值，不通过抖动/平滑伪造分布厚度。",
+          "missing": "未结算点标 pending，缺结果不能记为失败或零收益。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "事件身份和原观察可获取，是否相似由匹配方法决定，后续结果由真实路径结算，逐案例保留证据。"
+          },
+          "chart": {
+            "kind": "strip",
+            "columns": [
+              "case_id",
+              "scenario",
+              "return_pct"
+            ],
+            "evidence_role": "historical"
+          },
+          "historical": {
+            "rule": "凡字段承载行情预测、可检验方向/目标推断、概率、分布或置信度，须对照历史相同或可比情景的实际后续结果；仅有理论引用、供应商分数或匹配事件数不够。描述性事实不因此被强制改成预测。",
+            "sampling": "默认先查当前品种的近期同类情景；近期窗口由实际方法说明。只有完成该检索且确认 eligible_count 为 0 才跨品种，并记录可比性。检索不可用、未检索、样本少都不等于零匹配。用户明确改采样时记录 override_reason。",
+            "comparison": "每项推断保留知识假说与实际历史计数/结果、匹配/排除、未结算、重叠、基准、不确定性和反例的对照；综合判断另保留联合方法的历史检验，不强制一种匹配、统计或综合方法。",
+            "status": "行或逐项推断携带 method_ref、historical_basis 与真实 validation；固定引用和字段齐全只证明材料存在，不代表研究通过。缺少可比已结算结果用 unavailable/pending，不补 50%、零、主观置信度或暗示校准。"
+          }
+        },
+        "inference_evidence": {
+          "type": "inferences",
+          "catalog_meaning": "每项可检验推断独立关联历史相同或可比情景、实际后续结果、置信度定义及验证状态；综合结论另有联合方法和历史依据。",
+          "definition": "逐项可检验推断与其自身同类历史结果、置信度定义及验证状态的对应。",
+          "inputs": "claim ID、观察特征、知识假说、方法、历史匹配/实际结果/基准、置信度定义、相反证据与固定引用。",
+          "unit_time": "每项单独声明目标、起点、期限、历史可得性和样本时间，置信度数值若有用 0–1。",
+          "interpretation": "理论解释须与历史统计对照；共享数据的特征不是独立票数，综合判断需另有联合方法验证。",
+          "missing": "缺少某项历史支持时该推断设 unavailable/pending 并解释，不让其他特征的样本代替。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "逐项推断是解释/预测，历史案例/实际结果是事实与统计，验证状态/置信定义为记录；不得统一标签。"
+          },
+          "historical": {
+            "rule": "凡字段承载行情预测、可检验方向/目标推断、概率、分布或置信度，须对照历史相同或可比情景的实际后续结果；仅有理论引用、供应商分数或匹配事件数不够。描述性事实不因此被强制改成预测。",
+            "sampling": "默认先查当前品种的近期同类情景；近期窗口由实际方法说明。只有完成该检索且确认 eligible_count 为 0 才跨品种，并记录可比性。检索不可用、未检索、样本少都不等于零匹配。用户明确改采样时记录 override_reason。",
+            "comparison": "每项推断保留知识假说与实际历史计数/结果、匹配/排除、未结算、重叠、基准、不确定性和反例的对照；综合判断另保留联合方法的历史检验，不强制一种匹配、统计或综合方法。",
+            "status": "行或逐项推断携带 method_ref、historical_basis 与真实 validation；固定引用和字段齐全只证明材料存在，不代表研究通过。缺少可比已结算结果用 unavailable/pending，不补 50%、零、主观置信度或暗示校准。"
+          }
+        },
+        "feature": {
+          "type": "object",
+          "catalog_meaning": "特征定义、版本、当前值和目标。",
+          "definition": "需要验证的当前特征及其可重复识别定义。",
+          "inputs": "特征名称/版本、原始输入、当前值或状态、观察规则、目标和知识依据。",
+          "unit_time": "保留原尺度、识别时点、首次可得时间、bar 周期与预测期限。",
+          "interpretation": "当前特征存在与该特征能预测是两件事；事后定义不得伪装事前规则。",
+          "missing": "无法复现特征或缺输入时注明未确定，不从结果倒推特征定义。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "定义/目标来自用户或方法，当前值可能获取或计算，方向假设是推断，版本是元数据。"
+          }
+        },
+        "matching": {
+          "type": "object",
+          "catalog_meaning": "方法提供的匹配、排除和信息可得性规则。",
+          "definition": "用于寻找历史相同或可比情景的实际纳入、排除和搜索规则。",
+          "inputs": "相似性/条件定义、参数、排除、当时信息可得性、同品种近期检索记录与最终范围。",
+          "unit_time": "明确近期窗口、历史截至日、目标结算窗及规则冻结时点。",
+          "interpretation": "先同品种近期；只有完成检索确认零匹配才跨品种并解释可比性；检索不可用不等于零匹配。",
+          "missing": "搜索失败或输入缺失用 unavailable；不得为得到更好结果随意改匹配或直接跳到跨品种。",
+          "lineage": {
+            "suggested_kind": "user_supplied",
+            "nature": "plan",
+            "meaning_note": "匹配/排除/可得性规则由所选方法预先定义，不是来源直接给出的客观相似性。"
+          }
+        },
+        "sample": {
+          "type": "object",
+          "catalog_meaning": "时间范围、原始数量、事件或簇数。",
+          "definition": "历史匹配案例的数量、时间范围及处理账目。",
+          "inputs": "matched/resolved/pending/excluded、事件/簇数、有效样本量、去重/重叠处理和案例引用。",
+          "unit_time": "明确事件时间、结果结算期和历史截点，所有已结算结果应在截点可得。",
+          "interpretation": "原始行数不等于独立样本数；matched 应与已结算、待结算、排除数量对账。",
+          "missing": "零匹配、未检索和结果未结算分别表达；不人为放大有效样本数。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "原样本来自历史数据，纳入/排除和事件簇由规则产生，数量由实际记录计数。"
+          }
+        },
+        "baseline": {
+          "type": "object",
+          "catalog_meaning": "同口径基准的定义与结果。",
+          "definition": "评价特征结果时使用的可比参照样本或方法结果。",
+          "inputs": "基准定义、选择理由、范围、目标/期限、结果、样本数和固定引用。",
+          "unit_time": "与条件样本保持收益、币种、时间及结算口径可比，差异须解释。",
+          "interpretation": "无条件频率、其他情景、随机规则和市场基准各有含义；基准不是统一 50%。",
+          "missing": "无法建立可比基准时明确 unavailable 与原因，不用中性数值补空。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "基准定义由用户/方法选择，其历史原值获取、对应结局统计计算。"
+          }
+        },
+        "outcomes": {
+          "type": "array",
+          "catalog_meaning": "计数、条件频率与结果分布；不冒充预测概率。",
+          "definition": "匹配事件之后实际发生并已结算的目标结果统计。",
+          "inputs": "结果定义、计数、条件频率、分布、案例与基准，待结算和排除记录另列。",
+          "unit_time": "说明结算期限、阈值、单位、成本/复权口径及数据截止。",
+          "interpretation": "历史条件频率不是自动校准后的当前预测概率；类别若互斥完备应能对账。",
+          "missing": "未结算不算失败，未覆盖类别不补零；没有结果不能只给匹配案例数。",
+          "lineage": {
+            "suggested_kind": "derived",
+            "nature": "statistic",
+            "meaning_note": "计数/条件频率由已匹配案例的实际后续结果算出，不自动升级为当前预测概率。"
+          }
+        },
+        "uncertainty": {
+          "type": "object",
+          "catalog_meaning": "方法提供的区间、含义和估计方式。",
+          "definition": "所选研究方法对历史统计不确定性的估计和说明。",
+          "inputs": "区间上下界、估计对象、覆盖含义、方法、样本依赖与敏感性范围。",
+          "unit_time": "区间与被估计量同单位；覆盖水平若有为 0–1，数据窗口明确。",
+          "interpretation": "参数估计区间、结果预测区间、分位范围和假设敏感性范围不同；不强制某一种统计方法。",
+          "missing": "无已执行区间估计时只描述实际样本局限，不编造置信水平。",
+          "lineage": {
+            "suggested_kind": "derived",
+            "nature": "statistic",
+            "meaning_note": "区间与误差按选定统计方法从实际样本计算；区间含义与假设必须明确。"
+          }
+        },
+        "validation": {
+          "type": "object",
+          "catalog_meaning": "验证范围、结果、状态及来源。",
+          "definition": "历史研究实际完成的检验及其验证范围。",
+          "inputs": "方法、数据划分、规则冻结时点、评价目标、结果、状态和固定成果引用。",
+          "unit_time": "记录训练/留出/前瞻区间、结果可得时间、选择次数和样本单位。",
+          "interpretation": "文件可读或字段齐全不证明研究有效；探索、样本外与前瞻状态不可互换。",
+          "missing": "没做的检验标未验证，缺引用不声称样本外通过。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "实际验证范围/结果/状态取真实运行记录；通过标准由方法约定，结论解释另列。"
+          }
+        },
+        "applicability": {
+          "type": "text",
+          "catalog_meaning": "所选方法对当前适用性的评价。",
+          "definition": "基于样本与当前环境差异，对历史结论可迁移性的评价。",
+          "inputs": "当前与历史特征对照、资产/流动性/制度差异、时间接近性、支持和反例。",
+          "unit_time": "明确当前截点、预测期限、历史样本范围和关键尺度。",
+          "interpretation": "跨品种可比不表示同分布；知识假说与实证分歧应保留，不强制择一掩盖。",
+          "missing": "适用性证据不足时限制结论，不因无反例就宣称普适。",
+          "lineage": {
+            "suggested_kind": "inferred",
+            "nature": "interpretation",
+            "meaning_note": "把历史样本迁移到当前状态的适用性由方法判断，支持/反证与差异逐项说明。"
+          },
+          "historical": {
+            "rule": "凡字段承载行情预测、可检验方向/目标推断、概率、分布或置信度，须对照历史相同或可比情景的实际后续结果；仅有理论引用、供应商分数或匹配事件数不够。描述性事实不因此被强制改成预测。",
+            "sampling": "默认先查当前品种的近期同类情景；近期窗口由实际方法说明。只有完成该检索且确认 eligible_count 为 0 才跨品种，并记录可比性。检索不可用、未检索、样本少都不等于零匹配。用户明确改采样时记录 override_reason。",
+            "comparison": "每项推断保留知识假说与实际历史计数/结果、匹配/排除、未结算、重叠、基准、不确定性和反例的对照；综合判断另保留联合方法的历史检验，不强制一种匹配、统计或综合方法。",
+            "status": "行或逐项推断携带 method_ref、historical_basis 与真实 validation；固定引用和字段齐全只证明材料存在，不代表研究通过。缺少可比已结算结果用 unavailable/pending，不补 50%、零、主观置信度或暗示校准。"
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "catalog_meaning": "与本模块判断相关的事实和解释；固定来源记录在结果行的 evidence_refs。",
+          "definition": "支撑或限制特征的历史匹配、实际结果和验证判断的具体事实、计算结果和解释之间的对应关系。",
+          "inputs": "每条关联具体 claim/事件/结果、原值或事实、来源身份、方法与必要知识引用；完整固定证据放结果行 evidence_refs。",
+          "unit_time": "逐项保留事件样本、结算目标/期限、当时信息可得性和基准；事实的观察时间和首次可得时间必须区分。",
+          "interpretation": "引用说明出处，不能单凭有引用认定论证成立；知识给出假说，历史实际结果检验相关推断。网页链接、标题和裸 ID 不能替代固定 ArtifactRef。",
+          "missing": "证据不可得时说明哪条判断未支持，不用通用资料或无关历史成果补齐所有判断。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "数组逐项分开：原始事实是获取，数值统计是计算，解释/预测是推断，用户条件是输入；每项对应真实evidence_refs，转载和解析不算独立来源。"
+          }
+        },
+        "instrument_context": {
+          "type": "object",
+          "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+          "definition": "用于理解特征的历史匹配、实际结果和验证中对象身份、计价和数量的共同上下文。",
+          "inputs": "稳定标的 ID/名称、交易所/市场、资产类型、行业、报价/报表/账户币种，以及适用的 tick、pip、合约乘数和数量单位。",
+          "unit_time": "币种角色分别标明；身份/合约规格使用相关截点版本，数量换算可追溯。结合事件样本、结算目标/期限、当时信息可得性和基准解读。",
+          "interpretation": "同名资产或代码可能跨市场不同；报价币种不必等于账户/报表币种。此说明对象不扩展 section.context 的 subject/as_of/target/horizon 匹配键。",
+          "missing": "仅填适用且已知的属性；无合约乘数的对象可不适用，未知乘数不可默认 1，未知币种不可根据符号猜测。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+          }
+        },
+        "data_times": {
+          "type": "object",
+          "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+          "definition": "界定特征的历史匹配、实际结果和验证所用资料何时发生、当时何时可知以及本报告使用哪个截点。",
+          "inputs": "研究 as_of、观测/事件时间、首次公开可得时间、获取时间、来源更新与修订时间、时区、交易日历、bar 周期和闭合状态。",
+          "unit_time": "统一明确时区和日期粒度；财期/事件所属期、发布时刻、抓取时刻不能互代，历史研究只能使用当时已可得版本。",
+          "interpretation": "报告生成时间不能代替报价时间，期末不能代替财报公开日；未来计划日程可以在截点前已知，但未来实际结果不可以。",
+          "missing": "无法确认首次可得时间就保留未知并限制点时结论；日期级来源不补精确时刻，未闭合柱不冒充已确认。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+          }
+        },
+        "source_scales": {
+          "type": "array",
+          "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+          "definition": "让特征的历史匹配、实际结果和验证的外部数据、评分和方法结果按原定义可解释、可核对的来源记录。",
+          "inputs": "提供方/产品、指标定义、原值/尺度/标签、方向、覆盖、数据版本、方法版本、知识引用与完整固定结果引用。",
+          "unit_time": "保留原百分比/小数/评分/金额尺度及有效日期；不同来源或版本独立记录，转换须有已登记方法。",
+          "interpretation": "同名指标不保证同定义；供应商 Confidence 若代表语料量归入 evidence_volume，不转换成预测 confidence/probability；来源数不是独立样本数。",
+          "missing": "定义或版本未知时标未知，保留原标签，不默认 0–100 或自行归一化；引用不完整不能冒充固定来源。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+          }
+        }
+      }
+    },
+    "M14": {
+      "title": {
+        "zh-CN": "多特征综合预测",
+        "en": "Combined outlook"
+      },
+      "fields": {
+        "summary": {
+          "type": "text",
+          "catalog_meaning": "方法给出的本模块结论；保留事实、解释或预测的真实性质。",
+          "definition": "本模块对多特征综合目标判断及不确定性的核心回答，先给明确判断，最少给出有依据的倾向，不以数值列表或两面可能代替答案。",
+          "inputs": "关键结论、决定性事实/数值、比较对象、相反证据和适用条件；关联本模块实际采用的字段与固定成果。",
+          "unit_time": "概括时保留预测目标、起点/期限、联合方法和历史证据；关键数值不省略单位、比较期间或预测期限。",
+          "interpretation": "明确观察事实、方法解释、条件假说、模拟结果与预测各自性质；摘要不产生新算法、综合评分或额外研究授权。涉及行情预测的结论应能追溯同类历史实际结果。",
+          "missing": "信息不全时先说已能支持的判断及范围，再说明具体未知；确实不能区分时说明原因。用户可省略该字段，不为凑结论补造方向、概率或中性评价。",
+          "lineage": {
+            "suggested_kind": "inferred",
+            "nature": "prediction",
+            "meaning_note": "综合预测的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+          }
+        },
+        "evidence_chart": {
+          "type": "chart",
+          "catalog_meaning": "每项特征推断在同类历史情景中的实际结果与基准；配套 inference_evidence 逐项记录口径，不把差值当独立贡献。",
+          "definition": "逐特征推断在各自可比历史情景中的实际结果与基准对照。",
+          "inputs": "claim、conditional/baseline、n/baseline_n、目标、方法和 inference_evidence 对应引用。",
+          "unit_time": "只将同目标、期限、单位和口径放入同一比较轴，样本窗口明确。",
+          "interpretation": "条件差值不是独立预测贡献；相关特征的支持不能相加或多数投票变概率。",
+          "missing": "某推断历史或基准缺失时标未支持，不以其他特征结果替代。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "历史实际结局及基准是统计，图中各推断是解释/预测；差值不自动等于独立贡献。"
+          },
+          "chart": {
+            "kind": "dumbbell",
+            "columns": [
+              "claim",
+              "baseline",
+              "conditional",
+              "n",
+              "baseline_n"
+            ],
+            "evidence_role": "historical"
+          },
+          "historical": {
+            "rule": "凡字段承载行情预测、可检验方向/目标推断、概率、分布或置信度，须对照历史相同或可比情景的实际后续结果；仅有理论引用、供应商分数或匹配事件数不够。描述性事实不因此被强制改成预测。",
+            "sampling": "默认先查当前品种的近期同类情景；近期窗口由实际方法说明。只有完成该检索且确认 eligible_count 为 0 才跨品种，并记录可比性。检索不可用、未检索、样本少都不等于零匹配。用户明确改采样时记录 override_reason。",
+            "comparison": "每项推断保留知识假说与实际历史计数/结果、匹配/排除、未结算、重叠、基准、不确定性和反例的对照；综合判断另保留联合方法的历史检验，不强制一种匹配、统计或综合方法。",
+            "status": "行或逐项推断携带 method_ref、historical_basis 与真实 validation；固定引用和字段齐全只证明材料存在，不代表研究通过。缺少可比已结算结果用 unavailable/pending，不补 50%、零、主观置信度或暗示校准。"
+          }
+        },
+        "confidence": {
+          "type": "confidence",
+          "catalog_meaning": "置信度定义、统计不确定性、验证状态和依据；不预设评分法。",
+          "definition": "所选综合方法对本次判断可靠性或统计不确定性的明确评价。",
+          "inputs": "definition、estimate 或 assessment、可选区间、综合方法、历史联合情景结果与 validation。",
+          "unit_time": "数值 estimate/区间/level 为 0–1，区间另有 method_ref；评价关联具体目标、期限与截点。",
+          "interpretation": "预测置信度不是供应商新闻证据量、主观自评分或历史胜率；定性评价也须有其历史依据。",
+          "missing": "没有可比历史或明确定义时用 unavailable/pending，不填 50%、高/中/低或自评百分数。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "统计区间可计算、模型置信可推断、验证状态取记录，定义分别列；不默认评分法或供应商Confidence。"
+          },
+          "historical": {
+            "rule": "凡字段承载行情预测、可检验方向/目标推断、概率、分布或置信度，须对照历史相同或可比情景的实际后续结果；仅有理论引用、供应商分数或匹配事件数不够。描述性事实不因此被强制改成预测。",
+            "sampling": "默认先查当前品种的近期同类情景；近期窗口由实际方法说明。只有完成该检索且确认 eligible_count 为 0 才跨品种，并记录可比性。检索不可用、未检索、样本少都不等于零匹配。用户明确改采样时记录 override_reason。",
+            "comparison": "每项推断保留知识假说与实际历史计数/结果、匹配/排除、未结算、重叠、基准、不确定性和反例的对照；综合判断另保留联合方法的历史检验，不强制一种匹配、统计或综合方法。",
+            "status": "行或逐项推断携带 method_ref、historical_basis 与真实 validation；固定引用和字段齐全只证明材料存在，不代表研究通过。缺少可比已结算结果用 unavailable/pending，不补 50%、零、主观置信度或暗示校准。"
+          }
+        },
+        "outlook_chart": {
+          "type": "chart",
+          "catalog_meaning": "独立综合方法提供的同一目标概率及其历史依据；原值为 0–1，不用指标投票代替概率。",
+          "definition": "独立综合研究方法已经产出的目标结果概率分布。",
+          "inputs": "outcome、probability、完整目标、综合方法、历史依据、验证状态和类别覆盖。",
+          "unit_time": "概率原值 0–1，所有类别同一目标/期限/截点；完备类别才要求总和为 1。",
+          "interpretation": "特征票数、置信度和历史频率不能直接改名为综合概率；不在图表归一化补结果。",
+          "missing": "缺综合历史检验或分布时不给概率柱，保留有证据的定性结论。",
+          "lineage": {
+            "suggested_kind": "inferred",
+            "nature": "prediction",
+            "meaning_note": "同一目标的概率分布由独立综合方法提供，是预测；图形只展示，不归一化指标投票。"
+          },
+          "chart": {
+            "kind": "bar",
+            "columns": [
+              "outcome",
+              "probability"
+            ],
+            "evidence_role": "prediction"
+          },
+          "historical": {
+            "rule": "凡字段承载行情预测、可检验方向/目标推断、概率、分布或置信度，须对照历史相同或可比情景的实际后续结果；仅有理论引用、供应商分数或匹配事件数不够。描述性事实不因此被强制改成预测。",
+            "sampling": "默认先查当前品种的近期同类情景；近期窗口由实际方法说明。只有完成该检索且确认 eligible_count 为 0 才跨品种，并记录可比性。检索不可用、未检索、样本少都不等于零匹配。用户明确改采样时记录 override_reason。",
+            "comparison": "每项推断保留知识假说与实际历史计数/结果、匹配/排除、未结算、重叠、基准、不确定性和反例的对照；综合判断另保留联合方法的历史检验，不强制一种匹配、统计或综合方法。",
+            "status": "行或逐项推断携带 method_ref、historical_basis 与真实 validation；固定引用和字段齐全只证明材料存在，不代表研究通过。缺少可比已结算结果用 unavailable/pending，不补 50%、零、主观置信度或暗示校准。"
+          }
+        },
+        "target": {
+          "type": "object",
+          "catalog_meaning": "明确结果、期限、截点和口径。",
+          "definition": "综合预测试图回答的可观测结果及结算规则。",
+          "inputs": "标的、结果变量、阈值/类别、参考价/起点、预测截点、期限和结算方法。",
+          "unit_time": "价格/收益/事件单位、币种、交易日/自然日与时区明确。",
+          "interpretation": "预测上涨、达到目标价和净盈利是不同目标；后续评价必须沿用原定义。",
+          "missing": "目标或期限未确定时不能输出可检验概率，保留待明确事项。",
+          "lineage": {
+            "suggested_kind": "user_supplied",
+            "nature": "plan",
+            "meaning_note": "结果事件、期限、截点和结算口径来自任务/方法约定，不是外部数据事实。"
+          }
+        },
+        "supporting": {
+          "type": "array",
+          "catalog_meaning": "方法提供的支持项及历史依据。",
+          "definition": "所选综合方法认定支持当前判断的具体证据。",
+          "inputs": "推断 ID、当前观察、知识解释、同类历史实际结果、基准、方法与固定引用。",
+          "unit_time": "逐项目标/期限/信息可得时间可追溯，不同尺度保留原值。",
+          "interpretation": "支持方向不等于独立贡献；理论理由不能代替历史结果，不能只留有利样本。",
+          "missing": "缺历史支持的项标假说/待验证，不补权重或置信度。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "各支持项分别为原始事实、计算统计或方法解释，是否支持属于推断；每项历史依据单列。"
+          },
+          "historical": {
+            "rule": "凡字段承载行情预测、可检验方向/目标推断、概率、分布或置信度，须对照历史相同或可比情景的实际后续结果；仅有理论引用、供应商分数或匹配事件数不够。描述性事实不因此被强制改成预测。",
+            "sampling": "默认先查当前品种的近期同类情景；近期窗口由实际方法说明。只有完成该检索且确认 eligible_count 为 0 才跨品种，并记录可比性。检索不可用、未检索、样本少都不等于零匹配。用户明确改采样时记录 override_reason。",
+            "comparison": "每项推断保留知识假说与实际历史计数/结果、匹配/排除、未结算、重叠、基准、不确定性和反例的对照；综合判断另保留联合方法的历史检验，不强制一种匹配、统计或综合方法。",
+            "status": "行或逐项推断携带 method_ref、historical_basis 与真实 validation；固定引用和字段齐全只证明材料存在，不代表研究通过。缺少可比已结算结果用 unavailable/pending，不补 50%、零、主观置信度或暗示校准。"
+          }
+        },
+        "opposing": {
+          "type": "array",
+          "catalog_meaning": "方法提供的相反证据。",
+          "definition": "与当前综合判断冲突、削弱或限定其适用范围的证据。",
+          "inputs": "相反观察/推断、历史失败案例、与支持项的冲突、方法和固定引用。",
+          "unit_time": "记录观察截点、目标期限及样本口径，避免事后信息。",
+          "interpretation": "相反证据不是必须强凑的对称观点；其影响由综合方法说明，不机械正负相抵。",
+          "missing": "未发现反证需说明检索范围；未检索不等于无反证。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "相反事实/统计获取或计算，构成反证的含义由方法解释，不能因不支持主结论而省略。"
+          },
+          "historical": {
+            "rule": "凡字段承载行情预测、可检验方向/目标推断、概率、分布或置信度，须对照历史相同或可比情景的实际后续结果；仅有理论引用、供应商分数或匹配事件数不够。描述性事实不因此被强制改成预测。",
+            "sampling": "默认先查当前品种的近期同类情景；近期窗口由实际方法说明。只有完成该检索且确认 eligible_count 为 0 才跨品种，并记录可比性。检索不可用、未检索、样本少都不等于零匹配。用户明确改采样时记录 override_reason。",
+            "comparison": "每项推断保留知识假说与实际历史计数/结果、匹配/排除、未结算、重叠、基准、不确定性和反例的对照；综合判断另保留联合方法的历史检验，不强制一种匹配、统计或综合方法。",
+            "status": "行或逐项推断携带 method_ref、historical_basis 与真实 validation；固定引用和字段齐全只证明材料存在，不代表研究通过。缺少可比已结算结果用 unavailable/pending，不补 50%、零、主观置信度或暗示校准。"
+          }
+        },
+        "overlap": {
+          "type": "text",
+          "catalog_meaning": "综合方法对冗余或冲突的处理说明。",
+          "definition": "综合方法如何处理特征之间共享输入、冗余与冲突。",
+          "inputs": "相关推断 ID、共同来源/机制、依赖处理、冲突规则、方法版本和实际运行结果。",
+          "unit_time": "说明处理所用数据窗口、目标期限及当时可得性。",
+          "interpretation": "多个技术指标可能重复反映同一价格信息；不能把去重后数量当概率算法。",
+          "missing": "方法未处理或未披露依赖时明确局限，不自创新权重掩盖。",
+          "lineage": {
+            "suggested_kind": "inferred",
+            "nature": "interpretation",
+            "meaning_note": "相关/冗余量可计算，哪些信息重复或冲突及处理方式由综合方法判断。"
+          }
+        },
+        "probabilities": {
+          "type": "distribution",
+          "catalog_meaning": "所选方法提供的结果分布；类别和目标由任务确定。",
+          "definition": "所选综合方法对同一可结算目标给出的结果概率分布。",
+          "inputs": "target、exhaustive、items 中 label/probability、方法、联合历史依据、基准和验证状态。",
+          "unit_time": "概率为 0–1，类别共享起点/期限/单位；只有 exhaustive:true 时总和为 1。",
+          "interpretation": "类别不固定为涨/平/跌；模型输出需说明验证程度，单特征频率不能直接拼接综合分布。",
+          "missing": "没有综合历史结果时置不可用；部分覆盖不擅自归一化或补剩余类别。",
+          "lineage": {
+            "suggested_kind": "inferred",
+            "nature": "prediction",
+            "meaning_note": "结果概率是指定目标/期限下的模型预测；外部概率若获取也仍是预测。"
+          },
+          "historical": {
+            "rule": "凡字段承载行情预测、可检验方向/目标推断、概率、分布或置信度，须对照历史相同或可比情景的实际后续结果；仅有理论引用、供应商分数或匹配事件数不够。描述性事实不因此被强制改成预测。",
+            "sampling": "默认先查当前品种的近期同类情景；近期窗口由实际方法说明。只有完成该检索且确认 eligible_count 为 0 才跨品种，并记录可比性。检索不可用、未检索、样本少都不等于零匹配。用户明确改采样时记录 override_reason。",
+            "comparison": "每项推断保留知识假说与实际历史计数/结果、匹配/排除、未结算、重叠、基准、不确定性和反例的对照；综合判断另保留联合方法的历史检验，不强制一种匹配、统计或综合方法。",
+            "status": "行或逐项推断携带 method_ref、historical_basis 与真实 validation；固定引用和字段齐全只证明材料存在，不代表研究通过。缺少可比已结算结果用 unavailable/pending，不补 50%、零、主观置信度或暗示校准。"
+          }
+        },
+        "scenarios": {
+          "type": "array",
+          "catalog_meaning": "方法提供的条件判断，不暗示分支权重。",
+          "definition": "综合研究中的有条件未来路径及可能结果。",
+          "inputs": "情景 ID、条件、支持/反对依据、结果、期限、失效与相应历史案例。",
+          "unit_time": "统一目标、价格/收益单位、参考截点和触发观察方式。",
+          "interpretation": "情景叙述不自动含分支概率，知识推演与历史证据应分别可查；相互重叠须说明。",
+          "missing": "未研究情景不补结果；缺概率时保留条件表述不平均分配。",
+          "lineage": {
+            "suggested_kind": "inferred",
+            "nature": "prediction",
+            "meaning_note": "条件分支与结果由方法推断，条件事实和预测分开；无概率不暗示等权。"
+          },
+          "historical": {
+            "rule": "凡字段承载行情预测、可检验方向/目标推断、概率、分布或置信度，须对照历史相同或可比情景的实际后续结果；仅有理论引用、供应商分数或匹配事件数不够。描述性事实不因此被强制改成预测。",
+            "sampling": "默认先查当前品种的近期同类情景；近期窗口由实际方法说明。只有完成该检索且确认 eligible_count 为 0 才跨品种，并记录可比性。检索不可用、未检索、样本少都不等于零匹配。用户明确改采样时记录 override_reason。",
+            "comparison": "每项推断保留知识假说与实际历史计数/结果、匹配/排除、未结算、重叠、基准、不确定性和反例的对照；综合判断另保留联合方法的历史检验，不强制一种匹配、统计或综合方法。",
+            "status": "行或逐项推断携带 method_ref、historical_basis 与真实 validation；固定引用和字段齐全只证明材料存在，不代表研究通过。缺少可比已结算结果用 unavailable/pending，不补 50%、零、主观置信度或暗示校准。"
+          }
+        },
+        "invalidation": {
+          "type": "array",
+          "catalog_meaning": "改变判断的观测条件。",
+          "definition": "触发综合判断重新评估或失效的未来可观察条件。",
+          "inputs": "对应判断/情景、指标或事件条件、判定门槛、期限和方法依据。",
+          "unit_time": "注明单位、数据频率、首次可得时间要求和收盘/盘中判定方式。",
+          "interpretation": "失效不同于止损、到期或单项反证出现；条件必须与当前判断有关。",
+          "missing": "未定义条件时明确缺口，不自动用价格跌幅或任意阈值。",
+          "lineage": {
+            "suggested_kind": "inferred",
+            "nature": "plan",
+            "meaning_note": "哪些新观察会更新或推翻判断是事前约定的研究判据。"
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "catalog_meaning": "与本模块判断相关的事实和解释；固定来源记录在结果行的 evidence_refs。",
+          "definition": "支撑或限制多特征综合目标判断及不确定性判断的具体事实、计算结果和解释之间的对应关系。",
+          "inputs": "每条关联具体 claim/事件/结果、原值或事实、来源身份、方法与必要知识引用；完整固定证据放结果行 evidence_refs。",
+          "unit_time": "逐项保留预测目标、起点/期限、联合方法和历史证据；事实的观察时间和首次可得时间必须区分。",
+          "interpretation": "引用说明出处，不能单凭有引用认定论证成立；知识给出假说，历史实际结果检验相关推断。网页链接、标题和裸 ID 不能替代固定 ArtifactRef。",
+          "missing": "证据不可得时说明哪条判断未支持，不用通用资料或无关历史成果补齐所有判断。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "数组逐项分开：原始事实是获取，数值统计是计算，解释/预测是推断，用户条件是输入；每项对应真实evidence_refs，转载和解析不算独立来源。"
+          }
+        },
+        "inference_evidence": {
+          "type": "inferences",
+          "catalog_meaning": "每项可检验推断独立关联历史相同或可比情景、实际后续结果、置信度定义及验证状态；综合结论另有联合方法和历史依据。",
+          "definition": "组成综合判断的各个可检验推断及逐项历史支持。",
+          "inputs": "推断 ID/claim、所选知识/方法、同类历史结果、基准、置信度定义、验证与证据引用。",
+          "unit_time": "每项有自己的目标、期限、截点和样本窗，使用当时可得数据。",
+          "interpretation": "知识假说须对照实际历史，特征支持度不能相加；综合概率另需联合方法及历史检验。",
+          "missing": "无对应历史时该项设 unavailable/pending，不以一份通用报告支撑全部推断。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "逐项命题为推断，历史匹配/实际结果为计算与事实，验证状态/定义来自回执；综合方法需另有联合依据。"
+          },
+          "historical": {
+            "rule": "凡字段承载行情预测、可检验方向/目标推断、概率、分布或置信度，须对照历史相同或可比情景的实际后续结果；仅有理论引用、供应商分数或匹配事件数不够。描述性事实不因此被强制改成预测。",
+            "sampling": "默认先查当前品种的近期同类情景；近期窗口由实际方法说明。只有完成该检索且确认 eligible_count 为 0 才跨品种，并记录可比性。检索不可用、未检索、样本少都不等于零匹配。用户明确改采样时记录 override_reason。",
+            "comparison": "每项推断保留知识假说与实际历史计数/结果、匹配/排除、未结算、重叠、基准、不确定性和反例的对照；综合判断另保留联合方法的历史检验，不强制一种匹配、统计或综合方法。",
+            "status": "行或逐项推断携带 method_ref、historical_basis 与真实 validation；固定引用和字段齐全只证明材料存在，不代表研究通过。缺少可比已结算结果用 unavailable/pending，不补 50%、零、主观置信度或暗示校准。"
+          }
+        },
+        "instrument_context": {
+          "type": "object",
+          "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+          "definition": "用于理解多特征综合目标判断及不确定性中对象身份、计价和数量的共同上下文。",
+          "inputs": "稳定标的 ID/名称、交易所/市场、资产类型、行业、报价/报表/账户币种，以及适用的 tick、pip、合约乘数和数量单位。",
+          "unit_time": "币种角色分别标明；身份/合约规格使用相关截点版本，数量换算可追溯。结合预测目标、起点/期限、联合方法和历史证据解读。",
+          "interpretation": "同名资产或代码可能跨市场不同；报价币种不必等于账户/报表币种。此说明对象不扩展 section.context 的 subject/as_of/target/horizon 匹配键。",
+          "missing": "仅填适用且已知的属性；无合约乘数的对象可不适用，未知乘数不可默认 1，未知币种不可根据符号猜测。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+          }
+        },
+        "data_times": {
+          "type": "object",
+          "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+          "definition": "界定多特征综合目标判断及不确定性所用资料何时发生、当时何时可知以及本报告使用哪个截点。",
+          "inputs": "研究 as_of、观测/事件时间、首次公开可得时间、获取时间、来源更新与修订时间、时区、交易日历、bar 周期和闭合状态。",
+          "unit_time": "统一明确时区和日期粒度；财期/事件所属期、发布时刻、抓取时刻不能互代，历史研究只能使用当时已可得版本。",
+          "interpretation": "报告生成时间不能代替报价时间，期末不能代替财报公开日；未来计划日程可以在截点前已知，但未来实际结果不可以。",
+          "missing": "无法确认首次可得时间就保留未知并限制点时结论；日期级来源不补精确时刻，未闭合柱不冒充已确认。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+          }
+        },
+        "source_scales": {
+          "type": "array",
+          "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+          "definition": "让多特征综合目标判断及不确定性的外部数据、评分和方法结果按原定义可解释、可核对的来源记录。",
+          "inputs": "提供方/产品、指标定义、原值/尺度/标签、方向、覆盖、数据版本、方法版本、知识引用与完整固定结果引用。",
+          "unit_time": "保留原百分比/小数/评分/金额尺度及有效日期；不同来源或版本独立记录，转换须有已登记方法。",
+          "interpretation": "同名指标不保证同定义；供应商 Confidence 若代表语料量归入 evidence_volume，不转换成预测 confidence/probability；来源数不是独立样本数。",
+          "missing": "定义或版本未知时标未知，保留原标签，不默认 0–100 或自行归一化；引用不完整不能冒充固定来源。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+          }
+        }
+      }
+    },
+    "M15": {
+      "title": {
+        "zh-CN": "条件行动与监测计划",
+        "en": "Conditional action and monitoring"
+      },
+      "fields": {
+        "summary": {
+          "type": "text",
+          "catalog_meaning": "方法给出的本模块结论；保留事实、解释或预测的真实性质。",
+          "definition": "本模块对用户目标下的条件行动与后续观察的核心回答，先给明确判断，最少给出有依据的倾向，不以数值列表或两面可能代替答案。",
+          "inputs": "关键结论、决定性事实/数值、比较对象、相反证据和适用条件；关联本模块实际采用的字段与固定成果。",
+          "unit_time": "概括时保留情景身份、价格/资金条件、时间和实际行动状态；关键数值不省略单位、比较期间或预测期限。",
+          "interpretation": "明确观察事实、方法解释、条件假说、模拟结果与预测各自性质；摘要不产生新算法、综合评分或额外研究授权。涉及行情预测的结论应能追溯同类历史实际结果。",
+          "missing": "信息不全时先说已能支持的判断及范围，再说明具体未知；确实不能区分时说明原因。用户可省略该字段，不为凑结论补造方向、概率或中性评价。",
+          "lineage": {
+            "suggested_kind": "inferred",
+            "nature": "plan",
+            "meaning_note": "行动监测的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+          }
+        },
+        "monitor_chart": {
+          "type": "chart",
+          "catalog_meaning": "用户或指定方法的监测阈值与当前观测，同图保持统一单位，不根据图形自动执行交易。",
+          "definition": "所选监测项的实际观测与既定触发阈值对照。",
+          "inputs": "indicator、current、threshold、触发方向、情景引用、来源与状态。",
+          "unit_time": "同图统一单位；每项保留观测时间、频率和阈值有效期。",
+          "interpretation": "越过阈值只说明观察条件，是否行动取决于全情景约束；图表不执行交易。",
+          "missing": "无当前观测标 pending，无阈值则不编造；不能用零替代缺测。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "当前观测是获取，监测阈值来自用户/方法，差值可算；阈值越过不自动等于获授权行动。"
+          },
+          "chart": {
+            "kind": "dumbbell",
+            "columns": [
+              "indicator",
+              "current",
+              "threshold"
+            ],
+            "evidence_role": "descriptive"
+          }
+        },
+        "objective": {
+          "type": "text",
+          "catalog_meaning": "本次任务目标。",
+          "definition": "用户希望本次条件计划支持的具体决策或观察目标。",
+          "inputs": "目标、对象、投资/观察期限、风险偏好、已有任务约定。",
+          "unit_time": "明确时间范围和涉及资金/收益目标的单位、基准。",
+          "interpretation": "用户目的不是市场方向证据；目标可为监测、持有、研究或风险控制。",
+          "missing": "目标未明确时保留已有约定，不自动假定交易获利目标。",
+          "lineage": {
+            "suggested_kind": "user_supplied",
+            "nature": "plan",
+            "meaning_note": "目标来自本次用户要求，长期偏好只能在适用且有效时复用。"
+          }
+        },
+        "scenarios": {
+          "type": "array",
+          "catalog_meaning": "研究结果支持的情景、触发与失效条件。",
+          "definition": "与用户目标相关、由现有研究支持的条件情景。",
+          "inputs": "情景 ID、触发、预期结果、失效、约束、研究引用及对应行动。",
+          "unit_time": "统一情景的目标/期限/单位与观察截点，明确判定方式。",
+          "interpretation": "研究情景不自动变成执行指令；概率需要该情景实际历史结果。",
+          "missing": "证据缺失时保留待观察状态，不补触发价或推断行动已满足。",
+          "lineage": {
+            "suggested_kind": "inferred",
+            "nature": "prediction",
+            "meaning_note": "情景结果是条件预测，触发和失效是研究判据，事实依据另列。"
+          },
+          "historical": {
+            "rule": "凡字段承载行情预测、可检验方向/目标推断、概率、分布或置信度，须对照历史相同或可比情景的实际后续结果；仅有理论引用、供应商分数或匹配事件数不够。描述性事实不因此被强制改成预测。",
+            "sampling": "默认先查当前品种的近期同类情景；近期窗口由实际方法说明。只有完成该检索且确认 eligible_count 为 0 才跨品种，并记录可比性。检索不可用、未检索、样本少都不等于零匹配。用户明确改采样时记录 override_reason。",
+            "comparison": "每项推断保留知识假说与实际历史计数/结果、匹配/排除、未结算、重叠、基准、不确定性和反例的对照；综合判断另保留联合方法的历史检验，不强制一种匹配、统计或综合方法。",
+            "status": "行或逐项推断携带 method_ref、historical_basis 与真实 validation；固定引用和字段齐全只证明材料存在，不代表研究通过。缺少可比已结算结果用 unavailable/pending，不补 50%、零、主观置信度或暗示校准。"
+          }
+        },
+        "constraints": {
+          "type": "array",
+          "catalog_meaning": "用户指定或方法提供的约束。",
+          "definition": "本次行动或观察计划实际需要遵守的限制。",
+          "inputs": "资金、风险、时间、持仓、流动性、允许动作等约束及来源。",
+          "unit_time": "单位、有效期、账户/标的范围和优先关系明确。",
+          "interpretation": "约束来自用户或已选方法，模板不生成新投资限制；不能作为预测方向证据。",
+          "missing": "未知约束标待明确，不自行假定账户或交易权限。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "plan",
+            "meaning_note": "风险/费用限制来自用户目标或明确方法规则；真实成本参考与假设限额应单列。"
+          }
+        },
+        "watchlist": {
+          "type": "array",
+          "catalog_meaning": "有意义的后续观测。",
+          "definition": "能够改变当前判断或行动状态的具体后续观测项。",
+          "inputs": "标的/事件/指标、待观察值、触发意义、来源、频率及关联情景。",
+          "unit_time": "给出时区、计划发布/观测窗口及数据延迟。",
+          "interpretation": "观察清单不是已启用监控；只有有决策意义的项目才需列出。",
+          "missing": "时间或数据源未知时说明条件，不能声称定时监测已安排。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "plan",
+            "meaning_note": "观察对象/指标和后续问题由用户或方法选择，事实来源仅用于之后核验。"
+          }
+        },
+        "actions": {
+          "type": "array",
+          "catalog_meaning": "区分建议、已安排和已执行，不触发实际行动。",
+          "definition": "针对条件和研究结果提出或已确认的动作及真实状态。",
+          "inputs": "动作、对应情景、前置条件、建议/待确认/已安排/已执行状态及依据。",
+          "unit_time": "明确数量/资金单位、适用期限与实际安排/执行时间。",
+          "interpretation": "报告仅表达状态；建议不得写成已下单，计划也不是成交回执。",
+          "missing": "没有真实回执不得填已执行；条件未满足保留等待状态。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "plan",
+            "meaning_note": "建议行动由研究给出，已安排状态取计划回执，已执行必须取真实执行/成交证据，数组逐项区分。"
+          }
+        },
+        "review_at": {
+          "type": "text",
+          "catalog_meaning": "用户或任务约定的复核条件。",
+          "definition": "当前判断或方案需要复核的时间或触发条件。",
+          "inputs": "具体时间、事件触发、到期条件、复核对象及用户/方法约定。",
+          "unit_time": "区分交易日/自然日、时区与市场时段。",
+          "interpretation": "复核建议与已设提醒/自动任务不同，时间到达不自动触发实际交易。",
+          "missing": "未定日期可用明确事件条件，不编造计划或默认日更。",
+          "lineage": {
+            "suggested_kind": "user_supplied",
+            "nature": "plan",
+            "meaning_note": "复核日期/条件由用户或任务约定，也可由方法建议，不是已经发生的事实。"
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "catalog_meaning": "与本模块判断相关的事实和解释；固定来源记录在结果行的 evidence_refs。",
+          "definition": "支撑或限制用户目标下的条件行动与后续观察判断的具体事实、计算结果和解释之间的对应关系。",
+          "inputs": "每条关联具体 claim/事件/结果、原值或事实、来源身份、方法与必要知识引用；完整固定证据放结果行 evidence_refs。",
+          "unit_time": "逐项保留情景身份、价格/资金条件、时间和实际行动状态；事实的观察时间和首次可得时间必须区分。",
+          "interpretation": "引用说明出处，不能单凭有引用认定论证成立；知识给出假说，历史实际结果检验相关推断。网页链接、标题和裸 ID 不能替代固定 ArtifactRef。",
+          "missing": "证据不可得时说明哪条判断未支持，不用通用资料或无关历史成果补齐所有判断。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "数组逐项分开：原始事实是获取，数值统计是计算，解释/预测是推断，用户条件是输入；每项对应真实evidence_refs，转载和解析不算独立来源。"
+          }
+        },
+        "scenario_terms": {
+          "type": "array",
+          "catalog_meaning": "同一情景 ID 下的方向、触发、入场区、目标、观点失效、止损、期限、成本和盈亏比及依据；树节点引用这些研究结果。",
+          "definition": "同一情景内可供核对的方向、价格条件、风险和成本条款。",
+          "inputs": "情景 ID、方向、触发、入场区、目标、观点失效、止损、期限、成本、盈亏比和固定依据。",
+          "unit_time": "所有价格同币种/口径，规模和期限一致，触发确认方式明确。",
+          "interpretation": "观点失效与风险止损分开；盈亏比不是胜率；树节点引用同一条款以避免重复冲突。",
+          "missing": "可选条款未定义则保留缺失，不因画树而补价格、仓位或概率。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "plan",
+            "meaning_note": "每个情景的方向/目标是预测，入场/止损是计划，成本可为事实或假设，盈亏比是计算，分别关联依据。"
+          }
+        },
+        "instrument_context": {
+          "type": "object",
+          "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+          "definition": "用于理解用户目标下的条件行动与后续观察中对象身份、计价和数量的共同上下文。",
+          "inputs": "稳定标的 ID/名称、交易所/市场、资产类型、行业、报价/报表/账户币种，以及适用的 tick、pip、合约乘数和数量单位。",
+          "unit_time": "币种角色分别标明；身份/合约规格使用相关截点版本，数量换算可追溯。结合情景身份、价格/资金条件、时间和实际行动状态解读。",
+          "interpretation": "同名资产或代码可能跨市场不同；报价币种不必等于账户/报表币种。此说明对象不扩展 section.context 的 subject/as_of/target/horizon 匹配键。",
+          "missing": "仅填适用且已知的属性；无合约乘数的对象可不适用，未知乘数不可默认 1，未知币种不可根据符号猜测。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+          }
+        },
+        "data_times": {
+          "type": "object",
+          "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+          "definition": "界定用户目标下的条件行动与后续观察所用资料何时发生、当时何时可知以及本报告使用哪个截点。",
+          "inputs": "研究 as_of、观测/事件时间、首次公开可得时间、获取时间、来源更新与修订时间、时区、交易日历、bar 周期和闭合状态。",
+          "unit_time": "统一明确时区和日期粒度；财期/事件所属期、发布时刻、抓取时刻不能互代，历史研究只能使用当时已可得版本。",
+          "interpretation": "报告生成时间不能代替报价时间，期末不能代替财报公开日；未来计划日程可以在截点前已知，但未来实际结果不可以。",
+          "missing": "无法确认首次可得时间就保留未知并限制点时结论；日期级来源不补精确时刻，未闭合柱不冒充已确认。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+          }
+        },
+        "source_scales": {
+          "type": "array",
+          "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+          "definition": "让用户目标下的条件行动与后续观察的外部数据、评分和方法结果按原定义可解释、可核对的来源记录。",
+          "inputs": "提供方/产品、指标定义、原值/尺度/标签、方向、覆盖、数据版本、方法版本、知识引用与完整固定结果引用。",
+          "unit_time": "保留原百分比/小数/评分/金额尺度及有效日期；不同来源或版本独立记录，转换须有已登记方法。",
+          "interpretation": "同名指标不保证同定义；供应商 Confidence 若代表语料量归入 evidence_volume，不转换成预测 confidence/probability；来源数不是独立样本数。",
+          "missing": "定义或版本未知时标未知，保留原标签，不默认 0–100 或自行归一化；引用不完整不能冒充固定来源。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+          }
+        },
+        "action_chart": {
+          "type": "chart",
+          "catalog_meaning": "用户目标下的观察条件、待确认路径和行动；叶子是行动，不含尚待判断的条件。",
+          "definition": "用户目标下从观察条件到建议行动的综合路径图。",
+          "inputs": "节点/父节点、条件、情景 ID、叶子动作、状态和研究依据。",
+          "unit_time": "条件阈值和时间窗沿用 scenario_terms，观测与计划时间分开。",
+          "interpretation": "叶子应是行动或等待状态，未决条件放分支；树图不证明行动已安排或执行。",
+          "missing": "未满足条件保留待观察，未研究分支标待判断，不制造必然终局。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "plan",
+            "meaning_note": "分支条件来自研究，叶子是用户目标下的行动计划；真实执行状态需另有回执。"
+          },
+          "chart": {
+            "kind": "decision-tree",
+            "columns": [
+              "id",
+              "parentId",
+              "label",
+              "condition",
+              "detail"
+            ],
+            "evidence_role": "descriptive"
+          }
+        }
+      }
+    },
+    "M16": {
+      "title": {
+        "zh-CN": "预测复盘与校准",
+        "en": "Forecast review and calibration"
+      },
+      "fields": {
+        "summary": {
+          "type": "text",
+          "catalog_meaning": "方法给出的本模块结论；保留事实、解释或预测的真实性质。",
+          "definition": "本模块对原预测的实际结算、评价和校准的核心回答，先给明确判断，最少给出有依据的倾向，不以数值列表或两面可能代替答案。",
+          "inputs": "关键结论、决定性事实/数值、比较对象、相反证据和适用条件；关联本模块实际采用的字段与固定成果。",
+          "unit_time": "概括时保留原预测快照、目标/期限、实际结果和验证样本；关键数值不省略单位、比较期间或预测期限。",
+          "interpretation": "明确观察事实、方法解释、条件假说、模拟结果与预测各自性质；摘要不产生新算法、综合评分或额外研究授权。涉及行情预测的结论应能追溯同类历史实际结果。",
+          "missing": "信息不全时先说已能支持的判断及范围，再说明具体未知；确实不能区分时说明原因。用户可省略该字段，不为凑结论补造方向、概率或中性评价。",
+          "lineage": {
+            "suggested_kind": "inferred",
+            "nature": "interpretation",
+            "meaning_note": "预测复盘的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+          }
+        },
+        "use_judgments": {
+          "type": "array",
+          "catalog_meaning": "按原预测、校准映射、资产及可观察条件分别判断保留、采用、暂停或调整。",
+          "definition": "说明是哪套原分数或映射、在哪些条件下有信息、什么应停用，怎样调整及何时重新评估。",
+          "inputs": "原固定预测、真实后来结果、同口径基线、分组评价、校准前后和反例。 建议每项含问题、对象、期限、判断、依据、改判条件、历史参照；可按用户调整名称与呈现映射。",
+          "unit_time": "对象、比较对象、观察窗口与向前判断期限分别写清；沿用结果原币种/单位，时间由任务和实际方法决定。",
+          "interpretation": "校准失败不等于所有原分数无信息；保留研究基线与投入使用不同；拟议新映射不冒充已验证改进。",
+          "missing": "未完成某个请求角度时说明具体缺口，不用中性、零分或50%代替；给现有资料已能支持的判断。确定性比较或用户目标取舍可说明历史统计不适用，行情预测须有实际历史参照状态。",
+          "lineage": {
+            "suggested_kind": "inferred",
+            "nature": "plan",
+            "meaning_note": "知识与实际结果支持的分项判断；事实、历史结果、目标取舍与未来推断分别标明，不能由展示层产生。"
+          }
+        },
+        "calibration_chart": {
+          "type": "chart",
+          "catalog_meaning": "已登记的校准分组：原预测概率、实际频率、组内样本量与同口径参考；不能在报告拟合校准。",
+          "definition": "已登记预测概率分组与实际发生频率的对照。",
+          "inputs": "predicted/observed/reference、n、分组规则、预测快照、结算结果和校准方法。",
+          "unit_time": "同目标、期限、样本窗，概率 0–1；分组边界和点代表均值或边界须说明。",
+          "interpretation": "曲线接近参考不保证个体预测正确；同数据拟合与独立验证不同，不在报告重新拟合。",
+          "missing": "组内无已结算结果时不画点，未预测概率的任务不强制补校准图。",
+          "lineage": {
+            "suggested_kind": "derived",
+            "nature": "statistic",
+            "meaning_note": "原概率是事前预测记录，实际命中是结算事实，分箱均值/实际频率由统计产生。"
+          },
+          "chart": {
+            "kind": "line",
+            "columns": [
+              "predicted",
+              "observed",
+              "reference",
+              "n"
+            ],
+            "evidence_role": "historical"
+          },
+          "historical": {
+            "rule": "凡字段承载行情预测、可检验方向/目标推断、概率、分布或置信度，须对照历史相同或可比情景的实际后续结果；仅有理论引用、供应商分数或匹配事件数不够。描述性事实不因此被强制改成预测。",
+            "sampling": "默认先查当前品种的近期同类情景；近期窗口由实际方法说明。只有完成该检索且确认 eligible_count 为 0 才跨品种，并记录可比性。检索不可用、未检索、样本少都不等于零匹配。用户明确改采样时记录 override_reason。",
+            "comparison": "每项推断保留知识假说与实际历史计数/结果、匹配/排除、未结算、重叠、基准、不确定性和反例的对照；综合判断另保留联合方法的历史检验，不强制一种匹配、统计或综合方法。",
+            "status": "行或逐项推断携带 method_ref、historical_basis 与真实 validation；固定引用和字段齐全只证明材料存在，不代表研究通过。缺少可比已结算结果用 unavailable/pending，不补 50%、零、主观置信度或暗示校准。"
+          }
+        },
+        "evaluation_chart": {
+          "type": "chart",
+          "catalog_meaning": "相同结算目标和期间的评价指标；写明指标定义、方向和独立验证范围。",
+          "definition": "同一结算目标下模型与基准在各评价期间的既有指标。",
+          "inputs": "period、baseline/model、指标定义、优劣方向、样本数与验证范围。",
+          "unit_time": "同单位、目标、期限和成本口径；期间长度及分组方法明确。",
+          "interpretation": "不同评价指标不能共用无说明数轴；统计改善不自动证明实际决策收益。",
+          "missing": "基准或指标不可得时标缺失，不填零或用另一指标代替。",
+          "lineage": {
+            "suggested_kind": "derived",
+            "nature": "statistic",
+            "meaning_note": "同目标评价指标由已结算预测与事实计算；方法优劣解释另列，基准口径必须相同。"
+          },
+          "chart": {
+            "kind": "dumbbell",
+            "columns": [
+              "period",
+              "baseline",
+              "model"
+            ],
+            "evidence_role": "historical"
+          },
+          "historical": {
+            "rule": "凡字段承载行情预测、可检验方向/目标推断、概率、分布或置信度，须对照历史相同或可比情景的实际后续结果；仅有理论引用、供应商分数或匹配事件数不够。描述性事实不因此被强制改成预测。",
+            "sampling": "默认先查当前品种的近期同类情景；近期窗口由实际方法说明。只有完成该检索且确认 eligible_count 为 0 才跨品种，并记录可比性。检索不可用、未检索、样本少都不等于零匹配。用户明确改采样时记录 override_reason。",
+            "comparison": "每项推断保留知识假说与实际历史计数/结果、匹配/排除、未结算、重叠、基准、不确定性和反例的对照；综合判断另保留联合方法的历史检验，不强制一种匹配、统计或综合方法。",
+            "status": "行或逐项推断携带 method_ref、historical_basis 与真实 validation；固定引用和字段齐全只证明材料存在，不代表研究通过。缺少可比已结算结果用 unavailable/pending，不补 50%、零、主观置信度或暗示校准。"
+          }
+        },
+        "original": {
+          "type": "object",
+          "catalog_meaning": "原结果、方法、目标和版本引用。",
+          "definition": "原预测发布时冻结的内容、目标和方法身份。",
+          "inputs": "原值/类别/区间、目标、期限、起点、方法/知识版本和固定结果引用。",
+          "unit_time": "记录预测发布时间与数据截止，保留原单位和价格口径。",
+          "interpretation": "复盘必须使用原始预测，不能用更新后的判断替换旧记录。",
+          "missing": "找不到原快照时标不可追溯，不能凭回忆重构精确概率。",
+          "lineage": {
+            "suggested_kind": "acquired",
+            "nature": "prediction",
+            "meaning_note": "从事前固定记录获取原预测及概率/方法/期限；获取方式不把原预测变成事实。"
+          }
+        },
+        "settlement": {
+          "type": "text",
+          "catalog_meaning": "待观察、无法结算或已结算。",
+          "definition": "依据原预测目标判断实际结果能否结算及其状态。",
+          "inputs": "已结算/待观察/无法结算、适用结算规则、截止点和理由。",
+          "unit_time": "使用原期限、时区、价格/事件定义；规则变更单独记录。",
+          "interpretation": "尚未到期不等于预测失败，无法结算不应计入胜负样本。",
+          "missing": "缺结算数据标 pending/unavailable，不把 null 当零或失败。",
+          "lineage": {
+            "suggested_kind": "acquired",
+            "nature": "metadata",
+            "meaning_note": "待观察/缺证据/已结算状态取真实台账；解释失败原因应另列，不手工冒充成功。"
+          }
+        },
+        "actual": {
+          "type": "object",
+          "catalog_meaning": "原目标对应的实际结果。",
+          "definition": "与原预测目标和期限严格对应的实际结果。",
+          "inputs": "已观测值、类别、结算价格/事件、来源、原目标引用及修订状态。",
+          "unit_time": "同单位、币种、复权/含息口径和结算时刻，初值与修订值分开。",
+          "interpretation": "不能换一个更容易命中的目标或期限评价原预测；实际结果与预测解释分开。",
+          "missing": "未到期或数据缺失保持 null/pending，不借临时价格完成结算。",
+          "lineage": {
+            "suggested_kind": "acquired",
+            "nature": "fact",
+            "meaning_note": "实际观察值取对应数据/已核验记录，命中与否按事前口径计算；预测值不是事实替代。"
+          }
+        },
+        "evaluation": {
+          "type": "array",
+          "catalog_meaning": "方法提供的指标、定义、基准和评价。",
+          "definition": "所选评价方法对原预测和实际结果的已计算比较。",
+          "inputs": "指标名称、定义、数值、基准、样本数、优劣方向和方法。",
+          "unit_time": "保持目标、期限、时期与单位一致，概率评分和方向命中率分开。",
+          "interpretation": "单次正确不证明整体可靠；评价指标不是收益，方法选择不能只保留有利结果。",
+          "missing": "不适用指标注明原因，不为定性预测编造概率评分。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "指标分数是计算，基准值也需真实数据，评价/原因是解释；源记录逐项关联。"
+          }
+        },
+        "calibration": {
+          "type": "object",
+          "catalog_meaning": "适用的校准结果、覆盖和证据。",
+          "definition": "预测数值与实际发生频率关系的已完成校准研究。",
+          "inputs": "目标、预测样本、分组/拟合方法、结果、验证划分、版本和引用。",
+          "unit_time": "记录训练与评价区间、样本数量、原概率尺度和结算期限。",
+          "interpretation": "校准、区分能力和盈利能力不同；用同样本调参后的拟合不能叫独立检验。",
+          "missing": "原结果没有概率或历史不足时标不适用/不可用，不强制校准模型。",
+          "lineage": {
+            "suggested_kind": "derived",
+            "nature": "statistic",
+            "meaning_note": "从实际事前概率和已核验结果计算校准统计；不是给未来判断自动保证准确率。"
+          }
+        },
+        "explanation": {
+          "type": "text",
+          "catalog_meaning": "方法对偏差的解释。",
+          "definition": "基于实际证据对预测偏差或成功条件的解释。",
+          "inputs": "预测假说、实际路径、偏差位置、数据/模型/环境变化、反例与方法依据。",
+          "unit_time": "按事件先后与当时可得信息叙述，区分首次发布与修订版本。",
+          "interpretation": "事后解释不是已证因果，也不能修改原预测；成功也可能偶然。",
+          "missing": "证据不足时保留候选解释与待检验点，不编造唯一原因。",
+          "lineage": {
+            "suggested_kind": "inferred",
+            "nature": "interpretation",
+            "meaning_note": "误差原因是方法归因，需要支持/替代解释；一个结果不能证明原因。"
+          }
+        },
+        "follow_up": {
+          "type": "array",
+          "catalog_meaning": "有依据的后续研究或版本处理。",
+          "definition": "由复盘证据支持的后续研究、维护或版本处理。",
+          "inputs": "待检验问题、受影响方法/规则、建议动作、验证要求、已有结果引用。",
+          "unit_time": "记录建议适用期、旧新版本边界及未来评价窗口。",
+          "interpretation": "建议修订不代表已改模型或已验证有效；不得根据单次结果自动选优。",
+          "missing": "没有足够证据时建议继续观察，不凭失败一次强制换方法。",
+          "lineage": {
+            "suggested_kind": "inferred",
+            "nature": "plan",
+            "meaning_note": "后续验证/候选规则修订是研究计划；不是已经有效的新规则或已执行动作。"
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "catalog_meaning": "与本模块判断相关的事实和解释；固定来源记录在结果行的 evidence_refs。",
+          "definition": "支撑或限制原预测的实际结算、评价和校准判断的具体事实、计算结果和解释之间的对应关系。",
+          "inputs": "每条关联具体 claim/事件/结果、原值或事实、来源身份、方法与必要知识引用；完整固定证据放结果行 evidence_refs。",
+          "unit_time": "逐项保留原预测快照、目标/期限、实际结果和验证样本；事实的观察时间和首次可得时间必须区分。",
+          "interpretation": "引用说明出处，不能单凭有引用认定论证成立；知识给出假说，历史实际结果检验相关推断。网页链接、标题和裸 ID 不能替代固定 ArtifactRef。",
+          "missing": "证据不可得时说明哪条判断未支持，不用通用资料或无关历史成果补齐所有判断。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "数组逐项分开：原始事实是获取，数值统计是计算，解释/预测是推断，用户条件是输入；每项对应真实evidence_refs，转载和解析不算独立来源。"
+          }
+        },
+        "instrument_context": {
+          "type": "object",
+          "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+          "definition": "用于理解原预测的实际结算、评价和校准中对象身份、计价和数量的共同上下文。",
+          "inputs": "稳定标的 ID/名称、交易所/市场、资产类型、行业、报价/报表/账户币种，以及适用的 tick、pip、合约乘数和数量单位。",
+          "unit_time": "币种角色分别标明；身份/合约规格使用相关截点版本，数量换算可追溯。结合原预测快照、目标/期限、实际结果和验证样本解读。",
+          "interpretation": "同名资产或代码可能跨市场不同；报价币种不必等于账户/报表币种。此说明对象不扩展 section.context 的 subject/as_of/target/horizon 匹配键。",
+          "missing": "仅填适用且已知的属性；无合约乘数的对象可不适用，未知乘数不可默认 1，未知币种不可根据符号猜测。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+          }
+        },
+        "data_times": {
+          "type": "object",
+          "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+          "definition": "界定原预测的实际结算、评价和校准所用资料何时发生、当时何时可知以及本报告使用哪个截点。",
+          "inputs": "研究 as_of、观测/事件时间、首次公开可得时间、获取时间、来源更新与修订时间、时区、交易日历、bar 周期和闭合状态。",
+          "unit_time": "统一明确时区和日期粒度；财期/事件所属期、发布时刻、抓取时刻不能互代，历史研究只能使用当时已可得版本。",
+          "interpretation": "报告生成时间不能代替报价时间，期末不能代替财报公开日；未来计划日程可以在截点前已知，但未来实际结果不可以。",
+          "missing": "无法确认首次可得时间就保留未知并限制点时结论；日期级来源不补精确时刻，未闭合柱不冒充已确认。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+          }
+        },
+        "source_scales": {
+          "type": "array",
+          "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+          "definition": "让原预测的实际结算、评价和校准的外部数据、评分和方法结果按原定义可解释、可核对的来源记录。",
+          "inputs": "提供方/产品、指标定义、原值/尺度/标签、方向、覆盖、数据版本、方法版本、知识引用与完整固定结果引用。",
+          "unit_time": "保留原百分比/小数/评分/金额尺度及有效日期；不同来源或版本独立记录，转换须有已登记方法。",
+          "interpretation": "同名指标不保证同定义；供应商 Confidence 若代表语料量归入 evidence_volume，不转换成预测 confidence/probability；来源数不是独立样本数。",
+          "missing": "定义或版本未知时标未知，保留原标签，不默认 0–100 或自行归一化；引用不完整不能冒充固定来源。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,7 @@
 # Local verification workspaces and generated bundles.
 .omx/
 /output/
+.playwright-cli/
 node_modules/
 __pycache__/
 *.pyc

@@ -1,0 +1,245 @@
+﻿分类,规范字段,字段与别名,性质,当前状态,合成示例,获取/推导/缺口
+01 身份、时间、单位与来源,report.id,报告ID、report_uid,管理,呈,demo-eurusd-01,reports ArtifactRef；与供应商结果ID分开
+01 身份、时间、单位与来源,report.kind,报告种类、report_type,管理,呈,technical_scenario,新增业务模块目录，映射现有outline
+01 身份、时间、单位与来源,report.provider,机构、产品、publisher,来源,取/呈,Sesame / 自有技术研究,取真实来源；自研结果不标为TC/AC
+01 身份、时间、单位与来源,instrument.id,Instrument、symbol、ticker、标的,事实,取,EURUSD / broker-symbol,data-access + 对应market source；保留来源标识
+01 身份、时间、单位与来源,instrument.name,公司名、资产名、logo,事实,取/源,示例公司；logo未提供,行情目录可取名称；公司品牌/标识需资产主数据
+01 身份、时间、单位与来源,instrument.market,市场、exchange、region、asset_class,事实,取/源,FX / broker / USD报价,market source；区域和上市地需主数据补全
+01 身份、时间、单位与来源,instrument.sector,行业、sector、industry,事实,源,示例半导体行业,当前财务工具未建立统一公司行业主表
+01 身份、时间、单位与来源,instrument.currency,报价/报表/账户币种,事实,取,quote=USD，account=USD,各源分别取；不能用报价币种替代财务币种
+01 身份、时间、单位与来源,instrument.contract,tick/pip、lot步长、乘数、合约类型,事实,取/源,pip=0.0001；标准手100000,MT5/Binance/QMT已部分覆盖；pip需明确定义
+01 身份、时间、单位与来源,scope.horizon,Investment/Holding Horizon、forecast_minutes,定义,呈,未来4小时,与K线周期、回测区间分别保存
+01 身份、时间、单位与来源,scope.bar_size,Bar Size、interval/granularity,事实,取,1h,data-access spec；不要从持有期反推
+01 身份、时间、单位与来源,scope.universe,投资范围、同业范围、国家与筛选池,定义,编/源,同行业40家公司,固定证券全集及纳入/退市规则
+01 身份、时间、单位与来源,time.as_of,as_of、data_as_of、Report Time,来源,取/呈,2026-10-26T12:00:00Z,拆成数据截点与报告生成时间
+01 身份、时间、单位与来源,time.observed_at,价格/指标实际观察时刻,来源,取,2026-10-26T11:59:00Z,各适配器源时间；未知时不冒充UTC
+01 身份、时间、单位与来源,time.available_at,首次可得/披露时间、acceptanceDateTime,来源,取/源,财报11月5日才可得,financial-research已有外壳；缺原始发布档案需补
+01 身份、时间、单位与来源,time.retrieved_at,采集时间,来源,取,2026-10-26T12:01:00Z,DataRef来源；不等于历史首次发布时间
+01 身份、时间、单位与来源,time.timezone,市场时区、session、calendarRevision,来源,取/源,UTC；EU session,券商墙钟需明确转换；未知日历保留未知
+01 身份、时间、单位与来源,source.refs,source_refs、URL、raw_ref、原文,来源,取/呈,固定DataRef + URL,data-access / financial-research；报告绑定引用
+01 身份、时间、单位与来源,source.version,provider/version/endpoint/path、model_version,来源,取/编,method=sesame.breakout.v1,现有hash/版本复用；新增供应商字段路径映射
+01 身份、时间、单位与来源,source.status,缺失状态、覆盖、许可、修订,来源,取/编,unknown / not_applicable,已有coverage/status；许可与字段级状态需补
+01 身份、时间、单位与来源,value.unit_scale,单位、精度、score scale,定义,取/编,0.72 fraction；72 percent,同时保留raw值与原尺度，禁止凭数值猜尺度
+02 行情、技术指标与市场状态,price.reference,Current/Reference Price、closing_price,事实,取,1.1000 USD/EUR,同一来源和价格基准；market_read
+02 行情、技术指标与市场状态,price.ohlcv,OHLCV、时间、闭合状态,事实,取,H1收盘1.1000；tick volume,market_read；volume类型与单位单列
+02 行情、技术指标与市场状态,price.bid_ask,bid、ask、spread,事实/计算,取/编,1.0999/1.1001；2 pip,MT5/Binance/QMT报价；ask-bid后换单位
+02 行情、技术指标与市场状态,price.return,涨跌额、涨跌幅、Price Performance,计算,算/编,100→103；+3%,ABU收益/波动；基准与复权须一致
+02 行情、技术指标与市场状态,price.relative_strength,相对板块/指数强弱,计算,编/源,20日资产+4%，行业+1%,两条同口径序列；额外行业/基准来源
+02 行情、技术指标与市场状态,market.trend,trend、短/中/长期方向,判断,编,日内偏弱；长期上升,指标/确认拐点可用；固定判定方法
+02 行情、技术指标与市场状态,market.volatility_regime,volatility_regime、低/高波动状态,模型,编,波动处于自身历史第80百分位,现有波动值+训练窗分位阈值
+02 行情、技术指标与市场状态,market.liquidity,liquidity、成交活跃度/深度,事实/模型,取/编/源,点差2pip；深度未取,报价可取部分；完整深度与冲击历史缺
+02 行情、技术指标与市场状态,indicator.ma,SMA/EMA、MA20/MA50,计算,算,SMA20=102；SMA50=100,abu-indicators；显式算法/初始化
+02 行情、技术指标与市场状态,indicator.rsi,RSI,计算,算,RSI14=58,当前实现均值法，不能默认为Wilder
+02 行情、技术指标与市场状态,indicator.macd,MACD、signal、histogram,计算,算,DIF=0.5；signal=0.3,abu-indicators；参数与预热一致
+02 行情、技术指标与市场状态,indicator.stochastic,随机指标、K/D,计算,编,K14=70，D3=65,需补版本化计算与平滑参数
+02 行情、技术指标与市场状态,indicator.bollinger,Bollinger上下轨与带宽,计算,算,中轨100；上104；下96,abu-indicators；ddof/窗口固定
+02 行情、技术指标与市场状态,indicator.tr_atr,True Range、ATR、ATR%,计算,算,TR=60pip；ATR14=35pip,ABU各基线首TR不同；方法ID锁定
+02 行情、技术指标与市场状态,indicator.vwap,VWAP,计算,算,样本累计VWAP=100.4,abu-volatility；不是默认交易所当日VWAP
+02 行情、技术指标与市场状态,indicator.hv,收益标准差、年化HV,计算,算,日频HV=24%,abu-volatility；交易日数/收益定义固定
+02 行情、技术指标与市场状态,indicator.gap,跳空幅度与标记,计算,算,开盘较前收+1.2%,abu-volatility；公司行为与停市先解释
+02 行情、技术指标与市场状态,indicator.adc,Adaptive Divergence Convergence,专有,授/编,原厂值缺；自研另命名,TC公开框架但自适应周期不完整
+02 行情、技术指标与市场状态,market.snapshot,指数/板块/商品/FX/加密表现,事实/汇总,取/编/源,指数+0.6%；能源领先,行情可拼接；跨市场全集/行业源待补
+02 行情、技术指标与市场状态,market.risk_gauges,VIX、国债收益率、DXY等,事实,取/源,10Y收益率4.0%,FRED/行情按实际series与授权；无统一实时包
+03 技术事件、几何、质量与生命周期,event.id,result_uid、技术事件ID,管理,取/编/授,demo-pattern-01,现有计算生成事件；原厂结果须接入；大ID用字符串
+03 技术事件、几何、质量与生命周期,event.type,Event Type、pattern_name、形态名称,判断,算/编/授,已确认前高收盘突破,已有突破/有限PA/ICT；完整形态库未有
+03 技术事件、几何、质量与生命周期,event.direction,Idea Direction、bullish/bearish,判断,算/编/授,forecast=up,历史走势方向与预测方向分开
+03 技术事件、几何、质量与生命周期,event.stage,emerging/complete/failed/expired,判断/管理,编/授,forming；尚未突破,现有confirmed事件基础；需机会生命周期
+03 技术事件、几何、质量与生命周期,event.detected_at,Detection/identified,来源,算/编/授,10:00检测，11:00确认,AC内部found应忽略；检测时间不等于实际可行动时间
+03 技术事件、几何、质量与生命周期,event.confirmed_at,确认时间,来源,算,右侧第3根闭合后确认,PA/ICT源bar结束仅为确认下界；不证明当时已送达
+03 技术事件、几何、质量与生命周期,event.earliest_action,earliest_action、最早可行动时间,来源/方法,取/编,bar确认后，数据实际可得且市场可交易,ABU依赖输入available_at；真实延迟/会话需补，未知不填确认时间
+03 技术事件、几何、质量与生命周期,event.age_length,age、length、形态起止,事实,算/编/授,长40根；年龄2根,起止时间、长度单位与更新事件独立
+03 技术事件、几何、质量与生命周期,event.expiry,expires_at、relevant、失效原因,管理/判断,编/授,16:00到期；未达标,需设超时/破坏/替代事件规则
+03 技术事件、几何、质量与生命周期,event.history,事件历史、bullish/bearish计数,统计,编/源,近30日8多5空,先固定检测器与去重，再积累事件库
+03 技术事件、几何、质量与生命周期,pattern.anchors,摆动点、A/B/C/D/X、时间价位,计算,算/编/授,高点A=103；确认时刻已记录,ABU/PA提供拐点；谐波组合另算
+03 技术事件、几何、质量与生命周期,pattern.point_count,图形qty_tp、Fibonacci qtyTP,计算,算/编/授,5个形态转折点,按端点和路径解释；不当作水平位触碰次数
+03 技术事件、几何、质量与生命周期,pattern.boundaries,支撑/阻力线端点、几何边界,计算,编/授,"resistance=(t1,103)-(t2,103)",趋势线拟合/容差需新增；绘图只呈现
+03 技术事件、几何、质量与生命周期,pattern.height,形态高度,计算,编,区间57−47=10,明确形态/基底；不能对所有事件套高度法
+03 技术事件、几何、质量与生命周期,pattern.ratios,Fibonacci比例与阶梯,计算,算/编/授,回撤0.618；target10=1.2800,ABU有最近高低点水平；完整ABCD/Gartley需补
+03 技术事件、几何、质量与生命周期,pattern.continuation,Continuation/Reversal、trend_change,判断,编/授,continuation,以前置趋势和形态定义判定
+03 技术事件、几何、质量与生命周期,levels.values,Key Levels、support/resistance,计算,算/编,支撑98、阻力103/110,ABU聚类水平；原厂值需授权
+03 技术事件、几何、质量与生命周期,levels.significance,Level Significance、星级/重要性,判断,编/授,强/中/弱；自有规则v1,触碰数/距离可算；TC星级精确规则未公开
+03 技术事件、几何、质量与生命周期,levels.touches,Key Level qtyTP、触碰时刻,计算,算/编/授,4次确认触碰,ABU聚类已有；仅水平位路径适用，图形/Fib点数另存
+03 技术事件、几何、质量与生命周期,levels.approach,接近区、approachingTime/Price,判断,编/授,距150阻力0.15,需定义阈值；接近不等于反转
+03 技术事件、几何、质量与生命周期,levels.round,整数关口与穿越状态,判断,编/授,BTC接近100000,自有粒度规则；AC专属raw schema待验
+03 技术事件、几何、质量与生命周期,quality.overall,Technical Score、quality、averageQuality,专有/模型,授/编,AC原始quality=0.70,自研质量必须另命名；不是70%胜率
+03 技术事件、几何、质量与生命周期,quality.components,clarity/uniformity/initial_trend/breakout/volume,专有,授/编,clarity=0.80；breakout不适用,原厂0–1；子项公式未完整公开
+03 技术事件、几何、质量与生命周期,quality.fibonacci,ratioQuality、timeQuality,专有,授/编,ratioQuality=0.84,几何拟合；不能转换成交易成功率
+03 技术事件、几何、质量与生命周期,anomaly.movement,from/to_price、movement,计算,编/授,1.1000→1.1060，60pip,现有价格输入可算；检测/分位需固定窗口
+03 技术事件、几何、质量与生命周期,anomaly.consecutive,qty_candles、连续方向,计算,编/授,连续6根上涨,doji/平价定义与样本窗明确
+03 技术事件、几何、质量与生命周期,anomaly.percentile,异常百分位、统计基准,统计,编/源/授,历史第98百分位,≥95与0.98端点尺度不同；不是反转概率
+03 技术事件、几何、质量与生命周期,chart.annotations,Annotated/Reference Chart、drawing,展示,呈/编,K线+拐点+目标区域,reports内置candlestick；图元来自真实计算
+04 观点、情景与执行计划,thesis.summary,thesis.summary、Comment、Market Outlook,判断,编,突破前等待确认,基于已取证据与方法；不是取数结果
+04 观点、情景与执行计划,thesis.direction,Strategy、Long/Short/Neutral,判断,编/授,conditional-long,条件未成立时不写已触发
+04 观点、情景与执行计划,thesis.status,thesis.status、Decision、Value Status,判断,编,watching,区分观点状态与实际订单状态
+04 观点、情景与执行计划,scenario.primary,Preferred Scenario、primary_scenario,判断,编/授,收盘突破103后观察回踩,原厂情景授权；自有规则可组合
+04 观点、情景与执行计划,scenario.alternative,Alternative Scenario、trigger/action,判断,编/授,跌破98后退出原多头观点,条件是业务信息，避免无意义免责声明
+04 观点、情景与执行计划,scenario.entry,Entry Price/reference/zone/condition,判断,编/授,103确认；候选入场103–104,价格、区域、触发、执行方式分开
+04 观点、情景与执行计划,scenario.invalidation,Pivot、invalidation_price,判断,编/授,98失效,技术失效位不等于传统OHLC Pivot点
+04 观点、情景与执行计划,scenario.stop,Stop Price/stop_loss,判断/计算,算/编,计划止损98,已有ATR退出；结构止损规则需定
+04 观点、情景与执行计划,scenario.targets,Target1/2、target_level,判断/计算,编/授,110/115,来源可为结构/高度/原厂；保存期限
+04 观点、情景与执行计划,scenario.target_region,预测价格范围与期限,模型,编/源/授,未来4h目标110–112,双侧波动区间另列；概率区间需校准
+04 观点、情景与执行计划,scenario.expected_action,Expected Price Action、Signal Rationale,判断,编/授,趋势延续；先确认再执行,含证据与条件，避免仅报“看多”
+04 观点、情景与执行计划,scenario.reward_risk,reward_risk_at_entry_reference,计算,编,entry103，stop98，T1=113→2R,(target-entry)/(entry-stop)，费用另计
+04 观点、情景与执行计划,evidence.supporting,evidence[].type/finding/source/timeframe,来源/判断,取/编,H1收盘突破；固定数据引用,分离原始事实与解释
+04 观点、情景与执行计划,evidence.conflicts,conflicting_evidence、evidence_conflicts,判断,编,H1强、D1仍受阻,不同周期不必视为数据错误
+04 观点、情景与执行计划,evidence.independence,同源/独立证据与共振,定义/统计,编,RSI和MACD来自同一价格序列,不简单累加或相乘“概率”
+04 观点、情景与执行计划,monitoring.recheck,monitoring.recheck_on、提醒条件,管理/判断,呈/编,突破103/事件公布后复查,由编排/监控实现；报告保存条件
+05 波动、账户风险与规模,risk.account,equity/balance、currency、margin,事实,取,权益10000USD,MT5/QMT；Binance未换汇资产余额不冒充净值
+05 波动、账户风险与规模,risk.position,side/quantity/averagePrice/PnL,事实,取,多头0.2手,对应账户source；PnL维持原红绿色义
+05 波动、账户风险与规模,risk.budget_fraction,max_portfolio_risk_fraction,决策,编,0.005，即0.5%,用户/策略预算；不是供应商默认授权
+05 波动、账户风险与规模,risk.cash,account_risk、risk_amount,计算,算,10000×0.5%=50USD,ABU sizing；金额与比例不同字段
+05 波动、账户风险与规模,risk.stop_variants,Tight/Medium/Loose、trailing offset,计算,算/编,ATR×1/2/3（自有示例）,ABU已有ATR退出；三档参数另定，非TC系数
+05 波动、账户风险与规模,risk.stop_distance,risk_in_pips、ATR stop distance,计算,算/编,入场1.1000至1.0950=50pip,合约单位/币种转换需一致
+05 波动、账户风险与规模,risk.quantity,lot_size、quantity_estimate,计算,算/编,风险100USD、50pip→0.20手,ABU需point_value/quantity_unit；MT5可算单量盈亏；统一跨币种/任意止损/步长衔接需补
+05 波动、账户风险与规模,risk.profit_margin_calc,order_calc_profit/margin,计算,算,0.2手50pip风险100USD,MT5原生只计算；不等于发单
+05 波动、账户风险与规模,risk.costs,点差、佣金、滑点、融资/借券,事实/模型,取/编/源,双边成本8USD,历史成交部分可取；冲击/未来滑点需模型与样本
+05 波动、账户风险与规模,risk.event,event_risk、跳空/财报等风险,判断,取/编/源,1小时后就业数据,结构化未来日历需补源
+05 波动、账户风险与规模,risk.expected_ranges,low/high_15/30/60/240/1440,模型,编/源/授,H1范围1.0985–1.1015,自研需历史分布和回测；不是方向目标
+05 波动、账户风险与规模,risk.seasonality,日内/周内波动,统计,编/源/授,纽约开盘时段较活跃,时区/DST/交易日历与半年以上样本
+05 波动、账户风险与规模,risk.relative_volatility,rank/rank_rounded、标的相对波动排序,统计,编/源/授,当前返回集合中排名第3,保留排名集合与时刻；不是星期或日内季节性
+05 波动、账户风险与规模,risk.stress,压力情景、组合损失/敞口,模型,编/源,跳空2ATR时损失150USD,同步持仓/相关资产/跨币种风险源
+06 财务事实、比率与周期,fund.period,报告期、fiscalYear/period、TTM,事实/计算,取/编,2026Q2；TTM由4季相加,SEC/FMP原始期可取；TTM需处理年度/累计口径
+06 财务事实、比率与周期,fund.filing,accession、form、filingDate、公告链接,事实,取,10-Q / 原始文档URL,financial-research SEC索引；正文需另读
+06 财务事实、比率与周期,fund.revenue,营收、revenue,事实,取,1000M USD,SEC/FMP实际返回，币种/财期明确
+06 财务事实、比率与周期,fund.net_income,净利润、EPS、稀释股数,事实,取/源,净利100M；EPS2.0,SEC/FMP；股数概念/稀释口径需映射
+06 财务事实、比率与周期,fund.balance,资产/负债/权益/现金/债务,事实,取,资产2000M；权益1000M,SEC/FMP三表原料
+06 财务事实、比率与周期,fund.cashflow,经营现金流、资本开支、FCF,事实/计算,取/编,CFO150M；capex50M；FCF100M,FCF定义明确；原表符号先标准化
+06 财务事实、比率与周期,fund.market_cap,Market Cap,计算/事实,编/源,50M股×100=5000M,当前源未保证profile市值；点时流通/总股数
+06 财务事实、比率与周期,fund.pe,P/E、Trailing P/E,计算,编,price100/EPS5=20,TTM/forward分开；负EPS不硬填正常倍数
+06 财务事实、比率与周期,fund.pb,P/B,计算,编,市值5000M/权益2500M=2,权益归属和价格时间一致
+06 财务事实、比率与周期,fund.ps,Price/Sales,计算,编,市值5000M/营收2500M=2,TTM和稀释股本口径固定
+06 财务事实、比率与周期,fund.fcf_yield,自由现金流收益率,计算,编,FCF250M/市值5000M=5%,CFO-capex、企业/股权口径不能混
+06 财务事实、比率与周期,fund.growth,Revenue/EPS增长,计算,编,营收1000→1100M，+10%,同比可比期；基数为负另处理
+06 财务事实、比率与周期,fund.margins,利润率/现金转化率,计算,编,净利100/营收1000=10%,研发/一次性项等调整单独版本
+06 财务事实、比率与周期,fund.roe,ROE、ROA、质量指标,计算,编,净利100/平均权益1000=10%,平均期初期末权益；不使用期末替代未说明
+06 财务事实、比率与周期,fund.leverage,杠杆、偿债能力、利息覆盖,计算,编,净债务/EBITDA=2,所需EBITDA/利息实际字段映射
+06 财务事实、比率与周期,fund.dividend,股息、Dividend Yield、Payout,事实/计算,源/编,年股息2/价格100=2%,独立股息/公司行为源待补；比率方法可算
+06 财务事实、比率与周期,fund.revisions,分析师盈利预测及修正,事实/统计,源/编,EPS预期2.0→2.2,grades不是盈利预期数据
+06 财务事实、比率与周期,fund.insiders,内部人交易/持股变动,事实,取,申报买入1000股,FMP insider事件；不推断内幕动机
+06 财务事实、比率与周期,fund.peer_rank,Peer Comparison、Sector Ranking,统计,编/源,同业40家中第8,行业全集+点时比较口径
+06 财务事实、比率与周期,macro.series,FRED序列值/单位/频率/季调,事实,取,实际GDP、季度、季调年率,FRED series+observations；不是事件共识日历
+06 财务事实、比率与周期,macro.vintage,realtime_start/end、修订版本,来源,取/源,当时可见vintage,FRED保守as_of已有；精确发布时间仍需源
+06 财务事实、比率与周期,macro.cycle,Nowcasting、经济阶段/风格适配,模型,编/源/授,增长放缓、质量风格适配,原厂周期模型未全公开；自有方法另标
+06 财务事实、比率与周期,cot.positions,CFTC各类多空/OI/交易者数,事实,取,M-money long10000/short8000,Disaggregated Futures Only；公布时刻需补
+06 财务事实、比率与周期,cot.net,净仓、占OI、历史分位,计算,编,净多2000；占OI10%,相同合约/周度/历史窗口；不是散户投票
+07 综合评分、估值与共识,score.quantamental,Quantamental Rating、综合信号,专有/模型,授/编,自有68/100,原厂需授权；自有权重/标准化/缺失规则公开
+07 综合评分、估值与共识,score.factors,Value/Growth/Momentum/Income/Quality,专有/模型,授/编,自有82/54/63/43/71,现有因子工具可测，不是现成TC评分
+07 综合评分、估值与共识,score.labels,六个*Label、评级解释,专有/判断,授/编,valuationLabel=very-strong,TC标签存在；阈值未全公开；自有映射另定义
+07 综合评分、估值与共识,score.technical,Technical Summary、趋势评分,专有/模型,授/编,short=bullish；long=neutral,原厂版本/期限保留，不与五因子硬均分
+07 综合评分、估值与共识,valuation.fair_value,Fair Value,模型,编/源/授,120USD,自研剩余收益/DCF需假设；TC输出需授权
+07 综合评分、估值与共识,valuation.gap,Valuation Gap、折价/上行空间,计算,编,现价100对FV120：上行20%，折价16.67%,分母明确：相对现价 vs 相对公允值
+07 综合评分、估值与共识,valuation.target,TC Target Price 12M、自有模型目标,模型,编/源/授,12月目标112,估值不自动等于12月市场价格模型
+07 综合评分、估值与共识,valuation.target_return,Target Return、目标上行,计算,编,112/100−1=12%,目标与参考价各有时刻；是否含股息
+07 综合评分、估值与共识,valuation.assumptions,盈利预测、资本成本、增长/终值,模型输入,编/源,k=10%；永续g=3%,自有假设可设，但须标假设并做敏感性
+07 综合评分、估值与共识,valuation.sensitivity,牛/基/熊估值区间,模型,编,95/120/145,不叫统计置信区间；DCF/剩余收益情景
+07 综合评分、估值与共识,valuation.update,更新频率、模型日期,来源,授/编,FV月15日；模型目标月更,各产品不同；不统一为实时
+07 综合评分、估值与共识,analyst.grade_events,评级变动、机构、新旧评级,事实,取,Hold→Buy,financial-research FMP grades
+07 综合评分、估值与共识,analyst.consensus,Analyst Consensus、总体Buy/Hold/Sell,统计,源/编/授,Buy,新增共识端点；事件列表不能替代当前持有评级
+07 综合评分、估值与共识,analyst.counts,Buy/Hold/Sell人数、样本数,统计,源,12/6/2，共20,去重机构/分析师、最新日期/覆盖
+07 综合评分、估值与共识,analyst.targets,mean/high/low target,统计,源/编/授,115/145/85,FMP目标共识端点待接；不是TC模型目标
+07 综合评分、估值与共识,analyst.dispersion,目标分歧、修订趋势/期限,统计,编/源,高低差60；期限未提供,需要逐条预期或供应商汇总；不默认12月
+08 经济、公司事件与历史冲击,calendar.identity,event_uid/name/type、country/currency,事实,源/取,US就业 / USD,FRED有观测；未来结构化事件表缺，网页可补证
+08 经济、公司事件与历史冲击,calendar.release,Release Time、盘前/盘后、确认状态,事实,源,2026-11-06 13:30Z，confirmed,日历源/DST；预计日期与正式日期分开
+08 经济、公司事件与历史冲击,calendar.importance,Importance、事件类别/频率,供应商判断,源/编/授,high / monthly,供应商分档或明确自有规则；不是概率
+08 经济、公司事件与历史冲击,calendar.values,Actual/Forecast/Previous、单位,事实,取/源,90k/70k/60k,实际宏观序列部分可取；共识/首发/前值同表缺
+08 经济、公司事件与历史冲击,calendar.surprise,actual−forecast、above/below/inline,计算,编/源,+20k，above,来源齐备才算；等于容差/修订固定
+08 经济、公司事件与历史冲击,calendar.corporate,earnings/meeting/dividend/split,事实,源,财报盘后；拆股2:1,SEC索引不是完整未来公司日历
+08 经济、公司事件与历史冲击,calendar.earnings,fiscal quarter、EPS consensus/actual,事实,源/取,预期1.20；实际未公布,实际报表部分已取；预期与未来时间需新源
+08 经济、公司事件与历史冲击,calendar.dividend,除息/登记/支付日、每股金额,事实,源,每股0.50USD；除息11月10日,公司行动专用源，避免从报道拼完整全集
+08 经济、公司事件与历史冲击,calendar.split,拆股生效日/比例、复权因子,事实,源,2:1,要与行情复权统一
+08 经济、公司事件与历史冲击,impact.window,5m/15m/30m/1h/4h、trend_length,定义,编/授,事件后60分钟,固定t0、交易日历/价格基准
+08 经济、公司事件与历史冲击,impact.move,价格净变动、方向、pips,计算,编,1.1000→1.0970，−30pip,同一来源事件窗行情
+08 经济、公司事件与历史冲击,impact.true_range,事件TR、历史平均TR、ATR-based,计算/统计,算/编,前收1.1000、高1.1020、低1.0960，TR60pip,TR基础已有；事件样本匹配与聚合需新增
+08 经济、公司事件与历史冲击,impact.condition,delta_sign、趋势方向,定义/判断,编/授,actual>forecast，价格趋势向下,不能把经济数字高低当资产利好利空
+08 经济、公司事件与历史冲击,impact.sample,sample_size、条件样本/历史窗口,统计,编/源/授,总12；above组8,总样本和条件样本分别统计
+08 经济、公司事件与历史冲击,impact.frequency,历史涨跌频次、probability,统计/专有,编/源/授,above组6/8下跌=75%,条件频次，不是本次实际高于预期概率
+08 经济、公司事件与历史冲击,impact.distributions,正常/事件min/p25/median/p75/max/mean/std,统计,编/源/授,正常中位12pip；事件30pip,成对同时间窗样本；n与单位随分布保存
+08 经济、公司事件与历史冲击,impact.difference,volatility_diff/percent/value,计算,编/授,(30−12)/12=150%,标注比较统计量；差值std可为负
+08 经济、公司事件与历史冲击,impact.money,mean_mov_value、pip_value、换汇时刻,计算,编/授,18pip×每pip10USD=180USD/手,合约/账户币种/汇率时刻
+08 经济、公司事件与历史冲击,impact.history,历次date/expected/actual/delta/trend,事实/统计,源/编,12次首发事件及1h路径,必须点时版本，当前修订宏观值不替代
+08 经济、公司事件与历史冲击,impact.concurrent,同时事件、样本排除/对照,方法,编/源,同时发布失业率；无法单因果归因,事件研究设计，记录混杂因素
+09 新闻、情绪、关注度与传播,news.article,headline/title、URL、正文/摘要,事实,取,某公司发布新订单,FMP stock news、web、RSS；摘要非全文
+09 新闻、情绪、关注度与传播,news.source,source_info、来源/类型/作者,来源,取/编,新闻社 / news,原文归属与转载聚类需补
+09 新闻、情绪、关注度与传播,news.published,publication time、语言、版本,来源,取,2026-10-26T09:00Z,原始发布时间/采集时间分开
+09 新闻、情绪、关注度与传播,news.entity_topic,资产实体、topic、event type,模型,编/授,DEMO / 订单 / 监管,需要实体链接/去重/分类规则
+09 新闻、情绪、关注度与传播,news.mentions,News Volume、Buzz Volume、total_mentions,统计,编/源/授,24h去重提及320,当前有限分页≠全网统计；限定语料范围
+09 新闻、情绪、关注度与传播,news.baseline,基准量、volume_ratio、Buzz Score,统计/专有,编/源/授,320/80=4倍,自有量比可算，不能叫TC原厂Buzz公式
+09 新闻、情绪、关注度与传播,news.channels,news/web/social来源占比,统计,编/源,news70%、blog20%、social10%,源全集与同一窗口；社交是否计分按产品
+09 新闻、情绪、关注度与传播,sentiment.score,Sentiment Score、News Sentiment,模型/专有,编/授,原厂72/100,NLP模型/语料/尺度版本须记录
+09 新闻、情绪、关注度与传播,sentiment.signal,Bullish/Bearish/Neutral,判断,编/授,bullish,阈值依模型，不自动来自市场收益
+09 新闻、情绪、关注度与传播,sentiment.subjectivity,Subjectivity Score,专有,授/编,81/100,文本主观性不是新闻真假
+09 新闻、情绪、关注度与传播,sentiment.confidence,Confidence Index、证据量等级,专有/统计,授/编,Average,不同于预测置信区间或上涨概率
+09 新闻、情绪、关注度与传播,sentiment.trend,Sentiment Trend/Monitor/Histogram,模型,编/源/授,强弱72，趋势直方图46,近期/历史情绪；TC直方图50阈值只属该指标
+09 新闻、情绪、关注度与传播,sentiment.history,情绪/价格历史、sentiment_change,统计,编/源/授,365日序列；70→65,缺历史语料/旧分数时不能回填伪历史
+09 新闻、情绪、关注度与传播,sentiment.fear,Fear Index、市场比较,专有,授/编,90交易日历史；原值待取,TC Fear不等于VIX；未公开阈值不捏造
+09 新闻、情绪、关注度与传播,sentiment.peer,Peer Comparison、sector sentiment,统计,编/源/授,同业中位情绪55,同一模型、语料时间与行业全集
+09 新闻、情绪、关注度与传播,social.sample,Reddit score/comments/upvote_ratio,事实,取,30帖；单帖42评论,当前有限社区样本；不代表全市场散户态度
+09 新闻、情绪、关注度与传播,media.asset,视频/文章标题、语言、时间、URL/稿,事实/展示,取/呈/源,3分钟市场短评及文字稿,网页媒体引用；商业媒体全文/分发许可另核
+10 期权合约、波动率与组合,option.contract,代码、call/put、strike、expiry、乘数,事实,源,DEMO call K100，乘数100,当前无结构化期权链；不能从现货推出
+10 期权合约、波动率与组合,option.quote,bid/ask/last、报价时刻、volume/OI,事实,源,3.0/3.2；OI1000,同步underlying；低流动性报价过滤
+10 期权合约、波动率与组合,option.exercise,美/欧式、结算、交割与公司行为,事实,源,美式、实物交割,决定提前行权和模型，链源需明确
+10 期权合约、波动率与组合,option.iv,IV、Volatility Levels,模型,源/编/授,30%年化,真实权利金+合约+利率股息+定价模型
+10 期权合约、波动率与组合,option.iv_history,历史IV、HV比较,事实/模型,源/编,过去252交易日IV,今日链不能还原历史报价与IV
+10 期权合约、波动率与组合,option.iv_rank,IV Rank、IV Percentile,统计,源/编/授,IVR75；IV百分位另存,100×(IV-min)/(max-min)；max=min未定义；历史窗与可比IV序列固定，百分位另算
+10 期权合约、波动率与组合,option.skew,上/下行偏斜、期限偏斜,模型,源/编/授,同到期90%put IV35%，110%call IV28%,执行价偏斜用同到期；期限结构固定delta/moneyness再跨到期
+10 期权合约、波动率与组合,option.surface_cone,IV曲面、期限结构、波动锥,模型/统计,源/编/授,strike×expiry矩阵,需真实链和历史；插值方法与空洞保留
+10 期权合约、波动率与组合,option.expected_move,预期波动范围/到期价格区间,模型,源/编/授,30日±8.6%（自有近似）,σ√T需假设；不是原厂区间/确定目标
+10 期权合约、波动率与组合,option.greeks,Delta/Gamma/Vega/Theta/Rho,模型,源/编,Delta=0.55,非本次证实TC必返字段；自有扩展
+10 期权合约、波动率与组合,option.preference,方向、幅度、目标、风险偏好,决策输入,呈,温和看涨、限定最大损失,由需求给出，不从分数推断用户权限
+10 期权合约、波动率与组合,option.strategies,首选/替代策略、排名理由,判断/模型,编/源/授,bull call spread / long call,需真实可成交价格、事件和成本后比较
+10 期权合约、波动率与组合,option.legs,每腿方向、类型、执行价、到期、数量,计划,编/源,买100call，卖110call，同到期,组合乘数一致、合约标识唯一
+10 期权合约、波动率与组合,option.premium,净付/净收权利金,计算,编/源,debit3/股，合计300,mid估值与可成交bid/ask分开
+10 期权合约、波动率与组合,option.max_loss,最大亏损,计算,编/源,300USD,到期结构的确定性计算；裸卖可能无界
+10 期权合约、波动率与组合,option.max_profit,最大收益,计算,编/源,700USD,不等于期望收益
+10 期权合约、波动率与组合,option.breakeven,到期盈亏平衡,计算,编/源,103USD,到期前还受IV/时间影响
+10 期权合约、波动率与组合,option.payoff,到期损益曲线/情景损益,计算,编/源/呈,S=108时净收益500USD,明确到期/估值时点；reports展示
+10 期权合约、波动率与组合,option.pop,Probability of Profit,模型/专有,编/源/授,P(净损益>0)=0.60（合成概率）,需分布/风险中性或真实概率区分、成本与验证；不是期望利润
+10 期权合约、波动率与组合,option.expected_profit,Expected Profit、期望利润,模型,编/源/授,0.6×100+0.4×(−200)=−20USD,E[净损益]以金额/收益率表示；高胜率仍可负期望
+11 筛选、策略、组合与回测,screen.name,Strategy Name/Description/Objective,定义,呈,零售价值筛选,将目的与实际规则分开
+11 筛选、策略、组合与回测,screen.conditions,Filters、逻辑组合,定义,编,marketCap≥300M AND P/S≤1,当前自有筛选可写；TC任意OR未证实
+11 筛选、策略、组合与回测,screen.matches,匹配数、名单、TopN,计算,编/源,18匹配，选10,证券全集与缺失排除可追溯
+11 筛选、策略、组合与回测,screen.rank,rank、score、排序/并列规则,模型,编,归一化因子均值排序,factor-evaluator可测因子；非现成选股器
+11 筛选、策略、组合与回测,portfolio.constituents,当前/新增/移除成分及权重,事实/计算,取/编/源,10股等权；两只替换,实际持仓与模拟组合分开；指数方案可复用
+11 筛选、策略、组合与回测,portfolio.rebalance,换仓频率/日期、权重约束,定义,编,每13周换仓（TC筛选示例）,TC指数月调50股与筛选回测不同
+11 筛选、策略、组合与回测,portfolio.exposure,行业/资产/币种/相关性敞口,计算,编/源,科技40%、USD80%,真实持仓+资产主数据+汇率/相关历史
+11 筛选、策略、组合与回测,backtest.window,Start/End、训练/验证/留出区间,定义,算/编,2021–2025训练，2026留出,evaluator固定计划；样本可得时间需成立
+11 筛选、策略、组合与回测,backtest.equity,Equity Curve、Historical Performance,计算,算,初值1，5年终值1.8,回测引擎输出；清楚现金/保证金模型
+11 筛选、策略、组合与回测,backtest.return,Total Return、CAGR,计算,算,1.8^(1/5)−1=12.47%,ABU trade-metrics；实际期限不是行数
+11 筛选、策略、组合与回测,backtest.benchmark,Benchmark、超额收益,计算,算/编/源,基准CAGR9.86%，差2.61pp,收益差不称风险调整alpha
+11 筛选、策略、组合与回测,backtest.drawdown,Max Drawdown、回撤路径,计算,算,最大回撤−15%,ABU metrics/evaluator；值域与符号明确
+11 筛选、策略、组合与回测,backtest.sharpe,Sharpe、波动风险,统计,算,Sharpe0.9,频率、无风险率和自相关假设
+11 筛选、策略、组合与回测,backtest.trades,成交/交易数、win rate、profit factor,统计,算,100笔、55盈利；PF1.3,必须真实模拟成交日志；因子IC不替代
+11 筛选、策略、组合与回测,backtest.costs,费用、滑点、换手与融资,模型/统计,算/编/源,毛收益12%，成本2%，净10%,引擎实际设定与数据；缺成本不默认完备
+11 筛选、策略、组合与回测,backtest.assumptions,成交价/停牌/退市/股息/复权,方法,编/源,次根开盘成交；股息再投,点时全集/公司行为源是关键
+11 筛选、策略、组合与回测,backtest.attribution,逐策略/因子/资产收益贡献,计算,算/编,趋势+6%，均值回归−1%,ABU有策略归因；因子归因需额外模型
+11 筛选、策略、组合与回测,backtest.update,报告更新、Daily/Weekly/Monthly alerts,管理,呈/编,每周五更新,调度通知与投资指标分开
+11 筛选、策略、组合与回测,idea.card,Headline/Idea Details、候选机会,判断/展示,编/呈/授,H1三角突破候选,组合事件+理由+时间；未触发不叫已下单
+11 筛选、策略、组合与回测,idea.watch_trade,Watchlist Status、Trade Action/URL,管理/展示,呈/编,加入观察；打开交易计划,UI操作入口不视作已成交或交易授权
+12 统计验证、概率与结果跟踪,stats.sample,total/correct、样本/分组/起止,统计,算/编/源/授,200事件、140达标,evaluator能评诊断；形态事件库需另建
+12 统计验证、概率与结果跟踪,stats.hit_rate,percentage、历史目标触及率,统计,编/源/授,140/200=70%,不含止损先后/成本则不叫盈利率
+12 统计验证、概率与结果跟踪,stats.favorites,percent、hod/symbol/pattern分组统计,专有,授/编,percent=68.5；分组各有n,AC总值组合未公开；自研不反推等价
+12 统计验证、概率与结果跟踪,stats.correlating,Correlating Alerts percent_probability,专有,授/编,同向聚合原厂值72%,与Favorites分开；完整共振算法未公开，不用两个概率相乘
+12 统计验证、概率与结果跟踪,stats.confidence_interval,bootstrap/Wilson区间,统计,算/编,140/200的Wilson95%约63.3–75.9%,evaluator有bootstrap；比例Wilson需新增
+12 统计验证、概率与结果跟踪,factor.ic,IC、rank IC、coverage、net return,统计,算,time-series IC0.04,factor-evaluator/CLI；单资产可做时序
+12 统计验证、概率与结果跟踪,factor.redundancy,因子相关/冗余、选择回执,统计,算,训练集相关0.92，保留一项,train-only筛选；不能用留出集调阈值
+12 统计验证、概率与结果跟踪,validation.placebo,安慰剂测试,统计,算,打乱标签对照,evaluator已有；检验何种null需明确
+12 统计验证、概率与结果跟踪,validation.monte_carlo,蒙特卡洛模拟,统计,算,经验分块重采样诊断收益路径,当前不是交易执行顺序仿真；其他生成机制需另实现
+12 统计验证、概率与结果跟踪,validation.out_of_sample,样本外测试,统计,算,冻结后评未参与选择的数据,holdout需真正未使用
+12 统计验证、概率与结果跟踪,validation.walk_forward,滚动前推测试,统计,算,固定候选在前推窗评估，阈值来自训练期,当前不等于每窗重新训练/选参；不能全样本先选参再伪前推
+12 统计验证、概率与结果跟踪,validation.sensitivity,参数敏感性,统计,算,窗口10/15/20,关注稳定区间，避免只报最好点
+12 统计验证、概率与结果跟踪,validation.regimes,市场状态分层,统计,算/源,高波动/低波动分别评估,regime标签必须点时可得
+12 统计验证、概率与结果跟踪,validation.bootstrap,bootstrap置信区间,统计,算,分块重采样收益均值区间,样本依赖决定重采样单元
+12 统计验证、概率与结果跟踪,forecast.probability,事前概率、基准概率,模型/判断,编/呈,P=0.65；base=0.5,概率由研究方法产生；judgment登记而不估计事前概率
+12 统计验证、概率与结果跟踪,outcome.definition,outcome、期限、标量/路径判据,定义,呈/编,4h内先触110还是98,当前judgment只核验窗口内最新标量；路径需补
+12 统计验证、概率与结果跟踪,outcome.realized,实际结果、MAE/MFE、达标/到期,统计,算/编/源,先止损；随后才达目标,回测路径层生成；同bar双触需更细数据/明确规则
+12 统计验证、概率与结果跟踪,outcome.calibration,Brier、baseline_Brier、confidence_calibration,统计,算/编,n=100，Brier0.22,judgment有Brier/5档校准；不能声称已有成熟历史库
+12 统计验证、概率与结果跟踪,outcome.attribution,原因归因、模型/数据/执行差异,判断/统计,编,方向对，成本后亏损,固定原判断，不能事后改目标与期限
+13 叙述、展示与交付,report.modules,一个或多个报告模块、sections,管理,呈/编,技术情景+事件影响+风险,需新增业务recipe；复用reports outline
+13 叙述、展示与交付,report.summary,简明结论、Market Commentary/Wrap,判断/展示,编/呈,先说机会与触发条件,主agent综合固定研究结果
+13 叙述、展示与交付,report.story,FIBI各Story、自然语言解释,展示/判断,编/授,技术/基本面/新闻故事,自有agent可综合；TC FIBI需授权
+13 叙述、展示与交付,report.charts,图表/Reference Chart/Payoff等,展示,呈,candlestick / decision-tree / boxplot,reports已有26种图型；图表不创造数据
+13 叙述、展示与交付,report.details,Research Detail、关联报告/组合上下文,管理,呈,引用估值报告与实际持仓,ArtifactRef去重；避免相同报告重复出现
+13 叙述、展示与交付,report.risk_text,原稿Risk Disclosure/风险披露,文案,呈,仅保留影响决策的具体事件风险,供应商必要署名/许可文本按合同；不默认生成空泛章节
+13 叙述、展示与交付,report.publish,生成/发布版本、文件路径、状态,管理,呈,单文件HTML；固定revision,reports publish/check，报告存在才可引用
+13 叙述、展示与交付,report.export,PDF/PNG导出与状态,管理,呈,导出成功短提示,已有export检查；本研究交付HTML/MD/CSV
+13 叙述、展示与交付,report.delivery,channel/language/frequency/session,管理,呈/编,EU早报 / zh / daily,邮件、视频、Portal是交付形式，不新增信号

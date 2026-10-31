@@ -1,0 +1,4 @@
+当前报告 v6 的默认蜡烛已显示、无 logo、决策树与数据绑定验收通过。视觉检查定位了一个小布局问题：原 HTML 第 641 行 table{table-layout:fixed} 会影响 Lightweight Charts 内部的 table，把右价格轴 60px 挤为 30px，导致价格刻度被裁。页面 scrollWidth 不溢出并不能发现这种图内裁剪。
+Codex 已在 reports 3.2.4 的 assets/charts-market.js 内添加局部样式隔离：.sc-market-chart table{table-layout:auto;border-collapse:separate;border-spacing:0}，内部 td 无边框，已用真实浏览器回归验证。
+请读取刚装入的 3.2.4 assets/charts-market.js，只替换 v6 报告内联的同一组件，保留研究内容、当前四棵决策树、默认实体蜡烛、无 logo、原表格和全部固定数据不变。不做新研究。发布同一 artifact_id=artifact_3e92276c-fce4-4f39-8e6f-dcc3417cfa5a，expected_revision=revision_ecbdf77b-4a68-4db2-b63b-10b6b074b391，同一文件的新版本，然后 report_check。
+增加一个实际 DOM 检查：.sc-market-chart 内所有 Canvas 的 boundingClientRect.right/bottom 均不超过外层可见图表边界 1px（桌面/窄屏）；检查价格轴刻度完整可见，再给最新报告引用。

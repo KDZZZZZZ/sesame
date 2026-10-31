@@ -2,14 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { Value } from '@sesame/plugin-sdk/schema/value';
+import { resolveResearch, hasResearchDataAccess } from '../packages/auto-factor-mining/composition.js';
 
 const root = new URL('../packages/', import.meta.url);
-async function fixture(name) {
+async function fixture(name, capabilityId) {
   const base = new URL(name + '/', root);
   const declaration = JSON.parse(await readFile(new URL('capabilities.json', base), 'utf8'));
-  const input = JSON.parse(await readFile(new URL('examples/input.json', base), 'utf8'));
-  const { analyze } = await import(new URL('scripts/baseline.mjs', base));
-  return { capability: declaration.capabilities[0], input, analyze };
+  const audit = capabilityId === 'abu_trade_results_audit';
+  const input = JSON.parse(await readFile(new URL(audit ? 'examples/audit-input.json' : 'examples/input.json', base), 'utf8'));
+  const { analyze } = await import(new URL(audit ? 'scripts/audit.mjs' : 'scripts/baseline.mjs', base));
+  return { capability: capabilityId ? declaration.capabilities.find(cap => cap.id === capabilityId) : declaration.capabilities[0], input, analyze };
 }
 
 test('required calculation inputs are disclosed in the callable schema before execution', async () => {
@@ -59,8 +61,22 @@ test('feature names are dynamic and optional decision times keep the existing as
 });
 
 test('backtest audit accepts order and fill evidence without optional market bars',async()=>{
-  const {capability,input,analyze}=await fixture('abu-backtest-lab');
+  const {capability,input,analyze}=await fixture('abu-trade-metrics', 'abu_trade_results_audit');
   delete input.bars;
   assert.doesNotThrow(()=>analyze(input));
   assert.equal(Value.Check(capability.inputSchema,{input}),true,'optional bars must not be invented just to satisfy the tool schema');
+});
+
+test('merged independent diagnostics retain the real workflow input-only classification', async () => {
+  const plugin = JSON.parse(await readFile(new URL('abu-trade-metrics/plugin.json', root), 'utf8'));
+  const declaration = JSON.parse(await readFile(new URL('abu-trade-metrics/capabilities.json', root), 'utf8'));
+  const host = { plugins: { read(id, request) {
+    assert.equal(id, plugin.id);
+    return request.part === 'manifest' ? { ...declaration, id, version: plugin.version, revision: 'fixture-fixed-merged-plugin' }
+      : { state: 'mounted', runtime_status: 'ready', agent_scope: plugin.agent_scope };
+  } } };
+  const resolved = resolveResearch(host, { plugins: [plugin.id] });
+  assert.deepEqual(resolved.tools, ['sesame/abu-trade-metrics#abu_trade_metrics_analyze', 'sesame/abu-trade-metrics#abu_trade_results_audit']);
+  assert.deepEqual(resolved.inputOnlyTools, resolved.tools);
+  assert.equal(hasResearchDataAccess(resolved), false, 'Neither method adds external dataset access or native engine execution');
 });

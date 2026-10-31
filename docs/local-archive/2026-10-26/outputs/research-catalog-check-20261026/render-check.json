@@ -1,0 +1,14 @@
+{
+  "page_errors": [],
+  "dictionary_initial": "244 / 244 个业务字段组",
+  "analyst_search": "5 / 244 个业务字段组",
+  "options_search": "20 / 244 个业务字段组",
+  "desktop": {
+    "width": 1440,
+    "scroll": 1440
+  },
+  "mobile": {
+    "width": 390,
+    "scroll": 390
+  }
+}

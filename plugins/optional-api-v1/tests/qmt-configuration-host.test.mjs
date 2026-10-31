@@ -98,7 +98,7 @@ test('installed QMT shared configuration preserves one authority, CAS, read-only
       assert.equal(processCalls, 0);
     });
 
-    await t.test('market settings save independently and the original operation receipt owns retries and CAS', async () => {
+    await t.test('market settings save independently while platform gates, original operation receipts and CAS remain enforced', async () => {
       const values = { python_path: python, market_port: 58610 }, command = 'qmt-shared-market-save-01';
       const result = await apply(command, 1, values); assert.equal(result.status, 'applied');
       assert.equal(fields(result.catalog).market_port.value, 58610); assert.equal(fields(result.catalog).account_id.configured, false);
@@ -116,9 +116,23 @@ test('installed QMT shared configuration preserves one authority, CAS, read-only
       assert.equal((await config()).version, 2);
       assert.equal((await readiness('qmt_read', { action: 'quotes', symbols: ['600000.SH'] })).available, true);
       assert.deepEqual(missing(await readiness('qmt_read', { action: 'asset' })), ['account_id', 'userdata_directory']);
-      const bound = await call(`${pluginId}#market_bind`, { binding: {} }, qmt);
-      assert.equal(bound.health, 'configured');
-      await call(`${pluginId}#market_unbind`, { binding: bound }, qmt);
+      if (process.platform === 'win32') {
+        const bound = await call(`${pluginId}#market_bind`, { binding: {} }, qmt);
+        assert.equal(bound.health, 'configured');
+        await call(`${pluginId}#market_unbind`, { binding: bound }, qmt);
+      } else {
+        await assert.rejects(call(`${pluginId}#market_bind`, { binding: {} }, qmt), {
+          code: 'PREREQUISITE_REQUIRED', message: /native Windows x64.*macOS and Linux are not QMT hosts/
+        });
+        const inspection = await qmt.capabilities.invoke(`${pluginId}#qmt_environment`, { action: 'inspect' });
+        assert.equal(inspection.type, 'run');
+        const inspected = await qmt.runs.wait(inspection.run, { until: 'settled', timeoutMs: 30000 });
+        assert.equal(inspected.reason, 'settled'); assert.equal(inspected.run.status, 'completed', JSON.stringify(inspected.run.error));
+        const environment = inspected.run.output;
+        assert.equal(environment.platform, process.platform); assert.equal(environment.supported_platform, 'win32-x64');
+        assert.ok(environment.missing.includes('Native Windows x64 host'));
+        assert.equal(environment.sdk_verified, false); assert.equal(environment.terminal_started, false);
+      }
       assert.equal(processCalls, 0);
     });
 

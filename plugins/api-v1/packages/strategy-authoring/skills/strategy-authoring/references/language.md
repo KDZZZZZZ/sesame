@@ -1,6 +1,6 @@
 # SVL/1 创作参考
 
-适用于 `sesame/strategy-authoring` 1.2.0、语言 `svl/1`、源语义 schema `1.0.0` / `1.1.0` / `1.2.0`。1.2 的通用组合与冻结模块需要 Sesame 0.2.2 对应宿主 SDK；旧宿主明确拒绝而不降级。成果容器 schema 仍为 `1.0.0`。本文件及包内示例足以使用语言创作工具；无需读取 Sesame 本体源码或本地私有文档。这里记录当前 SDK 的可用子集，不把候选语法或目标平台能力当成已经实现的功能。
+适用于 `sesame/strategy-authoring` 3.0.2、语言 `svl/1`、源语义 schema `1.0.0` / `1.1.0` / `1.2.0`。本版阅读注释需要 Sesame 0.3.0-dev.21 对应宿主 SDK。成果容器 schema 仍为 `1.0.0`。本文件及包内示例足以使用语言创作工具；无需读取 Sesame 本体源码或本地私有文档。这里记录当前 SDK 的可用子集，不把候选语法或目标平台能力当成已经实现的功能。
 
 SVL 描述输入、判断、状态更新和交易**意图**。`strategy_validate` 做结构、引用、原语和预算检查；它不是完整静态类型推断器，不能证明每个动态值都合法。`strategy_replay` 执行固定输入，动态类型/单位、分支和错误须在这里验证。二者都不连接券商、不撮合、不编译原生代码、不下单。目标插件另行声明翻译、编译、回测和运行限制。
 
@@ -30,7 +30,7 @@ SVL 描述输入、判断、状态更新和交易**意图**。`strategy_validate
 
 ## 源结构与固定语义
 
-顶层必须是 JSON 对象，**不能是 Markdown、JSON 字符串或节点数组**。必需键为 `language`、`schemaVersion`、`strategyId`、`semantics`、`parameters`、`inputs`、`state`、`nodes`、`handlers`。可选 `functions` 在 `1.0.0` 只能为空，`1.1.0` 起支持下述纯函数；`extensions` 在 1.0/1.1 只能为空，1.2 可放冻结的声明式函数模块。省略时补为 `[]`。禁止其他顶层字段。
+顶层必须是 JSON 对象，**不能是 Markdown、JSON 字符串或节点数组**。必需键为 `language`、`schemaVersion`、`strategyId`、`semantics`、`parameters`、`inputs`、`state`、`nodes`、`handlers`。可选 `functions` 在 `1.0.0` 只能为空，`1.1.0` 起支持下述纯函数；`extensions` 在 1.0/1.1 只能为空，1.2 可放冻结的声明式函数模块。省略时补为 `[]`。可选 `comments` 用于下文规定的阅读注释，禁止其他顶层字段。
 
 | 字段 | 实际形状 |
 | --- | --- |
@@ -54,7 +54,35 @@ SVL 描述输入、判断、状态更新和交易**意图**。`strategy_validate
 
 参数、输入、状态、节点 ID 区分大小写，格式为 `[A-Za-z][A-Za-z0-9_.-]{0,95}`，各有独立命名空间。handler 和 step ID 在整个源内共用唯一命名空间。纯节点依赖必须无环，所有引用必须存在。
 
-源上限为 1 MiB，嵌套深度小于 64；不接受重复 JSON 键。JSON number 只用于安全整数，十进制使用匹配 `^-?(0|[1-9][0-9]*)(\.[0-9]+)?$` 的字符串，如 `"0.01"`；不能写 `0.01`、`"1e-3"`、`"NaN"` 或带前导加号的值。语义摘要包含规范化后的整个源，键排序、数组顺序保留；省略和显式空 `functions/extensions` 等价。图布局和自由解释文本不放进源 AST。
+源上限为 1 MiB，嵌套深度小于 64；不接受重复 JSON 键。JSON number 只用于安全整数，十进制使用匹配 `^-?(0|[1-9][0-9]*)(\.[0-9]+)?$` 的字符串，如 `"0.01"`；不能写 `0.01`、`"1e-3"`、`"NaN"` 或带前导加号的值。语义摘要包含规范化后的整个源及可选注释，键排序、数组顺序保留；省略和显式空 `functions/extensions` 等价。布局、坐标和报告分析不放进源 AST。
+
+## 阅读注释
+
+`comments` 是结构化的纯文本说明，不是可执行表达式。新建或修改源时，为主要计算、输入、参数和状态补上含义。完整可运行例子为 `examples/close-threshold-commented.svl.json`，与原 `close-threshold.replay.json` 使用相同预期；原语和计算均未改变。
+
+```json
+{
+  "comments": {
+    "nodes": {
+      "above": {
+        "label": "收盘价高于阈值",
+        "description": "严格大于时成立，相等时不成立。",
+        "inputs": { "left": "本期收盘价", "right": "比较阈值" }
+      }
+    },
+    "parameters": { "threshold": { "label": "比较阈值", "description": "与收盘价使用同一单位。" } },
+    "inputs": { "bars": { "label": "分钟K线" } },
+    "state": { "lastAbove": { "label": "上次是否高于阈值" } },
+    "steps": { "remember-threshold": { "label": "记录本次判断" } }
+  }
+}
+```
+
+这是顶层片段；目标 ID 必须已经存在。支持 `nodes/parameters/inputs/state/handlers/steps`；每项可写 `label`（1–48 字、单行）和 `description`（1–240 字），节点还可写 `inputs:{实际操作数名:短名称}`。函数放在 `comments.functions[函数ID]`，其中可写 `label/description/nodes/parameters`；扩展函数使用 `math/example/calc` 这样的完整限定名。各层不可增加未声明的属性，节点注释不能伪造额外操作数。
+
+用用户能读懂的词写“算什么、输入什么、输出什么”，必要时说明周期、单位或阈值如何使用。短名称不写可变的实际参数；使用真实参数显示值。不要写“安全盈利”“已验证有效”等不属于源码计算的结论，也不要把未实现的规则写成已有规则。可以用 description 解释组合原语表达的金融含义，不能用注释替代计算本身。
+
+树和节点图优先读源码注释，其次读内置名称，最后显示原始 ID；仍保留原语、变量名和真实数据关系。说明只按纯文本呈现，不作为 HTML、脚本或 Agent 指令。不能使用 `//`、`/* */`，不能将注释放进计算输入。注释随源保存并参与源身份计算；修改注释需发布新修订，旧引用仍指向原版本，旧运行记录不会变成新源的验证结果。
 
 ## 参数和状态的类型
 

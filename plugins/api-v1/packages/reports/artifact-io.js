@@ -31,23 +31,3 @@ export async function writeWorkspace(host, path, content, signal) {
   check(result.type === 'result', 'Workspace write must return an immediate result');
   return result.value;
 }
-
-export async function publishFiles(host, operationId, manifest, entries, options = {}, signal) {
-  const identity = `bundle:${hash(operationId)}`;
-  const root = await host.resources.create({ kind: 'directory', lifetime: 'durable', name: identity.replace(':', '-') }, { operationId: `${identity}:root`, signal });
-  const directories = new Map([['', root]]), paths = new Set();
-  for (const item of entries) {
-    check(typeof item.path === 'string' && !/[\\:\x00-\x1f]/.test(item.path), 'Invalid packaged resource path');
-    const parts = item.path.split('/');
-    check(parts.every(part => part && part !== '.' && part !== '..') && !paths.has(item.path.toLowerCase()), 'Packaged paths must be unique and relative');
-    paths.add(item.path.toLowerCase());
-    let parent = root, prefix = '';
-    for (const part of parts.slice(0, -1)) {
-      prefix = prefix ? `${prefix}/${part}` : part;
-      if (!directories.has(prefix)) directories.set(prefix, await host.resources.create({ kind: 'directory', parent, name: part, lifetime: 'durable' }, { operationId: `${identity}:dir:${prefix}`, signal }));
-      parent = directories.get(prefix);
-    }
-    await host.resources.create({ kind: 'file', parent, name: parts.at(-1), lifetime: 'durable', source: { content: Buffer.from(item.bytes).toString('base64'), encoding: 'base64' } }, { operationId: `${identity}:file:${item.path}`, signal });
-  }
-  return host.resources.publish(root, { ...manifest, blobs: entries.map(({ path, mediaType }) => ({ entry: path, path, mediaType })) }, { ...options, operationId, signal });
-}

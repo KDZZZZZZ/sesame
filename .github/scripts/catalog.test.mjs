@@ -71,7 +71,7 @@ test('legacy projection retains its exact format while taxonomy projection deriv
       }
     }
     if (taxonomy) {
-      assert.deepEqual(inventory.taxonomy.functionalCategories.map(item => item.id), ['business', 'analysis', 'integration', 'presentation', 'platform']);
+      assert.deepEqual(inventory.taxonomy.functionalCategories.map(item => item.id), ['analysis'], 'navigation includes only groups used by these source packages');
       assert.deepEqual(inventory.taxonomy.implementationKinds.map(item => item.id), ['knowledge', 'function', 'adapter', 'workflow', 'service']);
       assert.match(inventory.notice, /honor each package engines range/);
     } else {

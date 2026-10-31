@@ -212,13 +212,14 @@
       "usage": {
         "purpose": "使用明确分离的训练/评估数据拟合小型线性回归或逻辑回归，并输出可解释的参数和时间顺序评估。",
         "inputs": "调用形状为 {input:{schema_version:1,source:{id,kind},as_of,parameters?,...}}，不是文件路径或数据 ID。source.id 为 1..500 字符，kind 为 synthetic/historical/live；as_of 及全部时间字段使用真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒）。输入限 2MiB 有限 JSON，不接收代码。parameters 只支持列出的字段。 feature_names 为 1..50 个唯一名称；rows 含 time、available_at、label_available_at、split:\"train\"|\"eval\"、features:{各名称:有限数值}、label，可选唯一 id。至少 2 条 train 和 1 条 eval，time 不重复。当前契约要求 available_at == time <= label_available_at <= as_of；所有训练 time 和训练 label_available_at 必须早于第一条 eval.time。logistic 的 label 只能为 0/1。train 条数*(特征数+1)*iterations <= 5000000。",
-        "outputs": "observations.train_rows/eval_rows 为样本数；scaler、coefficients 只由 train 拟合；chronological_eval 含 predictions、mse 和 accuracy（仅 logistic 非 null）。 立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。",
+        "outputs": "observations.train_rows/eval_rows 为样本数；scaler、coefficients 只由 train 拟合；chronological_eval 含 predictions、mse 和 accuracy（仅 logistic 非 null）。 立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。 交给调用者时保留上述固定引用、source/as_of、实际参数和 limitations。把 scaler、coefficients、train_rows/eval_rows 和 chronological_eval 交给实验流程比较误差；特征生产、标签设计、参数选择和部署仍由调用者统筹，不能由本次评估结果倒选训练特征。",
         "prerequisites": [
           "提供与任务相符的已知输入；本能力不联网取数，不需要 Python、ABU 安装或券商账户。"
         ],
         "limitations": [
           "时间顺序验证不独立证明输入是真正未见样本。小型模型是可改进基线，不提供自动特征选择、模型部署或最优参数保证。",
-          "来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。"
+          "来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。",
+          "复用前核对输入版本、参数、截止时间与实现口径；已有匹配结果可直接引用。同源价格、成交或统计派生结果不能重复计为独立证据；计算只回答本项局部问题，方法解释与最终综合由调用者负责。"
         ]
       }
     }
@@ -236,7 +237,7 @@
     {
       "id": "knowledge-1",
       "path": "prompt.md",
-      "description": "轻量模型基线 — prompt.md",
+      "description": "abu_model_lab_analyze 的局部目标、解释边界和跨方法交接。",
       "kind": "prompt"
     },
     {
@@ -254,13 +255,13 @@
     {
       "id": "knowledge-4",
       "path": "skills/abu-model-lab/references/method.md",
-      "description": "轻量模型基线 — skills/abu-model-lab/references/method.md",
+      "description": "abu_model_lab_analyze 的公式、参数口径与基线差异；核对是否可以复用其他已计算结果。",
       "kind": "reference"
     },
     {
       "id": "knowledge-5",
       "path": "skills/abu-model-lab/SKILL.md",
-      "description": "轻量模型基线 — skills/abu-model-lab/SKILL.md",
+      "description": "数值方法：使用明确分离的训练/评估数据拟合小型线性回归或逻辑回归，并输出可解释的参数和时间顺序评估。 输入为已固定证据；输出为 observations 与输入/结果工件，供方法解释或工作流复用。",
       "kind": "skill"
     }
   ],

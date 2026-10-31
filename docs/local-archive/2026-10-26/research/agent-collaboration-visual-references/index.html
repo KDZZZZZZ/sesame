@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent 协作 · 视觉参考 — SESAME</title>
+  <style>
+    :root { color-scheme: light; --paper:#f5f2eb; --ink:#25251f; --muted:#6c6b62; --line:#d9d5cb; --accent:#b54b25; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; scroll-padding-top:24px; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.8 "Segoe UI","Microsoft YaHei",sans-serif; }
+    a { color:inherit; text-underline-offset:5px; }
+    a:hover { color:var(--accent); }
+    a:focus-visible, button:focus-visible, summary:focus-visible { outline:3px solid var(--accent); outline-offset:5px; }
+    main { max-width:1100px; margin:auto; padding:42px 36px 64px; }
+    .masthead { display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid var(--ink); padding-bottom:18px; gap:20px; }
+    .brand { font:900 31px/1 Georgia,serif; letter-spacing:-1.8px; }
+    .edition,.eyebrow { color:var(--muted); font-size:12px; letter-spacing:1.4px; }
+    header { padding:48px 0 32px; }
+    h1 { font-size:clamp(31px,5vw,53px); line-height:1.25; letter-spacing:-1.5px; margin:12px 0 21px; font-weight:650; }
+    .intro { max-width:720px; color:var(--muted); margin:0; }
+    .lead { font-size:20px; color:var(--ink); }
+    nav { display:flex; flex-wrap:wrap; gap:10px 24px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:15px 0; font-size:13px; }
+    nav a { text-decoration:none; }
+    .reference { padding:47px 0 40px; border-bottom:1px solid var(--line); }
+    .section-head { display:grid; grid-template-columns:48px 1fr; gap:16px; margin-bottom:23px; }
+    .number { font:italic 30px/1.4 Georgia,serif; color:var(--accent); }
+    .tag { font-size:11px; letter-spacing:1px; color:var(--accent); text-transform:uppercase; }
+    h2 { margin:3px 0 8px; font-size:27px; line-height:1.4; font-weight:600; }
+    .subtitle { margin:0; max-width:770px; color:var(--muted); }
+    figure { margin:0; }
+    .media { overflow:hidden; background:#15151a; border:1px solid #d1cdc4; }
+    .media img,.media video { display:block; width:100%; height:auto; }
+    .zoom { display:block; width:100%; border:0; padding:0; background:none; cursor:zoom-in; }
+    figcaption { display:flex; justify-content:space-between; gap:12px 20px; flex-wrap:wrap; font-size:12px; color:var(--muted); padding:10px 0; }
+    .notes { display:grid; grid-template-columns:1fr 1fr; gap:26px; margin-top:13px; }
+    .notes p { margin:4px 0; font-size:14px; }
+    .label { font-size:11px; color:var(--accent); letter-spacing:1px; }
+    .links { display:flex; flex-wrap:wrap; gap:12px 24px; font-size:13px; margin-top:15px; }
+    .sim-layout { display:grid; grid-template-columns:minmax(0,518px) minmax(0,1fr); gap:36px; align-items:center; }
+    .sim-aside { font-size:16px; }
+    .sim-aside h3 { font-size:22px; font-weight:500; margin:0 0 18px; }
+    .sim-aside p { color:var(--muted); }
+    .sim-aside strong { color:var(--ink); font-weight:600; }
+    details { margin-top:19px; }
+    summary { cursor:pointer; font-size:13px; padding:9px 0; }
+    details .media { margin-top:14px; }
+    .recommendation { padding:43px 0 12px; }
+    .recommendation h2 { margin-bottom:20px; }
+    .proposal { list-style:none; padding:0; margin:0; counter-reset:steps; }
+    .proposal li { counter-increment:steps; display:grid; grid-template-columns:38px 145px 1fr; gap:14px; border-top:1px solid var(--line); padding:17px 0; font-size:14px; }
+    .proposal li:before { content:"0" counter(steps); font:italic 20px Georgia,serif; color:var(--accent); }
+    .proposal span { color:var(--muted); }
+    footer { margin-top:36px; padding-top:17px; border-top:1px solid var(--ink); color:var(--muted); font-size:12px; }
+    dialog { border:0; padding:18px; width:calc(100vw - 32px); max-width:1600px; max-height:94vh; background:var(--paper); }
+    dialog::backdrop { background:#0b0b0be6; }
+    dialog form { text-align:right; margin-bottom:12px; }
+    dialog button { cursor:pointer; color:var(--ink); background:transparent; border:1px solid var(--line); padding:7px 18px; font:inherit; }
+    dialog img { display:block; width:100%; height:auto; }
+    @media(max-width:680px) {
+      main { padding:24px 20px 40px; }
+      .masthead { gap:10px; } .edition { font-size:10px; letter-spacing:0; }
+      header { padding:31px 0 25px; } .lead { font-size:18px; }
+      .reference { padding:30px 0; } .section-head { grid-template-columns:32px 1fr; gap:10px; }
+      h2 { font-size:23px; } .number { font-size:24px; }
+      .notes,.sim-layout { grid-template-columns:1fr; gap:16px; }
+      .proposal li { grid-template-columns:25px 1fr; gap:10px; }
+      .proposal li span { grid-column:2; }
+    }
+    @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+  </style>
+</head>
+<body>
+<main>
+  <div class="masthead"><span class="brand">SESAME</span><span class="edition">DESIGN RESEARCH · 2026.10.14</span></div>
+  <header>
+    <p class="intro"><a href="orchestration.html"><strong>查看第二轮筛选：高星标项目中的编排与通信逻辑 →</strong></a></p>
+    <div class="eyebrow">MULTI-AGENT COLLABORATION / VISUAL REFERENCES</div>
+    <h1>让协作过程，<br>看得见，也读得懂。</h1>
+    <p class="intro lead">6 个视觉切面，为纵向因子研究报告寻找合适的表达。</p>
+    <p class="intro">重点看任务交接、并行执行、迭代回放与证据展开。以下图片和视频均来自官方页面；点击图片可放大，视频可播放。每节的「用于 Sesame」是我们的设计建议。</p>
+  </header>
+  <nav aria-label="参考索引">
+    <a href="#tree">01 执行树</a><a href="#sim">02 证据展开</a><a href="#graph">03 协作路径</a><a href="#timeline">04 并行时间线</a><a href="#replay">05 回放概念</a><a href="#team">06 团队配置</a>
+  </nav>
+
+  <section class="reference" id="tree">
+    <div class="section-head"><span class="number">01</span><div><div class="tag">优先参考 · 已实现 UI</div><h2>AgentPrism · 执行树与时间条</h2><p class="subtitle">在同一行里读到调用层级、角色类型与执行耗时，适合多 Agent 研究的主视图。</p></div></div>
+    <figure><div class="media"><button class="zoom" aria-label="放大 AgentPrism 执行树截图"><img src="assets/agentprism-tree.png" alt="AgentPrism 官方截图：左侧嵌套执行树、标签与指标，右侧对齐的执行时间条"></button></div><figcaption><span>Evil Martians · 官方设计文章 / 2025.10.15</span><a href="https://evilmartians.com/chronicles/debug-ai-fast-agent-prism-open-source-library-visualize-agent-traces" target="_blank" rel="noopener">查看来源 ↗</a></figcaption></figure>
+    <div class="notes"><div><span class="label">值得借鉴</span><p>树的缩进表达谁调用谁；重复细节折叠后保留主干。时间条让并行关系和耗时一眼可见。</p></div><div><span class="label">用于 SESAME</span><p>按「轮次 → 研究方向 → Agent / 工具」组织，保留模型、状态、时间。用留白和连接线建立层级，控制颜色数量。</p></div></div>
+    <div class="links"><a href="https://agent-prism.evilmartians.io/" target="_blank" rel="noopener">交互 Demo ↗</a><a href="https://storybook.agent-prism.evilmartians.io/" target="_blank" rel="noopener">组件 Storybook ↗</a><a href="https://github.com/evilmartians/agent-prism" target="_blank" rel="noopener">开源实现 ↗</a></div>
+  </section>
+
+  <section class="reference" id="sim">
+    <div class="section-head"><span class="number">02</span><div><div class="tag">优先参考 · 当前官方文档截图</div><h2>Sim · 紧凑轨迹与输入输出</h2><p class="subtitle">先看本轮运行的轮廓，再进入某一步的证据。窄宽度下依然能阅读。</p></div></div>
+    <div class="sim-layout"><figure><div class="media"><button class="zoom" aria-label="放大 Sim 执行轨迹截图"><img src="assets/sim-trace.png" alt="Sim 的纵向 Trace 面板：嵌套排列 workflow、agent、model 和 tool，并显示各自时长"></button></div><figcaption><span>Sim · Log Details / Trace</span><a href="https://docs.sim.ai/logs-debugging" target="_blank" rel="noopener">查看来源 ↗</a></figcaption></figure><div class="sim-aside"><h3>让细节按需要出现。</h3><p><strong>总览：</strong>本轮状态、总耗时与步骤数量。</p><p><strong>步骤：</strong>Agent 与工具调用依次展开。</p><p><strong>证据：</strong>选中后查看实际输入、输出或错误。</p><p>用于 Sesame：把详情放在当前步骤下方展开，保持报告单列。公式、指标、评审意见与产物链接随步骤呈现。</p></div></div>
+    <details><summary>展开查看：Sim 输入 / 输出检查器原图</summary><figure><div class="media"><button class="zoom" aria-label="放大 Sim 输入输出检查器截图"><img src="assets/sim-inspector.png" alt="Sim 运行检查器：左侧步骤与耗时，右侧选中步骤的 Input / Output 字段树"></button></div><figcaption><span>Sim · 官方运行检查器截图</span><a href="https://docs.sim.ai/logs-debugging" target="_blank" rel="noopener">查看来源 ↗</a></figcaption></figure></details>
+    <div class="links"><a href="https://github.com/simstudioai/sim" target="_blank" rel="noopener">开源实现 ↗</a></div>
+  </section>
+
+  <section class="reference" id="graph">
+    <div class="section-head"><span class="number">03</span><div><div class="tag">优先参考 · 官方功能演示 / 2026.07</div><h2>Langfuse · 概览与实际执行路径</h2><p class="subtitle">聚合视图压缩重复调用；展开视图展示每一次实际发生的调用。</p></div></div>
+    <figure><div class="media"><video controls playsinline muted preload="metadata" src="assets/langfuse-graph.mp4#t=0.2" poster="assets/langfuse-graph-poster.png" aria-label="Langfuse 官方视频：聚合图和展开图之间切换"></video></div><figcaption><span>Langfuse · Graph view modes / 官方视频</span><a href="https://langfuse.com/docs/observability/features/agent-graphs" target="_blank" rel="noopener">查看来源 ↗</a></figcaption></figure>
+    <div class="notes"><div><span class="label">值得借鉴</span><p>概览里重复步骤合并并显示次数；展开后循环成为逐次调用构成的路径，能解释一次运行究竟如何推进。</p></div><div><span class="label">用于 SESAME</span><p>「协作概览」看角色关系，「本轮过程」看真实交接。研究 → 实现 → 评审 → 修改可以逐轮展开，保留失败分支。</p></div></div>
+    <div class="links"><a href="https://cloud.langfuse.com/project/cloramnkj0002jz088vzn1ja4/traces/8ed12d68-353f-464f-bc62-720984c3b6a0" target="_blank" rel="noopener">官方公开示例 ↗</a><a href="https://github.com/langfuse/langfuse" target="_blank" rel="noopener">开源实现 ↗</a></div>
+  </section>
+
+  <section class="reference" id="timeline">
+    <div class="section-head"><span class="number">04</span><div><div class="tag">近期更新 · 官方功能演示 / 2026.08.28</div><h2>Langfuse · 可缩放并行时间线</h2><p class="subtitle">先把整轮执行压进视野，再放大某一段，观察并发、等待与长任务。</p></div></div>
+    <figure><div class="media"><video controls playsinline muted preload="metadata" src="assets/langfuse-timeline.mp4#t=0.2" poster="assets/langfuse-timeline-poster.png" aria-label="Langfuse 官方视频：可缩放与平移的响应式执行时间线"></video></div><figcaption><span>Langfuse · Responsive Timeline / 官方视频</span><a href="https://langfuse.com/changelog/2026-08-28-responsive-timeline" target="_blank" rel="noopener">查看来源 ↗</a></figcaption></figure>
+    <div class="notes"><div><span class="label">值得借鉴</span><p>时间与行一起缩放；缩小时保留结构，放大后显示名称和耗时。可快速定位长耗时调用。</p></div><div><span class="label">用于 SESAME</span><p>作为「执行效率」的可折叠视图，查看哪些研究方向并行、哪一步等待最长。正文继续按研究逻辑纵向阅读。</p></div></div>
+  </section>
+
+  <section class="reference" id="replay">
+    <div class="section-head"><span class="number">05</span><div><div class="tag">设计概念 · 非已发布组件证明</div><h2>AgentPrism · 执行树回放</h2><p class="subtitle">用路径高亮、节点淡化与播放控制，表达研究如何走到当前结果。</p></div></div>
+    <figure><div class="media"><button class="zoom" aria-label="放大 AgentPrism 执行树回放概念稿"><img src="assets/agentprism-sequence.png" alt="AgentPrism 概念稿：自上而下的分支执行树，当前执行路径高亮，底部有播放与暂停控制"></button></div><figcaption><span>Evil Martians · 官方标注 Sequence Diagram concept image</span><a href="https://evilmartians.com/chronicles/debug-ai-fast-agent-prism-open-source-library-visualize-agent-traces" target="_blank" rel="noopener">查看来源 ↗</a></figcaption></figure>
+    <div class="notes"><div><span class="label">值得借鉴</span><p>将注意力集中在当前路径，其他分支弱化。图中是自上而下的执行树 / DAG，官方将它标为概念稿。</p></div><div><span class="label">用于 SESAME</span><p>回放因子提出、否决与修改过程；点选某个版本，显示它继承自哪个候选、依据什么证据改变。</p></div></div>
+  </section>
+
+  <section class="reference" id="team">
+    <div class="section-head"><span class="number">06</span><div><div class="tag">团队配置参考 · 官方文档截图</div><h2>AutoGen Studio · 角色、模型与工具</h2><p class="subtitle">把团队成员及其模型、工具展示在同一张关系图里。</p></div></div>
+    <figure><div class="media"><button class="zoom" aria-label="放大 AutoGen Team Builder 截图"><img src="assets/autogen-team.jpg" alt="AutoGen Studio 官方带标注截图：团队组件库与可视化节点，Agent 节点包含模型与工具"></button></div><figcaption><span>Microsoft AutoGen · Team Builder / 截图保留官方原始标注</span><a href="https://microsoft.github.io/autogen/stable/user-guide/autogenstudio-user-guide/usage.html" target="_blank" rel="noopener">查看来源 ↗</a></figcaption></figure>
+    <div class="notes"><div><span class="label">值得借鉴</span><p>角色、使用的模型、可调用的工具有清楚的归属关系，便于理解团队由谁组成。</p></div><div><span class="label">用于 SESAME</span><p>页面上方做简洁的团队名册：研究总管、研究员、实现者、评审者与复盘者，各自显示模型。主报告另按执行过程展开。</p></div></div>
+  </section>
+
+  <section class="recommendation">
+    <div class="eyebrow">PROPOSED DIRECTION / SESAME 的组合建议</div>
+    <h2>纵向叙事，按需深入。</h2>
+    <ol class="proposal">
+      <li><strong>团队与本轮目标</strong><span>谁负责什么、各自使用哪个模型、这一轮准备验证什么。</span></li>
+      <li><strong>阶段执行树</strong><span>以 AgentPrism 的树结构为主，按研究轮次展开；同轮的并行任务放在一起。</span></li>
+      <li><strong>可展开的证据</strong><span>借鉴 Sim：点击步骤，在下方查看输入、工具结果、公式、指标与评审依据。</span></li>
+      <li><strong>迭代与回放</strong><span>借鉴 Langfuse 的聚合 / 展开切换；显示真实发生的交接、修改与失败分支。</span></li>
+    </ol>
+    <p class="intro">视觉上保留 Sesame 的纸色背景、深色文字与少量橙色强调；用细连接线、缩进和排版表达结构。上方参考图保留原产品配色。</p>
+  </section>
+  <footer>调研日期：2026-10-14。媒体版权归原作者；此页用于本地设计参考，原始链接见各图注。参考素材与实施建议已分别标注。</footer>
+</main>
+<dialog id="lightbox" aria-label="参考图片放大查看"><form method="dialog"><button>关闭 ×</button></form><img id="large-image" alt=""></dialog>
+<script>
+  const dialog = document.getElementById('lightbox');
+  const largeImage = document.getElementById('large-image');
+  for (const button of document.querySelectorAll('.zoom')) {
+    button.addEventListener('click', () => {
+      const image = button.querySelector('img');
+      largeImage.src = image.src;
+      largeImage.alt = image.alt;
+      dialog.showModal();
+    });
+  }
+  dialog.addEventListener('click', event => {
+    if (event.target !== dialog) return;
+    const rect = dialog.getBoundingClientRect();
+    if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) dialog.close();
+  });
+</script>
+</body>
+</html>

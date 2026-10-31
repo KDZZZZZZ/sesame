@@ -1,9 +1,9 @@
 {
   "id": "sesame/dow-theory",
   "apiVersion": "2",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "title": "Dow Theory 趋势确认",
-  "description": "独立 Dow 理论研究：主要/次级趋势、收盘与多指数确认；历史版本明确，缺确认保持未确认。",
+  "description": "可组合的分析方法：预先定义的主要/次级趋势是否得到两个指数各自收盘的共同确认；消费已有证据，返回各指数确认时间线、已声明极值规则、confirmed/non-confirmation/insufficient-data 状态及撤销条件。",
   "author": {
     "name": "Sesame contributors"
   },

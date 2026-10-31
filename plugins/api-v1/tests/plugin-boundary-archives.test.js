@@ -6,12 +6,15 @@ import { join, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { buildLock, createArchive, packageFiles, treeDigest } from '../scripts/plugin-lock.mjs';
+import { applyApprovedRetirements } from '../scripts/verify-plugin-boundaries.mjs';
 
 const root = fileURLToPath(new URL('../../../', import.meta.url));
 const baseline = JSON.parse(readFileSync(new URL('./fixtures/plugin-boundaries-baseline.json', import.meta.url), 'utf8'));
+const retirements = JSON.parse(readFileSync(new URL('./fixtures/plugin-boundaries-retirements.json', import.meta.url), 'utf8'));
+const active = applyApprovedRetirements(root, baseline, retirements);
 const selected = process.env.SESAME_BOUNDARY_PACKAGES?.split(',');
-if (selected) for (const id of selected) assert.ok(baseline.packages.some(item => item.manifest.id === id), `Not in active scope: ${id}`);
-for (const item of baseline.packages.filter(item => !selected || selected.includes(item.manifest.id))) {
+if (selected) for (const id of selected) assert.ok(active.packages.some(item => item.manifest.id === id), `Not in active scope: ${id}`);
+for (const item of active.packages.filter(item => !selected || selected.includes(item.manifest.id))) {
   test(`${item.manifest.id}: independent archive restores exact bytes and imports without neighboring packages`, async t => {
     const directory = mkdtempSync(join(tmpdir(), 'sesame-boundary-archive-'));
     t.after(() => { assert.ok(resolve(directory).startsWith(resolve(tmpdir()) + sep)); rmSync(directory, { recursive: true, force: true }); });

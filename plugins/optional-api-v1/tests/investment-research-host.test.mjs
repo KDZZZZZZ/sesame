@@ -63,7 +63,7 @@ test('new package passes actual registration, executes a native eight-Agent work
       },
     });
     const declared = await host.capabilities.list({ pluginId: 'sesame/investment-research' });
-    assert.equal(declared.items.length, 3);
+    assert.equal(declared.items.length, 5);
     const accepted = await host.capabilities.invoke('sesame/investment-research#investment_research_analyze', {
       title: 'Synthetic independent research', question: 'Test evidence handoff; all content is fictional.', subjects: ['FICTIONAL'],
       model: { provider: 'fixture', id: 'fixture' }, research: { plugins: [] },

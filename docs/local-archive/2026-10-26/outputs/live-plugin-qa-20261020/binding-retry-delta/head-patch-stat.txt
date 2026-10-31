@@ -1,0 +1,4 @@
+ modules/frontend/src/lib/api/binding-lifecycle.ts |   44 +++++++--
+ modules/frontend/src/lib/api/contracts.ts         |    7 +
+ tests/provider-binding-lifecycle.test.js          |  103 +++++++++++++++++++++
+ 3 files changed, 143 insertions(+), 11 deletions(-)

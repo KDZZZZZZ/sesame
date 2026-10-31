@@ -1,7 +1,7 @@
 {
   "id": "sesame/kurumi-replay",
   "apiVersion": "2",
-  "version": "0.1.3-dev.3.8",
+  "version": "0.1.3-dev.3.9",
   "title": "久留美 · 三章连续挑战",
   "description": "非官方久留美三章连续模拟挑战，真实历史、真实角色Agent、只读行情与模拟账户观战；4小时决策与完整素材归档模式。",
   "default_state": "discoverable",
@@ -66,11 +66,27 @@
     "VALIDATION.md"
   ],
   "engines": {
-    "sesame": ">=0.2.2"
+    "sesame": ">=0.3.0-dev.1 <0.4.0"
   },
   "license": "MIT",
   "author": {
     "name": "Sesame contributors (internal Agent implementation)"
   },
-  "capability_manifest": "capabilities.json"
+  "capability_manifest": "capabilities.json",
+  "permissions": {
+    "scopes": [
+      "plugins.manage",
+      "workspace.messages.read"
+    ],
+    "calls": [
+      "host.agent.run",
+      "host.runs.read",
+      "host.runs.wait",
+      "host.runs.interrupt",
+      "host.resources.read",
+      "host.model.complete",
+      "host.sessions.query",
+      "host.messages.query"
+    ]
+  }
 }

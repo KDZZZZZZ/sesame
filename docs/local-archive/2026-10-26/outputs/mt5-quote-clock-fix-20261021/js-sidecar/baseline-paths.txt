@@ -1,0 +1,5 @@
+plugins/optional-api-v1/packages/mt5/backend/trading-prepare.js
+plugins/optional-api-v1/packages/mt5/positions.js
+plugins/optional-api-v1/packages/mt5/backend/python-tools.js
+plugins/optional-api-v1/packages/mt5/tests/trading-prepare.test.js
+plugins/optional-api-v1/tests/mt5-positions-v2.test.mjs

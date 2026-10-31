@@ -1,0 +1,11 @@
+fix(reports): download verified packaged attachments from the report view
+
+Relative attachment links inherited the srcdoc host URL and returned 404.
+Resolve them within the fixed report package and deliver verified bytes through
+the existing private report channel after a trusted user click. Keep opaque
+frame isolation, fixed filenames, integrity checks and Blob URL cleanup.
+
+Validation: 30 report attachment, frame policy, bundle and export checks passed,
+including real Chromium and Electron downloads. Standalone PDF and PNG keep
+attachment labels without embedding or fetching the attachment files.
+The existing revision-3 evidence report will be rechecked after deployment.

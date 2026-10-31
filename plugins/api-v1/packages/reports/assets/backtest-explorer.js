@@ -8,20 +8,28 @@
     if (className) node.className = className;
     return node;
   };
-  const svg = (tag, attrs, text) => {
-    const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
-    for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, String(value));
-    if (text != null) node.textContent = String(text);
-    return node;
-  };
   const tr = (zh, en) => document.documentElement.lang.startsWith('zh') ? zh : en;
   const exact = value => value == null ? '—' : typeof value === 'object' ? JSON.stringify(value) : String(value);
   const numericParameter = value => (typeof value === 'number' && Number.isFinite(value)) || (typeof value === 'string' && /^-?(?:0|[1-9]\d*)(?:\.\d+)?$/.test(value) && Number.isFinite(Number(value)));
   const numeric = value => value === null ? null : numericParameter(value) ? Number(value) : fail('Metrics must be finite numbers, exact decimal strings or null');
   const pair = row => JSON.stringify([row.symbol, row.timeframe]);
+  const statusLabel = value => ({ completed: tr('完成', 'Completed'), failed: tr('失败', 'Failed'), not_run: tr('未运行', 'Not run') })[value];
+  const selectedLabel = value => value ? tr('已选', 'Yes') : tr('未选', 'No');
+  // Format only the three displayed metrics. Decimal strings retain their full
+  // integer precision; parameters and the original evidence are never rounded.
+  const metricDisplay = value => {
+    if (value === null) return '—';
+    if (typeof value === 'number') return value.toLocaleString(tr('zh-CN', 'en-US'), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const negative = value.startsWith('-'), [integer, fraction = ''] = value.replace(/^-/, '').split('.');
+    let cents = BigInt(integer + fraction.padEnd(2, '0').slice(0, 2));
+    if ((fraction[2] ?? '0') >= '5') cents += 1n;
+    const digits = String(cents).padStart(3, '0');
+    return `${negative && cents !== 0n ? '-' : ''}${digits.slice(0, -2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}.${digits.slice(-2)}`;
+  };
 
-  function validate(rows, parameters) {
+  function validate(rows, parameters, parameterLabels) {
     if (!Array.isArray(parameters) || !parameters.length || parameters.length > 32 || parameters.some(key => typeof key !== 'string' || !key) || new Set(parameters).size !== parameters.length) fail('Provide 1–32 unique parameter keys');
+    if (parameterLabels !== undefined && (!parameterLabels || typeof parameterLabels !== 'object' || Array.isArray(parameterLabels) || Object.entries(parameterLabels).some(([key, label]) => !parameters.includes(key) || typeof label !== 'string' || !label.trim() || label.length > 64 || /[\u0000-\u001f\u007f]/.test(label)))) fail('Parameter labels must name declared parameters using short, nonempty single-line strings');
     if (!Array.isArray(rows) || !rows.length || rows.length > 100000) fail('Provide 1–100,000 frozen trial rows');
     const ids = new Set(), groups = new Map(), samples = new Set();
     for (const row of rows) {
@@ -73,85 +81,12 @@
     return update;
   }
 
-  function graphView(target, graph, source) {
-    if (!graph || !Array.isArray(graph.nodes) || !Array.isArray(graph.edges)) fail('Use the exact graph produced by strategy_graph');
-    const nodeDetails = new Map((source?.nodes ?? []).map(node => [node.id, node]));
-    const draw = (container, part, definitions) => {
-      const nodes = part.nodes, ids = new Set(nodes.map(node => node.id));
-      if (ids.size !== nodes.length || nodes.length > 2000 || part.edges.some(edge => !ids.has(edge.from) || !ids.has(edge.to))) fail('Invalid graph identity');
-      const levels = new Map(nodes.map(node => [node.id, 0]));
-      for (let index = 0; index < nodes.length; index++) {
-        let changed = false;
-        for (const edge of part.edges) if (levels.get(edge.to) <= levels.get(edge.from)) { levels.set(edge.to, levels.get(edge.from) + 1); changed = true; }
-        if (!changed) break;
-        if (index === nodes.length - 1) fail('Cyclic graph');
-      }
-      const lanes = new Map(), positions = new Map();
-      for (const node of nodes) {
-        const level = levels.get(node.id), slot = lanes.get(level) || 0;
-        lanes.set(level, slot + 1); positions.set(node.id, [24 + level * 220, 24 + slot * 70]);
-      }
-      const width = Math.max(640, (Math.max(0, ...levels.values()) + 1) * 220 + 28), height = Math.max(100, Math.max(0, ...lanes.values()) * 70 + 28);
-      const frame = el('div', null, 'backtest-logic'), plot = svg('svg', { viewBox: `0 0 ${width} ${height}`, role: 'group', 'aria-label': tr('SVL 策略逻辑', 'SVL strategy logic') });
-      plot.style.width = `${width}px`; frame.append(plot); container.append(frame);
-      const disclosure = el('details'), detail = el('pre', '', 'backtest-node');
-      disclosure.append(el('summary', tr('节点定义', 'Node definition')), detail); container.append(disclosure);
-      for (const edge of part.edges) {
-        const a = positions.get(edge.from), b = positions.get(edge.to);
-        plot.append(svg('path', { d: `M${a[0] + 188} ${a[1] + 23} C${a[0] + 205} ${a[1] + 23},${b[0] - 20} ${b[1] + 23},${b[0]} ${b[1] + 23}` }));
-      }
-      for (const node of nodes) {
-        const [x, y] = positions.get(node.id), group = svg('g', { tabindex: 0, role: 'button', 'aria-label': `${node.id}: ${node.operator}` });
-        const short = text => text.length > 25 ? text.slice(0, 24) + '…' : text;
-        group.append(svg('title', {}, `${node.id}: ${node.operator}`), svg('rect', { x, y, width: 188, height: 46, rx: 6 }), svg('text', { x: x + 9, y: y + 17 }, short(node.id)), svg('text', { x: x + 9, y: y + 34 }, short(node.operator)));
-        const select = () => { detail.textContent = JSON.stringify({ ...(definitions.get(node.id) ?? node), ...(node.functionId ? { resolvedFunctionId: node.functionId } : {}) }, null, 2); disclosure.open = true; };
-        group.addEventListener('click', select);
-        group.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); select(); } });
-        plot.append(group);
-      }
-    };
-    const definitions = el('details');
-    definitions.append(el('summary', tr('参数、输入与初始状态', 'Parameters, inputs and initial state')), el('pre', JSON.stringify({ parameters: source?.parameters, inputs: source?.inputs, state: source?.state, semantics: source?.semantics }, null, 2), 'backtest-node'));
-    target.append(definitions);
-    const steps = (container, list) => {
-      for (const step of list ?? []) {
-        const flow = el('div', null, 'backtest-flow');
-        if (step.forEach) {
-          flow.classList.add('backtest-loop');
-          flow.append(el('strong', `${step.id} · ${tr('逐项', 'For each')} ${step.forEach.item} ∈ ${exact(step.forEach.input)} · ${tr('最多', 'limit')} ${step.forEach.maxItems}`));
-          steps(flow, step.steps);
-        } else {
-          flow.append(el('span', step.when ? `${tr('条件', 'When')}: ${step.when}` : tr('每次事件', 'Every event')));
-          flow.append(el('span', `→ ${(step.actions ?? []).join(' → ') || '—'}`));
-          if (step.elseActions?.length) flow.append(el('span', `${tr('否则', 'Otherwise')} → ${step.elseActions.join(' → ')}`));
-        }
-        container.append(flow);
-      }
-    };
-    // Event conditions, bounded loops and actions are distinct from data-dependency edges.
-    for (const handler of graph.handlers ?? []) {
-      const block = el('div', null, 'backtest-handler');
-      block.append(el('strong', `${handler.id} · ${handler.event.type} · ${handler.event.input ?? ''}`));
-      steps(block, handler.steps);
-      target.append(block);
-    }
-    draw(target, graph, nodeDetails);
-    const functions = new Map((source?.functions ?? []).map(fn => [fn.id, fn]));
-    for (const extension of source?.extensions ?? []) for (const fn of extension.module?.functions ?? []) functions.set(`${extension.id}/${fn.id}`, fn);
-    for (const fn of graph.functions ?? []) {
-      const block = el('details'); block.append(el('summary', `${tr('函数', 'Function')}: ${fn.id}`)); target.append(block);
-      block.append(el('pre', JSON.stringify({ parameters: fn.parameters, output: fn.output, result: fn.result }, null, 2), 'backtest-node'));
-      let drawn = false;
-      block.addEventListener('toggle', () => {
-        if (block.open && !drawn) { drawn = true; draw(block, fn, new Map((functions.get(fn.id)?.nodes ?? []).map(node => [node.id, node]))); }
-      });
-    }
-  }
 
   function render(target, config) {
     if (typeof target === 'string') target = document.querySelector(target);
     if (!target) fail('A report target is required');
-    const groups = validate(config.rows, config.parameters);
+    const groups = validate(config.rows, config.parameters, config.parameterLabels);
+    const parameterLabel = key => Object.hasOwn(config.parameterLabels ?? {}, key) ? config.parameterLabels[key] : key;
     const metrics = [['sharpe', tr('夏普', 'Sharpe'), ''], ['max_drawdown_pct', tr('最大回撤', 'Max drawdown'), '%'], ['net_profit', tr('净盈亏', 'Net profit'), config.currency]];
     const symbols = [...new Set(config.rows.map(row => row.symbol))], timeframes = [...new Set(config.rows.map(row => row.timeframe))];
     const missing = (symbol, timeframe) => ({ symbol, timeframe, sharpe: null, max_drawdown_pct: null, net_profit: null });
@@ -159,10 +94,15 @@
       title: config.title, eyebrow: config.demo ? tr('Strategy · 演示样本', 'Strategy · DEMO SAMPLE') : 'Strategy',
       verdict: { tone: 'neutral', headline: config.summary },
       sections: [
-        { title: tr('策略逻辑', 'Strategy logic'), takeaway: tr('信号、条件与动作来自同一策略修订。', 'Signals, conditions and actions come from the same strategy revision.'), blocks: [{ type: 'custom', render: node => graphView(node, config.graph, config.definition) }] },
+        ...(config.graph ? [{ title: tr('策略逻辑', 'Strategy logic'), takeaway: tr('信号、条件与动作来自同一策略修订。', 'Signals, conditions and actions come from the same strategy revision.'), blocks: [{ type: 'custom', render: node => SesameSvlGraph.render(node, config.graph, config.definition) }] }] :
+          config.strategyEvidence ? [{ title: tr('策略说明', 'Strategy description'), takeaway: config.strategyEvidence.summary, blocks: [{ type: 'custom', render: node => {
+            if (config.strategyLogicHtml) { const logic = el('div'); logic.innerHTML = config.strategyLogicHtml; node.append(logic); SesameSvlGraph.mount(logic); }
+            const evidence = el('details'); evidence.setAttribute('data-report-evidence', '');
+            evidence.append(el('summary', tr('原生源码与运行证据', 'Native source and run evidence')), el('p', config.strategyEvidence.engine), el('pre', JSON.stringify(config.strategyEvidence.references, null, 2), 'backtest-node')); node.append(evidence);
+          } }] }] : []),
         { title: tr('品种 × 周期', 'Symbols × timeframes'), takeaway: config.selectionRule, blocks: [{ type: 'custom', render: explorer }] },
       ],
-      method: { steps: [config.sourceNote], limits: [tr('热力图显示已记录的选中参数组；颜色切换不会重新选优。', 'The matrix shows recorded selected trials; changing color metrics never reselects winners.')], sources: [{ label: 'SVL', value: JSON.stringify(config.source) }, { label: tr('固定数据', 'Frozen data'), value: config.dataId }] },
+      method: { steps: [config.sourceNote], limits: [tr('热力图显示已记录的选中参数组；颜色切换不会重新选优。', 'The matrix shows recorded selected trials; changing color metrics never reselects winners.')], sources: [...(config.source ? [{ label: 'SVL', value: JSON.stringify(config.source) }] : []), { label: tr('固定数据', 'Frozen data'), value: config.dataId }] },
     });
     function explorer(container) {
       const controls = el('div', null, 'backtest-controls');
@@ -174,17 +114,73 @@
       if (timeframes.length > 20) controls.append(timeframePage.label);
       container.append(controls);
       const matrix = el('div', null, 'backtest-matrix'), legend = el('p', null, 'report-source'), detail = el('section', null, 'backtest-detail'); detail.tabIndex = -1; container.append(matrix, legend, detail);
+      let redrawTrials = () => {};
       function select(row, focus = true) {
         const trials = groups.get(pair(row)) ?? [];
+        redrawTrials = () => {};
         reportKit.destroy(detail); SesameCharts.destroy(detail); detail.replaceChildren();
         detail.append(el('h3', `${row.symbol} · ${row.timeframe}`));
         if (!trials.length) { detail.append(el('p', tr('此组合没有回测记录。', 'No backtest was recorded for this combination.'))); return; }
         detail.append(el('p', `${tr('全部参数组', 'All parameter sets')}: ${trials.length} · ${trials[0].sample}`, 'report-source'));
-        const parameter = selector(tr('分析参数', 'Parameter'), config.parameters.map(key => [key, key])), toolbar = el('div', null, 'backtest-controls'); toolbar.append(parameter.label); detail.append(toolbar);
+        const parameter = selector(tr('分析参数', 'Parameter'), config.parameters.map(key => [key, parameterLabel(key)])), toolbar = el('div', null, 'backtest-controls');
+        const trialGrid = el('section', null, 'backtest-trial-grid'); detail.append(trialGrid, toolbar); toolbar.append(parameter.label);
         const plots = el('div', null, 'backtest-sensitivity'), plotPages = el('div'); detail.append(plots, plotPages);
         detail.append(el('p', tr('每点保留完整参数组，其他参数也可能不同；不合并相同横坐标。', 'Each point retains its full parameter set; other parameters may differ. Equal x-coordinates are not averaged.'), 'report-source'));
-        const exactBox = el('details'), exactRow = el('pre', '', 'backtest-node'); exactBox.append(el('summary', tr('完整试验记录', 'Complete trial record')), exactRow);
-        const inspect = trial => { exactRow.textContent = JSON.stringify(trial, null, 2); exactBox.open = true; };
+        const exactBox = el('details'), exactRow = el('pre', '', 'backtest-node'); exactBox.setAttribute('data-report-evidence', ''); exactBox.append(el('summary', tr('完整试验记录', 'Complete trial record')), exactRow);
+        const inspect = trial => { exactRow.textContent = JSON.stringify(trial, null, 2); exactBox.open = true; window.SesameAppendix?.reveal(exactBox); };
+        if (config.parameters.length === 2) {
+          const [xKey, yKey] = config.parameters, xValues = [], yValues = [], xSeen = new Set(), ySeen = new Set(), cells = new Map();
+          let duplicate = false;
+          for (const trial of trials) {
+            const x = exact(trial.parameters[xKey]), y = exact(trial.parameters[yKey]), key = JSON.stringify([x, y]);
+            if (cells.has(key)) duplicate = true;
+            cells.set(key, trial);
+            if (!xSeen.has(x)) { xSeen.add(x); xValues.push(x); }
+            if (!ySeen.has(y)) { ySeen.add(y); yValues.push(y); }
+          }
+          trialGrid.append(el('h4', tr('全部参数试验', 'All parameter trials')));
+          if (duplicate) trialGrid.append(el('p', tr('参数对存在重复或显示值相同，无法一格对应一项试验；以下逐项散点与表格保留全部记录，不平均、不合并。', 'Parameter pairs are repeated or share display values. The scatter plots and table retain every trial separately; no averaging or merging.'), 'report-source'));
+          else {
+            const xPage = axisPage(xValues, `${parameterLabel(xKey)} · ${tr('范围', 'range')}`), yPage = axisPage(yValues, `${parameterLabel(yKey)} · ${tr('范围', 'range')}`), pages = el('div', null, 'backtest-controls');
+            if (xValues.length > 20) pages.append(xPage.label);
+            if (yValues.length > 20) pages.append(yPage.label);
+            const grid = el('div', null, 'sc-table-wrap'), note = el('p', tr('横轴与纵轴对应原始参数值；✓ 为原记录选中。颜色切换不重选，失败和未运行保留。', 'Axes retain original parameter values; ✓ marks the recorded selection. Color changes never reselect; failed and unrun trials remain.'), 'report-source');
+            trialGrid.append(pages, grid, note);
+            redrawTrials = () => {
+              const [metric, name, unit] = metrics.find(item => item[0] === color.input.value);
+              const max = trials.reduce((value, trial) => trial.status === 'completed' && trial[metric] !== null ? Math.max(value, Math.abs(numeric(trial[metric]))) : value, 0) || 1;
+              const xs = xValues.slice(Number(xPage.input.value) * 20, (Number(xPage.input.value) + 1) * 20), ys = yValues.slice(Number(yPage.input.value) * 20, (Number(yPage.input.value) + 1) * 20);
+              const table = el('table', null, 'sc-table'), caption = el('caption', `${parameterLabel(yKey)} × ${parameterLabel(xKey)} · ${name}${unit ? ` (${unit})` : ''}`), head = el('thead'), header = el('tr'), body = el('tbody');
+              const corner = el('th', parameterLabel(yKey)); corner.title = `${parameterLabel(yKey)} \\ ${parameterLabel(xKey)}`; corner.style.padding = '6px'; header.append(corner);
+              caption.style.textAlign = 'left';
+              for (const x of xs) { const cell = el('th', x); cell.scope = 'col'; cell.style.padding = '6px'; header.append(cell); }
+              head.append(header); table.append(caption, head, body);
+              for (const y of ys) {
+                const line = el('tr'), label = el('th', y); label.scope = 'row'; label.style.padding = '6px'; line.append(label);
+                for (const x of xs) {
+                  const cell = el('td'), trial = cells.get(JSON.stringify([x, y])); cell.style.padding = '6px';
+                  if (!trial) { const absent = el('span', '—'); absent.title = tr('无试验记录', 'No trial recorded'); cell.append(absent); }
+                  else {
+                    const value = trial.status === 'completed' ? numeric(trial[metric]) : null;
+                    const text = trial.status !== 'completed' ? statusLabel(trial.status) : value === null ? tr('未定义', 'Undefined') : metricDisplay(trial[metric]);
+                    const button = el('button', `${text}${trial.selected ? ' ✓' : ''}`); button.type = 'button'; button.dataset.trialId = trial.trial_id; button.dataset.selected = String(trial.selected);
+                    button.title = `${trial.trial_id}\n${parameterLabel(xKey)}: ${x}; ${parameterLabel(yKey)}: ${y}\n${statusLabel(trial.status)} · ${selectedLabel(trial.selected)}\n${name}: ${exact(trial[metric])}${unit ? ` ${unit}` : ''}`;
+                    button.setAttribute('aria-label', `${parameterLabel(xKey)} ${x} · ${parameterLabel(yKey)} ${y} · ${text} · ${statusLabel(trial.status)} · ${selectedLabel(trial.selected)}`);
+                    button.style.cssText = 'font:inherit;color:var(--report-ink);min-width:4rem;padding:.45rem .35rem;border:1px solid var(--report-line);border-radius:3px';
+                    const tone = value === 0 ? 'var(--report-context)' : metric === 'net_profit' ? value < 0 ? 'var(--report-negative)' : 'var(--report-positive,var(--success,var(--report-default-success)))' : 'var(--report-accent)';
+                    button.style.backgroundColor = value === null ? 'var(--report-paper)' : `color-mix(in srgb, ${tone} ${12 + 38 * Math.abs(value) / max}%, var(--report-paper))`;
+                    if (trial.selected) button.style.border = '2px solid var(--report-ink)';
+                    button.addEventListener('click', () => inspect(trial)); cell.append(button);
+                  }
+                  line.append(cell);
+                }
+                body.append(line);
+              }
+              grid.replaceChildren(table); trialGrid.dataset.metric = metric;
+            };
+            xPage.input.addEventListener('change', redrawTrials); yPage.input.addEventListener('change', redrawTrials); redrawTrials();
+          }
+        }
         const complete = trials.filter(row => row.status === 'completed');
         let plotStart = 0, plotEnd = Math.min(1000, complete.length);
         function sensitivity() {
@@ -194,20 +190,20 @@
             const chart = el('div'); plots.append(chart);
             const rows = complete.slice(plotStart, plotEnd).map(row => ({ ...row, parameter_value: numericAxis ? row.parameters[key] : exact(row.parameters[key]) }));
             if (!rows.length) { chart.append(el('p', `${name}: ${tr('暂无成功回测。', 'No completed trial.')} `)); continue; }
-            reportKit.chart(chart, { kind: 'scatter', title: `${key} → ${name}`, caption: unit || name, data: rows, x: 'parameter_value', y: metric, xType: numericAxis ? 'number' : 'category', unit, onSelect: row => inspect(trials.find(trial => trial.trial_id === row.trial_id)) });
+            reportKit.chart(chart, { kind: 'scatter', title: `${parameterLabel(key)} → ${name}`, caption: unit || name, data: rows, x: 'parameter_value', y: metric, tone: metric === 'net_profit' ? 'signed' : 'neutral', xType: numericAxis ? 'number' : 'category', unit, onSelect: row => inspect(trials.find(trial => trial.trial_id === row.trial_id)) });
           }
         }
         parameter.input.addEventListener('change', sensitivity);
         pager(plotPages, complete.length, 1000, tr('图中试验', 'Plotted trials'), (start, end) => { plotStart = start; plotEnd = end; sensitivity(); })();
-        const table = el('div', null, 'sc-table-wrap'), pages = el('div'); detail.append(table, pages, exactBox);
+        const table = el('div', null, 'sc-table-wrap backtest-trials'), pages = el('div'); detail.append(table, pages, exactBox);
         // Separate parameter columns prevent a parameter called "status" or "net_profit" from replacing recorded evidence.
         pager(pages, trials.length, 50, tr('表中试验', 'Table trials'), (start, end) => {
           table.replaceChildren(); const grid = el('table', null, 'sc-table'), head = el('thead'), header = el('tr'), body = el('tbody');
-          const labels = [tr('试验', 'Trial'), tr('状态', 'Status'), tr('选中', 'Selected'), ...config.parameters, ...metrics.map(([, name, unit]) => unit ? `${name} (${unit})` : name)];
+          const labels = [tr('试验', 'Trial'), tr('状态', 'Status'), tr('选中', 'Selected'), ...config.parameters.map(parameterLabel), ...metrics.map(([, name, unit]) => unit ? `${name} (${unit})` : name)];
           labels.forEach(label => header.append(el('th', label))); head.append(header); grid.append(head, body);
-          for (const trial of trials.slice(start, end)) {
-            const line = el('tr'), id = el('td'), button = el('button', trial.trial_id); button.type = 'button'; button.addEventListener('click', () => inspect(trial)); id.append(button); line.append(id);
-            [trial.status, trial.selected, ...config.parameters.map(key => trial.parameters[key]), ...metrics.map(([key]) => trial[key])].forEach(value => line.append(el('td', exact(value)))); body.append(line);
+          for (const [index, trial] of trials.slice(start, end).entries()) {
+            const line = el('tr'), id = el('td'), button = el('button', `${tr('组合', 'Trial')} ${start + index + 1}`); button.type = 'button'; button.title = trial.trial_id; button.dataset.trialId = trial.trial_id; button.addEventListener('click', () => inspect(trial)); id.append(button); line.append(id);
+            [statusLabel(trial.status), selectedLabel(trial.selected), ...config.parameters.map(key => exact(trial.parameters[key])), ...metrics.map(([key]) => metricDisplay(trial[key]))].forEach(value => line.append(el('td', value))); body.append(line);
           }
           table.append(grid);
         })();
@@ -223,6 +219,7 @@
         legend.textContent = `${tr('跨页统一色阶 · 数值幅度', 'Consistent scale across pages · magnitude')} 0–${SesameCharts.format(colorMax, unit)}${metric === 'max_drawdown_pct' ? tr(' · 越低越好', ' · lower is better') : ''}`;
       }
       for (const input of [color.input, symbolPage.input, timeframePage.input]) input.addEventListener('change', matrixRender);
+      color.input.addEventListener('change', () => redrawTrials());
       matrixRender(); select(config.rows[0], false);
     }
   }

@@ -1,0 +1,7 @@
+{
+  "name": "@sesame/investment-research",
+  "version": "3.5.5",
+  "private": true,
+  "type": "module",
+  "license": "MIT"
+}

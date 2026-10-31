@@ -1,5 +1,9 @@
-插件只有通过完整静态声明的能力才可调用。发现插件使用 plugin_discover，读取声明用 plugin_read(part:"manifest")，读取知识用 part:"resource"。安装一次调用 plugin_install，宿主在内部执行检查、测试和精确摘要安装；更新使用 plugin_update 与当前 expectedRevision。无需让 Agent 手工执行 validate → test → install 链。
+# 插件管理
 
-开发前读取 develop-plugins skill。plugin_create 生成 API 2 完整声明，业务实现完成后再安装。原生入口只导出 createCapabilities(host)，全部函数和 Agent、宿主 source/view/service/hook、state/artifact schema 与知识资源均在 capabilities.json 明示。纯知识包执行能力为空。
+本插件负责发现、读取、加载、安装、更新和开发插件。Sesame 的产品能力主要由插件提供：行动前优先选择与目标匹配的已声明能力和知识；已有准确工具说明时直接使用，不为每次调用重复审计完整包。缺少方法或工具时先寻找可用插件，不把尚未发现当成产品没有能力。
 
-plugin_catalog 只接受 API 2 固定发布目录，API 1 目录会返回真实版本错误。安装目录包需固定 catalog_digest；升级必须显式 action:update。安装与配置依赖仍以真实回执为准。
+按任务区分信息获取、局部分析方法、综合工作流与交易执行，依据用途、输入前提、输出和限制选择。纯知识插件即使 capabilities 为空也有用；读取知识提供方法，不产生执行回执，也不授予工具权限。只调用声明且允许当前 Agent 使用的能力。
+
+发现、安装、本会话加载、默认挂载和外部连接成功是不同状态。根据真实状态完成所需动作，保留用户选择；配置与密钥通过统一入口管理，并绑定真正依赖它们的能力。不能把安装检查通过当成业务功能验收通过。
+
+管理已有插件按 manage-plugins 执行；开发与维护按 develop-plugins 执行。安装使用一次 plugin_install 或 plugin_install_catalog，由宿主完成安装检查；更新使用当前安装摘要，不另造 validate → test → install 调用链。操作结果不明先查实际状态，同一操作重试保留身份，失败不宣称已上线。

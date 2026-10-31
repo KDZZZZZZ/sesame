@@ -1,0 +1,26 @@
+✔ current evaluator rejects a DataRef passed through the existing options channel (1.3641ms)
+✖ proposed contract: fixed DataRef prepares and evaluates without a registered dataset (1.0039ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 1
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 74.7087
+
+✖ failing tests:
+
+test at outputs\live-plugin-qa-r3-20261021\factor-input\dataref-input.red.test.mjs:77:1
+✖ proposed contract: fixed DataRef prepares and evaluates without a registered dataset (1.0039ms)
+  Error: dataset_id is required
+      at check (file:///E:/brief2great/sesame/sesame/plugins/optional-api-v1/packages/factor-evaluator/evaluator.js:7:97)
+      at bounded (file:///E:/brief2great/sesame/sesame/plugins/optional-api-v1/packages/factor-evaluator/evaluator.js:9:37)
+      at evaluateSession (file:///E:/brief2great/sesame/sesame/plugins/optional-api-v1/packages/factor-evaluator/evaluator.js:83:22)
+      at file:///E:/brief2great/sesame/sesame/plugins/optional-api-v1/packages/factor-evaluator/evaluator.js:72:84
+      at async evaluate (file:///E:/brief2great/sesame/sesame/plugins/optional-api-v1/packages/factor-evaluator/evaluator.js:74:16)
+      at async TestContext.<anonymous> (file:///E:/brief2great/sesame/outputs/live-plugin-qa-r3-20261021/factor-input/dataref-input.red.test.mjs:81:20)
+      at async Test.run (node:internal/test_runner/test:1332:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    code: 'EVALUATION_REJECTED'
+  }

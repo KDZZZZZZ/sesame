@@ -1,9 +1,9 @@
 {
   "id": "sesame/wyckoff",
   "apiVersion": "2",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "title": "Wyckoff 量价与阶段研究",
-  "description": "独立 Wyckoff 研究：供需、努力/结果与阶段候选；成交量单位、替代解释和反证明确，Composite Man 仅是启发式。",
+  "description": "可组合的分析方法：固定区间中的价格推进与成交量是否支持某个阶段候选，以及什么替代解释仍成立；消费已有证据，返回价格事实/量证据/阶段或事件候选对照、替代解释、待确认资料、反证与硬失效条件。",
   "author": {
     "name": "Sesame contributors"
   },
