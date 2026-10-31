@@ -39,12 +39,12 @@ export async function researchQuestion(host, input, signal, execution) {
       const member = context.members?.[input.analyst];
       state.title = member?.title ?? TITLES[input.analyst];
       const { run: caller } = await host.runs.read({ id: agent.runId }), { run: workflow } = await host.runs.read(context.workflow_ref);
-      check(caller.parentRunId === workflow.id && caller.task?.agentId === original.role && workflow.capabilityId === 'sesame/investment-research#investment_research_analyze',
+      check(caller.parentRunId === workflow.id && caller.task?.agentId === original.role && ['sesame/investment-research#investment_research_analyze', 'sesame/investment-research#investment_research_start'].includes(workflow.capabilityId),
         'QA_CONTEXT_REQUIRED', 'The question must belong to this original research team.');
       const packet = original.research ?? (await readRows(host, original.context_ref))[0];
       const qa = uniqueQuestions([...(packet.qa ?? []), ...await questionAnswers(host, { id: agent.runId }, { signal, exclude: execution.run.id })]);
       const research = { ...packet, qa, source_refs: uniqueRefs([...packet.source_refs, ...qa.flatMap(answer => answer.source_refs)]) };
-      state.from = original.role; state.selection = context.selection;
+      state.from = original.role; state.selection = context.memberSelections?.[input.analyst] ?? context.selection;
       state.request = {
         title: `${packet.title.slice(0, 60)} · ${member?.title ?? TITLES[input.analyst]}定向核查`,
         objective: '回答会影响判断的具体问题，核查证据和机制，说明对原结论的修正及剩余不确定性。',

@@ -27,7 +27,7 @@ export function fixture({ stored, onInvoke } = {}) {
       status: 'running', sessionId: context.sessionId, parentRunId: context.runId ?? null }, capability, input: structuredClone(input), context, options, controller: new AbortController() };
     store.runs.set(id, job);
     if (capability === `${ID}#ultra_cycle`) launchCycle(job);
-    else if (capability === 'host.agent.run' && context.kind === 'subagent') queueMicrotask(() => complete(id, { text: 'Discover factor-research and dispatch two independent hypotheses.' }));
+    else if (capability === 'host.agent.run' && context.kind === 'subagent') queueMicrotask(() => complete(id, { text: 'Discover auto-factor-mining, read its declared references/research-guide.md, and dispatch two independent hypotheses.' }));
     return { id, kind: job.value.kind, revision: 1 };
   }
   function launchCycle(job) {
@@ -51,7 +51,7 @@ export function fixture({ stored, onInvoke } = {}) {
         commit: async changes => { for (const change of changes) { const key = `${change.key.collection}:${change.key.key}`, old = store.records.get(key); if ((old?.version ?? 0) !== change.expectedVersion) throw fail('VERSION_CONFLICT'); }
           for (const change of changes) store.records.set(`${change.key.collection}:${change.key.key}`, { key: change.key, value: structuredClone(change.value), version: change.expectedVersion + 1 }); return {}; },
       },
-      plugins: { search: async () => ({ items: [{ id: 'sesame/factor-research', title: 'Factor research', description: 'Knowledge method', state: 'discoverable' }] }) },
+      plugins: { search: async () => ({ items: [{ id: 'sesame/auto-factor-mining', title: 'Strategy', description: 'Factor and strategy workflow with integrated research knowledge', resources: [{ path: 'references/research-guide.md' }], state: 'discoverable' }] }) },
       capabilities: {
         list: async ({ ids } = {}) => ({ items: [...descriptors.values()].filter(item => !ids || ids.includes(item.id)).map(value => structuredClone(value)) }),
         invoke: async (target, input, options = {}) => {

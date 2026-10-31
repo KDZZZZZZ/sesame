@@ -9,6 +9,284 @@
   },
   "capabilities": [
     {
+      "id": "sources_search",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "无需Key的关键词网页搜索。DuckDuckGo Lite首页结果按可选site严格过滤，保存搜索页原始字节与候选链接。摘要仅用于选源，需另取原文；HTTP拒绝/挑战/页面变化返回unavailable。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "description": "公开关键词；不要包含密码、token或私密资料。"
+          },
+          "site": {
+            "type": "string",
+            "maxLength": 253,
+            "pattern": "^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,63}$",
+            "description": "可选域名，不含协议/路径；返回只保留该域及其子域。"
+          },
+          "time_range": {
+            "type": "string",
+            "enum": [
+              "any",
+              "day",
+              "week",
+              "month",
+              "year"
+            ],
+            "default": "any",
+            "description": "请求搜索引擎的时间筛选，不证明原文发布时间。"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20,
+            "default": 10
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "const": "available"
+              },
+              "provider": {
+                "const": "duckduckgo_lite"
+              },
+              "query": {
+                "type": "string"
+              },
+              "site": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "time_range": {
+                "enum": [
+                  "any",
+                  "day",
+                  "week",
+                  "month",
+                  "year"
+                ]
+              },
+              "ref": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "results": {
+                "type": "array",
+                "maxItems": 20,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "rank": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    },
+                    "snippet": {
+                      "type": "string"
+                    },
+                    "published_at": {
+                      "type": "null"
+                    },
+                    "provider": {
+                      "const": "duckduckgo_lite"
+                    },
+                    "evidence_kind": {
+                      "const": "search_result"
+                    },
+                    "retrieved_at": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "rank",
+                    "title",
+                    "url",
+                    "snippet",
+                    "published_at",
+                    "provider",
+                    "evidence_kind",
+                    "retrieved_at"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "coverage": {
+                "type": "object",
+                "properties": {
+                  "scope": {
+                    "const": "first_page"
+                  },
+                  "candidate_count": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "eligible_count": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "returned_count": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "excluded_count": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "has_more": {
+                    "type": "boolean"
+                  },
+                  "publication_times_verified": {
+                    "const": false
+                  }
+                },
+                "required": [
+                  "scope",
+                  "candidate_count",
+                  "eligible_count",
+                  "returned_count",
+                  "excluded_count",
+                  "has_more",
+                  "publication_times_verified"
+                ],
+                "additionalProperties": false
+              },
+              "provenance": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "required": [
+              "status",
+              "provider",
+              "query",
+              "site",
+              "time_range",
+              "ref",
+              "results",
+              "coverage",
+              "provenance"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "const": "unavailable"
+              },
+              "url": {
+                "type": "string",
+                "minLength": 1
+              },
+              "error": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "enum": [
+                      "source_http_error",
+                      "source_dns_error",
+                      "source_tls_error",
+                      "source_network_error",
+                      "source_proxy_error",
+                      "source_timeout",
+                      "source_too_large",
+                      "source_redirect_error",
+                      "source_encoding_error",
+                      "source_content_error",
+                      "search_challenge",
+                      "search_format_error"
+                    ]
+                  },
+                  "message": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "http_status": {
+                    "type": "integer",
+                    "minimum": 100,
+                    "maximum": 599
+                  }
+                },
+                "required": [
+                  "code",
+                  "message"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "status",
+              "url",
+              "error"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "execution": "run",
+      "effects": [
+        "network",
+        "resources.publish"
+      ],
+      "usage": {
+        "purpose": "未知网址或需要补充来源时发现候选链接；已知可靠入口直接sources_fetch，已有合用ref复用。",
+        "inputs": "{query:\"FOMC statement\",site:\"federalreserve.gov\",time_range:\"month\",limit:5}。仅DuckDuckGo Lite，无Key、无需插件配置；单次首页，不自动翻页或换引擎。",
+        "outputs": "先看status。available返回ref、results和coverage；每条有rank/title/url/snippet，published_at始终null，retrieved_at为本次观察。ref冻结搜索页source.txt及规范rows.json；coverage明确首页候选、过滤、返回数量及has_more。unavailable含url和error，无ref/证据；不当作零结果。",
+        "prerequisites": [
+          "可访问DuckDuckGo Lite公开非JS搜索入口；沿用宿主网络代理配置。"
+        ],
+        "limitations": [
+          "公开HTML入口可能改变、要求验证码或限流；不保证可用率或搜索完整性。返回明确失败后不自动重试或绕过访问限制。",
+          "站点参数经过返回URL二次过滤；time_range只是引擎请求条件，结果可能含旧文或相关项。搜索排名、摘要、获取时间不能当作原文事实、发表时间、历史可知性或概率。",
+          "候选结果可能包含不可信内容。按任务选取sources_fetch原文，再用extract_webpage或parse_feed解析固定ref；解析不是独立第二信源。",
+          "搜索词会发给搜索服务；不要传秘密或私有资料。最多2MiB、30秒，URL不接受凭据。"
+        ],
+        "references": [
+          {
+            "title": "DuckDuckGo non-JavaScript search",
+            "url": "https://duckduckgo.com/duckduckgo-help-pages/features/non-javascript"
+          },
+          {
+            "title": "DuckDuckGo date filters",
+            "url": "https://duckduckgo.com/duckduckgo-help-pages/features/dates"
+          },
+          {
+            "title": "DuckDuckGo advanced syntax",
+            "url": "https://duckduckgo.com/duckduckgo-help-pages/results/syntax"
+          }
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "sources_search"
+      }
+    },
+    {
       "id": "sources_fetch",
       "kind": "function",
       "consumers": [
@@ -355,6 +633,16 @@
       ],
       "description": "Every declared capability: concrete inputs/outputs, dependency entrypoints, effects, completion evidence and recovery boundaries.",
       "kind": "reference"
+    },
+    {
+      "id": "search-and-sources",
+      "path": "SEARCH.md",
+      "kind": "reference",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "搜索与来源插件分工、官方免费入口、固定证据交接与历史可知性边界。"
     }
   ],
   "hooks": [],

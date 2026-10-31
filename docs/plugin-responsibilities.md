@@ -6,28 +6,29 @@
 
 开发者从[统一开发指南](plugin-development.md)选择最小接口、硬性约束和同类参考实现；用户入口与使用方式由独立的 user-guide 维护，orchestration 负责协作编排方法。2026-10-26 的此次拆分保留两者纯知识身份，新增默认包不改变上文历史冻结的可调用能力契约；当前全量计数见[功能架构](plugin-functional-architecture.md)。
 
+2026-10-29 当前源码为 57 包（11 核心、46 可选）；上文能力数字为历史冻结基线。当前按六类发现，新研究只推荐 Research / Strategy，因子/策略指南与参考 CLI 已融合在 Strategy 内，不再独立分发。
+
 ## 分类口径
 
-| 分类 | 解决的问题 | 本轮数量 |
+| 分类 | 解决的问题 | 当前数量 |
 | --- | --- | ---: |
 | 业务流程 `business` | 如何完成一项任务，如何组织研究、决策、执行和验证 | 7 |
-| 专业能力 `analysis` | 如何理解或处理一个具体领域问题，提供知识、方法原理或局部计算 | [31，另表详列](analysis-plugin-responsibilities.md) |
-| 资源接入 `integration` | 如何访问数据、终端、账户、原生引擎和外部参考目录 | 10 |
+| 专业能力 `analysis` | 如何理解或处理一个具体领域问题，提供知识、方法原理或局部计算 | 30 |
+| 搜索与来源 `search` | 如何发现网页、获取来源证据，或解析已有网页/订阅内容 | 4 |
+| 资源接入 `integration` | 如何访问行情、终端、账户、原生引擎和外部参考目录 | 9 |
 | 交互呈现 `presentation` | 如何把已有数据和成果展示为图表、工作台和报告 | 2 |
-| 平台管理 `platform` | 如何管理配置、插件、个人记忆、文件和产品使用规则 | 5 |
+| 平台管理 `platform` | 如何管理配置、插件、个人记忆、文件和产品使用规则 | 6 |
 
-主分类描述插件承担的任务责任；知识文档、函数、适配器、工作流和服务描述实现方式。业务流程可以由指南、模型协作或确定性服务实现。因子/策略研究指南因此属于业务流程；ICT 一类局部专业知识属于专业能力。
+主分类描述插件承担的任务责任；知识文档、函数、适配器、工作流和服务描述实现方式。业务流程可以由指南、模型协作或确定性服务实现。研究知识与参考脚本已内置 Strategy；新研究任务统一从 Research（investment-research）或 Strategy（auto-factor-mining）开始。ICT 一类局部专业知识属于专业能力。
 
-`portfolio-execution` 归入业务流程，保留其 `service` 实现类型，inventory-policy 已同步。7/10/2/5 是本轮排除 Kurumi 和专业能力后的数量。
+`portfolio-execution` 归入业务流程，保留其 `service` 实现类型，inventory-policy 已同步。7/10/2/5 是 2026-10-19 排除 Kurumi 和专业能力后的历史数量；上表为当前全量分类。
 
 ## 业务流程：任务方法、研究、决策、执行与验证
 
 | 插件 | 核心责任 | 主要交付与状态归属 | 协作边界 |
 | --- | --- | --- | --- |
-| [factor-research](../plugins/optional-api-v1/packages/factor-research/capabilities.json) | 提供完整的因子研究方法：假设与机制、数据时点、因子定义、筛选、成本、固定选择与样本外验证；附离线诊断脚本 | 研究步骤、实验约束、筛选/选择/留出检验诊断；保留原 CLI 和结果摘要规则 | 数值评价交给选定评估器，自动多轮搜索交给 auto-factor-mining。指南本身没有注册的运行入口 |
-| [strategy-research](../plugins/optional-api-v1/packages/strategy-research/capabilities.json) | 提供完整的策略研究方法：明确目标、组合来源与方法、设计实验、比较试验、检查成本与样本外证据、选择原生引擎 | 研究计划、数据可用时点与实验台账审计、引擎交接要求；附离线检查脚本 | 策略表达、局部分析和原生回测由选定能力执行；保留指南及 CLI 的独立使用方式 |
-| [auto-factor-mining](../plugins/optional-api-v1/packages/auto-factor-mining/capabilities.json) | 自动组织多轮因子候选研究：角色分工、候选提交、调用评估器、比较与反思、固定选择、最终评价和归档 | 候选/试验台账、真实评价回执、检查点、最终研究报告；拥有本研究流程的业务状态 | 评估器负责数值计算和独立留出数据规则；宿主负责 Agent/Run 执行。评价结果来自真实调用回执 |
-| [investment-research](../plugins/optional-api-v1/packages/investment-research/capabilities.json) | 围绕投资问题组合指定信源与互补方法，组织分析师与经理，补齐具体证据缺口，综合观点；可单独重制报告 | 固定研究成果、证据引用、成员输出、综合结论、原研究角色问答；拥有研究成果和角色任务关系 | 数据获取、局部分析、报告发布分别调用相应能力；交易目标由 trading-decision 决定。研究成果可独立于交易账户存在 |
+| [auto-factor-mining](../plugins/optional-api-v1/packages/auto-factor-mining/capabilities.json) | Strategy 主入口，组织因子与策略实验：角色分工、候选提交、调用评估器、比较与反思、固定选择、最终评价和归档 | 候选/试验台账、真实评价回执、检查点、最终研究报告；拥有本研究流程的业务状态 | 评估器负责数值计算和独立留出数据规则；宿主负责 Agent/Run 执行。评价结果来自真实调用回执 |
+| [investment-research](../plugins/optional-api-v1/packages/investment-research/capabilities.json) | Research 主入口，围绕投资问题组合指定信源与互补方法，组织分析师与经理，补齐具体证据缺口，综合观点；可单独重制报告 | 固定研究成果、证据引用、成员输出、综合结论、原研究角色问答；拥有研究成果和角色任务关系 | 数据获取、局部分析、报告发布分别调用相应能力；交易目标由 trading-decision 决定。研究成果可独立于交易账户存在 |
 | [trading-decision](../plugins/optional-api-v1/packages/trading-decision/capabilities.json) | 基于固定研究、当前账户及用户风险规则，管理授权交易计划、定时/事件触发、形成并冻结目标仓位，交付执行，复盘既往决策 | 交易计划、决策与目标、触发队列、运行状态、执行回执引用、同账户决策复盘 | 消费符合契约的固定研究成果；目标执行交给选定执行能力。个人风险规则来自 memory，独立判断验证由 judgment-evolution 管理 |
 | [portfolio-execution](../plugins/optional-api-v1/packages/portfolio-execution/capabilities.json) | 将已授权的目标或单次手动指令落实到账户：绑定精确账户、计算目标差量、串行执行批次、检查未决订单、核对成交与剩余目标 | 冻结账户绑定、执行申请与批次、账户锁、订单操作与观察回执、对账结果 | MT5/QMT 负责平台原生操作。绑定属于执行业务引用；连接与凭据由选定后端管理。它消费已有目标，保持原交易授权链 |
 | [judgment-evolution](../plugins/optional-api-v1/packages/judgment-evolution/capabilities.json) | 管理可验证判断的完整生命周期：事前登记条件和概率、到期核验、证据不足延期、评分与归因、候选准则、前瞻验证、退出，以及回复中的判断覆盖检查 | 判断台账、核验与评分、准则候选/验证记录、覆盖队列与导出；拥有独立判断数据库 | 使用固定、时间有效的证据。统计准则与个人风险约束分别管理；memory 的正式用户规则仍遵循其确认流程 |
@@ -40,20 +41,26 @@
 
 | 插件 | 已支持的调整 | 保留的约束 |
 | --- | --- | --- |
-| investment-research | 选择/省略成员、调整阶段与并行组、添加自定义角色、指定最终综合者；问答跟随实际已完成前序成员 | 最后阶段唯一综合者，来源与工具显式选择，固定成果；省略计划保持默认八成员 |
-| auto-factor-mining | 调整角色分工、同一成员兼任多项、跳过规划/评审/反思的 Agent 环节 | 真实 evaluator、候选资格、固定选择及独立留出；不同业务步骤保留独立任务身份 |
+| investment-research | 新 start 入口默认需求、获取、分析、报告四阶段，可调整 report_brief 与成员；旧 analyze 计划和历史 Run 仍兼容 | 结果形式不指定分析方法；来源与能力明确选择，最终综合交付固定成果与报告 |
+| auto-factor-mining | 显式 single 为一个真实 Agent 承担全部阶段，默认 multi 保留角色分工；指南已内置 | 同一真实 evaluator、资格门槛、冻结选择与留出规则；统计诊断不等于交易规则回测 |
 | trading-decision | 顺序前置复核、只形成决策与报告 | 任一复核阻止则不执行；复核无下单权限，原账户授权与风险规则有效 |
-| factor-research / strategy-research | 根据目标裁剪研究指南并选择能力与原生引擎 | 保留证据时间、成本、试验与验证要求；指南不伪造运行入口 |
 
 已接受的 Run 冻结计划，恢复复用身份、成果和已保存回执；修改计划开启新一轮。临时调整不写入长期默认，偏好不能放宽权限、风险或证据要求。判断生命周期和账户执行中的状态/授权校验仍是业务约束，不能因为允许调整流程而绕过。
+
+## 搜索与来源：独立获取与解析
+
+| 插件 | 核心责任 | 主要交付与状态归属 | 协作边界 |
+| --- | --- | --- | --- |
+| [web-sources](../plugins/optional-api-v1/packages/web-sources/capabilities.json) | 无 Key 关键词搜索候选，按明确 HTTP/HTTPS URL 获取完整原文并冻结证据 | 搜索页和原文各自的固定引用、候选链接、来源与哈希、获取状态 | 只取搜索首页；摘要不是原文事实，拒绝/挑战/结构变化返回不可用；全文与订阅解析交独立工具 |
+| [rss-collect](../plugins/optional-api-v1/packages/rss-collect/capabilities.json) | 解析已有 RSS/Atom 原文或固定 source_ref | 订阅条目、原始发布时间、链接与来源 | 不联网、不自动取得每篇全文，不推断市场影响 |
+| [web-extract](../plugins/optional-api-v1/packages/web-extract/capabilities.json) | 解析已有完整 HTML 或固定 source_ref | 标题、正文、链接、元数据与来源 | 不联网、不执行 JS，不能把解析器当第二个独立信源 |
+| [financial-research](../plugins/optional-api-v1/packages/financial-research/capabilities.json) | 接入金融研究信息源，管理来源凭据映射和访问状态，按查询与截止时点取得或复用证据，保存原始与规范化内容 | 金融来源证据、来源/可见时间/覆盖信息、历史证据目录、固定引用与访问状态；拥有证据记录 | 来源语义与历史时间约束留本包；投资问题拆解、观点综合交给 investment-research。复用历史证据按原规则判断所需配置 |
 
 ## 资源接入：数据、平台、原生引擎与参考目录
 
 | 插件 | 核心责任 | 主要交付与状态归属 | 协作边界 |
 | --- | --- | --- | --- |
 | [data-access](../plugins/api-v1/packages/data-access/capabilities.json) | 提供通用数据访问入口：发现来源与品种、查询分页数据、读取/冻结行情和数据快照、读取与导出固定数据、登记真实计算结果及输入关系 | 数据源描述、查询结果、固定数据引用、捕获记录、来源与派生关系 | 具体网络/API/终端协议归各来源插件；研究解释归业务或专业能力。保存的快照可复用，来源引用与固定快照分别表达 |
-| [financial-research](../plugins/optional-api-v1/packages/financial-research/capabilities.json) | 接入金融研究信息源，管理来源凭据映射和访问状态，按查询与截止时点取得或复用证据，保存原始与规范化内容 | 金融来源证据、来源/可见时间/覆盖信息、历史证据目录、固定引用与访问状态；拥有证据记录 | 来源语义与历史时间约束留本包；投资问题拆解、观点综合交给 investment-research。复用历史证据按原规则判断所需配置 |
-| [web-sources](../plugins/optional-api-v1/packages/web-sources/capabilities.json) | 获取明确指定的 HTTP/HTTPS URL，处理传输、编码和格式，保存完整来源内容，提供可查询的数据行与有界预览 | 原始内容、来源与哈希、固定引用、规范化行、获取状态 | 当前提供明确 URL 获取；通用搜索引擎检索不在其现有接口内。资料解释由调用者选择的分析能力负责 |
 | [akshare](../plugins/optional-api-v1/packages/akshare/capabilities.json) | 接入 AKShare 及其支持的明确上游，发现和准备运行环境，提供 A 股等研究数据、报价、品种、历史行情及订阅适配 | 带上游身份、单位、复权与时间说明的数据；运行环境与安装回执、来源绑定 | 各上游覆盖、时间和单位语义分别保留；数据分析和交易执行交给对应能力。公共来源按实际需要配置 |
 | [ccxt](../plugins/optional-api-v1/packages/ccxt/capabilities.json) | 接入当前支持的 Kraken/Coinbase/OKX 公共现货市场，管理路线与连接、品种、历史 K 线、更新订阅、断流与回填 | 交易所公共行情、品种精度、固定分页、连接版本和订阅状态；拥有路线 worker 与环境状态 | 当前范围为公共市场数据，无账户交易与 API key 功能；保留交易所游标、限速及闭合时间规则 |
 | [mt5](../plugins/optional-api-v1/packages/mt5/capabilities.json) | 提供 MT5 平台完整适配：终端/连接/配置，市场和账户，原生方法与图表/编辑器/Python/系统工具，MQL5 工程/编译/翻译及一致性检查，Tester，EA 部署与原生交易 | 平台连接、行情/账户 source、持仓服务、工程修订和构建记录、Tester/部署/订单回执与产物；拥有原平台状态 | 投资研究与目标决策交给业务流程；组合批次由 portfolio-execution 管理。MT5 原生图表控制属于平台操作；Sesame 工作台呈现归 canvas-control |
@@ -105,7 +112,7 @@ Python 环境动作的可选解释器选择继续沿各引擎的原环境入口�
 | judgment-evolution / trading-decision | 已核实相同的固定证据快照读取实现 | 各自的时间/证据规则、判断或交易业务、原 host/context 与数据库 |
 | financial-research / web-sources | 相同的资源读取与文件发布基础代码 | 各自的原始来源、publishRows、输入输出差异、固定引用和发布归属 |
 | web-extract / rss-collect / market-data-parser | 相同的固定来源读取、宿主进程调用和长结果发布 transport | 各自 Python 格式解析、能力身份、原输入边界和成果归属 |
-| 18 个 ABU 局部计算包 | 既有输入/时间校验、摘要、固定成果与 CLI runtime | 各自 baseline 算法、参数和能力；完整职责见[专业能力清单](analysis-plugin-responsibilities.md) |
+| 17 个 ABU 局部计算包 | 既有输入/时间校验、摘要、固定成果与 CLI runtime | 各自 baseline 算法、参数和能力；完整职责见[专业能力清单](analysis-plugin-responsibilities.md) |
 | reports / data-access | 保留已有 report_data → data_snapshot 委托 | 报告与通用证据捕获分别负责各自原契约 |
 | workspace 两组文件接口 | 保留已有 FileAccess 与进程桥接 | 路径、行/字节分页、默认覆盖与文件策略等不同入口语义 |
 

@@ -8,6 +8,8 @@ export const DIAGNOSTICS = Object.freeze({
   sensitivity: 'Measure local changes to one AST window or constant at a time.',
   regimes: 'Condition validation association on an explicitly supplied point-in-time state field.',
   bootstrap: 'Estimate paired/block-bootstrap percentile intervals for association and mean diagnostic return.',
+  dsr: 'At selection freeze, adjust each trial Sharpe for the complete registered search and nonnormal returns.',
+  pbo: 'At selection freeze, measure Sharpe-selection overfitting by CSCV on all synchronous trial return series.',
 });
 const fail = (message, code = 'INVALID_DIAGNOSTIC_CONFIG') => { throw Object.assign(new Error(message), { code }); };
 const plain = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -308,7 +310,9 @@ async function bootstrap(dataset, expression, request, signal) {
 /** Each requested diagnostic is independent. Cancellation still cancels the invocation. */
 export async function evaluateDiagnostics(dataset, expression, requested = {}, { signal, finalized = false } = {}) {
   if (!plain(requested) || Object.keys(requested).some(key => !Object.hasOwn(DIAGNOSTICS, key))) fail('Unknown diagnostic name');
-  const methods = { placebo, monteCarlo, outOfSample: (d, e, r) => outOfSample(d, e, r, finalized), walkForward, sensitivity, regimes, bootstrap };
+  const deferredSearch = () => ({ status: 'deferred', reason: 'Requires the complete registered trial universe, frozen at select; a candidate or selected winner alone is insufficient' });
+  const methods = { placebo, monteCarlo, outOfSample: (d, e, r) => outOfSample(d, e, r, finalized), walkForward, sensitivity, regimes, bootstrap,
+    dsr: deferredSearch, pbo: deferredSearch };
   const results = {};
   for (const name of Object.keys(DIAGNOSTICS)) {
     signal?.throwIfAborted();
@@ -325,7 +329,7 @@ export async function evaluateDiagnostics(dataset, expression, requested = {}, {
 export async function evaluateCandidate(dataset, expression, options = {}, signal) {
   const metrics = evaluateFactor(dataset, expression);
   // Save the exact plan with measured evidence so portable archives can reproduce it.
-  metrics.diagnosticPlan = structuredClone(options.diagnostics ?? {});
+  metrics.diagnosticPlan = structuredClone({ ...options.diagnostics, ...options.evaluationPlan?.tests });
   metrics.diagnostics = await evaluateDiagnostics(dataset, expression, metrics.diagnosticPlan, { signal });
   return metrics;
 }

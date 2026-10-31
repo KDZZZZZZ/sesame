@@ -7,6 +7,7 @@
 | waterfall、dumbbell、strip、histogram、boxplot、ridgeline、violin | `skills/report-design/statistical-charts.md` | `examples/statistical-fixtures.json` | `assets/charts-statistics.js` |
 | calendar、parallel、bump、lifecycle | `skills/report-design/temporal-charts.md` | `examples/temporal-fixtures.json` | `assets/charts-temporal.js` |
 | treemap、threads、flow、network-circular、network-force | `skills/report-design/structural-charts.md` | `examples/structural-fixtures.json` | `assets/charts-structure.js` |
+| stream、stacked-rungs、dot-heatmap、funnel、category-links、outcome-tally、paired-rungs、rank-race、spectrum、tick-donut、barcode、bubble-ledger | `skills/report-design/composition-charts.md` | `examples/composition-fixtures.json` | `assets/charts-composition.js` |
 
 每份 fixture 的 `charts` 数组包含图名、说明与 `spec`。这些值全是明确登记为 demo 的虚构样本，不能作为真实行情、账户或策略结论。
 

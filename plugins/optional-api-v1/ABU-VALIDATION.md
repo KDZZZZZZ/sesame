@@ -1,5 +1,9 @@
 # ABU 插件验收记录
 
+2026-10-29 源码整理：当前 17 个 ABU 包、18 项实际能力。逐笔审计原算法、GPL 和独有算例已迁入 `abu-trade-metrics` 2.1.0，旧包/旧入口删除。整理后 118 项数值/边界/工厂/CLI 与工作流调用检查通过，隔离 API 2 宿主实际安装 17 包、执行 18 项能力并重读固定结果通过；模型、行情商、券商调用均为 0。`abu-parameter-search` 2.0.4 和 `abu-similarity` 2.0.2 保留计算并澄清边界。详见 [本轮回执](../../output/abu-consolidation-20261029/verification-summary.json) 与 [退役证明](../api-v1/tests/fixtures/analysis-plugin-retirements.json)。
+
+## 早期 1.0.0 验收记录（历史）
+
 本次交付 18 个 `sesame/abu-*` 1.0.0 独立研究基线，以及
 `manual-trading` 2.1.0 的按计划选择研究插件能力。分类见
 [ABU-BASELINES.md](ABU-BASELINES.md)。所有数字来自本次实际执行；合成样例的

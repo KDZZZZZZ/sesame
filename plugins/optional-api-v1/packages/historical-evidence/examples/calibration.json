@@ -1,0 +1,263 @@
+{
+  "as_of": "2026-01-01T00:00:00Z",
+  "source_refs": [
+    {
+      "id": "synthetic-fixed-input",
+      "revision": "v1",
+      "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "kind": "data",
+      "schemaVersion": "1.0.0"
+    }
+  ],
+  "plan": {
+    "ref": {
+      "id": "synthetic-fixed-input",
+      "revision": "v1",
+      "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "kind": "data",
+      "schemaVersion": "1.0.0"
+    },
+    "frozen_at": "2025-01-01T00:00:00Z",
+    "target": {
+      "id": "positive-next-day",
+      "horizon_seconds": 86400,
+      "description": "Caller supplied binary label: fixed next-day outcome is positive."
+    },
+    "independence": {
+      "gap_seconds": 0,
+      "assumption": "Synthetic observations separated by more than one day; real financial independence is not established."
+    },
+    "confidence_level": 0.95,
+    "conditions": [
+      "Example calm regime only; feature units unchanged."
+    ],
+    "failure_conditions": [
+      "Changed publication timing or target definition."
+    ],
+    "monitoring": [
+      "Track subsequent out-of-fit frequencies and new counterexamples."
+    ],
+    "regime_definition": "Caller-supplied pre-outcome calm/shock condition, not derived from the later label.",
+    "method": "isotonic",
+    "prediction_system": "fixed-forecast-v1",
+    "fit_end": "2025-06-30T00:00:00Z",
+    "evaluation_start": "2025-07-02T00:00:00Z",
+    "minimum_fit": 4,
+    "minimum_evaluation": 4,
+    "bins": 4,
+    "out_of_bounds": "unavailable",
+    "mode": "prospective"
+  },
+  "records": [
+    {
+      "id": "fit-0",
+      "instrument": "SYNTHETIC",
+      "regime_id": "calm",
+      "at": "2025-01-02T00:00:00Z",
+      "outcome": {
+        "target_id": "positive-next-day",
+        "horizon_seconds": 86400,
+        "end_at": "2025-01-03T00:00:00Z",
+        "available_at": "2025-01-03T00:00:00Z",
+        "label": 0
+      },
+      "probability": 0.1,
+      "prediction_system": "fixed-forecast-v1",
+      "prediction_available_at": "2025-01-02T00:00:00Z",
+      "model_trained_through": "2024-12-01T00:00:00Z",
+      "prediction_ref": {
+        "id": "synthetic-fixed-input",
+        "revision": "v1",
+        "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "kind": "data",
+        "schemaVersion": "1.0.0"
+      },
+      "regime_available_at": "2025-01-02T00:00:00Z"
+    },
+    {
+      "id": "fit-1",
+      "instrument": "SYNTHETIC",
+      "regime_id": "calm",
+      "at": "2025-01-04T00:00:00Z",
+      "outcome": {
+        "target_id": "positive-next-day",
+        "horizon_seconds": 86400,
+        "end_at": "2025-01-05T00:00:00Z",
+        "available_at": "2025-01-05T00:00:00Z",
+        "label": 1
+      },
+      "probability": 0.3,
+      "prediction_system": "fixed-forecast-v1",
+      "prediction_available_at": "2025-01-04T00:00:00Z",
+      "model_trained_through": "2024-12-01T00:00:00Z",
+      "prediction_ref": {
+        "id": "synthetic-fixed-input",
+        "revision": "v1",
+        "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "kind": "data",
+        "schemaVersion": "1.0.0"
+      },
+      "regime_available_at": "2025-01-04T00:00:00Z"
+    },
+    {
+      "id": "fit-2",
+      "instrument": "SYNTHETIC",
+      "regime_id": "calm",
+      "at": "2025-01-06T00:00:00Z",
+      "outcome": {
+        "target_id": "positive-next-day",
+        "horizon_seconds": 86400,
+        "end_at": "2025-01-07T00:00:00Z",
+        "available_at": "2025-01-07T00:00:00Z",
+        "label": 0
+      },
+      "probability": 0.5,
+      "prediction_system": "fixed-forecast-v1",
+      "prediction_available_at": "2025-01-06T00:00:00Z",
+      "model_trained_through": "2024-12-01T00:00:00Z",
+      "prediction_ref": {
+        "id": "synthetic-fixed-input",
+        "revision": "v1",
+        "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "kind": "data",
+        "schemaVersion": "1.0.0"
+      },
+      "regime_available_at": "2025-01-06T00:00:00Z"
+    },
+    {
+      "id": "fit-3",
+      "instrument": "SYNTHETIC",
+      "regime_id": "calm",
+      "at": "2025-01-08T00:00:00Z",
+      "outcome": {
+        "target_id": "positive-next-day",
+        "horizon_seconds": 86400,
+        "end_at": "2025-01-09T00:00:00Z",
+        "available_at": "2025-01-09T00:00:00Z",
+        "label": 1
+      },
+      "probability": 0.9,
+      "prediction_system": "fixed-forecast-v1",
+      "prediction_available_at": "2025-01-08T00:00:00Z",
+      "model_trained_through": "2024-12-01T00:00:00Z",
+      "prediction_ref": {
+        "id": "synthetic-fixed-input",
+        "revision": "v1",
+        "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "kind": "data",
+        "schemaVersion": "1.0.0"
+      },
+      "regime_available_at": "2025-01-08T00:00:00Z"
+    },
+    {
+      "id": "evaluation-0",
+      "instrument": "SYNTHETIC",
+      "regime_id": "calm",
+      "at": "2025-08-02T00:00:00Z",
+      "outcome": {
+        "target_id": "positive-next-day",
+        "horizon_seconds": 86400,
+        "end_at": "2025-08-03T00:00:00Z",
+        "available_at": "2025-08-03T00:00:00Z",
+        "label": 0
+      },
+      "probability": 0.2,
+      "prediction_system": "fixed-forecast-v1",
+      "prediction_available_at": "2025-08-02T00:00:00Z",
+      "model_trained_through": "2024-12-01T00:00:00Z",
+      "prediction_ref": {
+        "id": "synthetic-fixed-input",
+        "revision": "v1",
+        "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "kind": "data",
+        "schemaVersion": "1.0.0"
+      },
+      "regime_available_at": "2025-08-02T00:00:00Z"
+    },
+    {
+      "id": "evaluation-1",
+      "instrument": "SYNTHETIC",
+      "regime_id": "calm",
+      "at": "2025-08-04T00:00:00Z",
+      "outcome": {
+        "target_id": "positive-next-day",
+        "horizon_seconds": 86400,
+        "end_at": "2025-08-05T00:00:00Z",
+        "available_at": "2025-08-05T00:00:00Z",
+        "label": 1
+      },
+      "probability": 0.4,
+      "prediction_system": "fixed-forecast-v1",
+      "prediction_available_at": "2025-08-04T00:00:00Z",
+      "model_trained_through": "2024-12-01T00:00:00Z",
+      "prediction_ref": {
+        "id": "synthetic-fixed-input",
+        "revision": "v1",
+        "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "kind": "data",
+        "schemaVersion": "1.0.0"
+      },
+      "regime_available_at": "2025-08-04T00:00:00Z"
+    },
+    {
+      "id": "evaluation-2",
+      "instrument": "SYNTHETIC",
+      "regime_id": "calm",
+      "at": "2025-08-06T00:00:00Z",
+      "outcome": {
+        "target_id": "positive-next-day",
+        "horizon_seconds": 86400,
+        "end_at": "2025-08-07T00:00:00Z",
+        "available_at": "2025-08-07T00:00:00Z",
+        "label": 1
+      },
+      "probability": 0.8,
+      "prediction_system": "fixed-forecast-v1",
+      "prediction_available_at": "2025-08-06T00:00:00Z",
+      "model_trained_through": "2024-12-01T00:00:00Z",
+      "prediction_ref": {
+        "id": "synthetic-fixed-input",
+        "revision": "v1",
+        "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "kind": "data",
+        "schemaVersion": "1.0.0"
+      },
+      "regime_available_at": "2025-08-06T00:00:00Z"
+    },
+    {
+      "id": "evaluation-3",
+      "instrument": "SYNTHETIC",
+      "regime_id": "calm",
+      "at": "2025-08-08T00:00:00Z",
+      "outcome": {
+        "target_id": "positive-next-day",
+        "horizon_seconds": 86400,
+        "end_at": "2025-08-09T00:00:00Z",
+        "available_at": "2025-08-09T00:00:00Z",
+        "label": 0
+      },
+      "probability": 0.3,
+      "prediction_system": "fixed-forecast-v1",
+      "prediction_available_at": "2025-08-08T00:00:00Z",
+      "model_trained_through": "2024-12-01T00:00:00Z",
+      "prediction_ref": {
+        "id": "synthetic-fixed-input",
+        "revision": "v1",
+        "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "kind": "data",
+        "schemaVersion": "1.0.0"
+      },
+      "regime_available_at": "2025-08-08T00:00:00Z"
+    }
+  ],
+  "queries": [
+    {
+      "id": "current-calibration",
+      "instrument": "SYNTHETIC",
+      "regime_id": "calm",
+      "at": "2026-01-01T00:00:00Z",
+      "probability": 0.4,
+      "regime_available_at": "2026-01-01T00:00:00Z"
+    }
+  ]
+}

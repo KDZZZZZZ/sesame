@@ -118,7 +118,7 @@
               ],
               "count": 1,
               "query": "alpha191",
-              "version": "3.0.0"
+              "version": "4.2.0"
             }
           }
         ]
@@ -294,7 +294,7 @@
                 "category": "02 因子研发工具箱",
                 "limit": 5
               },
-              "version": "3.0.0"
+              "version": "4.2.0"
             }
           }
         ]
@@ -417,7 +417,7 @@
                 }
               ],
               "total_items": 214,
-              "version": "3.0.0"
+              "version": "4.2.0"
             }
           }
         ]
@@ -563,7 +563,7 @@
                 "verification_level": "pending_review",
                 "workflow_stage": "研究信号 / Research signal"
               },
-              "version": "3.0.0"
+              "version": "4.2.0"
             }
           }
         ]
@@ -576,7 +576,7 @@
         "agent",
         "host"
       ],
-      "description": "Route a user need to independently selectable methods and backend choices. Consolidate only sources of the same method. Does not install plugins or check availability.",
+      "description": "Recommend Research, Strategy, independently selected methods/backends, and existing-result diagnostics; distinguish native execution from input-only evidence. Does not install plugins or verify availability.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -586,11 +586,15 @@
               "market-data",
               "market-explanation",
               "technical-analysis",
-              "strategy-research",
-              "factor-research",
+              "investment-research",
+              "strategy",
               "native-backtest",
               "report",
-              "judgment-review"
+              "judgment-review",
+              "historical-evidence",
+              "trade-results",
+              "parameter-evidence",
+              "series-similarity"
             ]
           },
           "method": {
@@ -625,9 +629,9 @@
         "name": "catalog_recommend"
       },
       "usage": {
-        "purpose": "Route a user need to independently selectable methods and backend choices. Consolidate only sources of the same method. Does not install plugins or check availability.",
-        "inputs": "Use the catalog query fields; omitted optional filters mean no restriction.",
-        "outputs": "Structured catalog entries from the bundled snapshot.",
+        "purpose": "Recommend Research for investment questions and Strategy for factor/strategy experiments; preserve specific method and backend choices. Recommendations do not install plugins or check availability.",
+        "inputs": "Use need:investment-research for Research; need:strategy for factor and strategy experiments. Method selection remains limited to technical-analysis or market-explanation. Use need:historical-evidence for independent historical matching and probability calibration.",
+        "outputs": "The selected route, primary plugin IDs, optional methods/backends and fixed upstream references; availability remains not_checked. Investment questions use need:investment-research; factor and strategy experiments use need:strategy.",
         "prerequisites": [
           "Python 3 available to the host MCP transport."
         ],
@@ -698,7 +702,7 @@
                 "Read the selected SKILL and retain its sources; directory references are not imported implementations or proof of trading performance."
               ],
               "snapshot_date": "2026-10-03T14:34:06.311Z",
-              "version": "3.0.0"
+              "version": "4.2.0"
             }
           }
         ]

@@ -2,7 +2,7 @@
   "id": "sesame/vnpy",
   "title": "VeighNa CTA 回测",
   "description": "计算验证能力：消费固定数据与已编写CtaTemplate运行原生回测，交付可追溯结果与假设；候选比较由工作流负责，不连接实盘。",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "apiVersion": "2",
   "license": "MIT",
   "default_state": "discoverable",

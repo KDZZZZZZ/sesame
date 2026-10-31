@@ -11006,6 +11006,49 @@
         "type": "native",
         "name": "mt5_execution_cancel"
       }
+    },
+    {
+      "id": "mt5_backtest_operation",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Read the committed receipt for an original MT5 backtest command without starting or resending it.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{16,128}$"
+          }
+        },
+        "required": [
+          "command_id"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "state.read"
+      ],
+      "usage": {
+        "purpose": "Reconcile the original managed Tester dispatch.",
+        "inputs": "{command_id:<original mt5_backtest start key>}",
+        "outputs": "Actual saved job/pass receipt or not-found; absent committed receipt does not prove no dispatch occurred.",
+        "prerequisites": [],
+        "limitations": [
+          "Never starts a terminal, executes a test, or reads account credentials. Unknown attempts must not be resent."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "mt5_backtest_operation"
+      }
     }
   ],
   "sources": [

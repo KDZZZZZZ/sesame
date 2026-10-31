@@ -6,8 +6,8 @@ const config = {{CONFIG}};
 async function initialize() {
   const identity = await window.report.readData(config.dataId, { limit: 1 });
   const rows = await reportKit.rows(config.dataId, { maxRows: 100000 });
-  // Add insight, equity/trade evidence and bespoke interactions here. The source
-  // graph and all rows retain their exact identity; no backend is called here.
+  // The provider supplies source evidence and frozen trial rows. Presentation
+  // never computes a winner or invents missing parameters or native source logic.
   SesameBacktest.render('#report', { ...config, rows, demo: config.demo || identity.provenance?.kind === 'demo' });
 }
 window.report.track(initialize()).catch(error => {

@@ -3,6 +3,7 @@ import { fetchSource, unavailableSource } from './fetch.js';
 import { ApiError, digest, now } from './support.js';
 import { parseRows } from './data.js';
 import { publishRows } from './resource-files.js';
+import { searchWeb } from './search.js';
 async function query(url, signal) {
   const source = await fetchSource(url, signal);
   if (source.status === 'unavailable') return source;
@@ -20,6 +21,15 @@ async function query(url, signal) {
 
 export function createCapabilities(host) {
   return [
+    capability('sources_search', async (input, signal) => {
+      const value = await searchWeb(input, signal);
+      if (value.status === 'unavailable') return value;
+      const ref = await publishRows(host, { title: `Search: ${value.request.query}`, rows: value.rows, source: value.source,
+        provenance: value.provenance, metadata: { kind: 'search_results', query: value.request.query, site: value.request.site,
+          time_range: value.request.time_range, coverage: value.coverage } }, [], signal);
+      return { status: 'available', provider: 'duckduckgo_lite', query: value.request.query, site: value.request.site,
+        time_range: value.request.time_range, ref, results: value.rows, coverage: value.coverage, provenance: value.provenance };
+    }),
     capability('sources_fetch', async ({ url }, signal) => {
       const value = await query(url, signal);
       if (value.status === 'unavailable') return value;

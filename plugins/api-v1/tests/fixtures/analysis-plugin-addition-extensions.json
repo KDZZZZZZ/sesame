@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "reviewedAt": "2026-10-29",
+  "baselineSha256": "sha256:93846e9c02068b4dd2a1cd9c1cad5719d66b99afc3bc045383572804caff5ae3",
+  "purpose": "Retain the immutable first 1.0 contract and prior replay approval. Explicitly review 1.1.2 fixed-result publication: inline numerical algorithms remain 1.1.1 and byte-identical; only the reference reader adds declared resource creation/publication and returns a compact fixed result handoff.",
+  "baselineVersions": {
+    "sesame/historical-evidence": "1.0.0"
+  },
+  "changes": [
+    {
+      "pluginId": "sesame/historical-evidence",
+      "component": "manifest",
+      "beforeDigest": "sha256:50ef940a20560641dffc5a248e02e36ef532eb971ad015e4ce9170c96408b568",
+      "afterDigest": "sha256:edf17d024db0c8e37f866cf12cde22ceab6a3153978f061d82aeb68775bd5f98",
+      "decision": "approved",
+      "reason": "Allow the already resource-reading from_ref entry to create and publish immutable derived/data results through the standard host API. No network, model, process, configuration or plugin state capability is added; preserve demo ancestry and all input dependencies.",
+      "evidence": {
+        "currentVersion": "1.1.2",
+        "methodVersion": "1.1.1",
+        "contract": "plugins/optional-api-v1/packages/historical-evidence/README.md",
+        "tests": [
+          "plugins/optional-api-v1/packages/historical-evidence/tests",
+          "plugins/optional-api-v1/tests/historical-evidence-host.test.mjs",
+          "plugins/api-v1/tests/research-history-dependencies-host.test.mjs"
+        ],
+        "receipts": "output/historical-result-delivery-20261029",
+        "priorContractFile": {
+          "path": "plugin.json",
+          "sha256": "584aff8ad430eec596348d4749477e791db3f090bf3f9730cbcec531b8b2534c",
+          "bytes": 706
+        },
+        "review": "Real isolated API2 publication and readback, unchanged numerical fields, large bounded preview, exact dependency provenance, conflict rejection, concurrent/retry and restart recovery."
+      }
+    },
+    {
+      "pluginId": "sesame/historical-evidence",
+      "component": "declaration",
+      "beforeDigest": "sha256:9f83fab930065d8d65ebf2317c04793b9e37180ad2f9f7808172dbd8f78acb61",
+      "afterDigest": "sha256:b71677b8a3fb74a7724bdf6de168afd062e9fe34924423d7b5b16e81aa52888f",
+      "decision": "approved",
+      "reason": "Add optional stable operation_id, a required complete result_ref plus bounded summary, declared data/1.0.0 artifact schema, and resources.create/publish effects only on from_ref. Inline match/calibrate keep effects=[] and input-only contracts; method identifiers and algorithm bytes remain 1.1.1. Output shape is an intentional reviewed handoff change, not an unchanged full-inline response.",
+      "evidence": {
+        "currentVersion": "1.1.2",
+        "methodVersion": "1.1.1",
+        "contract": "plugins/optional-api-v1/packages/historical-evidence/README.md",
+        "tests": [
+          "plugins/optional-api-v1/packages/historical-evidence/tests",
+          "plugins/optional-api-v1/tests/historical-evidence-host.test.mjs",
+          "plugins/api-v1/tests/research-history-dependencies-host.test.mjs"
+        ],
+        "receipts": "output/historical-result-delivery-20261029",
+        "priorContractFile": {
+          "path": "capabilities.json",
+          "sha256": "260d7a02bfc25d0b448c955dc8f2a7ef990540d0cf95c264e10f2352178bafee",
+          "bytes": 60612
+        },
+        "review": "Real isolated API2 publication and readback, unchanged numerical fields, large bounded preview, exact dependency provenance, conflict rejection, concurrent/retry and restart recovery."
+      }
+    }
+  ],
+  "reviewHistory": [
+    {
+      "reviewedAt": "2026-10-29",
+      "purpose": "Keep the first historical-evidence 1.0 contract immutable. Exact review of the typed historical_replay extension in 1.1; actual/virtual clocks and fixed-code/data evidence do not weaken recorded ex-ante provenance, and replay remains exploratory with no current calibrated probability.",
+      "changes": [
+        {
+          "pluginId": "sesame/historical-evidence",
+          "component": "manifest",
+          "beforeDigest": "sha256:50ef940a20560641dffc5a248e02e36ef532eb971ad015e4ce9170c96408b568",
+          "afterDigest": "sha256:8c6987a177427c674dae644ac99c4e16cae9be9ef44172f474b7113a4c4048c2",
+          "decision": "approved",
+          "reason": "Declare the new REPLAY.md guidance while retaining the first package identity, permission and effects boundary; version-only reconstruction still uses the authenticated first 1.0.0 label.",
+          "evidence": {
+            "currentVersion": "1.1.0",
+            "contract": "plugins/optional-api-v1/packages/historical-evidence/REPLAY.md",
+            "tests": "plugins/optional-api-v1/packages/historical-evidence/tests",
+            "review": "33 pure historical-evidence tests plus the isolated API2 host integration reported by the owning agent."
+          }
+        },
+        {
+          "pluginId": "sesame/historical-evidence",
+          "component": "declaration",
+          "beforeDigest": "sha256:9f83fab930065d8d65ebf2317c04793b9e37180ad2f9f7808172dbd8f78acb61",
+          "afterDigest": "sha256:d34923f848fd96428c25fc6e487dbd1152ef752b8e4ce288434ae68e5e8de1a9",
+          "decision": "approved",
+          "reason": "Add typed historical_replay provenance with actual generation/observation clocks, virtual decision/prefix/outcome clocks and fixed code/data refs. Preserve strict recorded-prediction behavior. Only exploratory replay diagnostics are allowed; current calibrated probability remains null.",
+          "evidence": {
+            "currentVersion": "1.1.0",
+            "contract": "plugins/optional-api-v1/packages/historical-evidence/REPLAY.md",
+            "tests": "plugins/optional-api-v1/packages/historical-evidence/tests",
+            "review": "33 pure historical-evidence tests plus the isolated API2 host integration reported by the owning agent."
+          }
+        }
+      ]
+    }
+  ]
+}

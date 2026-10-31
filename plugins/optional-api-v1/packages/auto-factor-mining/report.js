@@ -8,7 +8,7 @@ const STATUS_NAMES = {
   paused: '已暂停', interrupted: '已中断', cancelled: '已取消', canceled: '已取消',
   failed: '失败', error: '失败', accepted: '已接纳', rejected: '已淘汰',
   evaluated: '已评估', proposed: '已提案', implemented: '已实现',
-  selected: '已入选', frozen: '已冻结', accept: '接纳', reject: '淘汰',
+  selected: '已入选', frozen: '已冻结', accept: '接纳', conditional: '有条件使用', reject: '淘汰', unavailable: '不可用', unknown: '结果未确认', unverified: '原生回执待核验', partial: '部分已测', 'not-run': '未运行',
   proposing: '提出假设', implementing: '实现中', evaluating: '计算中', reviewing: '评审中',
   exhausted: '预算已耗尽',
 };
@@ -38,6 +38,18 @@ const outcome = trial => ['accepted', 'rejected', 'failed', 'cancelled', 'cancel
   ? trial.status : trial.review?.verdict || trial.status;
 const zeroBased = run => arr(run.trials).some(t => t.round === 0) || arr(run.reflections).some(r => r.round === 0);
 const roundLabel = (round, offset) => typeof round === 'number' ? round + offset : round ?? '—';
+const goalOverview = value => {
+  const text = String(value ?? '').trim(), points = Array.from(text);
+  if (!text) return '';
+  if (points.length <= 180) return `<p class="goal">${e(text)}</p>`;
+  return `<p class="goal">${e(points.slice(0, 160).join('').trimEnd())}…</p><details class="goal-record"><summary>研究目标与完整任务书</summary><p>${e(text)}</p></details>`;
+};
+const recordExcerpt = (value, summary, extra = '') => {
+  const text = String(value ?? ''), points = Array.from(text);
+  if (points.length <= 180 && !extra) return `<p>${e(text)}</p>`;
+  const excerpt = points.length > 180 ? `${points.slice(0, 160).join('').trimEnd()}…` : text;
+  return `<p class="record-excerpt"><small>摘录 · 完整记录见附录</small><br>${e(excerpt)}</p><details class="prose-record"><summary>${e(summary)}</summary><p>${e(text)}</p>${extra}</details>`;
+};
 const prose = (value, summary, className = '') => {
   const text = String(value ?? ''), paragraph = `<p${className ? ` class="${e(className)}"` : ''}>${e(text)}</p>`;
   return text.length > 280 ? `<details><summary>${e(summary)}</summary>${paragraph}</details>` : paragraph;
@@ -54,17 +66,36 @@ function metricTable(trial) {
   return `<table class="metrics"><caption>计算结果 · 固定训练集与验证集</caption><thead><tr><th scope="col">指标</th><th scope="col">训练集</th><th scope="col">验证集</th></tr></thead><tbody>${rows.map(([name, key, fmt]) => `<tr><th scope="row">${e(name)}</th><td>${fmt(metrics.train?.[key])}</td><td>${fmt(metrics.validation?.[key])}</td></tr>`).join('')}</tbody></table>`;
 }
 
+function renderApplicability(value) {
+  if (!value) return '';
+  const names = { valid_when: '适用情景', invalid_when: '失效情景', evidence: '支持证据', limitations: '局限', monitor: '监控', stop_when: '停用条件', counterexamples: '反例' };
+  const keyConditions = ['valid_when', 'invalid_when', 'stop_when'].filter(key => arr(value[key]).length).map(key => `<p><strong>${e(names[key])}：</strong>${arr(value[key]).map(e).join('；')}</p>`).join('');
+  return `${keyConditions}<details><summary>条件使用依据与反例</summary>${Object.entries(value).map(([key, list]) => `<p><strong>${e(names[key] ?? key)}</strong>：${arr(list).map(e).join('；') || '未记录'}</p>`).join('')}</details>`;
+}
+
+function renderNative(run) {
+  if (!run.nativeValidation) return '';
+  const { source: _source, ...receipt } = run.nativeValidation;
+  const passes = arr(receipt.development?.passes ?? receipt.development?.result?.passes), measured = passes.filter(pass => pass.status === 'completed').length;
+  const evidence = passes.length ? `${measured} / ${passes.length} 组开发结果已确认` : receipt.attempts?.length ? `已记录 ${receipt.attempts.length} 次原生调用尝试，尚无可确认的开发组结果` : '尚无原生实测结果';
+  const selection = receipt.selection?.digest ? '参数已冻结' : '参数尚未冻结';
+  const holdout = receipt.holdout?.status === 'completed' ? '留出期已实测' : receipt.holdout?.status === 'failed' ? '留出验证失败' : receipt.holdout?.status === 'unknown' ? '留出结果未确认' : run.config?.nativeValidation?.holdout || receipt.holdout ? '留出期未运行' : '未请求留出验证';
+  return `<h3>原生交易规则验证 · ${e(receipt.engine)} · ${e(label(receipt.status))}</h3><p>${e(`${evidence}；${selection}；${holdout}。`)}</p>${receipt.reason || receipt.holdout?.reason ? `<p>${e(receipt.reason ?? receipt.holdout.reason)}</p>` : ''}<details><summary>输入窗口、参数选择、各次执行及边界回执</summary><pre>${e(json(receipt))}</pre></details>`;
+}
+
 function trialDetail(trial, index, tasks, roundOffset) {
   const taskList = tasks.filter(task => task.trialId === trial.id);
-  return `<article class="trial-detail" id="trial-detail-${index}" data-trial-detail="${index}" ${index ? 'hidden' : ''} aria-labelledby="trial-title-${index}">
+  return `<article class="trial-detail" id="trial-detail-${index}" data-trial-detail="${index}" data-report-evidence-context="试验 ${e(trial.id)} · 第 ${e(roundLabel(trial.round, roundOffset))} 轮" ${index ? 'hidden' : ''} aria-labelledby="trial-title-${index}">
     <div class="detail-heading"><div><span class="eyebrow">TRIAL ${e(trial.id)}</span><h3 id="trial-title-${index}">${e(trial.hypothesis || '待补充假设')}</h3></div>${badge(outcome(trial))}</div>
     ${prose(trial.rationale || '尚未记录经济解释。', '研究依据与限制', 'rationale')}
     <dl class="inline-meta"><div><dt>研究方向</dt><dd>${e(trial.direction || '未指定')}</dd></div><div><dt>研究轮次</dt><dd>${e(roundLabel(trial.round, roundOffset))}</dd></div><div><dt>父试验</dt><dd>${e(trial.parentId || '初始分支')}</dd></div></dl>
     ${metricTable(trial)}
-    <div class="review ${tone(outcome(trial))}"><span class="eyebrow">评审意见${trial.review?.verdict ? ` · ${e(label(trial.review.verdict))}` : ''}</span><p>${e(trial.review?.reason || '未记录评审意见。')}</p>${trial.gate ? `<p><strong>确定性门槛${trial.eligible === false ? '未通过' : trial.eligible === true ? '已通过' : ''}：</strong>${e(trial.gate)}</p>` : ''}</div>
+    <div class="review ${tone(outcome(trial))}"><span class="eyebrow">评审意见${trial.review?.verdict ? ` · ${e(label(trial.review.verdict))}` : ''}</span>${recordExcerpt(trial.review?.reason || '未记录评审意见。', '完整评审意见')}${trial.gate ? `<p><strong>实测证据与用户硬要求：</strong>${e(trial.gate)}</p>` : ''}</div>
+    ${renderApplicability(trial.applicability ?? trial.review?.applicability)}
+    ${trial.evaluation ? `<details><summary>评估计划与建议阈值</summary><pre>${e(json(trial.evaluation))}</pre></details>` : ''}
     ${trial.metrics ? `<details><summary>评估口径、样本诊断与局限</summary><p class="digest">引擎 ${e(trial.metrics.evaluatorVersion || '未记录')} · 数据 ${e(trial.metrics.dataDigest || '未记录')}</p><pre>${e(json({ metrics: trial.metrics, redundancy: trial.redundancy || [], receiptDigest: trial.evaluationReceipt?.receiptDigest || null }))}</pre></details>` : ''}
     ${trial.error ? `<p class="error"><strong>执行失败</strong> ${e(typeof trial.error === 'object' ? json(trial.error) : trial.error)}</p>` : ''}
-    <details><summary>因子表达式与执行记录 <span>${taskList.length} 项任务</span></summary><pre>${e((trial.candidate ?? trial.expression) == null ? '尚未生成候选' : json(trial.candidate ?? trial.expression))}</pre><p class="digest">候选指纹：${e(trial.candidateDigest || trial.expressionDigest || '尚未生成')}</p>${taskList.length ? `<ul class="task-log">${taskList.map(task => `<li><div><strong>${e(ROLE_NAMES[task.role] || task.role || 'Agent')}</strong>${badge(task.status)}</div><p>${e(modelLabel(task.model))}</p><small>${e(task.id)} · ${e(date(task.finishedAt || task.startedAt))}</small>${task.error ? `<p class="error">${e(typeof task.error === 'object' ? json(task.error) : task.error)}</p>` : ''}${task.output ? `<details><summary>查看结构化输出</summary><pre>${e(json(task.output))}</pre></details>` : ''}</li>`).join('')}</ul>` : empty('此试验尚无 Agent 任务记录。')}</details>
+    <details><summary>因子表达式与执行记录 <span>${taskList.length} 项阶段记录</span></summary><pre>${e((trial.candidate ?? trial.expression) == null ? '尚未生成候选' : json(trial.candidate ?? trial.expression))}</pre><p class="digest">候选指纹：${e(trial.candidateDigest || trial.expressionDigest || '尚未生成')}</p>${taskList.length ? `<ul class="task-log">${taskList.map(task => `<li><div><strong>${e(ROLE_NAMES[task.role] || task.role || 'Agent')}</strong>${badge(task.status)}</div><p>${e(modelLabel(task.model))}</p><small>${e(task.id)} · ${e(date(task.finishedAt || task.startedAt))}</small>${task.error ? `<p class="error">${e(typeof task.error === 'object' ? json(task.error) : task.error)}</p>` : ''}${task.output ? `<details><summary>查看结构化输出</summary><pre>${e(json(task.output))}</pre></details>` : ''}</li>`).join('')}</ul>` : empty('此试验尚无 Agent 任务记录。')}</details>
   </article>`;
 }
 
@@ -77,7 +108,7 @@ function renderRounds(run, trials, roundOffset) {
     return `<article class="round"><div class="round-label"><span>ROUND</span><strong>${e(String(roundLabel(round, roundOffset)).padStart(2, '0'))}</strong><small>${members.length} 个试验</small></div><div class="round-body"><div class="branches">${members.map(trial => {
       const idx = trials.indexOf(trial);
       return `<button type="button" class="branch" data-open-trial="${idx}" aria-label="查看试验 ${e(trial.id)}"><span class="branch-direction">${e(trial.direction || '研究分支')}</span><strong>${e(trial.hypothesis || trial.id)}</strong><span class="branch-footer"><span>${e(trial.id)}${trial.parentId ? ` ← ${e(trial.parentId)}` : ''}</span>${badge(outcome(trial))}</span></button>`;
-    }).join('') || empty('此轮无试验记录。')}</div>${reflection ? `<div class="reflection"><span class="eyebrow">本轮复盘</span><p>${e(reflection.summary || '未记录摘要')}</p>${arr(reflection.nextDirections).length ? `<small>后续方向：${e(reflection.nextDirections.join(' · '))}</small>` : ''}</div>` : '<p class="round-pending">未记录本轮复盘</p>'}</div></article>`;
+    }).join('') || empty('此轮无试验记录。')}</div>${reflection ? `<div class="reflection" data-report-evidence-context="第 ${e(roundLabel(round, roundOffset))} 轮"><span class="eyebrow">本轮复盘</span>${recordExcerpt(reflection.summary || '未记录摘要', '完整复盘与后续方向', arr(reflection.nextDirections).length ? `<p>后续方向：${e(reflection.nextDirections.join(' · '))}</p>` : '')}</div>` : '<p class="round-pending">未记录本轮复盘</p>'}</div></article>`;
   }).join('');
 }
 
@@ -102,6 +133,7 @@ export function renderReport(run, { demo = false } = {}) {
   if (!run || typeof run !== 'object' || Array.isArray(run)) throw new TypeError('run must be an object');
   const trials = arr(run.trials), tasks = arr(run.tasks), events = arr(run.events);
   const config = run.config || {}, dataset = run.evaluation?.contract?.dataset || config.dataset || {}, data = run.data || {};
+  const detailTasks = config.executionMode === 'single' ? arr(run.single?.steps).map(step => ({ id: step.key, role: tasks[0]?.role, model: tasks[0]?.model, mode: step.mode, trialId: step.trialId, status: 'completed', finishedAt: step.submittedAt, output: step.output, runRef: tasks[0]?.runRef })) : tasks;
   const accepted = trials.filter(t => ['accept', 'accepted'].includes(outcome(t))).length;
   const rejected = trials.filter(t => ['reject', 'rejected'].includes(outcome(t))).length;
   const roundOffset = zeroBased(run) ? 1 : 0;
@@ -120,7 +152,7 @@ export function renderReport(run, { demo = false } = {}) {
 </style></head><body><a class="skip" href="#main">跳到研究报告</a><div class="page">
 <header class="masthead"><div class="brand">SESAME</div><div class="edition">研究总结</div></header>
 ${demo ? '<aside class="demo-banner" role="note"><strong>演示数据 · SIMULATED</strong>模型任务、行情指标与评审均为合成示例。</aside>' : ''}
-<main id="main"><div class="hero"><span class="eyebrow">AUTO FACTOR MINING / ${e(run.id || '未命名运行')}</span><h1>${e(title)}</h1>${run.goal ? `<p class="goal">${e(run.goal)}</p>` : ''}<div class="hero-meta">${badge(run.status)}<span>记录时间 ${e(date(run.finishedAt || run.updatedAt || run.createdAt))}</span></div>${run.error ? `<p class="error">${e(typeof run.error === 'object' ? json(run.error) : run.error)}</p>` : ''}</div>
+<main id="main" data-report-appendix-root><div class="hero"><span class="eyebrow">AUTO FACTOR MINING / ${e(run.id || '未命名运行')}</span><h1>${e(title)}</h1>${goalOverview(run.goal)}<div class="hero-meta">${badge(run.status)}<span>记录时间 ${e(date(run.finishedAt || run.updatedAt || run.createdAt))}</span></div>${run.error ? `<p class="error">${e(typeof run.error === 'object' ? json(run.error) : run.error)}</p>` : ''}</div>
 <dl class="numbers"><div><dt>研究轮次</dt><dd>${e(trials.length ? roundLabel(run.round, roundOffset) : 0)}<small>/ ${e(config.rounds ?? '—')}</small></dd></div><div><dt>累计试验</dt><dd>${trials.length}<small>/ ${e(config.maxTrials ?? '—')}</small></dd></div><div><dt>已接纳 / 已淘汰</dt><dd>${accepted}<small>/ ${rejected}</small></dd></div><div><dt>并行研究上限</dt><dd>${e(config.parallelism ?? '—')}<small>条分支</small></dd></div></dl>
 <nav class="index" aria-label="报告目录"><a href="#team"><span>01</span>研究团队</a><a href="#rounds"><span>02</span>研究演进</a><a href="#evidence"><span>03</span>试验证据</a><a href="#selection"><span>04</span>最终选择</a><a href="#timeline"><span>05</span>协作记录</a><a href="#reproducibility"><span>06</span>复现依据</a></nav>
 <section id="team"><header><span class="section-num">01</span><h2>研究团队</h2></header><div class="team">${(config.workflow ? [...new Map(Object.values(config.workflow).filter(Boolean).map(member => [member.id, member.title])).entries()] : Object.entries(ROLE_NAMES)).map(([role, name], idx) => {
@@ -129,10 +161,10 @@ ${demo ? '<aside class="demo-banner" role="note"><strong>演示数据 · SIMULAT
     return `<div class="role"><span class="role-order">${String(idx + 1).padStart(2, '0')} / ${e(role.toUpperCase())}</span><h3>${e(name)}</h3><p>${e(duties)}</p><p class="model">${e(modelLabel(config.agentModels?.[role] || tasks.find(task => task.role === role)?.model || config.model))}</p><small>${tasks.filter(t => t.role === role).length} 项任务记录</small></div>`;
   }).join('')}</div>${renderTeamLog(tasks)}<div class="split"><div><strong>训练集</strong><span>截至 ${e(dataset.trainEnd || '未指定')}</span></div><div><strong>验证集</strong><span>截至 ${e(dataset.validationEnd || '未指定')}</span></div><div><strong>留出集</strong><span>${data.holdoutMode === 'none' ? '未使用' : `截至 ${e(dataset.holdoutEnd || '由评估能力定义')}`}</span></div></div></section>
 <section id="rounds"><header><span class="section-num">02</span><h2>研究演进</h2></header>${renderRounds(run, trials, roundOffset)}</section>
-<section id="evidence"><header><span class="section-num">03</span><h2>试验证据</h2></header><noscript><p class="no-js">交互需要 JavaScript；所有试验内容仍保存在本文件中。打印此页可查看完整试验详情。</p></noscript><div class="filterbar"><label>评审结果<select id="status-filter"><option value="all">全部结果</option><option value="accepted">已接纳</option><option value="rejected">已淘汰</option><option value="other">其他状态</option></select></label><label>研究方向<select id="direction-filter"><option value="all">全部方向</option>${directions.map(d => `<option value="${e(d)}">${e(d)}</option>`).join('')}</select></label><span class="filter-count" id="trial-count" aria-live="polite">${trials.length} / ${trials.length} 个试验</span></div><div class="evidence"><div class="trial-list" aria-label="选择试验">${trials.map((trial, i) => `<button type="button" class="trial-choice" data-trial-row="${i}" aria-pressed="${!i}" aria-controls="trial-detail-${i}"><small>${e(trial.id)} · R${e(roundLabel(trial.round, roundOffset))}</small><strong>${e(trial.hypothesis || '待补充假设')}</strong><span class="choice-bottom">${badge(outcome(trial))}<span class="ic">${trial.evaluationReceipt ? e(trial.eligible ? '评估门槛通过' : '评估门槛未通过') : `IC ${number(trial.metrics?.validation?.rankIC)}`}</span></span></button>`).join('')}</div><div id="trial-details">${trials.map((trial, i) => trialDetail(trial, i, tasks, roundOffset)).join('')}<p class="empty detail-empty" id="trial-empty" ${trials.length ? 'hidden' : ''}>暂无匹配的试验。</p></div></div></section>
-<section id="selection"><header><span class="section-num">04</span><h2>最终选择与评估</h2></header>${renderSelection(run)}</section>
-<section id="timeline"><header><span class="section-num">05</span><h2>协作记录</h2><p>${events.length} 条事件</p></header><ol class="events">${events.map((event, i) => `<li class="event" data-event="${i}"><time>${e(date(event.at))}</time><span class="event-role">${e(ROLE_NAMES[event.role] || event.role || '系统')}</span><p>${e(event.message || event.type || '事件')}<small>${e(event.type || '')}${event.trialId ? ` · ${e(event.trialId)}` : ''}</small></p></li>`).join('')}</ol>${events.length ? '' : empty('尚无协作事件。')}</section>
-<section id="reproducibility"><header><span class="section-num">06</span><h2>复现依据</h2></header><dl class="provenance"><div><dt>运行标识</dt><dd class="mono">${e(run.id || '未记录')}</dd></div><div><dt>创建时间</dt><dd>${e(date(run.createdAt))}</dd></div><div><dt>数据指纹</dt><dd class="mono">${e(data.digest || '尚未记录')}</dd></div><div><dt>数据规模</dt><dd>${e(data.rowCount ?? '—')} 行 / ${e(data.symbolCount ?? '—')} 个标的</dd></div><div><dt>可用字段</dt><dd class="mono">${e(arr(data.fields).join(', ') || '尚未记录')}</dd></div><div><dt>数据时间范围</dt><dd class="mono">${e(data.range ? typeof data.range === 'string' ? data.range : json(data.range) : '尚未记录')}</dd></div><div><dt>${config.evaluator ? '选中的评估工具' : '持有期 / 成本 / 分组比例'}</dt><dd>${config.evaluator ? e(`${config.evaluator.plugin_id} / ${config.evaluator.tool}`) : `${e(dataset.horizon ?? '—')} 期 / ${e(dataset.costBps ?? '—')} bps / ${percent(dataset.quantile)}`}</dd></div><div><dt>报告目录</dt><dd class="mono">${e(config.reportFolder || '未指定')}</dd></div></dl><details><summary>完整配置与数据身份</summary><pre>${e(json({ config, data }))}</pre></details></section></main>
+<section id="evidence"><header><span class="section-num">03</span><h2>试验证据</h2></header><noscript><p class="no-js">交互需要 JavaScript；所有试验内容仍保存在本文件中。打印此页可查看完整试验详情。</p></noscript><div class="filterbar"><label>评审结果<select id="status-filter"><option value="all">全部结果</option><option value="accepted">已接纳</option><option value="rejected">已淘汰</option><option value="other">其他状态</option></select></label><label>研究方向<select id="direction-filter"><option value="all">全部方向</option>${directions.map(d => `<option value="${e(d)}">${e(d)}</option>`).join('')}</select></label><span class="filter-count" id="trial-count" aria-live="polite">${trials.length} / ${trials.length} 个试验</span></div><div class="evidence"><div class="trial-list" aria-label="选择试验">${trials.map((trial, i) => `<button type="button" class="trial-choice" data-trial-row="${i}" aria-pressed="${!i}" aria-controls="trial-detail-${i}"><small>${e(trial.id)} · R${e(roundLabel(trial.round, roundOffset))}</small><strong>${e(trial.hypothesis || '待补充假设')}</strong><span class="choice-bottom">${badge(outcome(trial))}<span class="ic">${trial.evaluationReceipt ? e(trial.eligible ? '有可测证据' : '证据不足或违反硬要求') : `IC ${number(trial.metrics?.validation?.rankIC)}`}</span></span></button>`).join('')}</div><div id="trial-details">${trials.map((trial, i) => trialDetail(trial, i, detailTasks, roundOffset)).join('')}<p class="empty detail-empty" id="trial-empty" ${trials.length ? 'hidden' : ''}>暂无匹配的试验。</p></div></div></section>
+<section id="selection"><header><span class="section-num">04</span><h2>最终选择与评估</h2></header>${renderSelection(run)}${renderApplicability(run.selection?.applicability)}${run.selection?.diagnostics ? `<details><summary>完整试验集搜索诊断与条件评价</summary><pre>${e(json({ diagnostics: run.selection.diagnostics, evaluations: run.selection.evaluations }))}</pre></details>` : ''}${renderNative(run)}<p>本页保存因子/候选 evaluator 的实测回执；完整交易规则回测仍需所选真实引擎的独立回执，不能由统计诊断替代。</p>${run.strategyValidation ? `<details><summary>后续真实策略验证 · 未执行</summary><pre>${e(json(run.strategyValidation))}</pre></details>` : ''}</section>
+<details id="timeline"><summary>协作记录 · ${events.length} 条事件</summary><ol class="events">${events.map((event, i) => `<li class="event" data-event="${i}"><time>${e(date(event.at))}</time><span class="event-role">${e(ROLE_NAMES[event.role] || event.role || '系统')}</span><p>${e(event.message || event.type || '事件')}<small>${e(event.type || '')}${event.trialId ? ` · ${e(event.trialId)}` : ''}</small></p></li>`).join('')}</ol>${events.length ? '' : empty('尚无协作事件。')}</details>
+<details id="reproducibility"><summary>复现依据与数据身份</summary><dl class="provenance"><div><dt>运行标识</dt><dd class="mono">${e(run.id || '未记录')}</dd></div><div><dt>创建时间</dt><dd>${e(date(run.createdAt))}</dd></div><div><dt>数据指纹</dt><dd class="mono">${e(data.digest || '尚未记录')}</dd></div><div><dt>数据规模</dt><dd>${e(data.rowCount ?? '—')} 行 / ${e(data.symbolCount ?? '—')} 个标的</dd></div><div><dt>可用字段</dt><dd class="mono">${e(arr(data.fields).join(', ') || '尚未记录')}</dd></div><div><dt>数据时间范围</dt><dd class="mono">${e(data.range ? typeof data.range === 'string' ? data.range : json(data.range) : '尚未记录')}</dd></div><div><dt>${config.evaluator ? '选中的评估工具' : '持有期 / 成本 / 分组比例'}</dt><dd>${config.evaluator ? e(`${config.evaluator.plugin_id} / ${config.evaluator.tool}`) : `${e(dataset.horizon ?? '—')} 期 / ${e(dataset.costBps ?? '—')} bps / ${percent(dataset.quantile)}`}</dd></div><div><dt>报告目录</dt><dd class="mono">${e(config.reportFolder || '未指定')}</dd></div></dl><details><summary>完整配置与数据身份</summary><pre>${e(json({ config, data }))}</pre></details></details></main>
 <footer class="footer"><strong>SESAME</strong><p>${demo ? '合成示例 · 非市场或模型绩效证据' : '研究总结'}</p></footer></div>
 <script type="application/json" id="run-snapshot">${safeJson(run)}</script>
 <script>
@@ -166,26 +198,14 @@ ${demo ? '<aside class="demo-banner" role="note"><strong>演示数据 · SIMULAT
     document.getElementById('trial-count').textContent = visible.length + ' / ' + trials.length + ' 个试验';
   }
   status.addEventListener('change', filter); direction.addEventListener('change', filter);
+  document.getElementById('main').addEventListener('report-evidence-return', event => {
+    const index = Number(event.detail?.trial);
+    if (Number.isInteger(index) && index >= 0 && index < trials.length) { status.value = 'all'; direction.value = 'all'; filter(); choose(index, false); }
+  });
   rows.forEach(row => row.addEventListener('click', () => choose(Number(row.dataset.trialRow), false)));
   document.querySelectorAll('[data-open-trial]').forEach(button => button.addEventListener('click', () => {
     status.value = 'all'; direction.value = 'all'; filter(); choose(Number(button.dataset.openTrial), true);
   }));
 })();
 </script></body></html>`;
-}
-
-// The report service owns the page, heading, fonts and semantic theme. Preserve
-// this domain's evidence controls, without nesting another document/theme in it.
-export function renderReportBody(run, options) {
-  const html = renderReport(run, options);
-  const css = html.match(/<style>([\s\S]*?)<\/style>/)[1]
-    .replace(/:root\{[^}]*\}/, '')
-    .replace(/\b(?:html|body)\{[^}]*\}/g, '')
-    .replaceAll('#f1f3f7', 'var(--report-tint)');
-  const body = html.match(/<body>([\s\S]*)<\/body>/)[1]
-    .replace(/<header class="masthead">[\s\S]*?<\/header>/, '')
-    .replace(/<footer class="footer">[\s\S]*?<\/footer>/, '')
-    .replace(/<h1>[\s\S]*?<\/h1>/, '')
-    .replace('<main id="main">', '<article id="main">').replace('</main>', '</article>');
-  return `<style>.factor-report{--paper:var(--report-paper);--ink:var(--report-ink);--muted:var(--report-muted);--rule:var(--report-line);--orange:var(--report-accent);--orange-ink:var(--report-accent);--light:var(--report-paper);--blue:var(--report-accent);--green:var(--success,var(--report-default-success));--red:var(--report-negative);--serif:var(--report-sans);--sans:var(--report-sans);--mono:var(--report-mono)}@scope (.factor-report){${css}\n:scope .page{max-width:none;padding:0;margin:0}:scope .hero{padding-top:0}}</style><div class="factor-report">${body}</div>`;
 }

@@ -1,0 +1,942 @@
+{
+  "schemaVersion": "1.0.0",
+  "policy": "先显示结论与紧凑结果，保留回撤、年化收益、估值、期权等金融名词；去掉研究流程、开发用语和长句。label是用户标签，tc_fields仅为现有对照的内部映射；自有扩展放sesame_fields，不冒称TC原字段。短词、数字、表、图按内容选择，未知/不适用短标；建议长度不作硬限制。共享对象、期限、单位和截点，重复问题共用结果，方法与完整证据下移。用户删改优先。来源只支持内容/形式，未声称复制TC原版首屏或官方字数规范。",
+  "templates": {
+    "R01": {
+      "reference_type": "official_product_structure",
+      "reference_context": "TC Panoramic View · 官方产品结构",
+      "fields": [
+        {
+          "tc_fields": [
+            "研究对象"
+          ],
+          "label": "资产",
+          "format": "meta",
+          "guide": "名称、代码、资料日期共用一行。",
+          "question_refs": [
+            "R01.01"
+          ]
+        },
+        {
+          "tc_fields": [
+            "价值状态"
+          ],
+          "label": "价值判断",
+          "format": "phrase",
+          "guide": "约2–8字，回答价值投资条件的吸引力；不只写公司好坏，不造TC分数。",
+          "question_refs": [
+            "R01.02"
+          ]
+        },
+        {
+          "tc_fields": [
+            "技术方向"
+          ],
+          "label": "走势",
+          "format": "table",
+          "guide": "短期走势、中期走势、长期走势各用2–6字；期限放表头，不展开三段。",
+          "question_refs": [
+            "R01.03"
+          ]
+        },
+        {
+          "tc_fields": [
+            "新闻情绪"
+          ],
+          "label": "新闻情绪",
+          "format": "phrase",
+          "guide": "偏正、中性、偏负等短词；不是消息对价格的影响。",
+          "question_refs": [
+            "R01.04"
+          ]
+        },
+        {
+          "tc_fields": [
+            "关注程度"
+          ],
+          "label": "24小时关注",
+          "format": "number",
+          "guide": "实际数量及变化，或有定义的关注档位；口径短注。",
+          "question_refs": [
+            "R01.05"
+          ]
+        },
+        {
+          "tc_fields": [
+            "详细研究"
+          ],
+          "label": "查看依据",
+          "format": "link",
+          "guide": "只给入口，不加一段报告介绍。",
+          "question_refs": [
+            "R01.06"
+          ]
+        }
+      ],
+      "layout": "共享资产信息；价值、三期限走势、情绪、24小时关注直接可见；证据入口收尾。",
+      "sources": [
+        {
+          "label": "Panoramic View 官方说明",
+          "url": "https://www.tradingcentral.com/blog/trading-central-releases-summary-scores-in-panoramic-view"
+        },
+        {
+          "label": "三个技术期限的官方说明",
+          "url": "https://www.tradingcentral.com/blog/webull-launches-trading-central-panoramic-view"
+        }
+      ]
+    },
+    "R02": {
+      "reference_type": "official_historical_example",
+      "reference_context": "TC / ErisX · 2022 年 4 月 25 日 · BTC/USD · 短期",
+      "fields": [
+        {
+          "tc_fields": [
+            "对象与期限"
+          ],
+          "label": "资产·期限",
+          "format": "meta",
+          "guide": "资产、价格日期和判断期限共用一行。",
+          "question_refs": [
+            "R02.01"
+          ]
+        },
+        {
+          "tc_fields": [
+            "主判断"
+          ],
+          "label": "走势判断",
+          "format": "phrase",
+          "guide": "偏强、偏弱、震荡等2–6字。",
+          "question_refs": [
+            "R02.02"
+          ]
+        },
+        {
+          "tc_fields": [
+            "分界价（Pivot）",
+            "主情景目标"
+          ],
+          "label": "关键价位",
+          "format": "table",
+          "guide": "分界价、目标1、目标2直接给数字或实际目标区。",
+          "question_refs": [
+            "R02.03",
+            "R02.04"
+          ]
+        },
+        {
+          "tc_fields": [
+            "备用情景"
+          ],
+          "label": "备用情景",
+          "format": "sentence",
+          "guide": "约15–35字：切换条件→方向→目标；不重复画树。",
+          "question_refs": [
+            "R02.05"
+          ]
+        },
+        {
+          "tc_fields": [
+            "判断理由"
+          ],
+          "label": "理由",
+          "format": "sentence",
+          "guide": "一句关键技术依据；已有价格图放在结果后，完整方法下移。",
+          "question_refs": [
+            "R02.06"
+          ]
+        }
+      ],
+      "layout": "走势先给；分界/目标紧凑并列，备用和理由各一句；只保留一个最终情景树。",
+      "sources": [
+        {
+          "label": "TC 官方历史周报",
+          "url": "https://newsletters.tradingcentral.com/ErisX/index_en.html"
+        },
+        {
+          "label": "Technical Views 官方说明",
+          "url": "https://investor.tradingcentral.com/tutorials/getting-started-with-technical-views"
+        }
+      ]
+    },
+    "R03": {
+      "reference_type": "official_historical_example_and_tutorial",
+      "reference_context": "TC Economic Insight · 2023 年 2 月 21 日 · FOMC 纪要 → EUR/USD",
+      "fields": [
+        {
+          "tc_fields": [
+            "事件与资产",
+            "观察时间"
+          ],
+          "label": "事件·观察时间",
+          "format": "meta",
+          "guide": "事件、资产及公布后窗口共用一行。",
+          "question_refs": [
+            "R03.01",
+            "R03.02"
+          ]
+        },
+        {
+          "tc_fields": [
+            "历史样本",
+            "方向统计"
+          ],
+          "label": "历史涨跌",
+          "format": "number",
+          "guide": "上涨k/N次，可附百分比；明确是历史频率。",
+          "question_refs": [
+            "R03.03",
+            "R03.04"
+          ]
+        },
+        {
+          "tc_fields": [
+            "波动幅度"
+          ],
+          "label": "平均波动",
+          "format": "number",
+          "guide": "数值加单位，保留实际波幅定义。",
+          "question_refs": [
+            "R03.05"
+          ]
+        },
+        {
+          "tc_fields": [
+            "实际与预期"
+          ],
+          "label": "实际／预期",
+          "format": "phrase",
+          "guide": "两个数及高于、符合或低于；未知、不适用用短标记。",
+          "question_refs": [
+            "R03.06"
+          ]
+        },
+        {
+          "tc_fields": [
+            "净涨跌"
+          ],
+          "label": "净涨跌",
+          "format": "number",
+          "guide": "带正负号的数值；与波幅分开，同一观察窗口。",
+          "question_refs": [
+            "R03.07"
+          ]
+        },
+        {
+          "tc_fields": [
+            "价格路径"
+          ],
+          "label": "价格反应",
+          "format": "chart",
+          "guide": "已有价格图标事件时点和观察窗口，不用长图注重复结论。",
+          "question_refs": [
+            "R03.08"
+          ]
+        }
+      ],
+      "layout": "事件与窗口共享，历史次数、波幅、净涨跌直接显示，价格图随后。",
+      "sources": [
+        {
+          "label": "TC 官方事件周报",
+          "url": "https://www.tradingcentral.com/blog/tc-economic-insight-the-week-ahead-february-20-24"
+        },
+        {
+          "label": "Economic Insight 官方说明",
+          "url": "https://investor.tradingcentral.com/tutorials/getting-started-with-economic-insight"
+        }
+      ]
+    },
+    "R04": {
+      "reference_type": "adjacent_product_components",
+      "reference_context": "TC Fair Value / Analyst Consensus · 相近估值组件",
+      "fields": [
+        {
+          "tc_fields": [
+            "公允价值"
+          ],
+          "label": "公允价值",
+          "format": "number",
+          "guide": "金额或实际估值区间；与分析师目标价分开。",
+          "question_refs": [
+            "R04.01"
+          ]
+        },
+        {
+          "tc_fields": [
+            "分析师评级"
+          ],
+          "label": "分析师评级",
+          "format": "phrase",
+          "guide": "买入、持有、卖出等总体短判断；真实分布可用短数字，不强造人数。",
+          "question_refs": [
+            "R04.04"
+          ]
+        },
+        {
+          "tc_fields": [
+            "平均目标价",
+            "目标价分歧"
+          ],
+          "label": "分析师目标价",
+          "format": "table",
+          "guide": "平均、最低、最高三个数字同排。",
+          "question_refs": [
+            "R04.05",
+            "R04.06"
+          ]
+        },
+        {
+          "tc_fields": [
+            "估值方法"
+          ],
+          "label": "估值方法",
+          "format": "meta",
+          "guide": "只写方法名，关键假设在下方。",
+          "question_refs": [
+            "R04.02"
+          ]
+        },
+        {
+          "tc_fields": [
+            "估值更新",
+            "共识更新"
+          ],
+          "label": "更新时间",
+          "format": "meta",
+          "guide": "估值与共识各用日期／实际更新节奏短注，不照抄TC周期。",
+          "question_refs": [
+            "R04.03",
+            "R04.07"
+          ]
+        }
+      ],
+      "layout": "公允价值与分析师共识分两组；方法和更新用小注，不占结论卡。",
+      "sources": [
+        {
+          "label": "Fair Value 官方说明",
+          "url": "https://www.tradingcentral.com/blog/tc-fair-value-available-by-trading-central"
+        },
+        {
+          "label": "分析师共识官方说明",
+          "url": "https://www.tradingcentral.com/blog/analyst-consensus-rating-target-price"
+        }
+      ]
+    },
+    "R05": {
+      "reference_type": "official_historical_newsletter",
+      "reference_context": "TC Daily Market Newsletter · 2022 年 12 月 9 日",
+      "fields": [
+        {
+          "tc_fields": [
+            "报告日期"
+          ],
+          "label": "日期",
+          "format": "meta",
+          "guide": "日期与时区或收盘截点一行。",
+          "question_refs": [
+            "R05.01"
+          ]
+        },
+        {
+          "tc_fields": [
+            "市场回顾",
+            "跨资产状态",
+            "单资产判断",
+            "备用情景"
+          ],
+          "label": "市场与观点",
+          "format": "table",
+          "guide": "每资产一行：涨跌数字、走势短词、关键价位、备用条件；只列用户范围。",
+          "question_refs": [
+            "R05.02",
+            "R05.04",
+            "R05.05",
+            "R05.06"
+          ]
+        },
+        {
+          "tc_fields": [
+            "重要消息"
+          ],
+          "label": "关键消息",
+          "format": "sentence",
+          "guide": "每条一句发生了什么，约15–30字；不重复摘要。",
+          "question_refs": [
+            "R05.03"
+          ]
+        },
+        {
+          "tc_fields": [
+            "经济日历"
+          ],
+          "label": "接下来",
+          "format": "sentence",
+          "guide": "每项一行：时间·事件·预期·重要性；详细日历下接，未知项短标。",
+          "question_refs": [
+            "R05.07"
+          ]
+        }
+      ],
+      "layout": "市场表先给变化及判断；关键消息与日程各用一行，全文在下方展开。",
+      "sources": [
+        {
+          "label": "TC 官方日报样刊",
+          "url": "https://newsletters.tradingcentral.com/acmarkets/index_mb_en.html"
+        },
+        {
+          "label": "Market Buzz 官方说明",
+          "url": "https://www.tradingcentral.com/tc-products/tc-market-buzz"
+        }
+      ]
+    },
+    "R06": {
+      "reference_type": "official_historical_example",
+      "reference_context": "TC Options Insight · WDC · 2024 年 5 月 7 日",
+      "fields": [
+        {
+          "tc_fields": [
+            "标的与到期日",
+            "风险偏好"
+          ],
+          "label": "资产·到期·条件",
+          "format": "meta",
+          "guide": "标的、到期、预期方向和风险取向共用短行；持有期不同须说明。",
+          "question_refs": [
+            "R06.01",
+            "R06.04"
+          ]
+        },
+        {
+          "tc_fields": [
+            "行权价组合",
+            "首选与替代",
+            "最大损益",
+            "盈利概率"
+          ],
+          "label": "期权比较",
+          "format": "table",
+          "guide": "每结构一行：首选/替代、买卖合约、最大收益/亏损、真实盈利概率；共用单位。",
+          "question_refs": [
+            "R06.02",
+            "R06.03",
+            "R06.05",
+            "R06.06"
+          ]
+        },
+        {
+          "tc_fields": [
+            "损益图与波动区间"
+          ],
+          "label": "盈亏与波动区间",
+          "format": "chart",
+          "guide": "已有损益图与预计波动区间分清；压力情景轴不是未来范围，未知则直说。",
+          "question_refs": [
+            "R06.07"
+          ]
+        }
+      ],
+      "layout": "一张结构比较表＋一幅已有损益/波动图；共同条件只出现一次。",
+      "sources": [
+        {
+          "label": "WDC 官方期权案例",
+          "url": "https://www.tradingcentral.com/blog/western-digital-technical-breakout-provides-bullish-options"
+        },
+        {
+          "label": "Options Insight 官方说明",
+          "url": "https://www.tradingcentral.com/tc-products/tc-options-insight"
+        }
+      ]
+    },
+    "R07": {
+      "reference_type": "adjacent_holding_component",
+      "reference_context": "TC Panoramic View · 相近持仓研究组件",
+      "fields": [
+        {
+          "tc_fields": [
+            "持仓条目",
+            "价值状态",
+            "技术方向",
+            "新闻情绪",
+            "新闻关注"
+          ],
+          "label": "持仓判断",
+          "format": "table",
+          "guide": "每持仓一行：价值判断、近期/长期走势、情绪及变化、24小时关注；每格短词或数字。",
+          "question_refs": [
+            "R07.01",
+            "R07.02",
+            "R07.03",
+            "R07.04",
+            "R07.05"
+          ]
+        },
+        {
+          "tc_fields": [],
+          "label": "组合风险",
+          "format": "sentence",
+          "guide": "关键回撤、集中度或风险贡献数字，加一句风险取舍；不扩写流程。",
+          "sesame_fields": [
+            "Sesame扩展"
+          ],
+          "source_type": "sesame_extension",
+          "question_refs": [
+            "R07.06"
+          ]
+        }
+      ],
+      "layout": "持仓一行一项；组合总体风险另给一句，数值与方法不混成段落。",
+      "sources": [
+        {
+          "label": "Panoramic View 官方说明",
+          "url": "https://www.tradingcentral.com/blog/trading-central-releases-summary-scores-in-panoramic-view"
+        }
+      ]
+    },
+    "R08": {
+      "reference_type": "adjacent_event_statistics",
+      "reference_context": "TC Economic Insight · 历史统计的部分对应",
+      "fields": [
+        {
+          "tc_fields": [
+            "事件与资产",
+            "观察时间"
+          ],
+          "label": "对象·观察期",
+          "format": "meta",
+          "guide": "资产、真实事件或信号、结果窗口共用短行；无经济事件不新增研究。",
+          "question_refs": [
+            "R08.01",
+            "R08.02"
+          ]
+        },
+        {
+          "tc_fields": [
+            "样本与方向"
+          ],
+          "label": "历史频率",
+          "format": "number",
+          "guide": "上涨k/N次；与预测概率、校准结果分开。",
+          "question_refs": [
+            "R08.03"
+          ]
+        },
+        {
+          "tc_fields": [
+            "波动幅度",
+            "事件结果分组"
+          ],
+          "label": "事件结果",
+          "format": "phrase",
+          "guide": "适用时给波幅数字与预期差分组；纯概率任务短标不适用，不造空卡。",
+          "question_refs": [
+            "R08.04",
+            "R08.05"
+          ]
+        },
+        {
+          "tc_fields": [],
+          "label": "概率校准",
+          "format": "phrase",
+          "guide": "先给可用、需调整或暂不可用的短结论，再附关键改善/误差数字；细图下接。",
+          "sesame_fields": [
+            "Sesame扩展"
+          ],
+          "source_type": "sesame_extension",
+          "question_refs": [
+            "R08.06"
+          ]
+        }
+      ],
+      "layout": "概率采用/调整结论在前；历史数字支持，事件不适用不补无关内容。",
+      "sources": [
+        {
+          "label": "TC 官方历史统计实例",
+          "url": "https://www.tradingcentral.com/blog/tc-economic-insight-the-week-ahead-february-20-24"
+        },
+        {
+          "label": "Economic Insight 官方说明",
+          "url": "https://investor.tradingcentral.com/tutorials/getting-started-with-economic-insight"
+        }
+      ]
+    },
+    "R09": {
+      "reference_type": "official_calendar_structure",
+      "reference_context": "TC Economic Calendar + Corporate Calendar · 官方结构",
+      "fields": [
+        {
+          "tc_fields": [
+            "事件与对象",
+            "发布时间",
+            "重要性",
+            "预期与实际",
+            "上期与修订",
+            "公司事件"
+          ],
+          "label": "事件日历",
+          "format": "table",
+          "guide": "时间排序；事件/国家或公司、重要性、预期/实际、前值/修订同排，时区共享。",
+          "question_refs": [
+            "R09.01",
+            "R09.02",
+            "R09.03",
+            "R09.04",
+            "R09.05",
+            "R09.07"
+          ]
+        },
+        {
+          "tc_fields": [
+            "指标说明"
+          ],
+          "label": "事件详情",
+          "format": "link",
+          "guide": "每项一句指标含义和相关价格图入口；官方为点击查看，不全部首屏展开。",
+          "question_refs": [
+            "R09.06"
+          ]
+        }
+      ],
+      "layout": "时间表本身就是结果；指标说明和相关价格图点开查看。",
+      "sources": [
+        {
+          "label": "Economic Calendar 官方教程",
+          "url": "https://investor.tradingcentral.com/tutorials/follow-market-moving-events-2b558"
+        },
+        {
+          "label": "Corporate Calendar 官方说明",
+          "url": "https://www.tradingcentral.com/tc-products/tc-corporate-calendar"
+        }
+      ]
+    },
+    "R10": {
+      "reference_type": "two_independent_historical_examples",
+      "reference_context": "TC Strategy Builder · 2019-10-28 美国科技股；2017-04-03 美国消费股",
+      "fields": [
+        {
+          "tc_fields": [
+            "策略对象",
+            "回测时间",
+            "评价时间"
+          ],
+          "label": "策略·期间",
+          "format": "meta",
+          "guide": "对象、起止日期显示一次，策略和基准共用。",
+          "question_refs": [
+            "R10.02",
+            "R10.08",
+            "R10.09"
+          ]
+        },
+        {
+          "tc_fields": [
+            "选择规则",
+            "风险筛选"
+          ],
+          "label": "筛选规则",
+          "format": "phrase",
+          "guide": "条件名+阈值简列；个股Beta筛选不能用组合回撤替代。",
+          "question_refs": [
+            "R10.01",
+            "R10.13"
+          ]
+        },
+        {
+          "tc_fields": [
+            "持仓数量与权重"
+          ],
+          "label": "持仓",
+          "format": "number",
+          "guide": "实际数量+资金分配规则，短行。",
+          "question_refs": [
+            "R10.04"
+          ]
+        },
+        {
+          "tc_fields": [
+            "调整周期",
+            "换仓规则",
+            "成交规则",
+            "选股时能知道的信息"
+          ],
+          "label": "回测规则",
+          "format": "meta",
+          "guide": "调整周期、成交时点/价格、当时可知资料各短写一次；完整假设下移。",
+          "question_refs": [
+            "R10.03",
+            "R10.05",
+            "R10.06",
+            "R10.12"
+          ]
+        },
+        {
+          "tc_fields": [
+            "历史结果",
+            "年化表现",
+            "基准表现"
+          ],
+          "label": "收益比较",
+          "format": "table",
+          "guide": "策略与基准同排给年化收益；只显示一次，期间共用。",
+          "question_refs": [
+            "R10.07",
+            "R10.10",
+            "R10.11"
+          ]
+        },
+        {
+          "tc_fields": [],
+          "label": "风险与取舍",
+          "format": "sentence",
+          "guide": "关键回撤、成本数字＋一句适用或停用判断。",
+          "sesame_fields": [
+            "Sesame扩展"
+          ],
+          "source_type": "sesame_extension",
+          "question_refs": [
+            "R10.14"
+          ]
+        }
+      ],
+      "layout": "14个对照问题合并为6组；期间、换仓、年化不重复，两个TC历史案例不拼接收益。",
+      "sources": [
+        {
+          "label": "TC 官方科技股回测实例",
+          "url": "https://www.tradingcentral.com/blog/these-six-tech-stocks-could-fuel-a-market-breakout"
+        },
+        {
+          "label": "Strategy Builder 方法说明",
+          "url": "https://employee.tradingcentral.com/resources/strategy-builder"
+        },
+        {
+          "label": "TC 官方消费股回测实例",
+          "url": "https://www.tradingcentral.com/blog/seeking-lower-volatility-u-s-consumer-stocks"
+        },
+        {
+          "label": "Strategy Builder 官方教程",
+          "url": "https://investor.tradingcentral.com/tutorials/build-your-investing-strategy-with-strategy-builder-bb010"
+        }
+      ]
+    },
+    "R11": {
+      "reference_type": "adjacent_stock_index_methods",
+      "reference_context": "TC Quant Indices / Strategy Builder · 股票规则参考",
+      "fields": [
+        {
+          "tc_fields": [
+            "投资范围",
+            "选择依据"
+          ],
+          "label": "资产与选择",
+          "format": "meta",
+          "guide": "资产范围＋实际选择规则短行；不混用两套TC方法。",
+          "question_refs": [
+            "R11.01",
+            "R11.02"
+          ]
+        },
+        {
+          "tc_fields": [
+            "入选数量",
+            "资金分配"
+          ],
+          "label": "组合配置",
+          "format": "table",
+          "guide": "直接给成分与权重，表头或短注显示数量。",
+          "question_refs": [
+            "R11.03",
+            "R11.04"
+          ]
+        },
+        {
+          "tc_fields": [
+            "行业分散"
+          ],
+          "label": "行业分散",
+          "format": "phrase",
+          "guide": "集中/分散短判断及关键占比；股债现金分散不替代股票ETF内部行业。",
+          "question_refs": [
+            "R11.05"
+          ]
+        },
+        {
+          "tc_fields": [
+            "调整时间"
+          ],
+          "label": "调整时机",
+          "format": "phrase",
+          "guide": "实际周期或观察频率＋触发值，短行。",
+          "question_refs": [
+            "R11.06"
+          ]
+        },
+        {
+          "tc_fields": [],
+          "label": "适用条件",
+          "format": "sentence",
+          "guide": "一句约15–35字，写用户约束下何时采用或调整；重要执行限制短注。",
+          "sesame_fields": [
+            "Sesame扩展"
+          ],
+          "source_type": "sesame_extension",
+          "question_refs": [
+            "R11.07"
+          ]
+        }
+      ],
+      "layout": "权重直接给出；行业分散、调整时机与适用条件简写。",
+      "sources": [
+        {
+          "label": "Quant Indices 官方方法",
+          "url": "https://www.tradingcentral.com/financial-products/methodology"
+        },
+        {
+          "label": "Strategy Builder 方法说明",
+          "url": "https://employee.tradingcentral.com/resources/strategy-builder"
+        }
+      ]
+    },
+    "X03": {
+      "reference_type": "adjacent_technical_example_and_history_lookup",
+      "reference_context": "TC Ether/USD · 2022 年 4 月 25 日；Technical Insight 历史查询",
+      "fields": [
+        {
+          "tc_fields": [
+            "当时对象与期限",
+            "历史复查"
+          ],
+          "label": "历史范围",
+          "format": "meta",
+          "guide": "资产、信号日期、观察期与包含全部事件共用短行。",
+          "question_refs": [
+            "X03.01",
+            "X03.06"
+          ]
+        },
+        {
+          "tc_fields": [
+            "分界价",
+            "主情景目标",
+            "备用情景目标"
+          ],
+          "label": "当时判断",
+          "format": "table",
+          "guide": "原信号有价格情景时给分界/主目标/备用目标；纯信号复盘短标不适用。",
+          "question_refs": [
+            "X03.02",
+            "X03.03",
+            "X03.04"
+          ]
+        },
+        {
+          "tc_fields": [
+            "判断依据"
+          ],
+          "label": "理由",
+          "format": "sentence",
+          "guide": "一句实际指标或形态依据，不重复研究过程。",
+          "question_refs": [
+            "X03.05"
+          ]
+        },
+        {
+          "tc_fields": [
+            "失败状态"
+          ],
+          "label": "信号结果",
+          "format": "phrase",
+          "guide": "有效/失效等实际状态，必要时附例数；历史结果不冒充未来概率。",
+          "question_refs": [
+            "X03.07"
+          ]
+        }
+      ],
+      "layout": "当时判断与后续有效/失效结果分开；无原始价格情景就短标不适用。",
+      "sources": [
+        {
+          "label": "TC 官方 ETH 历史观点",
+          "url": "https://newsletters.tradingcentral.com/ErisX/index_en.html"
+        },
+        {
+          "label": "Technical Insight 官方说明",
+          "url": "https://investor.tradingcentral.com/technical-insight"
+        }
+      ]
+    },
+    "X04": {
+      "reference_type": "adjacent_history_lookup_and_methods",
+      "reference_context": "TC Technical Insight + Strategy Builder · 局部结构对应",
+      "fields": [
+        {
+          "tc_fields": [
+            "历史时间范围",
+            "具体标的"
+          ],
+          "label": "资产·历史范围",
+          "format": "meta",
+          "guide": "名称、代码与起止时间共用一行。",
+          "question_refs": [
+            "X04.01",
+            "X04.03"
+          ]
+        },
+        {
+          "tc_fields": [
+            "全部事件",
+            "排除规则"
+          ],
+          "label": "样本范围",
+          "format": "sentence",
+          "guide": "全部/入选/排除数量＋一句关键排除规则；全部事件开关不是完整性保证。",
+          "question_refs": [
+            "X04.02",
+            "X04.06"
+          ]
+        },
+        {
+          "tc_fields": [
+            "事件后表现"
+          ],
+          "label": "后续表现",
+          "format": "table",
+          "guide": "按观察期给实际涨跌次数与变化数字；已有价格路径放结果后。",
+          "question_refs": [
+            "X04.04"
+          ]
+        },
+        {
+          "tc_fields": [
+            "当时可知的信息"
+          ],
+          "label": "历史资料",
+          "format": "meta",
+          "guide": "当时版本或事后重建等真实边界短注，不展开审计过程。",
+          "question_refs": [
+            "X04.05"
+          ]
+        },
+        {
+          "tc_fields": [],
+          "label": "查看样本",
+          "format": "link",
+          "guide": "原始样本、来源和取舍记录入口；不是新增TC问题。",
+          "sesame_fields": [
+            "本报告的完整记录"
+          ],
+          "source_type": "sesame_extension",
+          "question_refs": []
+        }
+      ],
+      "layout": "样本范围及后续数字在前；资料边界短注，完整样本留入口。",
+      "sources": [
+        {
+          "label": "Technical Insight 官方说明",
+          "url": "https://investor.tradingcentral.com/technical-insight"
+        },
+        {
+          "label": "Strategy Builder 方法说明",
+          "url": "https://employee.tradingcentral.com/resources/strategy-builder"
+        }
+      ]
+    }
+  }
+}

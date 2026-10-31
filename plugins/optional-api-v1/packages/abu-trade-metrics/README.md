@@ -1,4 +1,8 @@
-# abu-trade-metrics
+# 交易结果诊断 · abu-trade-metrics
+
+提供两项可独立调用的计算：`abu_trade_metrics_analyze` 统计权益/闭合交易绩效，`abu_trade_results_audit` 审计订单/成交证据。实际交易规则由用户选择的原生引擎运行；本包消费已有结果，不再启动回测。因子 evaluator 的理想化组合诊断不等于这些实际交易记录。
+
+2.1.0 将原 `abu-backtest-lab` 的审计实现、独有算例和来源许可迁入本包；旧包及 `abu_backtest_lab_analyze` 已删除，没有兼容 alias。绩效公式与审计数值口径均保持原样。
 
 这是一个受 ABU `MetricsBu` / `TradeBu` 启发的交易指标研究基线，参考上游 commit `d602d847677e4c2b77b0a122df30816ea68b5710`。**这里的具体代码是基线，不是标准答案；Agent 可以根据账户、市场、成本口径和风控要求改进或修改，但必须保留原版输出、假设、差异、试验记录和固定样本外对照。**
 
@@ -11,6 +15,18 @@
 ## 输出
 
 工具输出总收益、CAGR、最大回撤、声明周期 Sharpe、闭合交易胜率、净盈亏、gross profit/loss、profit factor、总成本和按策略归因。`periods_per_year` 默认 `252`，`risk_free_rate` 默认 `0`。CAGR 使用首尾 equity 的日历时间跨度；跨度过短或年化值异常时会输出 `null` 并在 `warnings` 中说明。
+
+## 逐笔证据审计
+
+`abu_trade_results_audit({input})` 接受相同来源/as_of封装，以及可选 `engine:{name}`、`orders`、`trades` 和 `bars`。订单含 `id,symbol,side,time,available_at,quantity,limit_price?`；成交含 `id,order_id,symbol,time,available_at,quantity,price,cost`。每项 time ≤ available_at ≤ as_of，数量和价格为正，cost非负；列表内id唯一。`parameters.expected_engine` 若指定，须与engine.name一致。
+
+输出 `observations.audit.issues`、`evidence_counts`、`fills.total_cost` 与 `fills_by_symbol`。检查缺失订单、成交早于订单、标的不一致、买卖限价违反、累计超量和未成交；不同标的数量不相加。bars可省略，审计也不要求portfolio/equity_curve。输入时序或字段缺失会明确拒绝；已知订单/成交之间的冲突作为审计问题保留，不自动修正。
+
+```bash
+node scripts/audit.mjs examples/audit-input.json --out audit-result.json
+```
+
+这项审计不能证明券商成交真实性、重建策略、模拟撮合或复算权益曲线。详见 `skills/abu-trade-metrics/references/audit.md`；迁入方法的原始来源记录见 `AUDIT-PROVENANCE.md`。
 
 CLI 示例：
 
@@ -42,6 +58,7 @@ observations.equity 为权益、回撤与收益风险统计，closed_trades 为�
 | --- | --- |
 | `index.js` | 绑定现有能力，处理调用前取消，委托计算和成果登记 |
 | `scripts/baseline.mjs` | 本包算法、参数约束、观察值和局限；保留原 CLI 入口 |
+| `scripts/audit.mjs` | 迁入的逐笔审计算法及独立 CLI，不重复实现回测引擎 |
 | `scripts/runtime.mjs` | 输入/时间校验、证据摘要、固定成果和 CLI 协议，独立包内交付 |
 | `skills/abu-trade-metrics/` | 用法与按需公式参考，不重复实现算法或调度研究 |
 | `examples/input.json`、`tests/baseline.test.mjs` | 合成输入、手算预期与异常回归 |
@@ -49,3 +66,5 @@ observations.equity 为权益、回撤与收益风险统计，closed_trades 为�
 共用 runtime 的源码在仓库 `plugins/optional-api-v1/scripts/abu-runtime.mjs` 维护，以 `sync-abu-runtime.mjs --check/--write` 核验或同步。安装包只导入自己的副本，不相对引用其它插件；公式只在本包 baseline 修改。`implementation_sha256` 继续包含原算法和 runtime 字节，既有固定成果不会重绑。
 
 无需额外配置、API Key 或账户连接；计算参数仍是本次输入，不能移成全局配置。已有固定输入和输出由宿主资源接口管理，无私有研究调度器或交易状态。
+
+两项能力均声明 `researchDataAccess:{schemaVersion:1,reads:"input-only",writes:"derived-artifacts-only"}`。原生调用不解引用输入中的路径/Ref，不读取账户、已有工件或私有状态，不调用其它能力；只读取固定本包实现以生成摘要，创建本次输入/输出工件并清理本次临时blob。CLI显式文件读取是独立入口，不因该声明自动授权研究角色使用。

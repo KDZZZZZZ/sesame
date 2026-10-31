@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "policy": "Consolidate sources within the same method. Different methods remain independently installable and loadable. Backend choices do not imply installation; verify actual published availability.",
+  "policy": "Investment research uses need:investment-research and Research (sesame/investment-research); factor and strategy experiments use need:strategy and Strategy (sesame/auto-factor-mining). Specific methods and backend choices remain independently selectable; recommendations do not install or verify availability.",
   "workflows": {
     "market-data": {
       "purpose": "获取明确市场与来源的数据，允许同屏并用不同后端。",
@@ -45,7 +45,7 @@
         "sesame/data-access",
         "sesame/canvas-control"
       ],
-      "selection": "Select a single requested theory; different theories are separate plugins. Do not install or load other methods implicitly.",
+      "selection": "按用户问题独立选择一个或多个方法，可在同一固定证据上组合比较；不同方法的解释与反例分别保留。未选择时仅列出候选，不自动加载全部方法。",
       "reference_names": [
         "skill-quant-factor-directional-alpha",
         "skill-quant-factor-risk-pattern-alpha"
@@ -58,10 +58,26 @@
         "dow-theory": "sesame/dow-theory"
       }
     },
-    "strategy-research": {
-      "purpose": "将想法变成有数据、可视化逻辑、原生回测和样本外证据的策略研究。",
+    "investment-research": {
+      "purpose": "Research：按投资问题与需要的结果形式组织需求、获取、分析和报告。",
       "primary_plugins": [
-        "sesame/strategy-research"
+        "sesame/investment-research"
+      ],
+      "shared_plugins": [
+        "sesame/data-access",
+        "sesame/reports"
+      ],
+      "selection": "先明确对象、期限、范围与交付结果，再按问题选择可用来源和分析方法。预测性结论可选 historical-evidence 匹配历史并校准概率，理论、实测与反例共同说明适用边界。Report 字段只约定结果含义，不锁定研究方法；需要策略或因子实验时使用 Strategy。",
+      "reference_names": [
+        "skill-global-macro-rates-fx-lab",
+        "skill-macro-futures-scenario-analysis",
+        "skill-macro-monitor"
+      ]
+    },
+    "strategy": {
+      "purpose": "Strategy：统一因子与策略实验，保留假设、全部尝试、独立评价、冻结选择与样本外证据。",
+      "primary_plugins": [
+        "sesame/auto-factor-mining"
       ],
       "shared_plugins": [
         "sesame/data-access",
@@ -73,25 +89,12 @@
         "sesame/vnpy",
         "sesame/backtrader"
       ],
-      "selection": "先固定假设、预算、数据与接受标准，使用同一个研究流程。按引擎实际能力翻译原生策略，SVL 参考回放不冒充原生回测，回测通过不触发交易。",
+      "selection": "统一使用 Strategy，按任务选择单 Agent 或多 Agent。Agent 选择检验与阈值，用户要求优先；检验用于识别有效和失效条件，仅用户明确硬性要求作为淘汰条件。保留完整试验、反例、条件使用依据与冻结选择；可选接入交易平台原生回测及优化器，优化开发集与最终留出验证分开，回测结果不触发交易。",
       "reference_names": [
         "skill-backtesting-bias-avoidance",
         "skill-backtest-overfit",
         "skill-backtest-assumption-check",
-        "skill-quant-strategy-diagnostics"
-      ]
-    },
-    "factor-research": {
-      "purpose": "整合因子创意、生成、去冗余、评估和迭代，保留全部实验。",
-      "primary_plugins": [
-        "sesame/factor-research"
-      ],
-      "shared_plugins": [
-        "sesame/data-access",
-        "sesame/reports"
-      ],
-      "selection": "因子生成、评价和优化共用实验记录与时点规则，不重复安装同义 Skill；多重尝试和失败也保留。样本内高 IC 不等于已验证的盈利策略。",
-      "reference_names": [
+        "skill-quant-strategy-diagnostics",
         "skill-factor-mine",
         "skill-factor-idea-generation",
         "skill-factor-evaluate",
@@ -146,6 +149,53 @@
       "reference_names": [
         "skill-quant-strategy-diagnostics"
       ]
+    },
+    "historical-evidence": {
+      "purpose": "匹配历史同类情景，并使用过去的固定预测与独立结果评价概率校准。",
+      "primary_plugins": [
+        "sesame/historical-evidence"
+      ],
+      "shared_plugins": [],
+      "selection": "特征、相似规则、结果窗口和检验由用户或 Agent 按任务选择。先近期同品种，再同品种较早历史；零匹配后才在明确可比条件下跨品种，分层保留样本与反例。经验频率、拟合与独立评价分开；今天重跑旧历史须标 historical_replay、保留真实/虚拟两套时钟，只作 exploratory 诊断，不输出当前校准概率。",
+      "reference_names": [
+        "skill-backtest-overfit",
+        "skill-quant-strategy-diagnostics"
+      ]
+    },
+    "trade-results": {
+      "purpose": "诊断已有交易结果：权益绩效与逐笔订单/成交审计独立计算。",
+      "primary_plugins": [
+        "sesame/abu-trade-metrics"
+      ],
+      "shared_plugins": [
+        "sesame/data-access",
+        "sesame/reports"
+      ],
+      "selection": "按输入选 abu_trade_metrics_analyze（权益/已平仓交易）或 abu_trade_results_audit（订单/成交/回放）。保留单位、时序、费用及真实源结果；不生成成交，不替代原生回测，不把审计通过当预测置信度。",
+      "reference_names": [
+        "skill-strategy-performance-report",
+        "skill-backtest-assumption-check"
+      ]
+    },
+    "parameter-evidence": {
+      "purpose": "整理已有参数试验的开发期排名、固定选择及所选留出证据。",
+      "primary_plugins": [
+        "sesame/abu-parameter-search"
+      ],
+      "shared_plugins": [],
+      "selection": "abu_parameter_search_analyze 是 input-only 搜索空间与证据校验工具，不运行策略或优化器。先按用户/未来交易平台选真实引擎；所选引擎有原生 optimizer 则优先，特殊参数组记录假说。只用开发结果选参，冻结后核对所选参数的独立留出结果。",
+      "reference_names": [
+        "skill-backtest-overfit"
+      ]
+    },
+    "series-similarity": {
+      "purpose": "比较同期收益序列的相关、秩相关与方向一致率。",
+      "primary_plugins": [
+        "sesame/abu-similarity"
+      ],
+      "shared_plugins": [],
+      "selection": "abu_similarity_analyze 只比较相同收益起止时点，不填补缺失交易日；相关和方向一致率不是历史同类事件检索、预测胜率或校准概率。需要历史情景结果时独立选择 historical-evidence；重叠收益证据不能重复计票。",
+      "reference_names": []
     }
   }
 }

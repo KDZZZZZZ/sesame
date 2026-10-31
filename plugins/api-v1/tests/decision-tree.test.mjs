@@ -116,10 +116,10 @@ test('compact decision trees retain full topology, zoom/pan without changing row
     await page.setViewportSize({ width, height: 1000 });
     await page.evaluate(theme => { document.documentElement.dataset.theme = theme; document.documentElement.style.colorScheme = theme; }, theme);
     const expected = 'horizontal';
-    await page.waitForFunction(() => {
+    await page.waitForFunction(expected => {
       const chart = document.querySelector('#chart'), svg = chart.querySelector('svg');
-      return svg?.dataset.decisionLayout === 'horizontal' && svg.dataset.decisionStyle === 'compact' && Math.abs(svg.getBoundingClientRect().width - chart.clientWidth) <= 1;
-    });
+      return svg?.dataset.decisionLayout === expected && svg.dataset.decisionStyle === 'compact' && Math.abs(svg.getBoundingClientRect().width - chart.clientWidth) <= 1;
+    }, expected);
     await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
     assert.equal(await assertGeometry(`${width}px ${theme}`), expected);
     const naturalSize = await page.evaluate(() => {
@@ -217,6 +217,115 @@ test('compact decision trees retain full topology, zoom/pan without changing row
   assert.deepEqual(errors, []);
 });
 
+test('recorded R03 eight-node tree stays horizontal at1000/720/390 and keeps its relationships, text and following appendix', { skip: !host, timeout: 30000 }, async t => {
+  // Exact presentational rows from the published R03 report, revision_df725202.
+  // These are recorded conditions, not simulated market data or new analysis.
+  const rows = [
+    { id: 'root', parentId: null, label: '官方时间、环境与同口径价格是否齐备？' },
+    { id: 'missing', parentId: 'root', condition: '不齐备', label: '补齐证据，暂不类比' },
+    { id: 'd1', parentId: 'root', condition: '齐备', label: '后1天价格是否高于公告前？' },
+    { id: 'notup', parentId: 'd1', condition: '否', label: '分别记录后续反转与风险环境', detail: '首日下跌不能机械推断第5天结果。' },
+    { id: 'd5', parentId: 'd1', condition: '是', label: '后5天是否仍高于公告前？' },
+    { id: 'maintain', parentId: 'd5', condition: '是', label: '保留两期限净上涨的描述', detail: '不转化为未来概率或连续上涨证明。' },
+    { id: 'reverse', parentId: 'd5', condition: '否', label: '停用延续上涨的描述' },
+    { id: 'wait', parentId: 'd5', condition: '观察期未结束', label: '等待第5天观察点' },
+  ];
+  const { chromium } = createRequire(join(host, 'package.json'))('playwright');
+  const browser = await chromium.launch({ headless: true }); t.after(() => browser.close());
+  const page = await browser.newPage({ viewport: { width: 1000, height: 900 } }), errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.setContent('<html lang="zh-CN"><body><main><section id="chart"></section><section id="following">后续判断保持原位</section><section id="appendix"><details><summary>证据附录</summary>原始记录</details></section></main></body></html>');
+  await page.addStyleTag({ content: await readFile(new URL('assets/editorial.css', root), 'utf8') });
+  await page.addStyleTag({ content: 'body{padding:24px 48px}body>main{max-width:904px;margin:auto}@media(max-width:720px){body{padding:24px 36px}}@media(max-width:600px){body{padding:18px}}' });
+  for (const file of ['assets/editorial-charts.js', 'assets/charts-decision.js']) await page.addScriptTag({ content: await readFile(new URL(file, root), 'utf8') });
+  await page.evaluate(rows => {
+    window.recordedRows = rows; rows.forEach(Object.freeze); Object.freeze(rows); window.selections = [];
+    SesameCharts.chart('#chart', { kind: 'decision-tree', title: '条件与后续行动', height: 430, rows, onSelect(row, index) { selections.push({ row, index, original: row === rows[index] }); } });
+  }, rows);
+  for (const width of [1000, 720, 390, 1000]) {
+    await page.setViewportSize({ width, height: 900 });
+    const expected = 'horizontal';
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const result = await page.evaluate(() => {
+      const svg = document.querySelector('svg'), bounds = svg.getBoundingClientRect(), normalize = x => x.replace(/\s/gu, '');
+      const parts = [...svg.querySelectorAll('[data-decision-part]')];
+      return {
+        links: [...svg.querySelectorAll('[data-decision-kind=link]')].map(p => [p.dataset.sourceId, p.dataset.targetId]),
+        nodes: svg.querySelectorAll('[data-decision-kind=node]').length,
+        completeText: recordedRows.every(row => ['label', 'condition', 'detail'].every(part => {
+          if (!row[part]) return true;
+          const selector = part === 'condition' ? `[data-decision-kind=condition][data-target-id="${row.id}"] text` : `[data-node-id="${row.id}"] [data-decision-part="${part}"]`;
+          return normalize(svg.querySelector(selector)?.textContent ?? '') === normalize(row[part]);
+        })),
+        minFont: Math.min(...parts.map(p => parseFloat(getComputedStyle(p).fontSize) * p.getScreenCTM().a)),
+        allInView: parts.every(p => { const b = p.getBoundingClientRect(); return b.left >= bounds.left && b.right <= bounds.right + .2 && b.top >= bounds.top && b.bottom <= bounds.bottom + .2; }),
+        followingTop: document.querySelector('#following').getBoundingClientRect().top,
+        appendixTop: document.querySelector('#appendix').getBoundingClientRect().top,
+        chartBottom: document.querySelector('#chart').getBoundingClientRect().bottom,
+        overflow: document.documentElement.scrollWidth > innerWidth + 1,
+        rows: recordedRows,
+        layout: svg.dataset.decisionLayout,
+        chartWidth: bounds.width,
+      };
+    });
+    assert.deepEqual(result.links, rows.filter(r => r.parentId).map(r => [r.parentId, r.id]));
+    assert.equal(result.nodes, 8); assert.equal(result.completeText, true); assert.equal(result.allInView, true); assert.equal(result.overflow, false);
+    assert.ok(result.followingTop >= result.chartBottom - 1 && result.appendixTop >= result.followingTop, 'Growing the chart preserves normal document/appendix order');
+    assert.deepEqual(result.rows, rows);
+    assert.equal(result.chartWidth, width === 720 ? 648 : width === 390 ? 354 : 904);
+    assert.equal(result.layout, expected);
+    if (process.env.SESAME_DECISION_SCREENSHOTS) {
+      await mkdir(process.env.SESAME_DECISION_SCREENSHOTS, { recursive: true });
+      await page.locator('#chart').screenshot({ path: join(process.env.SESAME_DECISION_SCREENSHOTS, `decision-tree-R03-${width}.png`) });
+    }
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.waitForFunction(() => Math.abs(document.querySelector('#chart svg').getBoundingClientRect().width - 354) < 1);
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await page.locator('[data-node-id=maintain]').focus();
+  await page.keyboard.press('Enter');
+  assert.deepEqual(await page.evaluate(() => selections.at(-1)), { row: rows[5], index: 5, original: true });
+  assert.deepEqual(await page.locator('[data-decision-kind=node].sc-decision-active').evaluateAll(nodes => nodes.map(n => n.dataset.nodeId)), ['root', 'd1', 'd5', 'maintain']);
+  assert.deepEqual(errors, []);
+});
+
+test('narrow and short viewports keep the same horizontal tree without a second layout', { skip: !host, timeout: 30000 }, async t => {
+  const rows = [
+    { id: 'root', parentId: null, label: '核对？' },
+    { id: 'yes', parentId: 'root', condition: '是', label: '保留' },
+    { id: 'no', parentId: 'root', condition: '否', label: '待补' },
+  ]; // Non-financial component fixture.
+  const { chromium } = createRequire(join(host, 'package.json'))('playwright');
+  const browser = await chromium.launch({ headless: true }); t.after(() => browser.close());
+  const page = await browser.newPage({ viewport: { width: 1000, height: 900 } });
+  await page.setContent('<html lang="zh-CN"><body><main id="chart"></main></body></html>');
+  await page.addStyleTag({ content: await readFile(new URL('assets/editorial.css', root), 'utf8') });
+  await page.addStyleTag({ content: 'body{padding:24px 48px}@media(max-width:720px){body{padding:24px 36px}}@media(max-width:600px){body{padding:18px}}' });
+  for (const file of ['assets/editorial-charts.js', 'assets/charts-decision.js']) await page.addScriptTag({ content: await readFile(new URL(file, root), 'utf8') });
+  await page.evaluate(rows => {
+    window.shortRows = rows; rows.forEach(Object.freeze); Object.freeze(rows);
+    window.shortTree = SesameCharts.chart('#chart', { kind: 'decision-tree', rows, height: 200 });
+  }, rows);
+  for (const width of [1000, 720, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const result = await page.locator('svg').evaluate(svg => ({
+      layout: svg.dataset.decisionLayout,
+      boxes: [...svg.querySelectorAll('[data-decision-kind=node] rect')].map(r => { const b = r.getBBox(); return [b.x, b.y, b.width, b.height]; }),
+      minimumFont: Math.min(...[...svg.querySelectorAll('[data-decision-part]')].map(p => parseFloat(getComputedStyle(p).fontSize) * p.getScreenCTM().a)),
+    }));
+    assert.equal(result.layout, 'horizontal', 'Readable horizontal layouts do not depend on a width breakpoint');
+    assert.deepEqual(result.boxes, [[24,54,112,40],[212,24,112,40],[212,84,112,40]], 'Existing horizontal layout coordinates stay unchanged');
+    assert.ok(result.minimumFont >= 11.9);
+  }
+  await page.setViewportSize({ width: 1000, height: 900 });
+  await page.evaluate(() => { shortTree.destroy(); shortTree = SesameCharts.chart('#chart', { kind: 'decision-tree', rows: shortRows, height: 120 }); });
+  const compactHeight = await page.locator('svg').evaluate(svg => ({ layout: svg.dataset.decisionLayout, height: svg.getBoundingClientRect().height, minimumFont: Math.min(...[...svg.querySelectorAll('[data-decision-part]')].map(p => parseFloat(getComputedStyle(p).fontSize) * p.getScreenCTM().a)) }));
+  assert.equal(compactHeight.layout, 'horizontal'); assert.equal(compactHeight.height, 120);
+  assert.deepEqual(await page.locator('svg [data-decision-kind=node] rect').evaluateAll(items => items.map(r => { const b = r.getBBox(); return [b.x, b.y, b.width, b.height]; })), [[24,54,112,40],[212,24,112,40],[212,84,112,40]]);
+  assert.deepEqual(await page.evaluate(() => shortRows), rows);
+});
+
 test('report_template inlines the decision tree and reads its fixed rows through the report/1 bridge', { skip: !host, timeout: 60000 }, async t => {
   const { createCapabilities } = await import('../packages/reports/index.js');
   const { chromium } = createRequire(join(host, 'package.json'))('playwright');
@@ -264,8 +373,13 @@ test('report_template inlines the decision tree and reads its fixed rows through
     { dataId: 'fixed-decision-demo', cursor: 'second-page' },
   ]);
   assert.deepEqual(await page.evaluate(() => fixedRows), fixture.rows);
+  await page.evaluate(() => document.querySelector('.module-chart-plot').addEventListener('chartselect', event => { window.selectedTreeRow = event.detail; }));
   await page.locator('[data-node-id=usable]').focus(); await page.keyboard.press('Enter');
-  assert.equal(await page.locator('details.report-inspect').getAttribute('open'), '');
-  assert.match(await page.locator('.sc-row-selected').innerText(), /保留为本阶段证据/);
+  assert.deepEqual(await page.evaluate(() => selectedTreeRow), { row: fixture.rows[4], index: 4 });
+  const evidence = page.locator('details[data-report-evidence]');
+  assert.equal(await evidence.count(), 1);
+  await evidence.locator('summary').click();
+  assert.equal(await evidence.getAttribute('open'), '');
+  assert.deepEqual(JSON.parse(await evidence.locator('pre').textContent()).rows, fixture.rows);
   assert.deepEqual(errors, []);
 });

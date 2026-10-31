@@ -1,4 +1,8 @@
 # vnpy 公开能力契约
+
+## vnpy_operation
+
+调用者：agent、host。`{operation_id}` 只读同一个 vnpy_backtest 原操作记录，返回已保存 status/result/error；没有记录为 not-found。不会运行 Python，不重放 unknown/中断操作，也不把记录缺失解释成未曾执行。原生 optimizer 仍未声明；参数比较由工作流用明确假设及实际单次回执组织。
 此文依据当前实现。示例中的ID/路径/Ref必须用对应公开入口的实际返回值；它们展示参数形状，不是默认任务步骤。宿主能力不会直接暴露为普通Agent工具。
 
 ## vnpy_environment

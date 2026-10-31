@@ -265,6 +265,224 @@
       }
     },
     {
+      "id": "backtrader_optimize",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Run real native Cerebro.optstrategy on fixed development data and an authored strategy; retain all confirmed passes and incomplete/failed attempts. No holdout selection or live broker.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "operation_id",
+          "title",
+          "data",
+          "strategy_path",
+          "class_name",
+          "config",
+          "parameter_space"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "description": "Immutable operation key",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string",
+            "description": "Result title",
+            "minLength": 1
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string",
+                "const": "data"
+              },
+              "schemaVersion": {
+                "type": "string",
+                "const": "1.0.0"
+              }
+            },
+            "additionalProperties": false
+          },
+          "strategy_path": {
+            "type": "string",
+            "description": "Authored workspace Python file",
+            "minLength": 1
+          },
+          "class_name": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "config": {
+            "type": "object",
+            "required": [
+              "capital",
+              "commission",
+              "slippage",
+              "feed"
+            ],
+            "properties": {
+              "capital": {
+                "type": "string",
+                "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+              },
+              "commission": {
+                "type": "string",
+                "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+              },
+              "slippage": {
+                "type": "string",
+                "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+              },
+              "feed": {
+                "type": "object",
+                "required": [
+                  "timeframe",
+                  "compression"
+                ],
+                "properties": {
+                  "timeframe": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "const": "minutes"
+                      },
+                      {
+                        "type": "string",
+                        "const": "days"
+                      },
+                      {
+                        "type": "string",
+                        "const": "weeks"
+                      },
+                      {
+                        "type": "string",
+                        "const": "months"
+                      }
+                    ]
+                  },
+                  "compression": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100000
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "parameters": {
+            "type": "object",
+            "patternProperties": {
+              "^.*$": {}
+            }
+          },
+          "columns": {
+            "type": "object",
+            "properties": {
+              "datetime": {
+                "type": "string"
+              },
+              "open": {
+                "type": "string"
+              },
+              "high": {
+                "type": "string"
+              },
+              "low": {
+                "type": "string"
+              },
+              "close": {
+                "type": "string"
+              },
+              "volume": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "timeout": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 600
+          },
+          "parameter_space": {
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 12,
+            "additionalProperties": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 64,
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "run",
+      "effects": [
+        "process",
+        "private-filesystem",
+        "resources.publish",
+        "plugin.state.write"
+      ],
+      "usage": {
+        "purpose": "Run native Cerebro.optstrategy, at most 64 combinations and 200000 combined pass-bars, in one owned process.",
+        "inputs": "Same frozen fields as backtrader_backtest plus parameter_space:{period:[5,10]}. Vectors override same-named fixed parameters. Supply development data only; holdout is a separate backtrader_backtest with frozen parameters.",
+        "outputs": "Fixed strategy.result, rawResult, passes table and per-pass parameters/statistics/status. Exceptions preserve completed passes and mark remaining passes not-completed. Selection belongs to the workflow and must use a frozen objective.",
+        "prerequisites": [
+          "Environment inspect ready:true; authored strategy declares the actual native parameters."
+        ],
+        "limitations": [
+          "Actual Cerebro.optstrategy, no duplicate optimizer. Current-user Python is not an OS sandbox.",
+          "Failed or unknown passes have no invented returns. operation_id binds mode, parameter space, source and fixed data."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "backtrader_optimize"
+      }
+    },
+    {
       "id": "backtrader_result",
       "kind": "function",
       "consumers": [
@@ -375,6 +593,50 @@
       "binding": {
         "type": "native",
         "name": "backtrader_dispose"
+      }
+    },
+    {
+      "id": "backtrader_operation",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Read an existing native operation receipt only; never execute or replay an unknown attempt.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "operation_id"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "state.read"
+      ],
+      "usage": {
+        "purpose": "Reconcile the original operation before resuming.",
+        "inputs": "{operation_id:<original ID>}",
+        "outputs": "status, original result or error; absent record is not-found.",
+        "prerequisites": [],
+        "limitations": [
+          "Read-only reconciliation. Interrupted or unknown executions never become a new native attempt."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "backtrader_operation"
       }
     }
   ],

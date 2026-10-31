@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto';
 import { prepareDataset, evaluateFactor, compareFactors, validateExpression, EVALUATOR_VERSION } from './engine.js';
 import { DIAGNOSTICS, evaluateCandidate, evaluateDiagnostics } from './diagnostics.js';
+import { normalizeEvaluationPlan, assessCandidate, planDigest } from './evaluation-plan.js';
+import { evaluateSearchDiagnostics } from './search-diagnostics.js';
 export const PROTOCOL = 'sesame.factor-evaluator/v1';
 export const canonical = value => JSON.stringify(normalize(value));
 function normalize(value) { return Array.isArray(value) ? value.map(normalize) : value && typeof value === 'object' ? Object.fromEntries(Object.keys(value).sort().map(key => [key, normalize(value[key])])) : value; }
@@ -8,8 +10,15 @@ export const digest = value => `sha256:${createHash('sha256').update(canonical(v
 export function check(ok, message, code = 'EVALUATION_REJECTED') { if (!ok) throw Object.assign(new Error(message), { code }); }
 const receipt = value => ({ ...value, receiptDigest: digest(value) });
 const bounded = (value, label) => { check(typeof value === 'string' && value.length > 0 && value.length <= 200, `${label} is required`); return value; };
+async function recordFailure(host, session, failure, signal) {
+  session.failedTrials ??= [];
+  if (session.failedTrials.some(item => item.trialId === failure.trialId && item.candidateDigest === failure.candidateDigest && item.stage === failure.stage)) return;
+  check(session.failedTrials.length < 40, 'At most 40 failed trial attempts are supported');
+  session.failedTrials.push({ ...failure, attemptIndex: session.failedTrials.filter(item => item.trialId === failure.trialId).length + 1 });
+  await saveSession(host, session, signal);
+}
 const candidateExample = { op: 'delta', args: [{ op: 'field', name: 'close' }], window: 5 };
-const instructions = 'This evaluator accepts a factor AST: field(name), constant(value), add/sub/mul/div(2 args), neg/abs/log/rank/zscore(1 arg), lag/delta/mean/std/sum(1 arg, window 1..252). Read contract.dataset.mode: cross-sectional means per-date Spearman (4+ assets); time-series means per-symbol temporal Spearman (single assets supported), then equal-weight symbol aggregation. rank/zscore remain cross-sectional AST operators, so use rolling operators or arithmetic for a single symbol. Direction-return diagnostics are idealized nonoverlapping close returns after costs, not actual trade win rates or per-trade R. Optional diagnostics are chosen by the task in options.diagnostics; unrequested, inapplicable or unavailable checks do not block the others. Only explicitly supplied minRankIC/minCoverage/maxCorrelation are selection thresholds; otherwise an actual finite validation association is sufficient for eligibility, including a negative relationship worth further research. A status of completed means computation ran, not scientific success. Submit the AST itself; never supply measured metrics.';
+const instructions = 'This evaluator accepts a factor AST: field(name), constant(value), add/sub/mul/div(2 args), neg/abs/log/rank/zscore(1 arg), lag/delta/mean/std/sum(1 arg, window 1..252). Read contract.dataset.mode: cross-sectional means per-date Spearman (4+ assets); time-series means per-symbol temporal Spearman, then equal-weight symbol aggregation. rank/zscore remain cross-sectional AST operators. Direction returns are idealized nonoverlapping close returns after costs, not actual trades. Choose useful tests and thresholds in options.evaluationPlan; options.diagnostics remains supported. Only thresholds explicitly labeled source:user AND mode:required gate; do not label an Agent preference as a user requirement. Legacy minRankIC/minCoverage/maxCorrelation are advisory. Measured validation or identified development-subset evidence permits consideration, including conditional use; wholly unmeasurable candidates remain ineligible. Completed computation does not imply scientific success. DSR/PBO need all registered trial returns and are computed only at select; pending user requirements must then be measurable and met. Submit the AST, never measured metrics; holdout cannot inform the plan or selection.';
 const MAX_INPUT_BYTES = 4 * 1024 * 1024;
 const hashBytes = bytes => `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
 export const inputDigest = (dataset, data) => digest({ dataset, sourceId: data.sourceId, ...(data.inputRefs ? { inputRefs: data.inputRefs } : {}) });
@@ -109,7 +118,7 @@ async function saveSession(host, session, signal) {
   await host.state.commit([{ op: 'put', key: { collection: 'sessions', key: session.id }, expectedVersion: _stateVersion ?? 0, value: { ...metadata, refs } }], { signal });
 }
 function options(value = {}) {
-  check(value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).every(key => ['dataset', 'inputRef', 'minRankIC', 'minCoverage', 'maxCorrelation', 'diagnostics'].includes(key)), 'Unknown evaluator option');
+  check(value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).every(key => ['dataset', 'inputRef', 'minRankIC', 'minCoverage', 'maxCorrelation', 'diagnostics', 'evaluationPlan'].includes(key)), 'Unknown evaluator option');
   const result = { dataset: value.dataset, ...(value.inputRef === undefined ? {} : { inputRef: structuredClone(value.inputRef) }) };
   for (const [key, min] of [['minRankIC', -1], ['minCoverage', 0], ['maxCorrelation', 0]]) if (value[key] !== undefined) {
     check(Number.isFinite(value[key]) && value[key] >= min && value[key] <= 1, `Invalid evaluator threshold ${key}`);
@@ -121,6 +130,8 @@ function options(value = {}) {
       && Buffer.byteLength(JSON.stringify(value.diagnostics)) <= 12000, 'Use known diagnostic names and a plan within 12KB');
     result.diagnostics = structuredClone(value.diagnostics);
   }
+  result.evaluationPlan = normalizeEvaluationPlan({ ...result, evaluationPlan: value.evaluationPlan }, Object.keys(DIAGNOSTICS));
+  result.diagnostics = result.evaluationPlan.tests;
   return result;
 }
 const sessions = new Map();
@@ -162,9 +173,10 @@ async function evaluateSession(host, args, signal, execution) {
         synthetic: /demo|synthetic|fixture/i.test([source.source_kind, provenance.kind, provenance.source_kind].join(' ')),
         scope: 'development', holdoutMode: args.access === 'restricted' ? 'workflow-isolated' : 'none' },
       contract: { candidateExample, instructions, dataset: dataset.config, diagnostics: DIAGNOSTICS,
-        diagnosticPlan: config.diagnostics ?? {}, selectionThresholds: Object.fromEntries(['minRankIC', 'minCoverage', 'maxCorrelation'].filter(key => config[key] !== undefined).map(key => [key, config[key]])),
+        diagnosticPlan: config.diagnostics, evaluationPlan: config.evaluationPlan, planDigest: planDigest(config.evaluationPlan),
+        selectionThresholds: config.evaluationPlan.thresholds.filter(item => item.source === 'user' && item.mode === 'required'),
         metricColumns: [{ key: 'rankIC', label: dataset.config.mode === 'time-series' ? '时序 Rank IC' : '截面 Rank IC' }, { key: 'coverage', label: '覆盖率' }, { key: 'netReturn', label: '方向诊断收益' }] }, development });
-    await saveSession(host, { id, runId, workflowPluginId, ownerConversationId: host.context.sessionId, fingerprint, dataset, config, prepared, candidates: {} }, signal);
+    await saveSession(host, { id, runId, workflowPluginId, ownerConversationId: host.context.sessionId, fingerprint, dataset, config, prepared, candidates: {}, failedTrials: [] }, signal);
     return prepared;
   }
   const session = await storedSession(host, bounded(args.session_id, 'session_id'));
@@ -187,7 +199,11 @@ async function evaluateSession(host, args, signal, execution) {
     check(!session.selection, 'Candidate selection is frozen');
     const trialId = bounded(args.trial_id, 'trial_id');
     let candidate;
-    try { candidate = validateExpression(args.candidate); } catch (error) { error.code = 'EVALUATION_REJECTED'; throw error; }
+    try { candidate = validateExpression(args.candidate); } catch (error) {
+      check(!Object.hasOwn(session.candidates, trialId), 'Candidate receipt is frozen');
+      await recordFailure(host, session, { trialId, candidateDigest: digest(args.candidate ?? null), reason: error.message, stage: 'expression-validation' }, signal);
+      error.code = 'EVALUATION_REJECTED'; throw error;
+    }
     const candidateDigest = digest(candidate);
     const previous = session.candidates[trialId];
     if (previous) { check(previous.candidateDigest === candidateDigest, 'Candidate receipt is frozen'); return previous; }
@@ -195,26 +211,40 @@ async function evaluateSession(host, args, signal, execution) {
     check(!Object.values(session.candidates).some(value => value.candidateDigest === candidateDigest), 'Duplicate candidate formula');
     const accepted = args.accepted_ids ?? [];
     check(Array.isArray(accepted) && accepted.length <= 40 && accepted.every(id => Object.hasOwn(session.candidates, id)), 'Unknown comparison candidate');
-    const metrics = await evaluateCandidate(dataset, candidate, session.config, signal), validation = metrics.validation;
-    const measured = Number.isFinite(validation.rankIC);
-    const eligible = measured && (session.config.minRankIC === undefined || validation.rankIC >= session.config.minRankIC)
-      && (session.config.minCoverage === undefined || validation.coverage >= session.config.minCoverage);
-    const result = receipt({ ...common, trialId, candidate, candidateDigest, metrics, eligible,
-      gate: !measured ? 'validation association unavailable; retain as unmeasured evidence and continue other candidates'
-        : eligible ? 'measured validation association; explicit selection thresholds satisfied; optional diagnostics do not gate selection'
-          : 'measured validation association does not meet the explicitly requested rankIC/coverage threshold',
+    let metrics;
+    try { metrics = await evaluateCandidate(dataset, candidate, session.config, signal); }
+    catch (error) {
+      signal?.throwIfAborted();
+      await recordFailure(host, session, { trialId, candidateDigest, reason: error.message, stage: 'candidate-computation' }, signal); throw error;
+    }
+    const evaluation = assessCandidate(metrics, session.config.evaluationPlan);
+    const result = receipt({ ...common, trialId, candidate, candidateDigest, metrics, eligible: evaluation.eligible, evaluation,
+      gate: !evaluation.eligible ? 'No measurable development evidence, or an explicit user hard requirement is unmet or unmeasurable'
+        : evaluation.status === 'conditional' ? 'Identified development-subset evidence only; retain the recorded scope and limitations'
+          : 'Measured evidence; advisory findings do not gate. Deferred user hard requirements must resolve at select.',
       redundancy: accepted.map(id => ({ trialId: id, ...compareFactors(dataset, candidate, session.candidates[id].candidate) })) });
     session.candidates[trialId] = result; await saveSession(host, session, signal); return result;
   }
   if (args.action === 'select') {
     const ids = args.trial_ids;
-    check(Array.isArray(ids) && ids.length <= 20 && new Set(ids).size === ids.length && ids.every(id => session.candidates[id]?.eligible), 'Select unique eligible measured candidates');
+    check(Array.isArray(ids) && ids.length <= 20 && new Set(ids).size === ids.length && ids.every(id => session.candidates[id]?.eligible), 'Select unique eligible candidates with measurable evidence');
     if (session.selection) { check(canonical(session.selection.trialIds) === canonical(ids), 'Selection is frozen'); return session.selection; }
-    for (let a = 0; session.config.maxCorrelation !== undefined && a < ids.length; a++) for (let b = a + 1; b < ids.length; b++) {
-      const corr = compareFactors(dataset, session.candidates[ids[a]].candidate, session.candidates[ids[b]].candidate);
-      check(corr.correlation !== null && Math.abs(corr.correlation) <= session.config.maxCorrelation, 'Selected factors are redundant or have insufficient train overlap');
+    const diagnostics = await evaluateSearchDiagnostics(dataset, session.candidates, session.config.diagnostics, { failedTrials: session.failedTrials, signal });
+    const redundancy = [];
+    for (let a = 0; a < ids.length; a++) for (let b = a + 1; b < ids.length; b++) redundancy.push({ trialIds: [ids[a], ids[b]],
+      ...compareFactors(dataset, session.candidates[ids[a]].candidate, session.candidates[ids[b]].candidate) });
+    const evaluations = Object.fromEntries(ids.map(trialId => {
+      const pairs = redundancy.filter(item => item.trialIds.includes(trialId));
+      return [trialId, assessCandidate(session.candidates[trialId].metrics, session.config.evaluationPlan, { phase: 'select', searchDiagnostics: diagnostics, trialId,
+        redundancy: { pairCount: pairs.length, absoluteCorrelation: pairs.length && pairs.every(item => Number.isFinite(item.correlation)) ? Math.max(...pairs.map(item => Math.abs(item.correlation))) : null } })];
+    }));
+    if (Object.values(evaluations).some(item => !item.eligible)) {
+      const error = Object.assign(new Error('Selection violates an explicit user hard requirement or has no measurable evidence'), { code: 'HARD_REQUIREMENT_UNMET', diagnostics, evaluations });
+      session.lastSelectionReview = receipt({ ...common, trialIds: ids, diagnostics, evaluations, redundancy });
+      await saveSession(host, session, signal); throw error;
     }
-    session.selection = receipt({ ...common, trialIds: ids, selectionDigest: digest({ input: session.prepared.inputDigest, ids, candidates: ids.map(id => session.candidates[id].candidateDigest) }) });
+    session.selection = receipt({ ...common, trialIds: ids, diagnostics, evaluations, redundancy, failedTrials: session.failedTrials ?? [], planDigest: planDigest(session.config.evaluationPlan),
+      selectionDigest: digest({ input: session.prepared.inputDigest, ids, candidates: ids.map(id => session.candidates[id].candidateDigest), diagnostics, plan: session.config.evaluationPlan }) });
     await saveSession(host, session, signal); return session.selection;
   }
   check(args.action === 'finalize', 'Unknown evaluator action');
@@ -228,7 +258,8 @@ async function evaluateSession(host, args, signal, execution) {
         { outOfSample: session.config.diagnostics.outOfSample }, { signal, finalized: true })).outOfSample };
     }
   }
-  session.final = receipt({ ...common, selectionDigest: session.selection.selectionDigest, holdout,
+  session.final = receipt({ ...common, selectionDigest: session.selection.selectionDigest, diagnostics: session.selection.diagnostics,
+    evaluations: session.selection.evaluations, evaluationPlan: session.config.evaluationPlan, failedTrials: session.failedTrials ?? [], holdout,
     holdoutStatus: dataset.access === 'development-only' || !session.selection.trialIds.length ? 'not-requested' : 'evaluated', archive: dataset });
   await saveSession(host, session, signal); return session.final;
 }

@@ -7,6 +7,11 @@ export const CATALOG_URL = 'https://dl.sesame.bot/plugins/api-v1/catalog.json';
 const R2_ORIGIN = 'https://dl.sesame.bot';
 const REPOSITORY = 'https://github.com/KDZZZZZZ/sesame';
 const LEGACY_CATALOG_URL = 'https://raw.githubusercontent.com/KDZZZZZZ/sesame/main/plugins/api-v1/catalog.json';
+const FUNCTIONAL_CATEGORY_LABELS = {
+  business: 'Task workflows 业务流程', analysis: 'Knowledge and analysis 专业能力',
+  search: 'Search and sources 搜索与来源', integration: 'Resource integrations 资源接入',
+  presentation: 'Presentation and interaction 交互呈现', platform: 'Platform management 平台管理',
+};
 const hash = bytes => `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
 const check = (value, message, code = 'CATALOG_INVALID') => { if (!value) throw Object.assign(new Error(message), { code }); };
 const validPathChars = path => ![...path].some(char => char === '\\' || char === ':' || char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127);
@@ -116,7 +121,8 @@ export async function readCatalog(signal, fetcher = globalThis.fetch) {
 
 export async function catalogQuery(args, signal, fetcher) {
   const { catalog, digest } = await readCatalog(signal, fetcher), query = (args.query ?? '').toLowerCase();
-  const items = catalog.plugins.filter(entry => entry.status === 'active' && (!args.plugin_id || entry.id === args.plugin_id) && `${entry.id} ${entry.title} ${entry.description}`.toLowerCase().includes(query));
+  const items = catalog.plugins.filter(entry => entry.status === 'active' && (!args.plugin_id || entry.id === args.plugin_id)
+    && `${entry.id} ${entry.title} ${entry.description} ${entry.functionalCategory ?? ''} ${FUNCTIONAL_CATEGORY_LABELS[entry.functionalCategory] ?? ''}`.toLowerCase().includes(query));
   return { catalog_url: CATALOG_URL, legacy_catalog_url: LEGACY_CATALOG_URL, catalog_digest: digest, schemaVersion: catalog.schemaVersion, apiVersion: '2', channel: 'development', releases: catalog.releases,
     items: items.map(({ package: pkg, ...entry }) => ({ ...entry, package: { treeDigest: normalize(pkg.treeDigest), files: pkg.files.length, bytes: pkg.files.reduce((sum, file) => sum + file.bytes, 0), ...(pkg.baseUrl ? { baseUrl: pkg.baseUrl } : {}) } })),
     next: 'Use exact plugin_id and catalog_digest with plugin_install_catalog. For a newer catalog version, inspect the installed digest and explicitly choose action:update with expected_digest. Keep a newer installed version when the catalog is older; this interface does not support downgrades. The host enforces update versions and permissions. Identical bytes return already-installed; disabled plugins stay disabled. Only API 2 packages are accepted.' };

@@ -1,5 +1,5 @@
 import { digest } from '@sesame/plugin-sdk/protocol';
-import { check, configuredModel, reportSelection, selectResearch, synthesisSelection, verifySelection } from './composition.js';
+import { check, configuredModel, reportSelection, selectResearch, synthesisSelection, verifySelection, stageSelection } from './composition.js';
 import { PACKET_TYPE, checkedReport, publishPacket, readPacket, uniqueRefs, verifyRefs } from './artifacts.js';
 import { ASK_CALL, REVIEWERS, ROLES, roleInstructions } from './team.js';
 import { memberInput, waitForMember } from './members.js';
@@ -11,6 +11,7 @@ const packetOf = state => ({
   subjects: state.input.subjects, as_of: state.input.as_of ?? state.createdAt,
   ...(state.input.horizon ? { horizon: state.input.horizon } : {}),
   evidence_refs: state.input.evidence_refs ?? [],
+  ...(state.input.report_brief ? { report_brief: state.input.report_brief } : {}),
   ...(state.plan?.custom ? { workflow: publicPlan(state.plan) } : {}),
   members: (state.plan?.stages.flat() ?? ROLES).filter(role => state.members[role]).map(role => state.members[role]),
   qa: state.qa ?? [],
@@ -51,7 +52,8 @@ export async function researchWorkflow(host, input, signal, execution, mode) {
         const acquired = new Set([...previous.members, ...(previous.qa ?? [])].flatMap(item => item.source_refs ?? []).map(ref => digest(ref)));
         const { horizon: _requestedHorizon, ...restartInput } = input;
         state.input = { ...restartInput, title: previous.title, question: previous.question, subjects: previous.subjects, as_of: previous.as_of, ...(previous.horizon === undefined ? {} : { horizon: previous.horizon }),
-          evidence_refs: previous.evidence_refs ?? previous.source_refs.filter(ref => !acquired.has(digest(ref))) };
+          evidence_refs: previous.evidence_refs ?? previous.source_refs.filter(ref => !acquired.has(digest(ref))),
+          ...(previous.report_brief ? { report_brief: previous.report_brief } : {}) };
         state.members = Object.fromEntries(previous.members.filter(member => prefix.includes(member.role)).map(member => [member.role, member]));
         state.qa = (previous.qa ?? []).filter(answer => prefix.includes(answer.from));
         state.prefixLoaded = true;
@@ -88,7 +90,10 @@ export async function researchWorkflow(host, input, signal, execution, mode) {
       if (state.members[role]) return;
       signal?.throwIfAborted();
       const member = plan.members[role], final = role === synthesis;
-      const selection = final ? state.synthesis : state.research;
+      const phase = state.input.workflow_profile === 'report-research/1' ? role : null;
+      state.stageSelections ??= {};
+      if (!final && phase) state.stageSelections[role] ??= await stageSelection(host, state.research, phase);
+      const selection = final ? state.synthesis : state.stageSelections[role] ?? state.research;
       const targets = questionMembers(plan, role).filter(id => state.members[id]);
       const canAsk = mode === 'analyze' && (plan.custom ? targets.length > 0 : REVIEWERS.includes(role));
       await verifySelection(host, selection);
@@ -98,6 +103,7 @@ export async function researchWorkflow(host, input, signal, execution, mode) {
         const details = { role, ...(mode === 'report' ? { result_ref: input.result_ref } : {}),
           ...(canAsk ? { qa_context: { workflow_ref: execution.run, selection: state.research,
             requester: role, members: Object.fromEntries(targets.map(id => [id, plan.members[id]])),
+            ...(state.input.workflow_profile ? {memberSelections:Object.fromEntries(targets.map(id => [id,state.stageSelections[id] ?? state.research]))} : {}),
             models: Object.fromEntries(targets.map(analyst => [analyst, configuredModel(host, state.models[analyst])])) } } : {}) };
         const researchInput = await memberInput(host, packet, details, `${execution.run.id}:handoff:${role}`, mode === 'report' ? input.result_ref : undefined);
         job = state.jobs[role] = { request: {

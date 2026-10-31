@@ -1,20 +1,21 @@
 # 插件功能架构与分批验收
 
-本说明适用于当前 Plugin API 2 源码：59 个插件，其中 11 个核心、48 个可选。主分类按插件在实际任务中的职责划分，用于发现和导航；实现类型独立记录它如何实现，用于选择包内结构。分类本身不改变调用权限；2026-10-26 将产品帮助从编排中独立为默认核心插件 `sesame/user-guide`。
+本说明适用于当前 Plugin API 2 源码：57 个插件，其中 11 个核心、46 个可选。主分类按插件在实际任务中的职责划分，用于发现和导航；实现类型独立记录它如何实现，用于选择包内结构。分类本身不改变调用权限；2026-10-26 将产品帮助从编排中独立为默认核心插件 `sesame/user-guide`。
 
 ## 分类与清单
 
-每包在 [inventory-policy.json](../plugins/api-v1/inventory-policy.json) 中指定一个主要 `functionalCategory`，保留原 `category` 以兼容既有目录。2026-10-19 按用户反馈，将原先混合业务主题和实现形式的九类改为以下五类；判据是插件负责的结果，不是它暴露的接口。
+每包在 [inventory-policy.json](../plugins/api-v1/inventory-policy.json) 中指定一个主要 `functionalCategory`，保留原 `category` 以兼容既有目录。2026-10-19 将原先混合业务主题和实现形式的九类按任务职责归并；2026-10-28 增加“搜索与来源”，形成以下六类。判据是插件负责的结果，不是它暴露的接口。这里描述本地源码；目录发布、日常安装和外部连通状态需分别核验。
 
 | 职责 | 标识 | 当前数量 | 判断依据 |
 | --- | --- | ---: | --- |
-| 业务流程 | business | 9 | 组织完整任务的目标、步骤、选择、验收与交接，包含宏观方法指南和可执行工作流 |
-| 专业能力 | analysis | 31 | 在给定证据和边界内提供可复用的知识判断、分析、计算或解析 |
-| 资源接入 | integration | 11 | 访问和发现数据、搜索信源、终端、原生引擎或参考资源 |
+| 业务流程 | business | 7 | 组织完整任务的目标、步骤、选择、验收与交接，包含宏观方法指南和可执行工作流 |
+| 专业能力 | analysis | 29 | 在给定证据和边界内提供可复用的知识判断、分析、计算或解析 |
+| 搜索与来源 | search | 4 | 发现网页、获取来源证据，或解析已提供的网页/订阅内容；获取与解析能力分别核验 |
+| 资源接入 | integration | 9 | 访问行情、账户、终端、原生引擎或参考资源 |
 | 交互呈现 | presentation | 2 | 组织可见的工作台、图表、报告及交互 |
-| 平台管理 | platform | 5 | 管理配置、插件、工作空间、记忆与宿主使用规则 |
+| 平台管理 | platform | 6 | 管理配置、插件、工作空间、记忆与宿主使用规则 |
 
-因子研究指南和自动因子研究都负责推进完整研究，属于业务流程；ICT 判断和指标计算都为任务提供局部能力，属于专业能力。一个专业方法包含操作步骤，不代表它负责完整业务流程。资源接入也包含离线目录、本机终端和原生引擎，不限于联网 API。
+新研究任务保留两个主入口：Research（investment-research）围绕投资问题和结果需求组织获取、分析与报告；Strategy（auto-factor-mining）组织因子与策略实验。因子与策略知识、参考 CLI 已融合到 Strategy 内，当前目录不再提供两个独立旧入口。ICT 判断和指标计算为任务提供局部能力，属于专业能力。一个专业方法包含操作步骤，不代表它负责完整业务流程。资源接入也包含离线目录、本机终端和原生引擎，不限于联网 API。
 
 `implementationKinds` 是非空、无重复数组，可组合 `knowledge`、`function`、`adapter`、`workflow`、`service`。生成器根据**实际暴露的声明及随包入口**推导最小实现：显式 agent/workflow/graph、source 或 MCP 绑定、service/view/lifecycle hook、普通 capability、最后才是纯知识。更专门的职责覆盖机械 function/lifecycle 胶水；执行时间长、存在状态回执或存在 Python/JS 参考脚本，都不自动等于 workflow/service/function。纯知识包的空原生入口也不是执行能力。
 
@@ -22,10 +23,12 @@ policy 中的类型是可校验的审阅预期，不是分类真相。只有声�
 
 | 插件 | 任务职责 | 实现类型 |
 | --- | --- | --- |
-| factor-research | business：因子研究全过程指南 | knowledge：知识文档 |
-| auto-factor-mining | business：可执行的因子研究流程 | workflow：工作流 |
+| auto-factor-mining | business：Strategy，因子与策略实验主入口 | workflow：工作流 |
+| investment-research | business：Research，综合投资研究主入口 | workflow：工作流 |
 | ict | analysis：局部结构与流动性判断 | knowledge：知识文档 |
 | abu-trend | analysis：趋势计算 | function：确定性函数 |
+| web-sources | search：网页发现与来源证据获取 | adapter：来源适配 |
+| rss-collect / web-extract | search：已有订阅/网页内容解析 | function：确定性解析 |
 | mt5 | integration：终端、行情与账户接入 | adapter：平台适配 |
 | reports | presentation：报告展示与交互 | service：宿主服务 |
 
@@ -35,11 +38,12 @@ policy 中的类型是可校验的审阅预期，不是分类真相。只有声�
 
 | 主类 | 插件 |
 | --- | --- |
-| business（9） | factor-research、strategy-research、auto-factor-mining、investment-research、trading-decision、portfolio-execution、judgment-evolution、kurumi-replay、ultra |
+| business（7） | auto-factor-mining、investment-research、trading-decision、portfolio-execution、judgment-evolution、kurumi-replay、ultra |
 | analysis：领域知识（8） | ict、price-action、elliott-wave、wyckoff、dow-theory、behavioral-finance、institutional-analysis、narrative-analysis |
-| analysis：局部量化处理（18） | abu-backtest-lab、abu-breakout、abu-exit-rules、abu-indicators、abu-ml-features、abu-model-lab、abu-moving-average、abu-parameter-search、abu-position-sizing、abu-price-structure、abu-seasonality、abu-similarity、abu-stock-screening、abu-trade-judges、abu-trade-metrics、abu-trend、abu-trend-pullback、abu-volatility |
-| analysis：评估、表达与解析（5） | factor-evaluator、strategy-authoring、market-data-parser、rss-collect、web-extract |
-| integration（11） | data-access、web-sources、financial-research、akshare、ccxt、binance、mt5、qmt、backtrader、vnpy、quantskills-catalog |
+| analysis：局部量化处理（17） | abu-breakout、abu-exit-rules、abu-indicators、abu-ml-features、abu-model-lab、abu-moving-average、abu-parameter-search、abu-position-sizing、abu-price-structure、abu-seasonality、abu-similarity、abu-stock-screening、abu-trade-judges、abu-trade-metrics、abu-trend、abu-trend-pullback、abu-volatility |
+| analysis：评估、表达与解析（4） | factor-evaluator、historical-evidence、strategy-authoring、market-data-parser |
+| search（4） | web-sources、rss-collect、web-extract、financial-research |
+| integration（9） | data-access、akshare、ccxt、binance、mt5、qmt、backtrader、vnpy、quantskills-catalog |
 | presentation（2） | canvas-control、reports |
 | platform（6） | configuration、memory、orchestration、plugin-manager、user-guide、workspace |
 
@@ -47,7 +51,7 @@ binance 专注 Binance Spot 的公开行情、账户余额及订单操作，生�
 
 其中 strategy-authoring 处理已明确的策略逻辑、表达与求值，不负责选择研究方向；三个解析器消费已经提供的内容，不负责联网获取。portfolio-execution 对已有账户执行获授权目标，交易目标由 trading-decision 决定。judgment-evolution 组织事前登记、结果核验、复盘与前瞻验证；kurumi-replay 负责完整的历史角色模拟任务。orchestration 提供 Agent/Run 协作编排方法，user-guide 提供产品操作帮助；两者都是平台知识，默认挂载且不注册运行入口。quantskills-catalog 提供资源发现，不实现目录收录的方法。
 
-[分类定义与校验](../plugins/api-v1/scripts/plugin-taxonomy.mjs) 集中维护枚举；[inventory 生成器](../plugins/api-v1/scripts/inventory.mjs) 从实际声明投影能力和版本，检查缺失、重复和过期条目。生成清单仅作描述，安装授权仍来自既有固定发布目录。
+[分类定义与校验](../plugins/api-v1/scripts/plugin-taxonomy.mjs) 集中维护枚举；[inventory 生成器](../plugins/api-v1/scripts/inventory.mjs) 从实际声明投影能力和版本，检查缺失、重复和过期条目。发布目录生成器复用相同枚举，`plugin_catalog` 可按目录已声明的分类标识或中英文名检索。四个搜索包的 ID、旧 `category:data`、API 和获取/解析边界保留；分类不把解析器变成联网来源，也不把消息采集交给 Report。生成清单仅作描述，安装授权仍来自既有固定发布目录。
 
 ## 发行目录与脚手架
 
@@ -107,7 +111,7 @@ ICT 的验收保留原 Python 样例的 5 个区间观察及其确认时点；MT
 
 ## 分批推广与验收
 
-31 个专业能力包已完成全量架构核对与对齐，详见[逐项责任和配置审计](analysis-plugin-responsibilities.md)。八个知识包保持显式知识资源，十八个 ABU 包保持算法与共用证据运行时分离；三个解析器统一维护同源 transport 并独立交付；评估器和 SVL 保留已有纯计算、协议、状态与生命周期分层。修改前冻结全部 33 个执行能力的完整声明，未增加无实际依赖的配置项。
+历史上 31 个专业能力包已完成全量架构核对与对齐，详见[逐项责任和配置审计](analysis-plugin-responsibilities.md)；其中 RSS 和网页解析在 2026-10-28 改归搜索与来源，当前专业能力为 29 包。原始 31 包及 33 个执行能力的冻结契约继续全量校验，仅在分类测试中明确这两个包的归属变化。八个知识包保持显式知识资源，十八个 ABU 包保持算法与共用证据运行时分离；三个解析器统一维护同源 transport 并独立交付；评估器和 SVL 保留已有纯计算、协议、状态与生命周期分层，未增加无实际依赖的配置项。
 
 后续按实现类型选小批插件逐包迁移，每批完成以下步骤后再继续：
 

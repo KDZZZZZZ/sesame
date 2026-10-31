@@ -5,6 +5,8 @@ description: Rank supplied development trials over a finite grid and preserve a 
 
 # 参数实验基线
 
+本包处理已经测得的有限参数组指标，不执行策略、启动 optimizer 或补齐未跑的组合。grid_points 是声明空间，development_rank 才是提供的开发期测量。实际执行优先用户/预期交易平台对应引擎的原生优化器；已有完整回执可复用。因子 evaluator 的 IC、DSR/PBO 和工作流隔离有独立职责，不重复构建或绕过。
+
 用 `abu_parameter_search_analyze` 比较已完成实验的开发期指标，冻结选型，再用独立留出证据评价同一组合的稳定性。
 
 选型依据与留出验证分离，避免把留出期也变成调参数据。验证使用实际返回的 frozen_selection；哈希只证明记录内一致，固定保存的开发工件才支持先选型后验证的时序。本能力不运行策略或表达式。

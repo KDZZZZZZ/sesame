@@ -1,12 +1,50 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { checkBoundaries, compareBoundary, applyConfigurationExtensions, boundaryReport, captureBoundaryCandidate, createBoundaryReview, applyApprovedBoundaryReview } from '../scripts/verify-plugin-boundaries.mjs';
+import { checkBoundaries, compareBoundary, applyConfigurationExtensions, boundaryReport, captureBoundaryCandidate, createBoundaryReview, applyApprovedBoundaryReview, applyApprovedRetirements } from '../scripts/verify-plugin-boundaries.mjs';
+import { createHash } from 'node:crypto';
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
 test('current scoped contracts keep every declared interface and pre-refactor path', () => {
-  assert.deepEqual(checkBoundaries(), { packages: 24, declarations: 48, capabilities: 256 });
+  assert.deepEqual(checkBoundaries(), { packages: 22, declarations: 44, capabilities: 256 });
+});
+
+test('approved retirement preserves the frozen baseline and requires absent entries plus intact declared replacement resources', t => {
+  const root = mkdtempSync(join(tmpdir(), 'sesame-retirement-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const sourcePath = 'plugins/optional-api-v1/packages/old-guide', replacementSourcePath = 'plugins/optional-api-v1/packages/strategy';
+  const manifest = { id: 'fixture/old-guide', version: '1.0.0' }, declaration = { capabilities: [] };
+  const baseline = { schemaVersion: 1, packages: [{ sourcePath, manifest, declaration, paths: ['plugin.json', 'capabilities.json'] }] };
+  mkdirSync(join(root, sourcePath), { recursive: true });
+  writeFileSync(join(root, sourcePath, 'plugin.json'), JSON.stringify(manifest));
+  writeFileSync(join(root, sourcePath, 'capabilities.json'), JSON.stringify(declaration));
+  const before = structuredClone(baseline), baselineDigest = createBoundaryReview(root, baseline, { plugins: [] }).baselineDigest;
+  mkdirSync(join(root, replacementSourcePath, 'references'), { recursive: true });
+  writeFileSync(join(root, replacementSourcePath, 'plugin.json'), JSON.stringify({ id: 'fixture/strategy', version: '2.0.0' }));
+  writeFileSync(join(root, replacementSourcePath, 'capabilities.json'), JSON.stringify({ capabilities: [], knowledge: [{ path: 'references/method.md' }] }));
+  const resource = join(root, replacementSourcePath, 'references/method.md'), content = 'Retained original research guidance';
+  writeFileSync(resource, content);
+  const retirement = { schemaVersion: 1, status: 'approved', baselineDigest, entries: [{ pluginId: manifest.id, sourcePath,
+    reason: 'User explicitly removed the independent guide after its resources were integrated into Strategy.',
+    replacementPluginId: 'fixture/strategy', replacementSourcePath,
+    retainedResources: [{ path: 'references/method.md', sha256: `sha256:${createHash('sha256').update(content).digest('hex')}` }] }] };
+  assert.throws(() => applyApprovedRetirements(root, baseline, retirement), /still present/);
+  rmSync(join(root, sourcePath), { recursive: true });
+  assert.throws(() => boundaryReport(root, baseline, { plugins: [] }), { code: 'ENOENT' });
+  assert.deepEqual(applyApprovedRetirements(root, baseline, retirement).packages, []);
+  assert.deepEqual(checkBoundaries(root, baseline, { plugins: [] }, undefined, retirement), { packages: 0, declarations: 0, capabilities: 0 });
+  assert.deepEqual(baseline, before, 'Retirement never rewrites historical evidence');
+  for (const change of [r => { r.status = 'pending'; }, r => { r.baselineDigest = 'changed'; }, r => { r.entries.push(r.entries[0]); },
+    r => { r.entries[0].reason = ''; }, r => { r.entries[0].retainedResources[0].path = '../method.md'; },
+    r => { r.entries[0].retainedResources[0].sha256 = `sha256:${'0'.repeat(64)}`; }]) {
+    const changed = structuredClone(retirement); change(changed); assert.throws(() => applyApprovedRetirements(root, baseline, changed));
+  }
+  writeFileSync(join(root, 'plugins/optional-api-v1/bundle-profile.json'), JSON.stringify({ packages: [manifest.id] }));
+  assert.throws(() => applyApprovedRetirements(root, baseline, retirement), /distribution profile/);
+  writeFileSync(join(root, 'plugins/optional-api-v1/bundle-profile.json'), JSON.stringify({ packages: [] }));
+  writeFileSync(resource, 'Changed or missing evidence');
+  assert.throws(() => applyApprovedRetirements(root, baseline, retirement), /resource changed/);
 });
 
 test('configuration rollout keeps the frozen baseline and rejects replacement or agent-facing extensions', () => {

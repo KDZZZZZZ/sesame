@@ -60,7 +60,7 @@
 
 执行员只消费冻结目标并返回真实回执。submitted/unknown 不是成交，未知结果必须按原操作 ID 核对，不能新建运行重发。依赖问题中断时保留同一 Run、角色和已有成果；主 Agent 可在现有授权内修复并显式恢复，不要求所有暂停都等待用户回复。
 
-执行结束后归档一份经理总结 HTML，冻结 `run.json` 保留账户、固定研究、目标、执行和复盘依据。最终正文不拼成员全文，不增加报告员。研究的图表展示由独立研究报告能力负责；交易总结不能把建议、目标或已接受订单写成成交。
+执行结束后由 Report 生成并归档一份经理总结报告，冻结 `run.json` 保留账户、固定研究、目标、执行和复盘依据。最终正文不拼成员全文，不增加报告员。研究的图表展示由独立研究报告能力负责；交易总结不能把建议、目标或已接受订单写成成交。
 
 旧包历史数据不在此次更名中导入、迁移或删除。
 
@@ -69,3 +69,5 @@
 `runtime.js` 保留原能力门面、工作流执行、授权、持久状态和启动/停止生命周期。`scheduler.js` 负责事件与周期准入、账户串行队列和账户订阅，使用同一个 runtime 的 host、时钟、队列、订阅表与 Run 执行作用域，不创建第二份状态。
 
 重启继续保留已接受的 Run 和原回执；未知执行不重发。账户流断档沿原重试时间恢复，取消与停止仍由 runtime 关闭订阅并等待原任务。决策复盘继续使用既有 `memory.js`，不与个人记忆或判断准则台账合并。
+
+Report presentation follows the host-selected provider. The fixed document adapter first calls `host.reports.describe` and uses the `sesame/reports` facade only when that provider and its declared content/style schema are supported. An incompatible provider returns a specific unsupported result with the frozen decision and evidence retained; it never changes host settings or repeats execution. An Agent can instead read `host_reports_describe`, adapt the existing evidence to the returned inputSchema and publish through `host_reports_publish`; content/style is a Reports vocabulary, not the generic host schema. Do not upload HTML, CSS or scripts, or require a template step. Keep judgment, chart annotations, brief reasoning and material risk conditions in the body, with original account/research/execution records in the end appendix. The default Reports provider owns blue/gray borderless styling, LaTeX and reusable declarative style versions. Persist the exact published ref before checking; a failed inspection rechecks that ref and never replays trades. Presentation changes neither authorize execution nor reinterpret accepted orders as fills.

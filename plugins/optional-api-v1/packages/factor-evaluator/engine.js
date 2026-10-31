@@ -2,7 +2,7 @@
 // All factor values and diagnostics are computed locally; no generated code is executed.
 import { createHash } from 'node:crypto';
 
-export const EVALUATOR_VERSION = 'sesame-factor-ast/1.1.0';
+export const EVALUATOR_VERSION = 'sesame-factor-ast/1.2.0';
 const MAX_ROWS = 20000;
 const MAX_NODES = 128;
 const MAX_DEPTH = 12;

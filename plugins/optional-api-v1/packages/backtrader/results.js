@@ -40,6 +40,7 @@ export async function publishInputs(host, args, { bytes, fixed, selectedEnv, ori
         nativeSource: sourceRef,
         config: args.config,
         parameters: args.parameters ?? {},
+        ...(args.parameter_space ? { parameterSpace: args.parameter_space, optimizer: 'Cerebro.optstrategy' } : {}),
         provenance: { kind: origin },
       },
       { "bars.json": JSON.stringify(fixed.rows) },
@@ -63,8 +64,8 @@ export async function publishResult(host, args, { sourceRef, envRef, inputs, run
         dependencies,
       );
     const tables =
-      result.status === "completed"
-        ? await Promise.all(["equity", "trades", "orders"].map(async (name) => ({
+      result.status === "completed" || result.passes
+        ? await Promise.all((result.passes ? ['passes'] : ["equity", "trades", "orders"]).map(async (name) => ({
             id: name,
             ref: await resource(
               host,
@@ -110,6 +111,7 @@ export async function publishResult(host, args, { sourceRef, envRef, inputs, run
         rawResult: raw,
         data: tables,
         statistics: result.statistics ?? {},
+        ...(result.optimizer ? { optimizer: result.optimizer } : {}),
         provenance: { kind: origin, references: dependencies },
         limitations: result.limitations ?? [
           "Native engine failed; no success claim.",
@@ -127,6 +129,8 @@ export async function publishResult(host, args, { sourceRef, envRef, inputs, run
       executionRunId: run.runId ?? null,
       nativeSource: sourceRef,
       environment: envRef,
+      rawResult: raw,
+      ...(result.passes ? { optimizer: result.optimizer, passes: result.passes.map(({ equity, trades, orders, ...summary }) => summary) } : {}),
     };
     return answer;
 }

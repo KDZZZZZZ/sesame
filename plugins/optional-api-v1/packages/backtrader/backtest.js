@@ -10,7 +10,24 @@ import { selected } from './environment.js';
 import { fixedRows } from './fixed-input.js';
 import { publishInputs, publishResult } from './results.js';
 
-export async function backtest(host, args, signal) {
+export function optimizationPlan(args) {
+  const space = args.parameter_space;
+  check(space && typeof space === 'object' && !Array.isArray(space) && Object.keys(space).length > 0 && Object.keys(space).length <= 12,
+    'Native optimization requires 1..12 named parameter vectors');
+  let combinations = 1;
+  for (const [key, values] of Object.entries(space)) {
+    check(/^[A-Za-z_][A-Za-z0-9_]*$/.test(key) && !Object.hasOwn(Object.prototype, key), 'Invalid optimization parameter name');
+    check(Array.isArray(values) && values.length > 0 && values.length <= 64 && values.every(value =>
+      typeof value === 'boolean' || typeof value === 'string' && value.length <= 1000 || typeof value === 'number' && Number.isFinite(value)), 'Use bounded scalar parameter vectors');
+    check(new Set(values.map(value => JSON.stringify(value))).size === values.length, 'Duplicate parameter values are not independent trials');
+    combinations *= values.length;
+  }
+  check(combinations <= 64, 'Native optimizer is bounded to 64 combinations');
+  return { parameter_space: structuredClone(space), combinations };
+}
+
+export async function backtest(host, args, signal, optimize = false) {
+  const optimization = optimize ? optimizationPlan(args) : null;
   const bytes = await readUserFile(host,
     "read",
     args.strategy_path,
@@ -31,7 +48,10 @@ export async function backtest(host, args, signal) {
       title: args.title,
       parameters: args.parameters ?? {},
       config: args.config,
+      ...(optimization ? { optimization } : {}),
     });
+  check(!optimization || optimization.combinations * fixed.rows.length <= 200000,
+    'Optimization evidence budget is at most 200000 combined pass-bars');
   const old = records(host).get("backtests", args.operation_id, true);
   if (old) {
     check(
@@ -118,6 +138,7 @@ export async function backtest(host, args, signal) {
         rows: fixed.rows,
         parameters: args.parameters ?? {},
         config: args.config,
+        ...(optimization ? { optimization } : {}),
       }),
     );
     run = await runProcess(host,

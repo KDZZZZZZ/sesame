@@ -11,7 +11,7 @@
   const label = (row, key, fallback) => { check(row[key] === undefined || row[key] === null || typeof row[key] === 'string' || typeof row[key] === 'number' && Number.isFinite(row[key]), `${key} must be a text label`); return row[key] === undefined || row[key] === null ? fallback : String(row[key]); };
   const short = (value, length = 20) => value.length > length ? value.slice(0, Math.max(1, length - 1)) + '…' : value;
   const ink = 'var(--report-ink)', muted = 'var(--report-muted)', accent = 'var(--report-accent)', negative = 'var(--report-negative)';
-  const palette = [accent, 'var(--chart-series-1,var(--report-accent))', 'var(--chart-series-3,var(--report-muted))', 'var(--chart-series-4,var(--report-accent))'];
+  const palette = [accent, 'var(--report-context,var(--report-muted))', 'var(--chart-series-3,var(--report-accent))', 'var(--chart-series-4,var(--report-muted))', 'var(--chart-series-5,var(--report-accent))', 'var(--chart-series-6,var(--report-muted))'];
   const clamp = (value, lo, hi) => Math.max(lo, Math.min(hi, value));
   function rowsAreRecords(rows) {
     check(Array.isArray(rows) && rows.length <= 2500, 'rows must contain at most 2,500 fixed records');
@@ -79,6 +79,9 @@
       record.value = geometryNumber(record.total); visiting.delete(record.key); visited.add(record.key); return record.total;
     }
     roots.forEach(root => total(root)); check(visited.size === records.size, 'hierarchy contains an unrooted cycle');
+    const sides = [...new Set([...records.values()].filter(record => !record.children.length).map(record => record.side))];
+    const onlyNeutral = sides.length === 1 && sides[0] === 'neutral';
+    const sideLabel = side => language(side, { long: '多头', short: '空头', neutral: '中性' }[side]);
     const totalValue = geometryNumber(sum(roots.map(root => root.total))), zeroLeaves = [...records.values()].filter(record => !record.children.length && record.total.c === 0n);
     const top = 22, bottom = Math.max(top + 80, height - 12), sideColor = side => side === 'short' ? negative : side === 'long' ? accent : muted;
     // Recursively bisect by cumulative leaf value. Parents are labels, never an
@@ -102,13 +105,12 @@
       g.append(node('rect', { x: x + .75, y: y + .75, width: Math.max(.1, w - 1.5), height: Math.max(.1, h - 1.5), rx: 1, fill: sideColor(item.side), 'fill-opacity': .17 + Math.min(depth, 3) * .035 }));
       if (w >= 45 && h >= 22) g.append(node('text', { x: x + 7, y: y + 16, class: 'sc-label', 'pointer-events': 'none' }, short(item.name, Math.max(3, Math.floor((w - 14) / 7)))));
       if (w >= 68 && h >= 43) g.append(node('text', { x: x + 7, y: y + 33, class: 'sc-axis', 'pointer-events': 'none' }, ctx.format(item.value, spec.unit)));
-      mark(g, item.row, item.index, `${item.path.join(' › ')} [${item.key}] · ${item.side}: ${item.row[keys.value]}${spec.unit ? ' ' + spec.unit : ''}`);
+      mark(g, item.row, item.index, `${item.path.join(' › ')} [${item.key}] · ${onlyNeutral ? '' : `${sideLabel(item.side)}: `}${item.row[keys.value]}${spec.unit ? ' ' + spec.unit : ''}`);
       marks.push({ element: g, row: item.row });
     }
     if (totalValue > 0) partition(roots, 0, top, width, bottom - top);
     else caption(ctx, width / 2, height / 2, language('Zero total — no proportional area', '合计为零，无比例面积'), { 'text-anchor': 'middle' });
-    const sides = [...new Set([...records.values()].filter(record => !record.children.length).map(record => record.side))];
-    sides.forEach((side, index) => { svg.append(node('rect', { x: index * 94, y: 3, width: 8, height: 8, fill: sideColor(side), opacity: .55 })); caption(ctx, index * 94 + 14, 11, side); });
+    if (!onlyNeutral) sides.forEach((side, index) => { svg.append(node('rect', { x: index * 94, y: 3, width: 8, height: 8, fill: sideColor(side), opacity: .55 })); caption(ctx, index * 94 + 14, 11, sideLabel(side)); });
     if (zeroLeaves.length) {
       const details = ctx.html('details', 'sc-structure-zero'), summary = ctx.html('summary', null, language(`${zeroLeaves.length} zero-value records`, `${zeroLeaves.length} 条零值记录`)), list = ctx.html('div');
       list.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;max-height:160px;overflow:auto';

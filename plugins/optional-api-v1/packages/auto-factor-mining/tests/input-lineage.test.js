@@ -42,7 +42,9 @@ test('registered datasets without an artifact input retain an empty dependency l
 
 function context(run, task, section) {
   const development = { rows: [{ time: '2024-01-01T00:00:00Z', fields: { close: 100 } }] };
-  const subject = { authorize: () => ({ run, task }), checkpoints: { dataset: () => ({ development }) }, dataset: () => development };
+  // authorize has already matched this registered child; this unit fixture
+  // exercises the data projection rather than the early-dispatch handoff path.
+  const subject = { authorize: () => ({ run, task: task ? { ...task, runRef: { id: 'registered-role-run' } } : null }), checkpoints: { dataset: () => ({ development }) }, dataset: () => development };
   return MiningRuntime.prototype.context.call(subject, {}, run.id, section);
 }
 

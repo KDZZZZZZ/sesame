@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "status": "approved",
+  "baselineDigest": "sha256:f04b89485709457112cd5d5aa624d02d654162009d9c93f7b8cb2c883af6acfb",
+  "reviewedAt": "2026-10-28",
+  "authorization": "User explicitly requested removal of the two independent compatibility packages; no same-name routing aliases remain.",
+  "entries": [
+    {
+      "pluginId": "sesame/factor-research",
+      "sourcePath": "plugins/optional-api-v1/packages/factor-research",
+      "reason": "用户明确要求移除两个独立兼容知识入口；研究知识与参考脚本已融合到 Strategy。仅退役当前源码与分发入口，历史发布和冻结基线保持不变。",
+      "replacementPluginId": "sesame/auto-factor-mining",
+      "replacementSourcePath": "plugins/optional-api-v1/packages/auto-factor-mining",
+      "retainedResources": [
+        {
+          "path": "scripts/reference-factor.mjs",
+          "sha256": "sha256:2d6902e93a9f5f2562dce0ada58becc81473a05362ede7ab7fc9aa90a5b45d80"
+        },
+        {
+          "path": "examples/reference-factor/plan.demo.json",
+          "sha256": "sha256:6594aa712ea775f08a3d64eef7b6a7788982c597fb350f544f1b359e18ecad32"
+        },
+        {
+          "path": "examples/reference-factor/development.demo.json",
+          "sha256": "sha256:d2a27cffd87889b52bde17f2214c7554c59713cdce738d1976e3885be88eb64b"
+        },
+        {
+          "path": "examples/reference-factor/holdout.demo.json",
+          "sha256": "sha256:19813672a64b27426ec97b5fefee17f35635ebb9abb4d22055e1ed514ca6f7f8"
+        },
+        {
+          "path": "references/factor-method.md",
+          "sha256": "sha256:1a73d8be9ca3e1a43543b018ae358a54aaf0323f18e3862ba1962d2ea6b6cf44"
+        },
+        {
+          "path": "references/factor-cli.md",
+          "sha256": "sha256:823e7c99ef7cb7a4c204a83bd0ebe9de2d26355bb673a915bf13f25810f9bd80"
+        }
+      ]
+    },
+    {
+      "pluginId": "sesame/strategy-research",
+      "sourcePath": "plugins/optional-api-v1/packages/strategy-research",
+      "reason": "用户明确要求移除两个独立兼容知识入口；研究知识与参考脚本已融合到 Strategy。仅退役当前源码与分发入口，历史发布和冻结基线保持不变。",
+      "replacementPluginId": "sesame/auto-factor-mining",
+      "replacementSourcePath": "plugins/optional-api-v1/packages/auto-factor-mining",
+      "retainedResources": [
+        {
+          "path": "scripts/reference-experiment.mjs",
+          "sha256": "sha256:58e88721a18f8cdfda49062e943d32a5913ab87c99552ce7e40f7e7f71d03875"
+        },
+        {
+          "path": "examples/reference-strategy/plan.demo.json",
+          "sha256": "sha256:73fe9eb776ca0b94a6bf54694acb580ee5c3215f16ee9cb22d2c095f20ad187d"
+        },
+        {
+          "path": "examples/reference-strategy/timing.demo.json",
+          "sha256": "sha256:a05a37303b0cd4daffbaf64e9fad9f9b5b65d11c6215304bd844ff9a92fb10aa"
+        },
+        {
+          "path": "examples/reference-strategy/trials.demo.json",
+          "sha256": "sha256:fc7baa3193097c468af2004fbe50207fdb4bbee25e1462064243fb60a0c757e4"
+        },
+        {
+          "path": "examples/reference-strategy/input.demo.json",
+          "sha256": "sha256:4b5f7f37113fec6e01e7d32355bab67522ffa5951157179baa1fdcdc22edb95e"
+        },
+        {
+          "path": "references/strategy-evidence.md",
+          "sha256": "sha256:29418455e743eb10df3c7ae2b593890bfd1288ae9135ef1233dbeedda4c78865"
+        },
+        {
+          "path": "references/strategy-cli.md",
+          "sha256": "sha256:7d45ee5bc21f403e9ed0d4b57957b55d5f22f21cb07f506fdf6b7d4673f0d8e7"
+        }
+      ]
+    }
+  ]
+}

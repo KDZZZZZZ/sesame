@@ -2,6 +2,7 @@
 export const FUNCTIONAL_CATEGORIES = [
   { id: 'business', title: { en: 'Task workflows', zh: '业务流程' } },
   { id: 'analysis', title: { en: 'Knowledge and analysis', zh: '专业能力' } },
+  { id: 'search', title: { en: 'Search and sources', zh: '搜索与来源' } },
   { id: 'integration', title: { en: 'Resource integrations', zh: '资源接入' } },
   { id: 'presentation', title: { en: 'Presentation and interaction', zh: '交互呈现' } },
   { id: 'platform', title: { en: 'Platform management', zh: '平台管理' } },

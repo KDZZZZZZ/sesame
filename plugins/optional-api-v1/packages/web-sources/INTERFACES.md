@@ -38,3 +38,13 @@ provenance保留kind=observed、source_kind=external、最终provider URL、as_o
 需要按合约、报告期和持仓语义获取COT证据时，直接使用已注册的`sesame/financial-research#financial_research_query({kind:"cot",market_code:"088691",limit:12})`，无需自行拼URL。上面的URL仅展示本能力对一个已选公开JSON地址的通用传输方式，不替代该专用接口的字段、单位和历史可用性约束。
 
 `sources_fetch`不是通用办公文档解析器。SPF/GLD等XLSX来源不在当前HTML/RSS/汇率解析能力内；不得把下载或文本解码成功说成解析了工作簿。
+
+## sources_search
+
+输入 `{query,site?,time_range?,limit?}`；query 1–500字符，site为可选域名，time_range=any/day/week/month/year，limit 1–20（默认10）。使用DuckDuckGo官方Lite非JavaScript页面，无Key、无额外插件配置，遵守宿主网络设置。只观察首个结果页，不自动重试、翻页或切换服务。
+
+available 返回 provider=duckduckgo_lite、query、site、time_range、ref、results、coverage、provenance。结果是候选链接，包含 rank/title/url/snippet/published_at:null/retrieved_at/evidence_kind:search_result。站点筛选后过滤非该域/子域、凭据URL、非HTTP(S)、服务自身链接与重复URL。coverage分别给候选/合格/返回/排除数、has_more和未验证发表时间标志。完整搜索HTML和结构化行随ref保存，content.metadata记录搜索条件与覆盖。
+
+unavailable 沿用 sources_fetch 错误结构；增加 search_challenge（页面要求人工验证）、search_format_error（页面无法可靠解释）。不能将这两种结果伪装成0条消息。明确零结果页可以返回available和0条候选，也只表示本次有界搜索没有匹配结果。
+
+必须读取选定候选的原文才能将其作为报告事实证据。搜索发布时间未知；引擎时间筛选、新闻正文日期与今天取到原文都不证明某个历史版本当时已公开。

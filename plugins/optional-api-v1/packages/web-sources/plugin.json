@@ -1,8 +1,8 @@
 {
   "id": "sesame/web-sources",
-  "title": "公开来源",
-  "description": "抓取 HTTP/HTTPS 资料，支持公网与内网，保存来源和输入快照。",
-  "version": "3.0.1",
+  "title": "网页搜索与取证",
+  "description": "搜索与来源：免Key关键词搜索、站点筛选，抓取选定HTTP/HTTPS原文并保存固定引用；与RSS、正文解析和金融来源独立协作。",
+  "version": "3.1.0",
   "default_state": "discoverable",
   "prompts": [
     "prompt.md"

@@ -1,9 +1,9 @@
 {
   "id": "sesame/abu-trade-metrics",
   "apiVersion": "2",
-  "version": "2.0.1",
-  "title": "交易绩效基线",
-  "description": "权益回撤、交易归因、收益与风险指标。这是可改进基线而非标准答案；输入显式来源和截止时点，输出可复核研究结果。 自动冻结输入与结果数据工件，用户可复核。",
+  "version": "2.1.0",
+  "title": "交易结果诊断",
+  "description": "对已提供权益与闭合交易计算绩效，对订单与成交审计时序、限价、数量和成本。两项可独立使用的计算基线，保留固定证据；不运行回测或重建券商账单。",
   "author": {
     "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
   },
@@ -24,7 +24,11 @@
     "examples/input.json",
     "scripts/baseline.mjs",
     "scripts/runtime.mjs",
-    "skills/abu-trade-metrics/references/method.md"
+    "skills/abu-trade-metrics/references/method.md",
+    "AUDIT-PROVENANCE.md",
+    "examples/audit-input.json",
+    "scripts/audit.mjs",
+    "skills/abu-trade-metrics/references/audit.md"
   ],
   "provides": {},
   "engines": {

@@ -6,7 +6,7 @@
 
 | 要交付的结果 | 建议接口与实现 | 不需要顺带实现的能力 | 代表性源码 |
 | --- | --- | --- | --- |
-| 宏观任务方法、研究路线和验收原则 | business / knowledge；knowledge 的 skill/reference，capabilities 可为空 | 不为了步骤说明注册 workflow，不另造调度或报告发布 | factor-research、strategy-research 的 skills/ 与 index.js |
+| 宏观任务方法、研究路线和验收原则 | business / knowledge；knowledge 的 skill/reference，capabilities 可为空 | 不为了步骤说明注册 workflow，不另造调度或报告发布 | auto-factor-mining/references/research-guide.md（工作流内的研究知识） |
 | 局部领域知识、判据与反例 | analysis / knowledge；SKILL 说明输入、解释边界，长参考按需读 | 不附加联网、账户或交易，不把文档描述当计算回执 | ict 的 skills/ict、examples/ |
 | 给定输入的确定性计算、解析 | analysis / function；显式 input/outputSchema，普通 JSON 或真实固定成果 | 不另写取数、Agent 团队、账户状态或通用文件工具 | abu-trend、market-data-parser 的声明与注册入口 |
 | 外部数据、终端或原生引擎 | integration / adapter；原生 function，按宿主实际 contract 声明 sources/services；订阅用 transport:subscription | 不同时负责研究结论、目标仓位或 Sesame 窗口布局 | web-sources、financial-research、mt5、qmt；backtrader/vnpy 保留独立引擎规则 |
@@ -25,17 +25,18 @@ capabilities.json 包含 schemaVersion:1、apiVersion:"2"、configSchema，以�
 
 ## 功能分类与文件组织
 
-官方源码保持 packages/<slug> 平铺。inventory-policy.json 的原 category 继续兼容旧目录；functionalCategory 表示插件在完整任务中的主要职责，implementationKinds 表示实际实现形态。先判断插件负责的结果，再选代码或文档模板。分类描述不授予能力，也不改变发布成员。
+官方源码保持 packages/<slug> 平铺。inventory-policy.json 的原 category 继续兼容旧目录；functionalCategory 表示插件在完整任务中的主要职责，implementationKinds 表示实际实现形态。先判断插件负责的结果，再选代码或文档模板。分类描述不授予能力，也不改变发布成员。web-sources、rss-collect、web-extract、financial-research 归 search；RSS/HTML 解析器不因分类而获得搜索或抓取能力，分类也不将消息采集交给 Report。
 
 | functionalCategory | 主要职责 |
 | --- | --- |
 | business | 业务流程：组织完整任务的目标、步骤、选择、验收和交接，包括宏观方法指南和可执行工作流 |
 | analysis | 专业能力：消费给定证据，提供可复用的局部知识判断、解析、计算或评估 |
-| integration | 资源接入：访问和发现信源、搜索、终端、外部引擎或参考资源 |
+| search | 搜索与来源：发现网页、获取来源证据并解析已有网页/订阅内容；获取与解析职责继续独立 |
+| integration | 资源接入：行情/账户、终端、外部引擎或参考资源 |
 | presentation | 交互呈现：工作台、图表、报告和交互 |
 | platform | 平台管理：配置、插件、工作空间和记忆等基础管理 |
 
-implementationKinds 可使用 knowledge、function、adapter、workflow、service，一包按真实实现声明一个或多个值。它不是 capability.kind：例如 service 实现仍通过 function 能力和 services/hooks 等贡献对接宿主。factor-research 是 business / knowledge，investment-research 是 business / workflow；ict 是 analysis / knowledge，abu-trend 是 analysis / function。knowledge 仅指文档载体，不表示局部专业知识或宏观业务流程中的任何一种。不要因为说明含有几个步骤，就把局部分析工具归为业务流程。
+implementationKinds 可使用 knowledge、function、adapter、workflow、service，一包按真实实现声明一个或多个值。它不是 capability.kind：例如 service 实现仍通过 function 能力和 services/hooks 等贡献对接宿主。auto-factor-mining、investment-research 是 business / workflow，工作流内可同时声明研究 knowledge；ict 是 analysis / knowledge，abu-trend 是 analysis / function。knowledge 仅指文档载体，不表示局部专业知识或宏观业务流程中的任何一种。不要因为说明含有几个步骤，就把局部分析工具归为业务流程。
 
 脚手架的 native 和 skill 参数保持兼容。knowledge 生成方法与验证参考；function 生成 src/analyze.js 和可验证的求和示例；adapter、workflow、service 分别生成 src/source.js、src/runtime.js、src/service.js，业务未实现前明确抛出 NOT_IMPLEMENTED。workflow 声明 kind:workflow、execution:run，不预先宣称可恢复。按实际需要再拆 market/account/trading、members/composition/artifacts 或 state 模块，不补空层次。
 

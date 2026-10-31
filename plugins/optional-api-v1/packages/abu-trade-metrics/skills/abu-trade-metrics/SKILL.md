@@ -1,11 +1,13 @@
 ---
 name: abu-trade-metrics
-description: Summarize supplied equity and closed-trade evidence with an ABU-inspired baseline.
+description: Diagnose supplied trading results through independent performance statistics and order/fill evidence audits.
 ---
 
-# 交易绩效基线
+# 交易结果诊断
 
 用 `abu_trade_metrics_analyze` 汇总给定权益与已结束交易的收益、回撤、风险和成本，解释数值对应的统计口径。
+
+用 `abu_trade_results_audit` 核对给定订单/成交的时序、限价、数量和成本，保留缺失订单、超量成交等实际问题。审计不要求权益曲线，bars也可省略；不从已有K线猜测订单或成交。两项能力可按问题独立选择，均不运行策略或连接券商。
 
 CAGR 使用实际日历时长，Sharpe 使用声明的年内期数。资金进出和权益调整会改变收益解释，不能在缺少证据时声称没有外部现金流；本能力不重建券商账单。
 
@@ -15,6 +17,10 @@ CAGR 使用实际日历时长，Sharpe 使用声明的年内期数。资金进�
 
 工具 abu_trade_metrics_analyze 的已注册 inputSchema 和 usage 给出准确字段、参数、返回路径与错误条件，不要求先阅读示例或运行教学演练。保留 input_artifact、result_artifact、source/as_of、实际参数和 limitations；原始工件可用 data_read({ref}) 按完整引用再次读取。其他方法需要不同输入形状时按其已声明接口显式转换，不把一个结果对象直接冒充另一个工具的输入。
 
+逐笔审计使用 abu_trade_results_audit 自身的 schema 和 usage。两个原生能力均声明 input-only，只接受本次提供的 JSON 并发布派生工件；输入中的路径或 Ref 不解引用。原生引擎实际执行与本包结果诊断分工明确，因子理想化收益不是原生成交回执。
+
 ## 可选改进
 
 这是可修改、可验证的研究基线；只有任务需要比较公式或参数时才开展改进，保留原结果、修改假设与同一输入上的对照。references/method.md 解释公式和原版差异；examples/input.json 是合成教学输入。两者按需读取，合成结果保持演示身份。
+
+references/audit.md 与 examples/audit-input.json 保留迁入的逐笔审计规则和独有合成算例；来源与 GPL-3.0-only 许可见 AUDIT-PROVENANCE.md。

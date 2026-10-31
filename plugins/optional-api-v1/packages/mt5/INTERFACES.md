@@ -1,4 +1,8 @@
 # mt5 公开能力契约
+
+## mt5_backtest_operation
+
+调用者：agent、host。`{command_id:<原mt5_backtest start的稳定ID>}` 读取已提交的原job/pass回执，要求当前会话身份匹配；无提交记录返回not-found。该操作不启动终端、不读账户凭据、不运行或重放测试。缺记录不证明原dispatch未启动，unknown不得自动换ID重试。透明原生tester_run_optimization的恢复仍使用mt5_command读取原command，不用此managed-backtest读取器替代。
 此文依据当前实现。示例中的ID/路径/Ref必须用对应公开入口的实际返回值；它们展示参数形状，不是默认任务步骤。宿主能力不会直接暴露为普通Agent工具。
 
 ## mt5_trading_prepare

@@ -2,6 +2,8 @@
 
 参考 ABU 网格搜索与交叉验证，来源固定至 `d602d847677e4c2b77b0a122df30816ea68b5710`。本包展开有限参数网格，对调用者提供的实验指标排序，并校验开发选择与留出验证的交接记录。
 
+定位是**已完成实验的输入指标选型**，不是回测引擎或执行 optimizer。`grid_points` 只统计声明空间，未提供试验的组合不会自动运行，也不会补分。需要实际搜索时先选符合用户/交易平台要求的引擎，再优先它已提供的原生优化器；本工具仍可独立处理不同计算方法的开发记录，或核对已有选择。原生回执已包含相同选型证据时直接复用，不额外强制本工具。因子 IC、DSR/PBO 与工作流隔离仍由真正的 evaluator/工作流负责。
+
 这是可验证的基线，不是标准答案。Agent 可以改进搜索策略，但必须把原始网格、假设、变更、每次试验和固定 holdout 结果完整保存。
 
 ## 两阶段使用
@@ -35,7 +37,7 @@ observations.development_rank 是仅按开发指标排序的排名；frozen_sele
 
 ## 文件与能力边界
 
-`abu_parameter_search_analyze` 声明 `researchDataAccess:{schemaVersion:1,reads:"input-only",writes:"derived-artifacts-only"}`，可与 factor-research 等方法知识一起用于 auto-factor-mining 的 restricted 研究角色。只传入该角色已获得的开发试验；不为了调用本工具开放完整面板、data_read 或外部来源。留出证据仍由工作流冻结选择后评价。
+`abu_parameter_search_analyze` 声明 `researchDataAccess:{schemaVersion:1,reads:"input-only",writes:"derived-artifacts-only"}`，可与 Strategy（auto-factor-mining）内置的研究知识一起用于 restricted 研究角色。只传入该角色已获得的开发试验；不为了调用本工具开放完整面板、data_read 或外部来源。留出证据仍由工作流冻结选择后评价。
 
 原生路径只消费 args.input；其中的 ID、Ref、路径只作为来源标签保存，均不解引用。唯一文件读取是固定的本包 baseline.mjs 和 runtime.mjs 实现摘要；不取行情、账户或保留状态，不调用其他能力。create/publish 只保存本次输入及结果，并在发布后清理本次新建临时 blob，不能读写或删除已有资源。CLI 读取显式文件路径是独立入口，未作为研究工具授权。该约定由代码审计和真实执行回归支持，不是沙箱；修改数据访问路径时须重新声明并由新运行核对。
 

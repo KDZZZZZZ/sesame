@@ -2,10 +2,10 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 const read = path => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 const json = value => JSON.stringify(value).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
-const groups = ['statistical', 'temporal', 'structural'].map(group => ({ group, ...JSON.parse(read(`examples/${group}-fixtures.json`)) }));
+const groups = ['statistical', 'temporal', 'structural', 'composition'].map(group => ({ group, ...JSON.parse(read(`examples/${group}-fixtures.json`)) }));
 if (groups.some(group => group.provenance.kind !== 'demo')) throw new Error('Gallery inputs must be explicitly fictional demo data');
 const charts = groups.flatMap(group => group.charts.map(chart => ({ ...chart, family: group.group })));
-const assets = ['report-kit.js', 'editorial-charts.js', 'charts-statistics.js', 'charts-temporal.js', 'charts-structure.js'];
+const assets = ['report-kit.js', 'editorial-charts.js', 'charts-statistics.js', 'charts-temporal.js', 'charts-structure.js', 'charts-composition.js'];
 const html = `<!doctype html>
 <html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>A chart for each question · Sesame</title><style>${read('assets/editorial.css')}
 .gallery-controls{max-width:880px;margin:0 auto 28px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}.gallery-controls label{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.gallery-controls select{max-width:100%;font-size:13px}.gallery-picked{margin:12px 0;color:var(--report-muted);font-size:12px}.gallery-plot{min-width:0}

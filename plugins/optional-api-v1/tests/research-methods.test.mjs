@@ -5,37 +5,34 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import * as strategy from '../packages/strategy-research/scripts/experiment.mjs';
-import * as factor from '../packages/factor-research/scripts/factor.mjs';
-import { buildLock } from '../../api-v1/scripts/plugin-lock.mjs';
+import * as strategy from '../packages/auto-factor-mining/scripts/reference-experiment.mjs';
+import * as factor from '../packages/auto-factor-mining/scripts/reference-factor.mjs';
 
 const packageRoot = name => fileURLToPath(new URL(`../packages/${name}/`, import.meta.url));
 const read = (name, file) => JSON.parse(readFileSync(join(packageRoot(name), file)));
-const sPlan = () => read('strategy-research', 'examples/plan.demo.json');
-const timings = () => read('strategy-research', 'examples/timing.demo.json');
-const fPlan = () => read('factor-research', 'examples/plan.demo.json');
-const development = () => read('factor-research', 'examples/development.demo.json');
-const held = () => read('factor-research', 'examples/holdout.demo.json');
+const example = (kind, name) => read('auto-factor-mining', `examples/reference-${kind}/${name}.demo.json`);
+const sPlan = () => example('strategy', 'plan');
+const timings = () => example('strategy', 'timing');
+const fPlan = () => example('factor', 'plan');
+const development = () => example('factor', 'development');
+const held = () => example('factor', 'holdout');
 
-test('research packages declare their actual callable and knowledge surfaces without implicit host grants', async () => {
-  const root = mkdtempSync(join(tmpdir(), 'research-lock-'));
-  try {
-    mkdirSync(join(root, 'packages'));
-    for (const name of ['strategy-research', 'factor-research']) {
-      cpSync(packageRoot(name), join(root, 'packages', name), { recursive: true });
-      const manifest = read(name, 'plugin.json');
-      assert.equal(manifest.default_state, 'discoverable'); assert.equal(manifest.engines.sesame, '>=0.2.3');
-      assert.equal(manifest.tool_names, undefined); assert.equal(manifest.apiVersion, '2');
-      const declaration = read(name, 'capabilities.json');
-      const { createCapabilities } = await import(new URL(`../packages/${name}/index.js`, import.meta.url));
-      assert.deepEqual(declaration.capabilities.map(item => item.binding.name), createCapabilities({}).map(item => item.name));
-      assert.ok(declaration.knowledge.length);
-      assert.equal(manifest.migration, undefined); assert.deepEqual(manifest.provides, {});
-      for (const path of manifest.resources) assert.ok(readFileSync(join(packageRoot(name), path)).length, path);
-    }
-    const lock = buildLock(root); assert.equal(lock.packages.length, 2);
-    assert.deepEqual(lock.packages.map(pkg => pkg.id), ['sesame/factor-research', 'sesame/strategy-research']);
-  } finally { rmSync(root, { recursive: true, force: true }); }
+test('Strategy declares the integrated research resources without separate retired packages', () => {
+  const manifest = read('auto-factor-mining', 'plugin.json');
+  const declaration = read('auto-factor-mining', 'capabilities.json');
+  assert.equal(manifest.id, 'sesame/auto-factor-mining');
+  for (const path of ['references/research-guide.md', 'references/factor-method.md', 'references/strategy-evidence.md',
+    'references/factor-cli.md', 'references/strategy-cli.md', 'scripts/reference-factor.mjs', 'scripts/reference-experiment.mjs',
+    ...['plan', 'development', 'holdout'].map(name => `examples/reference-factor/${name}.demo.json`),
+    ...['plan', 'timing', 'trials', 'input'].map(name => `examples/reference-strategy/${name}.demo.json`)]) {
+    assert.ok(declaration.knowledge.some(item => item.path === path), path);
+    assert.ok(readFileSync(join(packageRoot('auto-factor-mining'), path)).length, path);
+  }
+  const profile = JSON.parse(readFileSync(new URL('../bundle-profile.json', import.meta.url)));
+  for (const name of ['factor-research', 'strategy-research']) {
+    assert.equal(existsSync(packageRoot(name)), false);
+    assert.ok(!profile.packages.includes(`sesame/${name}`));
+  }
 });
 
 test('strategy demo purges exactly boundary leakage and keeps holdout apart without pretending execution', () => {
@@ -68,7 +65,7 @@ test('plan rejects overlaps, malformed calendars and unknown schema fields; miss
   assert.ok(strategy.validatePlan(unknown).blockers.some(message => message.includes('universe')));
 });
 test('ledger counts failure/unknown attempts and rejects budget, re-used identity or any trial after holdout', () => {
-  const plan = sPlan(), trials = read('strategy-research', 'examples/trials.demo.json');
+  const plan = sPlan(), trials = example('strategy', 'trials');
   trials[0].status = 'failed'; trials[1].status = 'unknown';
   assert.equal(strategy.auditLedger(plan, trials).attempted, 4);
   assert.equal(strategy.auditLedger(plan, trials).multiplicity.pValue, null);
@@ -78,17 +75,17 @@ test('ledger counts failure/unknown attempts and rejects budget, re-used identit
   assert.throws(() => strategy.auditLedger(plan, [trials.at(-1), trials[0]]), /Holdout is terminal/);
 });
 test('ledger binds actual plan/data/source/engine and requires evidence for completion', () => {
-  const trials = read('strategy-research', 'examples/trials.demo.json');
+  const trials = example('strategy', 'trials');
   trials[0].status = 'completed'; assert.throws(() => strategy.auditLedger(sPlan(), trials), /result evidence/);
   trials[0].result = { id: 'artifact_result', revision: '1', digest: 'sha256:' + 'f'.repeat(64), kind: 'strategy.result', schemaVersion: '1.0.0' }; trials[0].planDigest = 'sha256:' + 'e'.repeat(64);
   assert.throws(() => strategy.auditLedger(sPlan(), trials), /bind the fixed/);
 });
 test('fixed result and digest contracts reject empty evidence and array-to-string coercion', () => {
   for (const result of ['', ' ', ['sha256:' + 'f'.repeat(64)]]) {
-    const trials = read('strategy-research', 'examples/trials.demo.json'); trials[0].status = 'completed'; trials[0].result = result;
+    const trials = example('strategy', 'trials'); trials[0].status = 'completed'; trials[0].result = result;
     assert.throws(() => strategy.auditLedger(sPlan(), trials), /object required/);
   }
-  const trials = read('strategy-research', 'examples/trials.demo.json'); trials[0].sourceDigest = [trials[0].sourceDigest];
+  const trials = example('strategy', 'trials'); trials[0].sourceDigest = [trials[0].sourceDigest];
   assert.throws(() => strategy.auditLedger(sPlan(), trials), /bind the fixed/);
   const s = sPlan(); s.data.sha256 = [s.data.sha256]; assert.throws(() => strategy.validatePlan(s), /require sha256/);
   const f = fPlan(); f.data.holdoutSha256 = [f.data.holdoutSha256]; assert.throws(() => factor.validatePlan(f), /digests required/);
@@ -177,41 +174,41 @@ test('unsupported schema, empty periods and malformed timestamps fail with no in
 });
 
 test('real CLI validates exact bytes, executes screen/select/holdout, preserves retries and refuses changed output', () => {
-  const root = mkdtempSync(join(tmpdir(), 'factor-cli-')), pkg = packageRoot('factor-research'), cli = join(pkg, 'scripts/factor.mjs');
+  const root = mkdtempSync(join(tmpdir(), 'factor-cli-')), pkg = packageRoot('auto-factor-mining'), cli = join(pkg, 'scripts/reference-factor.mjs');
   const invoke = args => spawnSync(process.execPath, [cli, ...args], { encoding: 'utf8' });
   try {
-    const plan = join(pkg, 'examples/plan.demo.json'), screen = join(root, 'screen.json'), selected = join(root, 'selection.json'), out = join(root, 'out.json');
-    const screenArgs = ['screen', plan, join(pkg, 'examples/development.demo.json'), '--out', screen];
+    const plan = join(pkg, 'examples/reference-factor/plan.demo.json'), screen = join(root, 'screen.json'), selected = join(root, 'selection.json'), out = join(root, 'out.json');
+    const screenArgs = ['screen', plan, join(pkg, 'examples/reference-factor/development.demo.json'), '--out', screen];
     assert.equal(invoke(screenArgs).status, 0); const before = readFileSync(screen);
     assert.equal(invoke(screenArgs).status, 0); assert.ok(readFileSync(screen).equals(before));
     assert.equal(invoke(['select', plan, screen, 'rank_signal', '--out', selected]).status, 0);
-    const run = invoke(['holdout', plan, join(pkg, 'examples/holdout.demo.json'), screen, selected, '--out', out]);
+    const run = invoke(['holdout', plan, join(pkg, 'examples/reference-factor/holdout.demo.json'), screen, selected, '--out', out]);
     assert.equal(run.status, 0, run.stderr); assert.equal(JSON.parse(readFileSync(out)).selected.factor, 'rank_signal');
-    const changed = join(root, 'changed.json'); writeFileSync(changed, readFileSync(join(pkg, 'examples/development.demo.json')).toString() + ' ');
+    const changed = join(root, 'changed.json'); writeFileSync(changed, readFileSync(join(pkg, 'examples/reference-factor/development.demo.json')).toString() + ' ');
     assert.match(invoke(['screen', plan, changed]).stderr, /Data bytes differ/);
     writeFileSync(screen, 'different'); assert.notEqual(invoke(screenArgs).status, 0); assert.equal(readFileSync(screen, 'utf8'), 'different');
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 test('strategy CLI runs all demo checks and rejects byte drift and non-UTF8 input', () => {
-  const root = mkdtempSync(join(tmpdir(), 'strategy-cli-')), pkg = packageRoot('strategy-research'), cli = join(pkg, 'scripts/experiment.mjs'), plan = join(pkg, 'examples/plan.demo.json');
+  const root = mkdtempSync(join(tmpdir(), 'strategy-cli-')), pkg = packageRoot('auto-factor-mining'), cli = join(pkg, 'scripts/reference-experiment.mjs'), plan = join(pkg, 'examples/reference-strategy/plan.demo.json');
   const invoke = args => spawnSync(process.execPath, [cli, ...args], { encoding: 'utf8' });
   try {
-    for (const args of [['plan', plan], ['timing', plan, join(pkg, 'examples/timing.demo.json')], ['ledger', plan, join(pkg, 'examples/trials.demo.json')]]) { const run = invoke(args); assert.equal(run.status, 0, run.stderr); assert.equal(JSON.parse(run.stdout).nativeEngineExecuted, false); }
+    for (const args of [['plan', plan], ['timing', plan, join(pkg, 'examples/reference-strategy/timing.demo.json')], ['ledger', plan, join(pkg, 'examples/reference-strategy/trials.demo.json')]]) { const run = invoke(args); assert.equal(run.status, 0, run.stderr); assert.equal(JSON.parse(run.stdout).nativeEngineExecuted, false); }
     const bad = join(root, 'bad.json'); writeFileSync(bad, '[]'); assert.match(invoke(['timing', plan, bad]).stderr, /bytes differ/);
     writeFileSync(bad, Buffer.from([0xff])); assert.notEqual(invoke(['plan', bad]).status, 0);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 test('invalid or absent selection fails before the CLI opens the physical holdout file', () => {
-  const root = mkdtempSync(join(tmpdir(), 'factor-no-peek-')), pkg = packageRoot('factor-research'), plan = fPlan();
+  const root = mkdtempSync(join(tmpdir(), 'factor-no-peek-')), pkg = packageRoot('auto-factor-mining'), plan = fPlan();
   try {
     const screening = factor.screen(plan, development()), selected = factor.select(plan, screening, 'rank_signal');
     selected.holdoutUsesAllowed = 2;
     const screen = join(root, 'screen.json'), selection = join(root, 'selection.json'), trace = join(root, 'opened'), preload = join(root, 'probe.cjs');
-    const input = join(pkg, 'examples/holdout.demo.json');
+    const input = join(pkg, 'examples/reference-factor/holdout.demo.json');
     writeFileSync(screen, JSON.stringify(screening)); writeFileSync(selection, JSON.stringify(selected));
     writeFileSync(preload, `const fs=require('node:fs');const original=fs.openSync;fs.openSync=function(path,...rest){if(String(path)===${JSON.stringify(input)})fs.writeFileSync(${JSON.stringify(trace)},'opened');return original.call(this,path,...rest)};require('node:module').syncBuiltinESMExports();`);
     for (const selectedPath of [selection, join(root, 'absent.json')]) {
-      const run = spawnSync(process.execPath, ['--require', preload, join(pkg, 'scripts/factor.mjs'), 'holdout', join(pkg, 'examples/plan.demo.json'), input, screen, selectedPath], { encoding: 'utf8' });
+      const run = spawnSync(process.execPath, ['--require', preload, join(pkg, 'scripts/reference-factor.mjs'), 'holdout', join(pkg, 'examples/reference-factor/plan.demo.json'), input, screen, selectedPath], { encoding: 'utf8' });
       assert.notEqual(run.status, 0); assert.equal(existsSync(trace), false, run.stderr);
     }
   } finally { rmSync(root, { recursive: true, force: true }); }
@@ -219,9 +216,9 @@ test('invalid or absent selection fails before the CLI opens the physical holdou
 test('both CLI entry points execute through a symlink directory alias and report malformed commands', () => {
   const root = mkdtempSync(join(tmpdir(), 'research-entry-alias-'));
   try {
-    for (const [name, script, command, input] of [['strategy-research', 'experiment.mjs', 'plan', []], ['factor-research', 'factor.mjs', 'screen', ['examples/development.demo.json']]]) {
-      const target = join(root, name); symlinkSync(packageRoot(name), target, process.platform === 'win32' ? 'junction' : 'dir');
-      const path = join(target, 'scripts', script), args = [command, join(target, 'examples/plan.demo.json'), ...input.map(file => join(target, file))];
+    for (const [name, script, command, input] of [['strategy', 'reference-experiment.mjs', 'plan', []], ['factor', 'reference-factor.mjs', 'screen', ['examples/reference-factor/development.demo.json']]]) {
+      const target = join(root, name); symlinkSync(packageRoot('auto-factor-mining'), target, process.platform === 'win32' ? 'junction' : 'dir');
+      const path = join(target, 'scripts', script), args = [command, join(target, `examples/reference-${name}/plan.demo.json`), ...input.map(file => join(target, file))];
       const run = spawnSync(process.execPath, [path, ...args], { encoding: 'utf8' });
       assert.equal(run.status, 0, run.stderr); assert.equal(JSON.parse(run.stdout).provenance, 'demo');
       const bad = spawnSync(process.execPath, [path, 'incorrect-command'], { encoding: 'utf8' });

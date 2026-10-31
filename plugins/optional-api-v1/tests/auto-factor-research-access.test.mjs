@@ -10,7 +10,7 @@ import { fixture, input, finished, poll, iso, rows } from '../packages/auto-fact
 const packageUrl = name => new URL(`../packages/${name}/`, import.meta.url);
 const load = (name, file) => JSON.parse(fs.readFileSync(new URL(file, packageUrl(name)), 'utf8'));
 function installMethods(f) {
-  for (const name of ['factor-research', 'abu-parameter-search']) {
+  for (const name of ['ict', 'abu-parameter-search']) {
     const plugin = load(name, 'plugin.json'), manifest = load(name, 'capabilities.json');
     f.manifests.set(plugin.id, { ...manifest, id: plugin.id, version: plugin.version, revision: `fixture:${name}:${plugin.version}` });
   }
@@ -41,7 +41,7 @@ function artifactHost() {
 }
 const own = (t, f) => { t.after(() => f.runtime.dispose()); return f; };
 
-test('real factor knowledge plus real parameter calculation retains holdout and completes the native workflow', async t => {
+test('real independent knowledge plus real parameter calculation retains holdout and completes the native workflow', async t => {
   const accesses = [], artifacts = artifactHost(); let calculations = 0;
   const f = own(t, await fixture({ evaluator: evaluate, onEvaluate: args => { if (args.action === 'prepare') accesses.push(args.access); },
     onTask: async ({ request, child, execution, runtime }) => {
@@ -57,12 +57,12 @@ test('real factor knowledge plus real parameter calculation retains holdout and 
       const result = await createCapabilities(artifacts.host)[0].execute({ input: calculation });
       assert.equal(result.observations.development_rank.length, 2); calculations++;
     } }));
-  installMethods(f); const args = input(); args.config.research = { plugins: ['sesame/factor-research', 'sesame/abu-parameter-search'] };
+  installMethods(f); const args = input(); args.config.research = { plugins: ['sesame/ict', 'sesame/abu-parameter-search'] };
   const run = await f.runtime.create(f.main, args), done = await finished(f, run.id);
   assert.equal(done.status, 'completed', JSON.stringify(done.error)); assert.deepEqual(accesses, ['restricted']);
   assert.equal(done.data.holdoutMode, 'workflow-isolated'); assert.equal(done.finalEvaluation.holdoutStatus, 'evaluated');
   assert.equal(Object.keys(done.holdout).length, 1); assert.equal(done.report.ref.kind, 'report'); assert.equal(calculations, 1);
-  assert.ok(f.requests.every(request => request.plugins.includes('sesame/factor-research')));
+  assert.ok(f.requests.every(request => request.plugins.includes('sesame/ict')));
   assert.deepEqual(artifacts.calls, ['create', 'publish', 'remove', 'create', 'publish', 'remove']);
 });
 
@@ -86,7 +86,7 @@ test('external reference readers and undeclared empty-effects tools still requir
 test('changed method declarations or implementation revisions refuse resume without replay or holdout promotion', async t => {
   for (const declaration of [true, false]) {
     const f = own(t, await fixture({ evaluator: evaluate, onTask: () => 'hold' })); installMethods(f);
-    const args = input(); args.config.research = { plugins: ['sesame/factor-research', 'sesame/abu-parameter-search'] };
+    const args = input(); args.config.research = { plugins: ['sesame/ict', 'sesame/abu-parameter-search'] };
     const run = await f.runtime.create(f.main, args); await poll(() => f.requests.length > 0);
     await f.runtime.control(f.main, run.id, 'pause'); const before = structuredClone(f.runtime.get(run.id)), calls = f.requests.length;
     const manifest = f.manifests.get('sesame/abu-parameter-search'); manifest.revision = 'sha256:changed';
@@ -103,7 +103,7 @@ test('changed method declarations or implementation revisions refuse resume with
 
 test('input-only composition still rejects rows outside the actual configured holdout boundary', async t => {
   const f = own(t, await fixture({ evaluator: evaluate })); installMethods(f);
-  const args = input(); args.config.research = { plugins: ['sesame/factor-research', 'sesame/abu-parameter-search'] };
+  const args = input(); args.config.research = { plugins: ['sesame/ict', 'sesame/abu-parameter-search'] };
   args.config.evaluator.arguments.dataset.holdoutEnd = iso(12);
   await assert.rejects(f.runtime.create(f.main, args), /after holdoutEnd/);
   assert.equal(f.requests.length, 0);

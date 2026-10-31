@@ -5,6 +5,8 @@ description: Run an authored Backtrader Strategy against frozen OHLCV, with expl
 
 公开资源定位：本包路径以插件根目录为准；[完整接口契约](../../INTERFACES.md) 可由 plugin_read({pluginId:"sesame/backtrader",part:"resource",path:"INTERFACES.md"}) 读取。此引用给出位置，无需每次调用前重复读取。
 
+原生参数搜索用 backtrader_optimize，与backtest相同冻结输入并加parameter_space；实际调用Cerebro.optstrategy，64组合/200000 pass-bars以内、单进程，保留全部完成/失败/未完成回执。只在开发输入搜索，目标先固定，holdout另用固定参数实测。恢复先backtrader_operation读同op；未知结果不重发。没有默认交易算法或自动选参结论。
+
 本插件是计算与验证层：对一份固定数据、一份策略及明确参数执行一次原生回测，交付引擎证据。工作流负责提出研究问题、选择候选、比较方法和综合结论；本插件不选择新市场、不重新抓取输入，也不另开最终报告。可用能力是环境核验/准备、原生回测和读取冻结结果，具体形状在 INTERFACES.md。已验证环境可复用；缺依赖时才使用已知Python路径或prepare准备私有环境，不扫描全机、不升级共享环境。
 
 固定输入可由 market_read 或 data_snapshot 发布；已有适用DataRef直接复用。工作区计算结果只有具备宿主成功执行及冻结输入/输出证据时才能用 research_register 发布，普通文件路径本身不是登记凭据。data_read({ref})读取固定内容。DataRef必须原样传递，不能只传datasetId或猜digest。策略是工作区已编写的单文件原生Python，执行在当前用户宿主权限下，并非OS沙箱；本插件不连接实盘网关。输入、源代码、环境、成本和结果分别冻结；向工作流交接结果ref、原始输入ref、统计、诊断和撮合假设，便于同口径比较。

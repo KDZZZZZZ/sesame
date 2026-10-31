@@ -79,7 +79,7 @@ test('parallel candidates keep both receipts without losing state or bypassing C
   assert.deepEqual(await f.call('candidate', { session_id, trial_id: 'positive', candidate, accepted_ids: [] }), positive);
 });
 
-test('thresholds are opt-in, and unavailable optional diagnostics cannot veto a measured candidate', async () => {
+test('legacy thresholds are advisory, and unavailable optional diagnostics cannot veto measurable evidence', async () => {
   const f = fixture(), prepared = await f.call('prepare', { dataset_id: 'data', access: 'restricted',
     options: { ...options, diagnostics: { regimes: { field: 'absent' }, sensitivity: true, placebo: { samples: -1 } } } });
   const session_id = prepared.sessionId;
@@ -97,8 +97,9 @@ test('thresholds are opt-in, and unavailable optional diagnostics cannot veto a 
   const gated = fixture();
   const gateSession = await gated.call('prepare', { dataset_id: 'data', access: 'restricted', options: { ...options, minRankIC: 0, maxCorrelation: .5 } });
   const measured = await gated.call('candidate', { session_id: gateSession.sessionId, trial_id: 'negative', candidate: { op: 'neg', args: [candidate] } });
-  assert.equal(measured.eligible, false);
-  await assert.rejects(gated.call('select', { session_id: gateSession.sessionId, trial_ids: ['negative'] }), /eligible/);
+  assert.equal(measured.eligible, true);
+  assert.equal(measured.evaluation.advisoryFindings[0].status, 'unmet');
+  assert.deepEqual((await gated.call('select', { session_id: gateSession.sessionId, trial_ids: ['negative'] })).trialIds, ['negative']);
 });
 
 test('all unmeasurable candidates allow empty completion without claiming any holdout evaluation', async () => {
@@ -122,4 +123,153 @@ test('selected out-of-sample diagnostic changes from deferred to measured only i
   const final = await f.call('finalize', { session_id, selection_digest: selection.selectionDigest });
   assert.equal(final.holdout.one.diagnostics.outOfSample.holdout.status, 'evaluated');
   assert.equal(final.holdout.one.diagnostics.outOfSample.holdout.rankIC, 1);
+});
+
+function searchFixture() {
+  const f = fixture(), prices = [100, 100, 100, 100], panel = [];
+  for (let day = 1; day <= 65; day++) for (let symbol = 0; symbol < 4; symbol++) {
+    panel.push({ time: iso(day), availableAt: iso(day), symbol: `S${symbol}`, fields: { close: prices[symbol], signal: symbol, noise: (symbol + day) % 4 } });
+    prices[symbol] *= 1 + (symbol - 1.5) * (.002 + .0005 * Math.sin(day));
+  }
+  f.host.data.query = async () => ({ items: panel, metadata: { id: 'data' } });
+  return { ...f, panel, options: { dataset: { trainEnd: iso(16), validationEnd: iso(49), holdoutEnd: iso(65), costBps: 0 },
+    evaluationPlan: { tests: { dsr: true, pbo: { blocks: 4 } }, reasons: { dsr: 'Multiple tried factor formulas', pbo: 'Inspect Sharpe selection risk across the complete attempted universe' } } } };
+}
+
+test('registered losers enter selection DSR/PBO; candidate receipts stay immutable and finalized evidence is identical', async () => {
+  const f = searchFixture(), prepared = await f.call('prepare', { dataset_id: 'data', access: 'restricted', options: f.options });
+  const session_id = prepared.sessionId;
+  assert.equal(prepared.contract.evaluationPlan.tests.dsr, true);
+  const first = await f.call('candidate', { session_id, trial_id: 'winner', candidate });
+  assert.equal(first.metrics.diagnostics.dsr.status, 'deferred');
+  await f.call('candidate', { session_id, trial_id: 'loser', candidate: { op: 'neg', args: [candidate] } });
+  const selection = await f.call('select', { session_id, trial_ids: ['winner'] });
+  assert.equal(selection.diagnostics.dsr.status, 'completed'); assert.equal(selection.diagnostics.pbo.status, 'completed');
+  assert.deepEqual(selection.diagnostics.pbo.trialIds, ['loser', 'winner']);
+  assert.equal(selection.diagnostics.pbo.trials, 2);
+  assert.equal(selection.evaluations.winner.eligible, true);
+  assert.equal(selection.planDigest, prepared.contract.planDigest);
+  const candidateRef = f.db.get(`sessions:${session_id}`).value.refs.candidates.winner;
+  const stored = JSON.parse(Buffer.from((await f.host.resources.read(candidateRef, {})).content, 'base64').toString());
+  assert.deepEqual(stored, first);
+  const finalized = await f.call('finalize', { session_id, selection_digest: selection.selectionDigest });
+  assert.deepEqual(finalized.diagnostics, selection.diagnostics);
+  assert.deepEqual(finalized.evaluations, selection.evaluations);
+  assert.deepEqual(await f.call('select', { session_id, trial_ids: ['winner'] }), selection);
+});
+
+test('only source=user plus required blocks selection; missing search evidence is not a passing result', async () => {
+  const f = searchFixture();
+  f.options.evaluationPlan.thresholds = [{ metric: 'diagnostics.pbo.probability', value: .9, operator: 'lte', mode: 'required', source: 'user', reason: 'The user explicitly requires an evaluable PBO below 0.9' }];
+  const prepared = await f.call('prepare', { dataset_id: 'data', access: 'restricted', options: f.options }), session_id = prepared.sessionId;
+  const first = await f.call('candidate', { session_id, trial_id: 'winner', candidate });
+  assert.equal(first.eligible, true); assert.equal(first.evaluation.pendingHardRequirements.length, 1);
+  await assert.rejects(f.call('select', { session_id, trial_ids: ['winner'] }), error => {
+    assert.equal(error.code, 'HARD_REQUIREMENT_UNMET');
+    assert.equal(error.evaluations.winner.hardRequirementFailures[0].status, 'unavailable');
+    return true;
+  });
+  const state = f.db.get(`sessions:${session_id}`).value;
+  assert.equal(state.selection, undefined); assert.equal(state.lastSelectionReview.diagnostics.pbo.status, 'unavailable');
+  await f.call('candidate', { session_id, trial_id: 'loser', candidate: { op: 'neg', args: [candidate] } });
+  const selected = await f.call('select', { session_id, trial_ids: ['winner'] });
+  assert.equal(selected.evaluations.winner.pendingHardRequirements.length, 0);
+  assert.equal(selected.evaluations.winner.hardRequirementFailures.length, 0);
+});
+
+test('explicit user pairwise redundancy gate waits for the actual selected pair; singleton is vacuous', async () => {
+  const f = fixture(), evaluationPlan = { thresholds: [{ metric: 'redundancy.absoluteCorrelation', value: .5, operator: 'lte', mode: 'required', source: 'user', reason: 'User disallows selected factors with absolute training correlation above 0.5' }] };
+  const prepared = await f.call('prepare', { dataset_id: 'data', access: 'restricted', options: { ...options, evaluationPlan } }), session_id = prepared.sessionId;
+  await f.call('candidate', { session_id, trial_id: 'positive', candidate });
+  await f.call('candidate', { session_id, trial_id: 'negative', candidate: { op: 'neg', args: [candidate] } });
+  await assert.rejects(f.call('select', { session_id, trial_ids: ['positive', 'negative'] }), error => error.code === 'HARD_REQUIREMENT_UNMET');
+  const selected = await f.call('select', { session_id, trial_ids: ['positive'] });
+  assert.equal(selected.evaluations.positive.thresholdResults[0].status, 'not-applicable');
+});
+
+test('failed AST attempts remain in the universe while deterministic rejection permits a corrected candidate', async () => {
+  const f = searchFixture(), prepared = await f.call('prepare', { dataset_id: 'data', access: 'restricted', options: f.options }), session_id = prepared.sessionId;
+  await f.call('candidate', { session_id, trial_id: 'winner', candidate });
+  await f.call('candidate', { session_id, trial_id: 'loser', candidate: { op: 'neg', args: [candidate] } });
+  await assert.rejects(f.call('candidate', { session_id, trial_id: 'failed', candidate: { op: 'unknown' } }));
+  await assert.rejects(f.call('candidate', { session_id, trial_id: 'failed', candidate: { op: 'unknown' } }));
+  const repaired = await f.call('candidate', { session_id, trial_id: 'failed', candidate: { op: 'field', name: 'noise' } });
+  assert.equal(repaired.eligible, true);
+  await assert.rejects(f.call('candidate', { session_id, trial_id: 'winner', candidate: { op: 'unknown' } }), /receipt is frozen/);
+  const selected = await f.call('select', { session_id, trial_ids: ['winner'] });
+  assert.equal(selected.diagnostics.pbo.status, 'unavailable'); assert.equal(selected.diagnostics.dsr.status, 'unavailable');
+  assert.equal(selected.diagnostics.pbo.attemptedTrialCount, 4);
+  assert.deepEqual(selected.failedTrials.map(item => item.trialId), ['failed']);
+  assert.equal(selected.failedTrials[0].attemptIndex, 1);
+  assert.equal(selected.evaluations.winner.eligible, true);
+});
+
+test('actual forward-subset evidence permits conditional selection when full validation association and return evidence are absent', async () => {
+  const f = fixture(), panel = []; let price = 100;
+  for (let day = 1; day <= 96; day++) {
+    panel.push({ time: iso(day), availableAt: iso(day), symbol: 'S', fields: { close: price, signal: day <= 32 ? Math.sin(day) : 0 } });
+    price *= 1 + Math.sin(day) * .001;
+  }
+  f.host.data.query = async () => ({ items: panel, metadata: { id: 'data' } });
+  const prepared = await f.call('prepare', { dataset_id: 'data', access: 'restricted', options: {
+    dataset: { trainEnd: iso(32), validationEnd: iso(64), holdoutEnd: iso(96), costBps: 0 },
+    evaluationPlan: { tests: { walkForward: { folds: 2, minTrain: 8, minTest: 4 } } },
+  } }), session_id = prepared.sessionId;
+  const result = await f.call('candidate', { session_id, trial_id: 'scoped', candidate });
+  assert.equal(result.metrics.validation.rankIC, null); assert.equal(result.metrics.validation.meanNetReturn, null);
+  assert.equal(result.evaluation.status, 'conditional'); assert.equal(result.eligible, true);
+  assert.ok(result.evaluation.conditions.some(item => item.scope === 'development-forward-fold'));
+  assert.deepEqual((await f.call('select', { session_id, trial_ids: ['scoped'] })).trialIds, ['scoped']);
+});
+
+test('40-trial search and 20-candidate selection retain findings within the declared receipt bounds', async () => {
+  const f = searchFixture();
+  f.options.evaluationPlan.tests = { ...f.options.evaluationPlan.tests, placebo: { samples: 20 }, bootstrap: { samples: 20 }, monteCarlo: { samples: 20 },
+    regimes: { field: 'noise' }, walkForward: { folds: 2, minTrain: 8, minTest: 4 }, sensitivity: true, outOfSample: true };
+  f.options.evaluationPlan.thresholds = Array.from({ length: 40 }, (_, i) => ({ metric: 'validation.rankIC', operator: 'gte', value: 2, mode: 'advisory', source: 'agent', reason: `Evidence reference ${i + 1}; explain the observed limitation.` }));
+  const prepared = await f.call('prepare', { dataset_id: 'data', access: 'restricted', options: f.options }), session_id = prepared.sessionId, ids = [];
+  for (let i = 0; i < 40; i++) {
+    const trialId = `${i.toString().padStart(2, '0')}-${'x'.repeat(190)}`; ids.push(trialId);
+    const result = await f.call('candidate', { session_id, trial_id: trialId, candidate: { op: 'add', args: [candidate, { op: 'constant', value: i }] } });
+    assert.ok(Buffer.byteLength(JSON.stringify(result)) <= 64 * 1024, 'Candidate receipt exceeds 64KiB');
+    assert.equal(result.evaluation.advisoryFindings.length, 40);
+  }
+  const result = await f.call('select', { session_id, trial_ids: ids.slice(0, 20) });
+  assert.equal(result.diagnostics.dsr.attemptedTrialCount, 40);
+  assert.equal(result.diagnostics.pbo.trials, 40);
+  assert.equal(Object.keys(result.evaluations).length, 20);
+  assert.ok(Buffer.byteLength(JSON.stringify(result)) <= 512 * 1024, `Selection receipt has ${Buffer.byteLength(JSON.stringify(result))} bytes`);
+});
+
+test('identified opposing regimes permit exploratory conditional use under an advisory global threshold, never a required-user exemption', async () => {
+  const panel = []; let price = 100;
+  for (let day = 1; day <= 144; day++) {
+    const signal = [-3, -2, -1, 1, 2, 3][(day - 1) % 6], state = Math.floor((day - 1) / 6) % 2 ? 1 : -1;
+    panel.push({ time: iso(day), availableAt: iso(day), symbol: 'S', fields: { close: price, signal, state } });
+    price *= 1 + signal * state * .001;
+  }
+  for (const mode of ['advisory', 'required']) {
+    const f = fixture(); f.host.data.query = async () => ({ items: panel, metadata: { id: 'data' } });
+    const prepared = await f.call('prepare', { dataset_id: 'data', access: 'restricted', options: {
+      dataset: { trainEnd: iso(48), validationEnd: iso(96), holdoutEnd: iso(144), costBps: 0 }, evaluationPlan: {
+        tests: { regimes: { field: 'state', bins: 2 } }, thresholds: [{ metric: 'validation.rankIC', operator: 'gte', value: .5,
+          source: 'user', mode, reason: mode === 'required' ? 'User explicitly requires whole-validation Rank IC >= 0.5' : 'User suggests comparing whole-validation Rank IC with 0.5' }],
+      },
+    } }), session_id = prepared.sessionId;
+    const result = await f.call('candidate', { session_id, trial_id: 'regime', candidate });
+    assert.ok(Math.abs(result.metrics.validation.rankIC) < .1);
+    assert.ok(result.metrics.diagnostics.regimes.strata[0].rankIC < -.99);
+    assert.ok(result.metrics.diagnostics.regimes.strata[1].rankIC > .99);
+    assert.equal(result.evaluation.status, 'conditional');
+    assert.equal(result.evaluation.evidenceStatus, 'exploratory-development');
+    assert.ok(result.evaluation.conditions.every(item => item.evidenceStatus === 'exploratory'));
+    assert.ok(result.evaluation.invalidations.some(item => item.metric === 'validation.rankIC'));
+    if (mode === 'advisory') {
+      assert.equal(result.eligible, true);
+      assert.deepEqual((await f.call('select', { session_id, trial_ids: ['regime'] })).trialIds, ['regime']);
+    } else {
+      assert.equal(result.eligible, false);
+      await assert.rejects(f.call('select', { session_id, trial_ids: ['regime'] }), /eligible/);
+    }
+  }
 });

@@ -26,7 +26,7 @@ export async function writeDailyReport(host, run, { onSnapshot = () => {}, onPub
     : frozen.executionDisposition === 'withheld_by_review' ? '复核阻止本轮执行，未执行交易。' : '';
   const summary = managerSummary(frozen) ?? '经理尚未形成最终总结，已取得的成果保留在工作过程中。';
   return publishWorkflowReport(host, { operationId: 'trading-decision-publication:' + run.id + ':' + hash,
-    title: frozen.plan.title, summary: summary.slice(0, 1000), bodyHTML: (disposition ? '<p>' + escape(disposition) + '</p>' : '') + '<article class="report-markdown">' + renderMarkdown(summary) + '</article>',
+    title: frozen.plan.title, summary: summary.slice(0, 1000), content: { kind: 'document', sections: [{ title: '本次判断', blocks: [...(disposition ? [{ type: 'paragraph', text: disposition }] : []), { type: 'markdown', text: summary }] }] },
     attachments: [{ path: 'run.json', content: raw, mediaType: 'application/json' }], references: [...(frozen.plan.researchRefs ?? []), ...(frozen.decision?.evidence_artifacts ?? [])],
     demo: Boolean(frozen.mockModelResponses), publication: run.reportPublication, onPublication, signal });
 }

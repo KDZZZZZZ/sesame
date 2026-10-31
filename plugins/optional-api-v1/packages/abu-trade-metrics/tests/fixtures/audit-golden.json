@@ -1,0 +1,771 @@
+{
+  "origin": {
+    "plugin": "sesame/abu-backtest-lab",
+    "version": "2.0.1",
+    "sourceSha256": "sha256:600daa6dfb42c329625189adbac08659bfd57b886cf4f151bba642e3d8ecb631",
+    "license": "GPL-3.0-only",
+    "synthetic": true
+  },
+  "cases": [
+    {
+      "name": "complete original evidence",
+      "input": {
+        "schema_version": 1,
+        "as_of": "2026-01-10T00:00:00.000Z",
+        "source": {
+          "id": "synthetic-backtest-lab",
+          "kind": "synthetic"
+        },
+        "parameters": {
+          "expected_engine": "sesame-native-replay"
+        },
+        "engine": {
+          "name": "sesame-native-replay"
+        },
+        "bars": [
+          {
+            "time": "2026-01-02T20:00:00.000Z",
+            "available_at": "2026-01-02T20:01:00.000Z",
+            "open": 100,
+            "high": 104,
+            "low": 99,
+            "close": 103,
+            "volume": 1000
+          },
+          {
+            "time": "2026-01-05T20:00:00.000Z",
+            "available_at": "2026-01-05T20:01:00.000Z",
+            "open": 103,
+            "high": 106,
+            "low": 101,
+            "close": 105,
+            "volume": 1100
+          }
+        ],
+        "orders": [
+          {
+            "id": "o1",
+            "time": "2026-01-02T20:05:00.000Z",
+            "available_at": "2026-01-02T20:05:01.000Z",
+            "symbol": "XYZ",
+            "side": "buy",
+            "quantity": 10,
+            "limit_price": 104
+          },
+          {
+            "id": "o2",
+            "time": "2026-01-05T20:05:00.000Z",
+            "available_at": "2026-01-05T20:05:01.000Z",
+            "symbol": "XYZ",
+            "side": "sell",
+            "quantity": 10,
+            "limit_price": 105
+          }
+        ],
+        "trades": [
+          {
+            "id": "f1",
+            "order_id": "o1",
+            "time": "2026-01-02T20:06:00.000Z",
+            "available_at": "2026-01-02T20:06:01.000Z",
+            "symbol": "XYZ",
+            "quantity": 10,
+            "price": 103.5,
+            "cost": 1.2
+          },
+          {
+            "id": "f2",
+            "order_id": "o2",
+            "time": "2026-01-05T20:06:00.000Z",
+            "available_at": "2026-01-05T20:06:01.000Z",
+            "symbol": "XYZ",
+            "quantity": 10,
+            "price": 105,
+            "cost": 1.2
+          }
+        ]
+      },
+      "expected": {
+        "parameters": {
+          "expected_engine": "sesame-native-replay"
+        },
+        "observations": {
+          "evidence_counts": {
+            "bars": 2,
+            "orders": 2,
+            "trades": 2
+          },
+          "audit": {
+            "issue_count": 0,
+            "issues": []
+          },
+          "fills": {
+            "total_cost": 2.4
+          },
+          "fills_by_symbol": {
+            "XYZ": {
+              "gross_quantity": 20,
+              "buy_quantity": 10,
+              "sell_quantity": 10,
+              "net_quantity": 0,
+              "cost": 2.4
+            }
+          },
+          "native_engine_handoff": {
+            "recommended": true,
+            "reason": "Use the existing native replay/backtest engine for matching, portfolio accounting and slippage; this plugin only audits supplied replay evidence and assumptions."
+          }
+        },
+        "limitations": [
+          "This is not a matching engine or a new backtester; it audits supplied replay evidence, chronology, costs and fill assumptions.",
+          "Fill quantities are reported per symbol as gross, buy, sell and net quantities; cross-symbol quantity is deliberately not aggregated.",
+          "Bar availability is checked when bars are provided, but order generation logic is not reconstructed."
+        ]
+      }
+    },
+    {
+      "name": "no market bars needed",
+      "input": {
+        "schema_version": 1,
+        "as_of": "2026-01-10T00:00:00.000Z",
+        "source": {
+          "id": "synthetic-backtest-lab",
+          "kind": "synthetic"
+        },
+        "parameters": {
+          "expected_engine": "sesame-native-replay"
+        },
+        "engine": {
+          "name": "sesame-native-replay"
+        },
+        "orders": [
+          {
+            "id": "o1",
+            "time": "2026-01-02T20:05:00.000Z",
+            "available_at": "2026-01-02T20:05:01.000Z",
+            "symbol": "XYZ",
+            "side": "buy",
+            "quantity": 10,
+            "limit_price": 104
+          },
+          {
+            "id": "o2",
+            "time": "2026-01-05T20:05:00.000Z",
+            "available_at": "2026-01-05T20:05:01.000Z",
+            "symbol": "XYZ",
+            "side": "sell",
+            "quantity": 10,
+            "limit_price": 105
+          }
+        ],
+        "trades": [
+          {
+            "id": "f1",
+            "order_id": "o1",
+            "time": "2026-01-02T20:06:00.000Z",
+            "available_at": "2026-01-02T20:06:01.000Z",
+            "symbol": "XYZ",
+            "quantity": 10,
+            "price": 103.5,
+            "cost": 1.2
+          },
+          {
+            "id": "f2",
+            "order_id": "o2",
+            "time": "2026-01-05T20:06:00.000Z",
+            "available_at": "2026-01-05T20:06:01.000Z",
+            "symbol": "XYZ",
+            "quantity": 10,
+            "price": 105,
+            "cost": 1.2
+          }
+        ]
+      },
+      "expected": {
+        "parameters": {
+          "expected_engine": "sesame-native-replay"
+        },
+        "observations": {
+          "evidence_counts": {
+            "bars": 0,
+            "orders": 2,
+            "trades": 2
+          },
+          "audit": {
+            "issue_count": 0,
+            "issues": []
+          },
+          "fills": {
+            "total_cost": 2.4
+          },
+          "fills_by_symbol": {
+            "XYZ": {
+              "gross_quantity": 20,
+              "buy_quantity": 10,
+              "sell_quantity": 10,
+              "net_quantity": 0,
+              "cost": 2.4
+            }
+          },
+          "native_engine_handoff": {
+            "recommended": true,
+            "reason": "Use the existing native replay/backtest engine for matching, portfolio accounting and slippage; this plugin only audits supplied replay evidence and assumptions."
+          }
+        },
+        "limitations": [
+          "This is not a matching engine or a new backtester; it audits supplied replay evidence, chronology, costs and fill assumptions.",
+          "Fill quantities are reported per symbol as gross, buy, sell and net quantities; cross-symbol quantity is deliberately not aggregated.",
+          "Bar availability is checked when bars are provided, but order generation logic is not reconstructed."
+        ]
+      }
+    },
+    {
+      "name": "chronology limit and overfill conflicts",
+      "input": {
+        "schema_version": 1,
+        "as_of": "2026-01-10T00:00:00.000Z",
+        "source": {
+          "id": "synthetic-backtest-lab",
+          "kind": "synthetic"
+        },
+        "parameters": {
+          "expected_engine": "sesame-native-replay"
+        },
+        "engine": {
+          "name": "sesame-native-replay"
+        },
+        "bars": [
+          {
+            "time": "2026-01-02T20:00:00.000Z",
+            "available_at": "2026-01-02T20:01:00.000Z",
+            "open": 100,
+            "high": 104,
+            "low": 99,
+            "close": 103,
+            "volume": 1000
+          },
+          {
+            "time": "2026-01-05T20:00:00.000Z",
+            "available_at": "2026-01-05T20:01:00.000Z",
+            "open": 103,
+            "high": 106,
+            "low": 101,
+            "close": 105,
+            "volume": 1100
+          }
+        ],
+        "orders": [
+          {
+            "id": "o1",
+            "time": "2026-01-02T20:05:00.000Z",
+            "available_at": "2026-01-02T20:05:01.000Z",
+            "symbol": "XYZ",
+            "side": "buy",
+            "quantity": 10,
+            "limit_price": 104
+          },
+          {
+            "id": "o2",
+            "time": "2026-01-05T20:05:00.000Z",
+            "available_at": "2026-01-05T20:05:01.000Z",
+            "symbol": "XYZ",
+            "side": "sell",
+            "quantity": 10,
+            "limit_price": 105
+          }
+        ],
+        "trades": [
+          {
+            "id": "f1",
+            "order_id": "o1",
+            "time": "2026-01-02T20:04:00.000Z",
+            "available_at": "2026-01-02T20:06:01.000Z",
+            "symbol": "XYZ",
+            "quantity": 11,
+            "price": 105,
+            "cost": 1.2
+          },
+          {
+            "id": "f2",
+            "order_id": "o2",
+            "time": "2026-01-05T20:06:00.000Z",
+            "available_at": "2026-01-05T20:06:01.000Z",
+            "symbol": "XYZ",
+            "quantity": 10,
+            "price": 105,
+            "cost": 1.2
+          }
+        ]
+      },
+      "expected": {
+        "parameters": {
+          "expected_engine": "sesame-native-replay"
+        },
+        "observations": {
+          "evidence_counts": {
+            "bars": 2,
+            "orders": 2,
+            "trades": 2
+          },
+          "audit": {
+            "issue_count": 3,
+            "issues": [
+              {
+                "severity": "error",
+                "code": "fill_before_order",
+                "id": "f1",
+                "message": "fill time is before order time"
+              },
+              {
+                "severity": "error",
+                "code": "buy_limit_breached",
+                "id": "f1",
+                "message": "buy fill price exceeds limit"
+              },
+              {
+                "severity": "error",
+                "code": "overfill",
+                "id": "o1",
+                "message": "filled quantity exceeds order quantity"
+              }
+            ]
+          },
+          "fills": {
+            "total_cost": 2.4
+          },
+          "fills_by_symbol": {
+            "XYZ": {
+              "gross_quantity": 21,
+              "buy_quantity": 11,
+              "sell_quantity": 10,
+              "net_quantity": 1,
+              "cost": 2.4
+            }
+          },
+          "native_engine_handoff": {
+            "recommended": true,
+            "reason": "Use the existing native replay/backtest engine for matching, portfolio accounting and slippage; this plugin only audits supplied replay evidence and assumptions."
+          }
+        },
+        "limitations": [
+          "This is not a matching engine or a new backtester; it audits supplied replay evidence, chronology, costs and fill assumptions.",
+          "Fill quantities are reported per symbol as gross, buy, sell and net quantities; cross-symbol quantity is deliberately not aggregated.",
+          "Bar availability is checked when bars are provided, but order generation logic is not reconstructed."
+        ]
+      }
+    },
+    {
+      "name": "unknown order and symbol mismatch",
+      "input": {
+        "schema_version": 1,
+        "as_of": "2026-01-10T00:00:00.000Z",
+        "source": {
+          "id": "synthetic-backtest-lab",
+          "kind": "synthetic"
+        },
+        "parameters": {
+          "expected_engine": "sesame-native-replay"
+        },
+        "engine": {
+          "name": "sesame-native-replay"
+        },
+        "bars": [
+          {
+            "time": "2026-01-02T20:00:00.000Z",
+            "available_at": "2026-01-02T20:01:00.000Z",
+            "open": 100,
+            "high": 104,
+            "low": 99,
+            "close": 103,
+            "volume": 1000
+          },
+          {
+            "time": "2026-01-05T20:00:00.000Z",
+            "available_at": "2026-01-05T20:01:00.000Z",
+            "open": 103,
+            "high": 106,
+            "low": 101,
+            "close": 105,
+            "volume": 1100
+          }
+        ],
+        "orders": [
+          {
+            "id": "o1",
+            "time": "2026-01-02T20:05:00.000Z",
+            "available_at": "2026-01-02T20:05:01.000Z",
+            "symbol": "XYZ",
+            "side": "buy",
+            "quantity": 10,
+            "limit_price": 104
+          },
+          {
+            "id": "o2",
+            "time": "2026-01-05T20:05:00.000Z",
+            "available_at": "2026-01-05T20:05:01.000Z",
+            "symbol": "XYZ",
+            "side": "sell",
+            "quantity": 10,
+            "limit_price": 105
+          }
+        ],
+        "trades": [
+          {
+            "id": "f1",
+            "order_id": "missing",
+            "time": "2026-01-02T20:06:00.000Z",
+            "available_at": "2026-01-02T20:06:01.000Z",
+            "symbol": "XYZ",
+            "quantity": 10,
+            "price": 103.5,
+            "cost": 1.2
+          },
+          {
+            "id": "f2",
+            "order_id": "o2",
+            "time": "2026-01-05T20:06:00.000Z",
+            "available_at": "2026-01-05T20:06:01.000Z",
+            "symbol": "OTHER",
+            "quantity": 10,
+            "price": 105,
+            "cost": 1.2
+          }
+        ]
+      },
+      "expected": {
+        "parameters": {
+          "expected_engine": "sesame-native-replay"
+        },
+        "observations": {
+          "evidence_counts": {
+            "bars": 2,
+            "orders": 2,
+            "trades": 2
+          },
+          "audit": {
+            "issue_count": 3,
+            "issues": [
+              {
+                "severity": "error",
+                "code": "unknown_order",
+                "id": "f1",
+                "message": "trade references missing order"
+              },
+              {
+                "severity": "error",
+                "code": "symbol_mismatch",
+                "id": "f2",
+                "message": "trade symbol differs from order symbol"
+              },
+              {
+                "severity": "warning",
+                "code": "unfilled_order",
+                "id": "o1",
+                "message": "order has no supplied fill evidence"
+              }
+            ]
+          },
+          "fills": {
+            "total_cost": 2.4
+          },
+          "fills_by_symbol": {
+            "XYZ": {
+              "gross_quantity": 10,
+              "buy_quantity": 0,
+              "sell_quantity": 0,
+              "net_quantity": 10,
+              "cost": 1.2
+            },
+            "OTHER": {
+              "gross_quantity": 10,
+              "buy_quantity": 0,
+              "sell_quantity": 10,
+              "net_quantity": -10,
+              "cost": 1.2
+            }
+          },
+          "native_engine_handoff": {
+            "recommended": true,
+            "reason": "Use the existing native replay/backtest engine for matching, portfolio accounting and slippage; this plugin only audits supplied replay evidence and assumptions."
+          }
+        },
+        "limitations": [
+          "This is not a matching engine or a new backtester; it audits supplied replay evidence, chronology, costs and fill assumptions.",
+          "Fill quantities are reported per symbol as gross, buy, sell and net quantities; cross-symbol quantity is deliberately not aggregated.",
+          "Bar availability is checked when bars are provided, but order generation logic is not reconstructed."
+        ]
+      }
+    },
+    {
+      "name": "unfilled order",
+      "input": {
+        "schema_version": 1,
+        "as_of": "2026-01-10T00:00:00.000Z",
+        "source": {
+          "id": "synthetic-backtest-lab",
+          "kind": "synthetic"
+        },
+        "parameters": {
+          "expected_engine": "sesame-native-replay"
+        },
+        "engine": {
+          "name": "sesame-native-replay"
+        },
+        "bars": [
+          {
+            "time": "2026-01-02T20:00:00.000Z",
+            "available_at": "2026-01-02T20:01:00.000Z",
+            "open": 100,
+            "high": 104,
+            "low": 99,
+            "close": 103,
+            "volume": 1000
+          },
+          {
+            "time": "2026-01-05T20:00:00.000Z",
+            "available_at": "2026-01-05T20:01:00.000Z",
+            "open": 103,
+            "high": 106,
+            "low": 101,
+            "close": 105,
+            "volume": 1100
+          }
+        ],
+        "orders": [
+          {
+            "id": "o1",
+            "time": "2026-01-02T20:05:00.000Z",
+            "available_at": "2026-01-02T20:05:01.000Z",
+            "symbol": "XYZ",
+            "side": "buy",
+            "quantity": 10,
+            "limit_price": 104
+          },
+          {
+            "id": "o2",
+            "time": "2026-01-05T20:05:00.000Z",
+            "available_at": "2026-01-05T20:05:01.000Z",
+            "symbol": "XYZ",
+            "side": "sell",
+            "quantity": 10,
+            "limit_price": 105
+          }
+        ],
+        "trades": []
+      },
+      "expected": {
+        "parameters": {
+          "expected_engine": "sesame-native-replay"
+        },
+        "observations": {
+          "evidence_counts": {
+            "bars": 2,
+            "orders": 2,
+            "trades": 0
+          },
+          "audit": {
+            "issue_count": 2,
+            "issues": [
+              {
+                "severity": "warning",
+                "code": "unfilled_order",
+                "id": "o1",
+                "message": "order has no supplied fill evidence"
+              },
+              {
+                "severity": "warning",
+                "code": "unfilled_order",
+                "id": "o2",
+                "message": "order has no supplied fill evidence"
+              }
+            ]
+          },
+          "fills": {
+            "total_cost": 0
+          },
+          "fills_by_symbol": {},
+          "native_engine_handoff": {
+            "recommended": true,
+            "reason": "Use the existing native replay/backtest engine for matching, portfolio accounting and slippage; this plugin only audits supplied replay evidence and assumptions."
+          }
+        },
+        "limitations": [
+          "This is not a matching engine or a new backtester; it audits supplied replay evidence, chronology, costs and fill assumptions.",
+          "Fill quantities are reported per symbol as gross, buy, sell and net quantities; cross-symbol quantity is deliberately not aggregated.",
+          "Bar availability is checked when bars are provided, but order generation logic is not reconstructed."
+        ]
+      }
+    },
+    {
+      "name": "invalid side retained as evidence",
+      "input": {
+        "schema_version": 1,
+        "as_of": "2026-01-10T00:00:00.000Z",
+        "source": {
+          "id": "synthetic-backtest-lab",
+          "kind": "synthetic"
+        },
+        "parameters": {
+          "expected_engine": "sesame-native-replay"
+        },
+        "engine": {
+          "name": "sesame-native-replay"
+        },
+        "bars": [
+          {
+            "time": "2026-01-02T20:00:00.000Z",
+            "available_at": "2026-01-02T20:01:00.000Z",
+            "open": 100,
+            "high": 104,
+            "low": 99,
+            "close": 103,
+            "volume": 1000
+          },
+          {
+            "time": "2026-01-05T20:00:00.000Z",
+            "available_at": "2026-01-05T20:01:00.000Z",
+            "open": 103,
+            "high": 106,
+            "low": 101,
+            "close": 105,
+            "volume": 1100
+          }
+        ],
+        "orders": [
+          {
+            "id": "o1",
+            "time": "2026-01-02T20:05:00.000Z",
+            "available_at": "2026-01-02T20:05:01.000Z",
+            "symbol": "XYZ",
+            "side": "unknown",
+            "quantity": 10,
+            "limit_price": 104
+          },
+          {
+            "id": "o2",
+            "time": "2026-01-05T20:05:00.000Z",
+            "available_at": "2026-01-05T20:05:01.000Z",
+            "symbol": "XYZ",
+            "side": "sell",
+            "quantity": 10,
+            "limit_price": 105
+          }
+        ],
+        "trades": [
+          {
+            "id": "f1",
+            "order_id": "o1",
+            "time": "2026-01-02T20:06:00.000Z",
+            "available_at": "2026-01-02T20:06:01.000Z",
+            "symbol": "XYZ",
+            "quantity": 10,
+            "price": 103.5,
+            "cost": 1.2
+          },
+          {
+            "id": "f2",
+            "order_id": "o2",
+            "time": "2026-01-05T20:06:00.000Z",
+            "available_at": "2026-01-05T20:06:01.000Z",
+            "symbol": "XYZ",
+            "quantity": 10,
+            "price": 105,
+            "cost": 1.2
+          }
+        ]
+      },
+      "expected": {
+        "parameters": {
+          "expected_engine": "sesame-native-replay"
+        },
+        "observations": {
+          "evidence_counts": {
+            "bars": 2,
+            "orders": 2,
+            "trades": 2
+          },
+          "audit": {
+            "issue_count": 1,
+            "issues": [
+              {
+                "severity": "error",
+                "code": "order_side",
+                "id": "o1",
+                "message": "order side must be buy or sell"
+              }
+            ]
+          },
+          "fills": {
+            "total_cost": 2.4
+          },
+          "fills_by_symbol": {
+            "XYZ": {
+              "gross_quantity": 20,
+              "buy_quantity": 0,
+              "sell_quantity": 10,
+              "net_quantity": 0,
+              "cost": 2.4
+            }
+          },
+          "native_engine_handoff": {
+            "recommended": true,
+            "reason": "Use the existing native replay/backtest engine for matching, portfolio accounting and slippage; this plugin only audits supplied replay evidence and assumptions."
+          }
+        },
+        "limitations": [
+          "This is not a matching engine or a new backtester; it audits supplied replay evidence, chronology, costs and fill assumptions.",
+          "Fill quantities are reported per symbol as gross, buy, sell and net quantities; cross-symbol quantity is deliberately not aggregated.",
+          "Bar availability is checked when bars are provided, but order generation logic is not reconstructed."
+        ]
+      }
+    },
+    {
+      "name": "empty supplied evidence",
+      "input": {
+        "schema_version": 1,
+        "as_of": "2026-01-10T00:00:00.000Z",
+        "source": {
+          "id": "synthetic-backtest-lab",
+          "kind": "synthetic"
+        },
+        "parameters": {
+          "expected_engine": "sesame-native-replay"
+        },
+        "engine": {
+          "name": "sesame-native-replay"
+        },
+        "orders": [],
+        "trades": []
+      },
+      "expected": {
+        "parameters": {
+          "expected_engine": "sesame-native-replay"
+        },
+        "observations": {
+          "evidence_counts": {
+            "bars": 0,
+            "orders": 0,
+            "trades": 0
+          },
+          "audit": {
+            "issue_count": 0,
+            "issues": []
+          },
+          "fills": {
+            "total_cost": 0
+          },
+          "fills_by_symbol": {},
+          "native_engine_handoff": {
+            "recommended": true,
+            "reason": "Use the existing native replay/backtest engine for matching, portfolio accounting and slippage; this plugin only audits supplied replay evidence and assumptions."
+          }
+        },
+        "limitations": [
+          "This is not a matching engine or a new backtester; it audits supplied replay evidence, chronology, costs and fill assumptions.",
+          "Fill quantities are reported per symbol as gross, buy, sell and net quantities; cross-symbol quantity is deliberately not aggregated.",
+          "Bar availability is checked when bars are provided, but order generation logic is not reconstructed."
+        ]
+      }
+    }
+  ]
+}

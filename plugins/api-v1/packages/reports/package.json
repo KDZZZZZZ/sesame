@@ -1,6 +1,6 @@
 {
   "name": "@sesame/plugin-reports",
-  "version": "3.3.2",
+  "version": "5.0.21",
   "private": true,
   "type": "module",
   "license": "MIT"

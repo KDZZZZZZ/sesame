@@ -2,6 +2,11 @@ import { check as assert, memberId } from './workflow-mechanics.js';
 const defaults = { plan: 'supervisor', hypothesis: 'researcher', code: 'coder', review: 'reviewer', reflection: 'reflector', selection: 'supervisor' };
 const optional = new Set(['plan', 'review', 'reflection']);
 const check = (ok, message) => assert(ok, 'INVALID_WORKFLOW', message);
+export function singleFactorPlan(input) {
+  const plan = factorPlan(input ?? Object.fromEntries(Object.keys(defaults).map(step => [step, { id: 'researcher', title: '因子与策略研究员' }])));
+  check(Object.values(plan).every(Boolean) && new Set(Object.values(plan).map(member => member.id)).size === 1, 'Single-Agent mode requires one member for all six duties; plan, review and reflection cannot be omitted.');
+  return plan;
+}
 export function factorPlan(input = {}) {
   check(input && typeof input === 'object' && !Array.isArray(input) && Object.keys(input).every(key => Object.hasOwn(defaults, key)), 'workflow accepts plan, hypothesis, code, review, reflection and selection.');
   return Object.fromEntries(Object.entries(defaults).map(([step, role]) => {

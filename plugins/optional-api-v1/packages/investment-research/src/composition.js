@@ -2,7 +2,30 @@ import { REPORT_CALLS } from './team.js';
 
 import { check, configuredModel as selectModel, uniqueCalls, verifyRevisions, researchSafeCapability } from './workflow-mechanics.js';
 export { check } from './workflow-mechanics.js';
-const readOnly = researchSafeCapability;
+// These reviewed functions have narrow public inputs but declare their real
+// internal process/cache effects. Never grant a generic shell/config tool.
+const reviewedResearch = {
+  // Public manifests and declared knowledge only; no installation/configuration.
+  'sesame/plugin-manager#plugin_read': [],
+  'sesame/rss-collect#parse_feed': ['resources.read', 'process', 'filesystem', 'resources.publish'],
+  'sesame/web-extract#extract_webpage': ['resources.read', 'process', 'filesystem', 'resources.publish'],
+  'sesame/financial-research#financial_research_query': ['network', 'resources.publish', 'plugin.state.write'],
+  'sesame/financial-research#financial_research_read': [],
+  'sesame/data-access#data_read': ['data.query', 'resource.read', 'filesystem.write'],
+  // Freeze queried rows or verified execution output. state.write is limited
+  // to the capture's idempotency record; these functions do not run commands.
+  'sesame/data-access#data_snapshot': ['data.query', 'resource.create', 'artifact.publish', 'state.write'],
+  'sesame/data-access#market_read': ['data.query', 'resource.create', 'artifact.publish', 'state.write'],
+  'sesame/data-access#research_register': ['data.query', 'resource.create', 'artifact.publish', 'state.write'],
+  // Reviewed deterministic input-only math. Empty effects on an unknown tool
+  // still do not imply safety. The fixed-ref adapter publishes only its actual
+  // derived result with the original fixed inputs, not arbitrary resources.
+  'sesame/historical-evidence#historical_evidence_match': [],
+  'sesame/historical-evidence#historical_evidence_calibrate': [],
+  'sesame/historical-evidence#historical_evidence_from_ref': ['resources.read', 'resources.create', 'resources.publish'],
+};
+export const readOnly = cap => researchSafeCapability(cap) || cap.kind === 'function' && Object.hasOwn(reviewedResearch, cap.id)
+  && JSON.stringify([...(cap.effects ?? [])].sort()) === JSON.stringify([...reviewedResearch[cap.id]].sort());
 
 async function plugin(host, id) {
   let value;
@@ -36,7 +59,15 @@ export async function selectResearch(host, selection) {
   return freezeSelection(host, [...new Set([...selection.plugins, ...calls.map(call => call.pluginId)])], calls);
 }
 async function freezeSelection(host, plugins, calls) {
-  const entries = await Promise.all(plugins.map(id => plugin(host, id)));
+  const pluginIds = plugins.filter(id => id !== 'host');
+  const entries = await Promise.all(pluginIds.map(id => plugin(host, id)));
+  const hostCalls = calls.filter(call => call.pluginId === 'host');
+  if (hostCalls.length) {
+    const declared = await catalog(host, 'host');
+    for (const call of hostCalls) check(['reports.describe', 'reports.publish'].includes(call.capabilityId)
+      && declared.some(cap => cap.localId === call.capabilityId), 'DEPENDENCY_UNAVAILABLE',
+    `Required host report capability host.${call.capabilityId} is unavailable; this workflow needs Sesame >=0.3.0-dev.2.`);
+  }
   for (const entry of entries) {
     const declared = await catalog(host, entry.id);
     for (const call of calls.filter(call => call.pluginId === entry.id)) {
@@ -44,11 +75,24 @@ async function freezeSelection(host, plugins, calls) {
     }
   }
   const allowedCalls = uniqueCalls(calls);
-  return { plugins, allowedCalls, revisions: entries.map(entry => ({ id: entry.id, digest: entry.digest })) };
+  return { plugins: pluginIds, allowedCalls, revisions: entries.map(entry => ({ id: entry.id, digest: entry.digest })) };
 }
 export const reportSelection = host => freezeSelection(host, [...new Set(REPORT_CALLS.map(call => call.pluginId))], REPORT_CALLS);
 export const synthesisSelection = (host, research) => freezeSelection(host, research.plugins,
   research.allowedCalls.filter(call => call.pluginId === 'sesame/plugin-manager' && call.capabilityId === 'plugin_read'));
+export async function stageSelection(host, research, phase) {
+  let calls;
+  if (phase === 'scope') {
+    calls = [{ pluginId: 'host', capabilityId: 'reports.describe' }, { pluginId: 'sesame/plugin-manager', capabilityId: 'plugin_read' }, { pluginId: 'sesame/reports', capabilityId: 'report_structure' }];
+  } else if (phase === 'analysis') {
+    const declarations = (await Promise.all(research.plugins.map(id => catalog(host, id)))).flat();
+    calls = research.allowedCalls.filter(call => {
+      const cap = declarations.find(value => value.id === `${call.pluginId}#${call.capabilityId}`);
+      return cap && !cap.effects?.includes('network');
+    });
+  } else return research;
+  return freezeSelection(host, [...new Set([...research.plugins, ...calls.map(call => call.pluginId)])], calls);
+}
 export async function verifySelection(host, selection) {
   await verifyRevisions(selection.revisions, id => plugin(host, id), { code: 'DEPENDENCY_UNAVAILABLE' });
   await freezeSelection(host, selection.plugins, selection.allowedCalls);

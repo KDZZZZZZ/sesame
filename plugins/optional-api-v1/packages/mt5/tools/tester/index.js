@@ -7,7 +7,13 @@ export function createCapabilities(host, mt5) {
   const tester = mt5.tester;
   const reference = pass => mt5.runObserver?.reference('tester', pass.id) ?? null;
   const view = job => ({ ...job, passes: job.passes.map(pass => ({ ...pass, run_record: reference(pass) })) });
-  return [officialTool(host, mt5, 'tester'), capability('mt5_backtest', async (args, signal) => {
+  return [officialTool(host, mt5, 'tester'), capability('mt5_backtest_operation', args => {
+    const operation = records(host).get('operation', `tester-start-${args.command_id}`, true);
+    if (!operation?.result?.id) return { command_id: args.command_id, status: 'not-found', note: 'No committed receipt. This does not prove a prior dispatch did not start; never resend an uncertain attempt.' };
+    const job = tester.get(operation.result.id);
+    requireValue(job.conversation_id === conversationId, 'Backtest receipt belongs to another conversation', 403, 'FORBIDDEN');
+    return { command_id: args.command_id, status: job.status, result: view(job) };
+  }), capability('mt5_backtest', async (args, signal) => {
     const fields = { start: ['action', 'command_id', 'build_id', 'config', 'parameter_space'], get: ['action', 'backtest_id'], wait: ['action', 'backtest_id'], stop: ['action', 'backtest_id'], list: ['action', 'project_id'] };
     requireValue(Object.keys(args).every(k => fields[args.action].includes(k)), '回测动作包含不适用的参数');
     if (args.action === 'list') return tester.list(args.project_id).map(job => ({ ...job, run_records: tester.get(job.id).passes.map(pass => ({ pass_id: pass.id, record: reference(pass) })) }));

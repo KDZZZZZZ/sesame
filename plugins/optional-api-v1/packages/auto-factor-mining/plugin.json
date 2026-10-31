@@ -1,9 +1,9 @@
 {
   "id": "sesame/auto-factor-mining",
   "apiVersion": "2",
-  "version": "1.1.8",
-  "title": "自动因子挖掘",
-  "description": "因子挖掘、候选信号与因子组合的多轮实验工作流：组合技术知识、数据来源、计算能力和独立 evaluator，组织假设、实测、复核与选择。公开入口 auto_factor_start；工作流不限定品种数量，具体数据形状与指标由所选 evaluator 决定。",
+  "version": "1.4.8",
+  "title": "因子与策略研究",
+  "description": "因子、候选信号与策略研究实验工作流：融合因子/策略证据指南，提供真正单 Agent 和默认多 Agent 模式；实际 evaluator 计算、冻结选择和隔离留出验证，交付 Strategy 报告。统计诊断不代替真实交易规则回测。",
   "author": {
     "name": "Sesame contributors"
   },
@@ -12,13 +12,14 @@
   "agent_scope": "all",
   "entry": "index.js",
   "engines": {
-    "sesame": ">=0.3.0-dev.1 <0.4.0"
+    "sesame": ">=0.3.0-dev.2 <0.4.0"
   },
   "capability_manifest": "capabilities.json",
   "permissions": {
     "scopes": [
       "capabilities.compose",
-      "plugins.manage"
+      "plugins.manage",
+      "process.execute"
     ],
     "calls": [
       "host.agent.run",
@@ -26,10 +27,10 @@
       "host.runs.wait",
       "host.runs.interrupt",
       "host.resources.read",
-      "sesame/reports#report_document_template",
       "sesame/reports#report_publish",
       "sesame/reports#report_check",
-      "sesame/workspace#write"
+      "sesame/workspace#write",
+      "host.reports.describe"
     ]
   }
 }

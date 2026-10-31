@@ -19,6 +19,8 @@
 
 例如：`node scripts/create-plugin.mjs --name my-source --publisher my-team --description "Read the selected source" --template adapter --output /path/to/new-directory`。先实现实际业务、输入输出及测试，再安装并验收。适配器、工作流与服务模板附有配置说明：在统一入口管理配置和密钥，并用 configurationRequirements 绑定实际依赖它们的能力；空草稿不会凭空要求密钥。
 
-官方源码的 inventory-policy.json 维护旧 category、五类任务职责 functionalCategory（业务流程、专业能力、资源接入、交互呈现、平台管理）和独立的 implementationKinds，包目录继续平铺。研究指南与可执行工作流同属业务流程；ICT 知识与指标计算同属专业能力。不要根据模板、接口或是否有代码推导主分类。分类不改变插件 ID、发布成员或调用授权。MCP 作者声明每个服务器工具的 binding:{type:"mcp",server,name}，安装时宿主比对真实工具目录。
+官方源码的 inventory-policy.json 维护旧 category、六类任务职责 functionalCategory（业务流程、专业能力、搜索与来源、资源接入、交互呈现、平台管理）和独立的 implementationKinds，包目录继续平铺。研究指南与可执行工作流同属业务流程；ICT 知识与指标计算同属专业能力。不要根据模板、接口或是否有代码推导主分类。web-sources、rss-collect、web-extract、financial-research 归入 search（搜索与来源），其 ID、旧 category 和各自获取/解析边界不变。分类不改变插件 ID、发布成员或调用授权。MCP 作者声明每个服务器工具的 binding:{type:"mcp",server,name}，安装时宿主比对真实工具目录。
+
+`plugin_catalog` 的 query 可搜索 ID、名称、描述及目录已声明的功能分类标识/中英文名；缺少分类的旧目录仍按原字段搜索。本地源码分类不表示目录已经发布，安装可用性仍看实际包版本和状态。
 
 `plugin_catalog` 读取 `https://dl.sesame.bot/plugins/api-v1/catalog.json` 的开发目录；路径名保留发布管线约定，包和目录的 `apiVersion` 必须为 `2`。schema2 使用 R2 内容寻址包目录，固定发布提交、锁与审阅记录，并在安装前逐文件验证大小及 SHA-256、整包 treeDigest。schema1 的固定 GitHub 提交来源仍可读取，不接受浮动分支、任意下载主机或 API1 包。安装失败不改称已完成；已禁用的包保持禁用。

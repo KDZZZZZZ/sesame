@@ -1,6 +1,49 @@
+# Research 工作流
+
+首选investment_research_start。详见[步骤与报告场景](WORKFLOW.md)。默认实际执行需求范围、取证、分析、综合报告四阶段；旧analyze的八成员默认保留给兼容调用。report_brief记录用户所需结果形式和调整，具体方法选择独立。
+
 # 投资研究工作流
 
-版本 3.1.4，宿主 API 2。输入投资问题，组合明确的信息来源与分析方法，输出可继续使用的固定研究成果。无需交易账户，不创建目标仓位、订单或计划。交易决策和实际执行分别使用相应独立插件。
+## 固定事件与结果对齐（不调用模型）
+
+`investment_research_event_outcomes` 是可独立使用的确定性数据衔接能力，不要求运行团队工作流。输入必须是两个完整固定 DataRef；它不会获取新闻、搜索相似事件或选择指标。来源插件与方法自由组合，Report 只消费已形成的结果。
+
+```json
+{
+  "events_ref": {"id":"实际事件工件 ID","revision":"实际修订","digest":"sha256:实际哈希","kind":"data","schemaVersion":"1.0.0"},
+  "market_ref": {"id":"实际行情工件 ID","revision":"实际修订","digest":"sha256:实际哈希","kind":"data","schemaVersion":"1.0.0"},
+  "selection":"调用者已选定的事件总体与筛选口径；不能把本次登记称为事前注册",
+  "price_basis":"上游明确的 USD、拆股调整收盘价；不含股息再投资",
+  "price_time_semantics":"closed_bar_close",
+  "as_of":"2026-10-28T12:00:00Z",
+  "anchor":"event_at",
+  "entry":"last_at_or_before",
+  "tolerance_seconds":3600,
+  "windows":[{"id":"one_day","seconds":86400}],
+  "baseline":{"kind":"instrument","instrument":"调用者选定的基准品种"}
+}
+```
+
+示例里的 DataRef 是接口占位，实际调用必须使用生产者返回的完整引用，不得编造。固定工件需采用 `json-rows`，事件最多 256 行，行情最多 50,000 行，每份最多 8 MiB；窗口 1–8 个，每个 1 秒至 31 天，对齐容差 0 至 7 天。超限报错，不截断后冒充完整。
+
+| 输入行 | 字段与语义 |
+| --- | --- |
+| 事件 | `event_id` 唯一字符串、`instrument`、`event_at`；可选 `published_at`、`first_available_at`、`retrieved_at`、`source_url` |
+| 行情 | `instrument`、`observed_at`、`close`、`unit`；可选 `available_at`，表示该价格观察的声明可用时间 |
+
+所有时间必须为带明确时区的 ISO 时间。价格时间应是**已经收盘的 bar 的结束时刻**（`closed_bar_close`），或明确的价格观察时刻（`price_observation`）；K 线开盘时间不能直接搭配该根尚未出现的收盘价。可用 `fields.market.time` 显式指定原数据的实际收盘时间列。其他列可通过 `fields.events`、`fields.market` 映射简单平面列名；嵌套原始来源先规范为另一份带原引用依赖的固定工件。市场行的重复品种/时间会被拒绝，不能静默任选后来的修订。
+
+`anchor` 显式选择 `event_at` 或 `first_available_at`；缺少后者时保留 `anchor_availability_unknown`，不会用发布时间或当前获取时间代填。入点选择 `last_at_or_before` 或 `first_at_or_after`，出点始终取锚点加窗口秒数之后的首个观察，均受容差约束。窗口是日历秒数，不能解释为交易日数；实际端点另行返回。`as_of` 之后的价格观察或声明可用时间被排除，未走完的窗口标 `pending`。不填补交易日、休市或缺失行情。
+
+收益为 `exit / entry - 1`，单位明确为 fraction；零、负、缺失价格及单位变化保留为缺口。它是输入价格口径的描述性收益，未加入手续费、滑点、汇率转换、股息再投资或因果识别。基准可明确为 `none`，或同一行情工件内的一个品种；后者必须拥有与目标**完全相同的实际首尾时间**，否则保留缺失，不能悄悄错时比较。基准差为两者收益相减，不是统计显著性。
+
+结果 `result_ref` 包含一行完整 packet：原始参数、输入来源元数据、逐事件/窗口的源行号、来源 refs、时间、首尾价格、收益、基准、缺失、重叠事件 ID。相同输入重复计算的 packet 完全一致；返回的 `counts` 只是行数清点。同品种相交窗口标记重叠；同事件多个期限也不独立。不会生成胜率、置信度、独立样本数或预测概率。
+
+发布时间、首次可用声明、本次获取时间分别保存。今天下载的旧新闻保留 `retrieved_after_event`，不能冒充当时已知。即使提供 `first_available_at`，这里只标 `declared_not_verified`；本能力不鉴定存档真实性或历史数据修订版本，全部样本 `eligible_for_point_in_time_validation:false`、`point_in_time_status:not_established`。可做回顾性描述，不能据此宣称完成 PIT 回测。固定引用证明本次输入身份，不单独证明历史可得性。
+
+事件选择与基准由调用者决定，应先固定定义再进行独立历史检索；本能力不筛样本，也不替代同品种近期优先的检索过程。`no_events` 只表示传入事件为空，不代表搜索成功后的零匹配，更不能把检索失败当零样本。多重搜索、筛选与重叠带来的偏差须在研究解释中保留。
+
+版本 3.2.0，宿主 API 2。输入投资问题，组合明确的信息来源与分析方法，输出可继续使用的固定研究成果。无需交易账户，不创建目标仓位、订单或计划。交易决策和实际执行分别使用相应独立插件。
 
 ## 能力与输入
 
@@ -68,7 +111,9 @@ analyze 的声明提供默认八成员图。显式 workflow 由执行器在首�
 {"task":{"output":{"type":"report","space":"research","path":"投资研究/AAPL.html"}}}
 ```
 
-普通 analyze 默认无报告。报告经理使用 `{type:"report",target:"parent"}` 发布到同一绑定；其他成员 output:none。经理得到 reports 设计知识、四项报告能力、data_read、read/write/edit 与 plugin_read，可通过原研究员补充关键证据；仅重做报告的入口消费已有成果。报告采用父工作流当前绑定的 artifact，且该精确修订最新 report_check 检查为 rendered；普通浏览器打开不代替验收。主 Agent 修复同一报告后，原 Run 可采用新修订继续，无需重派已完成经理。工作流不包一层纯文本 HTML、不复制所有成员正文。
+普通 analyze 默认无报告。报告经理使用 `{type:"report",target:"parent"}` 发布到同一绑定；其他成员 output:none。经理得到 reports 设计知识、实际授予的报告内容/样式/发布/核验能力、data_read、read/write/edit 与 plugin_read，可通过原研究员补充关键证据；仅重做报告的入口消费已有成果。报告采用父工作流当前绑定的 artifact，且该精确修订最新 report_check 检查为 rendered；普通浏览器打开不代替验收。主 Agent 修复同一报告后，原 Run 可采用新修订继续，无需重派已完成经理。工作流不包一层纯文本 HTML、不复制所有成员正文。
+
+报告阶段先调用 `host_reports_describe`，按宿主所选插件返回的 `inputSchema` 组织结果，再用 `host_reports_publish` 发布；宿主通用 envelope 使用 `operationId`、`title`、`summary`、`data`、`provenanceKind`、`references`，插件输入放 `input`，大型完整输入可先登记为固定 JSON 后使用 `inputRef:{ref,entry}`。`input` 与 `inputRef` 二选一，不把默认 Reports 的 content/style 当宿主通用格式，不自行改选 provider。仅当当前 provider 是 `sesame/reports` 且 schema 适用时，使用它的 `content` 与 `style`、字段/图表助手和通用样式；助手只预览。正文保留判断、读图注解、简短推理和关键条件，原始明细在末尾附录，公式交由所选插件的组件呈现。不能上传 HTML/CSS/脚本或以不匹配接口绕过当前选择。发布后核验精确 ref；检查失败保留该 ref 重试检查，不重新研究或重选结果。
 
 暂停使用宿主 checkpoint 保存冻结请求、已接受子 Run 与完整成果。恢复重查当前需要的模型/插件/证据，只重新等待原已接受的子 Run；完成成员不重派。已发布报告不重做。未知原操作使用相同 operationId 和输入找回，不能换 ID 重付费或把未完成当完成。
 
@@ -117,3 +162,7 @@ DataRef 完整包含 `{id,revision,digest,kind:"data",schemaVersion:"1.0.0"}`。
 已有完整 `result_ref` 时，使用同一 analyze 入口传入 `{start_from:{result_ref,role},research,model}`。role 是第一个重跑的角色：bull、bear、risk 或 manager；从多空完成后继续使用 risk。原标题、问题、对象、证据截止时点、期限及输入证据自动继承，不必重复填写。新工作的来源与模型由 research/model 明确选择。
 
 早于起点的成员全文、Run 引用及其问答原样保留，起点及以后的旧结论和问答不交回上游。执行剩余角色时仍可按需向原研究员 QA，新增证据进入后续角色和新结果。新原生工作流与报告保留 `start_from` 来源记录，不改写已完成的原工作流、固定成果和旧报告；它的暂停/恢复仍使用普通宿主 Run 接口。只改排版行文而不补研究时，继续使用 report 入口。
+
+## 可选历史证据计算
+
+可显式选择独立 `sesame/historical-evidence` 做历史同类情景匹配与isotonic校准；四阶段支持固定输入refs交接，方法不进入Report。用户优先选择条件、特征和阈值，已知有效/失效条件可以支持条件使用，不要求所有检验同时通过。实际权限、固定输入与独立评价见 [HISTORY.md](HISTORY.md)。

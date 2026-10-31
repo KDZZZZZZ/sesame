@@ -4,18 +4,18 @@
 
 共 257 个声明入口：169 个可供 Agent 调用，88 个仅供宿主调用。本轮保持冻结的 252 个原能力契约，另为统一配置新增 MT5、QMT 各两个宿主适配器。数量按插件 ID 与能力 ID 的组合计算；实际权限、配置条件和运行结果沿用原契约。
 
-factor-research、strategy-research、orchestration、user-guide 没有执行入口，其能力由知识指南提供。2026-10-26 新增独立默认 user-guide 并迁移产品帮助，orchestration 专注协作编排；上文执行能力数字保留历史核查口径，当前包数见功能架构与 inventory。
+orchestration、user-guide 没有执行入口，其能力由知识指南提供。2026-10-26 新增独立默认 user-guide 并迁移产品帮助，orchestration 专注协作编排；上文执行能力数字保留历史核查口径，当前包数见功能架构与 inventory。
+
+2026-10-28 入口调整：综合投资研究使用 **Research**（`investment-research`），因子与策略实验使用 **Strategy**（`auto-factor-mining`）。因子与策略指南、参考 CLI 已融合进 Strategy，不再作为独立包分发；下列历史能力数字不因入口调整而冒充新的全量统计，当前声明与版本见 [57 包功能总览](../output/plugin-review-20261028/index.html)。
 
 ## 总览
 
 | 职责 | 插件 | 业务能力 | Agent 可调用 | 仅宿主 |
 | --- | --- | --- | ---: | ---: |
 | 业务流程 | [auto-factor-mining](../plugins/optional-api-v1/packages/auto-factor-mining/capabilities.json) | 选择模型与研究角色；指定评估器并启动因子研究；读取共享证据；提交候选并保留真实评价回执；管理暂停、恢复与取消；读取最终报告和运行图。 | 7 | 4 |
-| 业务流程 | [factor-research](../plugins/optional-api-v1/packages/factor-research/capabilities.json) | 知识指南：形成可反驳因子候选，定义机制、时点和输入，解释覆盖、冗余、成本和实测评价，冻结选择并检验样本外证据。附可选检查脚本，无注册执行入口。 | 0 | 0 |
 | 业务流程 | [investment-research](../plugins/optional-api-v1/packages/investment-research/capabilities.json) | 组合信息源与互补方法开展研究，保存证据和情景；向原分析师追问具体缺口；基于已有研究生成或重生经理报告。 | 3 | 0 |
 | 业务流程 | [judgment-evolution](../plugins/optional-api-v1/packages/judgment-evolution/capabilities.json) | 事前登记可验证判断；查询到期队列；用真实数据核验并评分；证据缺失时延期；完成归因复盘；管理候选准则、前瞻验证和退休；核对回复中的判断覆盖。 | 13 | 3 |
 | 业务流程 | [portfolio-execution](../plugins/optional-api-v1/packages/portfolio-execution/capabilities.json) | 绑定已有执行适配器与精确账户；读取账户、报价、持仓及执行状态；应用工作流冻结的组合目标；执行已授权的单次手动订单；查询、恢复核对或撤销待成交委托，保留单次提交回执。 | 9 | 1 |
-| 业务流程 | [strategy-research](../plugins/optional-api-v1/packages/strategy-research/capabilities.json) | 知识指南：定义可检验策略假设，选择并组合来源和方法，固定证据与实验账本，比较试验，设计成本和样本外验证，对接策略表达及真实回测引擎并综合结果。附可选检查脚本，无注册执行入口。 | 0 | 0 |
 | 业务流程 | [trading-decision](../plugins/optional-api-v1/packages/trading-decision/capabilities.json) | 选择经理与执行者模型；管理授权交易计划、定时和事件触发；读取研究、账户与个人风险规则；冻结目标仓位并交付执行；查看运行和真实回执；读取报告并复盘既往决策。 | 12 | 4 |
 | 资源接入 | [akshare](../plugins/optional-api-v1/packages/akshare/capabilities.json) | 发现、验证和按需准备 AKShare 环境；检索支持的只读接口；查询 A 股研究数据及明确来源的报价快照。宿主接口提供品种查询、历史 K 线及行情/报价订阅。 | 6 | 8 |
 | 资源接入 | [backtrader](../plugins/optional-api-v1/packages/backtrader/capabilities.json) | 检查或准备 Backtrader 环境；用固定数据和策略源码执行原生 Cerebro 回测；读取保存的结果、统计、输入血缘和撮合假设。 | 3 | 1 |
@@ -57,25 +57,6 @@ factor-research、strategy-research、orchestration、user-guide 没有执行入
 | `auto_factor_activate` | 仅宿主 | Load and reconcile durable checkpoints without starting research. |
 | `auto_factor_dispose` | 仅宿主 | Cancel active work and finish durable checkpoint writes. |
 | `auto_factor_dependencies` | 仅宿主 | Read frozen input integrity and selected model/evaluator declarations before workflow admission or resume; never prepares a new evaluator session or starts an Agent. |
-
-### sesame/factor-research
-
-知识指南：形成可反驳因子候选，定义机制、时点和输入，解释覆盖、冗余、成本和实测评价，冻结选择并检验样本外证据。附可选检查脚本，无注册执行入口。
-
-来源：[capabilities.json](../plugins/optional-api-v1/packages/factor-research/capabilities.json)。Agent 可调用 0 项，仅宿主 0 项。
-
-无执行入口。已声明的知识与参考资源：
-
-- [prompt.md](../plugins/optional-api-v1/packages/factor-research/prompt.md)
-- [PROVENANCE.md](../plugins/optional-api-v1/packages/factor-research/PROVENANCE.md)
-- [README.md](../plugins/optional-api-v1/packages/factor-research/README.md)
-- [skills/factor-research/references/execution.md](../plugins/optional-api-v1/packages/factor-research/skills/factor-research/references/execution.md)
-- [skills/factor-research/references/method.md](../plugins/optional-api-v1/packages/factor-research/skills/factor-research/references/method.md)
-- [skills/factor-research/SKILL.md](../plugins/optional-api-v1/packages/factor-research/skills/factor-research/SKILL.md)
-- [scripts/factor.mjs](../plugins/optional-api-v1/packages/factor-research/scripts/factor.mjs)
-- [examples/plan.demo.json](../plugins/optional-api-v1/packages/factor-research/examples/plan.demo.json)
-- [examples/development.demo.json](../plugins/optional-api-v1/packages/factor-research/examples/development.demo.json)
-- [examples/holdout.demo.json](../plugins/optional-api-v1/packages/factor-research/examples/holdout.demo.json)
 
 ### sesame/investment-research
 
@@ -132,26 +113,6 @@ factor-research、strategy-research、orchestration、user-guide 没有执行入
 | `manual_trade_status` | Agent / 宿主 | Read a durable receipt; refresh reads the backend command and actual orders/fills for recovery. No matching record never proves a timed-out send failed. Does not replay or place orders. |
 | `manual_trade_cancel` | Agent / 宿主 | Request cancellation of a confirmed pending order created through this plugin, using a separate stable operation ID. Does not close a filled position. Query afterwards; cancel_requested is not confirmed cancellation. |
 | `dispose` | 仅宿主 | Close the private durable receipt database after all execution settles. |
-
-### sesame/strategy-research
-
-知识指南：定义可检验策略假设，选择并组合来源和方法，固定证据与实验账本，比较试验，设计成本和样本外验证，对接策略表达及真实回测引擎并综合结果。附可选检查脚本，无注册执行入口。
-
-来源：[capabilities.json](../plugins/optional-api-v1/packages/strategy-research/capabilities.json)。Agent 可调用 0 项，仅宿主 0 项。
-
-无执行入口。已声明的知识与参考资源：
-
-- [prompt.md](../plugins/optional-api-v1/packages/strategy-research/prompt.md)
-- [PROVENANCE.md](../plugins/optional-api-v1/packages/strategy-research/PROVENANCE.md)
-- [README.md](../plugins/optional-api-v1/packages/strategy-research/README.md)
-- [skills/strategy-research/references/evidence.md](../plugins/optional-api-v1/packages/strategy-research/skills/strategy-research/references/evidence.md)
-- [skills/strategy-research/references/execution.md](../plugins/optional-api-v1/packages/strategy-research/skills/strategy-research/references/execution.md)
-- [skills/strategy-research/SKILL.md](../plugins/optional-api-v1/packages/strategy-research/skills/strategy-research/SKILL.md)
-- [scripts/experiment.mjs](../plugins/optional-api-v1/packages/strategy-research/scripts/experiment.mjs)
-- [examples/plan.demo.json](../plugins/optional-api-v1/packages/strategy-research/examples/plan.demo.json)
-- [examples/input.demo.json](../plugins/optional-api-v1/packages/strategy-research/examples/input.demo.json)
-- [examples/timing.demo.json](../plugins/optional-api-v1/packages/strategy-research/examples/timing.demo.json)
-- [examples/trials.demo.json](../plugins/optional-api-v1/packages/strategy-research/examples/trials.demo.json)
 
 ### sesame/trading-decision
 

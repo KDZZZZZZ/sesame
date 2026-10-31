@@ -54,8 +54,8 @@ test('nine defaults provide backend-free authoring/reports; MT5 and judgments in
     }
     store.put('dataset', { id: 'core-demo', rows: [{ label: 'A', value: '1.25' }, { label: 'B', value: '2.50' }], provenance: { kind: 'demo' } });
     const data = await call('report_data', { operation_id: 'core-demo-data', dataset_id: 'core-demo' });
-    await call('report_template', { output_path: 'demo.html', title: 'Offline demo report', summary: 'Fictional reference values', data_id: 'demo', chart_title: 'Demo comparison', takeaway: 'B is twice A in this fixture', source_note: 'Fictional demo values; no market observations', kind: 'bar', x: 'label', y: 'value', unit: 'demo units', columns: ['label', 'value'], demo: true });
-    const report = await call('report_publish', { operation_id: 'core-demo-report', title: 'Offline demo report', summary: 'Fictional reference values', html_path: 'demo.html', provenance_kind: 'demo', data: [{ id: 'demo', ref: data.ref, usage: 'Fictional chart input' }] });
+    const preview = await call('report_template', { output_path: 'demo.html', title: 'Offline demo report', summary: 'Fictional reference values', data_id: 'demo', chart_title: 'Demo comparison', takeaway: 'B is twice A in this fixture', source_note: 'Fictional demo values; no market observations', kind: 'bar', x: 'label', y: 'value', unit: 'demo units', columns: ['label', 'value'], demo: true });
+    const report = await call('report_publish', { operation_id: 'core-demo-report', title: 'Offline demo report', summary: 'Fictional reference values', ...preview.publish, provenance_kind: 'demo', data: [{ id: 'demo', ref: data.ref, usage: 'Fictional chart input' }] });
     assert.equal(runtime.contractArtifacts.read(report.ref).manifest.content.provenance.kind, 'demo');
     if (process.env.SESAME_REPORT_INSPECT === '1') {
       const receipt = await call('report_check', { ref: report.ref }); assert.equal(receipt.status, 'rendered', JSON.stringify(receipt));
@@ -64,11 +64,11 @@ test('nine defaults provide backend-free authoring/reports; MT5 and judgments in
     const trials = [{ trial_id: 'fixture-trial', symbol: 'TEST', timeframe: 'H1', sample: 'fixture-only', status: 'completed', selected: true, parameters: { lookback: '20' }, sharpe: null, max_drawdown_pct: '3.25', net_profit: '-4.50' }];
     store.put('dataset', { id: 'core-demo-trials', rows: trials, provenance: { kind: 'demo' } });
     const trialData = await call('report_data', { operation_id: 'core-trial-data', dataset_id: 'core-demo-trials' });
-    await call('report_backtest_template', { output_path: 'backtest.html', title: 'Demo Strategy', summary: 'Rendering fixture only', strategy_source: strategySource, data_id: 'trials', parameters: ['lookback'], selection_rule: 'Only synthetic fixture trial; no fitted strategy', source_note: 'Synthetic USD result with no terminal execution', currency: 'USD' });
-    const strategyReport = await call('report_publish', { operation_id: 'core-demo-strategy', title: 'Demo Strategy', summary: 'Rendering fixture only', html_path: 'backtest.html', strategy_source: strategySource, provenance_kind: 'demo', data: [{ id: 'trials', ref: trialData.ref, usage: 'All fixture trials' }] });
+    const strategyPreview = await call('report_backtest_template', { output_path: 'backtest.html', title: 'Demo Strategy', summary: 'Rendering fixture only', strategy_source: strategySource, data_id: 'trials', parameters: ['lookback'], selection_rule: 'Only synthetic fixture trial; no fitted strategy', source_note: 'Synthetic USD result with no terminal execution', currency: 'USD' });
+    const strategyReport = await call('report_publish', { operation_id: 'core-demo-strategy', title: 'Demo Strategy', summary: 'Rendering fixture only', ...strategyPreview.publish, space: 'strategy', provenance_kind: 'demo', data: [{ id: 'trials', ref: trialData.ref, usage: 'All fixture trials' }] });
     const strategyContent = runtime.contractArtifacts.read(strategyReport.ref).manifest;
     assert.match(runtime.contractArtifacts.resource(strategyReport.ref, 'index.html').bytes.toString(), /<aside data-sesame-provenance="demo"/);
-    assert.deepEqual(strategyContent.content.related, [{ role: 'strategy', artifact: strategySource }]);
+    assert.ok(strategyContent.content.provenance.references.some(ref=>ref.digest===strategySource.digest));
     assert.ok(strategyContent.dependencies.some(ref => ref.digest === strategySource.digest));
     assert.ok(strategyContent.content.features.includes('strategy_details'));
     assert.equal(store.get('report', strategyReport.ref.id).kind, 'strategy', 'UI routes to Strategy without an Agent-written classification flag');

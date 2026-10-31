@@ -1,0 +1,16 @@
+/* Evidence stays at the end; the reading path and the main charts stay open. */
+.report-evidence-links { display: flex; flex-wrap: wrap; gap: .25rem .7rem; margin: .55rem 0 .85rem; font-size: .75rem; line-height: 1.5; }
+.report-evidence-links > a, .report-evidence-return { color: var(--report-muted, #646b75); text-decoration: none; border-bottom: 1px solid transparent; }
+.report-evidence-links > a:hover, .report-evidence-return:hover { color: var(--report-ink, #262930); border-bottom-color: currentColor; }
+.report-evidence-links > a:focus-visible, .report-evidence-return:focus-visible { outline: 2px solid var(--report-accent, #365da8); outline-offset: 4px; }
+.report-evidence-appendix { margin: 3rem 0 0; padding: 1.8rem 0 0; border: 0; border-top: 1px solid var(--report-line, #dce0e6); background: none; box-shadow: none; scroll-margin-top: 1.5rem; }
+.report-evidence-appendix > h2 { font-size: 1.2rem; margin: 0 0 1.2rem; }
+.report-evidence-entry { margin: 0 0 1rem; padding: 0; border: 0; background: none; box-shadow: none; scroll-margin-top: 1.5rem; }
+.report-evidence-entry > details { margin: 0; padding: .45rem 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+.report-evidence-entry > details > summary { cursor: pointer; font-size: .86rem; line-height: 1.6; }
+.report-evidence-context { color: var(--report-muted, #646b75); font-weight: 400; }
+.report-evidence-return { display: inline-block; font-size: .75rem; margin: .6rem 0 0; }
+.report-evidence-entry pre { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 100%; }
+.report-evidence-entry :target, .report-evidence-links :target { scroll-margin-top: 1.5rem; }
+@media (max-width: 560px) { .report-evidence-appendix { margin-top: 2rem; } .report-evidence-entry > details > summary { overflow-wrap: anywhere; } }
+@media print { .report-evidence-links, .report-evidence-return { display: none; } .report-evidence-entry { break-inside: auto; } .report-evidence-entry details::details-content { content-visibility: visible; } .report-evidence-entry details > :not(summary) { display: block; } }

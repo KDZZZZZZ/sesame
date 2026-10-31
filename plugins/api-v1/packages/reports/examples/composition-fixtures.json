@@ -1,0 +1,1643 @@
+{
+  "provenance": {
+    "kind": "demo",
+    "note": "全部为虚构展示数据，不是研究结论。"
+  },
+  "charts": [
+    {
+      "id": "stream",
+      "title": "资金逐步从债券转向股票",
+      "caption": "演示数据 · 色带厚度表示资金量。",
+      "spec": {
+        "kind": "stream",
+        "x": "month",
+        "series": "asset",
+        "value": "amount",
+        "xType": "category",
+        "unit": "万元",
+        "rows": [
+          {
+            "month": "1月",
+            "asset": "股票",
+            "amount": 20
+          },
+          {
+            "month": "1月",
+            "asset": "债券",
+            "amount": 48
+          },
+          {
+            "month": "1月",
+            "asset": "现金",
+            "amount": 12
+          },
+          {
+            "month": "2月",
+            "asset": "股票",
+            "amount": 24
+          },
+          {
+            "month": "2月",
+            "asset": "债券",
+            "amount": 46
+          },
+          {
+            "month": "2月",
+            "asset": "现金",
+            "amount": 14
+          },
+          {
+            "month": "3月",
+            "asset": "股票",
+            "amount": 30
+          },
+          {
+            "month": "3月",
+            "asset": "债券",
+            "amount": 42
+          },
+          {
+            "month": "3月",
+            "asset": "现金",
+            "amount": 15
+          },
+          {
+            "month": "4月",
+            "asset": "股票",
+            "amount": 38
+          },
+          {
+            "month": "4月",
+            "asset": "债券",
+            "amount": 38
+          },
+          {
+            "month": "4月",
+            "asset": "现金",
+            "amount": 16
+          },
+          {
+            "month": "5月",
+            "asset": "股票",
+            "amount": 44
+          },
+          {
+            "month": "5月",
+            "asset": "债券",
+            "amount": 32
+          },
+          {
+            "month": "5月",
+            "asset": "现金",
+            "amount": 16
+          },
+          {
+            "month": "6月",
+            "asset": "股票",
+            "amount": 52
+          },
+          {
+            "month": "6月",
+            "asset": "债券",
+            "amount": 26
+          },
+          {
+            "month": "6月",
+            "asset": "现金",
+            "amount": 18
+          },
+          {
+            "month": "7月",
+            "asset": "股票",
+            "amount": 58
+          },
+          {
+            "month": "7月",
+            "asset": "债券",
+            "amount": 24
+          },
+          {
+            "month": "7月",
+            "asset": "现金",
+            "amount": 20
+          },
+          {
+            "month": "8月",
+            "asset": "股票",
+            "amount": 64
+          },
+          {
+            "month": "8月",
+            "asset": "债券",
+            "amount": 22
+          },
+          {
+            "month": "8月",
+            "asset": "现金",
+            "amount": 20
+          }
+        ]
+      }
+    },
+    {
+      "id": "stacked-rungs",
+      "title": "四个账户的资金分别放在哪里",
+      "caption": "演示数据 · 柱顶是总额，颜色区分资产。",
+      "spec": {
+        "kind": "stacked-rungs",
+        "x": "account",
+        "series": "asset",
+        "value": "amount",
+        "unitValue": 1,
+        "unit": "万元",
+        "rows": [
+          {
+            "account": "账户1",
+            "asset": "股票",
+            "amount": 18
+          },
+          {
+            "account": "账户1",
+            "asset": "债券",
+            "amount": 11
+          },
+          {
+            "account": "账户1",
+            "asset": "现金",
+            "amount": 7
+          },
+          {
+            "account": "账户2",
+            "asset": "股票",
+            "amount": 14
+          },
+          {
+            "account": "账户2",
+            "asset": "债券",
+            "amount": 9
+          },
+          {
+            "account": "账户2",
+            "asset": "现金",
+            "amount": 5
+          },
+          {
+            "account": "账户3",
+            "asset": "股票",
+            "amount": 9
+          },
+          {
+            "account": "账户3",
+            "asset": "债券",
+            "amount": 7
+          },
+          {
+            "account": "账户3",
+            "asset": "现金",
+            "amount": 6
+          },
+          {
+            "account": "账户4",
+            "asset": "股票",
+            "amount": 5
+          },
+          {
+            "account": "账户4",
+            "asset": "债券",
+            "amount": 4
+          },
+          {
+            "account": "账户4",
+            "asset": "现金",
+            "amount": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "dot-heatmap",
+      "title": "消息集中在午间和尾盘",
+      "caption": "演示数据 · 圆越大，消息越多。",
+      "spec": {
+        "kind": "dot-heatmap",
+        "x": "hour",
+        "y": "day",
+        "value": "count",
+        "unit": "条消息",
+        "rows": [
+          {
+            "day": "周一",
+            "hour": "9时",
+            "count": 2
+          },
+          {
+            "day": "周一",
+            "hour": "10时",
+            "count": 5
+          },
+          {
+            "day": "周一",
+            "hour": "11时",
+            "count": 12
+          },
+          {
+            "day": "周一",
+            "hour": "12时",
+            "count": 18
+          },
+          {
+            "day": "周一",
+            "hour": "13时",
+            "count": 11
+          },
+          {
+            "day": "周一",
+            "hour": "14时",
+            "count": 14
+          },
+          {
+            "day": "周一",
+            "hour": "15时",
+            "count": 9
+          },
+          {
+            "day": "周一",
+            "hour": "16时",
+            "count": 3
+          },
+          {
+            "day": "周二",
+            "hour": "9时",
+            "count": 1
+          },
+          {
+            "day": "周二",
+            "hour": "10时",
+            "count": 4
+          },
+          {
+            "day": "周二",
+            "hour": "11时",
+            "count": 8
+          },
+          {
+            "day": "周二",
+            "hour": "12时",
+            "count": 16
+          },
+          {
+            "day": "周二",
+            "hour": "13时",
+            "count": 12
+          },
+          {
+            "day": "周二",
+            "hour": "14时",
+            "count": 18
+          },
+          {
+            "day": "周二",
+            "hour": "15时",
+            "count": 13
+          },
+          {
+            "day": "周二",
+            "hour": "16时",
+            "count": 4
+          },
+          {
+            "day": "周三",
+            "hour": "9时",
+            "count": 0
+          },
+          {
+            "day": "周三",
+            "hour": "10时",
+            "count": 5
+          },
+          {
+            "day": "周三",
+            "hour": "11时",
+            "count": 11
+          },
+          {
+            "day": "周三",
+            "hour": "12时",
+            "count": 24
+          },
+          {
+            "day": "周三",
+            "hour": "13时",
+            "count": 18
+          },
+          {
+            "day": "周三",
+            "hour": "14时",
+            "count": 16
+          },
+          {
+            "day": "周三",
+            "hour": "15时",
+            "count": 11
+          },
+          {
+            "day": "周三",
+            "hour": "16时",
+            "count": 2
+          },
+          {
+            "day": "周四",
+            "hour": "9时",
+            "count": 2
+          },
+          {
+            "day": "周四",
+            "hour": "10时",
+            "count": 3
+          },
+          {
+            "day": "周四",
+            "hour": "11时",
+            "count": 9
+          },
+          {
+            "day": "周四",
+            "hour": "12时",
+            "count": 15
+          },
+          {
+            "day": "周四",
+            "hour": "13时",
+            "count": 16
+          },
+          {
+            "day": "周四",
+            "hour": "14时",
+            "count": 14
+          },
+          {
+            "day": "周四",
+            "hour": "15时",
+            "count": 13
+          },
+          {
+            "day": "周四",
+            "hour": "16时",
+            "count": 3
+          },
+          {
+            "day": "周五",
+            "hour": "9时",
+            "count": 1
+          },
+          {
+            "day": "周五",
+            "hour": "10时",
+            "count": 5
+          },
+          {
+            "day": "周五",
+            "hour": "11时",
+            "count": 14
+          },
+          {
+            "day": "周五",
+            "hour": "12时",
+            "count": 20
+          },
+          {
+            "day": "周五",
+            "hour": "13时",
+            "count": 22
+          },
+          {
+            "day": "周五",
+            "hour": "14时",
+            "count": 18
+          },
+          {
+            "day": "周五",
+            "hour": "15时",
+            "count": 8
+          },
+          {
+            "day": "周五",
+            "hour": "16时",
+            "count": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "funnel",
+      "title": "从 4,200 只股票缩到 310 只候选",
+      "caption": "演示数据 · 条件由本次任务决定。",
+      "spec": {
+        "kind": "funnel",
+        "x": "stage",
+        "value": "count",
+        "unit": "只",
+        "rows": [
+          {
+            "stage": "起始股票",
+            "count": 4200
+          },
+          {
+            "stage": "成交活跃",
+            "count": 1900
+          },
+          {
+            "stage": "估值合适",
+            "count": 960
+          },
+          {
+            "stage": "财务合适",
+            "count": 540
+          },
+          {
+            "stage": "候选名单",
+            "count": 310
+          }
+        ]
+      }
+    },
+    {
+      "id": "category-links",
+      "title": "24 只候选股票，分别属于哪些行业",
+      "caption": "演示数据 · 左侧是名单，右侧是行业和数量。",
+      "spec": {
+        "kind": "category-links",
+        "item": "stock",
+        "group": "sector",
+        "rows": [
+          {
+            "stock": "股票01",
+            "sector": "消费"
+          },
+          {
+            "stock": "股票02",
+            "sector": "消费"
+          },
+          {
+            "stock": "股票03",
+            "sector": "消费"
+          },
+          {
+            "stock": "股票04",
+            "sector": "消费"
+          },
+          {
+            "stock": "股票05",
+            "sector": "消费"
+          },
+          {
+            "stock": "股票06",
+            "sector": "消费"
+          },
+          {
+            "stock": "股票07",
+            "sector": "科技"
+          },
+          {
+            "stock": "股票08",
+            "sector": "科技"
+          },
+          {
+            "stock": "股票09",
+            "sector": "科技"
+          },
+          {
+            "stock": "股票10",
+            "sector": "科技"
+          },
+          {
+            "stock": "股票11",
+            "sector": "科技"
+          },
+          {
+            "stock": "股票12",
+            "sector": "金融"
+          },
+          {
+            "stock": "股票13",
+            "sector": "金融"
+          },
+          {
+            "stock": "股票14",
+            "sector": "金融"
+          },
+          {
+            "stock": "股票15",
+            "sector": "金融"
+          },
+          {
+            "stock": "股票16",
+            "sector": "医药"
+          },
+          {
+            "stock": "股票17",
+            "sector": "医药"
+          },
+          {
+            "stock": "股票18",
+            "sector": "医药"
+          },
+          {
+            "stock": "股票19",
+            "sector": "医药"
+          },
+          {
+            "stock": "股票20",
+            "sector": "能源"
+          },
+          {
+            "stock": "股票21",
+            "sector": "能源"
+          },
+          {
+            "stock": "股票22",
+            "sector": "能源"
+          },
+          {
+            "stock": "股票23",
+            "sector": "工业"
+          },
+          {
+            "stock": "股票24",
+            "sector": "工业"
+          }
+        ]
+      }
+    },
+    {
+      "id": "outcome-tally",
+      "title": "100 段相似历史，后来发生了什么",
+      "caption": "演示数据 · 同一段历史可以出现多个结果。",
+      "spec": {
+        "kind": "outcome-tally",
+        "x": "outcome",
+        "value": "count",
+        "total": "samples",
+        "unitValue": 1,
+        "overlap": true,
+        "rows": [
+          {
+            "outcome": "第5天收盘高于起点",
+            "count": 61,
+            "samples": 100
+          },
+          {
+            "outcome": "期间回撤超过3%",
+            "count": 26,
+            "samples": 100
+          },
+          {
+            "outcome": "先跌后涨",
+            "count": 42,
+            "samples": 100
+          },
+          {
+            "outcome": "回到起点附近",
+            "count": 35,
+            "samples": 100
+          }
+        ]
+      }
+    },
+    {
+      "id": "paired-rungs",
+      "title": "调整前后，五类资产分别占多少",
+      "caption": "演示数据 · 浅蓝为调整前，蓝色为调整后。",
+      "spec": {
+        "kind": "paired-rungs",
+        "x": "asset",
+        "before": "before",
+        "after": "after",
+        "unitValue": 1,
+        "unit": "万元",
+        "rows": [
+          {
+            "asset": "股票",
+            "before": 31,
+            "after": 38
+          },
+          {
+            "asset": "债券",
+            "before": 22,
+            "after": 27
+          },
+          {
+            "asset": "黄金",
+            "before": 16,
+            "after": 22
+          },
+          {
+            "asset": "商品",
+            "before": 13,
+            "after": 16
+          },
+          {
+            "asset": "现金",
+            "before": 6,
+            "after": 9
+          }
+        ]
+      }
+    },
+    {
+      "id": "rank-race",
+      "title": "哪些行业的基金规模领先",
+      "caption": "演示数据 · 可播放或选择年份，颜色始终对应同一行业。",
+      "spec": {
+        "kind": "rank-race",
+        "time": "year",
+        "item": "sector",
+        "value": "amount",
+        "unit": "亿元",
+        "rows": [
+          {
+            "year": "2022",
+            "sector": "消费",
+            "amount": 42
+          },
+          {
+            "year": "2022",
+            "sector": "科技",
+            "amount": 38
+          },
+          {
+            "year": "2022",
+            "sector": "金融",
+            "amount": 30
+          },
+          {
+            "year": "2022",
+            "sector": "医药",
+            "amount": 26
+          },
+          {
+            "year": "2022",
+            "sector": "能源",
+            "amount": 18
+          },
+          {
+            "year": "2022",
+            "sector": "工业",
+            "amount": 14
+          },
+          {
+            "year": "2023",
+            "sector": "消费",
+            "amount": 44
+          },
+          {
+            "year": "2023",
+            "sector": "科技",
+            "amount": 48
+          },
+          {
+            "year": "2023",
+            "sector": "金融",
+            "amount": 32
+          },
+          {
+            "year": "2023",
+            "sector": "医药",
+            "amount": 30
+          },
+          {
+            "year": "2023",
+            "sector": "能源",
+            "amount": 20
+          },
+          {
+            "year": "2023",
+            "sector": "工业",
+            "amount": 15
+          },
+          {
+            "year": "2024",
+            "sector": "消费",
+            "amount": 49
+          },
+          {
+            "year": "2024",
+            "sector": "科技",
+            "amount": 58
+          },
+          {
+            "year": "2024",
+            "sector": "金融",
+            "amount": 36
+          },
+          {
+            "year": "2024",
+            "sector": "医药",
+            "amount": 33
+          },
+          {
+            "year": "2024",
+            "sector": "能源",
+            "amount": 23
+          },
+          {
+            "year": "2024",
+            "sector": "工业",
+            "amount": 19
+          },
+          {
+            "year": "2025",
+            "sector": "消费",
+            "amount": 55
+          },
+          {
+            "year": "2025",
+            "sector": "科技",
+            "amount": 72
+          },
+          {
+            "year": "2025",
+            "sector": "金融",
+            "amount": 40
+          },
+          {
+            "year": "2025",
+            "sector": "医药",
+            "amount": 38
+          },
+          {
+            "year": "2025",
+            "sector": "能源",
+            "amount": 27
+          },
+          {
+            "year": "2025",
+            "sector": "工业",
+            "amount": 24
+          },
+          {
+            "year": "2026",
+            "sector": "消费",
+            "amount": 62
+          },
+          {
+            "year": "2026",
+            "sector": "科技",
+            "amount": 86
+          },
+          {
+            "year": "2026",
+            "sector": "金融",
+            "amount": 46
+          },
+          {
+            "year": "2026",
+            "sector": "医药",
+            "amount": 43
+          },
+          {
+            "year": "2026",
+            "sector": "能源",
+            "amount": 35
+          },
+          {
+            "year": "2026",
+            "sector": "工业",
+            "amount": 29
+          }
+        ]
+      }
+    },
+    {
+      "id": "spectrum",
+      "title": "这套方案更偏成长，换手较低",
+      "caption": "演示数据 · 大点是当前方案，小点是三个对照方案。",
+      "spec": {
+        "kind": "spectrum",
+        "label": "plan",
+        "focus": "当前方案",
+        "dimensions": [
+          {
+            "field": "risk",
+            "min": 0,
+            "max": 100,
+            "left": "低波动",
+            "right": "高波动"
+          },
+          {
+            "field": "growth",
+            "min": 0,
+            "max": 100,
+            "left": "价值",
+            "right": "成长"
+          },
+          {
+            "field": "concentration",
+            "min": 0,
+            "max": 100,
+            "left": "分散",
+            "right": "集中"
+          },
+          {
+            "field": "turnover",
+            "min": 0,
+            "max": 100,
+            "left": "低换手",
+            "right": "高换手"
+          }
+        ],
+        "rows": [
+          {
+            "plan": "当前方案",
+            "risk": 74,
+            "growth": 80,
+            "concentration": 40,
+            "turnover": 22
+          },
+          {
+            "plan": "方案甲",
+            "risk": 22,
+            "growth": 35,
+            "concentration": 65,
+            "turnover": 58
+          },
+          {
+            "plan": "方案乙",
+            "risk": 48,
+            "growth": 50,
+            "concentration": 25,
+            "turnover": 80
+          },
+          {
+            "plan": "方案丙",
+            "risk": 60,
+            "growth": 67,
+            "concentration": 82,
+            "turnover": 40
+          }
+        ]
+      }
+    },
+    {
+      "id": "tick-donut",
+      "title": "股票占 37%，其余分散配置",
+      "caption": "演示数据 · 一格表示 1%，四类资产合计 100%。",
+      "spec": {
+        "kind": "tick-donut",
+        "x": "asset",
+        "value": "weight",
+        "unitValue": 1,
+        "unit": "%",
+        "rows": [
+          {
+            "asset": "股票",
+            "weight": 37
+          },
+          {
+            "asset": "债券",
+            "weight": 28
+          },
+          {
+            "asset": "黄金",
+            "weight": 21
+          },
+          {
+            "asset": "现金",
+            "weight": 14
+          }
+        ]
+      }
+    },
+    {
+      "id": "barcode",
+      "title": "三次成交明显放大，其余较平稳",
+      "caption": "演示数据 · 每点是一天的成交额，标出三次高点。",
+      "spec": {
+        "kind": "barcode",
+        "x": "day",
+        "value": "amount",
+        "xType": "time",
+        "unit": "亿元",
+        "highlights": [
+          "2026-07-15",
+          "2026-08-14",
+          "2026-09-15"
+        ],
+        "rows": [
+          {
+            "day": "2026-07-01",
+            "amount": 64
+          },
+          {
+            "day": "2026-07-02",
+            "amount": 102
+          },
+          {
+            "day": "2026-07-03",
+            "amount": 117
+          },
+          {
+            "day": "2026-07-04",
+            "amount": 101
+          },
+          {
+            "day": "2026-07-05",
+            "amount": 62
+          },
+          {
+            "day": "2026-07-06",
+            "amount": 91
+          },
+          {
+            "day": "2026-07-07",
+            "amount": 106
+          },
+          {
+            "day": "2026-07-08",
+            "amount": 91
+          },
+          {
+            "day": "2026-07-09",
+            "amount": 50
+          },
+          {
+            "day": "2026-07-10",
+            "amount": 72
+          },
+          {
+            "day": "2026-07-11",
+            "amount": 96
+          },
+          {
+            "day": "2026-07-12",
+            "amount": 91
+          },
+          {
+            "day": "2026-07-13",
+            "amount": 60
+          },
+          {
+            "day": "2026-07-14",
+            "amount": 84
+          },
+          {
+            "day": "2026-07-15",
+            "amount": 199
+          },
+          {
+            "day": "2026-07-16",
+            "amount": 106
+          },
+          {
+            "day": "2026-07-17",
+            "amount": 75
+          },
+          {
+            "day": "2026-07-18",
+            "amount": 91
+          },
+          {
+            "day": "2026-07-19",
+            "amount": 117
+          },
+          {
+            "day": "2026-07-20",
+            "amount": 112
+          },
+          {
+            "day": "2026-07-21",
+            "amount": 80
+          },
+          {
+            "day": "2026-07-22",
+            "amount": 86
+          },
+          {
+            "day": "2026-07-23",
+            "amount": 111
+          },
+          {
+            "day": "2026-07-24",
+            "amount": 107
+          },
+          {
+            "day": "2026-07-25",
+            "amount": 73
+          },
+          {
+            "day": "2026-07-26",
+            "amount": 71
+          },
+          {
+            "day": "2026-07-27",
+            "amount": 96
+          },
+          {
+            "day": "2026-07-28",
+            "amount": 92
+          },
+          {
+            "day": "2026-07-29",
+            "amount": 62
+          },
+          {
+            "day": "2026-07-30",
+            "amount": 62
+          },
+          {
+            "day": "2026-07-31",
+            "amount": 97
+          },
+          {
+            "day": "2026-08-01",
+            "amount": 104
+          },
+          {
+            "day": "2026-08-02",
+            "amount": 81
+          },
+          {
+            "day": "2026-08-03",
+            "amount": 73
+          },
+          {
+            "day": "2026-08-04",
+            "amount": 108
+          },
+          {
+            "day": "2026-08-05",
+            "amount": 116
+          },
+          {
+            "day": "2026-08-06",
+            "amount": 93
+          },
+          {
+            "day": "2026-08-07",
+            "amount": 76
+          },
+          {
+            "day": "2026-08-08",
+            "amount": 109
+          },
+          {
+            "day": "2026-08-09",
+            "amount": 117
+          },
+          {
+            "day": "2026-08-10",
+            "amount": 92
+          },
+          {
+            "day": "2026-08-11",
+            "amount": 67
+          },
+          {
+            "day": "2026-08-12",
+            "amount": 99
+          },
+          {
+            "day": "2026-08-13",
+            "amount": 106
+          },
+          {
+            "day": "2026-08-14",
+            "amount": 208
+          },
+          {
+            "day": "2026-08-15",
+            "amount": 48
+          },
+          {
+            "day": "2026-08-16",
+            "amount": 81
+          },
+          {
+            "day": "2026-08-17",
+            "amount": 96
+          },
+          {
+            "day": "2026-08-18",
+            "amount": 83
+          },
+          {
+            "day": "2026-08-19",
+            "amount": 52
+          },
+          {
+            "day": "2026-08-20",
+            "amount": 93
+          },
+          {
+            "day": "2026-08-21",
+            "amount": 112
+          },
+          {
+            "day": "2026-08-22",
+            "amount": 99
+          },
+          {
+            "day": "2026-08-23",
+            "amount": 63
+          },
+          {
+            "day": "2026-08-24",
+            "amount": 100
+          },
+          {
+            "day": "2026-08-25",
+            "amount": 119
+          },
+          {
+            "day": "2026-08-26",
+            "amount": 106
+          },
+          {
+            "day": "2026-08-27",
+            "amount": 68
+          },
+          {
+            "day": "2026-08-28",
+            "amount": 96
+          },
+          {
+            "day": "2026-08-29",
+            "amount": 114
+          },
+          {
+            "day": "2026-08-30",
+            "amount": 100
+          },
+          {
+            "day": "2026-08-31",
+            "amount": 62
+          },
+          {
+            "day": "2026-09-01",
+            "amount": 81
+          },
+          {
+            "day": "2026-09-02",
+            "amount": 99
+          },
+          {
+            "day": "2026-09-03",
+            "amount": 87
+          },
+          {
+            "day": "2026-09-04",
+            "amount": 51
+          },
+          {
+            "day": "2026-09-05",
+            "amount": 73
+          },
+          {
+            "day": "2026-09-06",
+            "amount": 101
+          },
+          {
+            "day": "2026-09-07",
+            "amount": 100
+          },
+          {
+            "day": "2026-09-08",
+            "amount": 70
+          },
+          {
+            "day": "2026-09-09",
+            "amount": 84
+          },
+          {
+            "day": "2026-09-10",
+            "amount": 113
+          },
+          {
+            "day": "2026-09-11",
+            "amount": 112
+          },
+          {
+            "day": "2026-09-12",
+            "amount": 82
+          },
+          {
+            "day": "2026-09-13",
+            "amount": 87
+          },
+          {
+            "day": "2026-09-14",
+            "amount": 115
+          },
+          {
+            "day": "2026-09-15",
+            "amount": 197
+          },
+          {
+            "day": "2026-09-16",
+            "amount": 82
+          },
+          {
+            "day": "2026-09-17",
+            "amount": 78
+          },
+          {
+            "day": "2026-09-18",
+            "amount": 105
+          },
+          {
+            "day": "2026-09-19",
+            "amount": 103
+          },
+          {
+            "day": "2026-09-20",
+            "amount": 72
+          },
+          {
+            "day": "2026-09-21",
+            "amount": 60
+          },
+          {
+            "day": "2026-09-22",
+            "amount": 87
+          },
+          {
+            "day": "2026-09-23",
+            "amount": 95
+          },
+          {
+            "day": "2026-09-24",
+            "amount": 73
+          },
+          {
+            "day": "2026-09-25",
+            "amount": 63
+          },
+          {
+            "day": "2026-09-26",
+            "amount": 101
+          },
+          {
+            "day": "2026-09-27",
+            "amount": 111
+          },
+          {
+            "day": "2026-09-28",
+            "amount": 90
+          }
+        ]
+      }
+    },
+    {
+      "id": "bubble-ledger",
+      "title": "科技与医药的项目逐年增加",
+      "caption": "演示数据 · 圆面积表示项目数，虚线表示资料不完整。",
+      "spec": {
+        "kind": "bubble-ledger",
+        "x": "sector",
+        "y": "year",
+        "value": "count",
+        "status": "coverage",
+        "event": "event",
+        "unit": "项",
+        "rows": [
+          {
+            "year": 2019,
+            "sector": "银行",
+            "count": 5,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2019,
+            "sector": "消费",
+            "count": 8,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2019,
+            "sector": "科技",
+            "count": null,
+            "coverage": "missing",
+            "event": ""
+          },
+          {
+            "year": 2019,
+            "sector": "医药",
+            "count": 7,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2019,
+            "sector": "能源",
+            "count": 3,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2019,
+            "sector": "工业",
+            "count": 2,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2020,
+            "sector": "银行",
+            "count": 9,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2020,
+            "sector": "消费",
+            "count": 9,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2020,
+            "sector": "科技",
+            "count": 12,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2020,
+            "sector": "医药",
+            "count": 8,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2020,
+            "sector": "能源",
+            "count": 4,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2020,
+            "sector": "工业",
+            "count": 6,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2021,
+            "sector": "银行",
+            "count": 10,
+            "coverage": "observed",
+            "event": "演示项目扩展"
+          },
+          {
+            "year": 2021,
+            "sector": "消费",
+            "count": 8,
+            "coverage": "observed",
+            "event": "演示项目扩展"
+          },
+          {
+            "year": 2021,
+            "sector": "科技",
+            "count": 14,
+            "coverage": "observed",
+            "event": "演示项目扩展"
+          },
+          {
+            "year": 2021,
+            "sector": "医药",
+            "count": 10,
+            "coverage": "observed",
+            "event": "演示项目扩展"
+          },
+          {
+            "year": 2021,
+            "sector": "能源",
+            "count": 7,
+            "coverage": "observed",
+            "event": "演示项目扩展"
+          },
+          {
+            "year": 2021,
+            "sector": "工业",
+            "count": 10,
+            "coverage": "observed",
+            "event": "演示项目扩展"
+          },
+          {
+            "year": 2022,
+            "sector": "银行",
+            "count": 9,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2022,
+            "sector": "消费",
+            "count": 7,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2022,
+            "sector": "科技",
+            "count": 17,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2022,
+            "sector": "医药",
+            "count": 15,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2022,
+            "sector": "能源",
+            "count": 11,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2022,
+            "sector": "工业",
+            "count": 12,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2023,
+            "sector": "银行",
+            "count": 8,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2023,
+            "sector": "消费",
+            "count": 7,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2023,
+            "sector": "科技",
+            "count": 23,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2023,
+            "sector": "医药",
+            "count": 21,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2023,
+            "sector": "能源",
+            "count": 13,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2023,
+            "sector": "工业",
+            "count": 11,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2024,
+            "sector": "银行",
+            "count": 8,
+            "coverage": "observed",
+            "event": "演示统计范围更新"
+          },
+          {
+            "year": 2024,
+            "sector": "消费",
+            "count": 10,
+            "coverage": "observed",
+            "event": "演示统计范围更新"
+          },
+          {
+            "year": 2024,
+            "sector": "科技",
+            "count": 30,
+            "coverage": "observed",
+            "event": "演示统计范围更新"
+          },
+          {
+            "year": 2024,
+            "sector": "医药",
+            "count": 25,
+            "coverage": "observed",
+            "event": "演示统计范围更新"
+          },
+          {
+            "year": 2024,
+            "sector": "能源",
+            "count": 12,
+            "coverage": "observed",
+            "event": "演示统计范围更新"
+          },
+          {
+            "year": 2024,
+            "sector": "工业",
+            "count": 10,
+            "coverage": "observed",
+            "event": "演示统计范围更新"
+          },
+          {
+            "year": 2025,
+            "sector": "银行",
+            "count": 12,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2025,
+            "sector": "消费",
+            "count": 14,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2025,
+            "sector": "科技",
+            "count": 35,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2025,
+            "sector": "医药",
+            "count": 26,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2025,
+            "sector": "能源",
+            "count": 11,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2025,
+            "sector": "工业",
+            "count": 9,
+            "coverage": "observed",
+            "event": ""
+          },
+          {
+            "year": 2026,
+            "sector": "银行",
+            "count": 16,
+            "coverage": "observed",
+            "event": "能源资料尚未齐全"
+          },
+          {
+            "year": 2026,
+            "sector": "消费",
+            "count": 17,
+            "coverage": "observed",
+            "event": "能源资料尚未齐全"
+          },
+          {
+            "year": 2026,
+            "sector": "科技",
+            "count": 37,
+            "coverage": "observed",
+            "event": "能源资料尚未齐全"
+          },
+          {
+            "year": 2026,
+            "sector": "医药",
+            "count": 26,
+            "coverage": "observed",
+            "event": "能源资料尚未齐全"
+          },
+          {
+            "year": 2026,
+            "sector": "能源",
+            "count": 11,
+            "coverage": "partial",
+            "event": "能源资料尚未齐全"
+          },
+          {
+            "year": 2026,
+            "sector": "工业",
+            "count": 12,
+            "coverage": "observed",
+            "event": "能源资料尚未齐全"
+          }
+        ]
+      }
+    }
+  ]
+}

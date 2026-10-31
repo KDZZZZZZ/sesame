@@ -65,7 +65,6 @@
     controls.setAttribute('role', 'toolbar'); controls.setAttribute('aria-label', '决策树视图');
     frame.classList.add('sc-decision-frame'); frame.prepend(viewport); viewport.append(svg); frame.append(controls);
     svg.setAttribute('role', 'group'); svg.setAttribute('data-decision-style', 'compact');
-    svg.setAttribute('data-decision-layout', 'horizontal');
     const listen = (element, event, handler, options) => {
       element.addEventListener(event, handler, options);
       listeners.push(() => element.removeEventListener(event, handler, options));
@@ -255,48 +254,56 @@
         applyTextStyle(probe, style);
         return Math.max(0, ...lines.map(line => { probe.textContent = line; return probe.getComputedTextLength(); }));
       };
-      const columns = Array(maxDepth + 1).fill(0), branches = Array(maxDepth + 1).fill(0);
-      for (const record of ordered) {
-        record.conditionLines = record.condition ? wrap(record.condition, 112, styles.condition) : [];
-        record.conditionHeight = record.conditionLines.length * styles.condition.lineHeight;
-        record.conditionWidth = measuredWidth(record.conditionLines, styles.condition);
-        record.parts = [];
-        let offset = 8, textWidth = 0;
-        for (const name of ['label', 'detail']) {
-          if (!record[name]) continue;
-          const style = styles[name], lines = wrap(record[name], 194, style);
-          textWidth = Math.max(textWidth, measuredWidth(lines, style));
-          if (record.parts.length) offset += 4;
-          record.parts.push({ name, style, lines, offset }); offset += lines.length * style.lineHeight;
+      function layout() {
+        const columns = Array(maxDepth + 1).fill(0), branches = Array(maxDepth + 1).fill(0);
+        for (const record of ordered) {
+          const available = 194;
+          record.conditionLines = record.condition ? wrap(record.condition, 112, styles.condition) : [];
+          record.conditionHeight = record.conditionLines.length * styles.condition.lineHeight;
+          record.conditionWidth = measuredWidth(record.conditionLines, styles.condition);
+          record.parts = [];
+          let offset = 8, textWidth = 0;
+          for (const name of ['label', 'detail']) {
+            if (!record[name]) continue;
+            const style = styles[name], lines = wrap(record[name], available, style);
+            textWidth = Math.max(textWidth, measuredWidth(lines, style));
+            if (record.parts.length) offset += 4;
+            record.parts.push({ name, style, lines, offset }); offset += lines.length * style.lineHeight;
+          }
+          record.w = Math.max(112, textWidth + inset + 8);
+          record.boxHeight = Math.max(40, offset + 8);
+          record.h = record.parent ? Math.max(record.boxHeight, record.conditionHeight) : record.boxHeight + (record.conditionHeight ? record.conditionHeight + 12 : 0);
+          columns[record.depth] = Math.max(columns[record.depth], record.w);
+          branches[record.depth] = Math.max(branches[record.depth], record.conditionWidth);
         }
-        record.w = Math.max(112, textWidth + inset + 8);
-        record.boxHeight = Math.max(40, offset + 8);
-        record.h = record.parent ? Math.max(record.boxHeight, record.conditionHeight) : record.boxHeight + (record.conditionHeight ? record.conditionHeight + 12 : 0);
-        columns[record.depth] = Math.max(columns[record.depth], record.w);
-        branches[record.depth] = Math.max(branches[record.depth], record.conditionWidth);
+        for (let i = ordered.length - 1; i >= 0; i--) {
+          const record = ordered[i];
+          record.childrenHeight = record.children.reduce((sum, child) => sum + child.subtreeHeight, 0) + Math.max(0, record.children.length - 1) * rowGap;
+          record.subtreeHeight = Math.max(record.h, record.childrenHeight);
+        }
+        const columnX = [margin];
+        for (let depth = 1; depth <= maxDepth; depth++) columnX[depth] = columnX[depth - 1] + columns[depth - 1] + branches[depth] + 64;
+        root.top = margin;
+        for (const record of ordered) {
+          record.x = columnX[record.depth];
+          record.y = record.top + (record.subtreeHeight - record.h) / 2;
+          record.boxY = record.y + (record.h - record.boxHeight) / 2;
+          if (!record.parent && record.conditionHeight) record.boxY = record.y + record.conditionHeight + 12;
+          record.cy = record.boxY + record.boxHeight / 2;
+          let childTop = record.top + (record.subtreeHeight - record.childrenHeight) / 2;
+          for (const child of record.children) { child.top = childTop; childTop += child.subtreeHeight + rowGap; }
+        }
+        return { branches, naturalWidth: Math.max(width, columnX[maxDepth] + columns[maxDepth] + margin),
+          totalHeight: Math.max(120, root.subtreeHeight + margin * 2) };
       }
+      const { branches, naturalWidth, totalHeight } = layout();
       probe.remove();
-      for (let i = ordered.length - 1; i >= 0; i--) {
-        const record = ordered[i];
-        record.childrenHeight = record.children.reduce((sum, child) => sum + child.subtreeHeight, 0) + Math.max(0, record.children.length - 1) * rowGap;
-        record.subtreeHeight = Math.max(record.h, record.childrenHeight);
-      }
-      const columnX = [margin];
-      for (let depth = 1; depth <= maxDepth; depth++) columnX[depth] = columnX[depth - 1] + columns[depth - 1] + branches[depth] + 64;
-      root.top = margin;
-      for (const record of ordered) {
-        record.x = columnX[record.depth]; record.y = record.top + (record.subtreeHeight - record.h) / 2;
-        record.boxY = record.y + (record.h - record.boxHeight) / 2;
-        if (!record.parent && record.conditionHeight) record.boxY = record.y + record.conditionHeight + 12;
-        record.cy = record.boxY + record.boxHeight / 2;
-        let childTop = record.top + (record.subtreeHeight - record.childrenHeight) / 2;
-        for (const child of record.children) { child.top = childTop; childTop += child.subtreeHeight + rowGap; }
-      }
-      const totalHeight = Math.max(120, root.subtreeHeight + margin * 2);
+      svg.setAttribute('data-decision-layout', 'horizontal');
       ctx.setHeight(spec.height ?? 480);
+      viewport.style.height = `${spec.height ?? 480}px`;
       // Natural geometry remains intact. Only this viewport transforms; source
       // records, layout coordinates, row indices and exported topology do not.
-      svg.setAttribute('viewBox', `0 0 ${Math.max(width, columnX[maxDepth] + columns[maxDepth] + margin)} ${totalHeight}`);
+      svg.setAttribute('viewBox', `0 0 ${naturalWidth} ${totalHeight}`);
       scene = node('g', { class: 'sc-decision-scene' }); svg.append(scene);
       const links = node('g', { class: 'sc-decision-links', fill: 'none', stroke: context, 'stroke-width': 1.2, 'aria-hidden': 'true', 'pointer-events': 'none' });
       scene.append(links);
@@ -317,7 +324,8 @@
           const branch = node('g', { 'data-decision-kind': 'condition', 'data-target-id': record.key, 'aria-hidden': 'true', 'pointer-events': 'none' });
           const element = node('text', { 'data-decision-part': 'condition' });
           applyTextStyle(element, styles.condition);
-          const x = record.parent ? record.conditionX : record.x + inset, y = record.parent ? record.cy - record.conditionHeight / 2 : record.y;
+          const x = record.parent ? record.conditionX : record.x + inset;
+          const y = record.parent ? record.cy - record.conditionHeight / 2 : record.y;
           record.conditionLines.forEach((lineText, i) => element.append(node('tspan', { x, y: y + styles.condition.size + i * styles.condition.lineHeight }, lineText)));
           branch.append(element); scene.append(branch); record.branch = branch;
         }

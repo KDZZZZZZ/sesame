@@ -26,6 +26,13 @@
         }
       },
       {
+        "id": "search",
+        "title": {
+          "en": "Search and sources",
+          "zh": "搜索与来源"
+        }
+      },
+      {
         "id": "integration",
         "title": {
           "en": "Resource integrations",
@@ -86,62 +93,6 @@
     ]
   },
   "packages": [
-    {
-      "id": "sesame/abu-backtest-lab",
-      "version": "2.0.1",
-      "distribution": "optional",
-      "state": "discoverable",
-      "engines": {
-        "sesame": ">=0.2.3"
-      },
-      "format": "sesame-native",
-      "license": "GPL-3.0-only",
-      "author": {
-        "name": "Sesame contributors; ABU reference by bbfamily / 阿布"
-      },
-      "category": "research",
-      "functionalCategory": "analysis",
-      "implementationKinds": [
-        "function"
-      ],
-      "title": {
-        "en": "Backtest diagnostics",
-        "zh": "回测诊断"
-      },
-      "summary": {
-        "en": "Inspect timing, cost, fill and position assumptions before handing fixed evidence to a native engine.",
-        "zh": "时序、成本、成交和持仓约束诊断及原生引擎交接。"
-      },
-      "dependencies": {
-        "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
-        "zh": "需要 Node.js 与明确来源、截止时点的固定输入。研究结果不等同于原生回测或可执行订单。"
-      },
-      "permissions": {
-        "scopes": [],
-        "calls": []
-      },
-      "tools": [
-        "abu_backtest_lab_analyze"
-      ],
-      "capabilities": [
-        {
-          "id": "abu_backtest_lab_analyze",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        }
-      ],
-      "hostContributions": {
-        "sources": [],
-        "views": [],
-        "services": [],
-        "hooks": []
-      },
-      "sourcePath": "plugins/optional-api-v1/packages/abu-backtest-lab"
-    },
     {
       "id": "sesame/abu-breakout",
       "version": "2.0.1",
@@ -480,7 +431,7 @@
     },
     {
       "id": "sesame/abu-parameter-search",
-      "version": "2.0.2",
+      "version": "2.0.4",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -497,12 +448,12 @@
         "function"
       ],
       "title": {
-        "en": "Parameter search",
-        "zh": "参数搜索"
+        "en": "Parameter experiment evidence",
+        "zh": "参数试验证据"
       },
       "summary": {
-        "en": "Search a bounded grid and freeze development-period selections before out-of-sample evaluation.",
-        "zh": "有限网格、开发期排名与固定样本外选择记录。"
+        "en": "Enumerate a bounded input-only grid, rank supplied development metrics, freeze selections and check selected-only holdout evidence; does not execute trials or a native optimizer.",
+        "zh": "在输入内枚举有界网格，排名已提供开发指标、冻结选择并校验所选留出证据；不执行试验或原生优化器。"
       },
       "dependencies": {
         "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
@@ -704,7 +655,7 @@
     },
     {
       "id": "sesame/abu-similarity",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -721,12 +672,12 @@
         "function"
       ],
       "title": {
-        "en": "Series similarity",
-        "zh": "序列相似性"
+        "en": "Concurrent return similarity",
+        "zh": "同期收益相似性"
       },
       "summary": {
-        "en": "Compare time-aligned return correlations, rank correlations and directional similarity.",
-        "zh": "时间对齐的收益相关、秩相关和方向相似性。"
+        "en": "Compare returns with exactly matching start/end timestamps using Pearson, Spearman and sign agreement; does not retrieve historical scenarios or predict probabilities.",
+        "zh": "以完全相同起止时点对齐收益，计算Pearson、Spearman与方向一致率；不检索历史情景或预测概率。"
       },
       "dependencies": {
         "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
@@ -872,7 +823,7 @@
     },
     {
       "id": "sesame/abu-trade-metrics",
-      "version": "2.0.1",
+      "version": "2.1.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -889,12 +840,12 @@
         "function"
       ],
       "title": {
-        "en": "Trade metrics",
-        "zh": "交易指标"
+        "en": "Trade results diagnostics",
+        "zh": "交易结果诊断"
       },
       "summary": {
-        "en": "Calculate drawdown, attribution, return and risk metrics from supplied evidence.",
-        "zh": "权益回撤、交易归因、收益与风险指标。"
+        "en": "Calculate equity performance and independently audit supplied order/fill/replay timing, cost and constraints; both operations preserve fixed input and output artifacts.",
+        "zh": "计算权益绩效，并独立审计已提供订单/成交/回放的时序、成本与约束；两个能力分别留存固定输入和结果工件。"
       },
       "dependencies": {
         "en": "Node.js and explicit fixed, time-labelled inputs. Research output is not a native backtest or executable order.",
@@ -905,11 +856,21 @@
         "calls": []
       },
       "tools": [
-        "abu_trade_metrics_analyze"
+        "abu_trade_metrics_analyze",
+        "abu_trade_results_audit"
       ],
       "capabilities": [
         {
           "id": "abu_trade_metrics_analyze",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "abu_trade_results_audit",
           "kind": "function",
           "consumers": [
             "agent",
@@ -1288,11 +1249,11 @@
     },
     {
       "id": "sesame/auto-factor-mining",
-      "version": "1.1.8",
+      "version": "1.4.8",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.3.0-dev.1 <0.4.0"
+        "sesame": ">=0.3.0-dev.2 <0.4.0"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -1305,12 +1266,12 @@
         "workflow"
       ],
       "title": {
-        "en": "Factor research workflow",
-        "zh": "因子研究工作流"
+        "en": "Strategy — factor and strategy research",
+        "zh": "Strategy · 因子与策略研究"
       },
       "summary": {
-        "en": "Coordinate configured role Agents and an explicitly selected evaluator in one native Run graph and final report.",
-        "zh": "用已配置角色 Agent 和明确选择的评估器组织研究，共用宿主运行图和最终报告。"
+        "en": "Run single- or multi-Agent factor and strategy experiments, retain conditional usefulness and counterevidence, optionally invoke native backtests and optimizers, and deliver Strategy.",
+        "zh": "以单 Agent 或多 Agent 研究因子与策略，保留条件用途与反例，可选接入原生回测和优化器并生成 Strategy。"
       },
       "dependencies": {
         "en": "A configured model, a selected evaluator and fixed evidence. No implicit trading backend.",
@@ -1319,7 +1280,8 @@
       "permissions": {
         "scopes": [
           "capabilities.compose",
-          "plugins.manage"
+          "plugins.manage",
+          "process.execute"
         ],
         "calls": [
           "host.agent.run",
@@ -1327,10 +1289,10 @@
           "host.runs.wait",
           "host.runs.interrupt",
           "host.resources.read",
-          "sesame/reports#report_document_template",
           "sesame/reports#report_publish",
           "sesame/reports#report_check",
-          "sesame/workspace#write"
+          "sesame/workspace#write",
+          "host.reports.describe"
         ]
       },
       "tools": [
@@ -1464,7 +1426,7 @@
     },
     {
       "id": "sesame/backtrader",
-      "version": "2.0.2",
+      "version": "2.1.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -1505,7 +1467,9 @@
       "tools": [
         "backtrader_environment",
         "backtrader_backtest",
-        "backtrader_result"
+        "backtrader_optimize",
+        "backtrader_result",
+        "backtrader_operation"
       ],
       "capabilities": [
         {
@@ -1527,6 +1491,15 @@
           "execution": "run"
         },
         {
+          "id": "backtrader_optimize",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
           "id": "backtrader_result",
           "kind": "function",
           "consumers": [
@@ -1539,6 +1512,15 @@
           "id": "backtrader_dispose",
           "kind": "function",
           "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "backtrader_operation",
+          "kind": "function",
+          "consumers": [
+            "agent",
             "host"
           ],
           "execution": "immediate"
@@ -2355,7 +2337,7 @@
     },
     {
       "id": "sesame/data-access",
-      "version": "3.0.3",
+      "version": "3.0.4",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -2575,7 +2557,7 @@
     },
     {
       "id": "sesame/factor-evaluator",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2596,12 +2578,12 @@
         "zh": "确定性因子评估"
       },
       "summary": {
-        "en": "Evaluate single-symbol or cross-sectional factors with task-selected placebo, Monte Carlo, out-of-sample, walk-forward, parameter, regime and bootstrap diagnostics; retain actual results and frozen selection.",
-        "zh": "评估单品种或截面因子，按需组合安慰剂、蒙特卡洛、样本外、滚动前推、参数、状态分层和置信区间诊断，保存实测结果与冻结选择。"
+        "en": "Compute factor association, task-selected diagnostics and complete-trial DSR/PBO evidence; support conditional use instead of requiring all tests to pass.",
+        "zh": "计算因子关联、按任务选择的检验及完整试验 DSR/PBO 证据；支持有条件使用，不要求所有检验通过。"
       },
       "dependencies": {
-        "en": "Fixed point-in-time data and a trusted workflow invocation. Optional diagnostics need only their own applicable inputs; unavailable items do not block the others. No broker connection or Python dependency.",
-        "zh": "需要固定时点数据和可信工作流调用；按需诊断只依赖各自适用输入，缺项不阻塞其他评估。无需券商连接或 Python。"
+        "en": "Fixed data and a trusted workflow. Agent thresholds are advisory; explicit user hard requirements gate selection. DSR/PBO require complete observed trial returns and stated assumptions.",
+        "zh": "需要固定数据和可信工作流；Agent 阈值用于判断，用户明确硬性要求才限制选择。DSR/PBO 需要完整试验收益及明确假设。"
       },
       "permissions": {
         "scopes": [],
@@ -2632,50 +2614,6 @@
       "sourcePath": "plugins/optional-api-v1/packages/factor-evaluator"
     },
     {
-      "id": "sesame/factor-research",
-      "version": "2.0.1",
-      "distribution": "optional",
-      "state": "discoverable",
-      "engines": {
-        "sesame": ">=0.2.3"
-      },
-      "format": "sesame-native",
-      "license": "MIT",
-      "author": {
-        "name": "Sesame contributors"
-      },
-      "category": "research",
-      "functionalCategory": "business",
-      "implementationKinds": [
-        "knowledge"
-      ],
-      "title": {
-        "en": "Factor research",
-        "zh": "因子研究"
-      },
-      "summary": {
-        "en": "Evaluate selected factor columns, redundancy, cost assumptions and held-out outcomes.",
-        "zh": "评估所选因子列、冗余、成本假设与留出样本结果。"
-      },
-      "dependencies": {
-        "en": "Existing Node.js 22+ and fixed point-in-time data; selection is frozen before OOS evaluation. No model family is preloaded.",
-        "zh": "需现有 Node.js 22+ 与固定时点数据，样本外评估前冻结选择；不预加载模型流派。"
-      },
-      "permissions": {
-        "scopes": [],
-        "calls": []
-      },
-      "tools": [],
-      "capabilities": [],
-      "hostContributions": {
-        "sources": [],
-        "views": [],
-        "services": [],
-        "hooks": []
-      },
-      "sourcePath": "plugins/optional-api-v1/packages/factor-research"
-    },
-    {
       "id": "sesame/financial-research",
       "version": "2.1.1",
       "distribution": "optional",
@@ -2689,7 +2627,7 @@
         "name": "Sesame contributors"
       },
       "category": "data",
-      "functionalCategory": "integration",
+      "functionalCategory": "search",
       "implementationKinds": [
         "adapter"
       ],
@@ -2798,6 +2736,86 @@
       "sourcePath": "plugins/optional-api-v1/packages/financial-research"
     },
     {
+      "id": "sesame/historical-evidence",
+      "version": "1.1.2",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.3.0-dev.1 <0.4.0"
+      },
+      "format": "sesame-native",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors"
+      },
+      "category": "research",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "title": {
+        "en": "Historical scenarios and probability calibration",
+        "zh": "历史情景与概率校准"
+      },
+      "summary": {
+        "en": "Match fixed comparable historical situations and evaluate calibration with separate fit/evaluation evidence; explicitly labelled present-day historical replay remains exploratory and yields no current calibrated probability.",
+        "zh": "匹配固定历史同类情景，并分开拟合和评价证据；明确标注的今日历史回放仅作探索诊断，不输出当前校准概率。"
+      },
+      "dependencies": {
+        "en": "Supplied features, verified availability and matured outcomes; prospective calibration requires original timestamped predictions. Historical replay requires fixed code/data and distinct actual/virtual clocks. No network or broker.",
+        "zh": "需要已提供特征、可验证可见时间和到期结果；前瞻校准须原始带时间预测。历史回放须固定代码/数据并区分实际与虚拟时钟。不联网或连接券商。"
+      },
+      "permissions": {
+        "scopes": [],
+        "calls": [
+          "host.resources.read",
+          "host.resources.create",
+          "host.resources.publish"
+        ]
+      },
+      "tools": [
+        "historical_evidence_match",
+        "historical_evidence_calibrate",
+        "historical_evidence_from_ref"
+      ],
+      "capabilities": [
+        {
+          "id": "historical_evidence_match",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "historical_evidence_calibrate",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "historical_evidence_from_ref",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
+      "sourcePath": "plugins/optional-api-v1/packages/historical-evidence"
+    },
+    {
       "id": "sesame/ict",
       "version": "2.0.1",
       "distribution": "optional",
@@ -2887,11 +2905,11 @@
     },
     {
       "id": "sesame/investment-research",
-      "version": "3.1.8",
+      "version": "3.5.5",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.3.0-dev.1 <0.4.0"
+        "sesame": ">=0.3.0-dev.2 <0.4.0"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -2904,12 +2922,12 @@
         "workflow"
       ],
       "title": {
-        "en": "Investment research",
-        "zh": "投资研究"
+        "en": "Research — investment research",
+        "zh": "Research · 投资研究"
       },
       "summary": {
-        "en": "Combine declared sources and methods into fixed research evidence, scenarios and a manager-authored visual report; regenerate presentation independently.",
-        "zh": "组合明确声明的信源与分析方法，产出固定研究成果、情景和经理图文报告；可单独重生报告。"
+        "en": "Organize requirements, evidence acquisition, analysis and report delivery for an investment question; adapt result forms without fixing methods.",
+        "zh": "围绕投资问题与结果需求组织获取、分析和报告，可调整结果形式，不固定研究方法。"
       },
       "dependencies": {
         "en": "Configured model and selected research capabilities; no trading account or execution binding. Report output uses the reports plugin and the host Run.",
@@ -2924,15 +2942,28 @@
           "host.runs.read",
           "host.runs.wait",
           "host.runs.interrupt",
-          "host.resources.read"
+          "host.resources.read",
+          "host.reports.describe",
+          "host.reports.publish"
         ]
       },
       "tools": [
+        "investment_research_start",
         "investment_research_analyze",
         "investment_research_report",
-        "investment_research_ask"
+        "investment_research_ask",
+        "investment_research_event_outcomes"
       ],
       "capabilities": [
+        {
+          "id": "investment_research_start",
+          "kind": "workflow",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
         {
           "id": "investment_research_analyze",
           "kind": "workflow",
@@ -2959,6 +2990,15 @@
             "host"
           ],
           "execution": "run"
+        },
+        {
+          "id": "investment_research_event_outcomes",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
         }
       ],
       "hostContributions": {
@@ -4046,7 +4086,7 @@
     },
     {
       "id": "sesame/mt5",
-      "version": "2.2.1",
+      "version": "2.2.3",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -4122,7 +4162,8 @@
         "mt5_execution_submit",
         "mt5_execution_recover",
         "mt5_execution_command",
-        "mt5_execution_cancel"
+        "mt5_execution_cancel",
+        "mt5_backtest_operation"
       ],
       "capabilities": [
         {
@@ -4732,6 +4773,15 @@
             "host"
           ],
           "execution": "immediate"
+        },
+        {
+          "id": "mt5_backtest_operation",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
         }
       ],
       "hostContributions": {
@@ -4954,7 +5004,7 @@
     },
     {
       "id": "sesame/plugin-manager",
-      "version": "3.1.3",
+      "version": "3.1.5",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -5822,7 +5872,7 @@
     },
     {
       "id": "sesame/quantskills-catalog",
-      "version": "3.0.2",
+      "version": "4.2.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -5843,8 +5893,8 @@
         "zh": "量化技能索引"
       },
       "summary": {
-        "en": "Discover curated research references and their preserved provenance.",
-        "zh": "发现研究参考材料并保留原始出处。"
+        "en": "Discover fixed QuantSkills references and route research to Research or Strategy; select methods and backends independently.",
+        "zh": "查询固定 QuantSkills 参考，综合投资研究推荐 Research，因子与策略研究推荐 Strategy。"
       },
       "dependencies": {
         "en": "Existing Python 3; this catalog is guidance, not an execution engine.",
@@ -5919,11 +5969,11 @@
     },
     {
       "id": "sesame/reports",
-      "version": "3.3.2",
+      "version": "5.0.21",
       "distribution": "core",
       "state": "mounted",
       "engines": {
-        "sesame": ">=0.3.0-dev.1 <0.4.0"
+        "sesame": ">=0.3.0-dev.2 <0.4.0"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -5940,21 +5990,21 @@
         "zh": "交互报告"
       },
       "summary": {
-        "en": "Explore strategy logic, optimization heatmaps and parameter sensitivity in interactive reports.",
-        "zh": "交互查看策略逻辑、回测优化热力图、全部参数试验和敏感性分析。"
+        "en": "Render plugin-defined research and strategy content with one shared visual style, native market charts and interactive backtest views.",
+        "zh": "用统一样式呈现研究与策略报告，支持内置行情图、回测热力图和参数比较。"
       },
       "dependencies": {
-        "en": "No market backend. Bundled charts use SVG and require no CDN.",
-        "zh": "无需行情后端；内置图表使用 SVG，无需 CDN。"
+        "en": "Requires the host report service in Sesame 0.3.0-dev.2 or later. Visual assets are packaged; no CDN is required.",
+        "zh": "需要 Sesame 0.3.0-dev.2 或更新宿主；图表随插件提供，无需 CDN。"
       },
-      "implementationReason": "Functions adapt host report publication, validation and presentation rather than implement an analytical calculation.",
       "permissions": {
         "scopes": [],
         "calls": [
           "host.artifacts.query",
           "host.records.query",
           "sesame/data-access#data_snapshot",
-          "sesame/workspace#write"
+          "sesame/workspace#write",
+          "host.reports.publish"
         ]
       },
       "tools": [
@@ -5965,7 +6015,11 @@
         "report_read",
         "report_check",
         "report_export_check",
-        "report_publish"
+        "report_publish",
+        "report_structure",
+        "report_compose",
+        "report_styles",
+        "report_style_save"
       ],
       "capabilities": [
         {
@@ -6039,12 +6093,64 @@
             "host"
           ],
           "execution": "immediate"
+        },
+        {
+          "id": "report_structure",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "report_compose",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "report_styles",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "report_style_save",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "report_render",
+          "kind": "function",
+          "consumers": [
+            "host"
+          ],
+          "execution": "immediate"
         }
       ],
       "hostContributions": {
         "sources": [],
         "views": [],
-        "services": [],
+        "services": [
+          {
+            "id": "report",
+            "contract": "sesame.report/1",
+            "operations": {
+              "render": "report_render"
+            }
+          }
+        ],
         "hooks": []
       },
       "sourcePath": "plugins/api-v1/packages/reports"
@@ -6063,7 +6169,7 @@
         "name": "Sesame"
       },
       "category": "data",
-      "functionalCategory": "analysis",
+      "functionalCategory": "search",
       "implementationKinds": [
         "function"
       ],
@@ -6111,11 +6217,11 @@
     },
     {
       "id": "sesame/strategy-authoring",
-      "version": "3.0.1",
+      "version": "3.0.2",
       "distribution": "core",
       "state": "mounted",
       "engines": {
-        "sesame": ">=0.3.0-dev.1 <0.4.0"
+        "sesame": ">=0.3.0-dev.21 <0.4.0"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -6271,56 +6377,12 @@
       "sourcePath": "plugins/api-v1/packages/strategy-authoring"
     },
     {
-      "id": "sesame/strategy-research",
-      "version": "2.0.4",
-      "distribution": "optional",
-      "state": "discoverable",
-      "engines": {
-        "sesame": ">=0.2.3"
-      },
-      "format": "sesame-native",
-      "license": "MIT",
-      "author": {
-        "name": "Sesame contributors"
-      },
-      "category": "strategy",
-      "functionalCategory": "business",
-      "implementationKinds": [
-        "knowledge"
-      ],
-      "title": {
-        "en": "Strategy research",
-        "zh": "策略研究"
-      },
-      "summary": {
-        "en": "Plan hypotheses, fixed trials and out-of-sample evaluation with an experiment ledger.",
-        "zh": "用实验账本组织假设、固定试验及样本外评估。"
-      },
-      "dependencies": {
-        "en": "Existing Node.js 22+; actual backtests require a separately selected engine. No algorithm is preselected.",
-        "zh": "需现有 Node.js 22+；真实回测需另选引擎，不预选策略算法。"
-      },
-      "permissions": {
-        "scopes": [],
-        "calls": []
-      },
-      "tools": [],
-      "capabilities": [],
-      "hostContributions": {
-        "sources": [],
-        "views": [],
-        "services": [],
-        "hooks": []
-      },
-      "sourcePath": "plugins/optional-api-v1/packages/strategy-research"
-    },
-    {
       "id": "sesame/trading-decision",
-      "version": "3.3.2",
+      "version": "3.3.5",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
-        "sesame": ">=0.3.0-dev.1 <0.4.0"
+        "sesame": ">=0.3.0-dev.2 <0.4.0"
       },
       "format": "sesame-native",
       "license": "MIT",
@@ -6354,10 +6416,10 @@
           "host.runs.wait",
           "host.runs.interrupt",
           "host.resources.read",
-          "sesame/reports#report_document_template",
           "sesame/reports#report_publish",
           "sesame/reports#report_check",
-          "sesame/workspace#write"
+          "sesame/workspace#write",
+          "host.reports.describe"
         ]
       },
       "tools": [
@@ -6541,7 +6603,7 @@
     },
     {
       "id": "sesame/ultra",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -6765,7 +6827,7 @@
     },
     {
       "id": "sesame/vnpy",
-      "version": "2.0.4",
+      "version": "2.0.5",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -6805,7 +6867,8 @@
       "tools": [
         "vnpy_environment",
         "vnpy_backtest",
-        "vnpy_result"
+        "vnpy_result",
+        "vnpy_operation"
       ],
       "capabilities": [
         {
@@ -6842,6 +6905,15 @@
             "host"
           ],
           "execution": "immediate"
+        },
+        {
+          "id": "vnpy_operation",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
         }
       ],
       "hostContributions": {
@@ -6874,7 +6946,7 @@
         "name": "Sesame"
       },
       "category": "data",
-      "functionalCategory": "analysis",
+      "functionalCategory": "search",
       "implementationKinds": [
         "function"
       ],
@@ -6922,7 +6994,7 @@
     },
     {
       "id": "sesame/web-sources",
-      "version": "3.0.1",
+      "version": "3.1.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -6934,17 +7006,17 @@
         "name": "Sesame contributors"
       },
       "category": "data",
-      "functionalCategory": "integration",
+      "functionalCategory": "search",
       "implementationKinds": [
         "adapter"
       ],
       "title": {
-        "en": "Web sources",
-        "zh": "网页来源"
+        "en": "Web search and evidence",
+        "zh": "网页搜索与取证"
       },
       "summary": {
-        "en": "Fetch original web evidence into fixed datasets with source metadata.",
-        "zh": "将网页原始证据与来源信息保存为固定数据。"
+        "en": "Discover candidate links with keyless search, then fetch selected web evidence into fixed datasets with source metadata.",
+        "zh": "无需来源Key搜索候选链接，并将选定网页原始证据与来源信息保存为固定数据。"
       },
       "dependencies": {
         "en": "Network access to the selected source; parsing is provided by separate optional tools.",
@@ -6955,9 +7027,19 @@
         "calls": []
       },
       "tools": [
+        "sources_search",
         "sources_fetch"
       ],
       "capabilities": [
+        {
+          "id": "sources_search",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
         {
           "id": "sources_fetch",
           "kind": "function",

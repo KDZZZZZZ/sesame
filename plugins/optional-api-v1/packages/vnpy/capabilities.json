@@ -400,6 +400,50 @@
         "type": "native",
         "name": "vnpy_dispose"
       }
+    },
+    {
+      "id": "vnpy_operation",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Read an existing native operation receipt only; never execute or replay an unknown attempt.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "operation_id"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "execution": "immediate",
+      "effects": [
+        "state.read"
+      ],
+      "usage": {
+        "purpose": "Reconcile the original operation before resuming.",
+        "inputs": "{operation_id:<original ID>}",
+        "outputs": "status, original result or error; absent record is not-found.",
+        "prerequisites": [],
+        "limitations": [
+          "Read-only reconciliation. Interrupted or unknown executions never become a new native attempt."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "vnpy_operation"
+      }
     }
   ],
   "sources": [],

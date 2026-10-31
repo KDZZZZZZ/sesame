@@ -41,6 +41,7 @@
     if(spec.rows.some(row=>!row||typeof row!=='object'||Array.isArray(row)))fail('rows must be objects');
     if (spec.rows.length>2500) fail('more than 2,500 marks; aggregate or filter the fixed data first');
     if (!kinds().includes(spec.kind)) fail('unknown chart kind');
+    if (['bar','matrix'].includes(spec.kind) && spec.tone != null && !['neutral','signed','positive','negative'].includes(spec.tone)) fail('tone must be neutral, signed, positive or negative');
     if(spec.height!==undefined&&(!Number.isFinite(spec.height)||spec.height<120||spec.height>12000))fail('height must be between 120 and 12,000 pixels');
     observers.get(target)?.disconnect();
     const state={observer:null,pendingFrame:null,svg:null,measured:0,cleanups:[]};
@@ -75,6 +76,10 @@
     if (!rows.length&&!(renderers.has(spec.kind)&&Array.isArray(spec.nodes)&&spec.nodes.length)){svg.append(node('text',{x:width/2,y:height/2,'text-anchor':'middle',class:'sc-label'},spec.emptyLabel || 'No observations'));return complete();}
     const label = row => `${row[spec.x] ?? row[spec.label] ?? ''}${spec.kind==='matrix'?` / ${row[spec.y]}`:''}: ${row[spec.value || spec.y] ?? 'missing'}${spec.unit ? ` ${spec.unit}` : ''}`;
     const mark=(n,row,index,labelOverride)=>{
+      if (['bar','matrix'].includes(spec.kind) && ['signed','positive','negative'].includes(spec.tone)) {
+        const value = numeric(row[spec.kind === 'matrix' ? spec.value : spec.y]);
+        if (value !== null) n.style.fill = value === 0 ? 'var(--report-muted)' : spec.tone === 'negative' || spec.tone === 'signed' && value < 0 ? 'var(--report-negative)' : 'var(--report-positive)';
+      }
       const text=labelOverride===undefined?label(row):String(labelOverride);
       const title=node('title',{},text);n.append(title);n.setAttribute('tabindex','0');n.setAttribute('role','button');n.setAttribute('aria-label',text);n.setAttribute('data-row-index',index);
       const show=()=>{tooltip.textContent=text;tooltip.hidden=false;};
@@ -120,7 +125,7 @@
       const values=rows.map(r=>numeric(r[spec.value])),observedMax=Math.max(0,...values.filter(v=>v!==null).map(Math.abs));
       if(spec.colorMax!==undefined&&(!Number.isFinite(spec.colorMax)||spec.colorMax<=0||spec.colorMax<observedMax))fail('matrix colorMax must be positive, finite and cover the displayed magnitudes');
       const max=spec.colorMax??Math.max(1,observedMax),w=(width-pad.left-pad.right)/xs.length,h=(height-pad.top-pad.bottom)/ys.length,seen=new Set();
-      rows.forEach((row,i)=>{const x=xs.indexOf(String(row[spec.x])),y=ys.indexOf(String(row[spec.y])),key=JSON.stringify([x,y]);if(seen.has(key))fail('duplicate matrix cell; aggregate explicitly');seen.add(key);const v=values[i];const r=node('rect',{x:pad.left+x*w+2,y:pad.top+y*h+2,width:Math.max(1,w-4),height:Math.max(1,h-4),rx:2,class:v===null?'sc-missing':v<0?'sc-negative':'sc-bar',opacity:v===null?1:.2+.8*Math.abs(v)/max});mark(r,row,i);if(w>45&&h>25)svg.append(node('text',{x:pad.left+(x+.5)*w,y:pad.top+(y+.5)*h+4,'text-anchor':'middle',class:`sc-cell-value${v!==null&&.2+.8*Math.abs(v)/max>.65?' sc-cell-inverse':''}`},v===null?'—':format(v)));});
+      rows.forEach((row,i)=>{const x=xs.indexOf(String(row[spec.x])),y=ys.indexOf(String(row[spec.y])),key=JSON.stringify([x,y]);if(seen.has(key))fail('duplicate matrix cell; aggregate explicitly');seen.add(key);const v=values[i];const r=node('rect',{x:pad.left+x*w+2,y:pad.top+y*h+2,width:Math.max(1,w-4),height:Math.max(1,h-4),rx:2,'data-zero':v===0?'true':undefined,class:v===null?'sc-missing':v<0?'sc-negative':'sc-bar',opacity:v===null?1:.2+.8*Math.abs(v)/max});mark(r,row,i);if(w>45&&h>25)svg.append(node('text',{x:pad.left+(x+.5)*w,y:pad.top+(y+.5)*h+4,'text-anchor':'middle',class:`sc-cell-value${v!==null&&.2+.8*Math.abs(v)/max>.65?' sc-cell-inverse':''}`},v===null?'—':format(v)));});
       xs.forEach((x,i)=>svg.append(node('text',{x:pad.left+(i+.5)*w,y:height-16,'text-anchor':'middle',class:'sc-axis'},x.slice(0,14))));ys.forEach((y,i)=>svg.append(node('text',{x:pad.left-8,y:pad.top+(i+.5)*h+4,'text-anchor':'end',class:'sc-axis'},y.slice(0,10))));
     } else if(spec.kind==='units'){
       const unit=spec.unitValue ?? 1; if(!Number.isFinite(unit)||unit<=0)fail('unitValue must be positive');

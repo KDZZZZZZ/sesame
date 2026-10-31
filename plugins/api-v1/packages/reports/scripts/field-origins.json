@@ -1,0 +1,2470 @@
+{
+  "schemaVersion": 1,
+  "policy": "Agent-only suggested result origin and nature. Actual methods may change origin. No provider routes or execution requirements.",
+  "fields": {
+    "M01.summary": {
+      "type": "text",
+      "catalog_meaning": "方法给出的本模块结论；保留事实、解释或预测的真实性质。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "行情观察与相对表现的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+    },
+    "M01.price_chart": {
+      "type": "chart",
+      "catalog_meaning": "同一标的、周期与价格口径的 OHLC；保留时间、时区、单位和精度。",
+      "suggested_kind": "acquired",
+      "nature": "fact",
+      "meaning_note": "图中OHLC是对应市场观测，不是图形推断；若使用人工/模拟价格应另标其来源。"
+    },
+    "M01.relative_chart": {
+      "type": "chart",
+      "catalog_meaning": "同一观察区间、币种及复权口径的资产收益，排序由研究结果提供。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "各资产同窗收益和排序是计算；原价格、汇率、分红与复权分别获取。"
+    },
+    "M01.reference_price": {
+      "type": "object",
+      "catalog_meaning": "价格、观察时间、币种和价格口径；不以报告生成时间代替报价时间。",
+      "suggested_kind": "acquired",
+      "nature": "fact",
+      "meaning_note": "价格及对应源时点直接获取；用户指定参考值须另记为假设，不能写成最新可成交价。"
+    },
+    "M01.timeframe_states": {
+      "type": "array",
+      "catalog_meaning": "分别保留 bar 周期、研究期限、方向、状态和方法；两种周期不互相替代。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "逐期限：bar周期/观察价取源；研究期限由任务设定；方向和状态由所选方法判断。"
+    },
+    "M01.price_performance": {
+      "type": "array",
+      "catalog_meaning": "用户所需观察期限的价格表现，保留单位。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "指定窗口的涨跌幅/收益由首尾或路径价格计算，窗口由用户选；含息收益需额外现金流。"
+    },
+    "M01.trend": {
+      "type": "text",
+      "catalog_meaning": "所选方法对当前趋势的解释。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "趋势是所选规则对行情的解释；可外取第三方趋势标签但仍是其判断。"
+    },
+    "M01.volatility": {
+      "type": "object",
+      "catalog_meaning": "所选方法提供的波动描述或统计。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "HV/ATR等数值为计算；高低波动状态为解释；外购波动数值需标明指数或模型。"
+    },
+    "M01.relative_strength": {
+      "type": "array",
+      "catalog_meaning": "比较对象、口径与相对表现。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "比较对象来自用户/方法，收益差或排名来自同口径计算，不是市场方向预测。"
+    },
+    "M01.changes": {
+      "type": "array",
+      "catalog_meaning": "与用户问题相关的变化。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "数组中价格变动为统计，制度/新闻变化需来源，重要性和因果为解释，逐项分开。"
+    },
+    "M01.evidence": {
+      "type": "array",
+      "catalog_meaning": "与本模块判断相关的事实和解释；固定来源记录在结果行的 evidence_refs。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "数组逐项分开：原始事实是获取，数值统计是计算，解释/预测是推断，用户条件是输入；每项对应真实evidence_refs，转载和解析不算独立来源。"
+    },
+    "M01.instrument_context": {
+      "type": "object",
+      "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+    },
+    "M01.data_times": {
+      "type": "object",
+      "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+    },
+    "M01.source_scales": {
+      "type": "array",
+      "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+    },
+    "M02.summary": {
+      "type": "text",
+      "catalog_meaning": "方法给出的本模块结论；保留事实、解释或预测的真实性质。",
+      "suggested_kind": "inferred",
+      "nature": "mixed",
+      "meaning_note": "技术特征与价格情景的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+    },
+    "M02.price_chart": {
+      "type": "chart",
+      "catalog_meaning": "所选技术方法对应的固定 OHLC；关键位置和失效条件保留方法结果，不在图表计算指标。",
+      "suggested_kind": "acquired",
+      "nature": "fact",
+      "meaning_note": "原OHLC直接获取，图上的关键位和技术标注消费独立方法结果。"
+    },
+    "M02.method_scan": {
+      "type": "array",
+      "catalog_meaning": "对同一固定行情输入尝试的方法家族、定义/参数/版本、数据引用与截点、首次可得时间、运行有信号/无信号/不可运行及原因；记录全部尝试，不计算主观分。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "方法/参数由研究选择；实际运行/无信号/失败状态从真实执行记录获取，首次可得性须输入证据。"
+    },
+    "M02.feature_signals": {
+      "type": "array",
+      "catalog_meaning": "各方法已计算的原值、单位、事件位置、首次可得时间、成立与失效条件、固定来源及历史检验状态；区分几何、波动尺度与方向命题，不替方法检测或匹配。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "每项原值/几何是计算，成立/方向命题是解释，时间/输入ref来自记录，历史验证另取真实结果。"
+    },
+    "M02.method_comparison_chart": {
+      "type": "chart",
+      "catalog_meaning": "同一行情截点下，各方法记录的特征发生/确认时间、无信号或不可运行状态与证据；不把方法数量当独立投票或置信度。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "图中事件状态/评估时间是实际方法回执；方向标签为方法判断，不按方法数投票。"
+    },
+    "M02.key_levels": {
+      "type": "array",
+      "catalog_meaning": "方法给出的价格区域和依据，不预设指标。",
+      "suggested_kind": "mixed",
+      "nature": "interpretation",
+      "meaning_note": "价位可能来自极值等计算或方法判断；选用哪个价位及重要性为解释，不能由图形自生。"
+    },
+    "M02.scenario_chart": {
+      "type": "chart",
+      "catalog_meaning": "条件节点、分支与叶子结果；无概率的树不能用节点大小暗示置信度。",
+      "suggested_kind": "inferred",
+      "nature": "prediction",
+      "meaning_note": "树节点是条件预测/计划分支，触发阈值可由用户或方法给定；无权重不表示等概率。"
+    },
+    "M02.lifecycle_chart": {
+      "type": "chart",
+      "catalog_meaning": "已记录的检测、确认、失效等事件与时间；保留原始事件 ID、时区和证据链接。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "检测/确认/失效记录来自实际规则执行，事件解释来自方法；发生时刻与检测时刻分列。"
+    },
+    "M02.events": {
+      "type": "array",
+      "catalog_meaning": "方法识别的事件及形成或确认状态。",
+      "suggested_kind": "mixed",
+      "nature": "interpretation",
+      "meaning_note": "技术事件由算法/理论识别，其命名和状态不是交易所公布事实；源柱是获取事实。"
+    },
+    "M02.scenarios": {
+      "type": "array",
+      "catalog_meaning": "情景、触发条件和可能结果；不隐含分支概率。",
+      "suggested_kind": "inferred",
+      "nature": "prediction",
+      "meaning_note": "每个情景是带条件的可能结果；触发事实、方法判断和概率分别列，不凭措辞当预测事实。"
+    },
+    "M02.invalidation": {
+      "type": "array",
+      "catalog_meaning": "使判断失效的可观察条件。",
+      "suggested_kind": "inferred",
+      "nature": "plan",
+      "meaning_note": "失效条件是预先设定的可观察判据，是否触达以后由事实核验。"
+    },
+    "M02.valid_until": {
+      "type": "text",
+      "catalog_meaning": "由用户和方法确定的有效时间或条件。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "期限来自用户约定或方法有效期判断；不是由价格源保证的有效时间。"
+    },
+    "M02.evidence": {
+      "type": "array",
+      "catalog_meaning": "与本模块判断相关的事实和解释；固定来源记录在结果行的 evidence_refs。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "数组逐项分开：原始事实是获取，数值统计是计算，解释/预测是推断，用户条件是输入；每项对应真实evidence_refs，转载和解析不算独立来源。"
+    },
+    "M02.event_identity": {
+      "type": "array",
+      "catalog_meaning": "事件 ID、名称/类型、方向及来源，连接生命周期、几何和情景结果。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "内部事件ID由执行器登记，名称/方向由方法定义；若取外部事件保留其原ID与来源。"
+    },
+    "M02.event_times": {
+      "type": "array",
+      "catalog_meaning": "同一事件的 detected_at、confirmed_at、最早可行动时间、bar 周期和闭合状态。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "柱时间来自行情；检测/确认来自真实执行，最早可行动时刻按明确规则派生。"
+    },
+    "M02.event_lifecycle": {
+      "type": "array",
+      "catalog_meaning": "事件 ID、形成/完成/失败/到期、状态时间和失效原因；不把检测时间当发生时间。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "形成/完成/失败状态按方法执行记录产生，失效原因是解释，保留状态版本。"
+    },
+    "M02.geometry": {
+      "type": "array",
+      "catalog_meaning": "由方法提供的点位/时间、边界端点、触碰、关键位重要性及标注引用，不识别形态。",
+      "suggested_kind": "mixed",
+      "nature": "interpretation",
+      "meaning_note": "点位和斜率/触碰可计算；边界选择、形态归属和重要性由方法判断，逐子项保留性质。"
+    },
+    "M02.research_horizons": {
+      "type": "array",
+      "catalog_meaning": "按事件或情景明确预测期限及观察 bar 周期。",
+      "suggested_kind": "user_supplied",
+      "nature": "plan",
+      "meaning_note": "预测期限由用户目标或所选方法明确；观察bar周期是独立输入。"
+    },
+    "M02.entry_zone": {
+      "type": "object",
+      "catalog_meaning": "方向、参考价/区间、触发条件、价格单位与时点；是研究条件，不表示已成交。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "方向/入场区/触发是研究或用户计划；引用的现价是事实，计划并非成交。"
+    },
+    "M02.targets": {
+      "type": "array",
+      "catalog_meaning": "各目标的价格或区间、期限、适用情景和方法引用。",
+      "suggested_kind": "inferred",
+      "nature": "prediction",
+      "meaning_note": "目标价/区间是指定方法的条件预测，期限和依据必须明确；外部目标则是获取的外部预测。"
+    },
+    "M02.stop_plan": {
+      "type": "object",
+      "catalog_meaning": "止损价格/区间、触发/跟踪规则及方法；与观点失效条件分开。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "止损阈值/跟踪可由计算或用户规则给出，选择属于计划；与观点失效不同。"
+    },
+    "M02.reward_risk": {
+      "type": "object",
+      "catalog_meaning": "方法按指定入场、止损、目标、成本计算的潜在盈亏比及参考条件，不是胜率。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "按已给入场/止损/目标/成本计算潜在盈亏比；不是历史命中率。"
+    },
+    "M02.instrument_context": {
+      "type": "object",
+      "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+    },
+    "M02.data_times": {
+      "type": "object",
+      "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+    },
+    "M02.source_scales": {
+      "type": "array",
+      "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+    },
+    "M03.summary": {
+      "type": "text",
+      "catalog_meaning": "方法给出的本模块结论；保留事实、解释或预测的真实性质。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "财报与基本面的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+    },
+    "M03.factor_chart": {
+      "type": "chart",
+      "catalog_meaning": "所选因子的已提供分数、尺度与标签；仅同尺度进入同图，不能从图中合成总分。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "因子原值来自报表/数据，分数由计算，标签由方法解释；外部评分是获取的供应商评价。"
+    },
+    "M03.composite_assessment": {
+      "type": "object",
+      "catalog_meaning": "所选方法的综合结果、尺度、标签与日期；不在 Report 汇总因子分数。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "综合评价由指定方法综合财务证据；外部评分可获取但仍是他人评价而非客观事实。"
+    },
+    "M03.growth_chart": {
+      "type": "chart",
+      "catalog_meaning": "同财期、币种、规模单位的财务序列；缺失和重述明确标记。",
+      "suggested_kind": "acquired",
+      "nature": "fact",
+      "meaning_note": "收入/经营现金流是已公布财务值；财期/币种/重述分别从原文获取，图表不推算缺失值。"
+    },
+    "M03.cash_bridge_chart": {
+      "type": "chart",
+      "catalog_meaning": "已登记的起点、增减及终点；角色 start/delta/end，金额必须对账。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "经营现金流/资本开支取报表，FCF和桥接增减为会计口径计算；起终点必须对账。"
+    },
+    "M03.factor_results": {
+      "type": "array",
+      "catalog_meaning": "因子名称、原始分/值、尺度、标签、同业范围、方法版本；因子集合由指定方法选择。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "每个因子分别列原始财务值、计算分数、尺度/评价标签和同业范围；不混成全是获取。"
+    },
+    "M03.period": {
+      "type": "text",
+      "catalog_meaning": "财期、币种和数据版本。",
+      "suggested_kind": "acquired",
+      "nature": "metadata",
+      "meaning_note": "财期/币种/申报版本取原始记录；季度/年度/TTM是不同口径，TTM需另算。"
+    },
+    "M03.growth": {
+      "type": "array",
+      "catalog_meaning": "方法选用的经营增长结果。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "收入/利润等历史值是获取，增长率为统计，增长持续性为解释/预测。"
+    },
+    "M03.earnings_quality": {
+      "type": "array",
+      "catalog_meaning": "盈利质量及其解释。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "利润/现金等为公布值，质量比率为计算，操纵/可持续性判断为解释。"
+    },
+    "M03.cash_flow": {
+      "type": "array",
+      "catalog_meaning": "现金流表现及其口径。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "现金流项目取财报，FCF/覆盖率计算，强弱/可持续性解释应单列。"
+    },
+    "M03.balance_sheet": {
+      "type": "array",
+      "catalog_meaning": "偿债、杠杆等所选研究结果。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "资产/负债原值获取，杠杆/偿债比率计算，偿付能力结论为解释。"
+    },
+    "M03.peers": {
+      "type": "array",
+      "catalog_meaning": "方法选定的同业与比较结果。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "同业集合由用户/方法选择；公司身份/财务获取；倍数和排名计算、可比性解释。"
+    },
+    "M03.evidence": {
+      "type": "array",
+      "catalog_meaning": "与本模块判断相关的事实和解释；固定来源记录在结果行的 evidence_refs。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "数组逐项分开：原始事实是获取，数值统计是计算，解释/预测是推断，用户条件是输入；每项对应真实evidence_refs，转载和解析不算独立来源。"
+    },
+    "M03.income": {
+      "type": "array",
+      "catalog_meaning": "股息金额、收益率、支付率、现金覆盖及其期间、单位和口径。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "每股股息/宣告金额是事实，收益率/支付率/现金覆盖是计算，支付能力判断为解释。"
+    },
+    "M03.cycle_context": {
+      "type": "object",
+      "catalog_meaning": "方法判断的经济阶段、适用风格/行业与依据；不强制某种周期理论。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "阶段/适用风格是方法解释；宏观观测值获取，指标变化计算。"
+    },
+    "M03.instrument_context": {
+      "type": "object",
+      "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+    },
+    "M03.data_times": {
+      "type": "object",
+      "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+    },
+    "M03.source_scales": {
+      "type": "array",
+      "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+    },
+    "M04.summary": {
+      "type": "text",
+      "catalog_meaning": "方法给出的本模块结论；保留事实、解释或预测的真实性质。",
+      "suggested_kind": "inferred",
+      "nature": "mixed",
+      "meaning_note": "估值与价格假设的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+    },
+    "M04.price_estimates_chart": {
+      "type": "chart",
+      "catalog_meaning": "同币种的现价、公允价值、模型目标和分析师目标；分别标识性质、日期与期限，不平均。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "逐项分开：现价是获取事实；公允价值是估值估计；模型目标是预测；分析师目标是获取的外部预测，不能取平均混为事实。"
+    },
+    "M04.valuation": {
+      "type": "object",
+      "catalog_meaning": "价值估计或区间，不等同于未来市场价格预测。",
+      "suggested_kind": "mixed",
+      "nature": "interpretation",
+      "meaning_note": "模型在已得财务和假设上计算价值；其数值是条件估值估计，既不是现价也不是未来市场价格事实。"
+    },
+    "M04.model_target": {
+      "type": "object",
+      "catalog_meaning": "价格预测及范围、目标期限、预测起点、币种、方法版本与依据；独立于公允价值与分析师共识。",
+      "suggested_kind": "inferred",
+      "nature": "prediction",
+      "meaning_note": "模型价格目标及范围是指定期限的预测；外部供应商模型目标也只是获取到的预测，不会变成事实。"
+    },
+    "M04.sensitivity_chart": {
+      "type": "chart",
+      "catalog_meaning": "所选方法的两个实际假设轴如何影响估值；轴和范围由任务与方法决定。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "增长×折现网格是对同一估值模型的条件计算，轴假设由用户/方法设定，不是实测市场分布。"
+    },
+    "M04.peer_chart": {
+      "type": "chart",
+      "catalog_meaning": "同一估值倍数、期间和可比范围；负分母或不可比情况先由方法处理。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "价格/报表值获取，估值倍数计算，同业纳入与负分母处理由方法确定。"
+    },
+    "M04.assumptions": {
+      "type": "array",
+      "catalog_meaning": "估值方法使用的关键假设。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "历史经营/利率参考是获取；增长/利润率/风险溢价/终值设定由用户或方法推断；外部预测单独注明。"
+    },
+    "M04.market_comparison": {
+      "type": "object",
+      "catalog_meaning": "估值与市场价格的同口径对照。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "市场价格获取，估值折溢价计算，对偏差原因的说明为解释；价格口径和估值日期分别保留。"
+    },
+    "M04.sensitivity": {
+      "type": "array",
+      "catalog_meaning": "由所选方法提供的假设变化结果。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "改变已声明假设后的价值变化由模型重算，结果只在指定条件内成立。"
+    },
+    "M04.implied_assumptions": {
+      "type": "array",
+      "catalog_meaning": "当前价格隐含的经营或市场假设。",
+      "suggested_kind": "mixed",
+      "nature": "interpretation",
+      "meaning_note": "给定现价与模型反解增长/折现等是计算；选择哪个假设自由度、经济含义为解释。"
+    },
+    "M04.evidence": {
+      "type": "array",
+      "catalog_meaning": "与本模块判断相关的事实和解释；固定来源记录在结果行的 evidence_refs。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "数组逐项分开：原始事实是获取，数值统计是计算，解释/预测是推断，用户条件是输入；每项对应真实evidence_refs，转载和解析不算独立来源。"
+    },
+    "M04.update_schedule": {
+      "type": "object",
+      "catalog_meaning": "各结果的模型日期、数据截点、更新频率或复核条件；不固定月更规则。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "模型日期/数据截点取已保存回执，未来复核频率或触发由任务和方法约定。"
+    },
+    "M04.instrument_context": {
+      "type": "object",
+      "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+    },
+    "M04.data_times": {
+      "type": "object",
+      "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+    },
+    "M04.source_scales": {
+      "type": "array",
+      "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+    },
+    "M05.summary": {
+      "type": "text",
+      "catalog_meaning": "方法给出的本模块结论；保留事实、解释或预测的真实性质。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "分析师预期的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+    },
+    "M05.revision_chart": {
+      "type": "chart",
+      "catalog_meaning": "同一预测目标、期限和单位的前后共识值，不混合不同财期。",
+      "suggested_kind": "acquired",
+      "nature": "prediction",
+      "meaning_note": "默认展示外部前后共识预测；若自己聚合则为计算，必须同一财期/目标/单位和两次真实版本。"
+    },
+    "M05.ratings_chart": {
+      "type": "chart",
+      "catalog_meaning": "同一覆盖范围、原评级体系与截点的数量；不能自动归并评级或转成概率。",
+      "suggested_kind": "acquired",
+      "nature": "statistic",
+      "meaning_note": "供应商当前评级数量是外部统计；若自己从有效研报集合计数则为派生，评级本身是意见。"
+    },
+    "M05.dispersion_chart": {
+      "type": "chart",
+      "catalog_meaning": "同目标各估计及指定方法的分歧指标；保留分析师覆盖时间，不假设一致性等于准确率。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "个体预测获取但性质是预测，标准差/分位等分歧为统计，分歧含义为解释。"
+    },
+    "M05.target_prices": {
+      "type": "object",
+      "catalog_meaning": "均值/中位数/最低/最高及币种、期限、样本数；与模型目标分开。",
+      "suggested_kind": "acquired",
+      "nature": "prediction",
+      "meaning_note": "均值/中位/高低是外部预测的统计摘要；仍是外部预测，不是未来真实价格。"
+    },
+    "M05.coverage": {
+      "type": "object",
+      "catalog_meaning": "参与者、时间及覆盖口径。",
+      "suggested_kind": "acquired",
+      "nature": "metadata",
+      "meaning_note": "分析师/机构/发布时间是覆盖元数据；是否仍有效需供应商定义或显式规则。"
+    },
+    "M05.consensus": {
+      "type": "object",
+      "catalog_meaning": "所选聚合方法的预期结果。",
+      "suggested_kind": "acquired",
+      "nature": "prediction",
+      "meaning_note": "默认获取外部一致预期；采用自有聚合则是计算得到的预测，不能标实际值。"
+    },
+    "M05.revisions": {
+      "type": "array",
+      "catalog_meaning": "发布时间、方向及幅度。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "评级变动可直接获取；EPS/目标价修订需前后预测，方向/幅度为计算，解释单列。"
+    },
+    "M05.dispersion": {
+      "type": "object",
+      "catalog_meaning": "方法定义的分歧或集中程度。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "以同目标个体估计计算分歧；供应商摘要可直接获取但仍是统计，不等于准确率。"
+    },
+    "M05.actual_comparison": {
+      "type": "array",
+      "catalog_meaning": "同口径预期和实际结果。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "实际财务披露是获取事实，事前预期是获取预测，差值/误差为计算；必须相同财期口径。"
+    },
+    "M05.evidence": {
+      "type": "array",
+      "catalog_meaning": "与本模块判断相关的事实和解释；固定来源记录在结果行的 evidence_refs。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "数组逐项分开：原始事实是获取，数值统计是计算，解释/预测是推断，用户条件是输入；每项对应真实evidence_refs，转载和解析不算独立来源。"
+    },
+    "M05.rating_distribution": {
+      "type": "array",
+      "catalog_meaning": "原始评级标签、数量、分母、截至时间与来源；不默认把不同机构量表合并。",
+      "suggested_kind": "acquired",
+      "nature": "statistic",
+      "meaning_note": "原评级标签是意见，数量/分母是供应商统计或自有计数；不同量表不直接合并。"
+    },
+    "M05.analyst_count": {
+      "type": "integer",
+      "catalog_meaning": "同一截至时间、目标与去重规则下的覆盖人数。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "按目标、截点和身份去重得到人数；供应商给定人数也只是其覆盖统计。"
+    },
+    "M05.target_dates": {
+      "type": "object",
+      "catalog_meaning": "各共识的公布/更新时间、预测期限、过期或修订范围。",
+      "suggested_kind": "acquired",
+      "nature": "metadata",
+      "meaning_note": "公布/更新时间是源元数据，预测期限/过期范围需原报告或定义；不能从获取时间猜期限。"
+    },
+    "M05.instrument_context": {
+      "type": "object",
+      "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+    },
+    "M05.data_times": {
+      "type": "object",
+      "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+    },
+    "M05.source_scales": {
+      "type": "array",
+      "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+    },
+    "M06.summary": {
+      "type": "text",
+      "catalog_meaning": "方法给出的本模块结论；保留事实、解释或预测的真实性质。",
+      "suggested_kind": "inferred",
+      "nature": "mixed",
+      "meaning_note": "事件冲击的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+    },
+    "M06.event_price_chart": {
+      "type": "chart",
+      "catalog_meaning": "事件前后固定 OHLC、事件实际发布时点和时间口径；预期与已发布结果分开。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "OHLC为事实，事件实际发布时点为事件源事实，事件窗口选择来自研究；计划时刻不能代实际发布。"
+    },
+    "M06.reaction_chart": {
+      "type": "chart",
+      "catalog_meaning": "以同一事件时点对齐的已登记路径，offset 单位明确；参照样本与统计方法注明。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "价格路径/参照按真实事件时点对齐计算；offset和样本选择为方法规则，不是供应商因果结论。"
+    },
+    "M06.event": {
+      "type": "object",
+      "catalog_meaning": "事件身份、时间和已公布或未公布状态。",
+      "suggested_kind": "acquired",
+      "nature": "fact",
+      "meaning_note": "身份/计划/实际公布/状态来自官方公告或日历；未公布计划也是计划事实，不等于结果已发生。"
+    },
+    "M06.expectations": {
+      "type": "object",
+      "catalog_meaning": "发布前可得的预期及来源。",
+      "suggested_kind": "acquired",
+      "nature": "prediction",
+      "meaning_note": "发布前共识是获取的外部预测；用户假设或自有预测分支须另记，不能叫已获得的共识。"
+    },
+    "M06.release": {
+      "type": "object",
+      "catalog_meaning": "实际公布结果与未公布的假设明确区分。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "已发布actual为获取事实；未发布假设为用户输入/预测，数组各分支分开，不能补成actual。"
+    },
+    "M06.surprise": {
+      "type": "object",
+      "catalog_meaning": "实际值相对预期的差值、单位与分类，分类阈值由所选方法提供。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "预期差按同口径actual/事前forecast计算；分类阈值是方法，非来源直接事实。"
+    },
+    "M06.reaction": {
+      "type": "array",
+      "catalog_meaning": "数据截点以前已观察到的变化。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "截点前变化由观测计算，归因于事件是解释；未结束窗口不是最终反应。"
+    },
+    "M06.conditional_outlook": {
+      "type": "array",
+      "catalog_meaning": "方法提供的分支判断、期限和依据。",
+      "suggested_kind": "inferred",
+      "nature": "prediction",
+      "meaning_note": "分支走势是研究预测，触发条件和期限来自方法；实际已发生部分另列。"
+    },
+    "M06.updates": {
+      "type": "array",
+      "catalog_meaning": "何时更新研究。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "复核时间/事件触发是任务或方法计划；当前事件更新记录需源证据。"
+    },
+    "M06.evidence": {
+      "type": "array",
+      "catalog_meaning": "与本模块判断相关的事实和解释；固定来源记录在结果行的 evidence_refs。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "数组逐项分开：原始事实是获取，数值统计是计算，解释/预测是推断，用户条件是输入；每项对应真实evidence_refs，转载和解析不算独立来源。"
+    },
+    "M06.previous_values": {
+      "type": "object",
+      "catalog_meaning": "前期初值、最新修订值、发布日期、单位及版本；不能把修订值当时已知。",
+      "suggested_kind": "acquired",
+      "nature": "fact",
+      "meaning_note": "前期初值和修订值是不同发布版本的事实，公布/可得时间分别保留。"
+    },
+    "M06.reaction_windows": {
+      "type": "array",
+      "catalog_meaning": "每个观察窗的起止、净变化、方向、TR/区间及其单位；未结束窗口明确标识。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "窗起止由方法定义，净变化/TR从真实路径计算，是否已结束由截点判断。"
+    },
+    "M06.event_importance": {
+      "type": "object",
+      "catalog_meaning": "事件类别、频率、重要性标签与提供方/方法定义。",
+      "suggested_kind": "mixed",
+      "nature": "interpretation",
+      "meaning_note": "类别/频率可取元数据；重要性可能是供应商标签或方法评价，不是客观影响强度。"
+    },
+    "M06.instrument_context": {
+      "type": "object",
+      "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+    },
+    "M06.data_times": {
+      "type": "object",
+      "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+    },
+    "M06.source_scales": {
+      "type": "array",
+      "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+    },
+    "M07.summary": {
+      "type": "text",
+      "catalog_meaning": "方法给出的本模块结论；保留事实、解释或预测的真实性质。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "新闻主题的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+    },
+    "M07.attention_chart": {
+      "type": "chart",
+      "catalog_meaning": "按同一来源集合、主题口径和时间段去重后的消息数量；数量不等于影响方向。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "同一源集合下去重后的数量由统计产生，主题分类和窗口由方法定义；数量不代表方向。"
+    },
+    "M07.themes_chart": {
+      "type": "chart",
+      "catalog_meaning": "研究方法产出的主题及去重数量，说明多标签是否可能重复计数。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "主题由分类方法判断，主题计数为统计，多标签重叠须保留。"
+    },
+    "M07.news": {
+      "type": "array",
+      "catalog_meaning": "可核验事实、实体、首发时间与来源。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "标题/链接/作者/时间可获取；正文包含事实陈述、引述预测与评论，核验后逐条保留性质，不能全称事实。"
+    },
+    "M07.themes": {
+      "type": "array",
+      "catalog_meaning": "所选分类方法提供的主题。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "主题是所选分类/聚类方法对实际语料的解释；外部主题标签也只是其分类结果。"
+    },
+    "M07.novelty": {
+      "type": "text",
+      "catalog_meaning": "相对于已有信息的新变化。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "新颖性依赖相对旧信息的比较：文本差异可算，信息是否新增/重要为解释。"
+    },
+    "M07.attention": {
+      "type": "object",
+      "catalog_meaning": "关注指标、基准和语料覆盖。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "消息数等为统计，热度变化解释与覆盖基准分开；外部关注指数是获取统计而非市场概率。"
+    },
+    "M07.impact": {
+      "type": "text",
+      "catalog_meaning": "方法提供的影响机制或解释。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "传导机制、方向和影响程度是方法解释/预测；引用事实与未来主张分开。"
+    },
+    "M07.evidence": {
+      "type": "array",
+      "catalog_meaning": "与本模块判断相关的事实和解释；固定来源记录在结果行的 evidence_refs。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "数组逐项分开：原始事实是获取，数值统计是计算，解释/预测是推断，用户条件是输入；每项对应真实evidence_refs，转载和解析不算独立来源。"
+    },
+    "M07.coverage_details": {
+      "type": "object",
+      "catalog_meaning": "观察窗口、语言、渠道范围、实体匹配与去重口径，明确基准窗口和已知覆盖变化。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "实际抓取范围/条数从回执取；语言/实体匹配/去重规则来自方法配置，覆盖变化需版本比较。"
+    },
+    "M07.source_mix": {
+      "type": "array",
+      "catalog_meaning": "新闻/网页/社交等来源类别及可比消息数；不同评分所用语料单独标识。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "按已记录来源类别对可比消息去重计数；来源类别是元数据，构成比为统计。"
+    },
+    "M07.instrument_context": {
+      "type": "object",
+      "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+    },
+    "M07.data_times": {
+      "type": "object",
+      "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+    },
+    "M07.source_scales": {
+      "type": "array",
+      "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+    },
+    "M08.summary": {
+      "type": "text",
+      "catalog_meaning": "方法给出的本模块结论；保留事实、解释或预测的真实性质。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "情绪与拥挤的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+    },
+    "M08.sentiment_chart": {
+      "type": "chart",
+      "catalog_meaning": "已计算的同口径情绪分数和参照，说明来源、量纲与覆盖变化。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "情绪分数由指定文本方法计算，外部得分可获取但仍是统计/评价；同源同尺度才能连线。"
+    },
+    "M08.fear_chart": {
+      "type": "chart",
+      "catalog_meaning": "同一恐惧指标的原尺度与历史值，来源口径单独说明。",
+      "suggested_kind": "acquired",
+      "nature": "statistic",
+      "meaning_note": "默认展示指定外部恐惧指标原历史；若自建则是计算，必须明确公式/尺度，不能默认VIX。"
+    },
+    "M08.subjectivity_chart": {
+      "type": "chart",
+      "catalog_meaning": "同一主观性量表、语料范围和时间频率的原始结果，不与情绪强度混合。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "主观性是对文本的模型结果，区别于情绪正负；时间序列须固定模型和语料口径。"
+    },
+    "M08.crowding_chart": {
+      "type": "chart",
+      "catalog_meaning": "历史时点可知的拥挤指标与固定后续窗口实际收益；相关性不等于因果。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "拥挤代理在历史时点可知，后续实际收益从价格算；相关图不是因果证据。"
+    },
+    "M08.subjectivity": {
+      "type": "object",
+      "catalog_meaning": "文本主观性结果及原尺度/标签、语料和方法，与情绪方向不同。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "主观性分数/标签由声明方法产生；源文本获取、解释标签单列，不能把票数当主观性。"
+    },
+    "M08.evidence_volume": {
+      "type": "object",
+      "catalog_meaning": "语料数量/证据充分性等级及原定义；供应商 Confidence 不作为预测概率或历史置信度。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "实际样本数为统计；充分性等级为评价；供应商Confidence是其定义，不是预测概率。"
+    },
+    "M08.fear_index": {
+      "type": "object",
+      "catalog_meaning": "独立恐惧量表、来源、时间与比较范围；不默认等同 VIX。",
+      "suggested_kind": "acquired",
+      "nature": "statistic",
+      "meaning_note": "外部恐惧量表是获取的指数；自建则为派生，原尺度/方法/范围须单列。"
+    },
+    "M08.coverage": {
+      "type": "object",
+      "catalog_meaning": "文本或持仓样本的来源及范围。",
+      "suggested_kind": "acquired",
+      "nature": "metadata",
+      "meaning_note": "来源/市场/窗口/文本或持仓样本属性从源与实际查询回执获取；覆盖完整性需另证。"
+    },
+    "M08.sentiment": {
+      "type": "object",
+      "catalog_meaning": "情绪值、量表定义及方法解释。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "数值情绪为计算或外部评分，强弱解释为推断；事实仅是所观察文本/行为。"
+    },
+    "M08.changes": {
+      "type": "array",
+      "catalog_meaning": "同口径变化。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "同尺度情绪变化是两次真实结果的差值；原因属于解释。"
+    },
+    "M08.crowding": {
+      "type": "object",
+      "catalog_meaning": "真实定位或代理指标及其定义。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "源持仓数量是事实，净仓/分位代理为统计，拥挤评价为解释；个人持仓不等于市场拥挤。"
+    },
+    "M08.divergence": {
+      "type": "array",
+      "catalog_meaning": "参与者分歧和与价格或持仓的关系。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "分歧/背离数值由对齐数据计算，行为机制解释另列；参与者标签来自源或方法。"
+    },
+    "M08.evidence": {
+      "type": "array",
+      "catalog_meaning": "与本模块判断相关的事实和解释；固定来源记录在结果行的 evidence_refs。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "数组逐项分开：原始事实是获取，数值统计是计算，解释/预测是推断，用户条件是输入；每项对应真实evidence_refs，转载和解析不算独立来源。"
+    },
+    "M08.trend_indicator": {
+      "type": "object",
+      "catalog_meaning": "情绪趋势/直方图的值、尺度、基准与解释，不与情绪绝对强度混用。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "情绪趋势/直方图由已算分数按明确规则派生；与绝对情绪强度不同。"
+    },
+    "M08.instrument_context": {
+      "type": "object",
+      "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+    },
+    "M08.data_times": {
+      "type": "object",
+      "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+    },
+    "M08.source_scales": {
+      "type": "array",
+      "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+    },
+    "M09.summary": {
+      "type": "text",
+      "catalog_meaning": "方法给出的本模块结论；保留事实、解释或预测的真实性质。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "波动与期权的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+    },
+    "M09.iv_history_chart": {
+      "type": "chart",
+      "catalog_meaning": "相同年化与期限口径的已提供 IV/HV；附历史窗口，不用现货 ATR 代替 IV。",
+      "suggested_kind": "mixed",
+      "nature": "statistic",
+      "meaning_note": "历史IV是获取的外部模型统计或由期权报价反算；HV由标的历史计算，两类序列不能互相替代。"
+    },
+    "M09.iv_history": {
+      "type": "object",
+      "catalog_meaning": "历史窗口、频率、期限/行权价口径及缺失处理，由方法提供可比历史。",
+      "suggested_kind": "acquired",
+      "nature": "statistic",
+      "meaning_note": "默认取得同期限/行权价口径的历史IV统计；自算时需每个历史截点的期权报价和模型输入。"
+    },
+    "M09.iv_rank": {
+      "type": "object",
+      "catalog_meaning": "原始结果、尺度、历史窗口、极值口径和所选方法，不能当作百分位。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "IV Rank由同口径当前IV和指定历史极值计算；供应商值可获取但仍是统计，不是百分位。"
+    },
+    "M09.iv_percentile": {
+      "type": "object",
+      "catalog_meaning": "历史分位结果、尺度、窗口、样本数和所选方法，不能与 IV Rank 合并。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "以同口径历史IV样本排序得到分位；不是IV Rank、方向概率或真实结局频率。"
+    },
+    "M09.expected_move_chart": {
+      "type": "chart",
+      "catalog_meaning": "独立方法给定的各期限价格范围与概率含义；不是方向目标，不在图中推算。",
+      "suggested_kind": "inferred",
+      "nature": "prediction",
+      "meaning_note": "价格范围来自独立概率/波动方法，若以定价分布计算仍是模型预测，不代表方向目标。"
+    },
+    "M09.expected_move": {
+      "type": "object",
+      "catalog_meaning": "价格/收益范围、期限、单位、概率含义和方法；预期波动不是方向目标价。",
+      "suggested_kind": "mixed",
+      "nature": "prediction",
+      "meaning_note": "范围可由模型计算或外部预测获取，期限/概率解释来自所选方法；不是现成观察事实。"
+    },
+    "M09.term_chart": {
+      "type": "chart",
+      "catalog_meaning": "同一截点和年化口径的到期天数及波动；实际波动窗口与隐含期限的区别写入图注。",
+      "suggested_kind": "mixed",
+      "nature": "statistic",
+      "meaning_note": "隐含期限各点取IV或反算，实际波动各窗计算；相同单位不表示同一性质。"
+    },
+    "M09.skew_chart": {
+      "type": "chart",
+      "catalog_meaning": "相同到期、截点与报价口径的行权价和隐含波动；不插入没有报价的点。",
+      "suggested_kind": "mixed",
+      "nature": "statistic",
+      "meaning_note": "报价/IV点获取或反算，偏斜形状与插值为计算；未报价点不当实测。"
+    },
+    "M09.implied_volatility": {
+      "type": "object",
+      "catalog_meaning": "报价时点、期限、模型口径与结果。",
+      "suggested_kind": "acquired",
+      "nature": "statistic",
+      "meaning_note": "供应商IV虽是获取值，但本质是模型反推统计；自行从期权价反算则为derived，不能叫实测波动。"
+    },
+    "M09.realized_volatility": {
+      "type": "object",
+      "catalog_meaning": "所选波动估计方法的结果。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "由真实历史价格按所选估计/年化/窗口计算；结果不是未来波动预测。"
+    },
+    "M09.term_structure": {
+      "type": "array",
+      "catalog_meaning": "各期限的同口径结果。",
+      "suggested_kind": "mixed",
+      "nature": "statistic",
+      "meaning_note": "同截点不同期限IV是定价统计；期限比较和归一由方法完成，外部值保留原模型。"
+    },
+    "M09.skew": {
+      "type": "array",
+      "catalog_meaning": "方法定义的偏斜数据。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "按明确到期/价内外程度/Delta口径计算偏斜；外部偏斜值仍是供应商统计。"
+    },
+    "M09.event_premium": {
+      "type": "object",
+      "catalog_meaning": "方法提供的事件相关定价结果。",
+      "suggested_kind": "mixed",
+      "nature": "interpretation",
+      "meaning_note": "事件前后定价差是模型统计，归因于特定事件是解释；事件日程本身才是事实输入。"
+    },
+    "M09.tails": {
+      "type": "object",
+      "catalog_meaning": "尾部描述；区分定价概率和实际发生概率。",
+      "suggested_kind": "inferred",
+      "nature": "prediction",
+      "meaning_note": "历史尾部分位是统计，未来尾部风险或风险中性概率是模型推断；两种概率不可混用。"
+    },
+    "M09.evidence": {
+      "type": "array",
+      "catalog_meaning": "与本模块判断相关的事实和解释；固定来源记录在结果行的 evidence_refs。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "数组逐项分开：原始事实是获取，数值统计是计算，解释/预测是推断，用户条件是输入；每项对应真实evidence_refs，转载和解析不算独立来源。"
+    },
+    "M09.quote_context": {
+      "type": "object",
+      "catalog_meaning": "标的与期权报价时点、合约范围、币种、价格口径及模型引用。",
+      "suggested_kind": "acquired",
+      "nature": "metadata",
+      "meaning_note": "标的/期权报价时刻、合约ID、币种与报价类型来自真实源，模型引用来自计算回执。"
+    },
+    "M09.volatility_surface": {
+      "type": "array",
+      "catalog_meaning": "期限、行权价/价内外程度、IV 与报价截点；缺失不插值冒充实测。",
+      "suggested_kind": "mixed",
+      "nature": "statistic",
+      "meaning_note": "观察节点IV来自外部统计或报价反算，拟合/插值为模型结果；各节点分别保留来源和缺失。"
+    },
+    "M09.volatility_cone": {
+      "type": "array",
+      "catalog_meaning": "期限、历史分位/范围、窗口、样本与估计方法。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "各持有窗口历史实现波动的分位/范围为统计，方法/样本窗口由研究选择。"
+    },
+    "M09.liquidity": {
+      "type": "array",
+      "catalog_meaning": "合约 bid/ask、价差、成交量、未平仓量、报价时点与单位。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "bid/ask/成交量/OI获取，价差计算，流动性好坏解释；各字段可能不同更新时点。"
+    },
+    "M09.instrument_context": {
+      "type": "object",
+      "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+    },
+    "M09.data_times": {
+      "type": "object",
+      "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+    },
+    "M09.source_scales": {
+      "type": "array",
+      "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+    },
+    "M10.summary": {
+      "type": "text",
+      "catalog_meaning": "方法给出的本模块结论；保留事实、解释或预测的真实性质。",
+      "suggested_kind": "inferred",
+      "nature": "mixed",
+      "meaning_note": "期权结构的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+    },
+    "M10.payoff_chart": {
+      "type": "chart",
+      "catalog_meaning": "指定方法已计算且包含成本的价格—到期损益；说明合约乘数、币种和提前行权假设。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "对给定合约腿/净成本计算到期损益，是条件数学结果而非发生概率；假设腿不能伪装真实报价。"
+    },
+    "M10.max_profit": {
+      "type": "object",
+      "catalog_meaning": "指定持有/结算条件、净成本和合约乘数下的金额；无上限明确说明。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "指定腿、净成本、乘数和结算假设下计算最大收益；无界情况按数学性质表达。"
+    },
+    "M10.max_loss": {
+      "type": "object",
+      "catalog_meaning": "指定持有/结算条件、净成本和合约乘数下的金额；未限定风险明确说明。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "指定条件下的最大亏损是模型计算，可能无界；不是未来实际损失。"
+    },
+    "M10.cost_chart": {
+      "type": "chart",
+      "catalog_meaning": "权利金、各费用与净成本的同口径对账，不重复扣除已包含的滑点。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "权利金报价为获取，费用可能源费率/用户假设，汇总净成本为计算，逐项标清是否已包含。"
+    },
+    "M10.profit_probability": {
+      "type": "probability",
+      "catalog_meaning": "明确目标为净盈利、期限、模型/统计口径；由独立方法提供并附可比历史证据，不能从损益图推算。",
+      "suggested_kind": "inferred",
+      "nature": "prediction",
+      "meaning_note": "净盈利概率来自明确分布/统计方法，是预测；外部POP也是获取到的模型预测，不是事实。"
+    },
+    "M10.objective": {
+      "type": "text",
+      "catalog_meaning": "用户希望表达的方向、波动或风险目标。",
+      "suggested_kind": "user_supplied",
+      "nature": "plan",
+      "meaning_note": "用户希望表达的方向/波动/风险目标是任务输入，不是市场证据。"
+    },
+    "M10.legs": {
+      "type": "array",
+      "catalog_meaning": "合约、数量、乘数、期限及行权条件。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "真实合约ID/expiry/strike/right/乘数获取，买卖/数量/组合选择由用户或方法计划。"
+    },
+    "M10.costs": {
+      "type": "object",
+      "catalog_meaning": "真实报价或明确的假设成本。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "真实bid/ask/权利金获取，净成本计算，滑点/手续费可能估计或用户假设；不可混为实际成交。"
+    },
+    "M10.payoff": {
+      "type": "array",
+      "catalog_meaning": "方法计算的情景结果，不隐含发生概率。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "在明确价格情景与结算假设下计算净损益，不隐含情景概率。"
+    },
+    "M10.risks": {
+      "type": "array",
+      "catalog_meaning": "方法提供的风险结果。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "风险敏感度是计算，流动性/提前行权等风险判断为解释，未来损失为预测。"
+    },
+    "M10.alternatives": {
+      "type": "array",
+      "catalog_meaning": "同口径方案比较。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "替代腿组合由用户/方法提出，成本与风险比较为计算，优劣属于目标约束下的判断。"
+    },
+    "M10.evidence": {
+      "type": "array",
+      "catalog_meaning": "与本模块判断相关的事实和解释；固定来源记录在结果行的 evidence_refs。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "数组逐项分开：原始事实是获取，数值统计是计算，解释/预测是推断，用户条件是输入；每项对应真实evidence_refs，转载和解析不算独立来源。"
+    },
+    "M10.breakevens": {
+      "type": "array",
+      "catalog_meaning": "方法计算的平衡价、期限、成本口径和条件，可有多个点。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "按净成本与结算公式求平衡价，可多个或不存在；不是价格目标预测。"
+    },
+    "M10.expected_profit": {
+      "type": "object",
+      "catalog_meaning": "方法按其分布计算的净期望、单位、期限与分布引用；与最大收益不同。",
+      "suggested_kind": "mixed",
+      "nature": "prediction",
+      "meaning_note": "期望净收益是对指定预测分布积分/统计；条件数学计算仍依赖预测，不等于最大收益。"
+    },
+    "M10.greeks": {
+      "type": "array",
+      "catalog_meaning": "Delta/Gamma/Vega/Theta/Rho 等由方法选择；附单位、报价截点与模型。",
+      "suggested_kind": "mixed",
+      "nature": "statistic",
+      "meaning_note": "外部Greeks是获取的模型统计；自算是derived，合约数量加总另算，单位/模型必须保留。"
+    },
+    "M10.liquidity": {
+      "type": "array",
+      "catalog_meaning": "合约 bid/ask、价差、成交量和 OI，记录同步报价时点。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "各腿bid/ask/量/OI是获取，价差/组合指标是计算，质量评价是解释。"
+    },
+    "M10.settlement": {
+      "type": "object",
+      "catalog_meaning": "美式/欧式、到期、现金/实物、乘数、提前行权与公司行为处理。",
+      "suggested_kind": "acquired",
+      "nature": "fact",
+      "meaning_note": "合约行权风格、到期、现金/实物、乘数和公司行为规则取正式规格；策略假设另列。"
+    },
+    "M10.instrument_context": {
+      "type": "object",
+      "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+    },
+    "M10.data_times": {
+      "type": "object",
+      "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+    },
+    "M10.source_scales": {
+      "type": "array",
+      "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+    },
+    "M11.summary": {
+      "type": "text",
+      "catalog_meaning": "方法给出的本模块结论；保留事实、解释或预测的真实性质。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "筛选的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+    },
+    "M11.ranking_chart": {
+      "type": "chart",
+      "catalog_meaning": "用户所选筛选方法的真实指标或评分及定义；图表不自行合成评分。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "指标/得分与排序来自实际筛选计算；外部得分可获取但仍是其统计/评价，不能按图形重算。"
+    },
+    "M11.tradeoff_chart": {
+      "type": "chart",
+      "catalog_meaning": "同观察窗的风险、收益及资产标识；历史表现不作为预测概率。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "同窗收益和风险指标由历史数据计算，资产ID取源；历史位置不是未来概率。"
+    },
+    "M11.universe": {
+      "type": "object",
+      "catalog_meaning": "资产范围、截点和数据覆盖。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "可交易身份由目录获取，纳入排除由任务/方法决定，历史范围必须用当时可得名单。"
+    },
+    "M11.criteria": {
+      "type": "array",
+      "catalog_meaning": "方法实际采用的筛选条件。",
+      "suggested_kind": "user_supplied",
+      "nature": "plan",
+      "meaning_note": "筛选条件由用户或所选方法实际指定，阈值不属于客观市场事实。"
+    },
+    "M11.candidates": {
+      "type": "array",
+      "catalog_meaning": "候选、排序、分数定义和入选依据。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "候选身份来自源，指标/分数/排序由计算，入选理由为解释。"
+    },
+    "M11.coverage_gaps": {
+      "type": "array",
+      "catalog_meaning": "与本次任务相关的数据缺口。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "实际失败/缺行/截断来自回执，是否足以代表目标市场由研究核查；不能把未查到当不存在。"
+    },
+    "M11.follow_up": {
+      "type": "array",
+      "catalog_meaning": "待研究问题和入口。",
+      "suggested_kind": "inferred",
+      "nature": "plan",
+      "meaning_note": "后续研究项目由当前缺口和用户目标推导，不是外部事实。"
+    },
+    "M11.evidence": {
+      "type": "array",
+      "catalog_meaning": "与本模块判断相关的事实和解释；固定来源记录在结果行的 evidence_refs。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "数组逐项分开：原始事实是获取，数值统计是计算，解释/预测是推断，用户条件是输入；每项对应真实evidence_refs，转载和解析不算独立来源。"
+    },
+    "M11.selection_logic": {
+      "type": "object",
+      "catalog_meaning": "条件之间的 AND/OR 等关系、阈值及输入版本；逻辑由用户/方法指定。",
+      "suggested_kind": "user_supplied",
+      "nature": "plan",
+      "meaning_note": "AND/OR、阈值、输入版本由用户/方法提供，实际执行回执验证其落实。"
+    },
+    "M11.rank_rules": {
+      "type": "object",
+      "catalog_meaning": "排序依据、方向、并列处理与 Top N；Report 不重新排序或计算分数。",
+      "suggested_kind": "user_supplied",
+      "nature": "plan",
+      "meaning_note": "排序方向、并列和Top N是已选规则；运行前约定与实际结果分开。"
+    },
+    "M11.candidate_details": {
+      "type": "array",
+      "catalog_meaning": "候选身份、技术事件引用、检测时间、bar 周期、持有期限、预期行为、状态及详情引用。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "身份/源价获取，事件/检测状态来自方法记录，期限/预期行为属于计划或预测。"
+    },
+    "M11.backtest_refs": {
+      "type": "array",
+      "catalog_meaning": "对应筛选规则版本与 M18/原生回测固定结果引用；不以条件频率替代回测。",
+      "suggested_kind": "acquired",
+      "nature": "metadata",
+      "meaning_note": "读取已真实完成、与筛选规则版本一致的固定回测ref；模拟结果身份不变成市场事实。"
+    },
+    "M11.instrument_context": {
+      "type": "object",
+      "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+    },
+    "M11.data_times": {
+      "type": "object",
+      "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+    },
+    "M11.source_scales": {
+      "type": "array",
+      "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+    },
+    "M12.summary": {
+      "type": "text",
+      "catalog_meaning": "方法给出的本模块结论；保留事实、解释或预测的真实性质。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "风险与组合的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+    },
+    "M12.exposure_chart": {
+      "type": "chart",
+      "catalog_meaning": "同一组合截点的非负总敞口层级；多空分开，父子金额不重复累计。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "持仓事实获取，估值/权重/层级加总计算；因子/行业映射另有来源，父子不重复计。"
+    },
+    "M12.dependence_chart": {
+      "type": "chart",
+      "catalog_meaning": "同一窗口、频率与所选依赖度方法的完整矩阵；缺失保持 null。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "按同窗收益或特征计算依赖矩阵，方法/频率由研究选择；相关不等因果。"
+    },
+    "M12.stop_chart": {
+      "type": "chart",
+      "catalog_meaning": "同一参考价、合约单位及风险预算下的已计算止损距离和规模；不在图中计算仓位。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "参考价格/规格获取，阈值与预算由用户/方法，距离/风险规模计算。"
+    },
+    "M12.portfolio": {
+      "type": "object",
+      "catalog_meaning": "真实或假设标识、持仓、币种及口径。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "真实持仓/余额从账户获取；假设组合由用户输入，合并币种/权重计算，二者不得混合。"
+    },
+    "M12.exposures": {
+      "type": "array",
+      "catalog_meaning": "所选资产或因子暴露结果。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "持仓和资产身份获取，名义/因子暴露计算；因子模型和分类判断另列。"
+    },
+    "M12.concentration": {
+      "type": "object",
+      "catalog_meaning": "方法给出的集中度。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "集中度由明确分母下的权重/金额计算；分组字典来自源或方法。"
+    },
+    "M12.dependence": {
+      "type": "array",
+      "catalog_meaning": "所选依赖度量及结果。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "相关/尾部依赖等为计算，是否稳定和适用为解释；指标选择由方法决定。"
+    },
+    "M12.stress": {
+      "type": "array",
+      "catalog_meaning": "方法生成的情景及潜在损失。",
+      "suggested_kind": "inferred",
+      "nature": "prediction",
+      "meaning_note": "压力路径是用户/方法设定的假设，损失由模型计算；不是已发生损失或默认概率。"
+    },
+    "M12.budget": {
+      "type": "object",
+      "catalog_meaning": "用户的决策条件，不作为价格方向证据。",
+      "suggested_kind": "user_supplied",
+      "nature": "plan",
+      "meaning_note": "风险金额/比例和限制来自当前用户目标或有效既有偏好，不是方向证据。"
+    },
+    "M12.evidence": {
+      "type": "array",
+      "catalog_meaning": "与本模块判断相关的事实和解释；固定来源记录在结果行的 evidence_refs。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "数组逐项分开：原始事实是获取，数值统计是计算，解释/预测是推断，用户条件是输入；每项对应真实evidence_refs，转载和解析不算独立来源。"
+    },
+    "M12.stop_variants": {
+      "type": "array",
+      "catalog_meaning": "所选方法给出的松紧/跟踪方案、价格或偏移、适用方向和期限；不固定三档算法。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "松紧/跟踪方案由用户或方法给出，数值可计算；不固定档数或算法。"
+    },
+    "M12.stop_distances": {
+      "type": "array",
+      "catalog_meaning": "各方案的价格/pip/ATR 距离、合约单位损失及计算时点。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "从参考价/止损/合约规则计算距离和单位损失；若给定风险单位需其明确定义。"
+    },
+    "M12.position_size": {
+      "type": "object",
+      "catalog_meaning": "风险金额、单单位损失、估计规模、合约乘数、步长、汇率与方法引用。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "预算是用户条件，单位损失/规模是计算，乘数/步长/汇率是源事实；不代表已下单。"
+    },
+    "M12.execution_costs": {
+      "type": "object",
+      "catalog_meaning": "价差、佣金、滑点、融资/借券等结果与单位；研究成本不表示执行授权。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "真实bid/ask/费率获取，滑点/融资借券可能估计或用户假设，最终成本汇总为计算。"
+    },
+    "M12.margin": {
+      "type": "object",
+      "catalog_meaning": "估算保证金、账户币种与资金条件；真实/假设账户明确标识。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "当前账户资金/已用保证金获取；拟议订单保证金为原生规则计算；假设账户须明确。"
+    },
+    "M12.instrument_context": {
+      "type": "object",
+      "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+    },
+    "M12.data_times": {
+      "type": "object",
+      "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+    },
+    "M12.source_scales": {
+      "type": "array",
+      "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+    },
+    "M13.summary": {
+      "type": "text",
+      "catalog_meaning": "方法给出的本模块结论；保留事实、解释或预测的真实性质。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "历史同类情景的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+    },
+    "M13.outcome_chart": {
+      "type": "chart",
+      "catalog_meaning": "历史匹配样本的已登记分箱；结果提供 sampleCount、method、边界规则和收益单位。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "对实际历史匹配后的结局分箱/计数，边界规则与样本量由真实研究记录提供，不是预测概率。"
+    },
+    "M13.baseline_chart": {
+      "type": "chart",
+      "catalog_meaning": "同一目标与期限的条件统计及可比基准；样本量、重叠处理和不确定性来自研究结果。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "条件样本统计和同目标基准各自计算，窗口/样本定义由研究决定，不在报告选择基准。"
+    },
+    "M13.cases_chart": {
+      "type": "chart",
+      "catalog_meaning": "逐次历史匹配事件的 ID、情景及已结算结果；少样本时优先原始点，不制造平滑密度。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "事件身份和原观察可获取，是否相似由匹配方法决定，后续结果由真实路径结算，逐案例保留证据。"
+    },
+    "M13.inference_evidence": {
+      "type": "inferences",
+      "catalog_meaning": "每项可检验推断独立关联历史相同或可比情景、实际后续结果、置信度定义及验证状态；综合结论另有联合方法和历史依据。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "逐项推断是解释/预测，历史案例/实际结果是事实与统计，验证状态/置信定义为记录；不得统一标签。"
+    },
+    "M13.feature": {
+      "type": "object",
+      "catalog_meaning": "特征定义、版本、当前值和目标。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "定义/目标来自用户或方法，当前值可能获取或计算，方向假设是推断，版本是元数据。"
+    },
+    "M13.matching": {
+      "type": "object",
+      "catalog_meaning": "方法提供的匹配、排除和信息可得性规则。",
+      "suggested_kind": "user_supplied",
+      "nature": "plan",
+      "meaning_note": "匹配/排除/可得性规则由所选方法预先定义，不是来源直接给出的客观相似性。"
+    },
+    "M13.sample": {
+      "type": "object",
+      "catalog_meaning": "时间范围、原始数量、事件或簇数。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "原样本来自历史数据，纳入/排除和事件簇由规则产生，数量由实际记录计数。"
+    },
+    "M13.baseline": {
+      "type": "object",
+      "catalog_meaning": "同口径基准的定义与结果。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "基准定义由用户/方法选择，其历史原值获取、对应结局统计计算。"
+    },
+    "M13.outcomes": {
+      "type": "array",
+      "catalog_meaning": "计数、条件频率与结果分布；不冒充预测概率。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "计数/条件频率由已匹配案例的实际后续结果算出，不自动升级为当前预测概率。"
+    },
+    "M13.uncertainty": {
+      "type": "object",
+      "catalog_meaning": "方法提供的区间、含义和估计方式。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "区间与误差按选定统计方法从实际样本计算；区间含义与假设必须明确。"
+    },
+    "M13.validation": {
+      "type": "object",
+      "catalog_meaning": "验证范围、结果、状态及来源。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "实际验证范围/结果/状态取真实运行记录；通过标准由方法约定，结论解释另列。"
+    },
+    "M13.applicability": {
+      "type": "text",
+      "catalog_meaning": "所选方法对当前适用性的评价。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "把历史样本迁移到当前状态的适用性由方法判断，支持/反证与差异逐项说明。"
+    },
+    "M13.evidence": {
+      "type": "array",
+      "catalog_meaning": "与本模块判断相关的事实和解释；固定来源记录在结果行的 evidence_refs。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "数组逐项分开：原始事实是获取，数值统计是计算，解释/预测是推断，用户条件是输入；每项对应真实evidence_refs，转载和解析不算独立来源。"
+    },
+    "M13.instrument_context": {
+      "type": "object",
+      "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+    },
+    "M13.data_times": {
+      "type": "object",
+      "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+    },
+    "M13.source_scales": {
+      "type": "array",
+      "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+    },
+    "M14.summary": {
+      "type": "text",
+      "catalog_meaning": "方法给出的本模块结论；保留事实、解释或预测的真实性质。",
+      "suggested_kind": "inferred",
+      "nature": "prediction",
+      "meaning_note": "综合预测的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+    },
+    "M14.evidence_chart": {
+      "type": "chart",
+      "catalog_meaning": "每项特征推断在同类历史情景中的实际结果与基准；配套 inference_evidence 逐项记录口径，不把差值当独立贡献。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "历史实际结局及基准是统计，图中各推断是解释/预测；差值不自动等于独立贡献。"
+    },
+    "M14.confidence": {
+      "type": "confidence",
+      "catalog_meaning": "置信度定义、统计不确定性、验证状态和依据；不预设评分法。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "统计区间可计算、模型置信可推断、验证状态取记录，定义分别列；不默认评分法或供应商Confidence。"
+    },
+    "M14.outlook_chart": {
+      "type": "chart",
+      "catalog_meaning": "独立综合方法提供的同一目标概率及其历史依据；原值为 0–1，不用指标投票代替概率。",
+      "suggested_kind": "inferred",
+      "nature": "prediction",
+      "meaning_note": "同一目标的概率分布由独立综合方法提供，是预测；图形只展示，不归一化指标投票。"
+    },
+    "M14.target": {
+      "type": "object",
+      "catalog_meaning": "明确结果、期限、截点和口径。",
+      "suggested_kind": "user_supplied",
+      "nature": "plan",
+      "meaning_note": "结果事件、期限、截点和结算口径来自任务/方法约定，不是外部数据事实。"
+    },
+    "M14.supporting": {
+      "type": "array",
+      "catalog_meaning": "方法提供的支持项及历史依据。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "各支持项分别为原始事实、计算统计或方法解释，是否支持属于推断；每项历史依据单列。"
+    },
+    "M14.opposing": {
+      "type": "array",
+      "catalog_meaning": "方法提供的相反证据。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "相反事实/统计获取或计算，构成反证的含义由方法解释，不能因不支持主结论而省略。"
+    },
+    "M14.overlap": {
+      "type": "text",
+      "catalog_meaning": "综合方法对冗余或冲突的处理说明。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "相关/冗余量可计算，哪些信息重复或冲突及处理方式由综合方法判断。"
+    },
+    "M14.probabilities": {
+      "type": "distribution",
+      "catalog_meaning": "所选方法提供的结果分布；类别和目标由任务确定。",
+      "suggested_kind": "inferred",
+      "nature": "prediction",
+      "meaning_note": "结果概率是指定目标/期限下的模型预测；外部概率若获取也仍是预测。"
+    },
+    "M14.scenarios": {
+      "type": "array",
+      "catalog_meaning": "方法提供的条件判断，不暗示分支权重。",
+      "suggested_kind": "inferred",
+      "nature": "prediction",
+      "meaning_note": "条件分支与结果由方法推断，条件事实和预测分开；无概率不暗示等权。"
+    },
+    "M14.invalidation": {
+      "type": "array",
+      "catalog_meaning": "改变判断的观测条件。",
+      "suggested_kind": "inferred",
+      "nature": "plan",
+      "meaning_note": "哪些新观察会更新或推翻判断是事前约定的研究判据。"
+    },
+    "M14.evidence": {
+      "type": "array",
+      "catalog_meaning": "与本模块判断相关的事实和解释；固定来源记录在结果行的 evidence_refs。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "数组逐项分开：原始事实是获取，数值统计是计算，解释/预测是推断，用户条件是输入；每项对应真实evidence_refs，转载和解析不算独立来源。"
+    },
+    "M14.inference_evidence": {
+      "type": "inferences",
+      "catalog_meaning": "每项可检验推断独立关联历史相同或可比情景、实际后续结果、置信度定义及验证状态；综合结论另有联合方法和历史依据。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "逐项命题为推断，历史匹配/实际结果为计算与事实，验证状态/定义来自回执；综合方法需另有联合依据。"
+    },
+    "M14.instrument_context": {
+      "type": "object",
+      "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+    },
+    "M14.data_times": {
+      "type": "object",
+      "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+    },
+    "M14.source_scales": {
+      "type": "array",
+      "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+    },
+    "M15.summary": {
+      "type": "text",
+      "catalog_meaning": "方法给出的本模块结论；保留事实、解释或预测的真实性质。",
+      "suggested_kind": "inferred",
+      "nature": "plan",
+      "meaning_note": "行动监测的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+    },
+    "M15.monitor_chart": {
+      "type": "chart",
+      "catalog_meaning": "用户或指定方法的监测阈值与当前观测，同图保持统一单位，不根据图形自动执行交易。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "当前观测是获取，监测阈值来自用户/方法，差值可算；阈值越过不自动等于获授权行动。"
+    },
+    "M15.objective": {
+      "type": "text",
+      "catalog_meaning": "本次任务目标。",
+      "suggested_kind": "user_supplied",
+      "nature": "plan",
+      "meaning_note": "目标来自本次用户要求，长期偏好只能在适用且有效时复用。"
+    },
+    "M15.scenarios": {
+      "type": "array",
+      "catalog_meaning": "研究结果支持的情景、触发与失效条件。",
+      "suggested_kind": "inferred",
+      "nature": "prediction",
+      "meaning_note": "情景结果是条件预测，触发和失效是研究判据，事实依据另列。"
+    },
+    "M15.constraints": {
+      "type": "array",
+      "catalog_meaning": "用户指定或方法提供的约束。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "风险/费用限制来自用户目标或明确方法规则；真实成本参考与假设限额应单列。"
+    },
+    "M15.watchlist": {
+      "type": "array",
+      "catalog_meaning": "有意义的后续观测。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "观察对象/指标和后续问题由用户或方法选择，事实来源仅用于之后核验。"
+    },
+    "M15.actions": {
+      "type": "array",
+      "catalog_meaning": "区分建议、已安排和已执行，不触发实际行动。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "建议行动由研究给出，已安排状态取计划回执，已执行必须取真实执行/成交证据，数组逐项区分。"
+    },
+    "M15.review_at": {
+      "type": "text",
+      "catalog_meaning": "用户或任务约定的复核条件。",
+      "suggested_kind": "user_supplied",
+      "nature": "plan",
+      "meaning_note": "复核日期/条件由用户或任务约定，也可由方法建议，不是已经发生的事实。"
+    },
+    "M15.evidence": {
+      "type": "array",
+      "catalog_meaning": "与本模块判断相关的事实和解释；固定来源记录在结果行的 evidence_refs。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "数组逐项分开：原始事实是获取，数值统计是计算，解释/预测是推断，用户条件是输入；每项对应真实evidence_refs，转载和解析不算独立来源。"
+    },
+    "M15.scenario_terms": {
+      "type": "array",
+      "catalog_meaning": "同一情景 ID 下的方向、触发、入场区、目标、观点失效、止损、期限、成本和盈亏比及依据；树节点引用这些研究结果。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "每个情景的方向/目标是预测，入场/止损是计划，成本可为事实或假设，盈亏比是计算，分别关联依据。"
+    },
+    "M15.instrument_context": {
+      "type": "object",
+      "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+    },
+    "M15.data_times": {
+      "type": "object",
+      "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+    },
+    "M15.source_scales": {
+      "type": "array",
+      "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+    },
+    "M15.action_chart": {
+      "type": "chart",
+      "catalog_meaning": "用户目标下的观察条件、待确认路径和行动；叶子是行动，不含尚待判断的条件。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "分支条件来自研究，叶子是用户目标下的行动计划；真实执行状态需另有回执。"
+    },
+    "M16.summary": {
+      "type": "text",
+      "catalog_meaning": "方法给出的本模块结论；保留事实、解释或预测的真实性质。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "预测复盘的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+    },
+    "M16.calibration_chart": {
+      "type": "chart",
+      "catalog_meaning": "已登记的校准分组：原预测概率、实际频率、组内样本量与同口径参考；不能在报告拟合校准。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "原概率是事前预测记录，实际命中是结算事实，分箱均值/实际频率由统计产生。"
+    },
+    "M16.evaluation_chart": {
+      "type": "chart",
+      "catalog_meaning": "相同结算目标和期间的评价指标；写明指标定义、方向和独立验证范围。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "同目标评价指标由已结算预测与事实计算；方法优劣解释另列，基准口径必须相同。"
+    },
+    "M16.original": {
+      "type": "object",
+      "catalog_meaning": "原结果、方法、目标和版本引用。",
+      "suggested_kind": "acquired",
+      "nature": "prediction",
+      "meaning_note": "从事前固定记录获取原预测及概率/方法/期限；获取方式不把原预测变成事实。"
+    },
+    "M16.settlement": {
+      "type": "text",
+      "catalog_meaning": "待观察、无法结算或已结算。",
+      "suggested_kind": "acquired",
+      "nature": "metadata",
+      "meaning_note": "待观察/缺证据/已结算状态取真实台账；解释失败原因应另列，不手工冒充成功。"
+    },
+    "M16.actual": {
+      "type": "object",
+      "catalog_meaning": "原目标对应的实际结果。",
+      "suggested_kind": "acquired",
+      "nature": "fact",
+      "meaning_note": "实际观察值取对应数据/已核验记录，命中与否按事前口径计算；预测值不是事实替代。"
+    },
+    "M16.evaluation": {
+      "type": "array",
+      "catalog_meaning": "方法提供的指标、定义、基准和评价。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "指标分数是计算，基准值也需真实数据，评价/原因是解释；源记录逐项关联。"
+    },
+    "M16.calibration": {
+      "type": "object",
+      "catalog_meaning": "适用的校准结果、覆盖和证据。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "从实际事前概率和已核验结果计算校准统计；不是给未来判断自动保证准确率。"
+    },
+    "M16.explanation": {
+      "type": "text",
+      "catalog_meaning": "方法对偏差的解释。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "误差原因是方法归因，需要支持/替代解释；一个结果不能证明原因。"
+    },
+    "M16.follow_up": {
+      "type": "array",
+      "catalog_meaning": "有依据的后续研究或版本处理。",
+      "suggested_kind": "inferred",
+      "nature": "plan",
+      "meaning_note": "后续验证/候选规则修订是研究计划；不是已经有效的新规则或已执行动作。"
+    },
+    "M16.evidence": {
+      "type": "array",
+      "catalog_meaning": "与本模块判断相关的事实和解释；固定来源记录在结果行的 evidence_refs。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "数组逐项分开：原始事实是获取，数值统计是计算，解释/预测是推断，用户条件是输入；每项对应真实evidence_refs，转载和解析不算独立来源。"
+    },
+    "M16.instrument_context": {
+      "type": "object",
+      "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+    },
+    "M16.data_times": {
+      "type": "object",
+      "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+    },
+    "M16.source_scales": {
+      "type": "array",
+      "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+    },
+    "M17.summary": {
+      "type": "text",
+      "catalog_meaning": "方法给出的本模块结论；区分事实、模拟结果和预测。",
+      "suggested_kind": "inferred",
+      "nature": "mixed",
+      "meaning_note": "事件日历的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+    },
+    "M17.timeline_chart": {
+      "type": "chart",
+      "catalog_meaning": "同一截点已知的计划/实际公布时间，逐项标记待公布、已公布、改期或取消，不把计划当事实结果。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "计划时间/确认状态取当前日历，实际公布/取消取事件记录；时间线不能把计划时刻当实际结果。"
+    },
+    "M17.calendar_chart": {
+      "type": "chart",
+      "catalog_meaning": "固定日历窗口按当地日期聚合的已知事件数量；零事件与来源未覆盖不同。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "对已知事件按当地日期计数；日界/覆盖范围为显式规则，零计数不能证明全市场无事件。"
+    },
+    "M17.scope": {
+      "type": "object",
+      "catalog_meaning": "开始/结束、时区、地区/资产、日历版本和数据截点。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "日期/地区/资产范围由任务设定，时区/日历版本/截点取源与真实查询回执。"
+    },
+    "M17.events": {
+      "type": "array",
+      "catalog_meaning": "事件 ID、名称/类型、国家/货币/标的、计划时间、时区、确认状态、重要性和来源。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "名称/国家/计划时刻/确认状态取源；重要性是供应商/方法评价，实际发生与计划分开。"
+    },
+    "M17.economic_releases": {
+      "type": "array",
+      "catalog_meaning": "事件 ID、频率、单位、前值/修订值/预期/实际及其可得时间；未公布 actual 为 null。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "前值/修订/实际为不同版本事实；事前预期是外部预测；频率/单位/可得时间取各自证据。"
+    },
+    "M17.earnings": {
+      "type": "array",
+      "catalog_meaning": "事件 ID、财季、盘前/盘后、EPS/营收预期与实际、币种和来源。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "财季/公布日程来自公告，EPS/营收预期为外部预测，实际披露为事实，盘前/盘后需源时区。"
+    },
+    "M17.dividends": {
+      "type": "array",
+      "catalog_meaning": "事件 ID、宣告/除息/登记/支付日期、每股金额、币种及普通/特别标识。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "正式公告的四类日期/金额/币种是获取事实；未来尚未宣布股息是估计，收益率另算。"
+    },
+    "M17.splits": {
+      "type": "array",
+      "catalog_meaning": "事件 ID、生效日、新旧股比例、复权口径与来源。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "生效日/新旧股比例取正式公告；复权因子/历史价格调整是计算，预期拆股与已确认分开。"
+    },
+    "M17.meetings": {
+      "type": "array",
+      "catalog_meaning": "会议类型、时间、时区、状态和已披露议题，不补造未公布内容。",
+      "suggested_kind": "acquired",
+      "nature": "fact",
+      "meaning_note": "会议类型、计划时间、状态和已披露议题取公告；对未公开议题的推测不属于此事实字段。"
+    },
+    "M17.schedule_changes": {
+      "type": "array",
+      "catalog_meaning": "原/新时间、确认或取消状态、修订时间与来源。",
+      "suggested_kind": "acquired",
+      "nature": "metadata",
+      "meaning_note": "原/新计划、取消/确认和修订时间需两版实际公告或源变更记录，不从最新日期反推旧版。"
+    },
+    "M17.coverage": {
+      "type": "object",
+      "catalog_meaning": "来源覆盖、更新频率与缺失范围；空白日和确认无事件分开。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "实际来源范围/失败/截断从回执获取，更新频率取源说明或真实观测，完整性需核查。"
+    },
+    "M17.instrument_context": {
+      "type": "object",
+      "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+    },
+    "M17.data_times": {
+      "type": "object",
+      "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+    },
+    "M17.source_scales": {
+      "type": "array",
+      "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+    },
+    "M18.summary": {
+      "type": "text",
+      "catalog_meaning": "方法给出的本模块结论；区分事实、模拟结果和预测。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "回测的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+    },
+    "M18.equity_chart": {
+      "type": "chart",
+      "catalog_meaning": "同初始基数、币种与期间的已计算净值，明确分红和成本；只展示已登记回测结果。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "净值来自真实完成的模拟/计算结果；基准同口径另算，模拟净值不是实盘权益事实。"
+    },
+    "M18.drawdown_chart": {
+      "type": "chart",
+      "catalog_meaning": "由同一净值结果计算的回撤路径与单位，不在浏览器重新计算。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "回撤是已登记净值路径的统计，必须明确金额/百分比及基准，报告不重算。"
+    },
+    "M18.market_matrix_chart": {
+      "type": "chart",
+      "catalog_meaning": "每格为已登记选中参数组的同样本净收益；选优规则与颜色指标分开，失败/缺失保持 null。完整逐组下钻沿用原生回测报告。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "矩阵每格来自真实运行的选定参数组指标，品种/周期是实验条件，失败保持缺失。"
+    },
+    "M18.parameter_heatmap": {
+      "type": "chart",
+      "catalog_meaning": "所选两个参数轴的已登记同品种、周期、样本及成本结果；固定其他参数，不填补未测试格，不据此重选样本外参数。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "每格为同数据/成本下真实参数试验统计；轴与固定参数来自设计，未测格不是零。"
+    },
+    "M18.parameter_sensitivity_chart": {
+      "type": "chart",
+      "catalog_meaning": "固定其他参数后的逐试验指标；每点可追溯完整参数组，相同横坐标不静默平均。参数、指标与筛选规则可由用户替换。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "逐点指标来自实际试验，横轴是参数输入；同横坐标不同完整参数组不得静默平均。"
+    },
+    "M18.validation_chart": {
+      "type": "chart",
+      "catalog_meaning": "冻结同一策略后训练与独立留出区间的已计算指标，注明区间长度与成本；不同长度累计收益不能直接比较优劣，留出不得参与选优。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "训练/留出指标来自真实独立运行，策略冻结和区间元数据证明选择时点；不是可视化判断通过。"
+    },
+    "M18.funnel_chart": {
+      "type": "chart",
+      "catalog_meaning": "同一运行中的去重阶段计数及排除原因；注明各阶段是否包含关系，不把筛选数量当命中率。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "各阶段计数由同一运行的信号/过滤/订单/成交记录计算；包含关系和排除原因需原trace。"
+    },
+    "M18.pnl_chart": {
+      "type": "chart",
+      "catalog_meaning": "同一账户、期间和币种的毛损益、负费用项与净损益，start/delta/end 对账；不能重复扣除已净额化的费用。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "毛损益/费用/净损益取真实模拟结果并计算对账；已净额化费用不得再扣，币种一致。"
+    },
+    "M18.hypothesis": {
+      "type": "text",
+      "catalog_meaning": "策略要检验的问题与冻结的规则/版本引用。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "问题和规则由用户/研究设定，冻结源码/版本是记录；不由外部行情自动生成策略。"
+    },
+    "M18.universe": {
+      "type": "object",
+      "catalog_meaning": "点时投资池、数据范围、存续/退市与可交易性口径。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "历史资产身份/可交易状态获取，范围选择由方法；当时资格不能由今天目录替代。"
+    },
+    "M18.selection": {
+      "type": "object",
+      "catalog_meaning": "条件、逻辑、排序、并列、数量及其固定规则引用。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "筛选/排序/并列/持仓数是实际冻结规则，结果是运行输出；报告不替策略选择。"
+    },
+    "M18.simulation": {
+      "type": "object",
+      "catalog_meaning": "初始资金、权重、换仓频率、成交时点、持有规则、分红再投和现金处理，由方法指定。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "初始资金/成交/换仓/现金处理是模拟配置；约束参考源事实，但假设不是实际成交。"
+    },
+    "M18.window": {
+      "type": "object",
+      "catalog_meaning": "开始/结束、训练/验证/留出边界、策略冻结时点与评价截点。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "实际开始结束/训练留出边界取运行配置，冻结时点取记录，设计边界来自任务。"
+    },
+    "M18.metrics": {
+      "type": "array",
+      "catalog_meaning": "总收益、年化、回撤、风险/交易指标及单位和定义，由方法选择。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "收益/回撤/风险/交易指标由真实模拟结果计算，定义/方向/单位来自所选评价口径。"
+    },
+    "M18.benchmark": {
+      "type": "object",
+      "catalog_meaning": "基准身份、期间、币种、含息/费用口径，与策略可比范围。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "基准选择来自用户/方法，身份/价格/分红等获取，基准收益计算。"
+    },
+    "M18.positions": {
+      "type": "array",
+      "catalog_meaning": "日期、资产、方向、数量/权重及来源记录。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "模拟持仓由真实引擎执行生成，是关于本次模拟的结果，不是账户实盘持仓。"
+    },
+    "M18.trades": {
+      "type": "array",
+      "catalog_meaning": "信号/成交时间、价格、数量、费用、交易 ID；与真实成交分开。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "模拟成交来自真实引擎回执，信号/成交时间和费用分别保留；不是已在市场成交的事实。"
+    },
+    "M18.costs": {
+      "type": "object",
+      "catalog_meaning": "费用、价差、滑点、换手与融资的估计方法、结果和纳入范围。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "实际模拟费用取结果，输入费率可能真实源或用户假设，滑点/融资模型属于估计，逐项区分。"
+    },
+    "M18.assumptions": {
+      "type": "array",
+      "catalog_meaning": "点时数据、停牌、退市、复权、分红、缺失与执行延迟处理。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "点时/停牌/复权/延迟处理是数据和模拟规则；其中“已具备PIT数据”需独立证据，不能仅写假设。"
+    },
+    "M18.validation": {
+      "type": "object",
+      "catalog_meaning": "所选方法实际完成的验证范围、结果、选择次数与固定依据，不由渲染判定通过。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "检验范围/执行状态/指标取实际记录，判断通过标准由研究决定；成功渲染不是通过。"
+    },
+    "M18.artifacts": {
+      "type": "array",
+      "catalog_meaning": "原生 run/result/trade/参数等固定引用；复用原生回测报告，不重算或复制执行层。",
+      "suggested_kind": "acquired",
+      "nature": "metadata",
+      "meaning_note": "读取真实原生run/result/trade/参数固定引用，生产者/修订不改写。"
+    },
+    "M18.instrument_context": {
+      "type": "object",
+      "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+    },
+    "M18.data_times": {
+      "type": "object",
+      "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+    },
+    "M18.source_scales": {
+      "type": "array",
+      "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+    },
+    "M18.logic_graph": {
+      "type": "object",
+      "catalog_meaning": "真实源码修订、逻辑图和对应运行引用；复用原生策略图/函数展开，只有本次实际使用 SVL 才关联 SVL，不根据叙述编造执行逻辑。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "源码/修订来自真实工件，逻辑图由同一语法结构派生，运行关联取回执；叙述不是执行逻辑。"
+    },
+    "M18.parameter_trials": {
+      "type": "array",
+      "catalog_meaning": "每组 trial_id、品种/周期、样本、完整参数、状态、预选标识及原始指标；保留失败、未运行和指标未定义，较大结果用原生分页下钻和固定引用。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "参数是输入，trial状态取真实执行，指标为统计，预选标识来自事前规则；失败/未运行明确保留。"
+    },
+    "M18.selection_rule": {
+      "type": "object",
+      "catalog_meaning": "运行前声明的优化指标、方向、样本、约束与并列规则，以及已登记获胜组；Report 不重新选优或使用留出结果挑参。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "优化指标/方向/约束/并列是事前规则，获胜组是执行选择结果；留出不参与重选。"
+    },
+    "M19.summary": {
+      "type": "text",
+      "catalog_meaning": "方法给出的本模块结论；区分事实、模拟结果和预测。",
+      "suggested_kind": "inferred",
+      "nature": "plan",
+      "meaning_note": "组合再平衡的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+    },
+    "M19.weights_chart": {
+      "type": "chart",
+      "catalog_meaning": "同一组合截点与分母的当前/目标权重，现金与多空口径明确，保留零权重资产。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "当前持仓获取后估值/权重计算，目标权重来自模型/用户计划；两者不具相同事实性质。"
+    },
+    "M19.changes_chart": {
+      "type": "chart",
+      "catalog_meaning": "同一当前/目标权重下由方法提供的变更，正负表示增加/减少，不能视为已成交。",
+      "suggested_kind": "derived",
+      "nature": "plan",
+      "meaning_note": "建议变更是同口径目标减当前权重的计算，正负是计划方向，不是实际成交。"
+    },
+    "M19.objective": {
+      "type": "text",
+      "catalog_meaning": "用户目标、投资期限与基准，和市场方向预测分开。",
+      "suggested_kind": "user_supplied",
+      "nature": "plan",
+      "meaning_note": "目标/期限/基准偏好来自当前用户任务或有效已确认记忆，不是市场价格预测。"
+    },
+    "M19.action_status": {
+      "type": "text",
+      "catalog_meaning": "建议、待确认、已安排、已执行及依据；字段呈现不触发交易。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "建议为研究状态，安排取计划回执，执行取真实应用/订单/成交证据，逐项不可混称。"
+    },
+    "M19.constraints": {
+      "type": "array",
+      "catalog_meaning": "资产/行业/币种/权重/流动性/风险/换手等本次约束。",
+      "suggested_kind": "user_supplied",
+      "nature": "plan",
+      "meaning_note": "权重/资产/流动性/风险/换手约束由用户或所选方法明确；实际市场限制另取证。"
+    },
+    "M19.current_weights": {
+      "type": "array",
+      "catalog_meaning": "资产、方向、当前权重/市值、币种和截点。",
+      "suggested_kind": "derived",
+      "nature": "statistic",
+      "meaning_note": "持仓/余额原值获取，按价格/币种/分母计算当前权重；报价时点需一致。"
+    },
+    "M19.target_weights": {
+      "type": "array",
+      "catalog_meaning": "方法给出的目标权重、允许偏离、依据与截点；多空/现金口径明确。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "数值可以由所选分配方法计算或用户给定，目标与允许偏离是计划，不是实际持仓。"
+    },
+    "M19.changes": {
+      "type": "array",
+      "catalog_meaning": "新增/移除/调整、当前至目标差异、估计成本与原因，区分建议和已执行。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "成分/权重差是计算，估计成本是模型/源输入，理由是解释，实施状态必须另有回执。"
+    },
+    "M19.weighting_rules": {
+      "type": "object",
+      "catalog_meaning": "所选方法/版本和规则说明；不固定等权、最优权重或任何优化器。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "方法/版本及分配规则来自用户或真实研究选择，执行结果另列；不默认等权或任何优化器。"
+    },
+    "M19.rebalance": {
+      "type": "object",
+      "catalog_meaning": "日期或触发、频率、阈值、换手与成本、复核条件及执行状态。",
+      "suggested_kind": "mixed",
+      "nature": "plan",
+      "meaning_note": "日期/阈值/频率来自计划，换手/成本为估计或计算，已安排/已执行取真实回执。"
+    },
+    "M19.benchmark": {
+      "type": "object",
+      "catalog_meaning": "目标比较基准及期间、币种、收益口径。",
+      "suggested_kind": "mixed",
+      "nature": "mixed",
+      "meaning_note": "比较目标来自任务，身份/价格/现金流获取，收益统计计算；不能混用价格与含息基准。"
+    },
+    "M19.performance_refs": {
+      "type": "array",
+      "catalog_meaning": "同规则版本的 M18/原生回测或真实业绩固定引用，模拟与实绩分开。",
+      "suggested_kind": "acquired",
+      "nature": "metadata",
+      "meaning_note": "取得同一规则版本的真实回测/业绩固定引用；模拟和实绩分别标清，不根据目标权重补业绩。"
+    },
+    "M19.risk_refs": {
+      "type": "array",
+      "catalog_meaning": "目标和当前组合的 M12 暴露、集中、依赖与压力结果引用。",
+      "suggested_kind": "acquired",
+      "nature": "metadata",
+      "meaning_note": "读取已有M12风险结果及固定版本引用；其中暴露/压力本身仍保留计算或预测性质。"
+    },
+    "M19.instrument_context": {
+      "type": "object",
+      "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+    },
+    "M19.data_times": {
+      "type": "object",
+      "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+    },
+    "M19.source_scales": {
+      "type": "array",
+      "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+      "suggested_kind": "mixed",
+      "nature": "metadata",
+      "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+    },
+    "M03.fundamental_judgments": {
+      "type": "array",
+      "catalog_meaning": "增长持续性、利润的现金支持、偿债与分配能力及同行位置的分项判断。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "知识与实际结果支持的分项判断；事实、历史结果、目标取舍与未来推断分别标明，不能由展示层产生。"
+    },
+    "M04.valuation_judgments": {
+      "type": "array",
+      "catalog_meaning": "相对当前价、同业或所选回报要求的价值判断，以及不同估值与共识的分歧解释。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "知识与实际结果支持的分项判断；事实、历史结果、目标取舍与未来推断分别标明，不能由展示层产生。"
+    },
+    "M05.consensus_judgments": {
+      "type": "array",
+      "catalog_meaning": "分析师总体态度、分歧、修订方向及其对本次问题的含义。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "知识与实际结果支持的分项判断；事实、历史结果、目标取舍与未来推断分别标明，不能由展示层产生。"
+    },
+    "M06.impact_judgments": {
+      "type": "array",
+      "catalog_meaning": "事件对指定资产在各观察或判断期限的方向、幅度、传导解释与可迁移性判断。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "知识与实际结果支持的分项判断；事实、历史结果、目标取舍与未来推断分别标明，不能由展示层产生。"
+    },
+    "M07.news_judgments": {
+      "type": "array",
+      "catalog_meaning": "逐资产或重要主题判断消息偏利好、偏利空、影响有限或利弊混合，以及起作用的期限和条件。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "知识与实际结果支持的分项判断；事实、历史结果、目标取舍与未来推断分别标明，不能由展示层产生。"
+    },
+    "M08.sentiment_judgments": {
+      "type": "array",
+      "catalog_meaning": "按资产或语料范围分别解释情绪方向、变化、分歧及其实际意义。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "知识与实际结果支持的分项判断；事实、历史结果、目标取舍与未来推断分别标明，不能由展示层产生。"
+    },
+    "M09.pricing_judgments": {
+      "type": "array",
+      "catalog_meaning": "相对所选实际参照解释期权波动定价、期限差、上下行偏斜及其对结构选择的含义。",
+      "suggested_kind": "inferred",
+      "nature": "interpretation",
+      "meaning_note": "知识与实际结果支持的分项判断；事实、历史结果、目标取舍与未来推断分别标明，不能由展示层产生。"
+    },
+    "M10.structure_judgments": {
+      "type": "array",
+      "catalog_meaning": "按目标、期限、预算比较期权结构、现货、现金或暂不参与，明确倾向和代价。",
+      "suggested_kind": "inferred",
+      "nature": "plan",
+      "meaning_note": "知识与实际结果支持的分项判断；事实、历史结果、目标取舍与未来推断分别标明，不能由展示层产生。"
+    },
+    "M11.candidate_judgments": {
+      "type": "array",
+      "catalog_meaning": "逐候选说明为何优先、仅在何种条件保留或暂不采用。",
+      "suggested_kind": "inferred",
+      "nature": "plan",
+      "meaning_note": "知识与实际结果支持的分项判断；事实、历史结果、目标取舍与未来推断分别标明，不能由展示层产生。"
+    },
+    "M12.risk_judgments": {
+      "type": "array",
+      "catalog_meaning": "分别判断风险集中在哪里、分散是否有效、主要冲击及应对选择的代价。",
+      "suggested_kind": "inferred",
+      "nature": "plan",
+      "meaning_note": "知识与实际结果支持的分项判断；事实、历史结果、目标取舍与未来推断分别标明，不能由展示层产生。"
+    },
+    "M16.use_judgments": {
+      "type": "array",
+      "catalog_meaning": "按原预测、校准映射、资产及可观察条件分别判断保留、采用、暂停或调整。",
+      "suggested_kind": "inferred",
+      "nature": "plan",
+      "meaning_note": "知识与实际结果支持的分项判断；事实、历史结果、目标取舍与未来推断分别标明，不能由展示层产生。"
+    },
+    "M17.event_priorities": {
+      "type": "array",
+      "catalog_meaning": "按任务判断先关注哪些事件、主要影响什么及何种结果值得重新判断。",
+      "suggested_kind": "inferred",
+      "nature": "plan",
+      "meaning_note": "知识与实际结果支持的分项判断；事实、历史结果、目标取舍与未来推断分别标明，不能由展示层产生。"
+    },
+    "M18.strategy_judgments": {
+      "type": "array",
+      "catalog_meaning": "按资产、固定规则与决策前可观察条件给策略取舍，结合成本后结果、基准和反例。",
+      "suggested_kind": "inferred",
+      "nature": "plan",
+      "meaning_note": "知识与实际结果支持的分项判断；事实、历史结果、目标取舍与未来推断分别标明，不能由展示层产生。"
+    },
+    "M19.allocation_judgments": {
+      "type": "array",
+      "catalog_meaning": "按目标比较当前、起始或备选组合与再平衡规则，明确倾向、代价和调整条件。",
+      "suggested_kind": "inferred",
+      "nature": "plan",
+      "meaning_note": "知识与实际结果支持的分项判断；事实、历史结果、目标取舍与未来推断分别标明，不能由展示层产生。"
+    }
+  }
+}

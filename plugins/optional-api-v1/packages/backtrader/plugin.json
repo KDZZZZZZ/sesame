@@ -1,8 +1,8 @@
 {
   "id": "sesame/backtrader",
   "title": "BACKTRADER optional backend",
-  "description": "计算验证能力：消费固定数据与已编写策略运行一次Cerebro回测，保留输入与结果引用；候选比较由工作流负责，不连接实盘。",
-  "version": "2.0.2",
+  "description": "计算验证能力：消费固定数据与已编写策略运行Cerebro回测或有界optstrategy原生优化，保留各次实际结果与引用；参数选择由工作流负责，不连接实盘。",
+  "version": "2.1.0",
   "apiVersion": "2",
   "engines": {
     "sesame": ">=0.3.0-dev.1 <0.4.0"

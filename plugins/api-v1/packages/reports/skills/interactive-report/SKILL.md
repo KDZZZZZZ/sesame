@@ -1,56 +1,49 @@
 ---
 name: interactive-report
-description: 绑定实际固定数据，沿用原版 reportKit 与可选图表编写交互 HTML，发布不可变 report/1 revision 并检查真实渲染。
+description: 绑定固定结果，按内容与样式发布报告，检查当前修订并处理修复和导出。
 ---
 
-先确认实际已登记的 dataset、固定 DataRef 或 run/result：列名、单位、区间、时区、数据量及来源。更新时用 report_read 检查完整 ArtifactRef 和当前 revision，不能按标题猜身份或覆盖别的会话。
+# 报告发布与核验
 
-默认按 report-design 的原版 outline 用 reportKit.render 组织页面，按 report-writing 写可核对结论。report_template 生成可编辑的 HTML，内含插件自带样式与组件，不需要搭一套新页面。纯正文或决策说明使用 report_document_template({title,locale?,body_html,output_path})，复用相同 editorial 样式，不虚构图表或占位数据；body_html 中合法离线样式/交互保留，仍受发布检查与运行时沙箱约束。需要特殊图形、比较、参数探索或下钻时，使用 custom block 或组合组件；仍用原生 HTML/CSS/JS，不依赖外部运行时网络。
+本指南的内容字段属于 sesame/reports。宿主选择其他提供者时遵循其 inputSchema，不套用本插件的组件或便利入口。
 
-## 数据与初始化
+先调用 `host.reports.describe` 读取宿主配置的提供者与 inputSchema，再调用 `host.reports.publish({input:{content,style?}, ...})`。宿主选择提供者，Agent 不传 provider。`report_publish({content,style,...})` 仅把旧蛇形外壳字段转接宿主；没有独立发布 HTML 的权限。Report 负责 HTML、主题、图表、公式、数据桥及附录。公开内容接口不接受 `body_html`、`html_path`，不允许上传 HTML、CSS、JavaScript 或 SVG 作为自定义页面。`report_template`、`report_document_template`、`report_backtest_template` 和 `report_compose` 仅供预览或检查结构，不是发布必经步骤；不要编辑其预览 HTML 再上传。
 
-已有 dataset 先按所属来源冻结：仅 host#datasets 中的宿主登记 ID 使用 report_data({operation_id,dataset_id})；MT5 等插件回执的 dataset_id 使用 report_data({operation_id,source:<原来源SourceRef>,input:{datasetId:<原ID>},title})，不传顶层 dataset_id。SourceRef 沿用目录中精确的 providerId/revision/binding，不能把插件 ID 当宿主 ID 或在失败后跨来源猜测。保留原始 decimal 字符串和 provenance。已有固定 DataRef 无需再冻结，可直接加入 report_publish.data，binding 的 id 与 HTML 中完全一致。Demo 必须在页面及 provenance 中标明，不能改成实盘结果。
+## 固定数据
 
-`await reportKit.rows(bindingId)` 从 `window.report.readData` 读完 page.nextCursor，默认 50,000 行预算，拒绝重复 cursor。可显式传 `{maxRows}`（最多一百万），大型结果优先用有记录的聚合或自行分页。也可直接 `await window.report.readData(id,{cursor,limit})`。不能把第一页当全部，不按标题选数据，不能用旧 reportData.query。reportKit 是插件资产，先通过模板或资产内联加载；宿主不提供 reportI18n 或自动 backtest 组件。
+已有完整 DataRef 直接绑定。裸 `dataset_id` 仅适用于宿主登记数据；插件私有数据通过原 SourceRef 冻结为可追溯成果。未完成或 `available_for_analysis: false` 的数据不能作为证据。
 
-```js
-async function initialize() {
-  const rows = await reportKit.rows('bound-data');
-  // rows 来自固定输入，outline 的结论与图表必须与它一致。
-  reportKit.render('#report', outlineFrom(rows));
-}
-window.report.track(initialize()).catch(error => {
-  document.getElementById('report').textContent = error.message;
-});
-```
+`report_publish.data` 中每项保留实际 `id`、完整 `ref` 和必要描述；内容中的 `data_id` 必须与绑定 ID 一致。`references` 和 `related` 使用真实引用，不伪造某分析插件产出；直接内联已有结果也必须保留来源和时间。来源性质、插件路由和内部审计记录供 Agent 核对，不显示为读者徽章。
 
-不要用 catch 返回空数组或虚构数值掩盖失败。异步数据或图表初始化交给 report.track，加载失败要能被报告检查记录。
+来源数据的时区、单位、样本范围、精确字符串、缺失和重复处理保持不变。Report 不取行情、不跑分析、不重新估计统计，不把分页首屏当完整样本。一次图表最多 2,500 行；需要减少数据时使用研究侧登记的聚合或分组结果，并保留原数据引用和口径。
 
-## 交互与策略报告
+## 内容与样式
 
-筛选、比较、图例开关、缩放和逐笔检查操作固定输入。异步交互也交给 report.track。给控件可访问名称，键盘与窄屏可用。重新生成 chart 容器前，reportKit.destroy(container) 释放旧图；SesameCharts.chart 同一目标自动替换旧图，离开页面时可调用返回句柄的 destroy()。
+- 通用报告用 `content.kind: "document"`，按 [组件契约](../report-design/components.md) 组合 `sections` 和 `appendix`。
+- 模块结果用 `content: {kind: "modules", structure, results_ref}`；`structure` 服从用户当前字段选择。`data` 中保留模块结果所需的全部原始固定绑定，不能只附一段 JSON 或替换其 revision。
+- 对应回测数据用 `content.kind: "backtest"`，既有研究运行用 `"signal-study"`，选择 `run` 或 `run_source: {ref, entry: "run.json"}` 二选一。run_source 只读已打包固定 JSON，ref 必须在 `references` 或 `data` 声明；不要求 Agent 抄写大型结果，不接受 HTML 来源。布局只读已有结果，不选择分析方法。
+- 默认省略 `style`，使用统一蓝灰无框排版；Agent 选择组件以及并排/上下组合。可查询 `report_styles`；仅用户明确要求时以声明式 `custom` 调整受控 token。复用样式用 `report_style_save` 返回的精确版本，示例见 [style-guide.md](../report-design/style-guide.md)。
+- 原始数据、参数、来源、样本与完整方法用 `details` 集中到末尾附录；正文只保留判断、主图、短注解、简短推理和关键条件。Report 统一生成往返锚点。
+- 公式用 `formula` 的 `latex`、`caption` 和可选 `display`，交给本地 KaTeX 渲染。
 
-可用 reportKit 的原版趋势/面积/柱形/横条/散点/热图；需要真实计数或选点联动时，把 SesameCharts 的 统计对照、分布、时序、结构和可选点图放在 custom 中，与原版叙事共存。长表和方法默认折叠，用户仍能展开核对全部细节。不要让所有数据表挤占结论区。
+## 发布与修订
 
-折叠和交互分页不会减少 PDF/图片静态导出时应呈现的完整内容，不能把当前页或裁切的滚动区域当作完整导出。报告内呈现关键证据和必要表格，完整原始 JSON、大结果通过固定数据引用或证据附件保留并在报告中引用，避免反复嵌入同一完整回执；发布前核对引用仍可追溯，检查导出内容与报告声明的范围一致。
+宿主发布使用真实 title、summary、locale、space、provenanceKind（便利入口为 provenance_kind），以及固定 `data`、`related`、`references`。演示数据明确为 `demo`；用户要求或工作流已绑定的报告位置优先。Research 承载市场、宏观与资料研究，Strategy 承载因子、策略、优化及回测结果；修改报告不迁移其原交易账本或绑定。
 
-Strategy 报告将真实策略、翻译、run、result 放入 report_publish.related，数值数据用 data 的固定引用。报告自己根据这些真实输入组织样本外表现、参数比较、权益、回撤与逐笔证据；不同后端可呈现各自数据。不存在隐式 MT5 backtest_ids 或自动注入的原生回测组件。没有完成回测时明确说明，不捏造收益。
+`input:{content,style?,assets?,strategy_source?,strategy_evidence?}` 是本插件接受的内容，生成的 HTML 是结果。长内容应将整个 input 保存为 UTF-8 JSON，登记为固定 ArtifactRef 后使用 `inputRef:{ref,entry}`；便利入口为 `input_ref`。不要让 Agent 再抄大段 JSON、反斜杠或公式。input 和 inputRef 严格二选一，引用文件不能只含 content 或整套发布外壳；data/related/references 始终在外壳保留。只需单份报告时不再额外套随机目录。任务必须绑定 report 输出并实际发布；聊天摘要、DataRef、预留文件或源码不替代报告交付。已绑定的路径、报告 ID、原数据引用和观测时点保持稳定。
 
-## 发布与修复
+更新既有报告时使用同一 `artifactId`、当前 `expectedRevision` 和新的 `operationId`（便利入口使用对应蛇形字段），发布新 immutable revision。对同一 operation 的重试保留相同请求，先核对已有结果，不能重复造另一个报告掩盖失败。只修呈现时保留原研究数据、选择、留出结果和绑定证据；修改内容块或样式，不重跑研究。
 
-先核对本次 Run 已绑定的报告交付位置。用户指定报告或路径时，须实际生成并发布报告；数据成果引用和聊天摘要不会出现在报告区，不能替代交付。若子任务绑定为 output.type="none"，将交付不匹配交回所属 Agent 处理，不擅自改绑。报告目录的预留文件或源码草稿也不代表已有固定发布；交付前通过报告文件与 Run 读取能力核对当前路径和状态。
+附件优先使用 `{path,ref,entry,media_type}`，完整 ref 必须也在外壳 references/data/related 中；既有 `{path,source_path,media_type}` 从当前工作区读取，不代表历史时点证明。允许随报告提供的附件是数据、文本或静态位图证据，不是自定义运行时。声明式内容之外的 HTML/CSS/脚本/SVG 上传不会成为发布通道。当前资源预算和 MIME 以能力契约与实际错误为准；不以删证据换取成功。
 
-用文件工具保存完整 HTML，资源本地打包，然后调用 report_publish（HTML ≤ 1 MiB，合计资源 ≤ 16 MiB），绑定 data 与 related。更新提供 artifact_id、expected_revision 和新 operation_id。只读桥可读取声明的数据/成果，不能访问 parent DOM、Node、磁盘、凭据或交易接口。
+## 当前修订核验
 
-发布只固定内容。需要交付可浏览报告时，以返回完整 ref 调用 report_check，查看桌面/窄屏、数据请求、脚本和交互的实际 receipt。failed 时保留绑定、修 HTML 并发布新 revision，再检查；rendered 才是该版本通过渲染的依据。用户只要求发布或没有可用验收环境时，保留发布成功与渲染尚未验收这两个状态。report_read.include_checks 可以核对历史，但旧 receipt 不能证明新版本成功。
+对 `report_publish` 返回的当前完整 ref 调用 `report_check`，检查本次 receipt。发布成功仅说明内容固定；只有 `receipt.status: "rendered"` 才能说明这一修订完成渲染检查。渲染通过不证明复制过程正确：同时核对保存的完整输入、公式、数字及固定引用与准备稿一致。未检查、超时或失败如实保留，不能引用旧 revision 的通过记录。
 
-## 静态导出是独立能力
+按 [report-design](../report-design/SKILL.md) 核对正文阅读、数据与图形一致性、桌面/窄屏、主要交互、公式和附录往返。报错依据具体诊断修正内容或样式，再发布同报告的新 revision 并检查。不要伪造已绑定报告身份或用无关报告替代工作流交付。
 
-发布成功只固定内容，report_check 的 rendered 只证明交互视图通过检查，两者都不保证 PDF/PNG。report_publish 返回的 exportability.checked="source" 是廉价作者建议：candidateFormats 不是已验证格式，needs-render-check 不能写成导出成功。不在每次发布时盲目生成 PDF，也不因 PDF 限制拒绝全部有效交互报告。
+## 导出
 
-需要静态交付时，用 report_export_check({ref}) 检查完整固定引用。它复用实际导出的隔离准备过程，返回 supportedFormats、逐格式 formats.status/reasons 和 limits，不生成文件，outputVerified 始终为 false。最终导出仍独立检查内容、布局和输出字节；检查与导出之间的运行时状态可能变化，不承诺输出相等。
+PDF/PNG 是独立交付。先对同一 ref 使用 `report_export_check`，再检查真正生成的文件；源级 exportability、渲染通过或 `outputVerified: false` 都不证明文件已生成。静态输出仍需包含完整结论、关键条件、来源和需要保留的原始证据，不能依赖悬停、筛选或折叠才能读到它们。
 
-- PDF 拒绝无法忠实复制的状态：开放或关闭的 shadow DOM、音视频/动画 SVG、没有 CSS 字体源的运行时 FontFace、移交的 canvas、未保留 drawing buffer 的 WebGL、非图像 blob 资源。保留原交互报告，或另写有依据的静态视图；不得静默删去/展平媒体后称完整导出。
-- PNG 是静态屏幕视图，不保留交互或音频。导出会展开 details 和 reportKit 折叠行、展开表格/代码滚动区；任意自定义分页/筛选的未渲染数据不会自动补全。关键证据不能只放在当前未呈现的交互状态。
-- 固定宽 1000px、完整高不超过 64000px、像素预算 64×1024×1024；PDF/PNG 合计输出最多 32 MiB。PNG 高于 16000px 时切成最多 8000px 高的页并一起下载。过大时按真实章节拆报告并保留固定来源，不截断或伪造全量。
-- 多文件资源按包内路径保留；引号/无引号/实体编码/脚本动态 URL 都可能依赖原目录。不确定自包含时不要为美化路径移动文件。草稿仅支持自包含资源，依赖包的报告从固定发布版本检查与导出。
+长图和资源限制按实际诊断处理，必要时分片并保留有效交互报告。不要静默删图、删数据或把未完成导出宣称成功。

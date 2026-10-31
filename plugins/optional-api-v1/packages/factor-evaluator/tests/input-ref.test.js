@@ -245,7 +245,7 @@ test('portable archive reproduction includes complete input reference identity',
   const final = await f.call('finalize', { session_id, selection_digest: selection.selectionDigest });
   assert.equal(measured.metrics.diagnostics.placebo.status, 'completed');
   assert.equal(final.holdout.one.diagnostics.outOfSample.holdout.status, 'evaluated');
-  const run = { id: 'fixed-panel', data: prepared.data, trials: [{ id: 'one', candidate, metrics: measured.metrics }], selection: { trialIds: ['one'] }, holdout: final.holdout };
+  const run = { id: 'fixed-panel', data: prepared.data, trials: [{ id: 'one', candidate, metrics: measured.metrics }], selection, holdout: final.holdout };
   const frozen = { dataDigest: prepared.data.digest, holdoutSealed: false, dataset: final.archive };
   const prefix = join(resolve(tmpdir()), 'sesame-factor-input-'), directory = await mkdtemp(prefix);
   try {
@@ -253,6 +253,10 @@ test('portable archive reproduction includes complete input reference identity',
     await writeFile(runPath, JSON.stringify(run)); await writeFile(dataPath, JSON.stringify(frozen));
     const reproduce = () => spawnSync(process.execPath, [fileURLToPath(new URL('../scripts/reproduce.mjs', import.meta.url)), runPath, dataPath], { encoding: 'utf8' });
     const good = reproduce(); assert.equal(good.status, 0, good.stderr); assert.equal(JSON.parse(good.stdout).verified, true);
+    assert.equal(JSON.parse(good.stdout).searchDiagnosticsVerified, true);
+    run.selection.diagnostics.pbo.probability = .0001; await writeFile(runPath, JSON.stringify(run));
+    const changedSearch = reproduce(); assert.notEqual(changedSearch.status, 0); assert.match(changedSearch.stderr, /Complete-search diagnostics differ/);
+    delete run.selection.diagnostics.pbo.probability;
     run.data.inputRefs[0].revision = 'tampered-revision'; await writeFile(runPath, JSON.stringify(run));
     const tampered = reproduce(); assert.notEqual(tampered.status, 0); assert.match(tampered.stderr, /Frozen input digest differs/);
   } finally {

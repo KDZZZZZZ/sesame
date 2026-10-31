@@ -1,0 +1,1026 @@
+{
+  "schemaVersion": 1,
+  "catalogSchemaVersion": "1.3.0",
+  "modules": {
+    "M17": {
+      "title": {
+        "zh-CN": "经济与公司事件日历",
+        "en": "Economic and corporate calendar"
+      },
+      "fields": {
+        "summary": {
+          "type": "text",
+          "catalog_meaning": "方法给出的本模块结论；区分事实、模拟结果和预测。",
+          "definition": "本模块对已知事件日程及发布状态的核心回答，先给明确判断，最少给出有依据的倾向，不以数值列表或两面可能代替答案。",
+          "inputs": "关键结论、决定性事实/数值、比较对象、相反证据和适用条件；关联本模块实际采用的字段与固定成果。",
+          "unit_time": "概括时保留事件身份、时区、计划/实际时间和来源覆盖；关键数值不省略单位、比较期间或预测期限。",
+          "interpretation": "明确观察事实、方法解释、条件假说、模拟结果与预测各自性质；摘要不产生新算法、综合评分或额外研究授权。涉及行情预测的结论应能追溯同类历史实际结果。",
+          "missing": "信息不全时先说已能支持的判断及范围，再说明具体未知；确实不能区分时说明原因。用户可省略该字段，不为凑结论补造方向、概率或中性评价。",
+          "lineage": {
+            "suggested_kind": "inferred",
+            "nature": "mixed",
+            "meaning_note": "事件日历的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+          }
+        },
+        "event_priorities": {
+          "type": "array",
+          "catalog_meaning": "按任务判断先关注哪些事件、主要影响什么及何种结果值得重新判断。",
+          "definition": "给事件排序或分组的理由；只做日历时不必输出多空目标或反应概率。",
+          "inputs": "已确认日程、事件内容、实际重要性定义、相关资产与用户问题。 建议每项含问题、对象、期限、判断、依据、改判条件、历史参照；可按用户调整名称与呈现映射。",
+          "unit_time": "对象、比较对象、观察窗口与向前判断期限分别写清；沿用结果原币种/单位，时间由任务和实际方法决定。",
+          "interpretation": "已知日期不等于精确时刻；预期未知也可说明关注理由，不能编公布结果。",
+          "missing": "未完成某个请求角度时说明具体缺口，不用中性、零分或50%代替；给现有资料已能支持的判断。确定性比较或用户目标取舍可说明历史统计不适用，行情预测须有实际历史参照状态。",
+          "lineage": {
+            "suggested_kind": "inferred",
+            "nature": "plan",
+            "meaning_note": "知识与实际结果支持的分项判断；事实、历史结果、目标取舍与未来推断分别标明，不能由展示层产生。"
+          }
+        },
+        "timeline_chart": {
+          "type": "chart",
+          "catalog_meaning": "同一截点已知的计划/实际公布时间，逐项标记待公布、已公布、改期或取消，不把计划当事实结果。",
+          "definition": "截至同一研究截点已知的计划与实际事件时间线。",
+          "inputs": "事件 ID、时间、名称、待公布/已公布/改期/取消状态及来源。",
+          "unit_time": "显示明确时区，计划时间与实际发布时间分开，日期级事件不伪造精确时刻。",
+          "interpretation": "未来日程是已知计划而非已发生结果；时间线密集不自动代表风险更大。",
+          "missing": "未知时刻标待定，实际未公布不填写结果；取消事件保留状态。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "计划时间/确认状态取当前日历，实际公布/取消取事件记录；时间线不能把计划时刻当实际结果。"
+          },
+          "chart": {
+            "kind": "lifecycle",
+            "columns": [
+              "id",
+              "time",
+              "item",
+              "state",
+              "evidence"
+            ],
+            "evidence_role": "descriptive"
+          }
+        },
+        "calendar_chart": {
+          "type": "chart",
+          "catalog_meaning": "固定日历窗口按当地日期聚合的已知事件数量；零事件与来源未覆盖不同。",
+          "definition": "固定日历窗口内按当地日期汇总的已知事件数量。",
+          "inputs": "date、count、覆盖状态、事件去重与日历来源。",
+          "unit_time": "日期使用声明时区，数量为唯一事件数，统计窗口起止明确。",
+          "interpretation": "零表示在已覆盖范围确认无事件；空白或未覆盖不是零。",
+          "missing": "来源未覆盖日保留 unknown/null，不绘成无事件日。",
+          "lineage": {
+            "suggested_kind": "derived",
+            "nature": "statistic",
+            "meaning_note": "对已知事件按当地日期计数；日界/覆盖范围为显式规则，零计数不能证明全市场无事件。"
+          },
+          "chart": {
+            "kind": "calendar",
+            "columns": [
+              "date",
+              "count",
+              "status"
+            ],
+            "evidence_role": "descriptive"
+          }
+        },
+        "scope": {
+          "type": "object",
+          "catalog_meaning": "开始/结束、时区、地区/资产、日历版本和数据截点。",
+          "definition": "本次事件日历所涵盖的日期、地区、市场与研究对象。",
+          "inputs": "起止日期、时区、国家/货币/标的、事件类型、日历版本和数据截点。",
+          "unit_time": "明确自然日/交易日、跨时区显示方式与时段边界。",
+          "interpretation": "日历范围只是信息覆盖，不代表所有相关事件均已确认。",
+          "missing": "范围或来源不完整时说明实际覆盖，不补默认全球日历。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "日期/地区/资产范围由任务设定，时区/日历版本/截点取源与真实查询回执。"
+          }
+        },
+        "events": {
+          "type": "array",
+          "catalog_meaning": "事件 ID、名称/类型、国家/货币/标的、计划时间、时区、确认状态、重要性和来源。",
+          "definition": "跨类别事件日程的稳定索引及当前确认状态。",
+          "inputs": "事件 ID、名称/类型、国家/货币/标的、计划时间、状态、重要性与来源。",
+          "unit_time": "时区和精确度明确，原事件日与更新时间分开。",
+          "interpretation": "同一事件更新不重复计数；对重点事件说清为何值得关注、主要影响什么，标明重要性来自提供方还是本次判断；日历不强制多空或反应概率。",
+          "missing": "未确认时间保留待定，查无记录与确认无事件分开。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "名称/国家/计划时刻/确认状态取源；重要性是供应商/方法评价，实际发生与计划分开。"
+          }
+        },
+        "economic_releases": {
+          "type": "array",
+          "catalog_meaning": "事件 ID、频率、单位、前值/修订值/预期/实际及其可得时间；未公布 actual 为 null。",
+          "definition": "经济数据发布日程及各版本数值的事实记录。",
+          "inputs": "事件 ID、指标/频率、所属期、前值/修订值/预期/实际、来源和各自可得时间。",
+          "unit_time": "注明百分比/百分点/指数/金额、季调/年化等口径和发布时区。",
+          "interpretation": "预期、前期初值、修订值和本期实际互不补位；发布前不可知道实际结果。",
+          "missing": "未公布 actual 为 null，缺预期标 unavailable，不能填零或前值。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "前值/修订/实际为不同版本事实；事前预期是外部预测；频率/单位/可得时间取各自证据。"
+          }
+        },
+        "earnings": {
+          "type": "array",
+          "catalog_meaning": "事件 ID、财季、盘前/盘后、EPS/营收预期与实际、币种和来源。",
+          "definition": "公司财报事件及同口径经营结果和预期。",
+          "inputs": "事件 ID、财季、计划/确认日期、盘前/盘后、EPS/营收预期与实际、来源。",
+          "unit_time": "币种、每股/总额、调整前后口径、财期与时区明确。",
+          "interpretation": "财报日程和财务结果不同；盘前/盘后是时间类别，不伪造具体时刻。",
+          "missing": "未发布 EPS/营收实际为 null，未确认日期标估计，不能用共识填 actual。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "财季/公布日程来自公告，EPS/营收预期为外部预测，实际披露为事实，盘前/盘后需源时区。"
+          }
+        },
+        "dividends": {
+          "type": "array",
+          "catalog_meaning": "事件 ID、宣告/除息/登记/支付日期、每股金额、币种及普通/特别标识。",
+          "definition": "已披露股息事件的各关键日期和支付条款。",
+          "inputs": "事件 ID、宣告/除息/登记/支付日、每股金额、币种、普通/特别及来源。",
+          "unit_time": "日期按交易所/公司时区，金额注明税前后和每股基础。",
+          "interpretation": "除息日不是支付日，宣告金额不是未来长期承诺；特别股息不默认年化。",
+          "missing": "未宣告金额或日期保留未知，不按历史频率生成事实日程。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "正式公告的四类日期/金额/币种是获取事实；未来尚未宣布股息是估计，收益率另算。"
+          }
+        },
+        "splits": {
+          "type": "array",
+          "catalog_meaning": "事件 ID、生效日、新旧股比例、复权口径与来源。",
+          "definition": "公司拆股或合股事件的已披露生效及份额变化规则。",
+          "inputs": "事件 ID、生效日、新旧股比例、公告状态、复权处理和来源。",
+          "unit_time": "比例说明新股数相对旧股数，生效时区与交易日明确。",
+          "interpretation": "拆股改变份额与名义价格，不本身创造投资收益；比例方向不可颠倒。",
+          "missing": "比例或生效日待确认时保持未知，不猜测复权因子。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "生效日/新旧股比例取正式公告；复权因子/历史价格调整是计算，预期拆股与已确认分开。"
+          }
+        },
+        "meetings": {
+          "type": "array",
+          "catalog_meaning": "会议类型、时间、时区、状态和已披露议题，不补造未公布内容。",
+          "definition": "政策、股东或公司会议的已知安排和公开议题。",
+          "inputs": "事件 ID、会议类型、主办方、时间/时区、状态、已披露议题与来源。",
+          "unit_time": "区分会议开始、结束、决议发布或记者会时点，时间精确度明确。",
+          "interpretation": "计划议题不等于通过的决定，会议结束也不保证结果已公开。",
+          "missing": "未披露议题或决议保持未知，不用市场预期补事实。",
+          "lineage": {
+            "suggested_kind": "acquired",
+            "nature": "fact",
+            "meaning_note": "会议类型、计划时间、状态和已披露议题取公告；对未公开议题的推测不属于此事实字段。"
+          }
+        },
+        "schedule_changes": {
+          "type": "array",
+          "catalog_meaning": "原/新时间、确认或取消状态、修订时间与来源。",
+          "definition": "同一日历事件日程的修订、确认或取消记录。",
+          "inputs": "事件 ID、原/新时间、旧/新状态、修订公布时间、原因与来源。",
+          "unit_time": "保留原时区和新时区，修改时间与事件时间分别记录。",
+          "interpretation": "改期不自动表示事件内容改变；原估计日期与已确认日期区别说明。",
+          "missing": "无新日期时标待定或取消，不默认顺延一天。",
+          "lineage": {
+            "suggested_kind": "acquired",
+            "nature": "metadata",
+            "meaning_note": "原/新计划、取消/确认和修订时间需两版实际公告或源变更记录，不从最新日期反推旧版。"
+          }
+        },
+        "coverage": {
+          "type": "object",
+          "catalog_meaning": "来源覆盖、更新频率与缺失范围；空白日和确认无事件分开。",
+          "definition": "日历来源实际覆盖和更新状况对日程解释的边界。",
+          "inputs": "来源、市场/事件类别覆盖、更新频率、最后成功更新时间、遗漏范围。",
+          "unit_time": "明确查询窗口、时区、来源延迟与数据截点。",
+          "interpretation": "没有条目不必然无事件；来源未更新不同于确认无变更。",
+          "missing": "覆盖未知如实说明，不把空日统计为确定零事件。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "实际来源范围/失败/截断从回执获取，更新频率取源说明或真实观测，完整性需核查。"
+          }
+        },
+        "instrument_context": {
+          "type": "object",
+          "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+          "definition": "用于理解已知事件日程及发布状态中对象身份、计价和数量的共同上下文。",
+          "inputs": "稳定标的 ID/名称、交易所/市场、资产类型、行业、报价/报表/账户币种，以及适用的 tick、pip、合约乘数和数量单位。",
+          "unit_time": "币种角色分别标明；身份/合约规格使用相关截点版本，数量换算可追溯。结合事件身份、时区、计划/实际时间和来源覆盖解读。",
+          "interpretation": "同名资产或代码可能跨市场不同；报价币种不必等于账户/报表币种。此说明对象不扩展 section.context 的 subject/as_of/target/horizon 匹配键。",
+          "missing": "仅填适用且已知的属性；无合约乘数的对象可不适用，未知乘数不可默认 1，未知币种不可根据符号猜测。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+          }
+        },
+        "data_times": {
+          "type": "object",
+          "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+          "definition": "界定已知事件日程及发布状态所用资料何时发生、当时何时可知以及本报告使用哪个截点。",
+          "inputs": "研究 as_of、观测/事件时间、首次公开可得时间、获取时间、来源更新与修订时间、时区、交易日历、bar 周期和闭合状态。",
+          "unit_time": "统一明确时区和日期粒度；财期/事件所属期、发布时刻、抓取时刻不能互代，历史研究只能使用当时已可得版本。",
+          "interpretation": "报告生成时间不能代替报价时间，期末不能代替财报公开日；未来计划日程可以在截点前已知，但未来实际结果不可以。",
+          "missing": "无法确认首次可得时间就保留未知并限制点时结论；日期级来源不补精确时刻，未闭合柱不冒充已确认。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+          }
+        },
+        "source_scales": {
+          "type": "array",
+          "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+          "definition": "让已知事件日程及发布状态的外部数据、评分和方法结果按原定义可解释、可核对的来源记录。",
+          "inputs": "提供方/产品、指标定义、原值/尺度/标签、方向、覆盖、数据版本、方法版本、知识引用与完整固定结果引用。",
+          "unit_time": "保留原百分比/小数/评分/金额尺度及有效日期；不同来源或版本独立记录，转换须有已登记方法。",
+          "interpretation": "同名指标不保证同定义；供应商 Confidence 若代表语料量归入 evidence_volume，不转换成预测 confidence/probability；来源数不是独立样本数。",
+          "missing": "定义或版本未知时标未知，保留原标签，不默认 0–100 或自行归一化；引用不完整不能冒充固定来源。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+          }
+        }
+      }
+    },
+    "M18": {
+      "title": {
+        "zh-CN": "策略回测与历史表现",
+        "en": "Strategy backtest and performance"
+      },
+      "fields": {
+        "summary": {
+          "type": "text",
+          "catalog_meaning": "方法给出的本模块结论；区分事实、模拟结果和预测。",
+          "definition": "本模块对冻结策略的模拟历史表现与验证的核心回答，先给明确判断，最少给出有依据的倾向，不以数值列表或两面可能代替答案。",
+          "inputs": "关键结论、决定性事实/数值、比较对象、相反证据和适用条件；关联本模块实际采用的字段与固定成果。",
+          "unit_time": "概括时保留策略/参数版本、运行、样本边界、成本和基准；关键数值不省略单位、比较期间或预测期限。",
+          "interpretation": "明确观察事实、方法解释、条件假说、模拟结果与预测各自性质；摘要不产生新算法、综合评分或额外研究授权。涉及行情预测的结论应能追溯同类历史实际结果。",
+          "missing": "信息不全时先说已能支持的判断及范围，再说明具体未知；确实不能区分时说明原因。用户可省略该字段，不为凑结论补造方向、概率或中性评价。",
+          "lineage": {
+            "suggested_kind": "inferred",
+            "nature": "interpretation",
+            "meaning_note": "回测的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+          }
+        },
+        "strategy_judgments": {
+          "type": "array",
+          "catalog_meaning": "按资产、固定规则与决策前可观察条件给策略取舍，结合成本后结果、基准和反例。",
+          "definition": "明确何时有效、何时可能失效、倾向怎样有条件使用；全检验通过不是唯一可用标准。",
+          "inputs": "同规则版本回测、交易、成本、基准、条件分组样本、反例与真实研究选择记录。 建议每项含问题、对象、期限、判断、依据、改判条件、历史参照；可按用户调整名称与呈现映射。",
+          "unit_time": "对象、比较对象、观察窗口与向前判断期限分别写清；沿用结果原币种/单位，时间由任务和实际方法决定。",
+          "interpretation": "事后赚钱月份不能直接变成事前状态；未识别可执行条件时区分研究候选与可启用方案，不为了结论重选赢家。",
+          "missing": "未完成某个请求角度时说明具体缺口，不用中性、零分或50%代替；给现有资料已能支持的判断。确定性比较或用户目标取舍可说明历史统计不适用，行情预测须有实际历史参照状态。",
+          "lineage": {
+            "suggested_kind": "inferred",
+            "nature": "plan",
+            "meaning_note": "知识与实际结果支持的分项判断；事实、历史结果、目标取舍与未来推断分别标明，不能由展示层产生。"
+          }
+        },
+        "equity_chart": {
+          "type": "chart",
+          "catalog_meaning": "同初始基数、币种与期间的已计算净值，明确分红和成本；只展示已登记回测结果。",
+          "definition": "固定回测运行产生的策略与基准净值路径。",
+          "inputs": "date、strategy/benchmark、运行 ID、初始基数、收益再投和费用口径。",
+          "unit_time": "同币种、初始日期与观察频率，明确净值是归一化指数或实际账户金额。",
+          "interpretation": "历史模拟净值不同于实盘业绩和未来预期；组合现金处理也影响可比性。",
+          "missing": "缺日期或基准时保留缺口，不插值冒充执行结果或重算净值。",
+          "lineage": {
+            "suggested_kind": "derived",
+            "nature": "statistic",
+            "meaning_note": "净值来自真实完成的模拟/计算结果；基准同口径另算，模拟净值不是实盘权益事实。"
+          },
+          "chart": {
+            "kind": "line",
+            "columns": [
+              "date",
+              "strategy",
+              "benchmark"
+            ],
+            "evidence_role": "descriptive"
+          }
+        },
+        "drawdown_chart": {
+          "type": "chart",
+          "catalog_meaning": "由同一净值结果计算的回撤路径与单位，不在浏览器重新计算。",
+          "definition": "同一固定净值路径对应的策略与基准回撤序列。",
+          "inputs": "日期、各回撤值、峰值/回撤定义、计算频率和原净值引用。",
+          "unit_time": "比例/百分数与负值/损失正值惯例明确，同币种口径与期间。",
+          "interpretation": "月度观测回撤不能称日内最大回撤；回撤路径不同于总亏损。",
+          "missing": "未提供回撤或净值不匹配时标不可用，不在浏览器补算。",
+          "lineage": {
+            "suggested_kind": "derived",
+            "nature": "statistic",
+            "meaning_note": "回撤是已登记净值路径的统计，必须明确金额/百分比及基准，报告不重算。"
+          },
+          "chart": {
+            "kind": "line",
+            "columns": [
+              "date",
+              "strategy_drawdown",
+              "benchmark_drawdown"
+            ],
+            "evidence_role": "descriptive"
+          }
+        },
+        "market_matrix_chart": {
+          "type": "chart",
+          "catalog_meaning": "每格为已登记选中参数组的同样本净收益；选优规则与颜色指标分开，失败/缺失保持 null。完整逐组下钻沿用原生回测报告。",
+          "definition": "各品种与周期单元内、按既定规则选中参数组的已登记结果。",
+          "inputs": "symbol、timeframe、net_return、trial_id、样本标签、选优规则与完整试验引用。",
+          "unit_time": "统一收益单位、成本和样本边界；不同单元期间差异明确。",
+          "interpretation": "颜色指标可与选优指标不同；每格是已选组，不是对所有参数平均，也不据留出重新选优。",
+          "missing": "失败、未运行和缺失单元保留状态/null；详细参数沿原生报告下钻。",
+          "lineage": {
+            "suggested_kind": "derived",
+            "nature": "statistic",
+            "meaning_note": "矩阵每格来自真实运行的选定参数组指标，品种/周期是实验条件，失败保持缺失。"
+          },
+          "chart": {
+            "kind": "heatmap",
+            "columns": [
+              "symbol",
+              "timeframe",
+              "net_return",
+              "trial_id",
+              "sample"
+            ],
+            "evidence_role": "descriptive"
+          }
+        },
+        "parameter_heatmap": {
+          "type": "chart",
+          "catalog_meaning": "所选两个参数轴的已登记同品种、周期、样本及成本结果；固定其他参数，不填补未测试格，不据此重选样本外参数。",
+          "definition": "在固定其他条件下两个参数轴对应的已执行试验结果。",
+          "inputs": "两参数取值、结果指标、trial_id、其他固定参数、品种/周期/样本与运行引用。",
+          "unit_time": "轴单位、收益尺度、成本、样本区间一致，默认 lookback/threshold 可按实际方法替换。",
+          "interpretation": "热区不证明稳健，未测试组合不能插值成实测；留出结果不能用于重新挑参数。",
+          "missing": "未运行或失败格保留 null 与状态，不删除不利组合或补齐网格。",
+          "lineage": {
+            "suggested_kind": "derived",
+            "nature": "statistic",
+            "meaning_note": "每格为同数据/成本下真实参数试验统计；轴与固定参数来自设计，未测格不是零。"
+          },
+          "chart": {
+            "kind": "heatmap",
+            "columns": [
+              "lookback",
+              "threshold",
+              "net_return",
+              "trial_id"
+            ],
+            "evidence_role": "descriptive"
+          }
+        },
+        "parameter_sensitivity_chart": {
+          "type": "chart",
+          "catalog_meaning": "固定其他参数后的逐试验指标；每点可追溯完整参数组，相同横坐标不静默平均。参数、指标与筛选规则可由用户替换。",
+          "definition": "固定其余参数时某一参数变化对应的逐组试验指标。",
+          "inputs": "参数轴、已登记指标、trial_id、完整参数组合及筛选条件。",
+          "unit_time": "横轴单位、指标尺度、品种/周期、样本与成本一致。",
+          "interpretation": "相同横坐标可能属于不同参数组，不能静默平均；曲线不是连续函数的证明。",
+          "missing": "没有该切片数据则标未测试，不能沿相邻点推算新试验。",
+          "lineage": {
+            "suggested_kind": "derived",
+            "nature": "statistic",
+            "meaning_note": "逐点指标来自实际试验，横轴是参数输入；同横坐标不同完整参数组不得静默平均。"
+          },
+          "chart": {
+            "kind": "line",
+            "columns": [
+              "lookback",
+              "net_return",
+              "trial_id",
+              "threshold"
+            ],
+            "evidence_role": "descriptive"
+          }
+        },
+        "validation_chart": {
+          "type": "chart",
+          "catalog_meaning": "冻结同一策略后训练与独立留出区间的已计算指标，注明区间长度与成本；不同长度累计收益不能直接比较优劣，留出不得参与选优。",
+          "definition": "冻结策略后在训练和独立评价区间的既有结果对照。",
+          "inputs": "sample、指标、start/end、months、冻结版本、成本与运行引用。",
+          "unit_time": "区间长度、币种、累计/年化口径明确，指标若不同不可直接共轴。",
+          "interpretation": "不同长度累计收益不能直接判优；用于选优的样本不能又称独立留出。",
+          "missing": "未执行独立评价则只给训练结果并标状态，不复制训练值作验证。",
+          "lineage": {
+            "suggested_kind": "derived",
+            "nature": "statistic",
+            "meaning_note": "训练/留出指标来自真实独立运行，策略冻结和区间元数据证明选择时点；不是可视化判断通过。"
+          },
+          "chart": {
+            "kind": "hbar",
+            "columns": [
+              "sample",
+              "net_return",
+              "start",
+              "end",
+              "months"
+            ],
+            "evidence_role": "descriptive"
+          }
+        },
+        "funnel_chart": {
+          "type": "chart",
+          "catalog_meaning": "同一运行中的去重阶段计数及排除原因；注明各阶段是否包含关系，不把筛选数量当命中率。",
+          "definition": "同一策略运行各实际筛选阶段的去重数量及排除。",
+          "inputs": "阶段、count、原始单位、纳入/排除规则、重叠关系和运行引用。",
+          "unit_time": "计数是资产/信号/订单/交易中的指定单位，期间及运行一致。",
+          "interpretation": "阶段不一定严格包含；筛选数量或通过比例不是交易胜率。",
+          "missing": "某阶段未记录就标未知，不由末端反推或为图形填递减数列。",
+          "lineage": {
+            "suggested_kind": "derived",
+            "nature": "statistic",
+            "meaning_note": "各阶段计数由同一运行的信号/过滤/订单/成交记录计算；包含关系和排除原因需原trace。"
+          },
+          "chart": {
+            "kind": "bar",
+            "columns": [
+              "stage",
+              "count"
+            ],
+            "evidence_role": "descriptive"
+          }
+        },
+        "pnl_chart": {
+          "type": "chart",
+          "catalog_meaning": "同一账户、期间和币种的毛损益、负费用项与净损益，start/delta/end 对账；不能重复扣除已净额化的费用。",
+          "definition": "同一账户和区间毛损益至净损益的费用勾稽。",
+          "inputs": "起点毛损益、负费用分项、终点净损益、start/delta/end 角色和原结果。",
+          "unit_time": "同币种、期间和规模，费用符号、计入价格或另扣方式明确。",
+          "interpretation": "净额化结果不可重复扣费；资金流入流出不同于交易损益。",
+          "missing": "费用构成不全或不能对账时注明差额来源，不伪造其他费用平衡。",
+          "lineage": {
+            "suggested_kind": "derived",
+            "nature": "statistic",
+            "meaning_note": "毛损益/费用/净损益取真实模拟结果并计算对账；已净额化费用不得再扣，币种一致。"
+          },
+          "chart": {
+            "kind": "waterfall",
+            "columns": [
+              "component",
+              "amount",
+              "role"
+            ],
+            "evidence_role": "descriptive"
+          }
+        },
+        "hypothesis": {
+          "type": "text",
+          "catalog_meaning": "策略要检验的问题与冻结的规则/版本引用。",
+          "definition": "该策略回测实际要检验的可证伪问题及冻结规则。",
+          "inputs": "策略意图、预期机制、完整规则/源码版本、适用范围、目标指标与原生引用。",
+          "unit_time": "记录假说和规则冻结时间、数据截止与拟检验期间。",
+          "interpretation": "策略叙述不同于真实执行逻辑；知识合理性不证明历史或未来收益。",
+          "missing": "缺少冻结规则时标不可复现，不从收益曲线倒推策略描述。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "plan",
+            "meaning_note": "问题和规则由用户/研究设定，冻结源码/版本是记录；不由外部行情自动生成策略。"
+          }
+        },
+        "universe": {
+          "type": "object",
+          "catalog_meaning": "点时投资池、数据范围、存续/退市与可交易性口径。",
+          "definition": "回测在各历史时点实际可见和可交易的投资池。",
+          "inputs": "资产纳入/排除、上市/退市、存续、停牌、可交易性和数据范围。",
+          "unit_time": "用当时成员与可得时间，市场/币种/合约规格和回测期间明确。",
+          "interpretation": "今日成分回填历史有存续偏差；可取到历史价格不等于当时可交易。",
+          "missing": "缺退市或历史成员时标覆盖局限，不声称完整点时投资池。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "历史资产身份/可交易状态获取，范围选择由方法；当时资格不能由今天目录替代。"
+          }
+        },
+        "selection": {
+          "type": "object",
+          "catalog_meaning": "条件、逻辑、排序、并列、数量及其固定规则引用。",
+          "definition": "回测实际执行的筛选、排序与候选截取规则。",
+          "inputs": "条件逻辑、阈值、排序键/方向、并列、数量、缺失处理和冻结规则引用。",
+          "unit_time": "输入可得时点、信号形成频率、回看窗与单位清楚。",
+          "interpretation": "规则来自固定方法，不为解释好业绩改写；候选入选不等于立即成交。",
+          "missing": "未披露规则只引用已知版本并标缺口，不补默认 Top N 或等权。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "plan",
+            "meaning_note": "筛选/排序/并列/持仓数是实际冻结规则，结果是运行输出；报告不替策略选择。"
+          }
+        },
+        "simulation": {
+          "type": "object",
+          "catalog_meaning": "初始资金、权重、换仓频率、成交时点、持有规则、分红再投和现金处理，由方法指定。",
+          "definition": "将信号转成模拟持仓和资金路径的实际执行假设。",
+          "inputs": "初始资金、权重、调仓、成交时点/价格、持有退出、现金、分红与订单处理。",
+          "unit_time": "币种、交易日历、bar 周期、延迟、数量步长和乘数明确。",
+          "interpretation": "信号时间、下单时间与模拟成交时间不同；模拟结果不代表真实执行可达。",
+          "missing": "假设未披露时标影响范围，不用常见成交规则替代原运行。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "plan",
+            "meaning_note": "初始资金/成交/换仓/现金处理是模拟配置；约束参考源事实，但假设不是实际成交。"
+          }
+        },
+        "window": {
+          "type": "object",
+          "catalog_meaning": "开始/结束、训练/验证/留出边界、策略冻结时点与评价截点。",
+          "definition": "回测各阶段的时间边界及当时信息可得性。",
+          "inputs": "总体开始/结束、训练/验证/留出分界、预热、规则冻结与评价截点。",
+          "unit_time": "时区、交易日历、bar 粒度、首末柱包含方式明确。",
+          "interpretation": "训练结束不是规则冻结的自动证明；留出期若参与选择需降为已用样本。",
+          "missing": "无法确认划分时标未知，不能将任意尾段改名样本外。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "实际开始结束/训练留出边界取运行配置，冻结时点取记录，设计边界来自任务。"
+          }
+        },
+        "metrics": {
+          "type": "array",
+          "catalog_meaning": "总收益、年化、回撤、风险/交易指标及单位和定义，由方法选择。",
+          "definition": "固定回测结果已计算的收益、风险或交易评价指标。",
+          "inputs": "指标名称、值、定义、方向、分母/样本量、成本纳入与方法。",
+          "unit_time": "注明金额/百分比/年化/倍数、币种、观测频率和期间。",
+          "interpretation": "累计收益、年化收益、胜率与风险调整指标不同；交易数不等于独立样本数。",
+          "missing": "指标未定义或运行失败时保留 null/原因，不填零或自行重算。",
+          "lineage": {
+            "suggested_kind": "derived",
+            "nature": "statistic",
+            "meaning_note": "收益/回撤/风险/交易指标由真实模拟结果计算，定义/方向/单位来自所选评价口径。"
+          }
+        },
+        "benchmark": {
+          "type": "object",
+          "catalog_meaning": "基准身份、期间、币种、含息/费用口径，与策略可比范围。",
+          "definition": "与该策略历史表现比较的明确基准路径和口径。",
+          "inputs": "基准身份/规则、数据/结果引用、再平衡、现金、分红、费用和可比范围。",
+          "unit_time": "同期间、币种、初始基数与收益频率；总收益与价格收益区别明确。",
+          "interpretation": "基准不能事后选择只为显得策略更好；基准回测和市场指数本身也有口径差异。",
+          "missing": "无可比基准时明确未提供，不用零收益默认替代。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "基准选择来自用户/方法，身份/价格/分红等获取，基准收益计算。"
+          }
+        },
+        "positions": {
+          "type": "array",
+          "catalog_meaning": "日期、资产、方向、数量/权重及来源记录。",
+          "definition": "固定模拟运行中实际记录的各时点持仓。",
+          "inputs": "日期、资产、方向、数量/权重、市值、现金和原生记录引用。",
+          "unit_time": "持仓形成时刻、估值时刻、币种、乘数、总/净分母清楚。",
+          "interpretation": "模拟持仓不是真实账户仓位；目标权重和已模拟持仓分开。",
+          "missing": "未记录时点保持缺失，不把最近持仓无限向后填充。",
+          "lineage": {
+            "suggested_kind": "derived",
+            "nature": "statistic",
+            "meaning_note": "模拟持仓由真实引擎执行生成，是关于本次模拟的结果，不是账户实盘持仓。"
+          }
+        },
+        "trades": {
+          "type": "array",
+          "catalog_meaning": "信号/成交时间、价格、数量、费用、交易 ID；与真实成交分开。",
+          "definition": "回测实际模拟的订单或成交记录及其身份。",
+          "inputs": "交易 ID、信号/订单/成交时间、资产、方向、价量、费用、退出原因与原生引用。",
+          "unit_time": "币种、合约单位、乘数、时区和成交数量精度明确。",
+          "interpretation": "信号不是成交；模拟成交不同于实盘回执，同一交易多次成交需保留关联。",
+          "missing": "缺成交记录不以信号条数代替交易数，也不补拟合价格。",
+          "lineage": {
+            "suggested_kind": "derived",
+            "nature": "statistic",
+            "meaning_note": "模拟成交来自真实引擎回执，信号/成交时间和费用分别保留；不是已在市场成交的事实。"
+          }
+        },
+        "costs": {
+          "type": "object",
+          "catalog_meaning": "费用、价差、滑点、换手与融资的估计方法、结果和纳入范围。",
+          "definition": "回测已采用的执行与持有成本模型及其结果。",
+          "inputs": "佣金、价差、滑点、冲击、融资/借券、换手、估计方法与纳入范围。",
+          "unit_time": "同币种、单边/往返、每单位或年率，持有期和费用截点明确。",
+          "interpretation": "成本假设影响净结果；已包含在成交价的费用不能再扣。",
+          "missing": "未建模项目标未覆盖，不声称真实零成本；已知零费率可明确为零。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "实际模拟费用取结果，输入费率可能真实源或用户假设，滑点/融资模型属于估计，逐项区分。"
+          }
+        },
+        "assumptions": {
+          "type": "array",
+          "catalog_meaning": "点时数据、停牌、退市、复权、分红、缺失与执行延迟处理。",
+          "definition": "影响历史模拟可复现性和适用性的具体数据与执行处理。",
+          "inputs": "点时数据、复权、分红、停牌/退市、缺失、延迟、流动性等实际规则及版本。",
+          "unit_time": "给出适用期间、信息首次可得时间与合约/市场范围。",
+          "interpretation": "明确做过与没做过的处理；常见最佳实践不能冒充本次已实现行为。",
+          "missing": "无法核实的假设标未知，不自动补成无前视或无存续偏差。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "plan",
+            "meaning_note": "点时/停牌/复权/延迟处理是数据和模拟规则；其中“已具备PIT数据”需独立证据，不能仅写假设。"
+          }
+        },
+        "validation": {
+          "type": "object",
+          "catalog_meaning": "所选方法实际完成的验证范围、结果、选择次数与固定依据，不由渲染判定通过。",
+          "definition": "策略历史评估实际完成的验证和参数选择记录。",
+          "inputs": "验证方式/范围、规则冻结、训练/留出结果、选择次数、多重试验与固定依据。",
+          "unit_time": "标明样本边界、运行时间、参数冻结时刻和成本口径。",
+          "interpretation": "报告渲染成功不证明策略有效；留出参与选优后不再是独立证据。",
+          "missing": "未做检验就标未做，缺失败试验记录时不声称充分稳健。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "检验范围/执行状态/指标取实际记录，判断通过标准由研究决定；成功渲染不是通过。"
+          }
+        },
+        "artifacts": {
+          "type": "array",
+          "catalog_meaning": "原生 run/result/trade/参数等固定引用；复用原生回测报告，不重算或复制执行层。",
+          "definition": "支持本次回测报告的原生运行、结果、交易与参数固定成果索引。",
+          "inputs": "完整固定引用、成果角色、运行/策略版本、原生报告或下钻入口。",
+          "unit_time": "每项保留 revision/digest/schemaVersion、产生时间和对应样本范围。",
+          "interpretation": "链接或裸 ID 不能冒充固定数据引用；复用原生结果，不再造模拟执行层。",
+          "missing": "成果缺失标不可读/未提供，不用相似运行替换。",
+          "lineage": {
+            "suggested_kind": "acquired",
+            "nature": "metadata",
+            "meaning_note": "读取真实原生run/result/trade/参数固定引用，生产者/修订不改写。"
+          }
+        },
+        "instrument_context": {
+          "type": "object",
+          "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+          "definition": "用于理解冻结策略的模拟历史表现与验证中对象身份、计价和数量的共同上下文。",
+          "inputs": "稳定标的 ID/名称、交易所/市场、资产类型、行业、报价/报表/账户币种，以及适用的 tick、pip、合约乘数和数量单位。",
+          "unit_time": "币种角色分别标明；身份/合约规格使用相关截点版本，数量换算可追溯。结合策略/参数版本、运行、样本边界、成本和基准解读。",
+          "interpretation": "同名资产或代码可能跨市场不同；报价币种不必等于账户/报表币种。此说明对象不扩展 section.context 的 subject/as_of/target/horizon 匹配键。",
+          "missing": "仅填适用且已知的属性；无合约乘数的对象可不适用，未知乘数不可默认 1，未知币种不可根据符号猜测。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+          }
+        },
+        "data_times": {
+          "type": "object",
+          "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+          "definition": "界定冻结策略的模拟历史表现与验证所用资料何时发生、当时何时可知以及本报告使用哪个截点。",
+          "inputs": "研究 as_of、观测/事件时间、首次公开可得时间、获取时间、来源更新与修订时间、时区、交易日历、bar 周期和闭合状态。",
+          "unit_time": "统一明确时区和日期粒度；财期/事件所属期、发布时刻、抓取时刻不能互代，历史研究只能使用当时已可得版本。",
+          "interpretation": "报告生成时间不能代替报价时间，期末不能代替财报公开日；未来计划日程可以在截点前已知，但未来实际结果不可以。",
+          "missing": "无法确认首次可得时间就保留未知并限制点时结论；日期级来源不补精确时刻，未闭合柱不冒充已确认。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+          }
+        },
+        "source_scales": {
+          "type": "array",
+          "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+          "definition": "让冻结策略的模拟历史表现与验证的外部数据、评分和方法结果按原定义可解释、可核对的来源记录。",
+          "inputs": "提供方/产品、指标定义、原值/尺度/标签、方向、覆盖、数据版本、方法版本、知识引用与完整固定结果引用。",
+          "unit_time": "保留原百分比/小数/评分/金额尺度及有效日期；不同来源或版本独立记录，转换须有已登记方法。",
+          "interpretation": "同名指标不保证同定义；供应商 Confidence 若代表语料量归入 evidence_volume，不转换成预测 confidence/probability；来源数不是独立样本数。",
+          "missing": "定义或版本未知时标未知，保留原标签，不默认 0–100 或自行归一化；引用不完整不能冒充固定来源。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+          }
+        },
+        "logic_graph": {
+          "type": "object",
+          "catalog_meaning": "真实源码修订、逻辑图和对应运行引用；复用原生策略图/函数展开，只有本次实际使用 SVL 才关联 SVL，不根据叙述编造执行逻辑。",
+          "definition": "实际执行策略源码与逻辑图及回测运行之间的对应关系。",
+          "inputs": "源码修订、函数/节点、逻辑图原生引用、运行 ID 和实际使用的策略表示。",
+          "unit_time": "记录源码冻结时刻与运行版本，输入数据/周期范围可追溯。",
+          "interpretation": "不能根据自然语言编造执行逻辑；只有本次实际使用 SVL 才关联 SVL，其他代码保留原生路径。",
+          "missing": "无源码或逻辑图时引用已有运行并标未提供，不伪造函数调用图。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "源码/修订来自真实工件，逻辑图由同一语法结构派生，运行关联取回执；叙述不是执行逻辑。"
+          }
+        },
+        "parameter_trials": {
+          "type": "array",
+          "catalog_meaning": "每组 trial_id、品种/周期、样本、完整参数、状态、预选标识及原始指标；保留失败、未运行和指标未定义，较大结果用原生分页下钻和固定引用。",
+          "definition": "本次真实参数搜索的逐组配置、运行状态与原始结果。",
+          "inputs": "trial_id、品种/周期、样本、完整参数、状态、预选标识、指标和原生结果引用。",
+          "unit_time": "参数单位、成本、样本区间、运行时间和指标尺度明确。",
+          "interpretation": "保留失败、未运行和指标未定义；大结果用原生分页下钻，不能只保留赢家制造稳定性。",
+          "missing": "未测试组合不补数据，失败指标用 null 与原因，不当作零收益。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "参数是输入，trial状态取真实执行，指标为统计，预选标识来自事前规则；失败/未运行明确保留。"
+          }
+        },
+        "selection_rule": {
+          "type": "object",
+          "catalog_meaning": "运行前声明的优化指标、方向、样本、约束与并列规则，以及已登记获胜组；Report 不重新选优或使用留出结果挑参。",
+          "definition": "参数试验前声明并实际使用的选择规则及已登记选中组。",
+          "inputs": "优化指标、最大/最小方向、选择样本、约束、并列规则、规则版本和获胜 trial_id。",
+          "unit_time": "记录声明/冻结时间、样本边界和指标单位；筛选指标与图表颜色指标分开。",
+          "interpretation": "Report 不重新选优，不使用留出结果挑参；选择后修改规则必须另记新研究版本。",
+          "missing": "缺事前规则就标未知或事后选择，不能倒写成预先声明。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "plan",
+            "meaning_note": "优化指标/方向/约束/并列是事前规则，获胜组是执行选择结果；留出不参与重选。"
+          }
+        }
+      }
+    },
+    "M19": {
+      "title": {
+        "zh-CN": "组合构建与再平衡",
+        "en": "Portfolio construction and rebalancing"
+      },
+      "fields": {
+        "summary": {
+          "type": "text",
+          "catalog_meaning": "方法给出的本模块结论；区分事实、模拟结果和预测。",
+          "definition": "本模块对组合构建与再平衡方案的核心回答，先给明确判断，最少给出有依据的倾向，不以数值列表或两面可能代替答案。",
+          "inputs": "关键结论、决定性事实/数值、比较对象、相反证据和适用条件；关联本模块实际采用的字段与固定成果。",
+          "unit_time": "概括时保留当前/目标组合身份、权重分母、方法和执行状态；关键数值不省略单位、比较期间或预测期限。",
+          "interpretation": "明确观察事实、方法解释、条件假说、模拟结果与预测各自性质；摘要不产生新算法、综合评分或额外研究授权。涉及行情预测的结论应能追溯同类历史实际结果。",
+          "missing": "信息不全时先说已能支持的判断及范围，再说明具体未知；确实不能区分时说明原因。用户可省略该字段，不为凑结论补造方向、概率或中性评价。",
+          "lineage": {
+            "suggested_kind": "inferred",
+            "nature": "plan",
+            "meaning_note": "组合再平衡的综合结论来自所选方法；其中引用的观察事实、统计、外部预测和行动主张应逐句保持本来性质，不能因写入摘要变成事实。"
+          }
+        },
+        "allocation_judgments": {
+          "type": "array",
+          "catalog_meaning": "按目标比较当前、起始或备选组合与再平衡规则，明确倾向、代价和调整条件。",
+          "definition": "回答哪套权重或规则更适合风险、成本或收益目标；没有唯一最优也要说明各自适用情形。",
+          "inputs": "同口径权重、约束、规则、成本、真实历史比较与对应风险结果。 建议每项含问题、对象、期限、判断、依据、改判条件、历史参照；可按用户调整名称与呈现映射。",
+          "unit_time": "对象、比较对象、观察窗口与向前判断期限分别写清；沿用结果原币种/单位，时间由任务和实际方法决定。",
+          "interpretation": "从零假设建仓也可比较方案，不编当前个人持仓；新权重有评估时如实展示，不能固定标为尚未评估。",
+          "missing": "未完成某个请求角度时说明具体缺口，不用中性、零分或50%代替；给现有资料已能支持的判断。确定性比较或用户目标取舍可说明历史统计不适用，行情预测须有实际历史参照状态。",
+          "lineage": {
+            "suggested_kind": "inferred",
+            "nature": "plan",
+            "meaning_note": "知识与实际结果支持的分项判断；事实、历史结果、目标取舍与未来推断分别标明，不能由展示层产生。"
+          }
+        },
+        "weights_chart": {
+          "type": "chart",
+          "catalog_meaning": "同一组合截点与分母的当前/目标权重，现金与多空口径明确，保留零权重资产。",
+          "definition": "同一组合参照下当前与拟议目标权重的并列比较。",
+          "inputs": "资产、current/target、权重分母、现金、多空和当前/目标身份。",
+          "unit_time": "同截点、币种估值与百分比/小数尺度，零目标和零当前保留。",
+          "interpretation": "目标权重是方案而非成交；多空净权重和总敞口权重不能混合求和。",
+          "missing": "当前持仓未知时不可填零，缺目标表示未分配/未知须按实际说明。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "当前持仓获取后估值/权重计算，目标权重来自模型/用户计划；两者不具相同事实性质。"
+          },
+          "chart": {
+            "kind": "dumbbell",
+            "columns": [
+              "asset",
+              "current",
+              "target"
+            ],
+            "evidence_role": "descriptive"
+          }
+        },
+        "changes_chart": {
+          "type": "chart",
+          "catalog_meaning": "同一当前/目标权重下由方法提供的变更，正负表示增加/减少，不能视为已成交。",
+          "definition": "既定当前与目标权重之间由方法给出的调整量。",
+          "inputs": "资产、change、当前/目标权重引用、增减含义、方法与方案状态。",
+          "unit_time": "权重差通常为百分点，注明分母、币种估值截点和费用口径。",
+          "interpretation": "正负调整是建议增加/减少，不表示已成交，也不是收益率。",
+          "missing": "一侧权重不可得时标无法计算，不默认卖空或清仓。",
+          "lineage": {
+            "suggested_kind": "derived",
+            "nature": "plan",
+            "meaning_note": "建议变更是同口径目标减当前权重的计算，正负是计划方向，不是实际成交。"
+          },
+          "chart": {
+            "kind": "hbar",
+            "columns": [
+              "asset",
+              "change"
+            ],
+            "evidence_role": "descriptive"
+          }
+        },
+        "objective": {
+          "type": "text",
+          "catalog_meaning": "用户目标、投资期限与基准，和市场方向预测分开。",
+          "definition": "组合方案希望满足的用户目标和评价参照。",
+          "inputs": "收益/风险/收入等目标、投资期限、基准、资金与用户约定。",
+          "unit_time": "目标数值带币种/百分比、名义/实际、年化/累计和期限。",
+          "interpretation": "配置目标是偏好或约束，不是未来收益保证，也不是市场方向证据。",
+          "missing": "未明确目标保持待确定，不自动假定最大化收益或固定风险偏好。",
+          "lineage": {
+            "suggested_kind": "user_supplied",
+            "nature": "plan",
+            "meaning_note": "目标/期限/基准偏好来自当前用户任务或有效已确认记忆，不是市场价格预测。"
+          }
+        },
+        "action_status": {
+          "type": "text",
+          "catalog_meaning": "建议、待确认、已安排、已执行及依据；字段呈现不触发交易。",
+          "definition": "组合方案及其后续行动在现实中的当前状态。",
+          "inputs": "建议/待确认/已安排/已执行、对应动作/版本、时间和实际依据。",
+          "unit_time": "实际安排/执行时间含时区，成交数量/金额如有需真实回执。",
+          "interpretation": "报告呈现不触发优化、下单或再平衡；已执行需要执行证据。",
+          "missing": "无回执保持建议或待确认，不将目标权重当已持有。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "plan",
+            "meaning_note": "建议为研究状态，安排取计划回执，执行取真实应用/订单/成交证据，逐项不可混称。"
+          }
+        },
+        "constraints": {
+          "type": "array",
+          "catalog_meaning": "资产/行业/币种/权重/流动性/风险/换手等本次约束。",
+          "definition": "本次构建或再平衡实际采用的限制条件。",
+          "inputs": "资产、行业、币种、单项权重、流动性、风险、换手、现金等约束及来源。",
+          "unit_time": "阈值单位、组合分母、有效期限和优先关系明确。",
+          "interpretation": "约束来自用户/方法而非模板；可行性和收益预测是不同结论。",
+          "missing": "未确认约束标未知，不自行假设禁止空头或默认上下限。",
+          "lineage": {
+            "suggested_kind": "user_supplied",
+            "nature": "plan",
+            "meaning_note": "权重/资产/流动性/风险/换手约束由用户或所选方法明确；实际市场限制另取证。"
+          }
+        },
+        "current_weights": {
+          "type": "array",
+          "catalog_meaning": "资产、方向、当前权重/市值、币种和截点。",
+          "definition": "构建方案所基于的真实或明确假设的当前持仓权重。",
+          "inputs": "资产、方向、数量/市值、权重、现金、来源与真实/模拟标识。",
+          "unit_time": "同持仓/价格/汇率截点、币种和分母，净额与总额口径清楚。",
+          "interpretation": "当前权重不是长期目标；缺持仓不能从历史方案或关注清单推断。",
+          "missing": "未知持仓保持未提供；明确未持有才可为零。",
+          "lineage": {
+            "suggested_kind": "derived",
+            "nature": "statistic",
+            "meaning_note": "持仓/余额原值获取，按价格/币种/分母计算当前权重；报价时点需一致。"
+          }
+        },
+        "target_weights": {
+          "type": "array",
+          "catalog_meaning": "方法给出的目标权重、允许偏离、依据与截点；多空/现金口径明确。",
+          "definition": "所选构建方法已产出的拟议配置及允许偏离。",
+          "inputs": "资产、方向、权重、容许区间、依据、方法版本与方案身份。",
+          "unit_time": "权重尺度、现金、多空/杠杆分母、适用截点和期限明确。",
+          "interpretation": "目标是方案而非已持仓或最优证明；方法可自由选择，不默认等权或优化器。",
+          "missing": "方法未完成就标 pending，不用当前权重充当目标输出。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "plan",
+            "meaning_note": "数值可以由所选分配方法计算或用户给定，目标与允许偏离是计划，不是实际持仓。"
+          }
+        },
+        "changes": {
+          "type": "array",
+          "catalog_meaning": "新增/移除/调整、当前至目标差异、估计成本与原因，区分建议和已执行。",
+          "definition": "当前至目标配置的具体新增、移除和调整计划。",
+          "inputs": "资产、原/新权重或数量、差异、原因、成本、状态和相关方案引用。",
+          "unit_time": "权重差为百分点或明确原单位，资金/份额换算的币种与截点可查。",
+          "interpretation": "建议调整、已安排订单和已执行成交必须分开；调仓差异不是实现收益。",
+          "missing": "当前或目标缺失时说明无法给变化，不补零导致虚构全买/全卖。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "plan",
+            "meaning_note": "成分/权重差是计算，估计成本是模型/源输入，理由是解释，实施状态必须另有回执。"
+          }
+        },
+        "weighting_rules": {
+          "type": "object",
+          "catalog_meaning": "所选方法/版本和规则说明；不固定等权、最优权重或任何优化器。",
+          "definition": "实际采用的组合权重生成方法、版本和规则。",
+          "inputs": "方法、输入、目标/约束、权重规则、假设、运行结果和固定引用。",
+          "unit_time": "输入窗口、信息可得时间、估计期限和尺度明确。",
+          "interpretation": "不固定等权、风险平价或任何优化器；规则名不保证约束满足或预测有效。",
+          "missing": "未提供生成方法时保留来源未知，不反向编造算法解释权重。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "plan",
+            "meaning_note": "方法/版本及分配规则来自用户或真实研究选择，执行结果另列；不默认等权或任何优化器。"
+          }
+        },
+        "rebalance": {
+          "type": "object",
+          "catalog_meaning": "日期或触发、频率、阈值、换手与成本、复核条件及执行状态。",
+          "definition": "组合方案从当前配置转向目标配置的既定安排或触发规则。",
+          "inputs": "日期/触发、频率、偏离阈值、换手、成本、复核条件与真实执行状态。",
+          "unit_time": "时区、交易日历、阈值单位、当前与目标版本明确。",
+          "interpretation": "再平衡规则与已安排自动执行不同；阈值触发也不意味着成交。",
+          "missing": "未约定频率/触发时标待定，不默认月度或生成执行计划。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "plan",
+            "meaning_note": "日期/阈值/频率来自计划，换手/成本为估计或计算，已安排/已执行取真实回执。"
+          }
+        },
+        "benchmark": {
+          "type": "object",
+          "catalog_meaning": "目标比较基准及期间、币种、收益口径。",
+          "definition": "用于评价组合目标或表现的明确比较基准。",
+          "inputs": "基准身份/构成、收益规则、再平衡、费用及选择理由。",
+          "unit_time": "期间、币种、含息、初始基数和年化口径可比。",
+          "interpretation": "目标基准不一定等于风险模型基准；不能事后更换以显得新方案更好。",
+          "missing": "未指定基准时说明未约定，不默认市场指数或零收益。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "mixed",
+            "meaning_note": "比较目标来自任务，身份/价格/现金流获取，收益统计计算；不能混用价格与含息基准。"
+          }
+        },
+        "performance_refs": {
+          "type": "array",
+          "catalog_meaning": "同规则版本的 M18/原生回测或真实业绩固定引用，模拟与实绩分开。",
+          "definition": "与当前或目标组合规则一致的历史模拟或实际业绩成果。",
+          "inputs": "组合/规则版本、模拟或实绩身份、M18/原生结果固定引用、期间与成本。",
+          "unit_time": "标明权重生效时间、币种、样本边界和运行截点。",
+          "interpretation": "原组合业绩不能改名为新权重方案业绩；同资产集合也不代表同组合规则。",
+          "missing": "新方案未做历史评估就标未评估，不借旧组合曲线填入。",
+          "lineage": {
+            "suggested_kind": "acquired",
+            "nature": "metadata",
+            "meaning_note": "取得同一规则版本的真实回测/业绩固定引用；模拟和实绩分别标清，不根据目标权重补业绩。"
+          }
+        },
+        "risk_refs": {
+          "type": "array",
+          "catalog_meaning": "目标和当前组合的 M12 暴露、集中、依赖与压力结果引用。",
+          "definition": "当前和目标组合各自风险研究的固定成果入口。",
+          "inputs": "组合身份/权重版本、暴露/集中/依赖/压力结果、M12 或原生固定引用。",
+          "unit_time": "风险估计截点、输入窗口、币种、目标期限及分母可追溯。",
+          "interpretation": "两套权重风险应分别评估；当前风险不能当作目标风险，风险低不等于收益高。",
+          "missing": "目标风险未计算时保留缺口，不根据减仓文字直接宣称风险已降低。",
+          "lineage": {
+            "suggested_kind": "acquired",
+            "nature": "metadata",
+            "meaning_note": "读取已有M12风险结果及固定版本引用；其中暴露/压力本身仍保留计算或预测性质。"
+          }
+        },
+        "instrument_context": {
+          "type": "object",
+          "catalog_meaning": "标的 ID/名称、市场/交易所、资产类型、行业、报价/报表/账户币种、tick/pip/乘数；按适用性提供。",
+          "definition": "用于理解组合构建与再平衡方案中对象身份、计价和数量的共同上下文。",
+          "inputs": "稳定标的 ID/名称、交易所/市场、资产类型、行业、报价/报表/账户币种，以及适用的 tick、pip、合约乘数和数量单位。",
+          "unit_time": "币种角色分别标明；身份/合约规格使用相关截点版本，数量换算可追溯。结合当前/目标组合身份、权重分母、方法和执行状态解读。",
+          "interpretation": "同名资产或代码可能跨市场不同；报价币种不必等于账户/报表币种。此说明对象不扩展 section.context 的 subject/as_of/target/horizon 匹配键。",
+          "missing": "仅填适用且已知的属性；无合约乘数的对象可不适用，未知乘数不可默认 1，未知币种不可根据符号猜测。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "分别列明：ID/市场/币种/tick/乘数来自实际品种或账户；研究对象选择来自用户；行业/同业标签及历史映射需对应来源或明确方法。各子项不能继承同一个来源标签。"
+          }
+        },
+        "data_times": {
+          "type": "object",
+          "catalog_meaning": "数据截点、观察/首次可得/获取时间、市场时区、交易日历、bar 周期和闭合状态；不能互相替代。",
+          "definition": "界定组合构建与再平衡方案所用资料何时发生、当时何时可知以及本报告使用哪个截点。",
+          "inputs": "研究 as_of、观测/事件时间、首次公开可得时间、获取时间、来源更新与修订时间、时区、交易日历、bar 周期和闭合状态。",
+          "unit_time": "统一明确时区和日期粒度；财期/事件所属期、发布时刻、抓取时刻不能互代，历史研究只能使用当时已可得版本。",
+          "interpretation": "报告生成时间不能代替报价时间，期末不能代替财报公开日；未来计划日程可以在截点前已知，但未来实际结果不可以。",
+          "missing": "无法确认首次可得时间就保留未知并限制点时结论；日期级来源不补精确时刻，未闭合柱不冒充已确认。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "观察/源发布时间/获取时间分别取自原始源与采集回执；研究截点来自任务，首次可得时间需版本证据，bar闭合可据明确规则判断。未知时区/公布时间不猜。"
+          }
+        },
+        "source_scales": {
+          "type": "array",
+          "catalog_meaning": "提供方/产品、指标定义、原值/尺度/标签、来源版本、方法版本与固定引用，未知保留缺失。",
+          "definition": "让组合构建与再平衡方案的外部数据、评分和方法结果按原定义可解释、可核对的来源记录。",
+          "inputs": "提供方/产品、指标定义、原值/尺度/标签、方向、覆盖、数据版本、方法版本、知识引用与完整固定结果引用。",
+          "unit_time": "保留原百分比/小数/评分/金额尺度及有效日期；不同来源或版本独立记录，转换须有已登记方法。",
+          "interpretation": "同名指标不保证同定义；供应商 Confidence 若代表语料量归入 evidence_volume，不转换成预测 confidence/probability；来源数不是独立样本数。",
+          "missing": "定义或版本未知时标未知，保留原标签，不默认 0–100 或自行归一化；引用不完整不能冒充固定来源。",
+          "lineage": {
+            "suggested_kind": "mixed",
+            "nature": "metadata",
+            "meaning_note": "提供方原值/原尺度/标签来自来源；方法定义/版本来自实际计算或研究；固定引用来自工件系统。供应商估计仍是外部预测，量表不自动变成事实或概率。"
+          }
+        }
+      }
+    }
+  }
+}

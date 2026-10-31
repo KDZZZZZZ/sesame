@@ -85,6 +85,643 @@
         ],
         "additionalProperties": false
       },
+      "id": "investment_research_start",
+      "description": "Research报告工作流：理解需求与建议结果形式、获取固定证据、组合分析方法与历史参照、生成并核验报告。用户可调整字段、视觉与成员。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "question": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16000
+          },
+          "subjects": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "as_of": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Evidence publication/observation cutoff, preferably UTC ISO; omitted uses workflow creation time. Current research may collect after starting and must record actual retrieval time separately. Historical backtests or point-in-time claims require the historical data version, not later revisions."
+          },
+          "horizon": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "description": "Relevant investment horizon; not a trading schedule."
+          },
+          "research": {
+            "type": "object",
+            "properties": {
+              "plugins": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "uniqueItems": true
+              },
+              "tools": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "uniqueItems": true,
+                "description": "Exact declared capability IDs (pluginId#capabilityId preferred). Omitted selects delegatable research functions with no declared trading/configuration/process/workflow-control effects; [] loads knowledge only."
+              }
+            },
+            "required": [
+              "plugins"
+            ],
+            "additionalProperties": false
+          },
+          "model": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string",
+                "minLength": 1
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "configurationDigest": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "provider",
+              "id"
+            ],
+            "additionalProperties": false
+          },
+          "agent_models": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "configurationDigest": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "provider",
+                "id"
+              ],
+              "additionalProperties": false
+            },
+            "maxProperties": 32
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "revision": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^sha256:[a-f0-9]{64}$"
+                },
+                "kind": {
+                  "const": "data"
+                },
+                "schemaVersion": {
+                  "const": "1.0.0"
+                }
+              },
+              "required": [
+                "id",
+                "revision",
+                "digest",
+                "kind",
+                "schemaVersion"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Existing fixed evidence to reuse. Account snapshots are optional evidence, never an execution binding."
+          },
+          "workflow": {
+            "type": "object",
+            "properties": {
+              "stages": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 32,
+                "items": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 32,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                      },
+                      "role": {
+                        "enum": [
+                          "market",
+                          "fundamentals",
+                          "news",
+                          "sentiment",
+                          "bull",
+                          "bear",
+                          "risk",
+                          "manager",
+                          "custom"
+                        ]
+                      },
+                      "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      },
+                      "instructions": {
+                        "type": "string",
+                        "maxLength": 6000
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "synthesis": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+              }
+            },
+            "required": [
+              "stages",
+              "synthesis"
+            ],
+            "additionalProperties": false,
+            "description": "用户自定义成员与顺序；省略则依次执行需求范围、取证、分析、报告。最后阶段为唯一synthesis。"
+          },
+          "report_brief": {
+            "type": "object",
+            "properties": {
+              "case": {
+                "type": "string",
+                "enum": [
+                  "auto",
+                  "overview",
+                  "outlook",
+                  "event",
+                  "company",
+                  "briefing",
+                  "options",
+                  "portfolio",
+                  "forecast_review",
+                  "calendar",
+                  "custom"
+                ],
+                "default": "auto"
+              },
+              "template_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "description": "Mxx/Rxx建议结果模板，显式值优先，不选择方法。"
+              },
+              "sections": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Stable identifier",
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$"
+                    },
+                    "module_id": {
+                      "type": "string",
+                      "description": "Optional M01–M19 module to copy suggested fields from",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Custom section title",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    "fields": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "description": "Suggested field key",
+                            "minLength": 1,
+                            "maxLength": 128
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "key": {
+                                "type": "string",
+                                "description": "Stable identifier",
+                                "minLength": 1,
+                                "maxLength": 128,
+                                "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$"
+                              },
+                              "label": {
+                                "type": "string",
+                                "description": "Reader-facing field label",
+                                "minLength": 1,
+                                "maxLength": 20000
+                              },
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "text",
+                                  "number",
+                                  "integer",
+                                  "boolean",
+                                  "array",
+                                  "object",
+                                  "probability",
+                                  "distribution",
+                                  "interval",
+                                  "confidence",
+                                  "inferences",
+                                  "chart"
+                                ]
+                              },
+                              "meaning": {
+                                "type": "string",
+                                "description": "Meaning of the result; no analysis algorithm is selected here",
+                                "minLength": 1,
+                                "maxLength": 20000
+                              },
+                              "unit": {
+                                "type": "string",
+                                "maxLength": 100
+                              },
+                              "required": {
+                                "type": "boolean",
+                                "description": "Required only for this task; defaults to false"
+                              },
+                              "display": {
+                                "type": "string",
+                                "enum": [
+                                  "visible",
+                                  "folded",
+                                  "hidden"
+                                ]
+                              },
+                              "chart": {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "description": "Existing reportKit or SesameCharts kind; prefer the module candidate."
+                                  },
+                                  "options": {
+                                    "type": "object",
+                                    "description": "Field mappings and display options only; no rows, data, nodes or callbacks."
+                                  },
+                                  "columns": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    },
+                                    "minItems": 1,
+                                    "maxItems": 32
+                                  },
+                                  "data_requirements": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  },
+                                  "evidence_role": {
+                                    "type": "string",
+                                    "enum": [
+                                      "descriptive",
+                                      "historical",
+                                      "prediction"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "columns",
+                                  "data_requirements"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "history_display": {
+                                "type": "string",
+                                "enum": [
+                                  "full",
+                                  "summary",
+                                  "hidden"
+                                ],
+                                "description": "Historical evidence presentation; summary links to matching history detail when present. Fixed evidence remains bound."
+                              },
+                              "presentation": {
+                                "description": "Optional value projection; only maps supplied properties. null disables the suggested view. No scores/probabilities/estimates are calculated.",
+                                "anyOf": [
+                                  {
+                                    "type": "null"
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": [
+                                          "metric",
+                                          "range",
+                                          "scores"
+                                        ]
+                                      },
+                                      "value": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                      },
+                                      "label": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                      },
+                                      "lower": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                      },
+                                      "upper": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                      },
+                                      "reference": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                      },
+                                      "caption": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                      },
+                                      "unit": {
+                                        "type": "string",
+                                        "maxLength": 100
+                                      },
+                                      "min": {
+                                        "type": "number"
+                                      },
+                                      "max": {
+                                        "type": "number"
+                                      },
+                                      "digits": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "maximum": 6
+                                      },
+                                      "meta": {
+                                        "type": "array",
+                                        "maxItems": 6,
+                                        "items": {
+                                          "type": "string",
+                                          "maxLength": 200
+                                        }
+                                      },
+                                      "unit_field": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                      },
+                                      "scale": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                      },
+                                      "scale_label": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                      }
+                                    },
+                                    "required": [
+                                      "kind"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "key"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "maxItems": 64
+                    },
+                    "method_refs": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "description": "Exact selected method or knowledge reference; no invocation is performed",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      "maxItems": 32
+                    },
+                    "context": {
+                      "type": "object",
+                      "properties": {
+                        "subject": {
+                          "type": "string",
+                          "description": "Expected research subject",
+                          "minLength": 1,
+                          "maxLength": 20000
+                        },
+                        "as_of": {
+                          "type": "string",
+                          "description": "Expected research as_of",
+                          "minLength": 1,
+                          "maxLength": 20000
+                        },
+                        "target": {
+                          "type": "string",
+                          "description": "Expected research target",
+                          "minLength": 1,
+                          "maxLength": 20000
+                        },
+                        "horizon": {
+                          "type": "string",
+                          "description": "Expected research horizon",
+                          "minLength": 1,
+                          "maxLength": 20000
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [],
+                  "additionalProperties": false
+                },
+                "maxItems": 64
+              },
+              "adjustments": {
+                "type": "string",
+                "maxLength": 12000,
+                "description": "用户对字段、结构和展示的调整优先于建议模板。"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "title",
+          "question",
+          "subjects",
+          "research",
+          "model"
+        ],
+        "additionalProperties": false
+      },
+      "effects": [
+        "start:agents",
+        "resources.create",
+        "resources.publish",
+        "invoke:selected-research",
+        "publish:report-if-requested"
+      ],
+      "usage": {
+        "purpose": "组织Research报告的研究过程；Report只建议字段与视觉，具体分析方法自由选择。",
+        "inputs": "{title,question,subjects,research:{plugins,tools?},model,as_of?,horizon?,evidence_refs?,report_brief?:{case,template_id?,sections?,adjustments?},workflow?,agent_models?}。绑定task.output:{type:\"report\",space:\"research\",path:\"...html\"}。case为auto/overview/outlook/event/company/briefing/options/portfolio/forecast_review/calendar/custom。显式sections替换建议组合。更新资料用新start并传旧result_ref至evidence_refs；仅改报告用investment_research_report。 可选选择sesame/historical-evidence的匹配/校准计算，固定单行输入DataRef放evidence_refs；具体选择和依赖字段见公开HISTORY.md，未选择时不强制调用。",
+        "outputs": "原生Run。result_ref保留冻结report_brief、实际成员计划及证据；report_ref为实际发布且已渲染的报告。默认四阶段有不同权限，自定义workflow优先。",
+        "prerequisites": [
+          "选定模型、来源与分析插件可用；reports 3.6.1+提供report_structure/report_compose。",
+          "来源配置走统一管理，无需配置的渠道不要求其他来源的Key。"
+        ],
+        "limitations": [
+          "scope只读字段和知识；evidence取证；analysis使用固定证据与选定方法，可定向请原取证成员补缺；synthesis只呈现固定结果。",
+          "模板不指定ATR/FVG等方法。日历、描述、比较或复盘不强制预测；预测需要历史情景与后果支持，不制造置信度。",
+          "不下单、不配置凭据；搜索失败不是无事件。用户明确来源、方法、字段及路径优先。",
+          "analyze保留高级计划与内部数据交接兼容；新报告任务优先使用start。"
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "investment_research_start"
+      }
+    },
+    {
+      "kind": "workflow",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "execution": "run",
+      "resumable": true,
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "result_ref": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "const": "data"
+              },
+              "schemaVersion": {
+                "const": "1.0.0"
+              }
+            },
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "additionalProperties": false
+          },
+          "summary": {
+            "type": "string"
+          },
+          "report_ref": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "const": "report"
+              },
+              "schemaVersion": {
+                "const": "1.0.0"
+              }
+            },
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "result_ref",
+          "summary"
+        ],
+        "additionalProperties": false
+      },
       "id": "investment_research_analyze",
       "description": "Research one investment question with selected sources and methods. All participating members share standards for a scoped main judgment, testable mechanisms, relevant theory and comparisons, competing explanations and evidence limits; methods and inquiry order follow the question. Targeted follow-up answers and fixed evidence remain in the result. No account or trading dependency. Authorized downstream members can query the completed predecessors listed in their QA context; the default bull/bear/risk/manager query the original analysts. start_from reruns a suffix from a completed fixed result without changing the original.",
       "inputSchema": {
@@ -930,6 +1567,386 @@
         "type": "native",
         "name": "investment_research_ask"
       }
+    },
+    {
+      "id": "investment_research_event_outcomes",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "execution": "immediate",
+      "description": "Align explicitly selected frozen historical events with frozen closed-bar prices or price observations. Record bounded endpoint returns, exact-time instrument baseline, availability uncertainty, gaps and overlapping windows. No model, acquisition, event matching, PIT certification, confidence or prediction probability.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "events_ref": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "const": "data"
+              },
+              "schemaVersion": {
+                "const": "1.0.0"
+              }
+            },
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "additionalProperties": false
+          },
+          "market_ref": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "const": "data"
+              },
+              "schemaVersion": {
+                "const": "1.0.0"
+              }
+            },
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "additionalProperties": false
+          },
+          "selection": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "description": "Describe the already selected event population; this call does not search, select or certify preregistration."
+          },
+          "price_basis": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "description": "Exact upstream price basis, such as split-adjusted close in USD; no corporate-action, reinvestment or FX adjustment is added."
+          },
+          "price_time_semantics": {
+            "enum": [
+              "closed_bar_close",
+              "price_observation"
+            ],
+            "description": "market.time must denote an actually closed bar or explicit price observation, never a bar-open timestamp pretending its close was known."
+          },
+          "as_of": {
+            "type": "string",
+            "minLength": 20,
+            "maxLength": 35,
+            "description": "Explicit timezone timestamp. Price observations or declared price availability after this cutoff are excluded."
+          },
+          "anchor": {
+            "enum": [
+              "event_at",
+              "first_available_at"
+            ]
+          },
+          "entry": {
+            "enum": [
+              "last_at_or_before",
+              "first_at_or_after"
+            ]
+          },
+          "tolerance_seconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 604800
+          },
+          "windows": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                },
+                "seconds": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 2678400
+                }
+              },
+              "required": [
+                "id",
+                "seconds"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "baseline": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "none"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "const": "instrument"
+                  },
+                  "instrument": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "kind",
+                  "instrument"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "fields": {
+            "type": "object",
+            "properties": {
+              "events": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_-]{0,79}$"
+                  },
+                  "instrument": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_-]{0,79}$"
+                  },
+                  "event_at": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_-]{0,79}$"
+                  },
+                  "published_at": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_-]{0,79}$"
+                  },
+                  "first_available_at": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_-]{0,79}$"
+                  },
+                  "retrieved_at": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_-]{0,79}$"
+                  },
+                  "source_url": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_-]{0,79}$"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "market": {
+                "type": "object",
+                "properties": {
+                  "instrument": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_-]{0,79}$"
+                  },
+                  "time": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_-]{0,79}$"
+                  },
+                  "price": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_-]{0,79}$"
+                  },
+                  "unit": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_-]{0,79}$"
+                  },
+                  "available_at": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_-]{0,79}$"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "events_ref",
+          "market_ref",
+          "selection",
+          "price_basis",
+          "price_time_semantics",
+          "as_of",
+          "anchor",
+          "entry",
+          "tolerance_seconds",
+          "windows",
+          "baseline"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "result_ref": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "kind": {
+                "const": "data"
+              },
+              "schemaVersion": {
+                "const": "1.0.0"
+              }
+            },
+            "required": [
+              "id",
+              "revision",
+              "digest",
+              "kind",
+              "schemaVersion"
+            ],
+            "additionalProperties": false
+          },
+          "method": {
+            "const": "fixed-event-window-returns/1.0.0"
+          },
+          "counts": {
+            "type": "object",
+            "properties": {
+              "events": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "outcomes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "complete": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "partial": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "missing": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "pending": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "overlapping": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "events",
+              "outcomes",
+              "complete",
+              "partial",
+              "missing",
+              "pending",
+              "overlapping"
+            ],
+            "additionalProperties": false
+          },
+          "point_in_time_status": {
+            "const": "not_established"
+          },
+          "status": {
+            "enum": [
+              "no_events",
+              "complete",
+              "partial"
+            ]
+          }
+        },
+        "required": [
+          "result_ref",
+          "method",
+          "counts",
+          "point_in_time_status",
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "effects": [
+        "resources.read",
+        "resources.write"
+      ],
+      "usage": {
+        "purpose": "Bridge already selected historical events and fixed market data with transparent retrospective endpoint arithmetic; no model or source configuration is required.",
+        "inputs": "Complete events_ref and market_ref DataRefs, explicit as_of, selection, price_basis, price_time_semantics, anchor, entry rule, 1..8 windows, tolerance_seconds and baseline. Defaults use flat event_id/instrument/event_at/published_at/first_available_at/retrieved_at/source_url and instrument/observed_at/close/unit/available_at columns; fields can map flat names. See README for the exact row contract.",
+        "outputs": "Immediate result_ref to one json-rows packet containing full parameters, input provenance, per-event/window prices, fraction returns, exact-time baseline/excess return, availability statuses, gaps, overlaps and source refs. Counts are accounting totals, not frequencies, independent sample counts or confidence.",
+        "prerequisites": [
+          "Frozen json-rows event and price artifacts with exact producer-backed refs; at most 256 events, 50000 price rows and 8 MiB per input.",
+          "Price timestamps represent actual bar closes or explicit observations. Price availability, publication time and retrieval time have separate meanings. Normalize incompatible source formats separately and preserve their input dependencies."
+        ],
+        "limitations": [
+          "No event search, semantic matching, historical snapshot authentication, causal attribution, probability calibration, cost/slippage model, FX conversion, dividend reinvestment or trading backtest. Methods and features remain freely selected outside Report.",
+          "Published_at is never promoted to first_available_at. Declared first_available_at is retained but not verified; every sample remains excluded from point-in-time validation by this capability. Recently retrieved old stories remain retrospective evidence.",
+          "Exit is first observation at/after anchor+seconds inside the explicit tolerance; baseline requires the exact chosen target endpoint times. Missing, not-yet-elapsed, invalid-price and unit-change cases remain visible.",
+          "No result claims independent votes: overlapping same-instrument event windows and multiple windows remain dependent. Selection is recorded but not certified as prospective. Zero supplied events is no_events, not a successful search with zero historical matches."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "investment_research_event_outcomes"
+      }
     }
   ],
   "sources": [],
@@ -947,6 +1964,18 @@
       "path": "README.md",
       "kind": "reference",
       "description": "Inputs, configuration, fixed research packet, report regeneration and native Run recovery."
+    },
+    {
+      "id": "research-report-workflow",
+      "path": "WORKFLOW.md",
+      "kind": "reference",
+      "description": "Research步骤、多种报告场景、用户调整与Strategy边界。"
+    },
+    {
+      "id": "historical-evidence-guidance",
+      "kind": "reference",
+      "path": "HISTORY.md",
+      "description": "可选独立历史匹配与概率校准的固定DataRef交接、用户选择、条件使用和隔离评价边界。"
     }
   ],
   "hooks": [],
