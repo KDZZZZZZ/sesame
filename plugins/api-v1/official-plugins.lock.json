@@ -1264,9 +1264,9 @@
     },
     {
       "id": "sesame/ultra",
-      "version": "1.0.4",
+      "version": "1.0.5",
       "directory": "ultra",
-      "treeDigest": "sha256:c56035271062c93323f4db5d7f212dc78dab86b0f84c9a3002b1d6f8695623bb",
+      "treeDigest": "sha256:e0cfb5545d5bcdc88b3a271e9aa2fcf442ffc5b6fa8a143222a97a5c3a830f56",
       "files": [
         {
           "path": "LICENSE",
@@ -1295,12 +1295,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "c2c62e39eac0e6a77a1375c793732f3a0f43c79a0cd292d7263434bef5b36dd0",
+          "sha256": "349a6377f9bdfd40299b24af91a9f9748f1e8940a448b4d773d8ef490ac4e641",
           "bytes": 173
         },
         {
           "path": "plugin.json",
-          "sha256": "1799c7dbf6ea8d6ccbb7db10f02d851dc3459afca1111460fc6c0b70623e35fb",
+          "sha256": "8ab19c99da4f20d035e320364cc551d9e0b17df51503f2576bae748964752be3",
           "bytes": 984
         },
         {
@@ -1315,8 +1315,8 @@
         },
         {
           "path": "src/runtime.js",
-          "sha256": "19050a2256a2027859b071ea8b81f5002787527675481e14c6795f33d85e10a6",
-          "bytes": 42166
+          "sha256": "2edfc89d9f9f8e1f5cdcc54ce75ef78fea5f46f66dcac076658e42ca2122612c",
+          "bytes": 42459
         },
         {
           "path": "src/state.js",

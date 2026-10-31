@@ -6603,7 +6603,7 @@
     },
     {
       "id": "sesame/ultra",
-      "version": "1.0.4",
+      "version": "1.0.5",
       "distribution": "core",
       "state": "mounted",
       "engines": {

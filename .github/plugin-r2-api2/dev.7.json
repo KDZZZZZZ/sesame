@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "dev.7",
-  "sourceCommit": "93baa1a597403b7ba371924227cb043c3eb279be",
+  "sourceCommit": "e601157a9f55bd453c597856b776d62ef6e343d9",
   "pullRequest": 98,
   "title": "Sesame 0.3.0: unified visual reports, historical evidence and conditional factor research",
   "profiles": [
@@ -21,8 +21,8 @@
         "sesame/user-guide",
         "sesame/workspace"
       ],
-      "archiveSha256": "613544bdbfb6dd180b9f1b38ca6327d7b8f5253397fcbaed52c38c1919da2e58",
-      "lockSha256": "732d9bd9658ac1f52841d0b486525fdc934751f122476d2051ee6f5fcc891240"
+      "archiveSha256": "815a1e90a2cfcb8fc5ac1ad7244c3ae0cc8f65ca8896610af76d4ca289c35268",
+      "lockSha256": "7c94cf797508f46454092fa099cdaf7089087254255cfc968030b98272258978"
     },
     {
       "profile": "optional",
