@@ -483,9 +483,9 @@
     },
     {
       "id": "sesame/reports",
-      "version": "5.0.21",
+      "version": "5.0.22",
       "directory": "reports",
-      "treeDigest": "sha256:e29db15e4ea82fc0b91aa0a100879862fb443d75fcc2032b020eec59b5e4fcdc",
+      "treeDigest": "sha256:c0b375c84a5c6de77d95fe9ecf8ef94c298b72d99b97d106cb6cc6176b3f5abe",
       "files": [
         {
           "path": "LICENSE",
@@ -729,12 +729,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "8182182e532c057bf99e66ec94e768a7c0ead81cb0ad50f15608ee5441d9f8d8",
+          "sha256": "79abb6ac5c2c1df309ed0089c982556cfe7d9d0fb140a189d7f1f45be9f7870e",
           "bytes": 121
         },
         {
           "path": "plugin.json",
-          "sha256": "89ec71726c10f67206cdaf47b8006f340c149e482168c888b1035e90fd45f061",
+          "sha256": "e24c2b288a429344defaa6341665f96f7be69587a7e890be4bf43f4477c0b5f5",
           "bytes": 3559
         },
         {

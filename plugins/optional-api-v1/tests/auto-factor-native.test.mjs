@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { mkdtemp, writeFile, rm, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { fileURLToPath } from 'node:url';
 import { nativePlan, prepareNative } from '../packages/auto-factor-mining/native-plan.js';
 import { executeNative, chooseParameters } from '../packages/auto-factor-mining/native-validation.js';
 import { applicability } from '../packages/auto-factor-mining/conditional-use.js';
@@ -16,12 +19,12 @@ const request = () => ({ engine: 'backtrader', reason: 'Explicit test-only autho
   development: { data: ref('development'), start: day(1), end: day(5) }, holdout: { data: ref('holdout'), start: day(5), end: day(9) },
   config: { capital: '100', commission: '0', slippage: '0', feed: { timeframe: 'days', compression: 1 } },
   search: { mode: 'auto', parameterSpace: { period: [2, 3] }, objective: { metric: 'finalEquity', direction: 'max' } } });
-async function setup(t, { run, rows: overrides } = {}) {
+async function setup(t, { run, rows: overrides, engine = 'backtrader' } = {}) {
   const directory = await mkdtemp(join(tmpdir(), 'factor-native-boundary-')); t.after(() => rm(directory, { recursive: true, force: true }));
   await writeFile(join(directory, 'strategy.py'), '# authored frozen fixture\nclass Test: pass\n');
-  const capabilities = ['backtrader_environment', 'backtrader_backtest', 'backtrader_optimize', 'backtrader_operation'].map(id => ({ id, consumers: ['host', 'agent'] }));
+  const capabilities = ['environment', 'backtest', 'optimize', 'operation'].map(tool => ({ id: `${engine}_${tool}`, consumers: ['host', 'agent'] }));
   const calls = [], operations = new Map();
-  const host = { context: { workspaceRoot: directory }, plugins: { read: () => ({ id: 'sesame/backtrader', version: '2.1.0', revision: 'fixture-engine', capabilities }), setEnabled: async () => {} },
+  const host = { context: { workspaceRoot: directory }, plugins: { read: () => ({ id: `sesame/${engine}`, version: '2.1.0', revision: 'fixture-engine', capabilities }), setEnabled: async () => {} },
     resources: { async read(selected, options) {
       const rows = overrides?.[selected.id] ?? [selected.id === 'development' ? 1 : 5, selected.id === 'development' ? 4 : 8].map(n => ({ datetime: day(n), open: '10', high: '11', low: '9', close: '10', volume: '1' }));
       if (options.part === 'metadata') return { ref: selected, producer: { id: 'fixture/fixed-input' } };
@@ -55,6 +58,130 @@ test('native plan freezes actual source and fixed right-open windows; overlap, e
   assert.equal((await prepareNative(bad.host, plan)).status, 'unavailable');
   const outside = await prepareNative(f.host, { ...plan, strategy: { path: '../no-such-file.py', className: 'Test' } });
   assert.equal(outside.status, 'unavailable');
+});
+
+const vnpyRequest = () => ({ ...request(), engine: 'vnpy', reason: 'Explicit synthetic fixed-history warmup test; no performance evidence',
+  development: { data: ref('development'), start: day(1), tradingStart: day(3), end: day(7) },
+  holdout: { data: ref('holdout'), start: day(7), tradingStart: day(9), end: day(13) },
+  config: { vt_symbol: 'DEMO.LOCAL', interval: 'd', capital: '10000', rate: '0.001', slippage: '0', size: '1', pricetick: '1' },
+  search: { mode: 'none' } });
+const vnpyRows = () => Object.fromEntries([['development', 1], ['holdout', 7]].map(([key, first]) => [key,
+  Array.from({ length: 6 }, (_, i) => ({ datetime: day(first + i), open: String(100 + i), high: String(102 + i), low: String(99 + i), close: String(101 + i), volume: '10' }))]));
+
+test('vnpy freezes distinct warmup and trading ranges for every group and independent holdout', async t => {
+  const f = await setup(t, { engine: 'vnpy', rows: vnpyRows() }), value = vnpyRequest();
+  value.search = { mode: 'groups', groups: [2, 3].map(period => ({ id: `period-${period}`, hypothesis: `Predeclared period ${period}`, parameters: { period } })), objective: { metric: 'finalEquity', direction: 'max' } };
+  const plan = nativePlan(value), state = await prepareNative(f.host, plan);
+  assert.equal(state.status, 'pending');
+  for (const [which, first] of [['development', 1], ['holdout', 7]]) {
+    assert.deepEqual(state.windows[which], { start: day(first), end: day(first + 6), rowCount: 6, first: day(first), last: day(first + 5), provenance: { kind: 'demo' },
+      warmup: { start: day(first), end: day(first + 2), rowCount: 2, first: day(first), last: day(first + 1) },
+      trading: { start: day(first + 2), end: day(first + 6), rowCount: 4, first: day(first + 2), last: day(first + 5) } });
+  }
+  const changed = structuredClone(plan); changed.development.tradingStart = day(4);
+  await assert.rejects(execute(f, changed, state), { code: 'NATIVE_PLAN_CHANGED' }); assert.equal(f.calls.length, 0);
+  const { result } = await execute(f, plan, state); assert.equal(result.status, 'completed');
+  const calls = f.calls.filter(call => call.id.endsWith('_backtest'));
+  assert.deepEqual(calls.map(call => [call.args.data.id, call.args.config.start, call.args.config.end]), [
+    ['development', day(3), day(6)], ['development', day(3), day(6)], ['holdout', day(9), day(12)]
+  ]);
+  assert.deepEqual(calls[0].args.data, plan.development.data);
+  assert.deepEqual(calls[2].args.data, plan.holdout.data);
+  const noWarmup = vnpyRequest(); delete noWarmup.development.tradingStart; delete noWarmup.holdout.tradingStart;
+  const ordinary = nativePlan(noWarmup), ordinaryState = await prepareNative(f.host, ordinary);
+  assert.equal(ordinaryState.windows.development.warmup.rowCount, 0);
+  assert.equal(ordinaryState.windows.development.trading.rowCount, 6);
+  await execute(f, ordinary, ordinaryState);
+  assert.equal(f.calls.filter(call => call.id.endsWith('_backtest'))[3].args.config.start, day(1));
+});
+
+test('vnpy tradingStart cannot override input boundaries or become a free-form engine config', () => {
+  for (const at of [day(0), day(7), '2025-01-03T00:00:00', 'not-a-date']) {
+    const value = vnpyRequest(); value.development.tradingStart = at;
+    assert.throws(() => nativePlan(value), { code: 'INVALID_NATIVE_PLAN' });
+  }
+  for (const value of [request(), mt5Request()]) {
+    value.development.tradingStart = day(3);
+    assert.throws(() => nativePlan(value), /development has unknown fields/);
+  }
+  for (const field of ['start', 'end']) {
+    const value = vnpyRequest(); value.config[field] = day(3);
+    assert.throws(() => nativePlan(value), /controlled by the frozen plan/);
+  }
+  const overlapping = vnpyRequest(); overlapping.holdout.start = day(6);
+  assert.throws(() => nativePlan(overlapping), /Holdout/);
+  const offset = vnpyRequest(); offset.development.tradingStart = '2025-01-02T19:00:00-05:00';
+  assert.equal(nativePlan(offset).development.tradingStart, offset.development.tradingStart);
+});
+
+test('vnpy rejects fewer than two trading bars and out-of-window history without clipping or borrowing development rows', async t => {
+  for (const at of [day(6), '2025-01-06T12:00:00Z']) {
+    const value = vnpyRequest(); value.development.tradingStart = at;
+    const f = await setup(t, { engine: 'vnpy', rows: vnpyRows() }), state = await prepareNative(f.host, nativePlan(value));
+    assert.equal(state.status, 'unavailable'); assert.match(state.reason, /at least two supplied bars/); assert.equal(f.calls.length, 0);
+  }
+  for (const [which, at] of [['development', day(0)], ['development', day(7)], ['holdout', day(6)], ['holdout', day(13)]]) {
+    const rows = vnpyRows(); rows[which][at === day(0) || at === day(6) ? 0 : 5].datetime = at;
+    const f = await setup(t, { engine: 'vnpy', rows }), state = await prepareNative(f.host, nativePlan(vnpyRequest()));
+    assert.equal(state.status, 'unavailable'); assert.match(state.reason, /Every supplied bar/); assert.equal(f.calls.length, 0);
+  }
+});
+
+test('vnpy controller passes real CtaTemplate.load_bar warmup while orders and metrics stay inside trading windows', { skip: !process.env.SESAME_VNPY_PYTHON, timeout: 120000 }, async t => {
+  // This exercises the unchanged runner and real pinned VeighNa engine through
+  // controller dispatch. The host port and six OHLCV bars per window are fixtures.
+  const strategy = `from datetime import timedelta
+from vnpy_ctastrategy import CtaTemplate
+from vnpy.trader.constant import Interval
+class Test(CtaTemplate):
+    def on_init(self):
+        self.warmup = []
+        self.live = []
+        self.load_bar(2, Interval.DAILY, self.on_warmup)
+        assert len(self.warmup) == 2, self.warmup
+        self.cta_engine.output('WARMUP ' + ','.join(at.isoformat() for at in self.warmup))
+    def on_warmup(self, bar):
+        assert not self.trading
+        assert self.buy(bar.high_price + 1, 1) == []
+        self.warmup.append(bar.datetime)
+    def on_bar(self, bar):
+        assert self.trading
+        assert bar.datetime >= self.warmup[-1] + timedelta(days=1)
+        self.live.append(bar.datetime)
+        self.cancel_all()
+        if len(self.live) == 1:
+            self.buy(bar.high_price + 1, 1)
+        elif len(self.live) == 3 and self.pos > 0:
+            self.sell(bar.low_price - 1, 1)
+    def on_stop(self):
+        assert len(self.live) == 4, self.live
+`;
+  const rows = vnpyRows(), receipts = [], execFileAsync = promisify(execFile);
+  const f = await setup(t, { engine: 'vnpy', rows, run: async ({ args, host }) => {
+    const requestPath = join(host.context.workspaceRoot, `${args.operation_id}.request.json`), resultPath = join(host.context.workspaceRoot, `${args.operation_id}.result.json`);
+    await writeFile(requestPath, JSON.stringify({ ...args, rows: rows[args.data.id] }));
+    try {
+      await execFileAsync(process.env.SESAME_VNPY_PYTHON, ['-I', '-B', fileURLToPath(new URL('../packages/vnpy/runner.py', import.meta.url)), requestPath, resultPath], { cwd: host.context.workspaceRoot, timeout: 30000 });
+    } catch (error) { if (error.code !== 1) throw error; }
+    const receipt = JSON.parse(await readFile(resultPath, 'utf8')); receipts.push(receipt); return receipt;
+  } });
+  await writeFile(join(f.directory, 'strategy.py'), strategy);
+  const plan = nativePlan(vnpyRequest()), state = await prepareNative(f.host, plan), { result } = await execute(f, plan, state);
+  assert.equal(result.status, 'completed', JSON.stringify(result)); assert.equal(receipts.length, 2);
+  for (const [index, first] of [1, 7].entries()) {
+    const receipt = receipts[index];
+    assert.equal(receipt.engine.vnpy, '4.5.0'); assert.equal(receipt.engine.vnpy_ctastrategy, '1.4.1');
+    assert.equal(receipt.processedBars, 4); assert.equal(receipt.daily.length, 4); assert.equal(receipt.trades.length, 2); assert.equal(receipt.orders.length, 2);
+    assert.ok(receipt.logs.some(line => line.includes(`WARMUP ${day(first).replace('.000Z', '+00:00')},${day(first + 1).replace('.000Z', '+00:00')}`)));
+    assert.deepEqual(receipt.daily.map(row => row.date), Array.from({ length: 4 }, (_, i) => day(first + i + 2).slice(0, 10)));
+    for (const record of [...receipt.trades, ...receipt.orders]) assert.ok(Date.parse(record.datetime) >= Date.parse(day(first + 2)) && Date.parse(record.datetime) < Date.parse(day(first + 6)));
+  }
+  const insufficient = vnpyRequest(); insufficient.development.tradingStart = day(2);
+  const missingPlan = nativePlan(insufficient), missingState = await prepareNative(f.host, missingPlan);
+  assert.equal(missingState.status, 'pending');
+  const failed = await execute(f, missingPlan, missingState);
+  assert.equal(failed.result.status, 'failed'); assert.equal(failed.result.holdout, undefined);
+  assert.equal(receipts.length, 3); assert.equal(receipts[2].status, 'failed'); assert.match(receipts[2].error.message, /does not cover requested warmup/);
 });
 
 test('real-shaped native results freeze parameters before holdout and exact repetition reuses all original results', async t => {

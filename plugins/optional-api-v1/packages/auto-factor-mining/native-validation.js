@@ -148,7 +148,7 @@ export async function executeNative(host, { runId, plan, state: initial, factorS
       const window = plan[which];
       if (plan.engine === 'mt5') return { action: 'start', build_id: plan.strategy.buildId, config: { ...plan.config, from_date: window.start, to_date: window.end, parameters } };
       return { title: `${runId} native ${which}`, strategy_path: sourcePath, class_name: plan.strategy.className, data: window.data,
-        config: { ...plan.config, ...(plan.engine === 'vnpy' ? { start: state.windows[which].first, end: state.windows[which].last } : {}) },
+        config: { ...plan.config, ...(plan.engine === 'vnpy' ? { start: window.tradingStart ?? state.windows[which].first, end: state.windows[which].last } : {}) },
         parameters, ...(plan.columns ? { columns: plan.columns } : {}), ...(plan.timeout ? { timeout: plan.timeout } : {}) };
     };
     const summarize = (value, parameters, group) => {

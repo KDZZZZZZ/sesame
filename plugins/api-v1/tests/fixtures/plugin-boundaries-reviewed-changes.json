@@ -13,7 +13,7 @@
     {
       "pluginId": "sesame/auto-factor-mining",
       "before": "1.1.0",
-      "after": "1.4.8"
+      "after": "1.4.9"
     },
     {
       "pluginId": "sesame/backtrader",
@@ -93,7 +93,7 @@
     {
       "pluginId": "sesame/reports",
       "before": "3.0.0",
-      "after": "5.0.21"
+      "after": "5.0.22"
     },
     {
       "pluginId": "sesame/trading-decision",
@@ -182,9 +182,9 @@
       "sourcePath": "plugins/optional-api-v1/packages/auto-factor-mining",
       "component": "capability:auto_factor_start",
       "beforeDigest": "sha256:ac91e211a68d1808d23e239147a97855fdddcaeeffa0c8e6dcf5ccf6b2c0fb76",
-      "afterDigest": "sha256:00e5b54f6fa59d481c1bae376edc5d1df870117256ea13a0d8d42f5904bf7447",
+      "afterDigest": "sha256:ffef41e2f764a7c7bf5d81e93639abe4c066963485da5faf98793a3b98837965",
       "decision": "approved",
-      "reason": "用户要求可选原生回测/优化与条件使用。已审查冻结计划、开发/留出边界、原生控制器调用范围与 process.execute 调用链要求；研究 Agent 无原生调用授权，保留实际状态、完整检验与恢复回执。",
+      "reason": "用户要求可选原生回测/优化与条件使用。已审查冻结计划、开发/留出边界、原生控制器调用范围与 process.execute 调用链要求；研究 Agent 无原生调用授权，保留实际状态、完整检验与恢复回执。 补充审查：vnpy 的 tradingStart 只在各自固定输入窗口内划分预热和交易，不扩大开发/留出边界；两处输入说明同步，实际引擎回归验证预热不下单且交易统计不含前缀。",
       "deltas": [
         {
           "path": "/description",
@@ -248,10 +248,12 @@
               },
               "development": {
                 "type": "object",
+                "description": "Frozen input [start,end) window. vnpy alone also accepts tradingStart inside that window: preceding supplied bars are available for warmup, with at least two bars at or after tradingStart. See references/native-validation.md.",
                 "additionalProperties": true
               },
               "holdout": {
                 "type": "object",
+                "description": "Independent frozen input [start,end) window at or after development.end, including its own optional vnpy tradingStart and warmup prefix. Warmup does not permit overlapping input windows.",
                 "additionalProperties": true
               },
               "strategy": {

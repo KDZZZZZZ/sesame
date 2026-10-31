@@ -27,6 +27,8 @@ config.nativeValidation = {
 
 Python 数据为固定 json-rows OHLCV，时间明确 UTC/offset；每根柱必须严格递增，全部落在所声明左闭右开 `[start,end)`，开发与留出不能重叠。时间列可用 `columns.datetime` 指定，不对未知时间做转换，不填缺失值。输入不隐式裁剪；vnpy 原生 end 为 inclusive，适配器传窗口内最后一根实际 bar 的时间，避免把右端点混入。成本、合约、日历、时段、粒度和成交规则来自明确引擎 config/strategyValidation，收益不能脱离它们解读。
 
+vnpy 需要 `CtaTemplate.load_bar(...)` 预热时，在每个窗口声明可选 `tradingStart`，例如 `development:{data:developmentRef,start:'2025-01-01T00:00:00Z',tradingStart:'2025-01-03T00:00:00Z',end:'2025-02-01T00:00:00Z'}`。它必须是该窗口 `[start,end)` 内的 UTC/offset 时间；`start` 仍限制全部输入，`[start,tradingStart)` 的固定柱仅供预热，`[tradingStart,end)` 至少包含两根实际交易柱，只有此段进入原生交易和收益统计。所有参数组使用同一冻结起点，留出使用自身窗口内的前缀，不能借预热扩大输入边界或重叠开发数据。省略时保留从首根输入柱交易的行为，没有自动补入预热。原生引擎仍检查策略请求的预热天数是否完整覆盖，缺数据如实失败；不读取外部历史、不伪造或重复柱。回执 `windows` 保留全部输入范围及实际首末柱、行数，并分别记录 `warmup` 可用输入和 `trading` 区间；`warmup` 不代表策略实际消费了所有前缀柱。`config.start/end` 仍不允许覆盖这些冻结边界，其他引擎不接受 `tradingStart`。
+
 MT5 用 `strategy:{buildId:<实际编译成功的冻结build>}`，development/holdout 改为 `{start:'YYYY-MM-DD',end:'YYYY-MM-DD',authority:'实际broker墙钟依据'}`；config 使用 mt5_backtest 的 symbol/period/deposit/currency/leverage/model 字段，不再放 from_date/to_date/parameters。MT5 使用其原生行情库，故不能提供一个并未被 Tester 消费的 DataRef 冒充固定行情绑定；日期范围和构建/连接/原生成交回执保留，PIT 行情快照保障明确不提供。工作流不读取或导入凭据，也不连接/控制实盘交易。
 
 MT5 原生 optimizer 的 `search` 使用 `{mode:'auto',nativeOptimizer,objective?}`，不再传第二份 parameterSpace。`nativeOptimizer` 必须含实际 catalog 的 `inputSchema` 和精确 `arguments`；工作流每次执行/恢复重新对照本机公布 schema，只调用 `mt5_test` 的 `server:'terminal',tool:'tester_run_optimization'`。这是唯一允许启动的透明原生优化方法，不开放任意 native 工具名。schema 和原始参数摘要随回执保存。

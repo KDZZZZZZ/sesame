@@ -2,7 +2,7 @@
   "id": "sesame/reports",
   "title": "交互报告",
   "description": "宿主选择报告提供者，本插件定义通用内容并生成统一蓝灰无框排版。保留内置图表、公式、末尾证据附录与用户样式；分析方法独立。",
-  "version": "5.0.21",
+  "version": "5.0.22",
   "default_state": "mounted",
   "prompts": [
     "prompt.md"

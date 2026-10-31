@@ -1,6 +1,6 @@
 {
   "name": "@sesame/auto-factor-mining",
-  "version": "1.4.8",
+  "version": "1.4.9",
   "type": "module",
   "license": "MIT",
   "scripts": {

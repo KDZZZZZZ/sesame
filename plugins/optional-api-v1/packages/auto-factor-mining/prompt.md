@@ -14,6 +14,8 @@
 
 显式config.nativeValidation可实际执行冻结源码/构建的Backtrader、vnpy或MT5回测。先按用户选择和预期交易平台选引擎；所选引擎有原生优化器则优先，Backtrader使用真实optstrategy，MT5仅对当前catalog公布的tester_run_optimization做精确schema和参数绑定，不把MT5宿主管理网格称为原生优化。缺少已声明接口或必要绑定时保留unavailable；无法核验原生配置窗口或完整pass时保留实际回执，但不自动选参或运行holdout。开发搜索按预先目标选参并持久化，再运行独立holdout；未知先读同op收据，不重发。研究Agent全部结束且因子选择/最终评价完成后才运行，本机原生代码不继承因子sealed保证。具体schema见已声明references/native-validation.md。未配置原生验证不阻断因子研究。
 
+vnpy窗口的start/end固定全部输入边界；需要预热时在该窗口内声明tradingStart，之前的固定柱只用于初始化，从tradingStart起的柱才进入原生交易与收益统计。预热长度由已编写策略的load_bar请求决定，不统一指定；数据不足如实失败。开发和留出各自声明输入与交易起点，全部输入仍不得重叠，不能用config.start/end绕过冻结边界。
+
 核心融合指南自动进入研究成员指令，完整方法、公开 references 与可选 CLI 都已声明在本包 knowledge。CLI 不是注册能力，不替代或重复真实 evaluator。因子研究交付 Strategy，市场/公司投资研究交付 Research。
 
 策略真实回测优先用户指定引擎，其次预期交易平台原生，再次相同数据/合约，必要替代时记录差异；例如预期 MT5 交易优先其原生 Tester，不强制每次因子统计运行 Tester。优先引擎自带 optimizer；有明确假设的特殊参数组可定制并记录全部搜索及失败。开发选优、固定选择和独立验证分离。config.strategyValidation 可保存平台/引擎/来源/合约/日历时段/点差佣金swap/成交规则/粒度及后续请求，属于待执行意图；当前因子 evaluator 不能伪称完整策略回测，缺引擎则保留未完成边界，不自动下单。

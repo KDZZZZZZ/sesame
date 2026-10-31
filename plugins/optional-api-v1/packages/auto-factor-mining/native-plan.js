@@ -10,6 +10,7 @@ const object = value => value && typeof value === 'object' && !Array.isArray(val
 const scalar = value => typeof value === 'boolean' || typeof value === 'number' && Number.isFinite(value) || typeof value === 'string' && value.length <= 1000;
 const exactKeys = (value, keys, name) => check(object(value) && Object.keys(value).every(key => keys.includes(key)), 'INVALID_NATIVE_PLAN', `${name} has unknown fields`);
 const nonempty = value => typeof value === 'string' && value.trim() && value.length <= 4000;
+const instant = value => typeof value === 'string' && /(Z|[+-]\d\d:\d\d)$/.test(value) && Number.isFinite(Date.parse(value));
 export function nativePlan(value, intent = {}) {
   if (value === undefined) return undefined;
   exactKeys(value, ['engine', 'reason', 'development', 'holdout', 'strategy', 'config', 'parameters', 'columns', 'search', 'timeout', 'environment'], 'nativeValidation');
@@ -22,14 +23,16 @@ export function nativePlan(value, intent = {}) {
   check(object(value.config) && object(value.parameters ?? {}), 'INVALID_NATIVE_PLAN', 'Native config and parameters must be objects');
   check(!Object.keys(value.config).some(key => ['from_date', 'to_date', 'start', 'end', 'parameters'].includes(key)), 'INVALID_NATIVE_PLAN', 'Windows and parameters are controlled by the frozen plan, not nested engine config');
   for (const [name, window] of Object.entries({ development: value.development, ...(value.holdout ? { holdout: value.holdout } : {}) })) {
-    exactKeys(window, ['data', 'start', 'end', 'authority'], name);
+    exactKeys(window, ['data', 'start', 'end', 'authority', ...(engine === 'vnpy' ? ['tradingStart'] : [])], name);
     if (engine === 'mt5') {
       check([window.start, window.end].every(at => typeof at === 'string' && /^\d{4}-\d\d-\d\d$/.test(at) && Number.isFinite(Date.parse(at)) && new Date(at).toISOString().slice(0, 10) === at) && nonempty(window.authority), 'INVALID_NATIVE_PLAN', 'MT5 windows need valid broker wall dates and explicit authority; these are not UTC/PIT snapshots');
       check(window.data === undefined, 'INVALID_NATIVE_PLAN', 'MT5 Tester uses its native price store; a supplied DataRef would not bind that store');
     } else {
-      check(dataRef(window.data) && [window.start, window.end].every(at => typeof at === 'string' && /(Z|[+-]\d\d:\d\d)$/.test(at) && Number.isFinite(Date.parse(at))), 'INVALID_NATIVE_PLAN', 'Native Python windows require fixed DataRefs and explicit UTC/offset endpoints');
+      check(dataRef(window.data) && [window.start, window.end].every(instant), 'INVALID_NATIVE_PLAN', 'Native Python windows require fixed DataRefs and explicit UTC/offset endpoints');
     }
     check(Date.parse(window.start) < Date.parse(window.end), 'INVALID_NATIVE_PLAN', 'Windows are nonempty [start,end)');
+    check(window.tradingStart === undefined || instant(window.tradingStart) && Date.parse(window.start) <= Date.parse(window.tradingStart) && Date.parse(window.tradingStart) < Date.parse(window.end),
+      'INVALID_NATIVE_PLAN', 'vnpy tradingStart must be an explicit UTC/offset instant inside its fixed input [start,end) window');
   }
   check(!value.holdout || Date.parse(value.development.end) <= Date.parse(value.holdout.start), 'INVALID_NATIVE_PLAN', 'Holdout must start at or after the right-open development end');
   check(engine !== 'mt5' || !value.holdout || value.holdout.authority === value.development.authority, 'INVALID_NATIVE_PLAN', 'MT5 development and holdout must use the same broker wall authority');
@@ -62,7 +65,7 @@ export function nativePlan(value, intent = {}) {
   return plan;
 }
 
-export async function checkWindow(host, window, columns, signal) {
+export async function checkWindow(host, window, columns, signal, engine) {
   const { manifest } = await checkedArtifact(host, window.data);
   check(['observed', 'demo', 'derived', 'user_input'].includes(manifest.content.provenance?.kind), 'INVALID_NATIVE_INPUT', 'Native input must retain actual provenance');
   const rows = await readRows(host, window.data, { manifest, signal, maxBytes: 16 * 1024 * 1024 });
@@ -75,7 +78,16 @@ export async function checkWindow(host, window, columns, signal) {
     return at;
   });
   check(times.every((at, i) => !i || at > times[i - 1]), 'INVALID_NATIVE_INPUT', 'Native bar timestamps must strictly increase');
-  return { rowCount: rows.length, first: new Date(times[0]).toISOString(), last: new Date(times.at(-1)).toISOString(), provenance: manifest.content.provenance };
+  const range = values => ({ rowCount: values.length, first: values.length ? new Date(values[0]).toISOString() : null, last: values.length ? new Date(values.at(-1)).toISOString() : null });
+  const evidence = { start: new Date(window.start).toISOString(), end: new Date(window.end).toISOString(), ...range(times), provenance: manifest.content.provenance };
+  if (engine !== 'vnpy') return evidence;
+  const tradingStart = Date.parse(window.tradingStart ?? evidence.first);
+  const warmup = times.filter(at => at < tradingStart), trading = times.filter(at => at >= tradingStart);
+  check(trading.length >= 2, 'INVALID_NATIVE_INPUT', 'vnpy trading window requires at least two supplied bars at or after tradingStart');
+  const start = new Date(tradingStart).toISOString();
+  return { ...evidence,
+    warmup: { start: evidence.start, end: start, ...range(warmup) },
+    trading: { start, end: evidence.end, ...range(trading) } };
 }
 
 export async function prepareNative(host, plan, signal) {
@@ -99,7 +111,7 @@ export async function prepareNative(host, plan, signal) {
       } finally { await handle.close(); }
       signal?.throwIfAborted();
       base.source = new TextDecoder('utf-8', { fatal: true }).decode(bytes); base.sourceDigest = digest(base.source);
-      base.windows = { development: await checkWindow(host, plan.development, plan.columns, signal), ...(plan.holdout ? { holdout: await checkWindow(host, plan.holdout, plan.columns, signal) } : {}) };
+      base.windows = { development: await checkWindow(host, plan.development, plan.columns, signal, plan.engine), ...(plan.holdout ? { holdout: await checkWindow(host, plan.holdout, plan.columns, signal, plan.engine) } : {}) };
     }
     return base;
   } catch (error) {

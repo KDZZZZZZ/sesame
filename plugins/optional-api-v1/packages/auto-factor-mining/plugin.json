@@ -1,7 +1,7 @@
 {
   "id": "sesame/auto-factor-mining",
   "apiVersion": "2",
-  "version": "1.4.8",
+  "version": "1.4.9",
   "title": "因子与策略研究",
   "description": "因子、候选信号与策略研究实验工作流：融合因子/策略证据指南，提供真正单 Agent 和默认多 Agent 模式；实际 evaluator 计算、冻结选择和隔离留出验证，交付 Strategy 报告。统计诊断不代替真实交易规则回测。",
   "author": {

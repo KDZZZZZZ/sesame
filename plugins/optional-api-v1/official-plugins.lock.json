@@ -1484,9 +1484,9 @@
     },
     {
       "id": "sesame/auto-factor-mining",
-      "version": "1.4.8",
+      "version": "1.4.9",
       "directory": "auto-factor-mining",
-      "treeDigest": "sha256:c761bbf8150491bb44acb1b73ac0829de9dd97d0165356c1953c521b69d17f53",
+      "treeDigest": "sha256:9b1cc281565b56749ad5c22bb11ee0a910b40e2c4159ee8e5eb93ee763dc8463",
       "files": [
         {
           "path": "LICENSE",
@@ -1515,8 +1515,8 @@
         },
         {
           "path": "capabilities.json",
-          "sha256": "c39a85ce6011a99edb50d9a2f6f31916bea7f2bc70f17355ae4bececc0654288",
-          "bytes": 64926
+          "sha256": "aaa42f9f6e7702bbe10831106a0c9b8e82656919fcd8f99a55315f8bd95ce776",
+          "bytes": 65415
         },
         {
           "path": "checkpoints.js",
@@ -1600,28 +1600,28 @@
         },
         {
           "path": "native-plan.js",
-          "sha256": "b6b7523f8b9e5b13ffefabd916be6f20e2639cc3518d3102c5daf07c4277e353",
-          "bytes": 11393
+          "sha256": "4c33b116cd82d913c0826035990b6d3d2a17f7bdb52b3d1bafe3bfd319c89017",
+          "bytes": 12610
         },
         {
           "path": "native-validation.js",
-          "sha256": "0afc7ee2ad5aeb1c47e08a31ba4cd6b7b66524e1022d7b257fc1bb32d6fb8e2b",
-          "bytes": 18723
+          "sha256": "dd5f9142883949d2f1aa49eda77052e4c967f3171293170f951f83f5a1b3feea",
+          "bytes": 18746
         },
         {
           "path": "package.json",
-          "sha256": "1c96cfeefe1f36cd438ff9b9fcb1c00770d57d33f96aa1f90246363a9563bf64",
+          "sha256": "44c3d31bf462277565795b8c140a67d3d04652f0e380d3f325bd86e5beb374ee",
           "bytes": 204
         },
         {
           "path": "plugin.json",
-          "sha256": "91606299c43dba4f6ed2808106b1a88b9e4346ebfb157b7825681cb98479413b",
+          "sha256": "d472697206b7f1bdb8825a70f51fbdd48f21ba41d09e59012ffe33fe29b80136",
           "bytes": 1085
         },
         {
           "path": "prompt.md",
-          "sha256": "f7edefdb0f88444cc53e7d6071f7305945e4d395e28387d3572518a353562eb0",
-          "bytes": 14126
+          "sha256": "3fd5945172d93d11e5f2df71ea1f85acf7d85e4d04ffc92e9f69f3e4d4d14b6c",
+          "bytes": 14558
         },
         {
           "path": "references/factor-cli.md",
@@ -1635,8 +1635,8 @@
         },
         {
           "path": "references/native-validation.md",
-          "sha256": "2683abff953239bdb964f4699ca5e5dbb398002decc68f84f5cdd6f97e168346",
-          "bytes": 9864
+          "sha256": "5c46185deda222759f84afdb416589e076029050187f0dee845fa7ca1fcaa885",
+          "bytes": 10992
         },
         {
           "path": "references/research-guide.md",

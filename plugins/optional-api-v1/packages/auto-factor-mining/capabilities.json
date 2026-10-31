@@ -618,10 +618,12 @@
                   },
                   "development": {
                     "type": "object",
+                    "description": "Frozen input [start,end) window. vnpy alone also accepts tradingStart inside that window: preceding supplied bars are available for warmup, with at least two bars at or after tradingStart. See references/native-validation.md.",
                     "additionalProperties": true
                   },
                   "holdout": {
                     "type": "object",
+                    "description": "Independent frozen input [start,end) window at or after development.end, including its own optional vnpy tradingStart and warmup prefix. Warmup does not permit overlapping input windows.",
                     "additionalProperties": true
                   },
                   "strategy": {
