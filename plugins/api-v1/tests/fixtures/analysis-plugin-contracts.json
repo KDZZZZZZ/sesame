@@ -1,0 +1,914 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Frozen before professional-capability architecture alignment on 2026-10-19. Full canonical manifest and capability digests preserve interfaces, grants, state, configuration and resource declarations.",
+  "packages": [
+    {
+      "id": "sesame/abu-backtest-lab",
+      "sourcePath": "plugins/optional-api-v1/packages/abu-backtest-lab",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:06e09e33230f7868b3f442890c6ff6d59ddfe0ed9ea52b76bc3a2ceec939a352",
+      "declarationDigest": "sha256:c7d8d5afbb439bbb5fd694cdf4b85aa56cd8342a812544be42a57d9b581a917a",
+      "capabilityIds": [
+        "abu_backtest_lab_analyze"
+      ],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/input.json",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "scripts/baseline.mjs",
+        "scripts/runtime.mjs",
+        "skills/abu-backtest-lab/SKILL.md",
+        "skills/abu-backtest-lab/references/method.md",
+        "tests/baseline.test.mjs"
+      ]
+    },
+    {
+      "id": "sesame/abu-breakout",
+      "sourcePath": "plugins/optional-api-v1/packages/abu-breakout",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:7dc344689659ff8e5b99023b2af09b6167c30ee87947b84f9f46f581e27d0418",
+      "declarationDigest": "sha256:95a4bcc87665eeeb7e84e8542ee455e0601a0a2db680fbc65b84a7e74ba50a75",
+      "capabilityIds": [
+        "abu_breakout_analyze"
+      ],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/input.json",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "scripts/baseline.mjs",
+        "scripts/runtime.mjs",
+        "skills/abu-breakout/SKILL.md",
+        "skills/abu-breakout/references/method.md",
+        "tests/baseline.test.mjs"
+      ]
+    },
+    {
+      "id": "sesame/abu-exit-rules",
+      "sourcePath": "plugins/optional-api-v1/packages/abu-exit-rules",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:56e37f741b71ae9ab515403458cfc0ac4ab355265f004f20c1e45ccf5b1a245b",
+      "declarationDigest": "sha256:f3b85abd4a1f59f16a72bf7c98942d16006f2e5411d5b8c3eb2754aeb488a789",
+      "capabilityIds": [
+        "abu_exit_rules_analyze"
+      ],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/input.json",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "scripts/baseline.mjs",
+        "scripts/runtime.mjs",
+        "skills/abu-exit-rules/SKILL.md",
+        "skills/abu-exit-rules/references/method.md",
+        "tests/baseline.test.mjs"
+      ]
+    },
+    {
+      "id": "sesame/abu-indicators",
+      "sourcePath": "plugins/optional-api-v1/packages/abu-indicators",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:527870fab8fa4be72fc854834676c5179507ca228883d7d893eb58009bfdf30a",
+      "declarationDigest": "sha256:35b241ca235cbcec2300b419cb25e18939a71c113cbad320dee5e1b540a9e073",
+      "capabilityIds": [
+        "abu_indicators_analyze"
+      ],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/input.json",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "scripts/baseline.mjs",
+        "scripts/runtime.mjs",
+        "skills/abu-indicators/SKILL.md",
+        "skills/abu-indicators/references/method.md",
+        "tests/baseline.test.mjs"
+      ]
+    },
+    {
+      "id": "sesame/abu-ml-features",
+      "sourcePath": "plugins/optional-api-v1/packages/abu-ml-features",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:4784b891f0443af5705803322964643592158be1a5db1acc2637c27720fe2e30",
+      "declarationDigest": "sha256:c4835a2c6764f095379d68cb3c5835fa924be4b287b0f4abc96e1ee554f3fa87",
+      "capabilityIds": [
+        "abu_ml_features_analyze"
+      ],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/input.json",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "scripts/baseline.mjs",
+        "scripts/runtime.mjs",
+        "skills/abu-ml-features/SKILL.md",
+        "skills/abu-ml-features/references/method.md",
+        "tests/baseline.test.mjs"
+      ]
+    },
+    {
+      "id": "sesame/abu-model-lab",
+      "sourcePath": "plugins/optional-api-v1/packages/abu-model-lab",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:234c0c62e4a18131ca93d7b67c4d873227d0f9385ffe86ca684e5fb548141fba",
+      "declarationDigest": "sha256:adede0d0546f7f059d9c066ff6ed792e9cdbd4dc8e73f8e0cf9e3cb82b2ab6fb",
+      "capabilityIds": [
+        "abu_model_lab_analyze"
+      ],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/input.json",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "scripts/baseline.mjs",
+        "scripts/runtime.mjs",
+        "skills/abu-model-lab/SKILL.md",
+        "skills/abu-model-lab/references/method.md",
+        "tests/baseline.test.mjs"
+      ]
+    },
+    {
+      "id": "sesame/abu-moving-average",
+      "sourcePath": "plugins/optional-api-v1/packages/abu-moving-average",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:1ec348d9a509714ea487d38fce55ad514ca99c39bbf9f7114d5766974f6c73ac",
+      "declarationDigest": "sha256:e9bced3c01861230d338a707e8fa7a40c0efef3802dadecba76fb5ed6700762a",
+      "capabilityIds": [
+        "abu_moving_average_analyze"
+      ],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/input.json",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "scripts/baseline.mjs",
+        "scripts/runtime.mjs",
+        "skills/abu-moving-average/SKILL.md",
+        "skills/abu-moving-average/references/method.md",
+        "tests/baseline.test.mjs"
+      ]
+    },
+    {
+      "id": "sesame/abu-parameter-search",
+      "sourcePath": "plugins/optional-api-v1/packages/abu-parameter-search",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:9fd75fd748f91f93a6ed9894cfe0155e4f1414333d8c6f530266a1d75c499b35",
+      "declarationDigest": "sha256:ba6f914796b286820634bc4e4a85bd8f3efa98b5003e159cd548c52184abc968",
+      "capabilityIds": [
+        "abu_parameter_search_analyze"
+      ],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/development.json",
+        "examples/input.json",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "scripts/baseline.mjs",
+        "scripts/runtime.mjs",
+        "skills/abu-parameter-search/SKILL.md",
+        "skills/abu-parameter-search/references/method.md",
+        "tests/baseline.test.mjs"
+      ]
+    },
+    {
+      "id": "sesame/abu-position-sizing",
+      "sourcePath": "plugins/optional-api-v1/packages/abu-position-sizing",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:7aa4a9b2a8c8e8c15a71b18ff0f503c998be38307946a0cc36f04667a2abd87d",
+      "declarationDigest": "sha256:43d7bfac0cd4bb200685b435ddb9214c3b1fb5baf06ebd4048d9130d1fbb2290",
+      "capabilityIds": [
+        "abu_position_sizing_analyze"
+      ],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/input.json",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "scripts/baseline.mjs",
+        "scripts/runtime.mjs",
+        "skills/abu-position-sizing/SKILL.md",
+        "skills/abu-position-sizing/references/method.md",
+        "tests/baseline.test.mjs"
+      ]
+    },
+    {
+      "id": "sesame/abu-price-structure",
+      "sourcePath": "plugins/optional-api-v1/packages/abu-price-structure",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:818a5e3dda4ddca208bc2cbfae7c9e1a3f4a50297432f109be3c69744cbb0aae",
+      "declarationDigest": "sha256:3a7b4f90e0ac1ac4012f25eb5e6022a503f2d4e145aa728f4a1c1c387ae1dd37",
+      "capabilityIds": [
+        "abu_price_structure_analyze"
+      ],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/input.json",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "scripts/baseline.mjs",
+        "scripts/runtime.mjs",
+        "skills/abu-price-structure/SKILL.md",
+        "skills/abu-price-structure/references/method.md",
+        "tests/baseline.test.mjs"
+      ]
+    },
+    {
+      "id": "sesame/abu-seasonality",
+      "sourcePath": "plugins/optional-api-v1/packages/abu-seasonality",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:266ff4b6dffa83523e2892aae8d7a51f3d634191b192bfa4f463f66457706ffa",
+      "declarationDigest": "sha256:25c1d271eff0a9954ba10ad81c2a70160363884badc9856bdbecf98f0091014b",
+      "capabilityIds": [
+        "abu_seasonality_analyze"
+      ],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/input.json",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "scripts/baseline.mjs",
+        "scripts/runtime.mjs",
+        "skills/abu-seasonality/SKILL.md",
+        "skills/abu-seasonality/references/method.md",
+        "tests/baseline.test.mjs"
+      ]
+    },
+    {
+      "id": "sesame/abu-similarity",
+      "sourcePath": "plugins/optional-api-v1/packages/abu-similarity",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:f28458fb338cf42d2d28ac3c88247eefa1b95ade03b3a04543a4f48e3b4d188f",
+      "declarationDigest": "sha256:5e26e0c14e8fad50229dc7bbed9276401b2ec48a036c4b0bfd416b11ef4c357a",
+      "capabilityIds": [
+        "abu_similarity_analyze"
+      ],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/input.json",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "scripts/baseline.mjs",
+        "scripts/runtime.mjs",
+        "skills/abu-similarity/SKILL.md",
+        "skills/abu-similarity/references/method.md",
+        "tests/baseline.test.mjs"
+      ]
+    },
+    {
+      "id": "sesame/abu-stock-screening",
+      "sourcePath": "plugins/optional-api-v1/packages/abu-stock-screening",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:839647dc472ee34658dca53c1ce0747c09238452d07d645cc03d91d757d9fb72",
+      "declarationDigest": "sha256:fdec81b5f771fe70efe65b640bc6b6e718a3a6718a85586161633b6d0e96535d",
+      "capabilityIds": [
+        "abu_stock_screening_analyze"
+      ],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/input.json",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "scripts/baseline.mjs",
+        "scripts/runtime.mjs",
+        "skills/abu-stock-screening/SKILL.md",
+        "skills/abu-stock-screening/references/method.md",
+        "tests/baseline.test.mjs"
+      ]
+    },
+    {
+      "id": "sesame/abu-trade-judges",
+      "sourcePath": "plugins/optional-api-v1/packages/abu-trade-judges",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:5acbd74882d44cb166b4b7f2dff78d9d836bd9548cd51015878b4ba7622adb86",
+      "declarationDigest": "sha256:5936e7d0a8f4e62edba872c5552d35e5d038f51297d8b44d2c15994dae57d32c",
+      "capabilityIds": [
+        "abu_trade_judges_analyze"
+      ],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/input.json",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "scripts/baseline.mjs",
+        "scripts/runtime.mjs",
+        "skills/abu-trade-judges/SKILL.md",
+        "skills/abu-trade-judges/references/method.md",
+        "tests/baseline.test.mjs"
+      ]
+    },
+    {
+      "id": "sesame/abu-trade-metrics",
+      "sourcePath": "plugins/optional-api-v1/packages/abu-trade-metrics",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:85b1a1429693c759f4388d3e68570129e51a30c01203b5fd068b012c9fb1cb79",
+      "declarationDigest": "sha256:924ecaae9c013a373ee89de422a3d8b097655b739bb0b80b36727ccecbb5a030",
+      "capabilityIds": [
+        "abu_trade_metrics_analyze"
+      ],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/input.json",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "scripts/baseline.mjs",
+        "scripts/runtime.mjs",
+        "skills/abu-trade-metrics/SKILL.md",
+        "skills/abu-trade-metrics/references/method.md",
+        "tests/baseline.test.mjs"
+      ]
+    },
+    {
+      "id": "sesame/abu-trend",
+      "sourcePath": "plugins/optional-api-v1/packages/abu-trend",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:2039e44af40e9bf3c663c0e1399543e4ca7ba79aeac6c0622a72a00661ee93b7",
+      "declarationDigest": "sha256:66c01134aab8a49303e623eaae92308be5c598378f393ecbf7d96af666abedd2",
+      "capabilityIds": [
+        "abu_trend_analyze"
+      ],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/input.json",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "scripts/baseline.mjs",
+        "scripts/runtime.mjs",
+        "skills/abu-trend/SKILL.md",
+        "skills/abu-trend/references/method.md",
+        "tests/baseline.test.mjs"
+      ]
+    },
+    {
+      "id": "sesame/abu-trend-pullback",
+      "sourcePath": "plugins/optional-api-v1/packages/abu-trend-pullback",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:7daab43eac048d7621f17279f7c20c23ce5469ffdb320f9b8343bfabc0a8c4cd",
+      "declarationDigest": "sha256:6bce5573426546189e5bd80a9bd52a5feb7ac44764244ee10d558bf46991f58c",
+      "capabilityIds": [
+        "abu_trend_pullback_analyze"
+      ],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/input.json",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "scripts/baseline.mjs",
+        "scripts/runtime.mjs",
+        "skills/abu-trend-pullback/SKILL.md",
+        "skills/abu-trend-pullback/references/method.md",
+        "tests/baseline.test.mjs"
+      ]
+    },
+    {
+      "id": "sesame/abu-volatility",
+      "sourcePath": "plugins/optional-api-v1/packages/abu-volatility",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:f83bb1b25622a66aaedb28af99b5dfab8fd9acbfad81e9edb81c7e8cb92d900c",
+      "declarationDigest": "sha256:50e7c05a040bc3f55efeac7c92b4338193e4fb92cd3c109ec89fd2970eaaaac0",
+      "capabilityIds": [
+        "abu_volatility_analyze"
+      ],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/input.json",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "scripts/baseline.mjs",
+        "scripts/runtime.mjs",
+        "skills/abu-volatility/SKILL.md",
+        "skills/abu-volatility/references/method.md",
+        "tests/baseline.test.mjs"
+      ]
+    },
+    {
+      "id": "sesame/behavioral-finance",
+      "sourcePath": "plugins/optional-api-v1/packages/behavioral-finance",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "knowledge"
+      ],
+      "manifestDigest": "sha256:744c75b9265da2b4ea48fc8b45a7db5d1b2e96e5b41c44eb0e65b79a0c8108fd",
+      "declarationDigest": "sha256:655ebd85611885116b9301f8bd747182c7ec7098d03870f5a480bf3e1e263703",
+      "capabilityIds": [],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/case.json",
+        "examples/expected.md",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "skills/behavioral-finance/SKILL.md",
+        "skills/behavioral-finance/references/evidence.md",
+        "skills/behavioral-finance/references/method.md"
+      ]
+    },
+    {
+      "id": "sesame/dow-theory",
+      "sourcePath": "plugins/optional-api-v1/packages/dow-theory",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "knowledge"
+      ],
+      "manifestDigest": "sha256:e584fb5cad9d7e24b4e76b9056f2adecc5382ccece67d6c9eba09f7bb9a46619",
+      "declarationDigest": "sha256:98e638a5b1f6fbf094c2861459b7b02281c6683fef2386394f3c289a3f70386d",
+      "capabilityIds": [],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/case.json",
+        "examples/expected.md",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "skills/dow-theory/SKILL.md",
+        "skills/dow-theory/references/method.md",
+        "skills/dow-theory/references/validation.md"
+      ]
+    },
+    {
+      "id": "sesame/elliott-wave",
+      "sourcePath": "plugins/optional-api-v1/packages/elliott-wave",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "knowledge"
+      ],
+      "manifestDigest": "sha256:4f00017da20e7e57665eed83559c8c03f76ca23c1b17948cf97411455f860a1e",
+      "declarationDigest": "sha256:b27a2038cea2b1e74dbc79aa2b06505eb18f01eeec79d4df04a7c4721a62503a",
+      "capabilityIds": [],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/case.json",
+        "examples/expected.md",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "skills/elliott-wave/SKILL.md",
+        "skills/elliott-wave/references/method.md",
+        "skills/elliott-wave/references/validation.md"
+      ]
+    },
+    {
+      "id": "sesame/factor-evaluator",
+      "sourcePath": "plugins/optional-api-v1/packages/factor-evaluator",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:ff62640e6084b044b4d2ea48f14ad584c7889b6b09523f01ee56c01ee5ac85ea",
+      "declarationDigest": "sha256:53b08d7816ae14bbd7680c5a78c6eea75d9015ab2d8c20223c24757c594053ac",
+      "capabilityIds": [
+        "factor_evaluate"
+      ],
+      "paths": [
+        "LICENSE",
+        "PROTOCOL.md",
+        "README.md",
+        "VALIDATION.md",
+        "capabilities.json",
+        "engine.js",
+        "evaluator.js",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "scripts/reproduce.mjs",
+        "tests/engine.test.js",
+        "tests/protocol.test.js"
+      ]
+    },
+    {
+      "id": "sesame/ict",
+      "sourcePath": "plugins/optional-api-v1/packages/ict",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "knowledge"
+      ],
+      "manifestDigest": "sha256:ea6f1a0b9b0f32679be154d686f544105bcac7cdcf61633ea61caa8c1276aea5",
+      "declarationDigest": "sha256:87d307020867bcc90b451088149d04cc67f413459f52b716fdb64e199bbae7ba",
+      "capabilityIds": [],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/bars.json",
+        "examples/expected.md",
+        "examples/source.json",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "scripts/bar_input.py",
+        "scripts/observe.py",
+        "skills/ict/SKILL.md",
+        "skills/ict/references/execution.md",
+        "skills/ict/references/method.md",
+        "skills/ict/references/validation.md"
+      ]
+    },
+    {
+      "id": "sesame/institutional-analysis",
+      "sourcePath": "plugins/optional-api-v1/packages/institutional-analysis",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "knowledge"
+      ],
+      "manifestDigest": "sha256:c3b20909e4711f7799942cc900687880caa3168e6f7b79bc8457f9a5a6831382",
+      "declarationDigest": "sha256:8e0c419b9839a8611436bb136cf2fbd356559b57632a7bde4070ce2e0521d2f2",
+      "capabilityIds": [],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/case.json",
+        "examples/expected.md",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "skills/institutional-analysis/SKILL.md",
+        "skills/institutional-analysis/references/evidence.md",
+        "skills/institutional-analysis/references/method.md"
+      ]
+    },
+    {
+      "id": "sesame/market-data-parser",
+      "sourcePath": "plugins/optional-api-v1/packages/market-data-parser",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:e07f002256b757a7ed620c344cf2c1dc663a77f0805ee078173ef1289e842c47",
+      "declarationDigest": "sha256:3bfa4902351ea8209d2dff4f3768483fdc8170f8d8d03d2752950b04ccdf8e53",
+      "capabilityIds": [
+        "parse_fx_json",
+        "parse_fx_xml"
+      ],
+      "paths": [
+        "LICENSE",
+        "capabilities.json",
+        "index.js",
+        "package.json",
+        "parser.js",
+        "plugin.json",
+        "sample_fx.json",
+        "sample_fx.xml",
+        "samples.json",
+        "server.py",
+        "skills/market-data-parser/PROVENANCE.md",
+        "skills/market-data-parser/SKILL.md"
+      ]
+    },
+    {
+      "id": "sesame/narrative-analysis",
+      "sourcePath": "plugins/optional-api-v1/packages/narrative-analysis",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "knowledge"
+      ],
+      "manifestDigest": "sha256:41d1fe7443dfc33bd7e28a534292f31a424d125df30b494b08796ace75cb27dc",
+      "declarationDigest": "sha256:378e354255b11b7ab67096925533d57791861cd3ffc7dab74cdd44c2d95e0878",
+      "capabilityIds": [],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/case.json",
+        "examples/expected.md",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "skills/narrative-analysis/SKILL.md",
+        "skills/narrative-analysis/references/evidence.md",
+        "skills/narrative-analysis/references/method.md"
+      ]
+    },
+    {
+      "id": "sesame/price-action",
+      "sourcePath": "plugins/optional-api-v1/packages/price-action",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "knowledge"
+      ],
+      "manifestDigest": "sha256:0c58d97d68080ecc1316eebec1d5e97105b195bb76c25389bbf400f850b08792",
+      "declarationDigest": "sha256:7d84ce847a3362995362e680fa33578b7614d42a6316027fe7a0308a3c593aad",
+      "capabilityIds": [],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/bars.json",
+        "examples/expected.md",
+        "examples/source.json",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "scripts/bar_input.py",
+        "scripts/observe.py",
+        "skills/price-action/SKILL.md",
+        "skills/price-action/references/execution.md",
+        "skills/price-action/references/method.md",
+        "skills/price-action/references/validation.md"
+      ]
+    },
+    {
+      "id": "sesame/rss-collect",
+      "sourcePath": "plugins/optional-api-v1/packages/rss-collect",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:af1076f5ccdce40524a1ebf24af8c56f6b649955e41fe2c8093f704a8b9de304",
+      "declarationDigest": "sha256:526e2885a7659be604b49b273d9b6a5dae960c69995af74a20324d7660682ae2",
+      "capabilityIds": [
+        "parse_feed"
+      ],
+      "paths": [
+        "LICENSE",
+        "capabilities.json",
+        "index.js",
+        "package.json",
+        "parser.js",
+        "plugin.json",
+        "sample.atom",
+        "samples.json",
+        "server.py",
+        "skills/rss-collect/PROVENANCE.md",
+        "skills/rss-collect/SKILL.md"
+      ]
+    },
+    {
+      "id": "sesame/strategy-authoring",
+      "sourcePath": "plugins/api-v1/packages/strategy-authoring",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "service"
+      ],
+      "manifestDigest": "sha256:51ce736f8a19110d0c71ef307e61042719d6189bcbf0808d246e063d2a25efeb",
+      "declarationDigest": "sha256:330ef67d537cc529ff3c05fb00822ab2672b4833c6beea13356c79e6c9c892cc",
+      "capabilityIds": [
+        "strategy_validate",
+        "strategy_publish",
+        "strategy_graph",
+        "strategy_replay",
+        "strategy_pipeline",
+        "strategy_workflow",
+        "strategy_decision",
+        "strategy_functions",
+        "strategy_activate",
+        "strategy_dispose"
+      ],
+      "paths": [
+        "LICENSE",
+        "artifact-io.js",
+        "capabilities.json",
+        "examples/close-threshold.replay.json",
+        "examples/close-threshold.svl.json",
+        "examples/crossover.replay.json",
+        "examples/crossover.svl.json",
+        "examples/function-threshold.replay.json",
+        "examples/function-threshold.svl.json",
+        "examples/method-workflow.js",
+        "examples/pipeline-fixture.js",
+        "index.js",
+        "lib/agent-decision-tools.js",
+        "lib/agent-decisions.js",
+        "lib/decision-bridge.js",
+        "lib/decision-records.js",
+        "lib/decision-service.js",
+        "lib/execution.js",
+        "lib/method-support.js",
+        "lib/pipeline.js",
+        "lib/portfolio-risk.js",
+        "lib/portfolio.js",
+        "lib/quant-functions.js",
+        "lib/universe.js",
+        "lib/workflow.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "skills/strategy-authoring/SKILL.md",
+        "skills/strategy-authoring/references/agent-inputs.md",
+        "skills/strategy-authoring/references/architecture.md",
+        "skills/strategy-authoring/references/execution.md",
+        "skills/strategy-authoring/references/language.md",
+        "skills/strategy-authoring/references/methods.md",
+        "skills/strategy-authoring/references/pipeline.md",
+        "skills/strategy-authoring/references/quant-functions.md"
+      ]
+    },
+    {
+      "id": "sesame/web-extract",
+      "sourcePath": "plugins/optional-api-v1/packages/web-extract",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "function"
+      ],
+      "manifestDigest": "sha256:c69d1599c0cde06d52be175ac180e16463cd55d1f53da0fd241a09285311fef4",
+      "declarationDigest": "sha256:23ab74d8f2927d96491d4412865f0cc6fd13b2e442c19121f1fe4f34f1677a5d",
+      "capabilityIds": [
+        "extract_webpage"
+      ],
+      "paths": [
+        "LICENSE",
+        "capabilities.json",
+        "index.js",
+        "package.json",
+        "parser.js",
+        "plugin.json",
+        "sample.html",
+        "samples.json",
+        "server.py",
+        "skills/web-extract/PROVENANCE.md",
+        "skills/web-extract/SKILL.md"
+      ]
+    },
+    {
+      "id": "sesame/wyckoff",
+      "sourcePath": "plugins/optional-api-v1/packages/wyckoff",
+      "functionalCategory": "analysis",
+      "implementationKinds": [
+        "knowledge"
+      ],
+      "manifestDigest": "sha256:55b5d43b5eb0bc6eb90f14bb1a536fd3a3f44fd70be4ba51fa92ea2c20de48e8",
+      "declarationDigest": "sha256:ef4ef3f0dd4cdbbda95587f3fc79812ae723d179d584b9c7bd5e6da851850ba3",
+      "capabilityIds": [],
+      "paths": [
+        "LICENSE",
+        "PROVENANCE.md",
+        "README.md",
+        "capabilities.json",
+        "examples/case.json",
+        "examples/expected.md",
+        "index.js",
+        "package.json",
+        "plugin.json",
+        "prompt.md",
+        "skills/wyckoff/SKILL.md",
+        "skills/wyckoff/references/method.md",
+        "skills/wyckoff/references/validation.md"
+      ]
+    }
+  ]
+}

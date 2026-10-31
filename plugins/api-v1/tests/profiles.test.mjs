@@ -21,18 +21,22 @@ function fixture(t, kind = 'optional') {
   writeFileSync(join(root, 'bundle-profile.json'), JSON.stringify(profile));
   return { root, pkg, manifest, profile, write };
 }
-test('candidate distribution has nine defaults and forty-six optional identities, with no duplicate tools from merged packages', () => {
+test('candidate distribution has ten defaults and forty-eight optional identities, with Ultra shipped for the built-in command', () => {
   const defaults = buildLock(core), options = buildLock(optional);
-  assert.equal(defaults.packages.length, 9); assert.equal(options.packages.length, 46);
-  const ids = [...defaults.packages, ...options.packages].map(item => item.id); assert.equal(new Set(ids).size, 55);
+  assert.equal(defaults.packages.length, 10); assert.equal(options.packages.length, 48);
+  const ids = [...defaults.packages, ...options.packages].map(item => item.id); assert.equal(new Set(ids).size, 58);
   assert.deepEqual(defaults.packages.map(item => item.id), readProfile(core).packages);
+  assert.ok(defaults.packages.some(item => item.id === 'sesame/ultra'));
+  assert.ok(!options.packages.some(item => item.id === 'sesame/ultra'));
   assert.ok(options.packages.some(item => item.id === 'sesame/mt5'));
-  for (const id of ['sesame/host-files', 'sesame/user-guide', 'sesame/research']) assert.ok(!ids.includes(id));
+  assert.ok(options.packages.some(item => item.id === 'sesame/binance'));
+  for (const id of ['sesame/host-files', 'sesame/user-guide', 'sesame/research', 'sesame/manual-trading']) assert.ok(!ids.includes(id));
+  for (const id of ['sesame/investment-research', 'sesame/trading-decision', 'sesame/ultra']) assert.ok(ids.includes(id));
   const names = defaults.packages.flatMap(pkg => JSON.parse(readFileSync(join(core, 'packages', pkg.directory, 'capabilities.json'))).capabilities.filter(cap => cap.consumers.includes('agent')).map(cap => cap.id));
   assert.equal(new Set(names).size, names.length);
   for (const name of ['read', 'host_files_run', 'data_read', 'research_register', 'market_read', 'report_publish', 'strategy_validate']) assert.ok(names.includes(name), name);
 });
-test('the actual default archive contains only the nine reviewed packages and their exact file list', () => {
+test('the actual default archive contains only the ten reviewed packages and their exact file list', () => {
   const lock = buildLock(core), bytes = gunzipSync(createArchive(core, lock)), names = [];
   for (let offset = 0; bytes[offset];) {
     const header = bytes.subarray(offset, offset + 512), text = (a, b) => header.subarray(a, b).toString().replace(/\0.*$/, '');
@@ -67,8 +71,13 @@ test('descriptive inventory records compatibility without claiming an applicatio
   assert.equal(preview.status, 'descriptive-inventory');
   assert.equal(preview.application.released, undefined);
   assert.equal(preview.application.minimum, '0.2.0');
-  assert.equal(preview.packages.filter(p => p.distribution === 'core').length, 9);
-  assert.equal(preview.packages.filter(p => p.distribution === 'optional').length, 46);
+  assert.equal(preview.packages.filter(p => p.distribution === 'core').length, 10);
+  assert.equal(preview.packages.filter(p => p.distribution === 'optional').length, 48);
+  const ultra = preview.packages.find(p => p.id === 'sesame/ultra');
+  assert.equal(ultra.distribution, 'core');
+  assert.equal(ultra.functionalCategory, 'business');
+  assert.deepEqual(ultra.implementationKinds, ['workflow', 'service']);
+  assert.equal(ultra.sourcePath, 'plugins/api-v1/packages/ultra');
   for (const item of preview.packages) {
     for (const key of ['source', 'sourceCommit', 'package', 'treeDigest', 'review', 'release']) assert.equal(item[key], undefined);
     assert.equal(item.engines.sesame, JSON.parse(readFileSync(join(core, '../..', item.sourcePath, 'plugin.json'))).engines.sesame);

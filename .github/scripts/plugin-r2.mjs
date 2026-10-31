@@ -5,7 +5,7 @@ import { basename, dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { buildLock, createArchive, readProfile, sha256 } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
 import { materializeSource } from './release-plugins.mjs';
-import { catalogPackage } from '../../plugins/api-v1/scripts/catalog.mjs';
+import { catalogPackage, readCatalogPolicy } from '../../plugins/api-v1/scripts/catalog.mjs';
 
 const RELEASE_BASE = 'https://dl.sesame.bot/plugins/api-v1/releases';
 const PACKAGE_BASE = 'https://dl.sesame.bot/plugins/api-v1/packages';
@@ -105,11 +105,11 @@ function buildSubsetSource(source, profilePlan, fullLock) {
   }
 }
 
-function readManifestEntry(repository, sourceCommit, profilePlan, release, pkg) {
+function readManifestEntry(repository, sourceCommit, profilePlan, release, pkg, classification) {
   const path = `${profilePlan.sourceRoot}/packages/${pkg.directory}`;
   const manifest = JSON.parse(git(repository, ['show', `${sourceCommit}:${path}/plugin.json`]));
   const declaration = JSON.parse(git(repository, ['show', `${sourceCommit}:${path}/capabilities.json`]));
-  const entry = catalogPackage(pkg, manifest, declaration, release);
+  const entry = catalogPackage(pkg, manifest, declaration, release, { classification });
   return { ...entry, package: { ...entry.package, baseUrl: `${PACKAGE_BASE}/${pkg.treeDigest.slice(7)}` } };
 }
 
@@ -157,6 +157,7 @@ export function buildR2Publication(repository, input, { releaseCommit, review })
   assert(hex(releaseCommit, 40), 'R2 publication requires a fixed release commit');
   assert(Buffer.isBuffer(review) && review.length > 0 && review.length <= 1024 * 1024, 'R2 publication requires review bytes');
   const prepared = prepareR2Release(repository, input);
+  const policy = readCatalogPolicy(repository, prepared.plan.sourceCommit);
   const reviewSha256 = sha256(review), releases = [], plugins = [], objects = new Map(), root = `plugins/api-v1/releases/${prepared.plan.id}`;
   for (const profile of prepared.profiles) {
     const prefix = `${root}/${profile.profile}`, tag = `r2-${profile.profile}-api-v1-${prepared.plan.id}`;
@@ -169,7 +170,7 @@ export function buildR2Publication(repository, input, { releaseCommit, review })
     addObject(objects, `${prefix}/official-plugins.lock.json`, profile.lockBytes);
     addObject(objects, `${prefix}/application-official-plugins.lock.json`, profile.pinBytes);
     for (const [name, bytes] of profile.fileBytes) addObject(objects, `plugins/api-v1/packages/${name}`, bytes);
-    for (const pkg of profile.lock.packages) plugins.push(readManifestEntry(repository, prepared.plan.sourceCommit, profile, release, pkg));
+    for (const pkg of profile.lock.packages) plugins.push(readManifestEntry(repository, prepared.plan.sourceCommit, profile, release, pkg, Object.hasOwn(policy, pkg.directory) ? policy[pkg.directory] : undefined));
   }
   plugins.sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
   releases.sort((a, b) => a.profile < b.profile ? -1 : a.profile > b.profile ? 1 : 0);

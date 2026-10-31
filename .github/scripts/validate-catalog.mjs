@@ -4,12 +4,12 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { buildLock, readProfile } from '../../plugins/api-v1/scripts/plugin-lock.mjs';
 import { buildInventory } from '../../plugins/api-v1/scripts/inventory.mjs';
+import { validateInventoryPolicy } from '../../plugins/api-v1/scripts/plugin-taxonomy.mjs';
 import { checkR2Plans } from './plugin-r2.mjs';
 import { validateApplicationPlan } from './release-application.mjs';
 
 const check = (condition, message) => { if (!condition) throw new Error(message); };
 const jsonBytes = value => Buffer.from(JSON.stringify(value, null, 2) + '\n');
-const object = value => value && typeof value === 'object' && !Array.isArray(value);
 
 function dataFile(root, path) {
   const parts = path.split('/');
@@ -21,7 +21,7 @@ function dataFile(root, path) {
 }
 
 export function validateRepository(repository) {
-  const root = resolve(repository), counts = {};
+  const root = resolve(repository), counts = {}, packageNames = [];
   for (const [directory, kind] of [['api-v1', 'core'], ['optional-api-v1', 'optional']]) {
     const prefix = `plugins/${directory}`;
     dataFile(root, `${prefix}/bundle-profile.json`);
@@ -30,17 +30,10 @@ export function validateRepository(repository) {
     const lock = buildLock(join(root, prefix));
     check(lock.apiVersion === '2' && committed.equals(jsonBytes(lock)), `Current ${kind} source lock differs from API 2 package bytes`);
     counts[kind] = lock.packages.length;
+    packageNames.push(...lock.packages.map(pkg => pkg.directory));
   }
   const policy = JSON.parse(dataFile(root, 'plugins/api-v1/inventory-policy.json'));
-  check(object(policy), 'Descriptive inventory policy must be an object');
-  for (const [name, entry] of Object.entries(policy)) {
-    check(/^[a-z][a-z0-9-]*$/.test(name) && object(entry), 'Invalid inventory policy entry');
-    check(Object.keys(entry).sort().join(',') === 'category,dependencies,summary,title', `${name}: inventory policy cannot override package facts`);
-    check(['workspace', 'data', 'research', 'strategy', 'backend'].includes(entry.category), `${name}: invalid inventory category`);
-    for (const field of ['title', 'summary', 'dependencies']) {
-      check(object(entry[field]) && Object.keys(entry[field]).sort().join(',') === 'en,zh' && ['en', 'zh'].every(language => typeof entry[field][language] === 'string' && entry[field][language].trim() && entry[field][language].length <= 2000), `${name}: ${field} requires explicit English and Chinese descriptions`);
-    }
-  }
+  validateInventoryPolicy(policy, packageNames);
   const inventory = buildInventory(join(root, 'plugins/api-v1'));
   check(dataFile(root, 'plugins/api-v1/inventory.json').equals(jsonBytes(inventory)), 'Descriptive inventory differs from current API 2 package facts');
   // A new root needs no old commits or GitHub plugin releases. New R2 plans,

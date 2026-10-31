@@ -57,6 +57,18 @@ test('a saved checkpoint does not turn an interrupted Agent into a completed wor
   assert.equal(done.report.ref.kind, 'report');
 });
 
+test('new factor workflow delivers its report to Strategy without an SVL source', async t => {
+  const f = await fixture({ evaluator: evaluate }); t.after(() => f.runtime.dispose());
+  const run = await f.runtime.create(f.main, input()), done = await finished(f, run.id);
+  assert.equal(done.status, 'completed', JSON.stringify(done.error));
+  const output = f.jobs.get(done.workflow.id).options.task.output;
+  assert.equal(output.type, 'report');
+  assert.equal(output.space, 'strategy');
+  assert.ok(output.path.endsWith('.html'));
+  assert.equal(done.report.ref.kind, 'report');
+  assert.equal((await f.runtime.create(f.main, input())).workflow.id, done.workflow.id, 'Idempotent reuse keeps the accepted report task');
+});
+
 test('actual workflow session owns child Runs and preserves measured handoff and output metadata', async t => {
   const f = await fixture({ evaluator: evaluate }); t.after(() => f.runtime.dispose());
   const run = await f.runtime.create(f.main, input()), done = await finished(f, run.id);
@@ -69,4 +81,36 @@ test('actual workflow session owns child Runs and preserves measured handoff and
   assert.equal(done.report.ref.kind, 'report');
   assert.equal(done.trials[0].metrics.validation.rankIC, 1);
   assert.equal(Object.keys(done.holdout).length, 1);
+});
+
+test('an immediately started child uses verified Run provenance before its reference is saved', async t => {
+  let checked = 0;
+  const f = await fixture({ evaluator: evaluate, onTask: ({ request, runtime, child, execution }) => {
+    if (request.input.mode !== 'hypothesis') return;
+    const { runId, assignmentId } = request.input;
+    assert.equal(runtime.get(runId).tasks.find(task => task.id === assignmentId).runRef, undefined);
+    for (const change of [
+      value => { value.provenance.agent.runId = 'unrelated-child'; },
+      value => { value.provenance.workflow.runId = 'unrelated-workflow'; },
+      value => { value.provenance.workflow.ownerSessionId = 'another-owner'; },
+    ]) {
+      const untrusted = structuredClone(execution); change(untrusted);
+      assert.throws(() => runtime.context(child, runId, 'team', 0, 20, untrusted), { code: 'FORBIDDEN' });
+    }
+    const before = f.saved.emitted.length;
+    runtime.context(child, runId, 'team', 0, 20, execution);
+    const handoffs = f.saved.emitted.slice(before).filter(event => event.type === 'handoff');
+    assert.equal(handoffs.length, 1);
+    assert.equal(handoffs[0].data.toRunId, execution.provenance.agent.runId);
+    assert.equal(handoffs[0].data.toRunId, child.context.runId);
+    assert.notEqual(handoffs[0].data.toRunId, request.input.runId);
+    checked++;
+  } });
+  t.after(() => f.runtime.dispose());
+  const started = await f.runtime.create(f.main, input()), done = await finished(f, started.id);
+  assert.equal(done.status, 'completed', JSON.stringify(done.error));
+  assert.equal(checked, 1);
+  const handoffs = f.saved.emitted.filter(event => event.type === 'handoff');
+  const pairs = handoffs.map(event => `${event.data.fromRunId}:${event.data.toRunId}`);
+  assert.equal(new Set(pairs).size, pairs.length, 'Repeated context reads do not duplicate handoffs');
 });

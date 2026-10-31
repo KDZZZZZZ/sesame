@@ -11,7 +11,7 @@ spec.loader.exec_module(guard)
 
 class Tests(unittest.TestCase):
     def fixture(self, change=None, short=False):
-        now = 1800000000000
+        now = 1792575200000  # Fixed 2026 synthetic UTC.
         counters = {"sends": 0, "checks": 0, "account_reads": 0, "position_reads": 0}
         position = SimpleNamespace(ticket=9007199254740995, symbol="EURUSD", type=1 if short else 0, volume=1.5)
 
@@ -23,7 +23,7 @@ class Tests(unittest.TestCase):
             def account_info(self):
                 counters["account_reads"] += 1
                 login = 111 if change == "account" and counters["checks"] else 9007199254740993
-                return SimpleNamespace(login=login, server="Fixture-Broker", trade_allowed=True, trade_expert=True)
+                return SimpleNamespace(login=login, server="FTMO-Demo", trade_allowed=True, trade_expert=True)
 
             def terminal_info(self):
                 return SimpleNamespace(connected=True, trade_allowed=True, tradeapi_disabled=False)
@@ -41,7 +41,7 @@ class Tests(unittest.TestCase):
                 return [SimpleNamespace(ticket=123)] if change == "working_order" else []
 
             def symbol_info_tick(self, _symbol):
-                return SimpleNamespace(time_msc=now - (6000 if change == "quote" else 0), bid=1.1, ask=1.1002)
+                return SimpleNamespace(time_msc=now + 10800000 - (6000 if change == "quote" else 0), bid=1.1, ask=1.1002)
 
             def order_check(self, _request):
                 counters["checks"] += 1
@@ -57,7 +57,7 @@ class Tests(unittest.TestCase):
         sdk = MT5()
         request = {"action": 1, "symbol": "EURUSD", "position": position.ticket, "volume": 0.5, "type": 0 if short else 1}
         bound = {"observed_at": now, "expires_at": now + 60000, "max_quote_age_ms": 5000, "max_quote_to_send_ms": 1000,
-                 "price_limit": "1.1002" if short else "1.1", "side": "buy" if short else "sell", "expected_account": "9007199254740993", "expected_server": "Fixture-Broker",
+                 "price_limit": "1.1002" if short else "1.1", "side": "buy" if short else "sell", "expected_account": "9007199254740993", "expected_server": "FTMO-Demo", "quote_clock_revision": "ftmo-demo-current-tick-2026-v1",
                  "expected_positions": [{"ticket": str(position.ticket), "type": position.type, "volume": "1.5"}]}
         return lambda: guard.guarded_send(sdk, request, bound, clock=lambda: now, monotonic=lambda: 0), counters
 

@@ -158,6 +158,28 @@ test('daily polling produces real forming corrections and unbind closes only tha
   assert.equal(stream.snapshot.bars.length,2);let event;await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('No bar correction')),1000);stream.ready(e=>{event=e;clearTimeout(timer);resolve()})});
   assert.equal(event.type,'bars.upsert');assert.equal(event.payload.bars.at(-1).close,'10.5');await service.market.unbind({bindingId:'market'});const before=calls;await new Promise(r=>setTimeout(r,20));assert.equal(calls,before);
 });
+
+test('service disposal closes quote and bar polling together and invalidates every prior binding',async t=>{
+  const {host,config}=await fixture(t);let calls=0;
+  const service=createService(host,{platform:'win32',now:()=>at('2026-10-09T10:00:00'),pollMs:5,request:async payload=>{
+    calls++;
+    return receipt(payload.action==='quotes'
+      ?{items:[{symbol:'600000.SH',tick:{...tick,lastPrice:String(calls)}}]}
+      :{items:[dailyRow('2026-10-08')],tick:{...tick,time:String(at('2026-10-09T10:00:00')),open:'9',high:'11',low:'8',lastPrice:'10',volume:'100'}},at('2026-10-09T10:00:00'));
+  }});
+  t.after(()=>service.dispose());
+  await bind(service,'market','quotes');await bind(service,'market','bars');await bind(service,'account');
+  const quotes=await service.market.subscribeQuotes({instruments:[instrumentRef(config,'600000.SH')]},{bindingId:'quotes'});
+  const bars=await service.market.subscribeBars({instrument:instrumentRef(config,'600000.SH'),spec:dailySpec,tailLimit:2},{bindingId:'bars'});
+  quotes.ready(()=>{});bars.ready(()=>{});
+  await new Promise(resolve=>setTimeout(resolve,20));
+  await service.dispose();const stoppedAt=calls;
+  await new Promise(resolve=>setTimeout(resolve,20));assert.equal(calls,stoppedAt);
+  await assert.rejects(service.market.searchInstruments({query:'',page:{limit:1}},{bindingId:'quotes'}),{code:'CONNECTION_CHANGED'});
+  await assert.rejects(service.market.queryBars({},{bindingId:'bars'}),{code:'CONNECTION_CHANGED'});
+  await assert.rejects(service.account.snapshot({account:accountRef(config)},{bindingId:'account'}),{code:'CONNECTION_CHANGED'});
+  await Promise.all([quotes.close(),bars.close()]);assert.equal(calls,stoppedAt);
+});
 test('unverified native order/fill time rejects normalized contracts; raw day-only reads remain available',async t=>{
  const {host,config}=await fixture(t);let calls=0;const service=createService(host,{platform:'win32',request:async()=>{calls++;return receipt({items:[{order_id:'9007199254740993',order_time:'93001'}],coverage:{scope:'current_trading_day',complete_history:false}})}});t.after(()=>service.dispose());
  assert.equal(descriptors[1].capabilities.includes('orders.query'),false);assert.equal(descriptors[1].capabilities.includes('fills.query'),false);

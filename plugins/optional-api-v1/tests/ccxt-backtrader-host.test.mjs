@@ -6,12 +6,12 @@ import {
   writeFile,
   readFile,
   rm,
-  mkdir,
   readdir,
 } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve, sep } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { randomUUID } from "node:crypto";
 const root = process.env.SESAME_HOST_ROOT;
 const packages = fileURLToPath(new URL("../packages/", import.meta.url));
 const python = process.env.SESAME_QUANT_PYTHON;
@@ -22,17 +22,20 @@ async function host(t, name) {
     { Runtime } = await import(
       pathToFileURL(join(root, "modules/agent/runtime.js"))
     );
-  const directory = await mkdtemp(
-      join(tmpdir(), "sesame-" + name + "-integration-"),
-    ),
+  const directory = await mkdtemp(join(tmpdir(), "sesame-" + name + "-integration-"));
+  let store, runtime;
+  const open = async () => {
     store = new Store(join(directory, "app"));
-  const runtime = await new Runtime(store, {
-    piDir: join(directory, "pi"),
-    officialPluginsDirectory: join(directory, "empty"),
-  }).init();
+    runtime = await new Runtime(store, {
+      piDir: join(directory, "pi"),
+      officialPluginsDirectory: join(directory, "empty"),
+    }).init();
+  };
+  await open();
   t.after(async () => {
     await runtime.close();
     store.close();
+    assert.ok(resolve(directory).startsWith(resolve(tmpdir()) + sep));
     await rm(directory, { recursive: true, force: true });
   });
   const draft = join(runtime.workspaces.root("conv_main"), "draft");
@@ -47,18 +50,35 @@ async function host(t, name) {
   });
   assert.equal(installed.runtime_status, "ready");
   runtime.plugins.activate("conv_main", installed.id);
-  const tools = runtime.plugins.definitions({ conversationId: "conv_main" });
+  const { createHostContextV2 } = await import(pathToFileURL(join(root, "modules/plugins/host-v2/context.js")));
   return {
-    runtime,
-    store,
+    get runtime() { return runtime; },
+    get store() { return store; },
     directory,
     installed,
-    call: async (name, args, signal) =>
-      (
-        await tools
-          .find((tool) => tool.name === name)
-          .execute("quant-test", args, signal)
-      ).details,
+    restart: async () => {
+      await runtime.close(); store.close();
+      await open();
+      runtime.plugins.activate("conv_main", installed.id);
+    },
+    call: async (name, args, signal) => {
+      const tools = runtime.plugins.definitions({ conversationId: "conv_main" });
+      const context = createHostContextV2(runtime, runtime.capabilities.hostEntry, "conv_main");
+      const accepted = (await tools.find((tool) => tool.name === name)
+        .execute(`quant-test-${randomUUID()}`, args, signal)).details;
+      if (accepted.type !== "run") return accepted;
+      const cancel = () => { void Promise.resolve().then(() => context.runs.cancel(accepted.run, { reason: "Test caller cancelled" })).catch(() => {}); };
+      signal?.addEventListener("abort", cancel, { once: true });
+      try {
+        if (signal?.aborted) cancel();
+        for (;;) {
+          const { reason, run } = await context.runs.wait(accepted.run, { until: "settled", timeoutMs: 30000 });
+          if (reason === "timeout") continue;
+          if (run.status === "completed") return run.output;
+          throw Object.assign(new Error(run.error?.message ?? run.status), { code: run.error?.code ?? run.status, details: run.error?.details });
+        }
+      } finally { signal?.removeEventListener("abort", cancel); }
+    },
   };
 }
 test(
@@ -73,8 +93,8 @@ test(
     );
     assert.equal(f.runtime.providers.list("sesame.market").length, 1);
     assert.equal((await f.call("ccxt_catalog", {})).orders, false);
-    const entry = f.runtime.providers.entries.values().next().value;
-    entry.implementation.call = async (_context, action) => ({
+    const { CCXTProvider } = await import(pathToFileURL(join(f.runtime.plugins.entry("sesame/ccxt").root, "provider.js")));
+    t.mock.method(CCXTProvider.prototype, "call", async (_context, action) => ({
       library: "4.5.85",
       exchange: "kraken",
       observedAt: Date.now(),
@@ -94,7 +114,7 @@ test(
               [1000, "10", "11", "9", "10.5", "1"],
               [61000, "10.5", "12", "10", "11", "2"],
             ],
-    });
+    }));
     const bound = await f.runtime.providers.bind(
       { pluginId: "sesame/ccxt", providerId: "market" },
       { configuration: { exchange: "kraken" } },
@@ -151,6 +171,8 @@ test(
     });
     assert.equal(env.ready, true);
     assert.equal(env.library, "1.9.78.123");
+    assert.equal(env.reused, true);
+    assert.deepEqual(env.downloads, []);
     // Fresh existing dependency discovery must select it without installing anything.
     const selection = join(
       f.store.directory,
@@ -220,6 +242,7 @@ test(
         feed: { timeframe: "minutes", compression: 60 },
       },
     };
+    const originalStrategy = await readFile(strategy);
     await assert.rejects(
       f.call("backtrader_backtest", {
         ...args,
@@ -303,7 +326,10 @@ class Warmup(bt.Strategy):
       rows.length,
     );
     // The host execution record snapshots the strategy's own lifecycle evidence before cleanup.
-    const warmExecution = f.store.get("execution", warmup.executionId);
+    const warmProcess = f.runtime.runs.read(warmup.executionRunId);
+    assert.equal(warmProcess.capabilityId, "host.process.exec");
+    assert.equal(warmProcess.status, "completed");
+    const warmExecution = f.store.get("execution", warmProcess.output.executionId);
     const hooks = JSON.parse(
       Buffer.from(warmExecution.files["hooks.json"], "base64").toString(),
     );
@@ -327,6 +353,9 @@ class Warmup(bt.Strategy):
     });
     assert.equal(failed.status, "failed");
     assert.deepEqual(failed.data, []);
+    assert.equal(f.runtime.runs.read(failed.executionRunId).status, "completed");
+    assert.equal(f.runtime.runs.read(failed.executionRunId).output.exitCode, 0,
+      "A controlled native failure delivers its failed receipt through the formal Run");
     for (const stage of ["import", "next"]) {
       for (const code of [0, 7]) {
         const controlledSource =
@@ -362,9 +391,8 @@ class Warmup(bt.Strategy):
 
     await writeFile(strategy, "import os\nos._exit(7)\n");
     const abruptArgs = { ...args, operation_id: "abrupt-no-receipt" };
-    await assert.rejects(f.call("backtrader_backtest", abruptArgs), {
-      code: "ENOENT",
-    });
+    await assert.rejects(f.call("backtrader_backtest", abruptArgs), error =>
+      ["PROCESS_EXIT", "RUN_INTERRUPTED"].includes(error.code));
     const abruptCount = f.store.list("execution").length;
     assert.equal(
       (await f.call("backtrader_backtest", abruptArgs)).status,
@@ -382,6 +410,7 @@ class Warmup(bt.Strategy):
     );
     const canceledArgs = { ...args, operation_id: "canceled-owned-engine" },
       controller = new AbortController();
+    const canceledStrategy = await readFile(strategy);
     const canceled = f.call(
       "backtrader_backtest",
       canceledArgs,
@@ -423,7 +452,22 @@ class Warmup(bt.Strategy):
       !(await readdir(f.runtime.workspaces.root("conv_main"))).some((name) =>
         name.startsWith(".backtrader-"),
       ),
+      JSON.stringify({ remaining: await readdir(f.runtime.workspaces.root("conv_main")),
+        errors: f.runtime.runs.list({}).filter(run => run.error).map(run => ({ capability: run.capabilityId, status: run.status, error: run.error })) }),
     );
+    const originalManifest = f.runtime.contractArtifacts.read(result.ref).manifest;
+    const revision = f.runtime.plugins.entry("sesame/backtrader").digest;
+    await f.restart();
+    assert.equal(f.runtime.plugins.entry("sesame/backtrader").digest, revision);
+    const reopenedCount = f.store.list("execution").length;
+    assert.deepEqual((await f.call("backtrader_result", { ref: result.ref })).manifest, originalManifest);
+    await writeFile(strategy, originalStrategy);
+    assert.deepEqual(await f.call("backtrader_backtest", args), result);
+    await writeFile(strategy, "import os\nos._exit(7)\n");
+    assert.equal((await f.call("backtrader_backtest", abruptArgs)).status, "unknown");
+    await writeFile(strategy, canceledStrategy);
+    assert.equal((await f.call("backtrader_backtest", canceledArgs)).status, "unknown");
+    assert.equal(f.store.list("execution").length, reopenedCount, "Restart reuses fixed outcomes without launching any native process");
     t.diagnostic(
       JSON.stringify({
         environment: env.origin,

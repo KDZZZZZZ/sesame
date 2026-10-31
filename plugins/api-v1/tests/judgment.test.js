@@ -166,6 +166,31 @@ test('coverage requires full-source semantic review, including responses without
   } finally { await app.dispose(); }
 });
 
+test('coverage keeps source hashes and contiguous read progress across reopening', async () => {
+  const app = fixture();
+  try {
+    const content = '固定原文需要逐页核对。';
+    const message = { id: 'durable-answer', role: 'assistant', content: [{ type: 'text', text: content }] };
+    app.store.put('message', message);
+    app.service.auditTurn({ conversationId: 'conv_main', responseId: message.id, status: 'completed' });
+    const sourceHash = app.service.get('coverage', message.id).source_hash;
+    app.service.auditSource('conv_main', { message_id: message.id, limit: 4 });
+    await app.service.close(); app.reopen();
+    assert.equal(app.service.get('coverage', message.id).read_offset, 4);
+    app.store.put('message', { ...message, content: [{ type: 'text', text: '原文被更改' }] });
+    assert.throws(() => app.service.auditSource('conv_main', { message_id: message.id, offset: 4 }), /原始回复已变化/);
+    assert.equal(app.service.get('coverage', message.id).read_offset, 4);
+    app.store.put('message', message);
+    const page = app.service.auditSource('conv_main', { message_id: message.id, offset: 4 });
+    assert.equal(page.source_text, content.slice(4)); assert.equal(page.next_offset, null);
+    app.service.acknowledgeCoverage('conv_main', { message_id: message.id, review_summary: '全文不包含待登记的事前判断。' });
+    await app.service.close(); app.reopen();
+    const saved = app.service.get('coverage', message.id);
+    assert.equal(saved.status, 'reviewed'); assert.equal(saved.source_hash, sourceHash); assert.equal(saved.read_offset, content.length);
+    assert.equal(app.service.reviewQueue('conv_main', { kind: 'coverage' }).total, 0);
+  } finally { await app.dispose(); }
+});
+
 test('judgment declarations are the single source of capability schemas and hook bindings', () => {
   const manifest = JSON.parse(readFileSync(new URL('../../optional-api-v1/packages/judgment-evolution/plugin.json', import.meta.url)));
   const declarations = JSON.parse(readFileSync(new URL('../../optional-api-v1/packages/judgment-evolution/capabilities.json', import.meta.url)));

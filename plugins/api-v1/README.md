@@ -2,14 +2,16 @@
 
 **Current packages use Plugin API 2 and declare their minimum Sesame version individually.** The updated configuration, orchestration and plugin-manager packages require Sesame >=0.2.4; unchanged packages retain >=0.2.3. Each package explicitly declares capabilities, schemas, consumers and dependencies. Installers are listed on the [application release page](https://github.com/KDZZZZZZ/sesame/releases/latest). API 1 hosts must upgrade before installing these packages. Source, published archives and the install catalog may select different package versions.
 
-This directory contains exactly nine default packages for the 0.2 application bundle. The application
+This directory contains ten default packages for the current 0.3 development bundle. The application
 keeps the protocol, verified loader and general interface. Plugin implementations,
 skills, templates, resources and platform integrations live here and are assembled
 into application distributions from a fixed, reviewed archive.
 
 The defaults are `canvas-control`, `configuration`, `data-access`, `memory`,
-`orchestration`, `plugin-manager`, `reports`, `strategy-authoring` and `workspace`.
-Canvas and settings are discoverable; the other seven are mounted. No market,
+`orchestration`, `plugin-manager`, `reports`, `strategy-authoring`, `ultra` and `workspace`.
+Canvas, settings and Ultra are discoverable; the other seven are mounted. Ultra
+ships with the built-in `/ultra` command while retaining its business workflow
+responsibility and public plugin interfaces. No market,
 account or native strategy backend is required to author sources, run fixed
 replays, work with local data or publish reports. Optional packages live in
 [`../optional-api-v1/`](../optional-api-v1/README.md), including MT5, QMT, AKShare
@@ -35,7 +37,7 @@ actual installation and activation are checked by a matching Sesame host.
 - `packages/<name>/plugin.json`: publisher-qualified identity, version, API and capabilities.
 - `packages/<name>/package.json`: Node module scope, version and per-package license.
 - `official-plugins.lock.json`: every packaged byte and package tree digest.
-- `bundle-profile.json`: the reviewed, exact nine-package distribution set.
+- `bundle-profile.json`: the reviewed, exact ten-package distribution set.
 - `catalog.json` / `catalog.sources.json`: retired API 1 historical records, not the current installation channel.
 - `inventory.json`: the descriptive source inventory, with no installation digests or authority.
 - `scripts/plugin-lock.mjs`: data-only validation, lock generation and deterministic archive creation.
@@ -55,7 +57,7 @@ user's permissions; this is not OS isolation. Workspace now includes the explici
 host-file list/search/read/import/write/mkdir/move/remove/run ports. Report and indicator renderer isolation remains.
 
 Optional MT5 checks and reuses existing native tools. No MT5 package, terminal,
-compiler VM, Wine distribution or mandatory runtime image is embedded in the nine-package archive.
+compiler VM, Wine distribution or mandatory runtime image is embedded in the default archive.
 Plugin skills guide dependency discovery, explicit preparation when missing, and
 actual verification. Optional integrations live separately in
 `../optional-api-v1/packages/` and do not enter this lock.

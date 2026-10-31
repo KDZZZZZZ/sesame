@@ -71,6 +71,56 @@ test('compaction quotes real evidence, preserves restart dedupe and journals no 
   assert.doesNotMatch(JSON.stringify(db.prepare('SELECT body FROM curation_journal').all()), /Reports should|citations|entries/); db.close();
 });
 
+test('curation identifies execution context separately from the memory scope it asks the model to choose', async t => {
+  const f = fixture(t), source = f.human();
+  f.respond = input => {
+    assert.equal(input.executionContext?.kind, 'main');
+    assert.equal(input.executionContext.project_id, 'project_a');
+    assert.equal(Object.hasOwn(input, 'scope'), false, 'a session kind must not be presented as a memory scope');
+    return { entries: [] };
+  };
+  const result = await f.call('memory_before_compact', { checkpointId: 'context', messages: [{ source }], model: { provider: 'fixture', id: 'test' } });
+  assert.equal(result.processedChunks, 1);
+  assert.equal(result.pendingSources, 0);
+  assert.equal((await f.call('memory_search')).total, 0);
+});
+
+test('curation rejects execution kinds and incomplete or conflicting memory scope IDs without writing or discarding the source', async t => {
+  const invalidScopes = [
+    { kind: 'main' },
+    { kind: 'subagent' },
+    { kind: 'project' },
+    { kind: 'strategy', project_id: 'project_a' },
+    { kind: 'strategy', strategy_id: 'strategy_a' },
+    { kind: 'global', project_id: 'project_a' },
+    { kind: 'project', project_id: 'project_a', strategy_id: 'strategy_a' },
+  ];
+  for (const scope of invalidScopes) await t.test(JSON.stringify(scope), async t => {
+    const f = fixture(t), source = f.human();
+    f.respond = input => ({ entries: [{ ...entry(source), category: 'lessons/plugins-tools', scope, sources: undefined,
+      citations: [{ key: input.documents[0].key, quote: input.documents[0].text }] }] });
+    await assert.rejects(f.call('memory_before_compact', { checkpointId: 'invalid-scope', messages: [{ source }], model: { provider: 'fixture', id: 'test' } }), { code: 'MEMORY_PLAN_INVALID' });
+    assert.equal((await f.call('memory_search')).total, 0);
+    assert.equal((await f.call('memory_manage', { action: 'candidates' })).items.length, 0);
+    const receipt = f.events.findLast(event => event.topic === 'workspace.memory.compaction').payload;
+    assert.equal(receipt.processedChunks, 0);
+    assert.equal(receipt.pendingSources, 1);
+    assert.equal(receipt.code, 'MEMORY_PLAN_INVALID');
+  });
+});
+
+test('main-session curation preserves each supported memory scope instead of broadening all facts to global', async t => {
+  const f = fixture(t), source = f.human('human', 'Keep report sources. Project project_a keeps module boundaries; strategy strategy_a in project_a keeps a fixed baseline.');
+  const scopes = [{ kind: 'global' }, { kind: 'project', project_id: 'project_a' }, { kind: 'strategy', project_id: 'project_a', strategy_id: 'strategy_a' }];
+  f.respond = input => ({ entries: scopes.map((scope, index) => ({ ...entry(source), category: 'lessons/plugins-tools', scope,
+    title: `Scoped fact ${index}`, content: `Fixture fact ${index} with its explicit scope.`, sources: undefined,
+    citations: [{ key: input.documents[0].key, quote: input.documents[0].text }] })) });
+  const result = await f.call('memory_before_compact', { checkpointId: 'scopes', messages: [{ source }], model: { provider: 'fixture', id: 'test' } });
+  assert.equal(result.counts.saved, 3);
+  const saved = (await f.call('memory_search')).items.sort((a, b) => a.title.localeCompare(b.title));
+  assert.deepEqual(saved.map(item => item.scope), scopes);
+});
+
 test('malformed plan is rejected before any partial write; candidates close with the Run', async t => {
   const f = fixture(t), source = f.human();
   f.respond = input => ({ entries: [{ ...entry(source), sources: undefined, citations: [{ key: input.documents[0].key, quote: 'made up evidence' }] }] });

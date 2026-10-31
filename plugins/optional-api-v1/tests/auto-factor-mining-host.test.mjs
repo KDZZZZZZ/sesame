@@ -65,7 +65,7 @@ test('installed factor workflow executes parallel research with role models, arc
       const input = taskInput(body);
       if (!input?.runId) { respond(response, body.model, 'Local fixture ready.'); return true; }
       assert.equal(body.model, `factor-${input.role}`, 'Every role must reach its selected model transport.');
-      const expectedTools = ['auto_factor_context', 'auto_factor_submit', 'host_runs_interrupt', 'host_runs_read', 'host_runs_wait'];
+      const expectedTools = ['auto_factor_context', 'auto_factor_submit', 'host_resources_read', 'host_runs_interrupt', 'host_runs_read', 'host_runs_wait'];
       assert.deepEqual(body.tools.map(tool => tool.function.name).sort(), expectedTools.sort());
       for (const tool of body.tools) assert.equal(tool.function.parameters.type, 'object');
       observations.push({ ...input, model: body.model });

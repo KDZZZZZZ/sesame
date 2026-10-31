@@ -21,7 +21,7 @@ test('installed MT5 v2 declares sources, redacts ingress credentials and publish
   const installed = await runtime.plugins.manager.install('conv_main', { path: draft, digest: checked.digest });
   assert.equal(installed.runtime_status, 'ready', JSON.stringify(installed.diagnostics));
   runtime.plugins.activate('conv_main', installed.id);
-  const host = createHostContextV2(runtime, runtime.plugins.entry(installed.id), 'conv_main');
+  const host = createHostContextV2(runtime, runtime.capabilities.hostEntry, 'conv_main');
   const call = async (name, input = {}) => { const result = await host.capabilities.invoke(`sesame/mt5#${name}`, input); assert.equal(result.type, 'result'); return result.value; };
   const sources = await host.data.sources({});
   assert.ok(sources.items.some(row => row.ref.providerId === 'sesame/mt5#market'));
@@ -38,11 +38,37 @@ test('installed MT5 v2 declares sources, redacts ingress credentials and publish
   assert.ok(guarded.parts[0].text.includes(messageId));
   const pending = await call('mt5_settings'); assert.equal(pending.pendingImports[0].source_message_id, messageId);
   assert.equal(JSON.stringify(pending).includes(token), false);
+  await call('mt5_update_configuration', { command_id: 'mt5-readiness-fixture-config', expected_version: pending.settings.version,
+    changes: { account: { login: '123456', server: 'Fixture-Demo', password: 'fixture-account-secret' }, servers: { terminal: { token } } } });
+  const child = runtime.createConversation('research', 'Configuration readiness fixture', 'conv_main');
+  for (const context of [{ sessionId: null, kind: 'service' }, { sessionId: child.id, kind: 'subagent' }]) {
+    const caller = runtime.authority.bind(context, runtime.capabilities.hostEntry);
+    const readiness = await runtime.capabilities.check('sesame/mt5#market.bind', { binding: {} }, { consumer: 'host' }, caller);
+    assert.equal(readiness.available, true, `${caller.kind}: ${JSON.stringify(readiness.requirements)}`);
+    assert.doesNotMatch(JSON.stringify(readiness), /fixture-not-real-secret|fixture-account-secret/);
+    await assert.rejects(runtime.capabilities.invoke('sesame/mt5#mt5_settings', {}, { consumer: 'host' }, caller), { code: 'FORBIDDEN' });
+    await assert.rejects(runtime.capabilities.invoke('sesame/mt5#mt5_update_configuration', {
+      command_id: `mt5-denied-${caller.kind}-fixture`, expected_version: pending.settings.version + 1, changes: { allow_trading: false },
+    }, { consumer: 'host' }, caller), { code: 'FORBIDDEN' });
+  }
   const target = await call('mt5_target');
   const manifest = await host.resources.read(target, { part: 'manifest' });
   assert.equal(manifest.kind, 'strategy.target'); assert.equal(manifest.content.id, 'sesame.mt5.mql5');
-  const declared = await host.resources.read(target, { part: 'content', entry: 'capabilities.json', encoding: 'utf8', length: 262144 });
-  assert.equal(JSON.parse(declared.content).apiVersion, '2');
+  let offset = 0, declared = '', total;
+  for (;;) {
+    const part = await host.resources.read(target, { part: 'content', entry: 'capabilities.json', encoding: 'utf8', offset, length: 262144 });
+    total ??= part.total;
+    assert.equal(part.offset, offset);
+    assert.equal(part.total, total);
+    assert.equal(Buffer.byteLength(part.content), part.length);
+    assert.ok(part.length > 0 && part.length <= 262144);
+    declared += part.content;
+    offset += part.length;
+    if (part.nextOffset === undefined) { assert.equal(offset, total); break; }
+    assert.equal(part.nextOffset, offset);
+    assert.ok(offset < total);
+  }
+  assert.equal(JSON.parse(declared).apiVersion, '2');
   const repeated = await call('mt5_target'); assert.deepEqual(repeated, target);
   t.diagnostic(JSON.stringify({ nativeTerminalCalls: 0, vendorCalls: 0, declaredSources: sources.items.filter(row => row.ref.providerId.startsWith('sesame/mt5#')).length, credentialsRedactedBeforePersistence: true, immutableTarget: true }));
 });

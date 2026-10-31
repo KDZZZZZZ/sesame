@@ -134,6 +134,40 @@ integration('memory schema distinguishes user messages and complete frozen Artif
   await assert.rejects(f.call('memory_propose', memoryEntry([{ type: 'artifact', ...f.ref, digest: `sha256:${'c'.repeat(64)}` }])), /not found/);
 });
 
+integration('drawing Agent tools share persisted source, geometry and revision with the host canvas', async t => {
+  const f = await fixture(t), schema = f.tool('chart_drawing').parameters;
+  const binding = { source: { providerId: 'example/market#prices', revision: 'source-v1', binding: { connection: { id: 'market', revision: 'connection-v1' } } }, instrument: { sourceId: 'prices', instrumentId: 'XAUUSD' }, spec: { timeframe: '1h', priceBasis: 'bid', adjustment: 'none', session: 'all', calendarRevision: { status: 'unknown' } } };
+  const scene = await f.call('canvas_apply', { command_id: crypto.randomUUID(), expected_version: 1, operations: [{ op: 'update', id: 'chart_main', chart: { symbol: 'XAUUSD', binding } }] });
+  const spec = { schemaVersion: 'sesame-drawing/1', kind: 'horizontal', title: '研究参考价位', anchors: [{ time: 1792400400, price: 3000 }], style: { color: '#24866e', width: 2, lineStyle: 'solid', fillOpacity: .12 } };
+  const input = { action: 'put', command_id: crypto.randomUUID(), expected_version: scene.version, expected_revision: null, chart_id: 'chart_main', binding, drawing: spec };
+  assert.equal(f.Check(schema, input), true);
+  const missingRevision = structuredClone(input); delete missingRevision.expected_revision;
+  assert.equal(f.Check(schema, missingRevision), false);
+  assert.equal(f.Check(schema, { ...input, source: 'also present' }), false);
+  assert.equal(f.Check(schema, { ...input, drawing: { ...spec, anchors: [...spec.anchors, ...spec.anchors] } }), false);
+  const created = await f.call('chart_drawing', input), record = created.scripts.find(script => script.drawing);
+  assert.ok(record.drawing.id); assert.equal(record.drawing.active, true); assert.deepEqual(record.drawing.spec, spec);
+  assert.equal(record.artifact.kind, 'indicator'); assert.equal(f.runtime.contractArtifacts.read(record.artifact).manifest.content.implementation.runtime, 'sesame-indicator/1');
+  const inspected = await f.call('canvas_inspect', {});
+  assert.equal(inspected.scripts[0].source, record.source, 'Agent sees the same executable source as the UI');
+  const read = await f.call('chart_drawing', { action: 'read', chart_id: 'chart_main', drawing_id: record.drawing.id });
+  assert.equal(read.source, record.source); assert.equal(read.drawing.revision, record.drawing.revision);
+  const { compute } = await import(`data:text/javascript,${encodeURIComponent(read.source)}`);
+  assert.deepEqual(compute().drawings, [spec]);
+  const changed = await f.call('chart_drawing', { action: 'put', command_id: crypto.randomUUID(), expected_version: created.version, chart_id: 'chart_main', drawing_id: record.drawing.id, expected_revision: record.drawing.revision, binding, source: read.source.replace('"price": 3000', '"price": 3015') });
+  const latest = changed.scripts.find(script => script.drawing);
+  assert.equal(latest.drawing.id, record.drawing.id); assert.notEqual(latest.id, record.id); assert.notEqual(latest.drawing.revision, record.drawing.revision);
+  assert.equal(latest.drawing.spec.anchors[0].price, 3015);
+  await assert.rejects(f.call('chart_drawing', { action: 'remove', command_id: crypto.randomUUID(), expected_version: changed.version, chart_id: 'chart_main', drawing_id: record.drawing.id, expected_revision: record.drawing.revision, binding }), { code: 'drawing_conflict' });
+  assert.equal(f.runtime.canvas.inspect().scripts[0].drawing.spec.anchors[0].price, 3015);
+  const removeInput = { action: 'remove', command_id: crypto.randomUUID(), expected_version: changed.version, chart_id: 'chart_main', drawing_id: latest.drawing.id, expected_revision: latest.drawing.revision, binding };
+  assert.equal(f.Check(schema, { ...removeInput, drawing: spec }), false);
+  assert.equal(f.Check(schema, { ...removeInput, source: read.source }), false);
+  const removed = await f.call('chart_drawing', { action: 'remove', command_id: crypto.randomUUID(), expected_version: changed.version, chart_id: 'chart_main', drawing_id: latest.drawing.id, expected_revision: latest.drawing.revision, binding });
+  assert.equal(removed.scripts.length, 0);
+  assert.equal(f.runtime.contractArtifacts.read(record.artifact).ref.revision, record.artifact.revision, 'prior code remains immutable');
+});
+
 integration('candidate IDs stay distinct from accepted memory IDs and stale candidate versions retain CAS', async t => {
   const f = await fixture(t), candidate = await f.call('memory_propose', memoryEntry([{ type: 'artifact', ...f.ref }]));
   await assert.rejects(f.call('memory_read', { id: candidate.id }), error => {
