@@ -1,17 +1,9 @@
 # 行为金融研究
 
-`sesame/behavioral-finance`，Plugin API 2，要求 Sesame `>=0.2.3`，当前包版本以 plugin.json 为准。独立可选、安装后 discoverable；`plugin_load` 只加载本方法。没有执行 capability 或 source；不自动联网、安装依赖或操作账户，也不注入其它方法包。
+`sesame/behavioral-finance`，版本 1.0.0，要求 Sesame `>=0.2.0-0`。独立可选、安装后 discoverable；`plugin_load` 只加载本方法。零 tools/providers，无自动联网/依赖安装/账户操作，也不依赖或注入其它方法包。
 
 独立行为金融：参照点、注意力与预期偏差的可检验假设；区分心理解释、可观测代理与因果证据。
 
-方法入口见 [skill](skills/behavioral-finance/SKILL.md)，来源与许可见 [PROVENANCE](PROVENANCE.md)。用户或工作流按要回答的问题选择本方法，输入已有固定证据，输出局部观察、解释、反证和缺口。取数与最终报告由调用者统筹；已有同定义、同参数、同版本的观察可直接复用。案例为原创虚构教学数据。
+从 [skill](skills/behavioral-finance/SKILL.md) 和 [PROVENANCE](PROVENANCE.md) 开始。案例为原创虚构教学数据。取数使用 data-access 与用户已配置的提供方；画图使用 canvas-control，报告使用 reports，策略化使用 strategy-authoring 与明确选定的目标。这些现有能力不是本包重复实现。
 
 本包提供具体研究步骤、证据要求和验收示例，不声称完整自动理论分类、经济效力或收益证明。引用外部文献不代表其作者认可本插件，亦不改变外部许可。
-
-## 文件与能力边界
-
-本包属于 `analysis / knowledge`。`index.js` 保持空能力列表，`capabilities.json` 显式声明可读取的知识资源。`skills/behavioral-finance/SKILL.md` 说明问题、输入与局部交付，`references/` 保留具体判据、反例及验证边界；`examples/` 提供合成输入和独立预期。解释和标注由选用本方法的 Agent 根据证据完成，不把知识内容冒充已执行算法。
-
-取数、选择方法、安排研究步骤和发布报告由调用方组织。本包交付带原始来源、时间、支持/反证与失效条件的局部判断；多个同源解释不增加独立证据数量。
-
-本包没有需要用户保存的配置、密钥或账户，不声明虚构的 `configurationRequirements`。所选数据源的配置绑定在来源能力上；模型认证沿用宿主设置。

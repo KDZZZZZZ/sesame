@@ -66,22 +66,6 @@ export class Market {
     const rows = this.db.prepare('SELECT body,observed_at FROM contract_bars WHERE server=? AND symbol=? AND period=? AND time>=? AND time<? ORDER BY time').all(server, symbol, period, from, to);
     return { rows: rows.map(row => JSON.parse(row.body)), observedAt: rows.length ? rows.reduce((at, row) => Math.min(at, row.observed_at), Infinity) : null };
   }
-  latestNativeBar(server, symbol) {
-    const row = this.db.prepare('SELECT body,observed_at FROM contract_bars WHERE server=? AND symbol=? ORDER BY time DESC,observed_at DESC LIMIT 1').get(server, symbol);
-    return row ? { time: JSON.parse(row.body).time, observedAt: row.observed_at } : null;
-  }
-  cachedSymbols(server) {
-    const catalog = this.db.prepare('SELECT body,updated_at FROM symbols WHERE server=?').get(server);
-    const items = new Map((catalog ? JSON.parse(catalog.body) : []).map(row => [row.symbol, row]));
-    const observed = catalog ? [Date.parse(catalog.updated_at)] : [];
-    for (const row of this.inventory().items.filter(row => row.server === server)) {
-      if (!items.has(row.symbol)) items.set(row.symbol, { symbol: row.symbol });
-      if (row.updated_at) observed.push(Date.parse(row.updated_at));
-    }
-    const times = observed.filter(Number.isFinite), observedAt = times.length ? Math.min(...times) : 0;
-    return { items: [...items.values()].sort((a, b) => a.symbol.localeCompare(b.symbol)), observedAt,
-      updated_at: observedAt ? new Date(observedAt).toISOString() : null };
-  }
   async read(tool, args = {}, signal) {
     requireValue(!this.mt5.terminalPreparing, '终端正在自动配置，本地历史仍可查看', 503, 'terminal_preparing');
     const blocked = this.official.access('terminal', tool, null).blocked_reason;
@@ -101,11 +85,11 @@ export class Market {
     const { server } = this.scope(), cached = this.db.prepare('SELECT * FROM symbols WHERE server=?').get(server);
     if (cached && !refresh && Date.now() - Date.parse(cached.updated_at) < 86400_000) return { server, items: JSON.parse(cached.body), updated_at: cached.updated_at, cached: true };
     if (this.symbolJobs.has(server)) return this.symbolJobs.get(server);
-    const job = this.loadSymbols(server);
+    const job = this.loadSymbols(server, cached);
     this.symbolJobs.set(server, job);
     try { return await job; } finally { this.symbolJobs.delete(server); }
   }
-  async loadSymbols(server) {
+  async loadSymbols(server, cached) {
     try {
       await this.connected();
       const data = await this.read('get_marketwatch_symbols', { include_hidden: true, limit: 10000 });
@@ -114,12 +98,7 @@ export class Market {
       const items = data.symbols.filter(s => typeof s.symbol === 'string').map(s => ({ symbol: s.symbol, description: s.description ?? '', digits: s.digits ?? 5, point: s.point ?? 0.00001, selected: !!s.selected, currency: s.currency_profit ?? '' }));
       const timestamp = now(); this.db.prepare('INSERT OR REPLACE INTO symbols VALUES(?,?,?)').run(server, JSON.stringify(items), timestamp);
       return { server, items, updated_at: timestamp, cached: false };
-    } catch (error) {
-      if (this.scope().server !== server || error.code === 'mt5_account_mismatch') throw error;
-      const cached = this.cachedSymbols(server);
-      if (!cached.items.length) throw error;
-      return { server, items: cached.items, updated_at: cached.updated_at, cached: true, warning: this.official.redact(error.message) };
-    }
+    } catch (error) { if (!cached) throw error; return { server, items: JSON.parse(cached.body), updated_at: cached.updated_at, cached: true, warning: this.official.redact(error.message) }; }
   }
   async searchSymbols({ q = '', offset = 0, limit = 50 } = {}) {
     requireValue(typeof q === 'string' && q.length <= 100 && !/[\x00-\x1f]/.test(q), '品种搜索内容无效');
@@ -147,32 +126,15 @@ export class Market {
     const { server } = this.scope(), { symbol, period, from, to } = this.validate(input), limit = Number(input.limit ?? 4000), offset = Number(input.offset ?? 0);
     requireValue(Number.isInteger(limit) && limit > 0 && limit <= 20000, '每页 K 线数量应为 1–20000');
     requireValue(Number.isSafeInteger(offset) && offset >= 0 && offset <= 200000, 'K 线偏移应为 0–200000；更大范围请使用 next_before 分页');
-    const rows = this.db.prepare(`SELECT * FROM (
-      SELECT b.time,b.open,b.high,b.low,b.close,b.volume,NULL body FROM bars b
-      WHERE b.server=? AND b.symbol=? AND b.period=? AND b.time>=? AND b.time<?
-      UNION ALL
-      SELECT c.time,NULL,NULL,NULL,NULL,NULL,c.body FROM contract_bars c
-      WHERE c.server=? AND c.symbol=? AND c.period=? AND c.time>=? AND c.time<?
-        AND NOT EXISTS(SELECT 1 FROM bars b WHERE b.server=c.server AND b.symbol=c.symbol AND b.period=c.period AND b.time=c.time)
-      ) ORDER BY time DESC LIMIT ? OFFSET ?`).all(server, symbol, period, from, to, server, symbol, period, from, to, limit + 1, offset);
+    const rows = this.db.prepare('SELECT time,open,high,low,close,volume FROM bars WHERE server=? AND symbol=? AND period=? AND time>=? AND time<? ORDER BY time DESC LIMIT ? OFFSET ?').all(server, symbol, period, from, to, limit + 1, offset);
     const more = rows.length > limit; if (more) rows.pop(); rows.reverse();
-    const bars = rows.map(({ body, ...row }) => body === null ? row : this.normalize([{ ...JSON.parse(body), time: row.time }], from, to)[0]);
     this.cache.accessed(server, symbol, period, from, to);
     const metadata = this.db.prepare('SELECT updated_at FROM series WHERE server=? AND symbol=? AND period=?').get(server, symbol, period);
-    const typed = this.db.prepare('SELECT MAX(observed_at) observed_at FROM contract_bars WHERE server=? AND symbol=? AND period=?').get(server, symbol, period);
-    const updated = [metadata?.updated_at, typed.observed_at === null ? null : new Date(typed.observed_at).toISOString()].filter(Boolean).sort().at(-1) ?? null;
-    return { server, symbol, period, bars, has_more: more, next_before: more ? bars[0].time : null, updated_at: updated, time_basis: TIME_BASIS, freshness: 'stale' };
+    return { server, symbol, period, bars: rows, has_more: more, next_before: more ? rows[0].time : null, updated_at: metadata?.updated_at ?? null, time_basis: TIME_BASIS };
   }
   inventory() {
-    const rows = this.db.prepare(`WITH cached AS (
-      SELECT server,symbol,period,time FROM bars UNION SELECT server,symbol,period,time FROM contract_bars
-      ), typed AS (SELECT server,symbol,period,MAX(observed_at) observed_at FROM contract_bars GROUP BY server,symbol,period)
-      SELECT b.server,b.symbol,b.period,COUNT(*) bar_count,MIN(b.time) first_time,MAX(b.time) last_time,s.updated_at,t.observed_at
-      FROM cached b LEFT JOIN series s USING(server,symbol,period) LEFT JOIN typed t USING(server,symbol,period)
-      GROUP BY b.server,b.symbol,b.period`).all();
-    const items = rows.map(({ observed_at, ...row }) => ({ ...row, updated_at: [row.updated_at,
-      observed_at === null ? null : new Date(observed_at).toISOString()].filter(Boolean).sort().at(-1) ?? null }))
-      .sort((a, b) => String(b.updated_at ?? '').localeCompare(String(a.updated_at ?? '')));
+    const items = this.db.prepare(`SELECT b.server,b.symbol,b.period,COUNT(*) bar_count,MIN(b.time) first_time,MAX(b.time) last_time,s.updated_at
+      FROM bars b LEFT JOIN series s USING(server,symbol,period) GROUP BY b.server,b.symbol,b.period ORDER BY s.updated_at DESC`).all();
     return { items, ...this.cache.stats(), typed_cache: this.db.prepare('SELECT COUNT(*) bar_count,COALESCE(SUM(length(body)),0) payload_bytes FROM contract_bars').get(), time_basis: TIME_BASIS };
   }
   remove(input) {

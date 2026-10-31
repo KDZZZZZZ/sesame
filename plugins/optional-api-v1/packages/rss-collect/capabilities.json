@@ -14,7 +14,7 @@
         "agent",
         "host"
       ],
-      "description": "信息解析：从已有完整RSS 2.0/Atom XML提取条目与日期；不联网、不判断新闻影响。优先传sources_fetch返回的完整source_ref；也可传xml_content或包内file_path，三选一。插件读取完整冻结原文，不重新抓取。 长结果返回完整正文/结构资源引用及有界预览。",
+      "description": "Parse RSS 2.0 or Atom XML feed (inline content or bundled file path) into entries",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -33,43 +33,9 @@
             "default": 10,
             "minimum": 1,
             "maximum": 100
-          },
-          "source_ref": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "revision": {
-                "type": "string",
-                "minLength": 1
-              },
-              "digest": {
-                "type": "string",
-                "pattern": "^sha256:[a-f0-9]{64}$"
-              },
-              "kind": {
-                "const": "data"
-              },
-              "schemaVersion": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "id",
-              "revision",
-              "digest",
-              "kind",
-              "schemaVersion"
-            ],
-            "additionalProperties": false,
-            "description": "Exact immutable data ref returned by sources_fetch; original source is read inside the plugin, without copying a preview or a workspace JSON line."
           }
         },
-        "additionalProperties": false,
-        "oneOf": [
+        "anyOf": [
           {
             "required": [
               "xml_content"
@@ -79,13 +45,9 @@
             "required": [
               "file_path"
             ]
-          },
-          {
-            "required": [
-              "source_ref"
-            ]
           }
-        ]
+        ],
+        "additionalProperties": false
       },
       "outputSchema": {
         "type": "object",
@@ -131,136 +93,26 @@
           },
           "version": {
             "type": "string"
-          },
-          "source_ref": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "revision": {
-                "type": "string",
-                "minLength": 1
-              },
-              "digest": {
-                "type": "string",
-                "pattern": "^sha256:[a-f0-9]{64}$"
-              },
-              "kind": {
-                "const": "data"
-              },
-              "schemaVersion": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "id",
-              "revision",
-              "digest",
-              "kind",
-              "schemaVersion"
-            ],
-            "additionalProperties": false,
-            "description": "Exact immutable data ref returned by sources_fetch; original source is read inside the plugin, without copying a preview or a workspace JSON line."
-          },
-          "source_provenance": {
-            "type": "object",
-            "additionalProperties": true,
-            "description": "Original snapshot final URL, retrieval time, content type and hash; parsing is derived evidence, not a new independent source."
-          },
-          "output_truncated": {
-            "type": "boolean",
-            "description": "True means the complete result is only in result_ref; returned text is a preview."
-          },
-          "result_ref": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "revision": {
-                "type": "string",
-                "minLength": 1
-              },
-              "digest": {
-                "type": "string",
-                "pattern": "^sha256:[a-f0-9]{64}$"
-              },
-              "kind": {
-                "const": "data"
-              },
-              "schemaVersion": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "id",
-              "revision",
-              "digest",
-              "kind",
-              "schemaVersion"
-            ],
-            "additionalProperties": false,
-            "description": "Exact immutable derived result artifact; use result_entries with host.resources.read. Original source and provenance are retained inside it."
-          },
-          "result_entries": {
-            "type": "object",
-            "properties": {
-              "structured": {
-                "const": "rows.json"
-              },
-              "text": {
-                "const": "text.txt"
-              }
-            },
-            "required": [
-              "structured"
-            ],
-            "additionalProperties": false
-          },
-          "result_bytes": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "result_preview": {
-            "type": "string",
-            "maxLength": 4000
-          },
-          "returned_entries": {
-            "type": "integer",
-            "minimum": 0
           }
         },
         "additionalProperties": true
       },
       "execution": "immediate",
-      "effects": [
-        "resources.read",
-        "process",
-        "filesystem",
-        "resources.publish"
-      ],
+      "effects": [],
       "binding": {
-        "type": "native",
+        "type": "mcp",
+        "server": "analysis",
         "name": "parse_feed"
       },
       "usage": {
-        "purpose": "把一份已有feed转成有限条目，供方法/工作流筛选；条目摘要不是文章全文。",
-        "inputs": "三选一：{source_ref:<sources_fetch返回的完整ref>}，或{xml_content:<完整文本>}，或{file_path:<包内相对样本路径>}；其余筛选参数按Schema。source_ref由插件按字节分页读取；不要把20000字符预览或data_read工作区路径代替原文。inline输入上限2MiB UTF-8；source_ref原始字节上限2MiB，按原编码解码后上限8MiB UTF-8。",
-        "outputs": "`format,feed_title,feed_updated,entry_count,entries,source,version`。entry_count是输入全部条数，entries受max_entries限制、没有分页。条目保留title/link/published/id和最多300字符content_snippet，摘要不是文章全文。 source_ref输入自动返回source_ref、source_provenance（原最终URL、获取时间、原始字节hash、内容类型、编码）；source为最终URL。inline/包内输入的source仅为inline/包内文件名，不推断URL或抓取时间。 超过24KiB的解析结果不直接注入上下文：返回output_truncated:true、result_ref、result_entries、result_bytes及有界预览；HTML保留完整text_length，RSS保留entry_count/returned_entries，汇率保留total_currencies/returned_currencies。完整结构在result_entries.structured（rows.json，含一行完整结果和来源），HTML全文另在result_entries.text（text.txt）。用host.resources.read(result_ref,{part:\"content\",entry:result_entries.text??result_entries.structured,offset:0,length:8192,encoding:\"utf8\"})按需读取，继续使用返回的nextOffset；Agent工具形状为host_resources_read({ref:result_ref,part:\"content\",entry:result_entries.structured,offset:0,length:8192,encoding:\"utf8\"})。HTML正文可改用返回的result_entries.text；RSS/汇率没有text.txt。预览不能当全文，长结果省略text/entries/rates/currencies；小结果保持完整原字段。",
+        "purpose": "Parse RSS 2.0 or Atom XML feed (inline content or bundled file path) into entries",
+        "inputs": "Provide xml_content or a bundled relative file_path. This parser does not fetch URLs.",
+        "outputs": "Structured JSON fields follow outputSchema; original source and version are preserved.",
         "prerequisites": [
-          "Existing Python 3 executable (host pythonPath, otherwise python on Windows / python3 on Linux). Only standard-library modules are used; no API key, pip install or network is required for parsing.",
-          "host.resources.read resolves source_ref and host.process.exec runs the bundled parser using owned temporary files.",
-          "host.resources.create/publish/remove retain large parsed results as immutable data artifacts; no extra Agent tool is needed."
+          "Python 3 available to the host MCP transport."
         ],
         "limitations": [
-          "仅支持RSS 2.0/Atom核心字段；有限条目或空摘要不等于没有新闻，也不证明已读文章全文。",
-          "不核实来源，不将同一事件转发当独立证据；同一快照可供多个方法复用，不另开报告。",
-          "仅解析传入快照；原来源选择、取证权限和收费/登录限制由获取能力处理。XML条目和汇率不代表实时价格，保留原始日期与覆盖范围。"
+          "Results describe supplied content or the bundled snapshot, not live network observations."
         ],
         "examples": [
           {
@@ -297,7 +149,7 @@
                 }
               ],
               "source": "sample.atom",
-              "version": "3.0.0"
+              "version": "2.0.3"
             }
           },
           {
@@ -327,18 +179,11 @@
                 }
               ],
               "source": "inline",
-              "version": "3.0.0"
+              "version": "2.0.3"
             }
           }
         ]
-      },
-      "requires": [
-        {
-          "id": "python-process",
-          "capability": "host.process.exec",
-          "reason": "Run the bundled standard-library Python parser through the existing host process capability."
-        }
-      ]
+      }
     }
   ],
   "sources": [],
@@ -360,42 +205,5 @@
   ],
   "hooks": [],
   "stateCollections": [],
-  "artifactSchemas": [
-    {
-      "id": "data",
-      "kind": "data",
-      "schemaVersion": "1.0.0",
-      "schema": {
-        "type": "object",
-        "properties": {
-          "format": {
-            "const": "json-rows"
-          },
-          "path": {
-            "type": "string",
-            "minLength": 1
-          },
-          "rowCount": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "columns": {
-            "type": "array"
-          },
-          "provenance": {
-            "type": "object",
-            "additionalProperties": true
-          }
-        },
-        "required": [
-          "format",
-          "path",
-          "rowCount",
-          "columns",
-          "provenance"
-        ],
-        "additionalProperties": true
-      }
-    }
-  ]
+  "artifactSchemas": []
 }

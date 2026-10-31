@@ -9,49 +9,49 @@
     {
       "id": "knowledge-0",
       "path": "examples/expected.md",
-      "description": "ICT 价格结构研究的合成教学反例与预期局部结论，不是真实市场结果。",
+      "description": "ICT 价格结构研究 — examples/expected.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-1",
       "path": "prompt.md",
-      "description": "ICT 价格结构研究的方法边界与组合入口：固定参考区间中的价格分离、跨越和结构转变候选是否满足明确的观察定义；复用固定证据并向调用者交回局部结论。",
+      "description": "ICT 价格结构研究 — prompt.md",
       "kind": "prompt"
     },
     {
       "id": "knowledge-2",
       "path": "PROVENANCE.md",
-      "description": "ICT 价格结构研究采用资料的出处、实际访问范围与许可，不是当前市场证据。",
+      "description": "ICT 价格结构研究 — PROVENANCE.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-3",
       "path": "README.md",
-      "description": "ICT 价格结构研究的输入、输出、方法边界和按需参考说明。",
+      "description": "ICT 价格结构研究 — README.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-4",
       "path": "skills/ict/references/execution.md",
-      "description": "ICT 价格结构研究可选 Python 计算的真实输入、执行与结果登记接口；已有匹配观察时可复用。",
+      "description": "ICT 价格结构研究 — skills/ict/references/execution.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-5",
       "path": "skills/ict/references/method.md",
-      "description": "ICT 价格结构研究的操作定义、因果边界与反证；用于核对本次具体判据。",
+      "description": "ICT 价格结构研究 — skills/ict/references/method.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-6",
       "path": "skills/ict/references/validation.md",
-      "description": "ICT 价格结构研究从解释候选到可重复规则的验证前提、时间与样本外边界。",
+      "description": "ICT 价格结构研究 — skills/ict/references/validation.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-7",
       "path": "skills/ict/SKILL.md",
-      "description": "分析方法：固定参考区间中的价格分离、跨越和结构转变候选是否满足明确的观察定义。输入：已有固定闭柱证据、SourceTime、时段与覆盖、参考高低点和判定定义；需要 session/kill-zone 时另需明确来源时区与历史夏令时规则。输出：源柱引用、三柱区间分离或其他明确规则的观察、确认时点、候选术语、替代解释及失效条件。",
+      "description": "ICT 价格结构研究 — skills/ict/SKILL.md",
       "kind": "skill"
     }
   ],

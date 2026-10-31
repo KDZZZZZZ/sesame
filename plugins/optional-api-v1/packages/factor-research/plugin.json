@@ -1,7 +1,7 @@
 {
   "id": "sesame/factor-research",
   "apiVersion": "2",
-  "version": "2.0.1",
+  "version": "2.0.0",
   "title": "因子研究",
   "description": "按需评估选定因子列的可得时点、秩相关、冗余与固定样本外，不强制挖掘模型。",
   "author": {

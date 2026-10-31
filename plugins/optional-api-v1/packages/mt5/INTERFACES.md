@@ -1,30 +1,6 @@
 # mt5 公开能力契约
 此文依据当前实现。示例中的ID/路径/Ref必须用对应公开入口的实际返回值；它们展示参数形状，不是默认任务步骤。宿主能力不会直接暴露为普通Agent工具。
 
-## mt5_trading_prepare
-
-调用者：主 Agent、host。用户已要求手动交易时优先使用此集中准备入口；参数完整时可直接调用 portfolio-execution 的 `manual_trade_execute` 快捷入口，由执行插件内部准备。无需先查目录、重复读取账户或逐项开启权限。
-
-输入：`{symbol:<准确品种>,command_id:<稳定16–128字符>,user_authorized:true,expected_account?:{accountId,server,revision}}`。已有用户授权继续有效；不猜订单数量、价格或账户，不自动切换登录。
-
-输出：`{account:{accountId,server,revision},summary,terminal,spec,positions,orders,tick,quote_clock,readStartedAt,capturedAt,preparation}`。原生 tick 时间保持不变；`quote_clock` 保留实际账户/服务器、原始毫秒、归一 UTC 毫秒、offsetMinutes、ruleId 与 ruleRevision。规则由 MT5 原生桥接统一解释；未知服务器/日期或未验证 DST 时段拒绝准备。报价是否可执行仍由执行入口即时校验决定，不能用接收时间代替源时间。
-
-行为：绑定当前账户，内部以配置版本校验开启 Sesame 交易许可；需要时复用终端算法交易准备；仅明确 Python `-10004` 时初始化一次。正常连接不初始化、不重启。规格、持仓和挂单一起调度，原生 Python worker 仍串行；随后读取最新报价，再核验账户。权限已开启时直接读取；主 Agent 可同时处理互不依赖的用户意图信息。
-
-幂等与失败：同命令并发调用共享准备，成功后再次调用重新读事实，权限副作用不重复。可选 expected_account 在任何权限副作用前校验，准备过程中账户或配置变化立即拒绝；自身开启应用许可后返回新 revision。保留取消、原生错误和失败阶段，不返回虚假 ready、不下单、不重放旧订单。券商限制、MCP AI Assistant Trading 授权和 Python API 禁用分别报明实际缺项；不猜未公开的配置项。
-
-## mt5_trading_permissions
-
-调用者：主Agent、host。区分插件许可、账户只读状态、MCP许可与终端算法交易开关；按已有用户授权准备当前绑定终端，不修改宿主接口。
-
-输入：`{action:"read"}`，或`{action:"enable",command_id:<稳定16–128字符>,expected_version:<读回configuration_version>}`。不接受账户、路径、密码或自定义INI覆盖。
-
-输出：read返回`{checked_at,configuration_version,account:{login,server,type,read_only},application:{allow_trading},terminal:{connected,experts_trade_allowed,mcp_trade_allowed}}`；未知布尔为null。enable返回持久的`configuration_change`回执，含`status/result:{before,after,restarted,verified}/error?`；只有配置版本与账户保持一致、真实终端权限回读通过才`applied`。准备途中失败且无法确定重启状态时，`restarted=null`，不猜成false。
-
-依赖与副作用：沿用统一配置声明的Terminal MCP、绑定账户和已有安装发现。read仅取状态；enable复用`prepareTerminal`，仅在无活动终端任务、持仓、挂单或EA时正常重启精确终端，写私有临时启动配置并清理；失败时尝试恢复原账户连接并禁用算法交易，恢复也可能失败，以实际回读和错误为准。已启用无需重启。重启配置保持DLL关闭；不重启路径仅核验既有状态。不下单、不自动挂载。
-
-恢复：同命令ID/输入/会话返回原回执，冲突拒绝；失败、running或unknown不得自动重新执行，先read真实状态。旧用户授权继续有效；权限修复不自动重放旧订单，不代表报价新鲜、订单成交或策略可用。本入口不改变原生MCP授权、Python API禁用或券商限制，具体缺项须分别说明。
-
 ## mt5_catalog
 调用者：agent、host。取得当前原生方法定义、归属工具及不可用原因。
 
@@ -34,9 +10,9 @@
 
 依赖入口：原生接口需要时使用；Sesame行情有已声明 data-access/canvas 入口，不以catalog作为必经流程。
 
-副作用：native-discovery
+副作用：native-discovery、may-start-metaeditor
 
-边界与恢复：目录查询不启动终端或 MetaEditor。Terminal MCP 拒绝连接返回 unavailable，不推断终端进程或账户状态；用 mt5_connect 先核对所选终端进程。MetaEditor 未监听返回 not_running；确需编辑时由主 Agent 使用 mt5_edit 的 launcher/start_editor，或执行已授权的编辑/编译能力。installed 不等于已连接。marketdata 是独立可选服务，disabled 不影响 terminal 券商行情。
+边界与恢复：指定metaeditor可能按需启动编辑器；installed不等于已连接。marketdata是独立可选服务，disabled不影响terminal券商行情。
 
 ## mt5_call
 调用者：agent、host。调用目录已声明的official一般读取方法，并保留原生回执。
@@ -220,15 +196,6 @@
 
 边界与恢复：冻结SDK/本机标准库后运行真实编译器，可能启动原生进程；不执行EA。诊断可指导修改checkout并save新revision，不能改旧构建冒充成功。
 
-## configuration.read
-调用者：host。供统一配置入口及能力依赖检查读取已声明的公开配置与凭据存在状态，支持服务和子任务上下文。
-
-输入：{}。
-
-输出：{settings:{version,servers,account,tester_agent,allow_trading,allow_host_operations}}。服务器仅含url/enabled/authenticated，账户及Tester代理密码仅以password_configured布尔值表示；不返回待导入凭据、连接诊断或私密值。
-
-副作用：只读，无原生网络调用或配置变更。存在状态不证明远端鉴权与连接成功；原有mt5_settings及配置写入仍只允许主会话。
-
 ## mt5_settings
 调用者：agent、host。读取脱敏配置、待导入引用和连接观察。
 
@@ -284,17 +251,17 @@
 原生行为参考：[MetaTrader 5 官方平台启动文档](https://www.metatrader5.com/zh/terminal/help/start_advanced/start)。特定原生启动参数继续由 mt5_catalog 声明的 launcher 方法和 mt5_trade 路由处理。
 
 ## mt5_connect
-调用者：agent、host。复用现有MT5配置，依次检查所选终端进程、MCP、券商和账户身份。
+调用者：agent、host。复用现有MT5配置并核验终端、券商和账户身份。
 
 输入：{command_id:<稳定ID>,start_if_needed?:boolean}；例 {command_id:"connect-existing-01",start_if_needed:false} 只恢复/验证现有连接。
 
-输出与状态：命令回执status=applied|failed，result:{server:"terminal",status:"connected"或不可用状态,code,reason,terminal_process?,mcp_connected?,broker_connected?,account?,settings_version?,started,steps}；terminal_process:{status,running,terminal_path,pids,checked_at}按完整路径匹配，running:null保留未知；connected需MCP和券商及账户一致。
+输出与状态：命令回执status=applied|failed，result:{server:"terminal",status:"connected"或不可用状态,code,reason,mcp_connected?,broker_connected?,account?,settings_version?,started,steps}；connected需MCP和券商及账户一致。
 
-依赖入口：主会话；mt5_settings/mt5_dependencies说明已有配置。只诊断传start_if_needed:false；允许启动时仅在确认所选终端未运行后按现有配置启动，不重复启动运行中或状态未知的终端。
+依赖入口：主会话；mt5_settings/mt5_dependencies说明已有配置。start_if_needed允许按现有配置启动终端。
 
 副作用：native-connection、may-start-terminal、plugin.state.write
 
-边界与恢复：MCP未连接先检查配置对应终端是否开启，不直接索取账户/密码/token，不循环重试；仅实际缺token或明确401处理MCP凭据。进程查询失败或不支持的平台保留unknown。保存配置不等于connected；connected不证明Python IPC。独立marketdata disabled不是券商行情故障；身份不符不自动切换账号；健康连接和正常交易不添加诊断步骤。
+边界与恢复：保存配置不等于connected；connected仅证明Terminal MCP和券商身份，不建立或证明Python IPC。独立marketdata disabled不是券商行情故障；身份不符不自动切换账号；超时/失败保留code和实际已验证环节。
 
 ## mt5_report_data
 调用者：agent、host。构建真实Tester报告的数据源与组件绑定。

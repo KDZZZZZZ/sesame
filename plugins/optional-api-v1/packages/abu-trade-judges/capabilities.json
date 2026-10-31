@@ -222,14 +222,13 @@
       "usage": {
         "purpose": "从查询时点前已结束的历史交易中寻找特征近邻，给出可解释的相似样本评分。",
         "inputs": "调用形状为 {input:{schema_version:1,source:{id,kind},as_of,parameters?,...}}，不是文件路径或数据 ID。source.id 为 1..500 字符，kind 为 synthetic/historical/live；as_of 及全部时间字段使用真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒）。输入限 2MiB 有限 JSON，不接收代码。parameters 只支持列出的字段。 feature_names 为 1..100 个唯一名称；query:{time,available_at,features}，available_at <= time <= as_of。completed_trades 每项含 id?、feature_snapshot_at、decision_time、outcome_available_at、features、outcome:{return}；feature_snapshot_at <= decision_time <= outcome_available_at < query.time。所有 features 按 feature_names 提供有限数，return 在 [-1,10]，交易 id 唯一。",
-        "outputs": "observations.query_time、neighbors、weighted_neighbor_return、score、decision_hint 分别给出查询时点、近邻证据、加权历史收益、评分和研究提示。 立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。 交给调用者时保留上述固定引用、source/as_of、实际参数和 limitations。把 neighbors、距离、历史结果与 decision_hint 交给风险或策略复盘；这是一份近邻证据，不能把 score 和加权收益拆成多个独立批准。",
+        "outputs": "observations.query_time、neighbors、weighted_neighbor_return、score、decision_hint 分别给出查询时点、近邻证据、加权历史收益、评分和研究提示。 立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。",
         "prerequisites": [
           "提供与任务相符的已知输入；本能力不联网取数，不需要 Python、ABU 安装或券商账户。"
         ],
         "limitations": [
           "这是缩放后的近邻基线，不是 ABU UMP/GMM 等价实现。加权历史收益不是校准后的预期收益，decision_hint 不等于下单批准。",
-          "来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。",
-          "复用前核对输入版本、参数、截止时间与实现口径；已有匹配结果可直接引用。同源价格、成交或统计派生结果不能重复计为独立证据；计算只回答本项局部问题，方法解释与最终综合由调用者负责。"
+          "来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。"
         ]
       }
     }
@@ -247,7 +246,7 @@
     {
       "id": "knowledge-1",
       "path": "prompt.md",
-      "description": "abu_trade_judges_analyze 的局部目标、解释边界和跨方法交接。",
+      "description": "历史交易裁判基线 — prompt.md",
       "kind": "prompt"
     },
     {
@@ -265,13 +264,13 @@
     {
       "id": "knowledge-4",
       "path": "skills/abu-trade-judges/references/method.md",
-      "description": "abu_trade_judges_analyze 的公式、参数口径与基线差异；核对是否可以复用其他已计算结果。",
+      "description": "历史交易裁判基线 — skills/abu-trade-judges/references/method.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-5",
       "path": "skills/abu-trade-judges/SKILL.md",
-      "description": "数值方法：从查询时点前已结束的历史交易中寻找特征近邻，给出可解释的相似样本评分。 输入为已固定证据；输出为 observations 与输入/结果工件，供方法解释或工作流复用。",
+      "description": "历史交易裁判基线 — skills/abu-trade-judges/SKILL.md",
       "kind": "skill"
     }
   ],

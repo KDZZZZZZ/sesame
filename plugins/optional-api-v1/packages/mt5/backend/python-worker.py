@@ -12,7 +12,6 @@ import numpy as np
 _guard_spec = importlib.util.spec_from_file_location("sesame_execution_guard", Path(__file__).with_name("execution_guard.py"))
 _guard = importlib.util.module_from_spec(_guard_spec)
 _guard_spec.loader.exec_module(_guard)
-_quote_clock = _guard._quote_clock
 
 ALLOWED = set('initialize login shutdown version last_error account_info terminal_info symbols_total symbols_get symbol_info symbol_info_tick symbol_select market_book_add market_book_get market_book_release copy_rates_from copy_rates_from_pos copy_rates_range copy_ticks_from copy_ticks_range orders_total orders_get order_calc_margin order_calc_profit order_check order_send positions_total positions_get history_orders_total history_orders_get history_deals_total history_deals_get'.split())
 POSITIONAL = {
@@ -30,21 +29,11 @@ POSITIONAL = {
 }
 IDS = {'ticket', 'order', 'deal', 'position', 'position_id', 'position_by', 'identifier', 'magic', 'login'}
 ENUMS = {'timeframe', 'flags', 'action', 'type', 'type_time', 'type_filling'}
-# MqlTradeRequest doubles; JSON may encode an integral price such as 157.0 as 157.
-REQUEST_DOUBLES = {'volume', 'price', 'stoplimit', 'sl', 'tp'}
 
 
 def convert_input(value, key=''):
     if isinstance(value, dict):
-        converted = {k: convert_input(v, k) for k, v in value.items()}
-        if key == 'request':
-            for field in REQUEST_DOUBLES:
-                if type(converted.get(field)) is int:
-                    number = float(converted[field])
-                    if number != converted[field]:
-                        raise ValueError('MT5 request double is not exactly representable')
-                    converted[field] = number
-        return converted
+        return {k: convert_input(v, k) for k, v in value.items()}
     if key in ENUMS and isinstance(value, str):
         if not value.isupper() or not isinstance(getattr(mt5, value, None), int):
             raise ValueError('Unknown MT5 enum constant')
@@ -81,15 +70,6 @@ def clean(value, key=''):
     return value
 
 
-def quote_account_identity():
-    """Side-read failure must not replace the ordinary tick's native result/error."""
-    try:
-        account = mt5.account_info()
-        return {'login': getattr(account, 'login', None), 'server': getattr(account, 'server', None)}
-    except Exception:
-        return None
-
-
 for line in sys.stdin:
     try:
         command = json.loads(line)
@@ -105,8 +85,6 @@ for line in sys.stdin:
             raise _guard.GuardRejected('INVALID_ARGUMENT', 'Guards are only supported for order_send')
         args = convert_input(supplied)
         timing = None
-        quote_clock = None
-        native_error = None
         if 'count' in args and not 1 <= args['count'] <= 100000:
             raise ValueError('count must be 1..100000')
         if name == 'initialize':
@@ -114,7 +92,7 @@ for line in sys.stdin:
             credentials = {k: account[k] for k in ['password', 'server'] if account.get(k)}
             if account.get('login'):
                 credentials['login'] = int(account['login'])
-            result = mt5.initialize(command['terminal'], timeout=15000, portable=command['portable'], **credentials)
+            result = mt5.initialize(command['terminal'], timeout=15000, **credentials)
         elif name == 'login':
             account = command.get('account') or {}
             credentials = {k: account[k] for k in ['password', 'server'] if account.get(k)}
@@ -123,33 +101,20 @@ for line in sys.stdin:
             result, timing = _guard.guarded_send(mt5, args['request'], execution_guard)
         elif name == 'order_send' and cancellation_guard is not None:
             result, timing = _guard.guarded_cancel(mt5, args['request'], cancellation_guard)
-        elif name == 'symbol_info_tick':
-            symbol = args.pop('symbol')
-            account_before = quote_account_identity()
-            result = mt5.symbol_info_tick(symbol, **args) if args else mt5.symbol_info_tick(symbol)
-            # Capture immediately: account_info may overwrite the SDK's last_error.
-            native_error = mt5.last_error()
-            account_after = quote_account_identity()
-            quote_clock = _quote_clock.resolve_quote_clock(result, account_before, account_after)
         else:
             positional = POSITIONAL.get(name, [])
             if name in {'history_orders_get', 'history_deals_get'} and 'date_from' in args:
                 positional = ['date_from', 'date_to']
             values = [args.pop(key) for key in positional]
-            # Some SDK C functions distinguish NULL kwargs from an empty dict.
-            # Dispatch exactly once and retain real keyword filters.
-            result = getattr(mt5, name)(*values, **args) if args else getattr(mt5, name)(*values)
-        output = {'result': clean(result), 'last_error': clean(native_error if name == 'symbol_info_tick' else mt5.last_error()), 'package_version': mt5.__version__}
-        if quote_clock is not None:
-            output['quote_clock'] = quote_clock
+            result = getattr(mt5, name)(*values, **args)
+        output = {'result': clean(result), 'last_error': clean(mt5.last_error()), 'package_version': mt5.__version__}
         if timing is not None:
             output['execution_timing'] = timing
         text = json.dumps(output, ensure_ascii=True, allow_nan=False)
         if len(text) > 8 * 1024 * 1024:
             raise ValueError('Result exceeds 8 MiB; use a smaller time range')
     except _guard.GuardRejected as error:
-        text = json.dumps({'error': error.code, 'message': str(error), 'submission_attempted': False,
-                           **clean(error.details or {})})
+        text = json.dumps({'error': error.code, 'message': str(error), 'submission_attempted': False})
     except Exception as error:
         # Do not echo exceptions containing user credentials or native process arguments.
         text = json.dumps({'error': type(error).__name__, 'message': 'Official Python call failed; check function parameters and terminal connection.'})

@@ -8,9 +8,6 @@
 
 对每个 `decision_time`，只有 `bar.available_at <= decision_time` 的 bar 能进入计算。当前 bar 只有在它自己的 `available_at` 已到达后才可用；否则最新来源就是上一根已可见 bar。输出中的 `source_until` 是所有实际使用 bar 的最大 `available_at`，用于审计特征是否在决策时已知。
 
-每个决策时点需至少 `max(window,atr_window,rank_window)+1` 根可见 K 线，额外一根提供
-收益率与 TR 的前收盘价。任一时点不足会拒绝整个调用，不返回部分特征或填零的预热结果。
-
 ## 公式
 
 - 回归斜率：对最近 `window` 个 close，以 `x=0..window-1` 做最小二乘斜率

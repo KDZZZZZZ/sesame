@@ -1,11 +1,9 @@
 import { configuration, configuredModel, check, digest, canonical, text, errorInfo, ID, terminal } from './shared.js';
-import { waitForSettledRun } from './workflow-mechanics.js';
 import { SYSTEM, OUTPUTS, PURPOSES, collaboration } from './team.js';
-import { verifyResearch, verifyEvaluator, taskPlugins, knowledgeCalls, hasResearchDataAccess } from './composition.js';
+import { verifyResearch, verifyEvaluator, taskPlugins } from './composition.js';
 import { callEvaluator } from './evaluation.js';
 import { archiveReport, finalSnapshot } from './archive.js';
 import { Checkpoints } from './checkpoints.js';
-import { factorPlan } from './workflow.js';
 
 const FINAL = new Set(['completed', 'cancelled']);
 const interruption = (error, signal) => ['RUN_INTERRUPTED', 'DEPENDENCY_UNAVAILABLE'].includes(error?.code) ? error
@@ -14,7 +12,7 @@ const dependencyCodes = new Set(['DEPENDENCY_UNAVAILABLE', 'MODEL_UNAVAILABLE', 
 const requirement = id => ({ id: 'factor-dependencies', capability: ID + '#auto_factor_dependencies', input: { run_id: id }, reason: 'The frozen factor workflow requires its selected model, evaluator and development evidence.' });
 const dependencyError = (id, error) => Object.assign(new Error(error.message), { code: 'DEPENDENCY_UNAVAILABLE', details: { ...error.details, cause: errorInfo(error), requirements: [requirement(id)] } });
 
-// Like trading-decision, the service schedules real host Agents and keeps durable
+// Like manual-trading, the service schedules real host Agents and keeps durable
 // checkpoints. This workflow has no account, order, or strategy-control ports.
 export class MiningRuntime {
   constructor(host, { now = Date.now } = {}) {
@@ -36,20 +34,15 @@ export class MiningRuntime {
     if (execution) await execution.checkpoint({ runId: id, generation: run.generation, phase: run.phase, round: run.round });
   }
   dependencies(host, id) {
-    // requires probes may inspect only the already-loaded frozen data and
-    // declarations. Evaluator preparation/candidate/finalization can perform
-    // network/process work and remains in explicit workflow operations.
     const run = this.get(id);
     try {
       this.dataset(id);
-      if (run.workflowDigest) check(run.workflowDigest === digest(run.config.workflow), 'FROZEN_WORKFLOW_CHANGED', 'Restore the frozen workflow plan or start a new factor run.');
       const missingOutput = run.tasks.find(task => task.finishedAt && !task.output && task.status !== 'cancelled');
       check(!missingOutput, 'MISSING_OUTPUT', `Completed ${missingOutput?.role}/${missingOutput?.mode} Agent ${missingOutput?.runRef?.id ?? missingOutput?.id} did not save its structured output. Its text and prior evidence are retained. auto_factor_submit requires that registered running role; the main Agent cannot submit on its behalf or repeat a completed Agent.`);
       if (!run.finalEvaluation) {
         verifyEvaluator(host, run.config.evaluator);
         if (!run.selection) {
           verifyResearch(host, run.config.research);
-          knowledgeCalls(host, run.config.research);
           for (const model of [run.config.model, ...Object.values(run.config.agentModels)]) configuredModel(host, model);
         }
       }
@@ -104,13 +97,12 @@ export class MiningRuntime {
     const id = `fm_${digest([host.context.sessionId, input.request_id]).slice(7, 39)}`;
     // Loading and calling happen inside auto_factor_start's live invocation.
     await host.plugins.setEnabled(config.evaluator.plugin_id, true, { scope: 'session' });
-    const openResearchData = hasResearchDataAccess(config.research);
     const prepared = await callEvaluator(host, config.evaluator, { action: 'prepare', run_id: id,
       ...(input.dataset_id ? { dataset_id: text(input.dataset_id, 'dataset_id', 200) } : {}), options: config.evaluator.arguments,
-      access: openResearchData ? 'development-only' : 'restricted' }, signal);
+      access: config.research.plugins.length ? 'development-only' : 'restricted' }, signal);
     check(prepared.development && Array.isArray(prepared.development.rows) && prepared.data?.digest && prepared.contract && typeof prepared.contract.instructions === 'string' && prepared.contract.instructions.length <= 6000,
       'EVALUATOR_PROTOCOL', 'Evaluator must return bounded development evidence and candidate instructions');
-    check(!openResearchData || prepared.data.holdoutMode === 'none', 'HOLDOUT_ACCESS', 'Research capabilities without compatible input-only access require an evaluator session without holdout data');
+    check(!config.research.plugins.length || prepared.data.holdoutMode === 'none', 'HOLDOUT_ACCESS', 'General research capabilities require an evaluator session without holdout data');
     const { development: dataset, ...evaluation } = prepared, dataDigest = prepared.data.digest;
     const fingerprint = digest({ title, goal, config, dataDigest });
     const prior = this.checkpoints.get(id);
@@ -119,7 +111,7 @@ export class MiningRuntime {
       .slice(-5).map(r => ({ runId: r.id, dataDigest, reflections: r.reflections, trials: r.trials.map(t => ({ id: t.id, hypothesis: t.hypothesis ?? null, candidate: t.candidate ?? null, metrics: t.metrics ?? null, review: t.review ?? null, error: t.error ?? null })) }));
     const run = { id, title, goal, fingerprint, ownerConversationId: host.context.sessionId, config, status: 'queued', phase: 'plan',
       createdAt: this.now(), updatedAt: this.now(), round: 0, generation: 0, tasks: [], trials: [], events: [], reflections: [], memory,
-      data: prepared.data, evaluation, reportPending: false, ...(config.workflow ? { workflowDigest: digest(config.workflow) } : {}) };
+      data: prepared.data, evaluation, reportPending: false };
     await this.checkpoints.setDataset(id, { id, dataset, digest: digest(dataset) }); this.save(run);
     this.event(id, 'created', '固定输入、时间分割、模型和研究范围，开始因子研究');
     await this.checkpoints.flush(); await this.pump(host, id); return this.get(id);
@@ -180,7 +172,7 @@ export class MiningRuntime {
     const run = this.get(id);
     if (run.workflow) return run.workflow;
     const result = await host.capabilities.invoke(ID + '#auto_factor_workflow', { run_id: id }, { operationId: id + ':workflow',
-      task: { title: run.title, ...(collaboration(run.config) ? { collaboration: collaboration(run.config) } : {}), output: { type: 'report', space: 'strategy', path: `${run.config.reportFolder}/${id}-attempt-${run.generation + 1}.html` } } });
+      task: { title: run.title, collaboration: collaboration(), output: { type: 'report', space: 'research', path: `${run.config.reportFolder}/${id}-attempt-${run.generation + 1}.html` } } });
     check(result.type === 'run', 'INVALID_HOST_RESULT', 'Workflow requires a tracked Run'); this.update(id, { workflow: result.run }); await this.checkpoints.flush();
   }
   async workflow(host, id, signal, execution) {
@@ -198,31 +190,28 @@ export class MiningRuntime {
   }
   async task(id, role, mode, key, details, signal) {
     signal.throwIfAborted(); let run = this.get(id); const host = this.workHosts.get(id);
-    const member = factorPlan(run.config.workflow)[mode], originalRole = role;
-    check(member, 'INVALID_WORKFLOW', `The ${mode} stage is omitted by this plan.`);
-    role = member.id;
     check(host, 'NO_ACTIVE_WORKFLOW', 'Agent dispatch requires its active workflow Run');
     const prior = run.tasks.filter(t => t.key === key).at(-1);
     if (prior?.output && prior.finishedAt && prior.status === 'completed') return prior.output;
     if (prior?.finishedAt) throw Object.assign(new Error(prior.error?.message ?? 'Task ended without a reusable output; no new Agent is created'), { code: prior.error?.code ?? 'AGENT_FAILED' });
-    const model = run.config.agentModels[role] ?? run.config.agentModels[originalRole] ?? run.config.model; configuredModel(host, model);
+    const model = run.config.agentModels[role] ?? run.config.model; configuredModel(host, model);
     verifyEvaluator(host, run.config.evaluator); verifyResearch(host, run.config.research); taskPlugins(run.config.evaluator, run.config.research);
-    const readingCalls = knowledgeCalls(host, run.config.research);
     const allowedCalls = [{ pluginId: ID, capabilityId: 'auto_factor_context' }, { pluginId: ID, capabilityId: 'auto_factor_submit' }, ...run.config.research.tools.map(value => { const index = value.lastIndexOf('#'); return { pluginId: value.slice(0, index), capabilityId: value.slice(index + 1) }; })];
-    for (const call of readingCalls) if (!allowedCalls.some(item => item.pluginId === call.pluginId && item.capabilityId === call.capabilityId)) allowedCalls.push(call);
     const assignmentId = 'assignment_' + digest([id, key, run.generation]).slice(7, 39);
-    const request = prior?.request ?? { title: run.title.slice(0, 60) + ' · ' + member.title, instructions: SYSTEM + '\n' + run.evaluation.contract.instructions + (member.instructions ? '\n本任务具体职责：' + member.instructions : ''), objective: PURPOSES[mode],
+    const request = prior?.request ?? { title: run.title.slice(0, 60) + ' · ' + role, instructions: SYSTEM + '\n' + run.evaluation.contract.instructions, objective: PURPOSES[mode],
       input: { runId: id, assignmentId, generation: run.generation, role, mode, ...details, ...(prior?.pendingOutput ? { retryOutput: prior.pendingOutput } : {}) },
-      plugins: [...new Set([...run.config.research.plugins, ...readingCalls.map(call => call.pluginId)])], allowedCalls, model };
+      allowedCalls, model };
     if (!prior) this.update(id, { tasks: [...run.tasks, { id: assignmentId, key, role, mode, ...details, generation: run.generation, model, status: 'queued', createdAt: this.now(), request, requestDigest: digest(request) }] });
     await this.checkpoint(id); let ref = prior?.runRef;
     try {
       const result = ref ? { type: 'run', run: ref } : await host.capabilities.invoke('host.agent.run', request, { operationId: assignmentId, signal,
-        task: { title: request.title, ...(collaboration(run.config) ? { agentId: role } : {}), role, stage: mode, iteration: details.round ?? 0, output: { type: 'none' } } });
+        task: { title: request.title, agentId: role, role, stage: mode, iteration: details.round ?? 0, output: { type: 'none' } } });
       check(result.type === 'run', 'INVALID_HOST_RESULT', 'Agent capability must return a Run'); ref = result.run;
       this.update(id, { tasks: this.get(id).tasks.map(t => t.id === assignmentId ? { ...t, runRef: ref } : t) }); await this.checkpoint(id);
-      const resultRun = await waitForSettledRun(host, ref, signal);
-      run = this.get(id); const saved = run.tasks.find(t => t.id === assignmentId);
+      let finished;
+      do { finished = await host.runs.wait(ref, { until: 'settled', timeoutMs: 30000, signal }); } while (finished.reason === 'timeout');
+      if (finished.reason === 'interrupted' || finished.run.status === 'interrupted') throw Object.assign(new Error(finished.run.interrupts?.find(item => !item.resolvedAt)?.reason ?? 'Child Agent is interrupted'), { code: 'RUN_INTERRUPTED', details: { childRunId: ref.id, interrupts: finished.run.interrupts } });
+      run = this.get(id); const saved = run.tasks.find(t => t.id === assignmentId), resultRun = finished.run;
       this.update(id, { tasks: run.tasks.map(t => t.id === assignmentId ? { ...t, status: resultRun.status, finishedAt: this.now(), conversationId: resultRun.output?.sessionId ?? t.conversationId ?? null,
         text: String(resultRun.output?.text ?? ''), ...(resultRun.error ? { error: errorInfo(resultRun.error) } : {}) } : t) });
       check(resultRun.status === 'completed', 'AGENT_FAILED', role + ': ' + resultRun.status + (resultRun.error?.message ? ': ' + resultRun.error.message : ''));
@@ -241,16 +230,7 @@ export class MiningRuntime {
   context(host, id, section = 'team', offset = 0, limit = 20, execution) {
     const { run, task } = this.authorize(host, id, undefined, execution);
     const page = rows => ({ items: rows.slice(offset, offset + limit), total: rows.length, nextOffset: offset + limit < rows.length ? offset + limit : null });
-    let config = run.config, data = run.data;
-    if (task && run.data.holdoutMode !== 'none') {
-      // A full input Ref resolves the held-out rows too. Keep it in the owner
-      // record and final archive, outside the research roles' development view.
-      const { arguments: _arguments, ...evaluator } = run.config.evaluator;
-      const { sourceId: _sourceId, inputRefs: _inputRefs, provenance: _provenance, dependencies: _dependencies, ...developmentData } = run.data;
-      config = { ...run.config, evaluator };
-      data = developmentData;
-    }
-    const base = { runId: id, title: run.title, goal: run.goal, status: run.status, config, data,
+    const base = { runId: id, title: run.title, goal: run.goal, status: run.status, config: run.config, data: run.data,
       assignment: task ? { role: task.role, mode: task.mode, direction: task.direction ?? null, round: task.round ?? null, trialId: task.trialId ?? null,
         expectedOutput: task.mode === 'code' ? { candidate: run.evaluation?.contract?.candidateExample ?? {}, explanation: '实现与假设之间的关系' } : OUTPUTS[task.mode] ?? null } : null,
       evaluator: run.evaluation?.contract ?? null, holdoutMode: run.data.holdoutMode ?? 'legacy' };
@@ -261,20 +241,11 @@ export class MiningRuntime {
     if (section === 'memory') return { ...base, memory: page(run.memory), reflections: run.reflections };
     const team = page(run.tasks.filter(t => t.output).map(t => ({ taskId: t.id, role: t.role, round: t.round ?? null, trialId: t.trialId ?? null, output: t.output })));
     if (task) {
-      // A child can read its assignment before start() returns its Run to the
-      // parent. Use only host provenance already matched to this assignment.
-      const toRunId = task.runRef?.id ?? execution.provenance.agent.runId;
-      if (!task.runRef) {
-        const workflow = execution.provenance.workflow;
-        check(typeof toRunId === 'string' && toRunId === host.context.runId &&
-          workflow?.runId === run.workflow?.id && workflow.ownerSessionId === run.ownerConversationId,
-          'FORBIDDEN', 'Early handoff requires the assigned child and its trusted parent workflow');
-      }
       const seen = new Set(run.consumedOutputs ?? []);
       for (const value of team.items.filter(value => value.taskId !== task.id)) {
         const source = run.tasks.find(item => item.id === value.taskId), key = `${value.taskId}:${task.id}`;
-        if (seen.has(key) || !source?.runRef || source.generation !== task.generation) continue;
-        this.executions.get(id)?.emit('handoff', { fromRunId: source.runRef.id, toRunId }); seen.add(key);
+        if (seen.has(key) || !source?.runRef || !task.runRef || source.generation !== task.generation) continue;
+        this.executions.get(id)?.emit('handoff', { fromRunId: source.runRef.id, toRunId: task.runRef.id }); seen.add(key);
       }
       if (seen.size !== (run.consumedOutputs?.length ?? 0)) this.update(id, { consumedOutputs: [...seen] });
     }
@@ -358,10 +329,8 @@ export class MiningRuntime {
       this.trial(id, trialId, { candidate: measured.candidate, candidateDigest: measured.candidateDigest, explanation: code.explanation,
         metrics: measured.metrics, redundancy: measured.redundancy, evaluationReceipt: measured, status: 'reviewing' });
       this.event(id, 'evaluated', '选中的评估能力已返回计算回执', { trialId });
+      const review = await this.task(id, 'reviewer', 'review', `${key}:review`, { round, direction, trialId }, signal);
       const eligible = measured.eligible;
-      const review = factorPlan(this.get(id).config.workflow).review
-        ? await this.task(id, 'reviewer', 'review', `${key}:review`, { round, direction, trialId }, signal)
-        : { verdict: eligible ? 'accept' : 'reject', reason: 'Human-language review omitted by the frozen workflow; acceptance uses the actual evaluator eligibility gate.', source: 'evaluator' };
       this.trial(id, trialId, { review, eligible, status: review.verdict === 'accept' && eligible ? 'accepted' : 'rejected',
         gate: measured.gate ?? '' });
     } catch (error) {
@@ -378,22 +347,18 @@ export class MiningRuntime {
         signal.throwIfAborted();
         await this.checkpoint(id);
         if (round && this.get(id).reflections.find(r => r.round === round - 1)?.stop) break;
-        if (this.get(id).reflections.some(r => r.round === round) || this.get(id).completedRounds?.includes(round)) continue;
+        if (this.get(id).reflections.some(r => r.round === round)) continue;
         if (this.get(id).trials.length >= this.get(id).config.maxTrials && !this.get(id).trials.some(t => t.round === round && !['accepted', 'rejected', 'failed'].includes(t.status))) break;
         this.update(id, { round, phase: 'plan' });
-        const workflow = factorPlan(this.get(id).config.workflow);
-        const plan = workflow.plan ? await this.task(id, 'supervisor', 'plan', `r${round}:plan`, { round }, signal)
-          : { directions: this.get(id).config.directions, stop: false };
+        const plan = await this.task(id, 'supervisor', 'plan', `r${round}:plan`, { round }, signal);
         if (plan.stop) break;
         this.update(id, { phase: 'experiments' });
         for (let start = 0; start < plan.directions.length; start += this.get(id).config.parallelism) {
           await Promise.all(plan.directions.slice(start, start + this.get(id).config.parallelism).map(d => this.branch(id, round, d, signal)));
         }
         this.update(id, { phase: 'reflection' });
-        if (workflow.reflection) {
-          const reflection = await this.task(id, 'reflector', 'reflection', `r${round}:reflection`, { round }, signal);
-          this.update(id, { reflections: [...this.get(id).reflections.filter(r => r.round !== round), { round, ...reflection }] });
-        } else this.update(id, { completedRounds: [...new Set([...(this.get(id).completedRounds ?? []), round])] });
+        const reflection = await this.task(id, 'reflector', 'reflection', `r${round}:reflection`, { round }, signal);
+        this.update(id, { reflections: [...this.get(id).reflections.filter(r => r.round !== round), { round, ...reflection }] });
         await this.checkpoint(id);
       }
       signal.throwIfAborted(); let selection = this.get(id).selection;
@@ -416,7 +381,7 @@ export class MiningRuntime {
       }
     } finally {
       if (!this.closed && !signal.aborted && FINAL.has(this.get(id).status) && !this.get(id).report) {
-        try { await this.report(this.workHosts.get(id), id, signal); }
+        try { await this.report(this.workHosts.get(id), id); }
         catch (error) { reportInterruption = interruption(error, signal) ?? error; this.update(id, { reportPending: true, reportError: errorInfo(error) }); }
       }
       reportInterruption ??= interruption(null, signal);
@@ -446,7 +411,7 @@ export class MiningRuntime {
     await this.checkpoints.setDataset(id, { id, dataset: archive, development: stored.development ?? stored.dataset, digest: digest(archive) });
     this.update(id, { holdout: result.holdout, finalEvaluation }); await this.checkpoints.flush(); return finalEvaluation;
   }
-  async report(host, id, signal) {
+  async report(host, id) {
     const run = this.get(id);
     if (host.context.kind === 'main') { this.main(host, run); check(run.report, 'REPORT_UNAVAILABLE', 'This execution has no published report; inspect its retained checkpoint or resume unfinished work'); return run.report; }
     this.executor(host, run, this.executions.get(id));
@@ -455,8 +420,7 @@ export class MiningRuntime {
     if (!this.reporting.has(id)) {
       const pending = Promise.resolve().then(async () => {
         if (!this.get(id).reportSnapshot && !this.get(id).report) this.update(id, { reportSnapshot: finalSnapshot(this.get(id)), reportPending: true });
-        const report = await archiveReport(host, this.get(id), this.get(id).report ? null : this.dataset(id), { signal,
-          onPublication: async reportPublication => { this.update(id, { reportPublication, reportPending: true }); await this.checkpoints.flush(); } });
+        const report = await archiveReport(host, this.get(id), this.get(id).report ? null : this.dataset(id));
         this.executions.get(id).emit('artifact', { ref: report.ref, label: this.get(id).title });
         this.update(id, { report, reportPending: false, reportError: null }); return report;
       }).catch(error => { this.update(id, { reportPending: true, reportError: errorInfo(error) }); throw error; })

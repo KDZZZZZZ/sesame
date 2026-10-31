@@ -23,22 +23,12 @@ SourceRef 为 `{providerId,revision,binding?}`，binding 只使用来源 configS
 
 每图回执为 `{id,status,error?,warning?,bar_count?,feed_status?}`。status 为 rendered/loading/offline/error/hidden；bar_count 是该图当前可绘制 K 线数量，feed_status 是数据通道状态，error 保留失败文本并优先展示底层数据订阅错误，warning 说明非阻断的数据限制。当前版本中 `status:"rendered"` 且 `bar_count>0` 是行情已显示的证据；hidden 表示不可见，相关数量和通道状态可省略。`feed_status:"live"` 说明订阅收到有效数据，不证明市场持续成交；行情时间与时效仍以实际来源为准。
 
-历史 queryBars/market_read、来源描述、画布保存和实时订阅各有独立结果。明确的 `SCHEMA_MISMATCH` 等协议错误应沿原 error、SourceRef 和 chart ID 定位；重复绑定同一身份、新建探针图或启用无关数据服务不会改变协议形状。`STALE_REVISION`、`SOURCE_CHANGED`（Presentation source revision changed）与 `CONNECTION_CHANGED` 指向身份修订变化；缺配置、权限拒绝、没有客户端回执也有各自原因。指标“输入不足”是下游现象，有行情错误时应以行情错误为主要诊断。
-
-来源版本更新的定点恢复使用宿主操作 `canvas_recover_source({command_id,expected_version,chart_id,expected_chart,time_basis?})`；expected_chart 是 inspect 中完整未修改的原图表。宿主核验同一 providerId 的新 revision、digest/实例、连接、品种、规格、日历与时钟，异步步骤后重新检查并释放临时绑定，再 CAS 更新原图。不要在插件另行组合描述和 apply 来绕过恢复校验。缺少原连接固定信息时不声称历史账户一致；绘图不会自动迁移，另见 chart_drawing 的显式迁移与双重 CAS。冲突/取消/身份变化不重试。最后检查当前版本逐图 rendering，分别报告保存与实际显示。
+历史 queryBars/market_read、来源描述、画布保存和实时订阅各有独立结果。明确的 `SCHEMA_MISMATCH` 等协议错误应沿原 error、SourceRef 和 chart ID 定位；重复绑定同一身份、新建探针图或启用无关数据服务不会改变协议形状。`STALE_REVISION` 与 `CONNECTION_CHANGED` 才指向身份修订变化；缺配置、权限拒绝、没有客户端回执也有各自原因。指标“输入不足”是下游现象，有行情错误时应以行情错误为主要诊断。
 
 价格口径、时段、复权、周期、源修订不同即不同序列；描述成功不证明行情新鲜度。独立图表默认独立时间轴，sync_group 是显式时间范围联动设置。
 
 indicator_publish({operation_id,definition,files}) 发布固定指标成果，chart_script({action:"put",artifact,...CAS}) 将完整 ArtifactRef 挂载到图表。定义声明 parameters、inputs、panes、series、implementation。代码仅支持 sesame-indicator/1 JavaScript compute(input)，包内入口必须存在，无法联网或读文件。例子为 resources/close-line.json 和 close-line.js。
 
-枚举指标用 `canvas_inspect({}).scripts`；读取单个实例用 `chart_script({action:"read",script_id})`，script_id 必须是其中实际返回的 `scripts[].id`。无实例时不调用 read。put/remove 均需 command_id、当前 expected_version 和 chart_id；put 还需完整 artifact，可带 parameters，首次挂载省略 script_id，替换时使用目标图表现有实例 ID；remove 必须提供该图表的 script_id。
-
 固定研究序列使用 implementation.kind=series、updateMode=static、initial=DataRef。发布冻结实际代码/定义字节，挂载与渲染另行检查。静态指标不会自动更新。布局操作、指标发布和挂载不执行交易。
-
-绘图入口在图表内部栏，支持趋势线、水平线、矩形、斐波那契回撤。用户与 chart_drawing 共享不可变成果和保存状态；DrawingSpec 直接验证渲染，不用 iframe 执行绘图代码，任意指标继续隔离运行。inspect 中包含 drawing.id/revision/attachment/binding/spec/active/can_migrate 及 source；非活跃绘图也可 read 和删除。
-
-创建绘图：`chart_drawing({action:"put",command_id,expected_version,chart_id,expected_revision:null,expected_attachment:null,binding,drawing})`。drawing 是 `{schemaVersion:"sesame-drawing/1",kind:"horizontal",title:"参考价位",anchors:[{time:原绑定时间轴秒数,price:价位}],style:{color:"#24866e",width:2,lineStyle:"solid",fillOpacity:0.12}}`；其他形状两个端点。更新与删除同时固定 expected_revision=drawing.revision 和 expected_attachment=script.id；source 可替代 drawing，仅编辑 JSON 声明。删除 inactive 绘图使用其原 binding，不改当前图表来源。can_migrate=true 才可显式 action:migrate，并另传 target_binding=当前图表 binding；宿主重新检查历史及当前时钟、日历、连接和系列规格，缺失历史观测/未知日历不能迁移。单绑定最多64幅活跃绘图；其他附着对象与成果历史不计活跃配额，不盲目清理。相同内容保存不产生新成果或 undo 项，但 command_id 仍幂等。
-
-指标 lookback 是最小预热数，0 不表示空输入。显式 window=N 才在 forming 过滤后取末 N 行，必须 >=lookback，不足报错。默认保留有界历史/固定数据：每输入最多20000行，所有输入合计100000行/8MiB，输出最多100000点。可见范围+预热仍需满足窗口预算；不能为超限静默丢弃行或删除旧成果。
 
 `rendering[].charts[].warning` 是不阻止渲染的数据限制。来源 `coverage.complete:false` 也可能表示未证明区间完整；有效行仍可绘制，指标按实际收到的闭柱/总行数检查输入。保留这项限制，不将它推断为断线，也不把完整性改写为 true 来消除提示。

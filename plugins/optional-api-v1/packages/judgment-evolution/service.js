@@ -2,15 +2,13 @@ import { DatabaseSync } from 'node:sqlite';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { mkdirSync, existsSync, lstatSync, writeFileSync, renameSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { id, digest, requireValue, securePath, text, mean } from './support.js';
-import * as rules from './rules.js';
-import * as coverage from './coverage.js';
-export { independentBlocks } from './rules.js';
+import { id, digest, requireValue, securePath } from './support.js';
 import { inputs } from './inputs.js';
 
 export const JUDGMENT_PLUGIN = 'sesame/judgment-evolution';
 export const JUDGMENT_POLICY = Object.freeze({ min_samples: 30, min_windows: 3, alpha: 0.05, retry_hours: 24 });
 const finite = value => typeof value === 'number' && Number.isFinite(value);
+const text = (value, name, max = 4000) => { requireValue(typeof value === 'string' && value.trim() && value.length <= max, `${name} 需要 1–${max} 个字符`); return value.trim(); };
 const probability = value => { requireValue(finite(value) && value >= 0 && value <= 1, '概率必须在 0–1 之间'); return value; };
 const timestamp = value => {
   requireValue(typeof value === 'string' && /T.*(?:Z|[+-]\d\d:\d\d)$/.test(value) && Number.isFinite(Date.parse(value)), '时间必须包含日期、时间和时区');
@@ -18,6 +16,7 @@ const timestamp = value => {
 };
 const clone = value => JSON.parse(JSON.stringify(value));
 const scalar = value => ['string', 'number', 'boolean'].includes(typeof value) && (typeof value !== 'number' || finite(value));
+const mean = values => values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
 const dot = (object, path) => {
   requireValue(typeof path === 'string' && /^[\w.-]{1,160}$/.test(path) && !path.split('.').some(p => ['__proto__', 'constructor', 'prototype'].includes(p)), '字段路径无效');
   return path.split('.').reduce((value, key) => value && Object.hasOwn(value, key) ? value[key] : undefined, object);
@@ -41,6 +40,19 @@ function condition(actual, verification) {
   requireValue(finite(actual), '证据字段不是有效数值');
   const target = verification.target;
   return verification.op === 'gt' ? actual > target : verification.op === 'gte' ? actual >= target : verification.op === 'lt' ? actual < target : verification.op === 'lte' ? actual <= target : actual >= target && actual <= verification.upper;
+}
+
+// Overlapping outcome intervals form one statistical block, even across assets.
+// This is deliberately more conservative than counting repeated forecasts as IID.
+export function independentBlocks(rows) {
+  const sorted = [...rows].sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
+  const blocks = [];
+  for (const row of sorted) {
+    const last = blocks.at(-1), start = Date.parse(row.start), end = Date.parse(row.end);
+    if (last && start <= last.end) { last.end = Math.max(last.end, end); last.values.push(row.improvement); }
+    else blocks.push({ end, values: [row.improvement] });
+  }
+  return blocks.map(block => mean(block.values));
 }
 
 export class JudgmentService {
@@ -204,10 +216,73 @@ export class JudgmentService {
     this.transaction(() => { this.put('review', review); this.put('prediction', { ...prediction, review }); });
     this.refreshFiles(); return this.get('prediction', judgment_id);
   }
-  proposeRule(conversationId, args) { return rules.proposeRule(this, conversationId, args); }
-  ruleEvaluation(rule) { return rules.ruleEvaluation(this, rule); }
-  evaluateRules() { return rules.evaluateRules(this); }
-  retireRule(conversationId, { rule_id, reason }) { return rules.retireRule(this, conversationId, { rule_id, reason }); }
+  proposeRule(conversationId, args) {
+    this.assertMain(conversationId);
+    const rule = this.idempotent('rule', args.command_id, args, () => {
+      for (const name of ['title', 'guideline', 'topic', 'regime', 'limitations']) text(args[name], name, name === 'guideline' ? 4000 : 2000);
+      requireValue(Array.isArray(args.evidence_ids) && args.evidence_ids.length > 0 && args.evidence_ids.length <= 20, '候选准则需绑定 1–20 个已复盘判断');
+      const evidenceIds = [...new Set(args.evidence_ids)];
+      for (const key of evidenceIds) requireValue(this.get('prediction', key).status === 'resolved', '准则只能引用已复盘判断');
+      if (args.parent_rule_id) this.get('rule', args.parent_rule_id);
+      requireValue(this.list('rule').filter(rule => rule.status !== 'retired' && rule.topic === args.topic).length < 10, '同一主题最多保留 10 个在试准则；请先退休不再适用的准则');
+      return this.put('rule', { id: id('criterion'), version: 1, title: args.title, guideline: args.guideline, topic: args.topic, regime: args.regime,
+        limitations: args.limitations, evidence_ids: evidenceIds, parent_rule_id: args.parent_rule_id ?? null,
+        created_at: this.now(), status: 'candidate', evaluation: null });
+    });
+    this.refreshFiles(); return rule;
+  }
+  ruleEvaluation(rule) {
+    const allRules = this.list('rule');
+    const family = allRules.length, trial = allRules.findIndex(item => item.id === rule.id) + 1;
+    const predictions = this.list('prediction').filter(prediction => Date.parse(prediction.created_at) >= Date.parse(rule.created_at) &&
+      !rule.evidence_ids.includes(prediction.id) && prediction.rule_predictions.some(shadow => shadow.rule_id === rule.id && shadow.rule_version === rule.version));
+    const due = predictions.filter(item => Date.parse(item.due_at) <= Date.parse(this.now()));
+    const resolved = due.filter(item => item.status === 'resolved');
+    // Repeated versions of the same event never manufacture additional samples.
+    const unique = [...new Map([...resolved].reverse().map(item => [item.event_key, item])).values()];
+    const rows = unique.map(item => {
+      const probability = item.rule_predictions.find(shadow => shadow.rule_id === rule.id).probability;
+      const shadowLoss = (probability - item.review.evidence.outcome) ** 2;
+      return { start: item.verification.window_start, end: item.due_at, improvement: item.review.brier - shadowLoss, baseline_improvement: item.review.baseline_brier - shadowLoss };
+    });
+    const blocks = independentBlocks(rows), improvement = mean(blocks), n = blocks.length;
+    const baselineBlocks = independentBlocks(rows.map(row => ({ ...row, improvement: row.baseline_improvement }))), baselineImprovement = mean(baselineBlocks);
+    const evidenceFingerprint = digest(JSON.stringify({ observations: unique.map(item => [item.id, item.review.id, item.review.brier, item.rule_predictions]), pending: due.filter(item => item.status !== 'resolved').map(item => item.id) }));
+    const inspection = Math.max(1, (rule.evaluation?.inspection_index ?? 0) + (rule.evaluation?.evidence_fingerprint === evidenceFingerprint ? 0 : 1));
+    // Allocate error across every candidate and every future inspection. The
+    // telescoping 1/(k*(k+1)) weights prevent repeated peeking from reusing alpha.
+    const alpha = this.policy.alpha / (2 * Math.max(1, trial) * (Math.max(1, trial) + 1) * inspection * (inspection + 1));
+    // Hoeffding lower bound for paired improvements in [-1,1], adjusted for all
+    // candidates and sample counts. These are conservative operational gates, not a
+    // guarantee of future profitability or a test that proves market independence.
+    const lower = n ? improvement - Math.sqrt(2 * Math.log(1 / alpha) / n) : null;
+    const baselineLower = n ? baselineImprovement - Math.sqrt(2 * Math.log(1 / alpha) / n) : null;
+    const windows = new Set(unique.map(item => item.due_at.slice(0, 10))).size;
+    const pending = due.length - resolved.length;
+    const accepted = n >= this.policy.min_samples && windows >= this.policy.min_windows && pending === 0 && lower > 0 && baselineLower > 0;
+    return { evaluated_at: this.now(), registered: predictions.length, resolved: resolved.length, unresolved_due: pending,
+      independent_blocks: n, calendar_windows: windows, candidate_trials: family, trial_index: trial,
+      inspection_index: inspection, evidence_fingerprint: evidenceFingerprint, mean_brier_improvement: improvement,
+      lower_bound: lower, mean_baseline_brier_improvement: baselineImprovement, baseline_lower_bound: baselineLower, adjusted_alpha: alpha, accepted,
+      reason: accepted ? '前瞻影子样本同时超过主判断与事前基准的保守门槛；仍需观察适用条件与漂移' : pending ? '到期样本尚未全部核验，不能选择性跳过失败或缺失结果' : n < this.policy.min_samples || windows < this.policy.min_windows ? '前瞻独立样本或时间窗口不足' : '未同时证明相对同期主判断与事前基准的概率评分改善' };
+  }
+  evaluateRules() {
+    let changed = false;
+    for (const rule of this.list('rule')) {
+      if (rule.status === 'retired') continue;
+      const evaluation = this.ruleEvaluation(rule);
+      const status = evaluation.accepted ? 'active' : rule.status === 'active' || rule.status === 'probation' ? 'probation' : 'candidate';
+      if (status !== rule.status || rule.evaluation?.evidence_fingerprint !== evaluation.evidence_fingerprint) changed = true;
+      if (status !== rule.status) this.put('rule_event', { id: id('rule_event'), rule_id: rule.id, from: rule.status, to: status, created_at: this.now(), evaluation });
+      this.put('rule', { ...rule, status, evaluation });
+    }
+    return changed;
+  }
+  retireRule(conversationId, { rule_id, reason }) {
+    this.assertMain(conversationId); const rule = this.get('rule', rule_id);
+    const result = this.put('rule', { ...rule, status: 'retired', retired_at: this.now(), retirement_reason: text(reason, '退休原因', 2000) });
+    this.refreshFiles(); return result;
+  }
   query(conversationId, { status, topic, limit = 30, offset = 0 } = {}) {
     this.assertMain(conversationId); requireValue(Number.isInteger(limit) && limit >= 1 && limit <= 100 && Number.isInteger(offset) && offset >= 0, '分页参数无效');
     const items = this.list('prediction').filter(item => (!status || item.status === status) && (!topic || item.topic === topic)).reverse();
@@ -245,10 +320,59 @@ export class JudgmentService {
     this.writeFile('metrics.json', JSON.stringify(stats, null, 2));
     this.writeFile('recent.json', JSON.stringify(this.list('prediction').slice(-30).map(({ review, ...item }) => ({ ...item, ...(review ? { review: { id: review.id, resolved_at: review.resolved_at, brier: review.brier, baseline_brier: review.baseline_brier, reflection: review.reflection, semantic: review.semantic ?? null, evidence: { dataset_id: review.evidence.dataset_id, dataset_hash: review.evidence.dataset_hash, value: review.evidence.value, observed_at: review.evidence.observed_at, outcome: review.evidence.outcome } } } : {}) })), null, 2));
   }
-  auditTurn({ conversationId, responseId, status }) { return coverage.auditTurn(this, { conversationId, responseId, status }); }
-  auditSource(conversationId, { message_id, offset = 0, limit = 12000 }) { return coverage.auditSource(this, conversationId, { message_id, offset, limit }); }
-  acknowledgeCoverage(conversationId, { message_id, judgment_ids = [], exclusions = [], review_summary }) { return coverage.acknowledgeCoverage(this, conversationId, { message_id, judgment_ids, exclusions, review_summary }); }
-  reviewQueue(conversationId, { kind = 'all', offset = 0, limit = 30 } = {}) { return coverage.reviewQueue(this, conversationId, { kind, offset, limit }); }
+  auditTurn({ conversationId, responseId, status }) {
+    if (!this.enabled() || status !== 'completed' || this.data().sessions.get(conversationId)?.kind !== 'main') return;
+    const message = this.message(responseId), input = this.message(message.replyTo, true);
+    if (input?.origin === 'automation') return;
+    const content = message.content.filter(part => part.type === 'text').map(part => part.text).join('\n');
+    if (!content.trim() || this.get('coverage', responseId, true)) return;
+    const registered = this.list('prediction').filter(item => item.source_message_id === responseId);
+    const sentences = content.split(/[。！？\n]+/).map(value => value.trim()).filter(value => value && /预计|预测|预期|目标价|概率|(?:明天|下周|未来|明年).{0,40}(?:上涨|下跌|达到|超过|低于)|\b(?:predict|forecast|probability|expect)\b/i.test(value) && !/^(?:我|我们)(?:会|将)|已登记|已核验|尚未|无法|没有.*(?:预测|概率)/.test(value));
+    const unmatched = sentences.filter(sentence => !registered.some(item => sentence.includes(item.id) || sentence.includes(item.claim) || item.claim.includes(sentence)));
+    // Keep a durable queue without waking the model. The Agent chooses when
+    // to audit; regex hints never substitute for reading the full source.
+    this.put('coverage', { id: responseId, conversation_id: conversationId, created_at: this.now(), status: 'pending',
+      source_hash: digest(content), source_length: content.length, read_offset: 0, statements: unmatched.slice(0, 20), attempts: 0 });
+  }
+  auditSource(conversationId, { message_id, offset = 0, limit = 12000 }) {
+    this.assertMain(conversationId); const coverage = this.get('coverage', message_id);
+    requireValue(Number.isInteger(offset) && offset >= 0 && offset <= (coverage.read_offset ?? 0) && Number.isInteger(limit) && limit > 0 && limit <= 20000, '必须依次读取完整原文，不能跳过页；每页最多 20000 字符');
+    const message = this.message(message_id), content = message.content.filter(part => part.type === 'text').map(part => part.text).join('\n');
+    requireValue(!coverage.source_hash || digest(content) === coverage.source_hash, '原始回复已变化，请重新检查');
+    const end = Math.min(content.length, offset + limit);
+    this.put('coverage', { ...coverage, read_offset: Math.max(coverage.read_offset ?? 0, end), source_length: content.length });
+    return { message_id, source_text: content.slice(offset, end), offset, total: content.length, next_offset: end < content.length ? end : null,
+      registered_judgments: this.list('prediction').filter(item => item.source_message_id === message_id).map(item => ({ id: item.id, claim: item.claim })) };
+  }
+  acknowledgeCoverage(conversationId, { message_id, judgment_ids = [], exclusions = [], review_summary }) {
+    this.assertMain(conversationId); const coverage = this.get('coverage', message_id);
+    requireValue((coverage.read_offset ?? 0) >= (coverage.source_length ?? 1), '请先用 judgment_audit_source 读完原文，不能只检查关键词提示');
+    text(review_summary, '完整语义核对结论', 4000);
+    requireValue(Array.isArray(judgment_ids) && Array.isArray(exclusions), '需要有效判断引用与不适用项');
+    for (const key of judgment_ids) this.get('prediction', key);
+    for (const item of exclusions) { text(item.statement, '原句', 2000); text(item.reason, '不适用原因', 2000); requireValue(coverage.statements.includes(item.statement), '排除项必须来自本次待核对原句'); }
+    const handled = new Set(exclusions.map(item => item.statement));
+    for (const statement of coverage.statements) if (judgment_ids.some(key => { const claim = this.get('prediction', key).claim; return claim === statement || statement.includes(claim); })) handled.add(statement);
+    requireValue(coverage.statements.every(statement => handled.has(statement)), '仍有原句未登记或解释');
+    const result = this.put('coverage', { ...coverage, status: 'reviewed', judgment_ids, exclusions, review_summary, completed_at: this.now() });
+    this.refreshFiles(); return result;
+  }
+  reviewQueue(conversationId, { kind = 'all', offset = 0, limit = 30 } = {}) {
+    this.assertMain(conversationId);
+    requireValue(this.enabled(), '判断复盘插件未启用', 403);
+    requireValue(['all', 'due', 'reflection', 'coverage'].includes(kind) && Number.isInteger(offset) && offset >= 0 && Number.isInteger(limit) && limit > 0 && limit <= 100, '复盘清单参数无效');
+    const now = Date.parse(this.now());
+    const items = [
+      ...this.list('prediction').filter(item => item.status !== 'resolved' && Date.parse(item.next_review_at) <= now)
+        .map(item => ({ kind: 'due', judgment_id: item.id, claim: item.claim, topic: item.topic, due_at: item.due_at, evidence_gap: item.evidence_gap ?? null })),
+      ...this.list('prediction').filter(item => item.status === 'resolved' && !item.review.semantic)
+        .map(item => ({ kind: 'reflection', judgment_id: item.id, claim: item.claim, resolved_at: item.review.resolved_at })),
+      ...this.list('coverage').filter(item => item.status === 'pending')
+        .map(item => ({ kind: 'coverage', message_id: item.id, created_at: item.created_at, hints: item.statements, source_length: item.source_length })),
+    ].filter(item => kind === 'all' || item.kind === kind);
+    return { items: items.slice(offset, offset + limit), total: items.length, offset,
+      next_offset: offset + limit < items.length ? offset + limit : null, statistics: this.statistics(), criteria_path: join(this.directory, 'CRITERIA.md') };
+  }
   reviewDue(conversationId) {
     this.assertMain(conversationId);
     requireValue(this.enabled(), '判断复盘插件未启用', 403);

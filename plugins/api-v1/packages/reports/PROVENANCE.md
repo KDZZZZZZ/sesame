@@ -9,8 +9,7 @@ metric rules, numbered evidence sections, legends, hover inspection and folded
 methods retain the original design. Only the read-only data bridge, resource
 lifecycle and optional interaction extensions are adapted for API 1. Components
 and style fallbacks are packaged here, with no imports from the private host.
-They require no CDN or external font. The optional candlestick component reuses
-the workbench's packaged Lightweight Charts runtime as described below. The immutable
+They require no CDN, external font or third-party chart runtime. The immutable
 report artifact retains the authored HTML, local assets and fixed DataRef inputs.
 
 Design research examined [Lieflat Charts](https://github.com/larashero3-dotcom/lieflat-charts)
@@ -41,28 +40,3 @@ or obtain a suitable additional license. Merely being publicly readable or free
 of charge does not make that upstream code permissively licensed.
 
 The optional independently authored collection now also includes waterfall, paired comparisons, strip plots, supplied-bin histograms, supplied-statistic boxes, supplied-grid ridgelines/violins, calendars, parallel coordinates, rank trajectories, lifecycle events, exposure treemaps, identified record threads, conserved flows and circular/stable-force network layouts. The statistics, temporal and structural modules contain no copied upstream code. All gallery input is explicitly fictional; financial estimates are not calculated inside these renderers. Selection and filtering preserve the identity of fixed source rows.
-
-## Compact decision trees
-
-The selected compact decision-tree style uses slim decision marks, leaf dots,
-curved branches, edge conditions and a blue selected path. Design research
-considered [AntV G6](https://github.com/antvis/G6) and
-[React Flow](https://github.com/xyflow/xyflow); the SVG layout and pan/zoom
-interaction are independently authored Sesame code. No upstream library,
-template, screenshot or other asset is bundled for this component. It uses the
-existing report palette and source-row selection contract, with no added
-dependency or host interface.
-
-## Default market candles
-
-`assets/vendor/lightweight-charts.js` is the unmodified standalone production
-distribution of [TradingView Lightweight Charts](https://github.com/tradingview/lightweight-charts),
-currently 5.2.1, copied from the host's already installed dependency using
-`scripts/sync-market-chart.mjs --host <host-root>`. It is Apache-2.0, not MIT;
-its original copyright header and `lightweight-charts-LICENSE` are retained.
-The chart hides its duplicate logo; attribution remains in Sesame settings.
-`--check` verifies exact byte equality with the workbench dependency. No runtime
-host import, CDN, package installation or network request is required.
-`assets/charts-market.js` is Sesame's MIT adapter for fixed OHLC rows, shared
-theme tokens, source-row selection and lifecycle cleanup. Candle bodies, wicks,
-axes, crosshair and interaction are rendered by the existing library.

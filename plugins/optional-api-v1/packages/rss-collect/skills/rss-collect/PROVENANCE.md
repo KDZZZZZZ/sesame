@@ -12,9 +12,10 @@ Sesame 内部主 Agent 创建的适配层，现由 Sesame 官方维护，内置�
 
 ## 维护规则
 
-当前为原生能力适配器：公开ID保持不变，接受精确source_ref，经host.resources.read读取原始字节；host.process.exec运行现有标准库Python解析器。file_path仍只接受包内相对路径。旧MCP传输入口已移除，不保留第二套调用方式。固定正向断言保存在samples.json，运行plugins/optional-api-v1/tests/source-parser-transport.test.mjs。无需API Key或pip安装；来源获取权限与配置由获取能力管理。
+源码、技能说明、样本、完整 MCP schema 和正向断言一起纳入仓库审查。修改 server.py 后运行 `node scripts/sync-plugin-tools.mjs`，再运行 `node --test tests/builtin-research-plugins.test.js` 与 schema `--check`。运行时仅在获准调用后使用已有本机 Python 启动 stdio MCP，以当前系统用户身份执行，可访问公网与内网；没有 Linux/WSL/Lima 或 OS 沙箱前提。工具自己的 file_path 参数只允许包内文件，这是服务器参数校验，不代表进程没有宿主权限。URL 采集可由 web-sources 插件负责。
 
-以下为历史版本记录，不描述当前执行方式。
+应用启动时优先加载此内置包；旧同名外部安装保留审计记录但不执行。沿用用户的启用策略，无 TTL、无单独密钥。来源内容或格式变更会影响抓取或解析质量；维护者需要显式更新并发布应用。
+
 
 ## Plugin API v1 package 2.0.0
 

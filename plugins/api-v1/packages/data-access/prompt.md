@@ -1,6 +1,4 @@
-信息层负责提供可复用的真实输入。复用满足标的、时点、周期、单位与覆盖要求的固定 DataRef；多个分析方法共享同一证据，只为明确缺口重新取数。观察值与来源元数据不是研究结论，解释交给方法层，比较与综合交给工作流。取数本身不要求显示画布或另建报告。
-
-本插件通过 API 2 静态数据源声明、真实分页和固定成果提供分析输入。`data_sources` 返回 `{items,nextCursor?}`，每项为 `{ref:{providerId,revision},contract,operations,configSchema,available}`，可另有 description。`data_providers` 使用同一形状，仅返回市场与账户来源；`contract:"sesame.market/1"` 选择行情来源。available 表示插件可用，不证明数据连接成功。SourceRef 的可选 binding 仅容纳 configSchema 明示配置。operations 是来源操作名到宿主能力的映射，查询时把对应操作键交给 data_query.operation，或使用 market_instruments、market_read 和画布的声明入口；它不等于 Agent 可直接调用的工具名。consumers 仅含 host 的能力不能直接 invoke，也不能改点号或下划线猜别名；无需从宿主代码或安装包猜接口。
+本插件通过 API 2 静态数据源声明、真实分页和固定成果提供分析输入。`data_sources` 返回 `{items,nextCursor?}`，每项为 `{ref:{providerId,revision},contract,operations,configSchema,available}`，可另有 description。`data_providers` 使用同一形状，仅返回市场与账户来源；`contract:"sesame.market/1"` 选择行情来源。available 表示插件可用，不证明数据连接成功。SourceRef 的可选 binding 仅容纳 configSchema 明示配置，声明已给出可调用操作，不需要从宿主代码或安装包猜接口。
 
 `data_query({source,operation,input,limit?,cursor?})` 返回实际 `{items,nextCursor?,metadata?,...}`；metadata 是来源声明的领域元数据。延续请求保持来源、查询和 limit 不变，使用 nextCursor；游标是 60 秒的短期绑定，不是长期证据。宿主管理真实运行时绑定与释放，不手填临时 bindingId。
 

@@ -2,7 +2,7 @@
   "id": "sesame/plugin-manager",
   "title": "插件管理",
   "description": "发现、检查安装和管理显式声明的 API 2 插件，生成可独立开发的完整草稿。",
-  "version": "3.1.1",
+  "version": "3.0.1",
   "default_state": "mounted",
   "execution": "native",
   "entry": "index.js",
@@ -31,12 +31,6 @@
   ],
   "license": "MIT",
   "engines": {
-    "sesame": ">=0.3.0-dev.1 <0.4.0"
-  },
-  "permissions": {
-    "scopes": [
-      "plugins.manage"
-    ],
-    "calls": []
+    "sesame": ">=0.2.4"
   }
 }

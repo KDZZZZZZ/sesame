@@ -15,33 +15,12 @@
 
 ## 并行研究：更快对照不同角度
 
-主 Agent 将研究问题组织成有明确目标和完成条件的阶段，委派 subagent 或适合的工作流，例如检查数据、分析价格结构或验证策略假设。每个交付阶段都要生成并发布报告；内部方法和工作流成员交回结论、证据与缺口，由指定综合者交付阶段报告，无需各建一份。子 Agent 完成所分配阶段，不默认再递归委派。日常问答可以直接回复，不强制报告或拆分任务；研究以及数据量大或复杂的分析任务需要报告，用户不必额外提出。
-
-彼此不依赖的阶段可以并行启动；依赖当前结果的下一阶段应在结果返回后选择。没有独立工作时，主 Agent 告知已启动的阶段后结束当前回复，空闲等待完成通知。并行数量、速度与成本受模型和运行环境影响，不承诺无限并行。
+可以让主 Agent 把一个问题拆成多个独立 subagent，例如分别读新闻、检查数据、分析价格结构或验证策略假设。各自先产出最终报告，由主 Agent 汇总共识、冲突与仍缺的证据。并行数量、速度与成本受模型和运行环境影响，不承诺无限并行。
 
 > “并行安排三个 subagent：一个读我给的公告，一个检查价格和成交量，一个找反对观点。最后给我一页带来源的结论和分歧。”
 > “让两个 subagent 分别研究趋势和均值回归方法，再比较它们在哪些环境容易失效。”
 
-已发布报告放在右侧 Research / Strategy，能引用、追问和修订。研究阶段、数据量大或复杂的分析任务，以及明确指定报告或报告路径的任务，都必须实际生成并交付报告；聊天中的固定数据引用不会创建报告区文件。子任务结束后临时过程清理，最终成果保留；顶层 Agent 或工作流完成并收尾后会自动通知所属主 Agent，即使主 Agent 已空闲也会唤醒接续原任务，内部成员先交回工作流控制器。主 Agent 核验报告后向用户简要汇报发现、主要边界和报告位置；若已有任务授权内存在有价值的下一阶段，先实际启动，再说明正在研究什么。主 Agent 负责把需要的曲线放到 Dashboard，subagent 不直接抢占用户布局。
-
-## 按任务调整流程，并记住长期偏好
-
-研究方法指南说明如何完成任务，具体成员、环节、顺序和交付按本次目标选择。先读适用的长期流程偏好，再应用本次要求；优先级是当前明确要求、适用偏好、插件默认。只需要一个局部判断时不必启动完整团队。
-
-> “以后这类研究先核查事实再综合，默认不做多空辩论，报告尽量简明；记住这个偏好。”
-> “这次临时在综合前加一个反证环节，不修改长期默认。”
-
-主 Agent 把用户明确要求长期沿用的偏好保存为 memory 的 user/workflow，保留真实用户消息来源、适用范围与版本。执行前搜索并读取正文；临时调整只进入本次计划。用户也可要求修订、归档或遗忘偏好。记忆不保存密钥，不提供额外执行权限。
-
-当前可调整的实际入口：
-
-| 工作流 | 可调整内容与边界 |
-| --- | --- |
-| Investment Research | workflow.stages 选择成员、角色、阶段顺序及并行组，可增 custom 角色；synthesis 指向最后阶段唯一综合成员。省略时沿用默认八成员；研究交付需绑定报告，由 synthesis 发布，内部成员不各自制作报告。 |
-| Auto Factor Mining | config.workflow 指定假设、实现、评审、反思和选择的成员，同一人可兼任；plan/review/reflection 可省略。真实 evaluator、候选资格、固定选择和独立留出验证仍需满足。 |
-| Trading Decision | plan.workflow.reviews 添加顺序复核；execute:false 只形成决策与报告。复核阻止时不能执行，复核成员无下单权限；原账户、授权和风险约束保持有效。 |
-
-计划随受理的 Run 冻结，暂停/恢复沿用同一计划与已完成成果。改变计划需创建新一轮并明确复用哪些固定证据；不要改运行中身份、重放已完成外部动作，或用未声明的输入伪装成流程调整。因子与策略研究指南可用于设计其他流程，ICT 等专业知识只回答其中的具体问题。
+成果放在右侧 Research / Strategy，能引用、追问和修订；子任务结束后临时过程清理，最终成果保留。主 Agent 最后负责把需要的曲线放到 Dashboard，subagent 不直接抢占用户布局。
 
 ### 宿主编排接口（供 Agent 按需参考）
 
@@ -49,7 +28,7 @@
 
 | 能力 ID | Agent 工具名 | 输入与结果 |
 | --- | --- | --- |
-| `host.agent.run` | `host_agent_run` | `title/instructions/objective/input/allowedCalls` 定义任务，返回受理的 Run 引用。`plugins` 选择知识包，`model` 和 `output` 可选。 |
+| `host.agent.run` | `host_agent_run` | `title/instructions/objective/input/allowedCalls` 定义任务，返回受理的 Run 引用。`model` 和 `output` 可选。 |
 | `host.runs.list` | `host_runs_list` | 用 `sessionId/parentRunId/capabilityId/status` 等筛选运行，返回分页概要；不创建任务。 |
 | `host.runs.read` | `host_runs_read` | `runId` 读取真实状态；可用 `include/cursor/limit` 读取消息、调用、事件、输出和资源。 |
 | `host.runs.wait` | `host_runs_wait` | `runId` 配合 `until:"settled"` 等待最终结果；`until:"changed"`、`afterVersion` 用于观察变化。返回等待原因与最新 Run。 |
@@ -57,21 +36,14 @@
 | `host.runs.resume` | `host_runs_resume` | `runId/interruptIds` 明确选择已处理的中断，`response` 提供解决信息；恢复同一个 Run。 |
 | `host.runs.message` | `host_runs_message` | `runId/text` 向现有运行发送补充信息，不能代替明确的恢复操作。 |
 | `host.runs.cancel` | `host_runs_cancel` | `runId` 和可选 `reason` 请求取消；以后续读取的真实状态确认收尾。 |
-| `host.resources.read` | `host_resources_read` | 工具输入平铺为 `ref/part` 及可选 `entry/offset/length/encoding`，读取任务允许的固定资源；不扩大资源范围。 |
 
-`instructions` 给出相关能力、因果明确的原则与约束，`objective` 给出可核验目标；不要让子任务重新猜测已经知道的输入或依赖。`allowedCalls` 使用 `{pluginId,capabilityId}`，其中 `capabilityId` 是局部 ID，例如 `{pluginId:"sesame/data-access",capabilityId:"data_query"}`。每个 Agent 自动拥有 host_runs_read / host_runs_wait / host_runs_interrupt / host_resources_read 四项基础能力；`allowedCalls:[]` 不授予业务工具、再次委派、恢复或取消权限。
-
-`plugins` 只选择知识，不授予工具；工具所属插件会自动加入。选中包的 SKILL 入口正文直接可见，方法参考文件通过获授的 plugin_read 按需读取。纯知识无须虚构执行结果，未选中或被禁用的包不能借读取或再次委派加载。
+`instructions` 给出相关能力、因果明确的原则与约束，`objective` 给出可核验目标；不要让子任务重新猜测已经知道的输入或依赖。`allowedCalls` 使用 `{pluginId,capabilityId}`，其中 `capabilityId` 是局部 ID，例如 `{pluginId:"sesame/data-access",capabilityId:"data_query"}`。每个 Agent 自动拥有 read/wait/interrupt 三项基础 Run 能力；`allowedCalls:[]` 不授予业务工具、再次委派、恢复或取消权限。
 
 `model` 省略时复用宿主配置，显式选择需使用 `host#models` 返回的 `{provider,id,configurationDigest}`。需要幂等操作标识时，通过 `host.capabilities.invoke`（工具 `host_capabilities_invoke`）向 `host.agent.run` 传递 `input` 和 `operationId`；不要把 `operationId` 塞入 Agent 任务输入或以新 ID 重启未确认的动作。
 
-研究阶段、数据量大或复杂的分析任务，以及明确要求报告或指定报告路径的任务，必须传 `output:{type:"report",space:"research",path:"comparison.html"}`，也可用 `space:"strategy"`。工作流调用将同样的交付声明放入宿主调用选项 `task.output`。这是该 Run 的报告交付位置，正文标题由最终报告内容决定；宿主自动创建缺失父目录。单文件报告直接使用文件路径，不另包一层任务目录。直接父 Run 已绑定报告且本子任务负责共同交付时，可用 `output:{type:"report",target:"parent"}` 复用该文件。日常问答和其他不需要报告的简单任务可省略 `output` 或使用 `{type:"none"}`；这不适用于应交付报告的研究或复杂分析。已绑定 none 却需要交付报告时向所属 Agent 报告不匹配，不自行改绑定。
-
-报告负责 Agent 的 `allowedCalls` 需包含实际写作、发布与核验能力。现有组合为 `sesame/reports` 的 `report_template`、`report_publish`、`report_check`、`report_read`，`sesame/workspace` 的 `read`、`write`、`edit`，读取固定数据的 `sesame/data-access#data_read` 和读取设计/方法资料的 `sesame/plugin-manager#plugin_read`；按 `{pluginId,capabilityId}` 逐项授予。绑定 output 只声明交付位置，不自动授予工具。遵循 reports 的统一视觉规则，发布后核验精确修订的实际 rendered 回执和最终文件路径。
+报告任务可指定 `output:{type:"report",space:"research",path:"comparison.html"}`，也可用 `space:"strategy"`。这是该 Run 的报告交付位置，正文标题由最终报告内容决定。普通任务可省略 `output` 或使用 `{type:"none"}`，无需为了运行 Agent 创建报告。
 
 受理返回的 `run.id` 是后续控制和读取的身份；只有 `completed` 的 `run.output` 才是最终结果，包含 `text/sessionId/model/turns/toolCalls`。等待超时只结束本次等待，不取消任务；`changed` 可因细小进度提前返回，不适合反复轮询最终成果。依赖缺失时暂停并报告具体需求，等待返回 `reason:"interrupted"` 后由主 Agent 核验并处理具体阻碍；已授权范围内可修复的依赖不要求新的用户回复。恢复前从同一 Run 读取待处理中断，明确选择实际解决的 `interruptIds`，是否需要用户输入遵循宿主控制契约，不默认把一个答复套到全部中断。正常结束由宿主收尾，无需另行完成调用；取消不回滚已发生的外部副作用，结果未知时读取 Run 与对应后端状态。
-
-完成通知携带原 Run 身份，主 Agent 读取真实结果并核对报告文件当前路径、发布状态与该版本渲染回执，向用户简要汇报阶段发现、主要边界及报告位置。不能仅凭 Run completed 宣称报告可见；未交付时说明具体诊断并处理可修复的阻碍，不重做已完成的研究。若还有能推进原问题、价值明确且在已有授权内的下一阶段，实际创建对应 Run 后再说明已经在进行什么，不能把计划说成已启动。没有独立工作时可结束回复等待下一次完成通知，无需反复轮询来唤醒自己；通知不提供新的用户要求或权限，仍尊重明确暂停和取消。
 
 ## 不写代码，也能提出想看的曲线
 
@@ -108,9 +80,7 @@
 
 > “把每次整理网页资料、去重并生成摘要的流程做成可复用插件，先测试，再告诉我怎么使用和关闭。”
 
-在 User → Agent 插件 → 浏览插件与更新中搜索、安装或更新；也可把精确名称（如 `sesame/web-sources`）交给 Sesame。先核对版本与兼容性，安装后查看三态和“配置与密钥”中的实际依赖。失败或取消先读当前版本，已有安装不会仅因下载失败被清除。安装不代表第三方服务认证已完成；纯知识包以知识可读取验证，运行能力以真实调用验证。
-
-开发新包时使用 plugin_create，先按插件责任选择最小接口；统一作者指南位于 plugin-manager 的 develop-plugins skill。业务指南不必创建空运行入口，资源适配不重复实现研究流程，呈现能力复用已有固定成果。
+在 [官方插件目录](https://sesame.bot/zh/plugins/) 找到方法，复制精确名称（如 `sesame/web-extract`）交给 Sesame。Agent 先核对当前版本与目录兼容性：随应用提供的功能直接启用；可安装包按固定版本校验并测试后加载。实际工具成功可调用后才说已可用。安装不代表第三方服务认证已完成。
 
 ## 一个更容易得到好结果的请求
 

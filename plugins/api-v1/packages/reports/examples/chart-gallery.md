@@ -12,6 +12,4 @@
 
 实际报告先取得固定数据，再调用 `report_template`，将所需字段映射与显示选项放入 `chart_options`；节点数组经 `chart_data` 读取固定绑定，不能把 fixture 的 `rows` 或 `nodes` 填进选项。保留原版 `reportKit` 的排版与自由布局，只添加有助于回答研究问题的图。
 
-条件情景另有 `decision-tree` 模板入口，参数和明确标为 demo 的最小例子见 `skills/report-design/decision-tree.md`，组件为 `assets/charts-decision.js`。它不在上表的离线图集内；可通过 `report_template(kind:'decision-tree',...)` 生成。完整选图和蓝灰规范见 `skills/report-design/visual-design.md`。
-
 鼠标悬停或聚焦显示精确原值，点击或按 Enter / Space 联动数据明细。表格搜索只筛明细；平行坐标的维度过滤同时筛图和明细。图集切换时释放旧图实例，完整示例的构建源码为 `scripts/build-chart-gallery.mjs`。

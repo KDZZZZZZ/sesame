@@ -210,14 +210,13 @@
       "usage": {
         "purpose": "比较已提供标的在相同相邻时间区间的收益相关、秩相关和方向相似性。",
         "inputs": "调用形状为 {input:{schema_version:1,source:{id,kind},as_of,parameters?,...}}，不是文件路径或数据 ID。source.id 为 1..500 字符，kind 为 synthetic/historical/live；as_of 及全部时间字段使用真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒）。输入限 2MiB 有限 JSON，不接收代码。parameters 只支持列出的字段。 bars 是 1..10000 条已知 OHLCV，按收盘 time 严格递增且不重复；每行含 time、available_at、open/high/low/close、volume。time <= available_at <= as_of，价格为正且 high/low 覆盖 open/close，volume >= 0。 instruments 至少 2 个且 <= max_instruments，每项 {id,bars}；id 唯一、1..80 字符且只含字母数字 _ . : -。每个 bars 遵循 OHLCV 契约且不超过 max_bars_per_instrument。仅起止时点都相同的相邻收益对可对齐。",
-        "outputs": "observations.instruments 为输入概况，pairs 为逐对重叠样本数和相似指标；不足 min_overlap 的指标保留空缺及诊断。 立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。 交给调用者时保留上述固定引用、source/as_of、实际参数和 limitations。把 pairs 的重叠数、相关和方向相似指标交给暴露或冗余分析；这些量不等同因果、预测概率或 Dow Theory 的双指数收盘确认。",
+        "outputs": "observations.instruments 为输入概况，pairs 为逐对重叠样本数和相似指标；不足 min_overlap 的指标保留空缺及诊断。 立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。",
         "prerequisites": [
           "提供与任务相符的已知输入；本能力不联网取数，不需要 Python、ABU 安装或券商账户。"
         ],
         "limitations": [
           "不前向填充、不推断交易日历或补造缺失收益。相关性既不是因果关系，也不是下一时段同涨概率。",
-          "来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。",
-          "复用前核对输入版本、参数、截止时间与实现口径；已有匹配结果可直接引用。同源价格、成交或统计派生结果不能重复计为独立证据；计算只回答本项局部问题，方法解释与最终综合由调用者负责。"
+          "来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。"
         ]
       }
     }
@@ -235,7 +234,7 @@
     {
       "id": "knowledge-1",
       "path": "prompt.md",
-      "description": "abu_similarity_analyze 的局部目标、解释边界和跨方法交接。",
+      "description": "市场相似性基线 — prompt.md",
       "kind": "prompt"
     },
     {
@@ -253,13 +252,13 @@
     {
       "id": "knowledge-4",
       "path": "skills/abu-similarity/references/method.md",
-      "description": "abu_similarity_analyze 的公式、参数口径与基线差异；核对是否可以复用其他已计算结果。",
+      "description": "市场相似性基线 — skills/abu-similarity/references/method.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-5",
       "path": "skills/abu-similarity/SKILL.md",
-      "description": "数值方法：比较已提供标的在相同相邻时间区间的收益相关、秩相关和方向相似性。 输入为已固定证据；输出为 observations 与输入/结果工件，供方法解释或工作流复用。",
+      "description": "市场相似性基线 — skills/abu-similarity/SKILL.md",
       "kind": "skill"
     }
   ],

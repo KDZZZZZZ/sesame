@@ -9,43 +9,43 @@
     {
       "id": "knowledge-0",
       "path": "examples/expected.md",
-      "description": "Elliott 波浪候选的合成教学反例与预期局部结论，不是真实市场结果。",
+      "description": "Elliott 波浪候选 — examples/expected.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-1",
       "path": "prompt.md",
-      "description": "Elliott 波浪候选的方法边界与组合入口：已知锚点是否符合声明的波浪结构约束，以及什么新观察能区分主候选和替代候选；复用固定证据并向调用者交回局部结论。",
+      "description": "Elliott 波浪候选 — prompt.md",
       "kind": "prompt"
     },
     {
       "id": "knowledge-2",
       "path": "PROVENANCE.md",
-      "description": "Elliott 波浪候选采用资料的出处、实际访问范围与许可，不是当前市场证据。",
+      "description": "Elliott 波浪候选 — PROVENANCE.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-3",
       "path": "README.md",
-      "description": "Elliott 波浪候选的输入、输出、方法边界和按需参考说明。",
+      "description": "Elliott 波浪候选 — README.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-4",
       "path": "skills/elliott-wave/references/method.md",
-      "description": "Elliott 波浪候选的操作定义、因果边界与反证；用于核对本次具体判据。",
+      "description": "Elliott 波浪候选 — skills/elliott-wave/references/method.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-5",
       "path": "skills/elliott-wave/references/validation.md",
-      "description": "Elliott 波浪候选从解释候选到可重复规则的验证前提、时间与样本外边界。",
+      "description": "Elliott 波浪候选 — skills/elliott-wave/references/validation.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-6",
       "path": "skills/elliott-wave/SKILL.md",
-      "description": "分析方法：已知锚点是否符合声明的波浪结构约束，以及什么新观察能区分主候选和替代候选。输入：已有固定行情和锚点引用、周期、价格基础、端点 high/low 或 close、确认时点、结构类别与级别；只有截图时缩小为示意候选。输出：主/替代候选表、标准推动结构的逐条规则结果、端点版本、失效价位及区分候选的新观察。",
+      "description": "Elliott 波浪候选 — skills/elliott-wave/SKILL.md",
       "kind": "skill"
     }
   ],

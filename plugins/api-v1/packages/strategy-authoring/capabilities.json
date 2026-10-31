@@ -683,7 +683,7 @@
     {
       "id": "strategy-guide",
       "path": "prompt.md",
-      "description": "把已有研究假设表达、验证和发布为SVL；区分语言执行、真实回测与工作流对收益证据的判断。",
+      "description": "SVL策略创作、验证与判断资料。",
       "kind": "prompt"
     },
     {

@@ -2,7 +2,7 @@
   "id": "sesame/reports",
   "title": "交互报告",
   "description": "统一风格的交互研究与策略报告，含 SVL 逻辑图、回测选优热力图、全部参数组与敏感性分析。",
-  "version": "3.3.0",
+  "version": "3.0.0",
   "default_state": "mounted",
   "prompts": [
     "prompt.md"
@@ -23,10 +23,6 @@
     "assets/charts-statistics.js",
     "assets/charts-temporal.js",
     "assets/charts-structure.js",
-    "assets/charts-decision.js",
-    "assets/charts-market.js",
-    "assets/vendor/lightweight-charts-LICENSE",
-    "assets/vendor/lightweight-charts.json",
     "examples/chart-gallery.md",
     "examples/statistical-fixtures.json",
     "examples/temporal-fixtures.json",
@@ -34,10 +30,6 @@
     "skills/report-design/statistical-charts.md",
     "skills/report-design/temporal-charts.md",
     "skills/report-design/structural-charts.md",
-    "skills/report-design/decision-tree.md",
-    "skills/report-design/visual-design.md",
-    "skills/report-design/chart-catalog.md",
-    "skills/report-design/market-charts.md",
     "backtest-template.js",
     "assets/backtest-explorer.js",
     "assets/backtest.css",
@@ -54,7 +46,7 @@
   "license": "MIT",
   "agent_scope": "all",
   "engines": {
-    "sesame": ">=0.3.0-dev.1 <0.4.0"
+    "sesame": ">=0.2.3"
   },
   "dependencies": [
     {
@@ -67,14 +59,5 @@
     }
   ],
   "execution": "native",
-  "capability_manifest": "capabilities.json",
-  "permissions": {
-    "scopes": [],
-    "calls": [
-      "host.artifacts.query",
-      "host.records.query",
-      "sesame/data-access#data_snapshot",
-      "sesame/workspace#write"
-    ]
-  }
+  "capability_manifest": "capabilities.json"
 }

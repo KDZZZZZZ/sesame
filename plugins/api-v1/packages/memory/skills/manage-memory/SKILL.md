@@ -20,8 +20,6 @@ scope 标记记忆适用的全局、项目或策略上下文，当前工作区�
 
 用户消息来源形状为 `{type:"user_message",id:"实际消息ID"}`；可通过 data_query 的 `{source:{providerId:"host#messages",revision:"host:2"},input:{sessionId:"当前会话ID"}}` 读取真实消息。成果来源为 `{type:"artifact",id,revision,kind,digest,schemaVersion}`。新偏好的最小保存形状：`memory_manage({action:"save",entry:{category:"user/workflow",title,summary,content,scope:{kind:"global"},sources:[真实来源],evidence:"explicit"}})`。返回 `id/version/status` 后才有保存证据；修订使用这份 version 作为 expected_version。
 
-业务流程偏好正文写清适用任务、可调整环节/角色/交付和所涉及模板版本；使用自然语言表达意图，调用时按当前声明生成 workflow 参数，不把旧 JSON 当永久可执行契约。明确的 user/workflow 不因闲置退出热区；手工归档、冲突、到期和遗忘仍生效。相关任务先检索并读取正文，当前任务要求优先于记忆、记忆优先于默认流程。临时增加环节不改长期默认；只有用户表达长期改变时才修订。偏好不提供调用权限或实盘授权，也不能关闭证据与独立留出约束。
-
 evidence 使用 explicit（有明确用户消息）、verified（有成果证据）、inferred（推断）、conflicted（冲突）。同一范围与分类下，同标题的不同内容会形成显式冲突。核验后用带 expected_version 的 save 修订、合并；不要用覆盖掩盖分歧。固定用户约束优先于推测，不会自动提高权限。
 
 `trading/risk-rules` 正式条目只允许 explicit，不接受 expires_at，保存时自动固定。每次 save/accept/archive/restore/forget 在 `memory_manage` 顶层增加 `confirmation_source:{type:"user_message",id:"本次真实确认消息ID"}`；正文修改、撤销和恢复不能重用旧 `confirmed_by`。代码验证来源身份，调用者须确认原话确实同意具体阈值和操作，不能把普通问询当确认。未获确认时用 propose 留草案；自动压缩永不自动接纳风险候选。不要改分类解除保护。`review_at` 到期表示需要复核，原红线仍然约束新增风险。

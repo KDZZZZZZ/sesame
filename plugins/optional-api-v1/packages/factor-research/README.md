@@ -1,9 +1,8 @@
 # Factor research
 
-An optional Sesame API 2 workflow guide (`>=0.2.3`) for factor hypotheses,
-candidate evaluation, frozen selection and holdout evidence. Its reference CLI
-evaluates explicitly supplied factor values; it does not inject Qlib, genetic
-search, causal discovery or any named investment theory.
+An independent optional Sesame API 1 package (`>=0.2.0-0`). Use it only for factor
+work. It evaluates explicitly selected factor values; it does not inject Qlib,
+genetic search, causal discovery or any named investment theory.
 
 The original Node.js CLI uses only built-ins. It reads fixed development and
 holdout JSON separately, checks point-in-time declarations, computes tie-aware

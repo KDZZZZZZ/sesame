@@ -1,9 +1,3 @@
-# Windows information-source audit — 2026-10-18
-
-Real registered capabilities in an isolated Sesame Runtime returned seven daily rows for 600519 over 2026-10-01 through 10-16 from each of Tencent and Sina. Tencent quotes initially failed because Chinese market names could not be encoded by Windows redirected stdout using cp1252. JSON Unicode escaping now preserves the values and structured errors independently of the active code page. Both Chinese-data and Chinese-error regressions reproduced the problem, then passed; the real Tencent quote returned one row after the fix.
-
-Eastmoney daily and quote requests still returned proxy/connection errors on this network. Those failures do not invalidate the working sources and are not treated as empty data. No source is silently substituted or mixed. Existing pinned AKShare 1.19.1 was reused on retest; no user environment, user history, broker or account was changed.
-
 # AKShare 1.0.5 time-basis correction — 2026-10-10
 
 The published 1.0.4 instrument description declared `zone: Asia/Shanghai`, but binding metadata and daily bar open/end times omitted it. An unchanged data-access 2.3.0 `market_read` rejected a range copied from that description with `INVALID_PROVIDER_DATA`. A real temporary Store + ProviderRegistry + HostContext + ContractArtifacts fixture reproduced this error before the patch; its worker returned controlled source rows, not live market observations.

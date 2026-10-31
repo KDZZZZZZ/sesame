@@ -1,7 +1,7 @@
 {
   "id": "sesame/abu-price-structure",
   "apiVersion": "2",
-  "version": "2.0.1",
+  "version": "2.0.0",
   "title": "价格结构基线",
   "description": "延迟确认摆动、支撑阻力和黄金分割的可修改研究计算。这是可改进基线而非标准答案；输入显式来源和截止时点，输出可复核研究结果。 自动冻结输入与结果数据工件，用户可复核。",
   "author": {

@@ -53,11 +53,3 @@ test('v2 hook audits public message text and skips automation origins', async t 
   const page = await f.service.invoke(f.host, 'auditSource', ['main', { message_id: 'response' }]);
   assert.equal(page.source_text, '预计明天上涨。');
 });
-
-test('non-completed and non-main turns do not read ports or create coverage work', async t => {
-  const f = fixture(t);
-  for (const event of [{ status: 'failed', scope: 'main' }, { status: 'completed', scope: 'subagent' }]) {
-    assert.equal(await f.service.invoke(f.host, 'auditTurn', [{ conversationId: 'main', responseId: 'absent', ...event }]), null);
-  }
-  assert.deepEqual(f.calls, []); assert.equal(f.service.list('coverage').length, 0);
-});

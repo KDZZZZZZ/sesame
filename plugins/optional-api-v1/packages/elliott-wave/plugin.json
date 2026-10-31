@@ -1,9 +1,9 @@
 {
   "id": "sesame/elliott-wave",
   "apiVersion": "2",
-  "version": "2.0.1",
+  "version": "2.0.0",
   "title": "Elliott 波浪候选",
-  "description": "可组合的分析方法：已知锚点是否符合声明的波浪结构约束，以及什么新观察能区分主候选和替代候选；消费已有证据，返回主/替代候选表、标准推动结构的逐条规则结果、端点版本、失效价位及区分候选的新观察。",
+  "description": "独立波浪研究：明确结构类型、级别、锚点、标准推动浪约束、替代计数和确认时刻；主观候选与验证分开。",
   "author": {
     "name": "Sesame contributors"
   },

@@ -1,8 +1,0 @@
-{
-  "name": "@sesame/ultra",
-  "version": "1.0.2",
-  "license": "MIT",
-  "private": true,
-  "type": "module",
-  "scripts": { "test": "node --test tests/*.test.js" }
-}

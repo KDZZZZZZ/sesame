@@ -9,49 +9,49 @@
     {
       "id": "knowledge-0",
       "path": "examples/expected.md",
-      "description": "Price Action 价格行为的合成教学反例与预期局部结论，不是真实市场结果。",
+      "description": "Price Action 价格行为 — examples/expected.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-1",
       "path": "prompt.md",
-      "description": "Price Action 价格行为的方法边界与组合入口：当前价格更符合哪一种趋势或区间结构，以及什么闭柱观察会削弱该判断；复用固定证据并向调用者交回局部结论。",
+      "description": "Price Action 价格行为 — prompt.md",
       "kind": "prompt"
     },
     {
       "id": "knowledge-2",
       "path": "PROVENANCE.md",
-      "description": "Price Action 价格行为采用资料的出处、实际访问范围与许可，不是当前市场证据。",
+      "description": "Price Action 价格行为 — PROVENANCE.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-3",
       "path": "README.md",
-      "description": "Price Action 价格行为的输入、输出、方法边界和按需参考说明。",
+      "description": "Price Action 价格行为 — README.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-4",
       "path": "skills/price-action/references/execution.md",
-      "description": "Price Action 价格行为可选 Python 计算的真实输入、执行与结果登记接口；已有匹配观察时可复用。",
+      "description": "Price Action 价格行为 — skills/price-action/references/execution.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-5",
       "path": "skills/price-action/references/method.md",
-      "description": "Price Action 价格行为的操作定义、因果边界与反证；用于核对本次具体判据。",
+      "description": "Price Action 价格行为 — skills/price-action/references/method.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-6",
       "path": "skills/price-action/references/validation.md",
-      "description": "Price Action 价格行为从解释候选到可重复规则的验证前提、时间与样本外边界。",
+      "description": "Price Action 价格行为 — skills/price-action/references/validation.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-7",
       "path": "skills/price-action/SKILL.md",
-      "description": "分析方法：当前价格更符合哪一种趋势或区间结构，以及什么闭柱观察会削弱该判断。输入：已有固定行情或已确认摆动/突破结果、价格基础、周期、复权、SourceTime、覆盖、摆动窗口和收盘/影线定义。输出：带源引用的推进/重叠/回撤观察、趋势/区间候选、确认时间、相反解释和失效条件。",
+      "description": "Price Action 价格行为 — skills/price-action/SKILL.md",
       "kind": "skill"
     }
   ],

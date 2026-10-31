@@ -5,19 +5,17 @@ const b = description => ({ type: 'boolean', description });
 const symbol = s('券商品种的精确名称');
 const date = s('带时区的 ISO 8601 时间，传入官方 API 前转为 UTC datetime');
 const ticket = s('MT5 uint64 ticket 的十进制字符串');
-const historyId = description => ({ ...s(description), pattern: '^[1-9][0-9]*$', maxLength: 20 });
 const enumeration = s('官方常量名，例如 TIMEFRAME_M5 / COPY_TICKS_ALL / ORDER_TYPE_BUY，也支持对应整数');
 enumeration.type = ['string', 'integer'];
 const request = { type: 'object', description: '官方 MqlTradeRequest 字段；action/type/type_time/type_filling 可用官方常量名，ticket 使用字符串。', additionalProperties: false,
   properties: { action: enumeration, magic: ticket, order: ticket, symbol, volume: n('手数'), price: n('价格'), stoplimit: n('StopLimit 价格'), sl: n('止损'), tp: n('止盈'), deviation: i('points'), type: enumeration, type_filling: enumeration, type_time: enumeration, expiration: i('UTC 秒'), comment: s('备注'), position: ticket, position_by: ticket } };
-const executionGuard = { type: 'object', additionalProperties: false, description: 'Optional Sesame final-mile guard; checked inside the native worker immediately before order_send. Requires a verified native quote-clock revision, independently resolved for each fresh tick. Supports market/limit orders and position reduction only; no retry.', properties: {
-  observed_at: i('Decision observation UTC milliseconds, never the raw server-wall tick time'), expires_at: i('Decision expiry UTC milliseconds, at most 60 seconds after observation'),
+const executionGuard = { type: 'object', additionalProperties: false, description: 'Optional Sesame final-mile guard; checked inside the native worker immediately before order_send. Supports market/limit orders and position reduction only; no retry.', properties: {
+  observed_at: i('Original observation UTC milliseconds'), expires_at: i('Decision expiry UTC milliseconds, at most 60 seconds after observation'),
   max_quote_age_ms: {type:'integer',minimum:1,maximum:5000}, max_quote_to_send_ms:{type:'integer',minimum:1,maximum:1000},
   price_limit:s('Maximum buy/minimum sell executable quote; positive decimal text'), side:{type:'string',enum:['buy','sell']}, expected_account:ticket, expected_server:s('Exact broker server'),
-  quote_clock_revision:{...s('Verified quote_clock.ruleRevision from this exact account/server tick; native worker resolves and compares it again before sending'),minLength:1,maxLength:128},
   expected_positions:{type:'array',maxItems:20000,description:'Optional full symbol position expectation; exact tickets/sides/decimal volumes and no working orders are checked after order_check and before send.',items:{type:'object',additionalProperties:false,properties:{ticket:{type:'string',pattern:'^[1-9]\\d*$'},type:{type:'integer',enum:[0,1]},volume:{type:'string',pattern:'^(0|[1-9]\\d*)(\\.\\d+)?$'}},required:['ticket','type','volume']}},
-}, required:['observed_at','expires_at','max_quote_age_ms','max_quote_to_send_ms','price_limit','side','expected_account','expected_server','quote_clock_revision'] };
-const cancellationGuard = { type:'object', additionalProperties:false, description:'Optional native pending-limit cancellation guard. Requires request to contain exactly {action:"TRADE_ACTION_REMOVE",order:"<ticket>"}; do not add symbol, comment or other request fields. Keep symbol and original remark in this guard. Rechecks exact account, server, symbol, remark, positive order ID, side and active status after queuing, immediately before REMOVE. Mutually exclusive with execution_guard.', properties:{expected_account:ticket,expected_server:s('Exact broker server'),symbol,remark:s('Exact original order comment'),order:ticket,side:{type:'string',enum:['buy','sell']}},required:['expected_account','expected_server','symbol','remark','order','side'] };
+}, required:['observed_at','expires_at','max_quote_age_ms','max_quote_to_send_ms','price_limit','side','expected_account','expected_server'] };
+const cancellationGuard = { type:'object', additionalProperties:false, description:'Optional native pending-limit cancellation guard. Rechecks exact account, server, symbol, remark, positive order ID, side and active status after queuing, immediately before REMOVE. Mutually exclusive with execution_guard.', properties:{expected_account:ticket,expected_server:s('Exact broker server'),symbol,remark:s('Exact original order comment'),order:ticket,side:{type:'string',enum:['buy','sell']}},required:['expected_account','expected_server','symbol','remark','order','side'] };
 const methods = [
   ['initialize', '连接配置的终端；账户和路径由用户设置，不接受 Agent 密码。', {}],
   ['login', '登录用户预先配置的账户。', {}],
@@ -42,17 +40,8 @@ const methods = [
   ['order_send', '向实际账户提交交易请求；需用户交易意图与实际权限。可选 execution_guard 在原生进程中校验账户、有效期、最新 tick、数量与价格边界，先 order_check 再刷新报价并仅发送一次；cancellation_guard 在原生撤单前复核账户及唯一匹配活动挂单。返回执行耗时。unknown 不重发。通过 mt5_trade 调用。', { request, execution_guard:executionGuard, cancellation_guard:cancellationGuard }, ['request']],
   ['positions_total', '当前持仓数量。', {}], ['positions_get', '当前持仓。', { symbol, group: s('组过滤'), ticket }],
   ['history_orders_total', 'UTC 区间历史订单数量。', { date_from: date, date_to: date }, ['date_from', 'date_to']],
-  ['history_orders_get', '历史订单三选一：完整 UTC 起止时间（可加 group）、订单 ticket、持仓 position；不得混用。', { date_from: date, date_to: date, group: s('仅用于时间区间的品种组过滤'), ticket: historyId('订单 ticket 的正 uint64 十进制字符串'), position: historyId('持仓标识（ORDER_POSITION_ID）的正 uint64 十进制字符串') }],
+  ['history_orders_get', '历史订单：使用 UTC 起止时间、ticket 或 position。', { date_from: date, date_to: date, group: s('组过滤'), ticket, position: ticket }],
   ['history_deals_total', 'UTC 区间历史成交数量。', { date_from: date, date_to: date }, ['date_from', 'date_to']],
-  ['history_deals_get', '历史成交三选一：完整 UTC 起止时间（可加 group）、订单 ticket、持仓 position；不得混用。ticket 对应订单，不是成交 ticket。', { date_from: date, date_to: date, group: s('仅用于时间区间的品种组过滤'), ticket: historyId('订单 ticket（DEAL_ORDER）的正 uint64 十进制字符串，不是成交自身的 ticket（deal ticket）'), position: historyId('持仓标识（DEAL_POSITION_ID）的正 uint64 十进制字符串') }],
+  ['history_deals_get', '历史成交：使用 UTC 起止时间、ticket 或 position。', { date_from: date, date_to: date, group: s('组过滤'), ticket, position: ticket }],
 ];
-export const PYTHON_TOOLS = methods.map(([name, description, properties, required = []]) => {
-  const inputSchema = { type: 'object', properties, required, additionalProperties: false };
-  if (name === 'history_orders_get' || name === 'history_deals_get') {
-    inputSchema.oneOf = [['date_from', 'date_to', 'group'], ['ticket'], ['position']].map(keys => ({
-      type: 'object', properties: Object.fromEntries(keys.map(key => [key, properties[key]])),
-      required: keys.filter(key => key !== 'group'), additionalProperties: false,
-    }));
-  }
-  return { name, description, inputSchema };
-});
+export const PYTHON_TOOLS = methods.map(([name, description, properties, required = []]) => ({ name, description, inputSchema: { type: 'object', properties, required, additionalProperties: false } }));

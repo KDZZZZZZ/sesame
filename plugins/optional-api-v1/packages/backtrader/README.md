@@ -11,11 +11,3 @@ Adapter and engine: GPL-3.0-or-later. Library is installed separately, not shipp
 For CCXT data, call host `market_read` with `volume_kind:'real'` and `include_forming:false`. Its fixed json-rows has `datetime` as original UTC SourceTime, OHLC as Decimal strings and `volume` as a Decimal string (not a Bar volume object). The returned `ref` is directly accepted with default columns; no extra flattening or timezone inference is needed. If volume was requested as `none` or is unknown, null volume is rejected. For other provider wall clocks, use an explicit provenance-preserving derived UTC/offset dataset before backtesting.
 
 Every backtest requires explicit `config.feed:{timeframe:"minutes"|"days"|"weeks"|"months",compression:<positive integer>}`. For fixed 1h bars use `minutes/60`, for 1d use `days/1`; obtain this from the frozen source query, not guessed timestamp intervals. These fields are passed to native FixedFeed and frozen in assumptions. The Strategy sees the actual declared timeframe/compression; missing values reject before running.
-
-## Internal responsibilities
-
-`index.js` retains the capability factory and the `fixedRows` export. `fixed-input.js` validates fixed data, decimal prices and explicit time authority; `backtest.js` owns the operation fingerprint, reservation, native execution and cleanup; `results.js` freezes inputs and publishes receipts/tables/results using the original host and producer. `records.js` remains the sole private database owner. Environment discovery and the native engine remain in `environment.js` and `runner.py`.
-
-The runner exits normally only after writing a confirmed `completed` or `failed` receipt. A caught strategy exception or `SystemExit` keeps the public `status: "failed"`, diagnostics and empty result tables. A crash, missing receipt, timeout or cancellation remains an interrupted/unknown execution, never an automatic replay. This distinguishes a delivered business failure from an interrupted host process under the current Run contract.
-
-Regression coverage includes exact decimal/time validation, cancellation with a revoked host context, installed HostContext invocation, actual native Cerebro execution, fixed artifacts, controlled failures and interruption idempotency. The native suite reuses an explicitly selected existing pinned interpreter and verifies that no downloads occurred.

@@ -25,7 +25,6 @@ export async function command(host, argv, cwd, signal, timeout = 120, env) {
   return result;
 }
 async function inspect(host, python, signal) {
-  check(await exists(python) || !/[\\/]/.test(python), 'Python candidate is not installed', 'PREREQUISITE_REQUIRED');
   const path = join(host.context.storageRoot, `.probe-${randomUUID()}.json`);
   try {
     await command(
@@ -35,15 +34,7 @@ async function inspect(host, python, signal) {
         "-I",
         "-B",
         "-c",
-        `import json,sys,struct,importlib,importlib.metadata as m
-from pathlib import Path
-data={'python':sys.executable,'version':list(sys.version_info[:3]),'platform':sys.platform,'bits':struct.calcsize('P')*8,'library':None}
-try:
-    importlib.import_module('${NAME}')
-    data.update(library=m.version('${NAME}'),packages={d.metadata['Name']:d.version for d in m.distributions()})
-except Exception as error:
-    data['unavailable']=type(error).__name__
-Path(sys.argv[1]).write_text(json.dumps(data))`,
+        `import json,sys,struct,importlib,importlib.metadata as m; from pathlib import Path; module=importlib.import_module('${NAME}'); Path(sys.argv[1]).write_text(json.dumps({'python':sys.executable,'version':list(sys.version_info[:3]),'platform':sys.platform,'bits':struct.calcsize('P')*8,'library':m.version('${NAME}'),'packages':{d.metadata['Name']:d.version for d in m.distributions()}}))`,
         path,
       ],
       host.context.storageRoot,

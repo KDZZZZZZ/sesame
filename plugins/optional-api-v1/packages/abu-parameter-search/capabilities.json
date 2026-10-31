@@ -266,11 +266,6 @@
         "resources.create",
         "resources.publish"
       ],
-      "researchDataAccess": {
-        "schemaVersion": 1,
-        "reads": "input-only",
-        "writes": "derived-artifacts-only"
-      },
       "binding": {
         "type": "native",
         "name": "abu_parameter_search_analyze"
@@ -278,15 +273,14 @@
       "usage": {
         "purpose": "对已完成实验的有限网格指标排序，冻结开发期选型，再核对该固定选型的留出期证据；不运行策略。",
         "inputs": "调用形状为 {input:{schema_version:1,source:{id,kind},as_of,parameters?,...}}，不是文件路径或数据 ID。source.id 为 1..500 字符，kind 为 synthetic/historical/live；as_of 及全部时间字段使用真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒）。输入限 2MiB 有限 JSON，不接收代码。parameters 只支持列出的字段。 grid 是 1..10 个任意参数名到候选数组的映射，每数组 1..100 个有限数值/字符串/布尔值，组合数 <= max_grid_points。trials:[{split:\"development\"|\"holdout\",available_at,parameters,metrics}]，每个 parameters 必须精确对应某个网格点，metrics[objective_metric] 为有限值。development 阶段至少 1 条开发试验，不接受 holdout 或 frozen_selection。holdout 阶段传回开发运行的完整 frozen_selection、相同 grid/目标/开发 trials，加上只属于选中参数的 holdout trials；保持选型和哈希原值，selected_at 必须早于 holdout.available_at <= as_of。",
-        "outputs": "observations.development_rank 是仅按开发指标排序的排名；frozen_selection 含 parameters、selected_at 和全部核验哈希；fixed_holdout_evidence 仅含选中参数的留出期指标；grid_points 是网格组合数。 立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。 交给调用者时保留上述固定引用、source/as_of、实际参数和 limitations。把 development_rank 和 frozen_selection 交回实验流程，留出核验传回同一完整 frozen_selection；该工具只比较已有试验指标，不负责取数、运行试验或提出新的调参方向。",
+        "outputs": "observations.development_rank 是仅按开发指标排序的排名；frozen_selection 含 parameters、selected_at 和全部核验哈希；fixed_holdout_evidence 仅含选中参数的留出期指标；grid_points 是网格组合数。 立即返回 {schema_version:1,baseline:true,status:\"research_baseline\",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。",
         "prerequisites": [
           "提供与任务相符的已知输入；本能力不联网取数，不需要 Python、ABU 安装或券商账户。",
           "留出验证依赖先前真实的开发选型记录；若只有一阶段的证据，结果只支持该阶段的结论。缺少选型时不要编造哈希或把留出结果改标为开发结果。"
         ],
         "limitations": [
           "哈希只能核对记录内一致性；外部固定保存的开发工件才支持先选型后验证的时序证据。传入的是已有指标，本能力不会执行任意策略或表达式。",
-          "来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。",
-          "复用前核对输入版本、参数、截止时间与实现口径；已有匹配结果可直接引用。同源价格、成交或统计派生结果不能重复计为独立证据；计算只回答本项局部问题，方法解释与最终综合由调用者负责。"
+          "来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。"
         ]
       }
     }
@@ -304,7 +298,7 @@
     {
       "id": "knowledge-1",
       "path": "prompt.md",
-      "description": "abu_parameter_search_analyze 的局部目标、解释边界和跨方法交接。",
+      "description": "参数实验基线 — prompt.md",
       "kind": "prompt"
     },
     {
@@ -322,13 +316,13 @@
     {
       "id": "knowledge-4",
       "path": "skills/abu-parameter-search/references/method.md",
-      "description": "abu_parameter_search_analyze 的公式、参数口径与基线差异；核对是否可以复用其他已计算结果。",
+      "description": "参数实验基线 — skills/abu-parameter-search/references/method.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-5",
       "path": "skills/abu-parameter-search/SKILL.md",
-      "description": "数值方法：对已完成实验的有限网格指标排序，冻结开发期选型，再核对该固定选型的留出期证据；不运行策略。 输入为已固定证据；输出为 observations 与输入/结果工件，供方法解释或工作流复用。",
+      "description": "参数实验基线 — skills/abu-parameter-search/SKILL.md",
       "kind": "skill"
     }
   ],
