@@ -7,6 +7,7 @@ const dispatching = new Map();
 const tradeEffects = new Set(['trade', 'broker.write', 'external-trading', 'external-strategy-operation', 'invoke:selected-execution', 'write:trading-checkpoints']);
 const opaqueEffects = new Set(['process', 'process.exec', 'native-call']);
 const taskActive = job => ['queued', 'starting', 'running'].includes(job.status);
+const executionLaneOccupied = job => job.exclusive && ['starting', 'running', 'interrupted', 'unknown'].includes(job.status);
 const frozen = state => FINAL.has(state.status) || state.status === 'stopping';
 const expanding = state => !frozen(state) && continuationState(state) === 'active';
 const cancelAccepted = state => ['stopping', 'stopped', 'completed'].includes(state.status);
@@ -105,7 +106,7 @@ async function continueAfterTurn(host, input, signal, drainQueue) {
     if (current && ACTIVE.has(current.status)) return publicState(state, jobs);
     if (state.recovery?.responseId === input.responseId) return publicState(state, jobs);
     const active = jobs.filter(job => ['starting', 'running'].includes(job.status));
-    const runnable = jobs.some(job => job.status === 'queued' && (!job.exclusive || !active.some(item => item.exclusive)));
+    const runnable = jobs.some(job => job.status === 'queued' && (!job.exclusive || !jobs.some(executionLaneOccupied)));
     if (drainQueue && runnable && active.length < state.maxParallel) return { drain: state.id };
     const refs = active.flatMap(job => job.refs ?? []);
     if (refs.length) return publicState(await launchCycle(host, state, { mode: 'runs', refs }, signal), jobs);
@@ -183,7 +184,9 @@ async function acceptedRefs(host, state, accepted) {
 
 async function observe(host, state) {
   let jobs = await branches(host, state.id);
-  await Promise.all(jobs.filter(job => job.refs?.length && !['completed', 'failed', 'cancelled', 'unknown'].includes(job.status)).map(async job => {
+  // An unknown outcome retains the original Run. Observe its reconciliation;
+  // never replace it with another invocation or release its execution lane.
+  await Promise.all(jobs.filter(job => job.refs?.length && !['completed', 'failed', 'cancelled'].includes(job.status)).map(async job => {
     const observed = await Promise.all(job.refs.map(async item => (await host.runs.read(item)).run));
     const active = observed.some(run => ACTIVE.has(run.status));
     const interrupted = observed.find(run => run.status === 'interrupted');
@@ -317,7 +320,7 @@ async function invokeBranch(host, state, job, signal) {
   } catch (error) {
     // The host operation key and the domain's own command key remain unchanged.
     // An uncertain side effect is reconciled, never converted into another order.
-    await saveBranch(host, job, { status: job.exclusive && signal?.aborted ? 'unknown' : 'failed', error: errorInfo(error) });
+    await saveBranch(host, job, { status: job.exclusive ? 'unknown' : 'failed', error: errorInfo(error) });
   }
 }
 
@@ -334,7 +337,7 @@ export async function dispatch(host, input, signal) {
       check(state.status !== 'interrupted', 'RESUME_REQUIRED', 'Resolve the retained cycle interruption and resume; do not create a new cycle.');
       const running = observed.jobs.filter(job => ['starting', 'running'].includes(job.status));
       const slots = Math.max(0, state.maxParallel - running.length);
-      let exclusive = running.some(job => job.exclusive);
+      let exclusive = observed.jobs.some(executionLaneOccupied);
       const admitted = [];
       for (const job of observed.jobs.filter(value => value.status === 'queued').sort((a, b) => a.createdAt - b.createdAt)) {
         if (admitted.length >= slots) break;
@@ -466,7 +469,7 @@ export async function resume(host, input, signal) {
     }
     check(!frozen(state), 'STOPPED', 'A stopped Ultra task is not resumed; start a new goal.');
     const jobs = await branches(host, state.id), refs = [...(state.cycle ? [state.cycle] : []), ...jobs.flatMap(job => job.refs ?? [])];
-    check(!jobs.some(job => job.status === 'starting' && !job.refs?.length), 'RECONCILE_REQUIRED', 'An admitted branch has no recorded outcome. Inspect the original operation before continuing; it is not replayed.');
+    check(!jobs.some(job => ['starting', 'unknown'].includes(job.status) && !job.refs?.length), 'RECONCILE_REQUIRED', 'An admitted branch has no recorded outcome. Inspect the original operation before continuing; it is not replayed.');
     for (const reference of refs) {
       const current = (await host.runs.read(reference)).run;
       if (current.status !== 'interrupted') { check(current.status !== 'unknown', 'RECONCILE_REQUIRED', 'A Run has an unknown outcome. Reconcile the original operation; do not replay it.'); continue; }
@@ -548,7 +551,7 @@ export async function finish(host, input) {
   return locked(host, owner, async () => {
     const observed = await observe(host, await session(host, input.id, owner)), state = observed.state;
     check(!frozen(state), 'STOPPED', 'Ultra is already ended.');
-    check(!observed.jobs.some(job => taskActive(job) || job.status === 'interrupted'), 'WORK_REMAINS', 'Wait for, resolve, or explicitly cancel the retained unfinished branches before finishing.');
+    check(!observed.jobs.some(job => taskActive(job) || ['interrupted', 'unknown'].includes(job.status)), 'WORK_REMAINS', 'Wait for, resolve, or explicitly cancel the retained unfinished branches before finishing.');
     check(observed.jobs.some(job => job.status === 'completed'), 'NO_EVIDENCE', 'A plan alone does not prove the user goal was achieved.');
     check(typeof input.summary === 'string' && input.summary.trim() && input.evidence?.length, 'NO_EVIDENCE', 'Give concrete completion evidence and report references from the actual work.');
     for (const job of observed.jobs.filter(item => item.stop && item.startedAt && !item.stopDone)) {
