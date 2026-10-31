@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 import { mkdtemp, rm } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { createService } from '../packages/binance/src/service.js';
 
 export const SYMBOL = { symbol: 'BTCUSDT', status: 'TRADING', baseAsset: 'BTC', quoteAsset: 'USDT', quoteAssetPrecision: 8, isSpotTradingAllowed: true, amendAllowed: true, orderTypes: ['MARKET', 'LIMIT'], filters: [
@@ -19,7 +21,7 @@ export class FakeSocket extends EventTarget {
   close() { if (this.closed) return; this.closed = true; this.dispatchEvent(new Event('close')); }
 }
 export async function fixture(t, { publicOnly = false, context = 'main' } = {}) {
-  const root = await mkdtemp('E:/brief2great/sesame/outputs/binance-backend-20261024/fixture-');
+  const root = await mkdtemp(join(tmpdir(), 'sesame-binance-fixture-'));
   let current = 2000000000000;
   const env = { BINANCE_ENVIRONMENT: 'testnet', ...(publicOnly ? {} : { BINANCE_API_KEY: 'fixture-key-not-real', BINANCE_API_SECRET: 'fixture-secret-not-real' }) };
   const calls = [], orders = new Map(), overrides = [], timers = new Set(); let orderNumber = 700;

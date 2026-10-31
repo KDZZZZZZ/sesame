@@ -62,7 +62,7 @@ function qmtFixture(t, role = 'executor') {
     if (['order', 'cancel'].includes(request.action)) assert.equal(qmtRecords(host).get('qmt_commands', request.operation_id).status, 'outcome_unknown');
     return { ok: true, sample: { from: 1, to: 2 }, result: request.action === 'order' ? { status: 'submitted', order_id: '44' }
       : request.action === 'cancel' ? { status: 'cancel_requested', order_id: request.order_id }
-      : request.action === 'asset' ? { asset: { account_id: '123' } } : { items: request.action === 'positions' ? [{ stock_code: '600000.SH', volume: '100', origin: 'strategy' }] : [] } };
+      : request.action === 'asset' ? { asset: { account_id: '123' } } : { items: request.action === 'positions' ? [{ account_id: '123', stock_code: '600000.SH', volume: '100', origin: 'strategy' }] : [] } };
   } });
   t.after(() => service.dispose());
   const invoke = (action, args, signal) => qmtCapability(`qmt_trading_${action}`, () => action === 'context' ? qmtContext(host, service)(args, signal)
