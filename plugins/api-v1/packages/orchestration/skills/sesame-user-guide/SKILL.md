@@ -1,6 +1,6 @@
 ---
 name: sesame-user-guide
-description: 教用户使用 Sesame 工作台、图表、报告引用、聊天命令、客户端插件安装更新、三态与配置密钥，以及按需调整研究流程、保存长期偏好和验证策略。适用于上手、功能解释、操作帮助和“我能用它做什么”。
+description: 教用户使用 Sesame 工作台、图表拖拽与滚动、@ 报告引用、/clear 和 /skill 命令、用户设置，以及并行研究、图表代码、策略验证和长期记忆。适用于上手、功能解释、操作帮助和“我能用它做什么”。
 ---
 
 # Sesame 用户使用指南
@@ -21,8 +21,8 @@ description: 教用户使用 Sesame 工作台、图表、报告引用、聊天�
 | 首次安装、各系统的额外环境、签名提示、更新与备份 | [安装与首次配置](references/installation.md) |
 | 三个窗口、按钮、拖动、调整大小、滚轮、图表组件 | [Dashboard 操作](references/dashboard.md) |
 | 输入、历史、停止、@、/clear、/skill、可用命令 | [聊天与命令](references/chat-and-commands.md) |
-| User 设置、模型、插件安装更新与三态、配置与密钥 | [设置解释](references/settings.md) |
-| 能帮我做什么、调整流程并记住偏好、并行 Agent、研究与策略示例 | [按目标使用 Agent](references/workflows.md) |
+| User 设置、模型与运行状态、Agent 插件、语言与主题 | [设置解释](references/settings.md) |
+| 能帮我做什么、并行 subagent、绘图、研究与策略示例 | [按目标使用 Agent](references/workflows.md) |
 | 拖不动、图表不见、没有行情、引用为空、任务失败 | [常见问题](references/troubleshooting.md) |
 
 ## 教学约束

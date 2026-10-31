@@ -59,6 +59,3 @@ export async function readTree(directory, prefix = '', files = {}) {
 }
 export const taskRunId = value => { requireValue(/^run_[0-9a-f-]{36}$/.test(value), '运行任务 ID 无效'); return value; };
 export const rowSchema = rows => ({ type: 'object', properties: Object.fromEntries([...new Set(rows.flatMap(Object.keys))].map(key => [key, {}])), additionalProperties: false });
-
-export const text = (value, name, max = 4000) => { requireValue(typeof value === 'string' && value.trim() && value.length <= max, `${name} 需要 1–${max} 个字符`); return value.trim(); };
-export const mean = values => values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;

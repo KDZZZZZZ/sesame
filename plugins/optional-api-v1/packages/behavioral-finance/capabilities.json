@@ -9,43 +9,43 @@
     {
       "id": "knowledge-0",
       "path": "examples/expected.md",
-      "description": "行为金融研究的合成教学反例与预期局部结论，不是真实市场结果。",
+      "description": "行为金融研究 — examples/expected.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-1",
       "path": "prompt.md",
-      "description": "行为金融研究的方法边界与组合入口：参照点、注意力或预期偏差是否比信息变化、风险与交易约束更能解释当前观察；复用固定证据并向调用者交回局部结论。",
+      "description": "行为金融研究 — prompt.md",
       "kind": "prompt"
     },
     {
       "id": "knowledge-2",
       "path": "PROVENANCE.md",
-      "description": "行为金融研究采用资料的出处、实际访问范围与许可，不是当前市场证据。",
+      "description": "行为金融研究 — PROVENANCE.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-3",
       "path": "README.md",
-      "description": "行为金融研究的输入、输出、方法边界和按需参考说明。",
+      "description": "行为金融研究 — README.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-4",
       "path": "skills/behavioral-finance/references/evidence.md",
-      "description": "行为金融研究输入证据的来源、版本、可得时间和局部结论引用要求。",
+      "description": "行为金融研究 — skills/behavioral-finance/references/evidence.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-5",
       "path": "skills/behavioral-finance/references/method.md",
-      "description": "行为金融研究的操作定义、因果边界与反证；用于核对本次具体判据。",
+      "description": "行为金融研究 — skills/behavioral-finance/references/method.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-6",
       "path": "skills/behavioral-finance/SKILL.md",
-      "description": "分析方法：参照点、注意力或预期偏差是否比信息变化、风险与交易约束更能解释当前观察。输入：已固定的事件和预期资料、参与者样本或可观测代理、发布时间与研究截止时间；参与者总体、成本参照点或历史版本未知时保留 unknown。输出：行为机制候选、基线解释、逐环节证据与替代原因、支持/削弱/未区分状态及下一项可区分测量。",
+      "description": "行为金融研究 — skills/behavioral-finance/SKILL.md",
       "kind": "skill"
     }
   ],

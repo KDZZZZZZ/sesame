@@ -15,7 +15,7 @@
         "agent",
         "host"
       ],
-      "description": "按插件 ID、标题或描述分页检索已安装插件，返回状态与能力摘要。",
+      "description": "分页检索已安装插件和能力摘要。",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -56,8 +56,8 @@
       "execution": "immediate",
       "effects": [],
       "usage": {
-        "purpose": "按插件 ID、标题或描述分页检索已安装插件，返回状态与能力摘要。",
-        "inputs": "query 对插件 id/title/description 做不区分大小写的子串匹配，不搜索能力 ID 或能力描述；ids 可选精确插件 ID，cursor/limit 用于分页。空输入列出当前可发现的已安装插件。",
+        "purpose": "分页检索已安装插件和能力摘要。",
+        "inputs": "query 按名称/能力搜索，ids 可选精确插件 ID；cursor/limit 用于分页。空输入列出已安装插件。",
         "outputs": "{items,nextCursor?}，含已安装插件状态和能力摘要；不联网安装。",
         "prerequisites": [],
         "limitations": [
@@ -370,15 +370,9 @@
             "description": "SemVer"
           },
           "template": {
-            "type": "string",
             "enum": [
               "native",
-              "skill",
-              "knowledge",
-              "function",
-              "adapter",
-              "workflow",
-              "service"
+              "skill"
             ]
           },
           "publisher": {
@@ -411,13 +405,13 @@
       ],
       "usage": {
         "purpose": "创建不覆盖已有目录的 API 2 完整声明草稿。",
-        "inputs": "command_id 稳定；name/publisher 用小写连字符 slug，description 描述业务；template 支持 native、skill、knowledge、function、adapter、workflow、service，version 默认0.1.0。",
+        "inputs": "command_id 稳定；name/publisher 用小写连字符 slug，description 描述业务；template=native或skill，version 默认0.1.0。",
         "outputs": "{path,id,name,version,template,files,...} 指向工作区 plugin-drafts 的新草稿。",
         "prerequisites": [
           "主 Agent；开发资料见 skills/develop-plugins/SKILL.md。"
         ],
         "limitations": [
-          "脚手架只提供最小起点；补齐业务实现、配置绑定和用法声明后安装。不会覆盖既有草稿。"
+          "native 只含 echo 起点，skill 无执行能力。不会覆盖既有草稿；完成业务实现和用法声明后才安装。"
         ]
       },
       "binding": {
@@ -670,29 +664,12 @@
   ],
   "sources": [],
   "views": [],
-  "services": [
-    {
-      "id": "management",
-      "contract": "sesame.plugin-management/1",
-      "consumer": "host",
-      "configSchema": { "type": "object", "properties": {}, "additionalProperties": false },
-      "operations": {
-        "catalog": "plugin_catalog",
-        "install_catalog": "plugin_install_catalog",
-        "create": "plugin_create",
-        "inspect": "plugin_inspect",
-        "install": "plugin_install",
-        "update": "plugin_update",
-        "uninstall": "plugin_uninstall",
-        "set_state": "plugin_set_state"
-      }
-    }
-  ],
+  "services": [],
   "knowledge": [
     {
       "id": "resource.1",
       "path": "prompt.md",
-      "description": "按已声明的用途与前提发现、读取、安装和管理API2插件；区分知识选择与工具授权。",
+      "description": "随包资源 prompt.md",
       "kind": "prompt"
     },
     {
@@ -716,13 +693,13 @@
     {
       "id": "resource.5",
       "path": "skills/develop-plugins/SKILL.md",
-      "description": "开发显式声明的API2能力与知识包：界定分层职责、输入输出和配置，并验证真实宿主调用。",
+      "description": "随包资源 skills/develop-plugins/SKILL.md",
       "kind": "skill"
     },
     {
       "id": "resource.6",
       "path": "skills/develop-plugins/references/authoring.md",
-      "description": "声明格式与组合原则：信息/方法/工作流的交接、配置和Schema、知识资源可读性、Agent的plugins与allowedCalls。",
+      "description": "随包资源 skills/develop-plugins/references/authoring.md",
       "kind": "reference"
     },
     {

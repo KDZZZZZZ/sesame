@@ -59,35 +59,17 @@ export function visible(row, asOf, name = 'row') {
   const time = instant(row.time, `${name}.time`), available = instant(row.available_at, `${name}.available_at`);
   check(time <= available && available <= instant(asOf, 'as_of'), `${name}: observation is not available at as_of`); return time;
 }
-function snapshotVisible(row, asOf, name) {
-  const dateOnly = typeof row.time === 'string' && /^\d{4}-\d\d-\d\d$/.test(row.time);
-  // Midnight is only an ordering key for a calendar date, never a fabricated close/availability time.
-  const time = instant(dateOnly ? `${row.time}T00:00:00.000Z` : row.time, `${name}.time`);
-  const cutoff = instant(asOf, 'as_of');
-  check(time <= cutoff, `${name}: observation is not available at as_of`);
-  if (row.available_at != null) {
-    const available = instant(row.available_at, `${name}.available_at`);
-    check(time <= available && available <= cutoff, `${name}: observation is not available at as_of`);
-  }
-  return time;
-}
-export function bars(input, key = 'bars', { allowSnapshot = false } = {}) {
+export function bars(input, key = 'bars') {
   validateInput(input); const rows = array(input[key], key); let previous = -Infinity;
   for (const [i, row] of rows.entries()) {
     check(row && typeof row === 'object' && !Array.isArray(row), `${key}[${i}]: object required`);
-    const time = (allowSnapshot ? snapshotVisible : visible)(row, input.as_of, `${key}[${i}]`);
-    if (allowSnapshot) check(row.time.length === rows[0].time.length, `${key}: use one time precision per series`);
+    const time = visible(row, input.as_of, `${key}[${i}]`);
     check(time > previous, `${key}: times must be unique and increasing`); previous = time;
     for (const name of ['open', 'high', 'low', 'close']) finite(row[name], `${key}[${i}].${name}`, Number.MIN_VALUE, 1e15);
     check(row.low <= Math.min(row.open, row.close) && row.high >= Math.max(row.open, row.close) && row.low <= row.high, `${key}[${i}]: invalid OHLC range`);
     finite(row.volume, `${key}[${i}].volume`, 0, 1e18);
   }
   return rows;
-}
-// TR includes both gaps relative to the preceding close; no preceding close means no TR.
-// https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/atr
-export function trueRange(row, previousClose) {
-  return previousClose == null ? null : Math.max(row.high - row.low, Math.abs(row.high - previousClose), Math.abs(row.low - previousClose));
 }
 export function envelope(input, analyze, moduleUrl) {
   validateInput(input);

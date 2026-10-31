@@ -5,18 +5,14 @@ description: ABU-inspired ATR risk budget, fractional Kelly and price-rank sizin
 
 # 仓位计算基线
 
-用 `abu_position_sizing_analyze` 比较 ATR 风险预算、分数 Kelly 与排名分配，明确输出预算、数量和单位。
+这是可修改、可验证的研究基线，不是标准答案。改进公式或参数时保留原结果、修改假设和对照证据。
 
-equity 是固定假设，不是模拟资金曲线；Kelly 的概率与盈亏比来自输入，未校准时不能声称可靠盈利概率。数量只有结合单位和点值才有意义，不能直接当作券商手数；本能力不发单。
+能力 `abu_position_sizing_analyze`：在明确权益、币种和标的单位假设下计算 ATR 风险预算、分数 Kelly 与价格排名仓位基线。
 
-本基线首根 TR 使用 high-low，累计 atr_window 根输入可得 ATR；完整仓位结果还须满足 price_rank_window。与 abu-indicators/abu-volatility 首根 TR=null、ATR 需 N+1 根的口径不同，不能直接互换初始窗口结果。
+调用形状为 {input:{schema_version:1,source:{id,kind},as_of,parameters?,...}}，不是文件路径或数据 ID。source.id 为 1..500 字符，kind 为 synthetic/historical/live；as_of 及全部时间字段使用真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒）。输入限 2MiB 有限 JSON，不接收代码。parameters 只支持列出的字段。 bars 是 1..10000 条已知 OHLCV，按收盘 time 严格递增且不重复；每行含 time、available_at、open/high/low/close、volume。time <= available_at <= as_of，价格为正且 high/low 覆盖 open/close，volume >= 0。 account:{equity>0,currency}；instrument:{price_currency,quantity_unit?,point_value?}。币种和数量单位代码须为 2..32 字符的大写标识；quantity_unit 与 point_value 必须同时提供或同时省略。point_value 表示每个数量单位每一个价格点对应的资金金额，不能把它误作最小跳动。
 
-## 输入与交接
+observations.account/instrument 保留单位假设，latest/series 给出风险/仓位观察，decision_available_at 为证据可用时点。省略数量换算时只得到资金/价格点维度的计算，不是券商下单手数。 立即返回 {schema_version:1,baseline:true,status:"research_baseline",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。
 
-本能力属于数值方法层，消费调用者提供的已知输入。把账户/单位假设和 latest/series 的风险预算、数量交给风险审查；实际券商手数、保证金和可成交性须用账户后端核验，观察值不直接转成订单。复用前核对输入版本、参数、截止时间与实现口径；已有匹配结果可直接引用。同源价格、成交或统计派生结果不能重复计为独立证据；计算只回答本项局部问题，方法解释与最终综合由调用者负责。缺少已声明的必需字段或真实时序时，交回具体缺口，不补造数据以通过校验。
+equity 是整段计算的固定假设，不是模拟权益轨迹。Kelly 的概率和盈亏比来自输入假设；未校准概率不能当作可靠盈利概率。本能力不发单。 来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。
 
-工具 abu_position_sizing_analyze 的已注册 inputSchema 和 usage 给出准确字段、参数、返回路径与错误条件，不要求先阅读示例或运行教学演练。保留 input_artifact、result_artifact、source/as_of、实际参数和 limitations；原始工件可用 data_read({ref}) 按完整引用再次读取。其他方法需要不同输入形状时按其已声明接口显式转换，不把一个结果对象直接冒充另一个工具的输入。
-
-## 可选改进
-
-这是可修改、可验证的研究基线；只有任务需要比较公式或参数时才开展改进，保留原结果、修改假设与同一输入上的对照。references/method.md 解释公式和原版差异；examples/input.json 是合成教学输入。两者按需读取，合成结果保持演示身份。
+`references/method.md` 解释公式和原版差异；包根目录 `examples/input.json` 提供合成样例。两者用于需要时核对，不是调用前的固定步骤。

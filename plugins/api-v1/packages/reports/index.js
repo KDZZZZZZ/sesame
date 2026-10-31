@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { backtestTemplate } from './backtest-template.js';
 import { readWorkspace, writeWorkspace, publishFiles } from './artifact-io.js';
-import { reportExportAdvice } from './shared/report-export-contract.js';
 
 const fail = (condition, message) => { if (!condition) throw new Error(message); };
 const utf8 = bytes => new TextDecoder('utf-8', { fatal: true }).decode(bytes);
@@ -9,8 +8,8 @@ const escapeHTML = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp
 const scriptJSON = value => JSON.stringify(value).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
 const asset = path => readFileSync(new URL(path, import.meta.url), 'utf8');
 const safePath = path => typeof path === 'string' && path.length <= 256 && !path.startsWith('/') && !path.includes('\\') && path.split('/').every(part => part && part !== '.' && part !== '..');
-const chartKinds = ['line', 'bar', 'scatter', 'matrix', 'units', 'waterfall', 'dumbbell', 'strip', 'histogram', 'boxplot', 'ridgeline', 'violin', 'calendar', 'parallel', 'bump', 'lifecycle', 'treemap', 'threads', 'flow', 'network-circular', 'network-force', 'decision-tree', 'candlestick'];
-const chartAssets = ['editorial-charts.js', 'charts-statistics.js', 'charts-temporal.js', 'charts-structure.js', 'charts-decision.js'];
+const chartKinds = ['line', 'bar', 'scatter', 'matrix', 'units', 'waterfall', 'dumbbell', 'strip', 'histogram', 'boxplot', 'ridgeline', 'violin', 'calendar', 'parallel', 'bump', 'lifecycle', 'treemap', 'threads', 'flow', 'network-circular', 'network-force'];
+const chartAssets = ['editorial-charts.js', 'charts-statistics.js', 'charts-temporal.js', 'charts-structure.js'];
 const uniqueRefs = refs => [...new Map(refs.map(ref => [JSON.stringify([ref.id, ref.revision, ref.digest, ref.kind, ref.schemaVersion]), ref])).values()];
 
 function assertPackaged(text, label) {
@@ -51,21 +50,9 @@ export function createCapabilities(host) {
       };
       const values = { LOCALE: args.locale ?? 'en', TITLE: args.title };
       let html = asset('templates/research-brief.html').replace(/\{\{([A-Z_]+)\}\}/g, (token, key) => Object.hasOwn(values, key) ? escapeHTML(values[key]) : token);
-      const assets = args.kind === 'candlestick' ? [...chartAssets, 'vendor/lightweight-charts.js', 'charts-market.js'] : chartAssets;
-      html = html.replace('{{STYLES}}', () => asset('assets/editorial.css')).replace('{{KIT}}', () => asset('assets/report-kit.js')).replace('{{CHARTS}}', () => assets.map(name => asset(`assets/${name}`)).join('\n')).replace('{{CONFIG}}', () => scriptJSON(config));
+      html = html.replace('{{STYLES}}', () => asset('assets/editorial.css')).replace('{{KIT}}', () => asset('assets/report-kit.js')).replace('{{CHARTS}}', () => chartAssets.map(name => asset(`assets/${name}`)).join('\n')).replace('{{CONFIG}}', () => scriptJSON(config));
       const written = await writeWorkspace(host, args.output_path, html, signal);
       return { path: written.path, bytes: Buffer.byteLength(html), runtime: 'sesame-report/1', runtimeRevision: '1.0.0', binding: args.data_id, editable: true };
-    } },
-    { name: 'report_document_template', execute: async (args, signal) => {
-      fail(typeof args.title === 'string' && args.title.trim() && typeof args.body_html === 'string' && args.body_html.trim(), 'Document template requires a title and authored HTML body');
-      const values = { LOCALE: escapeHTML(args.locale ?? 'en'), TITLE: escapeHTML(args.title), STYLES: asset('assets/editorial.css'), BODY: args.body_html };
-      // One replacement pass keeps authored {{...}} text literal. The body may
-      // contain legitimate inline styles/scripts; only the isolated report
-      // runtime executes it, under the same publish/resource/CSP checks.
-      const html = asset('templates/document.html').replace(/\{\{([A-Z_]+)\}\}/g, (token, key) => Object.hasOwn(values, key) ? values[key] : token);
-      fail(Buffer.byteLength(html) <= 1024 * 1024, 'Report including editorial styles exceeds 1 MiB');
-      const written = await writeWorkspace(host, args.output_path, html, signal);
-      return { path: written.path, bytes: Buffer.byteLength(html), runtime: 'sesame-report/1', runtimeRevision: '1.0.0', editable: true };
     } },
     backtestTemplate(host),
     { name: 'report_read', execute: async (args, signal) => {
@@ -74,15 +61,9 @@ export function createCapabilities(host) {
       return { ...metadata, manifest, ...(args.include_checks ? { checks: (await host.resources.read(args.ref, { part: 'receipts' })).items } : {}) };
     } },
     { name: 'report_check', execute: (args, signal) => host.views.inspect({ surface: 'artifact', ref: args.ref }, { signal }) },
-    { name: 'report_export_check', execute: (args, signal) => host.views.inspect({ surface: 'report-export', ref: args.ref }, { signal }) },
     { name: 'report_publish', execute: async (args, signal) => {
       let bytes = await readWorkspace(host, args.html_path, signal, args.operation_id), html = utf8(bytes);
       fail(bytes.length > 0 && bytes.length <= 1024 * 1024 && /<[a-z][a-z0-9:-]*(?:\s+(?:[^<>"']|"[^"<>]*"|'[^'<>]*')*)?\s*\/?>/i.test(html), 'Report requires valid authored HTML up to 1 MiB');
-      // A full report document must come from a unified report/1 template.
-      // HTML fragments remain accepted for legacy callers and tests.
-      const fullDocument = /<!doctype\s+html|<html\b/i.test(html);
-      const unifiedTemplate = /data-sesame-report-template\s*=\s*["']report\/1["']/i.test(html) || /reportKit\s*\.\s*render\s*\(/.test(html);
-      fail(!fullDocument || unifiedTemplate, 'Reports must be authored from the unified report_template, report_document_template or report_backtest_template scaffold (data-sesame-report-template="report/1"); hand-written report pages are not accepted.');
       assertPackaged(html, 'HTML');
       const related = [...(args.related ?? [])];
       if (args.strategy_source) {
@@ -110,20 +91,16 @@ export function createCapabilities(host) {
         fail(safePath(item.path) && !paths.has(item.path), 'Asset paths must be unique, safe and relative'); paths.add(item.path);
         const content = await readWorkspace(host, item.source_path, signal, args.operation_id); total += content.length;
         fail(total <= 16 * 1024 * 1024, 'Report assets exceed 16 MiB');
-        // Evidence JSON/plain text is inert, even when it quotes HTML. Only
-        // executable/renderable assets receive the authoring resource check;
-        // the host still validates MIME, paths, digests and runtime CSP.
-        if (/(?:javascript|ecmascript)/i.test(item.media_type) || /^(?:text\/(?:html|css)|application\/xhtml\+xml|image\/svg\+xml)(?:;|$)/i.test(item.media_type)) assertPackaged(utf8(content), item.path);
+        if (/^(text\/|application\/(?:javascript|json))/.test(item.media_type)) assertPackaged(utf8(content), item.path);
         blobs.push({ bytes: content, path: item.path, mediaType: item.media_type });
       }
       signal?.throwIfAborted();
       const provenance = { kind: args.provenance_kind, references: refs };
       const features = [...new Set([...(args.features ?? ['interactive']), ...(args.strategy_source ? ['strategy_details'] : [])])];
-      const content = { schemaVersion: '1.0.0', title: args.title, summary: args.summary, ...(args.space ? { space: args.space } : {}), entry: 'index.html', runtime: 'sesame-report/1', runtimeRevision: '1.0.0', data: args.data, related, features, locale: args.locale ?? 'en', provenance };
-      const exportability = reportExportAdvice(html, blobs.slice(1).filter(blob => /^(?:text\/html|image\/svg\+xml)(?:;|$)/i.test(blob.mediaType)).map(blob => ({ mediaType: blob.mediaType, text: Buffer.from(blob.bytes).toString('utf8') })));
+      const content = { schemaVersion: '1.0.0', title: args.title, summary: args.summary, entry: 'index.html', runtime: 'sesame-report/1', runtimeRevision: '1.0.0', data: args.data, related, features, locale: args.locale ?? 'en', provenance };
       const published = await publishFiles(host, args.operation_id, { kind: 'report', schemaVersion: '1.0.0', content, dependencies: refs, provenance }, blobs, args.artifact_id ? { artifactId: args.artifact_id, expectedRevision: args.expected_revision ?? null } : {}, signal);
       const ref = published.ref;
-      return { ref, title: args.title, data: args.data, runtime: content.runtime, runtimeRevision: content.runtimeRevision, renderStatus: 'not_checked', exportability };
+      return { ref, title: args.title, data: args.data, runtime: content.runtime, runtimeRevision: content.runtimeRevision, renderStatus: 'not_checked' };
     } },
   ];
 }

@@ -1,14 +1,8 @@
 # CCXT adapter validation
 
-## Public information audit (2026-10-18)
-
-A real isolated Host Runtime reproduced missing-library inspection interrupting its caller before private preparation could proceed. The probe now reports an absent/import-incompatible library as readiness data; nonexistent absolute candidate paths are excluded before launching a child command. A regression runs Python without site packages and proves inspection completes without a failed child process. Explicit private preparation then succeeded with pinned CCXT 4.5.85.
-
-Real public tests through each registered host market binding/search/describe/queryBars operation returned 17 daily BTC candles on Kraken, Coinbase and OKX. This machine required its existing credential-free HTTPS proxy to be supplied explicitly as `configuration.publicProxy`; all three direct routes failed. This is route-specific evidence, not an exchange-wide outage or a guarantee of future connectivity. No credentials, private exchange endpoints or orders were used. The SDK still preserves exact route identity and does not silently inherit or switch proxies. Fifty-two relevant Node regressions passed; one separate opt-in host route test was skipped.
-
 ## Persistent public sessions and latest candles (1.0.3)
 
-Controlled provider/transport tests cover Coinbase's native 300-candle cap, the current forming candle, one-second recent-tail refresh (restored in 2.0.8), source-proven closed bars, network-gap resnapshot, suspension gaps, process reuse across BTC/ETH, independent request cancellation, worker crash recovery, exact-route separation, pool eviction, idle expiry and plugin disposal. Python boundary tests verify cached markets and the persistent rate limiter, metadata refresh, native request limits, recoverable JSONL errors and rejection of private operations/credentials/route changes. No host ABI or account/trading operation was added.
+Controlled provider/transport tests cover Coinbase's native 300-candle cap, the current forming candle, one-second recent-tail refresh, source-proven closed bars, network-gap resnapshot, suspension gaps, process reuse across BTC/ETH, independent request cancellation, worker crash recovery, exact-route separation, pool eviction, idle expiry and plugin disposal. Python boundary tests verify cached markets and the persistent rate limiter, metadata refresh, native request limits, recoverable JSONL errors and rejection of private operations/credentials/route changes. No host ABI or account/trading operation was added.
 
 The opt-in `ccxt-public-live.test.mjs` ran on 2026-10-10 with an existing pinned CCXT environment and an explicitly configured public proxy. Actual Coinbase BTC/USD 1h initial snapshot returned 300 candles including the current forming bar; the following refresh returned three recent candles; ETH/USD returned its current candle. All three receipts shared a session ID and increasing request numbers. Observed request durations were 7076 ms (initial), 412 ms (refresh) and 954 ms (ETH). A separate raw-worker check observed 5997/1158/380 ms for BTC/BTC/ETH. These are one-run observations, not latency guarantees.
 

@@ -1,4 +1,4 @@
-export const SOURCE_KINDS = Object.freeze({ sec: ['filings', 'fundamentals'], fmp: ['prices', 'fundamentals', 'news', 'analyst', 'insiders'], fred: ['macro'], reddit: ['sentiment'], cftc: ['cot'] });
+export const SOURCE_KINDS = Object.freeze({ sec: ['filings', 'fundamentals'], fmp: ['prices', 'fundamentals', 'news', 'analyst', 'insiders'], fred: ['macro'], reddit: ['sentiment'] });
 export const timestamp = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/.test(value) && dateOnly(value.slice(0, 10)) && Number.isFinite(Date.parse(value)) ? new Date(value).toISOString() : null;
 export const dateOnly = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(`${value}T00:00:00Z`)) && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
 // Date-only sources do not supply an intraday timezone. UTC-14 is a conservative
@@ -6,7 +6,7 @@ export const dateOnly = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2
 export const dayUpper = value => dateOnly(value) ? new Date(Date.parse(`${value}T00:00:00Z`) + 38 * 3600000).toISOString() : null;
 
 export function selectProvider(args) {
-  return args.provider ?? (args.kind === 'cot' ? 'cftc' : args.kind === 'macro' ? 'fred' : args.kind === 'sentiment' ? 'reddit' : args.kind === 'filings' || (args.kind === 'fundamentals' && (!args.statement || args.statement === 'companyfacts')) ? 'sec' : 'fmp');
+  return args.provider ?? (args.kind === 'macro' ? 'fred' : args.kind === 'sentiment' ? 'reddit' : args.kind === 'filings' || (args.kind === 'fundamentals' && (!args.statement || args.statement === 'companyfacts')) ? 'sec' : 'fmp');
 }
 
 function url(origin, path, params = {}) {
@@ -85,7 +85,6 @@ async function fmp(args, context) {
   if (args.start) params.from = args.start;
   if (args.end) params.to = args.end;
   if (args.kind !== 'prices') params.limit = args.limit;
-  if (args.kind === 'fundamentals') params.period = args.period;
   if (['news', 'insiders'].includes(args.kind)) params.page = 0;
   const response = await context.get(url('https://financialmodelingprep.com', `/stable/${paths[args.kind]}`, params));
   if (!Array.isArray(response.data)) throw Object.assign(new Error('Unexpected FMP payload.'), { code: 'SOURCE_PAYLOAD_INVALID' });
@@ -94,7 +93,7 @@ async function fmp(args, context) {
     const available = timestamp(published);
     return candidate(row, response, { observed: row.date ?? row.transactionDate ?? row.publishedDate ?? null, available, basis: available ? 'source_timestamp_current_version' : 'unknown', source: typeof row.url === 'string' ? context.publicURL(row.url) ?? response.source.url : response.source.url });
   });
-  return { candidates, limited: true, warnings: [args.kind === 'prices' ? 'Unadjusted daily prices are for research; exchange timezone, release latency and historical corrections are not supplied. These are not executable quotes.' : 'This endpoint exposes the current source version. Publication/filing dates do not prove that its present content existed then.', ...(args.kind === 'fundamentals' ? [`Requested ${args.period} statements; source fiscalYear, period and date are preserved. Quarterly statements are not TTM; availability times may be unknown.`] : []), 'Single bounded source page; an empty or truncated sample does not establish absence.'] };
+  return { candidates, limited: true, warnings: [args.kind === 'prices' ? 'Unadjusted daily prices are for research; exchange timezone, release latency and historical corrections are not supplied. These are not executable quotes.' : 'This endpoint exposes the current source version. Publication/filing dates do not prove that its present content existed then.', 'Single bounded source page; an empty or truncated sample does not establish absence.'] };
 }
 
 async function fred(args, context) {
@@ -105,22 +104,10 @@ async function fred(args, context) {
   const params = { series_id: args.series_id, api_key: context.credential('fred_key_env'), file_type: 'json', sort_order: 'desc', limit: args.limit, observation_start: args.start, observation_end: args.end, realtime_start: vintage, realtime_end: vintage };
   const response = await context.get(url('https://api.stlouisfed.org', '/fred/series/observations', params));
   if (!Array.isArray(response.data?.observations)) throw Object.assign(new Error('Unexpected FRED payload.'), { code: 'SOURCE_PAYLOAD_INVALID' });
-  let series;
-  try {
-    const metadata = await context.get(url('https://api.stlouisfed.org', '/fred/series', { series_id: args.series_id, api_key: context.credential('fred_key_env'), file_type: 'json', realtime_start: vintage, realtime_end: vintage }));
-    const row = Array.isArray(metadata.data?.seriess) && metadata.data.seriess.find(item => item.id === args.series_id);
-    if (!row || !['title', 'units', 'frequency', 'seasonal_adjustment', 'last_updated'].every(key => typeof row[key] === 'string')) throw Object.assign(new Error('Unexpected FRED series metadata.'), { code: 'SOURCE_PAYLOAD_INVALID' });
-    const fields = ['id', 'title', 'units', 'units_short', 'frequency', 'frequency_short', 'seasonal_adjustment', 'seasonal_adjustment_short', 'last_updated', 'realtime_start', 'realtime_end', 'observation_start', 'observation_end'];
-    series = { status: 'ok', ...Object.fromEntries(fields.filter(key => row[key] !== undefined).map(key => [key, row[key]])), source_url: metadata.source.url, retrieved_at: metadata.source.retrieved_at };
-  } catch (error) {
-    const reason = /^SOURCE_(?:HTTP_\d{3}|CREDENTIAL_MISSING|TOO_LARGE|PAYLOAD_INVALID|ADDRESS_REJECTED|TIMEOUT)$/.test(error?.code ?? '') ? error.code : 'SOURCE_REQUEST_FAILED';
-    series = { status: 'source_unavailable', id: args.series_id, reason, checked_at: new Date(context.now()).toISOString() };
-  }
   return {
     candidates: response.data.observations.map(row => candidate({ series_id: args.series_id, ...row }, response, { observed: row.date, available: vintage ? dayUpper(vintage) : null, basis: vintage ? 'fred_vintage_day_upper_bound' : 'unknown', contentAvailable: vintage ? dayUpper(vintage) : response.source.retrieved_at })),
-    series,
-    limited: series.status !== 'ok' || Number(response.data.count) > response.data.observations.length,
-    warnings: [vintage ? `FRED vintage ${vintage}; date precision uses a conservative end-of-day bound, not an intraday publication time.` : 'Current FRED values may be revised. Use as_of for a historical vintage; observation date is not release date.', 'FRED missing-value marker "." is preserved; it is not zero.', 'Series last_updated is the official metadata update time, not an observation publication time. Series retrieval has its own timestamp.', ...(series.status !== 'ok' ? ['Series metadata is unavailable; retained observations are partial evidence. Do not infer their units, frequency or seasonal adjustment.'] : [])],
+    limited: Number(response.data.count) > response.data.observations.length,
+    warnings: [vintage ? `FRED vintage ${vintage}; date precision uses a conservative end-of-day bound, not an intraday publication time.` : 'Current FRED values may be revised. Use as_of for a historical vintage; observation date is not release date.', 'FRED missing-value marker "." is preserved; it is not zero.'],
   };
 }
 
@@ -140,19 +127,6 @@ async function reddit(args, context) {
   };
 }
 
-async function cftc(args, context) {
-  const dates = [];
-  if (args.start) dates.push(`report_date_as_yyyy_mm_dd >= '${args.start}T00:00:00'`);
-  if (args.end) dates.push(`report_date_as_yyyy_mm_dd <= '${args.end}T23:59:59.999'`);
-  const response = await context.get(url('https://publicreporting.cftc.gov', '/resource/72hh-3qpy.json', { cftc_contract_market_code: args.market_code, '$where': dates.length ? dates.join(' AND ') : undefined, '$order': 'report_date_as_yyyy_mm_dd DESC', '$limit': args.limit }));
-  if (!Array.isArray(response.data) || response.data.some(row => row?.cftc_contract_market_code !== args.market_code || typeof row?.report_date_as_yyyy_mm_dd !== 'string' || !dateOnly(row.report_date_as_yyyy_mm_dd.slice(0, 10)))) throw Object.assign(new Error('Unexpected CFTC disaggregated report payload.'), { code: 'SOURCE_PAYLOAD_INVALID' });
-  return {
-    candidates: response.data.map(row => candidate(row, response, { observed: row.report_date_as_yyyy_mm_dd.slice(0, 10) })),
-    limited: response.data.length >= args.limit,
-    warnings: ['CFTC dataset 72hh-3qpy is Disaggregated Futures Only. Original contract units, positions, percentages and trader counts are preserved; do not combine them as one unit or add futures-and-options reports.', 'Report date identifies the position observation, not publication or availability time. available_at is unknown; this fetched version is known only from retrieval onward.', 'Weekly bounded market sample; trader categories do not establish motives, future direction or absence of positions when records are missing.'],
-  };
-}
-
 export async function querySource(provider, args, context) {
-  return ({ sec, fmp, fred, reddit, cftc })[provider](args, context);
+  return ({ sec, fmp, fred, reddit })[provider](args, context);
 }

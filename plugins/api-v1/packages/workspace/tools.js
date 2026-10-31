@@ -55,8 +55,7 @@ export async function executeProcess(host, files, input, signal) {
   check((await stat(cwd)).isDirectory(), 'cwd must be a directory');
   const invoked = await host.capabilities.invoke('host.process.exec', { ...input, cwd }, { signal });
   check(invoked.type === 'run' && invoked.run?.id, 'Process execution must create a real host Run');
-  // A revoked Host port may throw synchronously; the original wait still rejects on abort.
-  const cancel = () => { void Promise.resolve().then(() => host.runs.cancel(invoked.run, { reason: 'Calling capability was cancelled' })).catch(() => {}); };
+  const cancel = () => { void Promise.resolve(host.runs.cancel(invoked.run, { reason: 'Calling capability was cancelled' })).catch(() => {}); };
   signal?.addEventListener('abort', cancel, { once: true });
   try {
     if (signal?.aborted) { cancel(); signal.throwIfAborted(); }

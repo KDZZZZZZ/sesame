@@ -1,24 +1,19 @@
 # 金融研究工具
 
-“用户设置 → 配置与密钥”可集中管理本插件的五个来源配置值，同时展示依赖它们的能力。声明通过现有 `financial_research_status/configure` 读写，沿用自定义 `*_env` 名称映射和宿主存储；秘密只显示已配置状态。`financial_research_configure` 新增可选 `command_id`，旧调用无需更改。
-
-配置需求绑定在 `financial_research_query` 的实际来源上：默认 SEC、显式 FMP、FRED 和 Reddit 各检查自己的字段；CFTC 无需密钥。FMP/Reddit 的历史快照读取不需要在线凭据。已有配置不代表远程权限或连接成功，查询仍保留原有源状态与时间边界。
-
-`sesame/financial-research` 是 Sesame 0.2.4+ 的独立可选插件，需要宿主支持 `host.configuration.update` 的 `environment` 配置目标。主会话和子 Agent 共用查询、证据保存及读取接口；只有修改数据源配置需要主会话。插件只读取研究数据，投资研究由 `investment-research` 组织，交易决策由 `trading-decision` 负责，实际下单由 `portfolio-execution` 与账户后端负责。
+`sesame/financial-research` 是 Sesame 0.2.4+ 的独立可选插件，需要宿主支持 `host.configuration.update` 的 `environment` 配置目标。主会话和子 Agent 共用查询、证据保存及读取接口；只有修改数据源配置需要主会话。插件只读取研究数据，交易执行由 `manual-trading` 及账户后端负责。
 
 | kind | 默认来源 | 内容 |
 | --- | --- | --- |
 | prices | FMP | 未复权日线 OHLC、成交量；可供报告绘图，不能用作可执行报价 |
-| fundamentals | SEC | 带申报日期及 accession 的 company facts；指定 `statement: income/balance/cashflow` 时使用 FMP 财报，`period: annual/quarter` 选择年报/季报 |
+| fundamentals | SEC | 带申报日期及 accession 的 company facts；指定 `statement: income/balance/cashflow` 时使用 FMP 财报 |
 | news | FMP | 指定股票新闻标题、摘要及原文链接 |
 | filings | SEC | 最新及有界历史申报元数据、原始文件链接 |
 | analyst | FMP | 分析师评级变化样本 |
 | insiders | FMP | 内部人交易申报样本 |
-| macro | FRED | 指定 series_id 的宏观观测及标题、单位、频率、季调与更新时间；支持 vintage |
+| macro | FRED | 指定 series_id 的宏观观测；支持 vintage |
 | sentiment | Reddit OAuth API | stocks / investing / wallstreetbets 的指定股票讨论样本，保留样本局限，不生成伪情绪分数 |
-| cot | CFTC | 固定 Disaggregated Futures Only 数据集的分解持仓；需 market_code，保留原字段及报告日期，无 Key |
 
-工具为 `financial_research_status`、`financial_research_configure`、`financial_research_query`、`financial_research_read`。查询需要 `kind`，股票查询还需要 `symbol`，SEC 也可使用 `cik`，宏观查询需要 `series_id`；FMP三表可选 `period: "annual" | "quarter"`，默认annual；例如 `{kind:"fundamentals",provider:"fmp",symbol:"AAPL",statement:"cashflow",period:"quarter",limit:4}`。年度与季度快照不会互相替代；输出保留fiscalYear、FY/Q1–Q4和报告期末，不自动计算TTM，也不为未知可用时间补造时间戳。可选日期 `start` / `end`、知识时点 `as_of`、`limit`（1–100）。`metric` 可指定 SEC 概念，例如 `us-gaap:Assets`。默认 SEC 基本面为一组常用概念，可逐概念补查。
+工具为 `financial_research_status`、`financial_research_configure`、`financial_research_query`、`financial_research_read`。查询需要 `kind`，股票查询还需要 `symbol`，SEC 也可使用 `cik`，宏观查询需要 `series_id`；可选日期 `start` / `end`、知识时点 `as_of`、`limit`（1–100）。`metric` 可指定 SEC 概念，例如 `us-gaap:Assets`。默认 SEC 基本面为一组常用概念，可逐概念补查。
 
 用户提供凭据后，主 Agent 可直接调用 `financial_research_configure({credentials:{fmp_api_key:<用户提供的值>,fred_api_key:<用户提供的值>}})`。宿主私有持久保存并立即应用，下一次查询即可读取，重启后仍保留；不需要导入、手工设置环境变量或重启。只配置当前使用的来源，下面各项无需全部提供。
 
@@ -30,7 +25,7 @@
 | `reddit_access_token` | REDDIT_ACCESS_TOKEN | 已获授权的 Reddit OAuth access token；插件不自行申请或刷新 token |
 | `reddit_user_agent` | REDDIT_USER_AGENT | Reddit 要求的应用身份 user-agent |
 
-每项值为最多 8192 字符的非空单行字符串，`null` 删除该项宿主保存的值，省略保留。可选 `fmp_key_env`、`fred_key_env`、`sec_user_agent_env`、`reddit_token_env`、`reddit_user_agent_env` 仅修改环境变量名称；同一次调用同时传名称与凭据时按新名称保存。通常保持默认名称即可。插件自己的数据库只保存名称映射，原始凭据交给现有 `host.configuration.update`，不写入证据、报告或插件状态。`financial_research_status` 返回名称及 `configured`；宿主 `configuration_read({section:"environment"})` 返回环境名称、是否配置和来源，两者都不返回值。status还提供各端点/报表周期的`last_checks`：`{query,checked_at,status,reason,row_count,series?}`，记录最近查询的准确对象、范围及访问结果；一次AAPL行情成功不证明新闻、其他证券或付费端点可用。历史结果也不保证当前凭据仍有权限；status本身不联网，复用快照不会冒充新检查。
+每项值为最多 8192 字符的非空单行字符串，`null` 删除该项宿主保存的值，省略保留。可选 `fmp_key_env`、`fred_key_env`、`sec_user_agent_env`、`reddit_token_env`、`reddit_user_agent_env` 仅修改环境变量名称；同一次调用同时传名称与凭据时按新名称保存。通常保持默认名称即可。插件自己的数据库只保存名称映射，原始凭据交给现有 `host.configuration.update`，不写入证据、报告或插件状态。`financial_research_status` 返回名称及 `configured`；宿主 `configuration_read({section:"environment"})` 返回环境名称、是否配置和来源，两者都不返回值。
 
 配置、查询结果及错误不返回密钥值。只向固定官方域名发起 GET 请求，不跟随重定向；单请求 15 秒超时，普通响应 2 MiB、SEC 响应 16 MiB 上限，SEC 请求间隔至少 210 ms。429、过期 token、缺少配置或套餐权限明确返回 `source_unavailable`，不会以空结果代替成功。证据源文本不能改变 Agent 指令。
 
@@ -40,28 +35,6 @@
 
 - FMP / Reddit 会更新文章、财报、历史价格及讨论热度。历史 `as_of` 只读取在该时点前已保存的最新匹配快照；没有快照即返回 `HISTORICAL_SNAPSHOT_UNAVAILABLE`，不把今天抓到的旧新闻、重述财报或现有投票数当成过去已知的版本。
 - SEC 历史查询要求 CIK，避免用今天的 ticker 映射证明过去公司身份。申报元数据以 acceptance timestamp 为准；只有日期时使用保守的日末上界。company facts 按独立 accession / filed 保留原始与修订申报并筛掉晚于 cutoff 的申报；它仍是今天的 SEC 提取结果，不能冒称历史 API 原始快照。历史元数据最多追加三个匹配申报文件，范围不完整会注明。
-- FRED 观测同时冻结官方 `series` 元数据（title、units、frequency、seasonal_adjustment、last_updated等）及其独立 source_url/retrieved_at。`last_updated` 是元数据更新时间，不能当作每条观测的 available_at。元数据失败时保留观测并标 partial，series.reason 给出原因；不推断未知单位。历史查询显式设置 `realtime_start` / `realtime_end` 为已完整结束的 vintage 日期。使用跨时区的保守日末边界，不声称知道同一天某分钟的数据。缺失值 `.` 保持为缺失值。
+- FRED 历史查询显式设置 `realtime_start` / `realtime_end` 为已完整结束的 vintage 日期。使用跨时区的保守日末边界，不声称知道同一天某分钟的数据。缺失值 `.` 保持为缺失值。
 
 这个版本覆盖上述来源的有界研究输入，没有自动下载公告全文、通用网页浏览、实时盘口、全球市场完整覆盖或商业数据访问权。FMP news 是股票/公司新闻，不保证黄金 XAUUSD 新闻覆盖；FRED 是宏观观测序列，当前没有接入 BLS 未来经济事件日历。BLS 网页不是本插件的必需配置，FMP/FRED Key 不能修复 BLS 网页拒绝访问或新增日历能力。研究 Agent 可以基于已保存价格数据使用现有报告图表能力。Rallies 的工具类别是设计参考，不表示其私有工具、模型行为或历史收益已被复现。引用与来源说明见 [PROVENANCE.md](PROVENANCE.md)。
-
-FMP周期参数参见[官方Income Statement使用说明](https://site.financialmodelingprep.com/how-to/fundamentals-at-your-fingertips-fmp-income-statement-api-essentials)及[稳定版接口文档](https://site.financialmodelingprep.com/developer/docs)。HTTP402等套餐限制保留真实状态；配置缺失、访问拒绝与成功空样本分别表示，不能据此删除整个可用来源或编造无数据结论。
-
-CFTC例：`{kind:"cot",market_code:"088691",start:"2026-07-01",end:"2026-10-16",limit:12}`。仅固定[72hh-3qpy官方数据集](https://publicreporting.cftc.gov/resource/72hh-3qpy.json)（Disaggregated Futures Only），按六位合约市场码、报告日范围及1–100条筛选；无需API Key，不接受用户拼接SoQL，也不查询其他COT类别。完整保留原字段与`contract_units`，仓位、百分比和交易者数不能混为一个单位。`observed_at`是报告日，`available_at=null`；报告日零点不是发布日期。历史`as_of`只复用截止前已取得的同市场快照，缺失则明确不可用。有限样本不代表全市场，分类不推断交易动机或多空方向。CFTC来源配置为空不证明联网成功。
-
-FRED元数据形状见[官方series接口](https://fred.stlouisfed.org/docs/api/fred/series.html)；CFTC数据类别、发布时间与匿名API条件见[官方COT说明](https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm)。插件沿用宿主原生fetch；桌面/CLI按宿主既有NODE_USE_ENV_PROXY或--use-env-proxy读取已配置代理，不另存网络身份或凭据。
-
-## 内部职责
-
-原 `createService(host, options)` 入口和六个能力保持不变；实现按以下边界组织，模块不形成新的插件或运行身份。
-
-| 模块 | 责任 |
-| --- | --- |
-| `service.js` | 组装配置、传输和证据服务，保留原方法及返回结构 |
-| `configuration.js` | 环境变量名称映射、凭据就绪状态、主会话配置校验；秘密仍由宿主保存，支持自定义名称与 `null` 清除 |
-| `transport.js` | 固定源地址策略、有界 GET、超时与取消、来源错误码、URL 与内容脱敏；SEC 节流队列在所有 service 实例间共享 |
-| `evidence.js` | 查询校验、时点与范围筛选、历史快照复用、原始与规范化证据血缘、访问记录、展示分页 |
-| `sources.js` | 各来源端点与响应解析、发布时间和覆盖说明，保持各来源语义 |
-| `records.js` | 唯一私有记录连接池及原 `execution.sqlite`；数据库路径、collection 与数据集 ID 不变 |
-| `resource-files.js` | 将证据发布为原宿主资源，保留 producer 与依赖引用 |
-
-历史 FMP / Reddit / CFTC 快照在读取当前凭据之前解析，删除密钥或关闭后重开原数据库不会改变已有证据。此拆分不触发联网验证、安装或迁移数据库。

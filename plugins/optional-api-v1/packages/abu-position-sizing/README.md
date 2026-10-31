@@ -6,7 +6,7 @@
 
 需要 `account.equity`、`account.currency`、`instrument.price_currency` 与 UTC 可见 `bars`。如果提供 `instrument.quantity_unit`，也必须同时提供 `instrument.point_value`；否则输出会明确标记为数学上的 cash-per-price-point，而不是 broker 数量。
 
-通过 Sesame 原生工具调用时，运行时登记固定输入和输出，返回完整 `input_artifact` 与 `result_artifact`；直接运行 CLI 只把结果写到 stdout 或 `--out` 文件，不自动发布固定成果。
+通过 Sesame 原生工具调用时，运行时会自动登记输入和输出数据集，返回可复核的 dataset id；直接运行 CLI 只把结果写到 stdout 或 `--out` 文件，不登记数据集。
 
 参数：
 
@@ -60,19 +60,3 @@ Agent 可加入合约乘数、最小交易单位、组合风险预算、货币�
 observations.account/instrument 保留单位假设，latest/series 给出风险/仓位观察，decision_available_at 为证据可用时点。省略数量换算时只得到资金/价格点维度的计算，不是券商下单手数。 立即返回 {schema_version:1,baseline:true,status:"research_baseline",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。
 
 equity 是整段计算的固定假设，不是模拟权益轨迹。Kelly 的概率和盈亏比来自输入假设；未校准概率不能当作可靠盈利概率。本能力不发单。 来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。
-
-## 文件与能力边界
-
-本包属于 `analysis / function`，提供给定证据上的局部确定性处理。算法和调用身份保持独立；研究目标、方法组合、数据来源、原生回测及交易交由调用方选择。
-
-| 文件 | 职责 |
-| --- | --- |
-| `index.js` | 绑定现有能力，处理调用前取消，委托计算和成果登记 |
-| `scripts/baseline.mjs` | 本包算法、参数约束、观察值和局限；保留原 CLI 入口 |
-| `scripts/runtime.mjs` | 输入/时间校验、证据摘要、固定成果和 CLI 协议，独立包内交付 |
-| `skills/abu-position-sizing/` | 用法与按需公式参考，不重复实现算法或调度研究 |
-| `examples/input.json`、`tests/baseline.test.mjs` | 合成输入、手算预期与异常回归 |
-
-共用 runtime 的源码在仓库 `plugins/optional-api-v1/scripts/abu-runtime.mjs` 维护，以 `sync-abu-runtime.mjs --check/--write` 核验或同步。安装包只导入自己的副本，不相对引用其它插件；公式只在本包 baseline 修改。`implementation_sha256` 继续包含原算法和 runtime 字节，既有固定成果不会重绑。
-
-无需额外配置、API Key 或账户连接；计算参数仍是本次输入，不能移成全局配置。已有固定输入和输出由宿主资源接口管理，无私有研究调度器或交易状态。

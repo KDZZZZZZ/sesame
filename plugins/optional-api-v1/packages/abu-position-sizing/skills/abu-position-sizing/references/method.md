@@ -6,12 +6,6 @@
 - Fractional Kelly：使用外部给定胜率和平均盈亏比，负值截为 0，先用 cap 限制，再乘以 `kelly_fraction_multiplier`。
 - Price rank：当前 close 在最近窗口中的百分位位置。
 
-ATR 使用最近 `atr_window` 个 TR 的简单平均；有前收盘价时
-`TR=max(high-low,abs(high-prev_close),abs(low-prev_close))`，首根输入则用 `high-low`。
-累计 N 根输入可得首个 N 期 ATR；不足时 atr=null。完整仓位结果还须满足 `price_rank_window`，
-任一窗口不足均返回 `status:"warmup"`。abu-indicators/abu-volatility 使用首根 TR=null、
-N+1 根输入的初始化口径，初始窗口的 ATR 不能直接互换。
-
 关键约束：
 
 - `kelly_win_probability` 必须在 `[0, 1]`。

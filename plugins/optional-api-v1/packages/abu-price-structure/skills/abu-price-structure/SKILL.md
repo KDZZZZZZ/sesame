@@ -6,16 +6,14 @@ license: GPL-3.0-only
 
 # 价格结构基线
 
-用 `abu_price_structure_analyze` 提取已确认拐点、支撑阻力聚类与黄金分割参考，说明价格位置和何时可知。
+这是可修改、可验证的研究基线，不是标准答案。改进公式或参数时保留原结果、修改假设和对照证据。
 
-右侧 K 线出现后拐点才确认，因此决策依据是 confirmed_at，不能提前使用 pivot_time。聚类与分割是形态参考；突破或反转仍需后续证据。
+能力 `abu_price_structure_analyze`：寻找已确认的摆动高低点、聚类支撑阻力与黄金分割参考水平，保留确认时间避免未来信息泄露。
 
-## 输入与交接
+调用形状为 {input:{schema_version:1,source:{id,kind},as_of,parameters?,...}}，不是文件路径或数据 ID。source.id 为 1..500 字符，kind 为 synthetic/historical/live；as_of 及全部时间字段使用真实 UTC YYYY-MM-DDTHH:mm:ss.sssZ（含毫秒）。输入限 2MiB 有限 JSON，不接收代码。parameters 只支持列出的字段。 bars 是 1..10000 条已知 OHLCV，按收盘 time 严格递增且不重复；每行含 time、available_at、open/high/low/close、volume。time <= available_at <= as_of，价格为正且 high/low 覆盖 open/close，volume >= 0。 left/right 是摆动点左右所需根数；bars.length <= max_bars，产生的 pivot 数量 <= max_pivots。
 
-本能力属于数值方法层，消费调用者提供的已知输入。把 pivots、confirmed_at、levels 和 golden_levels 交给 price-action、elliott-wave 或其他解释方法；窗口、端点和确认定义匹配时复用。聚类水平不等于完整趋势段，不能用同一摆动的多种标签重复确认。复用前核对输入版本、参数、截止时间与实现口径；已有匹配结果可直接引用。同源价格、成交或统计派生结果不能重复计为独立证据；计算只回答本项局部问题，方法解释与最终综合由调用者负责。缺少已声明的必需字段或真实时序时，交回具体缺口，不补造数据以通过校验。
+observations.pivots 含拐点及确认信息，levels 是聚类水平，golden_levels 来自最近确认的高低点，rows/baseline_note 描述覆盖与方法。 立即返回 {schema_version:1,baseline:true,status:"research_baseline",source,as_of,parameters,observations,limitations,input_sha256,implementation_sha256,input_artifact,result_artifact}。两个 artifact 是完整不可变 DataRef，保留 id/revision/digest/kind/schemaVersion；若需再次读取，可将完整 ref 传给 data_read({ref})（需 data-access/workspace）。input_artifact 保存 [{input}]，result_artifact 保存 [{...计算结果}]，后者不自包含 artifact 引用。
 
-工具 abu_price_structure_analyze 的已注册 inputSchema 和 usage 给出准确字段、参数、返回路径与错误条件，不要求先阅读示例或运行教学演练。保留 input_artifact、result_artifact、source/as_of、实际参数和 limitations；原始工件可用 data_read({ref}) 按完整引用再次读取。其他方法需要不同输入形状时按其已声明接口显式转换，不把一个结果对象直接冒充另一个工具的输入。
+拐点要到右侧 right 根 K 线出现才确认，使用 confirmed_at 而不是 pivot_time 作为可知时点。聚类和黄金分割是启发式参考，不是未来价格保证。 来源与 available_at 是调用方声明，能力不会独立验证供应商历史；synthetic 证据必须保持演示标记。结果是研究观察，不是订单、成交或收益证明。
 
-## 可选改进
-
-这是可修改、可验证的研究基线；只有任务需要比较公式或参数时才开展改进，保留原结果、修改假设与同一输入上的对照。references/method.md 解释公式和原版差异；examples/input.json 是合成教学输入。两者按需读取，合成结果保持演示身份。
+`references/method.md` 解释公式和原版差异；包根目录 `examples/input.json` 提供合成样例。两者用于需要时核对，不是调用前的固定步骤。

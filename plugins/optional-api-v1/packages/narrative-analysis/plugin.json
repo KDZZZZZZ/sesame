@@ -1,9 +1,9 @@
 {
   "id": "sesame/narrative-analysis",
   "apiVersion": "2",
-  "version": "2.0.1",
+  "version": "2.0.0",
   "title": "市场叙事研究",
-  "description": "可组合的分析方法：实际资料支持哪些市场命题、传播关系和竞争解释，下一项观察如何区分它们；消费已有证据，返回命题与 source_cluster 表、支持/反对/缺失事实、竞争情景、触发与反证及更新条件。",
+  "description": "独立叙事分析：原始命题、传播与来源簇、反叙事和条件情景；不把故事热度当因果或价格预测。",
   "author": {
     "name": "Sesame contributors"
   },

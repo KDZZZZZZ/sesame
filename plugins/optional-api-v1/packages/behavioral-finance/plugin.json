@@ -1,9 +1,9 @@
 {
   "id": "sesame/behavioral-finance",
   "apiVersion": "2",
-  "version": "2.0.1",
+  "version": "2.0.0",
   "title": "行为金融研究",
-  "description": "可组合的分析方法：参照点、注意力或预期偏差是否比信息变化、风险与交易约束更能解释当前观察；消费已有证据，返回行为机制候选、基线解释、逐环节证据与替代原因、支持/削弱/未区分状态及下一项可区分测量。",
+  "description": "独立行为金融：参照点、注意力与预期偏差的可检验假设；区分心理解释、可观测代理与因果证据。",
   "author": {
     "name": "Sesame contributors"
   },

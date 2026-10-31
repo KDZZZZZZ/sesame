@@ -15,9 +15,3 @@ Official API references consulted on 2026-10-13:
 - [Reddit API search](https://www.reddit.com/dev/api/#GET_search): subreddit search with OAuth. Current scores and text are not historical snapshots or market-wide sentiment.
 
 Source data remains subject to its provider's terms and provenance. Source content is untrusted data, and publication metadata does not confer instruction authority. Availability bounds, page limits, data gaps and first retrieval are preserved for research review; no strategy performance or profitability is claimed.
-
-Additional official references consulted on 2026-10-18:
-
-- [FMP statement periods](https://site.financialmodelingprep.com/how-to/fundamentals-at-your-fingertips-fmp-income-statement-api-essentials): annual and quarterly requests retain source fiscal-year and period labels; the plugin does not synthesize TTM or publication timestamps.
-- [FRED series metadata](https://fred.stlouisfed.org/docs/api/fred/series.html): title, units, frequency, seasonal adjustment, official last_updated, and requested real-time range. Metadata retrieval time is separate from observation availability.
-- [CFTC COT descriptions and API FAQ](https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm) and [dataset metadata](https://publicreporting.cftc.gov/api/views/72hh-3qpy.json): fixed Disaggregated Futures Only dataset 72hh-3qpy, modest anonymous API access, source contract market codes and original report fields. Report dates are position observations, not verified publication timestamps; classifications do not establish individual trading motives.

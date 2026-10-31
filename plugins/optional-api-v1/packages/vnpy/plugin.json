@@ -1,8 +1,8 @@
 {
   "id": "sesame/vnpy",
   "title": "VeighNa CTA 回测",
-  "description": "计算验证能力：消费固定数据与已编写CtaTemplate运行原生回测，交付可追溯结果与假设；候选比较由工作流负责，不连接实盘。",
-  "version": "2.0.4",
+  "description": "按需复用或安装本机 VeighNa 环境，以固定数据和 Agent 编写的 Python 策略运行真实 CTA 回测引擎并保存结果。",
+  "version": "2.0.0",
   "apiVersion": "2",
   "license": "MIT",
   "default_state": "discoverable",
@@ -22,15 +22,7 @@
     "PROVENANCE.md"
   ],
   "engines": {
-    "sesame": ">=0.3.0-dev.1 <0.4.0"
+    "sesame": ">=0.2.3"
   },
-  "capability_manifest": "capabilities.json",
-  "permissions": {
-    "scopes": [
-      "process.execute"
-    ],
-    "calls": [
-      "host.process.exec"
-    ]
-  }
+  "capability_manifest": "capabilities.json"
 }

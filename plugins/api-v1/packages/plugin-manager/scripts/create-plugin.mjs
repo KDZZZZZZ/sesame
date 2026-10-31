@@ -1,18 +1,14 @@
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { scaffold, writeDraft, TEMPLATES, DEFAULT_MIN_HOST } from '../scaffold.js';
+import { scaffold, writeDraft } from '../scaffold.js';
 
 const help = `Create a Sesame plugin without application source or credentials (Node 24+).
 
 node create-plugin.mjs --name my-plugin --publisher your-name --description "Purpose and trigger" --output /path/to/new-directory
 
-Optional: --template ${TEMPLATES.join('|')} --version 0.1.0 --min-host ${DEFAULT_MIN_HOST}
-The default host band is >=${DEFAULT_MIN_HOST} <0.4.0 (development candidate, not a release claim).
-An explicit --min-host override requires reviewing the actual APIs and permission enforcement on that host.
-Compatibility aliases: native = function-style echo (original contract); skill = minimal knowledge.
-Templates describe implementation responsibilities, never privileges. Permission requests start empty.
+Optional: --template native|skill --version 0.1.0 --min-host 0.2.0
 No dependency installation, model calls or automatic activation. Existing outputs are refused.
-Implement and test the business behavior, then use Sesame plugin_install (declaration and binding checks included) and verify the actual capability. Update existing IDs with plugin_update(expectedRevision).
+After editing, use Sesame plugin_validate → plugin_test → plugin_install → plugin_load.
 Guide: https://github.com/KDZZZZZZ/sesame/blob/main/plugins/api-v1/packages/plugin-manager/skills/develop-plugins/SKILL.md`;
 
 export async function main(args) {

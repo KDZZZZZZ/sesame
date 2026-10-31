@@ -1,7 +1,0 @@
-{
-  "name": "@sesame/plugin-binance",
-  "version": "1.0.1",
-  "type": "module",
-  "private": true,
-  "license": "MIT"
-}

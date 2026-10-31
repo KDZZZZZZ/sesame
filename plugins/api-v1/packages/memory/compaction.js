@@ -185,7 +185,7 @@ export async function curate(event, services) {
         const documents = [{ key, source: queued.source, text: evidence.slice(offset, end), truncated: offset > 0 || end < evidence.length }];
         const memories = existingMemories(services, documents);
         const batchId = hash([services.context.conversationId, key]);
-        const input = { executionContext: services.context, documents, memories: memories.map(({ id, version, category, scope, title, summary, content, evidence, pinned, status }) => ({ id, version, category, scope, title: redact(title), summary: redact(summary), content: redact(content.slice(0, 1500)), truncated: content.length > 1500, evidence, pinned, status })),
+        const input = { scope: services.context, documents, memories: memories.map(({ id, version, category, scope, title, summary, content, evidence, pinned, status }) => ({ id, version, category, scope, title: redact(title), summary: redact(summary), content: redact(content.slice(0, 1500)), truncated: content.length > 1500, evidence, pinned, status })),
           candidates: candidates.filter(candidate => candidate.sources.some(source => sourceKey(source) === sourceKey(queued.source))).slice(0, 12).map(({ id, category, title, summary, evidence }) => ({ id, category, title: redact(title), summary: redact(summary), evidence })), categories: services.memory.tree().categories };
         while (Buffer.byteLength(JSON.stringify(input)) > inputBudget && input.memories.length) input.memories.pop();
         while (Buffer.byteLength(JSON.stringify(input)) > inputBudget && input.candidates.length) input.candidates.pop();

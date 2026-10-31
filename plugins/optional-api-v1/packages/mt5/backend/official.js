@@ -193,9 +193,7 @@ export class MT5Official {
       const empty = (status, reason) => ({ server: name, status, reason, server_info: null, workspace: null, tools: [] });
       const config = this.config.servers[name];
       if (config && !config.enabled) return empty('disabled', name === 'marketdata' ? '此独立数据服务未启用，不影响券商行情。' : '此连接未启用，主 Agent 可按用户授权用 mt5_update_configuration 开启。');
-      if (config && !config.token) return empty('unconfigured', name === 'terminal'
-        ? 'Terminal MCP 尚无可用 token；先用 mt5_connect 检查配置对应的终端是否开启，再按实际缺项处理 MCP 配置；打开已有终端无需账户密码或 MCP 密钥。'
-        : '缺少此服务的 API Key；主 Agent 可用 mt5_update_configuration 直接保存用户已提供的 token。');
+      if (config && !config.token) return empty('unconfigured', '缺少此服务的 API Key；主 Agent 可用 mt5_update_configuration 直接保存用户已提供的 token。');
       if (name === 'python' && !this.python.available()) return { ...empty('not_installed', '尚未找到 MT5 或已配置的 Windows Python。'), prerequisite: dependencyRequirement('python-ipc', this.storage.directory, ['MT5', 'Windows Python + MetaTrader5 SDK']) };
       if (name === 'launcher' && !this.native) return { ...empty('not_installed', '尚未找到本机 MT5 安装。'), prerequisite: dependencyRequirement('launcher', this.storage.directory, ['MT5 terminal']) };
       try {
@@ -205,8 +203,7 @@ export class MT5Official {
             return { ...tool, category: categories.get(tool.name) ?? name, permission: this.permission(name, tool.name), ...this.access(name, tool.name, owner) };
           }) };
       } catch (error) {
-        if (name === 'terminal' && connectionRefused(error)) return empty('unavailable', 'Terminal MCP 未监听，不证明 MT5 未开启或账户未登录；先用 mt5_connect 检查配置对应的终端进程，再分层核验 MCP 和券商连接，不反复读取目录或索取账户密码。');
-        if (name === 'metaeditor' && connectionRefused(error)) return empty('not_running', '需要编辑或编译 MQL5 时启动 MetaEditor。');
+        if (['terminal', 'metaeditor'].includes(name) && connectionRefused(error)) return empty('not_running', name === 'metaeditor' ? '需要编辑或编译 MQL5 时启动 MetaEditor。' : '正在等待 MT5 启动，应用会自动尝试连接。');
         return empty('unavailable', this.redact(error.upstreamStatus === 401 ? '连接密钥未通过验证；主 Agent 可用 mt5_update_configuration 保存有效的新 token，再核验连接。' : error.message === 'fetch failed' ? '连接失败，请检查服务地址和网络。' : error.message));
       }
     }));

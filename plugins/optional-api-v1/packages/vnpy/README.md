@@ -1,6 +1,6 @@
 # VeighNa CTA backtests
 
-`sesame/vnpy` is an optional API 2 plugin. It runs the real VeighNa CTA `BacktestingEngine` on a fixed `DataRef` and one Agent-authored `CtaTemplate` Python file. It preserves the exact Python source, parameters, bar input, environment inventory, process receipt, daily results, simulated orders and fills as immutable artifacts. It does not connect a live gateway, publish account state, or place broker orders.
+`sesame/vnpy` is an optional API 1 plugin. It runs the real VeighNa CTA `BacktestingEngine` on a fixed `DataRef` and one Agent-authored `CtaTemplate` Python file. It preserves the exact Python source, parameters, bar input, environment inventory, process receipt, daily results, simulated orders and fills as immutable artifacts. It does not connect a live gateway, publish account state, or place broker orders.
 
 ## Use
 

@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto';
 import { prepareDataset, evaluateFactor, compareFactors, validateExpression, EVALUATOR_VERSION } from './engine.js';
-import { DIAGNOSTICS, evaluateCandidate, evaluateDiagnostics } from './diagnostics.js';
 export const PROTOCOL = 'sesame.factor-evaluator/v1';
 export const canonical = value => JSON.stringify(normalize(value));
 function normalize(value) { return Array.isArray(value) ? value.map(normalize) : value && typeof value === 'object' ? Object.fromEntries(Object.keys(value).sort().map(key => [key, normalize(value[key])])) : value; }
@@ -9,18 +8,7 @@ export function check(ok, message, code = 'EVALUATION_REJECTED') { if (!ok) thro
 const receipt = value => ({ ...value, receiptDigest: digest(value) });
 const bounded = (value, label) => { check(typeof value === 'string' && value.length > 0 && value.length <= 200, `${label} is required`); return value; };
 const candidateExample = { op: 'delta', args: [{ op: 'field', name: 'close' }], window: 5 };
-const instructions = 'This evaluator accepts a factor AST: field(name), constant(value), add/sub/mul/div(2 args), neg/abs/log/rank/zscore(1 arg), lag/delta/mean/std/sum(1 arg, window 1..252). Read contract.dataset.mode: cross-sectional means per-date Spearman (4+ assets); time-series means per-symbol temporal Spearman (single assets supported), then equal-weight symbol aggregation. rank/zscore remain cross-sectional AST operators, so use rolling operators or arithmetic for a single symbol. Direction-return diagnostics are idealized nonoverlapping close returns after costs, not actual trade win rates or per-trade R. Optional diagnostics are chosen by the task in options.diagnostics; unrequested, inapplicable or unavailable checks do not block the others. Only explicitly supplied minRankIC/minCoverage/maxCorrelation are selection thresholds; otherwise an actual finite validation association is sufficient for eligibility, including a negative relationship worth further research. A status of completed means computation ran, not scientific success. Submit the AST itself; never supply measured metrics.';
-const MAX_INPUT_BYTES = 4 * 1024 * 1024;
-const hashBytes = bytes => `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
-export const inputDigest = (dataset, data) => digest({ dataset, sourceId: data.sourceId, ...(data.inputRefs ? { inputRefs: data.inputRefs } : {}) });
-// Published artifacts sort keys while serializing. Keep the evaluator's existing
-// receipt/input digest contract unchanged: JSON.stringify reorders integer keys.
-function artifactCanonical(value) {
-  if (Array.isArray(value)) return `[${value.map(artifactCanonical).join(',')}]`;
-  if (value !== null && typeof value === 'object') return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${artifactCanonical(value[key])}`).join(',')}}`;
-  check(value === null || typeof value === 'boolean' || typeof value === 'string' || Number.isFinite(value), 'Artifact manifest must contain JSON values');
-  return JSON.stringify(value);
-}
+const instructions = 'This explicitly selected evaluator accepts a factor AST. Operators: field(name), constant(value), add/sub/mul/div(2 args), neg/abs/log/rank/zscore(1 arg), lag/delta/mean/std/sum(1 arg, window 1..252). It computes train/validation Rank IC, coverage, non-overlapping long-short return after costs and train-only redundancy. Submit the AST as candidate; never supply measured metrics.';
 
 function caller(host, execution) {
   const provenance = execution?.provenance, chain = provenance?.chain;
@@ -39,45 +27,6 @@ async function readDataset(host, datasetId, signal) {
     check(bytes <= 4 * 1024 * 1024, 'Use a panel <=4MiB'); cursor = result.nextCursor;
   } while (cursor);
   check(metadata?.id === datasetId, 'Dataset source returned a different identity'); return { ...metadata, rows };
-}
-async function readFixedDataset(host, ref, signal) {
-  check(ref && typeof ref === 'object' && !Array.isArray(ref) && Object.keys(ref).sort().join(',') === 'digest,id,kind,revision,schemaVersion' &&
-    ['id', 'revision'].every(key => typeof ref[key] === 'string' && ref[key].length > 0 && ref[key].length <= 200) &&
-    ref.kind === 'data' && ref.schemaVersion === '1.0.0' && /^sha256:[a-f0-9]{64}$/.test(ref.digest), 'Use a complete fixed data reference');
-  signal?.throwIfAborted();
-  const manifest = await host.resources.read(ref, { part: 'manifest' });
-  check(manifest && typeof manifest === 'object' && hashBytes(artifactCanonical(manifest)) === ref.digest, 'Fixed input manifest digest differs');
-  check(manifest.kind === 'data' && manifest.schemaVersion === ref.schemaVersion, 'Unsupported fixed data schema');
-  const content = manifest.content;
-  check(content?.format === 'json-rows', 'Fixed data must use json-rows');
-  check(Number.isSafeInteger(content.rowCount) && content.rowCount > 0 && content.rowCount <= 20000, 'Use a panel with 1–20000 rows');
-  check(content.provenance && ['observed', 'derived', 'user_input', 'demo'].includes(content.provenance.kind), 'Fixed data requires recorded provenance');
-  check(Array.isArray(manifest.dependencies) && manifest.dependencies.length <= 256 && (content.provenance.kind !== 'derived' || manifest.dependencies.length > 0), 'Fixed data requires its recorded dependencies');
-  const entries = Array.isArray(manifest.blobs) ? manifest.blobs.filter(blob => blob.path === content.path) : [];
-  check(typeof content.path === 'string' && content.path.length > 0 && entries.length === 1, 'Fixed data requires its published content entry');
-  const blob = entries[0];
-  check(Number.isSafeInteger(blob.size) && blob.size > 0 && blob.size <= MAX_INPUT_BYTES, 'Use a panel <=4MiB');
-  check(/^sha256:[a-f0-9]{64}$/.test(blob.digest), 'Fixed data content digest is required');
-  const parts = []; let offset = 0;
-  for (;;) {
-    signal?.throwIfAborted();
-    const value = await host.resources.read(ref, { part: 'content', entry: content.path, encoding: 'base64', offset, length: 262144 });
-    check(canonical(value.ref) === canonical(ref), 'Fixed input returned a different source identity');
-    check(value.encoding === 'base64' && typeof value.content === 'string', 'Fixed input must return base64 content');
-    const chunk = Buffer.from(value.content, 'base64');
-    check(value.offset === offset && value.length === chunk.length && value.total === blob.size && offset + chunk.length <= MAX_INPUT_BYTES, 'Fixed input byte range differs or exceeds 4MiB');
-    parts.push(chunk); offset += chunk.length;
-    if (value.nextOffset === undefined) { check(offset === blob.size, 'Fixed input content is incomplete'); break; }
-    check(chunk.length > 0 && value.nextOffset === offset && offset < blob.size, 'Invalid fixed input byte cursor');
-  }
-  signal?.throwIfAborted();
-  const bytes = Buffer.concat(parts);
-  check(hashBytes(bytes) === blob.digest, 'Fixed input content digest differs');
-  let rows;
-  try { rows = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)); }
-  catch { check(false, 'Fixed input must contain UTF-8 JSON rows'); }
-  check(Array.isArray(rows) && rows.length === content.rowCount, 'Fixed input rowCount differs from actual rows');
-  return { id: ref.id, rows, provenance: structuredClone(content.provenance), inputRefs: [structuredClone(ref)], dependencies: structuredClone(manifest.dependencies) };
 }
 async function readJson(host, ref) {
   const parts = []; let offset = 0, bytes = 0;
@@ -109,19 +58,9 @@ async function saveSession(host, session, signal) {
   await host.state.commit([{ op: 'put', key: { collection: 'sessions', key: session.id }, expectedVersion: _stateVersion ?? 0, value: { ...metadata, refs } }], { signal });
 }
 function options(value = {}) {
-  check(value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).every(key => ['dataset', 'inputRef', 'minRankIC', 'minCoverage', 'maxCorrelation', 'diagnostics'].includes(key)), 'Unknown evaluator option');
-  const result = { dataset: value.dataset, ...(value.inputRef === undefined ? {} : { inputRef: structuredClone(value.inputRef) }) };
-  for (const [key, min] of [['minRankIC', -1], ['minCoverage', 0], ['maxCorrelation', 0]]) if (value[key] !== undefined) {
-    check(Number.isFinite(value[key]) && value[key] >= min && value[key] <= 1, `Invalid evaluator threshold ${key}`);
-    result[key] = value[key];
-  }
-  if (value.diagnostics !== undefined) {
-    check(value.diagnostics && typeof value.diagnostics === 'object' && !Array.isArray(value.diagnostics)
-      && Object.keys(value.diagnostics).every(key => Object.hasOwn(DIAGNOSTICS, key))
-      && Buffer.byteLength(JSON.stringify(value.diagnostics)) <= 12000, 'Use known diagnostic names and a plan within 12KB');
-    result.diagnostics = structuredClone(value.diagnostics);
-  }
-  return result;
+  check(value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).every(key => ['dataset', 'minRankIC', 'minCoverage', 'maxCorrelation'].includes(key)), 'Unknown evaluator option');
+  const number = (value, fallback, min, max) => { const n = value ?? fallback; check(Number.isFinite(n) && n >= min && n <= max, 'Invalid evaluator threshold'); return n; };
+  return { dataset: value.dataset, minRankIC: number(value.minRankIC, 0, -1, 1), minCoverage: number(value.minCoverage, .6, 0, 1), maxCorrelation: number(value.maxCorrelation, .95, 0, 1) };
 }
 const sessions = new Map();
 export async function evaluate(host, args, signal, execution) {
@@ -141,29 +80,24 @@ async function evaluateSession(host, args, signal, execution) {
   if (args.action === 'prepare') {
     check(host.context.kind === 'main', 'Prepare a new evaluator session in the main conversation', 'FORBIDDEN');
     check(['restricted', 'development-only'].includes(args.access), 'Choose restricted or development-only data access');
-    const config = options(args.options), hasDataset = args.dataset_id !== undefined, hasRef = config.inputRef !== undefined;
-    check(hasDataset !== hasRef, hasDataset ? 'Choose dataset_id or options.inputRef, not both' : 'dataset_id or options.inputRef is required');
-    const source = hasRef ? await readFixedDataset(host, config.inputRef, signal) : await readDataset(host, bounded(args.dataset_id, 'dataset_id'), signal);
-    const sourceId = source.id, sourceIdentity = { sourceId, ...(source.inputRefs ? { inputRefs: source.inputRefs } : {}) };
+    const sourceId = bounded(args.dataset_id, 'dataset_id'), config = options(args.options), source = await readDataset(host, sourceId, signal);
     check(Buffer.byteLength(JSON.stringify(source.rows)) <= 4 * 1024 * 1024, 'Use a panel <=4MiB');
     const dataset = prepareDataset(source.rows, config.dataset, { developmentOnly: args.access === 'development-only' });
     config.dataset = dataset.config;
     const provenance = structuredClone(source.provenance ?? { source_kind: source.source_kind ?? 'unspecified' });
     check(Buffer.byteLength(JSON.stringify(provenance)) <= 12000, 'Keep input provenance within 12KB');
     const id = `fe_${digest([workflowPluginId, host.context.sessionId, runId]).slice(7, 39)}`;
-    const frozenDigest = inputDigest(dataset, sourceIdentity), fingerprint = digest({ inputDigest: frozenDigest, config, provenance, access: args.access });
+    const inputDigest = digest({ dataset, sourceId }), fingerprint = digest({ inputDigest, config, provenance, access: args.access });
     const prior = await storedSession(host, id);
     if (prior) { check(prior.fingerprint === fingerprint, 'Evaluator session already has different frozen inputs'); return prior.prepared; }
     const development = { evaluatorVersion: EVALUATOR_VERSION, access: args.access, config: dataset.config, summary: dataset.summary,
       rows: dataset.rows.filter(row => row.time <= dataset.config.validationEnd) };
-    const prepared = receipt({ protocol: PROTOCOL, action: 'prepare', runId, sessionId: id, inputDigest: frozenDigest,
-      data: { ...sourceIdentity, ...(source.dependencies ? { dependencies: source.dependencies } : {}), digest: frozenDigest, evaluatorVersion: EVALUATOR_VERSION, rowCount: dataset.summary.rows, symbolCount: dataset.summary.symbols.length,
+    const prepared = receipt({ protocol: PROTOCOL, action: 'prepare', runId, sessionId: id, inputDigest,
+      data: { sourceId, digest: inputDigest, evaluatorVersion: EVALUATOR_VERSION, rowCount: dataset.summary.rows, symbolCount: dataset.summary.symbols.length,
         fields: dataset.summary.fields, range: { start: dataset.summary.start, end: dataset.summary.end }, provenance,
         synthetic: /demo|synthetic|fixture/i.test([source.source_kind, provenance.kind, provenance.source_kind].join(' ')),
         scope: 'development', holdoutMode: args.access === 'restricted' ? 'workflow-isolated' : 'none' },
-      contract: { candidateExample, instructions, dataset: dataset.config, diagnostics: DIAGNOSTICS,
-        diagnosticPlan: config.diagnostics ?? {}, selectionThresholds: Object.fromEntries(['minRankIC', 'minCoverage', 'maxCorrelation'].filter(key => config[key] !== undefined).map(key => [key, config[key]])),
-        metricColumns: [{ key: 'rankIC', label: dataset.config.mode === 'time-series' ? '时序 Rank IC' : '截面 Rank IC' }, { key: 'coverage', label: '覆盖率' }, { key: 'netReturn', label: '方向诊断收益' }] }, development });
+      contract: { candidateExample, instructions, dataset: dataset.config, metricColumns: [{ key: 'rankIC', label: 'Rank IC' }, { key: 'coverage', label: '覆盖率' }, { key: 'netReturn', label: '净收益' }] }, development });
     await saveSession(host, { id, runId, workflowPluginId, ownerConversationId: host.context.sessionId, fingerprint, dataset, config, prepared, candidates: {} }, signal);
     return prepared;
   }
@@ -181,7 +115,7 @@ async function evaluateSession(host, args, signal, execution) {
   }
   check(session.dataset.evaluatorVersion === EVALUATOR_VERSION, 'Evaluator version changed');
   const dataset = prepareDataset(session.dataset.rows, session.dataset.config, { developmentOnly: session.dataset.access === 'development-only' });
-  check(inputDigest(dataset, session.prepared.data) === session.prepared.inputDigest, 'Frozen input digest differs');
+  check(digest({ dataset, sourceId: session.prepared.data.sourceId }) === session.prepared.inputDigest, 'Frozen input digest differs');
   const common = { protocol: PROTOCOL, action: args.action, runId, sessionId: session.id };
   if (args.action === 'candidate') {
     check(!session.selection, 'Candidate selection is frozen');
@@ -195,14 +129,10 @@ async function evaluateSession(host, args, signal, execution) {
     check(!Object.values(session.candidates).some(value => value.candidateDigest === candidateDigest), 'Duplicate candidate formula');
     const accepted = args.accepted_ids ?? [];
     check(Array.isArray(accepted) && accepted.length <= 40 && accepted.every(id => Object.hasOwn(session.candidates, id)), 'Unknown comparison candidate');
-    const metrics = await evaluateCandidate(dataset, candidate, session.config, signal), validation = metrics.validation;
-    const measured = Number.isFinite(validation.rankIC);
-    const eligible = measured && (session.config.minRankIC === undefined || validation.rankIC >= session.config.minRankIC)
-      && (session.config.minCoverage === undefined || validation.coverage >= session.config.minCoverage);
+    const metrics = evaluateFactor(dataset, candidate), validation = metrics.validation;
+    const eligible = Number.isFinite(validation.rankIC) && validation.rankIC >= session.config.minRankIC && validation.coverage >= session.config.minCoverage;
     const result = receipt({ ...common, trialId, candidate, candidateDigest, metrics, eligible,
-      gate: !measured ? 'validation association unavailable; retain as unmeasured evidence and continue other candidates'
-        : eligible ? 'measured validation association; explicit selection thresholds satisfied; optional diagnostics do not gate selection'
-          : 'measured validation association does not meet the explicitly requested rankIC/coverage threshold',
+      gate: eligible ? 'validation threshold passed; not proof of tradability' : 'validation rankIC/coverage threshold not met',
       redundancy: accepted.map(id => ({ trialId: id, ...compareFactors(dataset, candidate, session.candidates[id].candidate) })) });
     session.candidates[trialId] = result; await saveSession(host, session, signal); return result;
   }
@@ -210,7 +140,7 @@ async function evaluateSession(host, args, signal, execution) {
     const ids = args.trial_ids;
     check(Array.isArray(ids) && ids.length <= 20 && new Set(ids).size === ids.length && ids.every(id => session.candidates[id]?.eligible), 'Select unique eligible measured candidates');
     if (session.selection) { check(canonical(session.selection.trialIds) === canonical(ids), 'Selection is frozen'); return session.selection; }
-    for (let a = 0; session.config.maxCorrelation !== undefined && a < ids.length; a++) for (let b = a + 1; b < ids.length; b++) {
+    for (let a = 0; a < ids.length; a++) for (let b = a + 1; b < ids.length; b++) {
       const corr = compareFactors(dataset, session.candidates[ids[a]].candidate, session.candidates[ids[b]].candidate);
       check(corr.correlation !== null && Math.abs(corr.correlation) <= session.config.maxCorrelation, 'Selected factors are redundant or have insufficient train overlap');
     }
@@ -221,14 +151,7 @@ async function evaluateSession(host, args, signal, execution) {
   check(session.selection && args.selection_digest === session.selection.selectionDigest, 'Final evaluation requires the exact frozen selection');
   if (session.final) return session.final;
   const holdout = {};
-  if (dataset.access !== 'development-only') for (const id of session.selection.trialIds) {
-    holdout[id] = evaluateFactor(dataset, session.candidates[id].candidate, { holdout: true }).holdout;
-    if (session.config.diagnostics?.outOfSample) {
-      holdout[id].diagnostics = { outOfSample: (await evaluateDiagnostics(dataset, session.candidates[id].candidate,
-        { outOfSample: session.config.diagnostics.outOfSample }, { signal, finalized: true })).outOfSample };
-    }
-  }
-  session.final = receipt({ ...common, selectionDigest: session.selection.selectionDigest, holdout,
-    holdoutStatus: dataset.access === 'development-only' || !session.selection.trialIds.length ? 'not-requested' : 'evaluated', archive: dataset });
+  if (dataset.access !== 'development-only') for (const id of session.selection.trialIds) holdout[id] = evaluateFactor(dataset, session.candidates[id].candidate, { holdout: true }).holdout;
+  session.final = receipt({ ...common, selectionDigest: session.selection.selectionDigest, holdout, holdoutStatus: dataset.access === 'development-only' ? 'not-requested' : 'evaluated', archive: dataset });
   await saveSession(host, session, signal); return session.final;
 }

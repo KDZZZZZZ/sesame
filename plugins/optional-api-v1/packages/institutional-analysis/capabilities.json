@@ -9,43 +9,43 @@
     {
       "id": "knowledge-0",
       "path": "examples/expected.md",
-      "description": "制度与经济历史研究的合成教学反例与预期局部结论，不是真实市场结果。",
+      "description": "制度与经济历史研究 — examples/expected.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-1",
       "path": "prompt.md",
-      "description": "制度与经济历史研究的方法边界与组合入口：正式规则、执行与资金约束通过什么机制影响当前观察，历史类比在哪些条件下成立或失效；复用固定证据并向调用者交回局部结论。",
+      "description": "制度与经济历史研究 — prompt.md",
       "kind": "prompt"
     },
     {
       "id": "knowledge-2",
       "path": "PROVENANCE.md",
-      "description": "制度与经济历史研究采用资料的出处、实际访问范围与许可，不是当前市场证据。",
+      "description": "制度与经济历史研究 — PROVENANCE.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-3",
       "path": "README.md",
-      "description": "制度与经济历史研究的输入、输出、方法边界和按需参考说明。",
+      "description": "制度与经济历史研究 — README.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-4",
       "path": "skills/institutional-analysis/references/evidence.md",
-      "description": "制度与经济历史研究输入证据的来源、版本、可得时间和局部结论引用要求。",
+      "description": "制度与经济历史研究 — skills/institutional-analysis/references/evidence.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-5",
       "path": "skills/institutional-analysis/references/method.md",
-      "description": "制度与经济历史研究的操作定义、因果边界与反证；用于核对本次具体判据。",
+      "description": "制度与经济历史研究 — skills/institutional-analysis/references/method.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-6",
       "path": "skills/institutional-analysis/SKILL.md",
-      "description": "分析方法：正式规则、执行与资金约束通过什么机制影响当前观察，历史类比在哪些条件下成立或失效。输入：已有的规则原文及版本、生效与实际执行日期、地区/时期、资产与参与者资料、融资或结算证据及截止时间。输出：制度和资金传导链、逐环节证据、历史相同/不同/未知对照、替代原因与可推翻解释的事实条件。",
+      "description": "制度与经济历史研究 — skills/institutional-analysis/SKILL.md",
       "kind": "skill"
     }
   ],

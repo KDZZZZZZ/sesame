@@ -1,9 +1,9 @@
 {
   "id": "sesame/institutional-analysis",
   "apiVersion": "2",
-  "version": "2.0.1",
+  "version": "2.0.0",
   "title": "制度与经济历史研究",
-  "description": "可组合的分析方法：正式规则、执行与资金约束通过什么机制影响当前观察，历史类比在哪些条件下成立或失效；消费已有证据，返回制度和资金传导链、逐环节证据、历史相同/不同/未知对照、替代原因与可推翻解释的事实条件。",
+  "description": "独立制度分析：正式规则、执行与资金约束，借助经济史比较机制与差异，不把类比当重复周期预测。",
   "author": {
     "name": "Sesame contributors"
   },

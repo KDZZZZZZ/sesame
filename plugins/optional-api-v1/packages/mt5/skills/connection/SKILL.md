@@ -8,20 +8,11 @@ description: Configure and verify an MT5 terminal account without exposing crede
 安装/加载插件本身不导入原生连接文件。连接能力的目标是复用用户选定的终端和账户，并取得各通道的真实就绪证据。已有配置、可导入引用和缺失依赖都有公开入口；无需查看插件或本体源码。
 
 - mt5_settings 返回已有脱敏连接、账户绑定、版本与 pendingImports；mt5_dependencies inspect 返回已知路径、missing 和安装资源。现有连接可直接由 mt5_connect 核验；有限路径发现未命中，不证明远程 MCP 不可用。只有实际缺项需要补充已有路径，任务相关的 host_files 查询是可选诊断手段，不是每次连接的前置步骤。
-- 本地 Terminal MCP 未连接时，先调用现有 mt5_connect；只诊断使用 start_if_needed:false。它首先按已配置 terminal 完整路径检查进程，返回 terminal_process:{status,running,terminal_path,pids,checked_at}，再核验 MCP 监听/认证和券商账户。running:false 才证明所选终端未运行；running:null 保留未知，不能因别的同名终端已开或端口拒绝连接作判断。终端已开但 MCP 不通时处理该终端的 MCP 开关、监听地址或读取权限，不重复启动，不直接索取账户密码/token，也不循环 catalog/connect。明确 401 或实际缺 token 才处理 MCP 凭据，券商状态须由已连接的 MCP 返回。正常交易及健康连接不添加这项诊断前置步骤。
 - 打开本机终端使用主 Agent 能力 mt5_start_terminal({command_id:"open-selected-terminal-01"})，无需 MCP 密钥、Python、动态方法目录或自行构造 shell 命令。目标来自插件已选安装，自动保持原数据目录模式，不传新账号/profile/自定义 INI。原 profile 可能恢复已有 EA，所以沿用启动权限；权限拒绝不能通过其他传输绕过。returned/result.status=spawned 只是系统接收启动请求；MCP、券商及账户仍由 mt5_connect({command_id:"verify-started-terminal-01",start_if_needed:false}) 核验。原 ID 的 returned/unknown 回执不会重复启动；unknown 先读 mt5_command 并核对实际状态，缺安装按 mt5_dependencies inspect 的结果处理。
 - mt5_connect 使用已保存连接；已有本机配置可用 mt5_update_configuration 的 changes:{import_native:true} 导入。沿用用户已选 endpoint、账户和明确禁用状态；多个安装或账户不能静默择一切换。需要更换目标但意图不明确时，只确认该目标。
 - 用户已提供 MCP API Key、账户密码或 MetaTester 代理密码时，mt5_update_configuration 可直接保存 servers.<terminal|metaeditor|marketdata>.token、account.password、tester_agent.password。expected_version来自mt5_settings；凭据只传配置能力，不写进脚本、报告或长期记忆。省略字段保留现有值，空字符串清除；更换连接地址或账户身份会清除对应旧凭据，必要时同次提供新值。配置立即生效，不需要重启、重新挂载或让用户填写设置页。
 - pendingImports 是可选快捷入口；若宿主已提取凭据，直接用 mt5_import_configuration 传 source_message_id、expected_version 与稳定 command_id，复用已有信息。没有引用时直接配置，不要求用户为产生引用而重新发送或转换格式。仅缺少有效凭据时询问对应值；用户也可选择从 MT5「工具 → 选项 → MCP」复制连接导出。原生加密 API Key 不能解密为 Bearer，不反复猜密钥。
 - mt5_connect 验证精确账户；mt5_catalog 独立给出 MetaEditor 可调用状态。MCP 连接不等于券商登录；先复用 MT5 保存的账户会话，检查其连接状态。普通行情与账户查询不因此索要密码。真实本地 Tester 使用独立进程，需 login/server/password；先看 settings.account.password_configured，不能把主终端已登录当作 Tester 凭据齐全。
-
-## 终端交易权限
-
-主Agent用`mt5_trading_permissions({action:"read"})`取得当前绑定账户、`configuration_version`、插件`application.allow_trading`、账户`read_only`及终端`connected/experts_trade_allowed/mcp_trade_allowed`。未知值保持null；不把MCP已连接、账户可手动交易或配置保存成功当作程序交易获准。
-
-用户已授权当前账户的交易或权限设置，且终端算法交易关闭时，直接调用`mt5_trading_permissions({action:"enable",command_id:"enable-algo-trading-01",expected_version:<读回版本>})`。沿用已有授权，不再让用户手动点击或重新确认。插件检查账户和配置版本，复用已有空闲检查和正式启动配置，正常关闭并重启原终端、保留原数据，回读同一账户及真实开关后才返回`status:"applied"`、`result.verified:true`。已启用时不重启；过程中不挂载EA或发送订单。重启配置保持DLL关闭；不重启路径仅核验既有状态。
-
-有活动终端任务、持仓、挂单或原生EA时不强行重启，保留具体阻碍。MCP授权关闭、只读登录或券商限制不由本入口修改，Python API禁用与行情时间问题也不能用算法权限成功代替。相同命令ID和输入只返回原回执；失败或running/unknown先read真实状态，禁止盲目换ID重试。新交易须按原授权意图重新核对实际订单状态和有效报价，不重放旧失败/未知命令。
 
 ## 回测账户凭据
 

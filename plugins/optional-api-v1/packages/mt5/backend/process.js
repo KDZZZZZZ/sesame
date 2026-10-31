@@ -1,7 +1,7 @@
 import { spawn, execFile } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { existsSync } from 'node:fs';
-import { join, resolve as resolvePath } from 'node:path';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { ApiError, requireValue } from './support.js';
@@ -60,9 +60,7 @@ export class MT5Python {
           this.pending = { resolve, reject };
           abort = () => { reject(new Error('Python 调用中断，结果未知；先核对账户，不自动重试')); this.stop(); };
           combined.addEventListener('abort', abort, { once: true });
-          const command = { tool, arguments: args, terminal: winePath(this.native.terminal), ...(['login', 'initialize'].includes(tool) ? { account } : {}) };
-          if (tool === 'initialize') command.portable = resolvePath(this.native.dataDirectory) === resolvePath(this.native.directory);
-          this.child.stdin.write(JSON.stringify(command) + '\n');
+          this.child.stdin.write(JSON.stringify({ tool, arguments: args, terminal: winePath(this.native.terminal), ...(['login', 'initialize'].includes(tool) ? { account } : {}) }) + '\n');
         });
       } finally { combined.removeEventListener('abort', abort); this.pending = null; }
     });

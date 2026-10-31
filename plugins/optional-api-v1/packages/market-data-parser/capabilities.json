@@ -14,7 +14,7 @@
         "agent",
         "host"
       ],
-      "description": "信息解析：解析已有exchangerate-api风格JSON的base/date/rates并按币种筛选；不获取行情、不预测汇率。优先传sources_fetch返回的完整source_ref；也可传json_content或包内file_path，三选一。插件读取完整冻结原文，不重新抓取。 长结果返回完整正文/结构资源引用及有界预览。",
+      "description": "Parse exchangerate-api style JSON (base, date, rates) with optional currency filter",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -34,43 +34,9 @@
               "type": "string"
             },
             "description": "Optional currency code filter, e.g. [\"EUR\",\"JPY\"]"
-          },
-          "source_ref": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "revision": {
-                "type": "string",
-                "minLength": 1
-              },
-              "digest": {
-                "type": "string",
-                "pattern": "^sha256:[a-f0-9]{64}$"
-              },
-              "kind": {
-                "const": "data"
-              },
-              "schemaVersion": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "id",
-              "revision",
-              "digest",
-              "kind",
-              "schemaVersion"
-            ],
-            "additionalProperties": false,
-            "description": "Exact immutable data ref returned by sources_fetch; original source is read inside the plugin, without copying a preview or a workspace JSON line."
           }
         },
-        "additionalProperties": false,
-        "oneOf": [
+        "anyOf": [
           {
             "required": [
               "json_content"
@@ -80,13 +46,9 @@
             "required": [
               "file_path"
             ]
-          },
-          {
-            "required": [
-              "source_ref"
-            ]
           }
-        ]
+        ],
+        "additionalProperties": false
       },
       "outputSchema": {
         "type": "object",
@@ -132,136 +94,26 @@
           },
           "version": {
             "type": "string"
-          },
-          "source_ref": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "revision": {
-                "type": "string",
-                "minLength": 1
-              },
-              "digest": {
-                "type": "string",
-                "pattern": "^sha256:[a-f0-9]{64}$"
-              },
-              "kind": {
-                "const": "data"
-              },
-              "schemaVersion": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "id",
-              "revision",
-              "digest",
-              "kind",
-              "schemaVersion"
-            ],
-            "additionalProperties": false,
-            "description": "Exact immutable data ref returned by sources_fetch; original source is read inside the plugin, without copying a preview or a workspace JSON line."
-          },
-          "source_provenance": {
-            "type": "object",
-            "additionalProperties": true,
-            "description": "Original snapshot final URL, retrieval time, content type and hash; parsing is derived evidence, not a new independent source."
-          },
-          "output_truncated": {
-            "type": "boolean",
-            "description": "True means the complete result is only in result_ref; returned text is a preview."
-          },
-          "result_ref": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "revision": {
-                "type": "string",
-                "minLength": 1
-              },
-              "digest": {
-                "type": "string",
-                "pattern": "^sha256:[a-f0-9]{64}$"
-              },
-              "kind": {
-                "const": "data"
-              },
-              "schemaVersion": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "id",
-              "revision",
-              "digest",
-              "kind",
-              "schemaVersion"
-            ],
-            "additionalProperties": false,
-            "description": "Exact immutable derived result artifact; use result_entries with host.resources.read. Original source and provenance are retained inside it."
-          },
-          "result_entries": {
-            "type": "object",
-            "properties": {
-              "structured": {
-                "const": "rows.json"
-              },
-              "text": {
-                "const": "text.txt"
-              }
-            },
-            "required": [
-              "structured"
-            ],
-            "additionalProperties": false
-          },
-          "result_bytes": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "result_preview": {
-            "type": "string",
-            "maxLength": 4000
-          },
-          "returned_entries": {
-            "type": "integer",
-            "minimum": 0
           }
         },
         "additionalProperties": true
       },
       "execution": "immediate",
-      "effects": [
-        "resources.read",
-        "process",
-        "filesystem",
-        "resources.publish"
-      ],
+      "effects": [],
       "binding": {
-        "type": "native",
+        "type": "mcp",
+        "server": "analysis",
         "name": "parse_fx_json"
       },
       "usage": {
-        "purpose": "把已有汇率JSON转成有基准币种、日期和过滤范围的输入，供方法/工作流复用。",
-        "inputs": "三选一：{source_ref:<sources_fetch返回的完整ref>}，或{json_content:<完整文本>}，或{file_path:<包内相对样本路径>}；其余筛选参数按Schema。source_ref由插件按字节分页读取；不要把20000字符预览或data_read工作区路径代替原文。inline输入上限2MiB UTF-8；source_ref原始字节上限2MiB，按原编码解码后上限8MiB UTF-8。",
-        "outputs": "JSON返回provider/base/date/total_currencies/returned_currencies/rates；XML返回date/bulletin_no/total_currencies/returned_currencies/currencies（code,name,unit,forex_buying,forex_selling）。两者都有source/version。支持旧base/date和官方Open Access的base_code/time_last_update_utc，不把获取时间替代数据日期。 source_ref输入自动返回source_ref、source_provenance（原最终URL、获取时间、原始字节hash、内容类型、编码）；source为最终URL。inline/包内输入的source仅为inline/包内文件名，不推断URL或抓取时间。 超过24KiB的解析结果不直接注入上下文：返回output_truncated:true、result_ref、result_entries、result_bytes及有界预览；HTML保留完整text_length，RSS保留entry_count/returned_entries，汇率保留total_currencies/returned_currencies。完整结构在result_entries.structured（rows.json，含一行完整结果和来源），HTML全文另在result_entries.text（text.txt）。用host.resources.read(result_ref,{part:\"content\",entry:result_entries.text??result_entries.structured,offset:0,length:8192,encoding:\"utf8\"})按需读取，继续使用返回的nextOffset；Agent工具形状为host_resources_read({ref:result_ref,part:\"content\",entry:result_entries.structured,offset:0,length:8192,encoding:\"utf8\"})。HTML正文可改用返回的result_entries.text；RSS/汇率没有text.txt。预览不能当全文，长结果省略text/entries/rates/currencies；小结果保持完整原字段。",
+        "purpose": "Parse exchangerate-api style JSON (base, date, rates) with optional currency filter",
+        "inputs": "Provide json_content or a bundled relative file_path. This parser does not fetch URLs.",
+        "outputs": "Structured JSON fields follow outputSchema; original source and version are preserved.",
         "prerequisites": [
-          "Existing Python 3 executable (host pythonPath, otherwise python on Windows / python3 on Linux). Only standard-library modules are used; no API key, pip install or network is required for parsing.",
-          "host.resources.read resolves source_ref and host.process.exec runs the bundled parser using owned temporary files.",
-          "host.resources.create/publish/remove retain large parsed results as immutable data artifacts; no extra Agent tool is needed."
+          "Python 3 available to the host MCP transport."
         ],
         "limitations": [
-          "仅解释提供的JSON结构；样本是历史固定数据，不是当前报价。",
-          "保留base、过滤范围和来源时点；解析结果是原证据的派生结构，不是独立佐证或报告。",
-          "仅解析传入快照；原来源选择、取证权限和收费/登录限制由获取能力处理。XML条目和汇率不代表实时价格，保留原始日期与覆盖范围。"
+          "Results describe supplied content or the bundled snapshot, not live network observations."
         ],
         "examples": [
           {
@@ -288,18 +140,11 @@
                 "CNY": 6.71
               },
               "source": "sample_fx.json",
-              "version": "3.0.0"
+              "version": "2.0.3"
             }
           }
         ]
-      },
-      "requires": [
-        {
-          "id": "python-process",
-          "capability": "host.process.exec",
-          "reason": "Run the bundled standard-library Python parser through the existing host process capability."
-        }
-      ]
+      }
     },
     {
       "id": "parse_fx_xml",
@@ -308,7 +153,7 @@
         "agent",
         "host"
       ],
-      "description": "信息解析：解析已有TCMB Tarih_Date XML的日期、公告号、币种、单位与买卖汇率；不获取行情、不作交易判断。优先传sources_fetch返回的完整source_ref；也可传xml_content或包内file_path，三选一。插件读取完整冻结原文，不重新抓取。 长结果返回完整正文/结构资源引用及有界预览。",
+      "description": "Parse TCMB style daily FX XML (date, bulletin, currencies) with optional code filter",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -328,43 +173,9 @@
               "type": "string"
             },
             "description": "Optional currency code filter, e.g. [\"USD\",\"EUR\"]"
-          },
-          "source_ref": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "revision": {
-                "type": "string",
-                "minLength": 1
-              },
-              "digest": {
-                "type": "string",
-                "pattern": "^sha256:[a-f0-9]{64}$"
-              },
-              "kind": {
-                "const": "data"
-              },
-              "schemaVersion": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "id",
-              "revision",
-              "digest",
-              "kind",
-              "schemaVersion"
-            ],
-            "additionalProperties": false,
-            "description": "Exact immutable data ref returned by sources_fetch; original source is read inside the plugin, without copying a preview or a workspace JSON line."
           }
         },
-        "additionalProperties": false,
-        "oneOf": [
+        "anyOf": [
           {
             "required": [
               "xml_content"
@@ -374,13 +185,9 @@
             "required": [
               "file_path"
             ]
-          },
-          {
-            "required": [
-              "source_ref"
-            ]
           }
-        ]
+        ],
+        "additionalProperties": false
       },
       "outputSchema": {
         "type": "object",
@@ -429,136 +236,26 @@
           },
           "version": {
             "type": "string"
-          },
-          "source_ref": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "revision": {
-                "type": "string",
-                "minLength": 1
-              },
-              "digest": {
-                "type": "string",
-                "pattern": "^sha256:[a-f0-9]{64}$"
-              },
-              "kind": {
-                "const": "data"
-              },
-              "schemaVersion": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "id",
-              "revision",
-              "digest",
-              "kind",
-              "schemaVersion"
-            ],
-            "additionalProperties": false,
-            "description": "Exact immutable data ref returned by sources_fetch; original source is read inside the plugin, without copying a preview or a workspace JSON line."
-          },
-          "source_provenance": {
-            "type": "object",
-            "additionalProperties": true,
-            "description": "Original snapshot final URL, retrieval time, content type and hash; parsing is derived evidence, not a new independent source."
-          },
-          "output_truncated": {
-            "type": "boolean",
-            "description": "True means the complete result is only in result_ref; returned text is a preview."
-          },
-          "result_ref": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "revision": {
-                "type": "string",
-                "minLength": 1
-              },
-              "digest": {
-                "type": "string",
-                "pattern": "^sha256:[a-f0-9]{64}$"
-              },
-              "kind": {
-                "const": "data"
-              },
-              "schemaVersion": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "id",
-              "revision",
-              "digest",
-              "kind",
-              "schemaVersion"
-            ],
-            "additionalProperties": false,
-            "description": "Exact immutable derived result artifact; use result_entries with host.resources.read. Original source and provenance are retained inside it."
-          },
-          "result_entries": {
-            "type": "object",
-            "properties": {
-              "structured": {
-                "const": "rows.json"
-              },
-              "text": {
-                "const": "text.txt"
-              }
-            },
-            "required": [
-              "structured"
-            ],
-            "additionalProperties": false
-          },
-          "result_bytes": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "result_preview": {
-            "type": "string",
-            "maxLength": 4000
-          },
-          "returned_entries": {
-            "type": "integer",
-            "minimum": 0
           }
         },
         "additionalProperties": true
       },
       "execution": "immediate",
-      "effects": [
-        "resources.read",
-        "process",
-        "filesystem",
-        "resources.publish"
-      ],
+      "effects": [],
       "binding": {
-        "type": "native",
+        "type": "mcp",
+        "server": "analysis",
         "name": "parse_fx_xml"
       },
       "usage": {
-        "purpose": "把已有TCMB汇率XML转成保留单位和买卖方向的输入，供方法/工作流复用。",
-        "inputs": "三选一：{source_ref:<sources_fetch返回的完整ref>}，或{xml_content:<完整文本>}，或{file_path:<包内相对样本路径>}；其余筛选参数按Schema。source_ref由插件按字节分页读取；不要把20000字符预览或data_read工作区路径代替原文。inline输入上限2MiB UTF-8；source_ref原始字节上限2MiB，按原编码解码后上限8MiB UTF-8。",
-        "outputs": "JSON返回provider/base/date/total_currencies/returned_currencies/rates；XML返回date/bulletin_no/total_currencies/returned_currencies/currencies（code,name,unit,forex_buying,forex_selling）。两者都有source/version。支持旧base/date和官方Open Access的base_code/time_last_update_utc，不把获取时间替代数据日期。 source_ref输入自动返回source_ref、source_provenance（原最终URL、获取时间、原始字节hash、内容类型、编码）；source为最终URL。inline/包内输入的source仅为inline/包内文件名，不推断URL或抓取时间。 超过24KiB的解析结果不直接注入上下文：返回output_truncated:true、result_ref、result_entries、result_bytes及有界预览；HTML保留完整text_length，RSS保留entry_count/returned_entries，汇率保留total_currencies/returned_currencies。完整结构在result_entries.structured（rows.json，含一行完整结果和来源），HTML全文另在result_entries.text（text.txt）。用host.resources.read(result_ref,{part:\"content\",entry:result_entries.text??result_entries.structured,offset:0,length:8192,encoding:\"utf8\"})按需读取，继续使用返回的nextOffset；Agent工具形状为host_resources_read({ref:result_ref,part:\"content\",entry:result_entries.structured,offset:0,length:8192,encoding:\"utf8\"})。HTML正文可改用返回的result_entries.text；RSS/汇率没有text.txt。预览不能当全文，长结果省略text/entries/rates/currencies；小结果保持完整原字段。",
+        "purpose": "Parse TCMB style daily FX XML (date, bulletin, currencies) with optional code filter",
+        "inputs": "Provide xml_content or a bundled relative file_path. This parser does not fetch URLs.",
+        "outputs": "Structured JSON fields follow outputSchema; original source and version are preserved.",
         "prerequisites": [
-          "Existing Python 3 executable (host pythonPath, otherwise python on Windows / python3 on Linux). Only standard-library modules are used; no API key, pip install or network is required for parsing.",
-          "host.resources.read resolves source_ref and host.process.exec runs the bundled parser using owned temporary files.",
-          "host.resources.create/publish/remove retain large parsed results as immutable data artifacts; no extra Agent tool is needed."
+          "Python 3 available to the host MCP transport."
         ],
         "limitations": [
-          "只支持TCMB格式；样本不是当前报价，不推导股票/K线或其他JSON/XML能力。",
-          "解析同一快照不增加独立来源；结果交给方法/工作流，不另开报告。",
-          "仅解析传入快照；原来源选择、取证权限和收费/登录限制由获取能力处理。XML条目和汇率不代表实时价格，保留原始日期与覆盖范围。"
+          "Results describe supplied content or the bundled snapshot, not live network observations."
         ],
         "examples": [
           {
@@ -592,18 +289,11 @@
                 }
               ],
               "source": "sample_fx.xml",
-              "version": "3.0.0"
+              "version": "2.0.3"
             }
           }
         ]
-      },
-      "requires": [
-        {
-          "id": "python-process",
-          "capability": "host.process.exec",
-          "reason": "Run the bundled standard-library Python parser through the existing host process capability."
-        }
-      ]
+      }
     }
   ],
   "sources": [],
@@ -625,42 +315,5 @@
   ],
   "hooks": [],
   "stateCollections": [],
-  "artifactSchemas": [
-    {
-      "id": "data",
-      "kind": "data",
-      "schemaVersion": "1.0.0",
-      "schema": {
-        "type": "object",
-        "properties": {
-          "format": {
-            "const": "json-rows"
-          },
-          "path": {
-            "type": "string",
-            "minLength": 1
-          },
-          "rowCount": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "columns": {
-            "type": "array"
-          },
-          "provenance": {
-            "type": "object",
-            "additionalProperties": true
-          }
-        },
-        "required": [
-          "format",
-          "path",
-          "rowCount",
-          "columns",
-          "provenance"
-        ],
-        "additionalProperties": true
-      }
-    }
-  ]
+  "artifactSchemas": []
 }

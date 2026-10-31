@@ -9,43 +9,43 @@
     {
       "id": "knowledge-0",
       "path": "examples/expected.md",
-      "description": "Dow Theory 趋势确认的合成教学反例与预期局部结论，不是真实市场结果。",
+      "description": "Dow Theory 趋势确认 — examples/expected.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-1",
       "path": "prompt.md",
-      "description": "Dow Theory 趋势确认的方法边界与组合入口：预先定义的主要/次级趋势是否得到两个指数各自收盘的共同确认；复用固定证据并向调用者交回局部结论。",
+      "description": "Dow Theory 趋势确认 — prompt.md",
       "kind": "prompt"
     },
     {
       "id": "knowledge-2",
       "path": "PROVENANCE.md",
-      "description": "Dow Theory 趋势确认采用资料的出处、实际访问范围与许可，不是当前市场证据。",
+      "description": "Dow Theory 趋势确认 — PROVENANCE.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-3",
       "path": "README.md",
-      "description": "Dow Theory 趋势确认的输入、输出、方法边界和按需参考说明。",
+      "description": "Dow Theory 趋势确认 — README.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-4",
       "path": "skills/dow-theory/references/method.md",
-      "description": "Dow Theory 趋势确认的操作定义、因果边界与反证；用于核对本次具体判据。",
+      "description": "Dow Theory 趋势确认 — skills/dow-theory/references/method.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-5",
       "path": "skills/dow-theory/references/validation.md",
-      "description": "Dow Theory 趋势确认从解释候选到可重复规则的验证前提、时间与样本外边界。",
+      "description": "Dow Theory 趋势确认 — skills/dow-theory/references/validation.md",
       "kind": "reference"
     },
     {
       "id": "knowledge-6",
       "path": "skills/dow-theory/SKILL.md",
-      "description": "分析方法：预先定义的主要/次级趋势是否得到两个指数各自收盘的共同确认。输入：各指数已有固定行情、成分与复权口径、SourceTime、真实闭市时间、次级反应锚点及判定版本；缺一指数只能做有限单序列描述。输出：各指数确认时间线、已声明极值规则、confirmed/non-confirmation/insufficient-data 状态及撤销条件。",
+      "description": "Dow Theory 趋势确认 — skills/dow-theory/SKILL.md",
       "kind": "skill"
     }
   ],

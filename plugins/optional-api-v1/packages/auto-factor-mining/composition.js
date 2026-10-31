@@ -1,35 +1,5 @@
 import { canonical, check, text } from './shared.js';
 
-export const KNOWLEDGE_READER = Object.freeze({ pluginId: 'sesame/plugin-manager', capabilityId: 'plugin_read' });
-// Frozen classifications come from installed manifests, never from caller input.
-// Native plugin contracts are audited behavior promises, not a code sandbox.
-export const hasResearchDataAccess = research => Boolean(research?.generalDataPlugins?.length) || (research?.tools ?? []).some(id =>
-  id !== `${KNOWLEDGE_READER.pluginId}#${KNOWLEDGE_READER.capabilityId}` && !research.inputOnlyTools?.includes(id));
-const emptyList = value => value === undefined || Array.isArray(value) && value.length === 0;
-const generalDataEntry = entry => !emptyList(entry.hooks);
-function inputOnly({ capability, entry }) {
-  const access = capability.researchDataAccess;
-  if (!access || access.schemaVersion !== 1 || access.reads !== 'input-only' || !['none', 'derived-artifacts-only'].includes(access.writes)
-    || Object.keys(access).some(key => !['schemaVersion', 'reads', 'writes'].includes(key))) return false;
-  if (capability.kind !== 'function' || capability.execution !== 'immediate' || (capability.transport ?? 'json') !== 'json'
-    || capability.binding?.type !== 'native' || typeof capability.binding.name !== 'string'
-    || Object.keys(capability.binding).some(key => !['type', 'name'].includes(key))) return false;
-  if (!emptyList(capability.requires) || !emptyList(capability.allowedCalls) || capability.collaboration !== undefined
-    || capability.resumable === true) return false;
-  // Activation, providers and retained data can bypass a selected function's input.
-  if (!['hooks', 'sources', 'services', 'stateCollections'].every(key => emptyList(entry[key]))) return false;
-  // No wildcard write/read effects: derived artifacts are created only from this
-  // invocation's supplied input/result, including cleanup of its own new blobs.
-  return Array.isArray(capability.effects) && capability.effects.every(effect => access.writes === 'derived-artifacts-only'
-    && ['resources.create', 'resources.publish'].includes(effect));
-}
-export function knowledgeCalls(host, research) {
-  if (!research?.plugins?.length) return [];
-  const entry = inspectPlugin(host, KNOWLEDGE_READER.pluginId);
-  check(entry.capabilities.some(capability => capability.id === KNOWLEDGE_READER.capabilityId && capability.consumers.includes('agent')), 'RESEARCH_PLUGIN_UNAVAILABLE', 'Selected research methods require sesame/plugin-manager#plugin_read to read their declared knowledge.');
-  return [KNOWLEDGE_READER];
-}
-
 const list = (value, name, max) => {
   check(Array.isArray(value) && value.length <= max && new Set(value).size === value.length, 'INVALID_ARGUMENT', `${name} must contain at most ${max} distinct entries`);
   return value.map(value => { check(text(value, name, 150) === value, 'INVALID_ARGUMENT', `${name} must use exact names`); return value; });
@@ -50,7 +20,7 @@ export function resolveResearch(host, input) {
   const available = new Map();
   for (const entry of entries) for (const capability of entry.capabilities.filter(value => value.consumers.includes('agent'))) {
     const name = `${entry.id}#${capability.id}`;
-    check(!available.has(name), 'RESEARCH_TOOL_AMBIGUOUS', `Tool name is supplied by multiple selected plugins: ${name}`); available.set(name, { entry, capability });
+    check(!available.has(name), 'RESEARCH_TOOL_AMBIGUOUS', `Tool name is supplied by multiple selected plugins: ${name}`); available.set(name, entry.id);
   }
   const tools = input.tools === undefined ? [...available.keys()] : list(input.tools, 'research.tools', 61);
   for (const name of tools) {
@@ -58,20 +28,15 @@ export function resolveResearch(host, input) {
     check(available.has(name), 'RESEARCH_TOOL_UNAVAILABLE', `Tool does not belong to a selected plugin: ${name}`);
   }
   check(tools.length <= 61, 'RESEARCH_TOOL_LIMIT', 'Select at most 61 research tools, leaving space for workflow handoffs and the evaluator');
-  const inputOnlyTools = tools.filter(name => inputOnly(available.get(name)));
-  const generalDataPlugins = entries.filter(generalDataEntry).map(entry => entry.id);
-  return { plugins, tools, descriptors: entries.map(({ id, version, digest }) => ({ id, version, digest })),
-    ...(inputOnlyTools.length ? { inputOnlyTools } : {}), ...(generalDataPlugins.length ? { generalDataPlugins } : {}) };
+  return { plugins, tools, descriptors: entries.map(({ id, version, digest }) => ({ id, version, digest })) };
 }
 export function verifyResearch(host, frozen) {
   if (!frozen) return;
   const current = resolveResearch(host, { plugins: frozen.plugins, tools: frozen.tools });
   check(canonical(current.descriptors) === canonical(frozen.descriptors), 'RESEARCH_PLUGIN_CHANGED', 'Selected research plugin changed; restore its frozen version or start a new run');
-  check(canonical(current.inputOnlyTools ?? []) === canonical(frozen.inputOnlyTools ?? []), 'RESEARCH_PLUGIN_CHANGED', 'Selected research data access changed; start a new run with the current plugin declaration');
-  check(canonical(current.generalDataPlugins ?? []) === canonical(frozen.generalDataPlugins ?? []), 'RESEARCH_PLUGIN_CHANGED', 'Selected research plugin data entry points changed; start a new run with the current plugin declaration');
 }
 export function taskPlugins(evaluator, research) {
-  const plugins = [...new Set([evaluator.plugin_id, ...(research?.plugins ?? []), ...(research?.plugins?.length ? [KNOWLEDGE_READER.pluginId] : [])])];
+  const plugins = [...new Set([evaluator.plugin_id, ...(research?.plugins ?? [])])];
   check(plugins.length <= 32, 'PLUGIN_BUDGET_EXCEEDED', 'Selected evaluator and research plugins exceed the host limit of 32 unique plugins per task');
   return plugins;
 }

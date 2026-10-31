@@ -2,7 +2,7 @@
   "id": "sesame/data-access",
   "title": "数据与研究证据",
   "description": "发现提供方、查询与冻结数据、读取输入和登记可追溯代码计算结果。",
-  "version": "3.0.2",
+  "version": "3.0.0",
   "default_state": "mounted",
   "prompts": [
     "prompt.md"
@@ -14,7 +14,7 @@
   "apiVersion": "2",
   "license": "MIT",
   "engines": {
-    "sesame": ">=0.3.0-dev.1 <0.4.0"
+    "sesame": ">=0.2.3"
   },
   "execution": "native",
   "capability_manifest": "capabilities.json",
@@ -26,14 +26,5 @@
       "name": "sesame/workspace",
       "version": ">=3.0.0"
     }
-  ],
-  "permissions": {
-    "scopes": [
-      "capabilities.compose"
-    ],
-    "calls": [
-      "host.datasets.query",
-      "host.executions.query"
-    ]
-  }
+  ]
 }

@@ -1,7 +1,7 @@
 {
   "id": "sesame/portfolio-execution",
   "apiVersion": "2",
-  "version": "2.1.0",
+  "version": "2.0.1",
   "title": "目标仓位执行",
   "description": "独立执行能力：绑定既有账户，为工作流提供快照与目标仓位执行，保留原生校验、风险停止挂载、幂等回执和直接下单工具。",
   "license": "MIT",
@@ -12,7 +12,6 @@
     "portfolio_execution_status",
     "manual_trade_inspect",
     "manual_trade_observe",
-    "manual_trade_prepare",
     "manual_trade_execute",
     "manual_trade_status",
     "manual_trade_cancel"
@@ -25,83 +24,7 @@
     "README.md"
   ],
   "engines": {
-    "sesame": ">=0.3.0-dev.1 <0.4.0"
+    "sesame": ">=0.2.4"
   },
-  "capability_manifest": "capabilities.json",
-  "permissions": {
-    "scopes": [],
-    "calls": [
-      {
-        "pluginId": "sesame/mt5",
-        "serviceId": "execution",
-        "operation": "identity"
-      },
-      {
-        "pluginId": "sesame/mt5",
-        "serviceId": "execution",
-        "operation": "snapshot"
-      },
-      {
-        "pluginId": "sesame/mt5",
-        "serviceId": "execution",
-        "operation": "prepare"
-      },
-      {
-        "pluginId": "sesame/mt5",
-        "serviceId": "execution",
-        "operation": "submit"
-      },
-      {
-        "pluginId": "sesame/mt5",
-        "serviceId": "execution",
-        "operation": "recover"
-      },
-      {
-        "pluginId": "sesame/mt5",
-        "serviceId": "execution",
-        "operation": "command"
-      },
-      {
-        "pluginId": "sesame/mt5",
-        "serviceId": "execution",
-        "operation": "cancel"
-      },
-      {
-        "pluginId": "sesame/qmt",
-        "serviceId": "execution",
-        "operation": "identity"
-      },
-      {
-        "pluginId": "sesame/qmt",
-        "serviceId": "execution",
-        "operation": "snapshot"
-      },
-      {
-        "pluginId": "sesame/qmt",
-        "serviceId": "execution",
-        "operation": "prepare"
-      },
-      {
-        "pluginId": "sesame/qmt",
-        "serviceId": "execution",
-        "operation": "submit"
-      },
-      {
-        "pluginId": "sesame/qmt",
-        "serviceId": "execution",
-        "operation": "recover"
-      },
-      {
-        "pluginId": "sesame/qmt",
-        "serviceId": "execution",
-        "operation": "command"
-      },
-      {
-        "pluginId": "sesame/qmt",
-        "serviceId": "execution",
-        "operation": "cancel"
-      },
-      "sesame/mt5#mt5_trading_pause"
-    ]
-  }
+  "capability_manifest": "capabilities.json"
 }

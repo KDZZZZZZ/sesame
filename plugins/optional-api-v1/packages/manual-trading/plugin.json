@@ -1,0 +1,23 @@
+{
+  "id": "sesame/manual-trading",
+  "apiVersion": "2",
+  "version": "3.3.0",
+  "title": "Agent 手动交易",
+  "description": "只读多 Agent 交易研究工作流，或明确授权的周期/事件交易计划：统一协作、逐角色模型、Markdown 结论、可选研究报告、目标执行与证据复盘。",
+  "license": "MIT",
+  "default_state": "discoverable",
+  "entry": "index.js",
+  "engines": {
+    "sesame": ">=0.2.4"
+  },
+  "capability_manifest": "capabilities.json",
+  "main_tool_names": [
+    "manual_trading_analyze",
+    "manual_trading_plan",
+    "manual_trading_run",
+    "manual_trading_event",
+    "manual_trading_runs",
+    "manual_trading_activity",
+    "manual_trading_execution_export"
+  ]
+}

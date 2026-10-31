@@ -4,7 +4,6 @@ import { capability, currentExecution } from './execution.js';
 import { configuration } from './configuration.js';
 import { accountRef, position } from './mapping.js';
 import { records } from './records.js';
-import { readAccountRows } from './execution-evidence.js';
 
 const locks = new Map(), active = new Set();
 const same = (a, b) => canonical(a) === canonical(b);
@@ -26,8 +25,16 @@ export function createPositionManager(host, service, { now = Date.now } = {}) {
     return config;
   }
   async function readAll(action, binding, signal) {
-    const account = { accountId: binding.account.accountId, connectionId: binding.connection.id, revision: binding.connection.revision };
-    return readAccountRows(service, action, account, signal, () => target(binding));
+    const items = []; let cursor;
+    do {
+      target(binding);
+      const result = await service.native(action, { page: { limit: 200, ...(cursor ? { cursor } : {}) } }, signal);
+      check(same(result.connection, binding.connection) && Array.isArray(result.items), 'Native account snapshot changed', 'CONNECTION_CHANGED');
+      for (const row of result.items) check(row.account_id === binding.account.accountId, 'Native row belongs to another account', 'ACCOUNT_MISMATCH');
+      items.push(...result.items); cursor = result.nextCursor;
+      check(items.length <= 20000, 'Native account snapshot exceeds close budget', 'RESOURCE_EXHAUSTED');
+    } while (cursor);
+    return items;
   }
   function save(record, receipt) { db.put('position_closes', { ...record, receipt }); return receipt; }
   function retained(args) {

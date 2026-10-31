@@ -1,6 +1,5 @@
 import sys, json, os, re
 from html.parser import HTMLParser
-from urllib.parse import urljoin, urlsplit
 
 PLUGIN_ROOT = os.path.realpath(os.path.dirname(os.path.abspath(__file__)))
 with open(os.path.join(PLUGIN_ROOT, "plugin.json"), encoding="utf-8") as manifest:
@@ -13,44 +12,34 @@ def resolve_path(p):
     return target
 
 class WebExtractor(HTMLParser):
-    def __init__(self, source_url=""):
+    def __init__(self):
         super().__init__()
         self.title = ""
         self.text_parts = []
         self.links = []
         self.in_title = False
-        self.in_skip = False
-        self.elements = []
-        self.skip_tags = {"script", "style", "nav", "footer", "header", "aside", "ix:hidden"}
-        self.void_tags = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
+        self.in_skip = 0
+        self.skip_tags = {"script", "style", "nav", "footer", "header", "aside"}
         self.current_tag = None
         self.meta_description = ""
-        self.source_url = source_url
 
     def handle_starttag(self, tag, attrs):
         self.current_tag = tag
         attrs_dict = dict(attrs)
-        style = attrs_dict.get("style") or ""
-        hidden = tag in self.skip_tags or "hidden" in attrs_dict or bool(re.search(r'(?:^|;)\s*(?:display\s*:\s*none|visibility\s*:\s*hidden)\s*(?:!\s*important\s*)?(?:;|$)', style, re.I))
-        skipped = self.in_skip or hidden
-        if tag not in self.void_tags:
-            self.elements.append((tag, self.in_skip))
-            self.in_skip = skipped
-        if tag == "a" and isinstance(attrs_dict.get("href"), str) and not skipped:
-            href = urljoin(self.source_url, attrs_dict["href"])
-            if urlsplit(href).scheme in ("http", "https"):
+        if tag in self.skip_tags:
+            self.in_skip += 1
+        if tag == "a" and "href" in attrs_dict:
+            href = attrs_dict["href"]
+            if href.startswith("http"):
                 self.links.append(href)
-        if tag == "meta" and not skipped and (attrs_dict.get("name") or "").lower() == "description":
-            self.meta_description = attrs_dict.get("content") or ""
+        if tag == "meta" and attrs_dict.get("name", "").lower() == "description":
+            self.meta_description = attrs_dict.get("content", "")
         if tag == "title":
             self.in_title = True
 
     def handle_endtag(self, tag):
-        for index in range(len(self.elements) - 1, -1, -1):
-            if self.elements[index][0] == tag:
-                self.in_skip = self.elements[index][1]
-                del self.elements[index:]
-                break
+        if tag in self.skip_tags:
+            self.in_skip -= 1
         if tag == "title":
             self.in_title = False
         self.current_tag = None
@@ -92,10 +81,9 @@ def extract_webpage(args):
     if not content:
         return {"error": "No HTML content provided", "version": VERSION}
 
-    extractor = WebExtractor(args.get("_source_url", ""))
+    extractor = WebExtractor()
     try:
         extractor.feed(content)
-        extractor.close()
         result = extractor.get_result()
         result["version"] = VERSION
         result["source"] = file_path if file_path else "inline"
@@ -103,11 +91,31 @@ def extract_webpage(args):
     except Exception as e:
         return {"error": str(e), "version": VERSION}
 
+with open(os.path.join(str(PLUGIN_ROOT), "capabilities.json"), encoding="utf-8") as declaration_file:
+    DECLARED_CAPABILITIES = json.load(declaration_file)["capabilities"]
+TOOLS = [{"name": c["binding"]["name"], "description": c["description"], "inputSchema": c["inputSchema"], "outputSchema": c["outputSchema"]} for c in DECLARED_CAPABILITIES if c["binding"]["type"] == "mcp"]
 
-if __name__ == "__main__":
-    functions = {"extract_webpage": extract_webpage}
-    with open(sys.argv[2], encoding="utf-8") as request:
-        arguments = json.load(request)
-    result = functions[sys.argv[1]](arguments)
-    with open(sys.argv[3], "w", encoding="utf-8") as response:
-        json.dump(result, response, ensure_ascii=False)
+for line in sys.stdin:
+    try:
+        req = json.loads(line)
+        method = req.get("method")
+        result = None
+        if "id" not in req:
+            continue
+        if method == "server/discover":
+            result = {"serverInfo": {"name": "web-extract", "version": VERSION}, "capabilities": {"tools": {}}, "ttlMs": 0, "cacheScope": "private"}
+        elif method == "initialize":
+            result = {"protocolVersion": "2025-11-25", "serverInfo": {"name": "web-extract", "version": VERSION}, "capabilities": {"tools": {}}}
+        elif method == "tools/list":
+            result = {"tools": TOOLS, "ttlMs": 0, "cacheScope": "private"}
+        elif method == "tools/call" and req["params"]["name"] == "extract_webpage":
+            data = extract_webpage(req["params"]["arguments"])
+            result = {"content": [{"type": "text", "text": json.dumps(data, ensure_ascii=False)}], "structuredContent": data, "isError": "error" in data}
+        if result is None:
+            response = {"jsonrpc": "2.0", "id": req["id"], "error": {"code": -32601, "message": "Method or tool not found"}}
+        else:
+            result["resultType"] = "complete"
+            response = {"jsonrpc": "2.0", "id": req["id"], "result": result}
+    except Exception as error:
+        response = {"jsonrpc": "2.0", "id": req.get("id"), "error": {"code": -32602, "message": str(error)}}
+    print(json.dumps(response, ensure_ascii=False), flush=True)

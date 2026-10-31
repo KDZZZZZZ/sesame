@@ -3,20 +3,16 @@ import { closeRecords } from './records.js';
 import { sourceCapabilities } from './source.js';
 import { createService } from './service.js';
 import { configure, environment } from './configuration.js';
-import { createConfigurationCapabilities } from './configuration-adapter.js';
 import { createTradingCapabilities } from './trading-context.js';
 import { createPositionCapabilities } from './positions.js';
-import { createExecutionCapabilities } from './execution-adapter.js';
 
 const services = new Map();
 function service(host) { const key = host.context.storageRoot; if (!services.has(key)) services.set(key, createService(host)); return services.get(key); }
 
 export function createCapabilities(host) {
 return [
- ...createConfigurationCapabilities(host),
  ...sourceCapabilities(host,()=>service(host)),
  ...createPositionCapabilities(host,()=>service(host)),
- ...createExecutionCapabilities(host,()=>service(host)),
  capability('qmt_dispose',async()=>{await services.get(host.context.storageRoot)?.dispose();services.delete(host.context.storageRoot);closeRecords(host);return{closed:true};}),
     capability('qmt_environment', (args, signal) => environment(host, args, signal)),
     capability('qmt_configure', args => configure(host, args)),

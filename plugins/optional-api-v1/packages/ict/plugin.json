@@ -1,9 +1,9 @@
 {
   "id": "sesame/ict",
   "apiVersion": "2",
-  "version": "2.0.1",
+  "version": "2.0.0",
   "title": "ICT 价格结构研究",
-  "description": "可组合的分析方法：固定参考区间中的价格分离、跨越和结构转变候选是否满足明确的观察定义；消费已有证据，返回源柱引用、三柱区间分离或其他明确规则的观察、确认时点、候选术语、替代解释及失效条件。",
+  "description": "仅按需 ICT：固定参考范围、三柱价格区间、结构转变候选与失效证据；不从 OHLC 反推机构真实订单。",
   "author": {
     "name": "Sesame contributors"
   },

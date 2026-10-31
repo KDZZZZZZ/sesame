@@ -8,9 +8,7 @@
 
 可验证的显示成果在 `rendering[].charts[]` 中，按 `id` 对应图表；选择 `rendering[].version === version` 的回执。宿主只保留最近 30 秒回执，`at` 是宿主收到回执的毫秒时间。`render_status:"reported"` 仅表示有当前版本回执，不表示所有图表成功；没有回执或只有旧版本回执意味着尚不可确认。每图 `status` 为 rendered/loading/offline/error/hidden，`bar_count` 是当前可绘制 K 线数量，`feed_status` 是数据通道状态，`error` 是具体失败文本，优先保留底层订阅错误。hidden 表示该图当前未显示，bar_count/feed_status 可以省略。
 
-当前版本目标图表 `status:"rendered"` 且 `bar_count>0` 证明已有行情可绘制。`feed_status:"live"` 表示订阅收到有效数据，仍需结合来源的时间与时效判断，不能推断市场此刻有成交。历史 queryBars/market_read 成功、来源描述成功、布局保存和实时订阅是不同证据。订阅由宿主建立与恢复；SCHEMA_MISMATCH 等明确的来源协议错误应保留错误文本、source 和图表 ID，重新绑定相同身份或创建探针图不会修复协议形状。仅当证据指向 STALE_REVISION、SOURCE_CHANGED、CONNECTION_CHANGED 或确实缺少配置时才更新对应身份/配置；指标“输入不足”不能掩盖其上游行情失败。具体能力参考 market-chart。
-
-插件更新后，原图表可能因 `SOURCE_CHANGED` 保留旧来源版本。先 inspect，再调用 `canvas_recover_source({command_id,expected_version,chart_id,expected_chart})`，expected_chart 必须是完整原图表快照；已知原时钟可额外传 time_basis。宿主保留原 binding，只更新同一 providerId 的来源 revision；核验 digest/实例、原品种、规格、连接、日历和时钟，在异步步骤之后重新检查，释放临时绑定后才 CAS 提交。不要在 Agent 或浏览器另写一套 describe+apply 恢复。原图没有固定连接时不能声称证明了历史账户一致；原绘图不自动迁移。核验失败、来源再次变化或冲突时保留错误并重读，不自动重放。保存后另查当前版本 rendering，不能把重绑定成功当成行情恢复。
+当前版本目标图表 `status:"rendered"` 且 `bar_count>0` 证明已有行情可绘制。`feed_status:"live"` 表示订阅收到有效数据，仍需结合来源的时间与时效判断，不能推断市场此刻有成交。历史 queryBars/market_read 成功、来源描述成功、布局保存和实时订阅是不同证据。订阅由宿主建立与恢复；SCHEMA_MISMATCH 等明确的来源协议错误应保留错误文本、source 和图表 ID，重新绑定相同身份或创建探针图不会修复协议形状。仅当证据指向 STALE_REVISION、CONNECTION_CHANGED 或确实缺少配置时才更新对应身份/配置；指标“输入不足”不能掩盖其上游行情失败。具体能力参考 market-chart。
 
 canvas_apply 的 workspace 操作用于三个外层窗口，例如 {op:'workspace',workspace:{widths:{charts:1100,agents:460,research:720},column:'research'}}。widths 是各自独立的像素宽度，范围 320–3000，null 恢复默认；改变某列宽度不会挤窄其他列。column 请求浏览器横向定位该窗口。用户左右方向键也移动整排窗口，输入框内保留编辑行为。旧 panels.agents 仅兼容为定位 Agents / 图表的请求，不隐藏研究窗口。
 
@@ -26,15 +24,7 @@ layout.tiles 是按比例分割的平铺树，格式为最多 63 个节点的扁
 
 indicator_publish 发布标准指标定义和代码并返回固定成果，chart_script action:put 接收完整 ArtifactRef 挂载。JavaScript 模块须 export compute(input)，从 input.inputs.<id>.rows 读取声明的 typed Bar，返回 {status,series,diagnostics}；series 使用声明的 seriesId 和标准 points/markers，Decimal 为字符串，time 保留原 SourceTime。完整例子为 resources/close-line.json 与 resources/close-line.js。TypeScript/stream 暂无执行器。实时更新会重新计算有界输入；函数必须确定，不能 fetch、读文件或调用宿主。副指标用独立 pane，波浪/PA/ICT 标注用真实数据和声明图元，不把确认延迟或分析判断伪装成当时已知事实。
 
-枚举已挂载指标使用 `canvas_inspect({}).scripts`。`chart_script({action:"read",script_id})` 只读取单个实例，script_id 必须取自 `canvas_inspect.scripts[].id`；没有实例时不调用 read。put/remove 均需 command_id、当前 expected_version 和 chart_id；put 还需完整 artifact，首次挂载省略 script_id，替换时使用该图表现有实例 ID；remove 必须提供该图表的 script_id。
-
 Python 研究可将最终序列冻结为 DataRef，以 implementation.kind=series、updateMode=static 发布；保留真实品种/口径和来源，不绑定子任务临时路径。静态曲线不会自动更新，也不替代报告里的不可变证据。
-
-用户可在图表内部栏选择趋势线、水平线、矩形和斐波那契回撤。绘图保留不可变 indicator 代码成果作为可编辑/发布表示，但前端直接校验渲染 DrawingSpec，不启动绘图专用 iframe。任意指标代码仍在 sandbox 中执行。绘图实例含 `drawing={id,revision,attachment,binding,spec,active,can_migrate,...}` 和完整 `source`。真正变化时发布新成果与 script.id；同内容保存不追加历史，但 command_id 仍保留幂等回执。`active:false` 的附着绘图不显示，仍可检查与清理。
-
-`chart_drawing({action:"read",chart_id,drawing_id})` 读取完整代码和几何，包括非活跃绘图。创建用 `action:"put"`、command_id、expected_version、完整当前 binding、`expected_revision:null`、`expected_attachment:null` 和 drawing/source 二选一；已有绘图的修改/删除/迁移必须同时提供 `drawing.revision` 与当前 `script.id` 作为 expected_revision/expected_attachment，冲突后重读，不覆盖用户拖动。删除非活跃绘图时 binding 使用该绘图保存的 binding，无需切回原来源。只有 `can_migrate:true` 才可显式请求 `action:"migrate"`，另传当前图表的 target_binding；宿主重新核验历史及当前时钟/日历/连接，跨品种、规格或身份不迁移；旧绘图缺少历史观测或日历未知时不能推断为安全。drawing 格式为 `{schemaVersion:"sesame-drawing/1",kind,title,anchors,style}`；水平线一个端点，其余两个，`{time,price}` 保留原 SourceTime 投影语义。style 为 `{color:"#rrggbb",width:1|2|3|4,lineStyle:"solid"|"dashed"|"dotted",fillOpacity:0..0.4}`，不得改写已有颜色。source 只允许编辑导出的 JSON 声明，保留模块结构。当前绑定最多 64 幅活跃绘图；其他绑定的附着绘图、不可变成果、撤销和命名布局引用不占活跃配额且不盲目清理。普通指标最多 8 个；绘图不执行交易。
-
-指标 input.lookback 是最小预热量（0 表示无预热要求，不是空输入），不截断可见历史或固定数据。需要固定 N 个样本时显式声明 window=N，必须 >=lookback；在 forming 过滤后选取最后 N 行，行不足就报错而不计算。每输入最多 20000 行，可见范围加预热仍须满足同一窗口预算；全部输入合计最多 100000 行及 8MiB，输出最多 100000 个点。超限缩小明确窗口或调整定义，不能静默丢行；旧成果仍可检查/移除，不能因为新预算而删除证据。
 
 inspect 回执中的 viewport 是图表区内部可用绘图区，不是整个浏览器。自动平铺时不需要计算尺寸；每个在线客户端按自己的视口计算，间距 4 像素，不会用某一客户端的像素宽度覆盖其他客户端布局。不要用图表的 x/y 去移动整个工作台。
 
