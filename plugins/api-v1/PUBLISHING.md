@@ -2,8 +2,8 @@
 
 The source directories retain the names `plugins/api-v1` and
 `plugins/optional-api-v1`; their current manifests, capabilities and locks use
-**API 2**. Updated packages for the 0.2.4 release require Sesame **>=0.2.4**;
-unchanged packages retain **>=0.2.3**. Each manifest's `engines.sesame` is authoritative.
+**API 2**. The `dev.7` collection targets Sesame **0.3.0**. Each manifest's
+`engines.sesame` is authoritative, including its minimum and maximum host versions.
 Every plugin explicitly declares its
 capabilities, input/output schemas, consumers, dependencies and usage guidance.
 Preserve each package's license, author and third-party provenance.
@@ -90,7 +90,8 @@ checks, review scope and evidence. Do not fabricate review or test results.
 
 ## Host bundles and installation
 
-The core profile contains nine default plugins. The optional profile is selected
+The `dev.7` core profile contains eleven default plugins; its optional profile
+contains 45 plugins and excludes Kurumi. The optional profile is selected
 explicitly and is not automatically assembled into the application. Host builds
 pin the published core archive, source commit and lock digest; optional test
 fixtures pin their selected archive separately.

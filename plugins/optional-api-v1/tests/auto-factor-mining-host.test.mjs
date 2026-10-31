@@ -212,7 +212,7 @@ test('installed factor workflow executes parallel research with role models, arc
     assert.ok(observedData.length > 0);
     assert.equal(app.runtime.messages('conv_main').filter(message => message.role === 'user').length, 0, 'Background research creates no fake user messages.');
     testStage = 'archive';
-    const files = { list: options => app.runtime.reportLibrary.list({ space: 'research', ...options }), read: options => app.runtime.reportLibrary.read({ space: 'research', ...options }) };
+    const files = { list: options => app.runtime.reportLibrary.list({ space: 'strategy', ...options }), read: options => app.runtime.reportLibrary.read({ space: 'strategy', ...options }) };
     await app.runtime.reportLibrary.flush();
     assert.equal((await files.list({ recursive: true })).entries.filter(entry => entry.path.endsWith('.html')).length, 1);
     const target = app.runtime.reportLibrary.boundTarget(workflow.executionSessionId);
