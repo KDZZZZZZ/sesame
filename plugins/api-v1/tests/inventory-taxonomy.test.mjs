@@ -10,6 +10,14 @@ import { FUNCTIONAL_CATEGORIES, IMPLEMENTATION_KINDS, validateInventoryPolicy, d
 const root = fileURLToPath(new URL('../', import.meta.url));
 const policy = JSON.parse(readFileSync(join(root, 'inventory-policy.json')));
 
+test('search is a supported functional category while unknown categories remain invalid', () => {
+  const selected = structuredClone(policy);
+  selected['web-sources'].functionalCategory = 'search';
+  assert.equal(validateInventoryPolicy(selected, Object.keys(selected)), 'taxonomy');
+  selected['web-sources'].functionalCategory = 'arbitrary-source';
+  assert.throws(() => validateInventoryPolicy(selected, Object.keys(selected)), /invalid functional category/);
+});
+
 test('task responsibility groups guides with workflows and knowledge with reusable analysis independently of implementation', () => {
   const byId = Object.fromEntries(buildInventory().packages.map(item => [item.id, item]));
   for (const name of ['ict', 'price-action', 'abu-trend', 'factor-evaluator', 'strategy-authoring', 'web-extract', 'rss-collect', 'market-data-parser']) {
@@ -33,7 +41,7 @@ test('all 58 plugins have one reviewed functional group and valid implementation
   const inventory = buildInventory();
   assert.equal(inventory.packages.length, 58);
   assert.equal(new Set(inventory.packages.map(item => item.id)).size, 58);
-  assert.deepEqual(inventory.taxonomy, { functionalCategories: FUNCTIONAL_CATEGORIES, implementationKinds: IMPLEMENTATION_KINDS });
+  assert.deepEqual(inventory.taxonomy, { functionalCategories: FUNCTIONAL_CATEGORIES.filter(category => inventory.packages.some(entry => entry.functionalCategory === category.id)), implementationKinds: IMPLEMENTATION_KINDS });
   const counts = field => Object.fromEntries([...new Set(inventory.packages.map(item => item[field]))].sort().map(value => [value, inventory.packages.filter(item => item[field] === value).length]));
   assert.deepEqual(counts('functionalCategory'), { analysis: 31, business: 9, integration: 11, platform: 5, presentation: 2 });
   assert.deepEqual(counts('category'), { backend: 7, data: 6, research: 33, strategy: 6, workspace: 6 });
