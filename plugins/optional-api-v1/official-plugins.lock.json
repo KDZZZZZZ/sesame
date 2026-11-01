@@ -2840,9 +2840,9 @@
     },
     {
       "id": "sesame/investment-research",
-      "version": "3.5.5",
+      "version": "3.5.6",
       "directory": "investment-research",
-      "treeDigest": "sha256:0ddc86eb67c432076009aee6ee80dc06793a057314abfd09d5215c1e6127c612",
+      "treeDigest": "sha256:1b94376cf76d2b65119f4c86e1e0842e77f0852e15e9edde9161ea1acb5db3f0",
       "files": [
         {
           "path": "HISTORY.md",
@@ -2866,8 +2866,8 @@
         },
         {
           "path": "WORKFLOW.md",
-          "sha256": "749cee41e38e4b46397eea3d13541c2ff49c19053cfd7cf1014fc66ff0d99a0a",
-          "bytes": 7311
+          "sha256": "e9f46981ecd5ae80da22e46bd04919790b397bc0b420d6ded7249442258a7a3e",
+          "bytes": 8534
         },
         {
           "path": "capabilities.json",
@@ -2881,18 +2881,18 @@
         },
         {
           "path": "package.json",
-          "sha256": "c5d3f9695c8a5195ae00638ebcfad8cac40724bfc4697aee7067b742586aeff9",
+          "sha256": "43c515b91f7033c1da856b23d547011f59330679bbdba7a992dc24479018219d",
           "bytes": 125
         },
         {
           "path": "plugin.json",
-          "sha256": "099b1faa7a1a61958e9fa4513b3a107feefb85827d7c823fce81d2c86b3242b2",
+          "sha256": "8a43d4de123da67f009f216ee1a7067f45600d451cef337376636595185b6766",
           "bytes": 818
         },
         {
           "path": "prompt.md",
-          "sha256": "067e8b859a385b2ed24948726afd03e137c6a8438766f09992a195da2e448f45",
-          "bytes": 11759
+          "sha256": "ab38b0c3187477c34d2398d8b935193682a2809aa7cb37903b1e7bb2615be4ae",
+          "bytes": 13340
         },
         {
           "path": "src/artifacts.js",
@@ -2926,8 +2926,8 @@
         },
         {
           "path": "src/report-research.js",
-          "sha256": "00ce216172adfbe4a82988c97439b04eda3828fd9442808795bb7023c8153bd5",
-          "bytes": 8028
+          "sha256": "ebbf7b365c8e8606c253a2bafe2cfebf0cfbedaef0074e49705554872e9e7e80",
+          "bytes": 9587
         },
         {
           "path": "src/research-artifacts.js",
@@ -2941,8 +2941,8 @@
         },
         {
           "path": "src/team.js",
-          "sha256": "b234a73aa757244823e76e914f566837e8d822c996a5a610f9c4427b8370b10c",
-          "bytes": 21476
+          "sha256": "86333aa66cfeca7ee162c1db15073c102568392924af6615874f70fe56950cb7",
+          "bytes": 22957
         },
         {
           "path": "src/workflow-mechanics.js",

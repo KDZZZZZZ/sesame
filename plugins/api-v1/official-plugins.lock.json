@@ -483,9 +483,9 @@
     },
     {
       "id": "sesame/reports",
-      "version": "5.0.22",
+      "version": "5.0.23",
       "directory": "reports",
-      "treeDigest": "sha256:c0b375c84a5c6de77d95fe9ecf8ef94c298b72d99b97d106cb6cc6176b3f5abe",
+      "treeDigest": "sha256:98bd31a28e81440549916f55439184aa976667a618a86978ecb30f212cb45426",
       "files": [
         {
           "path": "LICENSE",
@@ -729,18 +729,18 @@
         },
         {
           "path": "package.json",
-          "sha256": "79abb6ac5c2c1df309ed0089c982556cfe7d9d0fb140a189d7f1f45be9f7870e",
+          "sha256": "f4253abaf9408f4f280c88aa712bd39b46722f86c48501fdd5cfb0671f766c09",
           "bytes": 121
         },
         {
           "path": "plugin.json",
-          "sha256": "e24c2b288a429344defaa6341665f96f7be69587a7e890be4bf43f4477c0b5f5",
+          "sha256": "9f7112d5d458fa00f5c2c27a2da42a1b7ebea1207f5ca36b2e3db47b91dcbb1c",
           "bytes": 3559
         },
         {
           "path": "prompt.md",
-          "sha256": "ffcde34e120ae76ba1a099935dc5885d43e48cbd1da7cdf1aac2e0c4855add8b",
-          "bytes": 20089
+          "sha256": "4af37f425ae39c2d81429136efd618152cec40a9d527b54ca6f50cb59ecf0113",
+          "bytes": 21142
         },
         {
           "path": "repair.md",
