@@ -1943,9 +1943,9 @@
     },
     {
       "id": "sesame/binance",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "directory": "binance",
-      "treeDigest": "sha256:401401c895ce316c4a02500a61d8c4cc9b35ab9a97b9bb2a409f0703db906f46",
+      "treeDigest": "sha256:c41e48579186674a5c731532060cdb40b44799900550214647e6f9cf509619ce",
       "files": [
         {
           "path": "INTERFACES.md",
@@ -1964,13 +1964,13 @@
         },
         {
           "path": "README.md",
-          "sha256": "cf9795ecfd0f478c041c080e14ed10172e6db7482678c1c3f99b17434aa8050f",
-          "bytes": 5939
+          "sha256": "6919fae19d7ce3c6c1438d920f91b47b4cc20da98f575e824163d29652af157a",
+          "bytes": 6621
         },
         {
           "path": "VALIDATION.md",
-          "sha256": "1a171f7ca40173a56e3196f7eda3a52b9203ab566c5841eaaa9cf9ae4856ee8b",
-          "bytes": 3138
+          "sha256": "c55a94ad97125351c9b930f5b587021cc444d0bf13b908da65f0a84379eac1a5",
+          "bytes": 4661
         },
         {
           "path": "capabilities.json",
@@ -1984,12 +1984,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "50ee857612f1c3d26abaf7f0daf6c64138c767c3eb1a09ce74d7bd87db856288",
+          "sha256": "6e92501ea7052151864fd40d58e11b5dbb8be5be07499edd50e832b4af9e3645",
           "bytes": 120
         },
         {
           "path": "plugin.json",
-          "sha256": "a29a4ef7502f7d8215b866cccd075b1491a86e051dff84b1a0662c1ac4e45b85",
+          "sha256": "74cd137c7f958a847988387ac1ad6e57dee5e1339d960089f21ae207bbeffb57",
           "bytes": 921
         },
         {
@@ -2009,13 +2009,13 @@
         },
         {
           "path": "src/client.js",
-          "sha256": "5ff431e20a64b920ab6645a4a4f81317c727d5ebf27f50a64d781ca48a12d2f0",
-          "bytes": 7719
+          "sha256": "156ca25a7d09097fb0cf4484a1b00098dfa4e20be3478337de3a96ceee2349cd",
+          "bytes": 8566
         },
         {
           "path": "src/common.js",
-          "sha256": "8b4d16ee7fc669d60530f5d9fee6490fed95c05b69fa3a7906f2b467cce640fd",
-          "bytes": 3458
+          "sha256": "d9550caf8c22efd8d4dfd2e0d7257477860663c68a6422e4e2818185015fc4c8",
+          "bytes": 3688
         },
         {
           "path": "src/execution.js",
@@ -2024,8 +2024,8 @@
         },
         {
           "path": "src/market.js",
-          "sha256": "c91b17447343e505b8d81bf2912d11b277d90c2f9783f8e4b30396f644f2a8ea",
-          "bytes": 14786
+          "sha256": "4c23da696741faf0e7fd82b33a578ba07fe65910036fff838ffb31de23425891",
+          "bytes": 15972
         },
         {
           "path": "src/pages.js",

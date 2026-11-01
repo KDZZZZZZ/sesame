@@ -103,9 +103,9 @@
     },
     {
       "id": "sesame/configuration",
-      "version": "3.1.3",
+      "version": "3.1.4",
       "directory": "configuration",
-      "treeDigest": "sha256:1bdf16442462e262a98307e9721c104ffb26c13a6a19608999f96416c69abe7d",
+      "treeDigest": "sha256:2e31dd0136215f8081c5493d3aa6c0e5e7abeeb45c9f3609989ba2ca0a3686ba",
       "files": [
         {
           "path": "LICENSE",
@@ -129,18 +129,18 @@
         },
         {
           "path": "package.json",
-          "sha256": "9c304bf6059c519e953ab3dd0b2a5e7ad3d936efcba4d6a7c25309562a65fa88",
+          "sha256": "cbcb5a6aef3dfb0eda293868f0b5100650bbf4b40e40b5904a335821b2918cac",
           "bytes": 107
         },
         {
           "path": "plugin.json",
-          "sha256": "238cf67d8615b100e002a9bd37a279855373747c8c325dbcaf7869640c5a8cd3",
+          "sha256": "0e51af303b3e3e27090568fcb754c19c74af5f39a6df7256c9a523d82a674347",
           "bytes": 858
         },
         {
           "path": "prompt.md",
-          "sha256": "d3c0b5674d7524395a51cc9285a6042a7382d1990b7985db8a6673579037231d",
-          "bytes": 3105
+          "sha256": "a778833f293b68ec6f5dddfc7fb1673b71cde1f2edd66b110d8246150e24a806",
+          "bytes": 3493
         },
         {
           "path": "skills/configure-application/SKILL.md",
@@ -154,8 +154,8 @@
         },
         {
           "path": "tools.js",
-          "sha256": "586dcf23d23952e0a3058a83df77b87a05d70f5c52e1a008762bd90c29a051d1",
-          "bytes": 899
+          "sha256": "87b0582d34501fc4dded8a2482a75e60a54da6ec8d153cda2276efa062430df3",
+          "bytes": 1280
         }
       ]
     },

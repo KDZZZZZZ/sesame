@@ -8,11 +8,30 @@ test('public directory, exact filters and environment-specific references', asyn
   const f = await fixture(t, { publicOnly: true }), market = f.service.market;
   const prod = market.bind({ configuration: { environment: 'production' } }), demo = market.bind({ configuration: { environment: 'testnet' } });
   const found = await market.search(prod, { query: 'BTC/USDT' }, { limit: 5 });
+  const directoryRequest = f.calls.find(row => row.path === '/api/v3/exchangeInfo');
+  assert.equal(directoryRequest.params.permissions, 'SPOT');
+  assert.equal(directoryRequest.params.showPermissionSets, 'false');
   assert.equal(found.items[0].ref.sourceId, 'binance:production:spot');
   const desc = (await market.describe(prod, { instrument: found.items[0].ref })).items[0];
   assert.equal(desc.price.tickSize.value, '0.01'); assert.equal(desc.quantity.step.value, '0.00001000'); assert.equal(desc.timeBasis.kind, 'utc');
   await assert.rejects(market.describe(demo, { instrument: found.items[0].ref }), { code: 'INSTRUMENT_MISMATCH' });
   assert.throws(() => market.bind({ connection: { id: prod.connection.id, revision: 'wrong' } }), { code: 'CONNECTION_CHANGED' });
+});
+
+test('a known chart symbol loads only its own filters and shares concurrent lookups', async t => {
+  const f = await fixture(t, { publicOnly: true }), market = f.service.market;
+  const binding = market.bind({ configuration: { environment: 'production' } });
+  const request = { instrument: { sourceId: binding.sourceId, instrumentId: 'BTCUSDT' } };
+  const results = await Promise.all([market.describe(binding, request), market.describe(binding, request)]);
+  assert.equal(results[0].items[0].price.tickSize.value, '0.01');
+  assert.equal(results[1].items[0].native.filters.length, SYMBOL.filters.length);
+  assert.equal(f.calls.length, 1);
+  assert.equal(f.calls[0].params.symbol, 'BTCUSDT');
+  assert.equal(f.calls[0].params.permissions, undefined);
+  assert.equal(f.calls[0].params.showPermissionSets, 'false');
+  await market.describe(binding, request); assert.equal(f.calls.length, 1);
+  f.clock.advance(300001);
+  await market.describe(binding, request); assert.equal(f.calls.length, 2);
 });
 test('history prefetch exceeds viewport and serves neighboring ranges from exact decimal cache', async t => {
   const f = await fixture(t), market = f.service.market, b = market.bind({}), end = Math.floor(f.clock.now() / 60000) * 60000 - 20 * 60000, from = end - 10 * 60000;

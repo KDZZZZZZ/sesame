@@ -1,5 +1,20 @@
 # Validation
 
+## Version 1.0.2 — 2026-11-01
+
+The five Binance suites and configuration integration suite passed 48 focused tests. New regressions cover placeholder credentials, original-value forwarding, exact large account/order IDs, reduced Spot directory queries, single-symbol queries and cache sharing/expiry, and streaming cancellation above the 8 MiB response limit. The MCP fixture still verifies the five observation-only exports and their paired package version.
+
+Six live read-only checks passed using the package's actual service entry points:
+
+- Spot Testnet account read, execution identity, and account-source bind/list using an explicitly supplied Testnet account.
+- Production BTC/USDT directory lookup, ten one-minute candles, and live quote subscription snapshot/update without credentials.
+
+No test order, trade, amendment or cancellation was sent. Testnet credentials stayed in memory and were absent from evidence. Authenticated production access and live order behavior remain untested. The observed `-2014` occurred with literal `[redacted]` values saved as keys; no Testnet URL or signing change was needed. Authenticated testing then exposed a separate large account-ID precision failure, now covered by a regression.
+
+The reduced production directory returned HTTP 200 at 6,709,941 bytes during this check. Local live evidence is in the sibling host workspace's ignored `output/binance-fix-20261101/live-readonly.json`; it records only check names, times and outcomes.
+
+## Earlier validation — 2026-10-24
+
 Validated on 2026-10-24. Evidence is recorded in `outputs/binance-backend-20261024` outside the package. Transport fixtures use synthetic credentials and deterministic Binance-format responses. No live authenticated request, test-order request or trade was sent.
 
 ## Local checks

@@ -20,6 +20,7 @@ export function settings(env = process.env) {
 }
 export function credentialIdentity(config) {
   check(config.apiKey && config.secret, 'Configure Binance API key and HMAC secret in 配置与密钥', 'AUTH_REQUIRED');
+  check(config.apiKey !== '[redacted]' && config.secret !== '[redacted]', 'Saved Binance credentials contain hidden-value placeholders. Save the original key and secret through 配置与密钥 before retrying.', 'AUTH_REQUIRED');
   // A connection revision is an opaque key identity, never the key or signature.
   return { connectionId: sourceId(config.environment), revision: createHash('sha256').update(config.apiKey).update('\0').update(config.secret).digest('hex') };
 }
