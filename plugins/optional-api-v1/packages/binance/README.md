@@ -14,6 +14,8 @@
 
 Spot holdings are multi-asset balances; the package does not invent per-trading-pair positions, a common-currency equity or cost-basis PnL. It therefore does not declare `positions.query`. Exact balances are available through `binance_account` and account snapshot `native.balances`.
 
+Account directory, snapshot, order and fill reads report the actual request sampling window, including rate-limit waits and all requests used by that read. Public cached/paginated market reads use `best_effort`, since they can combine observations made at different times. Quote initialization records its actual sampling window; subscription consistency follows the initial snapshot.
+
 ## Configuration
 
 The existing **配置与密钥** window and `configuration_integration_apply` own all three fields:
