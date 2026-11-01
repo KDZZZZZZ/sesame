@@ -46,11 +46,14 @@ test('all 28 native bindings and standard services match the package declaration
   }
   assert.deepEqual(manifest.configuration.fields.filter(row => row.schema.writeOnly).map(row => row.id), ['api_key', 'api_secret']);
 });
-test('account source exposes exact multi-asset balances without invented positions or equity', async t => {
+test('account source exposes exact multi-asset balances and same-environment USDT valuation without invented cost basis', async t => {
   const f = await fixture(t), source = f.service.account, b = await source.bind({});
   const listed = await source.list(b, {}, { limit: 10 }); assert.equal(listed.items.length, 1); assert.equal(listed.items[0].mode, 'demo');
   const result = await source.snapshot(b, { account: listed.items[0].ref }), item = result.items[0];
-  assert.equal(item.balance.status, 'unknown'); assert.equal(item.equity.status, 'unknown'); assert.equal(item.margin.used.status, 'not_applicable');
+  assert.deepEqual(item.balance, { status: 'value', value: { value: '60000', currency: 'USDT' } }); assert.deepEqual(item.equity, item.balance);
+  assert.equal(item.assets.length, 2); assert.equal(item.valuation.complete, true); assert.equal(item.unrealizedPnl.status, 'unknown');
+  assert.ok(f.calls.filter(row => row.path === '/api/v3/ticker/price').every(row => row.origin === 'https://testnet.binance.vision' && row.params.symbols === '["BTCUSDT"]'));
+  assert.equal(result.metadata.meta.origin, 'derived'); assert.equal(item.margin.used.status, 'not_applicable');
   assert.equal(item.native.balances[0].free, '1.00000000'); assert.equal(item.native.balances[0].asset, 'BTC');
   f.env.BINANCE_ENVIRONMENT = 'production';
   await assert.rejects(source.snapshot(b, { account: listed.items[0].ref }), { code: 'CONNECTION_CHANGED' });
@@ -75,4 +78,42 @@ test('historical queries require a bounded explicit symbol and mark upstream win
 test('numeric identifiers outside safe integer range are rejected instead of rounded', async t => {
   const f = await fixture(t), source = f.service.account, symbol = await f.service.market.row('testnet', 'BTCUSDT');
   assert.throws(() => source.fill('testnet', { connectionId: 'binance:testnet:spot', accountId: '1' }, { id: Number.MAX_SAFE_INTEGER + 1, orderId: 1, time: f.clock.now(), qty: '1', price: '1', commission: '0', commissionAsset: 'USDT' }, symbol), /not exact/);
+});
+
+test('partial valuation retains every balance and never publishes a partial sum as total equity', async t => {
+  const f = await fixture(t), source = f.service.account, b = await source.bind({});
+  f.overrides.push({ match: row => row.path === '/api/v3/account', run: () => response({ uid: 12345, accountType: 'SPOT', canTrade: true, balances: [{ asset: 'BTC', free: '0.1', locked: '0.2' }, { asset: 'USDT', free: '12', locked: '3' }, { asset: 'UNKNOWN', free: '7', locked: '0' }] }) });
+  const { items: [item] } = await source.snapshot(b, { account: source.ref(b.account) });
+  assert.equal(item.equity.status, 'unknown'); assert.equal(item.available.status, 'unknown');
+  assert.deepEqual(item.valuation.pricedValue, { value: '15015', currency: 'USDT' });
+  assert.deepEqual(item.valuation.unpricedAssets, ['UNKNOWN']);
+  assert.equal(item.assets[0].quantity, '0.3'); assert.equal(item.assets[0].marketValue.value.value, '15000');
+  assert.equal(item.assets[2].quantity, '7');
+});
+test('valuation prices inverse and bridge pairs without assuming stablecoin parity', async t => {
+  const f = await fixture(t), source = f.service.account, b = await source.bind({});
+  f.overrides.push({ match: row => row.path === '/api/v3/account', run: () => response({ uid: 12345, accountType: 'SPOT', balances: [{ asset: 'USDC', free: '10', locked: '2' }, { asset: 'ALT', free: '5', locked: '0' }] }) });
+  f.overrides.push({ match: row => row.path === '/api/v3/exchangeInfo', run: () => response({ symbols: [
+    { symbol: 'USDTUSDC', baseAsset: 'USDT', quoteAsset: 'USDC', status: 'TRADING' },
+    { symbol: 'ALTBTC', baseAsset: 'ALT', quoteAsset: 'BTC', status: 'TRADING' },
+    { symbol: 'BTCUSDT', baseAsset: 'BTC', quoteAsset: 'USDT', status: 'TRADING' },
+  ] }) });
+  f.overrides.push({ match: row => row.path === '/api/v3/ticker/price', run: () => response([{ symbol: 'USDTUSDC', price: '0.8' }, { symbol: 'ALTBTC', price: '0.001' }, { symbol: 'BTCUSDT', price: '50000' }]) });
+  const { items: [item] } = await source.snapshot(b, { account: source.ref(b.account) });
+  assert.equal(item.equity.value.value, '265'); assert.equal(item.available.value.value, '262.5');
+  assert.equal(item.assets[0].marketValue.value.value, '15');
+  assert.equal(item.assets[1].conversion.value.instruments.length, 2);
+});
+test('quote outages preserve exact quantities and do not record fake zero equity', async t => {
+  const f = await fixture(t), source = f.service.account, b = await source.bind({});
+  f.overrides.push({ match: row => row.path === '/api/v3/ticker/price', run: () => response({ code: -1007 }, 503) });
+  const { items: [item] } = await source.snapshot(b, { account: source.ref(b.account) });
+  assert.equal(item.assets[0].quantity, '1'); assert.equal(item.equity.status, 'unknown');
+  assert.deepEqual(item.valuation.unpricedAssets, ['BTC']); assert.equal(item.valuation.pricedValue.value, '10000');
+});
+test('an empty spot account has a real zero valuation and no invented profit', async t => {
+  const f = await fixture(t), source = f.service.account, b = await source.bind({});
+  f.overrides.push({ match: row => row.path === '/api/v3/account', run: () => response({ uid: 12345, accountType: 'SPOT', balances: [] }) });
+  const { items: [item] } = await source.snapshot(b, { account: source.ref(b.account) });
+  assert.equal(item.equity.value.value, '0'); assert.deepEqual(item.assets, []); assert.equal(item.unrealizedPnl.status, 'unknown');
 });

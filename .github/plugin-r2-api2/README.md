@@ -32,3 +32,8 @@ all other package bytes remain unchanged, and Kurumi remains excluded.
 5.0.23 and investment-research 3.5.6 with historical-outcome research and chart
 guidance, and direct-tool report binding integration coverage. Source
 `26ada857e53a4d8d97a41ebf816799096cf5caf9` is pinned for PR #110.
+
+`dev.11` retains the same selection and excludes Kurumi. It publishes Binance
+1.0.4 with per-asset holdings, same-environment USDT valuation and history-query
+suggestions, including explicit incomplete pricing. Source
+`62d6a730cb8cecf60d9b9365de4403e7d4abe1df` is pinned for PR #113.

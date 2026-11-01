@@ -1,5 +1,9 @@
 # Validation
 
+## Version 1.0.4 — 2026-11-01
+
+51 focused Binance checks pass, including exact direct/inverse/bridge valuation, reserved quantities, missing prices, quote failures, empty accounts and unchanged trading/MCP boundaries. Account presentation now supplies standard asset rows, scoped-history suggestions, and USDT valuation from the selected environment. Missing acquisition cost is not synthesized. Companion host changes display assets, respect the declared history window/instrument requirements, and separate partial-valuation history from full equity. Six live GET-only checks through the real host pass: account discovery, snapshot/asset valuation, orders, scoped fills, persisted valuation history and production candles. Two price-less test assets remain explicitly outside the valued subset. No order, test order, amendment or cancellation was issued. Local evidence: sibling host `output/account-fix-20261101/account-valuation-live.json`.
+
 ## Version 1.0.3 — 2026-11-01
 
 47 focused Binance tests passed. The account regression measures request time (including transport waits) separately from the requested history period. The bundled-host integration now exercises the actual account presentation provider used by the picker and panel: bind, account list, snapshot, working orders and explicitly scoped fills. This catches missing sampling windows that direct service/MCP observation tests did not cover.

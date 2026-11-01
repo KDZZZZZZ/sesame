@@ -69,7 +69,7 @@ export class BinanceClient {
       check(clock.uncertaintyMs < 2000, 'Binance clock round trip is too uncertain; retry the clock probe', 'SOURCE_UNAVAILABLE');
     }
     const origin = ENVIRONMENTS[env][signed ? 'signed' : 'public'];
-    await this.reserve(origin, path === '/api/v3/openOrders' && params.symbol ? 6 : WEIGHTS[path] ?? 1, signal);
+    await this.reserve(origin, path === '/api/v3/openOrders' && params.symbol ? 6 : path === '/api/v3/ticker/price' ? (params.symbol ? 2 : 4) : WEIGHTS[path] ?? 1, signal);
     this.assertIdentity(signed ? expectedIdentity ?? credentialIdentity(config) : undefined);
     const query = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined).map(([k, v]) => [k, String(v)]));
     if (signed) {

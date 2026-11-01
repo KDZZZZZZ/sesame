@@ -36,6 +36,7 @@ export async function fixture(t, { publicOnly = false, context = 'main' } = {}) 
     if (call.path === '/api/v3/time') return response({ serverTime: now() });
     if (call.path === '/api/v3/exchangeInfo') return response({ rateLimits: [{ rateLimitType: 'REQUEST_WEIGHT', interval: 'MINUTE', intervalNum: 1, limit: 6000 }], symbols: [SYMBOL] });
     if (call.path === '/api/v3/account') return response({ uid: 12345, accountType: 'SPOT', canTrade: true, canWithdraw: false, permissions: ['SPOT'], updateTime: now(), balances: [{ asset: 'BTC', free: '1.00000000', locked: '0.00000000' }, { asset: 'USDT', free: '10000.00000000', locked: '0.00000000' }] });
+    if (call.path === '/api/v3/ticker/price') return response(JSON.parse(p.symbols).map(symbol => ({ symbol, price: '50000.00' })));
     if (call.path === '/api/v3/ticker/24hr') return response({ symbol: p.symbol, bidPrice: '49999.99', askPrice: '50000.00', lastPrice: '50000.00', bidQty: '1.5', askQty: '2.5', closeTime: now() });
     if (call.path === '/api/v3/klines') {
       const duration = 60000, from = Math.ceil(Number(p.startTime) / duration) * duration, end = Math.min(Number(p.endTime), now()), rows = [];
