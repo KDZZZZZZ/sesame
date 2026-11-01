@@ -21,3 +21,9 @@ updates Binance to 1.0.2 and configuration to 3.1.4; all other package bytes
 remain unchanged. Publication is bound to dev-to-main PR #104.
 
 See [publication and independent review requirements](../../plugins/api-v1/PUBLISHING.md).
+
+`dev.9` retains that selection and publishes only the changed Binance 1.0.3
+package, with valid account read observation windows and real-host account
+presentation regression coverage. It pins
+`9b42dd3237168f613811ec879b29c71b6b303a25` for dev-to-main PR #107;
+all other package bytes remain unchanged, and Kurumi remains excluded.
