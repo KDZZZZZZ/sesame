@@ -26,7 +26,7 @@ All IDs below are in `sesame/binance`. All inputs are JSON objects. Decimal quan
 | `market_subscribeQuotes` | `{binding,query:{instruments}}` | Initial quote snapshot and quotes.upsert; max 20 instruments |
 | `account_bind` / `account_unbind` | `{binding}` | Exact authenticated account source lifetime |
 | `account_listAccounts` | `{binding,query:{},page}` | The explicitly configured account, no unrelated key enumeration |
-| `account_snapshot` | `{binding,query:{account}}` | Multi-asset balance snapshot with explicit common-currency unknowns |
+| `account_snapshot` | `{binding,query:{account}}` | Per-asset quantities and same-environment USDT valuation; incomplete pricing explicitly exposes priced subset, never fabricated full equity |
 | `account_queryOrders` | `{binding,query:{account,scope,range?,instruments?},page}` | Working/all/historical normalized orders; historical requires symbols and <=24h range |
 | `account_queryFills` | `{binding,query:{account,range,instruments,orderIds?},page}` | Normalized fills and exact commission assets; <=24h range |
 | `binance_dispose` | `{}` | Host-only cleanup, waits for pending work, retains business records |

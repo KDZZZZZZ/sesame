@@ -11,3 +11,5 @@
 撤单用 `binance_cancel`，减量保留优先级用 `binance_amend`，真实状态与未知结果恢复用 `binance_order_status`。同一 operation_id 重复调用返回原回执；未知结果先查原单，不能换 ID 重新下单。`binance_order_test` 只请求交易所的参数/签名校验，不产生订单或成交。
 
 Spot 资产余额不等于某个交易对的仓位。卖出是减少已有基础资产，不是期货做空；本包不接期货、杠杆、提币、MT5 position ticket 或附加止损。标准 execution service 已声明供显式组合，但当前 portfolio-execution 工作流仍仅接受 MT5/QMT；币安任务直接使用本包已声明的交易工具，不要反复尝试其旧白名单。需要图表、研究、报告时继续组合相应插件。
+
+账户页面通过标准 account snapshot 取得 `assets` 和 `valuation`。估值按当前所选环境的最新成交价折成 USDT，不把测试网价格当成实盘价格；有币种缺少价格时，`pricedValue` 仅指已估值部分，必须同时保留 `unpricedAssets`。持币数量不是某个交易对的仓位；赠币、转入资产缺少买入成本时，不把成本设为零或把余额变化当成交易盈亏。成交查询需要明确交易对和最多 24 小时范围；分段查询更早记录，建议交易对不代表所有历史交易。

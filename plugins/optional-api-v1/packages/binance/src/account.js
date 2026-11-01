@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { amount, check, Decimal, digest, metadata, na, nativeId, same, sourceId, unknown, utc, value } from './common.js';
 import { Pages } from './pages.js';
+import { valueBalances } from './valuation.js';
 
 const states = { NEW: 'working', PENDING_NEW: 'pending', PARTIALLY_FILLED: 'partially_filled', FILLED: 'filled', CANCELED: 'cancelled', PENDING_CANCEL: 'cancel_pending', REJECTED: 'rejected', EXPIRED: 'expired', EXPIRED_IN_MATCH: 'expired' };
 export class Account {
@@ -18,7 +19,7 @@ export class Account {
     return { account, environment: config.environment, balances, canTrade: data.canTrade === true, canWithdraw: data.canWithdraw === true, permissions: data.permissions ?? [], updateTime: Number.isSafeInteger(data.updateTime) ? data.updateTime : null, observedAt, samplingWindow: { from, to: observedAt } };
   }
   ref(account) { return { connectionId: account.connectionId, accountId: account.accountId }; }
-  summary(read) { return { ref: this.ref(read.account), name: `Binance Spot ${read.environment} · ${read.account.accountId}`, broker: 'Binance', server: value(read.environment), nativeLogin: value(read.account.accountId), mode: read.environment === 'production' ? 'live' : 'demo', baseCurrency: unknown('Spot balances are held in multiple assets'), positionMode: 'netting' }; }
+  summary(read) { return { ref: this.ref(read.account), name: `Binance Spot ${read.environment} · ${read.account.accountId}`, broker: 'Binance', server: value(read.environment), nativeLogin: value(read.account.accountId), mode: read.environment === 'production' ? 'live' : 'demo', baseCurrency: value('USDT'), positionMode: 'netting' }; }
   async bind(input = {}, signal) {
     check(!input.configuration || Object.keys(input.configuration).length === 0, 'Account source uses the shared Binance credentials and environment', 'INVALID_ARGUMENT');
     const read = await this.read(signal), connection = { id: read.account.connectionId, revision: read.account.revision };
@@ -39,8 +40,9 @@ export class Account {
   async snapshot(binding, query, signal) {
     const b = this.bound(binding, query.account), read = await this.read(signal); this.bound(binding);
     check(same(read.account, b.account), 'Binance account changed', 'ACCOUNT_MISMATCH');
-    const multi = unknown('No conversion to a common currency has been requested; exact per-asset balances are in native.balances');
-    return { items: [{ account: this.summary(read), snapshotId: digest(read), asOf: utc(read.observedAt), balance: multi, equity: multi, available: multi, buyingPower: na(), unrealizedPnl: unknown('Spot account does not supply cost-basis PnL'), realizedPnl: unknown('Spot account does not supply realized PnL'), margin: { used: na(), free: na(), levelRatio: na(), maintenance: na() }, restrictions: read.canTrade ? [] : [{ code: 'BINANCE_TRADING_DISABLED', description: 'The Binance account reports canTrade=false', observedAt: read.observedAt }], native: { balances: read.balances, canTrade: read.canTrade, permissions: read.permissions, updateTime: read.updateTime, observationTimeOnly: true } }], metadata: { connection: b.connection, meta: metadata(read.observedAt, 'live', { samplingWindow: read.samplingWindow }) } };
+    const valuation = await valueBalances(this.client, this.market, read, signal); this.bound(binding);
+    const observedAt = this.now();
+    return { items: [{ account: this.summary(read), snapshotId: digest([read, valuation]), asOf: utc(observedAt), ...valuation, buyingPower: na(), unrealizedPnl: unknown('Spot balances do not supply acquisition costs, including deposits and testnet grants'), realizedPnl: unknown('Spot account does not supply realized PnL'), margin: { used: na(), free: na(), levelRatio: na(), maintenance: na() }, restrictions: read.canTrade ? [] : [{ code: 'BINANCE_TRADING_DISABLED', description: 'The Binance account reports canTrade=false', observedAt: read.observedAt }], native: { balances: read.balances, canTrade: read.canTrade, permissions: read.permissions, updateTime: read.updateTime, observationTimeOnly: true } }], metadata: { connection: b.connection, meta: metadata(observedAt, 'live', { origin: 'derived', samplingWindow: { from: read.samplingWindow.from, to: observedAt } }) } };
   }
   order(env, account, row, symbol) {
     const id = `${account.connectionId}:${account.accountId}:${row.symbol}:${nativeId(row.orderId)}`;
