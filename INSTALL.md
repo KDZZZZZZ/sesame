@@ -1,17 +1,17 @@
 # Sesame 安装与开始使用
 
-版本 **0.2.4** 使用 Plugin API 2：子 Agent 与多 Agent 工作流共用暂停、恢复和报告绑定；工作过程与成果报告在同一窗口切换。报告支持 Markdown，手工交易的最终报告只展示经理总结。Windows 与 Linux 支持应用内更新，升级保留聊天、报告、插件和配置。
+版本 **0.3.0** 使用 Plugin API 2。报告统一样式，提供 38 种图表与策略逻辑图；投资研究和因子研究可以结合历史相似情景、概率校准和条件使用。Windows 与 Linux 支持应用内更新，升级保留聊天、报告、插件和配置。
 
-[下载安装包](https://github.com/KDZZZZZZ/sesame/releases/tag/v0.2.4) · [插件目录](https://sesame.bot/zh/plugins/) · [使用文档](https://sesame.bot/zh/docs/)
+[下载安装包](https://github.com/KDZZZZZZ/sesame/releases/tag/v0.3.0) · [插件目录](https://sesame.bot/zh/plugins/) · [使用文档](https://sesame.bot/zh/docs/)
 
 ## 选择安装包
 
 | 系统 | 文件 | 安装方式 |
 | --- | --- | --- |
-| macOS 13+，Apple Silicon | `Sesame-0.2.4-mac-arm64.dmg` | 打开后拖入 Applications，再从 Applications 启动 |
-| Windows 10/11 x64 | `Sesame-0.2.4-win-x64.exe` | 运行安装器，选择安装目录 |
-| Linux x64，Debian/Ubuntu 系 | `Sesame-0.2.4-linux-x64.deb` | `sudo apt install ./Sesame-0.2.4-linux-x64.deb` |
-| Linux x64，其他兼容桌面发行版 | `Sesame-0.2.4-linux-x64.AppImage` | 添加执行权限后运行；没有 FUSE 时可使用 `--appimage-extract-and-run` |
+| macOS 13+，Apple Silicon | `Sesame-0.3.0-mac-arm64.dmg` | 打开后拖入 Applications，再从 Applications 启动 |
+| Windows 10/11 x64 | `Sesame-0.3.0-win-x64.exe` | 运行安装器，选择安装目录 |
+| Linux x64，Debian/Ubuntu 系 | `Sesame-0.3.0-linux-x64.deb` | `sudo apt install ./Sesame-0.3.0-linux-x64.deb` |
+| Linux x64，其他兼容桌面发行版 | `Sesame-0.3.0-linux-x64.AppImage` | 添加执行权限后运行；没有 FUSE 时可使用 `--appimage-extract-and-run` |
 
 使用同一发行页的 `SHA256SUMS.txt` 核对下载文件。macOS 包采用 ad-hoc 签名、未经过 Apple 公证；Windows 包未签名。系统提示时先确认来源和校验值，再按系统提示允许打开。没有 Intel Mac 或 ARM Windows/Linux 安装包。
 
@@ -20,10 +20,10 @@
 ## 开始使用
 
 1. 在用户设置中配置可用模型及凭证，发送消息验证连接。Sesame 不附赠模型额度。
-2. 默认自带工作区、编排指南、数据引用、记忆、插件管理、报告、策略编写、图表控制和配置这 9 个基础插件。
+2. 默认自带工作区、编排指南、数据引用、记忆、插件管理、报告、策略编写、图表控制、配置、Ultra 和使用指南这 11 个基础插件。
 3. 按任务安装需要的可选插件，例如“安装 sesame/mt5，复用本机终端并检查连接”或“安装 sesame/akshare 和 sesame/vnpy，准备 A 股研究与回测”。插件会检查已声明能力和依赖；缺少服务、凭证或运行环境时应暂停并说明需要补充的条件。
 
-本次插件目录包含 **54 个 API 2 插件：9 个基础插件和 45 个可选插件**。Kurumi 暂不在本次发布范围内。安装插件不等于已安装其外部依赖或已连接账户。
+本次插件目录包含 **56 个 API 2 插件：11 个基础插件和 45 个可选插件**。Kurumi 暂不在本次发布范围内。安装插件不等于已安装其外部依赖或已连接账户。
 
 本体不需要单独安装 Node.js、浏览器、Python 或交易终端。插件按需使用独立的 Python/Node.js 环境、终端、模型或数据服务，这些环境不随安装包分发。
 
@@ -56,6 +56,6 @@ Agent、原生插件和本地 MCP 以当前系统用户权限执行，可以访�
 
 ## English quick start
 
-Install Sesame 0.2.4 for your operating system, configure a model, then ask Sesame to install the required plugins by their exact IDs. Nine core plugins are bundled; 45 optional API 2 plugins are published separately. Kurumi is excluded from this release. Plugin installation does not configure an external account or install every backend dependency.
+Install Sesame 0.3.0 for your operating system, configure a model, then ask Sesame to install the required plugins by their exact IDs. Eleven core plugins are bundled; 45 optional API 2 plugins are published separately. Kurumi is excluded from this release. Plugin installation does not configure an external account or install every backend dependency.
 
 Back up user data before the first manual upgrade and replace the application without deleting its data directory. New Windows/Linux builds notify users when an update is ready and install only after the user chooses to restart and active work has settled. Paused API 2 tasks remain paused. Published 0.2.3 clients need one manual upgrade to acquire the updater; macOS still updates manually. API 1 plugins must be replaced with API 2 versions. macOS builds are ad-hoc signed and not notarized; Windows installers are unsigned. Package verification does not establish native upgrade, full desktop, market-service or broker compatibility. Trading memory is guidance for the Agent; it does not automatically place broker orders or enforce a broker-side risk limit.
