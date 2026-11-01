@@ -12,7 +12,7 @@ const evidenceRoot = fileURLToPath(new URL('../../../../outputs/binance-mcp-2026
 
 test('Binance MCP export is exactly the five non-order-producing tools and version is paired', async () => {
   const [plugin, packageJson] = await Promise.all(['plugin.json', 'package.json'].map(async file => JSON.parse(await readFile(new URL(`../packages/binance/${file}`, import.meta.url), 'utf8'))));
-  assert.equal(plugin.version, '1.0.3'); assert.equal(packageJson.version, plugin.version);
+  assert.equal(plugin.version, '1.0.4'); assert.equal(packageJson.version, plugin.version);
   assert.deepEqual(plugin.mcp_export, exports);
   assert.ok(prohibited.every(name => !plugin.mcp_export.includes(name)));
 });

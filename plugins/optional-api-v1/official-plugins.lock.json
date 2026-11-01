@@ -1943,14 +1943,14 @@
     },
     {
       "id": "sesame/binance",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "directory": "binance",
-      "treeDigest": "sha256:ff788aa1bb395cdbe1945a2fb3b60400621e2d12819a57bafbe53f3ca5275a3f",
+      "treeDigest": "sha256:ab2dfcb52ffe480b4c1de4a441467784c9818463aaf54fdcb37b98f49285b5f2",
       "files": [
         {
           "path": "INTERFACES.md",
-          "sha256": "9072194fda3adda92a074951e918b2e49ba2cae7d449c9e1024eb27d3b09545d",
-          "bytes": 4941
+          "sha256": "efcd3a359955349152cc9f79b31bc42f7432ef9f9127f7df23723ed06f8b2376",
+          "bytes": 5013
         },
         {
           "path": "LICENSE",
@@ -1964,13 +1964,13 @@
         },
         {
           "path": "README.md",
-          "sha256": "0fd54aed69028a3be00e08ed91fc647a159d010424229480162f5d62bf7a31d1",
-          "bytes": 7007
+          "sha256": "6edcff96c5851ba1a7ba70210363f86fdee3b906cc114550008b9884817597dc",
+          "bytes": 7609
         },
         {
           "path": "VALIDATION.md",
-          "sha256": "5452e7ee6548217cbde9d3d31b240a0c818113dd3727ad004de42f4e9d9c83c1",
-          "bytes": 5953
+          "sha256": "20037f92d2d8a0b0f3048ebc60837891cf50446e2e1c495896aa976161a7facd",
+          "bytes": 6901
         },
         {
           "path": "capabilities.json",
@@ -1984,18 +1984,18 @@
         },
         {
           "path": "package.json",
-          "sha256": "ea6800b484f45cbfd7566b3a86104c7754c2da1ea3f65182f2a8e16625315463",
+          "sha256": "302b5fdfddd38411c011bbb402f5c42941205ab9debb4c92115d106864c1f08b",
           "bytes": 120
         },
         {
           "path": "plugin.json",
-          "sha256": "7406261817a70535ae5f75e35f5942e2f494e4a883659909ad500a077f0ace04",
+          "sha256": "79511bc85e4038590c01d87f24d184e6cea34da399f27e90eae74639a6fc820e",
           "bytes": 921
         },
         {
           "path": "prompt.md",
-          "sha256": "fd107630aab67576219235382a36260cb7d1ff72322267ce7160c340d8cfab3b",
-          "bytes": 2200
+          "sha256": "2e3c52f85b0be60c339827e7e9388e803d001d42c56af598c715f07b41039268",
+          "bytes": 2765
         },
         {
           "path": "skills/binance-spot/SKILL.md",
@@ -2004,13 +2004,13 @@
         },
         {
           "path": "src/account.js",
-          "sha256": "c0f3eb302273c416ce333efbff4e54500b6604af81346ec00e9d779ee572adda",
-          "bytes": 12422
+          "sha256": "b13558e93acd9c89cd9173a53497a4e2e9094c5b19902f82eedfec6628446602",
+          "bytes": 12496
         },
         {
           "path": "src/client.js",
-          "sha256": "156ca25a7d09097fb0cf4484a1b00098dfa4e20be3478337de3a96ceee2349cd",
-          "bytes": 8566
+          "sha256": "db7a0e90bbfaa038c6eccb30cb7d2547f51cdcd8dc3ae4d76af054abc1befc01",
+          "bytes": 8626
         },
         {
           "path": "src/common.js",
@@ -2046,6 +2046,11 @@
           "path": "src/streams.js",
           "sha256": "37847e73fd3bc37c02eac2eb381e6860bb5b48e696a7fc922bd1ab2354f3d0ad",
           "bytes": 10722
+        },
+        {
+          "path": "src/valuation.js",
+          "sha256": "42ad54661ba81e853ada6f844b7345777b277e5e52727f18eec5385338b7bf62",
+          "bytes": 4351
         }
       ]
     },
