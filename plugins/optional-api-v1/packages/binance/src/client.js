@@ -3,6 +3,22 @@ import { ENVIRONMENTS, environment, credentialIdentity, failure, settings, same,
 
 const sharedGates = new Map();
 const WEIGHTS = { '/api/v3/exchangeInfo': 20, '/api/v3/account': 20, '/api/v3/myTrades': 20, '/api/v3/openOrders': 80, '/api/v3/allOrders': 20, '/api/v3/klines': 2, '/api/v3/order/amend/keepPriority': 4 };
+const RESPONSE_BYTES = 8 * 1024 * 1024;
+async function responseText(response) {
+  const reader = response.body?.getReader();
+  if (!reader) return '';
+  const chunks = []; let bytes = 0;
+  try {
+    while (true) {
+      const next = await reader.read();
+      if (next.done) break;
+      bytes += next.value.byteLength;
+      if (bytes > RESPONSE_BYTES) { await reader.cancel(); throw failure('RESOURCE_EXHAUSTED', 'Binance response exceeded the byte budget'); }
+      chunks.push(Buffer.from(next.value));
+    }
+    return Buffer.concat(chunks, bytes).toString('utf8');
+  } finally { reader.releaseLock(); }
+}
 function gateFor(origin) {
   if (!sharedGates.has(origin)) sharedGates.set(origin, { next: 0, blockedUntil: 0, minute: 0, weight: 0, limit: 1200 });
   return sharedGates.get(origin);
@@ -65,9 +81,12 @@ export class BinanceClient {
     try {
       attempted = true;
       response = await this.fetch(`${origin}${path}${method === 'GET' ? `?${query}` : ''}`, { method, signal: combined, redirect: 'error', headers: { Accept: 'application/json', ...(signed ? { 'X-MBX-APIKEY': config.apiKey } : {}), ...(method !== 'GET' ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {}) }, ...(method !== 'GET' ? { body: query.toString() } : {}) });
-      const text = await response.text();
-      check(text.length <= 8 * 1024 * 1024, 'Binance response exceeded the byte budget', 'RESOURCE_EXHAUSTED');
-      try { data = JSON.parse(text); } catch { throw failure('SOURCE_UNAVAILABLE', 'Binance returned a non-JSON response'); }
+      const text = await responseText(response);
+      // Binance UIDs/order IDs can exceed JavaScript's exact integer range.
+      // JSON's source text preserves them as decimal strings before rounding.
+      try { data = JSON.parse(text, (_key, value, context) => typeof value === 'number' && Number.isInteger(value)
+        && !Number.isSafeInteger(value) && /^-?\d+$/.test(context.source) ? context.source : value); }
+      catch { throw failure('SOURCE_UNAVAILABLE', 'Binance returned a non-JSON response'); }
     } catch (error) {
       if (signed && method !== 'GET' && attempted) throw failure('OPERATION_OUTCOME_UNKNOWN', 'Binance response was lost; query the saved order identity before another action', { submissionAttempted: true });
       if (signal?.aborted) throw signal.reason;

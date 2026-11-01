@@ -9,7 +9,7 @@ export const symbolId = id => { check(typeof id === 'string' && /^[\p{L}\p{N}]{2
 export class Market {
   constructor(client, records, { now = Date.now } = {}) {
     this.client = client; this.records = records; this.now = now; this.bindings = new Map(); this.pages = new Pages(now);
-    this.catalogs = new Map(); this.catalogTasks = new Map(); this.cache = new Map(); this.loads = new Map(); this.revisions = new Map(); this.sequence = 0n;
+    this.catalogs = new Map(); this.catalogTasks = new Map(); this.symbols = new Map(); this.symbolTasks = new Map(); this.cache = new Map(); this.loads = new Map(); this.revisions = new Map(); this.sequence = 0n;
     this.trimCache();
   }
   bind(input = {}) {
@@ -32,7 +32,7 @@ export class Market {
     if (cached && this.now() - cached.at < 300000) return cached;
     if (this.catalogTasks.has(env)) return this.catalogTasks.get(env);
     const task = (async () => {
-      const data = await this.client.request(env, 'GET', '/api/v3/exchangeInfo', {}, { signal });
+      const data = await this.client.request(env, 'GET', '/api/v3/exchangeInfo', { permissions: 'SPOT', showPermissionSets: false }, { signal });
       check(Array.isArray(data.symbols) && data.symbols.length <= 20000, 'Invalid Binance symbol directory', 'INVALID_PROVIDER_DATA');
       const rows = data.symbols.filter(row => row.isSpotTradingAllowed !== false && typeof row.symbol === 'string');
       const item = { rows, at: this.now() }; this.catalogs.set(env, item); return item;
@@ -40,7 +40,24 @@ export class Market {
     this.catalogTasks.set(env, task); try { return await task; } finally { this.catalogTasks.delete(env); }
   }
   summary(env, row) { return { ref: { sourceId: sourceId(env), instrumentId: row.symbol }, symbol: row.symbol, name: `${row.baseAsset}/${row.quoteAsset}`, assetClass: 'crypto', venue: value(`Binance Spot ${env}`) }; }
-  async row(env, symbol, signal) { const row = (await this.catalog(env, signal)).rows.find(row => row.symbol === symbolId(symbol)); check(row, 'Binance Spot symbol was not found', 'NOT_FOUND'); return row; }
+  async row(env, symbol, signal) {
+    symbolId(symbol);
+    const key = `${env}:${symbol}`, catalog = this.catalogs.get(env), cached = this.symbols.get(key);
+    const fresh = item => item && this.now() - item.at < 300000;
+    const known = fresh(catalog) ? catalog.rows.find(row => row.symbol === symbol) : fresh(cached) ? cached.row : null;
+    if (known) return known;
+    if (this.symbolTasks.has(key)) return this.symbolTasks.get(key);
+    const task = (async () => {
+      // A chart/order already names its symbol. Fetch that symbol's complete
+      // trading filters, without downloading the whole exchange directory.
+      const data = await this.client.request(env, 'GET', '/api/v3/exchangeInfo', { symbol, showPermissionSets: false }, { signal });
+      const row = data.symbols?.find(row => row.symbol === symbol && row.isSpotTradingAllowed !== false);
+      check(row, 'Binance Spot symbol was not found', 'NOT_FOUND');
+      if (this.symbols.size >= 256 && !this.symbols.has(key)) this.symbols.delete(this.symbols.keys().next().value);
+      this.symbols.set(key, { row, at: this.now() }); return row;
+    })();
+    this.symbolTasks.set(key, task); try { return await task; } finally { this.symbolTasks.delete(key); }
+  }
   async search(binding, query, page, signal) {
     const b = this.bound(binding);
     return this.pages.read(b.bindingId, query, page, async () => {
@@ -147,5 +164,5 @@ export class Market {
     });
   }
   unbind(binding) { const b = this.bound(binding); this.pages.close(b.bindingId); this.bindings.delete(b.bindingId); }
-  async dispose() { await Promise.allSettled([...this.loads.values(), ...this.catalogTasks.values()]); this.pages.close(); this.bindings.clear(); }
+  async dispose() { await Promise.allSettled([...this.loads.values(), ...this.catalogTasks.values(), ...this.symbolTasks.values()]); this.pages.close(); this.bindings.clear(); this.symbols.clear(); }
 }

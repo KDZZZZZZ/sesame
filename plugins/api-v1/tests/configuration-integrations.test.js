@@ -21,3 +21,17 @@ test('configuration adds unified immediate wrappers while preserving legacy entr
   assert.deepEqual(await capabilities.find(item => item.name === 'configuration_open').execute({}), { surface: 'settings' });
   assert.deepEqual(await capabilities.find(item => item.name === 'configuration_integration_open').execute({}), { surface: 'integrations' });
 });
+
+test('configuration forwards original credentials and rejects display placeholders', async () => {
+  const calls = [], host = { capabilities: { invoke: async (...args) => { calls.push(args); return { type: 'result', value: { status: 'applied' } }; } } };
+  const tools = createCapabilities(host), apply = tools.find(item => item.name === 'configuration_integration_apply'), update = tools.find(item => item.name === 'configuration_update');
+  const values = { api_key: 'fixture-original-key', api_secret: 'fixture-original-secret' };
+  await apply.execute({ plugin_id: 'sesame/binance', values });
+  assert.deepEqual(calls[0][1].values, values);
+  for (const execute of [() => apply.execute({ values: { api_key: '[redacted]' } }), () => update.execute({ target: 'environment', changes: { BINANCE_API_KEY: '[redacted]' } })]) {
+    await assert.rejects(async () => execute(), { code: 'INVALID_ARGUMENT' });
+  }
+  assert.equal(calls.length, 1, 'invalid placeholders never reach the configuration writer');
+  await apply.execute({ values: { environment: 'testnet', api_key: null } });
+  assert.equal(calls.at(-1)[1].values.api_key, null, 'explicit clearing stays supported');
+});
