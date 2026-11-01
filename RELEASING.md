@@ -91,8 +91,8 @@ assets to make a release pass.
 
 ## Plugin compatibility
 
-Sesame **0.2.4** and its 54 published plugins use API 2; Kurumi is excluded.
-Eight updated plugins require host >=0.2.4; each package declares its own range.
+Sesame **0.3.0** and its 56 published plugins use API 2: 11 core and 45
+optional, excluding Kurumi. Each package declares its own host version range.
 Release builds select an exact source commit from the rebuilt history and the
 corresponding published R2 archive. API 1 hosts must upgrade before installing
 API 2 plugins. Historical plugin GitHub URLs are no longer supported; retained
