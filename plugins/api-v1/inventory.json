@@ -2905,7 +2905,7 @@
     },
     {
       "id": "sesame/investment-research",
-      "version": "3.5.5",
+      "version": "3.5.6",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -5969,7 +5969,7 @@
     },
     {
       "id": "sesame/reports",
-      "version": "5.0.22",
+      "version": "5.0.23",
       "distribution": "core",
       "state": "mounted",
       "engines": {
