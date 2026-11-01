@@ -1,7 +1,7 @@
 {
   "id": "sesame/investment-research",
   "apiVersion": "2",
-  "version": "3.5.5",
+  "version": "3.5.6",
   "title": "投资研究 · Research",
   "description": "Research报告研究流程：需求与建议结果形式、消息与数据取证、自由组合分析与历史参照、图表报告；支持多种模板、自定义与仅改报告。",
   "license": "MIT",
