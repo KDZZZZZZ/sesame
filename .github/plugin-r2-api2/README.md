@@ -15,4 +15,9 @@ selection and archive/lock digests also supply the host's bundled plugin pins.
 The `dev.N` sequence identifies plugin publication; it does not select the
 application's stable or preview update channel.
 
+`dev.8` keeps the same eleven core / 45 optional selection for Sesame 0.3.0,
+excluding Kurumi. It pins `6c9cbd446e63261b945ed4d3d3c21a39d900bdeb` and
+updates Binance to 1.0.2 and configuration to 3.1.4; all other package bytes
+remain unchanged. Publication is bound to dev-to-main PR #104.
+
 See [publication and independent review requirements](../../plugins/api-v1/PUBLISHING.md).
