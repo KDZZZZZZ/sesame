@@ -27,3 +27,8 @@ package, with valid account read observation windows and real-host account
 presentation regression coverage. It pins
 `9b42dd3237168f613811ec879b29c71b6b303a25` for dev-to-main PR #107;
 all other package bytes remain unchanged, and Kurumi remains excluded.
+
+`dev.10` retains the same selection and excludes Kurumi. It publishes Reports
+5.0.23 and investment-research 3.5.6 with historical-outcome research and chart
+guidance, and direct-tool report binding integration coverage. Source
+`26ada857e53a4d8d97a41ebf816799096cf5caf9` is pinned for PR #110.
