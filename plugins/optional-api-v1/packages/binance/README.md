@@ -26,6 +26,8 @@ The existing **配置与密钥** window and `configuration_integration_apply` ow
 
 Secrets are write-only and never stored in the plugin's SQLite business records. The package supports HMAC credentials; RSA/Ed25519 keys are not implemented. Configuration presence is separate from Binance account/API-key permissions. Public data needs no credentials. Its binding can explicitly select production even when the configured trading account is testnet.
 
+If a previous agent saved the literal `[redacted]` display placeholder, save the original key and secret again through the configuration tools. Version 1.0.2 rejects that placeholder before contacting Binance; updating the plugin cannot recover the original secret from it. When changing only the environment, omit unchanged key fields.
+
 Production and testnet source IDs, account connection identities, caches, subscriptions and command receipts are separate. Credential rotation changes the account connection revision. An existing binding/command cannot silently change environments or credentials.
 
 ## Calling it
@@ -45,6 +47,8 @@ Real order submission, amendment, cancellation, their execution-service aliases,
 ## Transport and limits
 
 Node's existing `fetch`, `crypto`, `WebSocket` and `sqlite` provide transport and storage. There are no added packages, Python downloads, background installers or host API changes. Signed requests are restricted to fixed official HTTPS origins, refuse redirects, calibrate to Binance time, and retry a timestamp rejection only once. HTTP 429/418 establish a shared retry deadline; unknown mutation responses are reconciled rather than retried.
+
+Symbol lookup requests only the named symbol, including its trading filters. Full directory searches request Spot symbols without permission-set expansion. Both paths cache successful results for five minutes; response bodies stop at 8 MiB. Native integer IDs larger than JavaScript's exact number range retain every digit as decimal strings.
 
 Market subscription consumers share the same native environment/topic connection. Closing one consumer leaves the others attached; the last closes the socket. Disconnects emit a protocol gap; reconnection uses fresh snapshots and bounded backoff. The native WebSocket implementation handles ping/pong frames. Account observations are REST queries, not a user-data WebSocket stream.
 

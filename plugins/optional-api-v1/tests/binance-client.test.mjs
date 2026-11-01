@@ -57,3 +57,31 @@ test('public production requests work without credentials and cannot use arbitra
   await assert.rejects(f.service.client.request('http://elsewhere', 'GET', '/api/v3/time'), { code: 'INVALID_ARGUMENT' });
   await assert.rejects(f.service.account.read(), { code: 'AUTH_REQUIRED' });
 });
+
+test('hidden-value placeholders fail before contacting Binance', async t => {
+  const f = await fixture(t);
+  f.env.BINANCE_API_KEY = '[redacted]';
+  await assert.rejects(f.service.account.read(), error => error.code === 'AUTH_REQUIRED' && /placeholders/.test(error.message));
+  assert.equal(f.calls.length, 0);
+});
+
+test('large native account and order identifiers preserve every digit from JSON', async t => {
+  const f = await fixture(t);
+  f.overrides.push({ match: row => row.path === '/api/v3/account', run: () => new Response('{"uid":9007199254740993,"accountType":"SPOT","balances":[],"canTrade":true}') });
+  const account = await f.service.account.read();
+  assert.equal(account.account.accountId, '9007199254740993');
+  f.overrides.push({ match: row => row.path === '/api/v3/order', run: () => new Response('{"orderId":9007199254740995,"time":1700000000000}') });
+  const order = await f.service.client.request('testnet', 'GET', '/api/v3/order', { symbol: 'BTCUSDT' }, { signed: true });
+  assert.equal(order.orderId, '9007199254740995');
+  assert.equal(order.time, 1700000000000, 'ordinary timestamps remain numeric');
+});
+
+test('oversized responses stop reading at the byte limit', async t => {
+  const f = await fixture(t); let canceled = false, reads = 0;
+  f.overrides.push({ match: row => row.path === '/api/v3/exchangeInfo', run: () => new Response(new ReadableStream({
+    pull(controller) { reads++; controller.enqueue(new Uint8Array(1024 * 1024)); },
+    cancel() { canceled = true; },
+  })) });
+  await assert.rejects(f.service.market.catalog('production'), { code: 'RESOURCE_EXHAUSTED' });
+  assert.equal(canceled, true); assert.ok(reads <= 10);
+});

@@ -12,7 +12,7 @@ const evidenceRoot = fileURLToPath(new URL('../../../../outputs/binance-mcp-2026
 
 test('Binance MCP export is exactly the five non-order-producing tools and version is paired', async () => {
   const [plugin, packageJson] = await Promise.all(['plugin.json', 'package.json'].map(async file => JSON.parse(await readFile(new URL(`../packages/binance/${file}`, import.meta.url), 'utf8'))));
-  assert.equal(plugin.version, '1.0.1'); assert.equal(packageJson.version, plugin.version);
+  assert.equal(plugin.version, '1.0.2'); assert.equal(packageJson.version, plugin.version);
   assert.deepEqual(plugin.mcp_export, exports);
   assert.ok(prohibited.every(name => !plugin.mcp_export.includes(name)));
 });
@@ -102,7 +102,7 @@ test('real bundled host MCP discovers and calls only Binance observations withou
       assert.ok(denied.error, `${name} must be unavailable through MCP`);
     }
     assert.ok(calls.every(row => row.method === 'GET'));
-    await writeFile(join(evidenceRoot, 'mcp-fixture.json'), JSON.stringify({ version: '1.0.1', authenticatedNetworkRequests: 0, exchangeMutations: 0, exportedTools: exports, nativeCallerKind: mcpContext.context.kind, conversationRole: 'external', transport: 'in-process local GET-only fixture', calls, transcript }, null, 2) + '\n');
+    await writeFile(join(evidenceRoot, 'mcp-fixture.json'), JSON.stringify({ version: '1.0.2', authenticatedNetworkRequests: 0, exchangeMutations: 0, exportedTools: exports, nativeCallerKind: mcpContext.context.kind, conversationRole: 'external', transport: 'in-process local GET-only fixture', calls, transcript }, null, 2) + '\n');
   } finally {
     await runtime?.close(); store?.close();
     for (const name of names) { if (previous[name] === undefined) delete process.env[name]; else process.env[name] = previous[name]; }
