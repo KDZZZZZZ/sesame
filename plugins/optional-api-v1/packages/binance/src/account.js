@@ -8,12 +8,14 @@ export class Account {
   async read(signal, expected) {
     const config = this.client.config(), identity = this.client.identity();
     check(!expected || same(expected, identity), 'Binance account configuration changed', 'CONNECTION_CHANGED');
+    const from = this.now();
     const data = await this.client.request(config.environment, 'GET', '/api/v3/account', { omitZeroBalances: true }, { signed: true, expectedIdentity: identity, signal });
+    const observedAt = this.now();
     this.client.assertIdentity(identity);
     check(Array.isArray(data.balances) && data.accountType === 'SPOT', 'Expected a Binance Spot account response', 'INVALID_PROVIDER_DATA');
     const balances = data.balances.map(row => ({ asset: String(row.asset), free: amount(row.free), locked: amount(row.locked) }));
     const account = { ...identity, accountId: data.uid === undefined ? `key:${identity.revision.slice(0, 20)}` : nativeId(data.uid) };
-    return { account, environment: config.environment, balances, canTrade: data.canTrade === true, canWithdraw: data.canWithdraw === true, permissions: data.permissions ?? [], updateTime: Number.isSafeInteger(data.updateTime) ? data.updateTime : null, observedAt: this.now() };
+    return { account, environment: config.environment, balances, canTrade: data.canTrade === true, canWithdraw: data.canWithdraw === true, permissions: data.permissions ?? [], updateTime: Number.isSafeInteger(data.updateTime) ? data.updateTime : null, observedAt, samplingWindow: { from, to: observedAt } };
   }
   ref(account) { return { connectionId: account.connectionId, accountId: account.accountId }; }
   summary(read) { return { ref: this.ref(read.account), name: `Binance Spot ${read.environment} · ${read.account.accountId}`, broker: 'Binance', server: value(read.environment), nativeLogin: value(read.account.accountId), mode: read.environment === 'production' ? 'live' : 'demo', baseCurrency: unknown('Spot balances are held in multiple assets'), positionMode: 'netting' }; }
@@ -32,13 +34,13 @@ export class Account {
   }
   async list(binding, query, page, signal) {
     const b = this.bound(binding);
-    return this.pages.read(b.bindingId, query, page, async () => { const read = await this.read(signal); this.bound(binding); check(same(read.account, b.account), 'Binance account changed', 'ACCOUNT_MISMATCH'); return { items: [this.summary(read)], metadata: { connection: b.connection, meta: metadata(read.observedAt) } }; });
+    return this.pages.read(b.bindingId, query, page, async () => { const read = await this.read(signal); this.bound(binding); check(same(read.account, b.account), 'Binance account changed', 'ACCOUNT_MISMATCH'); return { items: [this.summary(read)], metadata: { connection: b.connection, meta: metadata(read.observedAt, 'live', { samplingWindow: read.samplingWindow }) } }; });
   }
   async snapshot(binding, query, signal) {
     const b = this.bound(binding, query.account), read = await this.read(signal); this.bound(binding);
     check(same(read.account, b.account), 'Binance account changed', 'ACCOUNT_MISMATCH');
     const multi = unknown('No conversion to a common currency has been requested; exact per-asset balances are in native.balances');
-    return { items: [{ account: this.summary(read), snapshotId: digest(read), asOf: utc(read.observedAt), balance: multi, equity: multi, available: multi, buyingPower: na(), unrealizedPnl: unknown('Spot account does not supply cost-basis PnL'), realizedPnl: unknown('Spot account does not supply realized PnL'), margin: { used: na(), free: na(), levelRatio: na(), maintenance: na() }, restrictions: read.canTrade ? [] : [{ code: 'BINANCE_TRADING_DISABLED', description: 'The Binance account reports canTrade=false', observedAt: read.observedAt }], native: { balances: read.balances, canTrade: read.canTrade, permissions: read.permissions, updateTime: read.updateTime, observationTimeOnly: true } }], metadata: { connection: b.connection, meta: metadata(read.observedAt) } };
+    return { items: [{ account: this.summary(read), snapshotId: digest(read), asOf: utc(read.observedAt), balance: multi, equity: multi, available: multi, buyingPower: na(), unrealizedPnl: unknown('Spot account does not supply cost-basis PnL'), realizedPnl: unknown('Spot account does not supply realized PnL'), margin: { used: na(), free: na(), levelRatio: na(), maintenance: na() }, restrictions: read.canTrade ? [] : [{ code: 'BINANCE_TRADING_DISABLED', description: 'The Binance account reports canTrade=false', observedAt: read.observedAt }], native: { balances: read.balances, canTrade: read.canTrade, permissions: read.permissions, updateTime: read.updateTime, observationTimeOnly: true } }], metadata: { connection: b.connection, meta: metadata(read.observedAt, 'live', { samplingWindow: read.samplingWindow }) } };
   }
   order(env, account, row, symbol) {
     const id = `${account.connectionId}:${account.accountId}:${row.symbol}:${nativeId(row.orderId)}`;
@@ -62,7 +64,7 @@ export class Account {
     check(['working', 'history', 'all'].includes(query.scope), 'Choose working, history or all order scope', 'INVALID_ARGUMENT');
     const symbols = this.refs(b, query.instruments, !working), range = working ? {} : this.range(query.range);
     return this.pages.read(b.bindingId, query, page, async () => {
-      const rows = []; let truncated = false;
+      const from = this.now(), rows = []; let truncated = false;
       for (const symbol of symbols ?? [undefined]) {
         const native = await this.client.request(b.environment, 'GET', working ? '/api/v3/openOrders' : '/api/v3/allOrders', { symbol, ...range, ...(working ? {} : { limit: 1000 }) }, { signed: true, expectedIdentity: { connectionId: b.account.connectionId, revision: b.account.revision }, signal });
         check(Array.isArray(native) && native.length <= 20000, 'Invalid Binance order page', 'INVALID_PROVIDER_DATA');
@@ -74,20 +76,22 @@ export class Account {
         }
       }
       this.bound(binding); rows.sort((a, b) => a.createdAt.unixMs - b.createdAt.unixMs || a.id.localeCompare(b.id));
-      return { items: rows, metadata: { connection: b.connection, meta: metadata(this.now()), ...(query.range ? { coverage: { requested: query.range, observedRange: rows.length ? { from: rows[0].createdAt, to: rows.at(-1).createdAt } : null, complete: !truncated, gaps: truncated ? [{ range: query.range, reason: 'not_loaded' }] : [] }, truncated } : {}) } };
+      const observedAt = this.now();
+      return { items: rows, metadata: { connection: b.connection, meta: metadata(observedAt, 'live', { samplingWindow: { from, to: observedAt } }), ...(query.range ? { coverage: { requested: query.range, observedRange: rows.length ? { from: rows[0].createdAt, to: rows.at(-1).createdAt } : null, complete: !truncated, gaps: truncated ? [{ range: query.range, reason: 'not_loaded' }] : [] }, truncated } : {}) } };
     });
   }
   async fills(binding, query, page, signal) {
     const b = this.bound(binding, query.account), symbols = this.refs(b, query.instruments, true), range = this.range(query.range);
     return this.pages.read(b.bindingId, query, page, async () => {
-      const rows = []; let truncated = false;
+      const from = this.now(), rows = []; let truncated = false;
       for (const symbol of symbols) {
         const definition = await this.market.row(b.environment, symbol, signal), native = await this.client.request(b.environment, 'GET', '/api/v3/myTrades', { symbol, ...range, limit: 1000 }, { signed: true, expectedIdentity: { connectionId: b.account.connectionId, revision: b.account.revision }, signal });
         check(Array.isArray(native), 'Invalid Binance fill page', 'INVALID_PROVIDER_DATA'); if (native.length === 1000) truncated = true;
         for (const row of native) { const mapped = this.fill(b.environment, b.account, row, definition); if (!query.orderIds || query.orderIds.includes(mapped.orderId.value) || query.orderIds.includes(mapped.nativeOrderId.value)) rows.push(mapped); }
       }
       this.bound(binding); rows.sort((a, b) => a.time.unixMs - b.time.unixMs || a.id.localeCompare(b.id));
-      return { items: rows, metadata: { connection: b.connection, meta: metadata(this.now()), coverage: { requested: query.range, observedRange: rows.length ? { from: rows[0].time, to: rows.at(-1).time } : null, complete: !truncated, gaps: truncated ? [{ range: query.range, reason: 'not_loaded' }] : [] }, truncated } };
+      const observedAt = this.now();
+      return { items: rows, metadata: { connection: b.connection, meta: metadata(observedAt, 'live', { samplingWindow: { from, to: observedAt } }), coverage: { requested: query.range, observedRange: rows.length ? { from: rows[0].time, to: rows.at(-1).time } : null, complete: !truncated, gaps: truncated ? [{ range: query.range, reason: 'not_loaded' }] : [] }, truncated } };
     });
   }
   unbind(binding) { this.pages.close(binding.bindingId); this.bindings.delete(binding.bindingId); }

@@ -1,5 +1,13 @@
 # Validation
 
+## Version 1.0.3 — 2026-11-01
+
+47 focused Binance tests passed. The account regression measures request time (including transport waits) separately from the requested history period. The bundled-host integration now exercises the actual account presentation provider used by the picker and panel: bind, account list, snapshot, working orders and explicitly scoped fills. This catches missing sampling windows that direct service/MCP observation tests did not cover.
+
+Five live read-only checks passed through the real host ProviderRegistry and presentation adapter: Testnet account binding/list, snapshot with per-asset balances, working-order page, BTCUSDT fills for an explicit day, and production BTCUSDT instrument/candles (10 bars). Credentials remained in process memory; evidence includes no balances or account IDs. No order/test-order, amendment or cancellation was sent. Evidence: sibling host ignored `output/account-fix-20261101/live-provider.json`.
+
+The host account projection also needs its accompanying dev fix to wrap order/fill/history pages as documented. Binance fill history still requires explicit symbols and a UTC window up to 24 hours; it does not claim to supply unfiltered all-symbol 30-day history. Common-currency equity and cost-basis PnL remain unavailable.
+
 ## Version 1.0.2 — 2026-11-01
 
 The five Binance suites and configuration integration suite passed 48 focused tests. New regressions cover placeholder credentials, original-value forwarding, exact large account/order IDs, reduced Spot directory queries, single-symbol queries and cache sharing/expiry, and streaming cancellation above the 8 MiB response limit. The MCP fixture still verifies the five observation-only exports and their paired package version.

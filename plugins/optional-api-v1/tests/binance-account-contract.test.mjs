@@ -4,6 +4,33 @@ import { readFile } from 'node:fs/promises';
 import { createCapabilities } from '../packages/binance/index.js';
 import { fixture, response, utc } from './binance-fixture.mjs';
 
+test('account presentation retains the actual read window, not the requested history range', async t => {
+  const f = await fixture(t), source = f.service.account, b = await source.bind({}), ref = source.ref(b.account);
+  const start = f.clock.now();
+  f.overrides.push({ match: row => row.path === '/api/v3/account', run: () => {
+    f.clock.advance(37);
+    return response({ uid: 12345, accountType: 'SPOT', canTrade: true, balances: [] });
+  } });
+  const listed = await source.list(b, {}, { limit: 10 });
+  assert.deepEqual(listed.metadata.meta.samplingWindow, { from: start, to: f.clock.now() });
+  assert.ok(f.clock.now() >= start + 37, 'sampling includes the request and any shared rate-limit wait');
+  assert.equal(listed.metadata.meta.observedAt, f.clock.now());
+  assert.equal(listed.metadata.meta.consistency, 'bounded');
+  const snapshotStart = f.clock.now(), snapshot = await source.snapshot(b, { account: ref });
+  assert.deepEqual(snapshot.metadata.meta.samplingWindow, { from: snapshotStart, to: f.clock.now() });
+  for (const [path, method, query] of [
+    ['/api/v3/openOrders', 'orders', { account: ref, scope: 'working' }],
+    ['/api/v3/myTrades', 'fills', { account: ref, instruments: [{ sourceId: b.sourceId, instrumentId: 'BTCUSDT' }], range: { from: utc(start - 60000), to: utc(start) } }],
+  ]) {
+    const from = f.clock.now();
+    f.overrides.push({ match: row => row.path === path, run: () => { f.clock.advance(23); return response([]); } });
+    const result = await source[method](b, query, { limit: 10 });
+    assert.deepEqual(result.metadata.meta.samplingWindow, { from, to: f.clock.now() });
+    assert.ok(f.clock.now() >= from + 23);
+    assert.equal(result.metadata.meta.observedAt, f.clock.now());
+  }
+});
+
 test('all 28 native bindings and standard services match the package declaration', async () => {
   const manifest = JSON.parse(await readFile(new URL('../packages/binance/capabilities.json', import.meta.url), 'utf8'));
   assert.deepEqual(createCapabilities({ context: { storageRoot: 'unused' } }).map(row => row.name).sort(), manifest.capabilities.map(row => row.binding.name).sort());

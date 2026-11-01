@@ -68,7 +68,7 @@ export class Streams {
     const event = (type, payload) => push({ ...position, seq: String(++seq), eventId: randomUUID(), schemaVersion: '1.0.0', type, payload, observedAt: this.now() });
     const gap = reason => { event('stream.gap', { reason: { code: 'SOURCE_UNAVAILABLE', message: reason }, recovery: 'snapshot' }); void close(); };
     const consumer = { id: position.streamId, bindingId: binding.bindingId, close, event, gap, isClosed: () => ended, detach: fn => { detach = fn; if (ended) detach(); },
-      snapshot: snapshot => queue.unshift({ type: 'snapshot', snapshot, position, consistency: 'bounded', recovery: 'snapshot' }),
+      snapshot: snapshot => queue.unshift({ type: 'snapshot', snapshot, position, consistency: snapshot.meta.consistency, recovery: 'snapshot' }),
       events: { async *[Symbol.asyncIterator]() { try { for (;;) { if (queue.length) yield queue.shift(); else if (ended) return; else await new Promise(resolve => { wake = resolve; }); } } finally { await close(); } } } };
     this.consumers.add(consumer); signal?.addEventListener('abort', abort, { once: true }); if (signal?.aborted) abort(); return consumer;
   }
@@ -101,7 +101,7 @@ export class Streams {
     const consumer = this.consumer(binding, signal), disposers = [];
     consumer.detach(() => disposers.forEach(close => close()));
     try {
-      const quotes = [];
+      const from = this.now(), quotes = [];
       for (const ref of query.instruments) {
         this.market.bound(binding, ref); const symbol = await this.market.row(b.environment, ref.instrumentId, signal);
         signal?.throwIfAborted(); check(!consumer.isClosed(), 'Binance quote subscription closed during initialization', 'SOURCE_UNAVAILABLE');
@@ -113,7 +113,8 @@ export class Streams {
         const row = await this.market.client.request(b.environment, 'GET', '/api/v3/ticker/24hr', { symbol: symbol.symbol }, { signal }); quotes.push(this.quote(b.environment, symbol, row));
         signal?.throwIfAborted(); check(!consumer.isClosed(), 'Binance quote subscription closed during initialization', 'SOURCE_UNAVAILABLE');
       }
-      this.market.bound(binding); consumer.snapshot({ quotes, meta: metadata(this.now()) }); return consumer;
+      this.market.bound(binding); const observedAt = this.now();
+      consumer.snapshot({ quotes, meta: metadata(observedAt, 'live', { samplingWindow: { from, to: observedAt } }) }); return consumer;
     } catch (error) { await consumer.close(); throw error; }
   }
   async unbind(binding) { await Promise.all([...this.consumers].filter(row => row.bindingId === binding.bindingId).map(row => row.close())); }

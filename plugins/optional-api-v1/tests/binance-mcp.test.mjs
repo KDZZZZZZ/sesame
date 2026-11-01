@@ -12,7 +12,7 @@ const evidenceRoot = fileURLToPath(new URL('../../../../outputs/binance-mcp-2026
 
 test('Binance MCP export is exactly the five non-order-producing tools and version is paired', async () => {
   const [plugin, packageJson] = await Promise.all(['plugin.json', 'package.json'].map(async file => JSON.parse(await readFile(new URL(`../packages/binance/${file}`, import.meta.url), 'utf8'))));
-  assert.equal(plugin.version, '1.0.2'); assert.equal(packageJson.version, plugin.version);
+  assert.equal(plugin.version, '1.0.3'); assert.equal(packageJson.version, plugin.version);
   assert.deepEqual(plugin.mcp_export, exports);
   assert.ok(prohibited.every(name => !plugin.mcp_export.includes(name)));
 });
@@ -38,9 +38,11 @@ test('real bundled host MCP discovers and calls only Binance observations withou
     assert.ok(!parsed.href.includes(values.api_key)); assert.ok(!parsed.href.includes(values.api_secret));
     calls.push({ method: options.method, path: parsed.pathname });
     if (parsed.pathname === '/api/v3/time') return response({ serverTime: Date.now() });
+    if (parsed.pathname === '/api/v3/exchangeInfo') return response({ symbols: [{ symbol: 'BTCUSDT', baseAsset: 'BTC', quoteAsset: 'USDT', filters: [] }] });
     assert.equal(options.headers['X-MBX-APIKEY'], values.api_key);
     if (parsed.pathname === '/api/v3/account') return response({ uid: 12345, accountType: 'SPOT', canTrade: true, permissions: ['SPOT'], updateTime: Date.now(), balances: [{ asset: 'USDT', free: '100.00', locked: '0.00' }] });
     if (parsed.pathname === '/api/v3/openOrders') return response([]);
+    if (parsed.pathname === '/api/v3/myTrades') return response([]);
     if (parsed.pathname === '/api/v3/order') {
       assert.equal(params.get('orderId'), '700');
       return response({ symbol: 'BTCUSDT', orderId: 700, clientOrderId: 'fixture-existing-client', side: 'BUY', type: 'LIMIT', origQty: '0.001', executedQty: '0', price: '50000', status: 'NEW' });
@@ -87,6 +89,27 @@ test('real bundled host MCP discovers and calls only Binance observations withou
     assert.equal(account.result.isError, false); assert.equal(account.result.structuredContent.account.accountId, '12345');
     const identity = await call('binance_execution_identity');
     assert.equal(identity.result.isError, false); assert.equal(identity.result.structuredContent.account.accountId, '12345');
+    // The account picker uses the provider projection, not the MCP observation
+    // tool. Exercise the real host's metadata/financial validators as the UI does.
+    const binding = await runtime.providers.bind({ pluginId: 'sesame/binance', providerId: 'account' });
+    try {
+      const listed = await runtime.providers.call(binding.bindingId, 'listAccounts', { page: { limit: 100 } });
+      assert.equal(listed.data.items[0].ref.accountId, '12345');
+      const account = listed.data.items[0].ref;
+      const snapshot = await runtime.providers.call(binding.bindingId, 'snapshot', { account });
+      assert.equal(snapshot.data.native.balances[0].asset, 'USDT');
+      const orders = await runtime.providers.call(binding.bindingId, 'queryOrders', { account, scope: 'working', page: { limit: 100 } });
+      assert.deepEqual(orders.data.page.items, []);
+      const fills = await runtime.providers.call(binding.bindingId, 'queryFills', { account,
+        instruments: [{ sourceId: 'binance:testnet:spot', instrumentId: 'BTCUSDT' }],
+        range: { from: { basis: 'utc', unixMs: Date.now() - 60000 }, to: { basis: 'utc', unixMs: Date.now() } }, page: { limit: 100 } });
+      assert.deepEqual(fills.data.page.items, []);
+      for (const result of [listed, snapshot, orders, fills]) {
+        assert.equal(result.meta.consistency, 'bounded');
+        assert.ok(result.meta.samplingWindow.from <= result.meta.samplingWindow.to);
+        assert.equal(result.meta.samplingWindow.to, result.meta.observedAt);
+      }
+    } finally { await runtime.providers.unbind(binding.bindingId); }
     const snapshot = await call('binance_execution_snapshot');
     assert.equal(snapshot.result.isError, false); assert.deepEqual(snapshot.result.structuredContent.orders, []);
     assert.equal(snapshot.result.structuredContent.balances[0].free, '100.00');
@@ -102,7 +125,7 @@ test('real bundled host MCP discovers and calls only Binance observations withou
       assert.ok(denied.error, `${name} must be unavailable through MCP`);
     }
     assert.ok(calls.every(row => row.method === 'GET'));
-    await writeFile(join(evidenceRoot, 'mcp-fixture.json'), JSON.stringify({ version: '1.0.2', authenticatedNetworkRequests: 0, exchangeMutations: 0, exportedTools: exports, nativeCallerKind: mcpContext.context.kind, conversationRole: 'external', transport: 'in-process local GET-only fixture', calls, transcript }, null, 2) + '\n');
+    await writeFile(join(evidenceRoot, 'mcp-fixture.json'), JSON.stringify({ version: '1.0.3', authenticatedNetworkRequests: 0, exchangeMutations: 0, exportedTools: exports, nativeCallerKind: mcpContext.context.kind, conversationRole: 'external', transport: 'in-process local GET-only fixture', calls, transcript }, null, 2) + '\n');
   } finally {
     await runtime?.close(); store?.close();
     for (const name of names) { if (previous[name] === undefined) delete process.env[name]; else process.env[name] = previous[name]; }
