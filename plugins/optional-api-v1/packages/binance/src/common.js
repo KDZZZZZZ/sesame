@@ -34,7 +34,9 @@ export function nativeId(id) {
   check(typeof id === 'string' && /^\d{1,30}$/.test(id) || Number.isSafeInteger(id) && id >= 0, 'Native identifier is not exact', 'INVALID_PROVIDER_DATA');
   return String(id);
 }
-export const metadata = (observedAt, freshness = 'live', extra = {}) => ({ observedAt, freshness, origin: 'observed', consistency: 'bounded', warnings: [], ...extra });
+// Cached/multi-request market data is best effort unless the caller retained
+// the actual observation window. Never claim a bounded read without that window.
+export const metadata = (observedAt, freshness = 'live', extra = {}) => ({ observedAt, freshness, origin: 'observed', consistency: extra.samplingWindow ? 'bounded' : 'best_effort', warnings: [], ...extra });
 export const safeError = error => ({ code: error?.code ?? 'SOURCE_UNAVAILABLE', message: String(error?.safeMessage ?? 'Binance operation did not complete'), ...(error?.nativeCode === undefined ? {} : { nativeCode: error.nativeCode }), ...(error?.retryAt === undefined ? {} : { retryAt: error.retryAt }) });
 export function failure(code, message, details = {}) { return Object.assign(new Error(message), { code, safeMessage: message, ...details }); }
 export const abortableDelay = (ms, signal) => new Promise((resolve, reject) => {
