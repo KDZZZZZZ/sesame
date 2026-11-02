@@ -1,5 +1,7 @@
 # 回测报告：从结果比较到策略解释
 
+归档使用 `策略类别/具体策略项目/报告.html`，不加年或月目录；同一策略的因子研究、回测、优化和表现复盘长期放在一起，不把“回测”或“优化”当作类别。先按主要获利逻辑选类别，已有项目和用户指定位置优先，详见 [报告路径规则](report-paths.md)。
+
 回测报告属于 **Strategy**。委派阶段使用 `task.output.space:"strategy"`；未绑定任务的新报告用 `report_publish.space:"strategy"` 明确分类。用户指定的任务目录和已有报告位置优先，更新修订不迁移文件。只有实际回测使用了 SVL，才用 `report_publish.strategy_source` 传入对应固定源码；完整 ref 同时放发布外壳 references 或 related；便利入口会补入 references。Python、MT5 或其他原生回测用 `strategy_evidence:{engine,summary,references:[完整固定Ref]}` 关联真实源码与运行证据，且每个 ref 同时出现在发布外壳 references/data/related；保留全部原数据与执行结果，不为分类另造 SVL，也不把原生回测降为普通 Research。
 
 ## 完整回测报告的建议结构

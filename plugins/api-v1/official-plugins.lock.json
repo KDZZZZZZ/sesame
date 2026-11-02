@@ -483,9 +483,9 @@
     },
     {
       "id": "sesame/reports",
-      "version": "5.0.23",
+      "version": "5.0.24",
       "directory": "reports",
-      "treeDigest": "sha256:98bd31a28e81440549916f55439184aa976667a618a86978ecb30f212cb45426",
+      "treeDigest": "sha256:b543cf2e0cb976169c55c44edf7a933c1176055747943bc5e84a23408639c914",
       "files": [
         {
           "path": "LICENSE",
@@ -729,18 +729,18 @@
         },
         {
           "path": "package.json",
-          "sha256": "f4253abaf9408f4f280c88aa712bd39b46722f86c48501fdd5cfb0671f766c09",
+          "sha256": "0b49e88c365c6d8879d506b766d77a709c979cab4e8501dd7ba2ca09cb248a09",
           "bytes": 121
         },
         {
           "path": "plugin.json",
-          "sha256": "9f7112d5d458fa00f5c2c27a2da42a1b7ebea1207f5ca36b2e3db47b91dcbb1c",
-          "bytes": 3559
+          "sha256": "f0b67dc01d360d4517cde6b576d1c6a25b48b71899caa84af398a3cbde81c10e",
+          "bytes": 3604
         },
         {
           "path": "prompt.md",
-          "sha256": "4af37f425ae39c2d81429136efd618152cec40a9d527b54ca6f50cb59ecf0113",
-          "bytes": 21142
+          "sha256": "ec86f4eea025bb2cfc9a7d855113557e1649448ea1f4a586d2353c0a4af494c7",
+          "bytes": 23028
         },
         {
           "path": "repair.md",
@@ -899,8 +899,8 @@
         },
         {
           "path": "skills/interactive-report/SKILL.md",
-          "sha256": "8b9bc84fd94b59d252850d37a383ff8d1e3268da8ef2f4ad7eed96a8fd392654",
-          "bytes": 6685
+          "sha256": "75ccf1293f4ffdad6ea767dc3ab5c78702ffe325660b5d8965417dde41c98b9a",
+          "bytes": 7138
         },
         {
           "path": "skills/report-design/SKILL.md",
@@ -979,13 +979,13 @@
         },
         {
           "path": "skills/report-writing/SKILL.md",
-          "sha256": "0035d583f269028adb4188e1746b4c796a43256367107dd871516832a14f49e7",
-          "bytes": 13864
+          "sha256": "16597dbd3bd0693e7786413930593338eca56bd981d409187d84bfa8e6660845",
+          "bytes": 14187
         },
         {
           "path": "skills/report-writing/backtest.md",
-          "sha256": "5a93d8c98481e8f01c9afd8e17d7b7d7b1176437b043359ec4d41f4e909b2af5",
-          "bytes": 9143
+          "sha256": "2e2e4966ecc95f54bf320eab120c7ceaf5d3e70bbfa073fce439b2d5b70dbaf3",
+          "bytes": 9484
         },
         {
           "path": "skills/report-writing/field-guide.md",
@@ -1001,6 +1001,11 @@
           "path": "skills/report-writing/module-templates.md",
           "sha256": "57456ed9e9e8ceed7f8220ca6892a54e186f14ad4aa447e0b451531d6239910b",
           "bytes": 19922
+        },
+        {
+          "path": "skills/report-writing/report-paths.md",
+          "sha256": "fec56a104b29a1137807886a75cdaabaec92a89d1080ccb05a080c30be59dafd",
+          "bytes": 6758
         },
         {
           "path": "skills/report-writing/technical-research.md",
