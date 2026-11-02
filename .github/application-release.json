@@ -1,68 +1,68 @@
 {
   "schemaVersion": 2,
   "repository": "KDZZZZZZ/sesame",
-  "tag": "v0.3.0",
-  "releaseId": 430364264,
+  "tag": "v0.3.1",
+  "releaseId": 431305373,
   "assets": [
     {
       "name": "INSTALL.md",
       "size": 6698,
-      "sha256": "ae24009e21070ffdfecfeb574222bfbb5ffb31ea6b31c3a28f6d6f1429a11e9a"
+      "sha256": "a0a40bb686be0c9b2f536c0d297ca59c347b34409d5516b0a35203f18fc20249"
     },
     {
       "name": "SHA256SUMS.txt",
       "size": 1024,
-      "sha256": "f538827c735bfea3bfcc35c0d422106d69f043d3fc06229a133efc982b380391"
+      "sha256": "f4d33ee11d2563055561891ec249db429cb5bdf2f8e025b32123c396d37376d8"
     },
     {
-      "name": "Sesame-0.3.0-linux-x64.AppImage",
-      "size": 243037833,
-      "sha256": "3ac55708a2300ec10bd8ecf97142b983326b89452cfe0ca89318fb0f833d1de4"
+      "name": "Sesame-0.3.1-linux-x64.AppImage",
+      "size": 243058316,
+      "sha256": "c5075215110d413723293613dfb0cfe688c6c3f4cfac6f9f356991b7e776ae1c"
     },
     {
-      "name": "Sesame-0.3.0-linux-x64.deb",
-      "size": 216984136,
-      "sha256": "b2613cbf84756c26bb765ca97e9c3d18845bbfddd8d49f8727b48e9edce7616d"
+      "name": "Sesame-0.3.1-linux-x64.deb",
+      "size": 217005724,
+      "sha256": "8850d46de15892f31d511992906c6165d49d87b8da6841302354ad1b6410f914"
     },
     {
-      "name": "Sesame-0.3.0-linux-x64.deb.blockmap",
-      "size": 226054,
-      "sha256": "938ca16744cc53236d0b435ed2f91c2a4c02a5d7ce47b093cd3c652cde43424c"
+      "name": "Sesame-0.3.1-linux-x64.deb.blockmap",
+      "size": 226139,
+      "sha256": "65044284173e782f52756b0daed2186a017798a1af4195ce98729781c47a426f"
     },
     {
-      "name": "Sesame-0.3.0-mac-arm64.dmg",
-      "size": 267183099,
-      "sha256": "8c258648b2cafdd313cfc2d4528fcc3e1bd234fce01cb7457b7db4a1467671fb"
+      "name": "Sesame-0.3.1-mac-arm64.dmg",
+      "size": 267237716,
+      "sha256": "11c5a58ead684a5f0968bd1a192b9381df07586c02b1fe8304e447092e199e5f"
     },
     {
-      "name": "Sesame-0.3.0-win-x64.exe",
-      "size": 235546818,
-      "sha256": "01423aad1d109b09ca5b3662d11328f951ebc1146d660dd819f5bc0f49528df4"
+      "name": "Sesame-0.3.1-win-x64.exe",
+      "size": 235565723,
+      "sha256": "b8d413712085ef366329921cc6257d0046487957a4de2c48feba441195a71e41"
     },
     {
-      "name": "Sesame-0.3.0-win-x64.exe.blockmap",
-      "size": 236706,
-      "sha256": "5a4512cf446d8e0c86c2765dee7bc59abf66af66c4a951e3024198e81d60ac63"
+      "name": "Sesame-0.3.1-win-x64.exe.blockmap",
+      "size": 236617,
+      "sha256": "c8eb06c7a92e68af158dbf50fad36369b0786e824d90eb7f509963768dd3bbeb"
     },
     {
       "name": "update-feed-linux-x64.yml",
       "size": 539,
-      "sha256": "c05c54ec782339c4398475534a149abcaf64dc716189b13cbd9ce892917aae3e"
+      "sha256": "66e83618630504155ca5daf2e8e23330aaf106a3d6986c390d02a057fd49ade5"
     },
     {
       "name": "update-feed-win32-x64.yml",
       "size": 321,
-      "sha256": "bf21b97dd8acca0e8c7e1503d125e6cf271d06f66143e80ab32e7acaf1c2d936"
+      "sha256": "816654f691111bac90806755666e1e0c6efd2d30f4c001fac742900eb1060b73"
     },
     {
       "name": "update-plan-linux-x64.json",
       "size": 1014,
-      "sha256": "67dd5a1a65723ebcfcf9640b8d05b353de3641bf72d04f8b8961a3018291d1d9"
+      "sha256": "e9c4d9485f5c9c655ae6cdf2b7a5f210f65281eaa056cef9ad0f4a3ce53dbe88"
     },
     {
       "name": "update-plan-win32-x64.json",
       "size": 750,
-      "sha256": "cee39baa65f6236dd9e74a148ea1b146480731f5d37454293b24ca8c0025d648"
+      "sha256": "cabd6d5236eb2e56cd8c71402fb60bd18b1a168414ccd73aaa1c99905fa699b6"
     }
   ]
 }
