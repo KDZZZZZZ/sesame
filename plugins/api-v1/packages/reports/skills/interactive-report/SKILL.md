@@ -28,6 +28,8 @@ description: 绑定固定结果，按内容与样式发布报告，检查当前�
 
 ## 发布与修订
 
+首次发布前遵循 [报告路径规则](../report-writing/report-paths.md)。委派时把相对路径交给 `output:{type:"report",space,path}`；发布接口不接受 `path`。未绑定的新报告发布后通过宿主报告文件接口归档，已有报告沿用位置。Research 个股与品种按“标的 → 月份”，Strategy 按“策略类别 → 项目”，不设时间目录；多文件包整体移动，标题不显示 HTML 后缀。
+
 宿主发布使用真实 title、summary、locale、space、provenanceKind（便利入口为 provenance_kind），以及固定 `data`、`related`、`references`。演示数据明确为 `demo`；用户要求或工作流已绑定的报告位置优先。Research 承载市场、宏观与资料研究，Strategy 承载因子、策略、优化及回测结果；修改报告不迁移其原交易账本或绑定。
 
 `input:{content,style?,assets?,strategy_source?,strategy_evidence?}` 是本插件接受的内容，生成的 HTML 是结果。长内容应将整个 input 保存为 UTF-8 JSON，登记为固定 ArtifactRef 后使用 `inputRef:{ref,entry}`；便利入口为 `input_ref`。不要让 Agent 再抄大段 JSON、反斜杠或公式。input 和 inputRef 严格二选一，引用文件不能只含 content 或整套发布外壳；data/related/references 始终在外壳保留。只需单份报告时不再额外套随机目录。任务必须绑定 report 输出并实际发布；聊天摘要、DataRef、预留文件或源码不替代报告交付。已绑定的路径、报告 ID、原数据引用和观测时点保持稳定。
