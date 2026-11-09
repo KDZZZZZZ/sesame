@@ -53,12 +53,12 @@ integration('documented Agent and custom coordination calls match the actual hos
   assert.deepEqual(member.input.output, { type: 'none' }, 'the example member only prepares evidence for the parent report');
 });
 
-integration('documented workflow customizations satisfy both declared schemas and real plan rules', async () => {
+integration('documented workflow and factor calls satisfy declared schemas and semantic rules', async () => {
   const validate = validator();
   const declaration = async name => JSON.parse(await readFile(new URL(`../../optional-api-v1/packages/${name}/capabilities.json`, import.meta.url), 'utf8'));
   const capability = async (name, id) => (await declaration(name)).capabilities.find(item => item.id === id).inputSchema;
   const { researchPlan } = await import('../../optional-api-v1/packages/investment-research/src/workflow.js');
-  const { factorPlan } = await import('../../optional-api-v1/packages/auto-factor-mining/workflow.js');
+  const { validateMeasure } = await import('../../optional-api-v1/packages/auto-factor-mining/contracts.js');
   const { tradingPlan } = await import('../../optional-api-v1/packages/trading-decision/workflow.js');
 
   const research = await example('workflow-plans.md', 'Investment Research：workflow');
@@ -67,12 +67,12 @@ integration('documented workflow customizations satisfy both declared schemas an
   assert.deepEqual(normalizedResearch.stages, [['facts', 'method'], ['editor']]);
   assert.equal(normalizedResearch.synthesis, 'editor');
 
-  const factor = await example('workflow-plans.md', 'Auto Factor Mining：config.workflow');
-  validate((await capability('auto-factor-mining', 'auto_factor_start')).properties.config.properties.workflow, factor);
-  const normalizedFactor = factorPlan(factor);
-  assert.equal(normalizedFactor.plan, null);
-  assert.equal(normalizedFactor.reflection, null);
-  assert.ok(normalizedFactor.hypothesis && normalizedFactor.code && normalizedFactor.selection);
+  const factor = await example('workflow-plans.md', '因子研究：factor_measure');
+  validate(await capability('auto-factor-mining', 'factor_measure'), factor);
+  assert.equal(validateMeasure(factor), factor);
+  assert.equal(factor.mode, 'compute');
+  assert.ok(factor.formulas.length > 0);
+  assert.equal(Object.hasOwn(factor, 'space'), false, 'Independent calculation does not require a search space');
 
   const trading = await example('workflow-plans.md', 'Trading Decision：plan.workflow');
   const save = (await capability('trading-decision', 'trading_decision_plan')).oneOf.find(branch => branch.properties.action.const === 'save');

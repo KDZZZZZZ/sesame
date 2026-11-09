@@ -99,7 +99,7 @@ test('installed Research entry separates four actual Agent stages and publishes 
   } });
   try {
     const installed = [];
-    for (const [name, base] of [['reports', '../../api-v1/packages/'], ['web-sources', '../packages/'], ['investment-research', '../packages/'], ['auto-factor-mining', '../packages/'], ['trading-decision', '../packages/']]) {
+    for (const [name, base] of [['reports', '../../api-v1/packages/'], ['web-sources', '../packages/'], ['investment-research', '../packages/'], ['trading-decision', '../packages/']]) {
       const draft = join(app.runtime.workspaces.root('conv_main'), name + '-four-stage-draft');
       await cp(fileURLToPath(new URL(base + name + '/', import.meta.url)), draft, { recursive: true });
       const checked = await app.runtime.plugins.manager.test('conv_main', { path: draft }); assert.equal(checked.passed, true, JSON.stringify(checked));
@@ -157,7 +157,7 @@ test('installed Research entry separates four actual Agent stages and publishes 
     assert.match(html, /同类历史检索未运行/); assert.match(html, /USD/);
     assert.equal(calls.some(call => ['sources_fetch', 'sources_search', 'http_query'].includes(call.name)), false);
     const fixedAdapterChecks = [];
-    for (const name of ['auto-factor-mining', 'trading-decision']) {
+    for (const name of ['trading-decision']) {
       const adapterHost = createHostContextV2(app.runtime, app.runtime.plugins.entry('sesame/' + name), 'conv_main');
       const { publishWorkflowReport } = await import('../packages/' + name + '/report-publication.js');
       const evidenceBytes = JSON.stringify({ fixture: true, source: rawRef, noNewAnalysis: true });

@@ -30,7 +30,6 @@
     "sesame/ccxt",
     "sesame/dow-theory",
     "sesame/elliott-wave",
-    "sesame/factor-evaluator",
     "sesame/financial-research",
     "sesame/historical-evidence",
     "sesame/ict",

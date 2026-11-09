@@ -1,0 +1,9 @@
+# Validated CPython 3.12 environment. Install only in the package-owned venv.
+pyqlib==0.9.7
+deap==1.4.4
+optuna==5.0.0
+numpy==1.26.4
+pandas==2.2.3
+scipy==1.15.3
+mlflow==2.22.2
+filelock==3.20.0

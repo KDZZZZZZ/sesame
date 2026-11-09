@@ -37,7 +37,7 @@ observations.development_rank 是仅按开发指标排序的排名；frozen_sele
 
 ## 文件与能力边界
 
-`abu_parameter_search_analyze` 声明 `researchDataAccess:{schemaVersion:1,reads:"input-only",writes:"derived-artifacts-only"}`，可与 Strategy（auto-factor-mining）内置的研究知识一起用于 restricted 研究角色。只传入该角色已获得的开发试验；不为了调用本工具开放完整面板、data_read 或外部来源。留出证据仍由工作流冻结选择后评价。
+`abu_parameter_search_analyze` 声明 `researchDataAccess:{schemaVersion:1,reads:"input-only",writes:"derived-artifacts-only"}`，外部研究阶段可用它整理明确传入的开发试验。因子研究使用 auto-factor-mining 的 factor_research/factor_measure 窄接口；本工具不参与内部搜索或取得完整快照。留出证据在冻结选择后评价，不用于开发参数选择。
 
 原生路径只消费 args.input；其中的 ID、Ref、路径只作为来源标签保存，均不解引用。唯一文件读取是固定的本包 baseline.mjs 和 runtime.mjs 实现摘要；不取行情、账户或保留状态，不调用其他能力。create/publish 只保存本次输入及结果，并在发布后清理本次新建临时 blob，不能读写或删除已有资源。CLI 读取显式文件路径是独立入口，未作为研究工具授权。该约定由代码审计和真实执行回归支持，不是沙箱；修改数据访问路径时须重新声明并由新运行核对。
 

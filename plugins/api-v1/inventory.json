@@ -1249,7 +1249,7 @@
     },
     {
       "id": "sesame/auto-factor-mining",
-      "version": "1.4.9",
+      "version": "2.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -1261,52 +1261,57 @@
         "name": "Sesame contributors"
       },
       "category": "research",
-      "functionalCategory": "business",
+      "functionalCategory": "analysis",
       "implementationKinds": [
+        "function",
         "workflow"
       ],
       "title": {
-        "en": "Strategy — factor and strategy research",
-        "zh": "Strategy · 因子与策略研究"
+        "en": "Factor research",
+        "zh": "因子研究"
       },
       "summary": {
-        "en": "Run single- or multi-Agent factor and strategy experiments, retain conditional usefulness and counterevidence, optionally invoke native backtests and optimizers, and deliver Strategy.",
-        "zh": "以单 Agent 或多 Agent 研究因子与策略，保留条件用途与反例，可选接入原生回测和优化器并生成 Strategy。"
+        "en": "Reuse, reevaluate or search factors with real Qlib, DEAP and Optuna; retain pure factor evidence and explicit strategy-owned pool decisions.",
+        "zh": "按需求复用、补评或搜索因子，以真实 Qlib、DEAP、Optuna 留存纯因子证据；策略明确决定自己的池成员。"
       },
       "dependencies": {
-        "en": "A configured model, a selected evaluator and fixed evidence. No implicit trading backend.",
-        "zh": "需要已配置模型、选定评估器与固定证据，不隐式绑定交易后端。"
+        "en": "Verified private Windows x64 CPython 3.12 with pinned dependencies, immutable numerical data and an explicit target/profile. Strategy backtests are external.",
+        "zh": "需要已核验的 Windows x64 CPython 3.12 私有固定依赖、不可变数值数据及明确目标与评价配置；策略回测由外部能力执行。"
       },
+      "implementationReason": "Public compute/evaluate functions and one resumable native workflow share a private factor library; no model or trading runtime is part of the mathematics.",
       "permissions": {
         "scopes": [
           "capabilities.compose",
-          "plugins.manage",
           "process.execute"
         ],
         "calls": [
-          "host.agent.run",
-          "host.runs.read",
-          "host.runs.wait",
-          "host.runs.interrupt",
-          "host.resources.read",
-          "sesame/reports#report_publish",
+          "host.process.exec",
+          "sesame/auto-factor-mining#factor_workflow",
+          "host.reports.publish",
           "sesame/reports#report_check",
-          "sesame/workspace#write",
           "host.reports.describe"
         ]
       },
       "tools": [
-        "auto_factor_models",
-        "auto_factor_start",
-        "auto_factor_runs",
-        "auto_factor_context",
-        "auto_factor_submit",
-        "auto_factor_report",
-        "auto_factor_activity"
+        "factor_environment",
+        "factor_research",
+        "factor_measure",
+        "factor_job",
+        "factor_library",
+        "factor_pool"
       ],
       "capabilities": [
         {
-          "id": "auto_factor_models",
+          "id": "factor_environment",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "run"
+        },
+        {
+          "id": "factor_research",
           "kind": "function",
           "consumers": [
             "agent",
@@ -1315,7 +1320,7 @@
           "execution": "immediate"
         },
         {
-          "id": "auto_factor_start",
+          "id": "factor_measure",
           "kind": "function",
           "consumers": [
             "agent",
@@ -1324,7 +1329,7 @@
           "execution": "immediate"
         },
         {
-          "id": "auto_factor_runs",
+          "id": "factor_job",
           "kind": "function",
           "consumers": [
             "agent",
@@ -1333,7 +1338,7 @@
           "execution": "immediate"
         },
         {
-          "id": "auto_factor_context",
+          "id": "factor_library",
           "kind": "function",
           "consumers": [
             "agent",
@@ -1342,7 +1347,7 @@
           "execution": "immediate"
         },
         {
-          "id": "auto_factor_submit",
+          "id": "factor_pool",
           "kind": "function",
           "consumers": [
             "agent",
@@ -1351,25 +1356,7 @@
           "execution": "immediate"
         },
         {
-          "id": "auto_factor_report",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "auto_factor_activity",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "auto_factor_workflow",
+          "id": "factor_workflow",
           "kind": "workflow",
           "consumers": [
             "host"
@@ -1377,7 +1364,7 @@
           "execution": "run"
         },
         {
-          "id": "auto_factor_activate",
+          "id": "factor_configuration_read",
           "kind": "function",
           "consumers": [
             "host"
@@ -1385,15 +1372,7 @@
           "execution": "immediate"
         },
         {
-          "id": "auto_factor_dispose",
-          "kind": "function",
-          "consumers": [
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "auto_factor_dependencies",
+          "id": "factor_configuration_update",
           "kind": "function",
           "consumers": [
             "host"
@@ -1405,22 +1384,7 @@
         "sources": [],
         "views": [],
         "services": [],
-        "hooks": [
-          {
-            "id": "activate",
-            "contract": "sesame.lifecycle/1",
-            "operations": {
-              "handle": "auto_factor_activate"
-            }
-          },
-          {
-            "id": "dispose",
-            "contract": "sesame.lifecycle/1",
-            "operations": {
-              "handle": "auto_factor_dispose"
-            }
-          }
-        ]
+        "hooks": []
       },
       "sourcePath": "plugins/optional-api-v1/packages/auto-factor-mining"
     },
@@ -2554,64 +2518,6 @@
         "hooks": []
       },
       "sourcePath": "plugins/optional-api-v1/packages/elliott-wave"
-    },
-    {
-      "id": "sesame/factor-evaluator",
-      "version": "1.2.0",
-      "distribution": "optional",
-      "state": "discoverable",
-      "engines": {
-        "sesame": ">=0.3.0-dev.1 <0.4.0"
-      },
-      "format": "sesame-native",
-      "license": "MIT",
-      "author": {
-        "name": "Sesame contributors"
-      },
-      "category": "research",
-      "functionalCategory": "analysis",
-      "implementationKinds": [
-        "function"
-      ],
-      "title": {
-        "en": "Deterministic factor evaluator",
-        "zh": "确定性因子评估"
-      },
-      "summary": {
-        "en": "Compute factor association, task-selected diagnostics and complete-trial DSR/PBO evidence; support conditional use instead of requiring all tests to pass.",
-        "zh": "计算因子关联、按任务选择的检验及完整试验 DSR/PBO 证据；支持有条件使用，不要求所有检验通过。"
-      },
-      "dependencies": {
-        "en": "Fixed data and a trusted workflow. Agent thresholds are advisory; explicit user hard requirements gate selection. DSR/PBO require complete observed trial returns and stated assumptions.",
-        "zh": "需要固定数据和可信工作流；Agent 阈值用于判断，用户明确硬性要求才限制选择。DSR/PBO 需要完整试验收益及明确假设。"
-      },
-      "permissions": {
-        "scopes": [],
-        "calls": [
-          "host.datasets.query"
-        ]
-      },
-      "tools": [
-        "factor_evaluate"
-      ],
-      "capabilities": [
-        {
-          "id": "factor_evaluate",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "run"
-        }
-      ],
-      "hostContributions": {
-        "sources": [],
-        "views": [],
-        "services": [],
-        "hooks": []
-      },
-      "sourcePath": "plugins/optional-api-v1/packages/factor-evaluator"
     },
     {
       "id": "sesame/financial-research",
@@ -5893,8 +5799,8 @@
         "zh": "量化技能索引"
       },
       "summary": {
-        "en": "Discover fixed QuantSkills references and route research to Research or Strategy; select methods and backends independently.",
-        "zh": "查询固定 QuantSkills 参考，综合投资研究推荐 Research，因子与策略研究推荐 Strategy。"
+        "en": "Discover fixed QuantSkills references; route investment research, factor research and external strategy execution to their declared capabilities.",
+        "zh": "查询固定 QuantSkills 参考，分别发现投资研究、因子研究及外部策略执行能力。"
       },
       "dependencies": {
         "en": "Existing Python 3; this catalog is guidance, not an execution engine.",

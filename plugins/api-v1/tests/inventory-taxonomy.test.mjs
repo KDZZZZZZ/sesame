@@ -20,10 +20,10 @@ test('search is a supported functional category while unknown categories remain 
 
 test('task responsibility groups guides with workflows and knowledge with reusable analysis independently of implementation', () => {
   const byId = Object.fromEntries(buildInventory().packages.map(item => [item.id, item]));
-  for (const name of ['ict', 'price-action', 'abu-trend', 'factor-evaluator', 'strategy-authoring', 'market-data-parser']) {
+  for (const name of ['ict', 'price-action', 'abu-trend', 'auto-factor-mining', 'strategy-authoring', 'market-data-parser']) {
     assert.equal(byId[`sesame/${name}`].functionalCategory, 'analysis', name);
   }
-  for (const name of ['auto-factor-mining', 'investment-research', 'trading-decision', 'portfolio-execution', 'judgment-evolution', 'kurumi-replay', 'ultra']) {
+  for (const name of ['investment-research', 'trading-decision', 'portfolio-execution', 'judgment-evolution', 'kurumi-replay', 'ultra']) {
     assert.equal(byId[`sesame/${name}`].functionalCategory, 'business', name);
   }
   for (const name of ['mt5', 'qmt', 'binance', 'backtrader', 'vnpy', 'data-access', 'quantskills-catalog']) {
@@ -43,18 +43,18 @@ test('task responsibility groups guides with workflows and knowledge with reusab
   for (const name of ['canvas-control', 'reports']) assert.equal(byId[`sesame/${name}`].functionalCategory, 'presentation', name);
   for (const name of ['configuration', 'plugin-manager', 'workspace', 'memory', 'orchestration', 'user-guide']) assert.equal(byId[`sesame/${name}`].functionalCategory, 'platform', name);
   assert.deepEqual(byId['sesame/ict'].implementationKinds, ['knowledge']);
-  assert.deepEqual(byId['sesame/auto-factor-mining'].implementationKinds, ['workflow']);
+  assert.deepEqual(byId['sesame/auto-factor-mining'].implementationKinds, ['function', 'workflow']);
   assert.deepEqual(byId['sesame/abu-trend'].implementationKinds, ['function']);
 });
 
-test('all 57 plugins have one reviewed functional group and valid implementation kinds without replacing legacy categories', () => {
+test('all 56 plugins have one reviewed functional group and valid implementation kinds without replacing legacy categories', () => {
   const inventory = buildInventory();
-  assert.equal(inventory.packages.length, 57);
-  assert.equal(new Set(inventory.packages.map(item => item.id)).size, 57);
+  assert.equal(inventory.packages.length, 56);
+  assert.equal(new Set(inventory.packages.map(item => item.id)).size, 56);
   assert.deepEqual(inventory.taxonomy, { functionalCategories: FUNCTIONAL_CATEGORIES, implementationKinds: IMPLEMENTATION_KINDS });
   const counts = field => Object.fromEntries([...new Set(inventory.packages.map(item => item[field]))].sort().map(value => [value, inventory.packages.filter(item => item[field] === value).length]));
-  assert.deepEqual(counts('functionalCategory'), { analysis: 29, business: 7, integration: 9, platform: 6, presentation: 2, search: 4 });
-  assert.deepEqual(counts('category'), { backend: 7, data: 6, research: 32, strategy: 5, workspace: 7 });
+  assert.deepEqual(counts('functionalCategory'), { analysis: 29, business: 6, integration: 9, platform: 6, presentation: 2, search: 4 });
+  assert.deepEqual(counts('category'), { backend: 7, data: 6, research: 31, strategy: 5, workspace: 7 });
   for (const item of inventory.packages) {
     assert.equal(item.category, policy[item.id.slice('sesame/'.length)].category);
     assert.ok(item.implementationKinds.length > 0);
@@ -130,7 +130,7 @@ test('configuration readers and workflow probes explicitly declare truthful read
   for (const [name, id, effects] of [
     ['financial-research', 'financial_research_status', ['state.read']],
     ['trading-decision', 'trading_decision_workflow_dependencies', ['read']],
-    ['auto-factor-mining', 'auto_factor_dependencies', ['read']],
+    ['auto-factor-mining', 'factor_configuration_read', ['read']],
   ]) {
     const declaration = JSON.parse(readFileSync(join(root, '../optional-api-v1/packages', name, 'capabilities.json')));
     const capability = declaration.capabilities.find(item => item.id === id);
@@ -149,7 +149,7 @@ test('permission requests follow actual privileged ports, not category or native
   const expectedScopes = {
     ultra: ['capabilities.compose'],
     'canvas-control': ['capabilities.compose'], configuration: ['application.configure'], 'data-access': ['capabilities.compose'], memory: ['workspace.messages.read'], 'plugin-manager': ['plugins.manage'], workspace: ['process.execute'],
-    'auto-factor-mining': ['capabilities.compose', 'plugins.manage', 'process.execute'], backtrader: ['process.execute'], ccxt: ['process.execute'], 'financial-research': ['application.configure'], 'investment-research': ['capabilities.compose'],
+    'auto-factor-mining': ['capabilities.compose', 'process.execute'], backtrader: ['process.execute'], ccxt: ['process.execute'], 'financial-research': ['application.configure'], 'investment-research': ['capabilities.compose'],
     'judgment-evolution': ['capabilities.compose', 'workspace.messages.read'], 'kurumi-replay': ['plugins.manage', 'workspace.messages.read'], 'market-data-parser': ['process.execute'], mt5: ['workspace.messages.read'], 'rss-collect': ['process.execute'], 'trading-decision': ['capabilities.compose'], vnpy: ['process.execute'], 'web-extract': ['process.execute'],
   };
   const packages = buildInventory().packages, byId = new Map(packages.map(item => [item.id, item]));

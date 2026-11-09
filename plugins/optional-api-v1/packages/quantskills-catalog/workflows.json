@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "policy": "Investment research uses need:investment-research and Research (sesame/investment-research); factor and strategy experiments use need:strategy and Strategy (sesame/auto-factor-mining). Specific methods and backend choices remain independently selectable; recommendations do not install or verify availability.",
+  "policy": "Investment research uses sesame/investment-research. Factor needs use sesame/auto-factor-mining factor_library, factor_research or independent factor_measure. Strategy authoring and native backtests remain separate external capabilities; recommendations do not install or verify availability.",
   "workflows": {
     "market-data": {
       "purpose": "获取明确市场与来源的数据，允许同屏并用不同后端。",
@@ -67,7 +67,7 @@
         "sesame/data-access",
         "sesame/reports"
       ],
-      "selection": "先明确对象、期限、范围与交付结果，再按问题选择可用来源和分析方法。预测性结论可选 historical-evidence 匹配历史并校准概率，理论、实测与反例共同说明适用边界。Report 字段只约定结果含义，不锁定研究方法；需要策略或因子实验时使用 Strategy。",
+      "selection": "先明确对象、期限、范围与交付结果，再按问题选择可用来源和分析方法。预测性结论可选 historical-evidence 匹配历史并校准概率，理论、实测与反例共同说明适用边界。Report 字段只约定结果含义，不锁定研究方法；需要因子证据时使用因子研究，策略创作与回测另选对应能力。",
       "reference_names": [
         "skill-global-macro-rates-fx-lab",
         "skill-macro-futures-scenario-analysis",
@@ -75,7 +75,7 @@
       ]
     },
     "strategy": {
-      "purpose": "Strategy：统一因子与策略实验，保留假设、全部尝试、独立评价、冻结选择与样本外证据。",
+      "purpose": "因子研究：查库、复用、补评或搜索，并保留冻结数值和纯因子评价；策略应用独立验证。",
       "primary_plugins": [
         "sesame/auto-factor-mining"
       ],
@@ -89,7 +89,7 @@
         "sesame/vnpy",
         "sesame/backtrader"
       ],
-      "selection": "统一使用 Strategy，按任务选择单 Agent 或多 Agent。Agent 选择检验与阈值，用户要求优先；检验用于识别有效和失效条件，仅用户明确硬性要求作为淘汰条件。保留完整试验、反例、条件使用依据与冻结选择；可选接入交易平台原生回测及优化器，优化开发集与最终留出验证分开，回测结果不触发交易。",
+      "selection": "先查 factor_library，按需求调用 factor_research 或独立 factor_measure，并核验 factor_environment。目标、日历、数据切分、profile 和预算预先冻结；required 不完整诊断不能通过。策略明确决定自己的 factor_pool 成员，策略创作与原生回测选择外部能力，不由因子挖掘自动执行。",
       "reference_names": [
         "skill-backtesting-bias-avoidance",
         "skill-backtest-overfit",

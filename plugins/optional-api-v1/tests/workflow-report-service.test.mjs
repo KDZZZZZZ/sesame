@@ -6,7 +6,6 @@ import { fileURLToPath } from 'node:url';
 import { createCapabilities } from '../../api-v1/packages/reports/index.js';
 import { resourceFixture } from '../../api-v1/tests/mt5-resource-fixture.js';
 import { writeDailyReport } from '../packages/trading-decision/reports.js';
-import { archiveReport } from '../packages/auto-factor-mining/archive.js';
 
 // Real report service source and published bytes; the inspector is an explicit
 // synthetic port, not browser/rendering or installed-host verification.
@@ -94,27 +93,6 @@ test('export preflight or another report revision cannot satisfy actual workflow
     assert.deepEqual(report.ref, ref); assert.equal(report.renderStatus, 'rendered');
     assert.equal(f.calls.filter(call => call.id.endsWith('#report_publish')).length, 1);
   }
-});
-
-test('factor report uses the central signal-study layout and keeps the exact original evidence', async t => {
-  const f = await fixture(t);
-  const run = { id: 'direct-factor', title: 'Synthetic factor fixture', goal: 'No measured performance is invented', status: 'completed', config: { evaluator: { plugin_id: 'fixture/evaluator', tool: 'evaluate' } }, data: { digest: 'fixture-input', synthetic: true, holdoutMode: 'none', inputRefs: [] }, tasks: [], trials: [], reflections: [], events: [], selection: { trialIds: [], reason: 'No accepted candidates', digest: 'fixture-selection' } };
-  const report = await archiveReport(f.host, run, { rows: [] });
-  const html = (await f.host.resources.read(report.ref, { part: 'content', entry: report.entry })).content;
-  assert.match(html, /data-sesame-report-template="report\/1"/); assert.match(html, /id="factor-focus"/); assert.match(html, /id="run-snapshot"/);
-  assert.match(html, /<dt>后续行情<\/dt><dd>未完成<\/dd>/);
-  assert.equal((html.match(/<h1\b/g) ?? []).length, 1, 'The common service owns the single report heading.');
-  assert.equal((html.match(/<main\b/g) ?? []).length, 1, 'Factor controls do not nest another page document.');
-  assert.match(html, /class="report-signal-study"/);
-  assert.doesNotMatch(html, /@scope \(\.factor-report\)/);
-  assert.equal(f.calls.find(call => call.id.endsWith('#report_publish')).input.content.kind, 'signal-study');
-  assert.deepEqual(f.calls.filter(call => call.id.startsWith('sesame/reports#')).map(call => call.id.split('#')[1]), ['report_publish', 'report_check']);
-  assert.equal((await f.host.resources.read(report.ref, { part: 'manifest' })).content.provenance.kind, 'demo');
-  assert.deepEqual(JSON.parse((await f.host.resources.read(report.ref, { part: 'content', entry: 'run.json' })).content), run);
-  assert.deepEqual(JSON.parse(html.match(/<script[^>]*id="run-snapshot"[^>]*>([\s\S]*?)<\/script>/)[1]), run);
-  const dataset = JSON.parse((await f.host.resources.read(report.ref, { part: 'content', entry: 'dataset.json' })).content);
-  assert.equal(dataset.holdoutStatus, 'not-requested');
-  assert.equal(dataset.holdoutSealed, false);
 });
 
 test('raw report evidence preserves inert HTML examples without authorizing executable report markup', async t => {

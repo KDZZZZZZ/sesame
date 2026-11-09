@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { Value } from '@sesame/plugin-sdk/schema/value';
-import { resolveResearch, hasResearchDataAccess } from '../packages/auto-factor-mining/composition.js';
 
 const root = new URL('../packages/', import.meta.url);
 async function fixture(name, capabilityId) {
@@ -67,16 +66,17 @@ test('backtest audit accepts order and fill evidence without optional market bar
   assert.equal(Value.Check(capability.inputSchema,{input}),true,'optional bars must not be invented just to satisfy the tool schema');
 });
 
-test('merged independent diagnostics retain the real workflow input-only classification', async () => {
+test('independent trade diagnostics consume supplied evidence without adding source or execution ports', async () => {
   const plugin = JSON.parse(await readFile(new URL('abu-trade-metrics/plugin.json', root), 'utf8'));
   const declaration = JSON.parse(await readFile(new URL('abu-trade-metrics/capabilities.json', root), 'utf8'));
-  const host = { plugins: { read(id, request) {
-    assert.equal(id, plugin.id);
-    return request.part === 'manifest' ? { ...declaration, id, version: plugin.version, revision: 'fixture-fixed-merged-plugin' }
-      : { state: 'mounted', runtime_status: 'ready', agent_scope: plugin.agent_scope };
-  } } };
-  const resolved = resolveResearch(host, { plugins: [plugin.id] });
-  assert.deepEqual(resolved.tools, ['sesame/abu-trade-metrics#abu_trade_metrics_analyze', 'sesame/abu-trade-metrics#abu_trade_results_audit']);
-  assert.deepEqual(resolved.inputOnlyTools, resolved.tools);
-  assert.equal(hasResearchDataAccess(resolved), false, 'Neither method adds external dataset access or native engine execution');
+  assert.deepEqual(declaration.capabilities.map(cap => cap.id), ['abu_trade_metrics_analyze', 'abu_trade_results_audit']);
+  assert.deepEqual(declaration.sources, []);
+  assert.deepEqual(declaration.services, []);
+  assert.deepEqual(plugin.permissions?.calls ?? [], []);
+  for (const capability of declaration.capabilities) {
+    assert.equal(capability.kind, 'function');
+    assert.equal(capability.execution, 'immediate');
+    assert.deepEqual(capability.inputSchema.required, ['input']);
+    assert.ok(!capability.effects.some(effect => /network|process|trade|execution/.test(effect)));
+  }
 });

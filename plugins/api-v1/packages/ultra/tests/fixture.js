@@ -16,7 +16,8 @@ export function fixture({ stored, onInvoke } = {}) {
     ['sesame/trading#submit', { effects: ['trade'], execution: 'run' }],
     ['sesame/trading#schedule', { effects: ['manage:scheduler', 'trade'] }],
     ['sesame/trading#pause', { effects: ['trade'] }],
-    ['sesame/auto-factor-mining#auto_factor_start', { effects: ['write:research-checkpoints', 'start:workflow'] }],
+    ['sesame/auto-factor-mining#factor_research', { effects: ['plugin.state.write', 'start:workflow'] }],
+    ['sesame/auto-factor-mining#factor_measure', { effects: ['plugin.state.write', 'start:workflow'] }],
   ].map(([id, descriptor]) => [id, { id, revision: 'fixture:1', consumers: ['agent', 'host'], kind: 'function', execution: 'immediate', ...descriptor }]));
   const lookup = reference => { const value = store.runs.get(typeof reference === 'string' ? reference : reference.id); if (!value) throw fail('NOT_FOUND'); return value; };
   const emit = job => { for (const listener of store.listeners.get(job.value.id) ?? []) listener(structuredClone(job.value)); };
@@ -27,7 +28,7 @@ export function fixture({ stored, onInvoke } = {}) {
       status: 'running', sessionId: context.sessionId, parentRunId: context.runId ?? null }, capability, input: structuredClone(input), context, options, controller: new AbortController() };
     store.runs.set(id, job);
     if (capability === `${ID}#ultra_cycle`) launchCycle(job);
-    else if (capability === 'host.agent.run' && context.kind === 'subagent') queueMicrotask(() => complete(id, { text: 'Discover auto-factor-mining, read its declared references/research-guide.md, and dispatch two independent hypotheses.' }));
+    else if (capability === 'host.agent.run' && context.kind === 'subagent') queueMicrotask(() => complete(id, { text: 'Discover auto-factor-mining, read its declared references/contracts.md, and dispatch bounded factor_research or independent factor_measure work.' }));
     return { id, kind: job.value.kind, revision: 1 };
   }
   function launchCycle(job) {
@@ -51,7 +52,7 @@ export function fixture({ stored, onInvoke } = {}) {
         commit: async changes => { for (const change of changes) { const key = `${change.key.collection}:${change.key.key}`, old = store.records.get(key); if ((old?.version ?? 0) !== change.expectedVersion) throw fail('VERSION_CONFLICT'); }
           for (const change of changes) store.records.set(`${change.key.collection}:${change.key.key}`, { key: change.key, value: structuredClone(change.value), version: change.expectedVersion + 1 }); return {}; },
       },
-      plugins: { search: async () => ({ items: [{ id: 'sesame/auto-factor-mining', title: 'Strategy', description: 'Factor and strategy workflow with integrated research knowledge', resources: [{ path: 'references/research-guide.md' }], state: 'discoverable' }] }) },
+      plugins: { search: async () => ({ items: [{ id: 'sesame/auto-factor-mining', title: '因子研究', description: 'Independent Qlib factor computation, evaluation and bounded search', resources: [{ path: 'references/contracts.md' }], state: 'discoverable' }] }) },
       capabilities: {
         list: async ({ ids } = {}) => ({ items: [...descriptors.values()].filter(item => !ids || ids.includes(item.id)).map(value => structuredClone(value)) }),
         invoke: async (target, input, options = {}) => {
@@ -62,7 +63,11 @@ export function fixture({ stored, onInvoke } = {}) {
           let result = await onInvoke?.({ capability, input, options, host: makeHost(extra), store, newRun: () => newRun(capability, input, context, options) });
           if (!result) {
             if (capability === `${ID}#ultra_cycle` || descriptors.get(capability)?.execution === 'run') result = { type: 'run', run: newRun(capability, input, context, options) };
-            else if (capability === 'sesame/auto-factor-mining#auto_factor_start') result = { type: 'result', value: { id: 'fm_one', status: 'queued', workflow: newRun(capability, input, context, options) } };
+            else if (['sesame/auto-factor-mining#factor_research', 'sesame/auto-factor-mining#factor_measure'].includes(capability)) {
+              const run = newRun(capability, input, context, options);
+              const job = { id: 'factor_one', runId: run.id, status: 'queued', epoch: 0, completed: 0, proposed: 0, report: null, error: null };
+              result = { type: 'result', value: capability.endsWith('#factor_research') ? { resolution: 'research', job } : job };
+            }
             else result = { type: 'result', value: { ok: true } };
           }
           store.operations.set(key, result); return structuredClone(result);

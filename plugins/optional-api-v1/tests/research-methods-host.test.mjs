@@ -8,7 +8,7 @@ import { pathToFileURL, fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
 const hostRoot = process.env.SESAME_HOST_ROOT;
-test('Strategy formally installs its merged reference resources, executes the optional CLIs and reopens', { skip: !hostRoot, timeout: 60000 }, async t => {
+test('factor research formally installs its historical resources, executes the optional reference CLIs and reopens', { skip: !hostRoot, timeout: 60000 }, async t => {
   const load = path => import(pathToFileURL(join(hostRoot, path)));
   const { Store } = await load('modules/agent/store.js'), { Runtime } = await load('modules/agent/runtime.js');
   const { createHostContextV2 } = await load('modules/plugins/host-v2/context.js');
