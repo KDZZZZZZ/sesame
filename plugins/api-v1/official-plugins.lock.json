@@ -339,7 +339,7 @@
       "id": "sesame/orchestration",
       "version": "3.2.1",
       "directory": "orchestration",
-      "treeDigest": "sha256:74e7dab01087db6094c2327c18dcdcf0dc050fb6bc8e6430b9be287de10ab3b6",
+      "treeDigest": "sha256:6b0c93206439f81d9f095a85fb29851c0946e60b2746fdbd56d6adf4fe926b58",
       "files": [
         {
           "path": "LICENSE",
@@ -368,8 +368,8 @@
         },
         {
           "path": "skills/coordinate-research/SKILL.md",
-          "sha256": "c65f67c0775bc428d36332bc6c224e98e71e61f6cf8a2f04cb80ba0e059bc6c5",
-          "bytes": 12062
+          "sha256": "4b4f0d9a58a969e039ef4af12e1489cc630027e1e4ffc7570cfc6b486cd6ddc8",
+          "bytes": 11951
         },
         {
           "path": "skills/coordinate-research/references/agent-runs.md",
@@ -378,8 +378,8 @@
         },
         {
           "path": "skills/coordinate-research/references/workflow-plans.md",
-          "sha256": "b08d10eb0f385ab0952620383a0b2e8eef865f5cb9b463651c96849b7343bb6c",
-          "bytes": 12474
+          "sha256": "8e98e68d2a649e8864cb5810067595876372abd70a9d0baf8675732fc83e81c5",
+          "bytes": 12315
         }
       ]
     },
@@ -1271,7 +1271,7 @@
       "id": "sesame/ultra",
       "version": "1.0.5",
       "directory": "ultra",
-      "treeDigest": "sha256:39f7a3364c9413cbdaa1528490165b62b7115dd67c3f9749719a76f3deaa81b4",
+      "treeDigest": "sha256:d011dd9fac1285ab8b89f1ed53578852f043846888c0786a676cf29382163166",
       "files": [
         {
           "path": "LICENSE",
@@ -1315,13 +1315,13 @@
         },
         {
           "path": "src/planning.js",
-          "sha256": "909531f40c108a0ce4b4e86c67126d7f757ef74cc9c0515bd65529f769fc9866",
-          "bytes": 6935
+          "sha256": "c923080da79a589a73ffd193b11822826ba500a8e29e86d80c9d0bc68e46d281",
+          "bytes": 7198
         },
         {
           "path": "src/runtime.js",
-          "sha256": "de4be020d43804c55ea1f19c79c16195b804758951da4cc6091a5ce752820883",
-          "bytes": 42587
+          "sha256": "2edfc89d9f9f8e1f5cdcc54ce75ef78fea5f46f66dcac076658e42ca2122612c",
+          "bytes": 42459
         },
         {
           "path": "src/state.js",
@@ -1340,13 +1340,13 @@
         },
         {
           "path": "tests/fixture.js",
-          "sha256": "51b02cc9c253b95727dc2d97e25d721e9badc0961ab5683e7427525682801e5b",
-          "bytes": 10082
+          "sha256": "be1c2cb5cf6f00ff0d0c49c8702e2cd5069557ca2b8d7f9e8bb26743d1ff62d5",
+          "bytes": 9761
         },
         {
           "path": "tests/ultra.test.js",
-          "sha256": "f11cb6320653d984499209b3e7a597694c65a41bbc24e381becfbe1565c4b11f",
-          "bytes": 18953
+          "sha256": "ab0ada35a15fe976bb5eeddbd05eeb8af5c808fd284245f762a1f4ab2a50d54a",
+          "bytes": 18874
         }
       ]
     },

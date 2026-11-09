@@ -112,38 +112,21 @@
 - `research.plugins` 组合真实知识、方法和数据插件，`research.tools` 按合同限定可委派的读取能力。知识本身不增加工具；`research.tools:[]` 表示只提供知识。
 - `model` / `agent_models` 使用实际模型目录返回的描述，成员模型可按自定义 ID 选择。报告放在宿主调用选项 `task.output`，不是 `workflow` 中，由指定综合成员交付。
 
-### 因子研究：factor_measure
+### 因子研究：factor_compute
 
-已有公式使用公开入口 `sesame/auto-factor-mining#factor_measure`。下面是 compute 输入形状，datasetId、品种和日期必须来自实际数据；先完成 factor_environment 核验。
+已有公式使用公开入口 `sesame/auto-factor-mining#factor_compute`。先完成 factor_environment 核验，用 factor_prepare 冻结实际数据；下面的 snapshotRef 仅演示形状，调用时替换为 prepare 的真实固定引用。
 
 ```json
 {
-  "mode": "compute",
-  "requestId": "measure-example",
-  "source": {
-    "datasetId": "实际数据集 ID"
+  "requestId": "compute-example",
+  "snapshotRef": {
+    "id": "artifact_example",
+    "revision": "revision_example",
+    "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "kind": "resource",
+    "schemaVersion": "1.0.0"
   },
-  "layout": {
-    "universe": [
-      "实际品种"
-    ],
-    "frequency": "60min",
-    "timezone": "UTC",
-    "availableAt": "bar_close",
-    "development": [
-      "2026-01-01T00:00:00Z",
-      "2026-01-07T23:00:00Z"
-    ],
-    "holdout": [
-      "2026-01-08T00:00:00Z",
-      "2026-01-09T23:00:00Z"
-    ],
-    "target": {
-      "kind": "forward_return",
-      "field": "close",
-      "horizonBars": 1
-    }
-  },
+  "partition": "development",
   "formulas": [
     {
       "id": "mean-2",
@@ -170,22 +153,18 @@
     }
   ],
   "budget": {
-    "maxCandidates": 1,
-    "batchSize": 1,
-    "maxWorkers": 1,
     "maxSeconds": 120,
     "maxInputBytes": 8388608,
-    "maxOutputBytes": 8388608,
-    "seed": 7
+    "maxOutputBytes": 8388608
   }
 }
 ```
 
-- 新因子需求先查 factor_library，再提交 factor_research({draft})；draft 冻结数据、目标、profile、搜索空间和预算。
-- compute 返回后台 Job；factor_job read 查看状态和固定 Values 引用。evaluate 模式只接收 valuesRef/profile/references/requestId/budget，不重新取数。
+- 新因子需求先查 factor_library，由 Agent 判断复用、补评或挖掘。factor_prepare 固定数据和目标，factor_search open 固定空间/profile/预算，propose 只生成一批。
+- compute 返回原生 function Run，用宿主 Run read/wait 取得 valuesRef；factor_evaluate 只接收 valuesRef/profile/referenceValues/requestId/budget，不重新取数或代算参考。
 - 单品种选择 time_series，多品种按问题选择 cross_section；alpha/risk/state 使用对应目标。required 不完整诊断不能通过。
 - 因子入库不改变策略池；只有外部策略明确的 factor_pool decide 才能修改成员。策略回测由外部能力执行。
-- factor_workflow 是宿主内部入口，旧 auto_factor_* 和角色配置不再适用。
+- Agent/Agent 工作流安排独立分支、下一批、留出选择和最终报告；本插件不含自动研究工作流。
 
 ### Trading Decision：plan.workflow
 

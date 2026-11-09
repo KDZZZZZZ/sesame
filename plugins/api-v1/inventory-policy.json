@@ -962,22 +962,20 @@
     "category": "research",
     "functionalCategory": "analysis",
     "implementationKinds": [
-      "function",
-      "workflow"
+      "function"
     ],
     "title": {
       "en": "Factor research",
       "zh": "因子研究"
     },
     "summary": {
-      "en": "Reuse, reevaluate or search factors with real Qlib, DEAP and Optuna; retain pure factor evidence and explicit strategy-owned pool decisions.",
-      "zh": "按需求复用、补评或搜索因子，以真实 Qlib、DEAP、Optuna 留存纯因子证据；策略明确决定自己的池成员。"
+      "en": "Agent-directed data preparation, search, Qlib computation and pure factor evaluation, with an evidence library and explicit strategy-owned pools.",
+      "zh": "由 Agent 直接组织数据冻结、搜索、Qlib 计算及纯因子评价，保存证据库；策略明确决定自己的因子池。"
     },
     "dependencies": {
       "en": "Verified private Windows x64 CPython 3.12 with pinned dependencies, immutable numerical data and an explicit target/profile. Strategy backtests are external.",
       "zh": "需要已核验的 Windows x64 CPython 3.12 私有固定依赖、不可变数值数据及明确目标与评价配置；策略回测由外部能力执行。"
-    },
-    "implementationReason": "Public compute/evaluate functions and one resumable native workflow share a private factor library; no model or trading runtime is part of the mathematics."
+    }
   },
   "historical-evidence": {
     "category": "research",

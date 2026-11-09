@@ -8,4 +8,4 @@ Sesame contributors 原创的窄接口、类型树编译器、文件协议、执
 
 纯因子评价没有引入旧策略收益、仓位、Sharpe、回撤、DSR/PBO 或旧 JavaScript 因子计算器。数值测试用显式合成数据，只证明实现行为、边界和可复现性，不证明市场有效性。
 
-历史 v1 的设计参考、原 Sesame factor/strategy 指南、reference 脚本与合成案例在声明中标为 Historical。保留资源维持来源字节，不定义 v2 工具，也不作为当前数值结果。独立 sesame/factor-evaluator 安装项及旧协议已退役，稳定包 ID 不提供旧状态迁移或兼容别名。
+历史 v1 的设计参考、原 Sesame factor/strategy 指南、reference 脚本与合成案例在声明中标为 Historical。保留资源维持来源字节，不定义 v3 工具，也不作为当前数值结果。独立 sesame/factor-evaluator 安装项及旧协议已退役，稳定包 ID 不提供旧状态迁移或兼容别名。v3 去掉固定研究总控和自动报告；研究决策由调用方 Agent/工作流负责，底层数学与证据存储继续使用同一协议。

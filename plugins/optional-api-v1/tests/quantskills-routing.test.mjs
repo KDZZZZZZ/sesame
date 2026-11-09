@@ -45,7 +45,7 @@ test('research routing exposes investment-research and one strategy need, and re
   ]).map(response => response.result.structuredContent);
   assert.deepEqual(strategy.workflow.primary_plugins, ['sesame/auto-factor-mining']);
   assert.match(strategy.workflow.selection, /factor_library/);
-  assert.match(strategy.workflow.selection, /factor_measure/);
+  assert.match(strategy.workflow.selection, /factor_compute/);
   assert.doesNotMatch(strategy.workflow.selection, /auto_factor_|factor-evaluator/);
   assert.deepEqual(research.workflow.primary_plugins, ['sesame/investment-research']);
   const guidance = json('capabilities.json').capabilities.find(item => item.id === 'catalog_recommend').usage;

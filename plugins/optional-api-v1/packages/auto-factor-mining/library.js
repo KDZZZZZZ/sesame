@@ -8,6 +8,11 @@ export function createLibrary({ state, artifacts }) {
     return artifacts.readJSON(ref);
   };
   const read = async id => { const result = await readState(state, COLLECTIONS.factors, id); ensure(result, 'Factor not found', 'NOT_FOUND'); return result.value; };
+  const evaluation = async (factorId, evaluationId) => {
+    text(factorId, 128); text(evaluationId, 128);
+    const row = await readState(state, COLLECTIONS.evaluations, identifier('evaluation', [factorId, evaluationId]));
+    ensure(row, 'Factor evaluation not found', 'NOT_FOUND'); return row.value.evaluation;
+  };
   const evaluations = async (factorId, { cursor, limit = 50 } = {}) => {
     text(factorId, 128); ensure(Number.isSafeInteger(limit) && limit > 0 && limit <= 200, 'Invalid evaluation page limit');
     const page = await state.query({ collection: COLLECTIONS.evaluations, filter: { factorId }, ...(cursor ? { cursor } : {}), limit });
@@ -39,13 +44,16 @@ export function createLibrary({ state, artifacts }) {
     return { snapshot, values };
   };
   const record = async (candidates, measured, fence) => {
+    fence.signal?.throwIfAborted();
     const factors = [];
     for (const evaluation of measured) {
+      fence.signal?.throwIfAborted();
       const candidate = candidates.find(c => c.id === evaluation.candidateId); ensure(candidate, 'Evaluation candidate missing');
       const { values } = await validateEvidence(evaluation, candidate);
       const definitionDigest = digest({ dsl: candidate.formula.dsl, operatorDigest: values.engine.operatorDigest, tree: candidate.formula.tree }), factorId = identifier('factor', [candidate.formula.dsl, definitionDigest]);
       const evaluationKey = identifier('evaluation', [factorId, evaluation.id]);
       for (let retry = 0; retry < 12; retry++) {
+        fence.signal?.throwIfAborted();
         const active = await readState(state, COLLECTIONS.jobs, fence.jobId);
         ensure(active && active.value.epoch === fence.epoch && ['running', 'pausing'].includes(active.value.status), 'Cancelled or stale research cannot commit factors', 'CANCELLED');
         const existing = await readState(state, COLLECTIONS.factors, factorId), prior = await readState(state, COLLECTIONS.evaluations, evaluationKey);
@@ -58,7 +66,7 @@ export function createLibrary({ state, artifacts }) {
             { op: 'put', key: active.key, expectedVersion: active.version, value: active.value },
             { op: 'put', key: { collection: COLLECTIONS.factors, key: factorId }, expectedVersion: existing?.version ?? 0, value: next },
             { op: 'put', key: { collection: COLLECTIONS.evaluations, key: evaluationKey }, expectedVersion: 0, value: { factorId, evaluation } },
-          ]);
+          ], { signal: fence.signal });
           factors.push(next); break;
         } catch (e) { if (e.code !== 'VERSION_CONFLICT' || retry === 11) throw e; }
       }
@@ -136,7 +144,7 @@ export function createLibrary({ state, artifacts }) {
     return result;
   };
   return {
-    read, evaluations, query, record, pool, decide,
+    read, evaluation, evaluations, query, record, pool, decide,
     async annotate(factorId, note, operationId) {
       text(note, 4000); text(operationId, 256); const opKey = identifier('annotation', operationId), fingerprint = digest([factorId, note]);
       for (let retry = 0; retry < 12; retry++) {

@@ -25,24 +25,26 @@ test('the self-contained factor package passes the official package boundary val
   assert.ok(lock.packages.every(pkg => pkg.files.length > 0));
 });
 
-test('six public tools share one host-only resumable numerical workflow and no old orchestration API', () => {
+test('seven public tools expose independent native steps without a research scheduler or reports', () => {
   const manifest = read('plugin.json'), declaration = read('capabilities.json');
   const capabilities = declaration.capabilities;
   assert.equal(manifest.title, '因子研究');
-  assert.equal(manifest.version, '2.0.0');
+  assert.equal(manifest.version, '3.0.0');
   assert.deepEqual(capabilities.filter(cap => cap.consumers.includes('agent')).map(cap => cap.id),
-    ['factor_environment', 'factor_research', 'factor_measure', 'factor_job', 'factor_library', 'factor_pool']);
+    ['factor_environment', 'factor_prepare', 'factor_search', 'factor_compute', 'factor_evaluate', 'factor_library', 'factor_pool']);
   const workflows = capabilities.filter(cap => cap.kind === 'workflow');
-  assert.equal(workflows.length, 1);
-  assert.equal(workflows[0].id, 'factor_workflow');
-  assert.equal(workflows[0].execution, 'run');
-  assert.equal(workflows[0].resumable, true);
-  assert.deepEqual(workflows[0].consumers, ['host']);
+  assert.equal(workflows.length, 0);
+  for (const id of ['factor_prepare', 'factor_search', 'factor_compute', 'factor_evaluate']) {
+    const cap = capabilities.find(cap => cap.id === id);
+    assert.equal(cap.execution, 'run');
+    assert.equal(cap.resumable, true);
+  }
+  for (const name of ['runtime.js', 'report.js']) assert.equal(existsSync(new URL(name, packageRoot)), false);
   assert.ok(capabilities.every(cap => !cap.id.startsWith('auto_factor_')));
   assert.deepEqual(declaration.sources, []);
   assert.deepEqual(declaration.services, []);
   assert.deepEqual(manifest.permissions.scopes, ['capabilities.compose', 'process.execute']);
-  assert.deepEqual(manifest.permissions.calls, ['host.process.exec', 'sesame/auto-factor-mining#factor_workflow', 'host.reports.publish', 'sesame/reports#report_check', 'host.reports.describe']);
+  assert.deepEqual(manifest.permissions.calls, ['host.process.exec']);
   assert.equal(existsSync(new URL('../factor-evaluator/', packageRoot)), false);
   assert.equal(JSON.parse(readFileSync(new URL('../bundle-profile.json', import.meta.url))).packages.includes('sesame/factor-evaluator'), false);
 });
@@ -55,9 +57,9 @@ test('environment configuration and immutable storage are declared without block
     assert.deepEqual(byId.get(id).consumers, ['host']);
   }
   assert.deepEqual(declaration.configuration.fields[0].binding, { type: 'capability', read: 'factor_configuration_read', update: 'factor_configuration_update', valuePath: '/pythonPath', configuredPath: '/ready', writePath: '/pythonPath' });
-  for (const id of ['factor_research', 'factor_measure']) assert.deepEqual(byId.get(id).configurationRequirements.map(({ field, optional }) => ({ field, optional })), [{ field: 'pythonPath', optional: false }]);
+  for (const id of ['factor_prepare', 'factor_search', 'factor_compute', 'factor_evaluate']) assert.deepEqual(byId.get(id).configurationRequirements.map(({ field, optional }) => ({ field, optional })), [{ field: 'pythonPath', optional: false }]);
   assert.deepEqual(byId.get('factor_environment').configurationRequirements ?? [], []);
-  assert.equal(declaration.stateCollections.length, 6);
+  assert.equal(declaration.stateCollections.length, 7);
   assert.ok(declaration.stateCollections.every(item => item.mode === 'document' && item.access === 'private'));
   const resource = declaration.artifactSchemas.find(item => item.kind === 'resource');
   assert.equal(resource.schema.additionalProperties, false);

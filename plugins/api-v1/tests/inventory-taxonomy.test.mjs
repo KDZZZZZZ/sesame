@@ -43,7 +43,7 @@ test('task responsibility groups guides with workflows and knowledge with reusab
   for (const name of ['canvas-control', 'reports']) assert.equal(byId[`sesame/${name}`].functionalCategory, 'presentation', name);
   for (const name of ['configuration', 'plugin-manager', 'workspace', 'memory', 'orchestration', 'user-guide']) assert.equal(byId[`sesame/${name}`].functionalCategory, 'platform', name);
   assert.deepEqual(byId['sesame/ict'].implementationKinds, ['knowledge']);
-  assert.deepEqual(byId['sesame/auto-factor-mining'].implementationKinds, ['function', 'workflow']);
+  assert.deepEqual(byId['sesame/auto-factor-mining'].implementationKinds, ['function']);
   assert.deepEqual(byId['sesame/abu-trend'].implementationKinds, ['function']);
 });
 

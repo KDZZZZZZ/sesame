@@ -69,11 +69,12 @@ test('the documented ATR reuse has identical values and availability on one fixe
 test('factor guidance exposes independent measurement and keeps strategy selection outside mining', async () => {
   const prompt = await read('auto-factor-mining', 'prompt.md');
   const declaration = JSON.parse(await read('auto-factor-mining', 'capabilities.json'));
-  assert.match(prompt, /已有公式直接用 `factor_measure`/);
+  assert.match(prompt, /已有公式直接用 `factor_compute`/);
   assert.match(prompt, /入库不改变策略池/);
-  assert.match(prompt, /策略回测由外部能力完成/);
-  assert.match(prompt, /unavailable\/incomplete/);
-  assert.ok(declaration.capabilities.some(cap => cap.id === 'factor_measure' && cap.consumers.includes('agent')));
+  assert.match(prompt, /外部策略回测/);
+  assert.match(prompt, /诊断不完整要保留缺口/);
+  assert.ok(declaration.capabilities.some(cap => cap.id === 'factor_compute' && cap.consumers.includes('agent')));
+  assert.equal(declaration.capabilities.some(cap => cap.kind === 'workflow'), false);
   assert.ok(declaration.capabilities.some(cap => cap.id === 'factor_pool' && cap.consumers.includes('agent')));
   assert.ok(declaration.knowledge.filter(item => /reference-(?:factor|experiment)\.mjs$/.test(item.path)).every(item => item.description.startsWith('Historical')));
 });

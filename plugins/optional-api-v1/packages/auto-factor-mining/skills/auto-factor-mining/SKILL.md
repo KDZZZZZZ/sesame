@@ -1,20 +1,22 @@
 ---
 name: auto-factor-mining
-description: 按策略需求复用、补评或搜索因子；使用真实 Qlib 计算并保留纯因子证据，支持独立计算与评价。
+description: 主 Agent 直接组织因子搜索、Qlib 计算、纯因子评价和入库；策略独立选用因子。
 ---
 
-# 因子研究
+# 因子研究方法
 
-明确目标 alpha/risk/state、轴 time_series/cross_section、实际数据、UTC 切分、目标与门槛。读取现行 references/contracts.md，使用 factor_library 查询已有定义和匹配证据。
+当策略需要某种信号、发现可能可提取的规律，或需要复核现有因子时使用。先读取 [接口](../../references/contracts.md) 与相关知识方法，定义预期用途、可观测特征和检验目标。
 
-1. factor_environment inspect 核验真实 Python/Qlib/DEAP/Optuna 环境；缺依赖时 prepare 私有环境。不安装到全局 Python，不把元数据存在等同于可运行。
-2. 新需求调用 factor_research({draft})。已有公式用 factor_measure compute/both；已有冻结 Values 用 evaluate。公开输入不接受模型提供的指标。
-3. 用 factor_job 观察真实 Job 与分页证据。暂停等待安全点，恢复携带读到的 interruptIds，取消后不再提交结果。
-4. 核验定义、数据/目标/日历、环境/算子、profile 与 reference 身份。缺失或不适用诊断保持 incomplete，required 的不完整项不能通过。
-5. 入库与策略选择分别处理。只有外部策略明确决策才能调用 factor_pool decide，同时给出策略版本、预期池版本、理由、用途和应用证据。
+1. 用 factor_library 查询已有定义与评价。核对数据、时间、目标、环境、profile 和参考身份；由 Agent 决定是否可复用。
+2. 用 factor_environment inspect 核验实际环境；缺依赖时 prepare 私有环境。用 factor_prepare 冻结数据和开发/留出区间，读取原生 Run 的 snapshotRef。
+3. 已有公式直接 factor_compute。需要新公式则 factor_search open 固定字段、算子、窗口、复杂度、种子/模板、目标与搜索预算；propose 一次只请求一批。
+4. 明确调用 factor_compute 计算 development。独立公式批次或研究方向可以并行。需要 regimes/sensitivity 辅助值时，在 compute 的 diagnostics 中明确给出选项；参考公式也单独计算。
+5. 用 factor_evaluate 评价 valuesRef，传同一快照、分区和引擎的 referenceValues；无参考时传 []。成功评价自动存入库，包括不充分和无效结果，不自动选入策略池。
+6. 根据结果决定下一批、调整方向或停止。搜索反馈只传该搜索候选的真实 development `{factorId,evaluationId}`；变更搜索空间/profile 建立新会话。候选选定后，显式请求 holdout 计算与评价，记录选择依据与留出暴露，不把留出反馈给搜索器。
+7. 研究任务使用报告插件交付可见报告并校验统一视觉。因子池由外部策略明确 decide；策略回测和应用反馈另做，应用效果不覆盖纯因子评价。
 
-Formula 使用 qlib-expr/1 类型树。Ref lag、滚动 window 为正整数，Rank 为滚动时序排名。源行已经有 time/symbol/availableAt/fields；缺失柱保留网格位置。开发反馈不接触跨开发边界的未来标签或留出结果。
+每个数值调用得到宿主 Run 回执，用 read/wait 观察完成；function Run 完成不会自动续写主 Agent，不应发出后就宣称研究完成。取消/暂停使用宿主已有能力，恢复限制见 [执行说明](../../references/execution.md)。
 
-评价聚焦关联、覆盖率、稳定性、冗余与条件允许的残差关联，状态使用类别分离。独立评价只消费冻结矩阵与辅助值，不重新取数或计算公式。应用策略回测由外部能力执行，不把因子证据当成仓位、成本、PnL 或可交易结论。
+Formula 为 qlib-expr/1 类型树；Ref 正滞后，Rank 为滚动时序排名。固定网格保留缺失柱和预热；开发标签禁止越界。单品种可做时序评价，多品种按问题选择横截面评价。可选诊断不完整不妨碍其他独立步骤，required 不完整不能记为通过。
 
-公开入口是六个 factor_* 工具；不要调用内部 factor_workflow 或旧 auto_factor_*。Historical 材料中的旧接口不再适用。
+搜索器接收结构化空间，不理解自然语言来替你规划研究；need 是假设说明。没有自动查库、连续研究总控、隐式参考计算、前八名留出选择或自动报告步骤。

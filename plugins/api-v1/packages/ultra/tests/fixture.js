@@ -16,19 +16,20 @@ export function fixture({ stored, onInvoke } = {}) {
     ['sesame/trading#submit', { effects: ['trade'], execution: 'run' }],
     ['sesame/trading#schedule', { effects: ['manage:scheduler', 'trade'] }],
     ['sesame/trading#pause', { effects: ['trade'] }],
-    ['sesame/auto-factor-mining#factor_research', { effects: ['plugin.state.write', 'start:workflow'] }],
-    ['sesame/auto-factor-mining#factor_measure', { effects: ['plugin.state.write', 'start:workflow'] }],
+    ['sesame/auto-factor-mining#factor_search', { effects: ['plugin.state.write', 'execution'], execution: 'run' }],
+    ['sesame/auto-factor-mining#factor_compute', { effects: ['plugin.state.write', 'execution'], execution: 'run' }],
+    ['sesame/auto-factor-mining#factor_library', { effects: ['read'] }],
   ].map(([id, descriptor]) => [id, { id, revision: 'fixture:1', consumers: ['agent', 'host'], kind: 'function', execution: 'immediate', ...descriptor }]));
   const lookup = reference => { const value = store.runs.get(typeof reference === 'string' ? reference : reference.id); if (!value) throw fail('NOT_FOUND'); return value; };
   const emit = job => { for (const listener of store.listeners.get(job.value.id) ?? []) listener(structuredClone(job.value)); };
   function update(job, changes) { job.value = { ...job.value, ...changes, revision: job.value.revision + 1 }; emit(job); return job.value; }
   function complete(id, output = { text: 'Evidence and next experiment.' }, status = 'completed') { const job = lookup(id); update(job, { status, output }); return job.value; }
   function newRun(capability, input, context, options) {
-    const id = `run_${++store.sequence}`, job = { value: { id, kind: capability === `${ID}#ultra_cycle` ? 'workflow' : capability === 'host.agent.run' ? 'agent' : 'workflow', revision: 1,
+    const id = `run_${++store.sequence}`, job = { value: { id, kind: capability === `${ID}#ultra_cycle` ? 'workflow' : capability === 'host.agent.run' ? 'agent' : capability.startsWith('sesame/auto-factor-mining#') ? 'function' : 'workflow', revision: 1,
       status: 'running', sessionId: context.sessionId, parentRunId: context.runId ?? null }, capability, input: structuredClone(input), context, options, controller: new AbortController() };
     store.runs.set(id, job);
     if (capability === `${ID}#ultra_cycle`) launchCycle(job);
-    else if (capability === 'host.agent.run' && context.kind === 'subagent') queueMicrotask(() => complete(id, { text: 'Discover auto-factor-mining, read its declared references/contracts.md, and dispatch bounded factor_research or independent factor_measure work.' }));
+    else if (capability === 'host.agent.run' && context.kind === 'subagent') queueMicrotask(() => complete(id, { text: 'Discover auto-factor-mining, read references/contracts.md, then directly arrange factor_prepare/search/compute/evaluate and inspect each native Run result.' }));
     return { id, kind: job.value.kind, revision: 1 };
   }
   function launchCycle(job) {
@@ -63,11 +64,6 @@ export function fixture({ stored, onInvoke } = {}) {
           let result = await onInvoke?.({ capability, input, options, host: makeHost(extra), store, newRun: () => newRun(capability, input, context, options) });
           if (!result) {
             if (capability === `${ID}#ultra_cycle` || descriptors.get(capability)?.execution === 'run') result = { type: 'run', run: newRun(capability, input, context, options) };
-            else if (['sesame/auto-factor-mining#factor_research', 'sesame/auto-factor-mining#factor_measure'].includes(capability)) {
-              const run = newRun(capability, input, context, options);
-              const job = { id: 'factor_one', runId: run.id, status: 'queued', epoch: 0, completed: 0, proposed: 0, report: null, error: null };
-              result = { type: 'result', value: capability.endsWith('#factor_research') ? { resolution: 'research', job } : job };
-            }
             else result = { type: 'result', value: { ok: true } };
           }
           store.operations.set(key, result); return structuredClone(result);

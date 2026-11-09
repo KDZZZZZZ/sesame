@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 
-export const VERSION = '2.0.0';
+export const VERSION = '3.0.0';
 export const OPERATORS = Object.freeze(['Add', 'Sub', 'Mul', 'Div', 'Abs', 'Log', 'Ref', 'Mean', 'Std', 'Min', 'Max', 'Sum', 'Rank']);
-export const COLLECTIONS = Object.freeze(Object.fromEntries(['jobs', 'trials', 'factors', 'evaluations', 'pools', 'feedback'].map(name => [name, `factor_research_v1_${name}`])));
+export const COLLECTIONS = Object.freeze(Object.fromEntries(['jobs', 'trials', 'factors', 'evaluations', 'pools', 'feedback', 'searches'].map(name => [name, `factor_research_v1_${name}`])));
 export const ARTIFACT_SCHEMAS = Object.freeze(['snapshot', 'source-rows', 'provider', 'provider-features', 'symbol-map', 'calendar', 'matrix', 'values', 'search-state', 'evidence', 'usage', 'history', 'provider-file'].map(name => `factor-${name}/1`));
 export const MAX_SHARD_BYTES = 16 * 1024 * 1024;
 export const error = (code, message, retryable = false) => Object.assign(new Error(message), { code, retryable });
@@ -73,9 +73,13 @@ export function validateProfile(value, layout) {
   ensure(value.score === (value.kind === 'state' ? 'eta_squared' : 'abs_rank_ic'), 'Score must match the factor purpose');
   if (layout && value.kind === 'state') ensure(layout.target.kind === 'provided' && layout.target.scale === 'categorical', 'State profiles need categorical labels');
   if (layout && value.kind !== 'state') ensure(layout.target.kind !== 'provided' || layout.target.scale === 'continuous', 'Alpha/risk profiles need continuous labels');
-  list(value.diagnostics, 6); ensure(new Set(value.diagnostics.map(d => d.kind)).size === value.diagnostics.length, 'Diagnostic kinds must be unique');
+  validateDiagnostics(value.diagnostics);
+  return value;
+}
+export function validateDiagnostics(value) {
+  list(value, 6); ensure(new Set(value.map(d => d.kind)).size === value.length, 'Diagnostic kinds must be unique');
   const options = { placebo: ['blockBars', 'seed', 'confidence'], bootstrap: ['blockBars', 'seed', 'confidence'], walk_forward: ['foldBars'], regimes: ['field', 'bins'], sensitivity: ['argumentPath', 'neighbors'], quantiles: ['count'] };
-  for (const d of value.diagnostics) {
+  for (const d of value) {
     const resampling = ['placebo', 'bootstrap'].includes(d.kind);
     keys(d, ['kind', 'required', 'repetitions', 'options'], resampling ? ['kind', 'required', 'repetitions', 'options'] : ['kind', 'required', 'options']);
     ensure(options[d.kind] && typeof d.required === 'boolean', 'Unknown diagnostic'); keys(d.options, options[d.kind]);
@@ -122,21 +126,55 @@ export function validateSpace(value) {
   for (const template of value.templates) { keys(template, ['tree', 'domains']); ensure(object(template.domains) && Object.keys(template.domains).length <= 16, 'Template domains must be bounded'); for (const [key, domain] of Object.entries(template.domains)) { text(key, 64); list(domain, 64); ensure(domain.length && domain.every(Number.isFinite), 'Template domains need finite choices'); } }
   return value;
 }
-export function validateDraft(value) {
-  keys(value, ['requestId', 'need', 'source', 'layout', 'space', 'profile', 'references', 'budget', 'strategyId', 'poolId'], ['requestId', 'need', 'source', 'layout', 'space', 'profile', 'references', 'budget']);
-  text(value.requestId, 128); text(value.need, 8000); validateSource(value.source); validateLayout(value.layout); validateSpace(value.space); validateProfile(value.profile, value.layout); validateBudget(value.budget);
-  list(value.references, 32); value.references.forEach(id => text(id, 128));
-  if (value.layout.target.kind === 'provided') ensure(!value.space.fields.includes(value.layout.target.field), 'Provided target cannot be a feature');
-  for (const key of ['strategyId', 'poolId']) if (value[key] !== undefined) text(value[key], 128);
-  ensure(Buffer.byteLength(canonical(value)) <= 96000, 'Research draft exceeds 96 KB'); return value;
+export function validateExecutionBudget(value) {
+  keys(value, ['maxSeconds', 'maxInputBytes', 'maxOutputBytes']);
+  integer(value.maxSeconds, 1, 86400);
+  integer(value.maxInputBytes, 1024, 512 * 1024 * 1024); integer(value.maxOutputBytes, 1024, 512 * 1024 * 1024);
+  return value;
 }
-export function validateMeasure(value) {
-  const common = ['mode', 'requestId', 'budget'];
-  ensure(['compute', 'evaluate', 'both'].includes(value?.mode), 'Choose compute, evaluate or both');
-  const needed = value.mode === 'evaluate' ? ['valuesRef', 'profile', 'references'] : value.mode === 'compute' ? ['source', 'layout', 'formulas'] : ['source', 'layout', 'formulas', 'profile', 'references'];
-  keys(value, [...common, ...needed]); text(value.requestId, 128); validateBudget(value.budget);
-  if (value.mode !== 'evaluate') { validateSource(value.source); validateLayout(value.layout); list(value.formulas, 256); ensure(value.formulas.length > 0, 'At least one formula is required'); value.formulas.forEach(validateCandidate); }
-  else artifactRef(value.valuesRef);
-  if (value.mode !== 'compute') { validateProfile(value.profile, value.layout); list(value.references, 32); value.references.forEach(id => text(id, 128)); }
+export function validateSearchBudget(value) {
+  keys(value, ['maxSeconds', 'maxInputBytes', 'maxOutputBytes', 'maxCandidates', 'batchSize', 'seed']);
+  const { maxCandidates, batchSize, seed, ...resources } = value;
+  validateExecutionBudget(resources); integer(maxCandidates, 1, 100000); integer(batchSize, 1, 64); integer(seed, 0, 2147483647);
+  return value;
+}
+export function operationBudget(resources, count = 1) {
+  validateExecutionBudget(resources); integer(count, 1, 64);
+  return { ...resources, maxCandidates: count, batchSize: count, maxWorkers: 1, seed: 0 };
+}
+function resourceRef(ref) { artifactRef(ref); ensure(ref.kind === 'resource', 'Use a fixed factor resource reference'); }
+export function validatePrepare(value) {
+  keys(value, ['requestId', 'source', 'layout', 'budget']); text(value.requestId, 128);
+  validateSource(value.source); validateLayout(value.layout); validateExecutionBudget(value.budget); return value;
+}
+export function validateComputeInput(value) {
+  keys(value, ['requestId', 'snapshotRef', 'formulas', 'partition', 'budget', 'diagnostics'], ['requestId', 'snapshotRef', 'formulas', 'partition', 'budget']);
+  text(value.requestId, 128); resourceRef(value.snapshotRef); validateExecutionBudget(value.budget);
+  ensure(['development', 'holdout'].includes(value.partition), 'Choose the data partition explicitly');
+  list(value.formulas, 64); ensure(value.formulas.length > 0, 'At least one formula is required'); value.formulas.forEach(validateCandidate);
+  ensure(new Set(value.formulas.map(c => c.id)).size === value.formulas.length, 'Candidate IDs must be unique');
+  if (value.diagnostics !== undefined) validateDiagnostics(value.diagnostics);
+  return value;
+}
+export function validateEvaluateInput(value) {
+  keys(value, ['requestId', 'valuesRef', 'profile', 'referenceValues', 'budget']);
+  text(value.requestId, 128); resourceRef(value.valuesRef); validateProfile(value.profile); validateExecutionBudget(value.budget);
+  list(value.referenceValues, 32); value.referenceValues.forEach(resourceRef);
+  ensure(new Set(value.referenceValues.map(canonical)).size === value.referenceValues.length, 'Reference values must be unique');
+  return value;
+}
+export function validateSearchInput(value) {
+  ensure(['open', 'propose', 'read'].includes(value?.action), 'Choose open, propose or read');
+  if (value.action === 'open') {
+    keys(value, ['action', 'requestId', 'snapshotRef', 'need', 'space', 'profile', 'references', 'budget']);
+    text(value.requestId, 128); resourceRef(value.snapshotRef); text(value.need, 8000); validateSpace(value.space); validateProfile(value.profile); validateSearchBudget(value.budget);
+    list(value.references, 32); value.references.forEach(id => text(id, 128));
+    ensure(new Set(value.references).size === value.references.length, 'Reference factor IDs must be unique');
+    ensure(Buffer.byteLength(canonical(value)) <= 96000, 'Search request exceeds 96 KB');
+  } else if (value.action === 'propose') {
+    keys(value, ['action', 'requestId', 'searchId', 'limit', 'feedback']); text(value.requestId, 128); text(value.searchId, 128); integer(value.limit, 0, 64);
+    list(value.feedback, 64); for (const item of value.feedback) { keys(item, ['factorId', 'evaluationId']); text(item.factorId, 128); text(item.evaluationId, 128); }
+    ensure(new Set(value.feedback.map(canonical)).size === value.feedback.length, 'Feedback evaluation identifiers must be unique');
+  } else { keys(value, ['action', 'searchId']); text(value.searchId, 128); }
   return value;
 }

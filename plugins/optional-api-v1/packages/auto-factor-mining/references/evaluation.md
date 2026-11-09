@@ -76,7 +76,7 @@ The process bridge estimates work and enforces the attempt's diagnostic budget b
 
 `supported` means the profile's stated sufficiency and required checks are satisfied. It is possible for a measured zero to be supported: the profile has no minimum effect-size threshold. Insufficient pairs, factor coverage, association, stability, or a wholly uncomputable declared reference comparison give `insufficient`. A missing required diagnostic also gives `insufficient`. Exceeding the maximum reference correlation or failing a required diagnostic gives `invalid`; invalid takes precedence when both kinds of problem exist. Optional diagnostic failures/incompleteness are retained without independently changing eligibility.
 
-The evaluator produces factor/target evidence only. It creates no positions, costs, PnL, Sharpe ratio, drawdowns, old Monte Carlo proxy, DSR, or PBO. Full trial/failed/duplicate history, development-only feedback, prior holdout exposure, and whole-search multiplicity provenance belong to the workflow and report. No diagnostic here certifies an untouched holdout or corrects an entire adaptive search.
+The evaluator produces factor/target evidence only. It creates no positions, costs, PnL, Sharpe ratio, drawdowns, old Monte Carlo proxy, DSR, or PBO. Search checkpoints preserve trial/failed/duplicate history and development feedback. The calling Agent/workflow records selection, prior holdout exposure and whole-search multiplicity in its report; this plugin neither selects holdout candidates nor writes that report. No diagnostic here certifies an untouched holdout or corrects an entire adaptive search.
 
 ## Validation
 

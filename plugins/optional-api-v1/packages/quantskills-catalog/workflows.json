@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "policy": "Investment research uses sesame/investment-research. Factor needs use sesame/auto-factor-mining factor_library, factor_research or independent factor_measure. Strategy authoring and native backtests remain separate external capabilities; recommendations do not install or verify availability.",
+  "policy": "Investment research uses sesame/investment-research. Agents directly orchestrate sesame/auto-factor-mining factor_library/prepare/search/compute/evaluate; each step returns only its own evidence. Strategy authoring, pool selection, native backtests and final reports remain caller-owned; recommendations do not install or verify availability.",
   "workflows": {
     "market-data": {
       "purpose": "获取明确市场与来源的数据，允许同屏并用不同后端。",
@@ -89,7 +89,7 @@
         "sesame/vnpy",
         "sesame/backtrader"
       ],
-      "selection": "先查 factor_library，按需求调用 factor_research 或独立 factor_measure，并核验 factor_environment。目标、日历、数据切分、profile 和预算预先冻结；required 不完整诊断不能通过。策略明确决定自己的 factor_pool 成员，策略创作与原生回测选择外部能力，不由因子挖掘自动执行。",
+      "selection": "先查 factor_library 并核验 factor_environment，由 Agent/Agent 工作流直接安排 factor_prepare、factor_search、factor_compute、factor_evaluate；已有公式和值直接计算或评价，不强制搜索。预先固定目标、日历、切分、profile 和预算，独立分支并行；下一批、留出选择和最终报告由 Agent 决定。策略明确决定 factor_pool 成员，创作与回测使用外部能力。",
       "reference_names": [
         "skill-backtesting-bias-avoidance",
         "skill-backtest-overfit",

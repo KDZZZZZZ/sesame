@@ -1,4 +1,4 @@
-// Opt-in real host/SQLite/process/Qlib/Electron integration. Every input is demo data.
+// Opt-in production installer/SQLite/native Run/Python integration. All data is invented.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { cp, mkdir, realpath, writeFile } from 'node:fs/promises';
@@ -13,9 +13,10 @@ const packageRoot = fileURLToPath(new URL('../', import.meta.url));
 const profile = { id: 'host-synthetic-ts', version: 1, kind: 'alpha', axis: 'time_series', minPairs: 4, minCoverage: 0.8, stabilityWindows: 2, maxReferenceCorrelation: 0.99, score: 'abs_rank_ic', diagnostics: [{ kind: 'quantiles', required: false, options: { count: 3 } }] };
 const time = hour => new Date(Date.UTC(2026, 0, 1, hour)).toISOString();
 const layout = { universe: ['DEMO_A', 'DEMO_B', 'DEMO_C', 'DEMO_D'], frequency: '1h', timezone: 'UTC', availableAt: 'bar_close', development: [time(8), time(63)], holdout: [time(64), time(95)], target: { kind: 'forward_return', field: 'close', horizonBars: 1 } };
-const budget = { maxCandidates: 2, batchSize: 2, maxWorkers: 2, maxSeconds: 180, maxInputBytes: 16 * 1024 * 1024, maxOutputBytes: 16 * 1024 * 1024, seed: 11 };
+const budget = { maxSeconds: 180, maxInputBytes: 16 * 1024 * 1024, maxOutputBytes: 16 * 1024 * 1024 };
 const candidate = (id, tree) => ({ id, formula: { dsl: 'qlib-expr/1', tree }, hypothesis: 'Synthetic deterministic signal; not market evidence.', origin: { method: 'seed', parents: [], parameters: {} } });
 const formulas = [candidate('demo-signal', { field: 'signal' }), candidate('demo-negative', { call: 'Mul', args: [{ field: 'signal' }, { constant: -1 }] })];
+const json = value => JSON.stringify(value, null, 2);
 
 function syntheticRows() {
   const rows = [];
@@ -30,7 +31,7 @@ function syntheticRows() {
   return rows;
 }
 
-test('production host runs factor computation, evaluation, search, library/pool and checked reports', { skip: !hostRoot || !pythonPath || !scratch, timeout: 600000 }, async t => {
+test('production host supports explicitly scheduled factor steps without a research controller', { skip: !hostRoot || !pythonPath || !scratch, timeout: 600000 }, async t => {
   await mkdir(scratch, { recursive: true });
   const ownedRoot = await realpath(scratch), oldTemp = process.env.TEMP, oldTmp = process.env.TMP;
   assert.equal(resolve(ownedRoot).slice(0, 2).toUpperCase(), 'E:', 'Use the explicit isolated E: fixture root');
@@ -38,193 +39,236 @@ test('production host runs factor computation, evaluation, search, library/pool 
   const load = path => import(pathToFileURL(join(hostRoot, path)));
   const [{ fixture }, { createTools }, { createHostContextV2 }] = await Promise.all([load('tests/fixture-provider.js'), load('modules/agent/tools.js'), load('modules/plugins/host-v2/context.js')]);
   let app, stage = 'host startup', primaryError, sequence = 0;
-  const evidence = { synthetic: true, brokerCalls: 0, modelCalls: 0, stages: [], jobs: [] };
-  const advance = async value => { stage = value; evidence.stages.push(value); await writeFile(join(ownedRoot, 'current-host-stage.json'), JSON.stringify({ stage, at: new Date().toISOString() })); t.diagnostic(`factor host stage: ${value}`); };
+  const evidence = { synthetic: true, brokerCalls: 0, modelCalls: 0, stages: [], operations: [] };
+  const advance = async value => { stage = value; evidence.stages.push(value); await writeFile(join(ownedRoot, 'current-directed-host-stage.json'), json({ stage, at: new Date().toISOString() })); t.diagnostic(`factor host stage: ${value}`); };
   try {
-    app = await fixture({ configured: false, reportRenderer: 'electron', responseHandler: () => { throw new Error('Factor research must not invoke a model transport'); } });
+    app = await fixture({ configured: false, responseHandler: () => { throw new Error('Numerical integration must not invoke a model transport'); } });
     const child = relative(ownedRoot, await realpath(app.directory)); assert.ok(!child.startsWith('..') && !isAbsolute(child));
     await advance('production package installation');
-    const install = async (source, name) => {
-      const draft = join(app.runtime.workspaces.root('conv_main'), `${name}-draft`);
-      await cp(source, draft, { recursive: true, filter: path => !path.split(/[\\/]/).includes('__pycache__') && !/\.py[co]$/.test(path) });
-      const checked = await app.runtime.plugins.manager.test('conv_main', { path: draft });
-      assert.equal(checked.passed, true, JSON.stringify(checked));
-      const previous = app.runtime.plugins.entries.get(checked.id);
-      const installed = previous?.digest === checked.digest ? previous : await app.runtime.plugins.manager.install('conv_main', { path: draft, digest: checked.digest, ...(previous ? { expected_digest: previous.digest } : {}) }, Boolean(previous));
-      assert.equal(installed.runtime_status, 'ready', JSON.stringify(installed.diagnostics));
-      app.runtime.plugins.activate('conv_main', installed.id); return installed;
-    };
-    // The host's cached default bundle can predate its report-service API.
-    // Install the current production provider into this disposable fixture too.
-    const reports = await install(resolve(packageRoot, '../../../api-v1/packages/reports'), 'reports');
-    const installed = await install(packageRoot, 'factor-research');
-    evidence.packages = { reports: { id: reports.id, digest: reports.digest }, factor: { id: installed.id, digest: installed.digest } };
-    const entry = app.runtime.plugins.entry(pluginId), host = createHostContextV2(app.runtime, entry, 'conv_main'), main = createHostContextV2(app.runtime, app.runtime.capabilities.hostEntry, 'conv_main');
-    const settle = async accepted => {
-      if (accepted.type === 'result') return accepted.value;
-      assert.equal(accepted.type, 'run'); let result;
+    const draft = join(app.runtime.workspaces.root('conv_main'), 'factor-direct-draft');
+    await cp(packageRoot, draft, { recursive: true, filter: path => {
+      const parts = relative(packageRoot, path).split(/[\\/]/);
+      return parts[0] !== 'tests' && !parts.includes('__pycache__') && !/\.py[co]$/.test(path);
+    } });
+    const checked = await app.runtime.plugins.manager.test('conv_main', { path: draft });
+    assert.equal(checked.passed, true, json(checked));
+    const previous = app.runtime.plugins.entries.get(checked.id);
+    const installed = previous?.digest === checked.digest ? previous : await app.runtime.plugins.manager.install('conv_main', { path: draft, digest: checked.digest, ...(previous ? { expected_digest: previous.digest } : {}) }, Boolean(previous));
+    assert.equal(installed.runtime_status, 'ready', json(installed.diagnostics));
+    app.runtime.plugins.activate('conv_main', installed.id);
+    evidence.package = { id: installed.id, digest: installed.digest, version: installed.version };
+    const entry = app.runtime.plugins.entry(pluginId), own = createHostContextV2(app.runtime, entry, 'conv_main'), main = createHostContextV2(app.runtime, app.runtime.capabilities.hostEntry, 'conv_main');
+    const wait = async accepted => {
+      let result;
       do { result = await main.runs.wait(accepted.run, { until: 'settled', timeoutMs: 30000 }); } while (result.reason === 'timeout');
-      assert.equal(result.run.status, 'completed', JSON.stringify(result.run.error)); return result.run.output;
+      return result.run;
     };
-    const invoke = async (name, input = {}) => {
+    const admit = async (name, input = {}) => {
       const tool = createTools(app.runtime, 'conv_main').find(tool => tool.name === name); assert.ok(tool, `Missing public tool ${name}`);
       const result = await tool.execute(`factor-host-${++sequence}`, input);
-      assert.notEqual(result.isError, true, JSON.stringify(result));
-      const value = result.details ?? JSON.parse(result.content[0].text);
-      return value?.type === 'run' || value?.type === 'result' ? settle(value) : value;
+      assert.notEqual(result.isError, true, json(result));
+      return result.details ?? JSON.parse(result.content[0].text);
     };
-    const names = createTools(app.runtime, 'conv_main').map(tool => tool.name);
-    assert.deepEqual(names.filter(name => name.startsWith('factor_')).sort(), ['factor_environment', 'factor_job', 'factor_library', 'factor_measure', 'factor_pool', 'factor_research']);
-    assert.ok(!names.includes('auto_factor_start') && !names.includes('factor_evaluate'));
-
-    await advance('real Python environment and host-only configuration');
-    const environment = await invoke('factor_environment', { action: 'inspect', pythonPath });
-    assert.equal(environment.ready, true, JSON.stringify(environment));
-    assert.equal(environment.versions.pyqlib, '0.9.7');
-    assert.ok(environment.versions.deap && environment.versions.optuna);
-    const configurationPath = `/settings/integrations?plugin_id=${encodeURIComponent(pluginId)}`;
-    const configured = await app.api('/settings/integrations', { plugin_id: pluginId, values: { pythonPath } }, 'synthetic-host-python');
-    assert.equal(configured.response.status, 200, JSON.stringify(configured.data));
-    assert.equal(configured.data.status, 'applied');
-    const configuration = await app.api(configurationPath);
-    assert.equal(configuration.response.status, 200, JSON.stringify(configuration.data));
-    const pythonField = configuration.data.items[0].fields.find(field => field.id === 'pythonPath');
-    assert.equal(pythonField.configured, true); assert.equal(resolve(pythonField.value), resolve(pythonPath));
-    const repeatedConfiguration = await app.api('/settings/integrations', { plugin_id: pluginId, values: { pythonPath } }, 'synthetic-host-python');
-    assert.deepEqual(repeatedConfiguration.data, configured.data);
-    evidence.configuration = { status: configured.data.status, configured: pythonField.configured };
-    evidence.environment = environment;
-
-    app.store.put('dataset', { id: 'factor-host-demo', title: 'Invented deterministic panel for host acceptance only', rows: syntheticRows(), provenance: { kind: 'demo', source_kind: 'synthetic' } });
-    const finish = async job => {
-      assert.ok(job.runId);
-      const deadline = Date.now() + 240000;
-      for (;;) {
-        const read = await invoke('factor_job', { action: 'read', jobId: job.id });
-        const native = (await host.runs.read(job.runId)).run;
-        if (['failed', 'interrupted', 'cancelled'].includes(read.status)) assert.fail(JSON.stringify({ job: read, native }));
-        if (read.reportStatus === 'failed' && ['completed', 'interrupted', 'failed'].includes(native.status)) assert.fail(JSON.stringify({ job: read, native }));
-        if (read.status === 'completed' && read.reportStatus === 'published' && native.status === 'completed') {
-          assert.ok(read.report); evidence.jobs.push({ id: read.id, runId: read.runId, proposed: read.proposed, completed: read.completed, report: read.report }); return read;
-        }
-        assert.ok(Date.now() < deadline, JSON.stringify({ timeout: read, native }));
-        await new Promise(resolve => setTimeout(resolve, 200));
-      }
+    const invoke = async (name, input = {}) => {
+      const accepted = await admit(name, input);
+      if (accepted.type === 'result') return accepted.value;
+      if (accepted.type !== 'run') return accepted;
+      const run = await wait(accepted);
+      evidence.operations.push({ tool: name, requestId: input.requestId ?? null, runId: run.id, attempt: run.attempt, status: run.status, output: run.output });
+      assert.equal(run.status, 'completed', json({ tool: name, error: run.error, interrupts: run.interrupts }));
+      assert.equal(run.kind, 'function'); assert.equal(run.executionSessionId, null, 'A primitive operation cannot create a workflow task');
+      return run.output;
     };
-    const rendered = async job => {
-      const manifest = await host.resources.read(job.report, { part: 'manifest' }); assert.equal(manifest.kind, 'report');
-      assert.equal(manifest.content.provenance.kind, 'demo');
-      const receipts = await host.resources.read(job.report, { part: 'receipts' });
-      assert.ok(receipts.items.some(receipt => receipt.renderer?.name === 'sesame-report-inspector' && receipt.status === 'rendered'));
-      const html = await host.resources.read(job.report, { part: 'content', entry: manifest.content.entry, encoding: 'utf8' }); assert.match(html.content, /<!doctype html>/i);
-      (evidence.reports ??= []).push({ ref: job.report, manifest, receipts: receipts.items });
+    const rejectOperation = async (name, input, pattern) => {
+      const accepted = await admit(name, input); assert.equal(accepted.type, 'run');
+      const run = await wait(accepted);
+      assert.equal(run.status, 'interrupted', json(run)); assert.match(json(run.error ?? run.interrupts), pattern);
+      evidence.operations.push({ tool: name, requestId: input.requestId, runId: run.id, status: run.status, error: run.error });
+      await main.runs.cancel(accepted.run, { reason: 'Expected invalid synthetic request was verified' });
+      return run;
     };
+    const processRuns = () => app.store.list('run').filter(run => run.capabilityId === 'host.process.exec');
+    const isWorker = run => app.store.get('run_invocation', run.id, true)?.input?.argv?.some(value => /[\\/]python[\\/]worker\.py$/.test(value));
+    const workerRuns = () => processRuns().filter(isWorker);
+    const factorRows = () => own.state.query({ collection: 'factor_research_v1_factors', limit: 200 });
     const readJSON = async ref => {
-      const manifest = await host.resources.read(ref, { part: 'manifest' });
-      const part = await host.resources.read(ref, { part: 'content', entry: manifest.content.path, encoding: 'utf8' });
+      // Read through the main Agent's public resource port, not the producer context.
+      const manifest = await main.resources.read(ref, { part: 'manifest' });
+      const part = await main.resources.read(ref, { part: 'content', entry: manifest.content.path, encoding: 'utf8' });
       assert.equal(part.nextOffset, undefined, 'Synthetic identity documents fit one page'); return JSON.parse(part.content);
     };
+    const names = createTools(app.runtime, 'conv_main').map(tool => tool.name);
+    assert.deepEqual(names.filter(name => name.startsWith('factor_')).sort(), ['factor_compute', 'factor_environment', 'factor_evaluate', 'factor_library', 'factor_pool', 'factor_prepare', 'factor_search']);
+    for (const name of ['factor_prepare', 'factor_search', 'factor_compute', 'factor_evaluate']) {
+      const declaration = entry.capabilityManifest.capabilities.find(capability => capability.id === name);
+      assert.equal(declaration.kind, 'function'); assert.equal(declaration.execution, 'run'); assert.equal(declaration.resumable, true);
+    }
 
-    await advance('compute-only through real host process and artifact publication');
-    const computed = await finish(await invoke('factor_measure', { mode: 'compute', requestId: 'host-compute', source: { datasetId: 'factor-host-demo' }, layout, formulas, budget }));
-    assert.ok(computed.valuesRef ?? computed.evidence.items[0]);
-    const valuesRef = computed.valuesRef ?? computed.evidence.items[0];
-    const valuesManifest = await host.resources.read(valuesRef, { part: 'manifest' }); assert.equal(valuesManifest.content.schema, 'factor-values/1');
-    await rendered(computed);
+    await advance('real Python environment and host configuration');
+    const environment = await invoke('factor_environment', { action: 'inspect', pythonPath });
+    assert.equal(environment.ready, true, json(environment)); assert.equal(environment.versions.pyqlib, '0.9.7');
+    assert.ok(environment.versions.deap && environment.versions.optuna); evidence.environment = environment;
+    const configured = await app.api('/settings/integrations', { plugin_id: pluginId, values: { pythonPath } }, 'synthetic-host-python');
+    assert.equal(configured.response.status, 200, json(configured.data)); assert.equal(configured.data.status, 'applied');
+    const configuration = await app.api(`/settings/integrations?plugin_id=${encodeURIComponent(pluginId)}`);
+    const pythonField = configuration.data.items[0].fields.find(field => field.id === 'pythonPath');
+    assert.equal(pythonField.configured, true); assert.equal(resolve(pythonField.value), resolve(pythonPath));
+    evidence.configuration = { status: configured.data.status, configured: pythonField.configured };
+    app.store.put('dataset', { id: 'factor-host-demo', title: 'Invented deterministic panel for host acceptance only', rows: syntheticRows(), provenance: { kind: 'demo', source_kind: 'synthetic' } });
 
-    await advance('evaluate-only and immutable identical re-evaluation');
-    const evaluated = await finish(await invoke('factor_measure', { mode: 'evaluate', requestId: 'host-evaluate', valuesRef, profile, references: [], budget }));
-    await rendered(evaluated);
+    await advance('explicit prepare freezes data without computation or library writes');
+    const prepared = await invoke('factor_prepare', { requestId: 'host-prepare', source: { datasetId: 'factor-host-demo' }, layout, budget });
+    assert.ok(prepared.snapshotRef); assert.deepEqual(prepared.layout, layout);
+    assert.ok(prepared.rows.development > 0 && prepared.rows.holdout > 0);
+    assert.equal((await factorRows()).items.length, 0);
+    const snapshot = await readJSON(prepared.snapshotRef); assert.equal(snapshot.id, prepared.snapshotId);
+    evidence.snapshot = { ref: prepared.snapshotRef, id: prepared.snapshotId, rows: prepared.rows };
+    assert.throws(() => app.store.update('dataset', 'factor-host-demo', { rows: [] }), { code: 'dataset_immutable' }, 'The host rejects mutation of the registered demo source');
+
+    await advance('standalone Qlib compute and exact request replay');
+    const computeInput = { requestId: 'host-compute', snapshotRef: prepared.snapshotRef, formulas, partition: 'development', budget, diagnostics: profile.diagnostics };
+    const computed = await invoke('factor_compute', computeInput);
+    assert.equal(computed.candidates.length, formulas.length); assert.ok(computed.candidates.every(item => item.status === 'ok' && item.computeKey));
+    assert.equal((await factorRows()).items.length, 0, 'Computation does not evaluate or archive a factor');
+    const beforeReplay = processRuns().length;
+    assert.deepEqual(await invoke('factor_compute', computeInput), computed);
+    assert.equal(processRuns().length, beforeReplay, 'Completed operation replay cannot launch another Python worker');
+    const frozenValues = await readJSON(computed.valuesRef);
+    assert.deepEqual(frozenValues.snapshotRef, prepared.snapshotRef);
+
+    await advance('standalone evaluation and immutable duplicate evidence');
+    const evaluated = await invoke('factor_evaluate', { requestId: 'host-evaluate', valuesRef: computed.valuesRef, profile, referenceValues: [], budget });
+    assert.equal(evaluated.evaluations.length, 2); assert.equal(evaluated.factorIds.length, 2);
+    assert.ok(evaluated.evaluations.every(item => item.status === 'ok' && Math.abs(item.value.rankIC.value) > 0.99));
     const libraryPage = await invoke('factor_library', { action: 'query', query: { kind: 'alpha', axis: 'time_series', minCoverage: 0.8 } });
     assert.equal(libraryPage.items.length, 2);
-    const firstFactor = await invoke('factor_library', { action: 'read', factorId: libraryPage.items[0].id, limit: 100 });
+    const firstFactor = await invoke('factor_library', { action: 'read', factorId: evaluated.factorIds[0], limit: 100 });
     assert.equal(firstFactor.evaluations.items.length, 1);
-    assert.ok(Math.abs(firstFactor.evaluations.items[0].rankIC.value) > 0.99);
-    const repeated = await finish(await invoke('factor_measure', { mode: 'evaluate', requestId: 'host-evaluate-repeat', valuesRef, profile, references: [], budget }));
-    await rendered(repeated);
-    const afterRepeat = await invoke('factor_library', { action: 'read', factorId: firstFactor.factor.id, limit: 100 });
-    assert.deepEqual(afterRepeat.evaluations, firstFactor.evaluations, 'Repeated frozen evidence should reuse its immutable evaluation identity');
+    const repeated = await invoke('factor_evaluate', { requestId: 'host-evaluate-repeat', valuesRef: computed.valuesRef, profile, referenceValues: [], budget });
+    assert.deepEqual(repeated, evaluated, 'Frozen numerical evidence has stable IDs and ArtifactRefs');
+    assert.deepEqual((await invoke('factor_library', { action: 'read', factorId: firstFactor.factor.id, limit: 100 })).evaluations, firstFactor.evaluations);
+    assert.equal((await own.state.query({ collection: 'factor_research_v1_pools', limit: 200 })).items.length, 0, 'Evaluation cannot select a strategy pool');
 
-    await advance('library-first reuse of exact frozen source evidence');
-    const frozenValues = await readJSON(valuesRef), frozenSnapshot = await readJSON(frozenValues.snapshotRef);
-    const workflowsBefore = app.store.list('run').filter(run => run.capabilityId === `${pluginId}#factor_workflow`).length;
-    const reused = await invoke('factor_research', { draft: { requestId: 'host-reuse', need: 'Reuse exact synthetic evidence', source: { ref: frozenSnapshot.source }, layout, profile, references: [], budget, space: { fields: ['signal', 'close', 'volume'], operators: ['Mul'], windows: [2], lags: [1], constants: [-1], maxNodes: 12, maxDepth: 5, maxLookbackBars: 6, seeds: [firstFactor.factor.formula], templates: [] } } });
-    assert.equal(reused.resolution, 'reuse'); assert.equal(reused.factors[0].id, firstFactor.factor.id);
-    assert.equal(app.store.list('run').filter(run => run.capabilityId === `${pluginId}#factor_workflow`).length, workflowsBefore);
-
-    await advance('explicit pool selection and external application feedback');
-    assert.equal((await host.state.query({ collection: 'factor_research_v1_pools', limit: 200 })).items.length, 0, 'Research/evaluation cannot change a strategy pool');
+    await advance('explicit pool selection, annotation and external feedback preserve numerical evidence');
     const selected = await invoke('factor_pool', { action: 'decide', change: { operationId: 'host-select', poolId: 'demo-pool', strategyId: 'demo-strategy', expectedVersion: 0, decision: 'add', factorIds: [firstFactor.factor.id], replaces: [], purpose: 'Synthetic integration selection', reason: 'Explicit fixture strategy decision', strategyVersion: 'demo-v1', applicationEvidence: [] } });
     assert.deepEqual(selected.factorIds, [firstFactor.factor.id]);
-    await invoke('factor_pool', { action: 'feedback', poolId: selected.id, strategyVersion: 'demo-v1', poolVersion: selected.version, applicationEvidence: [evaluated.report], note: 'External synthetic evidence only; no strategy execution.', operationId: 'host-feedback' });
+    await invoke('factor_pool', { action: 'feedback', poolId: selected.id, strategyVersion: 'demo-v1', poolVersion: selected.version, applicationEvidence: [computed.valuesRef], note: 'External synthetic evidence only; no strategy execution.', operationId: 'host-feedback' });
+    await invoke('factor_library', { action: 'annotate', factorId: firstFactor.factor.id, note: 'Synthetic fixture annotation', operationId: 'host-note' });
     assert.deepEqual((await invoke('factor_library', { action: 'read', factorId: firstFactor.factor.id, limit: 100 })).evaluations, firstFactor.evaluations);
 
-    await advance('combined compute/evaluate mode with immutable reference evidence');
-    const combined = await finish(await invoke('factor_measure', { mode: 'both', requestId: 'host-both', source: { datasetId: 'factor-host-demo' }, layout, formulas: [candidate('demo-mean', { call: 'Mean', args: [{ field: 'signal' }, { constant: 2 }] })], profile, references: [firstFactor.factor.id], budget }));
-    await rendered(combined);
+    await advance('explicit reference Values are consumed without implicit computation');
+    const referenceTarget = await invoke('factor_compute', { requestId: 'host-reference-target', snapshotRef: prepared.snapshotRef, formulas: [candidate('demo-mean', { call: 'Mean', args: [{ field: 'signal' }, { constant: 2 }] })], partition: 'development', budget });
+    const beforeReference = workerRuns().length;
+    const withReference = await invoke('factor_evaluate', { requestId: 'host-reference-evaluate', valuesRef: referenceTarget.valuesRef, profile, referenceValues: [computed.valuesRef], budget });
+    assert.equal(workerRuns().length, beforeReference + 1, 'Reference evaluation launches only its evaluation worker');
+    const referenced = withReference.evaluations[0].value;
+    assert.equal(referenced.maxReferenceCorrelation.status, 'computed');
+    const details = await readJSON(referenced.details); assert.deepEqual(details.referenceValues, [computed.valuesRef]);
 
-    await advance('real search plus frozen holdout');
+    await advance('manual search batches use DEAP and Optuna with stored development feedback');
     const seed = { dsl: 'qlib-expr/1', tree: { call: 'Ref', args: [{ field: 'signal' }, { constant: 1 }] } };
-    const searchDraft = { requestId: 'host-research', need: 'Synthetic signal search for integration acceptance only', source: { datasetId: 'factor-host-demo' }, layout, profile, references: [], budget: { ...budget, maxCandidates: 4 }, space: { fields: ['signal', 'close'], operators: ['Add', 'Sub', 'Mul', 'Abs', 'Mean', 'Ref'], windows: [2, 3], lags: [1], constants: [-1, 1], maxNodes: 12, maxDepth: 5, maxLookbackBars: 6, seeds: [seed], templates: [{ tree: { call: 'Mean', args: [{ field: 'signal' }, { parameter: 'window' }] }, domains: { window: [2, 3] } }] } };
-    const searched = await invoke('factor_research', { draft: searchDraft });
-    assert.equal(searched.resolution, 'research');
-    const researched = await finish(searched.job); await rendered(researched);
-    const trials = await host.state.query({ collection: 'factor_research_v1_trials', filter: { jobId: researched.id, kind: 'candidate' }, limit: 200 });
-    assert.ok(trials.items.some(row => row.value.holdout?.status === 'evaluated'));
+    const searchInput = { action: 'open', requestId: 'host-search-open', snapshotRef: prepared.snapshotRef, need: 'Synthetic signal search for integration acceptance only', profile, references: [], budget: { ...budget, maxSeconds: 300, maxCandidates: 10, batchSize: 4, seed: 11 }, space: { fields: ['signal', 'close'], operators: ['Add', 'Sub', 'Mul', 'Abs', 'Mean', 'Ref'], windows: [2, 3], lags: [1], constants: [-1, 1], maxNodes: 12, maxDepth: 5, maxLookbackBars: 6, seeds: [seed], templates: [{ tree: { call: 'Mean', args: [{ field: 'signal' }, { parameter: 'window' }] }, domains: { window: [2, 3] } }] } };
+    const opened = await invoke('factor_search', searchInput);
+    assert.deepEqual(opened.candidates, []); assert.equal(opened.attempted, 0);
+    const first = await invoke('factor_search', { action: 'propose', requestId: 'host-search-first', searchId: opened.searchId, limit: 2, feedback: [] });
+    assert.equal(first.candidates.length, 2); assert.ok(first.checkpoint);
+    const beforeRead = processRuns().length, beforeLibrary = (await factorRows()).items.length;
+    const observation = await invoke('factor_search', { action: 'read', searchId: opened.searchId });
+    assert.equal(observation.attempted, first.attempted); assert.deepEqual(observation.candidates, []);
+    assert.equal(processRuns().length, beforeRead, 'Reading a search session cannot propose or compute');
+    assert.equal((await factorRows()).items.length, beforeLibrary, 'Proposing cannot evaluate or archive factors');
+    const searchCompute = await invoke('factor_compute', { requestId: 'host-search-compute', snapshotRef: prepared.snapshotRef, formulas: first.candidates, partition: 'development', budget, diagnostics: profile.diagnostics });
+    const searchEvaluation = await invoke('factor_evaluate', { requestId: 'host-search-evaluate', valuesRef: searchCompute.valuesRef, profile, referenceValues: [], budget });
+    const feedback = [];
+    for (const factorId of searchEvaluation.factorIds) {
+      const saved = await invoke('factor_library', { action: 'read', factorId, limit: 100 });
+      const evaluation = saved.evaluations.items.find(value => searchEvaluation.evaluations.some(item => item.status === 'ok' && item.value.id === value.id));
+      assert.ok(evaluation); feedback.push({ factorId, evaluationId: evaluation.id });
+    }
+    const nextInput = { action: 'propose', requestId: 'host-search-next', searchId: opened.searchId, limit: 4, feedback };
+    const next = await invoke('factor_search', nextInput);
+    assert.ok(next.attempted > first.attempted);
+    const beforeSearchReplay = processRuns().length;
+    assert.deepEqual(await invoke('factor_search', nextInput), next);
+    assert.equal(processRuns().length, beforeSearchReplay, 'Propose request replay cannot consume attempts or feedback twice');
+    const checkpoint = await readJSON(next.checkpoint);
+    const methods = new Set(checkpoint.attempts.map(attempt => attempt.method));
+    assert.ok(methods.has('deap') && methods.has('optuna'), json(checkpoint.attempts));
+    assert.equal(checkpoint.feedback.filter(item => item.disposition === 'accepted').length, feedback.length);
+    evidence.search = { searchId: opened.searchId, first, next, methods: [...methods], checkpoint: next.checkpoint };
+
+    await advance('holdout evaluation is explicitly chosen and cannot become search feedback');
+    const holdout = await invoke('factor_compute', { requestId: 'host-holdout-compute', snapshotRef: prepared.snapshotRef, formulas: first.candidates.slice(0, 1), partition: 'holdout', budget });
+    const holdoutEvaluation = await invoke('factor_evaluate', { requestId: 'host-holdout-evaluate', valuesRef: holdout.valuesRef, profile, referenceValues: [], budget });
+    assert.equal(holdoutEvaluation.partition, 'holdout');
+    const held = holdoutEvaluation.evaluations.find(item => item.status === 'ok'); assert.ok(held);
+    const beforeInvalid = processRuns().length;
+    await rejectOperation('factor_search', { action: 'propose', requestId: 'host-holdout-feedback', searchId: opened.searchId, limit: 0, feedback: [{ factorId: holdoutEvaluation.factorIds[0], evaluationId: held.value.id }] }, /holdout|development|EVIDENCE_MISMATCH/i);
+    assert.equal(processRuns().length, beforeInvalid, 'Rejected feedback cannot invoke a worker');
+    assert.equal((await invoke('factor_search', { action: 'read', searchId: opened.searchId })).attempted, next.attempted);
     assert.deepEqual((await invoke('factor_pool', { action: 'read', poolId: selected.id })).factorIds, selected.factorIds);
 
-    await advance('report failure resumes the same native task without repeating numerical work');
-    let stopped, originalRun;
-    await app.runtime.plugins.configure('sesame/reports', 'disabled', app.runtime.plugins.policy().version);
-    try {
-      const pending = await invoke('factor_measure', { mode: 'compute', requestId: 'host-report-retry', source: { datasetId: 'factor-host-demo' }, layout, formulas, budget });
-      const deadline = Date.now() + 120000;
-      for (;;) {
-        stopped = await invoke('factor_job', { action: 'read', jobId: pending.id });
-        originalRun = (await host.runs.read(pending.runId)).run;
-        if (stopped.reportStatus === 'failed' && originalRun.status === 'interrupted') break;
-        assert.ok(!['failed', 'completed', 'cancelled'].includes(originalRun.status), JSON.stringify({ job: stopped, native: originalRun }));
-        assert.ok(Date.now() < deadline, JSON.stringify({ timeout: stopped, native: originalRun }));
-        await new Promise(resolve => setTimeout(resolve, 200));
-      }
-      assert.equal(stopped.completed, formulas.length); assert.ok(stopped.valuesRef);
-      assert.equal(stopped.status, 'interrupted'); assert.equal(stopped.report, null);
-    } finally {
-      await app.runtime.plugins.configure('sesame/reports', 'mounted', app.runtime.plugins.policy().version);
-    }
-    const processCount = app.store.list('run').filter(run => run.capabilityId === 'host.process.exec').length;
-    const bindingIdentity = sessionId => {
-      const bound = app.runtime.reportLibrary.boundTarget(sessionId);
-      return bound && { reportId: bound.reportId, fileId: bound.fileId, space: bound.space, path: bound.path };
+    await advance('safe native checkpoint recovery reuses the completed worker receipt');
+    const stopAfterWorker = async (name, input, control) => {
+      let stoppedChild;
+      const listener = event => {
+        if (stoppedChild || event.type !== 'run.updated' || event.data.capabilityId !== 'host.process.exec' || event.data.status !== 'completed' || !isWorker(event.data)) return;
+        const parent = app.store.get('run', event.data.parentRunId);
+        if (parent?.capabilityId !== `${pluginId}#${name}`) return;
+        stoppedChild = event.data.id;
+        main.runs[control]({ id: parent.id }, { reason: `Synthetic ${control} after a completed worker, before publication` });
+      };
+      app.store.on('event', listener);
+      let accepted, run;
+      try { accepted = await admit(name, input); assert.equal(accepted.type, 'run'); run = await wait(accepted); }
+      finally { app.store.off('event', listener); }
+      assert.ok(stoppedChild, 'The real numerical worker reached a retained receipt');
+      assert.equal(run.status, control === 'cancel' ? 'cancelled' : 'interrupted', json(run));
+      assert.equal(app.store.get('run', stoppedChild).status, 'completed');
+      return { accepted, run, stoppedChild };
     };
-    const binding = bindingIdentity(originalRun.executionSessionId);
-    assert.ok(binding?.fileId);
-    const retry = await invoke('factor_job', { action: 'report', jobId: stopped.id });
-    assert.equal(retry.runId, originalRun.id);
-    const recovered = await finish(retry); await rendered(recovered);
-    assert.deepEqual(recovered.valuesRef, stopped.valuesRef);
-    assert.equal(app.store.list('run').filter(run => run.capabilityId === 'host.process.exec').length, processCount, 'A report retry cannot launch another numerical worker');
-    const resumed = (await host.runs.read(originalRun.id)).run;
-    assert.equal(resumed.executionSessionId, originalRun.executionSessionId);
-    assert.deepEqual(bindingIdentity(resumed.executionSessionId), binding);
-    evidence.reportRecovery = { runId: resumed.id, attempt: resumed.attempt, processCountBefore: processCount, processCountAfter: processCount, binding, valuesRef: recovered.valuesRef, report: recovered.report };
+    const resumableInput = { requestId: 'host-safe-resume', snapshotRef: prepared.snapshotRef, formulas: [candidate('safe-resume', { call: 'Ref', args: [{ field: 'signal' }, { constant: 2 }] })], partition: 'development', budget };
+    const paused = await stopAfterWorker('factor_compute', resumableInput, 'interrupt');
+    const beforeResume = workerRuns().length;
+    const resume = await main.runs.resume(paused.accepted.run, { interruptIds: paused.run.interrupts.filter(item => !item.resolvedAt).map(item => item.id), operationId: 'host-safe-resume-control' });
+    assert.equal(resume.run.id, paused.run.id);
+    const recovered = await wait(paused.accepted);
+    assert.equal(recovered.status, 'completed', json(recovered)); assert.equal(recovered.attempt, 2);
+    assert.equal(workerRuns().length, beforeResume, 'Safe resume consumes the verified receipt without repeating Qlib');
+    assert.equal(recovered.output.candidates[0].status, 'ok');
+    evidence.safeResume = { runId: recovered.id, attempt: recovered.attempt, retainedChild: paused.stoppedChild, valuesRef: recovered.output.valuesRef, numericalWorkersBefore: beforeResume, numericalWorkersAfter: workerRuns().length };
 
-    const processes = app.store.list('run').filter(run => run.capabilityId === 'host.process.exec');
-    assert.ok(processes.length >= 8); assert.ok(processes.every(run => run.status === 'completed'));
-    assert.equal(app.requests.length, 0, 'The factor workflow uses numerical workers, not model calls');
-    evidence.processRuns = processes.map(run => ({ id: run.id, status: run.status, parentRunId: run.parentRunId }));
-    evidence.completed = true; await advance('verified complete');
+    await advance('native cancel prevents evaluation archive; explicit resubmission reconciles its receipt');
+    const cancellationInput = { requestId: 'host-cancel-reconcile', valuesRef: recovered.output.valuesRef, profile: { ...profile, id: 'host-cancelled-evaluation' }, referenceValues: [], budget };
+    const beforeCancelledRecords = (await own.state.query({ collection: 'factor_research_v1_evaluations', limit: 200 })).items;
+    const cancelled = await stopAfterWorker('factor_evaluate', cancellationInput, 'cancel');
+    assert.deepEqual((await own.state.query({ collection: 'factor_research_v1_evaluations', limit: 200 })).items, beforeCancelledRecords, 'Cancelled operation cannot archive late evaluation records');
+    const beforeReconcile = workerRuns().length;
+    const reconciled = await invoke('factor_evaluate', cancellationInput);
+    assert.equal(reconciled.evaluations[0].status, 'ok');
+    assert.equal(workerRuns().length, beforeReconcile, 'Explicit same-request submission reuses the complete immutable worker receipt');
+    const newRun = evidence.operations.at(-1).runId;
+    assert.notEqual(newRun, cancelled.run.id, 'Cancelled native Runs are terminal; reconciliation uses a new explicit Run');
+    assert.equal((await main.runs.read(cancelled.accepted.run)).run.status, 'cancelled');
+    evidence.cancelReconciliation = { cancelledRunId: cancelled.run.id, newRunId: newRun, retainedChild: cancelled.stoppedChild, evaluationId: reconciled.evaluations[0].value.id, numericalWorkersBefore: beforeReconcile, numericalWorkersAfter: workerRuns().length };
+
+    const runs = app.store.list('run');
+    assert.ok(processRuns().length >= 10); assert.ok(processRuns().every(run => run.status === 'completed'));
+    assert.ok(!runs.some(run => run.kind === 'workflow' || /factor_(workflow|research|measure|job)|reports[.#]/.test(run.capabilityId)), 'No hidden controller, report publication or report rendering');
+    assert.equal(app.requests.length, 0);
+    evidence.processRuns = processRuns().map(run => ({ id: run.id, status: run.status, parentRunId: run.parentRunId, numerical: Boolean(isWorker(run)) }));
+    evidence.completed = true; await advance('verified explicit pipeline');
   } catch (error) {
     primaryError = error; evidence.failedStage = stage; evidence.error = { message: error.message, stack: error.stack };
     if (app) {
       evidence.runs = app.store.list('run').map(run => ({ id: run.id, capability: run.capabilityId, status: run.status, error: run.error, output: run.output }));
-      evidence.jobState = app.store.list(`plugin:${pluginId}:v2-state/factor_research_v1_jobs`);
-      evidence.trialState = app.store.list(`plugin:${pluginId}:v2-state/factor_research_v1_trials`);
+      evidence.operationsState = app.store.list(`plugin:${pluginId}:v2-state/factor_research_v1_jobs`);
+      evidence.searchState = app.store.list(`plugin:${pluginId}:v2-state/factor_research_v1_searches`);
     }
-    t.diagnostic(JSON.stringify({ stage, error: error.message, runs: evidence.runs?.map(({ id, capability, status, error }) => ({ id, capability, status, error })) })); throw error;
+    t.diagnostic(json({ stage, error: error.message, runs: evidence.runs?.map(({ id, capability, status, error }) => ({ id, capability, status, error })) })); throw error;
   } finally {
     evidence.modelCalls = app?.requests.length ?? 0;
-    await writeFile(join(ownedRoot, 'latest-host-evidence.json'), JSON.stringify(evidence, null, 2));
+    await writeFile(join(ownedRoot, 'agent-directed-host-evidence.json'), json(evidence));
     if (app) {
       const child = relative(ownedRoot, await realpath(app.directory)); assert.ok(!child.startsWith('..') && !isAbsolute(child));
       try { await app.dispose(); } catch (error) { if (!primaryError) throw error; t.diagnostic(`Cleanup after failure: ${error.message}`); }

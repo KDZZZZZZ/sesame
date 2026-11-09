@@ -176,8 +176,7 @@ async function ownedRef(host, state, candidate) {
 async function acceptedRefs(host, state, accepted) {
   if (accepted.type === 'run') return [await ownedRef(host, state, accepted.run)];
   const value = accepted.value, found = [];
-  const receiptIds = [value?.runId, value?.job?.runId].filter(id => typeof id === 'string').map(id => ({ id }));
-  for (const candidate of [value?.workflow, value?.run, value?.run_ref, value?.runRef, ...receiptIds]) {
+  for (const candidate of [value?.workflow, value?.run, value?.run_ref, value?.runRef]) {
     if (candidate && typeof candidate.id === 'string' && candidate.id.startsWith('run_') && !found.some(item => item.id === candidate.id)) found.push(await ownedRef(host, state, candidate));
   }
   return found;

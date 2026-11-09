@@ -30,6 +30,20 @@ const fence = { jobId: 'job', epoch: 1 };
 const record = (f, e) => f.library.record([e.candidate], [e.evaluation], fence);
 const change = (factorId, extras = {}) => ({ operationId: 'select', poolId: 'pool', strategyId: 'strategy', expectedVersion: 0, decision: 'add', factorIds: [factorId], replaces: [], purpose: 'Synthetic test', reason: 'Explicit selection', strategyVersion: 'v1', applicationEvidence: [], ...extras });
 
+test('exact feedback lookup cannot read an evaluation under another factor', async t => {
+  const f = await fixture(t), first = await f.makeEvidence(), second = await f.makeEvidence({ c: candidate('b', 'volume') });
+  const [a] = await record(f, first), [b] = await record(f, second);
+  assert.deepEqual(await f.library.evaluation(a.id, first.evaluation.id), first.evaluation);
+  await assert.rejects(f.library.evaluation(b.id, first.evaluation.id), { code: 'NOT_FOUND' });
+});
+
+test('native attempt cancellation is forwarded to the state transaction', async t => {
+  const f = await fixture(t), e = await f.makeEvidence(), controller = new AbortController();
+  f.state.beforeCommit = async () => controller.abort(Object.assign(new Error('Stopped'), { code: 'CANCELLED' }));
+  await assert.rejects(f.library.record([e.candidate], [e.evaluation], { ...fence, signal: controller.signal }), { code: 'CANCELLED' });
+  assert.equal(f.state.query({ collection: COLLECTIONS.factors }).items.length, 0);
+});
+
 test('formula identity includes operator version and matches compiler identity', async t => {
   const f = await fixture(t), a = await f.makeEvidence(), [first] = await record(f, a);
   assert.equal(first.definitionDigest, digest({ dsl: a.candidate.formula.dsl, operatorDigest: OPERATOR_DIGEST, tree: a.candidate.formula.tree }));

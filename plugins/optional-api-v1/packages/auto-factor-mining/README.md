@@ -1,78 +1,43 @@
-# 因子研究 2.0
+# 因子研究 3.0
 
-`sesame/auto-factor-mining` 把策略因子需求落实为查库、证据复用、补评或搜索，使用真实 Qlib 计算和纯因子评价保存结果。已有公式可独立计算，已有不可变 Values 可独立评价。因子库与策略池分别保存；策略明确决定自己的成员。
+`sesame/auto-factor-mining` 提供搜索、Qlib 计算、纯因子评价、因子库和策略因子池。主 Agent 或 Agent 工作流直接调用这些能力，决定搜索方向、并行分支、验证步骤和何时交付。
 
 ## 公开入口
 
-| 工具 | 用途 | 返回 |
+| 工具 | 输入重点 | 结果 |
 |---|---|---|
-| factor_environment | inspect 现有环境；prepare 私有依赖 | 原生 Run 的实际环境核验结果 |
-| factor_research | draft：需求、来源、切分、空间、评价、预算 | 匹配因子或后台 Job |
-| factor_measure | compute / evaluate / both | 后台 Job |
-| factor_job | read / pause / resume / cancel / report | Job 与分页证据 |
-| factor_library | query / read / annotate | 定义与独立评价 |
-| factor_pool | read / decide / feedback | 策略池或反馈引用 |
+| factor_environment | inspect / prepare，pythonPath 可选 | 实际环境核验 |
+| factor_prepare | source、layout、资源预算 | 固定 snapshotRef |
+| factor_search | open 固定搜索空间；propose 请求一批；read 读进度 | 候选公式与 checkpoint |
+| factor_compute | snapshotRef、明确公式、partition | 固定 valuesRef |
+| factor_evaluate | valuesRef、profile、已计算的 referenceValues | 纯因子评价及入库 ID |
+| factor_library | query / read / annotate | 定义和独立评价历史 |
+| factor_pool | read / decide / feedback | 策略选用与应用反馈 |
 
-完整接口见 [contracts.md](references/contracts.md)，评价约定见 [evaluation.md](references/evaluation.md)。factor_workflow 和配置读写是宿主内部能力。
+数值步骤返回原生 Run；调用者通过宿主 Run read/wait 读取最终 output，再安排依赖它的工作。搜索一次只返回本批候选，计算不隐式评价，评价不发起新搜索。不会自动选留出候选、改策略池或生成报告。
 
-## 环境与数据
+完整字段见 [contracts.md](references/contracts.md)，操作方法见 [SKILL.md](skills/auto-factor-mining/SKILL.md)，运行恢复见 [execution.md](references/execution.md)。
 
-先调用 `factor_environment({"action":"inspect","pythonPath":"已有 Python 可执行文件绝对路径"})`。prepare 在包私有目录安装锁定依赖，缓存和临时文件也留在该目录；全局 Python 仅作基础解释器或只读核验。基准为 Windows x64 / CPython 3.12、Qlib 0.9.7、DEAP 1.4.4、Optuna 5.0.0；完整实测依赖见 python/requirements-lock.txt。核验使用真实导入，包括 Qlib 原生扩展。
+## 使用方式
 
-源为 {datasetId} 或 {ref}，后者是完整 kind:data 的固定 ArtifactRef。json-rows 为 {time,symbol,availableAt,fields:{close,...}}。时间是 UTC ISO，可得时点晚于柱收盘的字段不作为当时特征。固定频率网格保留缺失柱，window/horizon 计网格位置。提供的目标字段不能作特征。
+先查因子库。证据已满足目标时可直接引用；已有公式而证据不足时，明确调用数据冻结、计算和评价；确实缺少定义时才开搜索。独立假设可以并行使用同一快照，不必先生成虚假的搜索请求。
 
-以下只展示 both 输入形状；数据集、品种和日期必须换为实际数据，示例本身不是研究证据：
+Agent 明确指定开发/留出区间、目标、评价标准和搜索空间。开发评价可按 `{factorId,evaluationId}` 回馈搜索器，分数从真实存档读取；留出结果不作搜索反馈。选择候选后，Agent 显式请求 holdout 计算与评价。需要参考比较时，先在同一快照和分区计算参考公式，再传入其 Values 引用。
 
-```json
-{
-  "mode": "both",
-  "requestId": "measure-mean-2",
-  "source": {"datasetId": "实际数据集 ID"},
-  "layout": {
-    "universe": ["实际品种"], "frequency": "60min", "timezone": "UTC", "availableAt": "bar_close",
-    "development": ["2026-01-01T00:00:00Z", "2026-02-28T23:00:00Z"],
-    "holdout": ["2026-03-01T00:00:00Z", "2026-03-31T23:00:00Z"],
-    "target": {"kind": "forward_return", "field": "close", "horizonBars": 1}
-  },
-  "formulas": [{
-    "id": "mean-2", "hypothesis": "预先声明的价格平滑假设",
-    "formula": {"dsl": "qlib-expr/1", "tree": {"call": "Mean", "args": [{"field": "close"}, {"constant": 2}]}},
-    "origin": {"method": "seed", "parents": [], "parameters": {}}
-  }],
-  "profile": {
-    "id": "alpha-ts-v1", "version": 1, "kind": "alpha", "axis": "time_series",
-    "minPairs": 20, "minCoverage": 0.8, "stabilityWindows": 4, "maxReferenceCorrelation": 0.95,
-    "score": "abs_rank_ic", "diagnostics": []
-  },
-  "references": [],
-  "budget": {"maxCandidates": 1, "batchSize": 1, "maxWorkers": 1, "maxSeconds": 120, "maxInputBytes": 8388608, "maxOutputBytes": 8388608, "seed": 7}
-}
-```
+研究及复杂任务由 Agent 使用报告插件交付统一视觉的报告；策略成员选择与回测由策略研究负责。因子评价不会生成仓位、PnL、Sharpe 或回撤。
 
-compute 只需 requestId/budget/source/layout/formulas；evaluate 只需 requestId/budget/valuesRef/profile/references。独立评价不重新取数。references 为已有库因子 ID，其值在同一快照上对齐。
+## 环境、数据与执行
 
-## 执行和证据
+`factor_environment inspect` 核验真实导入。缺依赖时 prepare 使用已有 64 位 CPython 3.12 创建包私有环境；缓存与临时文件也在私有目录，不修改全局 Python。已验证 Qlib 0.9.7、DEAP 1.4.4、Optuna 5.0.0，完整锁见 python/requirements-lock.txt。
 
-Formula 是有类型的白名单树，禁止执行用户字符串。Python 每次执行有界块，Qlib D.features 真实批量计算，单项失败保留成功项。单次进程最长 540 秒，kernels=1，共享磁盘缓存关闭，MLflow 使用明确本地 URI。数据、日历、环境和算子版本进入身份。持久资源不保存旧 attempt 路径。
+Source 是实际 `{datasetId}` 或固定 `{ref}`（kind:data）；行形状为 `{time,symbol,availableAt,fields:{close,...}}`。UTC 固定网格保留缺失柱，window/horizon 按网格位置计数。目标字段与特征分离，开发标签的未来端点不能越过开发结束；特征可以使用分区前历史预热。
 
-maxCandidates 计入重复和失败的搜索尝试；maxSeconds 累计活动时间，不计暂停。maxInputBytes/maxOutputBytes 是整项任务各工作块累计读写的字节预算，包含请求和结果回执，并按并行槽预留。单批数据超过额度时，应减小 batchSize/maxWorkers 或明确调整预算，不扩大宿主限制。多品种、多字段的 Qlib provider 使用分层清单，每份资源的固定依赖不超过宿主上限。
+Formula 使用 `qlib-expr/1` 类型树。Ref 仅正滞后，Rank 是滚动时序排名。真实 Qlib `D.features` 批量计算，单项失败保留同批成功项；大矩阵和 provider 分片为不可变资源，返回有界摘要与固定引用。
 
-开发标签的未来端点越过开发结束时会剔除。特征可以使用分区前历史预热；冻结选择后才访问留出。评价涵盖关联、覆盖率、固定窗口稳定性、参考冗余和条件允许的残差关联；state 使用 eta-squared。placebo、bootstrap、walk_forward、regimes、sensitivity、quantiles 按预先声明选项运行，缺失条件保留原因。收益分位只汇总未来标签，不创建交易组合。
-
-暂停在安全点保存，取消提升 epoch 阻止迟到入库，恢复先核对真实进程回执。回执只返回有界摘要和固定引用。报告经宿主报告能力发布，计算完成与报告发布分别记录。
-
-外部策略通过 factor_pool decide 提供策略身份、expectedVersion、operationId、用途、理由和 applicationEvidence。研究与入库不会自动改池。策略回测、成本与成交验证由外部能力负责。
+每个操作声明资源预算；搜索会话累计候选尝试（含重复/失败）、活动时长与 worker 输入/输出字节（含请求、结果及数值文件）。JS 元数据另受声明和资源大小上限约束。每个 Python 块单进程、最长 540 秒；跨块并行由 Agent 与宿主安排。原生 Run 支持观察和控制；中断恢复核对已保留回执，不盲目重放。
 
 ## 验证与历史材料
 
-设置 `SESAME_PLUGIN_SDK_LOADER` 为匹配应用提供的公开 SDK loader 文件 URL，`PYTHON` 为核验过的私有解释器绝对路径，然后在包目录运行 `npm test`：
+设置 `SESAME_PLUGIN_SDK_LOADER` 为匹配宿主公开 SDK loader 的文件 URL、`PYTHON` 为核验私有解释器，在包目录执行 `npm test` 和 `npm run schemas:check`。真实宿主夹具配置见 [VALIDATION.md](VALIDATION.md)。
 
-```powershell
-$env:SESAME_PLUGIN_SDK_LOADER='file:///实际路径/sdk-loader.js'
-$env:PYTHON='实际私有环境/Scripts/python.exe'
-npm test
-```
-
-入口运行本包全部 JavaScript 测试，再运行 `tests/*_test.py` 的搜索与评价测试；compute_python.py 已由 JavaScript 数值测试运行。未设置 PYTHON 时明确提示并跳过依赖 Python 的数值测试，不视为数值验收通过。真实安装宿主测试另需显式配置其隔离夹具，见 [VALIDATION.md](VALIDATION.md)。`npm run schemas:check` 核验静态声明。实际数学测试覆盖缺失柱、嵌套窗口、Ref、排名并列、零分母、未来扰动、开发边界、辅助值与重新物化。
-
-2.0 不兼容旧 auto_factor_*、旧 AST、旧工作流状态或独立 factor-evaluator。声明中 Historical 的 references、reference 脚本和合成 examples 保持来源字节；其中旧命令与策略指标不属于当前接口，也不自动执行。
+3.0 删除原研究总控和旧工具，不提供兼容别名。声明中 Historical 的脚本和案例保留来源字节，其旧命令不是当前接口。既有库定义、评价及策略池的数据模型保持独立。

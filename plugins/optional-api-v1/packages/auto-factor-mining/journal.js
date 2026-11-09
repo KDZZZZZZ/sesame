@@ -21,11 +21,17 @@ export async function updateState(state, collection, key, transform, signal) {
     catch (e) { if (e.code !== 'VERSION_CONFLICT' || retry === 11) throw e; }
   }
 }
-export function publicJob(job) {
-  return Object.fromEntries(['id', 'runId', 'status', 'epoch', 'completed', 'proposed', 'report', 'error'].map(k => [k, job[k] ?? null]));
-}
+const refsIn = value => {
+  const found = new Map();
+  const visit = item => { if (item && typeof item === 'object') {
+    if (typeof item.id === 'string' && typeof item.revision === 'string' && typeof item.digest === 'string') found.set(canonical(item), item);
+    else Object.values(item).forEach(visit);
+  } }; visit(value); return [...found.values()];
+};
 export function createJournal({ state, artifacts, ownerSessionId }) {
-  const get = async id => { const row = await readState(state, COLLECTIONS.jobs, id); ensure(row, 'Research job not found', 'NOT_FOUND'); return row.value; };
+  const idFor = requestId => identifier('factor-operation', [ownerSessionId, requestId]);
+  const find = async requestId => (await readState(state, COLLECTIONS.jobs, idFor(requestId)))?.value ?? null;
+  const get = async id => { const row = await readState(state, COLLECTIONS.jobs, id); ensure(row, 'Factor operation not found', 'NOT_FOUND'); return row.value; };
   const update = (id, fn, signal) => updateState(state, COLLECTIONS.jobs, id, (value, version) => { ensure(value, 'Research job not found', 'NOT_FOUND'); return fn(value, version); }, signal);
   const entryKey = (jobId, kind, id) => identifier(kind, [jobId, id]);
   const readEntry = async (jobId, kind, id) => (await readState(state, COLLECTIONS.trials, entryKey(jobId, kind, id)))?.value ?? null;
@@ -39,24 +45,38 @@ export function createJournal({ state, artifacts, ownerSessionId }) {
     return { items: result.items.map(row => row.value), cursor: result.nextCursor ?? null };
   };
   const all = async (jobId, kind) => { const items = []; let cursor; do { const result = await page(jobId, kind, cursor); items.push(...result.items); cursor = result.cursor; } while (cursor); return items; };
+  const getSearch = async id => {
+    const row = await readState(state, COLLECTIONS.searches, id); ensure(row, 'Search session not found', 'NOT_FOUND');
+    ensure(row.value.ownerSessionId === ownerSessionId, 'Search session belongs to another owner', 'FORBIDDEN'); return row.value;
+  };
   return {
-    get, update, entry, readEntry, page, all,
-    async create(type, input) {
+    get, find, idFor, update, entry, readEntry, page, all, getSearch,
+    updateSearch: (id, transform, signal) => updateState(state, COLLECTIONS.searches, id, value => {
+      ensure(value, 'Search session not found', 'NOT_FOUND'); ensure(value.ownerSessionId === ownerSessionId, 'Search session belongs to another owner', 'FORBIDDEN'); return transform(value);
+    }, signal),
+    async createSearch(input, initial, signal) {
+      const id = identifier('factor-search', [ownerSessionId, input.requestId]), inputDigest = digest(input);
+      return updateState(state, COLLECTIONS.searches, id, prior => {
+        if (prior) { ensure(prior.inputDigest === inputDigest, 'Search requestId changed', 'IDEMPOTENCY_CONFLICT'); return undefined; }
+        return { ...initial, id, inputDigest, ownerSessionId, createdAt: Date.now() };
+      }, signal);
+    },
+    async create(type, input, signal) {
       text(type, 128); text(input.requestId, 128);
-      const id = identifier('factor-job', [ownerSessionId, input.requestId]), inputDigest = digest(input);
+      const id = idFor(input.requestId), inputDigest = digest(input);
       const prior = await readState(state, COLLECTIONS.jobs, id);
       if (prior) { ensure(prior.value.inputDigest === inputDigest && prior.value.type === type, 'requestId was reused with different input', 'IDEMPOTENCY_CONFLICT'); return prior.value; }
-      const ctx = { jobId: id, epoch: 1, attemptId: 'admit' };
-      const inputRef = await artifacts.publishJSON(input, { schema: 'factor-evidence/1', dependencies: [], operationId: `${id}:input` }, ctx);
-      const job = { id, type, inputDigest, inputRef, ownerSessionId, runId: null, status: 'queued', epoch: 1, completed: 0, proposed: 0, report: null, error: null, createdAt: Date.now(), activeMs: 0, budget: input.budget, snapshot: null, searchCheckpoint: null, searchExhausted: false, selection: null, phase: 'prepare' };
-      try { await commitState(state, [{ op: 'put', key: { collection: COLLECTIONS.jobs, key: id }, value: job, expectedVersion: 0 }], { operationId: `${id}:admit:${inputDigest}` }); }
+      const ctx = { jobId: id, epoch: 1, attemptId: 'admit', signal };
+      const inputRef = await artifacts.publishJSON(input, { schema: 'factor-evidence/1', dependencies: refsIn(input), operationId: `${id}:input` }, ctx);
+      const job = { id, type, inputDigest, inputRef, ownerSessionId, runId: null, status: 'queued', epoch: 1, nativeAttempt: 0, hostAttempt: 0, outputRef: null, error: null, createdAt: Date.now(), activeMs: 0, startedAt: null, budget: input.budget };
+      try { await commitState(state, [{ op: 'put', key: { collection: COLLECTIONS.jobs, key: id }, value: job, expectedVersion: 0 }], { operationId: `${id}:admit:${inputDigest}`, signal }); }
       catch (e) { if (!['VERSION_CONFLICT', 'IDEMPOTENCY_CONFLICT'].includes(e.code)) throw e; const existing = await get(id); ensure(existing.inputDigest === inputDigest && existing.type === type, 'requestId conflict', 'IDEMPOTENCY_CONFLICT'); return existing; }
       return job;
     },
-    async assertActive(ctx, allowPausing = true) {
+    async assertActive(ctx) {
       ctx.signal?.throwIfAborted(); const job = await get(ctx.jobId);
-      ensure(job.epoch === ctx.epoch && (job.status === 'running' || allowPausing && job.status === 'pausing'), 'Research attempt is no longer active', 'CANCELLED');
-      if (job.activeMs + (job.startedAt ? Date.now() - job.startedAt : 0) >= job.budget.maxSeconds * 1000) throw error('BUDGET_EXHAUSTED', 'Research time budget exhausted');
+      ensure(job.epoch === ctx.epoch && job.status === 'running', 'Factor operation is no longer active', 'CANCELLED');
+      if (job.activeMs + (job.startedAt ? Date.now() - job.startedAt : 0) >= job.budget.maxSeconds * 1000) throw error('BUDGET_EXHAUSTED', 'Operation time budget exhausted');
       return job;
     },
   };

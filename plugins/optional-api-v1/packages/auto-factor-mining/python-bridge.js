@@ -12,6 +12,31 @@ export function createPython({ host, artifacts, journal, environment }) {
     selectedEnvironment ??= environment.inspect({}, signal).then(value => { ensure(value.ready, value.reason ?? 'Prepare the factor Python environment first', 'PREREQUISITE_REQUIRED'); return value; }).catch(e => { selectedEnvironment = null; throw e; });
     return selectedEnvironment;
   };
+  const retainedReceipt = async (record, command) => {
+    let receipt;
+    try {
+      ensure(await existingFileBytes(record.resultPath) <= MAX_SHARD_BYTES, 'Worker result exceeds budget', 'RESOURCE_EXHAUSTED');
+      receipt = JSON.parse(await readFile(record.resultPath, 'utf8'));
+    } catch (cause) { if (cause.code !== 'ENOENT' && !(cause instanceof SyntaxError)) throw cause; }
+    return receipt?.schema === 'factor-worker/1' && receipt.command === command && receipt.status === 'ok';
+  };
+  async function recoverChild(record, ctx) {
+    ensure(record.parentRunId && record.operationId && typeof host.runs.list === 'function', 'The previous child admission cannot be located; inspect its native Run before retrying', 'PROCESS_RECONCILIATION_REQUIRED');
+    const parent = (await host.runs.read({ id: record.parentRunId })).run;
+    ensure(['completed', 'cancelled', 'interrupted', 'unknown'].includes(parent.status), 'The previous native operation is still active', 'PROCESS_RECONCILIATION_REQUIRED');
+    const matches = []; let cursor;
+    do {
+      ctx.signal?.throwIfAborted();
+      const page = await host.runs.list({ parentRunId: record.parentRunId, capabilityId: 'host.process.exec', limit: 200, ...(cursor ? { cursor } : {}) });
+      matches.push(...page.items.filter(run => run.parentRunId === record.parentRunId && run.capabilityId === 'host.process.exec' && run.operationId === record.operationId));
+      ensure(!page.nextCursor || page.nextCursor !== cursor, 'Child Run cursor did not advance', 'EVIDENCE_MISMATCH'); cursor = page.nextCursor;
+    } while (cursor);
+    ensure(matches.length <= 1, 'More than one native child owns the same process admission', 'EVIDENCE_MISMATCH');
+    // Host admission persists the child Run before starting the OS process.
+    // An absent child is conclusive only when the parent itself stopped cleanly.
+    ensure(matches.length || parent.status !== 'unknown', 'The previous parent outcome is unknown and no child admission could be verified', 'PROCESS_RECONCILIATION_REQUIRED');
+    return matches[0] ?? null;
+  }
   async function settleBudget(record, ctx) {
     if (!record?.budgetToken || record.budgetSettled) return;
     const directory = attemptDirectory(root, { ...ctx, attemptId: record.attemptId });
@@ -139,28 +164,39 @@ export function createPython({ host, artifacts, journal, environment }) {
     async execute(command, input, callerCtx) {
       const job = await journal.assertActive(callerCtx), budget = job.budget;
       const remainingTime = () => budget.maxSeconds * 1000 - job.activeMs - (job.startedAt ? Date.now() - job.startedAt : 0);
-      ensure(remainingTime() > 0, 'Research time budget exhausted', 'BUDGET_EXHAUSTED');
+      ensure(remainingTime() > 0, 'Operation time budget exhausted', 'BUDGET_EXHAUSTED');
       const operation = identifier('process', [command, input]);
       let previous = await journal.readEntry(job.id, 'process', operation);
       if (previous?.outputRef) return artifacts.readJSON(previous.outputRef, callerCtx);
       let reconciledRun;
+      if (previous && !previous.runId) {
+        // Admission may have been interrupted before the child Run reference
+        // was saved. A later explicit invocation checks retained evidence;
+        // any recomputation gets a separate directory.
+        ensure((callerCtx.nativeAttempt ?? 1) > (previous.nativeAttempt ?? 1), 'A previous process admission is unresolved; explicitly resubmit the same requestId to reconcile it', 'PROCESS_RECONCILIATION_REQUIRED');
+        const child = await recoverChild(previous, callerCtx);
+        if (child) previous = await journal.entry(job.id, 'process', operation, value => ({ ...value, runId: child.id }), callerCtx.signal);
+        else {
+          await settleBudget(previous, callerCtx);
+          await journal.entry(job.id, 'process-attempt', `${operation}:${previous.attemptId}`, () => ({ ...previous, observedRunStatus: 'not_admitted', reconciledAt: Date.now(), disposition: 'retry_isolated_pure_computation' }), callerCtx.signal);
+          previous = null;
+        }
+      }
       if (previous?.runId) {
         reconciledRun = (await host.runs.read(previous.runId)).run;
         while (['queued', 'running', 'cancelling', 'interrupting'].includes(reconciledRun.status)) {
           callerCtx.signal?.throwIfAborted();
           reconciledRun = (await host.runs.wait(previous.runId, { until: 'settled', timeoutMs: 30000 })).run;
         }
-        let receipt;
-        try { receipt = JSON.parse(await readFile(previous.resultPath, 'utf8')); }
-        catch (cause) { if (cause.code !== 'ENOENT' && !(cause instanceof SyntaxError)) throw cause; }
-        const usable = receipt?.schema === 'factor-worker/1' && receipt.command === command && receipt.status === 'ok';
+        ensure(['completed', 'cancelled', 'interrupted'].includes(reconciledRun.status), `Previous process is ${reconciledRun.status}; its termination must be resolved before consuming its receipt or retrying`, 'PROCESS_RECONCILIATION_REQUIRED');
+        const usable = await retainedReceipt(previous, command);
         if (reconciledRun.status !== 'completed' || previous.status === 'failed' || !usable) {
-          ensure((callerCtx.nativeAttempt ?? 1) > (previous.nativeAttempt ?? 1), `Previous process is ${reconciledRun.status}; resume the workflow to reconcile its retained attempt`, 'PROCESS_RECONCILIATION_REQUIRED');
+          ensure((callerCtx.nativeAttempt ?? 1) > (previous.nativeAttempt ?? 1), `Previous process is ${reconciledRun.status}; explicitly resubmit the same requestId to reconcile its retained attempt`, 'PROCESS_RECONCILIATION_REQUIRED');
           await settleBudget(previous, callerCtx);
-          // A resumed workflow explicitly reconciles the stopped pure worker.
+          // An explicit later invocation reconciles the stopped pure worker.
           // Its old files and receipt remain untouched; a new worker gets a
           // separate directory and cannot publish or mutate the factor library.
-          await journal.entry(job.id, 'process-attempt', `${operation}:${previous.attemptId}`, () => ({ ...previous, observedRunStatus: reconciledRun.status, reconciledAt: Date.now(), disposition: usable ? 'use_verified_receipt' : 'retry_isolated_pure_computation' }));
+          await journal.entry(job.id, 'process-attempt', `${operation}:${previous.attemptId}`, () => ({ ...previous, observedRunStatus: reconciledRun.status, reconciledAt: Date.now(), disposition: usable ? 'use_verified_receipt' : 'retry_isolated_pure_computation' }), callerCtx.signal);
           if (usable) reconciledRun = { ...reconciledRun, output: { exitCode: 0 } };
           else { previous = null; reconciledRun = null; }
         }
@@ -170,18 +206,19 @@ export function createPython({ host, artifacts, journal, environment }) {
       const requestPath = join(dir, 'request.json'), resultPath = join(dir, 'result.json');
       const environmentInfo = await selection(ctx.signal);
       let prepared, settled;
-      if (previous?.runId) {
+      if (previous) {
         prepared = JSON.parse(await readFile(requestPath, 'utf8')).input; settled = reconciledRun.output;
       } else {
         const available = await budgets.available(job.id);
         const inputLimit = previous?.inputBytes ?? available.maxInputBytes;
-        ensure(inputLimit > 0, 'Research input byte budget exhausted', 'BUDGET_EXHAUSTED');
+        ensure(inputLimit > 0, 'Operation input byte budget exhausted', 'BUDGET_EXHAUSTED');
         prepared = await inputFor(command, input, ctx, { ...budget, maxInputBytes: inputLimit }, outputDir);
         const remaining = remainingTime();
-        ensure(remaining > 0, 'Research time budget exhausted during input preparation', 'BUDGET_EXHAUSTED');
+        ensure(remaining > 0, 'Operation time budget exhausted during input preparation', 'BUDGET_EXHAUSTED');
         const payloadBytes = await localInputBytes(root, prepared), reservedInput = payloadBytes + Buffer.byteLength(canonical(prepared)) + 1024;
         const budgetToken = identifier('byte-budget', [operation, ctx.attemptId]);
-        await journal.entry(job.id, 'process', operation, prior => ({ ...prior, command, attemptId: ctx.attemptId, nativeAttempt: ctx.nativeAttempt ?? 1, epoch: ctx.epoch, runId: null, resultPath, status: 'prepared', outputRef: null, startedAt: Date.now(), budgetToken, budgetSettled: false, inputBytes: reservedInput }), ctx.signal);
+        const operationId = `${job.id}:${operation}:${digest(ctx.attemptId).slice(7, 23)}`;
+        await journal.entry(job.id, 'process', operation, prior => ({ ...prior, command, attemptId: ctx.attemptId, nativeAttempt: ctx.nativeAttempt ?? 1, epoch: ctx.epoch, parentRunId: job.runId, operationId, runId: null, resultPath, status: 'prepared', outputRef: null, startedAt: Date.now(), budgetToken, budgetSettled: false, inputBytes: reservedInput }), ctx.signal);
         const reserved = await budgets.reserve(ctx, budgetToken, reservedInput, command === 'prepare');
         const limits = { maxInputBytes: reserved.input, maxOutputBytes: reserved.output, timeoutMs: Math.max(1, Math.min(540000, Math.floor(remaining))), maxDiagnosticWork: Math.max(1, Math.min(20000000, Math.floor(remaining * 100))) };
         const requestBytes = Buffer.from(canonical({ schema: 'factor-worker/1', command, limits, input: prepared }));
@@ -190,9 +227,15 @@ export function createPython({ host, artifacts, journal, environment }) {
         const temp = join(root, 'python-temp'); await mkdir(temp, { recursive: true });
         const env = { TEMP: temp, TMP: temp, MPLCONFIGDIR: join(temp, 'matplotlib'), PYTHONNOUSERSITE: '1', PYTHONDONTWRITEBYTECODE: '1', OMP_NUM_THREADS: '1', MKL_NUM_THREADS: '1', OPENBLAS_NUM_THREADS: '1' };
         try {
-          settled = await runProcess(host, [environmentInfo.pythonPath, '-I', '-B', join(host.context.pluginRoot, 'python', 'worker.py'), requestPath, resultPath], { cwd: root, env, signal: ctx.signal, timeoutMs: limits.timeoutMs, operationId: `${job.id}:${operation}:${digest(ctx.attemptId).slice(7, 23)}`, onRun: run => journal.entry(job.id, 'process', operation, prior => ({ ...prior, runId: run.id, status: 'running' })) });
+          settled = await runProcess(host, [environmentInfo.pythonPath, '-I', '-B', join(host.context.pluginRoot, 'python', 'worker.py'), requestPath, resultPath], { cwd: root, env, signal: ctx.signal, timeoutMs: limits.timeoutMs, operationId, onRun: run => journal.entry(job.id, 'process', operation, prior => ({ ...prior, runId: run.id, status: 'running' })) });
         } catch (cause) {
-          if (!ctx.signal?.aborted) await settleBudget(await journal.readEntry(job.id, 'process', operation), ctx);
+          if (!ctx.signal?.aborted) {
+            try {
+              const record = await journal.readEntry(job.id, 'process', operation);
+              const child = record?.runId ? (await host.runs.read({ id: record.runId })).run : null;
+              if (child && ['completed', 'cancelled', 'interrupted'].includes(child.status)) await settleBudget(record, ctx);
+            } catch { /* Preserve the original failure; explicit recovery reconciles any retained reservation. */ }
+          }
           throw cause;
         }
       }
