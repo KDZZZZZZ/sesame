@@ -13,7 +13,7 @@
     {
       "pluginId": "sesame/auto-factor-mining",
       "before": "1.1.0",
-      "after": "3.0.0"
+      "after": "3.1.0"
     },
     {
       "pluginId": "sesame/backtrader",
@@ -124,7 +124,7 @@
       "beforeDigest": "sha256:c7aaa99b88dc9fefbfd78673a7163568d4e86bb42c9abbfce3ef4496d0e23f46",
       "afterDigest": "sha256:58d3d3c3c82077d17880b228bdad93b15438c0e44d2359c68c0b45d2e1b53010",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/description",
@@ -175,7 +175,7 @@
       "beforeDigest": "sha256:28a3ef2b91b06f160c08c096312768984fb9dc327517b37293ef2098e5510ad2",
       "afterDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -270,7 +270,7 @@
       "beforeDigest": "sha256:ac91e211a68d1808d23e239147a97855fdddcaeeffa0c8e6dcf5ccf6b2c0fb76",
       "afterDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -837,7 +837,7 @@
       "beforeDigest": "sha256:9b5668a2e93454fd51575944ac7f06cf92c0018477d79d098cad871b1da78d21",
       "afterDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -1034,7 +1034,7 @@
       "beforeDigest": "sha256:3b98dfabfdc8095d3cb31fa8e7f8c709b231b30ef8ae3f5e93d1b1c3633ab31b",
       "afterDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -1118,7 +1118,7 @@
       "beforeDigest": "sha256:6c7fc040436c02eb36f8448a1b81190b8a17773143b2ee3886c091b83f76ccb4",
       "afterDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -1192,7 +1192,7 @@
       "beforeDigest": "sha256:d9b0eac3836dd5913b5cdf3cbc1a2bdba3cffd2ef2aca729ef3a59b67149d2e7",
       "afterDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -1256,7 +1256,7 @@
       "beforeDigest": "sha256:d1aa8848cafd3430e68ead4962879eb4a2c1e5f5791ccb8728189c0368af543b",
       "afterDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -1320,7 +1320,7 @@
       "beforeDigest": "sha256:23fe0b0129db03747819850e91ff130dcb26fa9b9e8e20c22868f2bd7a1ea648",
       "afterDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -1417,7 +1417,7 @@
       "beforeDigest": "sha256:30a7dc7aba7342593d0ed4e488146f8b54b0ef5a7747d7805cdfccab8659b093",
       "afterDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -1489,7 +1489,7 @@
       "beforeDigest": "sha256:e617dffd89ad5cd925bdc600bb2d9ceffeea792c6c29bd000b5903b55f572932",
       "afterDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -1553,7 +1553,7 @@
       "beforeDigest": "sha256:d7704413c06ba94706cc785d8c51250c2192ebbb7c7b4517f5cbca8ff6ce064e",
       "afterDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -1628,7 +1628,7 @@
       "beforeDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
       "afterDigest": "sha256:9c8f928054bb366a1e2a1a6548e34242ce1749ed9ad1dabfc8b92230967558b9",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -1734,7 +1734,7 @@
       "beforeDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
       "afterDigest": "sha256:fa2c6698c6f4a6d6731f1c59d052ac19c37af28a8ed70cf25abee8b1af65a887",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -2261,7 +2261,7 @@
       "beforeDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
       "afterDigest": "sha256:038667aefa0b109f503638c82a660d275c9853f174843c8125c78c6330cfa4b9",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -3405,7 +3405,7 @@
       "beforeDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
       "afterDigest": "sha256:96eae12b2fef8c15b03fedcd178ce2011cf521c1b8838cb7a2ededa4eb271d6a",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -4126,7 +4126,7 @@
       "beforeDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
       "afterDigest": "sha256:963c56981632655e8762ee847f0384ebeecba11448bef9323a8d9224e05ed892",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -5318,9 +5318,9 @@
       "sourcePath": "plugins/optional-api-v1/packages/auto-factor-mining",
       "component": "capability:factor_library",
       "beforeDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
-      "afterDigest": "sha256:2489a5e9cc45b29068659c161398657b0ba5e140cae35f1c599da3c0b60dadd9",
+      "afterDigest": "sha256:0725d63f7c1104e73365d0f93811e0fbf121ac1b9d93ed61ecdb833528b80699",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -5333,7 +5333,7 @@
               "agent",
               "host"
             ],
-            "description": "Query immutable factor definitions and separately versioned evidence, or add an annotation.",
+            "description": "Register user-owned formula definitions and provenance, query independently archived evidence, or add an annotation.",
             "inputSchema": {
               "type": "object",
               "oneOf": [
@@ -5380,6 +5380,56 @@
                   "required": [
                     "action",
                     "factorId"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "action": {
+                      "type": "string",
+                      "const": "register"
+                    },
+                    "operationId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "formula": {
+                      "$ref": "#/$defs/Formula"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "hypothesis": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4000
+                    },
+                    "sources": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/FactorSource"
+                      },
+                      "minItems": 0,
+                      "maxItems": 4
+                    },
+                    "changes": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4000
+                    }
+                  },
+                  "required": [
+                    "action",
+                    "operationId",
+                    "formula",
+                    "name",
+                    "hypothesis",
+                    "sources",
+                    "changes"
                   ],
                   "additionalProperties": false
                 },
@@ -5455,9 +5505,130 @@
                   ],
                   "additionalProperties": false
                 },
+                "Expr": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "field": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 64,
+                          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+                        }
+                      },
+                      "required": [
+                        "field"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "constant": {
+                          "type": "number",
+                          "minimum": -1000000000000,
+                          "maximum": 1000000000000
+                        }
+                      },
+                      "required": [
+                        "constant"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "call": {
+                          "type": "string",
+                          "enum": [
+                            "Add",
+                            "Sub",
+                            "Mul",
+                            "Div",
+                            "Abs",
+                            "Log",
+                            "Ref",
+                            "Mean",
+                            "Std",
+                            "Min",
+                            "Max",
+                            "Sum",
+                            "Rank"
+                          ]
+                        },
+                        "args": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/$defs/Expr"
+                          },
+                          "minItems": 1,
+                          "maxItems": 2
+                        }
+                      },
+                      "required": [
+                        "call",
+                        "args"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                "FactorSource": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2048,
+                      "pattern": "^https://"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "license": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    }
+                  },
+                  "required": [
+                    "url",
+                    "revision",
+                    "license"
+                  ],
+                  "additionalProperties": false
+                },
+                "Formula": {
+                  "type": "object",
+                  "properties": {
+                    "dsl": {
+                      "type": "string",
+                      "const": "qlib-expr/1"
+                    },
+                    "tree": {
+                      "$ref": "#/$defs/Expr"
+                    }
+                  },
+                  "required": [
+                    "dsl",
+                    "tree"
+                  ],
+                  "additionalProperties": false
+                },
                 "Query": {
                   "type": "object",
                   "properties": {
+                    "text": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "evaluated": {
+                      "type": "boolean"
+                    },
                     "fields": {
                       "type": "array",
                       "items": {
@@ -6162,6 +6333,14 @@
                       },
                       "minItems": 0,
                       "maxItems": 200
+                    },
+                    "registrations": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/FactorRegistration"
+                      },
+                      "minItems": 0,
+                      "maxItems": 8
                     }
                   },
                   "required": [
@@ -6170,6 +6349,68 @@
                     "definitionDigest",
                     "evaluationIds",
                     "annotations"
+                  ],
+                  "additionalProperties": false
+                },
+                "FactorRegistration": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "hypothesis": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4000
+                    },
+                    "sources": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/FactorSource"
+                      },
+                      "minItems": 0,
+                      "maxItems": 4
+                    },
+                    "changes": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4000
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "hypothesis",
+                    "sources",
+                    "changes"
+                  ],
+                  "additionalProperties": false
+                },
+                "FactorSource": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2048,
+                      "pattern": "^https://"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "license": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    }
+                  },
+                  "required": [
+                    "url",
+                    "revision",
+                    "license"
                   ],
                   "additionalProperties": false
                 },
@@ -6342,9 +6583,9 @@
               "plugin.state.write"
             ],
             "usage": {
-              "purpose": "Query immutable factor definitions and separately versioned evidence, or add an annotation.",
-              "inputs": "Query: {action:\"query\",query}. Read: {action:\"read\",factorId,cursor?,limit?}. Annotate: {action:\"annotate\",factorId,note,operationId}. Numerical metrics cannot be submitted.",
-              "outputs": "Page<Factor>, {factor,evaluations:Page<Evaluation>}, or Factor.",
+              "purpose": "Register user-owned formula definitions and provenance, query independently archived evidence, or add an annotation.",
+              "inputs": "Register: {action:\"register\",operationId,formula,name,hypothesis,sources:[{url,revision,license}],changes}; sources=[] for original work. Use fixed HTTPS source links without credentials; adapt selected references to supported AST operators. Registration performs no computation or evaluation. Query: {action:\"query\",query:{text?,evaluated?,...}}. Read: {action:\"read\",factorId,cursor?,limit?}. Annotate: {action:\"annotate\",factorId,note,operationId}. Numerical metrics cannot be submitted.",
+              "outputs": "Page<Factor>, {factor,evaluations:Page<Evaluation>}, or Factor. A newly registered definition has no evaluations; later genuine evaluation merges by mathematical identity and retains registrations.",
               "prerequisites": [],
               "limitations": [
                 "All data and formulas must satisfy the frozen qlib-expr/1 contract; results retain missing evidence and exclusions."
@@ -6367,7 +6608,7 @@
       "beforeDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
       "afterDigest": "sha256:d25eea0ef72263e27a06d38c4234121ecc7b4870635a264c2b0b5e1452d1cfa8",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -6722,7 +6963,7 @@
       "beforeDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
       "afterDigest": "sha256:a4f149f0f4fc82fa36a3a44e1ecb8b47ed7ef101604087fc932f7f6e439028ab",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -6796,7 +7037,7 @@
       "beforeDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
       "afterDigest": "sha256:0d866ca09be35ed5ab52373c1ad842be95db6dad1be05467d88e7451cf4c0298",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -6890,7 +7131,7 @@
       "beforeDigest": "sha256:1de258ed909c43cb8dcfa632dcd87669efb2bfd0727d9a1ce6a0d9fda25512e9",
       "afterDigest": "sha256:044fac51c36081662955b836ad0affe71fdda39a23ee72612bc650c662aefc4d",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -6939,9 +7180,9 @@
       "sourcePath": "plugins/optional-api-v1/packages/auto-factor-mining",
       "component": "capabilities.json/knowledge",
       "beforeDigest": "sha256:7d521410351de05abe0b1565e8e9d01f0d81660ee87af287940027e76ece7906",
-      "afterDigest": "sha256:a8985bf23958ab4f385915ae8696c710a885fce30c0446ef76e2822f45b16831",
+      "afterDigest": "sha256:f915ba548fdf16c6949f21ff494c753664b791b9b0cc10a786c1d2c8a185848b",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -7051,6 +7292,12 @@
               "path": "references/execution.md",
               "kind": "reference",
               "description": "Current factor-research v3 contract, usage or verification evidence. Agent directly orchestrates each independent step."
+            },
+            {
+              "id": "external-factor-sources",
+              "path": "references/external-factor-sources.md",
+              "kind": "reference",
+              "description": "External formula reference links, semantic checks and on-demand registration into the user factor library. Contains no bundled upstream formula catalog or code."
             },
             {
               "id": "final-report-example",
@@ -7173,7 +7420,7 @@
       "beforeDigest": "sha256:db6ab489b61ecd58eede638d470f9b94ba7811182a48dc2ccb0b81bc3a6a5305",
       "afterDigest": "sha256:afee606a8c5bb29fc682038c1e35b81b93e25849cf949225a46778e6b8f172d0",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -7612,7 +7859,7 @@
       "beforeDigest": "sha256:e523a33556487d76df1533a9639ae2551c0438e98242126e269e9d2ba7fa4c4c",
       "afterDigest": "sha256:ec232a778d7037d47aa55e4ef272ddde92e4ecf091ccfef55949cd4afa7d5635",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -7827,7 +8074,7 @@
       "beforeDigest": "sha256:398b676e47d03a29016ee92fe378b8b4f1b3e965390c4c64ce78d27f79df74d1",
       "afterDigest": "sha256:f4e28b3d117d16eb5f8dd4feb79ff8f0962a5e3e2c87bfb92b3a3f45eea4e8b6",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -7868,7 +8115,7 @@
       "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
       "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -7888,7 +8135,7 @@
       "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
       "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -7908,7 +8155,7 @@
       "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
       "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -7928,7 +8175,7 @@
       "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
       "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -7948,7 +8195,7 @@
       "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
       "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -7968,7 +8215,7 @@
       "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
       "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -7988,7 +8235,7 @@
       "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
       "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -8008,7 +8255,7 @@
       "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
       "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -8028,7 +8275,7 @@
       "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
       "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -8048,7 +8295,7 @@
       "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
       "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -8068,7 +8315,7 @@
       "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
       "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -8088,7 +8335,7 @@
       "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
       "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -8108,7 +8355,7 @@
       "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
       "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",
@@ -8128,7 +8375,7 @@
       "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
       "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
       "decision": "approved",
-      "reason": "2026-11-09：用户明确要求删除因子插件固定研究调度器，由主 Agent/Agent 工作流直接调度，宿主与 SDK 不改且不保留旧工具兼容。已独立审查七个公开入口 environment/prepare/search/compute/evaluate/library/pool：四个单步 native function Run、不自动查库选择/下一批/留出选择/参考计算/报告或策略选池；只保留单操作执行与搜索 checkpoint。取消事务栅栏、实际进程回执及 unknown 预留预算、真实 Qlib/DEAP/Optuna、库与池分离通过针对性及真实宿主验收。调用权限收窄为 host.process.exec，配置读写继续为 host-only。容量 schema 与库实现已核对；历史材料字节保持。本登记只说明本次授权组件的精确变化，不修改冻结基线或批准其他插件漂移。",
+      "reason": "2026-11-10：沿用已审查的 3.0 Agent 分步调度架构，宿主/SDK 不变，七个公共入口、原生单步 Run、环境配置、真实 Qlib/DEAP/Optuna、库与策略池分离及删除旧总控的边界保持。按用户要求，3.1 仅增加 factor_library register：闭合类型树、名称/假设/来源固定版本/许可/改写说明保存到用户私有库，官方包仅保留外部参考链接，不内置上游代码或公式全集。登记不启动网络/数值/模型/工作流/报告，不伪造评价；同数学身份与后续真实评价合并并保留来源，固定回执、CAS、并发/取消和容量通过回归。query 增加名称假设及是否评价筛选，评价条件仍匹配真实证据；未新增权限或依赖，策略仍显式决定选用。独立实现与契约审查、公开 schema、真实宿主登记到 Qlib 评价验收通过；历史材料字节保持。本登记只审查因子组件，不修改冻结基线或批准其他插件漂移。",
       "deltas": [
         {
           "path": "/",

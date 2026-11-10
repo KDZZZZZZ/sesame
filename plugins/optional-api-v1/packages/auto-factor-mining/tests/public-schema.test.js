@@ -10,8 +10,59 @@ import { storageFixture } from './storage-fixture.js';
 const capabilities = JSON.parse(readFileSync(new URL('../capabilities.json', import.meta.url))).capabilities;
 const pool = capabilities.find(value => value.id === 'factor_pool');
 const compute = capabilities.find(value => value.id === 'factor_compute');
+const libraryCapability = capabilities.find(value => value.id === 'factor_library');
 const ref = { id: 'fixed-artifact', revision: '1', digest: digest('artifact'), kind: 'resource', schemaVersion: '1.0.0' };
 const change = { operationId: 'selection-1', poolId: 'selected', strategyId: 'strategy', expectedVersion: 0, decision: 'add', factorIds: ['factor-1'], replaces: [], purpose: 'Explicit strategy selection', reason: 'Schema boundary regression', strategyVersion: '1', applicationEvidence: [] };
+const registration = { action: 'register', operationId: 'register-1', formula: { dsl: 'qlib-expr/1', tree: { field: 'close' } }, name: 'Synthetic close reference', hypothesis: 'A declared synthetic formula, not evaluated evidence.', sources: [{ url: 'https://example.invalid/factor-reference', revision: 'synthetic-v1', license: 'Synthetic test fixture' }], changes: 'Adapted only for this schema fixture.' };
+
+test('factor registration accepts explicit formulas and provenance, never caller-authored evaluation fields', () => {
+  assert.equal(Value.Check(libraryCapability.inputSchema, registration), true);
+  assert.equal(Value.Check(libraryCapability.inputSchema, { ...registration, sources: [] }), true, 'Original formulas do not require a fabricated external source');
+  for (const field of ['score', 'rankIC', 'eligibility', 'evaluationIds']) {
+    assert.equal(Value.Check(libraryCapability.inputSchema, { ...registration, [field]: field === 'evaluationIds' ? [] : 1 }), false, `Register must reject caller-supplied ${field}`);
+  }
+  assert.equal(Value.Check(libraryCapability.inputSchema, { ...registration, formula: { ...registration.formula, code: 'return 1' } }), false);
+  assert.equal(Value.Check(libraryCapability.inputSchema, { ...registration, sources: [{ ...registration.sources[0], score: 1 }] }), false);
+  assert.equal(Value.Check(libraryCapability.inputSchema, { ...registration, formula: { dsl: 'qlib-expr/1', tree: { call: 'Execute', args: [{ field: 'close' }] } } }), false);
+});
+
+test('registration source and descriptive bounds are exposed by the public input schema', () => {
+  for (const [field, maximum] of [['name', 128], ['hypothesis', 4000], ['changes', 4000]]) {
+    for (const length of [0, maximum, maximum + 1]) {
+      assert.equal(Value.Check(libraryCapability.inputSchema, { ...registration, [field]: 'x'.repeat(length) }), length === maximum, `${field} length ${length}`);
+    }
+  }
+  for (const length of [4, 5]) assert.equal(Value.Check(libraryCapability.inputSchema, { ...registration, sources: Array.from({ length }, () => registration.sources[0]) }), length === 4);
+  for (const [field, maximum] of [['url', 2048], ['revision', 128], ['license', 128]]) {
+    for (const length of [0, maximum, maximum + 1]) {
+      const value = field === 'url' && length ? 'https://example.invalid/'.padEnd(length, 'x') : 'x'.repeat(length);
+      assert.equal(Value.Check(libraryCapability.inputSchema, { ...registration, sources: [{ ...registration.sources[0], [field]: value }] }), length === maximum, `source ${field} length ${length}`);
+    }
+  }
+  for (const missing of ['url', 'revision', 'license']) {
+    const source = { ...registration.sources[0] }; delete source[missing];
+    assert.equal(Value.Check(libraryCapability.inputSchema, { ...registration, sources: [source] }), false, `source requires ${missing}`);
+  }
+});
+
+test('library output exposes bounded registrations without requiring an evaluation', () => {
+  const { formula, name, hypothesis, sources, changes } = registration;
+  const definitionDigest = digest({ dsl: formula.dsl, operatorDigest: OPERATOR_DIGEST, tree: formula.tree });
+  const factor = { id: identifier('factor', [formula.dsl, definitionDigest]), formula, definitionDigest, evaluationIds: [], annotations: [] };
+  const provenance = { name, hypothesis, sources, changes };
+  assert.equal(Value.Check(libraryCapability.outputSchema, factor), true, 'Registrations remain optional for factors archived from numerical evaluation');
+  for (const length of [1, 8, 9]) {
+    const registered = { ...factor, registrations: Array.from({ length }, (_, index) => ({ ...provenance, name: `${name} ${index}` })) };
+    assert.equal(Value.Check(libraryCapability.outputSchema, registered), length <= 8);
+    assert.equal(Value.Check(libraryCapability.outputSchema, { factor: registered, evaluations: { items: [], cursor: null } }), length <= 8);
+    assert.equal(Value.Check(libraryCapability.outputSchema, { items: [registered], cursor: null }), length <= 8);
+  }
+  assert.equal(Value.Check(libraryCapability.outputSchema, { ...factor, registrations: [{ ...provenance, score: 1 }] }), false);
+  assert.equal(Value.Check(libraryCapability.inputSchema, { action: 'query', query: { text: 'Synthetic close', evaluated: false } }), true);
+  assert.equal(Value.Check(libraryCapability.inputSchema, { action: 'query', query: { evaluated: true } }), true);
+  for (const length of [0, 256, 257]) assert.equal(Value.Check(libraryCapability.inputSchema, { action: 'query', query: { text: 'x'.repeat(length) } }), length === 256);
+  assert.equal(Value.Check(libraryCapability.inputSchema, { action: 'query', query: { evaluated: 'true' } }), false);
+});
 
 test('a real library pool grown in separate decisions remains valid beyond 200 members', async t => {
   const f = await storageFixture(t), library = createLibrary({ state: f.state, artifacts: createArtifacts({ host: f.host }) });

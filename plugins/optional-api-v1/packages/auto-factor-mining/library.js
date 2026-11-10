@@ -1,5 +1,23 @@
-import { COLLECTIONS, artifactRef, canonical, digest, ensure, identifier, keys, text, referenceIdentity, validateCandidate, validateProfile } from './contracts.js';
+import { COLLECTIONS, OPERATOR_DIGEST, artifactRef, canonical, clone, digest, ensure, identifier, keys, text, referenceIdentity, validateCandidate, validateFormula, validateProfile } from './contracts.js';
 import { readState, commitState } from './journal.js';
+
+function factorIdentity(formula, operatorDigest) {
+  const definitionDigest = digest({ dsl: formula.dsl, operatorDigest, tree: formula.tree });
+  return { id: identifier('factor', [formula.dsl, definitionDigest]), definitionDigest };
+}
+function registrationMetadata(input) {
+  keys(input, ['operationId', 'formula', 'name', 'hypothesis', 'sources', 'changes']);
+  text(input.operationId, 128); text(input.name, 128); text(input.hypothesis, 4000); text(input.changes, 4000);
+  validateFormula(input.formula);
+  ensure(Array.isArray(input.sources) && input.sources.length <= 4, 'Registration accepts at most four sources');
+  for (const source of input.sources) {
+    keys(source, ['url', 'revision', 'license']); text(source.url, 2048); text(source.revision, 128); text(source.license, 128);
+    let url; try { url = new URL(source.url); } catch { /* Report the contract without echoing possible credentials. */ }
+    ensure(url?.protocol === 'https:' && !url.username && !url.password, 'Source URL must use HTTPS without credentials');
+  }
+  const sources = [...new Map(input.sources.map(source => [canonical(source), source])).entries()].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([, source]) => source);
+  return clone({ name: input.name, hypothesis: input.hypothesis, sources, changes: input.changes });
+}
 
 export function createLibrary({ state, artifacts }) {
   const readTyped = async (ref, schema) => {
@@ -43,6 +61,29 @@ export function createLibrary({ state, artifacts }) {
     ensure(c.referenceDigest === digest(referenceIdentity(references)), 'Reference evidence identity differs', 'EVIDENCE_MISMATCH');
     return { snapshot, values };
   };
+  const register = async (input, signal) => {
+    signal?.throwIfAborted();
+    const registration = registrationMetadata(input), formula = clone(input.formula), identity = factorIdentity(formula, OPERATOR_DIGEST);
+    const opKey = identifier('factor-registration', input.operationId), fingerprint = digest(input), registrationKey = canonical(registration);
+    for (let retry = 0; retry < 12; retry++) {
+      signal?.throwIfAborted();
+      const prior = await readState(state, COLLECTIONS.feedback, opKey);
+      if (prior) { ensure(prior.value.fingerprint === fingerprint, 'Registration operation conflict', 'IDEMPOTENCY_CONFLICT'); signal?.throwIfAborted(); return prior.value.result; }
+      const existing = await readState(state, COLLECTIONS.factors, identity.id);
+      const factor = existing?.value ?? { ...identity, formula, evaluationIds: [], annotations: [] }, registrations = factor.registrations ?? [];
+      const merged = registrations.some(item => canonical(item) === registrationKey) ? registrations : [...registrations, registration];
+      ensure(merged.length <= 8, 'Factor already has eight distinct registrations', 'RESOURCE_EXHAUSTED');
+      const result = { ...factor, registrations: merged };
+      try {
+        // The receipt and definition commit together; a CAS retry rereads both before merging.
+        await commitState(state, [
+          { op: 'put', key: { collection: COLLECTIONS.factors, key: identity.id }, expectedVersion: existing?.version ?? 0, value: result },
+          { op: 'put', key: { collection: COLLECTIONS.feedback, key: opKey }, expectedVersion: 0, value: { fingerprint, result } },
+        ], { signal });
+        return result;
+      } catch (e) { if (e.code !== 'VERSION_CONFLICT' || retry === 11) throw e; }
+    }
+  };
   const record = async (candidates, measured, fence) => {
     fence.signal?.throwIfAborted();
     const factors = [];
@@ -50,7 +91,7 @@ export function createLibrary({ state, artifacts }) {
       fence.signal?.throwIfAborted();
       const candidate = candidates.find(c => c.id === evaluation.candidateId); ensure(candidate, 'Evaluation candidate missing');
       const { values } = await validateEvidence(evaluation, candidate);
-      const definitionDigest = digest({ dsl: candidate.formula.dsl, operatorDigest: values.engine.operatorDigest, tree: candidate.formula.tree }), factorId = identifier('factor', [candidate.formula.dsl, definitionDigest]);
+      const { id: factorId, definitionDigest } = factorIdentity(candidate.formula, values.engine.operatorDigest);
       const evaluationKey = identifier('evaluation', [factorId, evaluation.id]);
       for (let retry = 0; retry < 12; retry++) {
         fence.signal?.throwIfAborted();
@@ -74,10 +115,12 @@ export function createLibrary({ state, artifacts }) {
     return [...new Map(factors.map(f => [f.id, f])).values()];
   };
   const query = async (query = {}) => {
-    keys(query, ['fields', 'kind', 'axis', 'universe', 'frequency', 'profileId', 'minCoverage', 'evidenceMatch', 'cursor', 'limit'], []);
+    keys(query, ['fields', 'kind', 'axis', 'universe', 'frequency', 'profileId', 'minCoverage', 'evidenceMatch', 'text', 'evaluated', 'cursor', 'limit'], []);
     const limit = query.limit ?? 50; ensure(Number.isInteger(limit) && limit > 0 && limit <= 200, 'Invalid factor page limit');
     if (query.fields !== undefined) ensure(Array.isArray(query.fields) && query.fields.every(f => typeof f === 'string'), 'Fields must be a list');
     if (query.universe !== undefined) ensure(Array.isArray(query.universe) && query.universe.every(f => typeof f === 'string'), 'Universe must be a list');
+    if (query.evaluated !== undefined) ensure(typeof query.evaluated === 'boolean', 'Evaluated must be a boolean');
+    const searchText = query.text === undefined ? null : text(query.text, 256).toLowerCase();
     const found = []; let cursor = query.cursor, scanned = 0;
     // Scan bounded pages; cursor always points to the next unexamined factor.
     do {
@@ -88,6 +131,8 @@ export function createLibrary({ state, artifacts }) {
         scanned++;
         const factor = row.value, fields = formulaFields(factor.formula.tree);
         if (query.fields && !fields.every(f => query.fields.includes(f))) continue;
+        if (query.evaluated !== undefined && (factor.evaluationIds.length > 0) !== query.evaluated) continue;
+        if (searchText !== null && !(factor.registrations ?? []).some(item => item.name.toLowerCase().includes(searchText) || item.hypothesis.toLowerCase().includes(searchText))) continue;
         const needsEvidence = ['kind', 'axis', 'universe', 'frequency', 'profileId', 'minCoverage', 'evidenceMatch'].some(k => query[k] !== undefined);
         if (needsEvidence) {
           let matched = false;
@@ -144,7 +189,7 @@ export function createLibrary({ state, artifacts }) {
     return result;
   };
   return {
-    read, evaluation, evaluations, query, record, pool, decide,
+    read, evaluation, evaluations, query, register, record, pool, decide,
     async annotate(factorId, note, operationId) {
       text(note, 4000); text(operationId, 256); const opKey = identifier('annotation', operationId), fingerprint = digest([factorId, note]);
       for (let retry = 0; retry < 12; retry++) {

@@ -104,6 +104,34 @@ test('production host supports explicitly scheduled factor steps without a resea
       assert.equal(declaration.kind, 'function'); assert.equal(declaration.execution, 'run'); assert.equal(declaration.resumable, true);
     }
 
+    await advance('explicit user formula registration without numerical or research side effects');
+    const registrationInput = { action: 'register', operationId: 'host-register-signal', formula: formulas[0].formula,
+      name: 'Synthetic registered signal', hypothesis: formulas[0].hypothesis,
+      sources: [{ url: 'https://example.invalid/synthetic-factor-reference', revision: 'synthetic-fixture-v1', license: 'Invented acceptance-test metadata' }],
+      changes: 'The source link is an invented fixture; no upstream code or formulas are fetched.' };
+    const sideEffects = () => ({
+      runIds: app.store.list('run').map(run => run.id), processRuns: processRuns().length, numericalWorkers: workerRuns().length,
+      modelCalls: app.requests.length, workflowRuns: app.store.list('run').filter(run => run.kind === 'workflow').length,
+      reports: app.store.list('report').map(({ id, version, latest_revision }) => ({ id, version, latest_revision })),
+      reportFiles: app.store.list('report_file').map(({ id, version }) => ({ id, version })),
+    });
+    const beforeRegistration = sideEffects();
+    const registered = await invoke('factor_library', registrationInput);
+    const { name, hypothesis, sources, changes } = registrationInput;
+    assert.deepEqual(registered.formula, formulas[0].formula);
+    assert.deepEqual(registered.evaluationIds, []);
+    assert.deepEqual(registered.registrations, [{ name, hypothesis, sources, changes }]);
+    assert.deepEqual(await invoke('factor_library', registrationInput), registered, 'Registration replay preserves the same factor and provenance');
+    const unmeasured = await invoke('factor_library', { action: 'read', factorId: registered.id });
+    assert.deepEqual(unmeasured.factor, registered); assert.deepEqual(unmeasured.evaluations, { items: [], cursor: null });
+    const unmeasuredQuery = await invoke('factor_library', { action: 'query', query: { text: name, evaluated: false } });
+    assert.deepEqual(unmeasuredQuery.items.map(item => item.id), [registered.id]);
+    assert.deepEqual((await invoke('factor_library', { action: 'query', query: { text: name, evaluated: true } })).items, []);
+    assert.deepEqual(sideEffects(), beforeRegistration, 'Register/read/query cannot start a Run, numerical process, model, workflow or report');
+    assert.equal((await factorRows()).items.length, 1);
+    evidence.registration = { factorId: registered.id, registrations: registered.registrations,
+      unmeasuredEvaluationCount: unmeasured.evaluations.items.length, sideEffectsBefore: beforeRegistration, sideEffectsAfter: sideEffects() };
+
     await advance('real Python environment and host configuration');
     const environment = await invoke('factor_environment', { action: 'inspect', pythonPath });
     assert.equal(environment.ready, true, json(environment)); assert.equal(environment.versions.pyqlib, '0.9.7');
@@ -120,7 +148,7 @@ test('production host supports explicitly scheduled factor steps without a resea
     const prepared = await invoke('factor_prepare', { requestId: 'host-prepare', source: { datasetId: 'factor-host-demo' }, layout, budget });
     assert.ok(prepared.snapshotRef); assert.deepEqual(prepared.layout, layout);
     assert.ok(prepared.rows.development > 0 && prepared.rows.holdout > 0);
-    assert.equal((await factorRows()).items.length, 0);
+    assert.equal((await factorRows()).items.length, 1, 'Preparing data preserves the already registered user factor');
     const snapshot = await readJSON(prepared.snapshotRef); assert.equal(snapshot.id, prepared.snapshotId);
     evidence.snapshot = { ref: prepared.snapshotRef, id: prepared.snapshotId, rows: prepared.rows };
     assert.throws(() => app.store.update('dataset', 'factor-host-demo', { rows: [] }), { code: 'dataset_immutable' }, 'The host rejects mutation of the registered demo source');
@@ -129,7 +157,8 @@ test('production host supports explicitly scheduled factor steps without a resea
     const computeInput = { requestId: 'host-compute', snapshotRef: prepared.snapshotRef, formulas, partition: 'development', budget, diagnostics: profile.diagnostics };
     const computed = await invoke('factor_compute', computeInput);
     assert.equal(computed.candidates.length, formulas.length); assert.ok(computed.candidates.every(item => item.status === 'ok' && item.computeKey));
-    assert.equal((await factorRows()).items.length, 0, 'Computation does not evaluate or archive a factor');
+    assert.equal((await factorRows()).items.length, 1, 'Computation does not evaluate or archive another factor');
+    assert.deepEqual((await invoke('factor_library', { action: 'read', factorId: registered.id })).evaluations.items, [], 'Computing values does not mark the registered factor as evaluated');
     const beforeReplay = processRuns().length;
     assert.deepEqual(await invoke('factor_compute', computeInput), computed);
     assert.equal(processRuns().length, beforeReplay, 'Completed operation replay cannot launch another Python worker');
@@ -139,11 +168,18 @@ test('production host supports explicitly scheduled factor steps without a resea
     await advance('standalone evaluation and immutable duplicate evidence');
     const evaluated = await invoke('factor_evaluate', { requestId: 'host-evaluate', valuesRef: computed.valuesRef, profile, referenceValues: [], budget });
     assert.equal(evaluated.evaluations.length, 2); assert.equal(evaluated.factorIds.length, 2);
+    assert.equal(evaluated.factorIds[0], registered.id, 'User registration and genuine evaluation share the same mathematical identity');
+    assert.equal((await factorRows()).items.length, 2, 'Evaluating a registered formula merges into its existing factor instead of creating a duplicate');
     assert.ok(evaluated.evaluations.every(item => item.status === 'ok' && Math.abs(item.value.rankIC.value) > 0.99));
     const libraryPage = await invoke('factor_library', { action: 'query', query: { kind: 'alpha', axis: 'time_series', minCoverage: 0.8 } });
     assert.equal(libraryPage.items.length, 2);
     const firstFactor = await invoke('factor_library', { action: 'read', factorId: evaluated.factorIds[0], limit: 100 });
     assert.equal(firstFactor.evaluations.items.length, 1);
+    assert.deepEqual(firstFactor.factor.registrations, registered.registrations, 'Numerical archive must retain the user name, hypothesis, sources and adaptation notes');
+    assert.deepEqual((await invoke('factor_library', { action: 'query', query: { text: name, evaluated: false } })).items, []);
+    assert.deepEqual((await invoke('factor_library', { action: 'query', query: { text: name, evaluated: true } })).items.map(item => item.id), [registered.id]);
+    evidence.registration.evaluatedFactorId = firstFactor.factor.id;
+    evidence.registration.evaluationCount = firstFactor.evaluations.items.length;
     const repeated = await invoke('factor_evaluate', { requestId: 'host-evaluate-repeat', valuesRef: computed.valuesRef, profile, referenceValues: [], budget });
     assert.deepEqual(repeated, evaluated, 'Frozen numerical evidence has stable IDs and ArtifactRefs');
     assert.deepEqual((await invoke('factor_library', { action: 'read', factorId: firstFactor.factor.id, limit: 100 })).evaluations, firstFactor.evaluations);

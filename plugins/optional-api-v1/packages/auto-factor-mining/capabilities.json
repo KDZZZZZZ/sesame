@@ -3617,7 +3617,7 @@
         "agent",
         "host"
       ],
-      "description": "Query immutable factor definitions and separately versioned evidence, or add an annotation.",
+      "description": "Register user-owned formula definitions and provenance, query independently archived evidence, or add an annotation.",
       "inputSchema": {
         "type": "object",
         "oneOf": [
@@ -3664,6 +3664,56 @@
             "required": [
               "action",
               "factorId"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "const": "register"
+              },
+              "operationId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "formula": {
+                "$ref": "#/$defs/Formula"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "hypothesis": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              },
+              "sources": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/FactorSource"
+                },
+                "minItems": 0,
+                "maxItems": 4
+              },
+              "changes": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              }
+            },
+            "required": [
+              "action",
+              "operationId",
+              "formula",
+              "name",
+              "hypothesis",
+              "sources",
+              "changes"
             ],
             "additionalProperties": false
           },
@@ -3739,9 +3789,130 @@
             ],
             "additionalProperties": false
           },
+          "Expr": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "field": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "pattern": "^[a-z][a-z0-9_]{0,63}$"
+                  }
+                },
+                "required": [
+                  "field"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "constant": {
+                    "type": "number",
+                    "minimum": -1000000000000,
+                    "maximum": 1000000000000
+                  }
+                },
+                "required": [
+                  "constant"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "call": {
+                    "type": "string",
+                    "enum": [
+                      "Add",
+                      "Sub",
+                      "Mul",
+                      "Div",
+                      "Abs",
+                      "Log",
+                      "Ref",
+                      "Mean",
+                      "Std",
+                      "Min",
+                      "Max",
+                      "Sum",
+                      "Rank"
+                    ]
+                  },
+                  "args": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/Expr"
+                    },
+                    "minItems": 1,
+                    "maxItems": 2
+                  }
+                },
+                "required": [
+                  "call",
+                  "args"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "FactorSource": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048,
+                "pattern": "^https://"
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "license": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "url",
+              "revision",
+              "license"
+            ],
+            "additionalProperties": false
+          },
+          "Formula": {
+            "type": "object",
+            "properties": {
+              "dsl": {
+                "type": "string",
+                "const": "qlib-expr/1"
+              },
+              "tree": {
+                "$ref": "#/$defs/Expr"
+              }
+            },
+            "required": [
+              "dsl",
+              "tree"
+            ],
+            "additionalProperties": false
+          },
           "Query": {
             "type": "object",
             "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "evaluated": {
+                "type": "boolean"
+              },
               "fields": {
                 "type": "array",
                 "items": {
@@ -4446,6 +4617,14 @@
                 },
                 "minItems": 0,
                 "maxItems": 200
+              },
+              "registrations": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/FactorRegistration"
+                },
+                "minItems": 0,
+                "maxItems": 8
               }
             },
             "required": [
@@ -4454,6 +4633,68 @@
               "definitionDigest",
               "evaluationIds",
               "annotations"
+            ],
+            "additionalProperties": false
+          },
+          "FactorRegistration": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "hypothesis": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              },
+              "sources": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/FactorSource"
+                },
+                "minItems": 0,
+                "maxItems": 4
+              },
+              "changes": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              }
+            },
+            "required": [
+              "name",
+              "hypothesis",
+              "sources",
+              "changes"
+            ],
+            "additionalProperties": false
+          },
+          "FactorSource": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048,
+                "pattern": "^https://"
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "license": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              }
+            },
+            "required": [
+              "url",
+              "revision",
+              "license"
             ],
             "additionalProperties": false
           },
@@ -4626,9 +4867,9 @@
         "plugin.state.write"
       ],
       "usage": {
-        "purpose": "Query immutable factor definitions and separately versioned evidence, or add an annotation.",
-        "inputs": "Query: {action:\"query\",query}. Read: {action:\"read\",factorId,cursor?,limit?}. Annotate: {action:\"annotate\",factorId,note,operationId}. Numerical metrics cannot be submitted.",
-        "outputs": "Page<Factor>, {factor,evaluations:Page<Evaluation>}, or Factor.",
+        "purpose": "Register user-owned formula definitions and provenance, query independently archived evidence, or add an annotation.",
+        "inputs": "Register: {action:\"register\",operationId,formula,name,hypothesis,sources:[{url,revision,license}],changes}; sources=[] for original work. Use fixed HTTPS source links without credentials; adapt selected references to supported AST operators. Registration performs no computation or evaluation. Query: {action:\"query\",query:{text?,evaluated?,...}}. Read: {action:\"read\",factorId,cursor?,limit?}. Annotate: {action:\"annotate\",factorId,note,operationId}. Numerical metrics cannot be submitted.",
+        "outputs": "Page<Factor>, {factor,evaluations:Page<Evaluation>}, or Factor. A newly registered definition has no evaluations; later genuine evaluation merges by mathematical identity and retains registrations.",
         "prerequisites": [],
         "limitations": [
           "All data and formulas must satisfy the frozen qlib-expr/1 contract; results retain missing evidence and exclusions."
@@ -5190,6 +5431,12 @@
       "path": "references/execution.md",
       "kind": "reference",
       "description": "Current factor-research v3 contract, usage or verification evidence. Agent directly orchestrates each independent step."
+    },
+    {
+      "id": "external-factor-sources",
+      "path": "references/external-factor-sources.md",
+      "kind": "reference",
+      "description": "External formula reference links, semantic checks and on-demand registration into the user factor library. Contains no bundled upstream formula catalog or code."
     },
     {
       "id": "final-report-example",

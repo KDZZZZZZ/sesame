@@ -1,15 +1,15 @@
 ---
 name: auto-factor-mining
-description: 主 Agent 直接组织因子搜索、Qlib 计算、纯因子评价和入库；策略独立选用因子。
+description: 主 Agent 直接组织用户因子登记、搜索、Qlib 计算和纯因子评价；策略独立选用因子。
 ---
 
 # 因子研究方法
 
 当策略需要某种信号、发现可能可提取的规律，或需要复核现有因子时使用。先读取 [接口](../../references/contracts.md) 与相关知识方法，定义预期用途、可观测特征和检验目标。
 
-1. 用 factor_library 查询已有定义与评价。核对数据、时间、目标、环境、profile 和参考身份；由 Agent 决定是否可复用。
+1. 用 factor_library 查询已有定义与评价，text 搜名称/假设，evaluated 区分是否已有评价。核对数据、时间、目标、环境、profile 和参考身份；由 Agent 决定是否可复用。缺定义时先考虑 [外部参考](../../references/external-factor-sources.md) 中适合当前需求的少量公式；用已有检索插件读取固定版本，核对语义后 register 为用户因子。原创公式也可直接登记，sources=[]。保存定义无需安装 Python 或先跑评价。
 2. 用 factor_environment inspect 核验实际环境；缺依赖时 prepare 私有环境。用 factor_prepare 冻结数据和开发/留出区间，读取原生 Run 的 snapshotRef。
-3. 已有公式直接 factor_compute。需要新公式则 factor_search open 固定字段、算子、窗口、复杂度、种子/模板、目标与搜索预算；propose 一次只请求一批。
+3. 已有公式直接 factor_compute：库中 formula 与选定登记条目的 hypothesis 可组成 Candidate，id 使用该库因子 ID，origin 使用 `{method:'seed',parents:[],parameters:{}}`；没有登记假设时由 Agent 明确本次假设。需要新公式则 factor_search open 固定字段、算子、窗口、复杂度、种子/模板、目标与搜索预算；已登记的 Formula 可放入 space.seeds；propose 一次只请求一批。
 4. 明确调用 factor_compute 计算 development。独立公式批次或研究方向可以并行。需要 regimes/sensitivity 辅助值时，在 compute 的 diagnostics 中明确给出选项；参考公式也单独计算。
 5. 用 factor_evaluate 评价 valuesRef，传同一快照、分区和引擎的 referenceValues；无参考时传 []。成功评价自动存入库，包括不充分和无效结果，不自动选入策略池。
 6. 根据结果决定下一批、调整方向或停止。搜索反馈只传该搜索候选的真实 development `{factorId,evaluationId}`；变更搜索空间/profile 建立新会话。候选选定后，显式请求 holdout 计算与评价，记录选择依据与留出暴露，不把留出反馈给搜索器。

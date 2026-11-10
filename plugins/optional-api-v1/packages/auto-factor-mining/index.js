@@ -42,9 +42,10 @@ function createHandlers(host) {
     factor_search: (input, signal, nativeExecution) => search.handle(input, signal, nativeExecution),
     factor_compute: (input, signal, nativeExecution) => operations.compute(input, signal, nativeExecution),
     factor_evaluate: (input, signal, nativeExecution) => operations.evaluate(input, signal, nativeExecution),
-    factor_library: async input => {
+    factor_library: async (input, signal) => {
       if (input.action === 'query') return library.query(input.query);
       if (input.action === 'read') return { factor: await library.read(input.factorId), evaluations: await library.evaluations(input.factorId, { cursor: input.cursor, limit: input.limit ?? 20 }) };
+      if (input.action === 'register') { const { action: _action, ...registration } = input; return library.register(registration, signal); }
       return library.annotate(input.factorId, input.note, input.operationId);
     },
     factor_pool: input => {

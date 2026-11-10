@@ -1,4 +1,4 @@
-# 因子研究 3.0
+# 因子研究 3.1
 
 `sesame/auto-factor-mining` 提供搜索、Qlib 计算、纯因子评价、因子库和策略因子池。主 Agent 或 Agent 工作流直接调用这些能力，决定搜索方向、并行分支、验证步骤和何时交付。
 
@@ -11,7 +11,7 @@
 | factor_search | open 固定搜索空间；propose 请求一批；read 读进度 | 候选公式与 checkpoint |
 | factor_compute | snapshotRef、明确公式、partition | 固定 valuesRef |
 | factor_evaluate | valuesRef、profile、已计算的 referenceValues | 纯因子评价及入库 ID |
-| factor_library | query / read / annotate | 定义和独立评价历史 |
+| factor_library | register / query / read / annotate | 用户定义、来源和独立评价历史 |
 | factor_pool | read / decide / feedback | 策略选用与应用反馈 |
 
 数值步骤返回原生 Run；调用者通过宿主 Run read/wait 读取最终 output，再安排依赖它的工作。搜索一次只返回本批候选，计算不隐式评价，评价不发起新搜索。不会自动选留出候选、改策略池或生成报告。
@@ -20,7 +20,9 @@
 
 ## 使用方式
 
-先查因子库。证据已满足目标时可直接引用；已有公式而证据不足时，明确调用数据冻结、计算和评价；确实缺少定义时才开搜索。独立假设可以并行使用同一快照，不必先生成虚假的搜索请求。
+先查因子库。证据已满足目标时可直接引用；已有公式而证据不足时，明确调用数据冻结、计算和评价；缺定义时可按需参考外部公式或开启搜索。独立假设可以并行使用同一快照，不必先生成虚假的搜索请求。
+
+[外部因子来源](references/external-factor-sources.md) 只收参考链接和使用方法。Agent 按任务读取选中的公式，适配成当前类型树，用 factor_library register 保存名称、假设、来源版本、许可证和改写说明。定义属于用户工作区，不随官方插件批量分发；登记无需先跑数值任务。后续真实评价追加到相同数学定义，策略自行决定是否纳入因子池。
 
 Agent 明确指定开发/留出区间、目标、评价标准和搜索空间。开发评价可按 `{factorId,evaluationId}` 回馈搜索器，分数从真实存档读取；留出结果不作搜索反馈。选择候选后，Agent 显式请求 holdout 计算与评价。需要参考比较时，先在同一快照和分区计算参考公式，再传入其 Values 引用。
 

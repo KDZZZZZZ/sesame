@@ -29,6 +29,161 @@ async function fixture(t) {
 const fence = { jobId: 'job', epoch: 1 };
 const record = (f, e) => f.library.record([e.candidate], [e.evaluation], fence);
 const change = (factorId, extras = {}) => ({ operationId: 'select', poolId: 'pool', strategyId: 'strategy', expectedVersion: 0, decision: 'add', factorIds: [factorId], replaces: [], purpose: 'Synthetic test', reason: 'Explicit selection', strategyVersion: 'v1', applicationEvidence: [], ...extras });
+const source = { url: 'https://example.org/factors/formula.py', revision: 'revision-1', license: 'MIT' };
+const registration = (extras = {}) => ({ operationId: 'register', formula: candidate().formula, name: 'User Momentum', hypothesis: 'Price continuation over a chosen horizon', sources: [source], changes: 'Adapted to supported qlib operators', ...extras });
+
+test('registration stores a private definition without fabricated evidence or resource side effects', async t => {
+  const f = await storageFixture(t), library = createLibrary({ state: f.state, artifacts: {} });
+  const input = registration(), factor = await library.register(input);
+  assert.deepEqual(factor.registrations, [{ name: input.name, hypothesis: input.hypothesis, sources: input.sources, changes: input.changes }]);
+  assert.deepEqual(factor.evaluationIds, []); assert.deepEqual(factor.annotations, []);
+  assert.deepEqual(await library.read(factor.id), factor);
+  assert.equal(f.state.query({ collection: COLLECTIONS.evaluations }).items.length, 0);
+  assert.deepEqual(f.calls.map(call => call.kind), ['commit']);
+});
+
+test('registration and actual evidence merge under the same operator-based factor identity', async t => {
+  const f = await fixture(t), input = registration(), registered = await f.library.register(input);
+  const e = await f.makeEvidence(), [measured] = await record(f, e);
+  assert.equal(measured.id, registered.id);
+  assert.equal(measured.definitionDigest, registered.definitionDigest);
+  assert.deepEqual(measured.registrations, registered.registrations);
+  assert.deepEqual(measured.evaluationIds, [e.evaluation.id]);
+  assert.deepEqual((await f.library.evaluations(registered.id)).items, [e.evaluation]);
+  const replay = await f.library.register(input);
+  assert.deepEqual(replay, registered, 'Idempotent replay returns the original result, not a later evaluation snapshot');
+  assert.deepEqual(await f.library.read(registered.id), measured);
+});
+
+test('registration queries distinguish unevaluated definitions from actual supported evidence', async t => {
+  const f = await fixture(t), definition = await f.library.register(registration());
+  assert.deepEqual((await f.library.query({ evaluated: false, text: 'mOmEnTuM' })).items, [definition]);
+  assert.deepEqual((await f.library.query({ text: 'CONTINUATION' })).items, [definition]);
+  assert.deepEqual((await f.library.query({ text: 'missing' })).items, []);
+  assert.deepEqual((await f.library.query({ evaluated: true })).items, []);
+  assert.deepEqual((await f.library.query({ kind: 'alpha' })).items, []);
+  assert.deepEqual((await f.library.query({ minCoverage: 0 })).items, []);
+  const e = await f.makeEvidence(), [measured] = await record(f, e);
+  assert.deepEqual((await f.library.query({ evaluated: true, text: 'Momentum', kind: 'alpha' })).items, [measured]);
+  assert.deepEqual((await f.library.query({ evaluated: false })).items, []);
+});
+
+test('registration receipt rejects changed inputs and replays its fixed result after other registrations', async t => {
+  const f = await fixture(t), input = registration(), first = await f.library.register(input);
+  const second = await f.library.register(registration({ operationId: 'alias', name: 'Another name' }));
+  assert.equal(second.id, first.id); assert.equal(second.registrations.length, 2);
+  assert.deepEqual(await f.library.register(input), first);
+  for (const extras of [{ name: 'Changed name' }, { formula: candidate('other', 'high').formula }, { changes: 'Changed adaptation' }]) {
+    await assert.rejects(f.library.register({ ...input, ...extras }), { code: 'IDEMPOTENCY_CONFLICT' });
+  }
+  assert.deepEqual(await f.library.read(first.id), second);
+});
+
+test('registration normalizes duplicate sources and retains at most eight unique metadata entries', async t => {
+  const f = await fixture(t), another = { ...source, revision: 'revision-2' };
+  const first = await f.library.register(registration({ sources: [source, another, source] }));
+  assert.equal(first.registrations[0].sources.length, 2);
+  const duplicate = await f.library.register(registration({ operationId: 'same-metadata', sources: [another, source] }));
+  assert.deepEqual(duplicate, first, 'Source order does not create another alias');
+  let latest = first;
+  for (let i = 1; i < 8; i++) latest = await f.library.register(registration({ operationId: `alias-${i}`, name: `Alias ${i}`, sources: [source, another] }));
+  assert.equal(latest.registrations.length, 8);
+  assert.deepEqual(await f.library.register(registration({ operationId: 'dedup-at-limit', sources: [source, another] })), latest);
+  await assert.rejects(f.library.register(registration({ operationId: 'overflow', name: 'Ninth alias' })), { code: 'RESOURCE_EXHAUSTED' });
+  assert.deepEqual(await f.library.read(first.id), latest);
+});
+
+test('concurrent independent registrations merge through factor CAS', async t => {
+  const f = await fixture(t), input = registration();
+  f.state.beforeCommit = async () => { await f.library.register(registration({ operationId: 'concurrent', name: 'Concurrent alias' })); };
+  const factor = await f.library.register(input);
+  assert.deepEqual(factor.registrations.map(item => item.name), ['Concurrent alias', input.name]);
+  assert.deepEqual(await f.library.read(factor.id), factor);
+});
+
+test('concurrent identical registration receipts replay once and conflicting receipts fail', async t => {
+  const f = await fixture(t), input = registration(); let concurrent;
+  const before = f.calls.filter(call => call.kind === 'commit').length;
+  f.state.beforeCommit = async () => { concurrent = await f.library.register(input); };
+  assert.deepEqual(await f.library.register(input), concurrent);
+  assert.equal(f.calls.filter(call => call.kind === 'commit').length - before, 1);
+  const changed = registration({ operationId: 'conflicting', name: 'Winning input' });
+  f.state.beforeCommit = async () => { await f.library.register(changed); };
+  await assert.rejects(f.library.register({ ...changed, name: 'Losing input' }), { code: 'IDEMPOTENCY_CONFLICT' });
+  const current = await f.library.read(concurrent.id);
+  assert.deepEqual(current.registrations.map(item => item.name), [input.name, changed.name]);
+});
+
+test('registration and recording concurrently preserve both metadata and actual evaluations', async t => {
+  const f = await fixture(t), e = await f.makeEvidence();
+  f.state.beforeCommit = async () => { await record(f, e); };
+  const first = await f.library.register(registration());
+  assert.deepEqual(first.evaluationIds, [e.evaluation.id]);
+  assert.equal(first.registrations.length, 1);
+  const other = await f.makeEvidence({ c: candidate('other', 'high') });
+  f.state.beforeCommit = async () => { await f.library.register(registration({ operationId: 'other', formula: other.candidate.formula })); };
+  const [second] = await record(f, other);
+  assert.deepEqual(second.evaluationIds, [other.evaluation.id]);
+  assert.equal(second.registrations.length, 1);
+  assert.deepEqual((await f.library.evaluations(first.id)).items, [e.evaluation]);
+  assert.deepEqual((await f.library.evaluations(second.id)).items, [other.evaluation]);
+});
+
+test('registration cancellation before or during commit leaves no factor or receipt', async t => {
+  const f = await fixture(t), controller = new AbortController();
+  f.state.beforeCommit = async () => controller.abort(Object.assign(new Error('Stopped'), { code: 'CANCELLED' }));
+  await assert.rejects(f.library.register(registration(), controller.signal), { code: 'CANCELLED' });
+  assert.equal(f.state.query({ collection: COLLECTIONS.factors }).items.length, 0);
+  assert.equal(f.state.query({ collection: COLLECTIONS.feedback }).items.length, 0);
+  await assert.rejects(f.library.register(registration(), controller.signal), { code: 'CANCELLED' });
+  assert.equal(f.state.query({ collection: COLLECTIONS.feedback }).items.length, 0);
+});
+
+test('registration rejects invalid provenance, out-of-bounds metadata and invented metrics', async t => {
+  const f = await fixture(t), invalidSources = [
+    { ...source, url: 'http://example.org/factor' }, { ...source, url: 'not-a-url' },
+    { ...source, url: 'https://user:password@example.org/factor' }, { ...source, url: 'https://user@example.org/factor' },
+    { ...source, url: 'javascript:alert(1)' }, { ...source, url: `https://example.org/${'x'.repeat(2048)}` },
+    { ...source, revision: '' }, { ...source, revision: 'r'.repeat(129) }, { ...source, license: 'l'.repeat(129) },
+    { ...source, license: ' ' }, { ...source, metrics: { ic: 1 } },
+  ];
+  const invalid = [
+    { operationId: '' }, { operationId: 'o'.repeat(129) }, { name: '' }, { name: 'n'.repeat(129) },
+    { hypothesis: ' ' }, { hypothesis: 'h'.repeat(4001) }, { changes: '' }, { changes: 'c'.repeat(4001) },
+    { sources: null }, { sources: Array(5).fill(source) }, ...invalidSources.map(item => ({ sources: [item] })),
+    { metrics: { rankIC: 1 } }, { evaluationIds: ['invented'] }, { action: 'register' },
+    { formula: { dsl: 'qlib-expr/1', tree: { call: 'Exec', args: [] } } },
+    { formula: { dsl: 'qlib-expr/1', tree: { constant: 1 } } },
+  ];
+  for (const extras of invalid) await assert.rejects(f.library.register(registration(extras)), { code: 'INVALID_ARGUMENT' });
+  assert.equal(f.state.query({ collection: COLLECTIONS.factors }).items.length, 0);
+  assert.equal(f.state.query({ collection: COLLECTIONS.feedback }).items.length, 0);
+});
+
+test('registration accepts exact metadata bounds and original factors with no external source', async t => {
+  const f = await fixture(t), prefix = 'https://example.org/';
+  const sources = Array.from({ length: 4 }, (_, i) => ({ url: `${prefix}${'u'.repeat(2048 - prefix.length - 1)}${i}`, revision: 'r'.repeat(128), license: 'l'.repeat(128) }));
+  const factor = await f.library.register(registration({ operationId: 'o'.repeat(128), name: 'n'.repeat(128), hypothesis: 'h'.repeat(4000), changes: 'c'.repeat(4000), sources }));
+  assert.equal(factor.registrations[0].sources.length, 4);
+  assert.equal(factor.registrations[0].name.length, 128);
+  const original = await f.library.register(registration({ operationId: 'original', formula: candidate('volume', 'volume').formula, sources: [] }));
+  assert.deepEqual(original.registrations[0].sources, []);
+});
+
+test('new query filters validate their bounds and retain all original evidence requirements', async t => {
+  const f = await fixture(t), e = await f.makeEvidence();
+  await f.library.register(registration());
+  for (const input of [{ text: '' }, { text: ' ' }, { text: 'x'.repeat(257) }, { text: 1 }, { evaluated: 1 }, { evaluated: 'false' }]) {
+    await assert.rejects(f.library.query(input), { code: 'INVALID_ARGUMENT' });
+  }
+  for (const input of [{ kind: 'alpha' }, { axis: 'time_series' }, { universe: ['A'] }, { frequency: '1h' }, { profileId: profile.id }, { minCoverage: 0 }, { evidenceMatch: e.evaluation.context }]) {
+    assert.deepEqual((await f.library.query({ ...input, evaluated: false })).items, []);
+  }
+  assert.deepEqual((await f.library.query({ text: 'x'.repeat(256) })).items, []);
+  const [measured] = await record(f, await f.makeEvidence({ c: candidate('high', 'high') }));
+  assert.equal((await f.library.query({ evaluated: true })).items[0].id, measured.id);
+  assert.deepEqual((await f.library.query({ evaluated: true, text: 'high' })).items, [], 'An unregistered formula has no registration name or hypothesis');
+});
 
 test('exact feedback lookup cannot read an evaluation under another factor', async t => {
   const f = await fixture(t), first = await f.makeEvidence(), second = await f.makeEvidence({ c: candidate('b', 'volume') });

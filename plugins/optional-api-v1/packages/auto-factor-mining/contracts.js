@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-export const VERSION = '3.0.0';
+export const VERSION = '3.1.0';
 export const OPERATORS = Object.freeze(['Add', 'Sub', 'Mul', 'Div', 'Abs', 'Log', 'Ref', 'Mean', 'Std', 'Min', 'Max', 'Sum', 'Rank']);
 export const COLLECTIONS = Object.freeze(Object.fromEntries(['jobs', 'trials', 'factors', 'evaluations', 'pools', 'feedback', 'searches'].map(name => [name, `factor_research_v1_${name}`])));
 export const ARTIFACT_SCHEMAS = Object.freeze(['snapshot', 'source-rows', 'provider', 'provider-features', 'symbol-map', 'calendar', 'matrix', 'values', 'search-state', 'evidence', 'usage', 'history', 'provider-file'].map(name => `factor-${name}/1`));
