@@ -200,11 +200,8 @@
                   "context_window": {
                     "type": "integer",
                     "minimum": 1024,
-                    "maximum": 10000000
-                  },
-                  "max_tokens": {
-                    "type": "integer",
-                    "minimum": 1
+                    "maximum": 10000000,
+                    "description": "上下文窗口 token 数；省略时保留已存窗口，尚未配置时默认 256000。仅在用户要求调整时提交。"
                   },
                   "reasoning": {
                     "type": "boolean"
@@ -488,7 +485,7 @@
       ],
       "usage": {
         "purpose": "按用户要求直接保存模型 API Key、兼容接口、插件环境凭据或应用偏好；无需导入、手工设置环境变量或打开设置窗口。target=environment 将 changes 的环境变量值私有持久保存并立即生效，null 删除；target=model 在当前回复结束后应用。回执不含秘密。",
-        "inputs": "target=environment：changes={FMP_API_KEY:<用户提供的值>,FRED_API_KEY:<用户提供的值>}，值为单行非空字符串或 null 删除，不传 expected_version。target=model：changes={provider,model,thinking?,api_key?,base_url?,api?,context_window?,max_tokens?,reasoning?}，不传 expected_version；自定义接口使用新的 provider ID，base_url 与 api 配套。target=preferences：changes 为偏好补丁，expected_version 来自 preferences.version。command_id 为本次修改的稳定 ID。",
+        "inputs": "target=environment：changes={FMP_API_KEY:<用户提供的值>,FRED_API_KEY:<用户提供的值>}，值为单行非空字符串或 null 删除，不传 expected_version。target=model：changes={provider,model,thinking?,api_key?,base_url?,api?,context_window?,reasoning?}，不传 expected_version；context_window 省略时保留已存窗口，尚未配置时默认 256000；自定义接口使用新的 provider ID，base_url 与 api 配套。target=preferences：changes 为偏好补丁，expected_version 来自 preferences.version。command_id 为本次修改的稳定 ID。",
         "outputs": "脱敏变更回执 {id,target,status,changes,result?,error?}；environment/preferences 的 applied 表示已持久化生效，model 的 queued 表示将在当前回复结束后处理。秘密不会出现在回执中。",
         "prerequisites": [
           "主 Agent；使用用户提供的凭据或已保存认证，只有缺少必要信息时才询问用户。"
