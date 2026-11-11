@@ -21,7 +21,7 @@ function assertPackaged(text) {
 
 // This function returns a package only. Provider selection, idempotency, artifact
 // creation and immutable publication belong exclusively to host.reports.publish.
-export async function renderReport(host, envelope, signal) {
+export async function renderReport(host, envelope, signal, readWorkspaceAttachment = readWorkspace) {
   const { metadata, data, related, references, input } = envelope;
   check(object(input) && Object.keys(input).every(key => inputKeys.includes(key)), 'Unsupported Report input; HTML, CSS and script uploads are disabled');
   check(object(input.content), 'Report content is required');
@@ -56,7 +56,7 @@ export async function renderReport(host, envelope, signal) {
       bytes = await readBytes(host, asset.ref, asset.entry, signal);
     } else {
       check(asset.entry === undefined, 'Workspace attachments do not accept an entry');
-      bytes = await readWorkspace(host, asset.source_path, signal);
+      bytes = await readWorkspaceAttachment(host, asset.source_path, signal);
     }
     total += bytes.length;
     check(total <= 16 * 1024 * 1024, 'Report assets exceed 16 MiB');

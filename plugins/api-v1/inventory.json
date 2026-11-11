@@ -5871,7 +5871,7 @@
     },
     {
       "id": "sesame/reports",
-      "version": "5.0.24",
+      "version": "5.0.25",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -5906,7 +5906,8 @@
           "host.records.query",
           "sesame/data-access#data_snapshot",
           "sesame/workspace#write",
-          "host.reports.publish"
+          "host.reports.publish",
+          "host.reports.describe"
         ]
       },
       "tools": [
@@ -5917,6 +5918,7 @@
         "report_read",
         "report_check",
         "report_export_check",
+        "report_prepare",
         "report_publish",
         "report_structure",
         "report_compose",
@@ -5980,6 +5982,15 @@
         },
         {
           "id": "report_export_check",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "report_prepare",
           "kind": "function",
           "consumers": [
             "agent",

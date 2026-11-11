@@ -5,6 +5,7 @@ import { backtestTemplate } from './backtest-template.js';
 import { writeWorkspace } from './artifact-io.js';
 import { renderReport, publishReport } from './report-provider.js';
 import { reportCompositionCapabilities } from './report-compose.js';
+import { prepareReport } from './report-prepare.js';
 
 const fail = (condition, message) => { if (!condition) throw new Error(message); };
 const chartKinds = [...compositionKinds, 'line', 'bar', 'scatter', 'matrix', 'units', 'waterfall', 'dumbbell', 'strip', 'histogram', 'boxplot', 'ridgeline', 'violin', 'calendar', 'parallel', 'bump', 'lifecycle', 'treemap', 'threads', 'flow', 'network-circular', 'network-force', 'decision-tree', 'candlestick'];
@@ -52,6 +53,7 @@ export function createCapabilities(host) {
     { name: 'report_check', execute: (args, signal) => host.views.inspect({ surface: 'artifact', ref: args.ref }, { signal }) },
     { name: 'report_export_check', execute: (args, signal) => host.views.inspect({ surface: 'report-export', ref: args.ref }, { signal }) },
     { name: 'report_render', execute: (args, signal) => renderReport(host, args, signal) },
+    { name: 'report_prepare', execute: (args, signal) => prepareReport(host, args, signal) },
     { name: 'report_publish', execute: (args, signal) => publishReport(host, args, signal) },
   ];
 }

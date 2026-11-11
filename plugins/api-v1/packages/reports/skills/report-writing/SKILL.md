@@ -9,6 +9,8 @@ description: 把分析结果写成有用、可核对的结论：先回答问题�
 
 读者需要先知道三件事：结论是什么、有什么依据、下一步观察或行动什么。把已登记数据转成可核对的判断，不复述分析过程。先读取 `host_reports_describe`；宿主选中本插件时，用 `host_reports_publish` 的 `input.content` 和可选用户 `input.style` 呈现。`report_publish` 只是默认内容的便利转接，不覆盖宿主提供者；`document.sections` 可组合判断、图表和简短推理，不以业务模板限制表达。组件见 [report-design](../report-design/components.md)。
 
+大报告保存完整宿主发布请求到工作区 JSON，再用 `report_prepare({path,operation_id})` 检查并取得小型 `publication`；原样交给 `host_reports_publish`。`data` 必填，无绑定时为 `[]`；`locale` 放发布外壳；`details` 内部内容放 `blocks`。准备失败只按指针局部修草稿，成功前不生成报告；准备成功后改草稿使用新的 `operation_id`，改发布请求使用新的 `operationId`。不要反复在工具参数中手抄报告全文。
+
 正文保留结论、关键证据和必要表格。完整原始 JSON、大结果和执行回执保留为可追溯的固定数据引用或证据附件，在末尾 `details` 附录中标明对应来源；同一份完整回执不在多个章节重复嵌入。读者应能沿引用核对全部细节；数据引用不代替报告本身的编写与发布。
 
 需要下载完整文件时，在 `input.assets` 声明真实附件，用末尾 `attachments` 块的 `items: [{label,path,description?}]` 链接同一路径；不要用 Markdown 相对链接。文件与数值保持原字节，组件仅生成可点击的附件入口；路径和格式边界见[组件说明](../report-design/components.md)。

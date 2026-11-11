@@ -88,7 +88,7 @@ PDF/PNG 是独立交付；需要时对同一 ref 使用 report_export_check，�
 
 公式使用 formula 内容块的 latex 字段，可选 caption 和 display:"inline"|"block"。Report 使用内置 KaTeX 本地渲染，无需外网；不把英文函数串或未渲染的 LaTeX 当作公式交付。完整代码和技术定义保留在末尾附录。
 
-长内容不要在工具参数中重新抄写：把完整 `input` 对象原样保存为 UTF-8 JSON，并登记成含 application/json 附件的固定 ArtifactRef。宿主发布使用 `inputRef:{ref,entry}`（便利入口为 `input_ref`），与内联 input 二选一；JSON 内仅放提供者输入，元数据与 data/related/references 仍在发布外壳。宿主校验并读取确切字节，记录提供者修订和固定输入。修呈现不重算原研究、不改数字或引用。发布后的渲染通过不替代原文、公式、数字及引用的一致性核对。
+长报告先在工作区保存完整的 `host_reports_publish` 请求为 UTF-8 JSON：外壳包含 `operationId/title/summary/provenanceKind/data`（无数据绑定时 `data:[]`），正文放 `input`；`locale`、固定引用等仍在外壳。调用 `report_prepare({path,operation_id})` 检查外壳、当前提供者与正文渲染结构，成功后将返回的 `publication` 原样交给 `host_reports_publish`。准备只生成固定 JSON 输入，不发布报告、不改草稿；失败按字段位置局部编辑同一文件后再准备，不重输全文。准备成功后改内容或元数据须换 `operation_id`，修改发布请求须换外壳 `operationId`。已有固定输入仍可直接使用 `inputRef:{ref,entry}`（便利入口为 `input_ref`）。修呈现不重算原研究、不改数字或引用。发布后的渲染通过不替代原文、公式、数字及引用的一致性核对。
 
 Report 5 需要 Sesame >=0.3.0-dev.2 的 `sesame.report/1` 宿主服务。宿主工具名为 `host_reports_describe` / `host_reports_publish`；其能力 ID 是 `host.reports.describe` / `host.reports.publish`。旧版报告的固定 HTML 仍可读取；新报告不接受预设选择或绕过宿主的 HTML 发布。
 

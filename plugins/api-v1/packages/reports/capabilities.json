@@ -3362,6 +3362,64 @@
       }
     },
     {
+      "id": "report_prepare",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Validate a workspace JSON draft containing the complete host_reports_publish request, freeze its input, and return a small publication request with inputRef. Does not publish a report or edit the file.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000,
+            "description": "Workspace UTF-8 JSON file containing the complete host_reports_publish envelope and inline input. Read host_reports_describe for the two schemas."
+          },
+          "operation_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Stable ID for this preparation. Retry unchanged drafts with the same ID; after successful preparation use a new ID when changing content or metadata."
+          }
+        },
+        "required": [
+          "path",
+          "operation_id"
+        ]
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "read",
+        "resource.write",
+        "resource.publish"
+      ],
+      "usage": {
+        "purpose": "Prepare large structured reports without copying their complete content into another tool call.",
+        "inputs": "path and operation_id. The file is a host_reports_publish request: operationId, title, summary, provenanceKind, data (possibly []), input, and any original optional metadata or fixed references. locale belongs to this outer envelope.",
+        "outputs": "provider and publication. Pass publication unchanged to host_reports_publish. inputRef names an immutable application/json resource; no report exists until publication succeeds.",
+        "prerequisites": [
+          "The selected provider is sesame/reports.",
+          "The draft input follows the selected provider schema and contains the original research values and fixed references."
+        ],
+        "limitations": [
+          "Schema and renderer errors identify the draft field; edit only that part and prepare again. No automatic rewriting of findings.",
+          "Omitted locale remains omitted for the host preference; preflight uses the renderer default only for structural validation.",
+          "Prepared input does not bypass provider selection, immutable-reference checks or final report_check."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "report_prepare"
+      }
+    },
+    {
       "id": "report_publish",
       "kind": "function",
       "consumers": [
@@ -9686,5 +9744,108 @@
       }
     }
   ],
-  "artifactSchemas": []
+  "artifactSchemas": [
+    {
+      "id": "report-input",
+      "kind": "resource",
+      "schemaVersion": "1.0.0",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "const": "report-input"
+          },
+          "path": {
+            "const": "input.json"
+          },
+          "provider": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "pluginId": {
+                "const": "sesame/reports"
+              },
+              "serviceId": {
+                "const": "report"
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "revision": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "pluginId",
+              "serviceId",
+              "version",
+              "revision"
+            ]
+          },
+          "provenance": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "enum": [
+                  "observed",
+                  "derived",
+                  "user_input",
+                  "demo"
+                ]
+              },
+              "references": {
+                "type": "array",
+                "maxItems": 255,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "revision",
+                    "digest",
+                    "kind",
+                    "schemaVersion"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "revision": {
+                      "type": "string"
+                    },
+                    "digest": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$"
+                    },
+                    "kind": {
+                      "type": "string"
+                    },
+                    "schemaVersion": {
+                      "type": "string",
+                      "const": "1.0.0"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "kind",
+              "references"
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "path",
+          "provider",
+          "provenance"
+        ]
+      }
+    }
+  ]
 }
