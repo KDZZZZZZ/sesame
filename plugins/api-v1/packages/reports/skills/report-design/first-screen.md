@@ -4,6 +4,8 @@
 
 使用 `content.kind:"document"` 和 `content.overview`。首屏只有标题、一行结论、短结果以及确有必要的一张内置图。`summary` 是列表摘要，渲染器不再重复显示；正文从依据开始，不再写开场总结。
 
+长度按发布外壳的 `locale` 判断：中文标签最多 20 字，其他语言最多 72 字；中文结论/共用背景/注释分别最多 48/80/32 字，其他语言为 180/240/120 字。纯 `inputSchema` 不含外壳语言，`renderInputSchema` 与 `report_prepare` 会检查相应语言限制；错误给出具体字段，不截断原文。
+
 ```json
 {
   "kind": "document",

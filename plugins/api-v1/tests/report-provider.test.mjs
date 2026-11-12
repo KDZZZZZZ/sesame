@@ -21,7 +21,9 @@ test('Report declares a host-only immediate provider with plugin-owned recursive
   assert.deepEqual(c.services,[{id:'report',contract:'sesame.report/1',consumer:'host',configSchema:{type:'object',properties:{},additionalProperties:false},operations:{render:'report_render'}}]);
   assert.deepEqual(provider.consumers,['host']);assert.equal(provider.execution,'immediate');
   assert.notEqual(provider.resultRetention,'summary','full internal result supports interrupted host publication recovery');
-  assert.deepEqual(provider.inputSchema,reportRenderInputSchema(provider.inputSchema.properties.input));
+  const { allOf, ...envelopeSchema } = provider.inputSchema;
+  assert.deepEqual(envelopeSchema,reportRenderInputSchema(provider.inputSchema.properties.input));
+  assert.ok(allOf.length > 0, 'Provider may impose locale-dependent content limits without changing the host envelope');
   assert.deepEqual(provider.outputSchema,REPORT_RENDER_OUTPUT_SCHEMA);
   assert.match(provider.inputSchema.properties.input.$id,/^urn:/);
   assert.ok(provider.inputSchema.properties.input.$defs.block.oneOf.some(item=>item.properties.type.const==='group'));

@@ -17,12 +17,12 @@ const check = (ok, message) => { if (!ok) throw new Error(message); };
 const keys = (value, allowed) => check(object(value) && Object.keys(value).every(key => allowed.includes(key)), 'Unsupported content or style property');
 const text = value => check(typeof value === 'string' && value.length <= 20000, 'Content must be text up to 20,000 characters');
 const list = (value, maximum = 100) => check(Array.isArray(value) && value.length <= maximum, 'Too many content items');
-function valueTone(tone, value) {
+function valueTone(tone, value, path, tonePath) {
   if (tone === undefined) return '';
   check(['auto', 'positive', 'negative', 'neutral'].includes(tone), 'Value tone must be auto, positive, negative or neutral');
   if (value == null || value === 0) return 'neutral';
   if (tone !== 'auto') return tone;
-  check(typeof value === 'number' && Number.isFinite(value), 'Automatic colour needs a finite numeric value; formatted text requires an explicit tone');
+  check(typeof value === 'number' && Number.isFinite(value), `${path}: Automatic colour from ${tonePath} needs a finite numeric value; formatted text requires an explicit tone`);
   return value > 0 ? 'positive' : 'negative';
 }
 export const reportStyles = Object.freeze({ layouts: ['document', 'signal-study', 'modules', 'backtest'] });
@@ -46,13 +46,20 @@ export async function renderStructuredReport(host, args, signal) {
     return applyReportStyle((await buildBacktestReport(host, { ...args, ...content, demo: args.provenance_kind === 'demo' }, signal)).html, style);
   }
   const charts = [];
-  function block(row, depth = 0) {
+  function block(row, depth = 0, path = '/input/content') {
+    try { return renderBlock(row, depth, path); }
+    catch (error) {
+      if (!error.message.startsWith('/input/')) error.message = `${path}: ${error.message}`;
+      throw error;
+    }
+  }
+  function renderBlock(row, depth, path) {
     check(depth <= 5 && object(row), 'Invalid content block');
     if (row.type === 'logic') return renderLogicDiagram(row);
     if (row.type === 'group') {
       keys(row,['type','layout','blocks']); list(row.blocks,12);
       check(['columns','stack'].includes(row.layout),'Choose columns or stack');
-      return `<div class="report-group report-group-${row.layout}">${row.blocks.map(child=>`<div>${block(child,depth+1)}</div>`).join('')}</div>`;
+      return `<div class="report-group report-group-${row.layout}">${row.blocks.map((child,index)=>`<div>${block(child,depth+1,`${path}/blocks/${index}`)}</div>`).join('')}</div>`;
     }
     if (row.type === 'judgment') {
       keys(row,['type','text','note']);text(row.text);if(row.note!==undefined)text(row.note);
@@ -83,22 +90,23 @@ export async function renderStructuredReport(host, args, signal) {
       keys(row, ['type', 'items']); list(row.items, 64);
       check(row.items.length > 0, 'Attachments need at least one packaged file');
       const paths = new Set();
-      return `<ul class="report-attachments">${row.items.map(item => {
+      return `<ul class="report-attachments">${row.items.map((item, index) => {
+        const itemPath = `${path}/items/${index}`;
         keys(item, ['label', 'path', 'description']);
         check(typeof item.label === 'string' && item.label.trim().length > 0 && item.label.length <= 160, 'Attachment label must be short nonempty text');
         if (item.description !== undefined) check(typeof item.description === 'string' && item.description.length <= 1000, 'Attachment description must be text up to 1,000 characters');
         // Match the provider's package path rules, excluding URL syntax and
         // percent escapes as well: links must identify one literal package entry.
-        const path = item.path;
-        check(typeof path === 'string' && path.length <= 256 && !/^[\/]|[\\:%?#\x00-\x1f\x7f]/.test(path)
-          && path.split('/').every(part => part && part !== '.' && part !== '..'), 'Attachment links require safe literal relative paths');
-        check(!paths.has(path), 'Attachment links must not repeat a path'); paths.add(path);
-        const matches = (args.assets ?? []).filter(asset => asset.path === path);
-        check(matches.length === 1, 'Attachment link must match one declared packaged asset');
+        const assetPath = item.path;
+        check(typeof assetPath === 'string' && assetPath.length <= 256 && !/^[\/]|[\\:%?#\x00-\x1f\x7f]/.test(assetPath)
+          && assetPath.split('/').every(part => part && part !== '.' && part !== '..'), `${itemPath}/path: Attachment links require safe literal relative paths`);
+        check(!paths.has(assetPath), `${itemPath}/path: Attachment links must not repeat a path`); paths.add(assetPath);
+        const matches = (args.assets ?? []).filter(asset => asset.path === assetPath);
+        check(matches.length === 1, `${itemPath}/path: Attachment link must match one declared packaged asset at /input/assets/*/path`);
         const asset = matches[0], media = String(asset.media_type).split(';')[0].toLowerCase();
         const extensions = { 'application/json': ['json'], 'text/plain': ['txt', 'csv', 'tsv', 'md', 'log'], 'image/png': ['png'], 'image/jpeg': ['jpg', 'jpeg'], 'image/webp': ['webp'] };
-        check(extensions[media]?.includes(path.split('.').at(-1).toLowerCase()), 'Attachment links only accept inert packaged data, text or raster images');
-        const href = path.split('/').map(encodeURIComponent).join('/');
+        check(extensions[media]?.includes(assetPath.split('.').at(-1).toLowerCase()), `${itemPath}/path: Attachment links only accept inert packaged data, text or raster images; also check the matching /input/assets entry path and media_type`);
+        const href = assetPath.split('/').map(encodeURIComponent).join('/');
         return `<li><a href="${e(href)}">${e(item.label)}</a>${item.description ? `<p class="report-source">${e(item.description)}</p>` : ''}</li>`;
       }).join('')}</ul>`;
     }
@@ -110,7 +118,7 @@ export async function renderStructuredReport(host, args, signal) {
     }
     if (row.type === 'metrics') {
       keys(row, ['type','items']); list(row.items, 12);
-      return `<dl class="report-metrics">${row.items.map(item => { keys(item,['label','value','note','tone']); text(item.label); if(item.note!==undefined)text(item.note); check(typeof item.value === 'string' || typeof item.value === 'number' && Number.isFinite(item.value), 'Invalid metric value'); const tone = valueTone(item.tone, item.value); return `<div class="report-metric"${tone ? ` data-tone="${tone}"` : ''}><dt>${e(item.label)}</dt><dd>${e(item.value)}</dd>${item.note ? `<small>${e(item.note)}</small>` : ''}</div>`; }).join('')}</dl>`;
+      return `<dl class="report-metrics">${row.items.map((item,index) => { keys(item,['label','value','note','tone']); text(item.label); if(item.note!==undefined)text(item.note); check(typeof item.value === 'string' || typeof item.value === 'number' && Number.isFinite(item.value), `${path}/items/${index}/value: Invalid metric value`); const tone = valueTone(item.tone, item.value, `${path}/items/${index}/value`, `${path}/items/${index}/tone`); return `<div class="report-metric"${tone ? ` data-tone="${tone}"` : ''}><dt>${e(item.label)}</dt><dd>${e(item.value)}</dd>${item.note ? `<small>${e(item.note)}</small>` : ''}</div>`; }).join('')}</dl>`;
     }
     if (row.type === 'reasoning') {
       keys(row, ['type','steps']); list(row.steps, 8); row.steps.forEach(text);
@@ -121,7 +129,7 @@ export async function renderStructuredReport(host, args, signal) {
       if (row.column_tones !== undefined) check(Array.isArray(row.column_tones) && row.column_tones.length === row.columns.length && row.column_tones.every(tone => tone === null || ['auto','positive','negative','neutral'].includes(tone)), 'Table column_tones must match the columns; use null for ordinary content');
       if(row.caption!==undefined)text(row.caption);
       check(row.rows.every(values=>Array.isArray(values)&&values.length===row.columns.length&&values.every(value=>value===null||['string','boolean'].includes(typeof value)||typeof value==='number'&&Number.isFinite(value))), 'Table rows must match columns and contain finite scalar values');
-      return `<div class="report-table"><table>${row.caption ? `<caption>${e(row.caption)}</caption>` : ''}<thead><tr>${row.columns.map(value=>`<th>${e(value)}</th>`).join('')}</tr></thead><tbody>${row.rows.map(values=>`<tr>${values.map((value,index)=>{ const tone = valueTone(row.column_tones?.[index] ?? undefined, value); return `<td${tone ? ` data-tone="${tone}"` : ''}>${e(value ?? '—')}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>`;
+      return `<div class="report-table"><table>${row.caption ? `<caption>${e(row.caption)}</caption>` : ''}<thead><tr>${row.columns.map(value=>`<th>${e(value)}</th>`).join('')}</tr></thead><tbody>${row.rows.map((values,rowIndex)=>`<tr>${values.map((value,index)=>{ const tone = valueTone(row.column_tones?.[index] ?? undefined, value, `${path}/rows/${rowIndex}/${index}`, `${path}/column_tones/${index}`); return `<td${tone ? ` data-tone="${tone}"` : ''}>${e(value ?? '—')}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>`;
     }
     if (row.type === 'chart') {
       keys(row,['type','title','kind','columns','options','rows','data_id','takeaway','source_note','nodes','chart_data']);
@@ -141,7 +149,7 @@ export async function renderStructuredReport(host, args, signal) {
     }
     if (row.type === 'details') {
       keys(row,['type','title','blocks']); text(row.title); list(row.blocks);
-      return `<details data-report-evidence><summary>${e(row.title)}</summary>${row.blocks.map(child=>block(child,depth+1)).join('')}</details>`;
+      return `<details data-report-evidence><summary>${e(row.title)}</summary>${row.blocks.map((child,index)=>block(child,depth+1,`${path}/blocks/${index}`)).join('')}</details>`;
     }
     check(false, 'Unknown content block; custom HTML, CSS and scripts are not accepted');
   }
@@ -167,8 +175,8 @@ export async function renderStructuredReport(host, args, signal) {
   } else {
     keys(content,['kind','overview','sections','appendix']); list(content.sections,50); if(content.appendix)list(content.appendix);
     body=content.overview === undefined ? '' : renderOverview(content.overview, block, args.locale ?? 'zh-CN', content.sections.length > 0);
-    body+=content.sections.map((section,index)=>{keys(section,['title','blocks']);text(section.title);list(section.blocks);return `<section class="kit-section" id="content-section-${index+1}"><h2>${e(section.title)}</h2>${section.blocks.map(item=>block(item)).join('')}</section>`;}).join('');
-    body+= (content.appendix??[]).map(item=>block(item)).join('');
+    body+=content.sections.map((section,index)=>{keys(section,['title','blocks']);text(section.title);list(section.blocks);return `<section class="kit-section" id="content-section-${index+1}"><h2>${e(section.title)}</h2>${section.blocks.map((item,blockIndex)=>block(item,0,`/input/content/sections/${index}/blocks/${blockIndex}`)).join('')}</section>`;}).join('');
+    body+= (content.appendix??[]).map((item,index)=>block(item,0,`/input/content/appendix/${index}`)).join('');
     const assets=[];
     if(charts.length){assets.push('report-kit.js','editorial-charts.js');
       if(charts.some(chart=>['waterfall','dumbbell','strip','histogram','boxplot','ridgeline','violin'].includes(chart.kind)))assets.push('charts-statistics.js');

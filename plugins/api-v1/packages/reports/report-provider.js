@@ -10,6 +10,25 @@ const refKey = ref => JSON.stringify(['id', 'revision', 'digest', 'kind', 'schem
 const uniqueRefs = refs => [...new Map(refs.map(ref => [refKey(ref), ref])).values()];
 const safePath = path => typeof path === 'string' && path.length <= 256 && !/^[\/]|[\\:\x00-\x1f]/.test(path) && path.split('/').every(part => part && part !== '.' && part !== '..');
 const inputKeys = ['content', 'style', 'assets', 'strategy_source', 'strategy_evidence'];
+const attachmentExtensions = { 'application/json': ['json'], 'text/plain': ['txt', 'csv', 'tsv', 'md', 'log'], 'image/png': ['png'], 'image/jpeg': ['jpg', 'jpeg'], 'image/webp': ['webp'] };
+
+function validateAssets(assets, refs) {
+  const paths = new Set(['index.html', 'sesame-report-input.json']);
+  for (const [index, asset] of assets.entries()) {
+    const path = `/input/assets/${index}`;
+    check(object(asset) && Object.keys(asset).every(key => ['path', 'media_type', 'source_path', 'ref', 'entry'].includes(key)), `${path}: Unsupported attachment property`);
+    check(safePath(asset.path) && !paths.has(asset.path.toLowerCase()), `${path}/path: Asset paths must be unique, safe and relative`);
+    paths.add(asset.path.toLowerCase());
+    const media = String(asset.media_type).split(';')[0].toLowerCase(), suffix = asset.path.split('.').at(-1).toLowerCase();
+    check(attachmentExtensions[media], `${path}/media_type: Attachment extension and media type must match inert data, text or raster image formats; allowed MIME types: ${Object.keys(attachmentExtensions).join(', ')}. Executable scripts are not packaged attachments`);
+    check(attachmentExtensions[media].includes(suffix), `${path}/path: Attachment extension and media type must match; allowed extensions for this media_type: ${attachmentExtensions[media].join(', ')}. Changing media_type alone does not change the packaged path extension`);
+    check(Boolean(asset.source_path) !== Boolean(asset.ref), `${path}: Choose a workspace attachment or one fixed attachment reference`);
+    if (asset.ref) {
+      check(safePath(asset.entry), `${path}/entry: Fixed attachment must name a safe entry`);
+      check(refs.some(ref => refKey(ref) === refKey(asset.ref)), `${path}/ref: Fixed attachment must be declared in report references`);
+    } else check(asset.entry === undefined, `${path}/entry: Workspace attachments do not accept an entry`);
+  }
+}
 
 function assertPackaged(text) {
   // The host independently enforces package integrity, CSP and read-only refs.
@@ -27,6 +46,7 @@ export async function renderReport(host, envelope, signal, readWorkspaceAttachme
   check(object(input.content), 'Report content is required');
   const refs = uniqueRefs([...data.map(binding => binding.ref), ...related.flatMap(item => item.artifact ? [item.artifact] : []), ...references]);
   if (input.strategy_source) check(refs.some(ref => refKey(ref) === refKey(input.strategy_source)), 'Strategy source must be declared in report references');
+  validateAssets(input.assets ?? [], refs);
   const args = { ...input, ...metadata, provenance_kind: metadata.provenanceKind, data, related, references };
   let html = await renderStructuredReport(host, args, signal);
   assertPackaged(html);
@@ -38,28 +58,21 @@ export async function renderReport(host, envelope, signal, readWorkspaceAttachme
   let total = Buffer.byteLength(html);
   check(total > 0 && total <= 1024 * 1024, 'Rendered report exceeds 1 MiB');
   const files = [{ path: 'index.html', mediaType: 'text/html', content: html, encoding: 'utf8' }];
-  const paths = new Set(['index.html', 'sesame-report-input.json']);
-  for (const asset of input.assets ?? []) {
-    check(object(asset) && Object.keys(asset).every(key => ['path', 'media_type', 'source_path', 'ref', 'entry'].includes(key)), 'Unsupported attachment property');
-    check(safePath(asset.path) && !paths.has(asset.path.toLowerCase()), 'Asset paths must be unique, safe and relative');
-    paths.add(asset.path.toLowerCase());
-    const media = String(asset.media_type).split(';')[0].toLowerCase(), suffix = asset.path.split('.').at(-1).toLowerCase();
-    const extensions = { 'application/json': ['json'], 'text/plain': ['txt', 'csv', 'tsv', 'md', 'log'], 'image/png': ['png'], 'image/jpeg': ['jpg', 'jpeg'], 'image/webp': ['webp'] };
-    check(extensions[media]?.includes(suffix), 'Attachment extension and media type must match inert data, text or raster image formats; HTML, CSS, JavaScript and SVG uploads are disabled');
-    check(Boolean(asset.source_path) !== Boolean(asset.ref), 'Choose a workspace attachment or one fixed attachment reference');
+  for (const [index, asset] of (input.assets ?? []).entries()) {
+    const path = `/input/assets/${index}`, media = String(asset.media_type).split(';')[0].toLowerCase();
     let bytes;
     if (asset.ref) {
-      check(safePath(asset.entry) && refs.some(ref => refKey(ref) === refKey(asset.ref)), 'Fixed attachment must be declared in report references and name a safe entry');
       const manifest = await host.resources.read(asset.ref, { part: 'manifest' });
       const blob = manifest.blobs?.find(blob => blob.path === asset.entry);
-      check(blob && blob.mediaType.split(';')[0].toLowerCase() === media, 'Fixed attachment media type must match its manifest');
+      check(blob, `${path}/entry: Fixed attachment entry must exist in its manifest`);
+      check(blob.mediaType.split(';')[0].toLowerCase() === media, `${path}/media_type: Fixed attachment media type must match its manifest`);
       bytes = await readBytes(host, asset.ref, asset.entry, signal);
     } else {
-      check(asset.entry === undefined, 'Workspace attachments do not accept an entry');
-      bytes = await readWorkspaceAttachment(host, asset.source_path, signal);
+      try { bytes = await readWorkspaceAttachment(host, asset.source_path, signal); }
+      catch (error) { error.message = `${path}/source_path: ${error.message}`; throw error; }
     }
     total += bytes.length;
-    check(total <= 16 * 1024 * 1024, 'Report assets exceed 16 MiB');
+    check(total <= 16 * 1024 * 1024, `${path}: Report assets exceed 16 MiB`);
     files.push({ path: asset.path, mediaType: asset.media_type, content: bytes.toString('base64'), encoding: 'base64' });
   }
   signal?.throwIfAborted();

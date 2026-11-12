@@ -64,6 +64,8 @@ Strategy 使用 `策略类别/具体策略项目/报告.html`，不设年或月�
 
 完整证据文件在 input.assets 声明，在末尾 details 中用 attachments 组件的 items:[{label,path,description?}] 提供下载入口；path 必须对应实际包内附件。不要用 Markdown 相对链接。既有文件、样本和数字保持原样；格式与路径边界见 report-design/components.md。
 
+校验错误中的 JSON 指针就是草稿字段位置，按位置局部修正。`tone:"auto"` 只用于原始数值；带 `%` 等格式的文本使用明确的 `positive/negative/neutral` 或省略配色。附件同时校验 `media_type` 与包内 `path` 扩展名；仅修改媒体类型不会使 `.py` 等脚本扩展名有效，原源码仍保留在工作区或原研究资源中。
+
 完整回测报告默认呈现真实同源策略逻辑、品种×周期比较、实际参数试验和敏感性，字段与章节按用户要求调整，细则见 report-writing/backtest.md。仅实际使用 SVL 时填写 strategy_source 并提供同源逻辑图；Python、MT5 等原生回测用统一模板及真实原生源码/运行证据，无需另造 SVL。选优来自登记结果，样本外不参与重新选优，允许补充有价值的洞见。
 
 因子与策略报告默认在正文加入应用现有的 Netron 风格 SVL 渲染的逻辑图，说明实际数据怎样形成信号，以及已定义的买卖、仓位、退出和停用规则。通用 document 使用 `logic` 内容块；signal-study 自动展示候选表达式的计算图，可用 `presentation.logic[trialId]` 补充已有规则；原生 backtest 可提供 `strategy_evidence.logic`。字段说明见 report-design/logic-diagram.md。只研究因子时画到信号，不补造交易规则；图与真实表达式、源码和本次结果一致。逻辑图不替代净值、回撤、热力图和历史证据，不指定分析方法；用户可以调整或删去。

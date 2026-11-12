@@ -5871,7 +5871,7 @@
     },
     {
       "id": "sesame/reports",
-      "version": "5.0.25",
+      "version": "5.0.26",
       "distribution": "core",
       "state": "mounted",
       "engines": {

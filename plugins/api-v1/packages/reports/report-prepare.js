@@ -60,9 +60,10 @@ export async function prepareReport(host, args, signal) {
   const dependencies = uniqueRefs([...draft.data.map(item => item.ref), ...related.flatMap(item => item.artifact ? [item.artifact] : []), ...references]);
   check(dependencies.length < 256, '/: report dependencies exceed the 256-reference budget including prepared input');
   check(new Set(draft.data.map(item => item.id)).size === draft.data.length, '/data: binding IDs must be unique');
-  // The actual host supplies its current locale when the draft omits it. This
-  // structural preflight uses the renderer default without changing that intent.
-  const metadata = { title: draft.title, summary: draft.summary, locale: draft.locale ?? 'zh-CN',
+  // Unknown locale must not impose Chinese-only limits on a draft the host may
+  // publish in another language. Preflight uses the existing widest limits;
+  // publication retains the omission and the host applies its actual preference.
+  const metadata = { title: draft.title, summary: draft.summary, locale: draft.locale ?? 'en',
     ...(draft.space ? { space: draft.space } : {}), provenanceKind: draft.provenanceKind, features: draft.features ?? ['interactive'] };
   const envelope = { metadata, data: draft.data, related, references, input: draft.input };
   const renderReady = await host.capabilities.check({ id: `${host.context.pluginId}#report_render`, revision: provider.revision }, envelope, { signal });

@@ -656,12 +656,13 @@
                   },
                   "overview": {
                     "type": "object",
-                    "description": "Compact first screen: one conclusion, TC-aligned short results and at most one native chart. Details belong in sections. No repeated visible summary. Chinese values: phrase <=16, number <=36, sentence <=48; conclusion <=48, optional note <=32. User scope overrides template suggestions.",
+                    "description": "Compact first screen. Limits depend on outer locale: Chinese conclusion48/meta80/label20/note32/value phrase16,number36,sentence48/table column16,cell40; other locales conclusion180/meta240/label72/note120/value phrase72,number72,sentence180/table column60,cell140. Labels and text must be nonempty. Explanations belong in sections.",
                     "properties": {
                       "conclusion": {
                         "type": "string",
                         "minLength": 1,
-                        "maxLength": 180
+                        "maxLength": 180,
+                        "pattern": "\\S"
                       },
                       "facts": {
                         "type": "array",
@@ -672,12 +673,14 @@
                             "label": {
                               "type": "string",
                               "minLength": 1,
-                              "maxLength": 72
+                              "maxLength": 72,
+                              "pattern": "\\S"
                             },
                             "value": {
                               "type": "string",
                               "minLength": 1,
-                              "maxLength": 180
+                              "maxLength": 180,
+                              "pattern": "\\S"
                             },
                             "format": {
                               "enum": [
@@ -689,7 +692,8 @@
                             "note": {
                               "type": "string",
                               "minLength": 1,
-                              "maxLength": 120
+                              "maxLength": 120,
+                              "pattern": "\\S"
                             },
                             "tone": {
                               "enum": [
@@ -703,7 +707,33 @@
                             "label",
                             "value"
                           ],
-                          "additionalProperties": false
+                          "additionalProperties": false,
+                          "allOf": [
+                            {
+                              "if": {
+                                "type": "object",
+                                "properties": {
+                                  "format": {
+                                    "enum": [
+                                      "phrase",
+                                      "number"
+                                    ]
+                                  }
+                                }
+                              },
+                              "then": {
+                                "type": "object",
+                                "properties": {
+                                  "value": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 72,
+                                    "pattern": "\\S"
+                                  }
+                                }
+                              }
+                            }
+                          ]
                         }
                       },
                       "table": {
@@ -713,7 +743,9 @@
                             "type": "array",
                             "items": {
                               "type": "string",
-                              "maxLength": 20000
+                              "minLength": 1,
+                              "maxLength": 60,
+                              "pattern": "\\S"
                             },
                             "maxItems": 7,
                             "minItems": 1
@@ -722,15 +754,24 @@
                             "type": "array",
                             "items": {
                               "type": "array",
+                              "maxItems": 7,
                               "items": {
-                                "type": [
-                                  "string",
-                                  "number",
-                                  "boolean",
-                                  "null"
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 140,
+                                    "pattern": "\\S"
+                                  },
+                                  {
+                                    "type": [
+                                      "number",
+                                      "boolean",
+                                      "null"
+                                    ]
+                                  }
                                 ]
-                              },
-                              "maxItems": 24
+                              }
                             },
                             "maxItems": 6,
                             "minItems": 1
@@ -822,7 +863,21 @@
                             "minItems": 1
                           },
                           "options": {
-                            "type": "object"
+                            "type": "object",
+                            "properties": {
+                              "height": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": 180,
+                                    "maximum": 280
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            }
                           },
                           "rows": {
                             "type": "array",
@@ -911,14 +966,36 @@
                         "type": "string",
                         "minLength": 1,
                         "maxLength": 240,
-                        "description": "Shared asset, date and horizon once; Chinese at most 80 characters."
+                        "description": "Shared asset, date and horizon once; Chinese at most 80 characters.",
+                        "pattern": "\\S"
                       }
                     },
                     "required": [
                       "conclusion",
                       "facts"
                     ],
-                    "additionalProperties": false
+                    "additionalProperties": false,
+                    "anyOf": [
+                      {
+                        "required": [
+                          "table"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "chart"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "facts": {
+                            "type": "array",
+                            "minItems": 1
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "required": [
@@ -2131,7 +2208,30 @@
                         "label",
                         "value"
                       ],
-                      "additionalProperties": false
+                      "additionalProperties": false,
+                      "allOf": [
+                        {
+                          "if": {
+                            "type": "object",
+                            "properties": {
+                              "tone": {
+                                "const": "auto"
+                              }
+                            },
+                            "required": [
+                              "tone"
+                            ]
+                          },
+                          "then": {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "type": "number"
+                              }
+                            }
+                          }
+                        }
+                      ]
                     },
                     "maxItems": 12
                   }
@@ -2670,7 +2770,166 @@
               }
             ]
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "locale": {
+                  "type": "string",
+                  "pattern": "^[zZ][hH]"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "object",
+                  "properties": {
+                    "overview": {
+                      "type": "object",
+                      "properties": {
+                        "conclusion": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 48,
+                          "pattern": "\\S"
+                        },
+                        "meta": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 80,
+                          "pattern": "\\S"
+                        },
+                        "facts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 20,
+                                "pattern": "\\S"
+                              },
+                              "note": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 32,
+                                "pattern": "\\S"
+                              }
+                            },
+                            "allOf": [
+                              {
+                                "if": {
+                                  "type": "object",
+                                  "properties": {
+                                    "format": {
+                                      "const": "sentence"
+                                    }
+                                  },
+                                  "required": [
+                                    "format"
+                                  ]
+                                },
+                                "then": {
+                                  "type": "object",
+                                  "properties": {
+                                    "value": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 48,
+                                      "pattern": "\\S"
+                                    }
+                                  }
+                                },
+                                "else": {
+                                  "if": {
+                                    "type": "object",
+                                    "properties": {
+                                      "format": {
+                                        "const": "number"
+                                      }
+                                    },
+                                    "required": [
+                                      "format"
+                                    ]
+                                  },
+                                  "then": {
+                                    "type": "object",
+                                    "properties": {
+                                      "value": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 36,
+                                        "pattern": "\\S"
+                                      }
+                                    }
+                                  },
+                                  "else": {
+                                    "type": "object",
+                                    "properties": {
+                                      "value": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 16,
+                                        "pattern": "\\S"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "table": {
+                          "type": "object",
+                          "properties": {
+                            "columns": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 16,
+                                "pattern": "\\S"
+                              }
+                            },
+                            "rows": {
+                              "type": "array",
+                              "items": {
+                                "type": "array",
+                                "maxItems": 7,
+                                "items": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 40,
+                                      "pattern": "\\S"
+                                    },
+                                    {
+                                      "type": [
+                                        "number",
+                                        "boolean",
+                                        "null"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
       },
       "outputSchema": {
         "type": "object"
@@ -3410,7 +3669,7 @@
         ],
         "limitations": [
           "Schema and renderer errors identify the draft field; edit only that part and prepare again. No automatic rewriting of findings.",
-          "Omitted locale remains omitted for the host preference; preflight uses the renderer default only for structural validation.",
+          "Omitted locale remains omitted for the host preference; preflight uses the widest existing language limits, and publication checks the actual host locale.",
           "Prepared input does not bypass provider selection, immutable-reference checks or final report_check."
         ]
       },
@@ -3719,9 +3978,10 @@
               "properties": {
                 "path": {
                   "type": "string",
-                  "description": "Safe relative path used by the HTML",
+                  "description": "Safe packaged path; extension must match media_type. Changing MIME alone does not allow script extensions. Source files may remain in the workspace.",
                   "minLength": 1,
-                  "maxLength": 20000
+                  "maxLength": 256,
+                  "pattern": "^(?!.*[\\\\:\\u0000-\\u001f])(?:(?!\\.{1,2}/)[^/]+/)*(?!\\.{1,2}$)[^/]+$"
                 },
                 "source_path": {
                   "type": "string",
@@ -3731,9 +3991,10 @@
                 },
                 "media_type": {
                   "type": "string",
-                  "description": "Exact MIME type",
+                  "description": "Inert MIME: application/json (.json), text/plain (.txt/.csv/.tsv/.md/.log), image/png (.png), image/jpeg (.jpg/.jpeg), image/webp (.webp). Case-insensitive; MIME parameters allowed. Scripts are not accepted as executable attachments.",
                   "minLength": 1,
-                  "maxLength": 20000
+                  "maxLength": 20000,
+                  "pattern": "^(?:[aA][pP][pP][lL][iI][cC][aA][tT][iI][oO][nN]/[jJ][sS][oO][nN]|[tT][eE][xX][tT]/[pP][lL][aA][iI][nN]|[iI][mM][aA][gG][eE]/[pP][nN][gG]|[iI][mM][aA][gG][eE]/[jJ][pP][eE][gG]|[iI][mM][aA][gG][eE]/[wW][eE][bB][pP])(?:;[\\s\\S]*)?$"
                 },
                 "ref": {
                   "type": "object",
@@ -3773,7 +4034,8 @@
                 "entry": {
                   "type": "string",
                   "minLength": 1,
-                  "maxLength": 256
+                  "maxLength": 256,
+                  "pattern": "^(?!.*[\\\\:\\u0000-\\u001f])(?:(?!\\.{1,2}/)[^/]+/)*(?!\\.{1,2}$)[^/]+$"
                 }
               },
               "additionalProperties": false,
@@ -3806,6 +4068,123 @@
                     "required": [
                       "source_path"
                     ]
+                  }
+                }
+              ],
+              "allOf": [
+                {
+                  "if": {
+                    "type": "object",
+                    "properties": {
+                      "media_type": {
+                        "type": "string",
+                        "pattern": "^[aA][pP][pP][lL][iI][cC][aA][tT][iI][oO][nN]/[jJ][sS][oO][nN](?:;[\\s\\S]*)?$"
+                      }
+                    },
+                    "required": [
+                      "media_type"
+                    ]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "pattern": "\\.(?:[jJ][sS][oO][nN])$"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "type": "object",
+                    "properties": {
+                      "media_type": {
+                        "type": "string",
+                        "pattern": "^[tT][eE][xX][tT]/[pP][lL][aA][iI][nN](?:;[\\s\\S]*)?$"
+                      }
+                    },
+                    "required": [
+                      "media_type"
+                    ]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "pattern": "\\.(?:[tT][xX][tT]|[cC][sS][vV]|[tT][sS][vV]|[mM][dD]|[lL][oO][gG])$"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "type": "object",
+                    "properties": {
+                      "media_type": {
+                        "type": "string",
+                        "pattern": "^[iI][mM][aA][gG][eE]/[pP][nN][gG](?:;[\\s\\S]*)?$"
+                      }
+                    },
+                    "required": [
+                      "media_type"
+                    ]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "pattern": "\\.(?:[pP][nN][gG])$"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "type": "object",
+                    "properties": {
+                      "media_type": {
+                        "type": "string",
+                        "pattern": "^[iI][mM][aA][gG][eE]/[jJ][pP][eE][gG](?:;[\\s\\S]*)?$"
+                      }
+                    },
+                    "required": [
+                      "media_type"
+                    ]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "pattern": "\\.(?:[jJ][pP][gG]|[jJ][pP][eE][gG])$"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "type": "object",
+                    "properties": {
+                      "media_type": {
+                        "type": "string",
+                        "pattern": "^[iI][mM][aA][gG][eE]/[wW][eE][bB][pP](?:;[\\s\\S]*)?$"
+                      }
+                    },
+                    "required": [
+                      "media_type"
+                    ]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "pattern": "\\.(?:[wW][eE][bB][pP])$"
+                      }
+                    }
                   }
                 }
               ]
@@ -3875,12 +4254,13 @@
                   },
                   "overview": {
                     "type": "object",
-                    "description": "Compact first screen: one conclusion, TC-aligned short results and at most one native chart. Details belong in sections. No repeated visible summary. Chinese values: phrase <=16, number <=36, sentence <=48; conclusion <=48, optional note <=32. User scope overrides template suggestions.",
+                    "description": "Compact first screen. Limits depend on outer locale: Chinese conclusion48/meta80/label20/note32/value phrase16,number36,sentence48/table column16,cell40; other locales conclusion180/meta240/label72/note120/value phrase72,number72,sentence180/table column60,cell140. Labels and text must be nonempty. Explanations belong in sections.",
                     "properties": {
                       "conclusion": {
                         "type": "string",
                         "minLength": 1,
-                        "maxLength": 180
+                        "maxLength": 180,
+                        "pattern": "\\S"
                       },
                       "facts": {
                         "type": "array",
@@ -3891,12 +4271,14 @@
                             "label": {
                               "type": "string",
                               "minLength": 1,
-                              "maxLength": 72
+                              "maxLength": 72,
+                              "pattern": "\\S"
                             },
                             "value": {
                               "type": "string",
                               "minLength": 1,
-                              "maxLength": 180
+                              "maxLength": 180,
+                              "pattern": "\\S"
                             },
                             "format": {
                               "enum": [
@@ -3908,7 +4290,8 @@
                             "note": {
                               "type": "string",
                               "minLength": 1,
-                              "maxLength": 120
+                              "maxLength": 120,
+                              "pattern": "\\S"
                             },
                             "tone": {
                               "enum": [
@@ -3922,7 +4305,33 @@
                             "label",
                             "value"
                           ],
-                          "additionalProperties": false
+                          "additionalProperties": false,
+                          "allOf": [
+                            {
+                              "if": {
+                                "type": "object",
+                                "properties": {
+                                  "format": {
+                                    "enum": [
+                                      "phrase",
+                                      "number"
+                                    ]
+                                  }
+                                }
+                              },
+                              "then": {
+                                "type": "object",
+                                "properties": {
+                                  "value": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 72,
+                                    "pattern": "\\S"
+                                  }
+                                }
+                              }
+                            }
+                          ]
                         }
                       },
                       "table": {
@@ -3932,7 +4341,9 @@
                             "type": "array",
                             "items": {
                               "type": "string",
-                              "maxLength": 20000
+                              "minLength": 1,
+                              "maxLength": 60,
+                              "pattern": "\\S"
                             },
                             "maxItems": 7,
                             "minItems": 1
@@ -3941,15 +4352,24 @@
                             "type": "array",
                             "items": {
                               "type": "array",
+                              "maxItems": 7,
                               "items": {
-                                "type": [
-                                  "string",
-                                  "number",
-                                  "boolean",
-                                  "null"
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 140,
+                                    "pattern": "\\S"
+                                  },
+                                  {
+                                    "type": [
+                                      "number",
+                                      "boolean",
+                                      "null"
+                                    ]
+                                  }
                                 ]
-                              },
-                              "maxItems": 24
+                              }
                             },
                             "maxItems": 6,
                             "minItems": 1
@@ -4041,7 +4461,21 @@
                             "minItems": 1
                           },
                           "options": {
-                            "type": "object"
+                            "type": "object",
+                            "properties": {
+                              "height": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": 180,
+                                    "maximum": 280
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            }
                           },
                           "rows": {
                             "type": "array",
@@ -4130,14 +4564,36 @@
                         "type": "string",
                         "minLength": 1,
                         "maxLength": 240,
-                        "description": "Shared asset, date and horizon once; Chinese at most 80 characters."
+                        "description": "Shared asset, date and horizon once; Chinese at most 80 characters.",
+                        "pattern": "\\S"
                       }
                     },
                     "required": [
                       "conclusion",
                       "facts"
                     ],
-                    "additionalProperties": false
+                    "additionalProperties": false,
+                    "anyOf": [
+                      {
+                        "required": [
+                          "table"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "chart"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "facts": {
+                            "type": "array",
+                            "minItems": 1
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "required": [
@@ -5232,8 +5688,13 @@
                           "type": "string",
                           "minLength": 1,
                           "maxLength": 256,
-                          "pattern": "^(?!\\/)(?!.*(?:[\\\\:%?#\\x00-\\x1f\\x7f]|(?:^|\\/)\\.{1,2}(?:\\/|$)))[^/]+(?:\\/[^/]+)*$",
-                          "description": "Exact safe literal path of one declared input.assets entry. No URL, traversal, query, fragment or percent escapes; only inert packaged formats."
+                          "pattern": "^(?!.*[\\\\:%?#\\u0000-\\u001f\\u007f])(?:(?!\\.{1,2}/)[^/]+/)*(?!\\.{1,2}$)[^/]+$",
+                          "description": "Literal packaged path matching input.assets[].path. Allowed extensions: json, txt, csv, tsv, md, log, png, jpg, jpeg, webp. Script extensions including py are not packaged attachments.",
+                          "allOf": [
+                            {
+                              "pattern": "\\.(?:[jJ][sS][oO][nN]|[tT][xX][tT]|[cC][sS][vV]|[tT][sS][vV]|[mM][dD]|[lL][oO][gG]|[pP][nN][gG]|[jJ][pP][gG]|[jJ][pP][eE][gG]|[wW][eE][bB][pP])$"
+                            }
+                          ]
                         },
                         "description": {
                           "type": "string",
@@ -5343,7 +5804,30 @@
                         "label",
                         "value"
                       ],
-                      "additionalProperties": false
+                      "additionalProperties": false,
+                      "allOf": [
+                        {
+                          "if": {
+                            "type": "object",
+                            "properties": {
+                              "tone": {
+                                "const": "auto"
+                              }
+                            },
+                            "required": [
+                              "tone"
+                            ]
+                          },
+                          "then": {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "type": "number"
+                              }
+                            }
+                          }
+                        }
+                      ]
                     },
                     "maxItems": 12
                   }
@@ -5882,7 +6366,169 @@
               }
             ]
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "locale": {
+                  "type": "string",
+                  "pattern": "^[zZ][hH]"
+                }
+              },
+              "required": [
+                "locale"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "object",
+                  "properties": {
+                    "overview": {
+                      "type": "object",
+                      "properties": {
+                        "conclusion": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 48,
+                          "pattern": "\\S"
+                        },
+                        "meta": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 80,
+                          "pattern": "\\S"
+                        },
+                        "facts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 20,
+                                "pattern": "\\S"
+                              },
+                              "note": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 32,
+                                "pattern": "\\S"
+                              }
+                            },
+                            "allOf": [
+                              {
+                                "if": {
+                                  "type": "object",
+                                  "properties": {
+                                    "format": {
+                                      "const": "sentence"
+                                    }
+                                  },
+                                  "required": [
+                                    "format"
+                                  ]
+                                },
+                                "then": {
+                                  "type": "object",
+                                  "properties": {
+                                    "value": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 48,
+                                      "pattern": "\\S"
+                                    }
+                                  }
+                                },
+                                "else": {
+                                  "if": {
+                                    "type": "object",
+                                    "properties": {
+                                      "format": {
+                                        "const": "number"
+                                      }
+                                    },
+                                    "required": [
+                                      "format"
+                                    ]
+                                  },
+                                  "then": {
+                                    "type": "object",
+                                    "properties": {
+                                      "value": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 36,
+                                        "pattern": "\\S"
+                                      }
+                                    }
+                                  },
+                                  "else": {
+                                    "type": "object",
+                                    "properties": {
+                                      "value": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 16,
+                                        "pattern": "\\S"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "table": {
+                          "type": "object",
+                          "properties": {
+                            "columns": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 16,
+                                "pattern": "\\S"
+                              }
+                            },
+                            "rows": {
+                              "type": "array",
+                              "items": {
+                                "type": "array",
+                                "maxItems": 7,
+                                "items": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 40,
+                                      "pattern": "\\S"
+                                    },
+                                    {
+                                      "type": [
+                                        "number",
+                                        "boolean",
+                                        "null"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
       },
       "outputSchema": {
         "type": "object"
@@ -7244,12 +7890,13 @@
                       },
                       "overview": {
                         "type": "object",
-                        "description": "Compact first screen: one conclusion, TC-aligned short results and at most one native chart. Details belong in sections. No repeated visible summary. Chinese values: phrase <=16, number <=36, sentence <=48; conclusion <=48, optional note <=32. User scope overrides template suggestions.",
+                        "description": "Compact first screen. Limits depend on outer locale: Chinese conclusion48/meta80/label20/note32/value phrase16,number36,sentence48/table column16,cell40; other locales conclusion180/meta240/label72/note120/value phrase72,number72,sentence180/table column60,cell140. Labels and text must be nonempty. Explanations belong in sections.",
                         "properties": {
                           "conclusion": {
                             "type": "string",
                             "minLength": 1,
-                            "maxLength": 180
+                            "maxLength": 180,
+                            "pattern": "\\S"
                           },
                           "facts": {
                             "type": "array",
@@ -7260,12 +7907,14 @@
                                 "label": {
                                   "type": "string",
                                   "minLength": 1,
-                                  "maxLength": 72
+                                  "maxLength": 72,
+                                  "pattern": "\\S"
                                 },
                                 "value": {
                                   "type": "string",
                                   "minLength": 1,
-                                  "maxLength": 180
+                                  "maxLength": 180,
+                                  "pattern": "\\S"
                                 },
                                 "format": {
                                   "enum": [
@@ -7277,7 +7926,8 @@
                                 "note": {
                                   "type": "string",
                                   "minLength": 1,
-                                  "maxLength": 120
+                                  "maxLength": 120,
+                                  "pattern": "\\S"
                                 },
                                 "tone": {
                                   "enum": [
@@ -7291,7 +7941,33 @@
                                 "label",
                                 "value"
                               ],
-                              "additionalProperties": false
+                              "additionalProperties": false,
+                              "allOf": [
+                                {
+                                  "if": {
+                                    "type": "object",
+                                    "properties": {
+                                      "format": {
+                                        "enum": [
+                                          "phrase",
+                                          "number"
+                                        ]
+                                      }
+                                    }
+                                  },
+                                  "then": {
+                                    "type": "object",
+                                    "properties": {
+                                      "value": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 72,
+                                        "pattern": "\\S"
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
                             }
                           },
                           "table": {
@@ -7301,7 +7977,9 @@
                                 "type": "array",
                                 "items": {
                                   "type": "string",
-                                  "maxLength": 20000
+                                  "minLength": 1,
+                                  "maxLength": 60,
+                                  "pattern": "\\S"
                                 },
                                 "maxItems": 7,
                                 "minItems": 1
@@ -7310,15 +7988,24 @@
                                 "type": "array",
                                 "items": {
                                   "type": "array",
+                                  "maxItems": 7,
                                   "items": {
-                                    "type": [
-                                      "string",
-                                      "number",
-                                      "boolean",
-                                      "null"
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 140,
+                                        "pattern": "\\S"
+                                      },
+                                      {
+                                        "type": [
+                                          "number",
+                                          "boolean",
+                                          "null"
+                                        ]
+                                      }
                                     ]
-                                  },
-                                  "maxItems": 24
+                                  }
                                 },
                                 "maxItems": 6,
                                 "minItems": 1
@@ -7410,7 +8097,21 @@
                                 "minItems": 1
                               },
                               "options": {
-                                "type": "object"
+                                "type": "object",
+                                "properties": {
+                                  "height": {
+                                    "anyOf": [
+                                      {
+                                        "type": "integer",
+                                        "minimum": 180,
+                                        "maximum": 280
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  }
+                                }
                               },
                               "rows": {
                                 "type": "array",
@@ -7499,14 +8200,36 @@
                             "type": "string",
                             "minLength": 1,
                             "maxLength": 240,
-                            "description": "Shared asset, date and horizon once; Chinese at most 80 characters."
+                            "description": "Shared asset, date and horizon once; Chinese at most 80 characters.",
+                            "pattern": "\\S"
                           }
                         },
                         "required": [
                           "conclusion",
                           "facts"
                         ],
-                        "additionalProperties": false
+                        "additionalProperties": false,
+                        "anyOf": [
+                          {
+                            "required": [
+                              "table"
+                            ]
+                          },
+                          {
+                            "required": [
+                              "chart"
+                            ]
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "facts": {
+                                "type": "array",
+                                "minItems": 1
+                              }
+                            }
+                          }
+                        ]
                       }
                     },
                     "required": [
@@ -8303,9 +9026,10 @@
                   "properties": {
                     "path": {
                       "type": "string",
-                      "description": "Safe relative path used by the HTML",
+                      "description": "Safe packaged path; extension must match media_type. Changing MIME alone does not allow script extensions. Source files may remain in the workspace.",
                       "minLength": 1,
-                      "maxLength": 20000
+                      "maxLength": 256,
+                      "pattern": "^(?!.*[\\\\:\\u0000-\\u001f])(?:(?!\\.{1,2}/)[^/]+/)*(?!\\.{1,2}$)[^/]+$"
                     },
                     "source_path": {
                       "type": "string",
@@ -8315,9 +9039,10 @@
                     },
                     "media_type": {
                       "type": "string",
-                      "description": "Exact MIME type",
+                      "description": "Inert MIME: application/json (.json), text/plain (.txt/.csv/.tsv/.md/.log), image/png (.png), image/jpeg (.jpg/.jpeg), image/webp (.webp). Case-insensitive; MIME parameters allowed. Scripts are not accepted as executable attachments.",
                       "minLength": 1,
-                      "maxLength": 20000
+                      "maxLength": 20000,
+                      "pattern": "^(?:[aA][pP][pP][lL][iI][cC][aA][tT][iI][oO][nN]/[jJ][sS][oO][nN]|[tT][eE][xX][tT]/[pP][lL][aA][iI][nN]|[iI][mM][aA][gG][eE]/[pP][nN][gG]|[iI][mM][aA][gG][eE]/[jJ][pP][eE][gG]|[iI][mM][aA][gG][eE]/[wW][eE][bB][pP])(?:;[\\s\\S]*)?$"
                     },
                     "ref": {
                       "type": "object",
@@ -8357,7 +9082,8 @@
                     "entry": {
                       "type": "string",
                       "minLength": 1,
-                      "maxLength": 256
+                      "maxLength": 256,
+                      "pattern": "^(?!.*[\\\\:\\u0000-\\u001f])(?:(?!\\.{1,2}/)[^/]+/)*(?!\\.{1,2}$)[^/]+$"
                     }
                   },
                   "additionalProperties": false,
@@ -8390,6 +9116,123 @@
                         "required": [
                           "source_path"
                         ]
+                      }
+                    }
+                  ],
+                  "allOf": [
+                    {
+                      "if": {
+                        "type": "object",
+                        "properties": {
+                          "media_type": {
+                            "type": "string",
+                            "pattern": "^[aA][pP][pP][lL][iI][cC][aA][tT][iI][oO][nN]/[jJ][sS][oO][nN](?:;[\\s\\S]*)?$"
+                          }
+                        },
+                        "required": [
+                          "media_type"
+                        ]
+                      },
+                      "then": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string",
+                            "pattern": "\\.(?:[jJ][sS][oO][nN])$"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "if": {
+                        "type": "object",
+                        "properties": {
+                          "media_type": {
+                            "type": "string",
+                            "pattern": "^[tT][eE][xX][tT]/[pP][lL][aA][iI][nN](?:;[\\s\\S]*)?$"
+                          }
+                        },
+                        "required": [
+                          "media_type"
+                        ]
+                      },
+                      "then": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string",
+                            "pattern": "\\.(?:[tT][xX][tT]|[cC][sS][vV]|[tT][sS][vV]|[mM][dD]|[lL][oO][gG])$"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "if": {
+                        "type": "object",
+                        "properties": {
+                          "media_type": {
+                            "type": "string",
+                            "pattern": "^[iI][mM][aA][gG][eE]/[pP][nN][gG](?:;[\\s\\S]*)?$"
+                          }
+                        },
+                        "required": [
+                          "media_type"
+                        ]
+                      },
+                      "then": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string",
+                            "pattern": "\\.(?:[pP][nN][gG])$"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "if": {
+                        "type": "object",
+                        "properties": {
+                          "media_type": {
+                            "type": "string",
+                            "pattern": "^[iI][mM][aA][gG][eE]/[jJ][pP][eE][gG](?:;[\\s\\S]*)?$"
+                          }
+                        },
+                        "required": [
+                          "media_type"
+                        ]
+                      },
+                      "then": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string",
+                            "pattern": "\\.(?:[jJ][pP][gG]|[jJ][pP][eE][gG])$"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "if": {
+                        "type": "object",
+                        "properties": {
+                          "media_type": {
+                            "type": "string",
+                            "pattern": "^[iI][mM][aA][gG][eE]/[wW][eE][bB][pP](?:;[\\s\\S]*)?$"
+                          }
+                        },
+                        "required": [
+                          "media_type"
+                        ]
+                      },
+                      "then": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string",
+                            "pattern": "\\.(?:[wW][eE][bB][pP])$"
+                          }
+                        }
                       }
                     }
                   ]
@@ -8644,8 +9487,13 @@
                               "type": "string",
                               "minLength": 1,
                               "maxLength": 256,
-                              "pattern": "^(?!\\/)(?!.*(?:[\\\\:%?#\\x00-\\x1f\\x7f]|(?:^|\\/)\\.{1,2}(?:\\/|$)))[^/]+(?:\\/[^/]+)*$",
-                              "description": "Exact safe literal path of one declared input.assets entry. No URL, traversal, query, fragment or percent escapes; only inert packaged formats."
+                              "pattern": "^(?!.*[\\\\:%?#\\u0000-\\u001f\\u007f])(?:(?!\\.{1,2}/)[^/]+/)*(?!\\.{1,2}$)[^/]+$",
+                              "description": "Literal packaged path matching input.assets[].path. Allowed extensions: json, txt, csv, tsv, md, log, png, jpg, jpeg, webp. Script extensions including py are not packaged attachments.",
+                              "allOf": [
+                                {
+                                  "pattern": "\\.(?:[jJ][sS][oO][nN]|[tT][xX][tT]|[cC][sS][vV]|[tT][sS][vV]|[mM][dD]|[lL][oO][gG]|[pP][nN][gG]|[jJ][pP][gG]|[jJ][pP][eE][gG]|[wW][eE][bB][pP])$"
+                                }
+                              ]
                             },
                             "description": {
                               "type": "string",
@@ -8755,7 +9603,30 @@
                             "label",
                             "value"
                           ],
-                          "additionalProperties": false
+                          "additionalProperties": false,
+                          "allOf": [
+                            {
+                              "if": {
+                                "type": "object",
+                                "properties": {
+                                  "tone": {
+                                    "const": "auto"
+                                  }
+                                },
+                                "required": [
+                                  "tone"
+                                ]
+                              },
+                              "then": {
+                                "type": "object",
+                                "properties": {
+                                  "value": {
+                                    "type": "number"
+                                  }
+                                }
+                              }
+                            }
+                          ]
                         },
                         "maxItems": 12
                       }
@@ -9304,7 +10175,182 @@
           "references",
           "input"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "metadata": {
+                  "type": "object",
+                  "properties": {
+                    "locale": {
+                      "type": "string",
+                      "pattern": "^[zZ][hH]"
+                    }
+                  },
+                  "required": [
+                    "locale"
+                  ]
+                }
+              },
+              "required": [
+                "metadata"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "object",
+                      "properties": {
+                        "overview": {
+                          "type": "object",
+                          "properties": {
+                            "conclusion": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 48,
+                              "pattern": "\\S"
+                            },
+                            "meta": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 80,
+                              "pattern": "\\S"
+                            },
+                            "facts": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "label": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 20,
+                                    "pattern": "\\S"
+                                  },
+                                  "note": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 32,
+                                    "pattern": "\\S"
+                                  }
+                                },
+                                "allOf": [
+                                  {
+                                    "if": {
+                                      "type": "object",
+                                      "properties": {
+                                        "format": {
+                                          "const": "sentence"
+                                        }
+                                      },
+                                      "required": [
+                                        "format"
+                                      ]
+                                    },
+                                    "then": {
+                                      "type": "object",
+                                      "properties": {
+                                        "value": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 48,
+                                          "pattern": "\\S"
+                                        }
+                                      }
+                                    },
+                                    "else": {
+                                      "if": {
+                                        "type": "object",
+                                        "properties": {
+                                          "format": {
+                                            "const": "number"
+                                          }
+                                        },
+                                        "required": [
+                                          "format"
+                                        ]
+                                      },
+                                      "then": {
+                                        "type": "object",
+                                        "properties": {
+                                          "value": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 36,
+                                            "pattern": "\\S"
+                                          }
+                                        }
+                                      },
+                                      "else": {
+                                        "type": "object",
+                                        "properties": {
+                                          "value": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 16,
+                                            "pattern": "\\S"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "table": {
+                              "type": "object",
+                              "properties": {
+                                "columns": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 16,
+                                    "pattern": "\\S"
+                                  }
+                                },
+                                "rows": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "array",
+                                    "maxItems": 7,
+                                    "items": {
+                                      "anyOf": [
+                                        {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 40,
+                                          "pattern": "\\S"
+                                        },
+                                        {
+                                          "type": [
+                                            "number",
+                                            "boolean",
+                                            "null"
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
       },
       "outputSchema": {
         "type": "object",
