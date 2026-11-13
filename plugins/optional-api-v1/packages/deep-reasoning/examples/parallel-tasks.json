@@ -1,0 +1,254 @@
+[
+  {
+    "title": "历史类比",
+    "objective": "基于共同输入独立完成 H0，返回前提引用、机制摘要、条件结论和内部核验。",
+    "instructions": "这是深度推理综合研究的内部 H 阶段。只读取 sesame/deep-reasoning 的 skills/deep-reasoning/references/historical.md 和本任务 E0。按本路径方法独立核验，不读取其他路径临时结果，不再次委派，不另建报告。证据不足时标明缺口，不编造案例或概率。按 input.delivery 返回可审核摘要。",
+    "input": {
+      "evidence": {
+        "provenance": "synthetic",
+        "evidenceVersion": "E0",
+        "question": "一家虚构的市场研究机构会在未来十二个月将 AI 辅助研究从试点扩展为常规生产吗？",
+        "outcome": "常规生产指至少半数已发布研究使用该流程；试点数量不计为生产采用率。",
+        "scope": "单个虚构机构的研究流程，不讨论证券价格或真实公司。",
+        "horizon": {
+          "asOf": "2030-01-01",
+          "forecastEnd": "2031-01-01"
+        },
+        "evidence": [
+          {
+            "id": "F1",
+            "type": "F",
+            "statement": "目前有十个试点，其中两个进入常规生产。",
+            "source": "synthetic:case-ledger/1",
+            "date": "2030-01-01"
+          },
+          {
+            "id": "F2",
+            "type": "F",
+            "statement": "扩展生产必须通过机构自己的可靠性与审计检查。",
+            "source": "synthetic:case-policy/1",
+            "date": "2030-01-01"
+          },
+          {
+            "id": "M1",
+            "type": "M",
+            "statement": "团队估计扩展到半数研究需要六至十五个月。",
+            "method": "虚构团队估计，未校准为概率；区间不是客观频率。",
+            "source": "synthetic:case-estimate/1",
+            "date": "2030-01-01"
+          },
+          {
+            "id": "A1",
+            "type": "A",
+            "statement": "竞争者推出新工具可能提高本机构继续试点的激励。",
+            "condition": "竞争者行动及成本确实影响该机构选择。",
+            "source": "synthetic:case-hypothesis/1",
+            "date": "2030-01-01"
+          },
+          {
+            "id": "U1",
+            "type": "U",
+            "statement": "尚未取得可比机构的成功、失败与中间案例。",
+            "question": "哪些参照类具有相同迁移约束与审计要求？"
+          },
+          {
+            "id": "U2",
+            "type": "U",
+            "statement": "生产可靠性改善速度及决策者可行预算尚未知。",
+            "question": "可靠性和资源能否支持从试点迁移到常规生产？"
+          }
+        ]
+      },
+      "delivery": [
+        "path",
+        "version",
+        "evidenceVersion",
+        "applicability",
+        "claims",
+        "checks",
+        "conclusion",
+        "revisions"
+      ]
+    },
+    "plugins": [
+      "sesame/deep-reasoning"
+    ],
+    "allowedCalls": [
+      {
+        "pluginId": "sesame/plugin-manager",
+        "capabilityId": "plugin_read"
+      }
+    ],
+    "output": {
+      "type": "none"
+    }
+  },
+  {
+    "title": "矛盾分析",
+    "objective": "基于共同输入独立完成 D0，返回前提引用、机制摘要、条件结论和内部核验。",
+    "instructions": "这是深度推理综合研究的内部 D 阶段。只读取 sesame/deep-reasoning 的 skills/deep-reasoning/references/contradictions.md 和本任务 E0。按本路径方法独立核验，不读取其他路径临时结果，不再次委派，不另建报告。证据不足时标明缺口，不编造案例或概率。按 input.delivery 返回可审核摘要。",
+    "input": {
+      "evidence": {
+        "provenance": "synthetic",
+        "evidenceVersion": "E0",
+        "question": "一家虚构的市场研究机构会在未来十二个月将 AI 辅助研究从试点扩展为常规生产吗？",
+        "outcome": "常规生产指至少半数已发布研究使用该流程；试点数量不计为生产采用率。",
+        "scope": "单个虚构机构的研究流程，不讨论证券价格或真实公司。",
+        "horizon": {
+          "asOf": "2030-01-01",
+          "forecastEnd": "2031-01-01"
+        },
+        "evidence": [
+          {
+            "id": "F1",
+            "type": "F",
+            "statement": "目前有十个试点，其中两个进入常规生产。",
+            "source": "synthetic:case-ledger/1",
+            "date": "2030-01-01"
+          },
+          {
+            "id": "F2",
+            "type": "F",
+            "statement": "扩展生产必须通过机构自己的可靠性与审计检查。",
+            "source": "synthetic:case-policy/1",
+            "date": "2030-01-01"
+          },
+          {
+            "id": "M1",
+            "type": "M",
+            "statement": "团队估计扩展到半数研究需要六至十五个月。",
+            "method": "虚构团队估计，未校准为概率；区间不是客观频率。",
+            "source": "synthetic:case-estimate/1",
+            "date": "2030-01-01"
+          },
+          {
+            "id": "A1",
+            "type": "A",
+            "statement": "竞争者推出新工具可能提高本机构继续试点的激励。",
+            "condition": "竞争者行动及成本确实影响该机构选择。",
+            "source": "synthetic:case-hypothesis/1",
+            "date": "2030-01-01"
+          },
+          {
+            "id": "U1",
+            "type": "U",
+            "statement": "尚未取得可比机构的成功、失败与中间案例。",
+            "question": "哪些参照类具有相同迁移约束与审计要求？"
+          },
+          {
+            "id": "U2",
+            "type": "U",
+            "statement": "生产可靠性改善速度及决策者可行预算尚未知。",
+            "question": "可靠性和资源能否支持从试点迁移到常规生产？"
+          }
+        ]
+      },
+      "delivery": [
+        "path",
+        "version",
+        "evidenceVersion",
+        "applicability",
+        "claims",
+        "checks",
+        "conclusion",
+        "revisions"
+      ]
+    },
+    "plugins": [
+      "sesame/deep-reasoning"
+    ],
+    "allowedCalls": [
+      {
+        "pluginId": "sesame/plugin-manager",
+        "capabilityId": "plugin_read"
+      }
+    ],
+    "output": {
+      "type": "none"
+    }
+  },
+  {
+    "title": "博弈分析",
+    "objective": "基于共同输入独立完成 G0，返回前提引用、机制摘要、条件结论和内部核验。",
+    "instructions": "这是深度推理综合研究的内部 G 阶段。只读取 sesame/deep-reasoning 的 skills/deep-reasoning/references/game-theory.md 和本任务 E0。按本路径方法独立核验，不读取其他路径临时结果，不再次委派，不另建报告。证据不足时标明缺口，不编造案例或概率。按 input.delivery 返回可审核摘要。",
+    "input": {
+      "evidence": {
+        "provenance": "synthetic",
+        "evidenceVersion": "E0",
+        "question": "一家虚构的市场研究机构会在未来十二个月将 AI 辅助研究从试点扩展为常规生产吗？",
+        "outcome": "常规生产指至少半数已发布研究使用该流程；试点数量不计为生产采用率。",
+        "scope": "单个虚构机构的研究流程，不讨论证券价格或真实公司。",
+        "horizon": {
+          "asOf": "2030-01-01",
+          "forecastEnd": "2031-01-01"
+        },
+        "evidence": [
+          {
+            "id": "F1",
+            "type": "F",
+            "statement": "目前有十个试点，其中两个进入常规生产。",
+            "source": "synthetic:case-ledger/1",
+            "date": "2030-01-01"
+          },
+          {
+            "id": "F2",
+            "type": "F",
+            "statement": "扩展生产必须通过机构自己的可靠性与审计检查。",
+            "source": "synthetic:case-policy/1",
+            "date": "2030-01-01"
+          },
+          {
+            "id": "M1",
+            "type": "M",
+            "statement": "团队估计扩展到半数研究需要六至十五个月。",
+            "method": "虚构团队估计，未校准为概率；区间不是客观频率。",
+            "source": "synthetic:case-estimate/1",
+            "date": "2030-01-01"
+          },
+          {
+            "id": "A1",
+            "type": "A",
+            "statement": "竞争者推出新工具可能提高本机构继续试点的激励。",
+            "condition": "竞争者行动及成本确实影响该机构选择。",
+            "source": "synthetic:case-hypothesis/1",
+            "date": "2030-01-01"
+          },
+          {
+            "id": "U1",
+            "type": "U",
+            "statement": "尚未取得可比机构的成功、失败与中间案例。",
+            "question": "哪些参照类具有相同迁移约束与审计要求？"
+          },
+          {
+            "id": "U2",
+            "type": "U",
+            "statement": "生产可靠性改善速度及决策者可行预算尚未知。",
+            "question": "可靠性和资源能否支持从试点迁移到常规生产？"
+          }
+        ]
+      },
+      "delivery": [
+        "path",
+        "version",
+        "evidenceVersion",
+        "applicability",
+        "claims",
+        "checks",
+        "conclusion",
+        "revisions"
+      ]
+    },
+    "plugins": [
+      "sesame/deep-reasoning"
+    ],
+    "allowedCalls": [
+      {
+        "pluginId": "sesame/plugin-manager",
+        "capabilityId": "plugin_read"
+      }
+    ],
+    "output": {
+      "type": "none"
+    }
+  }
+]

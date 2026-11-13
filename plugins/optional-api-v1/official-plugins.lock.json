@@ -2328,6 +2328,104 @@
       ]
     },
     {
+      "id": "sesame/deep-reasoning",
+      "version": "1.0.0",
+      "directory": "deep-reasoning",
+      "treeDigest": "sha256:6da3b2dca1409415d72723dbcf092055a4ed3f904f2bc7ba2a4443f717f08239",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "fd0425639ea21ed2e8e6c52378a2c9ffea091c102339ca940fd7492b70fb32bb",
+          "bytes": 314
+        },
+        {
+          "path": "PROVENANCE.md",
+          "sha256": "02fae2a9094c5e12b306139bd5a5beb72e7a399bad0f19208e69d06795404bcf",
+          "bytes": 1084
+        },
+        {
+          "path": "README.md",
+          "sha256": "d402906e962f258faa04225a9dff8452b186f6337409f38769b11bae97b25fe6",
+          "bytes": 1893
+        },
+        {
+          "path": "capabilities.json",
+          "sha256": "efed33c154a21dfb0542a29c81c23984052e0ecd9d7732e0d88f0cffdd4f9e42",
+          "bytes": 2892
+        },
+        {
+          "path": "examples/evidence.json",
+          "sha256": "97cf50368aa7a6bdd6a93ee2fad9c8f87b87d7f36be47ab9c72f540c494b46ad",
+          "bytes": 1635
+        },
+        {
+          "path": "examples/parallel-tasks.json",
+          "sha256": "4b3e3c8b27264c01d368ecf9600f9e5346fd3549550f6a0424f75c61d98e92a6",
+          "bytes": 9743
+        },
+        {
+          "path": "examples/review-cases.md",
+          "sha256": "8488fcde93b93b938949e495470870bc669c66f026eb210a842e6a3f734db8bb",
+          "bytes": 2274
+        },
+        {
+          "path": "index.js",
+          "sha256": "0d90d5f9baa094156d1f8a912d943ae8cf17bcd7fdb09c061b5791c67860c0fc",
+          "bytes": 124
+        },
+        {
+          "path": "package.json",
+          "sha256": "39aa9fa55cb185fb1080516c638d41a38486d9eadc95577bb38fdc90ab383196",
+          "bytes": 127
+        },
+        {
+          "path": "plugin.json",
+          "sha256": "a72d8a243f525fcfa864dc5a28b35622cb6ef48f3605c0656cd6394c6bb792ed",
+          "bytes": 1207
+        },
+        {
+          "path": "prompt.md",
+          "sha256": "f4cdd4a87895f41e72c92c0481f8fb6e2c7fc18952a271628ab17ed4de7b7883",
+          "bytes": 962
+        },
+        {
+          "path": "skills/deep-reasoning/SKILL.md",
+          "sha256": "290873ad8ff1b4c251b4e0778f0d3443ca9ec05abbfb2c97f9751a751ca929fb",
+          "bytes": 3943
+        },
+        {
+          "path": "skills/deep-reasoning/references/contradictions.md",
+          "sha256": "ba12051d4f377a2b37c5fb4b78bae644581453f0977f74d30e14eefb547092e3",
+          "bytes": 1639
+        },
+        {
+          "path": "skills/deep-reasoning/references/coordination.md",
+          "sha256": "c401bfadd22cc3d3fb0d8cb25ace0208128e7e8b4cf00360756d1b9ac00c9829",
+          "bytes": 5485
+        },
+        {
+          "path": "skills/deep-reasoning/references/game-theory.md",
+          "sha256": "6225489a8b6f78ced0d3dc1535f2b2682451a78c58d8ba065de7ab5fba619f35",
+          "bytes": 1944
+        },
+        {
+          "path": "skills/deep-reasoning/references/historical.md",
+          "sha256": "67471860fdbd52d5eade2752b905324a3994a9f027f3f7050d40351f1e9afc73",
+          "bytes": 1607
+        },
+        {
+          "path": "skills/deep-reasoning/references/protocol.md",
+          "sha256": "6717e36eb566177d4db6ce1e0bc2016c2b069c7fed647c6093af43d3ec586a10",
+          "bytes": 4008
+        },
+        {
+          "path": "skills/deep-reasoning/references/reconciliation.md",
+          "sha256": "8bb71a35099bfc65edb036509c4690d29cd1a88d67554e99f4746a1b986687c1",
+          "bytes": 3686
+        }
+      ]
+    },
+    {
       "id": "sesame/dow-theory",
       "version": "2.0.1",
       "directory": "dow-theory",

@@ -2428,6 +2428,50 @@
       "sourcePath": "plugins/api-v1/packages/data-access"
     },
     {
+      "id": "sesame/deep-reasoning",
+      "version": "1.0.0",
+      "distribution": "optional",
+      "state": "discoverable",
+      "engines": {
+        "sesame": ">=0.3.0-dev.1"
+      },
+      "format": "sesame-native",
+      "license": "UNLICENSED",
+      "author": {
+        "name": "Sesame contributors"
+      },
+      "category": "research",
+      "functionalCategory": "business",
+      "implementationKinds": [
+        "knowledge"
+      ],
+      "title": {
+        "en": "Deep reasoning",
+        "zh": "深度推理"
+      },
+      "summary": {
+        "en": "Explain causes and evolution through independent historical, contradiction and game-theoretic analysis, targeted reconciliation and evidence-based synthesis.",
+        "zh": "独立开展历史类比、矛盾分析与博弈分析，定向复核分歧，形成有证据和可检验条件的整体解释。"
+      },
+      "dependencies": {
+        "en": "No keys or external runtime. Agents use existing host orchestration and selected evidence/report capabilities; loading the method starts no background work.",
+        "zh": "无需密钥或额外运行环境；Agent 使用现有宿主编排及按任务选择的证据、报告能力。加载方法不会自行启动后台工作。"
+      },
+      "permissions": {
+        "scopes": [],
+        "calls": []
+      },
+      "tools": [],
+      "capabilities": [],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
+      "sourcePath": "plugins/optional-api-v1/packages/deep-reasoning"
+    },
+    {
       "id": "sesame/dow-theory",
       "version": "2.0.1",
       "distribution": "optional",

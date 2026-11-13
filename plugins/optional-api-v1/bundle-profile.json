@@ -28,6 +28,7 @@
     "sesame/behavioral-finance",
     "sesame/binance",
     "sesame/ccxt",
+    "sesame/deep-reasoning",
     "sesame/dow-theory",
     "sesame/elliott-wave",
     "sesame/financial-research",
