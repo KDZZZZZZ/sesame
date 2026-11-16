@@ -7,7 +7,7 @@ description: 选择 Report 的通用组件与声明式样式，检查报告阅�
 
 本指南的内容字段属于 sesame/reports。宿主选择其他提供者时遵循其 inputSchema，不套用本插件的组件或便利入口。
 
-Report 统一拥有报告组件、样式、公式与交互渲染。先用 `host.reports.describe` 确认宿主所选提供者与输入契约，向 `host.reports.publish` 提交 `input:{content,style?}`；`report_publish` 仅是转接入口。不上传 HTML，不编写页面 CSS、JavaScript 或组件回调。模板、文档及组合 helper 只用于预览，不是发布前置步骤，也不产生可自由编辑后上传的页面。
+Report 统一拥有报告组件、样式、公式与交互渲染。常用报告与回答直接调用 `components_show`，自动补齐结构、校验和发布；选型或字段不熟悉时再按需 list/describe，见 [组件协议](component-protocol.md)。已有完整发布请求可继续走 `host.reports.publish`；仅在使用其他提供者或不确定其契约时查询 `host.reports.describe`。不上传 HTML，不编写页面 CSS、JavaScript 或组件回调。模板、文档及组合 helper 只用于预览，不是发布前置步骤。
 
 先按本次问题组织已有结果，再选择呈现。多数任务使用 `content.kind: "document"`，将判断、关键数字、图表和简短推理组合为 `sections`。`modules` 用于已有业务模块结果，`backtest` 用于对应的固定回测数据，`signal-study` 用于已记录的研究运行；这些内容布局不规定研究方法，也不各自另建样式。
 
@@ -30,7 +30,7 @@ Report 统一拥有报告组件、样式、公式与交互渲染。先用 `host.
 
 ## 图表与交互
 
-每张图回答一个问题，填写 `title`、`takeaway`、`source_note`。`chart.kind` 从现成图型中选择，字段映射放 `options`，数据通过固定 `data_id` 或已提供的 `rows` 二选一。来源、时间、单位、缺失、样本和原始精度保持可查。
+每张图提供有用信息。`chart.kind` 从现成图型中选择，字段映射放 `options`，数据通过固定 `data_id` 或已提供的 `rows` 二选一。`columns` 可从实际数据推导；`title`、`takeaway`、`source_note` 按需提供，不为每张图补齐说明。标题只命名，结论用正常正文展示，已在正文表达的不重复；来源记录保留在固定输入中，影响理解的时间、单位、缺失与条件仍在图旁或正文可见。样本和原始精度保持可查。
 
 图表、明细联动、筛选、缩放与键盘操作由 Report 组件提供。优先使用这些既有交互，不提交函数或自建页面运行时。现成图型不适合时，可以组合通用组件或选择表格并说明确切缺口，不能偷偷改成任意 HTML。
 

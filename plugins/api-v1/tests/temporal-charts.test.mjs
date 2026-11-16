@@ -177,7 +177,10 @@ test('temporal charts preserve source semantics through real browser interaction
         const mark = page.locator(`#${id} [data-row-index="0"]`);
         // A multi-axis SVG group's bounding-box center need not be on its
         // painted polyline. Click an actual source point, as a reader would.
-        await (id === 'parallel' || id === 'lifecycle' ? mark.locator('circle').first() : mark).click();
+        // Equal ranks are deliberately offset by less than a diameter. The
+        // first dot's exposed left side avoids the adjacent dot's stroke.
+        if (id === 'bump') await mark.click({ position: { x: 2, y: 4.5 } });
+        else await (id === 'parallel' || id === 'lifecycle' ? mark.locator('circle').first() : mark).click();
         assert.deepEqual(await page.evaluate(id => selected[id], id), { row: spec.rows[0], index: 0, same: true });
         await mark.focus();await page.keyboard.press(' ');
         assert.equal(await page.locator(`#${id} .sc-selected`).count(), 1);
@@ -193,7 +196,7 @@ test('temporal charts preserve source semantics through real browser interaction
           missing: cell('2026-01-03').dataset.state, closed: cell('2026-01-04').dataset.state,
           timezoneIndex: cell('2026-01-05').dataset.rowIndex,
           absent: { state: cell('2026-01-06').dataset.state, index: cell('2026-01-06').dataset.rowIndex ?? null, text: cell('2026-01-06').textContent },
-          note: document.querySelector('#calendar .sc-missing-note').textContent
+          note: document.querySelector('#calendar .sc-chart-reading').textContent
         };
       });
       assert.equal(result.zero.state, 'observed');assert.match(result.zero.text, /0/);
@@ -234,7 +237,8 @@ test('temporal charts preserve source semantics through real browser interaction
       assert.equal(await page.locator('#scratch [data-row-index]').count(), 0);
       assert.equal(await page.locator('#scratch [data-state="no-source-row"]').count(), 365);
       assert.deepEqual(await page.evaluate(() => longFilter), { indices: [], same: true });
-      assert.match(await page.locator('#scratch .sc-missing-note').last().innerText(), /closure is not inferred/);
+      assert.match(await page.locator('#scratch svg desc').textContent(), /closure is not inferred/);
+      assert.doesNotMatch(await page.locator('#scratch .sc-chart-reading').innerText(), /source row|closure is not inferred/);
       await picker.selectOption('2023');
       await page.evaluate(() => { window.oldYearPicker = document.querySelector('#scratch select'); });
       await page.setViewportSize({ width: 390, height: 850 });
@@ -296,7 +300,7 @@ test('temporal charts preserve source semantics through real browser interaction
         return { y: first.getAttribute('cy'), tiedY: tied.getAttribute('cy'), x: first.getAttribute('cx'), tiedX: tied.getAttribute('cx'),
           missing: document.querySelector('#bump [data-row-index="7"]').dataset.rank,
           segments: (document.querySelector('#bump [data-bump-item="B"]').getAttribute('d').match(/M/g) || []).length,
-          absent: document.querySelector('#bump .sc-missing-note').textContent
+          absent: document.querySelector('#bump svg desc').textContent
         };
       });
       assert.equal(result.y, result.tiedY);assert.notEqual(result.x, result.tiedX);assert.equal(result.missing, 'missing');assert.equal(result.segments, 2);assert.match(result.absent, /1 item\/period cells have no source row/);
@@ -349,7 +353,8 @@ test('temporal charts preserve source semantics through real browser interaction
       await page.locator('#lifecycle [data-row-index="4"]').focus();await page.keyboard.press(' ');
       assert.equal(await page.locator('#lifecycle a').count(), 0);
       assert.match(await page.locator('#lifecycle .report-source').innerText(), /No attached evidence link/);
-      assert.match(await page.locator('#lifecycle .sc-missing-note').innerText(), /not duration or causality/);
+      assert.match(await page.locator('#lifecycle svg desc').textContent(), /not duration or causality/);
+      assert.equal(await page.locator('#lifecycle [data-report-text="context"]').innerText(), 'Event time · UTC');
       const result = await page.evaluate(() => {
         const base = fixture.charts.find(c => c.id === 'lifecycle').spec;
         const rejected = [reject({ ...base, rows: [base.rows[0], base.rows[0]] }),
@@ -373,20 +378,25 @@ test('temporal charts preserve source semantics through real browser interaction
           window.localeSelection = null;
           drawScratch({ ...base, timezone: 'America/New_York', onSelect: (row, index) => { window.localeSelection = { index, row, same: row === base.rows[index] }; } });
           return {
-            prompt: document.querySelector('#scratch .report-source').textContent,
-            note: document.querySelector('#scratch .sc-missing-note').textContent,
+            promptHidden: document.querySelector('#scratch .report-source').hidden,
+            note: document.querySelector('#scratch [data-report-text="context"]').textContent,
+            help: document.querySelector('#scratch svg desc').textContent,
             geometry: [...document.querySelectorAll('#scratch [data-row-index]')].map(mark => ({ index: mark.dataset.rowIndex, cx: mark.querySelector('circle').getAttribute('cx'), cy: mark.querySelector('circle').getAttribute('cy') })),
           };
         }, lang);
         if (lang === 'zh-CN') {
-          assert.equal(initial.prompt, '选择事件，查看依据。');
-          assert.match(initial.note, /^America\/New_York · 只显示已记录事件；间距表示记录时间，不表示持续时长或因果关系。选择事件可查看附带的依据或报告链接。/);
-          assert.match(initial.note, /\d+ 个事件未附带依据链接/);
+          assert.equal(initial.promptHidden, true);
+          assert.equal(initial.note, '事件时间 · America/New_York');
+          assert.match(initial.help, /选择事件可查看附带的依据或报告链接。/);
+          assert.match(initial.help, /\d+ 个事件未附带依据链接/);
+          assert.match(initial.help, /间距表示记录时间，不表示持续时长或因果关系/);
           assert.doesNotMatch(initial.note, /recorded events|Select a source row/);
           geometry = initial.geometry;
         } else {
-          assert.equal(initial.prompt, 'Select an event to inspect its evidence.');
-          assert.match(initial.note, /recorded events only; spacing represents recorded time, not duration or causality/);
+          assert.equal(initial.promptHidden, true);
+          assert.equal(initial.note, 'Event time · America/New_York');
+          assert.match(initial.help, /recorded events only; spacing represents recorded time, not duration or causality/);
+          assert.match(initial.help, /Select a source row/);
           assert.deepEqual(initial.geometry, geometry);
         }
         await page.locator('#scratch [data-row-index="4"]').focus();

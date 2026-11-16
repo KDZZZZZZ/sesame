@@ -1,6 +1,6 @@
 # 报告交付
 
-通用组件已选定时直接调用 `components_show`：一个块填 component，一组块填 components，可选 layout:"stack"|"columns"；工具补齐文档包装、自动校验并发布，data 省略时为 []。复杂排版保留原 content。需要选型时再用 `components_list` 按比较、时间、分布、关联、流量或层级等数据关系发现组件，`components_describe` 按需返回准确 schema 与样例；`components_validate` 只用于发布前诊断。静态校验不代表浏览器视觉通过。协议与参数见 `skills/report-design/component-protocol.md`。
+报告和回答统一用 `components_show` 展示已有内容：一个块填 component，一组块填 components，可选 layout:"stack"|"columns"，完整排版用 content。常用图表只填 type:"chart"、kind、rows 或 data_id、options 中的必要映射；columns 可从实际数据推导，title、takeaway、source_note 按需填写。发布标识与默认索引标题由插件处理，来源性质从固定证据继承；演示数据须声明 demo。工具自动校验并发布，不要求先查目录或单独 validate。需要选型时用 `components_list`，不熟悉字段时再 `components_describe`；协议见 `skills/report-design/component-protocol.md`。
 
 主 Agent 在简短回答中展示组件时用 `target:"answer"`，相关多个组件合在一次 `components_show` 调用中；省略 target 或设为 "report" 保持报告页面。answer 仅接受 document，沿用相同固定数据、校验与发布流程；子 Agent 的 output 声明和报告交付规则照旧，不能用它绕过 `output.type="none"`。
 
@@ -10,7 +10,9 @@
 
 首屏按对应 TC 参考的结果形式直给，用 `content.kind="document"` 的 `overview` 统一呈现：一行总体判断，后接 `report_structure.first_screen_fields` 的全部适用短结果。方向用“偏强／偏弱”等几个字，价位、比例、次数直接写数字，理由只写一句；持仓和日历用短表，原参考依赖价格路径或损益图时放一张内置小图。同义内容合并，不漏掉它回答的问题。用户删改优先；查不到就用“未取得”等短标记，具体原因放正文。不把分析问题、字段含义或写作指导当成首屏段落。
 
-首屏不放长摘要、开场说明、大段粗体结论、研究过程或反复免责。`summary` 留给报告列表；有 `overview` 时渲染器不再把它重复显示在正文。正文直接展开各项判断的图表与短理由，不再重写开头。只解释会改变判断的关键条件，完整证据和方法保留在固定输入与引用中，按读者需要展示。
+首屏不放长摘要、开场说明、大段粗体结论、研究过程或反复免责。`summary` 仅供报告列表，不自动进入正文。正文直接展开各项判断的图表与短理由，不再重写开头。只解释会改变判断的关键条件，完整证据和方法保留在固定输入与引用中，按读者需要展示。
+
+文字各司其职：title 只命名；结论和条件放正文或判断组件，takeaway 是可选的图前正文，不强制每图补一句；note/caption 只补理解该单元所必需的信息，已有标题、正文、轴、图例说清的不要重写。图后不自动追加说明段落，单位、时点、分母与尺度放轴、短图例或共用范围；source_note 和方法记录属于证据，不用它们承载关键条件，也不自动铺成页尾小字。需要查看完整材料时在相关位置显式放 details。不要重复组合多种说明字段、填空泛提示或通过缩小字号塞入长说明；渲染器统一管理文字位置和字号。
 
 短并不等于暗语。保留回撤、年化收益、估值、期权等常用金融名词；去掉“校准、前推、检验期增量、量纲、回执”等研究或开发用语，以及 AUC、Brier、isotonic 等无助于读者选择的首屏指标。比如“什么时候好用”“预测与后来结果”“各买多少”“什么时候调整”。保持原意：回撤不是本金亏损，历史频率不是当前概率，价值投资特征不是公允价值。不要把普通金融名词翻译成长篇科普。
 

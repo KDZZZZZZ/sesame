@@ -28,6 +28,7 @@
     const count=numerator/denominator;if(count>1000n)fail('unit chart exceeds 1,000 units; choose and label a larger exact unitValue');return Number(count);
   };
   const observers = new WeakMap();
+  let descriptionId = 0;
   const builtins=['line','bar','scatter','matrix','units'], renderers=new Map();
   function register(kind,renderer){
     if(typeof kind!=='string'||!/^[-a-z][a-z0-9-]*$/.test(kind)||typeof renderer!=='function')fail('a chart kind and renderer are required');
@@ -43,8 +44,9 @@
     if (!kinds().includes(spec.kind)) fail('unknown chart kind');
     if (['bar','matrix'].includes(spec.kind) && spec.tone != null && !['neutral','signed','positive','negative'].includes(spec.tone)) fail('tone must be neutral, signed, positive or negative');
     if(spec.height!==undefined&&(!Number.isFinite(spec.height)||spec.height<120||spec.height>12000))fail('height must be between 120 and 12,000 pixels');
+    if(spec.description!==undefined&&typeof spec.description!=='string')fail('description must be text');
     observers.get(target)?.disconnect();
-    const state={observer:null,pendingFrame:null,svg:null,measured:0,cleanups:[]};
+    const state={observer:null,pendingFrame:null,svg:null,measured:0,cleanups:[],descriptionId:`sesame-chart-description-${++descriptionId}`};
     state.disposeRender=()=>{for(const cleanup of state.cleanups.splice(0))cleanup();};
     state.disconnect=()=>{state.observer?.disconnect();if(state.pendingFrame!==null){global.cancelAnimationFrame(state.pendingFrame);state.pendingFrame=null;}state.disposeRender();};
     state.handle={get svg(){return state.svg;},destroy:()=>{if(observers.get(target)!==state)return;state.disconnect();observers.delete(target);target.replaceChildren();}};
@@ -57,6 +59,29 @@
     let height=spec.height || Math.min(320,Math.max(240,width*.4));
     const svg=node('svg',{viewBox:`0 0 ${width} ${height}`,role:'img','aria-label':spec.title || spec.kind}),frame=html('div','sc-frame'),tooltip=html('div','sc-tooltip');
     tooltip.setAttribute('role','status');tooltip.hidden=true;frame.append(svg,tooltip);target.replaceChildren(frame);
+    const notes = new Map(), details = [];
+    let reading, description;
+    const note = (value, role = 'context') => {
+      if (!['context','legend','method','help'].includes(role)) fail('unknown chart text role');
+      const text = String(value).trim(), key = text || `empty:${role}`;
+      if (notes.has(key)) {
+        if (description && !description.parentNode) svg.prepend(description);
+        return notes.get(key);
+      }
+      if (role === 'method' || role === 'help') {
+        if (!description) {
+          description = node('desc', { id:state.descriptionId, 'data-report-text':'details' });
+          svg.setAttribute('aria-describedby', state.descriptionId);
+        }
+        details.push(text); description.textContent = details.join('\n');
+        if (!description.parentNode) svg.prepend(description);
+        notes.set(key, description); return description;
+      }
+      if (!reading) { reading = html('div', 'sc-chart-reading'); frame.append(reading); }
+      const item = html('p', 'sc-missing-note', text); item.setAttribute('data-report-text', role);
+      reading.append(item); notes.set(key, item); return item;
+    };
+    if(spec.description?.trim())note(spec.description, 'method');
     const complete=()=>{
       state.svg=svg;state.measured=measured;
       if(state.observer)return state.handle;
@@ -98,7 +123,7 @@
     }
     if(renderers.has(spec.kind)){
       const context={target,spec,rows,width,get height(){return height;},pad,svg,frame,node,html,numeric,extent,scale,format,mark,yAxis,categories,
-        note:text=>frame.append(html('p','sc-missing-note',text)),
+        note,
         setHeight:value=>{if(!Number.isFinite(value)||value<120||value>12000)fail('chart height is outside the supported range');height=value;svg.setAttribute('viewBox',`0 0 ${width} ${height}`);},
         onCleanup:fn=>{if(typeof fn!=='function')fail('cleanup must be a function');state.cleanups.push(fn);}
       };
@@ -145,7 +170,10 @@
       svg.setAttribute('viewBox',`0 0 ${width} ${top+30}`);
       svg.append(node('text',{x:left,y:top+12,class:'sc-axis'},`1 dot = ${unit} ${spec.unit || 'observations'}`));
     }
-    if(missing){const note=html('p','sc-missing-note',`${missing} ${spec.missingLabel || 'missing values; never replaced with zero'}`);frame.append(note);}
+    if(missing){
+      note(`${document.documentElement.lang.startsWith('zh') ? '缺失' : 'Missing'}: ${missing}`, 'context');
+      note(`${missing} ${spec.missingLabel || 'missing values; never replaced with zero'}`, 'help');
+    }
     return complete();
   }
   function table(target,rows,columns,{limit=100}={}){

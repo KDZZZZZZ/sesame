@@ -1,58 +1,51 @@
-# 通用组件工具
+# 通用组件调用
 
-组件协议为 `sesame-components/1`，使用现有 Reports `document` 内容、固定数据引用和同一个渲染器。按数据关系选择图型：比较、时间变化、分布、关联、流量、层级以及布局均可使用，不限定研究领域或业务模板。
-
-## 直接显示
-
-已经知道要用什么组件时，直接调用 `components_show`：一个块填 `component`，一组块填 `components`，工具自动补齐现有 document 包装。无需先列目录、读规格或单独校验。多组件默认纵向排列，可传 `layout:"columns"` 并排；一次最多 12 个。完整排版仍可传原 `content`。
-
-主 Agent 在简短回答中展示组件时设置 `target:"answer"`，相关多个组件合在一次调用中。省略 target 或设置 `target:"report"` 保持报告页面。answer 使用同一个 document 渲染器与固定发布流程，隐藏报告级标题和重复摘要、去掉页面外边距；组件自己的标题、标签、来源与明细交互保留。子 Agent 的 output 声明和报告交付规则不变，不能绕过 `output.type="none"`。
+报告与回答使用同一个 `components_show`，协议为 `sesame-components/1`。知道组件就直接调用，不要求先列目录、读取规格或校验。
 
 ```json
 {
-  "operation_id": "demo-component-counts-v1",
-  "title": "两组计数（演示）",
   "target": "answer",
   "provenance_kind": "demo",
   "component": {
     "type": "chart",
     "kind": "bar",
-    "title": "组别计数",
-    "columns": ["label", "value"],
-    "options": { "x": "label", "y": "value" },
-    "rows": [{ "label": "A", "value": 2 }, { "label": "B", "value": 4 }],
-    "takeaway": "演示中 B 组计数较多",
-    "source_note": "虚构软件演示，单位：个"
+    "rows": [{ "类别": "A", "数量": 2 }, { "类别": "B", "数量": 4 }],
+    "options": { "x": "类别", "y": "数量", "unit": "个" }
   }
 }
 ```
 
-`component`、`components`、`content` 三选一，show 还可选择完整固定 `input_ref`。`layout` 仅用于前两种便捷输入。`data` 省略时为 `[]`；有 data_id 时仍须提供真实固定绑定，不能用缺省值代替数据。
+这是演示数据，所以显式声明 demo。真实成果可继承固定数据的来源性质；没有可继承来源时按提交的派生内容记录，不代表已核验为直接行情或用户原话。
 
-## 按需发现
+## 内容与目标
 
-1. `components_list({query?, category?, cursor?, limit?})` 返回简短用途索引。默认 20 项，最多 100 项；继续读取时使用返回的 cursor。
-2. `components_describe({ids})` 接受 1–12 个索引 ID，返回当前公开 schema、最小样例、数据要求和组合位置。只读取本次需要的组件。样例里的数值都是演示数据。
-3. 选中的块或图表 example 可直接填入 `component` 或 `components`；overview 等完整布局位置使用 `content`。组件 ID 用于目录发现，输入中仍使用 schema 声明的 `type`、图表 `kind` 和字段。
+- 一个块用 `component`，一组块用 `components`，默认纵向；`layout:"columns"` 并排，最多 12 个。完整文档用 `content`。三者选一。
+- `target:"answer"` 在助手回复中展示；省略或 `"report"` 为报告。相关组件合并在一次调用中。
+- 图表需要 kind、rows 或 data_id、对应 options；columns 自动从真实数据推导。使用 data_id 时在外层 data 声明同名固定 DataRef。
+- `title` 可选，省略时从已提供内容生成索引名称；`operation_id` 可选，普通 Agent/MCP 调用使用宿主的稳定调用标识。脱离宿主执行时显式提供操作标识。
+- summary 仅用于报告列表；locale、space、style、assets、references、related 按需提供。没有需要就不填。
+- 固定数据、引用与字节仍走原发布流程。子 Agent 的 output 与报告绑定规则不变，不能绕过 `output.type="none"`。
 
-`whenToUse` 描述组件表达的数据关系。先判断需要比较大小、观察路径、看分布还是解释连接，再选择对应图型；它不要求执行任何特定分析方法。
+## 文字放哪里
 
-## 只读校验
+| 信息 | 位置 |
+| --- | --- |
+| title | 组件或所属章节的一个标题，不重复命名 |
+| 结论、理由、判断条件 | 正文、judgment 或可选的图前 takeaway，正常阅读字号 |
+| 单位、时点、尺度、分母 | 对应轴、标签、图例或统一范围 |
+| note / caption | 仅必要的就近解释；不再复述标题、结论或图例 |
+| source_note、方法与原始记录 | 固定输入与引用，读者需要时显式使用原位 details |
 
-需要发布前诊断时，可选调用 `components_validate`。它接受 `component`、`components` 或 `content`，以及原始 `data`、`references`、`assets`、`style`、`target`、`title`、`summary`、`locale`、`provenance_kind`、`related`。省略 title 使用校验标题，summary 为空，data 为 `[]`，provenance_kind 为 `derived`，target 为 report。省略 locale 使用现有最宽语言限制；实际发布仍按宿主最终语言检查。
+takeaway/source_note 均可省略，不为填字段而生成文字。单元不提供任意字号、自由 HTML/CSS、脚本或新的注释位置；没有补充内容就只显示主体。
 
-它复用公开 schema、目录中的具体图型 schema、服务端渲染器、现有 chartValue 字段校验及资产检查。固定图表数据通过原完整 DataRef 读取真实 `json-rows`，核对声明的列、图型必要选项及各图型行数上限（总上限 2500）；额外 nodes 也必须是声明的真实绑定。工作区附件复用只读路径检查，不登记资源、不写文件、不发布报告。
+## 按需工具
 
-返回 `valid`、`status`、`diagnostics:[{path,message}]`、`protocol` 和 `coverage`。路径对应本工具参数，例如 `/component/options/x`、`/components/1`、`/content/sections/0/blocks/1`、`/assets/0/ref`。`status:"incomplete"` 表示资源读取等检查未能完成，不能解释为有效。未知组件、缺失数据列、脚本或 CSS 字段以及不安全资产均不能通过。
+- `components_list({query?,category?,cursor?,limit?})`：按比较、趋势、分布、关联、流量、层级等数据关系找组件。
+- `components_describe({ids})`：读取 1–12 个选中组件的准确 schema 与最小样例。
+- `components_validate(...)`：与 show 使用相同规范化与静态检查，返回定位到输入字段的 diagnostics；只读、不发布。它不替代实际浏览器视觉检查。
 
-`valid:true` 只覆盖返回的静态与服务端检查；`coverage.browser` 始终为 `not_run`。它没有验证实际图表绘制、浏览器布局、交互或研究结论。发布后仍可对返回的固定报告调用 `report_check` 取得真实渲染检查。
+## 更新与固定复用
 
-## 发布与固定复用
+需要更新现有报告时使用 `artifact_id` 和 `expected_revision`；稳定重试可显式传 `operation_id`。`input_ref:{ref,entry}` 指向完整 `{content,style?,assets?,target?}` JSON，使用后不再从外部覆盖这些字段；固定输入不被改写。
 
-`components_show` 的发布参数沿用 `report_publish`：`operation_id`、`title`、`provenance_kind` 必填，另提供一种组件输入；可选 `target`、`data`、`summary`、`locale`、`space`、`style`、`assets`、`references`、`related`、`artifact_id`、`expected_revision`。summary 省略时为空，data 默认为 `[]`。更新已有报告须保留原 artifact_id 并传当前 expected_revision。
-
-`input_ref:{ref,entry}` 必须指向包含完整 `{content,style?,assets?,target?}` 的固定 application/json 输入，且 content 是本目录的 document；使用它时不再传 component/components/content/layout/style/assets/target，目标由固定输入决定。证据绑定仍放在外层。show 自动运行与 validate 相同的只读预检，再调用原发布入口；固定 input_ref 不会被改写。宿主按已配置提供者执行其必要检查、渲染、幂等与修订发布，调用方不能选择 provider。
-
-结果保留真实宿主回执及 `ref`、`renderStatus`、`provider`、`presentation`，附带 `protocol`、实际 `renderer` 和 `componentRef:{ref,protocol,kind,inputDigest?}`。其中 ref 是本次固定报告，inputDigest 来自宿主；不会返回整份 HTML。来源和精确原值保留在固定输入与引用中；读者需要的明细可用正文原位的 details/table/attachments，不自动生成末尾附录。
-
-`target:"answer"` 在发布前固化到 provider input，实际渲染结果的 `presentation.metadata` 为 `{layout:"unified",surface:"answer",protocol:"sesame-components/1"}`，回答端据这份固定成果决定展示；默认 report 保持 `{layout:"unified"}`。标记来自真实 provider 输出，不仅出现在工具回执中。本接口不声明 MCP Apps UI 资源，也不接收自行编写的 HTML、CSS 或脚本。
+show 自动校验后发布，返回固定 `ref` 和原宿主回执。实际渲染仍可用 `report_check` 检查。报告与回答共用一个渲染器；本接口不声明跨客户端 MCP Apps UI 能力。

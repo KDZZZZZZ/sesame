@@ -451,10 +451,11 @@ test('signal-study judgments and period identities preserve snapshots, eligible 
   await page.locator('#factor-periods svg').waitFor();
   assert.equal(await page.locator('[data-signal-judgments] .module-judgment-value').innerText(), '仅保留原研究条件下观察');
   assert.equal(await page.evaluate(() => document.querySelector('[data-signal-judgments]').compareDocumentPosition(document.querySelector('#factor-matrix')) & Node.DOCUMENT_POSITION_FOLLOWING), 4);
-  assert.match(await page.locator('#factor-period-scope').innerText(), /开发样本.*数据起点 2025-01-01.*截至 2025-03-31.*标签样本 91.*样本 90/s);
-  assert.match(await page.locator('#factor-period-scope').innerText(), /独立验证.*晚于 2025-03-31（不含）.*截至 2025-06-30.*样本 64.*组合期 63/s);
-  assert.match(await page.locator('#factor-period-scope').innerText(), /封存复核.*晚于 2025-06-30（不含）.*截至 2025-09-30.*标签样本 7/s);
-  assert.match(await page.locator('#factor-fold-scope').innerText(), /前推区间 1.*起点 2025-04-01.*截至 2025-04-30.*样本 20.*组合期 19/);
+  assert.equal(await page.locator('#factor-period-scope, #factor-fold-scope').count(), 0);
+  assert.match(await page.locator('#factor-periods svg desc').textContent(), /开发样本.*数据起点 2025-01-01.*截至 2025-03-31.*标签样本 91.*样本 90/s);
+  assert.match(await page.locator('#factor-periods svg desc').textContent(), /独立验证.*晚于 2025-03-31（不含）.*截至 2025-06-30.*样本 64.*组合期 63/s);
+  assert.match(await page.locator('#factor-periods svg desc').textContent(), /封存复核.*晚于 2025-06-30（不含）.*截至 2025-09-30.*标签样本 7/s);
+  assert.match(await page.locator('#factor-folds svg desc').textContent(), /前推区间 1.*起点 2025-04-01.*截至 2025-04-30.*样本 20.*组合期 19/);
   assert.equal(await page.locator('#factor-folds svg').count(), 1);
   assert.ok(await page.locator('[data-factor-condition="0"] math').count() > 0);
   assert.match(await page.locator('[data-signal-judgments] .module-value-details').textContent(), /JUDGMENT_ATTACK/);
@@ -465,9 +466,10 @@ test('signal-study judgments and period identities preserve snapshots, eligible 
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   }
   await page.locator('#factor-focus').selectOption('1');
-  assert.equal(await page.locator('#factor-fold-scope').innerText(), '');
-  assert.doesNotMatch(await page.locator('#factor-period-scope').innerText(), /样本 90|样本 64|标签样本 99|98\.765/);
-  assert.match(await page.locator('#factor-period-scope').innerText(), /封存复核 · 未提供可显示结果/);
+  assert.equal(await page.locator('#factor-folds').isVisible(), false);
+  assert.equal(await page.locator('#factor-folds svg desc').count(), 0);
+  assert.doesNotMatch(await page.locator('#factor-periods svg desc').textContent(), /样本 90|样本 64|标签样本 99|98\.765/);
+  assert.match(await page.locator('#factor-periods svg desc').textContent(), /封存复核 · 未提供可显示结果/);
   assert.deepEqual(await page.locator('#run-snapshot').evaluate(node => JSON.parse(node.textContent)), before);
   await assert.rejects(renderStructuredReport({}, args({ kind: 'signal-study', run, presentation: { period_labels: { later: '编造分期' } } })), /Period labels/);
 });
@@ -534,7 +536,7 @@ test('LaTeX renders as native MathML and exact authored evidence stays in place'
   assert.equal(await page.locator('article details td').textContent(), '9007199254740993.0000001');
 });
 
-test('charts retain one visible caption, accessible names and exact original configuration', { skip: !hostRoot, timeout: 30000 }, async t => {
+test('charts retain one authored body statement, accessible names and exact original configuration', { skip: !hostRoot, timeout: 30000 }, async t => {
   const page = await browserPage(t), sourceNote = 'SOURCE_NOTE_SYNTHETIC_FIXED_INPUT_ONLY';
   const precise = '9007199254740993.0000001';
   const titles = ['唯一图名 A', '唯一图名 B'], captions = ['仅输入数值 A', '仅输入数值 B'];
@@ -550,7 +552,9 @@ test('charts retain one visible caption, accessible names and exact original con
     await page.setViewportSize({ width, height: 850 });
     await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
     assert.deepEqual(await page.locator('figcaption strong').allTextContents(), titles, 'Each chart has one visible title');
-    assert.deepEqual(await page.locator('figcaption .kit-chart-caption').allTextContents(), captions, 'Each chart has one visible takeaway');
+    assert.deepEqual(await page.locator('figure.kit-chart > [data-report-text="body"]').allTextContents(), captions, 'Each chart has one visible body statement');
+    assert.equal(await page.locator('figcaption .kit-chart-caption').count(), 0, 'No second small-text caption slot');
+    assert.ok(await page.locator('figure.kit-chart > [data-report-text="body"]').evaluateAll(nodes => nodes.every(node => parseFloat(getComputedStyle(node).fontSize) >= 14)), 'Authored conclusions use the body type scale');
     for (const [index, title] of titles.entries()) {
       const plot = page.locator(`#content-chart-${index + 1}`);
       assert.equal(await plot.locator('figcaption').count(), 0, 'Nested renderer must not repeat the document caption');

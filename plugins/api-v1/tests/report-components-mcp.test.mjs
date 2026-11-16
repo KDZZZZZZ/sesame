@@ -93,6 +93,16 @@ test('component tools cross real HTTP and stdio MCP into immutable, inspectable 
   // The short form accepts the exact discovered example without document scaffolding.
   const concise = { operation_id: 'components-mcp-single', title: '单组件合成验收', provenance_kind: 'demo', component: line };
   assert.equal((await call('components_show', concise)).ref.kind, 'report');
+  const simpleInput = { target: 'answer', provenance_kind: 'demo', component: line };
+  assert.equal((await call('components_validate', simpleInput)).valid, true);
+  const simple = await call('components_show', simpleInput);
+  const simpleArtifact = app.runtime.contractArtifacts.read(simple.ref);
+  assert.equal(simpleArtifact.manifest.content.provenance.kind, 'demo');
+  const simpleStored = JSON.parse(app.runtime.contractArtifacts.resource(simple.ref, 'sesame-report-input.json').bytes.toString()).input;
+  assert.deepEqual(simpleStored.content.sections[0].blocks[0].columns, [...new Set(line.rows.flatMap(Object.keys))]);
+  assert.equal(simpleStored.content.sections[0].blocks[0].takeaway, undefined);
+  assert.equal(simpleStored.content.sections[0].blocks[0].source_note, undefined);
+  assert.notEqual((await call('components_show', simpleInput)).ref.id, simple.ref.id, 'A new MCP call with identical content is a new intent, not a content-hash retry');
   const answer = await call('components_show', { ...concise, operation_id: 'components-mcp-answer', target: 'answer', summary: '只用于报告索引的摘要' });
   const answerArtifact = app.runtime.contractArtifacts.read(answer.ref);
   assert.deepEqual(answerArtifact.manifest.content.rendering.presentation.metadata, { layout: 'unified', surface: 'answer', protocol: 'sesame-components/1' });
@@ -122,7 +132,8 @@ test('component tools cross real HTTP and stdio MCP into immutable, inspectable 
   await frame.locator('#content-chart-1 svg').waitFor();
   assert.equal(await frame.locator('.report-header').isVisible(), false);
   assert.equal(await frame.locator('.report-subtitle').isVisible(), false);
-  assert.equal(await frame.locator('figcaption strong').first().isVisible(), true);
+  assert.equal(await frame.locator('#content-chart-1 svg').getAttribute('aria-label'), line.kind);
+  assert.equal(await frame.locator('figcaption strong').count(), 0, 'An unnamed chart does not acquire a generated visible title');
   assert.equal(await frame.locator('body').evaluate(body => getComputedStyle(body).padding), '0px');
   assert.equal(await page.locator('#component-mcp-preview iframe').getAttribute('sandbox'), 'allow-scripts');
   if (output) await page.locator('#component-mcp-preview').screenshot({ path: join(output, 'mcp-answer-host.png') });
@@ -143,6 +154,8 @@ test('component tools cross real HTTP and stdio MCP into immutable, inspectable 
   assert.equal(boundValidation.valid, true, JSON.stringify(boundValidation.diagnostics));
   const boundReport = await call('components_show', { ...bound, operation_id: 'components-mcp-bound' });
   assert.ok(app.runtime.contractArtifacts.read(boundReport.ref).manifest.dependencies.some(ref => ref.digest === snapshot.value.ref.digest));
+  const inherited = await call('components_show', { component: boundChart, data: bound.data, target: 'answer' });
+  assert.equal(app.runtime.contractArtifacts.read(inherited.ref).manifest.content.provenance.kind, 'demo', 'Fixed data provenance is inherited without an extra agent field');
   const publication = { ...draft, operation_id: 'components-mcp-publication' };
   const shown = await call('components_show', publication);
   assert.equal(shown.ref.kind, 'report');

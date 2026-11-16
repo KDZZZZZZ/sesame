@@ -44,13 +44,13 @@
 
 ## 图表组件
 
-`chart` 的字段为 `type, title, kind, columns, options, takeaway, source_note`，并选择 `rows` 或 `data_id`。`columns` 是 1–32 个原始字段名；这里的 `rows` 是对象数组，区别于 `table.rows` 的二维数组。
+`chart` 的常用字段为 `type:"chart", kind, options`，并选择 `rows` 或 `data_id`。`title, takeaway, source_note, columns` 可省略；columns 从实际数据推导，显式提供时为 1–32 个原始字段名。这里的 `rows` 是对象数组，区别于 `table.rows` 的二维数组。
 
 - `data_id` 必须对应 `report_publish.data` 中同名的固定 DataRef。绑定保持完整 ref、来源、时间、单位与原始字节。
 - 内联 `rows` 为 1–2,500 条已有结果；不是免除来源引用的理由。大数据先使用有来源的聚合结果或按问题分图，不能把首批数据当全集。
 - `options` 只放该图型支持的字段映射与安全 JSON 显示参数；不放 rows、data、nodes、回调或函数。
 - 关系图可直接提供固定 `nodes`；或用 `chart_data: [{property: "nodes", data_id: "节点绑定ID"}]` 读取另一个已声明固定绑定，两者二选一。主边数据与节点数据都保持原来源。
-- `takeaway` 简短说明图上的比较或理由，不复述标题和开篇结论；`source_note` 只补必要口径，共同信息不逐图重复。完整数据和来源由 Report 保留在固定输入与图形配置中。
+- `title` 只命名；`takeaway` 是可选的正常正文说明，已在正文说过则不再填写。`source_note` 属于证据元数据，不自动显示；单位、时点和影响判断的条件应放在可见轴、标签或正文。完整数据和来源保留在固定输入与图形配置中。
 - 直方图、箱线图和密度图只接收已有分箱、分位或密度网格，并填写对应 `options.method`；报告不拟合 KDE、重算置信度或替研究选参数。
 
 38 种现成图型为：`line`、`area`、`bar`、`hbar`、`scatter`、`heatmap`、`matrix`、`units`、`waterfall`、`dumbbell`、`strip`、`histogram`、`boxplot`、`ridgeline`、`violin`、`calendar`、`parallel`、`bump`、`lifecycle`、`treemap`、`threads`、`flow`、`network-circular`、`network-force`、`decision-tree`、`stream`、`stacked-rungs`、`dot-heatmap`、`funnel`、`category-links`、`outcome-tally`、`paired-rungs`、`rank-race`、`spectrum`、`tick-donut`、`barcode`、`bubble-ledger`、`candlestick`。全部通过同一个声明式 `chart` 入口；内部 reportKit/SesameCharts 不是另一个自由编码接口。

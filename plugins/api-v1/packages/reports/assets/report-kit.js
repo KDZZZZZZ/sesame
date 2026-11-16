@@ -240,8 +240,8 @@
     const data = list(spec.data, `${path}.data`, 0, true);
     if (data.length > 20000) fail(`${path}: aggregate data before drawing more than 20000 rows.`);
     const chart = { ...spec, path, data };
-    text(spec.title, `${path}.title`, 30);
-    text(spec.caption, `${path}.caption`, 80);
+    chart.title = text(spec.title, `${path}.title`, 30, false);
+    text(spec.caption, `${path}.caption`, 80, false);
     if (spec.kind === 'heatmap') {
       for (const key of ['x', 'y', 'value']) if (typeof spec[key] !== 'string') fail(`${path}.${key} must name a row field.`);
       return chart;
@@ -283,8 +283,8 @@
     const model = normalizeChart(spec, path);
     const colors = palette(), hidden = new Set();
     const figure = h('figure', { class: 'kit-chart', 'data-kind': model.kind });
-    const head = h('figcaption', { class: 'kit-chart-head' }, h('strong', { text: model.title }), h('span', { class: 'kit-chart-caption', text: model.caption }));
-    const legend = model.kind !== 'heatmap' && model.series.length > 1 ? h('div', { class: 'kit-legend' }, model.series.map((series, i) => {
+    const head = model.title.trim() ? h('figcaption', { class: 'kit-chart-head', 'data-report-text':'title' }, h('strong', { text: model.title })) : null;
+    const legend = model.kind !== 'heatmap' && model.series.length > 1 ? h('div', { class: 'kit-legend', 'data-report-text':'legend' }, model.series.map((series, i) => {
       // Financial colours describe direction, so numbered keys identify series.
       const key = financialTones.includes(model.tone) ? h('span', { class: 'kit-series-key', text: String(i + 1) }) : h('i');
       const button = h('button', { type: 'button', 'data-kit-control': '', 'aria-pressed': 'true', style: `--swatch:${colors[i % colors.length]}` }, key, series.name);
@@ -306,7 +306,7 @@
         svg = s('svg', { viewBox: `0 0 ${width} 200`, class: 'kit-svg' });
         const label = s('text', { class: 'kit-axis', x: width / 2, y: 100, 'text-anchor': 'middle' }); label.textContent = tr('没有可绘制的数值', 'No values to draw'); svg.append(label);
       } else svg = (model.kind === 'heatmap' ? drawHeatmap : model.kind === 'hbar' ? drawHbar : model.kind === 'bar' ? drawBars : drawXY)(model, width, colors, hidden, tip);
-      svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', `${model.title}. ${model.caption}`);
+      svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', model.title.trim() || [model.kind,model.x,...(Array.isArray(model.y) ? model.y : [model.y]),model.value].filter(Boolean).join(' · '));
       stage.prepend(svg);
     };
     draw();
@@ -568,14 +568,14 @@
         return h('li', {}, h('span', { text: text(item.label, `meta[${i}].label`, 10) }), h('b', { text: text(String(item.value ?? '—'), `meta[${i}].value`, 30) }));
       })) : null);
     root.replaceChildren(header);
-    verdict(root, spec.verdict, 'verdict');
+    if (Object.hasOwn(spec, 'verdict')) verdict(root, spec.verdict, 'verdict');
     if (spec.metrics) metrics(root, spec.metrics, 'metrics');
     list(spec.sections, 'sections', 6, true).forEach((section, i) => {
       const path = `sections[${i}]`;
-      if (!isObject(section)) fail(`${path} must be { title, takeaway, blocks }.`);
+      if (!isObject(section)) fail(`${path} must be { title, blocks, takeaway? }.`);
       const node = h('section', { class: 'kit-section', id: section.id ?? null },
         h('h2', { text: text(section.title, `${path}.title`, 20) }),
-        h('p', { class: 'kit-takeaway', text: text(section.takeaway, `${path}.takeaway`, 80) }));
+        Object.hasOwn(section, 'takeaway') ? h('p', { class: 'kit-takeaway', 'data-report-text': 'context', text: text(section.takeaway, `${path}.takeaway`, 80) }) : null);
       root.append(node);
       list(section.blocks, `${path}.blocks`, 6, true).forEach((item, j) => block(node, item, `${path}.blocks[${j}]`));
     });

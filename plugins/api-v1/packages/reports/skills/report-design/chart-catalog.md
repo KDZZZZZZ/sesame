@@ -2,7 +2,7 @@
 
 按问题选择现成图型及默认样式。所有图型都通过 `document` 的 `chart` 内容块声明，由 Report 自动加载本地组件；不编写自定义 HTML、CSS 或绘图回调。
 
-`chart` 提供 `title`、`kind`、`columns`、`takeaway`、`source_note`，字段映射与显示参数放 `options`；数据选固定 `data_id` 或已有 `rows`，二选一。节点可来自固定 `nodes` 或 `chart_data` 绑定。完整字段见 [components.md](components.md)。`report_template` 只作预览，不是发布前置步骤。
+`chart` 只需 `type:"chart"`、`kind`、`options` 中的必要映射，以及固定 `data_id` 或已有 `rows` 二选一。`columns` 从实际数据推导；`title`、`takeaway`、`source_note` 按需提供，不重复正文或图例。节点可来自固定 `nodes` 或 `chart_data` 绑定。直接 `components_show` 即可展示，完整字段见 [components.md](components.md)。`report_template` 只作预览，不是发布前置步骤。
 
 以下共 **38 种 kind**。底层可能使用不同组件，但公开内容入口一致。
 

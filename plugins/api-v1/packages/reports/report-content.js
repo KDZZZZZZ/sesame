@@ -8,6 +8,8 @@ import { readBytes } from './artifact-io.js';
 import { renderJudgments } from './report-evidence.js';
 import { renderOverview } from './report-overview.js';
 import { renderLogicDiagram } from './report-logic.js';
+import { normalizeComponentContent } from './component-input.js';
+import { renderText, isDuplicateText } from './report-text.js';
 
 const asset = path => readFileSync(new URL(path, import.meta.url), 'utf8');
 const e = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -28,8 +30,9 @@ function valueTone(tone, value, path, tonePath) {
 export const reportStyles = Object.freeze({ layouts: ['document', 'signal-study', 'modules', 'backtest'] });
 
 export async function renderStructuredReport(host, args, signal) {
-  const content = args.content, style = await resolveReportStyle(host, args.style);
   const bindings = args.data ?? [];
+  const content = args.content?.kind === 'document' ? await normalizeComponentContent(host, args.content, bindings, signal) : args.content;
+  const style = await resolveReportStyle(host, args.style);
   const refKey = ref => JSON.stringify(['id','revision','digest','kind','schemaVersion'].map(key=>ref?.[key]));
   check(object(content) && reportStyles.layouts.includes(content.kind), 'Choose a built-in report layout');
   if (content.kind === 'modules') {
@@ -46,24 +49,26 @@ export async function renderStructuredReport(host, args, signal) {
     return applyReportStyle((await buildBacktestReport(host, { ...args, ...content, demo: args.provenance_kind === 'demo' }, signal)).html, style);
   }
   const charts = [];
-  function block(row, depth = 0, path = '/input/content') {
-    try { return renderBlock(row, depth, path); }
+  const prose = blocks => blocks.flatMap(row => ['paragraph', 'judgment'].includes(row.type) ? [row.text] : []);
+  function block(row, depth = 0, path = '/input/content', context = { titles: [], body: [] }) {
+    try { return renderBlock(row, depth, path, context); }
     catch (error) {
       if (!error.message.startsWith('/input/')) error.message = `${path}: ${error.message}`;
       throw error;
     }
   }
-  function renderBlock(row, depth, path) {
+  function renderBlock(row, depth, path, context) {
     check(depth <= 5 && object(row), 'Invalid content block');
-    if (row.type === 'logic') return renderLogicDiagram(row);
+    if (row.type === 'logic') return renderLogicDiagram(row, context);
     if (row.type === 'group') {
       keys(row,['type','layout','blocks']); list(row.blocks,12);
       check(['columns','stack'].includes(row.layout),'Choose columns or stack');
-      return `<div class="report-group report-group-${row.layout}">${row.blocks.map((child,index)=>`<div>${block(child,depth+1,`${path}/blocks/${index}`)}</div>`).join('')}</div>`;
+      const grouped = { ...context, body: [...context.body, ...prose(row.blocks)] };
+      return `<div class="report-group report-group-${row.layout}">${row.blocks.map((child,index)=>`<div>${block(child,depth+1,`${path}/blocks/${index}`,grouped)}</div>`).join('')}</div>`;
     }
     if (row.type === 'judgment') {
       keys(row,['type','text','note']);text(row.text);if(row.note!==undefined)text(row.note);
-      return `<div class="report-judgment"><p>${e(row.text)}</p>${row.note?`<small>${e(row.note)}</small>`:''}</div>`;
+      return `<div class="report-judgment"><p>${e(row.text)}</p>${renderText(row.note,{against:[row.text]})}</div>`;
     }
     if (row.type === 'judgments') {
       keys(row, ['type', 'items', 'presentation']);
@@ -74,13 +79,13 @@ export async function renderStructuredReport(host, args, signal) {
       check([row.min,row.max,row.value].every(Number.isFinite)&&row.max>row.min&&row.value>=row.min&&row.value<=row.max,'Range needs finite min < max and an in-range value');
       if(row.unit!==undefined)text(row.unit);if(row.note!==undefined)text(row.note);
       const unit=row.unit??'', position=(row.value-row.min)/(row.max-row.min)*100;
-      return `<figure class="report-range"><figcaption>${e(row.label)}<strong>${e(row.value)}${e(unit)}</strong></figcaption><div class="report-range-track" role="img" aria-label="${e(`${row.min}${unit} – ${row.max}${unit}；${row.value}${unit}`)}"><span style="left:${position}%"></span></div><div class="report-range-ends"><span>${e(row.min)}${e(unit)}</span><span>${e(row.max)}${e(unit)}</span></div>${row.note?`<p class="report-source">${e(row.note)}</p>`:''}</figure>`;
+      return `<figure class="report-range"><figcaption>${e(row.label)}<strong>${e(row.value)}${e(unit)}</strong></figcaption><div class="report-range-track" role="img" aria-label="${e(`${row.min}${unit} – ${row.max}${unit}；${row.value}${unit}`)}"><span style="left:${position}%"></span></div><div class="report-range-ends"><span>${e(row.min)}${e(unit)}</span><span>${e(row.max)}${e(unit)}</span></div>${renderText(row.note,{against:[row.label]})}</figure>`;
     }
     if (row.type === 'scores') {
       keys(row,['type','min','max','unit','items']);list(row.items,24);
       check(Number.isFinite(row.min)&&Number.isFinite(row.max)&&row.max>row.min,'Scores need an explicit finite min < max');
       if(row.unit!==undefined)text(row.unit);
-      return `<div class="report-scores">${row.items.map(item=>{keys(item,['label','value','note']);text(item.label);if(item.note!==undefined)text(item.note);check(Number.isFinite(item.value)&&item.value>=row.min&&item.value<=row.max,'Score must be within the supplied scale');return `<figure><figcaption>${e(item.label)}<strong>${e(item.value)}${e(row.unit??'')}</strong></figcaption><meter min="${row.min}" max="${row.max}" value="${item.value}" aria-label="${e(item.label)}"></meter>${item.note?`<p class="report-source">${e(item.note)}</p>`:''}</figure>`;}).join('')}</div>`;
+      return `<div class="report-scores">${row.items.map(item=>{keys(item,['label','value','note']);text(item.label);if(item.note!==undefined)text(item.note);check(Number.isFinite(item.value)&&item.value>=row.min&&item.value<=row.max,'Score must be within the supplied scale');return `<figure><figcaption>${e(item.label)}<strong>${e(item.value)}${e(row.unit??'')}</strong></figcaption><meter min="${row.min}" max="${row.max}" value="${item.value}" aria-label="${e(item.label)}"></meter>${renderText(item.note,{against:[item.label]})}</figure>`;}).join('')}</div>`;
     }
     if (row.type === 'paragraph' || row.type === 'markdown') {
       keys(row, ['type', 'text']); text(row.text);
@@ -107,18 +112,18 @@ export async function renderStructuredReport(host, args, signal) {
         const extensions = { 'application/json': ['json'], 'text/plain': ['txt', 'csv', 'tsv', 'md', 'log'], 'image/png': ['png'], 'image/jpeg': ['jpg', 'jpeg'], 'image/webp': ['webp'] };
         check(extensions[media]?.includes(assetPath.split('.').at(-1).toLowerCase()), `${itemPath}/path: Attachment links only accept inert packaged data, text or raster images; also check the matching /input/assets entry path and media_type`);
         const href = assetPath.split('/').map(encodeURIComponent).join('/');
-        return `<li><a href="${e(href)}">${e(item.label)}</a>${item.description ? `<p class="report-source">${e(item.description)}</p>` : ''}</li>`;
+        return `<li><a href="${e(href)}">${e(item.label)}</a>${renderText(item.description,{against:[item.label]})}</li>`;
       }).join('')}</ul>`;
     }
     if (row.type === 'formula') {
       keys(row, ['type','latex','caption','display']); text(row.latex);
       check(row.display === undefined || ['inline','block'].includes(row.display), 'Invalid formula display');
       if (row.caption !== undefined) text(row.caption);
-      return `<div class="report-formula" data-report-math="${e(row.latex)}"${row.display === 'inline' ? ' data-display="inline"' : ''}></div>${row.caption ? `<p class="report-source">${e(row.caption)}</p>` : ''}`;
+      return `<div class="report-formula" data-report-math="${e(row.latex)}"${row.display === 'inline' ? ' data-display="inline"' : ''}></div>${renderText(row.caption,{against:[row.latex]})}`;
     }
     if (row.type === 'metrics') {
       keys(row, ['type','items']); list(row.items, 12);
-      return `<dl class="report-metrics">${row.items.map((item,index) => { keys(item,['label','value','note','tone']); text(item.label); if(item.note!==undefined)text(item.note); check(typeof item.value === 'string' || typeof item.value === 'number' && Number.isFinite(item.value), `${path}/items/${index}/value: Invalid metric value`); const tone = valueTone(item.tone, item.value, `${path}/items/${index}/value`, `${path}/items/${index}/tone`); return `<div class="report-metric"${tone ? ` data-tone="${tone}"` : ''}><dt>${e(item.label)}</dt><dd>${e(item.value)}</dd>${item.note ? `<small>${e(item.note)}</small>` : ''}</div>`; }).join('')}</dl>`;
+      return `<dl class="report-metrics">${row.items.map((item,index) => { keys(item,['label','value','note','tone']); text(item.label); if(item.note!==undefined)text(item.note); check(typeof item.value === 'string' || typeof item.value === 'number' && Number.isFinite(item.value), `${path}/items/${index}/value: Invalid metric value`); const tone = valueTone(item.tone, item.value, `${path}/items/${index}/value`, `${path}/items/${index}/tone`); return `<div class="report-metric"${tone ? ` data-tone="${tone}"` : ''}><dt>${e(item.label)}</dt><dd>${e(item.value)}</dd>${renderText(item.note,{tag:'span',against:[item.label,item.value]})}</div>`; }).join('')}</dl>`;
     }
     if (row.type === 'reasoning') {
       keys(row, ['type','steps']); list(row.steps, 8); row.steps.forEach(text);
@@ -129,11 +134,12 @@ export async function renderStructuredReport(host, args, signal) {
       if (row.column_tones !== undefined) check(Array.isArray(row.column_tones) && row.column_tones.length === row.columns.length && row.column_tones.every(tone => tone === null || ['auto','positive','negative','neutral'].includes(tone)), 'Table column_tones must match the columns; use null for ordinary content');
       if(row.caption!==undefined)text(row.caption);
       check(row.rows.every(values=>Array.isArray(values)&&values.length===row.columns.length&&values.every(value=>value===null||['string','boolean'].includes(typeof value)||typeof value==='number'&&Number.isFinite(value))), 'Table rows must match columns and contain finite scalar values');
-      return `<div class="report-table"><table>${row.caption ? `<caption>${e(row.caption)}</caption>` : ''}<thead><tr>${row.columns.map(value=>`<th>${e(value)}</th>`).join('')}</tr></thead><tbody>${row.rows.map((values,rowIndex)=>`<tr>${values.map((value,index)=>{ const tone = valueTone(row.column_tones?.[index] ?? undefined, value, `${path}/rows/${rowIndex}/${index}`, `${path}/column_tones/${index}`); return `<td${tone ? ` data-tone="${tone}"` : ''}>${e(value ?? '—')}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>`;
+      const caption = renderText(row.caption,{role:'title',tag:'caption',against:context.titles});
+      return `<div class="report-table"><table${row.caption && !caption ? ` aria-label="${e(row.caption)}"` : ''}>${caption}<thead><tr>${row.columns.map(value=>`<th>${e(value)}</th>`).join('')}</tr></thead><tbody>${row.rows.map((values,rowIndex)=>`<tr>${values.map((value,index)=>{ const tone = valueTone(row.column_tones?.[index] ?? undefined, value, `${path}/rows/${rowIndex}/${index}`, `${path}/column_tones/${index}`); return `<td${tone ? ` data-tone="${tone}"` : ''}>${e(value ?? '—')}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>`;
     }
     if (row.type === 'chart') {
       keys(row,['type','title','kind','columns','options','rows','data_id','takeaway','source_note','nodes','chart_data']);
-      text(row.title); text(row.takeaway); text(row.source_note);
+      for (const value of [row.title,row.takeaway,row.source_note]) if(value!==undefined)text(value);
       const definition={kind:row.kind,columns:row.columns,options:row.options??{},data_requirements:'Supplied results only'};
       chartDefinition(definition);
       check(Boolean(row.data_id) !== Boolean(row.rows), 'Choose fixed rows or a data binding');
@@ -143,12 +149,14 @@ export async function renderStructuredReport(host, args, signal) {
       check(extraData.every(item=>object(item)&&Object.keys(item).every(key=>['property','data_id'].includes(key))&&item.property==='nodes'&&bindings.some(binding=>binding.id===item.data_id)),'Extra chart data must be a declared nodes binding');
       check(extraData.length<=1&&!(extraData.length&&row.nodes),'Choose one fixed nodes input');
       const id=`content-chart-${charts.length+1}`;
-      charts.push({id,title:row.title,caption:row.takeaway,source_note:row.source_note,kind:row.kind,columns:row.columns,options:{height:style.tokens.chart_height,...row.options??{}},...(row.rows?{rows:row.rows}:{dataId:row.data_id}),...(row.nodes?{nodes:row.nodes}:{}),...(extraData.length?{chartData:extraData}:{})});
-      return `<figure class="kit-chart"><figcaption class="kit-chart-head"><strong>${e(row.title)}</strong><span class="kit-chart-caption">${e(row.takeaway)}</span></figcaption><div id="${id}" class="module-chart-plot"></div></figure>`;
+      charts.push({id,title:row.title??row.kind,caption:row.takeaway,source_note:row.source_note,kind:row.kind,columns:row.columns,options:{height:style.tokens.chart_height,...row.options??{}},...(row.rows?{rows:row.rows}:{dataId:row.data_id}),...(row.nodes?{nodes:row.nodes}:{}),...(extraData.length?{chartData:extraData}:{})});
+      const heading = row.title && !isDuplicateText(row.title,context.titles) ? `<figcaption class="kit-chart-head"><strong>${e(row.title)}</strong></figcaption>` : '';
+      return `<figure class="kit-chart">${heading}${renderText(row.takeaway,{role:'body',against:[row.title,...context.titles,...context.body]})}<div id="${id}" class="module-chart-plot"></div></figure>`;
     }
     if (row.type === 'details') {
       keys(row,['type','title','blocks']); text(row.title); list(row.blocks);
-      return `<details data-report-evidence><summary>${e(row.title)}</summary>${row.blocks.map((child,index)=>block(child,depth+1,`${path}/blocks/${index}`)).join('')}</details>`;
+      const detail = { titles: [row.title], body: prose(row.blocks) };
+      return `<details data-report-evidence><summary>${e(row.title)}</summary>${row.blocks.map((child,index)=>block(child,depth+1,`${path}/blocks/${index}`,detail)).join('')}</details>`;
     }
     check(false, 'Unknown content block; custom HTML, CSS and scripts are not accepted');
   }
@@ -174,7 +182,8 @@ export async function renderStructuredReport(host, args, signal) {
   } else {
     keys(content,['kind','overview','sections','appendix']); list(content.sections,50); if(content.appendix)list(content.appendix);
     body=content.overview === undefined ? '' : renderOverview(content.overview, block, args.locale ?? 'zh-CN', content.sections.length > 0);
-    body+=content.sections.map((section,index)=>{keys(section,['title','blocks']);text(section.title);list(section.blocks);return `<section class="kit-section" id="content-section-${index+1}">${section.title.trim() ? `<h2>${e(section.title)}</h2>` : ''}${section.blocks.map((item,blockIndex)=>block(item,0,`/input/content/sections/${index}/blocks/${blockIndex}`)).join('')}</section>`;}).join('');
+    const reportTitles = args.target === 'answer' ? [] : [args.title];
+    body+=content.sections.map((section,index)=>{keys(section,['title','blocks']);text(section.title);list(section.blocks);const context={titles:section.title.trim()?[section.title]:reportTitles,body:prose(section.blocks)};return `<section class="kit-section" id="content-section-${index+1}">${section.title.trim()&&!isDuplicateText(section.title,reportTitles) ? `<h2>${e(section.title)}</h2>` : ''}${section.blocks.map((item,blockIndex)=>block(item,0,`/input/content/sections/${index}/blocks/${blockIndex}`,context)).join('')}</section>`;}).join('');
     body+= (content.appendix??[]).map((item,index)=>block(item,0,`/input/content/appendix/${index}`)).join('');
     const assets=[];
     if(charts.length){assets.push('report-kit.js','editorial-charts.js');
@@ -188,7 +197,9 @@ export async function renderStructuredReport(host, args, signal) {
     }
   }
   if (body.includes('data-report-svl')) body += `<script>${asset('assets/svl-graph.js')}</script><script>SesameSvlGraph.mount();</script>`;
-  body=`<div data-report-style="${e(style.theme)}" data-report-density="${e(style.density)}">${args.provenance_kind==='demo'?'<p data-sesame-provenance="demo">演示样本</p>':''}${args.summary&&content.kind!=='signal-study'&&!content.overview?`<p class="report-subtitle">${e(args.summary)}</p>`:''}${body}</div>`;
+  // Metadata summaries belong to the report index. Visible conclusions are
+  // authored once as overview/paragraph/judgment content, never injected here.
+  body=`<div data-report-style="${e(style.theme)}" data-report-density="${e(style.density)}">${args.provenance_kind==='demo'?'<p data-sesame-provenance="demo">演示样本</p>':''}${body}</div>`;
   const tokens={LOCALE:e(args.locale??'zh-CN'),TITLE:e(args.title),STYLES:asset('assets/editorial.css')+'\n'+asset('assets/module-report.css')+'\n'+asset('assets/report-overview.css')+'\n'+asset('assets/svl-graph.css'),BODY:body};
   return applyReportStyle(withEvidenceAppendix(asset('templates/document.html').replace(/\{\{([A-Z_]+)\}\}/g,(token,key)=>tokens[key]??token)),style);
 }

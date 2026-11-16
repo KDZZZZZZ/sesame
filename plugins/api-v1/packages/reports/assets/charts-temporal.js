@@ -21,7 +21,7 @@
   }
   function empty(ctx) {
     if (!Array.isArray(ctx.rows) || ctx.rows.length > 2500 || ctx.rows.some(row => !row || typeof row !== 'object' || Array.isArray(row))) fail('expected at most 2,500 source objects');
-    if (!ctx.rows.length) { ctx.note(ctx.spec.emptyLabel || 'No observations'); return true; }
+    if (!ctx.rows.length) { ctx.note(ctx.spec.emptyLabel || 'No observations', 'context'); return true; }
     return false;
   }
   function timezone(spec) {
@@ -109,11 +109,12 @@
     };
   }
   function evidencePanel(ctx, observations) {
-    const panel = ctx.html('p', 'report-source', language('Select an event to inspect its evidence.', '选择事件，查看依据。'));
+    const panel = ctx.html('p', 'report-source'); panel.hidden = true;
     panel.setAttribute('aria-live', 'polite'); panel.style.overflowWrap = 'anywhere'; ctx.frame.append(panel);
     listen(ctx, ctx.target, 'chartselect', event => {
       const { row, index } = event.detail || {}, item = observations[index];
       if (!item || item.row !== row) return;
+      panel.hidden = false;
       panel.replaceChildren(ctx.html('span', null, `${item.item} · ${item.state}${item.links.length ? ' · ' : language(' · No attached evidence link.', ' · 未附带依据链接。')}`));
       for (const entry of item.links) { const anchor = ctx.html('a', null, entry.label); anchor.href = entry.href; anchor.rel = 'noopener noreferrer'; anchor.style.marginRight = '16px'; panel.append(anchor); }
     });
@@ -143,20 +144,19 @@
     const years = [...new Set(months.map(month => month.slice(0, 4)))], paged = months.length > 12;
     let saved = views.get(ctx.target); if (saved?.spec !== spec || saved.kind !== 'calendar') saved = { spec, kind: 'calendar', year: years[0] };
     rememberView(ctx, saved);
-    const pageNote = ctx.html('p', 'sc-missing-note'), explanation = ctx.html('p', 'sc-missing-note');
+    const pageNote = ctx.note('', 'context'), explanation = ctx.note('', 'legend');
     pageNote.setAttribute('data-calendar-range', ''); pageNote.setAttribute('role', 'status');
     let select;
     if (paged) {
       const bar = controls(ctx), yearLabel = ctx.html('label', null, 'Year'); select = ctx.html('select'); select.setAttribute('aria-label', 'Calendar year');
       years.forEach(year => { const option = ctx.html('option', null, year); option.value = year; select.append(option); });
-      select.value = saved.year; yearLabel.append(select); bar.append(yearLabel); ctx.frame.insertBefore(bar, svg); ctx.frame.insertBefore(pageNote, svg);
+      select.value = saved.year; yearLabel.append(select); bar.append(yearLabel); ctx.frame.insertBefore(bar, svg);
     }
-    ctx.frame.append(explanation);
     const inspect = inspector(ctx, marks, label);
     const draw = () => {
       const visibleMonths = paged ? months.filter(month => month.startsWith(saved.year + '-')) : months;
       const pageFrom = paged && from < `${saved.year}-01-01` ? `${saved.year}-01-01` : from, pageTo = paged && to > `${saved.year}-12-31` ? `${saved.year}-12-31` : to;
-      pageNote.textContent = `Current: ${pageFrom} – ${pageTo} · Full range: ${from} – ${to}`;
+      pageNote.textContent = `${zone} · ${paged ? `Current: ${pageFrom} – ${pageTo} · Full range: ${from} – ${to}` : `${from} – ${to}`}`;
       svg.replaceChildren(); marks.clear(); ctx.frame.querySelector('.sc-tooltip').hidden = true;
       const columns = Math.max(1, Math.min(visibleMonths.length, 3, Math.floor((width - 24) / 250))), gap = 22, left = 12;
       const panelWidth = (width - left * 2 - gap * (columns - 1)) / columns, cell = Math.min(44, panelWidth / 7), rowHeights = [];
@@ -171,7 +171,6 @@
       });
       let total = 0; const rowOffsets = rowHeights.map(height => { const y = total; total += height; return y; });
       ctx.setHeight(Math.max(120, total + 8));
-      let absent = 0;
       blocks.forEach(({ month, monthStart, next, offset, firstWeek, row }, position) => {
         const x = left + position % columns * (panelWidth + gap) + (panelWidth - cell * 7) / 2, y = rowOffsets[row];
         axisText(ctx, x, y + 18, month, 'start');
@@ -186,10 +185,11 @@
           group.append(node('text', { x: cx + 6, y: cy + 14, class: `sc-axis${status === 'observed' ? ` sc-cell-value${opacity > .6 ? ' sc-cell-inverse' : ''}` : ''}`, stroke: 'none' }, number));
           if (status !== 'observed' || item.value === 0) group.append(node('text', { x: cx + cell / 2, y: cy + cell - 8, 'text-anchor': 'middle', class: 'sc-cell-value', stroke: 'none' }, status === 'closed' ? '×' : status === 'missing' ? '—' : '0'));
           if (item) addMark(ctx, marks, group, item.row, item.index, label(item.row));
-          else { absent++; group.append(node('title', {}, `${date} (${zone}) · no source row; status unknown`)); svg.append(group); }
+          else { group.append(node('title', {}, `${date} (${zone}) · no source row; status unknown`)); svg.append(group); }
         }
       });
-      explanation.textContent = `${zone} · 0 = observed zero · × = explicitly closed · — = missing. ${absent ? `${absent} dates have no source row; closure is not inferred.` : ''}`;
+      explanation.textContent = `${language('0: zero · ×: closed · —: missing', '0：零 · ×：关闭 · —：缺失')}${spec.unit ? ` · ${spec.unit}` : ''}`;
+      ctx.note(`${zone} · 0 = observed zero · × = explicitly closed · — = missing. ${(end - start) / 86400000 + 1 - observations.length} dates in the full range have no source row; closure is not inferred.`, 'help');
       const indices = observations.filter(item => item.date >= pageFrom && item.date <= pageTo).map(item => item.index); inspect(indices); publishFilter(ctx, indices);
     };
     if (select) listen(ctx, select, 'change', () => { if (years.includes(select.value)) { saved.year = select.value; draw(); } });
@@ -242,8 +242,8 @@
     });
     let saved = views.get(ctx.target); if (saved?.spec !== spec || saved.kind !== 'parallel') { saved = { spec, kind: 'parallel', ranges: dimensions.map(() => ['', '']), missing: true }; views.set(ctx.target, saved); }
     rememberView(ctx, saved);
-    const bar = controls(ctx), inputs = [], message = ctx.html('p', 'sc-missing-note'), missingLabel = ctx.html('label', null, 'Include rows with missing dimensions');
-    message.setAttribute('role', 'status'); ctx.frame.append(message);
+    const bar = controls(ctx), inputs = [], message = ctx.note('', 'context'), missingLabel = ctx.html('label', null, 'Include rows with missing dimensions');
+    message.setAttribute('role', 'status');
     dimensions.forEach((dimension, index) => {
       const label = ctx.html('label', null, dimension.label || dimension.key); label.style.flexWrap = 'wrap';
       const range = ctx.html('span', 'report-source', `${String(domains[index][0])} – ${String(domains[index][1])}${dimension.unit ? ` ${dimension.unit}` : ''}`);
@@ -259,15 +259,19 @@
       const ranges = inputs.map(pair => pair.map(input => input.value === '' ? null : Number(input.value)));
       const invalid = inputs.some((pair, index) => pair.some(input => input.validity.badInput || input.value !== '' && !Number.isFinite(Number(input.value))) || ranges[index][0] !== null && ranges[index][1] !== null && ranges[index][0] > ranges[index][1]);
       inputs.flat().forEach(input => input.setAttribute('aria-invalid', String(invalid)));
-      if (invalid) { message.textContent = 'Enter finite bounds with minimum ≤ maximum; the last valid filter remains active.'; return; }
+      if (invalid) { message.hidden = false; message.textContent = language('Invalid bounds; last valid filter active', '范围无效，保留上次筛选'); return; }
       saved.ranges = inputs.map(pair => pair.map(input => input.value)); saved.missing = includeMissing.checked;
       const indices = values.flatMap((row, index) => row.every((value, dimension) => value === null ? saved.missing : (ranges[dimension][0] === null || value >= ranges[dimension][0]) && (ranges[dimension][1] === null || value <= ranges[dimension][1])) ? [index] : []);
       const selected = new Set(indices); marks.forEach((mark, index) => { mark.style.display = selected.has(index) ? '' : 'none'; mark.setAttribute('tabindex', selected.has(index) ? '0' : '-1'); });
-      inspect(indices); message.textContent = `${indices.length} / ${rows.length} source rows match. Missing values remain missing.`; publishFilter(ctx, indices);
+      inspect(indices); message.hidden = includeMissing.checked && ranges.every(pair => pair.every(value => value === null));
+      message.textContent = `${language('Matched', '匹配')}：${indices.length} / ${rows.length}`; publishFilter(ctx, indices);
     };
     inputs.flat().forEach(input => listen(ctx, input, 'input', apply)); listen(ctx, includeMissing, 'change', apply);
     listen(ctx, reset, 'click', () => { inputs.flat().forEach(input => { input.value = ''; }); includeMissing.checked = true; apply(); }); apply();
-    ctx.note('Each axis has its own stated scale. Lines compare source dimensions; no weights, composite score, or ranking are calculated. Missing dimensions break the line.');
+    ctx.note(language('Gaps: missing', '断线：缺失'), 'legend');
+    ctx.note('Each axis has its own stated scale. Missing dimensions break the line.', 'help');
+    ctx.note('Lines compare source dimensions; no weights, composite score, or ranking are calculated.', 'help');
+    ctx.note('Enter finite bounds with minimum ≤ maximum; invalid edits keep the last valid filter. Missing values remain missing.', 'help');
   }
 
   function bump(ctx) {
@@ -341,6 +345,7 @@
     let saved = views.get(ctx.target); if (saved?.spec !== spec || saved.kind !== 'bump') { saved = { spec, kind: 'bump', active: new Set(universe) }; views.set(ctx.target, saved); }
     rememberView(ctx, saved);
     const bar = controls(ctx), active = saved.active, inspect = inspector(ctx, marks, (_row, index) => label(observations[index]));
+    bar.setAttribute('data-report-text', 'legend');
     const apply = () => {
       paths.forEach((path, item) => { path.style.display = active.has(item) ? '' : 'none'; });
       marks.forEach((mark, index) => { const show = active.has(observations[index].item); mark.style.display = show ? '' : 'none'; mark.setAttribute('tabindex', show ? '0' : '-1'); });
@@ -354,7 +359,11 @@
       });
     }); apply();
     const omitted = universe.length * periods.length - rows.length;
-    ctx.note(`${zone} · fixed universe: ${universe.length} items · tie rule: ${spec.ties}. Ranks are supplied by the source and never recalculated when filtering. Equal-rank dots are offset sideways only for selection. Gaps indicate missing ranks${omitted ? `; ${omitted} item/period cells have no source row` : ''}.`);
+    ctx.note(`${zone}${omitted ? ` · ${language('Missing', '缺失')}：${omitted}` : ''}`, 'context');
+    ctx.note(`${zone} · fixed universe: ${universe.length} items · tie rule: ${spec.ties}.${omitted ? ` ${omitted} item/period cells have no source row.` : ''}`, 'method');
+    ctx.note(language('Gaps: missing', '断线：缺失'), 'legend');
+    ctx.note('Gaps indicate missing ranks.', 'help');
+    ctx.note('Ranks are supplied by the source and never recalculated when filtering. Equal-rank dots are offset sideways only for selection.', 'help');
   }
 
   function lifecycle(ctx) {
@@ -406,10 +415,9 @@
     inspector(ctx, marks, (_row, index) => label(observations[index]), (_row, index) => observations[index].links);
     if (!spec.inspector) evidencePanel(ctx, observations);
     const unsupported = observations.filter(item => !item.links.length).length;
-    ctx.note(language(
-      `${zone} · recorded events only; spacing represents recorded time, not duration or causality. Select a source row to inspect its supplied evidence/report links.${unsupported ? ` ${unsupported} events have no attached evidence link.` : ''}`,
-      `${zone} · 只显示已记录事件；间距表示记录时间，不表示持续时长或因果关系。选择事件可查看附带的依据或报告链接。${unsupported ? ` ${unsupported} 个事件未附带依据链接。` : ''}`
-    ));
+    ctx.note(language(`Event time · ${zone}`, `事件时间 · ${zone}`), 'context');
+    ctx.note(language(`${zone} · recorded events only; spacing represents recorded time, not duration or causality.${unsupported ? ` ${unsupported} events have no attached evidence link.` : ''}`, `${zone} · 只显示已记录事件；间距表示记录时间，不表示持续时长或因果关系。${unsupported ? ` ${unsupported} 个事件未附带依据链接。` : ''}`), 'method');
+    ctx.note(language('Select a source row to inspect its supplied evidence/report links.', '选择事件可查看附带的依据或报告链接。'), 'help');
   }
   for (const [kind, renderer] of Object.entries({ calendar, parallel, bump, lifecycle })) global.SesameCharts.register(kind, renderer);
 })(window);

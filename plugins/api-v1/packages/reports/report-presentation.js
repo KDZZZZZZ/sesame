@@ -1,5 +1,6 @@
 // Declarative projections of supplied results. No scoring, valuation or
 // probability calculation belongs in this layer.
+import { renderText } from './report-text.js';
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const finite = value => typeof value === 'number' && Number.isFinite(value);
 const text = value => typeof value === 'string' && value.trim().length > 0 && value.length <= 200;
@@ -43,12 +44,19 @@ export function presentValue(field, value, { escape, valueHTML, locale, tr }) {
   const validScalar = value => finite(value) || typeof value === 'string' && value.trim().length > 0;
   const inside = value => finite(value) && value >= p.min && value <= p.max;
   const position = (value, min, max) => ((value - min) / (max - min) * 100).toFixed(4);
-  const metadata = source => `<div class="module-meta">${(p.meta ?? []).flatMap(key => {
-    const entry = own(source,key);
-    return entry === undefined || entry === null || typeof entry === 'object' ? [] : [`<span><span>${escape(key)}</span> ${format(entry)}</span>`];
-  }).join('')}</div>`;
-  const caption = source => validScalar(own(source,p.caption)) ? `<p class="module-visual-caption">${format(own(source,p.caption))}</p>` : '';
-  const details = `<details class="module-value-details"><summary>${tr('数据与口径', 'Data and definitions')}</summary><p class="module-field-definition">${escape(field.meaning)}</p>${valueHTML(value)}</details>`;
+  const context = (source, against = []) => {
+    const captionValue = own(source, p.caption);
+    const caption = validScalar(captionValue) ? renderText(finite(captionValue) ? number(captionValue) : captionValue, { role: 'context', against }) : '';
+    // Property labels carry meaning too: equal values under different labels
+    // are not duplicates. Only a repeated mapping of the caption is omitted.
+    const metadata = [...new Set(p.meta ?? [])].flatMap(key => {
+      const entry = own(source, key);
+      if (entry === undefined || entry === null || typeof entry === 'object' || key === p.caption && validScalar(captionValue)) return [];
+      return [`<p><span>${escape(key)}</span> ${renderText(finite(entry) ? number(entry) : entry, { role: 'context', tag: 'span' })}</p>`];
+    }).join('');
+    return caption || metadata ? `<div class="module-visual-context" data-report-text="context">${caption}${metadata}</div>` : '';
+  };
+  const details = `<details class="module-value-details"><summary>${tr('数据与口径', 'Data and definitions')}</summary>${renderText(field.meaning, { role: 'evidence', className: 'module-field-definition' })}${valueHTML(value)}</details>`;
   let body;
   if (p.kind === 'judgments') {
     const prose = entry => typeof entry === 'string' && entry.trim().length > 0;
@@ -63,28 +71,29 @@ export function presentValue(field, value, { escape, valueHTML, locale, tr }) {
     )) return null;
     const support = [['basis', tr('依据', 'Basis')], ['condition', tr('改判条件', 'Change conditions')], ['history', tr('历史参照', 'Historical reference')]];
     body = `<div class="module-judgments" role="list">${value.map(item => {
-      const context = [p.label, p.subject, p.horizon].filter(key => prose(own(item,key)));
+      const contextKeys = [p.label, p.subject, p.horizon].filter(key => prose(own(item,key)));
       const reasons = support.filter(([key]) => prose(own(item,p[key])));
-      return `<div class="module-judgment" role="listitem"><p class="module-judgment-context">${context.map(key => `<span>${escape(own(item,key))}</span>`).join('')}</p><p class="module-judgment-value"><strong>${escape(own(item,p.value))}</strong></p>${reasons.length ? `<dl class="module-judgment-support">${reasons.map(([key,label]) => `<div><dt>${escape(label)}</dt><dd>${escape(own(item,p[key]))}</dd></div>`).join('')}</dl>` : ''}${caption(item)}${p.meta?.length ? metadata(item) : ''}</div>`;
+      const shown = [...contextKeys, p.value, ...reasons.map(([key]) => p[key])].map(key => own(item, key));
+      return `<div class="module-judgment" role="listitem"><p class="module-judgment-context" data-report-text="context">${contextKeys.map(key => `<span>${escape(own(item,key))}</span>`).join('')}</p><p class="module-judgment-value" data-report-text="body"><strong>${escape(own(item,p.value))}</strong></p>${reasons.length ? `<dl class="module-judgment-support" data-report-text="context">${reasons.map(([key,label]) => `<div><dt>${escape(label)}</dt><dd>${escape(own(item,p[key]))}</dd></div>`).join('')}</dl>` : ''}${context(item, shown)}</div>`;
     }).join('')}</div>`;
   } else if (p.kind === 'scores') {
     if (!Array.isArray(value) || !value.length || value.length > 24 || !value.every(item => validScalar(own(item,p.label)) && inside(own(item,p.value)))) return null;
     body = `<div class="module-scores">${value.map(item => {
       const score = own(item,p.value), label = own(item,p.label);
-      return `<div class="module-score"><div class="module-score-heading"><span>${format(label)}</span><strong>${withUnit(score)}</strong></div><div class="module-meter" role="meter" aria-label="${escape(label)}" aria-valuemin="${p.min}" aria-valuemax="${p.max}" aria-valuenow="${score}"><span style="width:${position(score,p.min,p.max)}%"></span></div>${caption(item)}</div>`;
-    }).join('')}</div><p class="module-scale-note">${tr('原始尺度', 'Source scale')} ${format(p.min)}–${format(p.max)}${p.unit ? ` ${escape(p.unit)}` : ''}</p>`;
+      return `<div class="module-score"><div class="module-score-heading"><span>${format(label)}</span><strong>${withUnit(score)}</strong></div><div class="module-meter" role="meter" aria-label="${escape(label)}" aria-valuemin="${p.min}" aria-valuemax="${p.max}" aria-valuenow="${score}"><span style="width:${position(score,p.min,p.max)}%"></span></div>${context(item, [label])}</div>`;
+    }).join('')}</div>${renderText(`${tr('原始尺度', 'Source scale')} ${number(p.min)}–${number(p.max)}${p.unit ? ` ${p.unit}` : ''}`, { role: 'context' })}`;
   } else if (p.kind === 'range') {
     const lower = own(value,p.lower), upper = own(value,p.upper), marker = own(value,p.reference ?? p.value);
     // Do not clip an out-of-range observation, invent a midpoint or parse a
     // number from arbitrary text. The full fact layout is the honest fallback.
     if (!finite(lower) || !finite(upper) || lower >= upper || marker !== undefined && (!finite(marker) || marker < lower || marker > upper)) return null;
     const label = p.reference ?? p.value;
-    body = `${marker === undefined ? '' : `<div class="module-range-current"><span>${escape(label)}</span><strong>${withUnit(marker)}</strong></div>`}<div class="module-range-graphic" role="img" aria-label="${escape(`${field.label}: ${lower}–${upper} ${p.unit ?? ''}${marker === undefined ? '' : `; ${label} ${marker}`}`)}"><div class="module-range-track">${marker === undefined ? '' : `<span class="module-range-marker" style="left:${position(marker,lower,upper)}%"></span>`}</div></div><div class="module-range-ends"><span><small>${escape(p.lower)}</small><strong>${withUnit(lower)}</strong></span><span><small>${escape(p.upper)}</small><strong>${withUnit(upper)}</strong></span></div>${caption(value)}${metadata(value)}`;
+    body = `${marker === undefined ? '' : `<div class="module-range-current"><span>${escape(label)}</span><strong>${withUnit(marker)}</strong></div>`}<div class="module-range-graphic" role="img" aria-label="${escape(`${field.label}: ${lower}–${upper} ${p.unit ?? ''}${marker === undefined ? '' : `; ${label} ${marker}`}`)}"><div class="module-range-track">${marker === undefined ? '' : `<span class="module-range-marker" style="left:${position(marker,lower,upper)}%"></span>`}</div></div><div class="module-range-ends"><span><small>${escape(p.lower)}</small><strong>${withUnit(lower)}</strong></span><span><small>${escape(p.upper)}</small><strong>${withUnit(upper)}</strong></span></div>${context(value)}`;
   } else {
     const main = scalar ? value : own(value,p.value);
     if (!validScalar(main)) return null;
-    const scale = p.min === undefined || !inside(main) ? '' : `<div class="module-meter" role="meter" aria-label="${escape(field.label)}" aria-valuemin="${p.min}" aria-valuemax="${p.max}" aria-valuenow="${main}"><span style="width:${position(main,p.min,p.max)}%"></span></div><p class="module-scale-note">${format(p.min)}–${format(p.max)}</p>`;
-    body = `<p class="module-metric-value">${withUnit(main)}</p>${scale}${caption(value)}${metadata(value)}`;
+    const scale = p.min === undefined || !inside(main) ? '' : `<div class="module-meter" role="meter" aria-label="${escape(field.label)}" aria-valuemin="${p.min}" aria-valuemax="${p.max}" aria-valuenow="${main}"><span style="width:${position(main,p.min,p.max)}%"></span></div>${renderText(`${number(p.min)}–${number(p.max)}`, { role: 'context' })}`;
+    body = `<p class="module-metric-value">${withUnit(main)}</p>${scale}${context(value)}`;
   }
   return { kind: p.kind, html: `${body}${details}` };
 }

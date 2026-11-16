@@ -186,6 +186,7 @@ test('Unix candle times display as UTC dates while source seconds and selection 
     for (const content of contents) await page.addScriptTag({ content });
     await page.evaluate(() => {
       const library = LightweightCharts;
+      window.report = { track(promise) { window.numericReady = promise; return promise; } };
       window.LightweightCharts = { ...library, createChart(...args) {
         const chart = library.createChart(...args), add = chart.addSeries.bind(chart);
         chart.addSeries = (...args) => { window.numericSeries = add(...args); return numericSeries; };
@@ -198,8 +199,11 @@ test('Unix candle times display as UTC dates while source seconds and selection 
       SesameCharts.chart('#plot', { kind: 'candlestick', rows, digits: 2,
         onSelect(row, index) { numericSelections.push({ row, index, original: row === numericRows[index] }); } });
     }, fixture);
+    // Wait for the runtime's tracked canvas layout before reading coordinates.
+    await page.evaluate(() => numericReady);
     await page.waitForFunction(() => numericChart.timeScale().timeToCoordinate(numericRows[0].time) !== null);
     assert.match(await page.locator('.sc-market-values').innerText(), /^2026-11-01 06:00 UTC.*开 100\.12.*收 101\.23/);
+    assert.equal(await page.locator('.sc-market-values').getAttribute('data-report-text'), 'context');
     assert.deepEqual(await page.evaluate(() => numericRows.map(row => ({
       time: numericChart.options().localization.timeFormatter(row.time),
       tick: numericChart.options().timeScale.tickMarkFormatter(row.time),

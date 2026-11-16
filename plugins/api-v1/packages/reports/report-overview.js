@@ -1,4 +1,5 @@
 // A compact result surface. It never derives an opinion, score or probability.
+import { renderText } from './report-text.js';
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const check = (ok, message) => { if (!ok) throw new Error(message); };
 const keys = (value, allowed, path) => check(object(value) && Object.keys(value).every(key => allowed.includes(key)), `${path}: Unsupported overview property`);
@@ -26,7 +27,7 @@ export function renderOverview(value, renderBlock, locale = 'zh-CN', hasBody = t
     short(item.value, limit[format], 'value', `${itemPath}/value`);
     if (item.note !== undefined) short(item.note, zh ? 32 : 120, 'note', `${itemPath}/note`);
     check(item.tone === undefined || ['positive','negative','neutral'].includes(item.tone), `${itemPath}/tone: Overview tone must describe an actual signed financial value`);
-    return `<div class="report-overview-fact" data-format="${format}"${item.tone ? ` data-tone="${item.tone}"` : ''}><dt>${escape(item.label)}</dt><dd>${escape(item.value)}</dd>${item.note ? `<small>${escape(item.note)}</small>` : ''}</div>`;
+    return `<div class="report-overview-fact" data-format="${format}"${item.tone ? ` data-tone="${item.tone}"` : ''}><dt>${escape(item.label)}</dt><dd>${escape(item.value)}</dd>${renderText(item.note, { role: 'context', against: [item.value] })}</div>`;
   }).join('');
   let table = '', chart = '';
   if (value.table !== undefined) {
@@ -47,8 +48,8 @@ export function renderOverview(value, renderBlock, locale = 'zh-CN', hasBody = t
     check(object(value.chart) && value.chart.type === 'chart', `${path}/chart: Overview chart must use the built-in chart content`);
     const height = value.chart.options?.height ?? 200;
     check(Number.isInteger(height) && height >= 180 && height <= 280, `${path}/chart/options/height: Overview chart height must be 180–280`);
-    chart = renderBlock({ ...value.chart, options: { ...value.chart.options, height } }, 0, `${path}/chart`);
+    chart = renderBlock({ ...value.chart, options: { ...value.chart.options, height } }, 0, `${path}/chart`, { titles: [], body: [value.conclusion, value.meta] });
   }
   const more = hasBody ? `<a class="report-overview-more" href="#content-section-1">${zh ? '详细分析 ↓' : 'Full analysis ↓'}</a>` : '';
-  return `<section class="report-overview" aria-label="${zh ? '主要判断' : 'Key results'}">${value.meta ? `<p class="report-overview-meta">${escape(value.meta)}</p>` : ''}<p class="report-overview-conclusion">${escape(value.conclusion)}</p>${facts ? `<dl class="report-overview-facts">${facts}</dl>` : ''}${table}${chart}${more}</section>`;
+  return `<section class="report-overview" aria-label="${zh ? '主要判断' : 'Key results'}">${renderText(value.meta, { role: 'context', className: 'report-overview-meta', against: [value.conclusion] })}${renderText(value.conclusion, { role: 'body', className: 'report-overview-conclusion' })}${facts ? `<dl class="report-overview-facts">${facts}</dl>` : ''}${table}${chart}${more}</section>`;
 }

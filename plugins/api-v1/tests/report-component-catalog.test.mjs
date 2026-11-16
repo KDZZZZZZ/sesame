@@ -7,6 +7,7 @@ import { pathToFileURL } from 'node:url';
 import { COMPONENT_PROTOCOL, documentSchema, getComponentSchema, getChartSchema, getBlockSchema, listComponents, describeComponents } from '../packages/reports/component-catalog.js';
 import { renderStructuredReport } from '../packages/reports/report-content.js';
 import { chartDefinition, chartValue, kitKinds } from '../packages/reports/report-chart-fields.js';
+import { normalizeComponentContent } from '../packages/reports/component-input.js';
 
 const host = process.env.SESAME_HOST_ROOT;
 const manifest = JSON.parse(await readFile(new URL('../packages/reports/capabilities.json', import.meta.url), 'utf8'));
@@ -20,7 +21,7 @@ const asDocument = item => item.id === 'document.overview'
   : { kind: 'document', sections: [{ title: item.label, blocks: [item.example] }] };
 const args = item => ({ title: '组件目录演示', locale: 'zh-CN', provenance_kind: 'demo', data: [], ...item.exampleContext, content: asDocument(item) });
 
-test('catalog exposes exactly the public document components and no internal projections', () => {
+test('catalog exposes exactly the public document components and no internal projections', async () => {
   assert.equal(COMPONENT_PROTOCOL, 'sesame-components/1');
   assert.equal(all.schemaVersion, 1);
   assert.equal(all.total, 56);
@@ -40,8 +41,13 @@ test('catalog exposes exactly the public document components and no internal pro
     assert.equal(Object.hasOwn(item, 'inputSchema'), false, 'list stays a compact index');
     assert.equal(Object.hasOwn(item, 'example'), false);
   }
+  for (const item of details) assert.equal(item.exampleContext.provenance_kind, 'demo', item.id);
   for (const item of details.filter(item => item.id.startsWith('chart.'))) {
-    const example = item.example;
+    const example = (await normalizeComponentContent({}, asDocument(item))).sections[0].blocks[0];
+    for (const field of ['title', 'columns', 'takeaway', 'source_note']) {
+      assert.equal(Object.hasOwn(item.example, field), false, `${item.id} keeps ${field} optional`);
+      assert.equal(item.inputSchema.required.includes(field), false, `${item.id} schema keeps ${field} optional`);
+    }
     const definition = { kind: example.kind, columns: example.columns, options: example.options, data_requirements: 'Supplied demo records' };
     chartDefinition(definition);
     chartValue({ rows: example.rows, takeaway: example.takeaway, source_note: example.source_note, ...(example.nodes ? { nodes: example.nodes } : {}) }, definition);

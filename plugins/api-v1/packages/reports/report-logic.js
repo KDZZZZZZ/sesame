@@ -1,9 +1,10 @@
 // A presentation of supplied steps and dependencies, never a trading-rule generator.
+import { renderText, isDuplicateText } from './report-text.js';
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const object = value => value && typeof value === 'object' && !Array.isArray(value);
 const check = (ok, message) => { if (!ok) throw Error(`Report logic: ${message}`); };
 const text = value => typeof value === 'string' && value.trim() && value.length <= 2000;
-export function renderLogicDiagram(logic) {
+export function renderLogicDiagram(logic, context = { titles: [] }) {
   check(object(logic) && Object.keys(logic).every(k => ['type', 'title', 'note', 'nodes', 'edges'].includes(k)), 'supply a title, nodes and edges');
   check(logic.type === undefined || logic.type === 'logic', 'unknown content type');
   check(text(logic.title), 'title is required');
@@ -42,7 +43,7 @@ export function renderLogicDiagram(logic) {
     inputs: logic.edges.filter(edge => edge.to === node.id).map(edge => ({ from: edge.from, ...(edge.label ? { label: edge.label } : {}) })),
   })) };
   const payload = JSON.stringify({ graph, source }).replace(/[<>&\u2028\u2029]/g, c => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`);
-  return `<section data-report-svl><h3>${escape(logic.title)}</h3>${logic.note ? `<p class="report-source">${escape(logic.note)}</p>` : ''}<script type="application/json">${payload}</script></section>`;
+  return `<section data-report-svl>${isDuplicateText(logic.title,context.titles) ? '' : `<h3>${escape(logic.title)}</h3>`}${renderText(logic.note,{against:[logic.title]})}<script type="application/json">${payload}</script></section>`;
 }
 
 // Project an evaluator's actual expression into dependencies. Unknown operators

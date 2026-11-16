@@ -88,7 +88,7 @@ test('judgments map supplied prose without inferring scores, colors, probabiliti
   const body = judgmentBody(html);
   assert.ok(body);
   assert.equal((body.match(/class="module-judgment" role="listitem"/g) ?? []).length, 2);
-  assert.deepEqual([...body.matchAll(/class="module-judgment-value"><strong>(.*?)<\/strong>/g)].map(match => match[1]), judgmentExample.value.map(row => row.判断));
+  assert.deepEqual([...body.matchAll(/class="module-judgment-value" data-report-text="body"><strong>(.*?)<\/strong>/g)].map(match => match[1]), judgmentExample.value.map(row => row.判断));
   for (const text of ['虚构候选甲与乙', '本次研究范围', '乙补齐材料后重新比较。', '不适用：此项是材料完备性判断，不是价格预测。', '示例快照']) assert.ok(body.includes(text));
   assert.doesNotMatch(body, /role="meter"|aria-valuenow|module-meter|style=|50%|0\.5|undefined/);
   assert.equal(JSON.stringify(judgmentExample.value), before, 'Rendering leaves every supplied record unchanged');
@@ -106,7 +106,7 @@ test('judgment mappings read direct user-named properties and preserve every unm
   const html = render(field, value, 'en-US'), body = judgmentBody(html);
   assert.match(body, /<strong>Review the schedule first\.<\/strong>/);
   assert.doesNotMatch(body, /Nested data|9007199254740993/);
-  assert.match(body, /Historical reference/); assert.match(body, /checked<\/span> false/); assert.match(body, /count<\/span> 0/);
+  assert.match(body, /Historical reference/); assert.match(body, /checked<\/span> <span data-report-text="context">false/); assert.match(body, /count<\/span> <span data-report-text="context">0/);
   const details = html.match(/<details class="module-value-details">([\s\S]*?)<\/details>/)[1];
   for (const text of ['Nested data is not the mapped judgment.', '9007199254740993.0000000001', '&lt;original&gt;', '>—<']) assert.ok(details.includes(text));
   const unmapped = render({ type: 'array', presentation: { kind: 'judgments', label: '问题', value: '判断' } }, [{ 问题: '问题一', 判断: '保留当前结论。', 对象: '未映射对象' }]);

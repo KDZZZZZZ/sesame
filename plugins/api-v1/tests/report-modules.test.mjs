@@ -148,7 +148,7 @@ test('reading path omits internal validation badges while preserving evidence an
   assert.deepEqual(bound.evidence_refs, [ref('history')]);
   assertCompositionBindings(html, [], [ref('history')], 'derived');
   const withNote = render({ ...row, validation: { ...row.validation, note: '这里只比较已有记录，不能当成今天的概率。' } });
-  assert.match(withNote, /<p class="module-validation">这里只比较已有记录，不能当成今天的概率。<\/p>/);
+  assert.match(withNote, /<p data-report-text="context">这里只比较已有记录，不能当成今天的概率。<\/p>/);
   assert.doesNotMatch(withNote, /历史样本统计/);
   assert.deepEqual(row.validation, { status: 'historical_exploration', history_refs: [ref('history')] }, 'Presentation must not alter supplied evidence');
 });
@@ -160,8 +160,8 @@ test('composition reads fixed outputs, preserves precision and user structure, a
   assert.equal(result.completeness.provided, 3);
   assert.equal(result.renderStatus, 'not_checked'); assert.equal(result.researchValidation, 'not_evaluated');
   assert.match(html, /100\.00–101\.00/); assert.match(html, /data-sesame-report-template="report\/1"/);
-  assert.match(html, /演示样本/); assert.doesNotMatch(html, /<h2>新闻|<h3>结果概率/);
-  assert.ok(html.indexOf('<h3>条件情景') < html.indexOf('<h3>关键位置'));
+  assert.match(html, /演示样本/); assert.doesNotMatch(html, /<h2\b[^>]*>新闻|<h3\b[^>]*>结果概率/);
+  assert.ok(html.indexOf('<h3 data-report-text="title">条件情景') < html.indexOf('<h3 data-report-text="title">关键位置'));
   assert.deepEqual(result.publish.data[0].ref, ref()); assert.equal(result.publish.provenance_kind, 'demo');
   assert.ok(reads.every(read => read.ref.id === 'results'));
   assertCompositionBindings(html, result.publish.data, result.publish.references, 'demo');

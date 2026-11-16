@@ -21,7 +21,7 @@ test('all selected kinds reach the production document and preview interfaces', 
   for (const chart of fixture.charts) assert.ok(publicKinds.includes(chart.spec.kind), `${chart.spec.kind} must pass the public schema`);
   const html = await renderStructuredReport({}, report);
   assert.match(html, /function rankRace/);
-  assert.match(html, /data-report-evidence/);
+  assert.doesNotMatch(html, /<details[^>]+data-report-evidence|data-report-evidence-appendix/);
   const config = JSON.parse(html.match(/<script id="sesame-module-charts" type="application\/json">([\s\S]*?)<\/script>/)[1]);
   assert.deepEqual(config.map(c => c.kind), fixture.charts.map(c => c.spec.kind));
   assert.deepEqual(config.map(c => c.rows), fixture.charts.map(c => c.spec.rows));

@@ -74,3 +74,12 @@ html[data-report-layout="unified"] .report-metric[data-tone="neutral"] dd{color:
 
 .sc-ledger-events{display:flex;flex-wrap:wrap;gap:8px 20px;margin:12px 0;color:var(--report-muted);font-family:var(--report-sans);font-size:12px;line-height:18px}
 .sc-ledger-events strong{color:var(--report-ink);font-weight:500;font-variant-numeric:tabular-nums}
+
+/* A text role owns its position and type scale across reports and answers.
+   Context contains information needed to read the result, never a tiny footer. */
+.report [data-report-text]:is([data-report-text="body"],[data-report-text="context"]){font-family:var(--report-sans);font-size:var(--report-body-size,15px);font-weight:400;line-height:1.7;color:var(--report-ink);margin:10px 0;overflow-wrap:anywhere}
+.report [data-report-text="legend"],.report [data-report-text="evidence"]{font-family:var(--report-sans);font-size:max(13px,calc(var(--report-body-size,15px) - 1px));line-height:1.6;color:var(--report-muted);overflow-wrap:anywhere}
+.report-metric>[data-report-text="context"],.report-overview-fact>[data-report-text="context"]{display:block;margin-top:8px}
+.report .sc-chart-reading{display:flex;flex-wrap:wrap;gap:6px 18px;margin:10px 0}
+.report .sc-chart-reading>[data-report-text]{margin:0}
+.report .kit-chart-head:empty{display:none}

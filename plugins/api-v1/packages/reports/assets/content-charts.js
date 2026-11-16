@@ -6,12 +6,12 @@
     for (const chart of charts) {
       const rows = chart.rows ?? await reportKit.rows(chart.dataId, { maxRows: 2500 });
       const extra = Object.fromEntries(await Promise.all((chart.chartData??[]).map(async item=>[item.property,await reportKit.rows(item.data_id,{maxRows:2500})])));
-      const spec = { ...chart.options, kind: chart.kind, title: chart.title, caption: chart.caption };
+      const spec = { ...chart.options, kind: chart.kind, title: chart.title };
       const target = document.getElementById(chart.id);
       if (kit.has(chart.kind)) {
         const figure = reportKit.chart(target, { ...spec, data: rows });
-        // The document owns the visible caption. Keep title/caption in the
-        // built-in model so its SVG remains named, including after resize.
+        // The document owns visible prose. Keep the title in the built-in
+        // model so its SVG remains named, including after resize.
         figure.querySelector(':scope > figcaption')?.remove();
       }
       else SesameCharts.chart(target, { ...spec, rows, ...(chart.nodes ? { nodes: chart.nodes } : {}), ...extra });

@@ -9,6 +9,7 @@
     return node;
   };
   const tr = (zh, en) => document.documentElement.lang.startsWith('zh') ? zh : en;
+  const reading = (text, role = 'context') => { const node = el('p', text); node.dataset.reportText = role; return node; };
   const exact = value => value == null ? '—' : typeof value === 'object' ? JSON.stringify(value) : String(value);
   const numericParameter = value => (typeof value === 'number' && Number.isFinite(value)) || (typeof value === 'string' && /^-?(?:0|[1-9]\d*)(?:\.\d+)?$/.test(value) && Number.isFinite(Number(value)));
   const numeric = value => value === null ? null : numericParameter(value) ? Number(value) : fail('Metrics must be finite numbers, exact decimal strings or null');
@@ -92,9 +93,8 @@
     const missing = (symbol, timeframe) => ({ symbol, timeframe, sharpe: null, max_drawdown_pct: null, net_profit: null });
     reportKit.render(target, {
       title: config.title, eyebrow: config.demo ? tr('Strategy · 演示样本', 'Strategy · DEMO SAMPLE') : 'Strategy',
-      verdict: { tone: 'neutral', headline: config.summary },
       sections: [
-        ...(config.graph ? [{ title: tr('策略逻辑', 'Strategy logic'), takeaway: tr('信号、条件与动作来自同一策略修订。', 'Signals, conditions and actions come from the same strategy revision.'), blocks: [{ type: 'custom', render: node => SesameSvlGraph.render(node, config.graph, config.definition) }] }] :
+        ...(config.graph ? [{ title: tr('策略逻辑', 'Strategy logic'), blocks: [{ type: 'custom', render: node => SesameSvlGraph.render(node, config.graph, config.definition) }] }] :
           config.strategyEvidence ? [{ title: tr('策略说明', 'Strategy description'), takeaway: config.strategyEvidence.summary, blocks: [{ type: 'custom', render: node => {
             if (config.strategyLogicHtml) { const logic = el('div'); logic.innerHTML = config.strategyLogicHtml; node.append(logic); SesameSvlGraph.mount(logic); }
             const evidence = el('details'); evidence.setAttribute('data-report-evidence', '');
@@ -112,7 +112,7 @@
       if (symbols.length > 20) controls.append(symbolPage.label);
       if (timeframes.length > 20) controls.append(timeframePage.label);
       container.append(controls);
-      const matrix = el('div', null, 'backtest-matrix'), legend = el('p', null, 'report-source'), detail = el('section', null, 'backtest-detail'); detail.tabIndex = -1; container.append(matrix, legend, detail);
+      const matrix = el('div', null, 'backtest-matrix'), legend = reading(null, 'legend'), detail = el('section', null, 'backtest-detail'); detail.tabIndex = -1; container.append(matrix, legend, detail);
       let redrawTrials = () => {};
       function select(row, focus = true) {
         const trials = groups.get(pair(row)) ?? [];
@@ -120,11 +120,16 @@
         reportKit.destroy(detail); SesameCharts.destroy(detail); detail.replaceChildren();
         detail.append(el('h3', `${row.symbol} · ${row.timeframe}`));
         if (!trials.length) { detail.append(el('p', tr('此组合没有回测记录。', 'No backtest was recorded for this combination.'))); return; }
-        detail.append(el('p', `${tr('全部参数组', 'All parameter sets')}: ${trials.length} · ${trials[0].sample}`, 'report-source'));
+        detail.append(reading(`${tr('全部参数组', 'All parameter sets')}: ${trials.length} · ${trials[0].sample}`));
         const parameter = selector(tr('分析参数', 'Parameter'), config.parameters.map(key => [key, parameterLabel(key)])), toolbar = el('div', null, 'backtest-controls');
         const trialGrid = el('section', null, 'backtest-trial-grid'); detail.append(trialGrid, toolbar); toolbar.append(parameter.label);
-        const plots = el('div', null, 'backtest-sensitivity'), plotPages = el('div'); detail.append(plots, plotPages);
-        detail.append(el('p', tr('每点保留完整参数组，其他参数也可能不同；不合并相同横坐标。', 'Each point retains its full parameter set; other parameters may differ. Equal x-coordinates are not averaged.'), 'report-source'));
+        const plots = el('div', null, 'backtest-sensitivity'), plotPages = el('div');
+        const multipleParameters = config.parameters.length > 1;
+        if (multipleParameters) detail.append(reading(tr('参数可能共同变化', 'Parameters may vary together')));
+        plots.setAttribute('role', 'group'); plots.setAttribute('aria-label', tr('参数与结果', 'Parameters and results'));
+        plots.setAttribute('aria-description', (multipleParameters ? tr('其他参数也可能变化。', 'Other parameters may vary. ') : '')
+          + tr('每点保留完整参数组；同一横坐标下的试验分别保留。', 'Each point retains its complete parameter set; every trial at the same x-coordinate is retained.'));
+        detail.append(plots, plotPages);
         const exactBox = el('details'), exactRow = el('pre', '', 'backtest-node'); exactBox.setAttribute('data-report-evidence', ''); exactBox.append(el('summary', tr('完整试验记录', 'Complete trial record')), exactRow);
         const inspect = trial => { exactRow.textContent = JSON.stringify(trial, null, 2); exactBox.open = true; window.SesameAppendix?.reveal(exactBox); };
         if (config.parameters.length === 2) {
@@ -138,12 +143,12 @@
             if (!ySeen.has(y)) { ySeen.add(y); yValues.push(y); }
           }
           trialGrid.append(el('h4', tr('全部参数试验', 'All parameter trials')));
-          if (duplicate) trialGrid.append(el('p', tr('参数对存在重复或显示值相同，无法一格对应一项试验；以下逐项散点与表格保留全部记录，不平均、不合并。', 'Parameter pairs are repeated or share display values. The scatter plots and table retain every trial separately; no averaging or merging.'), 'report-source'));
+          if (duplicate) trialGrid.append(reading(tr('参数对存在重复或显示值相同；散点与表格保留逐项记录。', 'Parameter pairs repeat or share display values; plots and the table retain each trial.')));
           else {
             const xPage = axisPage(xValues, `${parameterLabel(xKey)} · ${tr('范围', 'range')}`), yPage = axisPage(yValues, `${parameterLabel(yKey)} · ${tr('范围', 'range')}`), pages = el('div', null, 'backtest-controls');
             if (xValues.length > 20) pages.append(xPage.label);
             if (yValues.length > 20) pages.append(yPage.label);
-            const grid = el('div', null, 'sc-table-wrap'), note = el('p', tr('横轴与纵轴对应原始参数值；✓ 为原记录选中。颜色切换不重选，失败和未运行保留。', 'Axes retain original parameter values; ✓ marks the recorded selection. Color changes never reselect; failed and unrun trials remain.'), 'report-source');
+            const grid = el('div', null, 'sc-table-wrap'), note = reading(tr('✓ 已选 · 失败 / 未运行', '✓ Selected · Failed / Not run'), 'legend');
             trialGrid.append(pages, grid, note);
             redrawTrials = () => {
               const [metric, name, unit] = metrics.find(item => item[0] === color.input.value);
@@ -189,7 +194,7 @@
             const chart = el('div'); plots.append(chart);
             const rows = complete.slice(plotStart, plotEnd).map(row => ({ ...row, parameter_value: numericAxis ? row.parameters[key] : exact(row.parameters[key]) }));
             if (!rows.length) { chart.append(el('p', `${name}: ${tr('暂无成功回测。', 'No completed trial.')} `)); continue; }
-            reportKit.chart(chart, { kind: 'scatter', title: `${parameterLabel(key)} → ${name}`, caption: unit || name, data: rows, x: 'parameter_value', y: metric, tone: metric === 'net_profit' ? 'signed' : 'neutral', xType: numericAxis ? 'number' : 'category', unit, onSelect: row => inspect(trials.find(trial => trial.trial_id === row.trial_id)) });
+            reportKit.chart(chart, { kind: 'scatter', title: `${parameterLabel(key)} → ${name}`, ...(unit ? { caption: unit } : {}), data: rows, x: 'parameter_value', y: metric, tone: metric === 'net_profit' ? 'signed' : 'neutral', xType: numericAxis ? 'number' : 'category', unit, onSelect: row => inspect(trials.find(trial => trial.trial_id === row.trial_id)) });
           }
         }
         parameter.input.addEventListener('change', sensitivity);

@@ -46,6 +46,108 @@ const readonlyHost = () => {
   return { host, entries, reads, writes, put };
 };
 
+test('minimal calls derive stable invocation identity and preserve unadorned component content', async () => {
+  const calls = [], host = { context: { sessionId: 'session-a' }, capabilities: { invoke: async (id, request) => {
+    calls.push({ id, request }); return { type: 'result', value: { ref: fixed('minimal', 'report') } };
+  } } };
+  const component = { type: 'chart', kind: 'bar', rows: [{ item: 'A', count: 2 }, { item: 'B', count: 4 }], options: { x: 'item', y: 'count' } };
+  const input = { component, target: 'answer' }, before = structuredClone(input);
+  const validate = capability(host, 'components_validate'), show = capability(host, 'components_show');
+  assert.equal((await validate(input)).valid, true);
+  await show(input, undefined, { callId: 'call-1' });
+  await show(input, undefined, { context: { callId: 'call-1' } });
+  await show({ ...input, component: { ...component, rows: [{ item: 'A', count: 8 }] } }, undefined, { callId: 'call-1' });
+  await show(input, undefined, { callId: 'call-2' });
+  host.context.sessionId = 'session-b';
+  await show(input, undefined, { callId: 'call-1' });
+  assert.equal(calls[0].request.operationId, calls[1].request.operationId);
+  assert.equal(calls[0].request.operationId, calls[2].request.operationId, 'changed content must not silently create a new invocation identity');
+  assert.notEqual(calls[0].request.operationId, calls[3].request.operationId);
+  assert.notEqual(calls[0].request.operationId, calls[4].request.operationId);
+  assert.equal(calls[0].request.provenanceKind, 'derived');
+  assert.equal(typeof calls[0].request.title, 'string'); assert.ok(calls[0].request.title.length > 0);
+  const block = calls[0].request.input.content.sections[0].blocks[0];
+  assert.deepEqual(block, { ...component, columns: ['item', 'count'] });
+  assert.equal(calls[0].request.input.content.sections[0].title, '');
+  assert.deepEqual(input, before);
+  await assert.rejects(show(input), /operation_id.*callId|callId.*operation_id/);
+  await assert.rejects(show({ ...input, callId: 'caller-spoof' }), /callId|Unsupported/);
+  await show({ ...input, operation_id: 'explicit-stable', title: 'Supplied title', provenance_kind: 'user_input' });
+  assert.equal(calls.at(-1).request.operationId, 'explicit-stable');
+  assert.equal(calls.at(-1).request.title, 'Supplied title'); assert.equal(calls.at(-1).request.provenanceKind, 'user_input');
+  assert.equal(calls.length, 6);
+});
+
+test('single, grouped and full document inputs share inference and located mapping errors', async () => {
+  const validate = capability({}, 'components_validate');
+  const simple = { type: 'chart', kind: 'bar', rows: [{ item: 'A', count: 2 }], options: { x: 'item', y: 'count' } };
+  const forms = [
+    [block => ({ component: block }), '/component'],
+    [block => ({ components: [{ type: 'paragraph', text: 'Supplied context' }, block] }), '/components/1'],
+    [block => ({ content: document([block]) }), '/content/sections/0/blocks/0'],
+  ];
+  for (const [wrap, path] of forms) {
+    assert.equal((await validate(wrap(simple))).valid, true);
+    const missing = await validate(wrap({ ...simple, options: { y: 'count' } }));
+    assert.equal(missing.valid, false); assert.equal(missing.diagnostics[0].path, `${path}/options/x`);
+    for (const source_note of ['', '   ', 42]) {
+      const invalid = await validate(wrap({ ...simple, source_note }));
+      assert.equal(invalid.valid, false); assert.ok(invalid.diagnostics[0].path.startsWith(path));
+    }
+  }
+});
+
+test('submitted prose defaults to derived and demo references cannot be relabelled', async () => {
+  const fixture = readonlyHost(), calls = [], source = fixed('demo-reference', 'resource');
+  fixture.put(source, { evidence: 'Synthetic source' });
+  fixture.host.capabilities.invoke = async (_id, request) => { calls.push(request); return { type: 'result', value: { ref: fixed('prose', 'report') } }; };
+  const input = { operation_id: 'supplied-prose', component: { type: 'paragraph', text: 'Submitted explanation' } };
+  await capability(fixture.host, 'components_show')(input);
+  assert.equal(calls[0].provenanceKind, 'derived');
+  await capability(fixture.host, 'components_show')({ ...input, references: [source] });
+  assert.equal(calls[1].provenanceKind, 'demo');
+  await assert.rejects(capability(fixture.host, 'components_show')({ ...input, references: [source], provenance_kind: 'user_input' }), /demo/);
+  assert.equal(calls.length, 2); assert.deepEqual(fixture.writes, []);
+});
+
+test('minimal fixed data inherits provenance and title without weakening mapped-row checks', async () => {
+  const fixture = readonlyHost(), ref = fixed('minimal-counts'), calls = [];
+  fixture.put(ref, [{ item: 'A', count: 2 }, { item: 'B', count: 4 }]);
+  fixture.entries.get(ref.id).manifest.content.columns = ['item', 'count'];
+  fixture.entries.get(ref.id).manifest.content.provenance.title = 'Recorded counts';
+  fixture.host.capabilities.invoke = async (id, request) => { calls.push(request); return { type: 'result', value: { ref: fixed('inherited', 'report') } }; };
+  const input = { operation_id: 'inherit', target: 'answer', data: [{ id: 'counts', ref, usage: 'Recorded counts' }],
+    component: { type: 'chart', kind: 'bar', data_id: 'counts', options: { x: 'item', y: 'count' } } };
+  assert.equal((await capability(fixture.host, 'components_validate')({ ...input, operation_id: undefined })).valid, false, 'validate does not accept publication-only properties');
+  await capability(fixture.host, 'components_show')(input);
+  assert.equal(calls[0].title, 'Recorded counts'); assert.equal(calls[0].provenanceKind, 'demo');
+  assert.deepEqual(calls[0].input.content.sections[0].blocks[0].columns, ['item', 'count']);
+  await assert.rejects(capability(fixture.host, 'components_show')({ ...input, provenance_kind: 'observed' }), /demo/i);
+  fixture.entries.get(ref.id).manifest.content.provenance.kind = 'observed';
+  await capability(fixture.host, 'components_show')({ ...input, operation_id: 'observed' });
+  assert.equal(calls[1].provenanceKind, 'observed');
+  fixture.put(ref, [{ item: 'A', wrong: 2 }]);
+  fixture.entries.get(ref.id).manifest.content.columns = ['item', 'count'];
+  const invalid = await capability(fixture.host, 'components_validate')({ data: input.data, components: [{ type: 'paragraph', text: 'Supplied context' }, input.component] });
+  assert.equal(invalid.valid, false); assert.ok(invalid.diagnostics[0].path.startsWith('/components/1'));
+  assert.match(invalid.diagnostics[0].message, /count/); assert.equal(calls.length, 2);
+});
+
+test('minimal fixed input remains complete and immutable after column inference', async () => {
+  const fixture = readonlyHost(), inputRef = fixed('minimal-input', 'resource'), dataRef = fixed('minimal-rows'), calls = [];
+  const stored = { target: 'answer', content: { kind: 'document', sections: [{ title: '', blocks: [
+    { type: 'chart', kind: 'bar', data_id: 'counts', options: { x: 'item', y: 'count' } },
+  ] }] } };
+  fixture.put(inputRef, stored, { path: 'input.json' }); fixture.put(dataRef, [{ item: 'A', count: 3 }]);
+  fixture.host.capabilities.invoke = async (id, request) => { calls.push(request); return { type: 'result', value: { ref: fixed('fixed-minimal', 'report') } }; };
+  const input = { operation_id: 'fixed-minimal', input_ref: { ref: inputRef, entry: 'input.json' }, data: [{ id: 'counts', ref: dataRef, usage: 'Recorded count' }] };
+  await capability(fixture.host, 'components_show')(input);
+  assert.equal(calls[0].provenanceKind, 'demo'); assert.deepEqual(calls[0].inputRef, input.input_ref);
+  assert.equal(Object.hasOwn(calls[0], 'input'), false);
+  assert.deepEqual(JSON.parse(fixture.entries.get(inputRef.id).bytes.toString('utf8')), stored);
+  assert.deepEqual(fixture.writes, []);
+});
+
 test('component capabilities use the shared catalog and expose bounded discovery schemas', async () => {
   const catalog = await import('../packages/reports/component-catalog.js');
   const list = capability({}, 'components_list'), describe = capability({}, 'components_describe');
@@ -63,7 +165,7 @@ test('component capabilities use the shared catalog and expose bounded discovery
     assert.equal(cap.binding.type, 'native'); assert.ok(plugin.mcp_export.includes(name));
     assert.ok(JSON.stringify(cap.inputSchema).length < 20000, 'tool schemas must not embed the full component catalog');
   }
-  assert.equal(plugin.execution, 'native'); assert.equal(plugin.version, '5.1.1');
+  assert.equal(plugin.execution, 'native'); assert.equal(plugin.version, '5.2.0');
   const listing = manifest.capabilities.find(item => item.id === 'components_list').inputSchema;
   assert.equal(listing.properties.limit.default, 20); assert.equal(listing.properties.limit.maximum, 100);
   assert.ok(plugin.resources.includes('skills/report-design/component-protocol.md'));
@@ -340,10 +442,10 @@ test('answer HTML retains compact chrome and interactions when the host rebuilds
     await page.locator('#content-chart-1 svg').waitFor();
     const shell = await page.evaluate(() => ({ padding: getComputedStyle(document.body).padding,
       header: getComputedStyle(document.querySelector('.report > .report-header')).display,
-      summary: getComputedStyle(document.querySelector('.report-subtitle')).display,
+      summary: document.querySelector('.report-subtitle') ? getComputedStyle(document.querySelector('.report-subtitle')).display : 'none',
       sectionMargin: getComputedStyle(document.querySelector('.kit-section')).marginTop }));
     assert.equal(shell.header === 'none', target === 'answer');
-    assert.equal(shell.summary === 'none', target === 'answer');
+    assert.equal(shell.summary, 'none', 'publication summary remains index metadata');
     assert.equal(shell.padding === '0px', target === 'answer');
     assert.equal(shell.sectionMargin === '0px', target === 'answer');
     assert.equal(await page.locator('figcaption strong').first().isVisible(), true);

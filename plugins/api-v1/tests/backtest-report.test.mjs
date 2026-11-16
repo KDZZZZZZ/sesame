@@ -82,6 +82,67 @@ test('native backtest judgments are supplied arrays and never inferred from resu
   assert.doesNotMatch(fallback.html, /class=\\"module-judgments/);
 });
 
+test('backtest index summary stays in config while recorded conditions, units and trial states remain visible', { skip: !hostRoot, timeout: 30000 }, async t => {
+  const { buildBacktestReport } = await import('../packages/reports/backtest-template.js');
+  const evidence = { ...ref, kind: 'resource' }, summary = 'INDEX ONLY: a searchable description of this report';
+  const strategyEvidence = { engine: 'Fixture engine', summary: 'Use only completed daily bars', references: [evidence] };
+  const input = { ...base, summary, strategy_source: undefined, strategy_evidence: strategyEvidence, references: [evidence], locale: 'en' };
+  const rows = [trial({ costs: { commission: '0.0012500001' } }),
+    trial({ trial_id: 'failed', selected: false, status: 'failed', parameters: { lookback: '40', net_profit: 'same-parameter' }, sharpe: null, max_drawdown_pct: null, net_profit: null }),
+    trial({ trial_id: 'not-run', selected: false, status: 'not_run', parameters: { lookback: '60', net_profit: 'same-parameter' }, sharpe: null, max_drawdown_pct: null, net_profit: null })];
+  const { html } = await buildBacktestReport({ resources: { read: async () => ({ content: {} }) } }, input);
+  const { chromium } = createRequire(join(hostRoot, 'package.json'))('playwright');
+  const browser = await chromium.launch({ headless: true }); t.after(() => browser.close());
+  const page = await browser.newPage(), errors = []; page.on('pageerror', error => errors.push(error.message));
+  await page.setContent(html.replace('<script>', `<script>window.report={readData:async()=>({rows:${JSON.stringify(rows)},page:{},provenance:{kind:'demo'}}),track:p=>{window.ready=p;return p;}};</script><script>`));
+  await page.evaluate(() => window.ready);
+  const visible = await page.locator('body').innerText();
+  assert.equal(visible.includes(summary), false, 'index metadata must not become an automatic conclusion');
+  assert.equal(await page.evaluate(() => config.summary), summary);
+  assert.equal(await page.locator('.kit-verdict').count(), 0);
+  assert.match(await page.locator('[data-report-text="context"]').allInnerTexts().then(values => values.join('\n')), /Use only completed daily bars.*Training Sharpe.*fixed-training-period/s);
+  assert.equal(await page.locator('.backtest-trial-grid [data-report-text="legend"]').innerText(), '✓ Selected · Failed / Not run');
+  const commonHint = page.locator('.backtest-detail > [data-report-text="context"]').filter({ hasText: 'Parameters may vary together' });
+  assert.equal(await commonHint.count(), 1);
+  assert.equal(await commonHint.evaluate(node => node.nextElementSibling.classList.contains('backtest-sensitivity')), true, 'one shared hint precedes all sensitivity charts');
+  assert.match(await page.locator('.backtest-sensitivity').getAttribute('aria-description'), /complete parameter.*same x-coordinate/s);
+  assert.equal(visible.includes('Other parameters may also vary; every trial'), false, 'full chart instructions are not default body prose');
+  assert.match(await page.locator('.backtest-trial-grid').innerText(), /Failed.*Not run/s);
+  assert.match(await page.locator('.backtest-trials').innerText(), /Max drawdown \(%\).*Net profit \(USD\)/si);
+  assert.equal(await page.locator('.backtest-detail .report-source, .backtest-matrix + .report-source').count(), 0);
+  await page.getByRole('combobox', { name: 'Color metric', exact: true }).selectOption('net_profit');
+  assert.match(await page.locator('.backtest-matrix + [data-report-text="legend"]').innerText(), /USD/);
+  assert.equal(await page.locator('.backtest-trial-grid [data-selected="true"]').getAttribute('data-trial-id'), 'A');
+  await page.locator('.backtest-trial-grid [data-trial-id="A"]').click();
+  assert.deepEqual(JSON.parse(await page.locator('.backtest-detail details[open] pre').innerText()), rows[0]);
+  assert.deepEqual(await page.evaluate(() => config.strategyEvidence), strategyEvidence);
+  assert.deepEqual(errors, []);
+});
+
+test('report outline permits omitted verdict and section prose but preserves strict explicit values', { skip: !hostRoot, timeout: 30000 }, async t => {
+  const { chromium } = createRequire(join(hostRoot, 'package.json'))('playwright');
+  const browser = await chromium.launch({ headless: true }); t.after(() => browser.close());
+  const page = await browser.newPage(); await page.setContent('<div id="report"></div>');
+  await page.addScriptTag({ content: await readFile(new URL('assets/report-kit.js', root), 'utf8') });
+  const result = await page.evaluate(() => {
+    const section = { title: 'Evidence', blocks: [{ type: 'custom', render: node => { node.textContent = 'Supplied evidence'; } }] };
+    reportKit.render('#report', { title: 'Recorded result', sections: [section] });
+    const omitted = { verdicts: document.querySelectorAll('.kit-verdict').length, takeaways: document.querySelectorAll('.kit-takeaway').length, text: document.body.innerText };
+    reportKit.render('#report', { title: 'Recorded result', verdict: { tone: 'neutral', headline: 'An explicit finding' }, sections: [{ ...section, takeaway: 'Only within the supplied period' }] });
+    const explicit = document.body.innerText, rejected = [];
+    for (const verdict of [null, false, { tone: 'neutral', headline: '' }]) {
+      try { reportKit.render('#report', { title: 'Recorded result', verdict, sections: [section] }); rejected.push(false); }
+      catch { rejected.push(true); }
+    }
+    try { reportKit.render('#report', { title: 'Recorded result', sections: [{ ...section, takeaway: null }] }); rejected.push(false); }
+    catch { rejected.push(true); }
+    return { omitted, explicit, rejected };
+  });
+  assert.deepEqual(result.omitted, { verdicts: 0, takeaways: 0, text: 'Recorded result\nEvidence\nSupplied evidence' });
+  assert.match(result.explicit, /An explicit finding.*Only within the supplied period.*Supplied evidence/s);
+  assert.deepEqual(result.rejected, [true, true, true, true]);
+});
+
 test('strategy report renders real controls, every trial, stable winners and missing cells on desktop and mobile', { skip: !hostRoot, timeout: 60000 }, async t => {
   const { chromium } = createRequire(join(hostRoot, 'package.json'))('playwright');
   const browser = await chromium.launch({ headless: true });

@@ -42,7 +42,7 @@ test('overview escapes text and supports full table labels on narrow screens', a
   assert.match(html, /content:attr\(data-label\)/);
 });
 
-test('overview uses the same native charts and evidence appendix without changing financial values', async () => {
+test('overview uses the same native charts and local evidence without changing financial values', async () => {
   const value = { ...overview, chart: { type: 'chart', title: '合成收益', kind: 'bar',
     columns: ['label','value'], rows: [{ label: '合成A', value: -2 }, { label: '合成B', value: 3 }],
     options: { x: 'label', y: 'value', valueType: 'return' },
@@ -51,7 +51,8 @@ test('overview uses the same native charts and evidence appendix without changin
   const charts = JSON.parse(html.match(/id="sesame-module-charts" type="application\/json">([\s\S]*?)<\/script>/)[1]);
   assert.deepEqual(charts[0].rows, value.chart.rows);
   assert.equal(charts[0].options.height, 200);
-  assert.match(html, /附录/);
+  assert.equal(charts[0].source_note, value.chart.source_note);
+  assert.doesNotMatch(html, /data-report-evidence-appendix|sesame-evidence-appendix-runtime/);
   assert.ok(html.indexOf('id="content-chart-1"') < html.indexOf('id="content-section-1"'));
   await assert.rejects(renderStructuredReport({}, input({ ...value, chart: { ...value.chart, options: { ...value.chart.options, height: 500 } } })), /180–280/);
 });

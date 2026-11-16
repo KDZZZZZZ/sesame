@@ -56,8 +56,8 @@ test('all optional charts work through the authoring tool and real read-only bin
         const selection = await page.evaluate(() => selectedObservation);
         assert.deepEqual(selection.row, rows[selection.index], 'Selection retains the exact bound observation');
         assert.equal(await page.locator('.module-chart-plot .sc-selected').count(), 1);
-        const evidence = await page.locator('[id$="-evidence"]').textContent();
-        assert.deepEqual(JSON.parse(evidence).rows, rows, 'The end appendix retains all original observations');
+        assert.deepEqual(await page.evaluate(() => window.bindings), bindings, 'Rendering retains every fixed source row and node unchanged');
+        assert.equal(await page.locator('[id$="-evidence"], [data-report-evidence-appendix]').count(), 0, 'Charts do not create an automatic source appendix');
         if (nodes && kind.startsWith('network-')) {
           const node = page.locator('.module-chart-plot [data-row-index="-1"]').first();
           await node.focus(); await page.keyboard.press('Enter');

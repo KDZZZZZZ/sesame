@@ -34,7 +34,7 @@ export function chartDefinition(chart) {
 export function chartValue(value, definition) {
   chartDefinition(definition);
   check(object(value) && Array.isArray(value.rows) && value.rows.length > 0 && value.rows.length <= 2500 && value.rows.every(object), 'Chart result needs 1–2500 fixed rows; use unavailable for missing data');
-  check(text(value.source_note) && text(value.takeaway), 'Chart result requires a source_note and evidence-based takeaway');
+  for (const key of ['source_note', 'takeaway']) check(value[key] === undefined || text(value[key]), `Chart ${key} must be nonempty text when supplied`);
   check(Object.keys(value).every(key => ['rows', 'source_note', 'takeaway', 'options', 'nodes'].includes(key)), 'Unknown chart result field');
   safeOptions(value.options ?? {});
   if (value.nodes !== undefined) check(Array.isArray(value.nodes) && value.nodes.length <= 2500 && value.nodes.every(object), 'Chart nodes must be fixed rows');

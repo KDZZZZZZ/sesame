@@ -3,10 +3,11 @@ import { resolveReportStyle, applyReportStyle } from './report-styles.js';
 import { readFileSync } from 'node:fs';
 import { readBytes, writeWorkspace } from './artifact-io.js';
 import { resolveStructure, bindResults, check, isFixedRef } from './report-structure.js';
-import { kitKinds, compositionKinds } from './report-chart-fields.js';
+import { compositionKinds } from './report-chart-fields.js';
 import { presentValue } from './report-presentation.js';
 import { renderReasoning, renderInference } from './report-reasoning.js';
 import { renderKnowledgeBasis } from './report-knowledge.js';
+import { renderText, isDuplicateText } from './report-text.js';
 
 const asset = path => readFileSync(new URL(path, import.meta.url), 'utf8');
 const escape = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -44,15 +45,13 @@ export function renderComposedReport({ title, summary, structure, bound, data, r
     return `<aside class="module-history"><p class="module-history-count"><strong>${sample.resolved}</strong> ${tr('个已结算同类情景', 'resolved comparable cases')}${sample.effective === undefined ? '' : ` · ${tr('有效样本量', 'Effective sample')} ${sample.effective}`}</p><p>${escape(basis.scenario)} · ${escape(basis.horizon)}</p><p>${basis.outcomes.map(row => `${escape(row.label)} ${row.count}`).join(' · ')}</p><details><summary>${tr('历史口径与不确定性', 'Historical scope and uncertainty')}</summary><dl class="module-values">${selectionDetail}${validationDetail}<dt>${tr('观察窗口', 'Observed window')}</dt><dd>${escape(basis.window.start)} → ${escape(basis.window.end)} · ${tr('截点', 'As of')} ${escape(basis.window.as_of)}</dd><dt>${tr('样本处理', 'Sample handling')}</dt><dd>${tr('匹配', 'Matched')} ${sample.matched} · ${tr('待结算', 'Pending')} ${sample.pending} · ${tr('排除', 'Excluded')} ${sample.excluded}</dd><dt>${tr('匹配方法', 'Matching method')}</dt><dd>${escape(basis.matching_method_ref)}</dd><dt>${tr('基准', 'Baseline')}</dt><dd>${escape(basis.baseline.description)}</dd><dt>${tr('样本依赖', 'Sample dependence')}</dt><dd>${escape(basis.dependence)}</dd><dt>${tr('不确定性', 'Uncertainty')}</dt><dd>${escape(basis.uncertainty)}</dd></dl><ul>${basis.limitations.map(limit => `<li>${escape(limit)}</li>`).join('')}</ul></details></aside>`;
   }
   const confidenceHTML = value => `<p class="module-confidence"><strong>${value.estimate === undefined ? escape(value.assessment) : escape(percent(value.estimate))}</strong> · ${escape(value.definition)}</p>${value.estimate !== undefined && value.assessment ? `<p>${escape(value.assessment)}</p>` : ''}${value.interval ? `<p>${escape(percent(value.interval.level))} ${tr('估计区间', 'estimation interval')} ${escape(percent(value.interval.lower))}–${escape(percent(value.interval.upper))}</p>` : ''}`;
-  function chartHTML(field) {
+  function chartHTML(field, section) {
     const value = field.result.value, id = `module-chart-${charts.length + 1}`;
-    const owner = bound.sections.find(section => section.fields.includes(field));
-    const repeated = owner?.fields.some(item => item.key === 'summary' && item.display === 'visible' && item.result.status === 'provided' && item.result.value === value.takeaway);
-    const caption = repeated ? '' : value.takeaway;
+    const summaries = section.fields.filter(item => item.key === 'summary' && item.type === 'text' && item.display === 'visible' && item.result.status === 'provided').map(item => `${item.result.value}${item.unit ? ` ${item.unit}` : ''}`);
     const options = { ...field.chart.options, ...value.options };
     const columns = [...new Set([...field.chart.columns, ...(field.chart.kind === 'candlestick' ? (options.overlays ?? []).map(overlay => overlay.field) : [])])];
     charts.push({ id, kind: field.chart.kind, title: field.label, caption:value.takeaway, columns, options, rows: value.rows, ...(value.nodes ? { nodes: value.nodes } : {}) });
-    return `<figure class="module-chart${repeated ? ' module-chart-caption-repeated' : ''}">${kitKinds.has(field.chart.kind) || !caption ? '' : `<p>${escape(caption)}</p>`}<div id="${id}" class="module-chart-plot" aria-label="${escape(field.label)}"></div><details id="${id}-details" class="module-chart-inspect"><summary>${tr('数据与来源', 'Data and sources')} · ${value.rows.length}${options.unit ? ` · ${escape(options.unit)}` : ''}</summary><p class="report-source">${escape(value.source_note)}</p><div class="module-chart-table"></div></details></figure>`;
+    return `<figure class="module-chart">${renderText(value.takeaway, { role: 'body', against: [section.title.trim() || title, field.label, ...summaries] })}<div id="${id}" class="module-chart-plot" aria-label="${escape(field.label)}"></div><details id="${id}-details" class="module-chart-inspect"><summary>${tr('数据与来源', 'Data and sources')} · ${value.rows.length}${options.unit ? ` · ${escape(options.unit)}` : ''}</summary>${renderText(value.source_note, { role: 'evidence' })}<div class="module-chart-table"></div></details></figure>`;
   }
   function valueHTML(value, depth = 0) {
     if (value === null) return '<span>—</span>';
@@ -72,34 +71,35 @@ export function renderComposedReport({ title, summary, structure, bound, data, r
     }
     return `<dl class="module-facts">${Object.entries(value).map(([key, entry]) => `<div class="module-fact${entry !== null && typeof entry === 'object' || typeof entry === 'string' && entry.length > 48 ? ' module-fact-wide' : ''}"><dt>${escape(displayName(key))}</dt><dd>${valueHTML(entry, depth + 1)}</dd></div>`).join('')}</dl>`;
   }
-  function fieldHTML(field) {
+  function fieldHTML(field, section) {
     const row = field.result;
     if (field.display === 'hidden' || !field.supplied && !field.required) return '';
     let body;
     const presentation = row.status === 'provided' ? presentValue(field, row.value, { escape, valueHTML, locale: structure.locale, tr }) : null;
-    if (row.status !== 'provided') body = `<p class="module-unavailable">${escape(row.reason)}</p>`;
+    if (row.status !== 'provided') body = renderText(row.reason, { role: 'context' });
     else if (presentation) body = presentation.html;
-    else if (field.type === 'chart') body = chartHTML(field);
+    else if (field.type === 'chart') body = chartHTML(field, section);
     else if (field.type === 'confidence') body = confidenceHTML(row.value);
     else if (field.type === 'inferences') body = row.value.map(step => renderInference(step, {escape,tr,historyHTML,confidenceHTML,historyDisplay:field.history_display})).join('');
-    else if (field.type === 'distribution') body = `<p class="report-source">${escape(row.value.target)}</p><div class="report-table"><table><thead><tr><th>${tr('结果', 'Outcome')}</th><th>${tr('概率', 'Probability')}</th></tr></thead><tbody>${row.value.items.map(item => `<tr><td>${escape(item.label)}</td><td>${escape(percent(item.probability))}</td></tr>`).join('')}</tbody></table></div>`;
+    else if (field.type === 'distribution') body = `${renderText(row.value.target, { role: 'context' })}<div class="report-table"><table><thead><tr><th>${tr('结果', 'Outcome')}</th><th>${tr('概率', 'Probability')}</th></tr></thead><tbody>${row.value.items.map(item => `<tr><td>${escape(item.label)}</td><td>${escape(percent(item.probability))}</td></tr>`).join('')}</tbody></table></div>`;
     else if (field.type === 'probability') body = `<p>${escape(percent(row.value))}</p>`;
-    else if (field.type === 'interval') body = `<p>${escape(row.value.lower)} – ${escape(row.value.upper)}${field.unit ? ` ${escape(field.unit)}` : ''}</p><p class="report-source">${escape(row.value.meaning)}${row.value.level === undefined ? '' : ` · ${escape(percent(row.value.level))}`}</p>`;
+    else if (field.type === 'interval') body = `<p>${escape(row.value.lower)} – ${escape(row.value.upper)}${field.unit ? ` ${escape(field.unit)}` : ''}</p>${renderText(`${row.value.meaning}${row.value.level === undefined ? '' : ` · ${percent(row.value.level)}`}`, { role: 'context' })}`;
+    else if (field.type === 'text') body = renderText(`${row.value}${field.unit ? ` ${field.unit}` : ''}`, { role: 'body', tag: 'div', className: 'module-value' });
     else body = `<div class="module-value">${valueHTML(row.value)}${field.unit && !['object', 'array'].includes(field.type) ? ` <span>${escape(field.unit)}</span>` : ''}</div>`;
     // Show useful explanations rather than repeating a status badge for every
     // result. Fixed inputs retain complete evidence; relevant details stay local.
     const state = row.validation?.note?.trim() && !row.historical_basis
-      ? `<p class="module-validation">${escape(row.validation.note)}</p>` : '';
+      ? renderText(row.validation.note, { role: 'context' }) : '';
     const explanation = field.type !== 'inferences' || row.status !== 'provided' ? renderReasoning({...row,confidence:field.type === 'confidence' && row.status === 'provided' ? row.value : undefined}, {escape,tr,historyHTML,confidenceHTML,historyDisplay:field.history_display}) : '';
-    const repeatedValue = explanation && (field.type === 'text' && row.value === row.reasoning.conclusion || field.type === 'confidence');
+    const repeatedValue = explanation && (field.type === 'text' && isDuplicateText(`${row.value}${field.unit ? ` ${field.unit}` : ''}`, [row.reasoning?.conclusion]) || field.type === 'confidence');
     const content = explanation ? `${repeatedValue ? '' : body}${explanation}` : `${body}${state}${field.type === 'inferences' ? '' : historyHTML(row.historical_basis, row.validation, field.history_display) + renderKnowledgeBasis(row.knowledge_basis,{escape,tr})}`;
     return field.display === 'folded'
       ? `<details class="module-field"><summary>${escape(field.label)}</summary>${content}</details>`
-      : `<div class="module-field${presentation ? ` module-visual-card module-presentation-${presentation.kind}` : ''}${field.key === 'summary' ? ' module-reading' : ''}" data-field="${escape(field.key)}">${field.type === 'chart' && row.status === 'provided' && kitKinds.has(field.chart.kind) ? '' : `<h3>${escape(field.label)}</h3>`}${content}</div>`;
+      : `<div class="module-field${presentation ? ` module-visual-card module-presentation-${presentation.kind}` : ''}${field.key === 'summary' ? ' module-reading' : ''}" data-field="${escape(field.key)}">${renderText(field.label, { role: 'title', tag: 'h3', against: [section.title.trim() || title, ...(field.type === 'text' && row.status === 'provided' ? [row.value] : [])] })}${content}</div>`;
   }
   const sections = bound.sections.map(section => {
-    const body = section.fields.map(fieldHTML).join('');
-    return body ? `<section class="kit-section module-section" id="section-${escape(section.id)}">${bound.sections.length === 1 && section.title === title ? '' : `<h2>${escape(section.title)}</h2>`}${body}</section>` : '';
+    const body = section.fields.map(field => fieldHTML(field, section)).join('');
+    return body ? `<section class="kit-section module-section" id="section-${escape(section.id)}">${renderText(section.title, { role: 'title', tag: 'h2', against: [title] })}${body}</section>` : '';
   }).join('');
   const badge = demo ? `<p class="module-demo" data-sesame-provenance="demo">${tr('演示样本 · 不代表真实行情或已验证预测', 'DEMO SAMPLE · Not market observations or validated forecasts')}</p>` : '';
   const empty = bound.completeness.status === 'empty' ? `<p>${tr('尚未提供所选字段的研究结果。', 'No research results have been supplied for the selected fields.')}</p>` : '';
@@ -123,7 +123,7 @@ export function renderComposedReport({ title, summary, structure, bound, data, r
   // Library assets are bundled once. Chart values are a projection of the fixed
   // result source, so offline viewing and the report host show identical rows.
   const chartScripts = charts.length ? `<script id="sesame-module-charts" type="application/json">${json(charts)}</script>${assets.map(path => `<script>${asset(`assets/${path}`)}</script>`).join('')}<script>${asset('assets/module-charts.js')}</script>` : '';
-  const body = `${badge}${summary ? `<p class="report-subtitle">${escape(summary)}</p>` : ''}${empty}${sections}${contract}${chartScripts}`;
+  const body = `${badge}${empty}${sections}${contract}${chartScripts}`;
   const tokens = { LOCALE: escape(structure.locale), TITLE: escape(title), STYLES: asset('assets/editorial.css') + '\n' + asset('assets/module-report.css') + '\n' + asset('assets/report-reasoning.css'), BODY: body };
   const html = withEvidenceAppendix(asset('templates/document.html').replace(/\{\{([A-Z_]+)\}\}/g, (token, key) => Object.hasOwn(tokens, key) ? tokens[key] : token));
   check(Buffer.byteLength(html) <= 1024 * 1024, 'Composed report exceeds 1 MiB; use a smaller selected result set or a custom document with bound evidence');

@@ -26,10 +26,11 @@
       const draw = () => {
         if (plot.dataset.chartStatus) return;
         try {
-          const spec = { ...entry.options, kind: entry.kind, title: entry.title, caption: entry.caption, onSelect: select };
+          const spec = { ...entry.options, kind: entry.kind, title: entry.title, onSelect: select };
           const handle = kit.has(entry.kind)
             ? reportKit.chart(plot, { ...spec, data: entry.rows })
             : SesameCharts.chart(plot, { ...spec, rows: entry.rows, ...(entry.nodes ? { nodes: entry.nodes } : {}) });
+          if (kit.has(entry.kind)) handle.querySelector(':scope > figcaption')?.remove();
           if (handle?.destroy) handles.push(handle);
           plot.dataset.chartStatus = 'ready';
         } catch (error) {

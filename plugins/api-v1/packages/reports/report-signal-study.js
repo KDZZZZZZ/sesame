@@ -2,6 +2,7 @@
 // infer returns, fill missing values or turn a diagnostic into a probability.
 import { renderJudgments } from './report-evidence.js';
 import { factorLogic, renderLogicDiagram } from './report-logic.js';
+import { renderText } from './report-text.js';
 const e = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const arr = value => Array.isArray(value) ? value : [];
 const finite = value => typeof value === 'number' && Number.isFinite(value);
@@ -11,12 +12,11 @@ const json = value => JSON.stringify(value).replace(/[<>&\u2028\u2029]/g, c => `
 const verdict = trial => trial.review?.verdict ?? trial.status;
 const names = { conditional: '继续观察', accept: '继续观察', accepted: '继续观察', reject: '暂不采用', rejected: '暂不采用', failed: '未完成' };
 const label = (trial, index) => String(trial.name ?? trial.hypothesis?.split(/[：:]/)[0] ?? `候选 ${index + 1}`);
-const metric = (title, value, hint = '') => `<div class="report-metric"><dt>${e(title)}</dt><dd>${e(value)}</dd>${hint ? `<small>${e(hint)}</small>` : ''}</div>`;
 const conditions = value => ['valid_when', 'invalid_when', 'stop_when'].flatMap(key => {
   const values = arr(value?.[key]);
-  return values.length ? [`<div><h3>${{ valid_when: '什么时候可以参考', invalid_when: '什么时候可能不管用', stop_when: '什么时候停止使用' }[key]}</h3>${values.map(text => `<p>${e(text)}</p>`).join('')}</div>`] : [];
+  return values.length ? [`<div>${renderText({ valid_when: '什么时候可以参考', invalid_when: '什么时候可能不管用', stop_when: '什么时候停止使用' }[key], { role: 'title', tag: 'h3' })}${values.map(text => renderText(text, { role: 'body' })).join('')}</div>`] : [];
 }).join('');
-const chartHost = (id, title, note) => `<figure class="kit-chart"><figcaption class="kit-chart-head"><strong>${e(title)}</strong><span class="kit-chart-caption">${e(note)}</span></figcaption><div id="${id}"></div></figure>`;
+const chartHost = (id, title) => `<figure class="kit-chart"><figcaption class="kit-chart-head">${renderText(title, { role: 'title', tag: 'strong' })}</figcaption><div id="${id}"></div></figure>`;
 const date = value => typeof value === 'string' && value.trim() && Number.isFinite(Date.parse(value)) ? value : null;
 const count = value => Number.isSafeInteger(value) && value >= 0 ? value : null;
 const periodDetail = row => [row.period,
@@ -71,29 +71,32 @@ export function renderSignalStudy(run, { demo = false, presentation = {} } = {})
   const matrixRows = display.flatMap((trial, i) => trial.periods.slice(0, 2).map(row => ({ ...row, candidate: `F${String(i + 1).padStart(2, '0')}`, name: trial.name, scope: row.period })));
   return `<div class="report-signal-study" data-report-native-charts data-report-style="${["blue","default"].includes(presentation.style) ? presentation.style : "blue"}">
 <div class="kit-eyebrow">STRATEGY · ${demo ? '演示样本' : '历史研究'}</div>
-<div class="kit-verdict-headline">${e(presentation.summary ?? state)}</div>
-<p class="factor-note">${e(presentation.note ?? '图中的变化来自历史行情，已扣除估算成本；实际买卖还可能不同。')}</p>
+${renderText(presentation.summary ?? state, { role: 'body', tag: 'div', className: 'kit-verdict-headline' })}
+${renderText(presentation.note, { role: 'body', against: [presentation.summary ?? state] })}
+${renderText(date(run.data?.range?.start) && date(run.data?.range?.end) ? `${run.data.range.start} — ${run.data.range.end}` : undefined, { role: 'context' })}
 ${judgments && presentation.judgments.length ? `<section class="kit-section" data-signal-judgments><h2>分项判断</h2>${judgments}</section>` : ''}
-<dl class="report-metrics">${metric('看过的信号', trials.length)}${metric('值得关注', selected.length)}${metric('比较轮数', run.config?.rounds ?? '—')}${metric('后续行情', measuredHoldout ? '已完成' : '未完成')}</dl>
-<section class="kit-section"><h2>哪些信号更有用</h2><p class="factor-note">点击色块查看信号。蓝色为正，灰色为负；颜色越深，变化越大。</p>
+<section class="kit-section"><h2>哪些信号更有用</h2>${renderText('绿：正 · 红：负 · 深浅：幅度 · —：缺失', { role: 'legend' })}
 ${trials.length>20?`<div class="report-toolbar"><label for="factor-page">查看信号</label><select id="factor-page">${Array.from({length:Math.ceil(trials.length/20)},(_,i)=>`<option value="${i}">${i*20+1}–${Math.min(trials.length,(i+1)*20)}</option>`).join('')}</select></div>`:''}
-${chartHost('factor-matrix', '平均每次变化 · %', '扣除估算成本。— 表示没有可用结果。')}
-<div class="factor-comparison"><table><thead><tr><th>信号</th><th>涨跌关联 IC</th><th>平均变化</th><th>结论</th></tr></thead><tbody>${trials.map((trial, i) => `<tr data-factor-row="${i}"><td class="factor-name">F${String(i + 1).padStart(2, '0')} · ${e(presentation.labels?.[trial.id] ?? label(trial, i))}<small>${selected.includes(trial.id) ? '继续观察' : '暂不采用'}</small></td><td>${n(trial.metrics?.validation?.rankIC)}</td><td data-tone="${!finite(trial.metrics?.validation?.meanNetReturn) || trial.metrics.validation.meanNetReturn === 0 ? 'neutral' : trial.metrics.validation.meanNetReturn < 0 ? 'negative' : 'positive'}">${pct(trial.metrics?.validation?.meanNetReturn)}</td><td>${e(names[verdict(trial)] ?? verdict(trial) ?? '未记录')}</td></tr>`).join('')}</tbody></table></div><p class="factor-note">IC 表示信号与后来涨跌的关联，越接近 0，关系越弱；它不是上涨概率。</p></section>
+${renderText(finite(dataset.costBps) ? `估算成本：${dataset.costBps} 基点` : undefined, { role: 'context' })}
+${chartHost('factor-matrix', '成本后平均每次变化 · %')}
+<div class="factor-comparison"><table><thead><tr><th>信号</th><th>Rank IC</th><th>平均变化</th><th>结论</th></tr></thead><tbody>${trials.map((trial, i) => `<tr data-factor-row="${i}"><td class="factor-name">F${String(i + 1).padStart(2, '0')} · ${e(presentation.labels?.[trial.id] ?? label(trial, i))}</td><td>${n(trial.metrics?.validation?.rankIC)}</td><td data-tone="${!finite(trial.metrics?.validation?.meanNetReturn) || trial.metrics.validation.meanNetReturn === 0 ? 'neutral' : trial.metrics.validation.meanNetReturn < 0 ? 'negative' : 'positive'}">${pct(trial.metrics?.validation?.meanNetReturn)}</td><td>${e(names[verdict(trial)] ?? verdict(trial) ?? '未记录')}</td></tr>`).join('')}</tbody></table></div></section>
 <section class="kit-section"><h2>不同时段的表现</h2><div class="report-toolbar"><label for="factor-focus">选择信号</label><select id="factor-focus">${trials.map((trial, i) => `<option value="${i}"${i === defaultTrial ? ' selected' : ''}>F${String(i + 1).padStart(2, '0')} · ${e(presentation.labels?.[trial.id] ?? label(trial, i))}</option>`).join('')}</select></div>
-${chartHost('factor-periods', '训练、验证与留出表现', '平均每次变化 · %；留出结果只显示已完成评估的选中信号。')}
-<div id="factor-period-scope" class="factor-note" aria-live="polite"></div>
-${chartHost('factor-folds', '逐个前推区间查看', '平均每次变化 · %；每个区间的原始起止与样本见下方。')}
-<div id="factor-fold-scope" class="factor-note" aria-live="polite"></div>
-${trials.map((trial, i) => `<div class="factor-conditions" data-factor-condition="${i}"${i === defaultTrial ? '' : ' hidden'}>${logicDiagrams[i]}${formula(trial.candidate ?? trial.expression)}${conditions(presentation.conditions?.[trial.id] ?? (selected.includes(trial.id) && run.selection?.applicability ? run.selection.applicability : trial.applicability ?? trial.review?.applicability)) || '<p class="factor-note">还不清楚这个信号在哪些情况下管用。</p>'}</div>`).join('')}</section>
+${chartHost('factor-periods', '训练、验证与留出表现 · %')}
+${chartHost('factor-folds', '前推区间表现 · %')}
+${trials.map((trial, i) => `<div class="factor-conditions" data-factor-condition="${i}"${i === defaultTrial ? '' : ' hidden'}>${logicDiagrams[i]}${formula(trial.candidate ?? trial.expression)}${conditions(presentation.conditions?.[trial.id] ?? (selected.includes(trial.id) && run.selection?.applicability ? run.selection.applicability : trial.applicability ?? trial.review?.applicability))}</div>`).join('')}</section>
 ${evidence}
-<script>(()=>{const rows=${json(matrixRows)},candidates=${json(display)},picker=document.getElementById('factor-focus');const chart=(id,spec)=>window.SesameCharts.chart(document.getElementById(id),{...spec,tone:'signed',missingLabel:'项缺失；未以零代替',onSelect:spec.onSelect});const notes=(id,records)=>{document.getElementById(id).replaceChildren(...records.map(row=>{const note=document.createElement('p');note.textContent=row.detail;return note;}));};const select=index=>{const candidate=candidates[index];if(!candidate)return;picker.value=String(index);document.querySelectorAll('[data-factor-condition]').forEach(node=>node.hidden=Number(node.dataset.factorCondition)!==index);chart('factor-periods',{kind:'bar',rows:candidate.periods,x:'period',y:'value',unit:'%',title:'训练、验证与留出期的平均变化',height:230});chart('factor-folds',{kind:'bar',rows:candidate.folds,x:'period',y:'value',unit:'%',title:'各前推区间的平均变化',height:230});notes('factor-period-scope',candidate.periods);notes('factor-fold-scope',candidate.folds);};const pages=document.getElementById('factor-page');const renderMatrix=page=>{const visible=rows.slice(page*40,(page+1)*40);if(visible.length)chart('factor-matrix',{kind:'matrix',rows:visible,x:'scope',y:'candidate',value:'value',unit:'%',title:'不同信号的平均变化',height:Math.max(220,Math.min(540,visible.length*28+80)),onSelect:row=>select(rows.indexOf(row)>>1)});document.querySelectorAll('[data-factor-row]').forEach(node=>node.hidden=Math.floor(Number(node.dataset.factorRow)/20)!==page);};pages?.addEventListener('change',()=>renderMatrix(Number(pages.value)));renderMatrix(0);picker.addEventListener('change',()=>select(Number(picker.value)));select(${defaultTrial});})();</script></div>`;
+<script>(()=>{const rows=${json(matrixRows)},candidates=${json(display)},picker=document.getElementById('factor-focus');const chart=(id,spec)=>window.SesameCharts.chart(document.getElementById(id),{...spec,tone:'signed',missingLabel:'项缺失；未以零代替',onSelect:spec.onSelect});const select=index=>{const candidate=candidates[index];if(!candidate)return;picker.value=String(index);document.querySelectorAll('[data-factor-condition]').forEach(node=>node.hidden=Number(node.dataset.factorCondition)!==index);chart('factor-periods',{kind:'bar',rows:candidate.periods,x:'period',y:'value',unit:'%',title:'训练、验证与留出期的平均变化',description:candidate.periods.map(row=>row.detail).join('；'),height:230});const folds=document.getElementById('factor-folds');folds.closest('figure').hidden=!candidate.folds.length;if(candidate.folds.length)chart('factor-folds',{kind:'bar',rows:candidate.folds,x:'period',y:'value',unit:'%',title:'各前推区间的平均变化',description:candidate.folds.map(row=>row.detail).join('；'),height:230});else window.SesameCharts.destroy(folds);};const pages=document.getElementById('factor-page');const renderMatrix=page=>{const visible=rows.slice(page*40,(page+1)*40);if(visible.length)chart('factor-matrix',{kind:'matrix',rows:visible,x:'scope',y:'candidate',value:'value',unit:'%',title:'不同信号的平均变化',height:Math.max(220,Math.min(540,visible.length*28+80)),onSelect:row=>select(rows.indexOf(row)>>1)});document.querySelectorAll('[data-factor-row]').forEach(node=>node.hidden=Math.floor(Number(node.dataset.factorRow)/20)!==page);};pages?.addEventListener('change',()=>renderMatrix(Number(pages.value)));renderMatrix(0);picker.addEventListener('change',()=>select(Number(picker.value)));select(${defaultTrial});})();</script></div>`;
 }
 
 // Translate a supported expression structurally; this never evaluates it.
 // Unsupported/custom expressions stay in the exact original run snapshot.
 function formula(expression) {
   const latex = expressionLatex(expression);
-  return latex ? `<div class="report-formula" data-report-math="${e(`F_t = ${latex}`)}"></div><p class="factor-note">C 是收盘价，V 是成交量；MA 表示平均值，Std 表示波动大小。</p>` : '';
+  if (!latex) return '';
+  const fields = [['C', '收盘价'], ['V', '成交量'], ['O', '开盘价'], ['H', '最高价'], ['L', '最低价']].filter(([symbol]) => latex.includes(`${symbol}_{`));
+  const operators = [['MA', '均值'], ['Std', '标准差'], ['Sum', '求和']].filter(([symbol]) => latex.includes(`\\operatorname{${symbol}}`));
+  const legend = [...fields, ...operators].map(([symbol, meaning]) => `${symbol}：${meaning}`).join(' · ');
+  return `<div class="report-formula" data-report-math="${e(`F_t = ${latex}`)}"></div>${renderText(legend, { role: 'legend' })}`;
 }
 export function expressionLatex(value, time = 't', depth = 0) {
   if (!value || typeof value !== 'object' || depth > 20) return null;

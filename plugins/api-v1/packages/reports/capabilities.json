@@ -857,10 +857,13 @@
                             "type": "array",
                             "items": {
                               "type": "string",
-                              "maxLength": 20000
+                              "maxLength": 20000,
+                              "minLength": 1,
+                              "pattern": "\\S"
                             },
                             "maxItems": 32,
-                            "minItems": 1
+                            "minItems": 1,
+                            "description": "Optional explicit source columns. When omitted, infer from actual rows or the fixed data manifest; existing field mappings and data checks still apply."
                           },
                           "options": {
                             "type": "object",
@@ -894,11 +897,17 @@
                           },
                           "takeaway": {
                             "type": "string",
-                            "maxLength": 20000
+                            "maxLength": 20000,
+                            "minLength": 1,
+                            "pattern": "\\S",
+                            "description": "Optional supplied text; omit when unnecessary. No generic explanation or source note is generated."
                           },
                           "source_note": {
                             "type": "string",
-                            "maxLength": 20000
+                            "maxLength": 20000,
+                            "minLength": 1,
+                            "pattern": "\\S",
+                            "description": "Optional supplied text; omit when unnecessary. No generic explanation or source note is generated."
                           },
                           "nodes": {
                             "type": "array",
@@ -932,11 +941,7 @@
                         },
                         "required": [
                           "type",
-                          "title",
-                          "kind",
-                          "columns",
-                          "takeaway",
-                          "source_note"
+                          "kind"
                         ],
                         "additionalProperties": false,
                         "oneOf": [
@@ -2514,10 +2519,13 @@
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "maxLength": 20000
+                      "maxLength": 20000,
+                      "minLength": 1,
+                      "pattern": "\\S"
                     },
                     "maxItems": 32,
-                    "minItems": 1
+                    "minItems": 1,
+                    "description": "Optional explicit source columns. When omitted, infer from actual rows or the fixed data manifest; existing field mappings and data checks still apply."
                   },
                   "options": {
                     "type": "object"
@@ -2537,11 +2545,17 @@
                   },
                   "takeaway": {
                     "type": "string",
-                    "maxLength": 20000
+                    "maxLength": 20000,
+                    "minLength": 1,
+                    "pattern": "\\S",
+                    "description": "Optional supplied text; omit when unnecessary. No generic explanation or source note is generated."
                   },
                   "source_note": {
                     "type": "string",
-                    "maxLength": 20000
+                    "maxLength": 20000,
+                    "minLength": 1,
+                    "pattern": "\\S",
+                    "description": "Optional supplied text; omit when unnecessary. No generic explanation or source note is generated."
                   },
                   "nodes": {
                     "type": "array",
@@ -2575,11 +2589,7 @@
                 },
                 "required": [
                   "type",
-                  "title",
-                  "kind",
-                  "columns",
-                  "takeaway",
-                  "source_note"
+                  "kind"
                 ],
                 "additionalProperties": false,
                 "oneOf": [
@@ -4455,10 +4465,13 @@
                             "type": "array",
                             "items": {
                               "type": "string",
-                              "maxLength": 20000
+                              "maxLength": 20000,
+                              "minLength": 1,
+                              "pattern": "\\S"
                             },
                             "maxItems": 32,
-                            "minItems": 1
+                            "minItems": 1,
+                            "description": "Optional explicit source columns. When omitted, infer from actual rows or the fixed data manifest; existing field mappings and data checks still apply."
                           },
                           "options": {
                             "type": "object",
@@ -4492,11 +4505,17 @@
                           },
                           "takeaway": {
                             "type": "string",
-                            "maxLength": 20000
+                            "maxLength": 20000,
+                            "minLength": 1,
+                            "pattern": "\\S",
+                            "description": "Optional supplied text; omit when unnecessary. No generic explanation or source note is generated."
                           },
                           "source_note": {
                             "type": "string",
-                            "maxLength": 20000
+                            "maxLength": 20000,
+                            "minLength": 1,
+                            "pattern": "\\S",
+                            "description": "Optional supplied text; omit when unnecessary. No generic explanation or source note is generated."
                           },
                           "nodes": {
                             "type": "array",
@@ -4530,11 +4549,7 @@
                         },
                         "required": [
                           "type",
-                          "title",
-                          "kind",
-                          "columns",
-                          "takeaway",
-                          "source_note"
+                          "kind"
                         ],
                         "additionalProperties": false,
                         "oneOf": [
@@ -6124,10 +6139,13 @@
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "maxLength": 20000
+                      "maxLength": 20000,
+                      "minLength": 1,
+                      "pattern": "\\S"
                     },
                     "maxItems": 32,
-                    "minItems": 1
+                    "minItems": 1,
+                    "description": "Optional explicit source columns. When omitted, infer from actual rows or the fixed data manifest; existing field mappings and data checks still apply."
                   },
                   "options": {
                     "type": "object"
@@ -6147,11 +6165,17 @@
                   },
                   "takeaway": {
                     "type": "string",
-                    "maxLength": 20000
+                    "maxLength": 20000,
+                    "minLength": 1,
+                    "pattern": "\\S",
+                    "description": "Optional supplied text; omit when unnecessary. No generic explanation or source note is generated."
                   },
                   "source_note": {
                     "type": "string",
-                    "maxLength": 20000
+                    "maxLength": 20000,
+                    "minLength": 1,
+                    "pattern": "\\S",
+                    "description": "Optional supplied text; omit when unnecessary. No generic explanation or source note is generated."
                   },
                   "nodes": {
                     "type": "array",
@@ -6185,11 +6209,7 @@
                 },
                 "required": [
                   "type",
-                  "title",
-                  "kind",
-                  "columns",
-                  "takeaway",
-                  "source_note"
+                  "kind"
                 ],
                 "additionalProperties": false,
                 "oneOf": [
@@ -8134,10 +8154,13 @@
                                 "type": "array",
                                 "items": {
                                   "type": "string",
-                                  "maxLength": 20000
+                                  "maxLength": 20000,
+                                  "minLength": 1,
+                                  "pattern": "\\S"
                                 },
                                 "maxItems": 32,
-                                "minItems": 1
+                                "minItems": 1,
+                                "description": "Optional explicit source columns. When omitted, infer from actual rows or the fixed data manifest; existing field mappings and data checks still apply."
                               },
                               "options": {
                                 "type": "object",
@@ -8171,11 +8194,17 @@
                               },
                               "takeaway": {
                                 "type": "string",
-                                "maxLength": 20000
+                                "maxLength": 20000,
+                                "minLength": 1,
+                                "pattern": "\\S",
+                                "description": "Optional supplied text; omit when unnecessary. No generic explanation or source note is generated."
                               },
                               "source_note": {
                                 "type": "string",
-                                "maxLength": 20000
+                                "maxLength": 20000,
+                                "minLength": 1,
+                                "pattern": "\\S",
+                                "description": "Optional supplied text; omit when unnecessary. No generic explanation or source note is generated."
                               },
                               "nodes": {
                                 "type": "array",
@@ -8209,11 +8238,7 @@
                             },
                             "required": [
                               "type",
-                              "title",
-                              "kind",
-                              "columns",
-                              "takeaway",
-                              "source_note"
+                              "kind"
                             ],
                             "additionalProperties": false,
                             "oneOf": [
@@ -9961,10 +9986,13 @@
                         "type": "array",
                         "items": {
                           "type": "string",
-                          "maxLength": 20000
+                          "maxLength": 20000,
+                          "minLength": 1,
+                          "pattern": "\\S"
                         },
                         "maxItems": 32,
-                        "minItems": 1
+                        "minItems": 1,
+                        "description": "Optional explicit source columns. When omitted, infer from actual rows or the fixed data manifest; existing field mappings and data checks still apply."
                       },
                       "options": {
                         "type": "object"
@@ -9984,11 +10012,17 @@
                       },
                       "takeaway": {
                         "type": "string",
-                        "maxLength": 20000
+                        "maxLength": 20000,
+                        "minLength": 1,
+                        "pattern": "\\S",
+                        "description": "Optional supplied text; omit when unnecessary. No generic explanation or source note is generated."
                       },
                       "source_note": {
                         "type": "string",
-                        "maxLength": 20000
+                        "maxLength": 20000,
+                        "minLength": 1,
+                        "pattern": "\\S",
+                        "description": "Optional supplied text; omit when unnecessary. No generic explanation or source note is generated."
                       },
                       "nodes": {
                         "type": "array",
@@ -10022,11 +10056,7 @@
                     },
                     "required": [
                       "type",
-                      "title",
-                      "kind",
-                      "columns",
-                      "takeaway",
-                      "source_note"
+                      "kind"
                     ],
                     "additionalProperties": false,
                     "oneOf": [
@@ -10652,7 +10682,8 @@
           "title": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 1000
+            "maxLength": 1000,
+            "description": "Optional index title. Defaults to a supplied component title, fixed data title, or component type; does not add a visible component title."
           },
           "summary": {
             "type": "string",
@@ -10681,7 +10712,8 @@
                 "type": "string",
                 "const": "demo"
               }
-            ]
+            ],
+            "description": "Optional provenance. Inherits fixed dependencies; demo cannot be downgraded. Without fixed provenance, supplied rows or text are recorded as derived, not inferred observations or user input."
           },
           "data": {
             "type": "array",
@@ -11345,14 +11377,15 @@
         "agent",
         "host"
       ],
-      "description": "Show one component, up to 12 components, or a complete document. Use target:answer for a concise answer and combine related components in one call; default target:report keeps a report page. Automatically runs the same static validation, then publishes through the host-selected provider and returns its fixed reference. Discovery and separate validation are optional.",
+      "description": "Show a component or up to 12 related components in one call. Supply chart type/kind, rows or a fixed data_id, and necessary options; titles, columns, notes and publication metadata are optional. The tool normalizes and validates, then publishes through the host-selected provider. Use target:answer for concise answers; report is the default. Discovery and separate validation are optional.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "title": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 1000
+            "maxLength": 1000,
+            "description": "Optional index title. Defaults to a supplied component title, fixed data title, or component type; does not add a visible component title."
           },
           "summary": {
             "type": "string",
@@ -11381,7 +11414,8 @@
                 "type": "string",
                 "const": "demo"
               }
-            ]
+            ],
+            "description": "Optional provenance. Inherits fixed dependencies; demo cannot be downgraded. Without fixed provenance, supplied rows or text are recorded as derived, not inferred observations or user input."
           },
           "data": {
             "type": "array",
@@ -11905,7 +11939,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 512,
-            "description": "Stable idempotency key for this exact publication."
+            "description": "Optional explicit retry identity. Otherwise derived from the trusted host execution callId and session; never from content or time. Required only when no trusted invocation identity is available."
           },
           "space": {
             "type": "string",
@@ -12008,11 +12042,7 @@
             "description": "Use answer for components embedded in a concise answer; report keeps the report page. Fixed input_ref owns this value and cannot be overridden."
           }
         },
-        "required": [
-          "operation_id",
-          "title",
-          "provenance_kind"
-        ],
+        "required": [],
         "additionalProperties": false,
         "oneOf": [
           {

@@ -90,7 +90,8 @@ test('signal study retains its exact snapshot and chart selection without a defa
   assert.equal(await page.locator('#run-snapshot').evaluate(node => JSON.stringify(JSON.parse(node.textContent))), before);
   await noAppendix(page);
   await page.locator('#factor-focus').selectOption('1');
-  assert.equal(await page.locator('[data-factor-condition="1"]').isVisible(), true);
-  assert.equal(await page.locator('[data-factor-condition="0"]').isHidden(), true);
+  // A selected record without authored conditions has no placeholder prose.
+  assert.equal(await page.locator('[data-factor-condition="1"]').getAttribute('hidden'), null);
+  assert.notEqual(await page.locator('[data-factor-condition="0"]').getAttribute('hidden'), null);
   assert.equal(await page.locator('#factor-periods svg').count(), 1);
 });
