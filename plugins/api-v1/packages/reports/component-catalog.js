@@ -10,19 +10,19 @@ const freeze = value => {
 
 // The existing publication contract is authoritative. Do not read schemas from
 // components_*: those capabilities themselves consume this catalog.
-const publicationSchema = readJSON('capabilities.json').capabilities.find(item => item.id === 'report_publish').inputSchema;
-const documentDefinition = publicationSchema.properties.content.oneOf.find(item => item.properties.kind.const === 'document');
+const publicationSchema = readJSON('capabilities.json').capabilities.find(item => item.id === 'report_render').inputSchema.properties.input;
+const documentDefinition = publicationSchema.properties.content;
 const blockDefinitions = publicationSchema.$defs.block.oneOf;
 const blockDefinition = type => blockDefinitions.find(item => item.properties.type.const === type);
 const standalone = schema => ({ ...clone(schema), ...(JSON.stringify(schema).includes('#/$defs/') ? { $defs: clone(publicationSchema.$defs) } : {}) });
 export const documentSchema = freeze(standalone(documentDefinition));
 
 const blocksPlacement = ['content.sections[].blocks[]', 'block.group.blocks[]', 'block.details.blocks[]'];
-const chartPlacement = [...blocksPlacement, 'content.overview.chart'];
+const chartPlacement = blocksPlacement;
 const categories = [
   ['trend', '趋势与有序变化'], ['comparison', '比较与差距'], ['distribution', '分布与统计'],
   ['composition', '总量与构成'], ['relationship', '结构与关系'], ['temporal', '日期与事件'],
-  ['multivariate', '多维比较'], ['content', '文字与证据'], ['layout', '布局与组合'], ['overview', '概览'],
+  ['multivariate', '多维比较'], ['content', '文字与证据'], ['layout', '布局与组合'],
 ].map(([id, label]) => ({ id, label }));
 
 // Purpose descriptions describe the encoding and data relationship, rather than
@@ -230,7 +230,7 @@ const blockExamples = {
   paragraph, markdown: { type: 'markdown', text: '**演示**：用短段落补充说明。' },
   attachments: { type: 'attachments', items: [{ label: '演示数据', path: 'evidence/demo.json' }] },
   judgment: { type: 'judgment', text: '演示：当前容量足够完成任务。' },
-  formula: { type: 'formula', latex: 'r=\\frac{a}{b}', caption: '演示：两个已知量的比值。' },
+  formula: { type: 'formula', latex: 'r=\\frac{a}{b}' },
   metrics: { type: 'metrics', items: [{ label: '演示数量', value: 12 }] },
   range: { type: 'range', label: '演示位置', min: 0, max: 10, value: 6 },
   scores: { type: 'scores', min: 0, max: 10, items: [{ label: '演示尺度甲', value: 6 }, { label: '演示尺度乙', value: 8 }] },
@@ -239,14 +239,14 @@ const blockExamples = {
   group: { type: 'group', layout: 'columns', blocks: [paragraph, { type: 'metrics', items: [{ label: '演示数量', value: 12 }] }] },
   details: { type: 'details', title: '演示依据', blocks: [paragraph] },
   chart: chartExample('line'),
-  judgments: { type: 'judgments', items: [{ 问题: '容量是否充足？', 判断: '演示：容量充足。', 依据: '虚构容量为 10，需求为 6。' }] },
+  judgments: { type: 'judgments', items: [{ label: '容量', value: '演示：容量充足。' }] },
   logic: { type: 'logic', title: '演示依赖关系', nodes: [{ id: 'input', label: '已有输入' }, { id: 'result', label: '输出结果' }], edges: [{ from: 'input', to: 'result' }] },
 };
 const blockMetadata = {
   paragraph: ['段落', 'content', '用简短自然语言解释背景、方法、限制或图表中的关键观察。', 'paragraph text prose'],
   markdown: ['Markdown 文本', 'content', '需要加粗、列表或链接等基础格式时，组织补充说明与阅读结构。', 'markdown formatted text list'],
   attachments: ['证据附件', 'content', '向读者提供已打包数据、文本或图片的下载入口，便于核对完整材料。', 'attachments evidence files download'],
-  judgment: ['一句判断', 'content', '突出一个已有依据的核心判断，并可补充简短边界说明。', 'judgment conclusion statement'],
+  judgment: ['一句判断', 'content', '突出一个已有的核心判断。', 'judgment conclusion statement'],
   formula: ['数学公式', 'content', '以 LaTeX 表达变量关系、计算定义或方法中的关键公式。', 'formula latex math equation'],
   metrics: ['指标摘要', 'content', '集中呈现少量关键数值及其含义，便于读者快速读取结果。', 'metrics kpi numeric summary'],
   range: ['区间位置', 'comparison', '在明确上下界内定位一个真实数值，突出它距两端的相对位置。', 'range bounded position'],
@@ -256,7 +256,7 @@ const blockMetadata = {
   group: ['内容组合', 'layout', '把相关内容按并列或纵向关系组成一组，保持同一阅读上下文。', 'group layout columns stack composition'],
   details: ['折叠详情', 'layout', '把完整证据、方法或长说明放入可展开区域，减少主叙述中的干扰。', 'details disclosure evidence'],
   chart: ['通用图表入口', 'content', '把固定源数据映射到一种已支持图型，具体选择与参数由 chart.* 目录提供。', 'chart builtin visualization'],
-  judgments: ['分项判断', 'content', '并列展示多个已有判断及对象、依据和条件，保留每条原始记录。', 'judgments results evidence conditions'],
+  judgments: ['分项判断', 'content', '并列展示已有的标签和判断；需要明细时显式提供命名的值。', 'judgments results evidence conditions'],
   logic: ['逻辑依赖图', 'relationship', '展示多个输入、步骤和结果之间的有向依赖，适合包含共享输入或汇合的无环结构。', 'logic dag dependency directed graph'],
 };
 
@@ -269,7 +269,7 @@ function add(id, metadata, detail) {
 const publicKinds = blockDefinition('chart').properties.kind.enum;
 if (publicKinds.length !== Object.keys(chartMetadata).length || publicKinds.some(kind => !chartMetadata[kind] || !mappings[kind])) throw new Error('Component catalog must cover every public chart kind');
 for (const kind of publicKinds) add(`chart.${kind}`, chartMetadata[kind], {
-  placement: chartPlacement, inputSchema: chartSchema(kind), example: chartExample(kind), notes: [chartNotes[kind], 'rows 与固定 data_id 二选一；columns 从实际数据推导，可显式提供。title、takeaway、source_note 均可省略；只填写必要的已有文字。示例调用须包含 exampleContext 的 demo 来源。置于 overview 时图高须为 180–280。'],
+  placement: chartPlacement, inputSchema: chartSchema(kind), example: chartExample(kind), notes: [chartNotes[kind], 'rows 与固定 data_id 二选一；columns 从实际数据推导，可显式提供。title 可省略；解释放独立 paragraph/markdown。示例调用须包含 exampleContext 的 demo 来源。'],
 });
 for (const schema of blockDefinitions) {
   const type = schema.properties.type.const;
@@ -283,11 +283,6 @@ for (const schema of blockDefinitions) {
               : '示例为虚构演示；内容和证据由调用者提供，组件不产生新的分析结论。',
   ], ...(type === 'attachments' ? { exampleContext: { assets: [{ path: 'evidence/demo.json', source_path: 'packages/reports/examples/statistical-fixtures.json', media_type: 'application/json' }] } } : {}) });
 }
-add('document.overview', ['首页概览', 'overview', '用一个结论和少量关键事实概括已有结果，帮助读者在进入正文前抓住重点。', 'overview summary key facts conclusion'], {
-  placement: ['content.overview'], inputSchema: standalone(documentDefinition.properties.overview),
-  example: { conclusion: '演示：当前容量足够覆盖需求。', facts: [{ label: '容量', value: '10', format: 'number' }, { label: '需求', value: '6', format: 'number' }] },
-  notes: ['facts、table、chart 至少一个有实际结果；中文结论≤48字，事实标签≤20字，短语≤16字、数字≤36字、句子≤48字；详细解释放正文。', '概览表最多 7 列×6 行，图高 180–280；locale 的其余限制见公开 schema 与真实 renderer。'],
-});
 for (const layout of ['columns', 'stack']) {
   const schema = standalone(blockDefinition('group'));
   schema.properties.layout = { const: layout };

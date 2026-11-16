@@ -11,27 +11,25 @@ import { normalizeComponentContent } from '../packages/reports/component-input.j
 
 const host = process.env.SESAME_HOST_ROOT;
 const manifest = JSON.parse(await readFile(new URL('../packages/reports/capabilities.json', import.meta.url), 'utf8'));
-const publicationSchema = manifest.capabilities.find(item => item.id === 'report_publish').inputSchema;
+const publicationSchema = manifest.capabilities.find(item => item.id === 'report_render').inputSchema.properties.input;
 const publicBlocks = publicationSchema.$defs.block.oneOf;
 const publicKinds = publicBlocks.find(item => item.properties.type.const === 'chart').properties.kind.enum;
 const all = listComponents({ limit: 100 });
 const details = all.items.flatMap((_, index, items) => index % 12 ? [] : describeComponents(items.slice(index, index + 12).map(item => item.id)).items);
-const asDocument = item => item.id === 'document.overview'
-  ? { kind: 'document', overview: item.example, sections: [] }
-  : { kind: 'document', sections: [{ title: item.label, blocks: [item.example] }] };
+const asDocument = item => ({ kind: 'document', sections: [{ title: item.label, blocks: [item.example] }] });
 const args = item => ({ title: '组件目录演示', locale: 'zh-CN', provenance_kind: 'demo', data: [], ...item.exampleContext, content: asDocument(item) });
 
 test('catalog exposes exactly the public document components and no internal projections', async () => {
   assert.equal(COMPONENT_PROTOCOL, 'sesame-components/1');
   assert.equal(all.schemaVersion, 1);
-  assert.equal(all.total, 56);
+  assert.equal(all.total, 55);
   assert.equal(publicKinds.length, 38);
   assert.equal(publicBlocks.length, 15);
   assert.deepEqual(all.items.filter(item => item.id.startsWith('chart.')).map(item => item.id.slice(6)).sort(), [...publicKinds].sort());
   assert.deepEqual(all.items.filter(item => item.id.startsWith('block.')).map(item => item.id.slice(6)).sort(), publicBlocks.map(item => item.properties.type.const).sort());
-  assert.deepEqual(all.items.filter(item => !/^(chart|block)\./.test(item.id)).map(item => item.id).sort(), ['document.overview', 'layout.columns', 'layout.stack']);
-  assert.equal(new Set(all.items.map(item => item.id)).size, 56);
-  assert.equal(all.categories.reduce((sum, category) => sum + category.count, 0), 56);
+  assert.deepEqual(all.items.filter(item => !/^(chart|block)\./.test(item.id)).map(item => item.id).sort(), ['layout.columns', 'layout.stack']);
+  assert.equal(new Set(all.items.map(item => item.id)).size, 55);
+  assert.equal(all.categories.reduce((sum, category) => sum + category.count, 0), 55);
   for (const item of all.items) {
     assert.match(item.label, /[\u3400-\u9fff]/);
     assert.match(item.whenToUse, /[\u3400-\u9fff]/);
@@ -50,7 +48,7 @@ test('catalog exposes exactly the public document components and no internal pro
     }
     const definition = { kind: example.kind, columns: example.columns, options: example.options, data_requirements: 'Supplied demo records' };
     chartDefinition(definition);
-    chartValue({ rows: example.rows, takeaway: example.takeaway, source_note: example.source_note, ...(example.nodes ? { nodes: example.nodes } : {}) }, definition);
+    chartValue({ rows: example.rows, ...(example.nodes ? { nodes: example.nodes } : {}) }, definition);
     assert.ok(Object.keys(item.inputSchema.properties.options.properties).length > 2, item.id);
   }
 });
@@ -58,11 +56,11 @@ test('catalog exposes exactly the public document components and no internal pro
 test('pagination is bounded, stable and bound to the current search', () => {
   const first = listComponents();
   assert.equal(first.items.length, 20);
-  assert.equal(first.total, 56);
+  assert.equal(first.total, 55);
   assert.ok(first.nextCursor);
   const second = listComponents({ cursor: first.nextCursor });
   const third = listComponents({ cursor: second.nextCursor });
-  assert.equal(third.items.length, 16);
+  assert.equal(third.items.length, 15);
   assert.equal(Object.hasOwn(third, 'nextCursor'), false);
   assert.deepEqual([...first.items, ...second.items, ...third.items].map(item => item.id), all.items.map(item => item.id));
   for (const limit of [0, -1, 101, 1.5, '20', null]) assert.throws(() => listComponents({ limit }), /limit/);
@@ -103,7 +101,7 @@ test('describe rejects unknown ids, keeps order and returns independent contract
   const schema = getChartSchema('line'); schema.required.push('wrong');
   assert.ok(!getChartSchema('line').required.includes('wrong'));
   assert.deepEqual(getBlockSchema('paragraph'), publicBlocks.find(item => item.properties.type.const === 'paragraph'));
-  assert.deepEqual(documentSchema, { ...publicationSchema.properties.content.oneOf.find(item => item.properties.kind.const === 'document'), $defs: publicationSchema.$defs });
+  assert.deepEqual(documentSchema, { ...publicationSchema.properties.content, $defs: publicationSchema.$defs });
 });
 
 test('every component example renders through the production document renderer', async () => {
@@ -159,8 +157,7 @@ test('all public chart kinds mount in the actual browser and match the renderer 
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   await page.route('**/*', route => route.abort());
-  const content = { kind: 'document', overview: details.find(item => item.id === 'document.overview').example,
-    sections: details.filter(item => item.id !== 'document.overview').map(item => ({ title: item.id, blocks: [item.example] })) };
+  const content = { kind: 'document', sections: details.map(item => ({ title: item.id, blocks: [item.example] })) };
   // The document has a public 50-section limit; combine adjacent examples.
   content.sections = content.sections.flatMap((section, index, sections) => index % 2 ? [] : [{ title: section.title,
     blocks: [section.blocks[0], ...(sections[index + 1]?.blocks ?? [])] }]);

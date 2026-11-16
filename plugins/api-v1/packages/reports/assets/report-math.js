@@ -5,6 +5,11 @@
     for (const node of root.querySelectorAll('[data-report-math]:not([data-math-rendered])')) {
       const latex = node.getAttribute('data-report-math') || node.textContent;
       node.innerHTML = katex.renderToString(latex, { output: 'mathml', displayMode: node.getAttribute('data-display') !== 'inline', throwOnError: true, trust: false, strict: 'error', maxExpand: 1000, maxSize: 20 });
+      // Author styling cannot override the report theme. Keep MathML's genuine
+      // script structures and scriptlevel, which size subscripts and exponents.
+      for (const styled of node.querySelectorAll('math [mathsize], math [mathcolor], math [mathbackground]')) {
+        for (const attribute of ['mathsize', 'mathcolor', 'mathbackground']) styled.removeAttribute(attribute);
+      }
       node.setAttribute('data-math-rendered', 'true');
     }
   };

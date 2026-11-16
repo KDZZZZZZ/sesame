@@ -49,6 +49,6 @@ H0 / D0 / G0 收齐后由协调者按协议检查内部完整性，再做成对�
 
 给交付者显式授予 `{pluginId:"host",capabilityId:"reports.describe"}` 与 `{pluginId:"host",capabilityId:"reports.publish"}`，先调用 `host_reports_describe` 取得当前选定报告提供方的实际 schema，再按它的合同准备内容并通过 `host_reports_publish` 发布。绑定路径不会自动赋予写作工具，也不固定使用某个提供方的旧参数。
 
-当前选择 `sesame/reports` 时，再按需要授予 `report_template`、`report_prepare`、`report_check`、`report_read` 及工作区、数据能力；`report_prepare` 返回的 publication 按实际合同交给宿主发布入口。遵循当前报告插件指导，使用统一组件与渲染，核验对应修订的文件和 rendered 回执。不把 Run completed 或一个文件名当作报告已交付。
+当前选择 `sesame/reports` 时，按需要授予 `components_show`、`report_check`、`report_read` 及工作区、数据能力；已有结论和固定数据通过 `components_show` 交付，需要时再查组件目录。遵循当前报告插件指导，使用统一组件与渲染，核验对应修订的文件和 rendered 回执。不把 Run completed 或一个文件名当作报告已交付。
 
 主 Agent 最后简述发现与报告位置；有价值明确且在原授权内的下一项检验可以安排后再说明已开始什么。没有新证据或新方向时结束本轮，不因“深度”二字持续制造任务。用户明确暂停或取消时遵循宿主控制。

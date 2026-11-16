@@ -7,7 +7,22 @@ Sesame API 1 development host. Both packages declare `engines.sesame >=0.2.0-0`.
 This record is author execution evidence, not an independent approval or a claim
 that the application has been released.
 
-## Package boundaries
+## Current reproduction
+
+The current `research-methods.test.mjs` and `research-methods-host.test.mjs`
+exercise the integrated `auto-factor-mining` package, its declared research
+references and optional reference CLIs. The host test installs that package in a
+temporary API 2 workspace, reads the declared resources, runs the three strategy
+audit commands and selected-factor screen/select/holdout commands, then reopens
+the workspace. It does not install a fixed nine-package core bundle and does not
+publish reports. For the eight independent theory methods and the current
+`data_snapshot` → `data_read` → workspace execution → `research_register` →
+`components_show(target:"report")` path, use `method-host.test.mjs`.
+
+The dated execution counts below apply only to the historical checkout; this
+document does not treat a renamed command as fresh validation.
+
+## Historical package boundaries
 
 - `sesame/strategy-research` 1.0.0: original MIT plan, temporal split and complete
   experiment-ledger audits. It does not execute an engine or implement a named
@@ -36,15 +51,15 @@ The opt-in `research-methods-host.test.mjs`: **1 integration test passed**. It
 accepts `SESAME_HOST_ROOT` from its caller and dynamically imports that matching
 host. All data and installed files are in a new temporary root:
 
-1. Copy the fixed nine core packages into a separate validated fixture bundle;
+1. Copy that checkout's core packages into a separate validated fixture bundle;
    run formal `plugin_test` and `plugin_install` for both new packages.
 2. Load each skill in a different real Pi session; the other skill stays absent,
    unloaded resource access fails, and every declared resource matches its source.
 3. Execute three strategy audits and five factor workflow commands through the
    actual workspace `bash` tool (eight real Node.js commands, no model call).
 4. Use the real `data_read` byte serialization. Register a one-row selection
-   from an execution snapshot using `research_register`, then freeze it with
-   `report_data` and a development-data dependency. Verify its actual immutable
+   from an execution snapshot using the historical registration/snapshot chain
+   and a development-data dependency. Verify its actual immutable
    row before the holdout input has been exported into the workspace.
 5. Export the separate holdout, evaluate only the selected factor, register four
    diagnostic rows and freeze them with selection and holdout-input references.
@@ -53,7 +68,8 @@ host. All data and installed files are in a new temporary root:
 
 The fixture forbids network access and confirms zero requests, zero model calls
 and zero native engine calls. Temporary state is deleted after verification.
-To rerun against an explicitly selected compatible checkout:
+To run the current integrated-package test against an explicitly selected
+compatible API 2 checkout (its scope is described above):
 
 ```sh
 SESAME_HOST_ROOT=/absolute/path/to/host node \

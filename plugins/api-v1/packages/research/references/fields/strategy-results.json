@@ -1,0 +1,343 @@
+{
+  "title": "策略回测与历史表现：字段语义",
+  "reading": "按需查阅所采用指标的含义、输入、单位、解释和缺失处理。series 表示已有分析数据，不指定图形或布局。并非必须计算或填满的清单。",
+  "context": "fields-context",
+  "fields": {
+    "equity_series": {
+      "label": "策略与基准净值",
+      "meaning": "同初始基数、币种与期间的已计算净值，明确分红和成本；只展示已登记回测结果。",
+      "definition": "固定回测运行产生的策略与基准净值路径。",
+      "inputs": "date、strategy/benchmark、运行 ID、初始基数、收益再投和费用口径。",
+      "unit_time": "同币种、初始日期与观察频率，明确净值是归一化指数或实际账户金额。",
+      "interpretation": "历史模拟净值不同于实盘业绩和未来预期；组合现金处理也影响可比性。",
+      "missing": "缺日期或基准时保留缺口，不插值冒充执行结果或重算净值。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "净值来自真实完成的模拟/计算结果；基准同口径另算，模拟净值不是实盘权益事实。"
+      }
+    },
+    "drawdown_series": {
+      "label": "策略与基准回撤",
+      "meaning": "由同一净值结果计算的回撤路径与单位，不在浏览器重新计算。",
+      "definition": "同一固定净值路径对应的策略与基准回撤序列。",
+      "inputs": "日期、各回撤值、峰值/回撤定义、计算频率和原净值引用。",
+      "unit_time": "比例/百分数与负值/损失正值惯例明确，同币种口径与期间。",
+      "interpretation": "月度观测回撤不能称日内最大回撤；回撤路径不同于总亏损。",
+      "missing": "未提供回撤或净值不匹配时标不可用，不在浏览器补算。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "回撤是已登记净值路径的统计，必须明确金额/百分比及基准，报告不重算。"
+      }
+    },
+    "market_matrix_series": {
+      "label": "不同品种与周期的表现",
+      "meaning": "每格为已登记选中参数组的同样本净收益；选优规则与颜色指标分开，失败/缺失保持 null。完整逐组下钻沿用原生回测报告。",
+      "definition": "各品种与周期单元内、按既定规则选中参数组的已登记结果。",
+      "inputs": "symbol、timeframe、net_return、trial_id、样本标签、选优规则与完整试验引用。",
+      "unit_time": "统一收益单位、成本和样本边界；不同单元期间差异明确。",
+      "interpretation": "颜色指标可与选优指标不同；每格是已选组，不是对所有参数平均，也不据留出重新选优。",
+      "missing": "失败、未运行和缺失单元保留状态/null；详细参数沿原生报告下钻。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "矩阵每格来自真实运行的选定参数组指标，品种/周期是实验条件，失败保持缺失。"
+      }
+    },
+    "parameter_surface": {
+      "label": "参数组合表现",
+      "meaning": "所选两个参数轴的已登记同品种、周期、样本及成本结果；固定其他参数，不填补未测试格，不据此重选样本外参数。",
+      "definition": "在固定其他条件下两个参数轴对应的已执行试验结果。",
+      "inputs": "两参数取值、结果指标、trial_id、其他固定参数、品种/周期/样本与运行引用。",
+      "unit_time": "轴单位、收益尺度、成本、样本区间一致，默认 lookback/threshold 可按实际方法替换。",
+      "interpretation": "热区不证明稳健，未测试组合不能插值成实测；留出结果不能用于重新挑参数。",
+      "missing": "未运行或失败格保留 null 与状态，不删除不利组合或补齐网格。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "每格为同数据/成本下真实参数试验统计；轴与固定参数来自设计，未测格不是零。"
+      }
+    },
+    "parameter_sensitivity_series": {
+      "label": "参数敏感性",
+      "meaning": "固定其他参数后的逐试验指标；每点可追溯完整参数组，相同横坐标不静默平均。参数、指标与筛选规则可由用户替换。",
+      "definition": "固定其余参数时某一参数变化对应的逐组试验指标。",
+      "inputs": "参数轴、已登记指标、trial_id、完整参数组合及筛选条件。",
+      "unit_time": "横轴单位、指标尺度、品种/周期、样本与成本一致。",
+      "interpretation": "相同横坐标可能属于不同参数组，不能静默平均；曲线不是连续函数的证明。",
+      "missing": "没有该切片数据则标未测试，不能沿相邻点推算新试验。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "逐点指标来自实际试验，横轴是参数输入；同横坐标不同完整参数组不得静默平均。"
+      }
+    },
+    "validation_series": {
+      "label": "训练与留出区间对照",
+      "meaning": "冻结同一策略后训练与独立留出区间的已计算指标，注明区间长度与成本；不同长度累计收益不能直接比较优劣，留出不得参与选优。",
+      "definition": "冻结策略后在训练和独立评价区间的既有结果对照。",
+      "inputs": "sample、指标、start/end、months、冻结版本、成本与运行引用。",
+      "unit_time": "区间长度、币种、累计/年化口径明确，指标若不同不可直接共轴。",
+      "interpretation": "不同长度累计收益不能直接判优；用于选优的样本不能又称独立留出。",
+      "missing": "未执行独立评价则只给训练结果并标状态，不复制训练值作验证。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "训练/留出指标来自真实独立运行，策略冻结和区间元数据证明选择时点；不是可视化判断通过。"
+      }
+    },
+    "funnel_series": {
+      "label": "信号到成交漏斗",
+      "meaning": "同一运行中的去重阶段计数及排除原因；注明各阶段是否包含关系，不把筛选数量当命中率。",
+      "definition": "同一策略运行各实际筛选阶段的去重数量及排除。",
+      "inputs": "阶段、count、原始单位、纳入/排除规则、重叠关系和运行引用。",
+      "unit_time": "计数是资产/信号/订单/交易中的指定单位，期间及运行一致。",
+      "interpretation": "阶段不一定严格包含；筛选数量或通过比例不是交易胜率。",
+      "missing": "某阶段未记录就标未知，不由末端反推或为图形填递减数列。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "各阶段计数由同一运行的信号/过滤/订单/成交记录计算；包含关系和排除原因需原trace。"
+      }
+    },
+    "pnl_series": {
+      "label": "损益与费用构成",
+      "meaning": "同一账户、期间和币种的毛损益、费用与净损益应对账；不能重复扣除已净额化的费用。",
+      "definition": "同一账户和区间毛损益至净损益的费用勾稽。",
+      "inputs": "毛损益、逐项费用、净损益、各项正负方向及原结果。",
+      "unit_time": "同币种、期间和规模，费用符号、计入价格或另扣方式明确。",
+      "interpretation": "净额化结果不可重复扣费；资金流入流出不同于交易损益。",
+      "missing": "费用构成不全或不能对账时注明差额来源，不伪造其他费用平衡。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "毛损益/费用/净损益取真实模拟结果并计算对账；已净额化费用不得再扣，币种一致。"
+      }
+    },
+    "hypothesis": {
+      "label": "策略假设",
+      "meaning": "策略要检验的问题与冻结的规则/版本引用。",
+      "definition": "该策略回测实际要检验的可证伪问题及冻结规则。",
+      "inputs": "策略意图、预期机制、完整规则/源码版本、适用范围、目标指标与原生引用。",
+      "unit_time": "记录假说和规则冻结时间、数据截止与拟检验期间。",
+      "interpretation": "策略叙述不同于真实执行逻辑；知识合理性不证明历史或未来收益。",
+      "missing": "缺少冻结规则时标不可复现，不从收益曲线倒推策略描述。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "plan",
+        "meaning_note": "问题和规则由用户/研究设定，冻结源码/版本是记录；不由外部行情自动生成策略。"
+      }
+    },
+    "universe": {
+      "label": "历史投资范围",
+      "meaning": "点时投资池、数据范围、存续/退市与可交易性口径。",
+      "definition": "回测在各历史时点实际可见和可交易的投资池。",
+      "inputs": "资产纳入/排除、上市/退市、存续、停牌、可交易性和数据范围。",
+      "unit_time": "用当时成员与可得时间，市场/币种/合约规格和回测期间明确。",
+      "interpretation": "今日成分回填历史有存续偏差；可取到历史价格不等于当时可交易。",
+      "missing": "缺退市或历史成员时标覆盖局限，不声称完整点时投资池。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "metadata",
+        "meaning_note": "历史资产身份/可交易状态获取，范围选择由方法；当时资格不能由今天目录替代。"
+      }
+    },
+    "selection": {
+      "label": "筛选与持仓选择",
+      "meaning": "条件、逻辑、排序、并列、数量及其固定规则引用。",
+      "definition": "回测实际执行的筛选、排序与候选截取规则。",
+      "inputs": "条件逻辑、阈值、排序键/方向、并列、数量、缺失处理和冻结规则引用。",
+      "unit_time": "输入可得时点、信号形成频率、回看窗与单位清楚。",
+      "interpretation": "规则来自固定方法，不为解释好业绩改写；候选入选不等于立即成交。",
+      "missing": "未披露规则只引用已知版本并标缺口，不补默认 Top N 或等权。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "plan",
+        "meaning_note": "筛选/排序/并列/持仓数是实际冻结规则，结果是运行输出；不得替换既有策略的选择结果。"
+      }
+    },
+    "simulation": {
+      "label": "模拟与换仓规则",
+      "meaning": "初始资金、权重、换仓频率、成交时点、持有规则、分红再投和现金处理，由方法指定。",
+      "definition": "将信号转成模拟持仓和资金路径的实际执行假设。",
+      "inputs": "初始资金、权重、调仓、成交时点/价格、持有退出、现金、分红与订单处理。",
+      "unit_time": "币种、交易日历、bar 周期、延迟、数量步长和乘数明确。",
+      "interpretation": "信号时间、下单时间与模拟成交时间不同；模拟结果不代表真实执行可达。",
+      "missing": "假设未披露时标影响范围，不用常见成交规则替代原运行。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "plan",
+        "meaning_note": "初始资金/成交/换仓/现金处理是模拟配置；约束参考源事实，但假设不是实际成交。"
+      }
+    },
+    "window": {
+      "label": "回测与验证区间",
+      "meaning": "开始/结束、训练/验证/留出边界、策略冻结时点与评价截点。",
+      "definition": "回测各阶段的时间边界及当时信息可得性。",
+      "inputs": "总体开始/结束、训练/验证/留出分界、预热、规则冻结与评价截点。",
+      "unit_time": "时区、交易日历、bar 粒度、首末柱包含方式明确。",
+      "interpretation": "训练结束不是规则冻结的自动证明；留出期若参与选择需降为已用样本。",
+      "missing": "无法确认划分时标未知，不能将任意尾段改名样本外。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "metadata",
+        "meaning_note": "实际开始结束/训练留出边界取运行配置，冻结时点取记录，设计边界来自任务。"
+      }
+    },
+    "metrics": {
+      "label": "历史表现指标",
+      "meaning": "总收益、年化、回撤、风险/交易指标及单位和定义，由方法选择。",
+      "definition": "固定回测结果已计算的收益、风险或交易评价指标。",
+      "inputs": "指标名称、值、定义、方向、分母/样本量、成本纳入与方法。",
+      "unit_time": "注明金额/百分比/年化/倍数、币种、观测频率和期间。",
+      "interpretation": "累计收益、年化收益、胜率与风险调整指标不同；交易数不等于独立样本数。",
+      "missing": "指标未定义或运行失败时保留 null/原因，不填零或自行重算。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "收益/回撤/风险/交易指标由真实模拟结果计算，定义/方向/单位来自所选评价口径。"
+      }
+    },
+    "benchmark": {
+      "label": "比较基准",
+      "meaning": "基准身份、期间、币种、含息/费用口径，与策略可比范围。",
+      "definition": "与该策略历史表现比较的明确基准路径和口径。",
+      "inputs": "基准身份/规则、数据/结果引用、再平衡、现金、分红、费用和可比范围。",
+      "unit_time": "同期间、币种、初始基数与收益频率；总收益与价格收益区别明确。",
+      "interpretation": "基准不能事后选择只为显得策略更好；基准回测和市场指数本身也有口径差异。",
+      "missing": "无可比基准时明确未提供，不用零收益默认替代。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "基准选择来自用户/方法，身份/价格/分红等获取，基准收益计算。"
+      }
+    },
+    "positions": {
+      "label": "模拟持仓与成分",
+      "meaning": "日期、资产、方向、数量/权重及来源记录。",
+      "definition": "固定模拟运行中实际记录的各时点持仓。",
+      "inputs": "日期、资产、方向、数量/权重、市值、现金和原生记录引用。",
+      "unit_time": "持仓形成时刻、估值时刻、币种、乘数、总/净分母清楚。",
+      "interpretation": "模拟持仓不是真实账户仓位；目标权重和已模拟持仓分开。",
+      "missing": "未记录时点保持缺失，不把最近持仓无限向后填充。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "模拟持仓由真实引擎执行生成，是关于本次模拟的结果，不是账户实盘持仓。"
+      }
+    },
+    "trades": {
+      "label": "模拟成交",
+      "meaning": "信号/成交时间、价格、数量、费用、交易 ID；与真实成交分开。",
+      "definition": "回测实际模拟的订单或成交记录及其身份。",
+      "inputs": "交易 ID、信号/订单/成交时间、资产、方向、价量、费用、退出原因与原生引用。",
+      "unit_time": "币种、合约单位、乘数、时区和成交数量精度明确。",
+      "interpretation": "信号不是成交；模拟成交不同于实盘回执，同一交易多次成交需保留关联。",
+      "missing": "缺成交记录不以信号条数代替交易数，也不补拟合价格。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "模拟成交来自真实引擎回执，信号/成交时间和费用分别保留；不是已在市场成交的事实。"
+      }
+    },
+    "costs": {
+      "label": "回测成本",
+      "meaning": "费用、价差、滑点、换手与融资的估计方法、结果和纳入范围。",
+      "definition": "回测已采用的执行与持有成本模型及其结果。",
+      "inputs": "佣金、价差、滑点、冲击、融资/借券、换手、估计方法与纳入范围。",
+      "unit_time": "同币种、单边/往返、每单位或年率，持有期和费用截点明确。",
+      "interpretation": "成本假设影响净结果；已包含在成交价的费用不能再扣。",
+      "missing": "未建模项目标未覆盖，不声称真实零成本；已知零费率可明确为零。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "实际模拟费用取结果，输入费率可能真实源或用户假设，滑点/融资模型属于估计，逐项区分。"
+      }
+    },
+    "assumptions": {
+      "label": "数据与成交处理",
+      "meaning": "点时数据、停牌、退市、复权、分红、缺失与执行延迟处理。",
+      "definition": "影响历史模拟可复现性和适用性的具体数据与执行处理。",
+      "inputs": "点时数据、复权、分红、停牌/退市、缺失、延迟、流动性等实际规则及版本。",
+      "unit_time": "给出适用期间、信息首次可得时间与合约/市场范围。",
+      "interpretation": "明确做过与没做过的处理；常见最佳实践不能冒充本次已实现行为。",
+      "missing": "无法核实的假设标未知，不自动补成无前视或无存续偏差。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "plan",
+        "meaning_note": "点时/停牌/复权/延迟处理是数据和模拟规则；其中“已具备PIT数据”需独立证据，不能仅写假设。"
+      }
+    },
+    "validation": {
+      "label": "策略验证记录",
+      "meaning": "所选方法实际完成的验证范围、结果、选择次数与固定依据，不由渲染判定通过。",
+      "definition": "策略历史评估实际完成的验证和参数选择记录。",
+      "inputs": "验证方式/范围、规则冻结、训练/留出结果、选择次数、多重试验与固定依据。",
+      "unit_time": "标明样本边界、运行时间、参数冻结时刻和成本口径。",
+      "interpretation": "成功生成结果文件不证明策略有效；留出样本参与选优后不再是独立证据。",
+      "missing": "未做检验就标未做，缺失败试验记录时不声称充分稳健。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "metadata",
+        "meaning_note": "检验范围/执行状态/指标取实际记录，判断通过标准由研究决定；成功渲染不是通过。"
+      }
+    },
+    "artifacts": {
+      "label": "固定回测结果",
+      "meaning": "原生 run/result/trade/参数等固定引用；复用原生回测报告，不重算或复制执行层。",
+      "definition": "支持本次回测报告的原生运行、结果、交易与参数固定成果索引。",
+      "inputs": "完整固定引用、成果角色、运行/策略版本、原生报告或下钻入口。",
+      "unit_time": "每项保留 revision/digest/schemaVersion、产生时间和对应样本范围。",
+      "interpretation": "链接或裸 ID 不能冒充固定数据引用；复用原生结果，不再造模拟执行层。",
+      "missing": "成果缺失标不可读/未提供，不用相似运行替换。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "metadata",
+        "meaning_note": "读取真实原生run/result/trade/参数固定引用，生产者/修订不改写。"
+      }
+    },
+    "strategy_logic": {
+      "label": "策略逻辑与源码",
+      "meaning": "真实源码修订、逻辑图和对应运行引用；复用原生策略图/函数展开，只有本次实际使用 SVL 才关联 SVL，不根据叙述编造执行逻辑。",
+      "definition": "实际执行策略源码与逻辑图及回测运行之间的对应关系。",
+      "inputs": "源码修订、函数/节点、逻辑图原生引用、运行 ID 和实际使用的策略表示。",
+      "unit_time": "记录源码冻结时刻与运行版本，输入数据/周期范围可追溯。",
+      "interpretation": "不能根据自然语言编造执行逻辑；只有本次实际使用 SVL 才关联 SVL，其他代码保留原生路径。",
+      "missing": "无源码或逻辑图时引用已有运行并标未提供，不伪造函数调用图。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "metadata",
+        "meaning_note": "源码/修订来自真实工件，逻辑图由同一语法结构派生，运行关联取回执；叙述不是执行逻辑。"
+      }
+    },
+    "parameter_trials": {
+      "label": "完整参数试验",
+      "meaning": "每组 trial_id、品种/周期、样本、完整参数、状态、预选标识及原始指标；保留失败、未运行和指标未定义，较大结果用原生分页下钻和固定引用。",
+      "definition": "本次真实参数搜索的逐组配置、运行状态与原始结果。",
+      "inputs": "trial_id、品种/周期、样本、完整参数、状态、预选标识、指标和原生结果引用。",
+      "unit_time": "参数单位、成本、样本区间、运行时间和指标尺度明确。",
+      "interpretation": "保留失败、未运行和指标未定义；大结果用原生分页下钻，不能只保留赢家制造稳定性。",
+      "missing": "未测试组合不补数据，失败指标用 null 与原因，不当作零收益。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "参数是输入，trial状态取真实执行，指标为统计，预选标识来自事前规则；失败/未运行明确保留。"
+      }
+    },
+    "selection_rule": {
+      "label": "参数选优口径",
+      "meaning": "运行前声明的优化指标、方向、样本、约束与并列规则，以及据此选出的组合；不使用留出结果挑参。",
+      "definition": "参数试验前声明并实际使用的选择规则及已登记选中组。",
+      "inputs": "优化指标、最大/最小方向、选择样本、约束、并列规则、规则版本和获胜 trial_id。",
+      "unit_time": "记录声明/冻结时间、样本边界和指标单位；筛选指标与其他描述指标分开。",
+      "interpretation": "选择规则与实际结果对应；选择后修改规则必须另记新研究版本，不能继续称为同一预先冻结检验。",
+      "missing": "缺事前规则就标未知或事后选择，不能倒写成预先声明。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "plan",
+        "meaning_note": "优化指标/方向/约束/并列是事前规则，获胜组是执行选择结果；留出不参与重选。"
+      }
+    }
+  }
+}

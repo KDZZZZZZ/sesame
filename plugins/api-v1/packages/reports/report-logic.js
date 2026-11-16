@@ -1,14 +1,13 @@
 // A presentation of supplied steps and dependencies, never a trading-rule generator.
-import { renderText, isDuplicateText } from './report-text.js';
+import { isDuplicateText } from './report-text.js';
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const object = value => value && typeof value === 'object' && !Array.isArray(value);
 const check = (ok, message) => { if (!ok) throw Error(`Report logic: ${message}`); };
 const text = value => typeof value === 'string' && value.trim() && value.length <= 2000;
 export function renderLogicDiagram(logic, context = { titles: [] }) {
-  check(object(logic) && Object.keys(logic).every(k => ['type', 'title', 'note', 'nodes', 'edges'].includes(k)), 'supply a title, nodes and edges');
+  check(object(logic) && Object.keys(logic).every(k => ['type', 'title', 'nodes', 'edges'].includes(k)), 'supply a title, nodes and edges');
   check(logic.type === undefined || logic.type === 'logic', 'unknown content type');
   check(text(logic.title), 'title is required');
-  check(logic.note === undefined || text(logic.note), 'note must be text');
   check(Array.isArray(logic.nodes) && logic.nodes.length >= 1 && logic.nodes.length <= 80, 'supply 1–80 nodes');
   check(Array.isArray(logic.edges) && logic.edges.length <= 160, 'supply at most 160 edges');
   const nodes = new Map();
@@ -36,39 +35,12 @@ export function renderLogicDiagram(logic, context = { titles: [] }) {
   check(ordered.length === nodes.size, 'show one pass of a repeated process; circular dependencies are not supported');
   const graph = {
     title: logic.title,
-    nodes: logic.nodes.map(node => ({ id: node.id, label: node.label, operator: node.detail ?? '', effect: 'pure' })),
+    nodes: logic.nodes.map(node => ({ id: node.id, label: node.label, operator: '', effect: 'pure' })),
     edges: logic.edges,
   };
   const source = { nodes: logic.nodes.map(node => ({ ...node,
     inputs: logic.edges.filter(edge => edge.to === node.id).map(edge => ({ from: edge.from, ...(edge.label ? { label: edge.label } : {}) })),
   })) };
   const payload = JSON.stringify({ graph, source }).replace(/[<>&\u2028\u2029]/g, c => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`);
-  return `<section data-report-svl>${isDuplicateText(logic.title,context.titles) ? '' : `<h3>${escape(logic.title)}</h3>`}${renderText(logic.note,{against:[logic.title]})}<script type="application/json">${payload}</script></section>`;
-}
-
-// Project an evaluator's actual expression into dependencies. Unknown operators
-// retain their recorded names; this projection never guesses their semantics.
-export function factorLogic(expression) {
-  if (!object(expression) || typeof expression.op !== 'string') return null;
-  const nodes = [], edges = [];
-  const fields = { close: '收盘价', open: '开盘价', high: '最高价', low: '最低价', volume: '成交量' };
-  const labels = { add: '①加上②', sub: '①减去②', mul: '①乘以②', div: '①除以②', neg: '取相反数', abs: '取绝对值', log: '取对数', mean: '求平均值', std: '计算波动大小', sum: '求和', lag: '取之前的值', delta: '计算与之前的差' };
-  function visit(value, depth = 0) {
-    if (!object(value) || typeof value.op !== 'string' || depth > 20 || nodes.length >= 78) return null;
-    if (value.op === 'field' && typeof value.name !== 'string' || value.op === 'constant' && !Number.isFinite(value.value)) return null;
-    const id = `step-${nodes.length}`;
-    const label = value.op === 'field' ? fields[value.name] ?? value.name : value.op === 'constant' ? `数值 ${value.value}` : labels[value.op] ?? value.op;
-    const node = { id, label, ...(Number.isInteger(value.window) && value.window > 0 ? { detail: `${value.window} 个周期` } : {}) };
-    nodes.push(node);
-    const args = value.args ?? [];
-    if (!Array.isArray(args)) return null;
-    for (let i = 0; i < args.length; i++) {
-      const from = visit(args[i], depth + 1); if (!from) return null;
-      edges.push({ from, to: id, ...(args.length > 1 ? { label: `输入${i + 1}` } : {}) });
-    }
-    return id;
-  }
-  const result = visit(expression); if (!result) return null;
-  nodes.push({ id: 'factor-result', label: '因子数值' }); edges.push({ from: result, to: 'factor-result' });
-  return { title: '这个因子怎么算出来', nodes, edges };
+  return `<section data-report-svl>${isDuplicateText(logic.title,context.titles) ? '' : `<h3>${escape(logic.title)}</h3>`}<script type="application/json">${payload}</script></section>`;
 }

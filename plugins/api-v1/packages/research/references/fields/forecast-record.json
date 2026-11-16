@@ -1,0 +1,135 @@
+{
+  "title": "预测复盘与校准：字段语义",
+  "reading": "按需查阅所采用指标的含义、输入、单位、解释和缺失处理。series 表示已有分析数据，不指定图形或布局。并非必须计算或填满的清单。",
+  "context": "fields-context",
+  "fields": {
+    "calibration_series": {
+      "label": "预测概率与实际频率",
+      "meaning": "已登记的校准分组：原预测概率、实际频率、组内样本量与同口径参考；不能在报告拟合校准。",
+      "definition": "已登记预测概率分组与实际发生频率的对照。",
+      "inputs": "predicted/observed/reference、n、分组规则、预测快照、结算结果和校准方法。",
+      "unit_time": "同目标、期限、样本窗，概率 0–1；分组边界和点代表均值或边界须说明。",
+      "interpretation": "曲线接近参考不保证个体预测正确；同数据拟合与独立验证不同，不在报告重新拟合。",
+      "missing": "组内没有已结算结果就没有实际频率；事前未给出概率的任务不事后补概率校准。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "原概率是事前预测记录，实际命中是结算事实，分箱均值/实际频率由统计产生。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "evaluation_series": {
+      "label": "预测方法与基准表现",
+      "meaning": "相同结算目标和期间的评价指标；写明指标定义、方向和独立验证范围。",
+      "definition": "同一结算目标下模型与基准在各评价期间的既有指标。",
+      "inputs": "period、baseline/model、指标定义、优劣方向、样本数与验证范围。",
+      "unit_time": "同单位、目标、期限和成本口径；期间长度及分组方法明确。",
+      "interpretation": "不同评价指标不能共用无说明数轴；统计改善不自动证明实际决策收益。",
+      "missing": "基准或指标不可得时标缺失，不填零或用另一指标代替。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "同目标评价指标由已结算预测与事实计算；方法优劣解释另列，基准口径必须相同。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "original": {
+      "label": "原预测",
+      "meaning": "原结果、方法、目标和版本引用。",
+      "definition": "原预测发布时冻结的内容、目标和方法身份。",
+      "inputs": "原值/类别/区间、目标、期限、起点、方法/知识版本和固定结果引用。",
+      "unit_time": "记录预测发布时间与数据截止，保留原单位和价格口径。",
+      "interpretation": "复盘必须使用原始预测，不能用更新后的判断替换旧记录。",
+      "missing": "找不到原快照时标不可追溯，不能凭回忆重构精确概率。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "prediction",
+        "meaning_note": "从事前固定记录获取原预测及概率/方法/期限；获取方式不把原预测变成事实。"
+      }
+    },
+    "settlement": {
+      "label": "结算状态",
+      "meaning": "待观察、无法结算或已结算。",
+      "definition": "依据原预测目标判断实际结果能否结算及其状态。",
+      "inputs": "已结算/待观察/无法结算、适用结算规则、截止点和理由。",
+      "unit_time": "使用原期限、时区、价格/事件定义；规则变更单独记录。",
+      "interpretation": "尚未到期不等于预测失败，无法结算不应计入胜负样本。",
+      "missing": "缺结算数据标 pending/unavailable，不把 null 当零或失败。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "metadata",
+        "meaning_note": "待观察/缺证据/已结算状态取真实台账；解释失败原因应另列，不手工冒充成功。"
+      }
+    },
+    "actual": {
+      "label": "实际结果",
+      "meaning": "原目标对应的实际结果。",
+      "definition": "与原预测目标和期限严格对应的实际结果。",
+      "inputs": "已观测值、类别、结算价格/事件、来源、原目标引用及修订状态。",
+      "unit_time": "同单位、币种、复权/含息口径和结算时刻，初值与修订值分开。",
+      "interpretation": "不能换一个更容易命中的目标或期限评价原预测；实际结果与预测解释分开。",
+      "missing": "未到期或数据缺失保持 null/pending，不借临时价格完成结算。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "fact",
+        "meaning_note": "实际观察值取对应数据/已核验记录，命中与否按事前口径计算；预测值不是事实替代。"
+      }
+    },
+    "evaluation": {
+      "label": "评价结果",
+      "meaning": "方法提供的指标、定义、基准和评价。",
+      "definition": "所选评价方法对原预测和实际结果的已计算比较。",
+      "inputs": "指标名称、定义、数值、基准、样本数、优劣方向和方法。",
+      "unit_time": "保持目标、期限、时期与单位一致，概率评分和方向命中率分开。",
+      "interpretation": "单次正确不证明整体可靠；评价指标不是收益，方法选择不能只保留有利结果。",
+      "missing": "不适用指标注明原因，不为定性预测编造概率评分。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "指标分数是计算，基准值也需真实数据，评价/原因是解释；源记录逐项关联。"
+      }
+    },
+    "calibration": {
+      "label": "校准结果",
+      "meaning": "适用的校准结果、覆盖和证据。",
+      "definition": "预测数值与实际发生频率关系的已完成校准研究。",
+      "inputs": "目标、预测样本、分组/拟合方法、结果、验证划分、版本和引用。",
+      "unit_time": "记录训练与评价区间、样本数量、原概率尺度和结算期限。",
+      "interpretation": "校准、区分能力和盈利能力不同；用同样本调参后的拟合不能叫独立检验。",
+      "missing": "原结果没有概率或历史不足时标不适用/不可用，不强制校准模型。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "从实际事前概率和已核验结果计算校准统计；不是给未来判断自动保证准确率。"
+      }
+    },
+    "explanation": {
+      "label": "偏差解释",
+      "meaning": "方法对偏差的解释。",
+      "definition": "基于实际证据对预测偏差或成功条件的解释。",
+      "inputs": "预测假说、实际路径、偏差位置、数据/模型/环境变化、反例与方法依据。",
+      "unit_time": "按事件先后与当时可得信息叙述，区分首次发布与修订版本。",
+      "interpretation": "事后解释不是已证因果，也不能修改原预测；成功也可能偶然。",
+      "missing": "证据不足时保留候选解释与待检验点，不编造唯一原因。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "interpretation",
+        "meaning_note": "误差原因是方法归因，需要支持/替代解释；一个结果不能证明原因。"
+      }
+    },
+    "follow_up": {
+      "label": "后续处理",
+      "meaning": "有依据的后续研究或版本处理。",
+      "definition": "由复盘证据支持的后续研究、维护或版本处理。",
+      "inputs": "待检验问题、受影响方法/规则、建议动作、验证要求、已有结果引用。",
+      "unit_time": "记录建议适用期、旧新版本边界及未来评价窗口。",
+      "interpretation": "建议修订不代表已改模型或已验证有效；不得根据单次结果自动选优。",
+      "missing": "没有足够证据时建议继续观察，不凭失败一次强制换方法。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "plan",
+        "meaning_note": "后续验证/候选规则修订是研究计划；不是已经有效的新规则或已执行动作。"
+      }
+    }
+  }
+}

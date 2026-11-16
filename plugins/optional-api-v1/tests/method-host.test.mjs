@@ -12,6 +12,7 @@ const hostRoot = process.env.SESAME_HOST_ROOT;
 test('checked API 2 installation isolates eight skills; workspace scripts register fixed demo data and reports, then reopen', { skip: !hostRoot, timeout: 120000 }, async t => {
   const load = path => import(pathToFileURL(join(hostRoot, path)));
   const { Store } = await load('modules/agent/store.js'), { Runtime } = await load('modules/agent/runtime.js');
+  const { createHostContextV2 } = await load('modules/plugins/host-v2/context.js');
   const { ModelRuntime } = await load('node_modules/@earendil-works/pi-coding-agent/dist/index.js');
   const root = await realpath(await mkdtemp(join(tmpdir(), 'sesame-method-host-'))), bundle = join(root, 'bundle');
   const core = fileURLToPath(new URL('../../api-v1/', import.meta.url));
@@ -20,7 +21,8 @@ test('checked API 2 installation isolates eight skills; workspace scripts regist
   const close = async () => { await runtime?.close(); runtime = null; store?.close(); store = null; };
   try {
     await mkdir(bundle);
-    const lock = buildLock(core); assert.equal(lock.packages.length, 9);
+    const lock = buildLock(core);
+    for (const name of ['data-access', 'workspace', 'reports', 'research', 'plugin-manager']) assert.ok(lock.packages.some(pkg => pkg.directory === name));
     for (const pkg of lock.packages) await cp(join(core, 'packages', pkg.directory), join(bundle, pkg.directory), { recursive: true });
     await writeFile(join(bundle, 'official-plugins.lock.json'), JSON.stringify(lock, null, 2) + '\n');
     const models = await ModelRuntime.create({ authPath: join(root, 'auth.json'), modelsPath: null, modelsStorePath: join(root, 'models.json'), refreshOnCreate: false });
@@ -31,7 +33,8 @@ test('checked API 2 installation isolates eight skills; workspace scripts regist
     const main = await runtime.session('conv_main');
     const call = async (conversationId, name, args) => {
       const descriptor = runtime.capabilities.descriptors().find(item => item.localId === name); assert.ok(descriptor, name);
-      const result = await runtime.capabilities.invoke(descriptor.id, args, {}, { kind: 'main', sessionId: conversationId, pluginId: 'host' });
+      const host = createHostContextV2(runtime, runtime.capabilities.hostEntry, conversationId);
+      const result = await host.capabilities.invoke(descriptor.id, args);
       assert.equal(result.type, 'result', JSON.stringify(result)); return result.value;
     };
     for (const name of names) {
@@ -73,7 +76,7 @@ test('checked API 2 installation isolates eight skills; workspace scripts regist
       const source = JSON.parse((await call(conversationId, 'plugin_read', { pluginId: `sesame/${name}`, part: 'resource', path: 'examples/source.json' })).content);
       const dataset = `demo-${name}`;
       store.put('dataset', { id: dataset, title: `${name} invented bars`, rows, provenance: { kind: 'demo', source_kind: 'synthetic' } });
-      const fixed = await call(conversationId, 'report_data', { operation_id: `input-${name}`, dataset_id: dataset });
+      const fixed = await call(conversationId, 'data_snapshot', { operationId: `input-${name}`, source: {providerId:'host#datasets',revision:'host:2'}, input:{datasetId:dataset}, title:`${name} fictional bars`, provenanceKind:'demo' });
       source.ref = fixed.ref;
       const input = await call(conversationId, 'data_read', { ref: fixed.ref });
       for (const filename of ['bar_input.py', 'observe.py']) {
@@ -90,8 +93,10 @@ test('checked API 2 installation isolates eight skills; workspace scripts regist
       assert.equal(output.provenance.kind, 'demo');
       const fixedRows = runtime.contractArtifacts.data(output.ref).rows;
       assert.deepEqual(fixedRows[0].source_ref, fixed.ref); assert.match(fixedRows[0].availability, /unknown/);
-      await call(conversationId, 'report_template', { output_path: 'observations.html', title: `${name} demo`, summary: 'Finite observational fixture; not a strategy', data_id: 'observations', chart_title: 'Confirmed demo observations', takeaway: 'Confirmation occurs after required source bars close', source_note: 'Invented OHLC, no real market/volume or trade results', kind: 'bar', x: 'id', y: name === 'ict' ? 'lower' : 'level', unit: 'fictional price', columns: ['kind', name === 'ict' ? 'lower' : 'level'], demo: true });
-      const report = await call(conversationId, 'report_publish', { operation_id: `report-${name}`, title: `${name} demo`, summary: 'Finite observation fixture', html_path: 'observations.html', provenance_kind: 'demo', data: [{ id: 'observations', ref: output.ref, usage: 'Exact script output from fictional prices' }] });
+      const report = await call(conversationId, 'components_show', { target:'report', operation_id:`report-${name}`, title:`${name} demo`, summary:'Finite observation fixture', provenance_kind:'demo',
+        data:[{id:'observations',ref:output.ref,usage:'Exact script output from fictional prices'}], references:[fixed.ref,output.ref],
+        content:{kind:'document',sections:[{title:'Confirmed observations',blocks:[{type:'chart',kind:'bar',title:'Confirmed demo observations',data_id:'observations',options:{x:'id',y:name==='ict'?'lower':'level',unit:'fictional price'}},
+          {type:'paragraph',text:'Observations become available after the required source bars close.'}]}]} });
       assert.equal(runtime.contractArtifacts.read(report.ref).manifest.content.provenance.kind, 'demo');
       results.push({ name, executionId: run.executionId, rows: output.rowCount, data: output.ref, report: report.ref });
     }

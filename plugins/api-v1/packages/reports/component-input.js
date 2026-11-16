@@ -59,11 +59,9 @@ export async function normalizeComponentContent(host, content, data = [], signal
     }
   };
   if (object(result) && result.kind === 'document') {
-    if (result.overview?.chart) await visit(result.overview.chart, '/content/overview/chart');
     if (Array.isArray(result.sections)) for (const [index, section] of result.sections.entries()) {
       if (Array.isArray(section?.blocks)) for (const [blockIndex, block] of section.blocks.entries()) await visit(block, `/content/sections/${index}/blocks/${blockIndex}`);
     }
-    if (Array.isArray(result.appendix)) for (const [index, block] of result.appendix.entries()) await visit(block, `/content/appendix/${index}`);
   }
   return result;
 }

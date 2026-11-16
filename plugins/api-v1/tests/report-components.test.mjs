@@ -11,7 +11,7 @@ const protocol = 'sesame-components/1';
 const fixed = (id, kind = 'data') => ({ id, revision: 'fixture-v1', digest: `sha256:${'a'.repeat(64)}`, kind, schemaVersion: '1.0.0' });
 const document = blocks => ({ kind: 'document', sections: [{ title: 'Synthetic comparison', blocks }] });
 const chart = extra => ({ type: 'chart', kind: 'bar', title: 'Supplied counts', columns: ['label', 'value'],
-  options: { x: 'label', y: 'value' }, takeaway: 'B has the larger supplied count', source_note: 'Synthetic fixture only', ...extra });
+  options: { x: 'label', y: 'value' }, ...extra });
 const args = (content = document([{ type: 'paragraph', text: 'Synthetic test only' }]), extra = {}) => ({
   title: 'Components fixture', locale: 'en', provenance_kind: 'demo', data: [], content, ...extra,
 });
@@ -165,12 +165,12 @@ test('component capabilities use the shared catalog and expose bounded discovery
     assert.equal(cap.binding.type, 'native'); assert.ok(plugin.mcp_export.includes(name));
     assert.ok(JSON.stringify(cap.inputSchema).length < 20000, 'tool schemas must not embed the full component catalog');
   }
-  assert.equal(plugin.execution, 'native'); assert.equal(plugin.version, '5.2.0');
+  assert.equal(plugin.execution, 'native'); assert.equal(plugin.version, '6.0.0');
   const listing = manifest.capabilities.find(item => item.id === 'components_list').inputSchema;
   assert.equal(listing.properties.limit.default, 20); assert.equal(listing.properties.limit.maximum, 100);
-  assert.ok(plugin.resources.includes('skills/report-design/component-protocol.md'));
+  assert.ok(plugin.resources.includes('references/composing.md'));
   assert.ok(plugin.resources.includes('assets/answer-surface.css'));
-  assert.ok(manifest.knowledge.some(item => item.path === 'skills/report-design/component-protocol.md'));
+  assert.ok(manifest.knowledge.some(item => item.path === 'references/composing.md'));
 });
 
 test('discovery accepts its own cursor for the longest supported search query', async () => {
@@ -183,11 +183,9 @@ test('discovery accepts its own cursor for the longest supported search query', 
 
 test('validation renders combined content without publication and explicitly excludes browser checks', async () => {
   const fixture = readonlyHost();
-  const content = { ...document([{ type: 'group', layout: 'columns', blocks: [
-    { type: 'judgment', text: 'Compare the supplied counts' },
-    chart({ rows: [{ label: 'A', value: 2 }, { label: 'B', value: 4 }] }),
-  ] }]), overview: { conclusion: 'B has the larger supplied count', facts: [{ label: 'B', value: '4', format: 'number' }] },
-  appendix: [{ type: 'details', title: 'Original records', blocks: [{ type: 'table', columns: ['value'], rows: [[2], [4]] }] }] };
+  const content = document([{ type: 'group', layout: 'columns', blocks: [
+    { type: 'judgment', text: 'Compare the supplied counts' }, chart({ rows: [{ label: 'A', value: 2 }, { label: 'B', value: 4 }] })
+  ] }, { type: 'details', title: 'Original records', blocks: [{ type: 'table', columns: ['value'], rows: [[2], [4]] }] }]);
   const original = args(content), before = structuredClone(original);
   const result = await capability(fixture.host, 'components_validate')(original);
   assert.equal(result.valid, true); assert.deepEqual(result.diagnostics, []); assert.equal(result.protocol, protocol);
@@ -216,12 +214,11 @@ test('validation reports paths for unknown components, raw HTML, CSS, callbacks 
   }
 });
 
-test('fixed chart data is read completely and checked against real columns, including nested and overview charts', async () => {
+test('fixed chart data is read completely and checked against real columns, including repeated nested charts', async () => {
   const fixture = readonlyHost(), ref = fixed('bound-counts');
   fixture.put(ref, [{ label: 'A', value: 2 }, { label: 'B', value: 4 }]);
   const binding = { id: 'counts', ref, usage: 'Synthetic source counts' };
-  const content = { ...document([{ type: 'group', layout: 'stack', blocks: [chart({ data_id: binding.id })] }]),
-    overview: { conclusion: 'Recorded comparison', facts: [], chart: chart({ data_id: binding.id }) } };
+  const content = document([{ type: 'group', layout: 'stack', blocks: [chart({ data_id: binding.id })] }, chart({ data_id: binding.id })]);
   const validate = capability(fixture.host, 'components_validate');
   const valid = await validate(args(content, { data: [binding] }));
   assert.equal(valid.valid, true); assert.equal(valid.coverage.fixedData, 'passed');
@@ -229,7 +226,7 @@ test('fixed chart data is read completely and checked against real columns, incl
   fixture.put(ref, [{ label: 'A', other: 2 }]);
   const invalid = await validate(args(content, { data: [binding] }));
   assert.equal(invalid.valid, false); assert.match(invalid.diagnostics[0].message, /column.*value|value.*column/i);
-  assert.match(invalid.diagnostics[0].path, /^\/content\/(overview\/chart|sections\/0\/blocks\/0\/blocks\/0)/);
+  assert.match(invalid.diagnostics[0].path, /^\/content\/sections\/0\/blocks\/0\/blocks\/0/);
   fixture.put(ref, [{ label: 'A', value: 2 }], { format: 'unknown' });
   const unsupported = await validate(args(content, { data: [binding] }));
   assert.equal(unsupported.valid, false); assert.match(unsupported.diagnostics[0].message, /json-rows|format/i);
@@ -410,9 +407,11 @@ test('fixed inputRef owns its answer target and rejects external target override
 });
 
 test('answer HTML retains compact chrome and interactions when the host rebuilds its root elements', { skip: !process.env.SESAME_HOST_ROOT, timeout: 30000 }, async t => {
-  const content = { kind: 'document', sections: [{ title: '', blocks: [
+  const content = { kind: 'document', sections: [{ title: 'Comparison', blocks: [
     chart({ rows: [{ label: 'A', value: 2 }, { label: 'B', value: 4 }] }),
     { type: 'details', title: 'Supplied detail', blocks: [{ type: 'paragraph', text: 'Original supplied detail' }] },
+  ] }, { title: 'Interpretation', blocks: [
+    { type: 'reasoning', steps: ['A is 2.', 'B is 4.'] },
   ] }] };
   const metadata = { title: 'Report wrapper', summary: 'List-only summary', locale: 'en', provenanceKind: 'demo', features: ['interactive'] };
   const base = { metadata, data: [], related: [], references: [] };
@@ -448,6 +447,10 @@ test('answer HTML retains compact chrome and interactions when the host rebuilds
     assert.equal(shell.summary, 'none', 'publication summary remains index metadata');
     assert.equal(shell.padding === '0px', target === 'answer');
     assert.equal(shell.sectionMargin === '0px', target === 'answer');
+    assert.deepEqual(await page.locator('.kit-section h2').allTextContents(), ['Comparison', 'Interpretation']);
+    assert.deepEqual(await page.locator('.kit-section h2,.report-reasoning-steps li').evaluateAll(elements => elements.map(element =>
+      getComputedStyle(element, '::before').content)), ['none', 'none', 'none', 'none'], 'no decorative section or step numbers');
+    assert.deepEqual(await page.locator('.report-reasoning-steps li').allTextContents(), ['A is 2.', 'B is 4.']);
     assert.equal(await page.locator('figcaption strong').first().isVisible(), true);
     assert.equal(await page.locator('[data-sesame-provenance="demo"]').isVisible(), true);
     await page.getByText('Supplied detail', { exact: true }).click();

@@ -4,6 +4,7 @@ import { analyzeReportHtml } from './report-html.js';
 export const REPORT_EXPORT = Object.freeze({
   width: 1000, maxHeight: 64000, maxPixels: 64 * 1024 * 1024,
   maxOutput: 32 * 1024 * 1024, timeout: 45000,
+  pdfTimeout: 180000, pdfPagesPerBatch: 8, pdfMaxPages: 256,
   singleImageHeight: 16000, imageSliceHeight: 8000,
   paperWidth: 8.2677, paperHeight: 11.6929, margin: 0.25, scale: 0.7457,
 });

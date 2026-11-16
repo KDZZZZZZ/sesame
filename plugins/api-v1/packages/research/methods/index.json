@@ -1,0 +1,1028 @@
+{
+  "schemaVersion": 1,
+  "common": [
+    "evidence-and-judgment",
+    "adapt-and-compose",
+    "review-and-recovery"
+  ],
+  "entries": [
+    {
+      "id": "market-state",
+      "title": "当前行情与相对强弱",
+      "summary": "解释当前相对前期、同类资产有哪些变化，区分事实快照与预测。",
+      "questions": [
+        "当前行情发生了什么？",
+        "相对同类资产谁更强？"
+      ],
+      "keywords": [
+        "行情",
+        "市场状态",
+        "相对强弱",
+        "市场快照",
+        "market state",
+        "relative strength"
+      ],
+      "related": [
+        "technical-structure",
+        "event-explanation"
+      ],
+      "references": [
+        "fields-market-observations",
+        "fields-news-attention",
+        "fields-sentiment-positioning"
+      ],
+      "kind": "method",
+      "path": "references/methods/market-state.md"
+    },
+    {
+      "id": "technical-structure",
+      "title": "技术结构与条件路径",
+      "summary": "围绕观察期限、关键分界、触发、目标及相反路径组织技术判断。",
+      "questions": [
+        "当前技术结构应怎样观察或交易？",
+        "未来这个期限更支持什么路径？"
+      ],
+      "keywords": [
+        "技术分析",
+        "走势",
+        "关键价位",
+        "支撑",
+        "阻力",
+        "突破",
+        "趋势",
+        "条件路径",
+        "technical",
+        "price forecast"
+      ],
+      "related": [
+        "volatility-patterns",
+        "forecast-review"
+      ],
+      "references": [
+        "fields-technical-events",
+        "fields-historical-evidence",
+        "fields-outlook-synthesis",
+        "fields-conditions-monitoring"
+      ],
+      "kind": "method",
+      "path": "references/methods/technical-structure.md"
+    },
+    {
+      "id": "volatility-patterns",
+      "title": "波幅、时段与波动定价",
+      "summary": "研究何时更活跃、不同持有期可能波动多大，以及期权波动定价差异。",
+      "questions": [
+        "一天中什么时候更活跃？",
+        "这个期限的波动范围怎样？"
+      ],
+      "keywords": [
+        "波动",
+        "波幅",
+        "时段",
+        "活跃",
+        "ATR",
+        "IV",
+        "volatility",
+        "expected move"
+      ],
+      "related": [
+        "options-structures",
+        "technical-structure"
+      ],
+      "references": [
+        "fields-volatility-pricing",
+        "fields-market-observations"
+      ],
+      "kind": "method",
+      "path": "references/methods/volatility-patterns.md"
+    },
+    {
+      "id": "opportunity-and-calendar",
+      "title": "候选筛选与事件关注",
+      "summary": "按用户条件区分候选，或只整理事件时点和已知预期。",
+      "questions": [
+        "哪些机会值得继续研究？",
+        "本周有哪些相关事件？"
+      ],
+      "keywords": [
+        "机会",
+        "筛选",
+        "候选",
+        "日历",
+        "周历",
+        "事件安排",
+        "扫描",
+        "screening",
+        "calendar",
+        "opportunities"
+      ],
+      "related": [
+        "comparison",
+        "event-explanation"
+      ],
+      "references": [
+        "fields-candidate-screening",
+        "fields-event-calendar",
+        "fields-news-attention"
+      ],
+      "kind": "method",
+      "path": "references/methods/opportunity-and-calendar.md"
+    },
+    {
+      "id": "business-quality",
+      "title": "商业模式与经营质量",
+      "summary": "解释收入、利润和现金怎样产生，增长与竞争优势能否持续。",
+      "questions": [
+        "公司怎样赚钱？",
+        "增长和盈利质量如何？"
+      ],
+      "keywords": [
+        "商业模式",
+        "公司研究",
+        "经营质量",
+        "财务质量",
+        "利润质量",
+        "增长质量",
+        "现金流",
+        "business quality",
+        "company research"
+      ],
+      "related": [
+        "valuation",
+        "earnings-review"
+      ],
+      "references": [
+        "fields-fundamental-quality",
+        "fields-expectations-revisions"
+      ],
+      "kind": "method",
+      "path": "references/methods/business-quality.md"
+    },
+    {
+      "id": "valuation",
+      "title": "估值与价格隐含假设",
+      "summary": "比较当前价格要求的经营表现、可支持假设和价值敏感性。",
+      "questions": [
+        "现在的价格贵不贵？",
+        "市场价格隐含多高的增长？"
+      ],
+      "keywords": [
+        "估值",
+        "贵不贵",
+        "便宜",
+        "公允价值",
+        "目标价",
+        "隐含假设",
+        "valuation",
+        "fair value"
+      ],
+      "related": [
+        "business-quality",
+        "comparison"
+      ],
+      "references": [
+        "fields-valuation",
+        "fields-expectations-revisions"
+      ],
+      "kind": "method",
+      "path": "references/methods/valuation.md"
+    },
+    {
+      "id": "earnings-preview",
+      "title": "财报前瞻",
+      "summary": "围绕事前预期、待揭晓经营变量和公布后的解读安排调查。",
+      "questions": [
+        "财报发布前重点看什么？",
+        "哪些指标会影响预期？"
+      ],
+      "keywords": [
+        "财报前",
+        "财报前瞻",
+        "业绩前瞻",
+        "发布前",
+        "earnings preview",
+        "before earnings"
+      ],
+      "related": [
+        "business-quality",
+        "earnings-review"
+      ],
+      "references": [
+        "fields-expectations-revisions",
+        "fields-fundamental-quality",
+        "fields-event-impact"
+      ],
+      "kind": "method",
+      "path": "references/methods/earnings-preview.md"
+    },
+    {
+      "id": "earnings-review",
+      "title": "财报点评与预期修订",
+      "summary": "解释实际相对事前预期的差异，以及经营判断具体发生的变化。",
+      "questions": [
+        "财报哪里超出或低于预期？",
+        "利润增长为什么没有改善市场判断？"
+      ],
+      "keywords": [
+        "财报后",
+        "财报点评",
+        "业绩点评",
+        "超预期",
+        "低于预期",
+        "利润增长",
+        "业绩公布",
+        "earnings review",
+        "earnings analysis"
+      ],
+      "related": [
+        "event-explanation",
+        "business-quality",
+        "valuation"
+      ],
+      "references": [
+        "fields-fundamental-quality",
+        "fields-expectations-revisions",
+        "fields-event-impact"
+      ],
+      "kind": "method",
+      "path": "references/methods/earnings-review.md"
+    },
+    {
+      "id": "event-explanation",
+      "title": "事件与价格变化解释",
+      "summary": "用信息到达、预期差和竞争解释调查涨跌，而非新闻与价格简单配对。",
+      "questions": [
+        "为什么发生这次涨跌？",
+        "这条消息怎样影响了市场？"
+      ],
+      "keywords": [
+        "为什么涨",
+        "为什么跌",
+        "股价跌",
+        "涨跌原因",
+        "事件冲击",
+        "事件解释",
+        "消息影响",
+        "price reaction",
+        "event impact"
+      ],
+      "related": [
+        "earnings-review",
+        "macro-transmission"
+      ],
+      "references": [
+        "fields-event-impact",
+        "fields-news-attention",
+        "fields-sentiment-positioning",
+        "fields-historical-evidence"
+      ],
+      "kind": "method",
+      "path": "references/methods/event-explanation.md"
+    },
+    {
+      "id": "macro-outlook",
+      "title": "经济与政策路径",
+      "summary": "从基准假设连接增长、通胀、政策反应与地区差异。",
+      "questions": [
+        "经济和政策路径会怎样变化？",
+        "这次宏观预测相比之前改了什么？"
+      ],
+      "keywords": [
+        "宏观展望",
+        "经济增长",
+        "通胀",
+        "政策路径",
+        "经济预测",
+        "macro outlook",
+        "inflation",
+        "economic forecast"
+      ],
+      "related": [
+        "macro-transmission",
+        "event-explanation"
+      ],
+      "references": [
+        "fields-event-impact",
+        "fields-outlook-synthesis"
+      ],
+      "kind": "method",
+      "path": "references/methods/macro-outlook.md"
+    },
+    {
+      "id": "macro-transmission",
+      "title": "宏观主题与资产传导",
+      "summary": "解释冲击通过何种渠道、时滞和相反力量影响目标资产。",
+      "questions": [
+        "降息或油价变化怎样影响这个资产？",
+        "AI 投资通过什么途径改变行业价值？"
+      ],
+      "keywords": [
+        "宏观传导",
+        "降息",
+        "加息",
+        "油价",
+        "AI 投资",
+        "电力",
+        "传导",
+        "macro transmission",
+        "rate cut",
+        "AI investment"
+      ],
+      "related": [
+        "macro-outlook",
+        "valuation",
+        "portfolio-risk"
+      ],
+      "references": [
+        "fields-event-impact",
+        "fields-outlook-synthesis",
+        "fields-news-attention"
+      ],
+      "kind": "method",
+      "path": "references/methods/macro-transmission.md"
+    },
+    {
+      "id": "comparison",
+      "title": "资产与方案比较",
+      "summary": "按用户目标选择共同口径，解释决定选择的差异和条件取舍。",
+      "questions": [
+        "这两个资产或方案怎样选择？",
+        "什么条件下应该采用不同方案？"
+      ],
+      "keywords": [
+        "比较",
+        "对比",
+        "选择",
+        "取舍",
+        "哪个好",
+        "comparison",
+        "compare",
+        "trade-off"
+      ],
+      "related": [
+        "valuation",
+        "options-structures",
+        "allocation-rebalance"
+      ],
+      "references": [
+        "fields-candidate-screening",
+        "fields-valuation",
+        "fields-conditions-monitoring"
+      ],
+      "kind": "method",
+      "path": "references/methods/comparison.md"
+    },
+    {
+      "id": "portfolio-risk",
+      "title": "组合风险与集中暴露",
+      "summary": "区分持仓权重、共同暴露、风险贡献和压力损失。",
+      "questions": [
+        "我的组合主要承担什么风险？",
+        "哪些持仓看似分散却会同时受损？"
+      ],
+      "keywords": [
+        "组合风险",
+        "持仓风险",
+        "集中度",
+        "风险贡献",
+        "暴露",
+        "压力测试",
+        "portfolio risk",
+        "exposure"
+      ],
+      "related": [
+        "allocation-rebalance",
+        "performance-attribution",
+        "macro-transmission"
+      ],
+      "references": [
+        "fields-portfolio-exposures",
+        "fields-allocation"
+      ],
+      "kind": "method",
+      "path": "references/methods/portfolio-risk.md"
+    },
+    {
+      "id": "performance-attribution",
+      "title": "组合损益归因",
+      "summary": "解释已实现表现来自哪些资产、时段、配置和交易变化。",
+      "questions": [
+        "这次组合亏损主要从哪里来？",
+        "收益是选股、配置还是交易造成的？"
+      ],
+      "keywords": [
+        "损益归因",
+        "亏损来源",
+        "收益归因",
+        "组合亏损",
+        "绩效归因",
+        "attribution",
+        "pnl attribution"
+      ],
+      "related": [
+        "portfolio-risk",
+        "strategy-diagnosis"
+      ],
+      "references": [
+        "fields-portfolio-exposures",
+        "fields-strategy-results"
+      ],
+      "kind": "method",
+      "path": "references/methods/performance-attribution.md"
+    },
+    {
+      "id": "allocation-rebalance",
+      "title": "配置与再平衡",
+      "summary": "围绕目标、约束、当前持仓和调整成本比较配置方案。",
+      "questions": [
+        "怎样配置或再平衡？",
+        "调整前后的暴露和成本会怎样变化？"
+      ],
+      "keywords": [
+        "配置",
+        "再平衡",
+        "目标权重",
+        "资产配置",
+        "组合构建",
+        "allocation",
+        "rebalance"
+      ],
+      "related": [
+        "portfolio-risk",
+        "comparison"
+      ],
+      "references": [
+        "fields-allocation",
+        "fields-portfolio-exposures",
+        "fields-strategy-results"
+      ],
+      "kind": "method",
+      "path": "references/methods/allocation-rebalance.md"
+    },
+    {
+      "id": "options-structures",
+      "title": "期权结构与条件损益",
+      "summary": "比较合约成本、条件损益，以及时间、波动和到期因素的取舍。",
+      "questions": [
+        "哪种期权结构适合这个目标？",
+        "成本、盈亏平衡与主要损失是什么？"
+      ],
+      "keywords": [
+        "期权结构",
+        "价差",
+        "备兑",
+        "保护性",
+        "盈亏平衡",
+        "options structure",
+        "option spread",
+        "payoff"
+      ],
+      "related": [
+        "volatility-patterns",
+        "comparison"
+      ],
+      "references": [
+        "fields-option-payoffs",
+        "fields-volatility-pricing",
+        "fields-portfolio-exposures"
+      ],
+      "kind": "method",
+      "path": "references/methods/options-structures.md"
+    },
+    {
+      "id": "factor-evaluation",
+      "title": "因子信息与稳定性",
+      "summary": "评价因子描述或预测什么、在哪些样本成立，以及是否提供增量信息。",
+      "questions": [
+        "这个因子提供什么信息？",
+        "它是否稳定、冗余或互补？"
+      ],
+      "keywords": [
+        "因子",
+        "IC",
+        "Rank IC",
+        "因子评估",
+        "因子池",
+        "因子库",
+        "factor",
+        "alphalens"
+      ],
+      "related": [
+        "strategy-evaluation",
+        "forecast-review"
+      ],
+      "references": [
+        "fields-historical-evidence",
+        "fields-fundamental-quality"
+      ],
+      "kind": "method",
+      "path": "references/methods/factor-evaluation.md"
+    },
+    {
+      "id": "strategy-evaluation",
+      "title": "策略规则与表现评估",
+      "summary": "把真实策略规则、样本划分、成本和收益风险联系起来评价。",
+      "questions": [
+        "策略是否值得进一步研究或使用？",
+        "哪些条件下有效，哪些风险最突出？"
+      ],
+      "keywords": [
+        "策略评估",
+        "回测",
+        "样本外",
+        "稳健性",
+        "策略表现",
+        "strategy evaluation",
+        "backtest",
+        "walk forward"
+      ],
+      "related": [
+        "strategy-diagnosis",
+        "factor-evaluation"
+      ],
+      "references": [
+        "fields-strategy-results",
+        "fields-historical-evidence",
+        "fields-portfolio-exposures"
+      ],
+      "kind": "method",
+      "path": "references/methods/strategy-evaluation.md"
+    },
+    {
+      "id": "strategy-diagnosis",
+      "title": "策略退化与执行诊断",
+      "summary": "定位表现变化的时间、贡献来源和竞争原因，再确定值得修改的部分。",
+      "questions": [
+        "策略最近为什么失效？",
+        "问题来自信号、市场状态还是执行？"
+      ],
+      "keywords": [
+        "策略失效",
+        "策略退化",
+        "最近亏损",
+        "执行偏差",
+        "strategy decay",
+        "strategy diagnosis",
+        "slippage"
+      ],
+      "related": [
+        "strategy-evaluation",
+        "performance-attribution",
+        "factor-evaluation"
+      ],
+      "references": [
+        "fields-strategy-results",
+        "fields-historical-evidence"
+      ],
+      "kind": "method",
+      "path": "references/methods/strategy-diagnosis.md"
+    },
+    {
+      "id": "forecast-review",
+      "title": "预测复盘与概率校准",
+      "summary": "把当时可知的预测与实际结果比较，区分条件、数据和推断偏差。",
+      "questions": [
+        "之前的预测为什么不准？",
+        "概率校准或修正真的改善了吗？"
+      ],
+      "keywords": [
+        "预测复盘",
+        "概率校准",
+        "预测不准",
+        "命中率",
+        "Brier",
+        "calibration",
+        "forecast review"
+      ],
+      "related": [
+        "technical-structure",
+        "factor-evaluation"
+      ],
+      "references": [
+        "fields-forecast-record",
+        "fields-historical-evidence",
+        "fields-outlook-synthesis"
+      ],
+      "kind": "method",
+      "path": "references/methods/forecast-review.md"
+    },
+    {
+      "id": "concept-explanation",
+      "title": "概念、机制与简单计算",
+      "summary": "直接解释用户不理解的关系，用必要市场例子或复算回答。",
+      "questions": [
+        "这个概念或数字是什么意思？",
+        "这个简单关系怎么计算？"
+      ],
+      "keywords": [
+        "什么意思",
+        "是什么",
+        "概念",
+        "解释一下",
+        "简单计算",
+        "concept",
+        "meaning",
+        "explain"
+      ],
+      "related": [
+        "comparison"
+      ],
+      "references": [
+        "evidence-and-judgment"
+      ],
+      "kind": "method",
+      "path": "references/methods/concept-explanation.md"
+    },
+    {
+      "id": "fields-market-observations",
+      "kind": "reference",
+      "title": "行情状态与相对强弱字段语义",
+      "summary": "按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。",
+      "path": "references/fields/market-observations.json",
+      "related": [
+        "market-state"
+      ],
+      "references": [
+        "fields-context"
+      ],
+      "keywords": [
+        "fields-market-observations"
+      ]
+    },
+    {
+      "id": "fields-technical-events",
+      "kind": "reference",
+      "title": "技术事件与价格情景字段语义",
+      "summary": "按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。",
+      "path": "references/fields/technical-events.json",
+      "related": [
+        "technical-structure"
+      ],
+      "references": [
+        "fields-context",
+        "evidence-and-judgment"
+      ],
+      "keywords": [
+        "fields-technical-events"
+      ]
+    },
+    {
+      "id": "fields-fundamental-quality",
+      "kind": "reference",
+      "title": "基本面与财务质量字段语义",
+      "summary": "按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。",
+      "path": "references/fields/fundamental-quality.json",
+      "related": [
+        "business-quality",
+        "factor-evaluation"
+      ],
+      "references": [
+        "fields-context"
+      ],
+      "keywords": [
+        "fields-fundamental-quality"
+      ]
+    },
+    {
+      "id": "fields-valuation",
+      "kind": "reference",
+      "title": "估值与价格假设字段语义",
+      "summary": "按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。",
+      "path": "references/fields/valuation.json",
+      "related": [
+        "valuation"
+      ],
+      "references": [
+        "fields-context",
+        "evidence-and-judgment"
+      ],
+      "keywords": [
+        "fields-valuation"
+      ]
+    },
+    {
+      "id": "fields-expectations-revisions",
+      "kind": "reference",
+      "title": "共识与预期修正字段语义",
+      "summary": "按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。",
+      "path": "references/fields/expectations-revisions.json",
+      "related": [
+        "earnings-preview",
+        "earnings-review",
+        "valuation"
+      ],
+      "references": [
+        "fields-context"
+      ],
+      "keywords": [
+        "fields-expectations-revisions"
+      ]
+    },
+    {
+      "id": "fields-event-impact",
+      "kind": "reference",
+      "title": "宏观与公司事件冲击字段语义",
+      "summary": "按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。",
+      "path": "references/fields/event-impact.json",
+      "related": [
+        "event-explanation",
+        "macro-outlook",
+        "macro-transmission",
+        "earnings-preview",
+        "earnings-review"
+      ],
+      "references": [
+        "fields-context",
+        "evidence-and-judgment"
+      ],
+      "keywords": [
+        "fields-event-impact"
+      ]
+    },
+    {
+      "id": "fields-news-attention",
+      "kind": "reference",
+      "title": "新闻主题与关注变化字段语义",
+      "summary": "按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。",
+      "path": "references/fields/news-attention.json",
+      "related": [
+        "market-state",
+        "event-explanation",
+        "opportunity-and-calendar"
+      ],
+      "references": [
+        "fields-context",
+        "evidence-and-judgment"
+      ],
+      "keywords": [
+        "fields-news-attention"
+      ]
+    },
+    {
+      "id": "fields-sentiment-positioning",
+      "kind": "reference",
+      "title": "情绪与拥挤状态字段语义",
+      "summary": "按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。",
+      "path": "references/fields/sentiment-positioning.json",
+      "related": [
+        "market-state",
+        "event-explanation"
+      ],
+      "references": [
+        "fields-context",
+        "evidence-and-judgment"
+      ],
+      "keywords": [
+        "fields-sentiment-positioning"
+      ]
+    },
+    {
+      "id": "fields-volatility-pricing",
+      "kind": "reference",
+      "title": "波动与期权定价字段语义",
+      "summary": "按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。",
+      "path": "references/fields/volatility-pricing.json",
+      "related": [
+        "volatility-patterns",
+        "options-structures"
+      ],
+      "references": [
+        "fields-context",
+        "evidence-and-judgment"
+      ],
+      "keywords": [
+        "fields-volatility-pricing"
+      ]
+    },
+    {
+      "id": "fields-option-payoffs",
+      "kind": "reference",
+      "title": "期权结构与损益字段语义",
+      "summary": "按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。",
+      "path": "references/fields/option-payoffs.json",
+      "related": [
+        "options-structures"
+      ],
+      "references": [
+        "fields-context",
+        "evidence-and-judgment"
+      ],
+      "keywords": [
+        "fields-option-payoffs"
+      ]
+    },
+    {
+      "id": "fields-candidate-screening",
+      "kind": "reference",
+      "title": "条件筛选与机会候选字段语义",
+      "summary": "按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。",
+      "path": "references/fields/candidate-screening.json",
+      "related": [
+        "opportunity-and-calendar",
+        "comparison"
+      ],
+      "references": [
+        "fields-context",
+        "evidence-and-judgment"
+      ],
+      "keywords": [
+        "fields-candidate-screening"
+      ]
+    },
+    {
+      "id": "fields-portfolio-exposures",
+      "kind": "reference",
+      "title": "风险与组合暴露字段语义",
+      "summary": "按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。",
+      "path": "references/fields/portfolio-exposures.json",
+      "related": [
+        "portfolio-risk",
+        "performance-attribution"
+      ],
+      "references": [
+        "fields-context"
+      ],
+      "keywords": [
+        "fields-portfolio-exposures"
+      ]
+    },
+    {
+      "id": "fields-historical-evidence",
+      "kind": "reference",
+      "title": "历史同类特征验证字段语义",
+      "summary": "按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。",
+      "path": "references/fields/historical-evidence.json",
+      "related": [
+        "factor-evaluation",
+        "technical-structure",
+        "strategy-evaluation",
+        "forecast-review"
+      ],
+      "references": [
+        "fields-context",
+        "evidence-and-judgment"
+      ],
+      "keywords": [
+        "fields-historical-evidence"
+      ]
+    },
+    {
+      "id": "fields-outlook-synthesis",
+      "kind": "reference",
+      "title": "多特征综合预测字段语义",
+      "summary": "按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。",
+      "path": "references/fields/outlook-synthesis.json",
+      "related": [
+        "technical-structure",
+        "macro-outlook",
+        "macro-transmission"
+      ],
+      "references": [
+        "fields-context",
+        "evidence-and-judgment"
+      ],
+      "keywords": [
+        "fields-outlook-synthesis"
+      ]
+    },
+    {
+      "id": "fields-conditions-monitoring",
+      "kind": "reference",
+      "title": "条件行动与监测计划字段语义",
+      "summary": "按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。",
+      "path": "references/fields/conditions-monitoring.json",
+      "related": [
+        "technical-structure",
+        "comparison",
+        "allocation-rebalance"
+      ],
+      "references": [
+        "fields-context",
+        "evidence-and-judgment"
+      ],
+      "keywords": [
+        "fields-conditions-monitoring"
+      ]
+    },
+    {
+      "id": "fields-forecast-record",
+      "kind": "reference",
+      "title": "预测复盘与校准字段语义",
+      "summary": "按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。",
+      "path": "references/fields/forecast-record.json",
+      "related": [
+        "forecast-review"
+      ],
+      "references": [
+        "fields-context",
+        "evidence-and-judgment"
+      ],
+      "keywords": [
+        "fields-forecast-record"
+      ]
+    },
+    {
+      "id": "fields-event-calendar",
+      "kind": "reference",
+      "title": "经济与公司事件日历字段语义",
+      "summary": "按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。",
+      "path": "references/fields/event-calendar.json",
+      "related": [
+        "opportunity-and-calendar"
+      ],
+      "references": [
+        "fields-context"
+      ],
+      "keywords": [
+        "fields-event-calendar"
+      ]
+    },
+    {
+      "id": "fields-strategy-results",
+      "kind": "reference",
+      "title": "策略回测与历史表现字段语义",
+      "summary": "按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。",
+      "path": "references/fields/strategy-results.json",
+      "related": [
+        "strategy-evaluation",
+        "strategy-diagnosis",
+        "performance-attribution"
+      ],
+      "references": [
+        "fields-context"
+      ],
+      "keywords": [
+        "fields-strategy-results"
+      ]
+    },
+    {
+      "id": "fields-allocation",
+      "kind": "reference",
+      "title": "组合构建与再平衡字段语义",
+      "summary": "按需解释相关结果的含义、单位、证据和缺失；不指定图表或必填项。",
+      "path": "references/fields/allocation.json",
+      "related": [
+        "allocation-rebalance"
+      ],
+      "references": [
+        "fields-context"
+      ],
+      "keywords": [
+        "fields-allocation"
+      ]
+    },
+    {
+      "id": "evidence-and-judgment",
+      "kind": "reference",
+      "title": "证据与判断",
+      "summary": "来源与内容性质、历史可知性、采样和概率含义。",
+      "path": "references/evidence-and-judgment.md",
+      "keywords": [
+        "evidence-and-judgment"
+      ]
+    },
+    {
+      "id": "adapt-and-compose",
+      "kind": "reference",
+      "title": "任务适配与组合",
+      "summary": "为混合与未命中问题选择主回答线，并按用户范围裁剪。",
+      "path": "references/adapt-and-compose.md",
+      "references": [
+        "adaptation-examples"
+      ],
+      "keywords": [
+        "adapt-and-compose"
+      ]
+    },
+    {
+      "id": "review-and-recovery",
+      "kind": "reference",
+      "title": "定向复核与恢复",
+      "summary": "按问题复核、失败处理、范围变更与真实报告交付。",
+      "path": "references/review-and-recovery.md",
+      "keywords": [
+        "review-and-recovery"
+      ]
+    },
+    {
+      "id": "fields-context",
+      "kind": "reference",
+      "title": "共同对象与数据语义",
+      "summary": "精确对象、时间、原尺度和固定证据的共同含义。",
+      "path": "references/fields/context.md",
+      "keywords": [
+        "fields-context"
+      ]
+    },
+    {
+      "id": "adaptation-examples",
+      "kind": "reference",
+      "title": "不同任务的适配示例",
+      "summary": "同对象不同问题、混合问题、局部需求和仅改视觉的示例。",
+      "path": "examples/adaptation.json",
+      "keywords": [
+        "adaptation-examples"
+      ]
+    }
+  ]
+}

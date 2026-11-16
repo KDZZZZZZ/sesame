@@ -1,0 +1,134 @@
+{
+  "title": "条件行动与监测计划：字段语义",
+  "reading": "按需查阅所采用指标的含义、输入、单位、解释和缺失处理。series 表示已有分析数据，不指定图形或布局。并非必须计算或填满的清单。",
+  "context": "fields-context",
+  "fields": {
+    "monitor_series": {
+      "label": "当前观测与监测阈值",
+      "meaning": "用户或指定方法的监测阈值与当前观测，同图保持统一单位，不根据图形自动执行交易。",
+      "definition": "所选监测项的实际观测与既定触发阈值对照。",
+      "inputs": "indicator、current、threshold、触发方向、情景引用、来源与状态。",
+      "unit_time": "同图统一单位；每项保留观测时间、频率和阈值有效期。",
+      "interpretation": "越过阈值只说明观察条件，是否行动取决于完整情景约束和实际授权。",
+      "missing": "无当前观测标 pending，无阈值则不编造；不能用零替代缺测。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "当前观测是获取，监测阈值来自用户/方法，差值可算；阈值越过不自动等于获授权行动。"
+      }
+    },
+    "objective": {
+      "label": "用户目标",
+      "meaning": "本次任务目标。",
+      "definition": "用户希望本次条件计划支持的具体决策或观察目标。",
+      "inputs": "目标、对象、投资/观察期限、风险偏好、已有任务约定。",
+      "unit_time": "明确时间范围和涉及资金/收益目标的单位、基准。",
+      "interpretation": "用户目的不是市场方向证据；目标可为监测、持有、研究或风险控制。",
+      "missing": "目标未明确时保留已有约定，不自动假定交易获利目标。",
+      "provenance": {
+        "suggested_kind": "user_supplied",
+        "nature": "plan",
+        "meaning_note": "目标来自本次用户要求，长期偏好只能在适用且有效时复用。"
+      }
+    },
+    "scenarios": {
+      "label": "情景与条件",
+      "meaning": "研究结果支持的情景、触发与失效条件。",
+      "definition": "与用户目标相关、由现有研究支持的条件情景。",
+      "inputs": "情景 ID、触发、预期结果、失效、约束、研究引用及对应行动。",
+      "unit_time": "统一情景的目标/期限/单位与观察截点，明确判定方式。",
+      "interpretation": "研究情景不自动变成执行指令；概率需要该情景实际历史结果。",
+      "missing": "证据缺失时保留待观察状态，不补触发价或推断行动已满足。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "prediction",
+        "meaning_note": "情景结果是条件预测，触发和失效是研究判据，事实依据另列。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "constraints": {
+      "label": "风险与成本约束",
+      "meaning": "用户指定或方法提供的约束。",
+      "definition": "本次行动或观察计划实际需要遵守的限制。",
+      "inputs": "资金、风险、时间、持仓、流动性、允许动作等约束及来源。",
+      "unit_time": "单位、有效期、账户/标的范围和优先关系明确。",
+      "interpretation": "约束来自用户或已选方法，不生成额外投资限制；约束本身不能作为预测方向证据。",
+      "missing": "未知约束标待明确，不自行假定账户或交易权限。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "plan",
+        "meaning_note": "风险/费用限制来自用户目标或明确方法规则；真实成本参考与假设限额应单列。"
+      }
+    },
+    "watchlist": {
+      "label": "观察项目",
+      "meaning": "有意义的后续观测。",
+      "definition": "能够改变当前判断或行动状态的具体后续观测项。",
+      "inputs": "标的/事件/指标、待观察值、触发意义、来源、频率及关联情景。",
+      "unit_time": "给出时区、计划发布/观测窗口及数据延迟。",
+      "interpretation": "观察清单不是已启用监控；只有有决策意义的项目才需列出。",
+      "missing": "时间或数据源未知时说明条件，不能声称定时监测已安排。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "plan",
+        "meaning_note": "观察对象/指标和后续问题由用户或方法选择，事实来源仅用于之后核验。"
+      }
+    },
+    "actions": {
+      "label": "行动与状态",
+      "meaning": "区分建议、已安排和已执行，不触发实际行动。",
+      "definition": "针对条件和研究结果提出或已确认的动作及真实状态。",
+      "inputs": "动作、对应情景、前置条件、建议/待确认/已安排/已执行状态及依据。",
+      "unit_time": "明确数量/资金单位、适用期限与实际安排/执行时间。",
+      "interpretation": "报告仅表达状态；建议不得写成已下单，计划也不是成交回执。",
+      "missing": "没有真实回执不得填已执行；条件未满足保留等待状态。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "plan",
+        "meaning_note": "建议行动由研究给出，已安排状态取计划回执，已执行必须取真实执行/成交证据，数组逐项区分。"
+      }
+    },
+    "review_at": {
+      "label": "复核时点",
+      "meaning": "用户或任务约定的复核条件。",
+      "definition": "当前判断或方案需要复核的时间或触发条件。",
+      "inputs": "具体时间、事件触发、到期条件、复核对象及用户/方法约定。",
+      "unit_time": "区分交易日/自然日、时区与市场时段。",
+      "interpretation": "复核建议与已设提醒/自动任务不同，时间到达不自动触发实际交易。",
+      "missing": "未定日期可用明确事件条件，不编造计划或默认日更。",
+      "provenance": {
+        "suggested_kind": "user_supplied",
+        "nature": "plan",
+        "meaning_note": "复核日期/条件由用户或任务约定，也可由方法建议，不是已经发生的事实。"
+      }
+    },
+    "scenario_terms": {
+      "label": "综合情景的价格与条件",
+      "meaning": "同一情景 ID 下的方向、触发、入场区、目标、观点失效、止损、期限、成本和盈亏比及依据；树节点引用这些研究结果。",
+      "definition": "同一情景内可供核对的方向、价格条件、风险和成本条款。",
+      "inputs": "情景 ID、方向、触发、入场区、目标、观点失效、止损、期限、成本、盈亏比和固定依据。",
+      "unit_time": "所有价格同币种/口径，规模和期限一致，触发确认方式明确。",
+      "interpretation": "观点失效与风险止损分开；盈亏比不是胜率；树节点引用同一条款以避免重复冲突。",
+      "missing": "可选条款未定义则保留缺失，不因画树而补价格、仓位或概率。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "plan",
+        "meaning_note": "每个情景的方向/目标是预测，入场/止损是计划，成本可为事实或假设，盈亏比是计算，分别关联依据。"
+      }
+    },
+    "action_series": {
+      "label": "条件与后续行动",
+      "meaning": "用户目标下的观察条件、待确认路径和行动；叶子是行动，不含尚待判断的条件。",
+      "definition": "用户目标下从观察条件到建议行动的综合路径图。",
+      "inputs": "节点/父节点、条件、情景 ID、叶子动作、状态和研究依据。",
+      "unit_time": "条件阈值和时间窗沿用 scenario_terms，观测与计划时间分开。",
+      "interpretation": "叶子应是行动或等待状态，未决条件放分支；树图不证明行动已安排或执行。",
+      "missing": "未满足条件保留待观察，未研究分支标待判断，不制造必然终局。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "plan",
+        "meaning_note": "分支条件来自研究，叶子是用户目标下的行动计划；真实执行状态需另有回执。"
+      }
+    }
+  }
+}

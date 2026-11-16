@@ -1,0 +1,176 @@
+{
+  "title": "宏观与公司事件冲击：字段语义",
+  "reading": "按需查阅所采用指标的含义、输入、单位、解释和缺失处理。series 表示已有分析数据，不指定图形或布局。并非必须计算或填满的清单。",
+  "context": "fields-context",
+  "fields": {
+    "event_price_series": {
+      "label": "事件窗口 · K 线",
+      "meaning": "事件前后固定 OHLC、事件实际发布时点和时间口径；预期与已发布结果分开。",
+      "definition": "围绕指定事件公布时点的实际市场价格记录。",
+      "inputs": "固定 OHLC、事件 ID、计划与实际发布时间、标的与价格来源。",
+      "unit_time": "注明时区、bar 周期及闭合状态，价格口径一致，事件前后窗口可核对。",
+      "interpretation": "同时发生的其他信息可能影响价格；事件后变动不是因果效应的自动证明。",
+      "missing": "事件未发布时只有已知价格和计划时点，没有未来实际反应。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "OHLC为事实，事件实际发布时点为事件源事实，事件窗口选择来自研究；计划时刻不能代实际发布。"
+      }
+    },
+    "reaction_series": {
+      "label": "事件前后路径与参照",
+      "meaning": "以同一事件时点对齐的已登记路径，offset 单位明确；参照样本与统计方法注明。",
+      "definition": "以同类事件的共同参考时点对齐的已观察价格或收益路径。",
+      "inputs": "offset、当前路径、可比历史路径/聚合、事件 ID、匹配与统计方法引用。",
+      "unit_time": "offset 明确分钟/小时/交易日；路径共同基数、单位、事件零点和结算窗。",
+      "interpretation": "历史平均路径不是未来必走路线；当前未完成窗口不与完整历史终点冒充同阶段。",
+      "missing": "后续尚未发生的数据保持缺口；没有可比历史时不虚构参照。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "价格路径/参照按真实事件时点对齐计算；offset和样本选择为方法规则，不是供应商因果结论。"
+      }
+    },
+    "event": {
+      "label": "事件及公布状态",
+      "meaning": "事件身份、时间和已公布或未公布状态。",
+      "definition": "本次研究的宏观或公司事件的身份与公布状态。",
+      "inputs": "事件 ID、名称/类别、关联实体、计划/实际时间、状态和官方或原始来源。",
+      "unit_time": "标明当地时区、市场交易时段、数据截点及所指统计期间。",
+      "interpretation": "计划发生、已确认、已发布、取消与传闻不同；事件身份不能由相似标题替代。",
+      "missing": "时间或状态未确认时明确待确认，不将预定日写成实际发生日。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "fact",
+        "meaning_note": "身份/计划/实际公布/状态来自官方公告或日历；未公布计划也是计划事实，不等于结果已发生。"
+      }
+    },
+    "expectations": {
+      "label": "事前预期",
+      "meaning": "发布前可得的预期及来源。",
+      "definition": "事件发生前已经可得的市场、机构或模型预期。",
+      "inputs": "预期目标/数值、来源与聚合方式、样本覆盖、预测版本及发布时间。",
+      "unit_time": "与将公布结果同单位同期间；预期快照时间必须早于实际发布。",
+      "interpretation": "预期是观点或模型输出，不是事实；旧预期与即时更新不可混合。",
+      "missing": "无公开预期时保留缺失，不用前值或实际值回填。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "prediction",
+        "meaning_note": "发布前共识是获取的外部预测；用户假设或自有预测分支须另记，不能叫已获得的共识。"
+      }
+    },
+    "release": {
+      "label": "实际值或假设分支",
+      "meaning": "实际公布结果与未公布的假设明确区分。",
+      "definition": "事件实际公布的内容，及尚未公布时明确标识的假设分支。",
+      "inputs": "实际初值、修订值、文本结论、发布日期/时间、原始版本与来源；假设独立标记。",
+      "unit_time": "统计期间、币种/比例单位、季调或同比等口径和首次可得时间明确。",
+      "interpretation": "已公布事实与待发生情景分开；修订后的数据不能当首次发布时所见。",
+      "missing": "未公布实际值为 null/pending，不能将预期当 actual。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "已发布actual为获取事实；未发布假设为用户输入/预测，数组各分支分开，不能补成actual。"
+      }
+    },
+    "surprise": {
+      "label": "预期差",
+      "meaning": "实际值相对预期的差值、单位与分类，分类阈值由所选方法提供。",
+      "definition": "同口径实际结果相对于发布前预期的偏离。",
+      "inputs": "实际与预期快照、差值或标准化结果、分类阈值、方法与来源。",
+      "unit_time": "明确原单位差、百分比或百分点，标准化值注明基准样本和尺度。",
+      "interpretation": "正预期差不自动意味着资产利多；经济意义依事件、定位和历史反应而定。",
+      "missing": "预期或实际不可得时无法给预期差，不填零表示符合预期。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "预期差按同口径actual/事前forecast计算；分类阈值是方法，非来源直接事实。"
+      }
+    },
+    "reaction": {
+      "label": "已发生的反应",
+      "meaning": "数据截点以前已观察到的变化。",
+      "definition": "在研究截点前已经观察到的事件附近市场变化。",
+      "inputs": "相关资产、价格/收益/成交等原值、参考点、窗口和比较基准。",
+      "unit_time": "同币种与频率；标明事件起点、窗口终点和是否已完成。",
+      "interpretation": "观察反应不等于事件的独立因果影响，也不代表反应已经结束。",
+      "missing": "未开始或未完成的窗口分别标注，不从历史平均补未来行情。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "截点前变化由观测计算，归因于事件是解释；未结束窗口不是最终反应。"
+      }
+    },
+    "conditional_outlook": {
+      "label": "条件判断",
+      "meaning": "方法提供的分支判断、期限和依据。",
+      "definition": "围绕未决事件条件或已发生冲击给出的后续情景。",
+      "inputs": "分支条件、目标/方向、期限、机制假说、历史同类结果、相反证据及失效条件。",
+      "unit_time": "明确预测截点、事件值单位、价格目标及结算时间。",
+      "interpretation": "知识机制与历史结果并列对照，不仅因利好/利空标签预测方向；分支不默认等概率。",
+      "missing": "无可比历史时保留待检验解释，不补概率、分布或预测置信度。",
+      "provenance": {
+        "suggested_kind": "inferred",
+        "nature": "prediction",
+        "meaning_note": "分支走势是研究预测，触发条件和期限来自方法；实际已发生部分另列。"
+      },
+      "historical": "evidence-and-judgment"
+    },
+    "updates": {
+      "label": "更新条件",
+      "meaning": "何时更新研究。",
+      "definition": "会改变事件研究结果的后续公布或复核安排。",
+      "inputs": "待公布项目/修订、计划时间、复核触发、受影响结论和实际更新记录。",
+      "unit_time": "注明时区、原计划与新计划、数据版本及最后完成时间。",
+      "interpretation": "建议复核与已建立自动任务不同；安排不证明新信息已经可得。",
+      "missing": "日期未知时用具体触发事件，不能编造发布时间。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "plan",
+        "meaning_note": "复核时间/事件触发是任务或方法计划；当前事件更新记录需源证据。"
+      }
+    },
+    "previous_values": {
+      "label": "前值与修订值",
+      "meaning": "前期初值、最新修订值、发布日期、单位及版本；不能把修订值当时已知。",
+      "definition": "同一发布序列前期初值及后续修订的版本记录。",
+      "inputs": "前期标签、初值、各次修订值、各版本发布日期与来源。",
+      "unit_time": "统计期、单位、季调/年化等口径一致；每版首次可得时间独立保留。",
+      "interpretation": "最新修订前值不等于本次事件前市场当时所知的前值。",
+      "missing": "找不到初值时说明只有最新版本，不倒填到历史时点。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "fact",
+        "meaning_note": "前期初值和修订值是不同发布版本的事实，公布/可得时间分别保留。"
+      }
+    },
+    "reaction_windows": {
+      "label": "事件后反应窗口",
+      "meaning": "每个观察窗的起止、净变化、方向、TR/区间及其单位；未结束窗口明确标识。",
+      "definition": "各事件反应窗口已记录的变化、范围和完成程度。",
+      "inputs": "窗口起止、起终价、净变化、方向、区间/TR 定义、事件 ID与方法结果。",
+      "unit_time": "明确分钟/交易日、价格/百分比单位及基准时间，TR 保留所选定义。",
+      "interpretation": "最大区间与终点净变化不同；重叠窗口不是独立证据。",
+      "missing": "窗口未结束则标未完成，缺少高低数据不能由收盘差代替波动范围。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "窗起止由方法定义，净变化/TR从真实路径计算，是否已结束由截点判断。"
+      }
+    },
+    "event_importance": {
+      "label": "事件重要性",
+      "meaning": "事件类别、频率、重要性标签与提供方/方法定义。",
+      "definition": "来源或方法对事件类别和重要程度的分类。",
+      "inputs": "事件类别、频率、原重要性标签/评分、量表定义、评定方与依据。",
+      "unit_time": "标明评定截点及标签版本，不同来源量表分开。",
+      "interpretation": "重要性是影响关注或研究优先级的标签，不是方向、影响幅度或发生概率。",
+      "missing": "未定义标签保持未知，不将任何高频事件自动评为低重要性。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "interpretation",
+        "meaning_note": "类别/频率可取元数据；重要性可能是供应商标签或方法评价，不是客观影响强度。"
+      }
+    }
+  }
+}

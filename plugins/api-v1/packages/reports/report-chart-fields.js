@@ -24,18 +24,16 @@ function axisOptions(kind, options) {
 }
 export function chartDefinition(chart) {
   check(object(chart) && kinds.has(chart.kind), 'Chart field requires a supported built-in kind');
-  check(Object.keys(chart).every(key => ['kind', 'options', 'columns', 'data_requirements', 'evidence_role'].includes(key)), 'Unknown chart definition field');
+  check(Object.keys(chart).every(key => ['kind', 'options', 'columns', 'data_requirements'].includes(key)), 'Unknown chart definition field');
   safeOptions(chart.options ?? {});
   axisOptions(chart.kind, chart.options ?? {});
   check(Array.isArray(chart.columns) && chart.columns.length > 0 && chart.columns.length <= 32 && chart.columns.every(text), 'Chart field requires source columns');
   check(text(chart.data_requirements), 'Chart field requires data_requirements');
-  check(chart.evidence_role === undefined || ['descriptive', 'historical', 'prediction'].includes(chart.evidence_role), 'Invalid chart evidence role');
 }
 export function chartValue(value, definition) {
   chartDefinition(definition);
-  check(object(value) && Array.isArray(value.rows) && value.rows.length > 0 && value.rows.length <= 2500 && value.rows.every(object), 'Chart result needs 1–2500 fixed rows; use unavailable for missing data');
-  for (const key of ['source_note', 'takeaway']) check(value[key] === undefined || text(value[key]), `Chart ${key} must be nonempty text when supplied`);
-  check(Object.keys(value).every(key => ['rows', 'source_note', 'takeaway', 'options', 'nodes'].includes(key)), 'Unknown chart result field');
+  check(object(value) && Array.isArray(value.rows) && value.rows.length > 0 && value.rows.length <= 2500 && value.rows.every(object), 'Chart result needs 1–2500 fixed rows; omit a chart when no rows are supplied');
+  check(Object.keys(value).every(key => ['rows', 'options', 'nodes'].includes(key)), 'Unknown chart result field');
   safeOptions(value.options ?? {});
   if (value.nodes !== undefined) check(Array.isArray(value.nodes) && value.nodes.length <= 2500 && value.nodes.every(object), 'Chart nodes must be fixed rows');
   const options = { ...definition.options, ...value.options };

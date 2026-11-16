@@ -9,7 +9,7 @@ const hostRoot = process.env.SESAME_HOST_ROOT;
 const references = new URL('../packages/orchestration/skills/coordinate-research/references/', import.meta.url);
 const integration = (name, run) => test(name, { skip: !hostRoot }, run);
 async function example(file, heading) {
-  const text = await readFile(new URL(file, references), 'utf8');
+  const text = (await readFile(new URL(file, references), 'utf8')).replaceAll('\r\n', '\n');
   const section = text.split(`### ${heading}\n`)[1]?.split('\n### ')[0];
   assert.ok(section, `${file}: missing ${heading}`);
   const body = /^```json\r?\n([\s\S]*?)^```/m.exec(section)?.[1];
@@ -26,6 +26,21 @@ function validator() {
     return validate;
   };
 }
+
+test('report and method grants in the examples resolve to current public plugin capabilities', async () => {
+  const manifests = new Map(await Promise.all(['reports','research','data-access','workspace','plugin-manager'].map(async name => [
+    `sesame/${name}`, JSON.parse(await readFile(new URL(`../packages/${name}/capabilities.json`, import.meta.url), 'utf8')),
+  ])));
+  const stage = await example('agent-runs.md', '单阶段调用：host_agent_run');
+  const coordinator = (await example('workflow-plans.md', '自定义协调者：host_capabilities_invoke')).input;
+  for (const input of [stage,coordinator]) {
+    assert.ok(input.allowedCalls.some(call=>call.pluginId==='sesame/reports' && call.capabilityId==='components_show'));
+    for (const call of input.allowedCalls.filter(call=>call.pluginId!=='host')) {
+      const cap=manifests.get(call.pluginId)?.capabilities.find(cap=>cap.id===call.capabilityId);
+      assert.ok(cap?.consumers.includes('agent'), `Example grants removed or non-Agent capability ${call.pluginId}#${call.capabilityId}`);
+    }
+  }
+});
 
 integration('documented Agent and custom coordination calls match the actual host schemas without runtime side effects', async () => {
   const { createExecutionCapabilities } = await import(pathToFileURL(join(hostRoot, 'modules/plugins/host-v2/execution.js')));

@@ -1,7 +1,7 @@
 {
   "id": "sesame/auto-factor-mining",
   "apiVersion": "2",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "title": "因子研究",
   "description": "由 Agent 直接组织因子研究：分别调用数据冻结、DEAP/Optuna 搜索、Qlib 计算、纯因子评价及因子库。策略通过明确决策维护自己的因子池。",
   "author": {

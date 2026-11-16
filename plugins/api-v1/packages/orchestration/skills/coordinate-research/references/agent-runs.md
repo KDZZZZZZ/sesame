@@ -25,7 +25,7 @@
 
 研究阶段、数据量大或复杂的分析任务，以及明确要求报告或指定报告路径的任务，必须传 `output:{type:"report",space:"research",path:"comparison.html"}`，也可用 `space:"strategy"`。工作流调用将同样的交付声明放入宿主调用选项 `task.output`。这是该 Run 的报告交付位置，正文标题由最终报告内容决定；宿主自动创建缺失父目录。单文件报告直接使用文件路径，不另包一层任务目录。直接父 Run 已绑定报告且本子任务负责共同交付时，可用 `output:{type:"report",target:"parent"}` 复用该文件。日常问答和其他不需要报告的简单任务可省略 `output` 或使用 `{type:"none"}`；这不适用于应交付报告的研究或复杂分析。已绑定 none 却需要交付报告时向所属 Agent 报告不匹配，不自行改绑定。
 
-报告负责 Agent 的 `allowedCalls` 需包含实际写作、发布与核验能力。现有组合为 `sesame/reports` 的 `report_template`、`report_publish`、`report_check`、`report_read`，`sesame/workspace` 的 `read`、`write`、`edit`，读取固定数据的 `sesame/data-access#data_read` 和读取设计/方法资料的 `sesame/plugin-manager#plugin_read`；按 `{pluginId,capabilityId}` 逐项授予。绑定 output 只声明交付位置，不自动授予工具。遵循 reports 的统一视觉规则，发布后核验精确修订的实际 rendered 回执和最终文件路径。
+报告负责 Agent 的 `allowedCalls` 需包含实际写作、发布与核验能力。现有组合为 `sesame/reports` 的 `components_list`、`components_describe`、`components_show`、`report_check`、`report_read`，`sesame/workspace` 的 `read`、`write`、`edit`，读取固定数据的 `sesame/data-access#data_read` 和读取设计/方法资料的 `sesame/plugin-manager#plugin_read`；按 `{pluginId,capabilityId}` 逐项授予。绑定 output 只声明交付位置，不自动授予工具。直接 components_show({target:"report",content:{kind:"document",sections:[...]},...}) 发布；不清楚组件时才查目录或说明，不增加模板步骤。Research 与专业知识负责调查和内容，Reports 只管统一视觉。发布后核验精确修订的实际 rendered 回执和最终文件路径。
 
 受理返回的 `run.id` 是后续控制和读取的身份；只有 `completed` 的 `run.output` 才是最终结果，包含 `text/sessionId/model/turns/toolCalls`。等待超时只结束本次等待，不取消任务；`changed` 可因细小进度提前返回，不适合反复轮询最终成果。依赖缺失时暂停并报告具体需求，等待返回 `reason:"interrupted"` 后由主 Agent 核验并处理具体阻碍；已授权范围内可修复的依赖不要求新的用户回复。恢复前从同一 Run 读取待处理中断，明确选择实际解决的 `interruptIds`，是否需要用户输入遵循宿主控制契约，不默认把一个答复套到全部中断。正常结束由宿主收尾，无需另行完成调用；取消不回滚已发生的外部副作用，结果未知时读取 Run 与对应后端状态。
 
@@ -39,7 +39,7 @@
 {
   "title": "价格结构研究",
   "objective": "基于给定固定数据，归纳结构判断、证据与待验证问题，并交付可读报告。",
-  "instructions": "阅读所选 ICT 方法，使用给定数据与既有证据完成本阶段；用统一报告模板实际发布并检查本次报告，不再委派。",
+  "instructions": "阅读所选 ICT 方法，使用给定数据与既有证据完成本阶段；用 components_show 的通用组件实际发布并检查本次报告，不再委派。",
   "input": {
     "dataset_id": "<真实固定数据集 ID>",
     "question": "<用户已经提出的研究问题>"
@@ -48,8 +48,11 @@
   "allowedCalls": [
     {"pluginId": "sesame/data-access", "capabilityId": "data_read"},
     {"pluginId": "sesame/plugin-manager", "capabilityId": "plugin_read"},
-    {"pluginId": "sesame/reports", "capabilityId": "report_template"},
-    {"pluginId": "sesame/reports", "capabilityId": "report_publish"},
+    {"pluginId": "sesame/research", "capabilityId": "research_methods"},
+    {"pluginId": "sesame/research", "capabilityId": "research_read"},
+    {"pluginId": "sesame/reports", "capabilityId": "components_list"},
+    {"pluginId": "sesame/reports", "capabilityId": "components_describe"},
+    {"pluginId": "sesame/reports", "capabilityId": "components_show"},
     {"pluginId": "sesame/reports", "capabilityId": "report_check"},
     {"pluginId": "sesame/reports", "capabilityId": "report_read"},
     {"pluginId": "sesame/workspace", "capabilityId": "read"},

@@ -146,7 +146,7 @@ test('component tools cross real HTTP and stdio MCP into immutable, inspectable 
 
   // Read fixed data through the real artifact protocol, not a mocked row reader.
   app.store.put('dataset', { id: 'components-fixed-data', rows: line.rows, provenance: { kind: 'demo' } });
-  const snapshot = await host.capabilities.invoke('sesame/reports#report_data', { operation_id: 'components-fixed-snapshot', dataset_id: 'components-fixed-data' });
+  const snapshot = await host.capabilities.invoke('sesame/data-access#data_snapshot', { operationId: 'components-fixed-snapshot', title: 'Components fixed data', source: { providerId:'host#datasets', revision:'host:2' }, input: { datasetId:'components-fixed-data' } });
   assert.equal(snapshot.type, 'result');
   const boundChart = { ...line, data_id: 'series' }; delete boundChart.rows;
   const bound = { title: draft.title, provenance_kind: 'demo', component: boundChart, data: [{ id: 'series', ref: snapshot.value.ref, usage: 'Synthetic component series' }] };

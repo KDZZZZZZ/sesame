@@ -13,13 +13,13 @@
     "gitMatches": true
   },
   "after": {
-    "version": "3.0.4",
+    "version": "3.0.5",
     "sha256": "sha256:06ede75709c800c0b4d43ed4eea2f3c165f97f94711e62c58c7b9d24b68cf0b2",
-    "manifestDigest": "sha256:b447e7a6c14669014cb855bfb40bcfa4dc3bdb2d1496f664bb6c593fa67cb0bf"
+    "manifestDigest": "sha256:bb5d8d466a158c0c70209d80fa6e05986b77d530df88e08014a6f1b59da174d0"
   },
   "declarationSha256Unchanged": "sha256:8ed9303626c1f7067f778c266969b8b08cfdb17811c8c4971532bbef2b7f3b7e",
   "decision": "approved",
-  "reason": "User-authorized interoperability repair: new captures directly pin already-verified inputRefs alongside capture evidence so strict historical-evidence readers can validate plan/source/prediction/replay dependencies. Preserve exact input/output evidence, original provenance labels and references, and old completed or unknown-publication idempotent recovery. No added capability, data fetch or authority.",
+  "reason": "User-authorized interoperability repair: new captures directly pin already-verified inputRefs alongside capture evidence so strict historical-evidence readers can validate plan/source/prediction/replay dependencies. Preserve exact input/output evidence, original provenance labels and references, and old completed or unknown-publication idempotent recovery. No added capability, data fetch or authority. 2026-11-16: also review the exact usage-only wording correction and package version bump for the pure-visual Report handoff.",
   "approvedSourceEdits": [
     {
       "before": "export const publicSource = ({ providerId, revision }) => ({ providerId, revision });\nconst pending = new Map(), MAX_BYTES = 16 * 1024 * 1024;\n\nexport async function readBytes(host, ref, entry, signal) {\n",
@@ -53,5 +53,12 @@
     "plugins/api-v1/tests/core-v2-data.test.js",
     "plugins/api-v1/tests/research-history-dependencies-host.test.mjs"
   ],
-  "receipt": "output/research-register-dependencies-20261029/host-receipt.json"
+  "receipt": "output/research-register-dependencies-20261029/host-receipt.json",
+  "approvedDeclarationEdits": [
+    {
+      "before": "        \"inputs\": \"无 datasetId/ref 时列出登记数据；二者选一时读取全部行并写入 directory/inputs，directory 默认当前工作区且自身不能是 inputs。ref 来自 data_snapshot/market_read/report_data。\",",
+      "after": "        \"inputs\": \"无 datasetId/ref 时列出登记数据；二者选一时读取全部行并写入 directory/inputs，directory 默认当前工作区且自身不能是 inputs。ref 来自 data_snapshot 或 market_read，可直接供报告绑定，无需再次冻结。\",",
+      "reason": "2026-11-16 Reports no longer creates snapshots; reuse data_snapshot or market_read fixed references. No schema/effect/state change."
+    }
+  ]
 }

@@ -4,7 +4,7 @@
 
 | 工作流 | 可调整内容与边界 |
 | --- | --- |
-| Investment Research | workflow.stages 选择成员、角色、阶段顺序及并行组，可增 custom 角色；synthesis 指向最后阶段唯一综合成员。省略时沿用默认八成员；研究交付需绑定报告，由 synthesis 发布，内部成员不各自制作报告。 |
+| Investment Research | workflow.stages 选择成员、角色、阶段顺序及并行组，可增 custom 角色；synthesis 指向最后阶段唯一综合成员。start 省略时执行明确问题、取证、分析、报告四阶段，analyze 默认八成员；研究交付需绑定报告，由 synthesis 发布，内部成员不各自制作报告。 |
 | Auto Factor Mining | config.workflow 指定假设、实现、评审、反思和选择的成员，同一人可兼任；plan/review/reflection 可显式设 null 跳过，省略字段则沿用默认角色。真实 evaluator、候选资格、固定选择和独立留出验证仍需满足。 |
 | Trading Decision | plan.workflow.reviews 添加顺序复核；execute:false 只形成决策与报告。复核阻止时不能执行，复核成员无下单权限；原账户、授权和风险约束保持有效。 |
 
@@ -32,8 +32,8 @@
       {"pluginId": "host", "capabilityId": "agent.run"},
       {"pluginId": "host", "capabilityId": "capabilities.invoke"},
       {"pluginId": "sesame/plugin-manager", "capabilityId": "plugin_read"},
-      {"pluginId": "sesame/reports", "capabilityId": "report_template"},
-      {"pluginId": "sesame/reports", "capabilityId": "report_publish"},
+      {"pluginId": "sesame/reports", "capabilityId": "components_describe"},
+      {"pluginId": "sesame/reports", "capabilityId": "components_show"},
       {"pluginId": "sesame/reports", "capabilityId": "report_check"},
       {"pluginId": "sesame/reports", "capabilityId": "report_read"},
       {"pluginId": "sesame/workspace", "capabilityId": "read"},

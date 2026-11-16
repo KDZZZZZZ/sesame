@@ -56,7 +56,7 @@ test('real API2 Report stores versioned styles and renders content bound to exac
     assert.equal(checked.passed, true, JSON.stringify(checked));
     const installed = await runtime.plugins.manager.install('conv_main', { path: draft, digest: checked.digest });
     assert.equal(installed.runtime_status, 'ready'); assert.equal(installed.version, JSON.parse(await readFile(join(core,'packages/reports/plugin.json'),'utf8')).version);
-    for (const name of ['report_styles', 'report_style_save', 'report_document_template', 'report_publish', 'report_check']) {
+    for (const name of ['report_styles', 'report_style_save', 'components_show', 'components_validate', 'report_check']) {
       assert.ok(runtime.plugins.definitions({ conversationId: 'conv_main' }).some(tool => tool.name === name), name + ' is registered');
     }
 
@@ -96,43 +96,49 @@ test('real API2 Report stores versioned styles and renders content bound to exac
     assert.throws(() => reportHost.state.read(key, { version: 3 }), /not exist|not found/i);
     assert.throws(() => host.state.read({ collection: 'sesame/reports::report-styles', key: create.id }), /private|undeclared|forbidden/i);
 
-    stage = 'restart persistence and fixed-version template';
+    stage = 'restart persistence and fixed-version visual content';
     await close(); await open();
     assert.equal(runtime.plugins.entry('sesame/reports').runtime_status, 'ready');
     assert.deepEqual((await invoke('report_styles', {})).saved[0].style, updated.style);
     const rows = [{ label: '合成甲', value: 2 }, { label: '合成乙', value: 5 }];
     store.put('dataset', { id: 'synthetic-style-results', rows, provenance: { kind: 'demo' } });
-    const snapshot = await invoke('report_data', { operation_id: 'synthetic-style-data', dataset_id: 'synthetic-style-results' });
+    const snapshotResult = await host.capabilities.invoke('sesame/data-access#data_snapshot', {
+      operationId: 'synthetic-style-data', source: { providerId: 'host#datasets', revision: 'host:2' },
+      input: { datasetId: 'synthetic-style-results' }, title: 'Synthetic software fixture',
+    });
+    assert.equal(snapshotResult.type, 'result');
+    const snapshot = snapshotResult.value;
     const data = [{ id: 'comparison', ref: snapshot.ref, usage: 'Synthetic software fixture values' }];
     const content = { kind: 'document', sections: [{ title: '合成软件验收', blocks: [
-      { type: 'judgment', text: '演示：报告只显示输入的内容和数值', note: '没有执行模型或读取市场数据。' },
+      { type: 'judgment', text: '演示：报告只显示输入的内容和数值' },
       { type: 'group', layout: 'columns', blocks: [
-        { type: 'range', label: '输入区间', min: 0, max: 10, value: 5, unit: '个', note: '预先给定的合成数值' },
-        { type: 'scores', min: 0, max: 10, unit: '分', items: [{ label: '输入分数', value: 4, note: '不表示概率' }] },
+        { type: 'range', label: '输入区间', min: 0, max: 10, value: 5, unit: '个' },
+        { type: 'scores', min: 0, max: 10, unit: '分', items: [{ label: '输入分数', value: 4 }] },
       ] },
-      { type: 'formula', latex: String.raw`\frac{1}{2} + \sqrt{4}`, caption: '合成公式' },
+      { type: 'formula', latex: String.raw`\frac{1}{2} + \sqrt{4}` },
       { type: 'chart', title: '固定引用数据', kind: 'bar', columns: ['label', 'value'], options: { x: 'label', y: 'value' },
-        data_id: 'comparison', takeaway: '仅展示固定快照中的两个输入数值', source_note: 'Synthetic fixture; not observed market data' },
+        data_id: 'comparison' },
       { type: 'details', title: '完整合成证据说明', blocks: [{ type: 'paragraph', text: '<script>Not executable</script> 是原始文字' }] },
     ] }] };
     const args = { title: '真实隔离宿主 · 合成内容验收', summary: 'DEMO：只验证 API2 内容、样式和渲染契约', provenance_kind: 'demo', locale: 'zh-CN', data, content, style: first.style };
-    const preview = await invoke('report_document_template', { ...args, output_path: 'synthetic-content-preview.html' });
-    assert.equal(preview.editable, false); assert.deepEqual(preview.publish, { content, style: first.style });
-    const previewHtml = await readFile(join(workspace, 'synthetic-content-preview.html'), 'utf8');
-    assert.match(previewHtml, /--report-body-size:17px;/); assert.match(previewHtml, /--report-accent:#334eac;/);
-    assert.doesNotMatch(previewHtml, /--report-body-size:19px;/);
-    await assert.rejects(invoke('report_document_template', { ...args, output_path: 'wrong-version.html', style: { saved_id: create.id, saved_version: 99 } }), /not exist|not found|version/i);
-    await assert.rejects(invoke('report_document_template', { ...args, output_path: 'html-rejected.html', body_html: '<h1>Untrusted HTML</h1>' }), /schema|property|HTML|invalid/i);
+    const preview = await invoke('components_validate', args);
+    assert.equal(preview.valid, true, JSON.stringify(preview));
+    const invalidStyle = await invoke('components_validate', { ...args, style: { saved_id: create.id, saved_version: 99 } });
+    assert.equal(invalidStyle.valid, false);
+    assert.match(JSON.stringify(invalidStyle.diagnostics), /not exist|not found|version/i);
+    await assert.rejects(invoke('components_show', { ...args, operation_id: 'html-rejected', body_html: '<h1>Untrusted HTML</h1>' }), /schema|property|HTML|invalid/i);
 
     stage = 'content publication and actual dual-viewport renderer';
-    const published = await invoke('report_publish', { ...args, ...preview.publish, operation_id: 'synthetic-content-publication' });
+    const published = await invoke('components_show', { ...args, operation_id: 'synthetic-content-publication' });
     assert.equal(published.renderStatus, 'not_checked');
     const artifact = runtime.contractArtifacts.read(published.ref);
     assert.ok(artifact.manifest.dependencies.some(ref=>ref.id===snapshot.ref.id && ref.digest===snapshot.ref.digest));
     assert.equal(artifact.manifest.content.provenance.kind, 'demo');
     assert.deepEqual(runtime.contractArtifacts.reportData(published.ref, 'comparison').rows, rows);
     const html = runtime.contractArtifacts.resource(published.ref, 'index.html').bytes.toString('utf8');
-    assert.match(html, /--report-body-size:17px;/); assert.match(html, /&lt;script&gt;Not executable&lt;\/script&gt;/);
+    assert.match(html, /--report-body-size:17px;/); assert.match(html, /--report-accent:#334eac;/);
+    assert.doesNotMatch(html, /--report-body-size:19px;/);
+    assert.match(html, /&lt;script&gt;Not executable&lt;\/script&gt;/);
     const inspected = await invoke('report_check', { ref: published.ref });
     assert.deepEqual(inspected.artifact, published.ref); assert.equal(inspected.renderer.name, 'sesame-report-inspector');
     assert.equal(inspected.status, 'rendered', JSON.stringify(inspected));
@@ -157,12 +163,12 @@ test('real API2 Report stores versioned styles and renders content bound to exac
     assert.deepEqual(recordedInput.input,completeInput,'long content and formula escapes are not retyped');
     assert.deepEqual(runtime.contractArtifacts.resource(byRef.ref,'index.html').bytes,runtime.contractArtifacts.resource(published.ref,'index.html').bytes,'inline input and complete JSON reference produce identical content bytes');
     assert.ok(runtime.contractArtifacts.read(byRef.ref).manifest.dependencies.some(ref=>ref.id===inputArtifact.ref.id&&ref.digest===inputArtifact.ref.digest));
-    const viaFacade=await invoke('report_publish',{operation_id:'synthetic-facade-fixed-input',title:args.title,summary:args.summary,locale:args.locale,provenance_kind:'demo',data,input_ref:viaRef.inputRef});
+    const viaFacade=await invoke('components_show',{operation_id:'synthetic-facade-fixed-input',title:args.title,summary:args.summary,locale:args.locale,provenance_kind:'demo',data,input_ref:viaRef.inputRef});
     assert.deepEqual(runtime.contractArtifacts.resource(viaFacade.ref,'index.html').bytes,runtime.contractArtifacts.resource(byRef.ref,'index.html').bytes);
     stage = 'packaged attachment component through complete fixed input JSON';
     assert.ok(description.inputSchema.$defs.block.oneOf.some(block=>block.properties.type.const==='attachments'));
     const evidencePath='evidence/samples.json', evidenceEntry=runtime.contractArtifacts.read(snapshot.ref).manifest.blobs.find(blob=>blob.mediaType==='application/json').path;
-    const attachmentInput={...completeInput,content:{...content,appendix:[{type:'details',title:'完整合成附件',blocks:[{type:'attachments',items:[{label:'下载完整样本',path:evidencePath,description:'合成输入；不代表行情'}]}]}]},
+    const attachmentInput={...completeInput,content:{...content,sections:[...content.sections,{title:'合成附件',blocks:[{type:'attachments',items:[{label:'下载完整样本',path:evidencePath}]}]}]},
       assets:[{path:evidencePath,ref:snapshot.ref,entry:evidenceEntry,media_type:'application/json'}]};
     const attachmentResource=await host.resources.create({kind:'file',name:'attachment-input.json',lifetime:'durable',source:{content:JSON.stringify(attachmentInput),encoding:'utf8'}});
     const attachmentSource=await host.resources.publish(attachmentResource,{kind:'resource',schemaVersion:'1.0.0',content:{title:'Synthetic input with exact attachment'},dependencies:[snapshot.ref],blobs:[{entry:'attachment-input.json',path:'input.json',mediaType:'application/json'}]}, {operationId:'synthetic-attachment-input'});
@@ -173,12 +179,12 @@ test('real API2 Report stores versioned styles and renders content bound to exac
     assert.equal(attachmentInspected.status,'rendered',JSON.stringify(attachmentInspected));
     assert.deepEqual(attachmentInspected.diagnostics,[]);
     const wrongAttachmentInput=structuredClone(attachmentInput);
-    wrongAttachmentInput.content.appendix[0].blocks[0].items[0].path='evidence/unregistered.json';
+    wrongAttachmentInput.content.sections.at(-1).blocks[0].items[0].path='evidence/unregistered.json';
     const wrongAttachmentRequest={...viaRef,operationId:'bad-undeclared-attachment',input:wrongAttachmentInput};delete wrongAttachmentRequest.inputRef;
     await assert.rejects(hostCall('host.reports.publish',wrongAttachmentRequest),/declared packaged asset/i);
     const badContent={...viaRef,operationId:'bad-provider-content',input:{content:{kind:'document',sections:[{title:'Bad',blocks:[{type:'html',text:'<script>bad()</script>'}]}]}}};delete badContent.inputRef;
     await assert.rejects(hostCall('host.reports.publish',badContent),/schema|input|property/i);
-    await assert.rejects(invoke('report_document_template',{...args,style:{preset:'editorial'},output_path:'old-preset-rejected.html'}),/schema|property|invalid/i);
+    await assert.rejects(invoke('components_show',{...args,operation_id:'preset-rejected',style:{preset:'editorial'}}),/schema|property|invalid/i);
     assert.equal(modelCalls, 0); assert.equal(networkCalls, 0);
     if (output) {
       await mkdir(output, { recursive: true });

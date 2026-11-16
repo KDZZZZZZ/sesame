@@ -58,9 +58,9 @@ test('chart context and legend stay visible once while method and help remain ac
   }
 });
 
-test('document and module wrappers own visible chart titles and conclusions across resize', { skip: !host }, async t => {
+test('document wrapper owns visible chart titles and conclusions across resize', { skip: !host }, async t => {
   const rows = [{ category: 'A', value: 3 }, { category: 'B', value: 5 }];
-  for (const runtime of ['content-charts.js', 'module-charts.js']) {
+  for (const runtime of ['content-charts.js']) {
     const page = await pageFor(t, ['report-kit.js', 'editorial-charts.js']);
     await page.evaluate(rows => {
       document.querySelector('main').innerHTML = '<h3>Outer chart title</h3><p>Authored conclusion</p><div id="plot"></div><details id="plot-details"><summary>Exact records</summary><div class="module-chart-table"></div></details>';

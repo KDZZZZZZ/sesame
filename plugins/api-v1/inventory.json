@@ -1249,7 +1249,7 @@
     },
     {
       "id": "sesame/auto-factor-mining",
-      "version": "3.1.0",
+      "version": "3.1.1",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2297,7 +2297,7 @@
     },
     {
       "id": "sesame/data-access",
-      "version": "3.0.4",
+      "version": "3.0.5",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -2429,7 +2429,7 @@
     },
     {
       "id": "sesame/deep-reasoning",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -2851,7 +2851,7 @@
     },
     {
       "id": "sesame/investment-research",
-      "version": "3.5.6",
+      "version": "4.0.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -4032,7 +4032,7 @@
     },
     {
       "id": "sesame/mt5",
-      "version": "2.2.3",
+      "version": "2.2.4",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -4906,7 +4906,7 @@
     },
     {
       "id": "sesame/orchestration",
-      "version": "3.2.1",
+      "version": "3.3.0",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -5915,7 +5915,7 @@
     },
     {
       "id": "sesame/reports",
-      "version": "5.0.26",
+      "version": "6.0.0",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -5936,8 +5936,8 @@
         "zh": "交互报告"
       },
       "summary": {
-        "en": "Render plugin-defined research and strategy content with one shared visual style, native market charts and interactive backtest views.",
-        "zh": "用统一样式呈现研究与策略报告，支持内置行情图、回测热力图和参数比较。"
+        "en": "Present text and fixed data through shared visual components, charts, layouts and interactions in reports and answers.",
+        "zh": "用统一组件、图表、排版与交互在报告和回答中展示已有文字与固定数据。"
       },
       "dependencies": {
         "en": "Requires the host report service in Sesame 0.3.0-dev.2 or later. Visual assets are packaged; no CDN is required.",
@@ -5948,64 +5948,23 @@
         "calls": [
           "host.artifacts.query",
           "host.records.query",
-          "sesame/data-access#data_snapshot",
-          "sesame/workspace#write",
           "host.reports.publish",
           "host.reports.describe"
         ]
       },
       "tools": [
-        "report_data",
-        "report_template",
-        "report_document_template",
-        "report_backtest_template",
         "report_read",
         "report_check",
         "report_export_check",
         "report_prepare",
-        "report_publish",
-        "report_structure",
-        "report_compose",
         "report_styles",
-        "report_style_save"
+        "report_style_save",
+        "components_list",
+        "components_describe",
+        "components_validate",
+        "components_show"
       ],
       "capabilities": [
-        {
-          "id": "report_data",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "report_template",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "report_document_template",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "report_backtest_template",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
         {
           "id": "report_read",
           "kind": "function",
@@ -6043,33 +6002,6 @@
           "execution": "immediate"
         },
         {
-          "id": "report_publish",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "report_structure",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
-          "id": "report_compose",
-          "kind": "function",
-          "consumers": [
-            "agent",
-            "host"
-          ],
-          "execution": "immediate"
-        },
-        {
           "id": "report_styles",
           "kind": "function",
           "consumers": [
@@ -6094,6 +6026,42 @@
             "host"
           ],
           "execution": "immediate"
+        },
+        {
+          "id": "components_list",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "components_describe",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "components_validate",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "components_show",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
         }
       ],
       "hostContributions": {
@@ -6111,6 +6079,72 @@
         "hooks": []
       },
       "sourcePath": "plugins/api-v1/packages/reports"
+    },
+    {
+      "id": "sesame/research",
+      "version": "1.0.0",
+      "distribution": "core",
+      "state": "mounted",
+      "engines": {
+        "sesame": ">=0.3.0-dev.1 <0.4.0"
+      },
+      "format": "sesame-native",
+      "license": "MIT",
+      "author": {
+        "name": "Sesame contributors"
+      },
+      "category": "research",
+      "functionalCategory": "business",
+      "implementationKinds": [
+        "function"
+      ],
+      "title": {
+        "en": "Research methods",
+        "zh": "研究方法"
+      },
+      "summary": {
+        "en": "Find financial investigation methods and question-specific answer structures; adapt them to new questions and review evidence.",
+        "zh": "发现金融调查方法与问题专属回答结构，适配新问题并复核研究证据。"
+      },
+      "dependencies": {
+        "en": "Method lookup needs no credentials or external runtime. Research uses the existing agents and relevant source and calculation plugins.",
+        "zh": "查询方法无需密钥或额外运行环境；研究由现有 Agent 配合所需来源与计算插件执行。"
+      },
+      "permissions": {
+        "scopes": [],
+        "calls": []
+      },
+      "tools": [
+        "research_methods",
+        "research_read"
+      ],
+      "capabilities": [
+        {
+          "id": "research_methods",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "research_read",
+          "kind": "function",
+          "consumers": [
+            "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        }
+      ],
+      "hostContributions": {
+        "sources": [],
+        "views": [],
+        "services": [],
+        "hooks": []
+      },
+      "sourcePath": "plugins/api-v1/packages/research"
     },
     {
       "id": "sesame/rss-collect",
@@ -6335,7 +6369,7 @@
     },
     {
       "id": "sesame/trading-decision",
-      "version": "3.3.5",
+      "version": "3.4.0",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {
@@ -6373,7 +6407,7 @@
           "host.runs.wait",
           "host.runs.interrupt",
           "host.resources.read",
-          "sesame/reports#report_publish",
+          "sesame/reports#components_show",
           "sesame/reports#report_check",
           "sesame/workspace#write",
           "host.reports.describe"
@@ -6740,7 +6774,7 @@
     },
     {
       "id": "sesame/user-guide",
-      "version": "3.0.1",
+      "version": "3.0.2",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -6784,7 +6818,7 @@
     },
     {
       "id": "sesame/vnpy",
-      "version": "2.0.5",
+      "version": "2.0.6",
       "distribution": "optional",
       "state": "discoverable",
       "engines": {

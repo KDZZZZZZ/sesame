@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { renderStructuredReport } from './report-content.js';
 import { readBytes, readWorkspace } from './artifact-io.js';
-import { assertCompositionBindings } from './report-compose.js';
 import { COMPONENT_PROTOCOL } from './component-catalog.js';
 
 const { id, version } = JSON.parse(readFileSync(new URL('./plugin.json', import.meta.url), 'utf8'));
@@ -10,7 +9,7 @@ const object = value => value && typeof value === 'object' && !Array.isArray(val
 const refKey = ref => JSON.stringify(['id', 'revision', 'digest', 'kind', 'schemaVersion'].map(key => ref?.[key]));
 const uniqueRefs = refs => [...new Map(refs.map(ref => [refKey(ref), ref])).values()];
 const safePath = path => typeof path === 'string' && path.length <= 256 && !/^[\/]|[\\:\x00-\x1f]/.test(path) && path.split('/').every(part => part && part !== '.' && part !== '..');
-const inputKeys = ['content', 'style', 'assets', 'strategy_source', 'strategy_evidence', 'target'];
+const inputKeys = ['content', 'style', 'assets', 'target'];
 const answerStyle = readFileSync(new URL('./assets/answer-surface.css', import.meta.url), 'utf8');
 const attachmentExtensions = { 'application/json': ['json'], 'text/plain': ['txt', 'csv', 'tsv', 'md', 'log'], 'image/png': ['png'], 'image/jpeg': ['jpg', 'jpeg'], 'image/webp': ['webp'] };
 
@@ -50,14 +49,12 @@ export async function renderReport(host, envelope, signal, readWorkspaceAttachme
   const answer = input.target === 'answer';
   check(!answer || input.content.kind === 'document', '/input/content/kind: Answer components require the document layout');
   const refs = uniqueRefs([...data.map(binding => binding.ref), ...related.flatMap(item => item.artifact ? [item.artifact] : []), ...references]);
-  if (input.strategy_source) check(refs.some(ref => refKey(ref) === refKey(input.strategy_source)), 'Strategy source must be declared in report references');
   validateAssets(input.assets ?? [], refs);
   const args = { ...input, ...metadata, provenance_kind: metadata.provenanceKind, data, related, references };
   let html = await renderStructuredReport(host, args, signal);
   if (answer) html = html.replace(/<html\b/i, '<html data-report-surface="answer"')
     .replace('</head>', `<style data-report-answer-style>${answerStyle}</style></head>`);
   assertPackaged(html);
-  assertCompositionBindings(html, data, refs, metadata.provenanceKind);
   if (metadata.provenanceKind === 'demo' && !html.includes('data-sesame-provenance="demo"')) {
     const badge = '<aside data-sesame-provenance="demo" role="note" style="display:block!important;visibility:visible!important;opacity:1!important;padding:8px 0;font:600 12px/1.5 system-ui;color:var(--report-muted,#626262)">DEMO · 演示数据</aside>';
     html = html.replace(/<body\b[^>]*>/i, value => value + badge);
@@ -88,7 +85,7 @@ export async function renderReport(host, envelope, signal, readWorkspaceAttachme
   } } };
 }
 
-// Optional agent convenience facade. It cannot select a provider or publish HTML.
+// Internal publication adapter shared by components_show. The host owns revisions.
 export async function publishReport(host, args, signal) {
   const allowed = ['operation_id', 'title', 'summary', 'locale', 'space', 'provenance_kind', 'data', 'related', 'references', 'features', 'artifact_id', 'expected_revision', 'input_ref', ...inputKeys];
   check(object(args) && Object.keys(args).every(key => allowed.includes(key)), 'Unsupported publication property; custom HTML uploads and provider overrides are disabled');
@@ -96,7 +93,7 @@ export async function publishReport(host, args, signal) {
   if (args.input_ref) check(inputKeys.every(key => !Object.hasOwn(args, key)), 'input_ref contains the complete provider input; do not supply additional content, style, assets or target');
   const input = Object.fromEntries(inputKeys.filter(key => Object.hasOwn(args, key)).map(key => [key, args[key]]));
   // Explicit evidence refs remain fixed dependencies even through this facade.
-  const references = uniqueRefs([...(args.references ?? []), ...(args.strategy_source ? [args.strategy_source] : []), ...(args.strategy_evidence?.references ?? [])]);
+  const references = uniqueRefs(args.references ?? []);
   const request = { operationId: args.operation_id, title: args.title, summary: args.summary, data: args.data,
     provenanceKind: args.provenance_kind, references, ...(args.input_ref ? { inputRef: args.input_ref } : { input }) };
   for (const [from, to] of [['locale', 'locale'], ['space', 'space'], ['related', 'related'], ['features', 'features'], ['artifact_id', 'artifactId'], ['expected_revision', 'expectedRevision']]) if (Object.hasOwn(args, from)) request[to] = args[from];

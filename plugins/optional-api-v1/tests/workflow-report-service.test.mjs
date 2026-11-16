@@ -4,6 +4,7 @@ import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCapabilities } from '../../api-v1/packages/reports/index.js';
+import { reportDescription } from './workflow-report-fixture.mjs';
 import { resourceFixture } from '../../api-v1/tests/mt5-resource-fixture.js';
 import { writeDailyReport } from '../packages/trading-decision/reports.js';
 
@@ -38,6 +39,17 @@ async function fixture(t) {
       const path = join(directory, input.path); await mkdir(dirname(path), { recursive: true }); await writeFile(path, input.content);
       return { type: 'result', value: { path } };
     }
+    if (id === 'host.reports.describe') return { type: 'result', value: reportDescription() };
+    if (id === 'host.reports.publish') {
+      const metadata = { title:input.title, summary:input.summary, locale:input.locale ?? 'zh-CN', provenanceKind:input.provenanceKind, features:input.features ?? [] };
+      const rendered = await handlers.find(handler => handler.name === 'report_render').execute({ metadata, input:input.input, data:input.data ?? [], related:input.related ?? [], references:input.references ?? [] }, options.signal);
+      const root = await host.resources.create({kind:'directory',lifetime:'durable',name:'fixture-report'}, {operationId:input.operationId+':root'});
+      for (const file of rendered.files) await host.resources.create({kind:'file',parent:root,lifetime:'durable',name:file.path,source:{content:file.content,encoding:file.encoding}}, {operationId:input.operationId+':'+file.path});
+      const provenance = {kind:input.provenanceKind,references:input.references ?? []};
+      const published = await host.resources.publish(root, {kind:'report',schemaVersion:'1.0.0',content:{title:input.title,summary:input.summary,entry:rendered.entry,runtime:'sesame-report/1',runtimeRevision:'1.0.0',data:input.data ?? [],provenance},dependencies:input.references ?? [],provenance,
+        blobs:rendered.files.map(({path,mediaType})=>({path,mediaType}))}, {operationId:input.operationId});
+      return {type:'result',value:{ref:published.ref,renderStatus:'not_checked'}};
+    }
     assert.ok(id.startsWith('sesame/reports#'));
     const handler = handlers.find(value => value.name === id.split('#')[1]); assert.ok(handler);
     return { type: 'result', value: await handler.execute(input, options.signal) };
@@ -50,16 +62,17 @@ const decisionRun = () => ({ id: 'direct-service-decision', createdAt: 1, plan: 
 test('native decision report sends content directly through the common publication service without another Agent', async t => {
   const f = await fixture(t), run = decisionRun(), report = await writeDailyReport(f.host, run);
   const html = (await f.host.resources.read(report.ref, { part: 'content', entry: report.entry })).content;
-  assert.match(html, /data-sesame-report-template="report\/1"/); assert.match(html, /--report-/);
+  assert.match(html, /data-sesame-report/); assert.match(html, /--report-/);
   assert.match(html, /<h1>Frozen decision<\/h1>/); assert.match(html, /复核阻止本轮执行/);
   assert.equal(report.renderStatus, 'rendered'); assert.equal(report.inspection.renderer.name, 'sesame-report-inspector');
   assert.deepEqual(JSON.parse((await f.host.resources.read(report.ref, { part: 'content', entry: 'run.json' })).content), run);
-  assert.deepEqual(f.calls.filter(call => call.id.startsWith('sesame/reports#')).map(call => call.id.split('#')[1]), ['report_publish', 'report_check']);
-  const publication = f.calls.find(call => call.id.endsWith('#report_publish')).input;
+  assert.deepEqual(f.calls.filter(call => call.id.startsWith('sesame/reports#')).map(call => call.id.split('#')[1]), ['components_show', 'report_check']);
+  const publication = f.calls.find(call => call.id.endsWith('#components_show')).input;
+  assert.equal(publication.target, 'report');
   assert.equal(publication.content.kind, 'document');
   assert.equal(Object.hasOwn(publication, 'html_path'), false);
   assert.equal(Object.hasOwn(publication, 'body_html'), false);
-  assert.deepEqual(publication.style, { theme: 'blue' });
+  assert.equal(publication.style, undefined, 'Use the report provider default theme');
   assert.equal(f.calls.filter(call => call.id === 'sesame/workspace#write').length, 1, 'Only raw run evidence is written, never an intermediate HTML page');
 });
 
@@ -72,7 +85,7 @@ test('untrusted attachment write return paths never become report sources or int
       return result;
     };
     const run = decisionRun(), report = await writeDailyReport(f.host, run);
-    const publication = f.calls.find(call => call.id.endsWith('#report_publish')).input;
+    const publication = f.calls.find(call => call.id.endsWith('#components_show')).input;
     const write = f.calls.find(call => call.id === 'sesame/workspace#write').input;
     assert.deepEqual(publication.assets, [{ path: 'run.json', source_path: write.path, media_type: 'application/json' }]);
     assert.equal(Object.hasOwn(publication, 'html_path'), false);
@@ -91,7 +104,7 @@ test('export preflight or another report revision cannot satisfy actual workflow
     f.state.renderer = 'sesame-report-inspector'; f.state.wrongRevision = false;
     const report = await writeDailyReport(f.host, run, options);
     assert.deepEqual(report.ref, ref); assert.equal(report.renderStatus, 'rendered');
-    assert.equal(f.calls.filter(call => call.id.endsWith('#report_publish')).length, 1);
+    assert.equal(f.calls.filter(call => call.id.endsWith('#components_show')).length, 1);
   }
 });
 

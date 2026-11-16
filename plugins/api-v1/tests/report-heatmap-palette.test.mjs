@@ -29,7 +29,7 @@ test('heatmaps and signed bars follow report roles and custom/dark tokens withou
     const page=await browser.newPage({viewport:{width:720,height:900}});
     page.on('pageerror',error=>errors.push(error.message));
     page.on('console',message=>{if(message.type()==='error')errors.push(message.text());});
-    const blocks=[...fixtures.map((rows,i)=>({type:'chart',kind:'heatmap',title:`Fixture ${i+1}`,columns:['x','y','value'],options:{x:'x',y:'y',value:'value'},rows,takeaway:'Only supplied values and explicit gaps',source_note:'Synthetic fixture; not research evidence'})),...['bar','hbar'].map(kind=>({type:'chart',kind,title:`Signed ${kind}`,columns:['label','value'],options:{x:'label',y:'value',tone:'signed'},rows:signedRows,takeaway:'Original signed values',source_note:'Synthetic fixture only'}))];
+    const blocks=[...fixtures.map((rows,i)=>({type:'chart',kind:'heatmap',title:`Fixture ${i+1}`,columns:['x','y','value'],options:{x:'x',y:'y',value:'value'},rows})),...['bar','hbar'].map(kind=>({type:'chart',kind,title:`Signed ${kind}`,columns:['label','value'],options:{x:'label',y:'value',tone:'signed'},rows:signedRows}))];
     const input={title:'Synthetic report color fixture',summary:'Software presentation checks only',locale:'en',provenance_kind:'demo',data:[],...(variant.style?{style:variant.style}:{}),content:{kind:'document',sections:[{title:'Supplied cells and signed bars',blocks}]}};
     const original=structuredClone(input),html=await renderStructuredReport({},input);
     assert.deepEqual(input,original);

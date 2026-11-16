@@ -6,6 +6,7 @@ import { COMPONENT_PROTOCOL, listComponents, describeComponents, getChartSchema 
 import { renderStructuredReport } from './report-content.js';
 import { renderReport, publishReport } from './report-provider.js';
 import { chartValue } from './report-chart-fields.js';
+import { controlScope, validateInteraction, filterRows, controlledOptions } from './report-interactions.js';
 import { readWorkspaceBytes } from './report-prepare.js';
 import { normalizeComponentContent, readComponentResource as readResource, readComponentJson as readJson, isSafeComponentEntry as safeEntry } from './component-input.js';
 
@@ -64,7 +65,7 @@ function authorPath(path, args) {
 
 function envelope(args, input = Object.fromEntries(['content', 'style', 'assets', 'target'].filter(key => Object.hasOwn(args, key)).map(key => [key, args[key]]))) {
   return { metadata: { title: args.title ?? 'Component validation', summary: args.summary ?? '', locale: args.locale ?? 'en',
-    provenanceKind: args.provenance_kind ?? 'derived', features: ['interactive'], ...(args.space ? { space: args.space } : {}) },
+    provenanceKind: args.provenance_kind ?? 'derived', features: args.features ?? ['interactive'], ...(args.space ? { space: args.space } : {}) },
   data: args.data ?? [], related: args.related ?? [], references: args.references ?? [], input };
 }
 
@@ -75,13 +76,12 @@ function assertDocument(input) {
 
 function chartsIn(content) {
   const charts = [];
-  const visit = (block, path) => {
-    if (block.type === 'chart') charts.push({ block, path });
-    if (block.type === 'group' || block.type === 'details') block.blocks.forEach((item, index) => visit(item, `${path}/blocks/${index}`));
+  const visit = (block, path, controls = new Map()) => {
+    if (block.type === 'group' && block.controls !== undefined) controls = controlScope(block.controls);
+    if (block.type === 'chart') charts.push({ block, path, controls });
+    if (block.type === 'group' || block.type === 'details') block.blocks.forEach((item, index) => visit(item, `${path}/blocks/${index}`, controls));
   };
-  if (content.overview?.chart) visit(content.overview.chart, '/content/overview/chart');
   content.sections.forEach((section, index) => section.blocks.forEach((block, blockIndex) => visit(block, `/content/sections/${index}/blocks/${blockIndex}`)));
-  (content.appendix ?? []).forEach((block, index) => visit(block, `/content/appendix/${index}`));
   return charts;
 }
 
@@ -96,7 +96,6 @@ function assertChartShape(block, path) {
 function contentTitle(content) {
   const blocks = [];
   const visit = block => { blocks.push(block); if (block.blocks) block.blocks.forEach(visit); };
-  if (content.overview?.chart) visit(content.overview.chart);
   content.sections.forEach(section => section.blocks.forEach(visit));
   const title = blocks.find(block => typeof block.title === 'string' && block.title.trim())?.title
     ?? content.sections.find(section => section.title.trim())?.title;
@@ -154,7 +153,7 @@ async function validateChartRows(host, args, charts, signal) {
     }
     return cache.get(id);
   };
-  for (const { block, path } of charts) {
+  for (const { block, path, controls } of charts) {
     signal?.throwIfAborted();
     const rows = block.data_id ? await rowsFor(block.data_id, `${path}/data_id`) : block.rows;
     let nodes = block.nodes;
@@ -163,8 +162,11 @@ async function validateChartRows(host, args, charts, signal) {
     delete resolved.data_id; delete resolved.chart_data;
     assertChartShape(resolved, path);
     try {
-      chartValue({ rows, takeaway: block.takeaway, source_note: block.source_note, ...(nodes ? { nodes } : {}) },
-        { kind: block.kind, columns: block.columns, options: block.options ?? {}, data_requirements: 'Supplied results only' });
+      validateInteraction(block, controls, block.columns);
+      const visible = filterRows(rows, block.filter, controls);
+      const options = controlledOptions(block.options ?? {}, block.option_controls, controls);
+      if (visible.length) chartValue({ rows: visible, ...(nodes ? { nodes } : {}) },
+        { kind: block.kind, columns: block.columns, options, data_requirements: 'Supplied results only' });
     } catch (error) { throw new Error(`${path}: ${error.message}`); }
   }
   return cache.size;

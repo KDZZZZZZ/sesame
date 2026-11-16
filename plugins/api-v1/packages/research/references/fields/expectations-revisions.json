@@ -1,0 +1,175 @@
+{
+  "title": "共识与预期修正：字段语义",
+  "reading": "按需查阅所采用指标的含义、输入、单位、解释和缺失处理。series 表示已有分析数据，不指定图形或布局。并非必须计算或填满的清单。",
+  "context": "fields-context",
+  "fields": {
+    "revision_series": {
+      "label": "预期修正前后",
+      "meaning": "同一预测目标、期限和单位的前后共识值，不混合不同财期。",
+      "definition": "同一预期目标在两个截点的共识变化。",
+      "inputs": "指标/财期、previous/current、两次覆盖集合、聚合规则和更新时间。",
+      "unit_time": "同单位同目标期；明确修正是值的变化、百分比还是百分点。",
+      "interpretation": "覆盖者进出导致的变化与同分析师修正不同，不把跨财年滚动当上调。",
+      "missing": "无可比旧快照时只报告当前共识，不伪造零基准。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "prediction",
+        "meaning_note": "默认展示外部前后共识预测；若自己聚合则为计算，必须同一财期/目标/单位和两次真实版本。"
+      }
+    },
+    "ratings_series": {
+      "label": "分析师评级分布",
+      "meaning": "同一覆盖范围、原评级体系与截点的数量；不能自动归并评级或转成概率。",
+      "definition": "截至同一时点、按原评级体系计数的意见分布。",
+      "inputs": "原评级标签、计数、去重规则、覆盖分母、来源及评级有效期。",
+      "unit_time": "数量为人/机构/意见条数中的明确定义，截点与最新评级时间分开。",
+      "interpretation": "不同机构标签不可默认归并；评级份额不是上涨概率或准确率。",
+      "missing": "缺少评级映射或覆盖时按来源分组，未知评级不归入中性。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "statistic",
+        "meaning_note": "供应商当前评级数量是外部统计；若自己从有效研报集合计数则为派生，评级本身是意见。"
+      }
+    },
+    "dispersion_series": {
+      "label": "分歧与覆盖",
+      "meaning": "同目标各估计及指定方法的分歧指标；保留分析师覆盖时间，不假设一致性等于准确率。",
+      "definition": "同一目标下参与者估计及其相对位置的展示。",
+      "inputs": "分析师/机构、估计值、方法提供的分歧指标、覆盖日期和财期。",
+      "unit_time": "估计值同币种/单位/期限；分歧指标保留原量纲与分母定义。",
+      "interpretation": "小分歧表示观点集中，不代表更准确；离群值不能无依据删除。",
+      "missing": "缺少个体估计或分歧方法时只展示已有覆盖，不推造散点。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "个体预测获取但性质是预测，标准差/分位等分歧为统计，分歧含义为解释。"
+      }
+    },
+    "target_prices": {
+      "label": "分析师目标价",
+      "meaning": "均值/中位数/最低/最高及币种、期限、样本数；与模型目标分开。",
+      "definition": "分析师价格目标的已提供聚合统计及其覆盖。",
+      "inputs": "均值/中位数/最低/最高、个体样本或来源、人数、聚合规则与有效目标范围。",
+      "unit_time": "标明币种、每股基础、各目标期限、共识截至日和意见发布时间。",
+      "interpretation": "这是分析师意见汇总，不是自身模型目标或内在价值；最高/最低不是概率预测区间。",
+      "missing": "期限或样本未知时说明可比限制，不能用自身模型填入分析师共识。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "prediction",
+        "meaning_note": "均值/中位/高低是外部预测的统计摘要；仍是外部预测，不是未来真实价格。"
+      }
+    },
+    "coverage": {
+      "label": "机构覆盖",
+      "meaning": "参与者、时间及覆盖口径。",
+      "definition": "某项共识实际纳入的预测者及其统计边界。",
+      "inputs": "分析师/机构集合、去重与过期规则、目标、有效样本数和来源。",
+      "unit_time": "明确共识截点、各意见可得时间和对应目标财期。",
+      "interpretation": "人数、机构数和预测条数不同；覆盖广不自动提高预测准确率。",
+      "missing": "未披露参与者时标注聚合覆盖未知，不把供应商覆盖总数当本目标样本数。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "metadata",
+        "meaning_note": "分析师/机构/发布时间是覆盖元数据；是否仍有效需供应商定义或显式规则。"
+      }
+    },
+    "consensus": {
+      "label": "共识",
+      "meaning": "所选聚合方法的预期结果。",
+      "definition": "选定聚合规则下对指定未来经营量或其他目标的意见汇总。",
+      "inputs": "目标、财期、已聚合估计、均值/中位数等规则、有效样本数及来源。",
+      "unit_time": "单位、币种、调整前后口径、发布截点与预测期间明确。",
+      "interpretation": "共识是意见统计，不是事实或已校准概率；不同目标不能汇成一个总共识。",
+      "missing": "尚无预期或样本不足时保留不可用，不用历史实际值充当预期。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "prediction",
+        "meaning_note": "默认获取外部一致预期；采用自有聚合则是计算得到的预测，不能标实际值。"
+      }
+    },
+    "revisions": {
+      "label": "预期修正",
+      "meaning": "发布时间、方向及幅度。",
+      "definition": "参与者或共识在明确日期对同一预测目标的修订。",
+      "inputs": "修订前后值、方向/幅度、发布时间、目标财期、参与者与原因来源。",
+      "unit_time": "区分百分比变化、百分点差和原单位差；历史版本使用当时已公布数据。",
+      "interpretation": "预测滚动到下一财年不等于原目标上调；意见修订不是经营实际改善。",
+      "missing": "缺少旧版本时不能推断修订幅度；标明仅有最新值。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "评级变动可直接获取；EPS/目标价修订需前后预测，方向/幅度为计算，解释单列。"
+      }
+    },
+    "dispersion": {
+      "label": "分歧",
+      "meaning": "方法定义的分歧或集中程度。",
+      "definition": "参与者对同一目标的分歧或集中程度。",
+      "inputs": "分歧度量及定义、估计分布摘要、有效样本数、缺失/离群处理和方法。",
+      "unit_time": "估计目标、期限和单位一致；标准差、极差、分位差等保持原定义。",
+      "interpretation": "分歧度不是不确定性的完整估计，也不是预测置信度；低分歧可能共同偏误。",
+      "missing": "个体数据或分母缺失时说明无法估计，不默认零分歧。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "以同目标个体估计计算分歧；供应商摘要可直接获取但仍是统计，不等于准确率。"
+      }
+    },
+    "actual_comparison": {
+      "label": "与实际结果对照",
+      "meaning": "同口径预期和实际结果。",
+      "definition": "同一目标的发布前共识与后来实际结果的对照。",
+      "inputs": "预期快照、实际初值/修订值、差异指标、目标财期及各自来源。",
+      "unit_time": "单位、会计调整、币种和公布时间对齐，预测必须在结果可得之前。",
+      "interpretation": "预期差不同于价格反应；不可用事后修订共识评价事前预测。",
+      "missing": "实际未公布时保持 null/pending，不填前值或零；不可比口径明确说明。",
+      "provenance": {
+        "suggested_kind": "mixed",
+        "nature": "mixed",
+        "meaning_note": "实际财务披露是获取事实，事前预期是获取预测，差值/误差为计算；必须相同财期口径。"
+      }
+    },
+    "rating_distribution": {
+      "label": "评级分布",
+      "meaning": "原始评级标签、数量、分母、截至时间与来源；不默认把不同机构量表合并。",
+      "definition": "各原始评级标签的数量或占比及映射边界。",
+      "inputs": "评级名称、数量、覆盖分母、源量表、去重规则及必要的显式映射。",
+      "unit_time": "同统计截点，数量单位与比例尺度明确，过期评级是否剔除需说明。",
+      "interpretation": "买入等文字标签的含义由原机构定义；评级比例不是未来方向概率。",
+      "missing": "未知评级与缺少覆盖分别列明，不默认为持有或平均分配。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "statistic",
+        "meaning_note": "原评级标签是意见，数量/分母是供应商统计或自有计数；不同量表不直接合并。"
+      }
+    },
+    "analyst_count": {
+      "label": "覆盖分析师数量",
+      "meaning": "同一截至时间、目标与去重规则下的覆盖人数。",
+      "definition": "本目标、本截点按既定去重规则计算的有效预测者数量。",
+      "inputs": "目标和范围、计数结果、去重单位、过期与重复处理依据。",
+      "unit_time": "非负整数，单位明确为人或机构；配套覆盖字段记录时间。",
+      "interpretation": "人数不等于意见条数，也不能直接当置信度；不能跨目标复用全公司覆盖数。",
+      "missing": "未知人数保持不可用；已检索确认无人覆盖才可为 0。",
+      "provenance": {
+        "suggested_kind": "derived",
+        "nature": "statistic",
+        "meaning_note": "按目标、截点和身份去重得到人数；供应商给定人数也只是其覆盖统计。"
+      }
+    },
+    "target_dates": {
+      "label": "共识日期与期限",
+      "meaning": "各共识的公布/更新时间、预测期限、过期或修订范围。",
+      "definition": "各项预期或目标价的发布、更新和结算时间属性。",
+      "inputs": "目标 ID、首次公布、最近修订、共识截点、目标期限、过期状态与来源。",
+      "unit_time": "区分财务期间、滚动十二个月与自然日期；含时区或明确日期粒度。",
+      "interpretation": "更新时间不自动重置目标期限；过期目标不能无说明纳入当前共识。",
+      "missing": "没有确切期限时保留原来源描述与未知，不统一补成一年。",
+      "provenance": {
+        "suggested_kind": "acquired",
+        "nature": "metadata",
+        "meaning_note": "公布/更新时间是源元数据，预测期限/过期范围需原报告或定义；不能从获取时间猜期限。"
+      }
+    }
+  }
+}

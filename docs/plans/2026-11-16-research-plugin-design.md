@@ -1,6 +1,6 @@
 # Research 插件设计：调查方法与回答结构
 
-2026-11-16 · 设计稿，尚未实施
+2026-11-16 · 已实现为 Research 1.0.0；[当前架构概要](../reports-and-research.md)。以下保留实施依据。
 
 配套方案：[Reports 纯视觉插件设计](2026-11-16-reports-visual-only-design.md)。
 

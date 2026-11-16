@@ -9,13 +9,13 @@ const data = [{ id: 'counts', ref, usage: 'Supplied counts' }];
 test('shared normalization infers only columns and preserves every supplied value recursively', async () => {
   const { normalizeComponentContent } = await import('../packages/reports/component-input.js');
   const inline = chart({ rows: [{ item: 'A', count: '9007199254740993.00001' }, { item: 'B', count: null, note: 'supplied' }] });
-  const original = { ...document([{ type: 'group', layout: 'stack', blocks: [{ type: 'details', title: 'Detail', blocks: [inline] }] }]), overview: { conclusion: 'Supplied conclusion', chart: { ...inline, options: { ...inline.options, height: 200 } } } };
+  const original = document([{ type: 'group', layout: 'stack', blocks: [{ type: 'details', title: 'Detail', blocks: [inline] }] }, inline]);
   const before = structuredClone(original), normalized = await normalizeComponentContent({}, original);
   assert.deepEqual(original, before); assert.notEqual(normalized, original);
-  assert.deepEqual(normalized.overview.chart.columns, ['item', 'count', 'note']);
+  assert.deepEqual(normalized.sections[0].blocks[1].columns, ['item', 'count', 'note']);
   assert.deepEqual(normalized.sections[0].blocks[0].blocks[0].blocks[0], { ...inline, columns: ['item', 'count', 'note'] });
-  for (const name of ['title', 'takeaway', 'source_note']) assert.equal(Object.hasOwn(normalized.overview.chart, name), false);
-  assert.equal(normalized.overview.chart.rows[0].count, '9007199254740993.00001');
+  for (const name of ['title', 'takeaway', 'source_note']) assert.equal(Object.hasOwn(normalized.sections[0].blocks[1], name), false);
+  assert.equal(normalized.sections[0].blocks[1].rows[0].count, '9007199254740993.00001');
 });
 
 test('fixed columns prefer manifest metadata and otherwise read actual JSON rows', async () => {

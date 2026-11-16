@@ -5,19 +5,18 @@ import { check } from './workflow-mechanics.js';
 import { artifactRef, checkedArtifact, checkedReportReceipt, uniqueRefs } from './research-artifacts.js';
 
 export const REPORT_CAPABILITIES = Object.freeze({
-  describe: 'host.reports.describe', publish: 'sesame/reports#report_publish', inspect: 'sesame/reports#report_check', write: 'sesame/workspace#write',
+  describe: 'host.reports.describe', publish: 'sesame/reports#components_show', inspect: 'sesame/reports#report_check', write: 'sesame/workspace#write',
 });
 export async function publishWorkflowReport(host, { operationId, title, summary, content, style, attachments = [], data = [], references = [], demo = false,
   features = [], locale = 'zh-CN', publication, onPublication = () => {}, signal }) {
   let saved = publication;
   if (!saved) {
-    check(content && typeof content === 'object' && !Array.isArray(content), 'INVALID_REPORT_CONTENT', 'Workflow reports provide structured content and a built-in style, never HTML.');
+    check(content && typeof content === 'object' && !Array.isArray(content) && content.kind === 'document', 'INVALID_REPORT_CONTENT', 'Workflow producers provide a generic document of visual blocks and fixed data, never a business template or HTML.');
     const description = await invokeValue(host, REPORT_CAPABILITIES.describe, {}, { signal });
     const schema = description?.inputSchema;
-    const variants = schema?.properties?.content?.oneOf ?? schema?.properties?.content?.anyOf ?? [];
     check(description?.contract === 'sesame.report/1' && description?.provider?.pluginId === 'sesame/reports'
       && schema?.$id === 'urn:sesame:report:provider-input:1' && schema.properties.style
-      && variants.some(variant => variant?.properties?.kind?.const === content.kind)
+      && schema.properties.content?.properties?.kind?.const === 'document'
       && (!attachments.length || schema.properties.assets), 'REPORT_PROVIDER_UNSUPPORTED',
     `The fixed workflow adapter supports the declared sesame/reports content/style schema for ${content.kind}; selected provider ${description?.provider?.pluginId ?? 'unknown'} does not expose that interface. Research and frozen results remain saved. Use an Agent with host_reports_describe and host_reports_publish to adapt the existing evidence to the selected provider; this workflow never changes host provider settings.`);
     const root = `workflow-reports/${digest(operationId).slice(7)}`;
@@ -36,7 +35,7 @@ export async function publishWorkflowReport(host, { operationId, title, summary,
       await invokeValue(host, REPORT_CAPABILITIES.write, { path: source_path, content: file.content }, { signal });
       assets.push({ path: file.path, source_path, media_type: file.mediaType });
     }
-    const result = await invokeValue(host, REPORT_CAPABILITIES.publish, { operation_id: operationId, title, summary, content, ...(style === undefined ? {} : { style }), data, assets,
+    const result = await invokeValue(host, REPORT_CAPABILITIES.publish, { target: 'report', operation_id: operationId, title, summary, content, ...(style === undefined ? {} : { style }), data, assets,
       related: [], references: refs, features, locale, provenance_kind: isDemo ? 'demo' : 'derived' }, { signal });
     check(artifactRef(result?.ref, 'report'), 'REPORT_PUBLICATION_UNKNOWN', 'Report publication did not return an exact report ArtifactRef; reconcile the original operation ID.');
     saved = { ref: result.ref, entry: 'index.html', attachments: attachments.map(({ path, mediaType }) => ({ path, mediaType })), state: 'published', renderStatus: 'not_checked' };

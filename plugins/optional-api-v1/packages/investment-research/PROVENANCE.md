@@ -10,4 +10,6 @@ Sources and numerical methods remain separately selected plugins with their own 
 
 Version 3.2.0 adds original MIT-licensed, bounded `fixed-event-window-returns/1.0.0` endpoint arithmetic over caller-selected fixed event and market artifacts. It records actual alignment, raw price basis, baseline and missing/overlapping observations. This is neither a historical event search engine nor a point-in-time dataset certification or predictive method. No third-party method, source credential, model request or market dataset is embedded; deterministic synthetic tests establish arithmetic and artifact identity, not investment performance.
 
-3.3.0：新增Research报告流程入口与结果brief，复用原生Run、固定证据、问答及渲染核验。报告阶段开放当前report_structure/report_compose。受限RSS/HTML解析及金融证据读取纳入审核研究能力，未授予通用shell或配置权限。
+3.3.0：新增研究报告流程入口与结果 brief，复用原生 Run、固定证据、问答及渲染核验。受限 RSS/HTML 解析及金融证据读取纳入审核研究能力，未授予通用 shell 或配置权限。
+
+4.0.0：任务 brief 改为目标、问题、方法参考、证据和交付要求，删除旧业务模板选择。Research 提供独立的只读方法发现与正文；本工作流继续使用既有 Run 执行，Reports 仅通过通用组件统一呈现。来源、计算、报告和交易权限保持分别声明；不新增宿主接口、调度器或数据获取服务。

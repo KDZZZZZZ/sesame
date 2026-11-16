@@ -3,14 +3,13 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { graph } from '@sesame/plugin-sdk/svl';
 import { createCapabilities as reports } from '../packages/reports/index.js';
 import { createCapabilities as canvas } from '../packages/canvas-control/index.js';
 import { resourceHost } from './core-v2-fixture.mjs';
 const table = capabilities => new Map(capabilities.map(item => [item.name, item.execute]));
 
 test('core tool factories exactly implement declared API 2 names without legacy factories', async () => {
-  for (const name of ['plugin-manager', 'workspace', 'data-access', 'reports', 'canvas-control']) {
+  for (const name of ['plugin-manager', 'workspace', 'data-access', 'reports', 'research', 'canvas-control']) {
     const root = new URL(`../packages/${name}/`, import.meta.url), declared = JSON.parse(await readFile(new URL('capabilities.json', root), 'utf8')), implementation = await import(new URL('index.js', root));
     assert.equal(implementation.createTools, undefined);
     const capabilities = implementation.createCapabilities({ context: { filePolicy: { protectedRoots: [], readRoots: [], writeRoots: [] } } });
@@ -54,16 +53,16 @@ test('Report provider preserves evidence and delegates provenance/CAS to host pu
   const originalEvidence = JSON.stringify({ observed: '1.010000000000000001', quotedText: '<script>literal evidence only</script>' });
   await writeFile(join(root, 'evidence.json'), originalEvidence);
   const raw = await f.host.resources.create({ kind: 'file', source: { content: '[{"value":"1.01"}]' } });
-  const data = (await f.host.resources.publish(raw, { kind: 'data', schemaVersion: '1.0.0', content: { path: 'rows.json', provenance: { kind: 'demo' } }, blobs: [{ path: 'rows.json' }] })).ref;
+  const data = (await f.host.resources.publish(raw, { kind: 'data', schemaVersion: '1.0.0', content: { format: 'json-rows', path: 'rows.json', provenance: { kind: 'demo' } }, blobs: [{ path: 'rows.json' }] })).ref;
   const tools = table(reports(f.host)), input = { operation_id: 'report', title: 'Supplied content', summary: 'Fixture',
     content: { kind: 'document', sections: [{ title: '合成判断', blocks: [{ type: 'paragraph', text: 'Demo source <script>literal only</script>' }] }] },
     provenance_kind: 'demo', data: [{ id: 'data', ref: data, usage: 'fixed evidence' }],
     assets: [{ path: 'evidence.json', source_path: 'evidence.json', media_type: 'application/json' }], artifact_id: 'updated-report', expected_revision: 'older' };
-  await assert.rejects(tools.get('report_publish')({ ...input, html_path: 'report.html' }), /HTML uploads|HTML.*disabled/i);
-  await assert.rejects(tools.get('report_publish')({ ...input, body_html: '<h1>Custom markup</h1>' }), /HTML uploads|HTML.*disabled/i);
+  await assert.rejects(tools.get('components_show')({ ...input, html_path: 'report.html' }), /html_path|HTML|Unsupported/i);
+  await assert.rejects(tools.get('components_show')({ ...input, body_html: '<h1>Custom markup</h1>' }), /body_html|HTML|Unsupported/i);
   let delegated;const expected={ref:{id:'updated-report',revision:'new',digest:'sha256:'+'f'.repeat(64),kind:'report',schemaVersion:'1.0.0'},renderStatus:'not_checked'};
   f.host.capabilities={invoke:async(id,args)=>{assert.equal(id,'host.reports.publish');delegated=args;return {type:'result',value:expected};}};
-  const result = await tools.get('report_publish')(input);
+  const result = await tools.get('components_show')(input);
   assert.equal(result.ref.id, 'updated-report');assert.equal(result.renderStatus, 'not_checked');assert.equal(checks.length, 0);
   assert.equal(delegated.artifactId,'updated-report');assert.equal(delegated.expectedRevision,'older');assert.equal(delegated.provenanceKind,'demo');assert.deepEqual(delegated.data,input.data);
   const packaged=await tools.get('report_render')({metadata:{title:input.title,summary:input.summary,locale:'en',provenanceKind:'demo',features:['interactive']},data:input.data,related:[],references:[],input:delegated.input});
@@ -78,13 +77,17 @@ test('Report provider preserves evidence and delegates provenance/CAS to host pu
   assert.deepEqual(inspected.inspected, result.ref);assert.equal(checks[0][0].surface, 'artifact');assert.equal(checks[0][1].signal, controller.signal);
 });
 
-test('backtest authoring derives graph from actual fixed SVL bytes and uses declared workspace capability', async () => {
-  const f = resourceHost(), source = { language: 'svl/1', schemaVersion: '1.0.0', strategyId: 'fixture', semantics: { numeric: { precision: 34, rounding: 'half_even' }, missing: 'not_ready', onError: 'pause', eventOrdering: 'input_sequence', duplicateEvent: 'ignore', stateCommit: 'per_event' }, parameters: {period:{type:'integer',default:20}}, inputs: {}, state: {}, nodes: [], handlers: [] };
-  const raw = await f.host.resources.create({ kind: 'file', source: { content: JSON.stringify(source) } });
-  const ref = (await f.host.resources.publish(raw, { kind: 'strategy.source', schemaVersion: '1.0.0', content: { sourcePath: 'source.json', sourceDigest: graph(source).sourceDigest }, blobs: [{ path: 'source.json' }] })).ref;
-  let authored;f.host.capabilities = { invoke: async (id, input) => { assert.equal(id, 'sesame/workspace#write');authored = input;return { type: 'result', value: { path: '/actual/report.html' } }; } };
-  const create = table(reports(f.host)).get('report_backtest_template'), input = { output_path: 'report.html', title: '</title><script>wrong()</script>', summary: 'Fixture', strategy_source: ref, data_id: 'trials', parameters: ['period'], selection_rule: 'No ranking', source_note: 'Fixed fixture', currency: 'USD' };
-  const result = await create(input);assert.equal(result.path, '/actual/report.html');assert.equal(result.sourceDigest, graph(source).sourceDigest);assert.doesNotMatch(authored.content, /<script>wrong\(\)/);
-  f.artifacts.get(ref.id).manifest.content.sourceDigest = 'sha256:wrong';
-  await assert.rejects(create(input), /match.*digest/);
+test('Report consumes prepared content without interpreting strategy sources or executing research', async () => {
+  const f = resourceHost();
+  const raw = await f.host.resources.create({ kind: 'file', source: { content: 'Opaque producer-owned strategy bytes' } });
+  const ref = (await f.host.resources.publish(raw, { kind: 'strategy.source', schemaVersion: '1.0.0', content: { sourcePath: 'source.json' }, blobs: [{ path: 'source.json' }] })).ref;
+  const reads = [], read = f.host.resources.read;
+  f.host.resources.read = async (reference, request) => { reads.push(request); return read(reference, request); };
+  f.host.capabilities = { invoke: () => assert.fail('Rendering cannot start a research or strategy capability') };
+  const rendered = await table(reports(f.host)).get('report_render')({
+    metadata: { title: 'Supplied strategy result', summary: '', locale: 'en', provenanceKind: 'demo', features: [] },
+    data: [], related: [], references: [ref], input: { content: { kind: 'document', sections: [{ title: '', blocks: [{ type: 'paragraph', text: 'The producer supplied this result.' }] }] } },
+  });
+  assert.match(rendered.files.find(file => file.path === 'index.html').content, /The producer supplied this result/);
+  assert.ok(reads.every(request => request.part === 'manifest'), 'Report must not parse producer-owned strategy source bytes');
 });

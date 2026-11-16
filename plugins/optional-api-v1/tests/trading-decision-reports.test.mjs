@@ -1,7 +1,7 @@
 import { workflowReports } from './workflow-report-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { dailyHTML, reportPath, writeDailyReport } from '../packages/trading-decision/reports.js';
+import { reportPath, writeDailyReport } from '../packages/trading-decision/reports.js';
 import { resourceFixture } from '../../api-v1/tests/mt5-resource-fixture.js';
 
 function fixture() {
@@ -11,16 +11,21 @@ function fixture() {
  return {host,run,...resources};
 }
 
-test('legacy trading report destinations retain their explicit historical ownership', () => {
+async function publishedHTML(f) {
+  const report = await writeDailyReport(f.host, f.run);
+  return (await f.host.resources.read(report.ref, { part:'content', entry:'index.html' })).content;
+}
+
+test('explicit trading report destinations retain their historical ownership', async () => {
   const f = fixture(); f.run.plan.reportFolder = '手工交易日报/Existing-plan';
   assert.equal(reportPath(f.run), '手工交易日报/Existing-plan/1970-01-01T00-00-00-001Z-run.html');
-  assert.match(dailyHTML(f.run), /<title>Observed account fixture<\/title>/);
+  assert.match(await publishedHTML(f), /<title>Observed account fixture<\/title>/);
 });
 
-test('decision-only and blocked-review reports retain native nonexecution labels', () => {
+test('decision-only and blocked-review reports retain native nonexecution labels', async () => {
  const f=fixture();f.run.reports=[{role:'manager',status:'completed',text:'## Frozen target\nManager conclusion.'}];
- f.run.executionDisposition='decision_only';assert.match(dailyHTML(f.run),/仅交付决策，未执行交易/);
- f.run.executionDisposition='withheld_by_review';assert.match(dailyHTML(f.run),/复核阻止本轮执行，未执行交易/);
+ f.run.executionDisposition='decision_only';assert.match(await publishedHTML(f),/仅交付决策，未执行交易/);
+ f.run.executionDisposition='withheld_by_review';assert.match(await publishedHTML(f),/复核阻止本轮执行，未执行交易/);
 });
 test('a failed publication retries the same frozen evidence after later checkpoint changes',async()=>{
  const f=fixture(),create=f.host.resources.create;let failed=false;
@@ -95,11 +100,11 @@ test('the final report renders the manager summary once and keeps member reports
   assert.deepEqual(f.run, expected, 'Rendering must never rewrite the source evidence or Markdown');
 });
 
-test('agent-authored report Markdown cannot execute HTML or load unbundled resources', () => {
+test('agent-authored report Markdown cannot execute HTML or load unbundled resources', async () => {
   const f = fixture();
   f.run.summary = '<script>unsafe()</script>\n\n<img src="x" onerror="unsafe()">\n\n[unsafe](javascript:alert%281%29)\n\n![remote](https://example.org/tracker.png)\n\n[safe](https://example.org/source)\n\n<iframe src="https://example.org"></iframe>';
   f.run.reports = [{ role: 'manager', status: 'completed', text: f.run.summary }, { role: 'news', text: '<iframe src="https://example.org"></iframe>\n\n[credentials](https://user:password@example.org/private)' }];
-  const html = dailyHTML(f.run);
+  const html = await publishedHTML(f);
   assert.match(html, /&lt;script&gt;unsafe\(\)&lt;\/script&gt;/);
   assert.match(html, /&lt;iframe/);
   assert.match(html, /href="https:\/\/example\.org\/source"/);
@@ -126,11 +131,11 @@ test('trading reports use the last completed manager summary without appending e
   assert.deepEqual(JSON.parse((await f.host.resources.read(report.ref, { part: 'content', entry: 'run.json' })).content), expected);
 });
 
-test('without a completed manager summary the report does not substitute another role or diagnostic', () => {
+test('without a completed manager summary the report does not substitute another role or diagnostic', async () => {
   const f = fixture();
   f.run.reports = [{ role: 'market', status: 'completed', text: 'ANALYST_RESULT' }, { role: 'manager', status: 'interrupted', text: 'PARTIAL_MANAGER' }];
   f.run.error = { message: 'INTERNAL_DIAGNOSTIC' };
-  const html = dailyHTML(f.run);
+  const html = await publishedHTML(f);
   assert.match(html, /经理尚未形成最终总结/);
   assert.doesNotMatch(html, /ANALYST_RESULT|PARTIAL_MANAGER|INTERNAL_DIAGNOSTIC/);
 });

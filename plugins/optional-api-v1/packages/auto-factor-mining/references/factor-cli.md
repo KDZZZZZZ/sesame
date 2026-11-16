@@ -68,7 +68,7 @@ unavailable，但它不会进入统计。所有价格/因子原值是十进制�
    或实际已登记数据集的 `inputIds`。`recipePaths` 列出已由该次执行冻结的 `factor.mjs`、
    `plan.json`、`screen.json`、`selection.json`、`seal-selection.mjs`；路径相对 `bash.cwd`。
    工具直接返回不可变数据 `ref`、证据 `evidence` 和发布回执；保留完整引用及选择内容摘要，
-   无需再调用 `report_data` 冻结同一选择。`ref.id` 不能冒充旧宿主数据集 ID，demo 仍为 demo。
+   已有固定引用直接复用，无需再次冻结同一选择。`ref.id` 不能冒充旧宿主数据集 ID，demo 仍为 demo。
 4. 确认本地选择与固定成果一致，才导出留出文件并执行 `holdout`。将本次暴露写入试验账本；
    最终曲线用对应成功执行的 `research_register` 登记，在 `inputRefs` 中引用固定选择及留出输入，
    并先用同一执行目录的 `data_read` 导出这些引用，以绑定实际输入字节。修改选择需新实验及新的

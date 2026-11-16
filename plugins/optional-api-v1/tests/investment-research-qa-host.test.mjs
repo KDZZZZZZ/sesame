@@ -80,7 +80,7 @@ test('a report-bound custom synthesizer can ask its selected source analyst with
         assert.equal(names.includes('investment_research_ask'),false);
         reply(response,body.model,input.qa?'Fixed source scope verified by the original analyst.':'Initial fictional source observation.');
       } else {
-        assert.equal(input.role,'editor');assert.ok(names.includes('report_publish'));assert.equal(names.includes('sources_fetch'),false);
+        assert.equal(input.role,'editor');assert.ok(names.includes('components_show'));assert.equal(names.includes('sources_fetch'),false);
         const accepted=returned(body,'report_source_ask');
         if(!accepted){reply(response,body.model,null,{id:'report_source_ask',name:'investment_research_ask',arguments:{analyst:'facts',question:'Verify the exact source scope before writing the report.'}});return true;}
         assert.equal(accepted.type,'run');

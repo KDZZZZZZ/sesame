@@ -21,8 +21,6 @@
     if (!Array.isArray(value)) fail(`${path} must be an array.`);
     return value;
   };
-  const tones = ['positive', 'negative', 'caution', 'neutral'];
-  const tone = (value, path) => { if (value == null) return 'neutral'; if (!tones.includes(value)) fail(`${path} must be one of ${tones.join(', ')}.`); return value; };
 
   const h = (tag, attrs = {}, ...children) => {
     const node = document.createElement(tag);
@@ -68,7 +66,6 @@
     const digits = Math.max(0, Math.min(6, -Math.floor(Math.log10(step) + 1e-9)));
     return value => formatNumber(value, { maximumFractionDigits: digits, minimumFractionDigits: digits });
   };
-  const signTone = value => !finite(value) || value === 0 ? 'neutral' : value > 0 ? 'positive' : 'negative';
 
   // ── Data ──────────────────────────────────────────────────────────────
   // Resolve exact fixed bindings only. Paging never substitutes a live query.
@@ -86,96 +83,6 @@
       if (cursor) seen.add(cursor);
     } while (cursor);
     return out;
-  }
-
-  // ── Components ────────────────────────────────────────────────────────
-  const icons = { positive: 'M5 12.5l4.5 4.5L19 7.5', negative: 'M7 7l10 10M17 7L7 17', caution: 'M12 7v6M12 16.5v.5', neutral: 'M6 12h12' };
-  const toneIcon = value => { const svg = s('svg', { viewBox: '0 0 24 24', 'aria-hidden': 'true', class: 'kit-tone-icon' }); svg.append(s('path', { d: icons[value] })); return svg; };
-
-  function verdict(target, spec, path = 'verdict') {
-    if (!isObject(spec)) fail(`${path} must be an object.`);
-    const t = tone(spec.tone, `${path}.tone`);
-    const node = h('section', { class: 'kit-verdict', 'data-tone': t, 'aria-label': tr('结论', 'Conclusion') },
-      h('p', { class: 'kit-verdict-kicker' }, toneIcon(t), tr('结论', 'Conclusion')),
-      h('p', { class: 'kit-verdict-headline', text: text(spec.headline, `${path}.headline`, 80) }),
-      spec.detail ? h('p', { class: 'kit-verdict-detail', text: text(spec.detail, `${path}.detail`, 160, false) }) : null);
-    resolve(target).append(node); return node;
-  }
-
-  function metricNode(item, path) {
-    if (!isObject(item)) fail(`${path} must be an object.`);
-    const value = item.value;
-    if (value != null && typeof value !== 'number' && typeof value !== 'string') fail(`${path}.value must be a number from report data, a short string or null.`);
-    if (typeof value === 'string') text(value, `${path}.value`, 16);
-    const t = item.tone === 'auto' ? signTone(value) : tone(item.tone, `${path}.tone`);
-    const delta = item.delta == null ? null : (() => {
-      if (!isObject(item.delta) || !finite(item.delta.value)) fail(`${path}.delta must be { value: number, label?: string }.`);
-      return h('span', { class: 'kit-delta', 'data-tone': signTone(item.delta.value) }, formatValue(item.delta.value, { ...item, ...item.delta, signed: true }), item.delta.label ? h('small', { text: ` ${text(item.delta.label, `${path}.delta.label`, 16)}` }) : null);
-    })();
-    return h('div', { class: 'kit-metric', 'data-tone': t },
-      h('dt', { text: text(item.label, `${path}.label`, 16) }),
-      h('dd', {}, h('span', { class: 'kit-metric-value', text: formatValue(value, item) }), delta),
-      item.hint ? h('p', { class: 'kit-metric-hint', text: text(item.hint, `${path}.hint`, 30, false) }) : null);
-  }
-  function metrics(target, items, path = 'metrics') {
-    const entries = list(items, path, 8, true);
-    const node = h('dl', { class: 'kit-metrics', style: `--cols:${entries.length <= 4 ? Math.max(1, entries.length) : entries.length <= 6 ? 3 : 4}` }, entries.map((item, i) => metricNode(item, `${path}[${i}]`)));
-    resolve(target).append(node); return node;
-  }
-
-  function evidenceNode(evidence, path) {
-    if (typeof evidence === 'string') return h('p', { class: 'kit-evidence-text', text: text(evidence, path, 100) });
-    return h('ul', { class: 'kit-evidence' }, list(evidence, path, 4).map((item, i) => {
-      if (!isObject(item)) fail(`${path}[${i}] must be { label, value, format?, unit? }.`);
-      const t = item.tone === 'auto' ? signTone(item.value) : tone(item.tone, `${path}[${i}].tone`);
-      return h('li', { 'data-tone': t }, h('span', { text: text(item.label, `${path}[${i}].label`, 16) }), h('b', { text: formatValue(item.value, item) }));
-    }));
-  }
-  function findings(target, items, path = 'findings') {
-    const node = h('ol', { class: 'kit-findings' }, list(items, path, 6, true).map((item, i) => {
-      const p = `${path}[${i}]`;
-      if (!isObject(item)) fail(`${p} must be { claim, evidence, tone?, caveat? }.`);
-      const t = tone(item.tone, `${p}.tone`);
-      return h('li', { 'data-tone': t }, h('span', { class: 'kit-finding-mark' }, toneIcon(t)),
-        h('div', {}, h('p', { class: 'kit-claim', text: text(item.claim, `${p}.claim`, 60) }),
-          item.evidence == null ? null : evidenceNode(item.evidence, `${p}.evidence`),
-          item.caveat ? h('p', { class: 'kit-caveat', text: text(item.caveat, `${p}.caveat`, 80, false) }) : null));
-    }));
-    resolve(target).append(node); return node;
-  }
-
-  function note(target, spec, path = 'note') {
-    if (!isObject(spec)) fail(`${path} must be { text, tone? }.`);
-    const node = h('p', { class: 'kit-note', 'data-tone': tone(spec.tone, `${path}.tone`), text: text(spec.text, `${path}.text`, 120) });
-    resolve(target).append(node); return node;
-  }
-
-  function table(target, spec, path = 'table') {
-    if (!isObject(spec)) fail(`${path} must be { columns, rows, limit?, caption? }.`);
-    const columns = list(spec.columns, `${path}.columns`, 8, true).map((column, i) => {
-      if (typeof column === 'string') return { key: column, label: column };
-      if (!isObject(column) || typeof column.key !== 'string') fail(`${path}.columns[${i}] must be a key or { key, label, format?, digits?, unit?, tone? }.`);
-      return column;
-    });
-    const data = list(spec.rows, `${path}.rows`, 0, true), limit = spec.limit ?? 8;
-    if (!Number.isInteger(limit) || limit < 1) fail(`${path}.limit must be a positive integer.`);
-    const numeric = column => column.format ? column.format !== 'text' : data.some(row => finite(row?.[column.key]));
-    const body = h('tbody', {}, data.map((row, i) => h('tr', { hidden: i >= limit }, columns.map(column => {
-      const value = row?.[column.key];
-      const t = column.tone === 'auto' ? signTone(value) : null;
-      return h('td', { class: numeric(column) ? 'numeric' : null, 'data-tone': t, text: formatValue(value, column) });
-    }))));
-    const wrap = h('div', { class: 'report-table kit-table' }, h('table', {},
-      spec.caption ? h('caption', { text: text(spec.caption, `${path}.caption`, 60) }) : null,
-      h('thead', {}, h('tr', {}, columns.map(column => h('th', { class: numeric(column) ? 'numeric' : null, scope: 'col', text: column.label ?? column.key })))), body));
-    const nodes = [wrap];
-    if (data.length > limit) {
-      const more = h('details', { class: 'kit-more' }, h('summary', { text: tr('显示其余 {count} 行', 'Show {count} more rows', { count: data.length - limit }) }));
-      more.addEventListener('toggle', () => { body.querySelectorAll('tr').forEach((tr, i) => { tr.hidden = !more.open && i >= limit; }); });
-      nodes.push(more);
-    }
-    if (!data.length) nodes.push(h('p', { class: 'kit-empty', text: tr('没有符合条件的记录。', 'No matching records.') }));
-    resolve(target).append(...nodes); return wrap;
   }
 
   // ── Charts ────────────────────────────────────────────────────────────
@@ -541,69 +448,11 @@
     return svg;
   }
 
-  // ── Whole report ──────────────────────────────────────────────────────
-  const blockTypes = ['chart', 'findings', 'metrics', 'table', 'note', 'custom'];
-  function block(parent, spec, path) {
-    if (!isObject(spec) || !blockTypes.includes(spec.type)) fail(`${path}.type must be one of ${blockTypes.join(', ')}.`);
-    if (spec.type === 'chart') return chart(parent, spec, path);
-    if (spec.type === 'findings') return findings(parent, spec.items, `${path}.items`);
-    if (spec.type === 'metrics') return metrics(parent, spec.items, `${path}.items`);
-    if (spec.type === 'table') return table(parent, spec, path);
-    if (spec.type === 'note') return note(parent, spec, path);
-    if (typeof spec.render !== 'function') fail(`${path}.render must be a function (element) => void for a custom block.`);
-    const host = h('div', { class: 'kit-custom' }); parent.append(host); spec.render(host); return host;
-  }
-
-  function render(target, spec) {
-    if (!isObject(spec)) fail('render(target, spec) needs a report outline object.');
-    const root = resolve(target);
-    destroy(root);
-    root.classList.add('report', 'kit-report');
-    const header = h('header', { class: 'kit-header' },
-      spec.eyebrow ? h('p', { class: 'kit-eyebrow', text: text(spec.eyebrow, 'eyebrow', 24, false) }) : null,
-      h('h1', { text: text(spec.title, 'title', 40) }),
-      spec.subtitle ? h('p', { class: 'kit-subtitle', text: text(spec.subtitle, 'subtitle', 80, false) }) : null,
-      spec.meta ? h('ul', { class: 'kit-meta' }, list(spec.meta, 'meta', 6).map((item, i) => {
-        if (!isObject(item)) fail(`meta[${i}] must be { label, value }.`);
-        return h('li', {}, h('span', { text: text(item.label, `meta[${i}].label`, 10) }), h('b', { text: text(String(item.value ?? '—'), `meta[${i}].value`, 30) }));
-      })) : null);
-    root.replaceChildren(header);
-    if (Object.hasOwn(spec, 'verdict')) verdict(root, spec.verdict, 'verdict');
-    if (spec.metrics) metrics(root, spec.metrics, 'metrics');
-    list(spec.sections, 'sections', 6, true).forEach((section, i) => {
-      const path = `sections[${i}]`;
-      if (!isObject(section)) fail(`${path} must be { title, blocks, takeaway? }.`);
-      const node = h('section', { class: 'kit-section', id: section.id ?? null },
-        h('h2', { text: text(section.title, `${path}.title`, 20) }),
-        Object.hasOwn(section, 'takeaway') ? h('p', { class: 'kit-takeaway', 'data-report-text': 'context', text: text(section.takeaway, `${path}.takeaway`, 80) }) : null);
-      root.append(node);
-      list(section.blocks, `${path}.blocks`, 6, true).forEach((item, j) => block(node, item, `${path}.blocks[${j}]`));
-    });
-    if (spec.method) {
-      const method = spec.method;
-      if (!isObject(method)) fail('method must be { steps?, limits?, sources? }.');
-      const group = (key, label) => {
-        const items = list(method[key], `method.${key}`, 8);
-        return items.length ? h('div', { class: 'kit-method-group' }, h('h3', { text: label }), h('ul', {}, items.map((item, i) => h('li', { text: text(item, `method.${key}[${i}]`, 100) })))) : null;
-      };
-      const sources = list(method.sources, 'method.sources', 12);
-      root.append(h('details', { class: 'kit-appendix' },
-        h('summary', {}, h('span', { text: tr('方法与来源', 'Method and sources') })),
-        h('div', { class: 'kit-appendix-body' },
-          group('steps', tr('方法', 'Method')), group('limits', tr('限制', 'Limits')),
-          sources.length ? h('div', { class: 'kit-method-group' }, h('h3', { text: tr('来源', 'Sources') }), h('dl', { class: 'kit-sources' }, sources.flatMap((item, i) => {
-            if (!isObject(item)) fail(`method.sources[${i}] must be { label, value }.`);
-            return [h('dt', { text: text(item.label, `method.sources[${i}].label`, 16) }), h('dd', { text: String(item.value ?? '—') })];
-          }))) : null)));
-    }
-    return root;
-  }
-
   function destroy(target) {
     const root = resolve(target);
     window.SesameCharts?.destroy(root);
     for (const figure of [root, ...root.querySelectorAll('.kit-chart')]) { chartInstances.get(figure)?.(); chartInstances.delete(figure); }
   }
 
-  Object.defineProperty(window, 'reportKit', { value: Object.freeze({ rows, render, verdict, metrics, findings, chart, table, note, destroy, format: formatValue }) });
+  Object.defineProperty(window, 'reportKit', { value: Object.freeze({ rows, chart, destroy, format: formatValue }) });
 })();

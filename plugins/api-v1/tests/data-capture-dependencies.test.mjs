@@ -10,7 +10,12 @@ test('the runtime extension proves the complete old source by reversing only exa
   assert.equal(review.schemaVersion, 1); assert.equal(review.status, 'approved'); assert.equal(review.decision, 'approved');
   assert.ok(review.reason.length >= 20);
   assert.equal(digest(read('./fixtures/plugin-boundaries-baseline.json')), review.baselineSha256);
-  assert.equal(digest(read('../packages/data-access/capabilities.json')), review.declarationSha256Unchanged, 'schemas, effects, permissions and state declarations are not relaxed');
+  let declaration = read('../packages/data-access/capabilities.json').toString('utf8');
+  for (const edit of [...(review.approvedDeclarationEdits ?? [])].reverse()) {
+    assert.equal(declaration.split(edit.after).length, 2, 'each reviewed usage wording edit has exactly one location');
+    declaration = declaration.replace(edit.after, edit.before);
+  }
+  assert.equal(digest(declaration), review.declarationSha256Unchanged, 'schemas, effects, permissions and state declarations are unchanged after reversing reviewed usage wording');
   const manifest = JSON.parse(read('../packages/data-access/plugin.json'));
   assert.equal(manifest.version, review.after.version); assert.equal(review.before.version, '3.0.3');
   assert.equal(digest(manifest), review.after.manifestDigest);
