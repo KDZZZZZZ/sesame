@@ -6,10 +6,13 @@
 
 已经知道要用什么组件时，直接调用 `components_show`：一个块填 `component`，一组块填 `components`，工具自动补齐现有 document 包装。无需先列目录、读规格或单独校验。多组件默认纵向排列，可传 `layout:"columns"` 并排；一次最多 12 个。完整排版仍可传原 `content`。
 
+主 Agent 在简短回答中展示组件时设置 `target:"answer"`，相关多个组件合在一次调用中。省略 target 或设置 `target:"report"` 保持报告页面。answer 使用同一个 document 渲染器与固定发布流程，隐藏报告级标题和重复摘要、去掉页面外边距；组件自己的标题、标签、来源与明细交互保留。子 Agent 的 output 声明和报告交付规则不变，不能绕过 `output.type="none"`。
+
 ```json
 {
   "operation_id": "demo-component-counts-v1",
   "title": "两组计数（演示）",
+  "target": "answer",
   "provenance_kind": "demo",
   "component": {
     "type": "chart",
@@ -36,7 +39,7 @@
 
 ## 只读校验
 
-需要发布前诊断时，可选调用 `components_validate`。它接受 `component`、`components` 或 `content`，以及原始 `data`、`references`、`assets`、`style`、`title`、`summary`、`locale`、`provenance_kind`、`related`。省略 title 使用校验标题，summary 为空，data 为 `[]`，provenance_kind 为 `derived`。省略 locale 使用现有最宽语言限制；实际发布仍按宿主最终语言检查。
+需要发布前诊断时，可选调用 `components_validate`。它接受 `component`、`components` 或 `content`，以及原始 `data`、`references`、`assets`、`style`、`target`、`title`、`summary`、`locale`、`provenance_kind`、`related`。省略 title 使用校验标题，summary 为空，data 为 `[]`，provenance_kind 为 `derived`，target 为 report。省略 locale 使用现有最宽语言限制；实际发布仍按宿主最终语言检查。
 
 它复用公开 schema、目录中的具体图型 schema、服务端渲染器、现有 chartValue 字段校验及资产检查。固定图表数据通过原完整 DataRef 读取真实 `json-rows`，核对声明的列、图型必要选项及各图型行数上限（总上限 2500）；额外 nodes 也必须是声明的真实绑定。工作区附件复用只读路径检查，不登记资源、不写文件、不发布报告。
 
@@ -46,10 +49,10 @@
 
 ## 发布与固定复用
 
-`components_show` 的发布参数沿用 `report_publish`：`operation_id`、`title`、`provenance_kind` 必填，另提供一种组件输入；可选 `data`、`summary`、`locale`、`space`、`style`、`assets`、`references`、`related`、`artifact_id`、`expected_revision`。summary 省略时为空，data 默认为 `[]`。更新已有报告须保留原 artifact_id 并传当前 expected_revision。
+`components_show` 的发布参数沿用 `report_publish`：`operation_id`、`title`、`provenance_kind` 必填，另提供一种组件输入；可选 `target`、`data`、`summary`、`locale`、`space`、`style`、`assets`、`references`、`related`、`artifact_id`、`expected_revision`。summary 省略时为空，data 默认为 `[]`。更新已有报告须保留原 artifact_id 并传当前 expected_revision。
 
-`input_ref:{ref,entry}` 必须指向包含完整 `{content,style?,assets?}` 的固定 application/json 输入，且 content 是本目录的 document；使用它时不再传 component/components/content/layout/style/assets。证据绑定仍放在外层。show 自动运行与 validate 相同的只读预检，再调用原发布入口；固定 input_ref 不会被改写。宿主按已配置提供者执行其必要检查、渲染、幂等与修订发布，调用方不能选择 provider。
+`input_ref:{ref,entry}` 必须指向包含完整 `{content,style?,assets?,target?}` 的固定 application/json 输入，且 content 是本目录的 document；使用它时不再传 component/components/content/layout/style/assets/target，目标由固定输入决定。证据绑定仍放在外层。show 自动运行与 validate 相同的只读预检，再调用原发布入口；固定 input_ref 不会被改写。宿主按已配置提供者执行其必要检查、渲染、幂等与修订发布，调用方不能选择 provider。
 
 结果保留真实宿主回执及 `ref`、`renderStatus`、`provider`、`presentation`，附带 `protocol`、实际 `renderer` 和 `componentRef:{ref,protocol,kind,inputDigest?}`。其中 ref 是本次固定报告，inputDigest 来自宿主；不会返回整份 HTML。来源和精确原值保留在固定输入与引用中；读者需要的明细可用正文原位的 details/table/attachments，不自动生成末尾附录。
 
-后续回答端可据同一固定成果及协议设计复用。本接口不声明 MCP Apps UI 资源，不创建回答展示 target，也不表示当前聊天已经支持内嵌组件。
+`target:"answer"` 在发布前固化到 provider input，实际渲染结果的 `presentation.metadata` 为 `{layout:"unified",surface:"answer",protocol:"sesame-components/1"}`，回答端据这份固定成果决定展示；默认 report 保持 `{layout:"unified"}`。标记来自真实 provider 输出，不仅出现在工具回执中。本接口不声明 MCP Apps UI 资源，也不接收自行编写的 HTML、CSS 或脚本。

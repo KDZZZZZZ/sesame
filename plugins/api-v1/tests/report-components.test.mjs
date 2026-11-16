@@ -63,10 +63,11 @@ test('component capabilities use the shared catalog and expose bounded discovery
     assert.equal(cap.binding.type, 'native'); assert.ok(plugin.mcp_export.includes(name));
     assert.ok(JSON.stringify(cap.inputSchema).length < 20000, 'tool schemas must not embed the full component catalog');
   }
-  assert.equal(plugin.execution, 'native'); assert.equal(plugin.version, '5.1.0');
+  assert.equal(plugin.execution, 'native'); assert.equal(plugin.version, '5.1.1');
   const listing = manifest.capabilities.find(item => item.id === 'components_list').inputSchema;
   assert.equal(listing.properties.limit.default, 20); assert.equal(listing.properties.limit.maximum, 100);
   assert.ok(plugin.resources.includes('skills/report-design/component-protocol.md'));
+  assert.ok(plugin.resources.includes('assets/answer-surface.css'));
   assert.ok(manifest.knowledge.some(item => item.path === 'skills/report-design/component-protocol.md'));
 });
 
@@ -258,6 +259,102 @@ test('show checks document inputRef without rewriting its fixed identity and let
   fixture.put(ref, { content: args().content }, { path: 'input.json', mediaType: 'text/html' });
   await assert.rejects(capability(fixture.host, 'components_show')(input), /JSON|json/);
   assert.equal(calls.length, 1); assert.deepEqual(fixture.writes, []);
+});
+
+test('answer components validate and publish the same pinned surface metadata', async () => {
+  const calls = [], host = { capabilities: { invoke: async (id, request) => {
+    const rendered = await renderReport({}, { metadata: { title: request.title, summary: request.summary, locale: 'en', provenanceKind: request.provenanceKind, features: ['interactive'] },
+      data: request.data, related: [], references: request.references, input: request.input });
+    calls.push({ id, request, rendered });
+    return { type: 'result', value: { ref: fixed('answer-components', 'report'), presentation: rendered.presentation, renderStatus: 'not_checked' } };
+  } } };
+  const component = { type: 'metrics', items: [{ label: 'Count', value: 4 }] };
+  const input = { title: 'Synthetic answer', provenance_kind: 'demo', target: 'answer', component };
+  const valid = await capability(host, 'components_validate')(input);
+  assert.equal(valid.valid, true); assert.equal(valid.renderer.metadata.surface, 'answer'); assert.equal(calls.length, 0);
+  const shown = await capability(host, 'components_show')({ ...input, operation_id: 'answer-components' });
+  assert.equal(calls[0].request.input.target, 'answer'); assert.equal(Object.hasOwn(calls[0].request, 'target'), false);
+  assert.deepEqual(calls[0].rendered.presentation.metadata, { layout: 'unified', surface: 'answer', protocol });
+  assert.deepEqual(shown.renderer, calls[0].rendered.presentation); assert.equal(shown.renderStatus, 'not_checked');
+  const defaultInput = { ...input }; delete defaultInput.target;
+  const ordinary = await capability(host, 'components_validate')(defaultInput);
+  assert.deepEqual(ordinary.renderer.metadata, { layout: 'unified' });
+  for (const extra of [{ target: 'raw-html' }, { css: 'body{display:none}' }, { html: '<script>bad</script>' }]) {
+    const invalid = await capability(host, 'components_validate')({ ...input, ...extra });
+    assert.equal(invalid.valid, false);
+    await assert.rejects(capability(host, 'components_show')({ ...input, operation_id: 'invalid-answer', ...extra }));
+  }
+  assert.equal(calls.length, 1);
+});
+
+test('fixed inputRef owns its answer target and rejects external target overrides before publication', async () => {
+  const fixture = readonlyHost(), ref = fixed('answer-input', 'resource'), calls = [];
+  const stored = { content: args().content, target: 'answer' };
+  fixture.put(ref, stored, { path: 'input.json' });
+  fixture.host.capabilities.invoke = async (id, request) => {
+    const original = JSON.parse(fixture.entries.get(request.inputRef.ref.id).bytes.toString('utf8'));
+    const rendered = await renderReport(fixture.host, { metadata: { title: request.title, summary: request.summary, locale: 'en', provenanceKind: request.provenanceKind, features: ['interactive'] },
+      data: request.data, related: [], references: request.references, input: original });
+    calls.push({ id, request });
+    return { type: 'result', value: { ref: fixed('answer-from-ref', 'report'), presentation: rendered.presentation } };
+  };
+  const input = publication({ input_ref: { ref, entry: 'input.json' } }); delete input.content;
+  const shown = await capability(fixture.host, 'components_show')(input);
+  assert.deepEqual(calls[0].request.inputRef, input.input_ref); assert.equal(Object.hasOwn(calls[0].request, 'input'), false);
+  assert.equal(Object.hasOwn(calls[0].request, 'target'), false); assert.equal(shown.renderer.metadata.surface, 'answer');
+  assert.deepEqual(JSON.parse(fixture.entries.get(ref.id).bytes.toString('utf8')), stored);
+  for (const target of ['report', 'answer']) await assert.rejects(capability(fixture.host, 'components_show')({ ...input, target }));
+  assert.equal(calls.length, 1); assert.deepEqual(fixture.writes, []);
+});
+
+test('answer HTML retains compact chrome and interactions when the host rebuilds its root elements', { skip: !process.env.SESAME_HOST_ROOT, timeout: 30000 }, async t => {
+  const content = { kind: 'document', sections: [{ title: '', blocks: [
+    chart({ rows: [{ label: 'A', value: 2 }, { label: 'B', value: 4 }] }),
+    { type: 'details', title: 'Supplied detail', blocks: [{ type: 'paragraph', text: 'Original supplied detail' }] },
+  ] }] };
+  const metadata = { title: 'Report wrapper', summary: 'List-only summary', locale: 'en', provenanceKind: 'demo', features: ['interactive'] };
+  const base = { metadata, data: [], related: [], references: [] };
+  const { chromium } = createRequire(join(process.env.SESAME_HOST_ROOT, 'package.json'))('playwright');
+  const browser = await chromium.launch({ headless: true }); t.after(() => browser.close());
+  const errors = [];
+  for (const [target, rebuildRoot] of [['report', false], ['answer', false], ['report', true], ['answer', true]]) {
+    const page = await browser.newPage({ viewport: { width: 640, height: 600 } });
+    page.on('pageerror', error => errors.push(error.message));
+    const rendered = await renderReport({}, { ...base, input: { content, target } });
+    let html = rendered.files[0].content;
+    if (rebuildRoot) html = await page.evaluate(source => {
+      // artifact-host retains head/body contents and lang, then creates new roots.
+      const parsed = new DOMParser().parseFromString(source, 'text/html');
+      const rebuilt = document.implementation.createHTMLDocument('');
+      rebuilt.documentElement.lang = parsed.documentElement.lang;
+      rebuilt.documentElement.dataset.theme = 'light';
+      rebuilt.head.innerHTML = parsed.head.innerHTML;
+      rebuilt.body.innerHTML = parsed.body.innerHTML;
+      return '<!doctype html>' + rebuilt.documentElement.outerHTML;
+    }, html);
+    await page.setContent(html);
+    if (rebuildRoot) {
+      assert.equal(await page.locator('html').getAttribute('data-report-surface'), null);
+      assert.equal(await page.locator('html').getAttribute('data-report-layout'), null);
+    }
+    await page.locator('#content-chart-1 svg').waitFor();
+    const shell = await page.evaluate(() => ({ padding: getComputedStyle(document.body).padding,
+      header: getComputedStyle(document.querySelector('.report > .report-header')).display,
+      summary: getComputedStyle(document.querySelector('.report-subtitle')).display,
+      sectionMargin: getComputedStyle(document.querySelector('.kit-section')).marginTop }));
+    assert.equal(shell.header === 'none', target === 'answer');
+    assert.equal(shell.summary === 'none', target === 'answer');
+    assert.equal(shell.padding === '0px', target === 'answer');
+    assert.equal(shell.sectionMargin === '0px', target === 'answer');
+    assert.equal(await page.locator('figcaption strong').first().isVisible(), true);
+    assert.equal(await page.locator('[data-sesame-provenance="demo"]').isVisible(), true);
+    await page.getByText('Supplied detail', { exact: true }).click();
+    assert.equal(await page.getByText('Original supplied detail', { exact: true }).isVisible(), true);
+    await page.setViewportSize({ width: 390, height: 600 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await page.close();
+  }
+  assert.deepEqual(errors, []);
 });
 
 test('a combined component document renders its bound chart through the existing browser runtime', { skip: !process.env.SESAME_HOST_ROOT, timeout: 30000 }, async t => {

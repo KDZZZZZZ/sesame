@@ -5579,6 +5579,15 @@
             ],
             "additionalProperties": false,
             "description": "Complete provider input JSON registered as an immutable artifact. Do not retype long content; host validates and reads the exact JSON bytes. Keep all evidence bindings in the envelope."
+          },
+          "target": {
+            "type": "string",
+            "enum": [
+              "report",
+              "answer"
+            ],
+            "default": "report",
+            "description": "Use answer for components embedded in a concise answer; report keeps the report page. Fixed input_ref owns this value and cannot be overridden."
           }
         },
         "additionalProperties": false,
@@ -5622,6 +5631,11 @@
                 {
                   "required": [
                     "strategy_evidence"
+                  ]
+                },
+                {
+                  "required": [
+                    "target"
                   ]
                 }
               ]
@@ -6524,6 +6538,35 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "const": "answer"
+                }
+              },
+              "required": [
+                "target"
+              ]
+            },
+            "then": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "document"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
                 }
               }
             }
@@ -9420,6 +9463,15 @@
                 ],
                 "additionalProperties": false,
                 "description": "Recorded native strategy/source/run evidence. Every fixed ref must also be declared in the report envelope references/data/related. Does not invent an SVL graph."
+              },
+              "target": {
+                "type": "string",
+                "enum": [
+                  "report",
+                  "answer"
+                ],
+                "default": "report",
+                "description": "Use answer for components embedded in a concise answer; report keeps the report page. Fixed input_ref owns this value and cannot be overridden."
               }
             },
             "required": [
@@ -10165,7 +10217,38 @@
                   }
                 ]
               }
-            }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "type": "object",
+                  "properties": {
+                    "target": {
+                      "const": "answer"
+                    }
+                  },
+                  "required": [
+                    "target"
+                  ]
+                },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "const": "document"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         "required": [
@@ -11137,6 +11220,15 @@
               "columns"
             ],
             "description": "Layout for component/components only; multiple components default to stack."
+          },
+          "target": {
+            "type": "string",
+            "enum": [
+              "report",
+              "answer"
+            ],
+            "default": "report",
+            "description": "Use answer for components embedded in a concise answer; report keeps the report page. Fixed input_ref owns this value and cannot be overridden."
           }
         },
         "required": [],
@@ -11253,7 +11345,7 @@
         "agent",
         "host"
       ],
-      "description": "Show one component, up to 12 components, or a complete document as a real report. Automatically runs the same static validation, then publishes through the host-selected provider; returns the fixed report reference. Discovery and a separate validation call are optional.",
+      "description": "Show one component, up to 12 components, or a complete document. Use target:answer for a concise answer and combine related components in one call; default target:report keeps a report page. Automatically runs the same static validation, then publishes through the host-selected provider and returns its fixed reference. Discovery and separate validation are optional.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -11905,6 +11997,15 @@
               "columns"
             ],
             "description": "Layout for component/components only; multiple components default to stack."
+          },
+          "target": {
+            "type": "string",
+            "enum": [
+              "report",
+              "answer"
+            ],
+            "default": "report",
+            "description": "Use answer for components embedded in a concise answer; report keeps the report page. Fixed input_ref owns this value and cannot be overridden."
           }
         },
         "required": [
@@ -12052,6 +12153,11 @@
                   {
                     "required": [
                       "assets"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "target"
                     ]
                   }
                 ]

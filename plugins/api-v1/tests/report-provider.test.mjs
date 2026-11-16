@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { Errors } from '@sesame/plugin-sdk/schema/value';
 import { graph as sourceGraph } from '@sesame/plugin-sdk/svl';
 import { reportRenderInputSchema, REPORT_RENDER_OUTPUT_SCHEMA } from '@sesame/plugin-sdk/report-contract';
 import { renderReport, publishReport } from '../packages/reports/report-provider.js';
@@ -21,6 +22,46 @@ test('a published document shows one demo label rather than duplicating renderer
   const labels = html.match(/<(?:p|aside)\b(?=[^>]*data-sesame-provenance="demo"|[^>]*>演示样本<)[^>]*>/g) ?? [];
   assert.equal(labels.length, 1);
   assert.match(html, /data-sesame-provenance="demo"/);
+});
+
+test('answer surface is pinned in provider output while default report output stays unchanged', async () => {
+  const ordinary = await renderReport({}, envelope({ content }));
+  const explicitReport = await renderReport({}, envelope({ content, target: 'report' }));
+  assert.deepEqual(explicitReport, ordinary);
+  assert.deepEqual(ordinary.presentation.metadata, { layout: 'unified' });
+  assert.doesNotMatch(ordinary.files[0].content, /data-report-surface="answer"|data-report-answer-style/);
+  const answer = await renderReport({}, envelope({ content, target: 'answer' }));
+  assert.deepEqual(answer.presentation.metadata, { layout: 'unified', surface: 'answer', protocol: 'sesame-components/1' });
+  assert.match(answer.files[0].content, /<html\b[^>]*data-report-surface="answer"/);
+  assert.match(answer.files[0].content, /<style data-report-answer-style>/);
+  assert.match(answer.files[0].content, /Synthetic values only/);
+  const manifest = JSON.parse(await readFile(new URL('../packages/reports/capabilities.json', import.meta.url), 'utf8'));
+  const providerSchema = manifest.capabilities.find(item => item.id === 'report_render').inputSchema;
+  assert.equal(Object.hasOwn(providerSchema.properties, 'target'), false, 'target belongs only to plugin-owned input');
+  assert.deepEqual(Errors(providerSchema, envelope({ content, target: 'answer' })), []);
+  const nonDocument = { kind: 'signal-study', run: {} };
+  assert.deepEqual(Errors(providerSchema, envelope({ content: nonDocument, target: 'report' })), []);
+  assert.ok(Errors(providerSchema, envelope({ content: nonDocument, target: 'answer' })).length);
+  await assert.rejects(renderReport({}, envelope({ content: nonDocument, target: 'answer' })), /document/);
+  for (const target of ['chat-html', '<script>bad</script>', { css: 'body{display:none}' }]) {
+    await assert.rejects(renderReport({}, envelope({ content, target })), /target/);
+  }
+  for (const extra of [{ css: 'body{display:none}' }, { body_html: '<p>raw</p>' }]) {
+    await assert.rejects(renderReport({}, envelope({ content, target: 'answer', ...extra })), /HTML|CSS|input/);
+  }
+});
+
+test('answer target travels through the existing facade as complete provider input', async () => {
+  const calls = [], host = { capabilities: { invoke: async (id, request) => {
+    calls.push({ id, request });
+    const rendered = await renderReport({}, envelope(request.input));
+    return { type: 'result', value: { ref: ref('answer-publication', 'report'), presentation: rendered.presentation } };
+  } } };
+  const result = await publishReport(host, publishArgs({ target: 'answer' }));
+  assert.equal(calls[0].id, 'host.reports.publish');
+  assert.deepEqual(calls[0].request.input, { content, target: 'answer' });
+  assert.equal(Object.hasOwn(calls[0].request, 'target'), false);
+  assert.equal(result.presentation.metadata.surface, 'answer');
 });
 
 test('Report declares a host-only immediate provider with plugin-owned recursive content schema', async () => {
@@ -57,7 +98,7 @@ test('complete inputRef is forwarded without retyping, reading or accepting an a
   const args=publishArgs({input_ref});delete args.content;
   await publishReport(host,args);
   assert.deepEqual(calls[0].args.inputRef,input_ref);assert.equal(Object.hasOwn(calls[0].args,'input'),false);
-  for(const extra of [{content},{style:{}},{provider:'other/report'},{html_path:'report.html'},{body_html:'<h1>raw</h1>'}]) await assert.rejects(publishReport(host,{...args,...extra}),/input_ref|content|property|HTML|provider/i);
+  for(const extra of [{content},{style:{}},{target:'answer'},{target:'report'},{provider:'other/report'},{html_path:'report.html'},{body_html:'<h1>raw</h1>'}]) await assert.rejects(publishReport(host,{...args,...extra}),/input_ref|content|property|HTML|provider/i);
   assert.equal(calls.length,1);
   await assert.rejects(publishReport({capabilities:{invoke:async()=>({type:'job',job:{}})}},args),/immediate/);
 });

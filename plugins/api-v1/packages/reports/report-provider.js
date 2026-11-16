@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { renderStructuredReport } from './report-content.js';
 import { readBytes, readWorkspace } from './artifact-io.js';
 import { assertCompositionBindings } from './report-compose.js';
+import { COMPONENT_PROTOCOL } from './component-catalog.js';
 
 const { id, version } = JSON.parse(readFileSync(new URL('./plugin.json', import.meta.url), 'utf8'));
 const check = (condition, message) => { if (!condition) throw new Error(message); };
@@ -9,7 +10,8 @@ const object = value => value && typeof value === 'object' && !Array.isArray(val
 const refKey = ref => JSON.stringify(['id', 'revision', 'digest', 'kind', 'schemaVersion'].map(key => ref?.[key]));
 const uniqueRefs = refs => [...new Map(refs.map(ref => [refKey(ref), ref])).values()];
 const safePath = path => typeof path === 'string' && path.length <= 256 && !/^[\/]|[\\:\x00-\x1f]/.test(path) && path.split('/').every(part => part && part !== '.' && part !== '..');
-const inputKeys = ['content', 'style', 'assets', 'strategy_source', 'strategy_evidence'];
+const inputKeys = ['content', 'style', 'assets', 'strategy_source', 'strategy_evidence', 'target'];
+const answerStyle = readFileSync(new URL('./assets/answer-surface.css', import.meta.url), 'utf8');
 const attachmentExtensions = { 'application/json': ['json'], 'text/plain': ['txt', 'csv', 'tsv', 'md', 'log'], 'image/png': ['png'], 'image/jpeg': ['jpg', 'jpeg'], 'image/webp': ['webp'] };
 
 function validateAssets(assets, refs) {
@@ -44,11 +46,16 @@ export async function renderReport(host, envelope, signal, readWorkspaceAttachme
   const { metadata, data, related, references, input } = envelope;
   check(object(input) && Object.keys(input).every(key => inputKeys.includes(key)), 'Unsupported Report input; HTML, CSS and script uploads are disabled');
   check(object(input.content), 'Report content is required');
+  check(input.target === undefined || ['report', 'answer'].includes(input.target), '/input/target: Target must be report or answer');
+  const answer = input.target === 'answer';
+  check(!answer || input.content.kind === 'document', '/input/content/kind: Answer components require the document layout');
   const refs = uniqueRefs([...data.map(binding => binding.ref), ...related.flatMap(item => item.artifact ? [item.artifact] : []), ...references]);
   if (input.strategy_source) check(refs.some(ref => refKey(ref) === refKey(input.strategy_source)), 'Strategy source must be declared in report references');
   validateAssets(input.assets ?? [], refs);
   const args = { ...input, ...metadata, provenance_kind: metadata.provenanceKind, data, related, references };
   let html = await renderStructuredReport(host, args, signal);
+  if (answer) html = html.replace(/<html\b/i, '<html data-report-surface="answer"')
+    .replace('</head>', `<style data-report-answer-style>${answerStyle}</style></head>`);
   assertPackaged(html);
   assertCompositionBindings(html, data, refs, metadata.provenanceKind);
   if (metadata.provenanceKind === 'demo' && !html.includes('data-sesame-provenance="demo"')) {
@@ -76,7 +83,9 @@ export async function renderReport(host, envelope, signal, readWorkspaceAttachme
     files.push({ path: asset.path, mediaType: asset.media_type, content: bytes.toString('base64'), encoding: 'base64' });
   }
   signal?.throwIfAborted();
-  return { entry: 'index.html', files, presentation: { id, version, metadata: { layout: 'unified' } } };
+  return { entry: 'index.html', files, presentation: { id, version, metadata: {
+    layout: 'unified', ...(answer ? { surface: 'answer', protocol: COMPONENT_PROTOCOL } : {}),
+  } } };
 }
 
 // Optional agent convenience facade. It cannot select a provider or publish HTML.
@@ -84,7 +93,7 @@ export async function publishReport(host, args, signal) {
   const allowed = ['operation_id', 'title', 'summary', 'locale', 'space', 'provenance_kind', 'data', 'related', 'references', 'features', 'artifact_id', 'expected_revision', 'input_ref', ...inputKeys];
   check(object(args) && Object.keys(args).every(key => allowed.includes(key)), 'Unsupported publication property; custom HTML uploads and provider overrides are disabled');
   check(Boolean(args.input_ref) !== Boolean(args.content), 'Supply content or input_ref, never both');
-  if (args.input_ref) check(inputKeys.every(key => !Object.hasOwn(args, key)), 'input_ref contains the complete provider input; do not supply additional content or style');
+  if (args.input_ref) check(inputKeys.every(key => !Object.hasOwn(args, key)), 'input_ref contains the complete provider input; do not supply additional content, style, assets or target');
   const input = Object.fromEntries(inputKeys.filter(key => Object.hasOwn(args, key)).map(key => [key, args[key]]));
   // Explicit evidence refs remain fixed dependencies even through this facade.
   const references = uniqueRefs([...(args.references ?? []), ...(args.strategy_source ? [args.strategy_source] : []), ...(args.strategy_evidence?.references ?? [])]);

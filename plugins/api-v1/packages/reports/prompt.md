@@ -2,6 +2,8 @@
 
 通用组件已选定时直接调用 `components_show`：一个块填 component，一组块填 components，可选 layout:"stack"|"columns"；工具补齐文档包装、自动校验并发布，data 省略时为 []。复杂排版保留原 content。需要选型时再用 `components_list` 按比较、时间、分布、关联、流量或层级等数据关系发现组件，`components_describe` 按需返回准确 schema 与样例；`components_validate` 只用于发布前诊断。静态校验不代表浏览器视觉通过。协议与参数见 `skills/report-design/component-protocol.md`。
 
+主 Agent 在简短回答中展示组件时用 `target:"answer"`，相关多个组件合在一次 `components_show` 调用中；省略 target 或设为 "report" 保持报告页面。answer 仅接受 document，沿用相同固定数据、校验与发布流程；子 Agent 的 output 声明和报告交付规则照旧，不能用它绕过 `output.type="none"`。
+
 研究先明确用户需要判断什么、从哪些角度、对象和期限、比较对象，以及什么证据会改变答案。用户指定角度与Agent补充角度分开；信息足够就合理假设继续。研究属于现有模板适用范围且用户未另给完整结构时，在取证与分析前调用 `report_structure`，先从完整的 `template_index` 选择对应报告组合，再读取它的 `analysis_questions` 界定研究问题。`module_index` 用于用户选定模块或自行拼接，不因单个模块名称相近而跳过适用组合的问题。`analysis_questions` 保留完整问题；较大的字段与图表说明按需继续读取。用户删改优先，Agent自己裁剪章节不能等同用户放弃问题。这里约定要回答的问题，不限定方法、指标或必填字段。
 
 委派研究前，父Agent先读取并交接这些问题及用户调整，或为负责界定研究范围的Agent开放 `report_structure` 调用；无需每个子Agent重复读取，也不绕过已有权限。问题须进入研究范围和取证安排，不能等到发布时才补形式。
@@ -14,7 +16,7 @@
 
 独立判断结果可用 `presentation.kind:"judgments"`；问题、判断、对象、期限、依据、改判条件和历史参照是可用的展示信息，不要求每项填满七栏。相同对象和期限共用说明，影响判断的条件与历史数字就近保留；已有文字或图表已经说清的内容不重复做卡片。只呈现实际研究结果，不打分、不生成概率、不指定方法。完整值保留在固定输入与引用中。参考 `examples/judgment-presentation.json`。
 
-本插件把已有研究与策略成果呈现为可浏览、可追溯的报告。先调用宿主 `host.reports.describe` 读取所选提供者及其 inputSchema，再调用 `host.reports.publish`；宿主决定使用哪个插件，插件定义可接受内容。Agent 不选择或覆盖 provider；若宿主所选是其他插件，以其 inputSchema 为准，不套用本插件字段。本插件提供 `input:{content,style?,assets?,strategy_source?,strategy_evidence?}`，只生成文件包，不自行发布 HTML。`report_publish` 是宿主发布的便利转接入口，不是另一条发布通道。已有固定结果与完整参数时直接使用，不重复阅读全部资料；不接受 HTML、CSS、脚本或自定义渲染函数。
+本插件把已有研究与策略成果呈现为可浏览、可追溯的报告。先调用宿主 `host.reports.describe` 读取所选提供者及其 inputSchema，再调用 `host.reports.publish`；宿主决定使用哪个插件，插件定义可接受内容。Agent 不选择或覆盖 provider；若宿主所选是其他插件，以其 inputSchema 为准，不套用本插件字段。本插件提供 `input:{content,style?,assets?,strategy_source?,strategy_evidence?,target?}`，target 属于完整 provider input，只生成文件包，不自行发布 HTML。`report_publish` 是宿主发布的便利转接入口，不是另一条发布通道。已有固定结果与完整参数时直接使用，不重复阅读全部资料；不接受 HTML、CSS、脚本或自定义渲染函数。
 
 职责停留在报告指导与呈现：消息获取由独立来源插件提供，理论与计算由独立知识/方法插件提供；本包不实现外部消息采集、供应商认证或研究算法。Report 只接收固定成果与来源引用，不接收密钥。来源插件的配置与状态由统一插件机制管理，不能藏在报告字段或另建配置文件。
 

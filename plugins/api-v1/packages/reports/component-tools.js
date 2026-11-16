@@ -63,14 +63,14 @@ function authorPath(path, args) {
   return path;
 }
 
-function envelope(args, input = Object.fromEntries(['content', 'style', 'assets'].filter(key => Object.hasOwn(args, key)).map(key => [key, args[key]]))) {
+function envelope(args, input = Object.fromEntries(['content', 'style', 'assets', 'target'].filter(key => Object.hasOwn(args, key)).map(key => [key, args[key]]))) {
   return { metadata: { title: args.title ?? 'Component validation', summary: args.summary ?? '', locale: args.locale ?? 'en',
     provenanceKind: args.provenance_kind ?? 'derived', features: ['interactive'], ...(args.space ? { space: args.space } : {}) },
   data: args.data ?? [], related: args.related ?? [], references: args.references ?? [], input };
 }
 
 function assertDocument(input) {
-  check(object(input) && Object.keys(input).every(key => ['content', 'style', 'assets'].includes(key)), '/content', 'Unsupported input property; HTML, CSS and scripts are disabled');
+  check(object(input) && Object.keys(input).every(key => ['content', 'style', 'assets', 'target'].includes(key)), '/content', 'Unsupported input property; HTML, CSS and scripts are disabled');
   check(object(input.content) && input.content.kind === 'document', '/content/kind', 'Components require the built-in document layout');
 }
 

@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { cp, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
+import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildLock } from '../scripts/plugin-lock.mjs';
@@ -92,6 +93,43 @@ test('component tools cross real HTTP and stdio MCP into immutable, inspectable 
   // The short form accepts the exact discovered example without document scaffolding.
   const concise = { operation_id: 'components-mcp-single', title: '单组件合成验收', provenance_kind: 'demo', component: line };
   assert.equal((await call('components_show', concise)).ref.kind, 'report');
+  const answer = await call('components_show', { ...concise, operation_id: 'components-mcp-answer', target: 'answer', summary: '只用于报告索引的摘要' });
+  const answerArtifact = app.runtime.contractArtifacts.read(answer.ref);
+  assert.deepEqual(answerArtifact.manifest.content.rendering.presentation.metadata, { layout: 'unified', surface: 'answer', protocol: 'sesame-components/1' });
+  const answerInput = JSON.parse(app.runtime.contractArtifacts.resource(answer.ref, 'sesame-report-input.json').bytes.toString());
+  assert.equal(answerInput.input.target, 'answer', 'Answer placement is part of the fixed input, not just tool output');
+  // Mount the real published package through the host, which rebuilds HTML roots
+  // and verifies packaged assets. A raw HTML preview cannot prove this path.
+  const { chromium } = createRequire(join(hostRoot, 'package.json'))('playwright');
+  const browser = await chromium.launch({ headless: true }); t.after(() => browser.close());
+  const page = await browser.newPage({ viewport: { width: 720, height: 800 } }), browserErrors = [];
+  page.on('pageerror', error => browserErrors.push(error.message));
+  await page.goto(app.launchUrl);
+  await page.evaluate(async report => {
+    const { mountArtifactReport } = await import('/modules/frontend/report-runtime/artifact-host.js');
+    const container = document.createElement('main'); container.id = 'component-mcp-preview';
+    container.style.cssText = 'position:fixed;inset:0;z-index:2147483647;overflow:auto;background:var(--bg,#fff);padding:20px';
+    document.body.append(container);
+    const dispose = await mountArtifactReport(container, report, async path => {
+      const response = await fetch(`/api/v1${path}`);
+      if (!response.ok) throw new Error(`Report request failed: ${response.status}`);
+      return response.json();
+    }, { sizeToContent: true });
+    container.querySelector('iframe').style.cssText += ';display:block;width:100%;border:0';
+    await dispose.ready;
+  }, app.runtime.report(answer.ref.id, 1));
+  const frame = page.frameLocator('#component-mcp-preview iframe');
+  await frame.locator('#content-chart-1 svg').waitFor();
+  assert.equal(await frame.locator('.report-header').isVisible(), false);
+  assert.equal(await frame.locator('.report-subtitle').isVisible(), false);
+  assert.equal(await frame.locator('figcaption strong').first().isVisible(), true);
+  assert.equal(await frame.locator('body').evaluate(body => getComputedStyle(body).padding), '0px');
+  assert.equal(await page.locator('#component-mcp-preview iframe').getAttribute('sandbox'), 'allow-scripts');
+  if (output) await page.locator('#component-mcp-preview').screenshot({ path: join(output, 'mcp-answer-host.png') });
+  await page.setViewportSize({ width: 390, height: 800 });
+  assert.equal(await frame.locator('body').evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  assert.deepEqual(browserErrors, []);
+  await page.close();
   const parallel = await call('components_validate', { title: draft.title, provenance_kind: 'demo', components: [line, line], layout: 'columns' });
   assert.equal(parallel.valid, true, JSON.stringify(parallel.diagnostics));
 
