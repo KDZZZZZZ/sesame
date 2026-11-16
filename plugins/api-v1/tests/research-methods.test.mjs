@@ -21,7 +21,7 @@ const migration = JSON.parse(readFileSync(new URL('./fixtures/research-migration
 test('Research is a mounted native read-only plugin with exactly two narrow tools', async () => {
   assert.equal(manifest.id, 'sesame/research');
   assert.equal(manifest.apiVersion, '2');
-  assert.equal(manifest.version, '1.0.0');
+  assert.equal(manifest.version, json('package.json').version);
   assert.equal(manifest.execution, 'native');
   assert.equal(manifest.default_state, 'mounted');
   assert.deepEqual(manifest.permissions, { scopes: [], calls: [] });

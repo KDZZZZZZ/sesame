@@ -4,8 +4,8 @@
 
 | 插件 | 责任 | 主要入口 |
 | --- | --- | --- |
-| `sesame/research` 1.0.0 | 找到适合问题的调查方法，组织证据与回答，复核结论 | `research_methods` 查方法，`research_read` 批量读资料 |
-| `sesame/reports` 6.0.0 | 把已有内容呈现为统一组件、报告与回答，管理样式、交互及交付 | `components_show`；不熟悉组件时查 `components_list` / `components_describe` |
+| `sesame/research` 1.0.1 | 找到适合问题的调查方法，组织证据与回答，复核结论 | `research_methods` 查方法，`research_read` 批量读资料 |
+| `sesame/reports` 6.0.1 | 把已有内容呈现为统一组件、报告与回答，管理样式、交互及交付 | `components_show`；不熟悉组件时查 `components_list` / `components_describe` |
 
 ## Reports 的层次
 
@@ -15,6 +15,10 @@
 4. **交付**：报告和回答共用组件；固定数据、修订与发布沿用宿主。`report_check` 检查实际渲染，`report_export_check` 检查导出；长输入可先用 `report_prepare` 固定。
 
 调用默认一步展示，不要求每次先列目录、取模板、校验再发布。`components_validate` 是可选预检。报告只检查输入与视觉，不判断研究是否充分，不取行情、不解析策略源码、不要求业务章节。公开内容不接受自由 HTML/CSS/JavaScript。
+
+报告与回答都主动选择适合数据关系的组件，无需用户点名画图。图表承担数据证据，文字解释关键发现和意义；按信息需要决定图表数量，简单事实可直接回答。Research 交接真实数据、口径、来源与要说明的关系，Reports 决定图型与排版。
+
+每份报告在标题后先用一小段直接回答用户核心问题、给出关键结论，再展开证据与分析；不要求固定摘要章节。
 
 ## Research 的层次
 

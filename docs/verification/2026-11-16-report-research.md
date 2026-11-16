@@ -47,3 +47,21 @@
 - 7项MT5配置导入测试的旧消息来源fixture未满足主会话用户来源校验，报403或后续预期不符。本次没有修改其后端实现。
 
 这9项不在本次 Report/Research 实现范围。相关源码与断言保持原样；本次改造的打包、组件、方法和研究交付链路已单独验证。
+
+## 后续：主动选图与结论先行
+
+Reports 6.0.1 / Research 1.0.1 增加简短默认引导：每份报告标题后先回答核心问题；数据关系主动用图表达，正文解释发现和意义。Research 保留实际数据、口径与来源，按问题组织并去重子研究；Reports 负责选图与排版。继续区分 Prompt、操作 Skill 和按需资料，没有新增宿主接口或固定报告模板。
+
+结构参考的是报告 Agent 的公开生成规则：[OpenAI Data Analytics](https://github.com/openai/plugins/blob/main/plugins/data-analytics/skills/build-report/specifications/executive-report.md) 的答案先行、发现与证据相邻，以及 [GPT Researcher](https://github.com/assafelovic/gpt-researcher/blob/main/gpt_researcher/prompts.py) 的分问题研究与章节去重。只借鉴适用原则，不引入固定摘要标题、字数下限、默认附录或限制说明章节。
+
+使用已有 OpenAI 订阅 `gpt-6.1-sol`，在隔离工作区以未指定图表的用户问题验收。首轮仍只交表格，未算通过；明确关键数据关系优先实际用图后复测：
+
+| 问题 | 实际结果 |
+| --- | --- |
+| 季报前瞻短报告 | 开头直接说明销量增长与利润率压力的关键判断，主动以区间图展示110–115的收入指引及113的共识位置 |
+| 组合与基准的半年表现，直接在回答中说明 | 主动发布 answer 组件中的双折线，逐月数值与题设一致 |
+| 一句话解释市盈率 | 直接一句话作答，0工具调用、0图表 |
+
+最终三题共15次真实工具调用、0工具错误；两份视觉产物均取得 `rendered` 回执，另以浏览器核对开头、图中数值、回答 surface 及截图，无浏览器错误。这是小规模行为验收，不宣称提示词能保证所有问题的报告质量。
+
+当前方法/清单/契约用例33项通过，锁文件校验与diff检查通过。本轮没有重跑前述全库套件，也没有安装或替换正在使用的 Sesame。记录、产物和截图在 `E:/brief2great/sesame/outputs/report-visual-guidance-20261116/final/`；首轮未达效果的产物保留在其上级目录。

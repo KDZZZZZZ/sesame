@@ -2,7 +2,7 @@
   "id": "sesame/reports",
   "title": "视觉组件与报告",
   "description": "将已有文字和固定数据组合为统一视觉的报告或回答组件；38 种图表、15 种内容块、局部筛选联动和现有宿主交付。研究方法独立。",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "default_state": "mounted",
   "prompts": [
     "prompt.md"
