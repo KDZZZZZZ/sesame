@@ -141,14 +141,15 @@ test('reading path omits internal validation badges while preserving evidence an
   const structure = resolveStructure({ sections: [{ module_id: 'M13', fields: ['summary'] }] });
   const row = { section_id: 'M13', field: 'summary', value: '20次相似情况里有11次上涨。', validation: { status: 'historical_exploration', history_refs: [ref('history')] } };
   const render = value => renderComposedReport({ title: '历史比较', structure, bound: bindResults(structure, [value]), data: [], references: [ref('history')], demo: false });
-  const html = render(row), mainReading = html.split('<details class="kit-appendix module-sources">')[0];
-  assert.match(mainReading, /20次相似情况里有11次上涨/);
-  assert.doesNotMatch(mainReading, /<p class="module-validation">/);
-  assert.match(html, /&quot;status&quot;: &quot;historical_exploration&quot;/);
-  assert.match(html, /&quot;history_refs&quot;/);
+  const bound = bindResults(structure, [row]), html = render(row);
+  assert.match(html, /20次相似情况里有11次上涨/);
+  assert.doesNotMatch(html, /<p class="module-validation">|<details class="kit-appendix module-sources">/);
+  assert.deepEqual(bound.sections[0].fields[0].result.validation, row.validation);
+  assert.deepEqual(bound.evidence_refs, [ref('history')]);
+  assertCompositionBindings(html, [], [ref('history')], 'derived');
   const withNote = render({ ...row, validation: { ...row.validation, note: '这里只比较已有记录，不能当成今天的概率。' } });
   assert.match(withNote, /<p class="module-validation">这里只比较已有记录，不能当成今天的概率。<\/p>/);
-  assert.doesNotMatch(withNote.split('<details class="kit-appendix module-sources">')[0], /历史样本统计/);
+  assert.doesNotMatch(withNote, /历史样本统计/);
   assert.deepEqual(row.validation, { status: 'historical_exploration', history_refs: [ref('history')] }, 'Presentation must not alter supplied evidence');
 });
 
@@ -211,7 +212,9 @@ test('hidden fields retain source state and removed fields never get validated o
   const structure = resolveStructure({ sections: [{ module_id: 'M14', fields: [{ key: 'probabilities', display: 'hidden' }] }] });
   const bound = bindResults(structure, [row]);
   const html = renderComposedReport({ title: '演示', structure, bound, data: [], references: [], demo: true });
-  assert.doesNotMatch(html, /<th>概率/); assert.match(html, /unvalidated/);
+  assert.doesNotMatch(html, /<th>概率|<details[^>]+module-sources/);
+  assert.equal(bound.sections[0].fields[0].result.validation.status, 'unvalidated');
+  assert.deepEqual(bound.sections[0].fields[0].result.value, row.value);
   const removed = resolveStructure({ sections: [{ module_id: 'M14', fields: [] }] });
   const result = bindResults(removed, [{ ...row, value: 'ignored incompatible result' }]);
   assert.equal(result.completeness.ignored, 1); assert.deepEqual(result.completeness.missing, []);

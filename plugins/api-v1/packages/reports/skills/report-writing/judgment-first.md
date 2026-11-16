@@ -16,7 +16,7 @@
 {"kind":"judgments","label":"问题","value":"判断","subject":"对象","horizon":"期限","basis":"依据","condition":"改判条件","history":"历史参照"}
 ```
 
-它仅映射已有数组，不根据文字推断多空或生成分数、概率。不兼容内容完整回退，原值进附录。例见 `examples/judgment-presentation.json`。
+它仅映射已有数组，不根据文字推断多空或生成分数、概率。不兼容内容完整回退，原值保留在对应字段的按需明细。例见 `examples/judgment-presentation.json`。
 
 以下只示意改写方式，结论仍须来自实际分析：
 

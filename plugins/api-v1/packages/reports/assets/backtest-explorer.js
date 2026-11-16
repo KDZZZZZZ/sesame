@@ -102,7 +102,6 @@
           } }] }] : []),
         { title: tr('品种 × 周期', 'Symbols × timeframes'), takeaway: config.selectionRule, blocks: [{ type: 'custom', render: explorer }] },
       ],
-      method: { steps: [config.sourceNote], limits: [tr('热力图显示已记录的选中参数组；颜色切换不会重新选优。', 'The matrix shows recorded selected trials; changing color metrics never reselects winners.')], sources: [...(config.source ? [{ label: 'SVL', value: JSON.stringify(config.source) }] : []), { label: tr('固定数据', 'Frozen data'), value: config.dataId }] },
     });
     function explorer(container) {
       const controls = el('div', null, 'backtest-controls');

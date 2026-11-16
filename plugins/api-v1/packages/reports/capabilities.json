@@ -10448,6 +10448,1643 @@
         "type": "native",
         "name": "report_render"
       }
+    },
+    {
+      "id": "components_list",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Discover built-in document components and charts by the data relationship they express: comparison, time, distribution, association, flow, hierarchy or layout. Returns a compact paginated index; request exact schemas only for selected IDs.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "category": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "read"
+      ],
+      "usage": {
+        "purpose": "Discover built-in document components and charts by the data relationship they express: comparison, time, distribution, association, flow, hierarchy or layout. Returns a compact paginated index; request exact schemas only for selected IDs.",
+        "inputs": "Optional query/category, opaque cursor and limit (default 20, maximum 100).",
+        "outputs": "Compact component IDs, categories and whenToUse guidance with a continuation cursor.",
+        "prerequisites": [],
+        "limitations": [
+          "Discovery does not create reports or inspect actual browser output."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "components_list"
+      }
+    },
+    {
+      "id": "components_describe",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Read exact public schemas, minimal runnable examples, data requirements and composition positions for 1–12 selected built-in component IDs.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 12,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "read"
+      ],
+      "usage": {
+        "purpose": "Read exact public schemas, minimal runnable examples, data requirements and composition positions for 1–12 selected built-in component IDs.",
+        "inputs": "IDs returned by components_list; choose only the components needed for the current content.",
+        "outputs": "Selected component schemas and examples derived from the current renderer contract.",
+        "prerequisites": [],
+        "limitations": [
+          "Examples are demonstration values, not research evidence."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "components_describe"
+      }
+    },
+    {
+      "id": "components_validate",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Optionally check one component, up to 12 components, or a complete document using the same schema, real fixed rows, server renderer and attachment checks as components_show. Returns located diagnostics without imports or publication; browser drawing and layout are not checked.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 20000
+          },
+          "locale": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "provenance_kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "observed"
+              },
+              {
+                "type": "string",
+                "const": "derived"
+              },
+              {
+                "type": "string",
+                "const": "user_input"
+              },
+              {
+                "type": "string",
+                "const": "demo"
+              }
+            ]
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "ref",
+                "usage"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Local data binding ID used by report.readData",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "ref": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "revision",
+                    "digest",
+                    "kind",
+                    "schemaVersion"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "revision": {
+                      "type": "string"
+                    },
+                    "digest": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "const": "data"
+                    },
+                    "schemaVersion": {
+                      "type": "string",
+                      "const": "1.0.0"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "usage": {
+                  "type": "string",
+                  "description": "What this fixed data supports",
+                  "minLength": 1,
+                  "maxLength": 20000
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 32,
+            "default": []
+          },
+          "related": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "role"
+              ],
+              "properties": {
+                "role": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "strategy"
+                    },
+                    {
+                      "type": "string",
+                      "const": "translation"
+                    },
+                    {
+                      "type": "string",
+                      "const": "run"
+                    },
+                    {
+                      "type": "string",
+                      "const": "result"
+                    },
+                    {
+                      "type": "string",
+                      "const": "source"
+                    }
+                  ]
+                },
+                "artifact": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "revision",
+                    "digest",
+                    "kind",
+                    "schemaVersion"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "revision": {
+                      "type": "string"
+                    },
+                    "digest": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$"
+                    },
+                    "kind": {
+                      "type": "string"
+                    },
+                    "schemaVersion": {
+                      "type": "string",
+                      "const": "1.0.0"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "record": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "version"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 32
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "revision",
+                "digest",
+                "kind",
+                "schemaVersion"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "revision": {
+                  "type": "string"
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^sha256:[a-f0-9]{64}$"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "schemaVersion": {
+                  "type": "string",
+                  "const": "1.0.0"
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 64
+          },
+          "style": {
+            "type": "object",
+            "properties": {
+              "custom": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "description": "User-requested presentation need",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "tokens": {
+                    "type": "object",
+                    "properties": {
+                      "accent": {
+                        "type": "string",
+                        "pattern": "^#[a-fA-F0-9]{6}$"
+                      },
+                      "context": {
+                        "type": "string",
+                        "pattern": "^#[a-fA-F0-9]{6}$"
+                      },
+                      "accent_dark": {
+                        "type": "string",
+                        "pattern": "^#[a-fA-F0-9]{6}$"
+                      },
+                      "context_dark": {
+                        "type": "string",
+                        "pattern": "^#[a-fA-F0-9]{6}$"
+                      },
+                      "heading": {
+                        "enum": [
+                          "serif",
+                          "sans"
+                        ]
+                      },
+                      "body_size": {
+                        "type": "integer",
+                        "minimum": 14,
+                        "maximum": 20
+                      },
+                      "content_width": {
+                        "type": "integer",
+                        "minimum": 640,
+                        "maximum": 1440
+                      },
+                      "section_gap": {
+                        "type": "integer",
+                        "minimum": 24,
+                        "maximum": 88
+                      },
+                      "chart_height": {
+                        "type": "integer",
+                        "minimum": 180,
+                        "maximum": 640
+                      },
+                      "columns": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 3
+                      }
+                    },
+                    "required": [],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "reason",
+                  "tokens"
+                ],
+                "additionalProperties": false
+              },
+              "saved_id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]{0,63}$"
+              },
+              "saved_version": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "additionalProperties": false,
+            "description": "One unified blue/gray frameless layout. Omit style by default. Only use custom safe tokens or a saved exact style version for user-requested presentation changes; no presets, themes, raw CSS or scripts."
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "path",
+                "media_type"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "description": "Safe packaged path; extension must match media_type. Changing MIME alone does not allow script extensions. Source files may remain in the workspace.",
+                  "minLength": 1,
+                  "maxLength": 256,
+                  "pattern": "^(?!.*[\\\\:\\u0000-\\u001f])(?:(?!\\.{1,2}/)[^/]+/)*(?!\\.{1,2}$)[^/]+$"
+                },
+                "source_path": {
+                  "type": "string",
+                  "description": "Workspace file containing this asset",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "media_type": {
+                  "type": "string",
+                  "description": "Inert MIME: application/json (.json), text/plain (.txt/.csv/.tsv/.md/.log), image/png (.png), image/jpeg (.jpg/.jpeg), image/webp (.webp). Case-insensitive; MIME parameters allowed. Scripts are not accepted as executable attachments.",
+                  "minLength": 1,
+                  "maxLength": 20000,
+                  "pattern": "^(?:[aA][pP][pP][lL][iI][cC][aA][tT][iI][oO][nN]/[jJ][sS][oO][nN]|[tT][eE][xX][tT]/[pP][lL][aA][iI][nN]|[iI][mM][aA][gG][eE]/[pP][nN][gG]|[iI][mM][aA][gG][eE]/[jJ][pP][eE][gG]|[iI][mM][aA][gG][eE]/[wW][eE][bB][pP])(?:;[\\s\\S]*)?$"
+                },
+                "ref": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "maxLength": 256,
+                      "minLength": 1
+                    },
+                    "revision": {
+                      "type": "string",
+                      "maxLength": 256,
+                      "minLength": 1
+                    },
+                    "digest": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "maxLength": 128,
+                      "minLength": 1
+                    },
+                    "schemaVersion": {
+                      "const": "1.0.0"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "revision",
+                    "digest",
+                    "kind",
+                    "schemaVersion"
+                  ],
+                  "additionalProperties": false
+                },
+                "entry": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256,
+                  "pattern": "^(?!.*[\\\\:\\u0000-\\u001f])(?:(?!\\.{1,2}/)[^/]+/)*(?!\\.{1,2}$)[^/]+$"
+                }
+              },
+              "additionalProperties": false,
+              "oneOf": [
+                {
+                  "required": [
+                    "source_path"
+                  ],
+                  "not": {
+                    "anyOf": [
+                      {
+                        "required": [
+                          "ref"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "entry"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "required": [
+                    "ref",
+                    "entry"
+                  ],
+                  "not": {
+                    "required": [
+                      "source_path"
+                    ]
+                  }
+                }
+              ],
+              "allOf": [
+                {
+                  "if": {
+                    "type": "object",
+                    "properties": {
+                      "media_type": {
+                        "type": "string",
+                        "pattern": "^[aA][pP][pP][lL][iI][cC][aA][tT][iI][oO][nN]/[jJ][sS][oO][nN](?:;[\\s\\S]*)?$"
+                      }
+                    },
+                    "required": [
+                      "media_type"
+                    ]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "pattern": "\\.(?:[jJ][sS][oO][nN])$"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "type": "object",
+                    "properties": {
+                      "media_type": {
+                        "type": "string",
+                        "pattern": "^[tT][eE][xX][tT]/[pP][lL][aA][iI][nN](?:;[\\s\\S]*)?$"
+                      }
+                    },
+                    "required": [
+                      "media_type"
+                    ]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "pattern": "\\.(?:[tT][xX][tT]|[cC][sS][vV]|[tT][sS][vV]|[mM][dD]|[lL][oO][gG])$"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "type": "object",
+                    "properties": {
+                      "media_type": {
+                        "type": "string",
+                        "pattern": "^[iI][mM][aA][gG][eE]/[pP][nN][gG](?:;[\\s\\S]*)?$"
+                      }
+                    },
+                    "required": [
+                      "media_type"
+                    ]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "pattern": "\\.(?:[pP][nN][gG])$"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "type": "object",
+                    "properties": {
+                      "media_type": {
+                        "type": "string",
+                        "pattern": "^[iI][mM][aA][gG][eE]/[jJ][pP][eE][gG](?:;[\\s\\S]*)?$"
+                      }
+                    },
+                    "required": [
+                      "media_type"
+                    ]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "pattern": "\\.(?:[jJ][pP][gG]|[jJ][pP][eE][gG])$"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "type": "object",
+                    "properties": {
+                      "media_type": {
+                        "type": "string",
+                        "pattern": "^[iI][mM][aA][gG][eE]/[wW][eE][bB][pP](?:;[\\s\\S]*)?$"
+                      }
+                    },
+                    "required": [
+                      "media_type"
+                    ]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "pattern": "\\.(?:[wW][eE][bB][pP])$"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "maxItems": 64,
+            "description": "Inert attachments only. Prefer a complete fixed ref + entry declared in envelope references. Workspace source_path is read at rendering time, not represented as historical point-in-time evidence."
+          },
+          "content": {
+            "type": "object",
+            "description": "Controlled document content. Use components_describe for exact block/chart schemas and examples; the existing report renderer enforces every nested field. No HTML, CSS or scripts.",
+            "properties": {
+              "kind": {
+                "const": "document"
+              },
+              "overview": {
+                "type": "object"
+              },
+              "sections": {
+                "type": "array",
+                "maxItems": 50,
+                "items": {
+                  "type": "object"
+                }
+              },
+              "appendix": {
+                "type": "array",
+                "maxItems": 100,
+                "items": {
+                  "type": "object"
+                }
+              }
+            },
+            "required": [
+              "kind",
+              "sections"
+            ],
+            "additionalProperties": false
+          },
+          "component": {
+            "type": "object",
+            "description": "One existing block or chart, copied directly from a components_describe example. The tool supplies the document wrapper."
+          },
+          "components": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 12,
+            "items": {
+              "type": "object"
+            },
+            "description": "Existing blocks/charts in reading order. The tool supplies the document and group wrappers."
+          },
+          "layout": {
+            "enum": [
+              "stack",
+              "columns"
+            ],
+            "description": "Layout for component/components only; multiple components default to stack."
+          }
+        },
+        "required": [],
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "component"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "components"
+                  ]
+                },
+                {
+                  "required": [
+                    "content"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "required": [
+              "components"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "component"
+                  ]
+                },
+                {
+                  "required": [
+                    "content"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "required": [
+              "content"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "component"
+                  ]
+                },
+                {
+                  "required": [
+                    "components"
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "allOf": [
+          {
+            "if": {
+              "anyOf": [
+                {
+                  "required": [
+                    "content"
+                  ]
+                }
+              ]
+            },
+            "then": {
+              "not": {
+                "required": [
+                  "layout"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "read"
+      ],
+      "usage": {
+        "purpose": "Optionally check one component, up to 12 components, or a complete document using the same schema, real fixed rows, server renderer and attachment checks as components_show. Returns located diagnostics without imports or publication; browser drawing and layout are not checked.",
+        "inputs": "Exactly one of component, components or content; layout stack/columns applies only to shorthand components. data defaults to []. Preserve original references/assets/style/title/summary/locale/provenance_kind/related. Omitted title is Component validation; omitted locale uses widest existing limits; omitted provenance_kind is derived.",
+        "outputs": "valid, status (valid/invalid/incomplete), diagnostics[{path,message}], protocol and explicit schema/renderer/fixedData/assets/browser coverage. A failed resource read is incomplete, never valid.",
+        "prerequisites": [
+          "Fixed bindings and attachment references must be accessible and complete."
+        ],
+        "limitations": [
+          "Reads fixed json-rows data and checks the current chartValue mapping rules; unsupported data formats cannot pass.",
+          "This is static/server validation. Actual chart drawing, browser layout and interaction still require report_check after publication.",
+          "No data values, findings or methods are invented or changed."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "components_validate"
+      }
+    },
+    {
+      "id": "components_show",
+      "kind": "function",
+      "consumers": [
+        "agent",
+        "host"
+      ],
+      "description": "Show one component, up to 12 components, or a complete document as a real report. Automatically runs the same static validation, then publishes through the host-selected provider; returns the fixed report reference. Discovery and a separate validation call are optional.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 20000
+          },
+          "locale": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "provenance_kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "observed"
+              },
+              {
+                "type": "string",
+                "const": "derived"
+              },
+              {
+                "type": "string",
+                "const": "user_input"
+              },
+              {
+                "type": "string",
+                "const": "demo"
+              }
+            ]
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "ref",
+                "usage"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Local data binding ID used by report.readData",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "ref": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "revision",
+                    "digest",
+                    "kind",
+                    "schemaVersion"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "revision": {
+                      "type": "string"
+                    },
+                    "digest": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "const": "data"
+                    },
+                    "schemaVersion": {
+                      "type": "string",
+                      "const": "1.0.0"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "usage": {
+                  "type": "string",
+                  "description": "What this fixed data supports",
+                  "minLength": 1,
+                  "maxLength": 20000
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 32,
+            "default": []
+          },
+          "related": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "role"
+              ],
+              "properties": {
+                "role": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "const": "strategy"
+                    },
+                    {
+                      "type": "string",
+                      "const": "translation"
+                    },
+                    {
+                      "type": "string",
+                      "const": "run"
+                    },
+                    {
+                      "type": "string",
+                      "const": "result"
+                    },
+                    {
+                      "type": "string",
+                      "const": "source"
+                    }
+                  ]
+                },
+                "artifact": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "revision",
+                    "digest",
+                    "kind",
+                    "schemaVersion"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "revision": {
+                      "type": "string"
+                    },
+                    "digest": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$"
+                    },
+                    "kind": {
+                      "type": "string"
+                    },
+                    "schemaVersion": {
+                      "type": "string",
+                      "const": "1.0.0"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "record": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "version"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 32
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "revision",
+                "digest",
+                "kind",
+                "schemaVersion"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "revision": {
+                  "type": "string"
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^sha256:[a-f0-9]{64}$"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "schemaVersion": {
+                  "type": "string",
+                  "const": "1.0.0"
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 64
+          },
+          "style": {
+            "type": "object",
+            "properties": {
+              "custom": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "description": "User-requested presentation need",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "tokens": {
+                    "type": "object",
+                    "properties": {
+                      "accent": {
+                        "type": "string",
+                        "pattern": "^#[a-fA-F0-9]{6}$"
+                      },
+                      "context": {
+                        "type": "string",
+                        "pattern": "^#[a-fA-F0-9]{6}$"
+                      },
+                      "accent_dark": {
+                        "type": "string",
+                        "pattern": "^#[a-fA-F0-9]{6}$"
+                      },
+                      "context_dark": {
+                        "type": "string",
+                        "pattern": "^#[a-fA-F0-9]{6}$"
+                      },
+                      "heading": {
+                        "enum": [
+                          "serif",
+                          "sans"
+                        ]
+                      },
+                      "body_size": {
+                        "type": "integer",
+                        "minimum": 14,
+                        "maximum": 20
+                      },
+                      "content_width": {
+                        "type": "integer",
+                        "minimum": 640,
+                        "maximum": 1440
+                      },
+                      "section_gap": {
+                        "type": "integer",
+                        "minimum": 24,
+                        "maximum": 88
+                      },
+                      "chart_height": {
+                        "type": "integer",
+                        "minimum": 180,
+                        "maximum": 640
+                      },
+                      "columns": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 3
+                      }
+                    },
+                    "required": [],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "reason",
+                  "tokens"
+                ],
+                "additionalProperties": false
+              },
+              "saved_id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]{0,63}$"
+              },
+              "saved_version": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "additionalProperties": false,
+            "description": "One unified blue/gray frameless layout. Omit style by default. Only use custom safe tokens or a saved exact style version for user-requested presentation changes; no presets, themes, raw CSS or scripts."
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "path",
+                "media_type"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "description": "Safe packaged path; extension must match media_type. Changing MIME alone does not allow script extensions. Source files may remain in the workspace.",
+                  "minLength": 1,
+                  "maxLength": 256,
+                  "pattern": "^(?!.*[\\\\:\\u0000-\\u001f])(?:(?!\\.{1,2}/)[^/]+/)*(?!\\.{1,2}$)[^/]+$"
+                },
+                "source_path": {
+                  "type": "string",
+                  "description": "Workspace file containing this asset",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "media_type": {
+                  "type": "string",
+                  "description": "Inert MIME: application/json (.json), text/plain (.txt/.csv/.tsv/.md/.log), image/png (.png), image/jpeg (.jpg/.jpeg), image/webp (.webp). Case-insensitive; MIME parameters allowed. Scripts are not accepted as executable attachments.",
+                  "minLength": 1,
+                  "maxLength": 20000,
+                  "pattern": "^(?:[aA][pP][pP][lL][iI][cC][aA][tT][iI][oO][nN]/[jJ][sS][oO][nN]|[tT][eE][xX][tT]/[pP][lL][aA][iI][nN]|[iI][mM][aA][gG][eE]/[pP][nN][gG]|[iI][mM][aA][gG][eE]/[jJ][pP][eE][gG]|[iI][mM][aA][gG][eE]/[wW][eE][bB][pP])(?:;[\\s\\S]*)?$"
+                },
+                "ref": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "maxLength": 256,
+                      "minLength": 1
+                    },
+                    "revision": {
+                      "type": "string",
+                      "maxLength": 256,
+                      "minLength": 1
+                    },
+                    "digest": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "maxLength": 128,
+                      "minLength": 1
+                    },
+                    "schemaVersion": {
+                      "const": "1.0.0"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "revision",
+                    "digest",
+                    "kind",
+                    "schemaVersion"
+                  ],
+                  "additionalProperties": false
+                },
+                "entry": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256,
+                  "pattern": "^(?!.*[\\\\:\\u0000-\\u001f])(?:(?!\\.{1,2}/)[^/]+/)*(?!\\.{1,2}$)[^/]+$"
+                }
+              },
+              "additionalProperties": false,
+              "oneOf": [
+                {
+                  "required": [
+                    "source_path"
+                  ],
+                  "not": {
+                    "anyOf": [
+                      {
+                        "required": [
+                          "ref"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "entry"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "required": [
+                    "ref",
+                    "entry"
+                  ],
+                  "not": {
+                    "required": [
+                      "source_path"
+                    ]
+                  }
+                }
+              ],
+              "allOf": [
+                {
+                  "if": {
+                    "type": "object",
+                    "properties": {
+                      "media_type": {
+                        "type": "string",
+                        "pattern": "^[aA][pP][pP][lL][iI][cC][aA][tT][iI][oO][nN]/[jJ][sS][oO][nN](?:;[\\s\\S]*)?$"
+                      }
+                    },
+                    "required": [
+                      "media_type"
+                    ]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "pattern": "\\.(?:[jJ][sS][oO][nN])$"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "type": "object",
+                    "properties": {
+                      "media_type": {
+                        "type": "string",
+                        "pattern": "^[tT][eE][xX][tT]/[pP][lL][aA][iI][nN](?:;[\\s\\S]*)?$"
+                      }
+                    },
+                    "required": [
+                      "media_type"
+                    ]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "pattern": "\\.(?:[tT][xX][tT]|[cC][sS][vV]|[tT][sS][vV]|[mM][dD]|[lL][oO][gG])$"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "type": "object",
+                    "properties": {
+                      "media_type": {
+                        "type": "string",
+                        "pattern": "^[iI][mM][aA][gG][eE]/[pP][nN][gG](?:;[\\s\\S]*)?$"
+                      }
+                    },
+                    "required": [
+                      "media_type"
+                    ]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "pattern": "\\.(?:[pP][nN][gG])$"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "type": "object",
+                    "properties": {
+                      "media_type": {
+                        "type": "string",
+                        "pattern": "^[iI][mM][aA][gG][eE]/[jJ][pP][eE][gG](?:;[\\s\\S]*)?$"
+                      }
+                    },
+                    "required": [
+                      "media_type"
+                    ]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "pattern": "\\.(?:[jJ][pP][gG]|[jJ][pP][eE][gG])$"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "type": "object",
+                    "properties": {
+                      "media_type": {
+                        "type": "string",
+                        "pattern": "^[iI][mM][aA][gG][eE]/[wW][eE][bB][pP](?:;[\\s\\S]*)?$"
+                      }
+                    },
+                    "required": [
+                      "media_type"
+                    ]
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "pattern": "\\.(?:[wW][eE][bB][pP])$"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "maxItems": 64,
+            "description": "Inert attachments only. Prefer a complete fixed ref + entry declared in envelope references. Workspace source_path is read at rendering time, not represented as historical point-in-time evidence."
+          },
+          "content": {
+            "type": "object",
+            "description": "Controlled document content. Use components_describe for exact block/chart schemas and examples; the existing report renderer enforces every nested field. No HTML, CSS or scripts.",
+            "properties": {
+              "kind": {
+                "const": "document"
+              },
+              "overview": {
+                "type": "object"
+              },
+              "sections": {
+                "type": "array",
+                "maxItems": 50,
+                "items": {
+                  "type": "object"
+                }
+              },
+              "appendix": {
+                "type": "array",
+                "maxItems": 100,
+                "items": {
+                  "type": "object"
+                }
+              }
+            },
+            "required": [
+              "kind",
+              "sections"
+            ],
+            "additionalProperties": false
+          },
+          "operation_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "description": "Stable idempotency key for this exact publication."
+          },
+          "space": {
+            "type": "string",
+            "enum": [
+              "research",
+              "strategy"
+            ],
+            "description": "Initial destination for a new unbound report: strategy for strategy design, factor combinations, backtests and optimization; research for market, macro and source research. An existing report location or bound task output takes precedence. Does not require an SVL strategy source."
+          },
+          "artifact_id": {
+            "type": "string",
+            "description": "Existing report artifact ID for a new revision",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "expected_revision": {
+            "type": "string",
+            "description": "Exact current revision when updating",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "input_ref": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "maxLength": 256,
+                    "minLength": 1
+                  },
+                  "revision": {
+                    "type": "string",
+                    "maxLength": 256,
+                    "minLength": 1
+                  },
+                  "digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[a-f0-9]{64}$"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 1
+                  },
+                  "schemaVersion": {
+                    "const": "1.0.0"
+                  }
+                },
+                "required": [
+                  "id",
+                  "revision",
+                  "digest",
+                  "kind",
+                  "schemaVersion"
+                ],
+                "additionalProperties": false
+              },
+              "entry": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              }
+            },
+            "required": [
+              "ref",
+              "entry"
+            ],
+            "additionalProperties": false,
+            "description": "Complete provider input JSON registered as an immutable artifact. Do not retype long content; host validates and reads the exact JSON bytes. Keep all evidence bindings in the envelope."
+          },
+          "component": {
+            "type": "object",
+            "description": "One existing block or chart, copied directly from a components_describe example. The tool supplies the document wrapper."
+          },
+          "components": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 12,
+            "items": {
+              "type": "object"
+            },
+            "description": "Existing blocks/charts in reading order. The tool supplies the document and group wrappers."
+          },
+          "layout": {
+            "enum": [
+              "stack",
+              "columns"
+            ],
+            "description": "Layout for component/components only; multiple components default to stack."
+          }
+        },
+        "required": [
+          "operation_id",
+          "title",
+          "provenance_kind"
+        ],
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "component"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "components"
+                  ]
+                },
+                {
+                  "required": [
+                    "content"
+                  ]
+                },
+                {
+                  "required": [
+                    "input_ref"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "required": [
+              "components"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "component"
+                  ]
+                },
+                {
+                  "required": [
+                    "content"
+                  ]
+                },
+                {
+                  "required": [
+                    "input_ref"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "required": [
+              "content"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "component"
+                  ]
+                },
+                {
+                  "required": [
+                    "components"
+                  ]
+                },
+                {
+                  "required": [
+                    "input_ref"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "required": [
+              "input_ref"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "component"
+                  ]
+                },
+                {
+                  "required": [
+                    "components"
+                  ]
+                },
+                {
+                  "required": [
+                    "content"
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "allOf": [
+          {
+            "if": {
+              "anyOf": [
+                {
+                  "required": [
+                    "content"
+                  ]
+                },
+                {
+                  "required": [
+                    "input_ref"
+                  ]
+                }
+              ]
+            },
+            "then": {
+              "not": {
+                "required": [
+                  "layout"
+                ]
+              }
+            }
+          },
+          {
+            "if": {
+              "required": [
+                "input_ref"
+              ]
+            },
+            "then": {
+              "not": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "style"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "assets"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": "immediate",
+      "effects": [
+        "read",
+        "artifact.write"
+      ],
+      "usage": {
+        "purpose": "Show one component, up to 12 components, or a complete document as a real report. Automatically runs the same static validation, then publishes through the host-selected provider; returns the fixed report reference. Discovery and a separate validation call are optional.",
+        "inputs": "operation_id, title and provenance_kind; exactly one of component, components, content or complete fixed input_ref. Shorthand inputs accept layout stack/columns. data defaults to []; optional summary defaults to empty. Preserve locale/space/style/assets/references/related/artifact_id/expected_revision as needed.",
+        "outputs": "Original host publication receipt plus protocol, actual renderer identity and componentRef containing the same fixed report ref and inputDigest when supplied by the host.",
+        "prerequisites": [
+          "Content must use this catalog’s document layout; the host chooses the renderer."
+        ],
+        "limitations": [
+          "No provider override, free HTML/CSS/scripts, MCP Apps resource or answer display target.",
+          "Show automatically performs the same schema, fixed-row, server-renderer and attachment preflight; the host repeats its required publication checks. renderStatus still does not imply visual inspection.",
+          "Use the returned immutable report ref for inspection and later reuse."
+        ]
+      },
+      "binding": {
+        "type": "native",
+        "name": "components_show"
+      }
     }
   ],
   "sources": [],
@@ -10671,6 +12308,12 @@
       "path": "skills/report-design/style-guide.md",
       "kind": "reference",
       "description": "通用内容组件、样式选择与可复用的声明式扩展；直接发布内容，不上传HTML。"
+    },
+    {
+      "id": "resource.component-protocol",
+      "path": "skills/report-design/component-protocol.md",
+      "kind": "reference",
+      "description": "通用组件发现、按需规格、只读校验与真实报告发布；固定成果引用与检查覆盖。"
     }
   ],
   "hooks": [],

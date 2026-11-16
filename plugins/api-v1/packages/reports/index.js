@@ -6,11 +6,13 @@ import { writeWorkspace } from './artifact-io.js';
 import { renderReport, publishReport } from './report-provider.js';
 import { reportCompositionCapabilities } from './report-compose.js';
 import { prepareReport } from './report-prepare.js';
+import { componentCapabilities } from './component-tools.js';
 
 const fail = (condition, message) => { if (!condition) throw new Error(message); };
 const chartKinds = [...compositionKinds, 'line', 'bar', 'scatter', 'matrix', 'units', 'waterfall', 'dumbbell', 'strip', 'histogram', 'boxplot', 'ridgeline', 'violin', 'calendar', 'parallel', 'bump', 'lifecycle', 'treemap', 'threads', 'flow', 'network-circular', 'network-force', 'decision-tree', 'candlestick'];
 export function createCapabilities(host) {
   return [
+    ...componentCapabilities(host),
     ...reportStyleCapabilities(host),
     ...reportCompositionCapabilities(host),
     { name: 'report_data', execute: async (args, signal) => {

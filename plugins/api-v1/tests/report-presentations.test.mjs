@@ -165,7 +165,7 @@ test('judgments require explicit text mappings on array fields and reject numeri
   assert.throws(() => render({ presentation: { kind: 'metric', value: 'v', basis: 'why' } }, { v: 1, why: 'Ignored mapping' }));
 });
 
-test('judgment layout adapts to wide and narrow screens and keeps complete data in the appendix', { skip: !process.env.SESAME_HOST_ROOT, timeout: 60000 }, async t => {
+test('judgment layout adapts to wide and narrow screens and keeps complete data in place', { skip: !process.env.SESAME_HOST_ROOT, timeout: 60000 }, async t => {
   const { chromium } = createRequire(join(process.env.SESAME_HOST_ROOT, 'package.json'))('playwright');
   const browser = await chromium.launch({ headless: true }); t.after(() => browser.close());
   const page = await browser.newPage({ viewport: { width: 1000, height: 900 } });
@@ -175,7 +175,7 @@ test('judgment layout adapts to wide and narrow screens and keeps complete data 
   values[1].判断 = '偏弱：这是提供方的另一条文字判断。';
   values[1].对象 = 'A_long_unbroken_source_identifier_'.repeat(8);
   await page.setContent(render(judgmentField, values));
-  await page.locator('[data-report-evidence-appendix] .module-value-details').waitFor({ state: 'attached' });
+  await page.locator('#section-custom .module-value-details').waitFor({ state: 'attached' });
   for (const width of [1000, 390]) {
     await page.setViewportSize({ width, height: 900 });
     const layout = await page.locator('.module-judgments').evaluate(element => ({
@@ -196,10 +196,9 @@ test('judgment layout adapts to wide and narrow screens and keeps complete data 
       assert.equal(item.border, '0px'); assert.equal(item.background, 'rgba(0, 0, 0, 0)'); assert.equal(item.shadow, 'none');
     }
   }
-  assert.equal(await page.locator('#section-custom .module-value-details').count(), 0);
-  const link = page.locator('.module-presentation-judgments .report-evidence-links a').first();
-  await link.click();
-  const details = page.locator('[data-report-evidence-appendix] .module-value-details');
+  assert.equal(await page.locator('[data-report-evidence-appendix], .report-evidence-links').count(), 0);
+  const details = page.locator('#section-custom .module-value-details');
+  await details.locator(':scope > summary').click();
   assert.equal(await details.getAttribute('open'), '');
   assert.match(await details.innerText(), /未映射的原始记录/);
   assert.match(await details.innerText(), /材料齐全/);

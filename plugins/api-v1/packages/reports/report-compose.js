@@ -86,9 +86,8 @@ export function renderComposedReport({ title, summary, structure, bound, data, r
     else if (field.type === 'probability') body = `<p>${escape(percent(row.value))}</p>`;
     else if (field.type === 'interval') body = `<p>${escape(row.value.lower)} – ${escape(row.value.upper)}${field.unit ? ` ${escape(field.unit)}` : ''}</p><p class="report-source">${escape(row.value.meaning)}${row.value.level === undefined ? '' : ` · ${escape(percent(row.value.level))}`}</p>`;
     else body = `<div class="module-value">${valueHTML(row.value)}${field.unit && !['object', 'array'].includes(field.type) ? ` <span>${escape(field.unit)}</span>` : ''}</div>`;
-    // The internal evidence status remains in the end appendix. In the reading
-    // path, show a useful explanation rather than repeating a status badge for
-    // every result. Actual sample counts and historical comparisons stay visible.
+    // Show useful explanations rather than repeating a status badge for every
+    // result. Fixed inputs retain complete evidence; relevant details stay local.
     const state = row.validation?.note?.trim() && !row.historical_basis
       ? `<p class="module-validation">${escape(row.validation.note)}</p>` : '';
     const explanation = field.type !== 'inferences' || row.status !== 'provided' ? renderReasoning({...row,confidence:field.type === 'confidence' && row.status === 'provided' ? row.value : undefined}, {escape,tr,historyHTML,confidenceHTML,historyDisplay:field.history_display}) : '';
@@ -102,23 +101,7 @@ export function renderComposedReport({ title, summary, structure, bound, data, r
     const body = section.fields.map(fieldHTML).join('');
     return body ? `<section class="kit-section module-section" id="section-${escape(section.id)}">${bound.sections.length === 1 && section.title === title ? '' : `<h2>${escape(section.title)}</h2>`}${body}</section>` : '';
   }).join('');
-  const readerEvidence = (row, display) => {
-    const allowed = ['id','claim','status','reason','method_ref','theory_refs','evidence_refs','confidence','knowledge_basis','reasoning','validation',...(display === undefined || display === 'full' ? ['historical_basis'] : [])];
-    const result = Object.fromEntries(allowed.filter(key=>row[key] !== undefined).map(key=>[key,structuredClone(row[key])]));
-    if (display === 'hidden' || display === 'summary') {
-      if (result.validation) delete result.validation.history_refs;
-      if (display === 'hidden' && result.reasoning) delete result.reasoning.history;
-    }
-    return result;
-  };
-  const methodRows = bound.sections.flatMap(section => section.fields.filter(field => field.result.status === 'provided').map(field => ({
-    section: section.title, field: field.label, method: field.result.method_ref ?? null, theories: field.result.theory_refs ?? [],
-    context: field.result.context ?? null, ...readerEvidence(field.result,field.display === 'hidden' ? 'hidden' : field.history_display),
-    ...(field.type === 'inferences' ? { inferences: field.result.value.map(step=>readerEvidence(step,field.display === 'hidden' ? 'hidden' : field.history_display)) } : {}),
-    ...(field.type === 'confidence' ? { confidence: field.result.value } : {}),
-  })));
-  const source = `<details class="kit-appendix module-sources"><summary>${tr('研究依据与来源', 'Research methods and sources')}</summary><div class="kit-appendix-body"><pre class="module-raw">${escape(JSON.stringify({ inputs: data, references, methods: methodRows }, null, 2))}</pre></div></details>`;
-  const badge = demo ? `<p class="module-demo">${tr('演示样本 · 不代表真实行情或已验证预测', 'DEMO SAMPLE · Not market observations or validated forecasts')}</p>` : '';
+  const badge = demo ? `<p class="module-demo" data-sesame-provenance="demo">${tr('演示样本 · 不代表真实行情或已验证预测', 'DEMO SAMPLE · Not market observations or validated forecasts')}</p>` : '';
   const empty = bound.completeness.status === 'empty' ? `<p>${tr('尚未提供所选字段的研究结果。', 'No research results have been supplied for the selected fields.')}</p>` : '';
   // The contract binds the static projection to the exact immutable inputs at publication.
   // Agent writing guidance is not part of the visual projection. Keep the
@@ -140,7 +123,7 @@ export function renderComposedReport({ title, summary, structure, bound, data, r
   // Library assets are bundled once. Chart values are a projection of the fixed
   // result source, so offline viewing and the report host show identical rows.
   const chartScripts = charts.length ? `<script id="sesame-module-charts" type="application/json">${json(charts)}</script>${assets.map(path => `<script>${asset(`assets/${path}`)}</script>`).join('')}<script>${asset('assets/module-charts.js')}</script>` : '';
-  const body = `${badge}${summary ? `<p class="report-subtitle">${escape(summary)}</p>` : ''}${empty}${sections}${source}${contract}${chartScripts}`;
+  const body = `${badge}${summary ? `<p class="report-subtitle">${escape(summary)}</p>` : ''}${empty}${sections}${contract}${chartScripts}`;
   const tokens = { LOCALE: escape(structure.locale), TITLE: escape(title), STYLES: asset('assets/editorial.css') + '\n' + asset('assets/module-report.css') + '\n' + asset('assets/report-reasoning.css'), BODY: body };
   const html = withEvidenceAppendix(asset('templates/document.html').replace(/\{\{([A-Z_]+)\}\}/g, (token, key) => Object.hasOwn(tokens, key) ? tokens[key] : token));
   check(Buffer.byteLength(html) <= 1024 * 1024, 'Composed report exceeds 1 MiB; use a smaller selected result set or a custom document with bound evidence');

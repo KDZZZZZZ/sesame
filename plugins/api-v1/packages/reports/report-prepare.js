@@ -9,7 +9,7 @@ const canonical = value => value && typeof value === 'object' ? Array.isArray(va
 const hash = value => createHash('sha256').update(JSON.stringify(canonical(value))).digest('hex');
 const uniqueRefs = refs => [...new Map(refs.map(ref => [hash(ref), ref])).values()];
 
-async function readWorkspaceBytes(host, path, signal, limit = MAX_BYTES) {
+export async function readWorkspaceBytes(host, path, signal, limit = MAX_BYTES) {
   check(host.context.workspaceRoot, '/path: an active workspace is required');
   const root = await realpath(host.context.workspaceRoot), target = await realpath(resolve(root, path));
   const part = relative(root, target);

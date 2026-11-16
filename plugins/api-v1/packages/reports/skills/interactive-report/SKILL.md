@@ -7,7 +7,7 @@ description: 绑定固定结果，按内容与样式发布报告，检查当前�
 
 本指南的内容字段属于 sesame/reports。宿主选择其他提供者时遵循其 inputSchema，不套用本插件的组件或便利入口。
 
-先调用 `host.reports.describe` 读取宿主配置的提供者与 inputSchema，再调用 `host.reports.publish({input:{content,style?}, ...})`。宿主选择提供者，Agent 不传 provider。`report_publish({content,style,...})` 仅把旧蛇形外壳字段转接宿主；没有独立发布 HTML 的权限。Report 负责 HTML、主题、图表、公式、数据桥及附录。公开内容接口不接受 `body_html`、`html_path`，不允许上传 HTML、CSS、JavaScript 或 SVG 作为自定义页面。`report_template`、`report_document_template`、`report_backtest_template` 和 `report_compose` 仅供预览或检查结构，不是发布必经步骤；不要编辑其预览 HTML 再上传。
+先调用 `host.reports.describe` 读取宿主配置的提供者与 inputSchema，再调用 `host.reports.publish({input:{content,style?}, ...})`。宿主选择提供者，Agent 不传 provider。`report_publish({content,style,...})` 仅把旧蛇形外壳字段转接宿主；没有独立发布 HTML 的权限。Report 负责 HTML、主题、图表、公式和数据桥。公开内容接口不接受 `body_html`、`html_path`，不允许上传 HTML、CSS、JavaScript 或 SVG 作为自定义页面。`report_template`、`report_document_template`、`report_backtest_template` 和 `report_compose` 仅供预览或检查结构，不是发布必经步骤；不要编辑其预览 HTML 再上传。
 
 ## 固定数据
 
@@ -19,11 +19,11 @@ description: 绑定固定结果，按内容与样式发布报告，检查当前�
 
 ## 内容与样式
 
-- 通用报告用 `content.kind: "document"`，按 [组件契约](../report-design/components.md) 组合 `sections` 和 `appendix`。
+- 通用报告用 `content.kind: "document"`，按 [组件契约](../report-design/components.md) 组合 `sections` 和内容块。
 - 模块结果用 `content: {kind: "modules", structure, results_ref}`；`structure` 服从用户当前字段选择。`data` 中保留模块结果所需的全部原始固定绑定，不能只附一段 JSON 或替换其 revision。
 - 对应回测数据用 `content.kind: "backtest"`，既有研究运行用 `"signal-study"`，选择 `run` 或 `run_source: {ref, entry: "run.json"}` 二选一。run_source 只读已打包固定 JSON，ref 必须在 `references` 或 `data` 声明；不要求 Agent 抄写大型结果，不接受 HTML 来源。布局只读已有结果，不选择分析方法。
 - 默认省略 `style`，使用统一蓝灰无框排版；Agent 选择组件以及并排/上下组合。可查询 `report_styles`；仅用户明确要求时以声明式 `custom` 调整受控 token。复用样式用 `report_style_save` 返回的精确版本，示例见 [style-guide.md](../report-design/style-guide.md)。
-- 原始数据、参数、来源、样本与完整方法用 `details` 集中到末尾附录；正文只保留判断、主图、短注解、简短推理和关键条件。Report 统一生成往返锚点。
+- 原始数据与来源保留固定输入；正文呈现判断、主图、短注解、推理和关键条件。用户明确需要的明细使用原位 `details`、表格或附件。
 - 公式用 `formula` 的 `latex`、`caption` 和可选 `display`，交给本地 KaTeX 渲染。
 
 ## 发布与修订
@@ -42,7 +42,7 @@ description: 绑定固定结果，按内容与样式发布报告，检查当前�
 
 对 `report_publish` 返回的当前完整 ref 调用 `report_check`，检查本次 receipt。发布成功仅说明内容固定；只有 `receipt.status: "rendered"` 才能说明这一修订完成渲染检查。渲染通过不证明复制过程正确：同时核对保存的完整输入、公式、数字及固定引用与准备稿一致。未检查、超时或失败如实保留，不能引用旧 revision 的通过记录。
 
-按 [report-design](../report-design/SKILL.md) 核对正文阅读、数据与图形一致性、桌面/窄屏、主要交互、公式和附录往返。报错依据具体诊断修正内容或样式，再发布同报告的新 revision 并检查。不要伪造已绑定报告身份或用无关报告替代工作流交付。
+按 [report-design](../report-design/SKILL.md) 核对正文阅读、数据与图形一致性、桌面/窄屏、主要交互、公式和原位明细展开。报错依据具体诊断修正内容或样式，再发布同报告的新 revision 并检查。不要伪造已绑定报告身份或用无关报告替代工作流交付。
 
 ## 导出
 

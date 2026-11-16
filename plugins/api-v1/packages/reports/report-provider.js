@@ -51,7 +51,7 @@ export async function renderReport(host, envelope, signal, readWorkspaceAttachme
   let html = await renderStructuredReport(host, args, signal);
   assertPackaged(html);
   assertCompositionBindings(html, data, refs, metadata.provenanceKind);
-  if (metadata.provenanceKind === 'demo') {
+  if (metadata.provenanceKind === 'demo' && !html.includes('data-sesame-provenance="demo"')) {
     const badge = '<aside data-sesame-provenance="demo" role="note" style="display:block!important;visibility:visible!important;opacity:1!important;padding:8px 0;font:600 12px/1.5 system-ui;color:var(--report-muted,#626262)">DEMO · 演示数据</aside>';
     html = html.replace(/<body\b[^>]*>/i, value => value + badge);
   }

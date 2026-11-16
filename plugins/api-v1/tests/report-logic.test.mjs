@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { renderLogicDiagram, factorLogic } from '../packages/reports/report-logic.js';
 import { renderStructuredReport } from '../packages/reports/report-content.js';
 const host = process.env.SESAME_HOST_ROOT;
@@ -39,7 +40,7 @@ test('logic content preserves shared dependencies and escapes labels, rejecting 
 });
 
 test('all public report inputs accept the same logic content through their declared schema', {skip:!host}, async () => {
-  const {validateSchemas}=await import(join(host,'modules/shared/schema-service.js'));
+  const {validateSchemas}=await import(pathToFileURL(join(host,'modules/shared/schema-service.js')).href);
   const contract=JSON.parse(await readFile(new URL('../packages/reports/capabilities.json',import.meta.url),'utf8'));
   const content={kind:'document',sections:[{title:'规则',blocks:[{type:'logic',...flow}]}]};
   const values={
@@ -83,7 +84,8 @@ test('factor selection switches its actual logic diagram and keeps narrow pages 
     assert.ok(await page.locator('[data-report-svl]:visible .svl-node').evaluateAll(nodes=>nodes.every(n=>n.querySelector('.svl-node__id').getComputedTextLength() <= Number(n.querySelector('rect').getAttribute('width'))-40)));
   }
   await page.locator('[data-report-svl]:visible .svl-node[data-node-id="step-0"]').click();
-  assert.equal(await page.locator('[data-report-evidence-appendix] details[open]').filter({hasText:'成交量'}).count(),1);
+  assert.equal(await page.locator('[data-factor-condition="1"] [data-report-svl] details[open]').filter({hasText:'成交量'}).count(),1);
+  assert.equal(await page.locator('[data-report-evidence-appendix], .report-evidence-links').count(),0);
   await page.emulateMedia({media:'print'});
   assert.equal(await page.locator('[data-report-svl]:visible .svl-graph').evaluate(n=>getComputedStyle(n).overflowX),'visible');
   assert.deepEqual(run,before);assert.deepEqual(errors,[]);

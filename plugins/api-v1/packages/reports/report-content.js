@@ -144,8 +144,7 @@ export async function renderStructuredReport(host, args, signal) {
       check(extraData.length<=1&&!(extraData.length&&row.nodes),'Choose one fixed nodes input');
       const id=`content-chart-${charts.length+1}`;
       charts.push({id,title:row.title,caption:row.takeaway,source_note:row.source_note,kind:row.kind,columns:row.columns,options:{height:style.tokens.chart_height,...row.options??{}},...(row.rows?{rows:row.rows}:{dataId:row.data_id}),...(row.nodes?{nodes:row.nodes}:{}),...(extraData.length?{chartData:extraData}:{})});
-      const original = row.rows ? JSON.stringify({rows:row.rows,...(row.nodes?{nodes:row.nodes}:{})},null,2) : '';
-      return `<figure class="kit-chart"><figcaption class="kit-chart-head"><strong>${e(row.title)}</strong><span class="kit-chart-caption">${e(row.takeaway)}</span></figcaption><div id="${id}" class="module-chart-plot"></div></figure><details data-report-evidence><summary>${e(row.title)} · 来源与数据</summary><p>${e(row.source_note)}</p><pre id="${id}-evidence">${e(original)}</pre></details>`;
+      return `<figure class="kit-chart"><figcaption class="kit-chart-head"><strong>${e(row.title)}</strong><span class="kit-chart-caption">${e(row.takeaway)}</span></figcaption><div id="${id}" class="module-chart-plot"></div></figure>`;
     }
     if (row.type === 'details') {
       keys(row,['type','title','blocks']); text(row.title); list(row.blocks);
@@ -175,7 +174,7 @@ export async function renderStructuredReport(host, args, signal) {
   } else {
     keys(content,['kind','overview','sections','appendix']); list(content.sections,50); if(content.appendix)list(content.appendix);
     body=content.overview === undefined ? '' : renderOverview(content.overview, block, args.locale ?? 'zh-CN', content.sections.length > 0);
-    body+=content.sections.map((section,index)=>{keys(section,['title','blocks']);text(section.title);list(section.blocks);return `<section class="kit-section" id="content-section-${index+1}"><h2>${e(section.title)}</h2>${section.blocks.map((item,blockIndex)=>block(item,0,`/input/content/sections/${index}/blocks/${blockIndex}`)).join('')}</section>`;}).join('');
+    body+=content.sections.map((section,index)=>{keys(section,['title','blocks']);text(section.title);list(section.blocks);return `<section class="kit-section" id="content-section-${index+1}">${section.title.trim() ? `<h2>${e(section.title)}</h2>` : ''}${section.blocks.map((item,blockIndex)=>block(item,0,`/input/content/sections/${index}/blocks/${blockIndex}`)).join('')}</section>`;}).join('');
     body+= (content.appendix??[]).map((item,index)=>block(item,0,`/input/content/appendix/${index}`)).join('');
     const assets=[];
     if(charts.length){assets.push('report-kit.js','editorial-charts.js');
@@ -189,7 +188,7 @@ export async function renderStructuredReport(host, args, signal) {
     }
   }
   if (body.includes('data-report-svl')) body += `<script>${asset('assets/svl-graph.js')}</script><script>SesameSvlGraph.mount();</script>`;
-  body=`<div data-report-style="${e(style.theme)}" data-report-density="${e(style.density)}">${args.provenance_kind==='demo'?'<p>演示样本</p>':''}${args.summary&&content.kind!=='signal-study'&&!content.overview?`<p class="report-subtitle">${e(args.summary)}</p>`:''}${body}</div>`;
+  body=`<div data-report-style="${e(style.theme)}" data-report-density="${e(style.density)}">${args.provenance_kind==='demo'?'<p data-sesame-provenance="demo">演示样本</p>':''}${args.summary&&content.kind!=='signal-study'&&!content.overview?`<p class="report-subtitle">${e(args.summary)}</p>`:''}${body}</div>`;
   const tokens={LOCALE:e(args.locale??'zh-CN'),TITLE:e(args.title),STYLES:asset('assets/editorial.css')+'\n'+asset('assets/module-report.css')+'\n'+asset('assets/report-overview.css')+'\n'+asset('assets/svl-graph.css'),BODY:body};
   return applyReportStyle(withEvidenceAppendix(asset('templates/document.html').replace(/\{\{([A-Z_]+)\}\}/g,(token,key)=>tokens[key]??token)),style);
 }

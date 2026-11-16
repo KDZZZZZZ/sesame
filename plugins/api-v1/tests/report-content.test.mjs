@@ -20,7 +20,23 @@ const args = (body = content([{ type: 'paragraph', text: '明确标记的合成�
 const chart = extra => ({ type: 'chart', title: '固定样本', kind: 'bar', columns: ['label', 'value'],
   options: { x: 'label', y: 'value' }, takeaway: '只有输入中的值', source_note: 'Synthetic fixture only', ...extra });
 const freeze = value => { if (value && typeof value === 'object') { Object.values(value).forEach(freeze); Object.freeze(value); } return value; };
+
+test('chart content keeps exact source data in its configuration without a default detail block', async () => {
+  const rows = [{ label: 'A', value: 1, original: '9007199254740993.0000001' }];
+  const html = await renderStructuredReport({}, args(content([chart({ rows })])));
+  assert.equal(html.includes('<details'), false);
+  const config = JSON.parse(html.match(/<script id="sesame-module-charts" type="application\/json">([\s\S]*?)<\/script>/)[1]);
+  assert.deepEqual(config[0].rows, rows);
+  assert.equal(config[0].source_note, 'Synthetic fixture only');
+});
 const snapshot = html => JSON.parse(html.match(/<script[^>]*id="run-snapshot"[^>]*>([\s\S]*?)<\/script>/)[1]);
+
+test('untitled sections omit empty headings while retaining authored component titles', async () => {
+  const html = await renderStructuredReport({}, args({kind:'document',sections:[{title:'',blocks:[chart({rows:[{label:'A',value:1}]})]}]}));
+  assert.doesNotMatch(html, /<h2>\s*<\/h2>/);
+  assert.equal((html.match(/<strong>固定样本<\/strong>/g) ?? []).length, 1);
+  assert.match(html, /<h1>内容接口 · 合成测试<\/h1>/);
+});
 
 test('document judgments share default and custom property projections, with complete fallback and no synthetic conclusions', async () => {
   const supplied = freeze([{ 问题: '是否继续研究', 判断: '现有样本不足以采用', 对象: '合成候选', 期限: '原实验期间', 依据: '保留既有记录', 改判条件: '新增独立证据', 历史参照: '没有可比记录', 未映射: { exact: '9007199254740993.0000001' } }]);
@@ -398,7 +414,7 @@ async function browserPage(t) {
   return page;
 }
 
-test('document judgment reading order, responsive layout and exact appendix survive native rendering', { skip: !hostRoot, timeout: 30000 }, async t => {
+test('document judgment reading order, responsive layout and exact local details survive native rendering', { skip: !hostRoot, timeout: 30000 }, async t => {
   const page = await browserPage(t);
   const items = [{ 问题: '候选甲', 判断: '保留观察', 对象: 'A', 依据: '输入依据', opaque: '完整原值甲' }, { 问题: '候选乙', 判断: '暂缓采用', 对象: 'B', opaque: '完整原值乙' }];
   const html = await renderStructuredReport({}, args(content([{ type: 'judgments', items }, chart({ rows: [{ label: 'A', value: 1 }] })])));
@@ -411,8 +427,8 @@ test('document judgment reading order, responsive layout and exact appendix surv
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     assert.ok(Number(await page.locator('.module-judgment-value strong').first().evaluate(node => getComputedStyle(node).fontWeight)) >= 600);
   }
-  assert.match(await page.locator('[data-report-evidence-appendix]').textContent(), /完整原值甲.*完整原值乙/s);
-  assert.equal(await page.locator('article .module-value-details').count(), 0);
+  assert.match(await page.locator('article .module-value-details').textContent(), /完整原值甲.*完整原值乙/s);
+  assert.equal(await page.locator('[data-report-evidence-appendix], .report-evidence-links').count(), 0);
   assert.equal(await page.locator('.module-judgment').count(), 2);
 });
 
@@ -441,7 +457,7 @@ test('signal-study judgments and period identities preserve snapshots, eligible 
   assert.match(await page.locator('#factor-fold-scope').innerText(), /前推区间 1.*起点 2025-04-01.*截至 2025-04-30.*样本 20.*组合期 19/);
   assert.equal(await page.locator('#factor-folds svg').count(), 1);
   assert.ok(await page.locator('[data-factor-condition="0"] math').count() > 0);
-  assert.match(await page.locator('[data-report-evidence-appendix]').textContent(), /JUDGMENT_ATTACK/);
+  assert.match(await page.locator('[data-signal-judgments] .module-value-details').textContent(), /JUDGMENT_ATTACK/);
   assert.equal(await page.evaluate(() => window.JUDGMENT_ATTACK), undefined);
   for (const width of [1000, 390]) {
     await page.setViewportSize({ width, height: 850 });
@@ -473,11 +489,11 @@ test('all fourteen packaged evidence links remain real anchors and click to thei
     window.attachmentClicks = [];
     document.addEventListener('click', event => { const link = event.target.closest('.report-attachments a'); if (link) { event.preventDefault(); window.attachmentClicks.push(link.getAttribute('href')); } });
   });
-  const appendix = page.locator('[data-report-evidence-appendix]');
-  await appendix.locator('details > summary').click();
+  const details = page.locator('article details[data-report-evidence]');
+  await details.locator(':scope > summary').click();
   for (const width of [1000, 390]) {
     await page.setViewportSize({ width, height: 850 });
-    const links = appendix.locator('.report-attachments a');
+    const links = details.locator('.report-attachments a');
     assert.equal(await links.count(), 14);
     assert.deepEqual(await links.evaluateAll(nodes => nodes.map(node => node.getAttribute('href'))), items.map(item => item.path));
     for (let i = 0; i < items.length; i++) await links.nth(i).click();
@@ -499,7 +515,7 @@ test('Markdown, labels and chart rows cannot execute HTML, CSS, scripts or remot
   assert.equal(await page.locator('main').evaluate(node => getComputedStyle(node).display === 'none'), false);
 });
 
-test('LaTeX renders as native MathML and exact evidence moves to the final appendix', { skip: !hostRoot, timeout: 30000 }, async t => {
+test('LaTeX renders as native MathML and exact authored evidence stays in place', { skip: !hostRoot, timeout: 30000 }, async t => {
   const page = await browserPage(t), latex = String.raw`\frac{a_1}{\sqrt{b}} = \sum_{i=1}^{n} x_i`;
   const html = await renderStructuredReport({}, args(content([
     { type: 'paragraph', text: '正文判断保留' },
@@ -513,12 +529,12 @@ test('LaTeX renders as native MathML and exact evidence moves to the final appen
   assert.ok(await page.locator('math msqrt').count() > 0);
   assert.equal(await page.locator('math').first().evaluate(node => node.namespaceURI), 'http://www.w3.org/1998/Math/MathML');
   assert.equal(await page.locator('.katex-html').count(), 0);
-  assert.equal(await page.evaluate(() => document.querySelector('main').lastElementChild.matches('[data-report-evidence-appendix]')), true);
-  assert.equal(await page.locator('main > article details').count(), 0);
-  assert.equal(await page.locator('[data-report-evidence-appendix] td').textContent(), '9007199254740993.0000001');
+  assert.equal(await page.locator('[data-report-evidence-appendix], .report-evidence-links').count(), 0);
+  assert.equal(await page.locator('main > article details').count(), 1);
+  assert.equal(await page.locator('article details td').textContent(), '9007199254740993.0000001');
 });
 
-test('charts retain one visible caption, accessible names and exact originals in the final appendix', { skip: !hostRoot, timeout: 30000 }, async t => {
+test('charts retain one visible caption, accessible names and exact original configuration', { skip: !hostRoot, timeout: 30000 }, async t => {
   const page = await browserPage(t), sourceNote = 'SOURCE_NOTE_SYNTHETIC_FIXED_INPUT_ONLY';
   const precise = '9007199254740993.0000001';
   const titles = ['唯一图名 A', '唯一图名 B'], captions = ['仅输入数值 A', '仅输入数值 B'];
@@ -541,13 +557,10 @@ test('charts retain one visible caption, accessible names and exact originals in
       assert.ok((await plot.locator('svg[role="img"]').getAttribute('aria-label')).includes(title), 'Plot retains its supplied accessible name after resize');
     }
   }
-  await page.locator('[data-report-evidence-appendix]').waitFor();
-  const evidence = await page.locator('[data-report-evidence-appendix]').textContent();
-  assert.ok(evidence.includes(sourceNote));
-  assert.ok(evidence.includes(precise));
-  assert.equal(await page.locator('[data-report-evidence-appendix] #content-chart-1').count(), 0,
-    'Primary chart stays in the reading path while its original records move to the appendix');
-  assert.equal(await page.evaluate(() => document.querySelector('main').lastElementChild.matches('[data-report-evidence-appendix]')), true);
+  const config = await page.locator('#sesame-module-charts').evaluate(node => JSON.parse(node.textContent));
+  assert.equal(config[0].source_note, sourceNote);
+  assert.equal(config[0].rows[0].original_decimal, precise);
+  assert.equal(await page.locator('main details, [data-report-evidence-appendix], .report-evidence-links').count(), 0);
 });
 
 test('unselected and unmeasured holdout metrics do not appear in signal-study charts', { skip: !hostRoot, timeout: 30000 }, async t => {

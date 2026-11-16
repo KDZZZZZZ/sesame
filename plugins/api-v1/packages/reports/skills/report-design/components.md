@@ -1,13 +1,13 @@
 # 声明式内容组件
 
-先从 `host.reports.describe` 读取宿主所选提供者与完整 inputSchema。此插件的内容放 `host.reports.publish.input.content`，用户样式放可选 input.style；`report_publish` 是同一宿主发布入口的便利转接。Report 负责页面、主题、图表运行时、公式和末尾附录；组件不接收 HTML、CSS、脚本或函数。可运行的通用内容与样式示例见 [style-guide.md](style-guide.md)，图型映射见 [chart-catalog.md](chart-catalog.md)。
+先从 `host.reports.describe` 读取宿主所选提供者与完整 inputSchema。此插件的内容放 `host.reports.publish.input.content`，用户样式放可选 input.style；`report_publish` 是同一宿主发布入口的便利转接。Report 负责页面、主题、图表运行时和公式；组件不接收 HTML、CSS、脚本或函数。可运行的通用内容与样式示例见 [style-guide.md](style-guide.md)，图型映射见 [chart-catalog.md](chart-catalog.md)。
 
 ## 文档结构
 
-`content: {kind: "document", sections: [{title, blocks}], appendix: [...]}`。
+`content: {kind: "document", sections: [{title, blocks}]}`。
 
 - `sections` 最多 50 节；节标题尽量用读者能懂的话表达结论，下面用已有图表和短理由支撑。对象与期限可共用说明，不为每项判断新增整套栏目或重复卡片。
-- `appendix` 放完整证据，通常以 `details` 分组。正文中的 `details` 也会集中到末尾；组件统一提供往返锚点。
+- `details`、表格和附件按明确提供的位置显示；图形原始输入及引用保持在固定配置中。
 - 每个文本字段最多 20,000 字符，这是输入上限，不是正文篇幅目标。正文仍只写判断、短注解和简短推理。
 - 语言由 `report_publish.locale` 选择；固定结论的语言由作者提供，切换界面语言不会翻译研究结果。
 
@@ -28,7 +28,7 @@
 | `attachments` | `items: [{label, path, description?}]`，1–64 项；链接本次发布 `input.assets` 中已有的惰性附件，通常放末尾 `details` |
 | `formula` | `latex`，可选 `caption, display: "inline"或"block"`；由内置 KaTeX 渲染，不交付未渲染公式 |
 | `table` | `columns: [标题]`、`rows: [[单元格…]]`，可选 `caption`；最多 24 列、2,500 行，行长须等于列数，单元格为有限数值、字符串、布尔或 null |
-| `details` | `title, blocks`；完整证据放末尾折叠附录，正文保留引用锚点 |
+| `details` | `title, blocks`；按需展开明确提供的内容，保留编写位置 |
 
 `range` 和 `scores` 只显示输入位置与原量表，不把 0–5 自动换成 0–100。价格、金额等精确字符串保留在指标和表格中，不能为画图重新计算金融统计。必要统计由独立研究结果提供。
 
@@ -50,7 +50,7 @@
 - 内联 `rows` 为 1–2,500 条已有结果；不是免除来源引用的理由。大数据先使用有来源的聚合结果或按问题分图，不能把首批数据当全集。
 - `options` 只放该图型支持的字段映射与安全 JSON 显示参数；不放 rows、data、nodes、回调或函数。
 - 关系图可直接提供固定 `nodes`；或用 `chart_data: [{property: "nodes", data_id: "节点绑定ID"}]` 读取另一个已声明固定绑定，两者二选一。主边数据与节点数据都保持原来源。
-- `takeaway` 简短说明图上的比较或理由，不复述标题和开篇结论；`source_note` 只补必要口径，共同信息不逐图重复。完整数据和来源明细由 Report 放末尾附录。
+- `takeaway` 简短说明图上的比较或理由，不复述标题和开篇结论；`source_note` 只补必要口径，共同信息不逐图重复。完整数据和来源由 Report 保留在固定输入与图形配置中。
 - 直方图、箱线图和密度图只接收已有分箱、分位或密度网格，并填写对应 `options.method`；报告不拟合 KDE、重算置信度或替研究选参数。
 
 38 种现成图型为：`line`、`area`、`bar`、`hbar`、`scatter`、`heatmap`、`matrix`、`units`、`waterfall`、`dumbbell`、`strip`、`histogram`、`boxplot`、`ridgeline`、`violin`、`calendar`、`parallel`、`bump`、`lifecycle`、`treemap`、`threads`、`flow`、`network-circular`、`network-force`、`decision-tree`、`stream`、`stacked-rungs`、`dot-heatmap`、`funnel`、`category-links`、`outcome-tally`、`paired-rungs`、`rank-race`、`spectrum`、`tick-donut`、`barcode`、`bubble-ledger`、`candlestick`。全部通过同一个声明式 `chart` 入口；内部 reportKit/SesameCharts 不是另一个自由编码接口。

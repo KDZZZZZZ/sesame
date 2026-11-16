@@ -15,6 +15,14 @@ const envelope = input => ({metadata,data:[],related:[],references:[],input});
 const publishArgs = extra => ({operation_id:'fixture-op',title:metadata.title,summary:metadata.summary,provenance_kind:'demo',data:[],content,...extra});
 const freeze = value => { if(value&&typeof value==='object'){Object.values(value).forEach(freeze);Object.freeze(value);}return value; };
 
+test('a published document shows one demo label rather than duplicating renderer metadata', async () => {
+  const result = await renderReport({}, envelope({ content }));
+  const html = result.files.find(file => file.path === 'index.html').content;
+  const labels = html.match(/<(?:p|aside)\b(?=[^>]*data-sesame-provenance="demo"|[^>]*>演示样本<)[^>]*>/g) ?? [];
+  assert.equal(labels.length, 1);
+  assert.match(html, /data-sesame-provenance="demo"/);
+});
+
 test('Report declares a host-only immediate provider with plugin-owned recursive content schema', async () => {
   const c=JSON.parse(await readFile(new URL('../packages/reports/capabilities.json',import.meta.url),'utf8'));
   const provider=c.capabilities.find(item=>item.id==='report_render');

@@ -129,14 +129,14 @@ test('strategy report renders real controls, every trial, stable winners and mis
     assert.equal(await page.locator('.backtest-trials tbody tr').count(), 5);
     assert.equal(await page.getByRole('button', { name: 'Trial 55', exact: true }).getAttribute('title'), 'A54');
     await page.getByRole('button', { name: 'Trial 55', exact: true }).click();
-    assert.match(await page.locator('.report-evidence-entry > details[open] .backtest-node').innerText(), /"trial_id": "A54"/);
-    const oldTrialEntry = await page.locator('.report-evidence-entry > details[open]').evaluate(node => node.parentElement.id);
+    assert.match(await page.locator('.backtest-detail details[open] .backtest-node').innerText(), /"trial_id": "A54"/);
+    const oldTrialEntry = await page.locator('.backtest-detail details[open]').elementHandle();
     await page.getByRole('combobox', { name: 'Color metric' }).selectOption('net_profit');
     assert.match(await page.locator('.backtest-matrix [data-row-index="0"]').getAttribute('aria-label'), /-10 USD/);
     // Changing the display metric did not pick A54's higher profit.
     await page.locator('.backtest-matrix [data-row-index="3"]').focus(); await page.keyboard.press('Enter');
     assert.equal(await page.locator('.backtest-detail h3').innerText(), 'ETHUSD · M5');
-    await page.waitForFunction(id => !document.getElementById(id), oldTrialEntry);
+    assert.equal(await oldTrialEntry.evaluate(node => node.isConnected), false);
     assert.equal(await page.locator('.backtest-matrix').evaluate(node => Boolean(node.closest('[data-report-evidence-appendix]'))), false);
     await page.locator('.backtest-matrix [data-row-index="1"]').click();
     assert.match(await page.locator('.backtest-detail').innerText(), /No backtest was recorded/);
@@ -146,7 +146,7 @@ test('strategy report renders real controls, every trial, stable winners and mis
     assert.match(await page.locator('.backtest-trials tbody tr').first().innerText(), /parameter-only.*-10/);
     await page.getByRole('tab',{name:'Node graph',exact:true}).click();
     await page.locator('.svl-node[data-node-id="signal"]').focus(); await page.keyboard.press('Enter');
-    assert.equal(await page.locator('.report-evidence-entry .backtest-node').filter({ hasText: '"parameter": "lookback"' }).count(), 1);
+    assert.equal(await page.locator('[data-report-svl] .backtest-node').filter({ hasText: '"parameter": "lookback"' }).count(), 1);
     await page.locator('summary').filter({ hasText: 'Function: fixture/math/power' }).click();
     await page.locator('.svl-node[data-node-id="square"]').click();
     const functionText = await page.locator('details').filter({ has: page.locator('summary', { hasText: 'Function: fixture/math/power' }) }).innerText();
@@ -168,8 +168,8 @@ test('strategy report renders real controls, every trial, stable winners and mis
     const opacity = await page.locator('.backtest-matrix [data-row-index="0"]').getAttribute('opacity');
     await page.getByRole('combobox', { name: 'Symbol range' }).selectOption('1');
     assert.equal(await page.locator('.backtest-matrix [data-row-index="0"]').getAttribute('opacity'), opacity);
-    assert.equal(await page.locator('details:not([data-report-evidence-appendix] details)').count(), 0);
-    assert.equal(await page.evaluate(() => { const ids = [...document.querySelectorAll('[id]')].map(node => node.id); return ids.length === new Set(ids).size && [...document.querySelectorAll('.report-evidence-links a')].every(link => document.getElementById(link.hash.slice(1))); }), true);
+    assert.equal(await page.locator('[data-report-evidence-appendix], .report-evidence-links, .report-evidence-return').count(), 0);
+    assert.equal(await page.evaluate(() => { const ids = [...document.querySelectorAll('[id]')].map(node => node.id); return ids.length === new Set(ids).size; }), true);
     assert.deepEqual(errors, []);
     await page.screenshot({ path: '/tmp/sesame-backtest-mobile.png', fullPage: true });
     await page.setViewportSize({ width: 1100, height: 1000 });
@@ -225,10 +225,10 @@ test('native backtests retain matrix, recorded winners, trial pagination and sen
     await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,`no native layout overflow at ${width}`);
   }
-  assert.match(await page.locator('[data-report-evidence-appendix]').textContent(),/native-fixture-evidence/);
-  assert.match(await page.locator('[data-report-evidence-appendix]').textContent(),/\{\{TITLE\}\}.*JUDGMENT_ATTACK/s);
+  assert.match(await page.locator('.kit-custom details[data-report-evidence]').filter({hasText:'Native source and run evidence'}).textContent(),/native-fixture-evidence/);
+  assert.match(await page.locator('[data-backtest-judgments] .module-value-details').textContent(),/\{\{TITLE\}\}.*JUDGMENT_ATTACK/s);
   assert.equal(await page.locator('[data-backtest-judgments] .module-judgment').count(),1,'original chart controls retain the supplied judgment');
-  assert.equal(await page.locator('main details:not([data-report-evidence-appendix] details)').count(),0);
+  assert.equal(await page.locator('[data-report-evidence-appendix], .report-evidence-links').count(),0);
   assert.deepEqual(errors,[]);
 });
 
@@ -264,7 +264,7 @@ test('Chinese backtest labels and all two-parameter trials remain inspectable wi
     assert.match(await page.locator('.backtest-trial-grid').innerText(), s ? /未运行/ : /失败/);
     for (const row of rows.filter(r=>r.symbol === (s ? 'ETHUSDT' : 'BTCUSDT'))) {
       await page.locator(`.backtest-trial-grid button[data-trial-id="${row.trial_id}"]`).click();
-      const detail = await page.locator('.report-evidence-entry > details[open] .backtest-node').innerText();
+      const detail = await page.locator('.backtest-detail details[open] .backtest-node').innerText();
       assert.deepEqual(JSON.parse(detail),row); inspected.push(row.trial_id);
     }
     const winner = await page.locator('.backtest-trial-grid button[data-selected="true"]').getAttribute('data-trial-id');
@@ -281,7 +281,7 @@ test('Chinese backtest labels and all two-parameter trials remain inspectable wi
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   assert.equal(await page.locator('.backtest-trial-grid button[data-trial-id]').count(),6);
   await page.locator('.backtest-trial-grid button[data-selected="true"]').click();
-  assert.match(await page.locator('.report-evidence-entry > details[open] .backtest-node').innerText(),/-1234\.56789012345678901234567/);
+  assert.match(await page.locator('.backtest-detail details[open] .backtest-node').innerText(),/-1234\.56789012345678901234567/);
   // A duplicated pair stays as two original trial records, never a mean cell.
   const duplicate = [...rows, { ...rows[0], trial_id: 'duplicate-pair', selected: false }];
   await page.evaluate(rows=>SesameBacktest.render('#report',{...config,rows}),duplicate);

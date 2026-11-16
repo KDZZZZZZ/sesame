@@ -2,9 +2,9 @@
 
 本指南的内容字段属于 sesame/reports。宿主选择其他提供者时遵循其 inputSchema，不套用本插件的组件或便利入口。
 
-Report 的组件和样式按信息关系设计，可用于研究、策略、运营或其他报告。它们不绑定品种、指标、流派或特定分析插件。Agent 提供已有结果、精简判断和来源，Report 生成页面、图表、公式与末尾附录。
+Report 的组件和样式按信息关系设计，可用于研究、策略、运营或其他报告。它们不绑定品种、指标、流派或特定分析插件。Agent 提供已有结果、精简判断和来源，Report 生成页面、图表和公式。
 
-分项判断使用统一无框样式：文档内容为 `{type:"judgments",items:[...]}`，每项建议包含 `问题/判断/对象/期限/依据/改判条件/历史参照`；可用 `presentation` 调整直接属性映射。模块字段使用 `presentation.kind:"judgments"`。原生回测在 `strategy_evidence.judgments`、信号研究在 `content.presentation.judgments` 提供同样数组，原有图表和全部试验仍保留。样式不从收益数字推断态度，不计算分数或概率。超过适合展示的数量或映射不足时完整回退，未映射数据仍在附录。
+分项判断使用统一无框样式：文档内容为 `{type:"judgments",items:[...]}`，每项建议包含 `问题/判断/对象/期限/依据/改判条件/历史参照`；可用 `presentation` 调整直接属性映射。模块字段使用 `presentation.kind:"judgments"`。原生回测在 `strategy_evidence.judgments`、信号研究在 `content.presentation.judgments` 提供同样数组，原有图表和全部试验仍保留。样式不从收益数字推断态度，不计算分数或概率。超过适合展示的数量或映射不足时完整回退，未映射数据保留在原位按需明细中。
 
 先调用 `host.reports.describe` 查看宿主所选提供者及 inputSchema。此插件接受 `input:{content,style?,assets?,strategy_source?,strategy_evidence?}`；用 `host.reports.publish` 发布，Agent 不选择 provider。`report_publish` 只是同一宿主发布的便利转接。不需要先生成模板；helper 只用于预览。公开入口不接受 HTML、CSS、JavaScript 或自定义渲染函数。
 
@@ -17,7 +17,7 @@ Report 的组件和样式按信息关系设计，可用于研究、策略、运�
 ```json
 {
   "title": "演示 · 两组结果比较",
-  "summary": "虚构数据展示判断、比较图与证据附录的组合。",
+  "summary": "虚构数据展示判断、比较图与原位说明的组合。",
   "locale": "zh-CN",
   "space": "research",
   "data": [],
@@ -97,45 +97,43 @@ Report 的组件和样式按信息关系设计，可用于研究、策略、运�
                 "已提供的汇总为 24 条与 30 条，差值为 6 条。",
                 "本次比较支持 B 组达标记录更多这一描述。"
               ]
-            }
-          ]
-        }
-      ],
-      "appendix": [
-        {
-          "type": "details",
-          "title": "演示来源与计算口径",
-          "blocks": [
-            {
-              "type": "paragraph",
-              "text": "这些固定数值仅用于组件演示，无市场或预测含义。"
             },
             {
-              "type": "formula",
-              "latex": "r = \\frac{n_{\\mathrm{target}}}{n_{\\mathrm{total}}}",
-              "caption": "比例定义；已有完成率为 75%，Report 不重新计算研究结果。",
-              "display": "block"
-            },
-            {
-              "type": "table",
-              "columns": [
-                "组别",
-                "达标数",
-                "总数"
-              ],
-              "rows": [
-                [
-                  "A 组",
-                  24,
-                  40
-                ],
-                [
-                  "B 组",
-                  30,
-                  40
-                ]
-              ],
-              "caption": "完整演示汇总"
+              "type": "details",
+              "title": "演示来源与计算口径",
+              "blocks": [
+                {
+                  "type": "paragraph",
+                  "text": "这些固定数值仅用于组件演示，无市场或预测含义。"
+                },
+                {
+                  "type": "formula",
+                  "latex": "r = \\frac{n_{\\mathrm{target}}}{n_{\\mathrm{total}}}",
+                  "caption": "比例定义；已有完成率为 75%，Report 不重新计算研究结果。",
+                  "display": "block"
+                },
+                {
+                  "type": "table",
+                  "columns": [
+                    "组别",
+                    "达标数",
+                    "总数"
+                  ],
+                  "rows": [
+                    [
+                      "A 组",
+                      24,
+                      40
+                    ],
+                    [
+                      "B 组",
+                      30,
+                      40
+                    ]
+                  ],
+                  "caption": "完整演示汇总"
+                }
+              ]
             }
           ]
         }
@@ -147,7 +145,7 @@ Report 的组件和样式按信息关系设计，可用于研究、策略、运�
 
 可按用户需要删除或重排组件，不要求同时使用指标、区间、图表与推理。`scores` 适合展示来源已给出的量表；`range` 适合位置；`chart` 适合多项比较。两者都不产生新分数或指定指标。公式通过 `formula.latex` 渲染，不用上传 HTML 或展示英文函数串。
 
-真实数据图将 `rows` 换为 `data_id`，并在 `data` 中加入对应的 `{id, ref, usage}`；ref 必须是实际发布且可读取的完整固定引用。原始明细、参数、来源和方法放 `details`，Report 把证据集中在末尾并生成往返锚点。
+真实数据图将 `rows` 换为 `data_id`，并在 `data` 中加入对应的 `{id, ref, usage}`；ref 必须是实际发布且可读取的完整固定引用。原始输入与来源保持固定；需要展示的参数、方法和明细可明确用 `details` 在对应位置展开。
 
 ## 复用大型研究成果
 
@@ -159,9 +157,9 @@ Report 的组件和样式按信息关系设计，可用于研究、策略、运�
 
 `report_styles` 返回统一默认、受支持组件及已保存用户样式。省略 `style` 使用同一套蓝灰、无框、留白排版，不选择预设。主图直接放正文，不套层层卡片。Agent 按信息关系使用 `group.layout: columns|stack` 组织并排或上下内容；深浅主题及公式渲染由 Report 统一处理。
 
-正文只保留影响理解的验证提示。相同的 `validation.note` 或历史限制集中说明一次，不给每个事实重复同一句；完整方法、来源与逐项依据放末尾附录，各判断的真实验证状态和独有重要条件保持不变。
+正文只保留影响理解的验证提示。相同的 `validation.note` 或历史限制集中说明一次，不给每个事实重复同一句；完整方法、来源与逐项依据保留固定引用，必要说明就近展示，各判断的真实验证状态和独有重要条件保持不变。
 
-正文金额选合适的数量级并写明单位，显示名不用内部列名；能直观表达比较、范围或分布时优先使用现有内置图表，原始明细留在末尾附录。一句判断不在多个小标题下重复；不要求每个字段必须画图，用户可调整布局与表达方式。
+正文金额选合适的数量级并写明单位，显示名不用内部列名；能直观表达比较、范围或分布时优先使用现有内置图表，原始明细保留在固定数据中。一句判断不在多个小标题下重复；不要求每个字段必须画图，用户可调整布局与表达方式。
 
 ## 完整 JSON 引用发布
 
