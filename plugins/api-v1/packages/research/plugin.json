@@ -2,7 +2,7 @@
   "id": "sesame/research",
   "title": "金融研究方法",
   "description": "按金融问题发现调查方法、证据要求与回答结构；支持混合问题、定向复核及专业字段释义。",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "default_state": "mounted",
   "apiVersion": "2",
   "execution": "native",
