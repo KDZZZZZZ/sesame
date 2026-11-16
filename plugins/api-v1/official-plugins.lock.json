@@ -483,9 +483,9 @@
     },
     {
       "id": "sesame/reports",
-      "version": "6.0.1",
+      "version": "6.0.2",
       "directory": "reports",
-      "treeDigest": "sha256:91e369019e6611c860a03e71dc151951724c71db3886921ef24c412c05fbdbe9",
+      "treeDigest": "sha256:3b3c33e5d2ff61f3dc37f08daa47562deffbaa5679a51c0d49c23a69d8cc37cb",
       "files": [
         {
           "path": "LICENSE",
@@ -679,23 +679,23 @@
         },
         {
           "path": "package.json",
-          "sha256": "bd125fe83cd38fe13fe816944cd54d1ab9c1c207ba3c545ea2e036ca95f048a6",
+          "sha256": "17ee3d05ae056d4805e45d314a248f5d46b76f1faa93314a5b794fca5c8b6e0f",
           "bytes": 120
         },
         {
           "path": "plugin.json",
-          "sha256": "b41edc2730003b8448aa0fcbcf424c41de4566552a5c29bafc24e672c5e285e6",
+          "sha256": "2bfff4bf46cbcbfdad2fb59dfef73a41c31ed1e6870e518758cc5083648e1f56",
           "bytes": 2151
         },
         {
           "path": "prompt.md",
-          "sha256": "d4c5bc51fae17c257f68db83c0a25ad3efce3933cbab8bf19b05c1df7674766e",
-          "bytes": 1637
+          "sha256": "1660c2191567bc5bdd221006518757e75ed4f57b4d98dec897819718c6b8eab2",
+          "bytes": 1691
         },
         {
           "path": "references/composing.md",
-          "sha256": "d8b75faacee6d1bf72a9ce383bc735f2311742496222b73b8ded82139508c5c4",
-          "bytes": 1783
+          "sha256": "159d78006c5bcd70028bc3e43a3adeb2c06e0d790c370ddafea7698abc713449",
+          "bytes": 2187
         },
         {
           "path": "references/data-binding.md",
@@ -724,8 +724,8 @@
         },
         {
           "path": "references/text.md",
-          "sha256": "8244c339ef2b4facaba2b84b978e824bf19a70a2e98ca704288138936f100458",
-          "bytes": 1449
+          "sha256": "d6fbddf0f28d43a927b500e258e3811c84d5f670994510192180624d4d8a09ff",
+          "bytes": 1605
         },
         {
           "path": "renderer/builtins.js",
@@ -819,16 +819,16 @@
         },
         {
           "path": "skills/visual-compose/SKILL.md",
-          "sha256": "392b0b2a2ca881bc3137c36aec877707dcc5772a960c78a948dc6f1512c37c6f",
-          "bytes": 1455
+          "sha256": "4e4d5ac12f238698d5e5606850523a4aca924f9537c7b6f0a388085b2b637467",
+          "bytes": 1665
         }
       ]
     },
     {
       "id": "sesame/research",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "directory": "research",
-      "treeDigest": "sha256:5bac49b21cebf2d59d8321a4ade15854e5ab8777cae7da416e323a4f8388ce39",
+      "treeDigest": "sha256:4b5b4a0bbda4f7a790848c48cbf14bca4865c3d5f05a3f98ecb322f8f225b075",
       "files": [
         {
           "path": "LICENSE",
@@ -857,18 +857,18 @@
         },
         {
           "path": "package.json",
-          "sha256": "2a1d08fe7e7496d8681251a1a60d12f262d30629b36c80d02e35c5f994bb2179",
+          "sha256": "19a4fc7d02c5a1a1cf8c1b7e6ecbe160235fea34c74d3d41c8678944b324a64b",
           "bytes": 102
         },
         {
           "path": "plugin.json",
-          "sha256": "f60f8dc1a31bb5806290c840ba40f5a71a45bf45bbe725db20353c10cb60ee95",
+          "sha256": "67cad61a0c3d30f2ad0c07e79b10050b50134998b592dbdfcc7ee595c7c942da",
           "bytes": 2766
         },
         {
           "path": "prompt.md",
-          "sha256": "05d0458d11a1f7de2d82376bdf6d0d1959f192f4361e44b02a8b6855473fcca2",
-          "bytes": 1522
+          "sha256": "faf5e06ad734a247c8839e8de4a7ef4af6ac5d9f0ea6b831614eefb04ed89e84",
+          "bytes": 1568
         },
         {
           "path": "references/adapt-and-compose.md",
@@ -1087,8 +1087,8 @@
         },
         {
           "path": "references/review-and-recovery.md",
-          "sha256": "33b31eab4f590906d92f154e2dc6698ff3bef0ed096c756c8f71b63fadd320da",
-          "bytes": 2776
+          "sha256": "cc1876944f1f5664aa43642ccececd6be26866795e04c8708ccc94cc94c16056",
+          "bytes": 2911
         },
         {
           "path": "skills/research/SKILL.md",
