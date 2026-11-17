@@ -4280,7 +4280,7 @@
       "id": "visual-compose",
       "kind": "skill",
       "path": "skills/visual-compose/SKILL.md",
-      "description": "依据数据关系选择图表，组合标题、开篇结论、关键结果与正文。"
+      "description": "根据初稿的表达意图设计图文，尽可能把数据转为直观图表，再组合报告。"
     },
     {
       "id": "report-delivery",
