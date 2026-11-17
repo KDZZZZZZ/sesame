@@ -485,7 +485,7 @@
       "id": "sesame/reports",
       "version": "6.0.3",
       "directory": "reports",
-      "treeDigest": "sha256:e17c0138ec2529b4bef9fd19c7a783d9762b06e6362f183534707924d94caf98",
+      "treeDigest": "sha256:253de00e1b12d314a24c1ae956eebd013e84f5e59dba23db477f70456455729e",
       "files": [
         {
           "path": "LICENSE",
@@ -749,8 +749,8 @@
         },
         {
           "path": "report-content.js",
-          "sha256": "2a3218c03fbd25eaf3adff69dd163d8f9ff44dd015c02f3063eafd6da2d1cc68",
-          "bytes": 16696
+          "sha256": "93a39840c6e8006163b2356f73c669566246add14a5c06f4c0af36a42d9ca7b3",
+          "bytes": 16721
         },
         {
           "path": "report-interactions.js",
