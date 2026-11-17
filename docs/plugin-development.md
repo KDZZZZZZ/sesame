@@ -2,8 +2,8 @@
 
 统一开发指南随 plugin-manager 发布，开发者与 Agent 使用同一份内容：
 
-- [能力定位、接口选择、代表实现与硬性要求](../plugins/api-v1/packages/plugin-manager/skills/develop-plugins/references/authoring.md)
-- [宿主 API 2 端口与原生执行接口](../plugins/api-v1/packages/plugin-manager/skills/develop-plugins/references/host-api.md)
+- [能力定位、接口选择、代表实现与硬性要求](../plugins/api-v1/packages/plugin-manager/references/authoring.md)
+- [宿主 API 2 端口与原生执行接口](../plugins/api-v1/packages/plugin-manager/references/host-api.md)
 - [开发 Skill 入口](../plugins/api-v1/packages/plugin-manager/skills/develop-plugins/SKILL.md)
 - [完整插件职责清单](plugin-responsibilities.md)
 - [31 个专业能力插件的职责、模块与配置归属](analysis-plugin-responsibilities.md)

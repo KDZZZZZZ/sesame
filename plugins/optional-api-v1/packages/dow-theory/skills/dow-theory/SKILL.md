@@ -27,4 +27,4 @@ price-action 可说明每个序列内部的结构，abu-similarity 可补收益�
 
 ## 按需参考
 
-references/method.md 解释版本和确认；references/validation.md 说明效力验证；examples/case.json 与 examples/expected.md 展示未确认反例。 参考路径位于 skills/dow-theory/，案例路径相对包根；通过 plugin_read({pluginId:"sesame/dow-theory",part:"resource",path:"skills/dow-theory/references/method.md"}) 读取所需内容，path 换成相应已注册资源，不要求每次重读全部文件。PROVENANCE.md 说明来源与许可；案例是 demo，不能当真实行情或研究结论。
+references/method.md 解释版本和确认；references/validation.md 说明效力验证；examples/case.json 与 examples/expected.md 展示未确认反例。 参考路径位于 references/，案例路径相对包根；通过 plugin_read({pluginId:"sesame/dow-theory",part:"resource",path:"references/method.md"}) 读取所需内容，path 换成相应已注册资源，不要求每次重读全部文件。PROVENANCE.md 说明来源与许可；案例是 demo，不能当真实行情或研究结论。

@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const hostRoot = process.env.SESAME_HOST_ROOT;
-const references = new URL('../packages/orchestration/skills/coordinate-research/references/', import.meta.url);
+const references = new URL('../packages/orchestration/references/', import.meta.url);
 const integration = (name, run) => test(name, { skip: !hostRoot }, run);
 async function example(file, heading) {
   const text = (await readFile(new URL(file, references), 'utf8')).replaceAll('\r\n', '\n');

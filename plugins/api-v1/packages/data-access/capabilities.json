@@ -1179,19 +1179,19 @@
     },
     {
       "id": "resource.4",
-      "path": "skills/market-discovery/references/source-queries.md",
+      "path": "references/source-queries.md",
       "description": "来源发现、缓存入口、通用查询与固定快照的参数、分页和恢复规则。",
       "kind": "reference"
     },
     {
       "id": "resource.5",
-      "path": "skills/market-discovery/references/market-history.md",
+      "path": "references/market-history.md",
       "description": "精确品种、历史K线参数、来源时间与量单位，以及显示和订阅的验收证据。",
       "kind": "reference"
     },
     {
       "id": "resource.6",
-      "path": "skills/analyze-data/references/execution-evidence.md",
+      "path": "references/execution-evidence.md",
       "description": "登记输入与DataRef、计算目录、executionId和冻结输入输出的登记示例。",
       "kind": "reference"
     }

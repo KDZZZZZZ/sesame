@@ -9,10 +9,10 @@ description: 解释复杂市场、产业、政策或机构变化的成因与未�
 
 ## 先选择本次职责
 
-- **主 Agent / 协调者**：先读取 [协议与证据](references/protocol.md) 和 [实际编排](references/coordination.md)。固定 E0 后提交独立 H / D / G 成员；收齐并核验实际输出后比较。仅在有实质分歧时读取 [定向复核](references/reconciliation.md)。
-- **历史成员 H**：只读取 [历史类比](references/historical.md)，使用 E0 和自身方法，不读取其他成员尚未冻结的分析。
-- **矛盾成员 D**：只读取 [矛盾分析](references/contradictions.md)，遵守相同独立性。
-- **博弈成员 G**：只读取 [博弈分析](references/game-theory.md)，遵守相同独立性。
+- **主 Agent / 协调者**：先读取 [协议与证据](../../references/protocol.md) 和 [实际编排](../../references/coordination.md)。固定 E0 后提交独立 H / D / G 成员；收齐并核验实际输出后比较。仅在有实质分歧时读取 [定向复核](../../references/reconciliation.md)。
+- **历史成员 H**：只读取 [历史类比](../../references/historical.md)，使用 E0 和自身方法，不读取其他成员尚未冻结的分析。
+- **矛盾成员 D**：只读取 [矛盾分析](../../references/contradictions.md)，遵守相同独立性。
+- **博弈成员 G**：只读取 [博弈分析](../../references/game-theory.md)，遵守相同独立性。
 - **复核 / 综合成员**：读取协议和定向复核页，使用已经冻结且核验过的成员结果。成员身份由本次任务明确指定，不自行扩成另一套团队。
 
 ## 五条原则

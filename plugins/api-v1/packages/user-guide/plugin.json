@@ -13,13 +13,13 @@
     "skills"
   ],
   "resources": [
-    "skills/sesame-user-guide/references/installation.md",
-    "skills/sesame-user-guide/references/dashboard.md",
-    "skills/sesame-user-guide/references/chat-and-commands.md",
-    "skills/sesame-user-guide/references/settings.md",
-    "skills/sesame-user-guide/references/workflows.md",
-    "skills/sesame-user-guide/references/troubleshooting.md",
-    "skills/sesame-user-guide/references/website-docs.md"
+    "references/installation.md",
+    "references/dashboard.md",
+    "references/chat-and-commands.md",
+    "references/settings.md",
+    "references/workflows.md",
+    "references/troubleshooting.md",
+    "references/website-docs.md"
   ],
   "license": "MIT",
   "engines": {

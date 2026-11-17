@@ -22,7 +22,7 @@ test('the separate product guide retains all seven linked reference chapters and
   const guideRead = path => readFile(new URL(`../user-guide/${path}`, root), 'utf8');
   const manifest = JSON.parse(await guideRead('plugin.json')), declarations = JSON.parse(await guideRead('capabilities.json'));
   const route = 'skills/sesame-user-guide/SKILL.md', body = await guideRead(route);
-  const links = [...body.matchAll(/\]\((references\/[^)]+\.md)\)/g)].map(match => posix.join(posix.dirname(route), match[1]));
+  const links = [...body.matchAll(/\]\(([^)]+\.md)\)/g)].map(match => posix.normalize(posix.join(posix.dirname(route), match[1])));
   assert.equal(links.length, 7);
   assert.equal(new Set(links).size, 7);
   assert.deepEqual([...manifest.resources].sort(), [...links].sort());

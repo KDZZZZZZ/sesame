@@ -7,7 +7,7 @@ description: 新增或维护 Sesame API 2 插件：确定职责、实现能力�
 
 ## 1. 确定职责与接口
 
-先读 [声明与实现](references/authoring.md) 的责任与接口选择表，确定任务需要的最小能力，再按 [宿主 API](references/host-api.md) 对接宿主。统一指南包含同类源码参考、可调整流程、长期偏好、三态和验证硬要求。所有对 Agent 或宿主提供的能力都要显式声明；配置后的 source、view、service、hook 不得隐式注册。
+先读 [声明与实现](../../references/authoring.md) 的责任与接口选择表，确定任务需要的最小能力，再按 [宿主 API](../../references/host-api.md) 对接宿主。统一指南包含同类源码参考、可调整流程、长期偏好、三态和验证硬要求。所有对 Agent 或宿主提供的能力都要显式声明；配置后的 source、view、service、hook 不得隐式注册。
 
 ## 2. 创建并实现
 
@@ -23,6 +23,6 @@ prompt.md 保留职责与原则，SKILL.md 写适用场景和操作方法，长�
 
 ## 4. 测试、安装与验收
 
-插件一次完成准备、检查、执行和结果回读；需要长期执行时使用 Run。先运行实际业务测试，再调用 plugin_install（宿主自动检查并安装）。原生包的安装检查不会替你运行包内业务测试；MCP 工具目录和声明检查也不等于完整业务验收。更新先 plugin_inspect 读取当前 digest，传入 plugin_update.expectedRevision；安装后用真实能力核验目标结果。失败读取合并诊断，按 [恢复约定](references/recovery.md) 修复，不添加兼容旧接口的包装层。
+插件一次完成准备、检查、执行和结果回读；需要长期执行时使用 Run。先运行实际业务测试，再调用 plugin_install（宿主自动检查并安装）。原生包的安装检查不会替你运行包内业务测试；MCP 工具目录和声明检查也不等于完整业务验收。更新先 plugin_inspect 读取当前 digest，传入 plugin_update.expectedRevision；安装后用真实能力核验目标结果。失败读取合并诊断，按 [恢复约定](../../references/recovery.md) 修复，不添加兼容旧接口的包装层。
 
 用户沟通提示词由宿主管理。插件定义可用能力、可量化领域目标、输入输出、调用权限和因果明确的原则；只说明真实依赖顺序，不把固定操作清单当作完成目标的唯一方式。usage 会进入 Agent 工具描述，应写清实际参数入口、返回状态/成功证据、外部副作用与针对具体错误的恢复，不使用“按 schema”或“按声明结果”等占位。

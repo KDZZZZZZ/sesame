@@ -30,7 +30,7 @@ test('method knowledge can be selected by a workflow and returns a local finding
 
 test('optional observation scripts use current public evidence and execution field names', async () => {
   for (const name of ['ict', 'price-action']) {
-    const guide = await read(name, `skills/${name}/references/execution.md`);
+    const guide = await read(name, `references/execution.md`);
     assert.doesNotMatch(guide, /dataset_id|execution_id|exit_code|snapshot_errors|input_ids|recipe_paths|ref\/raw/);
     assert.match(guide, /data_read\(\{ref/);
     assert.match(guide, /executionId/);

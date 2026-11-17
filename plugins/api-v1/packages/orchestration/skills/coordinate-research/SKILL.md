@@ -51,9 +51,9 @@ description: 根据目标选择直接委派、定制现成工作流或自定义�
 自定义协作按以下步骤执行：
 
 1. 为每个阶段写明问题、输入及来源、完成判据、所需知识与调用能力、依赖和成果去向。相互独立的阶段可以并行；综合、复核或回测必须拿到其需要的真实前序结果后再启动。
-2. 单次委派用 `host_agent_run` 的 `title`、`objective`、`instructions`、`input` 描述任务，`plugins` 选择方法知识，`allowedCalls` 授予实际工具，`output` 绑定交付。研究与回测报告分别放入适合的 research / strategy 空间，完整参数示例见 [Agent 与 Run 调用参考](references/agent-runs.md)。
+2. 单次委派用 `host_agent_run` 的 `title`、`objective`、`instructions`、`input` 描述任务，`plugins` 选择方法知识，`allowedCalls` 授予实际工具，`output` 绑定交付。研究与回测报告分别放入适合的 research / strategy 空间，完整参数示例见 [Agent 与 Run 调用参考](../../references/agent-runs.md)。
 3. 直接由主 Agent 协调几个阶段时，逐个提交独立 Run 并保存真实引用。需要一个独立协调者管理成员时，明确授权它再次委派，传入所需的宿主和业务能力；默认“子 Agent 不递归委派”的规则不阻止这一项明确分工。
-4. 需要显示协作结构时，通过 `host_capabilities_invoke` 的 `task.collaboration` 声明稳定成员及关系，内部成员调用以 `task.agentId` 绑定身份。关系线是展示信息，不执行依赖调度；协调者或业务控制器仍须实际安排调用、等待结果和传递证据。具体例子见 [工作流计划与可调整阶段](references/workflow-plans.md)。
+4. 需要显示协作结构时，通过 `host_capabilities_invoke` 的 `task.collaboration` 声明稳定成员及关系，内部成员调用以 `task.agentId` 绑定身份。关系线是展示信息，不执行依赖调度；协调者或业务控制器仍须实际安排调用、等待结果和传递证据。具体例子见 [工作流计划与可调整阶段](../../references/workflow-plans.md)。
 5. 定制现成工作流时，只修改它公开支持的计划字段。Investment Research 可以改阶段及阶段内并行成员，Auto Factor Mining 可以配角色和可选规划/评审/反思，Trading Decision 可以配顺序复核；这三者都不能用一个任意 DAG 替代其真实执行合同。
 
 协作图、计划文本与普通 Agent Run 都不自动变成业务 workflow。要求启动真实工作流时，仍须使用已注册的工作流或其公开启动函数，以实际受理的 Run 为准。
@@ -70,8 +70,8 @@ host.agent.run 的 plugins 可显式选择知识包，工具所属包会自动�
 
 业务流程按任务调整：当前明确要求优先于适用的长期偏好，再采用插件默认。用户明确要求长期沿用时，使用 memory 保存 user/workflow 与真实用户消息来源；执行前读取正文、适用范围和版本，将选择转换成该工作流声明支持的计划。临时变更不改长期默认，偏好不授予交易权限、不绕过证据和风险约束。已受理的 Run 保留冻结计划，改变计划另开研究。
 
-需要选择 Investment Research、Auto Factor Mining 或 Trading Decision 的可配置阶段时，按需读取 [工作流计划与可调整阶段](references/workflow-plans.md)。
+需要选择 Investment Research、Auto Factor Mining 或 Trading Decision 的可配置阶段时，按需读取 [工作流计划与可调整阶段](../../references/workflow-plans.md)。
 
 ## 调用参考
 
-调用前需要核对参数、知识与能力的授予、报告输出、暂停恢复或结果读取时，按需读取 [宿主 Agent 与 Run 调用参考](references/agent-runs.md)。`host.agent.run` / `host.runs.*` 是宿主能力；本插件没有运行工具。产品界面、聊天命令和安装上手由 `sesame/user-guide` 提供。
+调用前需要核对参数、知识与能力的授予、报告输出、暂停恢复或结果读取时，按需读取 [宿主 Agent 与 Run 调用参考](../../references/agent-runs.md)。`host.agent.run` / `host.runs.*` 是宿主能力；本插件没有运行工具。产品界面、聊天命令和安装上手由 `sesame/user-guide` 提供。

@@ -23,8 +23,8 @@
     "README.md",
     "examples/case.json",
     "examples/expected.md",
-    "skills/wyckoff/references/method.md",
-    "skills/wyckoff/references/validation.md"
+    "references/method.md",
+    "references/validation.md"
   ],
   "provides": {},
   "engines": {

@@ -26,7 +26,7 @@
 node scripts/audit.mjs examples/audit-input.json --out audit-result.json
 ```
 
-这项审计不能证明券商成交真实性、重建策略、模拟撮合或复算权益曲线。详见 `skills/abu-trade-metrics/references/audit.md`；迁入方法的原始来源记录见 `AUDIT-PROVENANCE.md`。
+这项审计不能证明券商成交真实性、重建策略、模拟撮合或复算权益曲线。详见 `references/audit.md`；迁入方法的原始来源记录见 `AUDIT-PROVENANCE.md`。
 
 CLI 示例：
 

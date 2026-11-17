@@ -33,8 +33,8 @@ history were retired; existing API 1 installations are not automatically convert
 ## Layout
 
 Start with the [shared plugin development Skill](packages/plugin-manager/skills/develop-plugins/SKILL.md),
-the [authoring guide](packages/plugin-manager/skills/develop-plugins/references/authoring.md)
-and the [open interface reference](packages/plugin-manager/skills/develop-plugins/references/host-api.md).
+the [authoring guide](packages/plugin-manager/references/authoring.md)
+and the [open interface reference](packages/plugin-manager/references/host-api.md).
 They are shipped inside plugin-manager so internal and external Agents learn from the same source.
 The [portable scaffold CLI](packages/plugin-manager/scripts/create-plugin.mjs) requires only Node;
 actual installation and activation are checked by a matching Sesame host.

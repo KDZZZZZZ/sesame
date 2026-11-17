@@ -27,4 +27,4 @@ abu-price-structure 的已确认摆动和价格水平可作锚点证据，但需
 
 ## 按需参考
 
-references/method.md 列结构约束；references/validation.md 说明检验边界；examples/case.json 与 examples/expected.md 展示失效计数。 参考路径位于 skills/elliott-wave/，案例路径相对包根；通过 plugin_read({pluginId:"sesame/elliott-wave",part:"resource",path:"skills/elliott-wave/references/method.md"}) 读取所需内容，path 换成相应已注册资源，不要求每次重读全部文件。PROVENANCE.md 说明来源与许可；案例是 demo，不能当真实行情或研究结论。
+references/method.md 列结构约束；references/validation.md 说明检验边界；examples/case.json 与 examples/expected.md 展示失效计数。 参考路径位于 references/，案例路径相对包根；通过 plugin_read({pluginId:"sesame/elliott-wave",part:"resource",path:"references/method.md"}) 读取所需内容，path 换成相应已注册资源，不要求每次重读全部文件。PROVENANCE.md 说明来源与许可；案例是 demo，不能当真实行情或研究结论。

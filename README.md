@@ -69,8 +69,8 @@ Sesame 是面向量化研究与交易的 Agent 工作台。它把对话、行情
 | 你要做什么 | 阅读资料 |
 | --- | --- |
 | 让 Sesame 或外部编码 Agent 开发插件 | [开发 Skill](plugins/api-v1/packages/plugin-manager/skills/develop-plugins/SKILL.md) |
-| 了解接口、作用域和能力限制 | [HostContext 与产品接口](plugins/api-v1/packages/plugin-manager/skills/develop-plugins/references/host-api.md) |
-| 创建、测试、安装和恢复插件 | [编写与安装](plugins/api-v1/packages/plugin-manager/skills/develop-plugins/references/authoring.md) · [恢复指南](plugins/api-v1/packages/plugin-manager/skills/develop-plugins/references/recovery.md) |
+| 了解接口、作用域和能力限制 | [HostContext 与产品接口](plugins/api-v1/packages/plugin-manager/references/host-api.md) |
+| 创建、测试、安装和恢复插件 | [编写与安装](plugins/api-v1/packages/plugin-manager/references/authoring.md) · [恢复指南](plugins/api-v1/packages/plugin-manager/references/recovery.md) |
 | 寻找可复用的实现 | [基础插件](plugins/api-v1/packages/) · [可选插件](plugins/optional-api-v1/packages/) |
 | 提交代码与了解分发规则 | [贡献流程](CONTRIBUTING.md) · [插件发布政策](plugins/api-v1/PUBLISHING.md) |
 

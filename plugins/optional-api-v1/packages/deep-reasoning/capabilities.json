@@ -26,37 +26,37 @@
     },
     {
       "id": "protocol",
-      "path": "skills/deep-reasoning/references/protocol.md",
+      "path": "references/protocol.md",
       "kind": "reference",
       "description": "共同证据 E0、窄交接字段、综合和最终检查"
     },
     {
       "id": "historical",
-      "path": "skills/deep-reasoning/references/historical.md",
+      "path": "references/historical.md",
       "kind": "reference",
       "description": "H：因果参照类、案例偏差、基准频率与类比条件"
     },
     {
       "id": "contradictions",
-      "path": "skills/deep-reasoning/references/contradictions.md",
+      "path": "references/contradictions.md",
       "kind": "reference",
       "description": "D：具体制约、主次张力、反馈与条件演变"
     },
     {
       "id": "game-theory",
-      "path": "skills/deep-reasoning/references/game-theory.md",
+      "path": "references/game-theory.md",
       "kind": "reference",
       "description": "G：真实行动者、激励信息、候选均衡与协调证据"
     },
     {
       "id": "reconciliation",
-      "path": "skills/deep-reasoning/references/reconciliation.md",
+      "path": "references/reconciliation.md",
       "kind": "reference",
       "description": "成对比较、最小责任链、七类修订与进展停止条件"
     },
     {
       "id": "coordination",
-      "path": "skills/deep-reasoning/references/coordination.md",
+      "path": "references/coordination.md",
       "kind": "reference",
       "description": "现有宿主 Agent 与 Run 的实际独立并行及唯一报告交付"
     },

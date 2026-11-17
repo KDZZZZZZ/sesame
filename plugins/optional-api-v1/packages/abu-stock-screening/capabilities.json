@@ -279,7 +279,7 @@
     },
     {
       "id": "knowledge-4",
-      "path": "skills/abu-stock-screening/references/method.md",
+      "path": "references/method.md",
       "description": "abu_stock_screening_analyze 的公式、参数口径与基线差异；核对是否可以复用其他已计算结果。",
       "kind": "reference"
     },

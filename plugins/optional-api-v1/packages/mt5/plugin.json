@@ -22,7 +22,7 @@
   ],
   "resources": [
     "README.md",
-    "skills/visual-state-machines/references/language.md",
+    "references/language.md",
     "target/README.md",
     "target/translation-file.md",
     "target/sdk-integration.md",

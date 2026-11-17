@@ -32,13 +32,13 @@
     },
     {
       "id": "knowledge-4",
-      "path": "skills/narrative-analysis/references/evidence.md",
+      "path": "references/evidence.md",
       "description": "市场叙事研究输入证据的来源、版本、可得时间和局部结论引用要求。",
       "kind": "reference"
     },
     {
       "id": "knowledge-5",
-      "path": "skills/narrative-analysis/references/method.md",
+      "path": "references/method.md",
       "description": "市场叙事研究的操作定义、因果边界与反证；用于核对本次具体判据。",
       "kind": "reference"
     },

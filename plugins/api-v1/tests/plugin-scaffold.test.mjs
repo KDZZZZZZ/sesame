@@ -82,7 +82,7 @@ test('functional templates keep portable entries, explicit knowledge, truthful e
     assert.deepEqual(capabilities.map(item => item.name), declaration.capabilities.map(item => item.binding.name));
     if (['skill', 'knowledge'].includes(template)) {
       assert.deepEqual(capabilities, []);
-      if (template === 'knowledge') assert.ok(recipe.files[`skills/${input.name}/references/validation.md`]);
+      if (template === 'knowledge') assert.ok(recipe.files[`references/validation.md`]);
       continue;
     }
     const execute = (...args) => Promise.resolve().then(() => capabilities[0].execute(...args));

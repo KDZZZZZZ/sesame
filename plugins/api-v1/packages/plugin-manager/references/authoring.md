@@ -38,6 +38,8 @@ capabilities.json 包含 schemaVersion:1、apiVersion:"2"、configSchema，以�
 
 implementationKinds 可使用 knowledge、function、adapter、workflow、service，一包按真实实现声明一个或多个值。它不是 capability.kind：例如 service 实现仍通过 function 能力和 services/hooks 等贡献对接宿主。auto-factor-mining、investment-research 是 business / workflow，工作流内可同时声明研究 knowledge；ict 是 analysis / knowledge，abu-trend 是 analysis / function。knowledge 仅指文档载体，不表示局部专业知识或宏观业务流程中的任何一种。不要因为说明含有几个步骤，就把局部分析工具归为业务流程。
 
+供 Agent 阅读的长期内容分四层，只建实际用到的文件。`prompt.md` 说明何时使用、负责什么、必须遵守的原则，以及数据、判断、编排或呈现交给哪项能力。`skills/<任务>/SKILL.md` 写一类任务的最短路径：识别需求、复用已有输入、执行、必要分支和验收。方法、字段、接口、案例和故障细节放包根 `references/`，材料多了再按主题分子目录。可复用的角色职责才放 `references/roles/`。本次任务的目标、输入、范围、能力和交付写进已有 Agent 调用字段，不另建合同文件，也不按每个工具拆一篇 Skill。每份正文在 knowledge 里登记一次。
+
 脚手架的 native 和 skill 参数保持兼容。knowledge 生成方法与验证参考；function 生成 src/analyze.js 和可验证的求和示例；adapter、workflow、service 分别生成 src/source.js、src/runtime.js、src/service.js，业务未实现前明确抛出 NOT_IMPLEMENTED。workflow 声明 kind:workflow、execution:run，不预先宣称可恢复。按实际需要再拆 market/account/trading、members/composition/artifacts 或 state 模块，不补空层次。
 
 index.js 只负责注册；供 Agent 读取的知识正文通过 knowledge 显式声明。knowledge 是知识入口清单，不是完整包文件清单。跨包复用使用 host.capabilities.invoke，禁止相对导入另一个插件的实现。发布前选择许可证、补全 LICENSE/PROVENANCE.md、对齐包版本并更新固定文件摘要。

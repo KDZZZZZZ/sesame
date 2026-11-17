@@ -5,7 +5,7 @@ description: 编写受限 MQL5 策略模块，自动生成原生 EA、协作图�
 
 公开资源定位：本包路径以插件根目录为准；[完整接口契约](../../INTERFACES.md) 可由 plugin_read({pluginId:"sesame/mt5",part:"resource",path:"INTERFACES.md"}) 读取。此引用给出位置，无需每次调用前重复读取。
 
-checkout 的 README.md、strategy.json 与实际源码定义当前工程。新工程是模板 3.0.0 / visual-mql-v1；受限语言的公开定义是 `skills/visual-state-machines/references/language.md`。那里列出实际语法、接入函数、原语和限制，不能按完整 MQL5 的自由度添加调用。主 Agent 与 subagent 使用相同规则。
+checkout 的 README.md、strategy.json 与实际源码定义当前工程。新工程是模板 3.0.0 / visual-mql-v1；受限语言的公开定义是 `references/language.md`。那里列出实际语法、接入函数、原语和限制，不能按完整 MQL5 的自由度添加调用。主 Agent 与 subagent 使用相同规则。
 
 ## 一份源码
 

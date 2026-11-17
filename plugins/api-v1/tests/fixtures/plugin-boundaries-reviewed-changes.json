@@ -12212,9 +12212,9 @@
       "sourcePath": "plugins/api-v1/packages/data-access",
       "component": "plugin.json",
       "beforeDigest": "sha256:dc33ab3a84e937d0588cd1d171d6531fc2c5fb91ec8d74fabe69eb70584e2b93",
-      "afterDigest": "sha256:3b4ac7b1d9c053c043cc3ce1224a6f348adf35fce07b6b7a713332286bbcc86e",
+      "afterDigest": "sha256:8ae9df4e1dfcae326e475ed8ac4b31a725a05494126270f842dfae34048c18f4",
       "decision": "approved",
-      "reason": "Automated exact-hash engineering acceptance: New-host compatibility and explicit request-only permission migration, with exact calls/service selectors and no automatic grants. Candidate versions are separate from prior installed/published bytes; this is not a backward-compatible metadata assertion. No human/release/broker acceptance is implied.\n2026-10-26 user-requested guide cleanup: keep principles and operational steps separate, move parameter details into three declared references; correct available versus session-loading semantics. All eight execution/input/output contracts remain unchanged; actual schema examples and existing data regressions verified.",
+      "reason": "Automated exact-hash engineering acceptance: New-host compatibility and explicit request-only permission migration, with exact calls/service selectors and no automatic grants. Candidate versions are separate from prior installed/published bytes; this is not a backward-compatible metadata assertion. No human/release/broker acceptance is implied.\n2026-10-26 user-requested guide cleanup: keep principles and operational steps separate, move parameter details into three declared references; correct available versus session-loading semantics. All eight execution/input/output contracts remain unchanged; actual schema examples and existing data regressions verified. 2026-11-16 追加：已有参考从 skills/<任务>/references/ 移到包根 references/，只更新 knowledge 与 resources 中的路径。不新增角色合同、工具或工作流，能力 schema、权限和执行入口不变。",
       "deltas": [
         {
           "path": "/engines/sesame",
@@ -12244,9 +12244,9 @@
           "beforePresent": false,
           "afterPresent": true,
           "after": [
-            "skills/market-discovery/references/source-queries.md",
-            "skills/market-discovery/references/market-history.md",
-            "skills/analyze-data/references/execution-evidence.md"
+            "references/source-queries.md",
+            "references/market-history.md",
+            "references/execution-evidence.md"
           ],
           "impact": "declaration-contract-review"
         }
@@ -12302,9 +12302,9 @@
       "sourcePath": "plugins/api-v1/packages/data-access",
       "component": "capabilities.json/knowledge",
       "beforeDigest": "sha256:bd1891721776e698bd17e719e9c8f2f10bd20c9d034da918d629311793d52115",
-      "afterDigest": "sha256:1ebe0051b59e63cd9e281741f7f39addaa3825b8f85cc7a59d70914237263071",
+      "afterDigest": "sha256:14514c4b4ea8e5ffff5ed7bfc30ba472831a804085f7440f629dc6b2720d376a",
       "decision": "approved",
-      "reason": "2026-10-26 user-requested guide cleanup: keep principles and operational steps separate, move parameter details into three declared references; correct available versus session-loading semantics. All eight execution/input/output contracts remain unchanged; actual schema examples and existing data regressions verified.",
+      "reason": "2026-10-26 user-requested guide cleanup: keep principles and operational steps separate, move parameter details into three declared references; correct available versus session-loading semantics. All eight execution/input/output contracts remain unchanged; actual schema examples and existing data regressions verified. 2026-11-16 追加：已有参考从 skills/<任务>/references/ 移到包根 references/，只更新 knowledge 与 resources 中的路径。不新增角色合同、工具或工作流，能力 schema、权限和执行入口不变。",
       "deltas": [
         {
           "path": "/",
@@ -12351,19 +12351,19 @@
             },
             {
               "id": "resource.4",
-              "path": "skills/market-discovery/references/source-queries.md",
+              "path": "references/source-queries.md",
               "description": "来源发现、缓存入口、通用查询与固定快照的参数、分页和恢复规则。",
               "kind": "reference"
             },
             {
               "id": "resource.5",
-              "path": "skills/market-discovery/references/market-history.md",
+              "path": "references/market-history.md",
               "description": "精确品种、历史K线参数、来源时间与量单位，以及显示和订阅的验收证据。",
               "kind": "reference"
             },
             {
               "id": "resource.6",
-              "path": "skills/analyze-data/references/execution-evidence.md",
+              "path": "references/execution-evidence.md",
               "description": "登记输入与DataRef、计算目录、executionId和冻结输入输出的登记示例。",
               "kind": "reference"
             }
@@ -13630,9 +13630,9 @@
       "sourcePath": "plugins/optional-api-v1/packages/mt5",
       "component": "plugin.json",
       "beforeDigest": "sha256:3d1e8dc0db78d0bfba203c9c09ecc30d0dbcc96b1ea47946765b02c243b182f0",
-      "afterDigest": "sha256:d99e2e7a6066665b2e7c60764c59d6e5052f32003d483c2fe3ff36b661b882df",
+      "afterDigest": "sha256:a34ff15fb7d6bd1aa6a729850020eeede17ca54823cc33ca24c950154b950d67",
       "decision": "approved",
-      "reason": "Automated exact-hash engineering acceptance: New-host compatibility and explicit request-only permission migration, with exact calls/service selectors and no automatic grants. Candidate versions are separate from prior installed/published bytes; this is not a backward-compatible metadata assertion. No human/release/broker acceptance is implied.",
+      "reason": "Automated exact-hash engineering acceptance: New-host compatibility and explicit request-only permission migration, with exact calls/service selectors and no automatic grants. Candidate versions are separate from prior installed/published bytes; this is not a backward-compatible metadata assertion. No human/release/broker acceptance is implied. 2026-11-16 追加：已有参考从 skills/<任务>/references/ 移到包根 references/，只更新 knowledge 与 resources 中的路径。不新增角色合同、工具或工作流，能力 schema、权限和执行入口不变。",
       "deltas": [
         {
           "path": "/engines/sesame",
@@ -13679,6 +13679,56 @@
             ]
           },
           "impact": "authorization-restriction"
+        },
+        {
+          "path": "/resources",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": [
+            "README.md",
+            "skills/visual-state-machines/references/language.md",
+            "target/README.md",
+            "target/translation-file.md",
+            "target/sdk-integration.md",
+            "target/examples/Strategy.mq5",
+            "backend/sdk/Expert.mqh",
+            "backend/sdk/Results.mqh",
+            "backend/sdk/Risk.mqh",
+            "backend/sdk/Telemetry.mqh",
+            "backend/sdk/Trade.mqh",
+            "backend/sdk/Visual.mqh",
+            "scripts/install-mt5-python.py",
+            "scripts/install-mt5-macos.sh",
+            "scripts/README.md",
+            "TRADING.md",
+            "target/conformance.md",
+            "backend/sdk/Conformance.mqh",
+            "backend/sdk/FrozenInputs.mqh",
+            "target/examples/FrozenTimeline.mq5"
+          ],
+          "after": [
+            "README.md",
+            "references/language.md",
+            "target/README.md",
+            "target/translation-file.md",
+            "target/sdk-integration.md",
+            "target/examples/Strategy.mq5",
+            "backend/sdk/Expert.mqh",
+            "backend/sdk/Results.mqh",
+            "backend/sdk/Risk.mqh",
+            "backend/sdk/Telemetry.mqh",
+            "backend/sdk/Trade.mqh",
+            "backend/sdk/Visual.mqh",
+            "scripts/install-mt5-python.py",
+            "scripts/install-mt5-macos.sh",
+            "scripts/README.md",
+            "TRADING.md",
+            "target/conformance.md",
+            "backend/sdk/Conformance.mqh",
+            "backend/sdk/FrozenInputs.mqh",
+            "target/examples/FrozenTimeline.mq5"
+          ],
+          "impact": "declaration-contract-review"
         }
       ],
       "findings": []
@@ -16819,13 +16869,495 @@
       "findings": []
     },
     {
+      "pluginId": "sesame/mt5",
+      "sourcePath": "plugins/optional-api-v1/packages/mt5",
+      "component": "capabilities.json/knowledge",
+      "beforeDigest": "sha256:e8186d75e62de6400a7443836a0bbd1958eb5896e0c4aa13306a03a1470b5393",
+      "afterDigest": "sha256:d556ec0b9af85625960d4fd421f10c8f9ab447c2034998267119819e5532ddb5",
+      "decision": "approved",
+      "reason": "2026-11-16：该参考路径已从 skills/<任务>/references/ 移到包根 references/，旧位置不保留副本。knowledge 与 resources 改为新路径。未新增角色合同、工具或工作流，能力 schema、权限和执行入口不变。",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": [
+            {
+              "id": "reference-0",
+              "path": "prompt.md",
+              "description": "MT5 domain reference: prompt.md",
+              "kind": "prompt"
+            },
+            {
+              "id": "reference-1",
+              "path": "tools/official/prompt.md",
+              "description": "MT5 domain reference: tools/official/prompt.md",
+              "kind": "prompt"
+            },
+            {
+              "id": "reference-2",
+              "path": "tools/charts/prompt.md",
+              "description": "MT5 domain reference: tools/charts/prompt.md",
+              "kind": "prompt"
+            },
+            {
+              "id": "reference-3",
+              "path": "tools/editor/prompt.md",
+              "description": "MT5 domain reference: tools/editor/prompt.md",
+              "kind": "prompt"
+            },
+            {
+              "id": "reference-4",
+              "path": "tools/python/prompt.md",
+              "description": "MT5 domain reference: tools/python/prompt.md",
+              "kind": "prompt"
+            },
+            {
+              "id": "reference-5",
+              "path": "tools/system/prompt.md",
+              "description": "MT5 domain reference: tools/system/prompt.md",
+              "kind": "prompt"
+            },
+            {
+              "id": "reference-6",
+              "path": "tools/tester/prompt.md",
+              "description": "MT5 domain reference: tools/tester/prompt.md",
+              "kind": "prompt"
+            },
+            {
+              "id": "reference-7",
+              "path": "tools/trading/prompt.md",
+              "description": "MT5 domain reference: tools/trading/prompt.md",
+              "kind": "prompt"
+            },
+            {
+              "id": "reference-8",
+              "path": "tools/deployment/prompt.md",
+              "description": "MT5 domain reference: tools/deployment/prompt.md",
+              "kind": "prompt"
+            },
+            {
+              "id": "reference-9",
+              "path": "tools/authoring/prompt.md",
+              "description": "MT5 domain reference: tools/authoring/prompt.md",
+              "kind": "prompt"
+            },
+            {
+              "id": "reference-10",
+              "path": "skills/visual-state-machines/references/language.md",
+              "description": "MT5 domain reference: skills/visual-state-machines/references/language.md",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-11",
+              "path": "target/README.md",
+              "description": "MT5 domain reference: target/README.md",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-12",
+              "path": "target/translation-file.md",
+              "description": "MT5 domain reference: target/translation-file.md",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-13",
+              "path": "target/sdk-integration.md",
+              "description": "MT5 domain reference: target/sdk-integration.md",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-14",
+              "path": "target/examples/Strategy.mq5",
+              "description": "MT5 domain reference: target/examples/Strategy.mq5",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-15",
+              "path": "backend/sdk/Expert.mqh",
+              "description": "MT5 domain reference: backend/sdk/Expert.mqh",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-16",
+              "path": "backend/sdk/Results.mqh",
+              "description": "MT5 domain reference: backend/sdk/Results.mqh",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-17",
+              "path": "backend/sdk/Risk.mqh",
+              "description": "MT5 domain reference: backend/sdk/Risk.mqh",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-18",
+              "path": "backend/sdk/Telemetry.mqh",
+              "description": "MT5 domain reference: backend/sdk/Telemetry.mqh",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-19",
+              "path": "backend/sdk/Trade.mqh",
+              "description": "MT5 domain reference: backend/sdk/Trade.mqh",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-20",
+              "path": "backend/sdk/Visual.mqh",
+              "description": "MT5 domain reference: backend/sdk/Visual.mqh",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-21",
+              "path": "scripts/install-mt5-python.py",
+              "description": "MT5 domain reference: scripts/install-mt5-python.py",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-22",
+              "path": "scripts/install-mt5-macos.sh",
+              "description": "MT5 domain reference: scripts/install-mt5-macos.sh",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-23",
+              "path": "scripts/README.md",
+              "description": "MT5 domain reference: scripts/README.md",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-24",
+              "path": "TRADING.md",
+              "description": "MT5 domain reference: TRADING.md",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-25",
+              "path": "target/conformance.md",
+              "description": "MT5 domain reference: target/conformance.md",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-26",
+              "path": "backend/sdk/Conformance.mqh",
+              "description": "MT5 domain reference: backend/sdk/Conformance.mqh",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-27",
+              "path": "backend/sdk/FrozenInputs.mqh",
+              "description": "MT5 domain reference: backend/sdk/FrozenInputs.mqh",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-28",
+              "path": "target/examples/FrozenTimeline.mq5",
+              "description": "MT5 domain reference: target/examples/FrozenTimeline.mq5",
+              "kind": "reference"
+            },
+            {
+              "id": "skill-connection",
+              "path": "skills/connection/SKILL.md",
+              "description": "MT5 domain capability reference skills/connection/SKILL.md",
+              "kind": "skill"
+            },
+            {
+              "id": "skill-dependencies",
+              "path": "skills/dependencies/SKILL.md",
+              "description": "MT5 domain capability reference skills/dependencies/SKILL.md",
+              "kind": "skill"
+            },
+            {
+              "id": "skill-mt5-official",
+              "path": "skills/mt5-official/SKILL.md",
+              "description": "MT5 domain capability reference skills/mt5-official/SKILL.md",
+              "kind": "skill"
+            },
+            {
+              "id": "skill-native-ea",
+              "path": "skills/native-ea/SKILL.md",
+              "description": "MT5 domain capability reference skills/native-ea/SKILL.md",
+              "kind": "skill"
+            },
+            {
+              "id": "skill-svl-mql5",
+              "path": "skills/svl-mql5/SKILL.md",
+              "description": "MT5 domain capability reference skills/svl-mql5/SKILL.md",
+              "kind": "skill"
+            },
+            {
+              "id": "skill-visual-state-machines",
+              "path": "skills/visual-state-machines/SKILL.md",
+              "description": "MT5 domain capability reference skills/visual-state-machines/SKILL.md",
+              "kind": "skill"
+            },
+            {
+              "id": "public-interface-contract",
+              "path": "INTERFACES.md",
+              "consumers": [
+                "agent",
+                "host"
+              ],
+              "description": "Every declared capability: concrete inputs/outputs, dependency entrypoints, effects, completion evidence and recovery boundaries.",
+              "kind": "reference"
+            }
+          ],
+          "after": [
+            {
+              "id": "reference-0",
+              "path": "prompt.md",
+              "description": "MT5 domain reference: prompt.md",
+              "kind": "prompt"
+            },
+            {
+              "id": "reference-1",
+              "path": "tools/official/prompt.md",
+              "description": "MT5 domain reference: tools/official/prompt.md",
+              "kind": "prompt"
+            },
+            {
+              "id": "reference-2",
+              "path": "tools/charts/prompt.md",
+              "description": "MT5 domain reference: tools/charts/prompt.md",
+              "kind": "prompt"
+            },
+            {
+              "id": "reference-3",
+              "path": "tools/editor/prompt.md",
+              "description": "MT5 domain reference: tools/editor/prompt.md",
+              "kind": "prompt"
+            },
+            {
+              "id": "reference-4",
+              "path": "tools/python/prompt.md",
+              "description": "MT5 domain reference: tools/python/prompt.md",
+              "kind": "prompt"
+            },
+            {
+              "id": "reference-5",
+              "path": "tools/system/prompt.md",
+              "description": "MT5 domain reference: tools/system/prompt.md",
+              "kind": "prompt"
+            },
+            {
+              "id": "reference-6",
+              "path": "tools/tester/prompt.md",
+              "description": "MT5 domain reference: tools/tester/prompt.md",
+              "kind": "prompt"
+            },
+            {
+              "id": "reference-7",
+              "path": "tools/trading/prompt.md",
+              "description": "MT5 domain reference: tools/trading/prompt.md",
+              "kind": "prompt"
+            },
+            {
+              "id": "reference-8",
+              "path": "tools/deployment/prompt.md",
+              "description": "MT5 domain reference: tools/deployment/prompt.md",
+              "kind": "prompt"
+            },
+            {
+              "id": "reference-9",
+              "path": "tools/authoring/prompt.md",
+              "description": "MT5 domain reference: tools/authoring/prompt.md",
+              "kind": "prompt"
+            },
+            {
+              "id": "reference-10",
+              "path": "references/language.md",
+              "description": "MT5 domain reference: references/language.md",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-11",
+              "path": "target/README.md",
+              "description": "MT5 domain reference: target/README.md",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-12",
+              "path": "target/translation-file.md",
+              "description": "MT5 domain reference: target/translation-file.md",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-13",
+              "path": "target/sdk-integration.md",
+              "description": "MT5 domain reference: target/sdk-integration.md",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-14",
+              "path": "target/examples/Strategy.mq5",
+              "description": "MT5 domain reference: target/examples/Strategy.mq5",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-15",
+              "path": "backend/sdk/Expert.mqh",
+              "description": "MT5 domain reference: backend/sdk/Expert.mqh",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-16",
+              "path": "backend/sdk/Results.mqh",
+              "description": "MT5 domain reference: backend/sdk/Results.mqh",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-17",
+              "path": "backend/sdk/Risk.mqh",
+              "description": "MT5 domain reference: backend/sdk/Risk.mqh",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-18",
+              "path": "backend/sdk/Telemetry.mqh",
+              "description": "MT5 domain reference: backend/sdk/Telemetry.mqh",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-19",
+              "path": "backend/sdk/Trade.mqh",
+              "description": "MT5 domain reference: backend/sdk/Trade.mqh",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-20",
+              "path": "backend/sdk/Visual.mqh",
+              "description": "MT5 domain reference: backend/sdk/Visual.mqh",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-21",
+              "path": "scripts/install-mt5-python.py",
+              "description": "MT5 domain reference: scripts/install-mt5-python.py",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-22",
+              "path": "scripts/install-mt5-macos.sh",
+              "description": "MT5 domain reference: scripts/install-mt5-macos.sh",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-23",
+              "path": "scripts/README.md",
+              "description": "MT5 domain reference: scripts/README.md",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-24",
+              "path": "TRADING.md",
+              "description": "MT5 domain reference: TRADING.md",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-25",
+              "path": "target/conformance.md",
+              "description": "MT5 domain reference: target/conformance.md",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-26",
+              "path": "backend/sdk/Conformance.mqh",
+              "description": "MT5 domain reference: backend/sdk/Conformance.mqh",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-27",
+              "path": "backend/sdk/FrozenInputs.mqh",
+              "description": "MT5 domain reference: backend/sdk/FrozenInputs.mqh",
+              "kind": "reference"
+            },
+            {
+              "id": "reference-28",
+              "path": "target/examples/FrozenTimeline.mq5",
+              "description": "MT5 domain reference: target/examples/FrozenTimeline.mq5",
+              "kind": "reference"
+            },
+            {
+              "id": "skill-connection",
+              "path": "skills/connection/SKILL.md",
+              "description": "MT5 domain capability reference skills/connection/SKILL.md",
+              "kind": "skill"
+            },
+            {
+              "id": "skill-dependencies",
+              "path": "skills/dependencies/SKILL.md",
+              "description": "MT5 domain capability reference skills/dependencies/SKILL.md",
+              "kind": "skill"
+            },
+            {
+              "id": "skill-mt5-official",
+              "path": "skills/mt5-official/SKILL.md",
+              "description": "MT5 domain capability reference skills/mt5-official/SKILL.md",
+              "kind": "skill"
+            },
+            {
+              "id": "skill-native-ea",
+              "path": "skills/native-ea/SKILL.md",
+              "description": "MT5 domain capability reference skills/native-ea/SKILL.md",
+              "kind": "skill"
+            },
+            {
+              "id": "skill-svl-mql5",
+              "path": "skills/svl-mql5/SKILL.md",
+              "description": "MT5 domain capability reference skills/svl-mql5/SKILL.md",
+              "kind": "skill"
+            },
+            {
+              "id": "skill-visual-state-machines",
+              "path": "skills/visual-state-machines/SKILL.md",
+              "description": "MT5 domain capability reference skills/visual-state-machines/SKILL.md",
+              "kind": "skill"
+            },
+            {
+              "id": "public-interface-contract",
+              "path": "INTERFACES.md",
+              "consumers": [
+                "agent",
+                "host"
+              ],
+              "description": "Every declared capability: concrete inputs/outputs, dependency entrypoints, effects, completion evidence and recovery boundaries.",
+              "kind": "reference"
+            }
+          ],
+          "impact": "resource-declaration-review"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/mt5",
+      "sourcePath": "plugins/optional-api-v1/packages/mt5",
+      "component": "removed path:skills/visual-state-machines/references/language.md",
+      "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
+      "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
+      "decision": "approved",
+      "reason": "2026-11-16：该参考路径已从 skills/<任务>/references/ 移到包根 references/，旧位置不保留副本。knowledge 与 resources 改为新路径。未新增角色合同、工具或工作流，能力 schema、权限和执行入口不变。",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": true,
+          "after": false,
+          "impact": "breaking-path-removal"
+        }
+      ],
+      "findings": []
+    },
+    {
       "pluginId": "sesame/orchestration",
       "sourcePath": "plugins/api-v1/packages/orchestration",
       "component": "plugin.json",
       "beforeDigest": "sha256:8bb880264ef2ad5c825b1dfbdd3ca39db5d4fd4a706c640fbd00be44b920cc83",
-      "afterDigest": "sha256:3ba83a985ca14fde047546846869f7d3a180f5d3fde5886d9055c8ac664417de",
+      "afterDigest": "sha256:daa8035326bd05ad32e565871fd9172ae4a3d990fbd6b89ec79e9b3f7d64d629",
       "decision": "approved",
-      "reason": "User-requested responsibility split on 2026-10-26: orchestration 3.2.0 retains collaboration principles, the coordinate-research skill and host-owned Agent/Run references. Product help moves to independent default sesame/user-guide 3.0.0. Both packages remain knowledge-only; no execution capability, permission or host interface is changed.",
+      "reason": "User-requested responsibility split on 2026-10-26: orchestration 3.2.0 retains collaboration principles, the coordinate-research skill and host-owned Agent/Run references. Product help moves to independent default sesame/user-guide 3.0.0. Both packages remain knowledge-only; no execution capability, permission or host interface is changed. 2026-11-16 追加：已有参考从 skills/<任务>/references/ 移到包根 references/，只更新 knowledge 与 resources 中的路径。不新增角色合同、工具或工作流，能力 schema、权限和执行入口不变。",
       "deltas": [
         {
           "path": "/description",
@@ -16849,8 +17381,8 @@
             "skills/sesame-user-guide/references/website-docs.md"
           ],
           "after": [
-            "skills/coordinate-research/references/agent-runs.md",
-            "skills/coordinate-research/references/workflow-plans.md"
+            "references/agent-runs.md",
+            "references/workflow-plans.md"
           ],
           "impact": "declaration-contract-review"
         },
@@ -16870,9 +17402,9 @@
       "sourcePath": "plugins/api-v1/packages/orchestration",
       "component": "capabilities.json/knowledge",
       "beforeDigest": "sha256:27b93f04d1d4f1e76d79abc8e8c5b233855c29d26e50876f133eeec015692002",
-      "afterDigest": "sha256:43909303ea249243f1eedb8ecaa7235a0ae678ed786e4558751d14abafc42762",
+      "afterDigest": "sha256:5327326891afa863ef6d8e5a39ca115095e1a5f35a4614fa3061a55e2a7aecaf",
       "decision": "approved",
-      "reason": "User-requested responsibility split on 2026-10-26: orchestration 3.2.0 retains collaboration principles, the coordinate-research skill and host-owned Agent/Run references. Product help moves to independent default sesame/user-guide 3.0.0. Both packages remain knowledge-only; no execution capability, permission or host interface is changed.",
+      "reason": "User-requested responsibility split on 2026-10-26: orchestration 3.2.0 retains collaboration principles, the coordinate-research skill and host-owned Agent/Run references. Product help moves to independent default sesame/user-guide 3.0.0. Both packages remain knowledge-only; no execution capability, permission or host interface is changed. 2026-11-16 追加：已有参考从 skills/<任务>/references/ 移到包根 references/，只更新 knowledge 与 resources 中的路径。不新增角色合同、工具或工作流，能力 schema、权限和执行入口不变。",
       "deltas": [
         {
           "path": "/",
@@ -16949,13 +17481,13 @@
             },
             {
               "id": "resource.3",
-              "path": "skills/coordinate-research/references/agent-runs.md",
-              "description": "知识资料 skills/coordinate-research/references/agent-runs.md",
+              "path": "references/agent-runs.md",
+              "description": "知识资料 references/agent-runs.md",
               "kind": "reference"
             },
             {
               "id": "resource.4",
-              "path": "skills/coordinate-research/references/workflow-plans.md",
+              "path": "references/workflow-plans.md",
               "description": "工作流计划与可调整阶段",
               "kind": "reference"
             }
@@ -17130,9 +17662,9 @@
       "sourcePath": "plugins/api-v1/packages/plugin-manager",
       "component": "plugin.json",
       "beforeDigest": "sha256:b18dce07f3ab94e09a7c560ffa1d5966738fcc5ec4d567799763fa0a24b0bd66",
-      "afterDigest": "sha256:ded29b5598bcae7356ab57fb2781a3e0c9fc3a332f8ac77f2d8f71ad10e053a5",
+      "afterDigest": "sha256:972eddf385b0cebe9c197e5fd59b1191f435391e761bd8dce3331706baff2a93",
       "decision": "approved",
-      "reason": "Automated exact-hash engineering acceptance: New-host compatibility and explicit request-only permission migration, with exact calls/service selectors and no automatic grants. Candidate versions are separate from prior installed/published bytes; this is not a backward-compatible metadata assertion. No human/release/broker acceptance is implied.\n2026-10-26 user-requested guide cleanup: separate management/development skills and declare their resource; align command_id and conditional catalog/resource arguments with existing runtime checks (invalid inputs previously failed later); clarify true loading/configuration/install-check semantics. Native factories and valid runtime inputs are unchanged. Focused regression, documented-example and real isolated-host installation tests pass.",
+      "reason": "Automated exact-hash engineering acceptance: New-host compatibility and explicit request-only permission migration, with exact calls/service selectors and no automatic grants. Candidate versions are separate from prior installed/published bytes; this is not a backward-compatible metadata assertion. No human/release/broker acceptance is implied.\n2026-10-26 user-requested guide cleanup: separate management/development skills and declare their resource; align command_id and conditional catalog/resource arguments with existing runtime checks (invalid inputs previously failed later); clarify true loading/configuration/install-check semantics. Native factories and valid runtime inputs are unchanged. Focused regression, documented-example and real isolated-host installation tests pass. 2026-11-16 追加：已有参考从 skills/<任务>/references/ 移到包根 references/，只更新 knowledge 与 resources 中的路径。不新增角色合同、工具或工作流，能力 schema、权限和执行入口不变。",
       "deltas": [
         {
           "path": "/engines/sesame",
@@ -17170,10 +17702,10 @@
             "README.md",
             "scaffold.js",
             "scripts/create-plugin.mjs",
-            "skills/develop-plugins/references/authoring.md",
-            "skills/develop-plugins/references/host-api.md",
-            "skills/develop-plugins/references/recovery.md",
-            "skills/manage-plugins/references/operations.md"
+            "references/authoring.md",
+            "references/host-api.md",
+            "references/recovery.md",
+            "references/operations.md"
           ],
           "impact": "declaration-contract-review"
         }
@@ -17553,9 +18085,9 @@
       "sourcePath": "plugins/api-v1/packages/plugin-manager",
       "component": "capabilities.json/knowledge",
       "beforeDigest": "sha256:ccb3a2c1485d0e19deca49fb30ad3b677e25a340837ac3941628f2e0f51ca1f1",
-      "afterDigest": "sha256:8db2bed1d5023a1991186b0f4f8f54726e478b72af2f6dc9ca45d81876514d75",
+      "afterDigest": "sha256:0f95138d3a342c322eb6944a1091cba17f409ed471f50232c6a61a02f9bbe1b6",
       "decision": "approved",
-      "reason": "2026-10-26 user-requested guide cleanup: separate management/development skills and declare their resource; align command_id and conditional catalog/resource arguments with existing runtime checks (invalid inputs previously failed later); clarify true loading/configuration/install-check semantics. Native factories and valid runtime inputs are unchanged. Focused regression, documented-example and real isolated-host installation tests pass.",
+      "reason": "2026-10-26 user-requested guide cleanup: separate management/development skills and declare their resource; align command_id and conditional catalog/resource arguments with existing runtime checks (invalid inputs previously failed later); clarify true loading/configuration/install-check semantics. Native factories and valid runtime inputs are unchanged. Focused regression, documented-example and real isolated-host installation tests pass. 2026-11-16 追加：已有参考从 skills/<任务>/references/ 移到包根 references/，只更新 knowledge 与 resources 中的路径。不新增角色合同、工具或工作流，能力 schema、权限和执行入口不变。",
       "deltas": [
         {
           "path": "/",
@@ -17644,19 +18176,19 @@
             },
             {
               "id": "resource.6",
-              "path": "skills/develop-plugins/references/authoring.md",
+              "path": "references/authoring.md",
               "description": "插件职责、显式声明、权限、配置依赖、知识分层和验证要求。",
               "kind": "reference"
             },
             {
               "id": "resource.7",
-              "path": "skills/develop-plugins/references/host-api.md",
+              "path": "references/host-api.md",
               "description": "八个宿主端口、能力与 Run、资源和入站消息的真实调用约定。",
               "kind": "reference"
             },
             {
               "id": "resource.8",
-              "path": "skills/develop-plugins/references/recovery.md",
+              "path": "references/recovery.md",
               "description": "安装失败、摘要冲突、未知结果及草稿恢复。",
               "kind": "reference"
             },
@@ -17668,12 +18200,72 @@
             },
             {
               "id": "management-operations",
-              "path": "skills/manage-plugins/references/operations.md",
+              "path": "references/operations.md",
               "kind": "reference",
               "description": "11 个插件管理工具的参数、版本字段、三态、配置入口和安装检查范围。"
             }
           ],
           "impact": "resource-declaration-review"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/plugin-manager",
+      "sourcePath": "plugins/api-v1/packages/plugin-manager",
+      "component": "removed path:skills/develop-plugins/references/authoring.md",
+      "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
+      "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
+      "decision": "approved",
+      "reason": "2026-11-16：该参考路径已从 skills/<任务>/references/ 移到包根 references/，旧位置不保留副本。knowledge 与 resources 改为新路径。未新增角色合同、工具或工作流，能力 schema、权限和执行入口不变。",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": true,
+          "after": false,
+          "impact": "breaking-path-removal"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/plugin-manager",
+      "sourcePath": "plugins/api-v1/packages/plugin-manager",
+      "component": "removed path:skills/develop-plugins/references/host-api.md",
+      "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
+      "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
+      "decision": "approved",
+      "reason": "2026-11-16：该参考路径已从 skills/<任务>/references/ 移到包根 references/，旧位置不保留副本。knowledge 与 resources 改为新路径。未新增角色合同、工具或工作流，能力 schema、权限和执行入口不变。",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": true,
+          "after": false,
+          "impact": "breaking-path-removal"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "pluginId": "sesame/plugin-manager",
+      "sourcePath": "plugins/api-v1/packages/plugin-manager",
+      "component": "removed path:skills/develop-plugins/references/recovery.md",
+      "beforeDigest": "sha256:a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f",
+      "afterDigest": "sha256:f31334156d7e5209dfc90f4f42f19e829fa93f75741665019395b045576b09a5",
+      "decision": "approved",
+      "reason": "2026-11-16：该参考路径已从 skills/<任务>/references/ 移到包根 references/，旧位置不保留副本。knowledge 与 resources 改为新路径。未新增角色合同、工具或工作流，能力 schema、权限和执行入口不变。",
+      "deltas": [
+        {
+          "path": "/",
+          "beforePresent": true,
+          "afterPresent": true,
+          "before": true,
+          "after": false,
+          "impact": "breaking-path-removal"
         }
       ],
       "findings": []

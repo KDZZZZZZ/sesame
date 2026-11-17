@@ -458,8 +458,8 @@ orchestration、user-guide 没有执行入口，其能力由知识指南提供�
 
 - [prompt.md](../plugins/api-v1/packages/orchestration/prompt.md)
 - [skills/coordinate-research/SKILL.md](../plugins/api-v1/packages/orchestration/skills/coordinate-research/SKILL.md)
-- [skills/coordinate-research/references/agent-runs.md](../plugins/api-v1/packages/orchestration/skills/coordinate-research/references/agent-runs.md)
-- [skills/coordinate-research/references/workflow-plans.md](../plugins/api-v1/packages/orchestration/skills/coordinate-research/references/workflow-plans.md)
+- [references/agent-runs.md](../plugins/api-v1/packages/orchestration/references/agent-runs.md)
+- [references/workflow-plans.md](../plugins/api-v1/packages/orchestration/references/workflow-plans.md)
 
 ### sesame/user-guide
 
@@ -471,13 +471,13 @@ orchestration、user-guide 没有执行入口，其能力由知识指南提供�
 
 - [prompt.md](../plugins/api-v1/packages/user-guide/prompt.md)
 - [skills/sesame-user-guide/SKILL.md](../plugins/api-v1/packages/user-guide/skills/sesame-user-guide/SKILL.md)
-- [skills/sesame-user-guide/references/installation.md](../plugins/api-v1/packages/user-guide/skills/sesame-user-guide/references/installation.md)
-- [skills/sesame-user-guide/references/dashboard.md](../plugins/api-v1/packages/user-guide/skills/sesame-user-guide/references/dashboard.md)
-- [skills/sesame-user-guide/references/chat-and-commands.md](../plugins/api-v1/packages/user-guide/skills/sesame-user-guide/references/chat-and-commands.md)
-- [skills/sesame-user-guide/references/settings.md](../plugins/api-v1/packages/user-guide/skills/sesame-user-guide/references/settings.md)
-- [skills/sesame-user-guide/references/workflows.md](../plugins/api-v1/packages/user-guide/skills/sesame-user-guide/references/workflows.md)
-- [skills/sesame-user-guide/references/troubleshooting.md](../plugins/api-v1/packages/user-guide/skills/sesame-user-guide/references/troubleshooting.md)
-- [skills/sesame-user-guide/references/website-docs.md](../plugins/api-v1/packages/user-guide/skills/sesame-user-guide/references/website-docs.md)
+- [references/installation.md](../plugins/api-v1/packages/user-guide/references/installation.md)
+- [references/dashboard.md](../plugins/api-v1/packages/user-guide/references/dashboard.md)
+- [references/chat-and-commands.md](../plugins/api-v1/packages/user-guide/references/chat-and-commands.md)
+- [references/settings.md](../plugins/api-v1/packages/user-guide/references/settings.md)
+- [references/workflows.md](../plugins/api-v1/packages/user-guide/references/workflows.md)
+- [references/troubleshooting.md](../plugins/api-v1/packages/user-guide/references/troubleshooting.md)
+- [references/website-docs.md](../plugins/api-v1/packages/user-guide/references/website-docs.md)
 
 ### sesame/plugin-manager
 

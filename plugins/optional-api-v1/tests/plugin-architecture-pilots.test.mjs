@@ -11,7 +11,7 @@ const read = (name, path) => readFile(new URL(`${name}/${path}`, root));
 // Exact new-host engine/call declarations are reviewed in plugin-boundaries-reviewed-changes.json;
 // input/result shape and default execution are also checked below and in the host tests.
 const contracts = {
-  ict: { manifest: 'ba4dea11d18b997d581568bcb367984e0cc2b8f8321f22af82cb0cb88d68ab09', declaration: '87cf4bd7b88fc49eab2049588c478f3d5424772d6f990b351875702dcee67ece' },
+  ict: { manifest: '4220d8f8e3ac4e671a9fce85dee861817c5100bb4073a28a2c08c1ec810831a0', declaration: 'e4bec4696f626f491726cd65382b9fa48f829fb30624c341c527515a4d14e83a' },
   'investment-research': { manifest: '3335edae35664d145b328cfe1d410fa90f3f447847b329e1d14c627ed431d406', declaration: 'b8e748e4a9169764691a0037a086754918a9c5ade0b7fd4cb8f105ced51554e4' },
 };
 

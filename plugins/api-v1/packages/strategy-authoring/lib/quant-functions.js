@@ -83,6 +83,6 @@ export function createQuantCapabilities(host) {
     const extension = quantFunctions();
     await writeWorkspace(host, args.output_path, JSON.stringify(extension, null, 2) + '\n', signal);
     return { id: extension.id, version: extension.version, digest: extension.digest, languageVersion: '1.2.0', path: args.output_path,
-      functions: extension.module.functions.filter(fn => !fn.id.endsWith('Step')).map(fn => ({ id: extension.id + '/' + fn.id, parameters: fn.parameters, output: fn.output })), reference: 'skills/strategy-authoring/references/quant-functions.md' };
+      functions: extension.module.functions.filter(fn => !fn.id.endsWith('Step')).map(fn => ({ id: extension.id + '/' + fn.id, parameters: fn.parameters, output: fn.output })), reference: 'references/quant-functions.md' };
   } }];
 }

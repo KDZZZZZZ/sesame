@@ -112,8 +112,8 @@ test('deep-reasoning installs, is discoverable, loads selectively and survives r
       assert.equal(runtime.plugins.entry('sesame/deep-reasoning').digest, digest);
       assert.equal(runtime.plugins.entry('sesame/deep-reasoning').runtime_status, 'ready');
       assert.equal(runtime.plugins.active('conv_main', 'sesame/deep-reasoning'), true);
-      const response = await call('plugin_read', { pluginId: 'sesame/deep-reasoning', part: 'resource', path: 'skills/deep-reasoning/references/reconciliation.md' });
-      assert.equal(response.content.trim(), (await read('skills/deep-reasoning/references/reconciliation.md')).trim());
+      const response = await call('plugin_read', { pluginId: 'sesame/deep-reasoning', part: 'resource', path: 'references/reconciliation.md' });
+      assert.equal(response.content.trim(), (await read('references/reconciliation.md')).trim());
     });
     assert.deepEqual(requests, [], 'installation and knowledge loading must not start research');
   } finally {

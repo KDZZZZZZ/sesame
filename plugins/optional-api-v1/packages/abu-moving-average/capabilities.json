@@ -226,7 +226,7 @@
     },
     {
       "id": "knowledge-4",
-      "path": "skills/abu-moving-average/references/method.md",
+      "path": "references/method.md",
       "description": "abu_moving_average_analyze 的公式、参数口径与基线差异；核对是否可以复用其他已计算结果。",
       "kind": "reference"
     },

@@ -16,9 +16,9 @@
 | --- | --- |
 | capabilities.json | 显式知识资源、空执行能力和空配置 Schema |
 | skills/ict/SKILL.md | 问题、输入、判断边界和交接规则 |
-| skills/ict/references/method.md | 三柱区间观察的操作定义与反证 |
-| skills/ict/references/validation.md | 确认时点、日历与效力验证边界 |
-| skills/ict/references/execution.md | 读取固定输入、真实执行及登记派生结果的接口 |
+| references/method.md | 三柱区间观察的操作定义与反证 |
+| references/validation.md | 确认时点、日历与效力验证边界 |
+| references/execution.md | 读取固定输入、真实执行及登记派生结果的接口 |
 | scripts/observe.py、scripts/bar_input.py | 保持原路径的可选 Python 标准库计算和输入校验 |
 | examples/bars.json、examples/source.json、examples/expected.md | 同一套虚构闭柱输入、来源约束与独立预期 |
 

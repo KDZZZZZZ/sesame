@@ -26,9 +26,9 @@
     "examples/source.json",
     "scripts/bar_input.py",
     "scripts/observe.py",
-    "skills/price-action/references/execution.md",
-    "skills/price-action/references/method.md",
-    "skills/price-action/references/validation.md"
+    "references/execution.md",
+    "references/method.md",
+    "references/validation.md"
   ],
   "provides": {},
   "engines": {

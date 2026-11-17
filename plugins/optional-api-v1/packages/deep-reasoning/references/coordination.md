@@ -12,7 +12,7 @@
 {
   "title": "历史类比",
   "objective": "基于共同输入独立完成 H0，返回前提引用、机制摘要、条件结论和内部核验。",
-  "instructions": "这是深度推理综合研究的内部 H 阶段。只读取 sesame/deep-reasoning 的 skills/deep-reasoning/references/historical.md 和本任务的 E0；不读取 D/G 临时结论，不再次委派，不另建报告。发现缺证据时写明需核对的事实与其影响。按任务 input.delivery 返回可审核摘要。",
+  "instructions": "这是深度推理综合研究的内部 H 阶段。只读取 sesame/deep-reasoning 的 references/historical.md 和本任务的 E0；不读取 D/G 临时结论，不再次委派，不另建报告。发现缺证据时写明需核对的事实与其影响。按任务 input.delivery 返回可审核摘要。",
   "input": {
     "evidence": "替换为本次真实完整 E0 对象或成员可读的固定资源引用",
     "delivery": ["path", "version", "evidenceVersion", "applicability", "claims", "checks", "conclusion", "revisions"]

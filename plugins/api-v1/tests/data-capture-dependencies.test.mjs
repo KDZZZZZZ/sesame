@@ -16,10 +16,16 @@ test('the runtime extension proves the complete old source by reversing only exa
     declaration = declaration.replace(edit.after, edit.before);
   }
   assert.equal(digest(declaration), review.declarationSha256Unchanged, 'schemas, effects, permissions and state declarations are unchanged after reversing reviewed usage wording');
-  const manifest = JSON.parse(read('../packages/data-access/plugin.json'));
+  const manifestText = read('../packages/data-access/plugin.json').toString('utf8');
+  let restoredManifest = manifestText;
+  for (const edit of [...(review.approvedManifestEdits ?? [])].reverse()) {
+    assert.equal(restoredManifest.split(edit.after).length, 2, 'each reviewed manifest path edit has exactly one location');
+    restoredManifest = restoredManifest.replace(edit.after, edit.before);
+  }
+  const manifest = JSON.parse(manifestText);
   assert.equal(manifest.version, review.after.version); assert.equal(review.before.version, '3.0.3');
   assert.equal(digest(manifest), review.after.manifestDigest);
-  assert.equal(digest({ ...manifest, version: review.before.version }), review.before.manifestDigest);
+  assert.equal(digest({ ...JSON.parse(restoredManifest), version: review.before.version }), review.before.manifestDigest);
   let source = read('../packages/data-access/capture.js').toString('utf8');
   assert.equal(digest(source), review.after.sha256);
   assert.ok(review.approvedSourceEdits.length > 0);

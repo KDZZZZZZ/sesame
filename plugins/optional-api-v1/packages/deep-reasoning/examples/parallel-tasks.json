@@ -2,7 +2,7 @@
   {
     "title": "历史类比",
     "objective": "基于共同输入独立完成 H0，返回前提引用、机制摘要、条件结论和内部核验。",
-    "instructions": "这是深度推理综合研究的内部 H 阶段。只读取 sesame/deep-reasoning 的 skills/deep-reasoning/references/historical.md 和本任务 E0。按本路径方法独立核验，不读取其他路径临时结果，不再次委派，不另建报告。证据不足时标明缺口，不编造案例或概率。按 input.delivery 返回可审核摘要。",
+    "instructions": "这是深度推理综合研究的内部 H 阶段。只读取 sesame/deep-reasoning 的 references/historical.md 和本任务 E0。按本路径方法独立核验，不读取其他路径临时结果，不再次委派，不另建报告。证据不足时标明缺口，不编造案例或概率。按 input.delivery 返回可审核摘要。",
     "input": {
       "evidence": {
         "provenance": "synthetic",
@@ -86,7 +86,7 @@
   {
     "title": "矛盾分析",
     "objective": "基于共同输入独立完成 D0，返回前提引用、机制摘要、条件结论和内部核验。",
-    "instructions": "这是深度推理综合研究的内部 D 阶段。只读取 sesame/deep-reasoning 的 skills/deep-reasoning/references/contradictions.md 和本任务 E0。按本路径方法独立核验，不读取其他路径临时结果，不再次委派，不另建报告。证据不足时标明缺口，不编造案例或概率。按 input.delivery 返回可审核摘要。",
+    "instructions": "这是深度推理综合研究的内部 D 阶段。只读取 sesame/deep-reasoning 的 references/contradictions.md 和本任务 E0。按本路径方法独立核验，不读取其他路径临时结果，不再次委派，不另建报告。证据不足时标明缺口，不编造案例或概率。按 input.delivery 返回可审核摘要。",
     "input": {
       "evidence": {
         "provenance": "synthetic",
@@ -170,7 +170,7 @@
   {
     "title": "博弈分析",
     "objective": "基于共同输入独立完成 G0，返回前提引用、机制摘要、条件结论和内部核验。",
-    "instructions": "这是深度推理综合研究的内部 G 阶段。只读取 sesame/deep-reasoning 的 skills/deep-reasoning/references/game-theory.md 和本任务 E0。按本路径方法独立核验，不读取其他路径临时结果，不再次委派，不另建报告。证据不足时标明缺口，不编造案例或概率。按 input.delivery 返回可审核摘要。",
+    "instructions": "这是深度推理综合研究的内部 G 阶段。只读取 sesame/deep-reasoning 的 references/game-theory.md 和本任务 E0。按本路径方法独立核验，不读取其他路径临时结果，不再次委派，不另建报告。证据不足时标明缺口，不编造案例或概率。按 input.delivery 返回可审核摘要。",
     "input": {
       "evidence": {
         "provenance": "synthetic",

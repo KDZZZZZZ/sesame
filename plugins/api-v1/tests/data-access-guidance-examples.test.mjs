@@ -7,11 +7,11 @@ const root = new URL('../packages/data-access/', import.meta.url);
 test('data guidance examples use the current public capability input contracts', async () => {
   const declarations = JSON.parse(await readFile(new URL('capabilities.json', root), 'utf8'));
   const cases = [
-    ['skills/market-discovery/references/source-queries.md', '查询一页：data_query', 'data_query'],
-    ['skills/market-discovery/references/source-queries.md', '固定数据：data_snapshot', 'data_snapshot'],
-    ['skills/market-discovery/references/market-history.md', '读取历史：market_read', 'market_read'],
-    ['skills/analyze-data/references/execution-evidence.md', '读取登记输入：data_read', 'data_read'],
-    ['skills/analyze-data/references/execution-evidence.md', '登记计算：research_register', 'research_register'],
+    ['references/source-queries.md', '查询一页：data_query', 'data_query'],
+    ['references/source-queries.md', '固定数据：data_snapshot', 'data_snapshot'],
+    ['references/market-history.md', '读取历史：market_read', 'market_read'],
+    ['references/execution-evidence.md', '读取登记输入：data_read', 'data_read'],
+    ['references/execution-evidence.md', '登记计算：research_register', 'research_register'],
   ];
   for (const [path, heading, id] of cases) {
     const content = (await readFile(new URL(path, root), 'utf8')).replaceAll('\r\n', '\n');

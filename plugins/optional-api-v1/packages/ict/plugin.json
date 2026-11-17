@@ -26,9 +26,9 @@
     "examples/source.json",
     "scripts/bar_input.py",
     "scripts/observe.py",
-    "skills/ict/references/execution.md",
-    "skills/ict/references/method.md",
-    "skills/ict/references/validation.md"
+    "references/execution.md",
+    "references/method.md",
+    "references/validation.md"
   ],
   "provides": {},
   "engines": {

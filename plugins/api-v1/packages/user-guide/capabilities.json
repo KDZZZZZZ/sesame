@@ -26,44 +26,44 @@
     },
     {
       "id": "resource.3",
-      "path": "skills/sesame-user-guide/references/installation.md",
-      "description": "知识资料 skills/sesame-user-guide/references/installation.md",
+      "path": "references/installation.md",
+      "description": "知识资料 references/installation.md",
       "kind": "reference"
     },
     {
       "id": "resource.4",
-      "path": "skills/sesame-user-guide/references/dashboard.md",
-      "description": "知识资料 skills/sesame-user-guide/references/dashboard.md",
+      "path": "references/dashboard.md",
+      "description": "知识资料 references/dashboard.md",
       "kind": "reference"
     },
     {
       "id": "resource.5",
-      "path": "skills/sesame-user-guide/references/chat-and-commands.md",
-      "description": "知识资料 skills/sesame-user-guide/references/chat-and-commands.md",
+      "path": "references/chat-and-commands.md",
+      "description": "知识资料 references/chat-and-commands.md",
       "kind": "reference"
     },
     {
       "id": "resource.6",
-      "path": "skills/sesame-user-guide/references/settings.md",
-      "description": "知识资料 skills/sesame-user-guide/references/settings.md",
+      "path": "references/settings.md",
+      "description": "知识资料 references/settings.md",
       "kind": "reference"
     },
     {
       "id": "resource.7",
-      "path": "skills/sesame-user-guide/references/workflows.md",
-      "description": "知识资料 skills/sesame-user-guide/references/workflows.md",
+      "path": "references/workflows.md",
+      "description": "知识资料 references/workflows.md",
       "kind": "reference"
     },
     {
       "id": "resource.8",
-      "path": "skills/sesame-user-guide/references/troubleshooting.md",
-      "description": "知识资料 skills/sesame-user-guide/references/troubleshooting.md",
+      "path": "references/troubleshooting.md",
+      "description": "知识资料 references/troubleshooting.md",
       "kind": "reference"
     },
     {
       "id": "resource.9",
-      "path": "skills/sesame-user-guide/references/website-docs.md",
-      "description": "知识资料 skills/sesame-user-guide/references/website-docs.md",
+      "path": "references/website-docs.md",
+      "description": "知识资料 references/website-docs.md",
       "kind": "reference"
     }
   ],

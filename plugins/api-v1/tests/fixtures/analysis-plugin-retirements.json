@@ -412,8 +412,8 @@
       "replacementSourcePath": "plugins/optional-api-v1/packages/abu-trade-metrics",
       "replacementContract": {
         "version": "2.1.0",
-        "manifestDigest": "sha256:d3e774b4107810a61e98159dfff1b59dc65901106968219d1bd236d2434ee55c",
-        "declarationDigest": "sha256:ac3779e3e52b846152f79662201ef5dee57b373c1b64304b53102ce1a7973058"
+        "manifestDigest": "sha256:1090fe9f88bba7c895fdb4d3ffc4710a3062f6e6cb356473c37e2373b2988e8a",
+        "declarationDigest": "sha256:309b903885f1448c5e971e8d08bef65d18779b227085aa2d5337bfe52a3b61bc"
       },
       "capabilityMappings": [
         {
@@ -457,7 +457,7 @@
         {
           "role": "method",
           "from": "skills/abu-backtest-lab/references/method.md",
-          "to": "skills/abu-trade-metrics/references/audit.md",
+          "to": "references/audit.md",
           "preservation": "byte-identical",
           "beforeSha256": "sha256:77138894fa45849e1d4f248b7566292cf2f7ed91008a15b8408668eff846484b",
           "afterSha256": "sha256:77138894fa45849e1d4f248b7566292cf2f7ed91008a15b8408668eff846484b"

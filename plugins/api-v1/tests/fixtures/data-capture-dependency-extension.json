@@ -15,7 +15,7 @@
   "after": {
     "version": "3.0.5",
     "sha256": "sha256:06ede75709c800c0b4d43ed4eea2f3c165f97f94711e62c58c7b9d24b68cf0b2",
-    "manifestDigest": "sha256:bb5d8d466a158c0c70209d80fa6e05986b77d530df88e08014a6f1b59da174d0"
+    "manifestDigest": "sha256:cecd5c8c8760b47dbfdb5b6ffe7f5e2f3ef04b0fffe3643a7ba8620eea0d0b90"
   },
   "declarationSha256Unchanged": "sha256:8ed9303626c1f7067f778c266969b8b08cfdb17811c8c4971532bbef2b7f3b7e",
   "decision": "approved",
@@ -54,7 +54,39 @@
     "plugins/api-v1/tests/research-history-dependencies-host.test.mjs"
   ],
   "receipt": "output/research-register-dependencies-20261029/host-receipt.json",
+  "approvedManifestEdits": [
+    {
+      "before": "skills/market-discovery/references/source-queries.md",
+      "after": "references/source-queries.md",
+      "reason": "2026-11-16 move the existing source query reference to package references/. No capability or permission change."
+    },
+    {
+      "before": "skills/market-discovery/references/market-history.md",
+      "after": "references/market-history.md",
+      "reason": "2026-11-16 move the existing market history reference to package references/. No capability or permission change."
+    },
+    {
+      "before": "skills/analyze-data/references/execution-evidence.md",
+      "after": "references/execution-evidence.md",
+      "reason": "2026-11-16 move the existing execution evidence reference to package references/. No capability or permission change."
+    }
+  ],
   "approvedDeclarationEdits": [
+    {
+      "before": "skills/market-discovery/references/source-queries.md",
+      "after": "references/source-queries.md",
+      "reason": "2026-11-16 move the existing source query reference to package references/. No schema, effect or state change."
+    },
+    {
+      "before": "skills/market-discovery/references/market-history.md",
+      "after": "references/market-history.md",
+      "reason": "2026-11-16 move the existing market history reference to package references/. No schema, effect or state change."
+    },
+    {
+      "before": "skills/analyze-data/references/execution-evidence.md",
+      "after": "references/execution-evidence.md",
+      "reason": "2026-11-16 move the existing execution evidence reference to package references/. No schema, effect or state change."
+    },
     {
       "before": "        \"inputs\": \"无 datasetId/ref 时列出登记数据；二者选一时读取全部行并写入 directory/inputs，directory 默认当前工作区且自身不能是 inputs。ref 来自 data_snapshot/market_read/report_data。\",",
       "after": "        \"inputs\": \"无 datasetId/ref 时列出登记数据；二者选一时读取全部行并写入 directory/inputs，directory 默认当前工作区且自身不能是 inputs。ref 来自 data_snapshot 或 market_read，可直接供报告绑定，无需再次冻结。\",",

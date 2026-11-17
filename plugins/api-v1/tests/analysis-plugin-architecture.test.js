@@ -151,7 +151,10 @@ for (const item of currentContracts) {
     }
     assert.equal(policy[name].functionalCategory, reclassifiedParsers.get(item.id) ?? item.functionalCategory);
     assert.deepEqual(policy[name].implementationKinds, item.implementationKinds);
-    for (const path of item.paths) assert.ok(existsSync(join(directory, path)), `Original package path remains available: ${path}`);
+    for (const path of item.paths) {
+      const relocated = path.replace(/^skills\/[a-z0-9-]+\/references\//, 'references/');
+      assert.ok(existsSync(join(directory, path)) || existsSync(join(directory, relocated)), `Original package path remains available: ${path}`);
+    }
 
     const temporary = mkdtempSync(join(tmpdir(), 'sesame-analysis-archive-'));
     t.after(() => { assert.ok(resolve(temporary).startsWith(resolve(tmpdir()) + sep)); rmSync(temporary, { recursive: true, force: true, maxRetries: 3 }); });

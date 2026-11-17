@@ -13,8 +13,8 @@
     "skills"
   ],
   "resources": [
-    "skills/coordinate-research/references/agent-runs.md",
-    "skills/coordinate-research/references/workflow-plans.md"
+    "references/agent-runs.md",
+    "references/workflow-plans.md"
   ],
   "license": "MIT",
   "engines": {

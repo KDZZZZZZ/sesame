@@ -29,4 +29,4 @@ TR/ATR 数值使用 `abu_volatility_analyze` 或 `abu_indicators_analyze`，已�
 
 ## 按需参考
 
-references/method.md 定义观察与语境；references/execution.md 仅在需要本包 Python 计算时使用；references/validation.md 说明效力边界。 参考路径位于 skills/price-action/，案例路径相对包根；通过 plugin_read({pluginId:"sesame/price-action",part:"resource",path:"skills/price-action/references/method.md"}) 读取所需内容，path 换成相应已注册资源，不要求每次重读全部文件。PROVENANCE.md 说明来源与许可；案例是 demo，不能当真实行情或研究结论。
+references/method.md 定义观察与语境；references/execution.md 仅在需要本包 Python 计算时使用；references/validation.md 说明效力边界。 参考路径位于 references/，案例路径相对包根；通过 plugin_read({pluginId:"sesame/price-action",part:"resource",path:"references/method.md"}) 读取所需内容，path 换成相应已注册资源，不要求每次重读全部文件。PROVENANCE.md 说明来源与许可；案例是 demo，不能当真实行情或研究结论。

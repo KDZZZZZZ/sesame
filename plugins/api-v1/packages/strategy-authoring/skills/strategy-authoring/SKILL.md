@@ -18,7 +18,7 @@ license: MIT
 | `strategy_replay` | `{source,fixture_path,output_path?,operation_id?}` → 实际事件求值、`validationScope/nativeEngineExecuted`，可选固定 evidence | 检查固定事件上的分支、类型与状态；不接行情、不撮合。 |
 | `strategy_functions` | `{output_path}` → 扩展身份、digest、函数名和保存路径 | 写出 RSI、ATR、MACD、Bollinger、Donchian、z-score、波动率纯函数；并未发布或执行策略。 |
 
-语法入口是 `plugin_read({pluginId:"sesame/strategy-authoring",part:"resource",path:"skills/strategy-authoring/references/language.md"})`，完整参考包含结构、类型、当前原语、控制流、回放格式、预算和错误定位。新建或修改源时按需读取；需要理解设计取舍时读 `references/architecture.md`，它说明需求、时间、信号、分配、风险、执行与恢复，不新增语法。合法示例为 `examples/close-threshold.svl.json` 与 `.replay.json`；交易意图示例为 `examples/crossover.svl.json` 与 `.replay.json`。这些教学数据分别演示状态更新、交叉入场意图，不能证明实盘策略完整。
+语法入口是 `plugin_read({pluginId:"sesame/strategy-authoring",part:"resource",path:"references/language.md"})`，完整参考包含结构、类型、当前原语、控制流、回放格式、预算和错误定位。新建或修改源时按需读取；需要理解设计取舍时读 `references/architecture.md`，它说明需求、时间、信号、分配、风险、执行与恢复，不新增语法。合法示例为 `examples/close-threshold.svl.json` 与 `.replay.json`；交易意图示例为 `examples/crossover.svl.json` 与 `.replay.json`。这些教学数据分别演示状态更新、交叉入场意图，不能证明实盘策略完整。
 
 源中的 `parameters/inputs/state` 是具名对象。参数 `type` 是字符串，状态为 `{"type":{"kind":"decimal"},"initial":"0"}`；Decimal 用字符串，JSON number 仅安全整数。遇到对象形状错误，依错误路径核对具名集合、状态 type 与节点 inputs。不要发明自由文本表达式或未声明原语。1.0 的 functions 必须为空，1.1 增加类型化纯函数、窗口与时间原语，1.2 支持声明的集合、统计和冻结扩展。需要指标函数时读 `references/quant-functions.md`，将 strategy_functions 返回的完整扩展嵌入匹配的 1.2 源；只改版本号不能获得目标支持。
 
@@ -26,9 +26,9 @@ license: MIT
 
 ## 信号、组合、风险与执行
 
-需要组合策略、多个信号源或 Agent 参与判断时，先用 `plugin_read` 读取 `skills/strategy-authoring/references/pipeline.md`。按“信号 → 目标组合 → 风险调整 → 执行”固定输入输出、时间线与引用。已有目标可用 `strategy_pipeline` 检查；需要实际筛选品种和计算仓位时，继续读取 `references/methods.md`、`references/execution.md`，调用 `strategy_workflow`：动态排名、等权/置信度/逆波动率、汇率与合约数量、预算余量、回撤与总净/分组风险、拆单/保护/反向分段、部分成交/改单/撤单/恢复都有可重放结果。固定输入推演不调用模型、不连接券商、不成交。保留经典事件状态机，别把紧密关联的入场/退出逻辑强塞进组合分配。
+需要组合策略、多个信号源或 Agent 参与判断时，先用 `plugin_read` 读取 `references/pipeline.md`。按“信号 → 目标组合 → 风险调整 → 执行”固定输入输出、时间线与引用。已有目标可用 `strategy_pipeline` 检查；需要实际筛选品种和计算仓位时，继续读取 `references/methods.md`、`references/execution.md`，调用 `strategy_workflow`：动态排名、等权/置信度/逆波动率、汇率与合约数量、预算余量、回撤与总净/分组风险、拆单/保护/反向分段、部分成交/改单/撤单/恢复都有可重放结果。固定输入推演不调用模型、不连接券商、不成交。保留经典事件状态机，别把紧密关联的入场/退出逻辑强塞进组合分配。
 
-Agent 作为信号或非技术风险来源时，再读 `skills/strategy-authoring/references/agent-inputs.md`，使用 `strategy_decision` 提交隔离判断、查询/取消、使旧请求失效、导出固定时间线或启动目标适配器可消费的本机桥。实时结果和历史结果使用同一外部输入契约，按首次可消费时间进入策略；回测重放固定输出，不在每个优化参数下重新请求模型。账户反馈判断不能跨不同参数的模拟账户复用。硬风险规则、判断过期、断连和迟到结果的处理必须预先定义。源语言、图和固定事件测试通过，不意味着目标后端已经完成实盘消费或语义一致性验证。
+Agent 作为信号或非技术风险来源时，再读 `references/agent-inputs.md`，使用 `strategy_decision` 提交隔离判断、查询/取消、使旧请求失效、导出固定时间线或启动目标适配器可消费的本机桥。实时结果和历史结果使用同一外部输入契约，按首次可消费时间进入策略；回测重放固定输出，不在每个优化参数下重新请求模型。账户反馈判断不能跨不同参数的模拟账户复用。硬风险规则、判断过期、断连和迟到结果的处理必须预先定义。源语言、图和固定事件测试通过，不意味着目标后端已经完成实盘消费或语义一致性验证。
 
 ## 当前求值边界
 

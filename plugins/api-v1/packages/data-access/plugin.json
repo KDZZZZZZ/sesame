@@ -37,8 +37,8 @@
     ]
   },
   "resources": [
-    "skills/market-discovery/references/source-queries.md",
-    "skills/market-discovery/references/market-history.md",
-    "skills/analyze-data/references/execution-evidence.md"
+    "references/source-queries.md",
+    "references/market-history.md",
+    "references/execution-evidence.md"
   ]
 }

@@ -31,7 +31,7 @@
 
 正常调用所需的输入、输出、默认参数、依赖和限制直接来自每个能力的 Schema 与 usage，
 由宿主提供给 Agent，无需自行寻找用法。具体公式、差异及研究方法以各包 `README.md` 与
-`skills/<插件名>/references/method.md` 为准。交易裁判不声称与原 UMP/GMM 等价，
+`references/method.md` 为准。交易裁判不声称与原 UMP/GMM 等价，
 回测审计不代替 MT5/vn.py/Backtrader 撮合，轻量模型不冒充完整 sklearn/XGBoost/HMM。
 
 ## Agent 使用与改进
