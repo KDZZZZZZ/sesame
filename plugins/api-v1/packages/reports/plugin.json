@@ -1,8 +1,8 @@
 {
   "id": "sesame/reports",
   "title": "视觉组件与报告",
-  "description": "将初稿经视觉设计转为统一报告或回答组件；首屏关键结果、38种图表和15种内容块，保持研究原意，按数据关系组织呈现。",
-  "version": "8.0.1",
+  "description": "将研究初稿统一做图文编辑：组织内容、润色文字、设计图的意义，使用受控组件呈现报告或回答，保持事实与判断边界。",
+  "version": "8.0.2",
   "default_state": "mounted",
   "prompts": [
     "prompt.md"

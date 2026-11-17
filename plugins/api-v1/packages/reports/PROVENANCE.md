@@ -1,6 +1,6 @@
 # Sesame report components
 
-Reports 6 owns controlled visual components, a deterministic document renderer and
+Reports owns controlled visual components, a deterministic document renderer and
 delivery through the host-selected sesame.report/1 provider. Research methods and
 business report structures are separate. The component catalogue, table controls,
 chart families and the blue/gray visual adapter are original Sesame MIT code.
@@ -35,3 +35,17 @@ JavaScript, color-token file, font, screenshot or asset is redistributed.
 Standard chart encodings, restraint and data-shape-based selection informed
 Sesame's independent implementation. All packaged numerical fixtures are
 fictional demos, not market observations or performance claims.
+
+## Editorial references
+
+Reader-facing writing guidance was independently adapted from K-Dense-AI's
+Claude Scientific Writer: `.claude/WRITER.md`,
+`skills/scientific-writing/references/writing_principles.md`,
+`skills/scientific-writing/references/figures_tables.md` and
+`skills/venue-templates/references/nature_science_style.md` at
+https://github.com/K-Dense-AI/claude-scientific-writer . The references informed
+finding-led organization, paragraph coherence and division of work between
+figures and prose. Sesame's single editorial step, financial examples and
+component bindings are original; no upstream code, PDF, asset or prompt is
+bundled. Journal templates, figure quotas and publication approval flows are not
+part of the Reports contract.
