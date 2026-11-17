@@ -5915,7 +5915,7 @@
     },
     {
       "id": "sesame/reports",
-      "version": "8.0.2",
+      "version": "8.0.3",
       "distribution": "core",
       "state": "mounted",
       "engines": {
@@ -6059,6 +6059,14 @@
           "kind": "function",
           "consumers": [
             "agent",
+            "host"
+          ],
+          "execution": "immediate"
+        },
+        {
+          "id": "components_render",
+          "kind": "function",
+          "consumers": [
             "host"
           ],
           "execution": "immediate"

@@ -483,9 +483,9 @@
     },
     {
       "id": "sesame/reports",
-      "version": "8.0.2",
+      "version": "8.0.3",
       "directory": "reports",
-      "treeDigest": "sha256:613bb1614fa13310897f125d98ff93a4df26724a1403aee5cc6ec5c5ee8a2879",
+      "treeDigest": "sha256:9a57267654791d24d5dd14607e294894c6af925cd90821c934eb0f68c6e532ee",
       "files": [
         {
           "path": "LICENSE",
@@ -634,8 +634,8 @@
         },
         {
           "path": "capabilities.json",
-          "sha256": "bba4d5aa0ba0cb328840977ee7aab7650607b9c506f705aec6c71eb47f094174",
-          "bytes": 157748
+          "sha256": "1178ccb57650ed2b3a711b6e97a475aa5e2b7ce4c6fd4db58d166ec7b77d13fb",
+          "bytes": 163182
         },
         {
           "path": "component-catalog.js",
@@ -648,9 +648,14 @@
           "bytes": 4303
         },
         {
+          "path": "component-publication.js",
+          "sha256": "269d3f8dc267c6ff4514a12e9a2a08a8db661915adc41e8efe718f026299b0d8",
+          "bytes": 6545
+        },
+        {
           "path": "component-tools.js",
-          "sha256": "250b13fdc3645e001fcbba30559557cf7715f0f21d558d8369a77e10b32acf2a",
-          "bytes": 17725
+          "sha256": "3686d92878ef6ad4426a835c21a4b81c868e537c6fd63a7a701702f6fe2fef63",
+          "bytes": 18999
         },
         {
           "path": "examples/composition-fixtures.json",
@@ -679,12 +684,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "b574c9a20a2e3d98cf8e6f239109aac62662288b8b7019996aab8aef00464b36",
+          "sha256": "07000297ce3d5ef496902cd01dc84ca27d45090b71680cb5b85bbd35a2d06f44",
           "bytes": 120
         },
         {
           "path": "plugin.json",
-          "sha256": "1373fef4c000117330ac0b59fc852848ec3d6d2196ee95fb0c80c40b6df4405b",
+          "sha256": "d264892f105106f91bac3c2cf07a8b64c4cfa7e8ff283da9ee49f60bcf26710d",
           "bytes": 2139
         },
         {

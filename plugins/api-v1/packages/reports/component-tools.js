@@ -9,6 +9,7 @@ import { chartValue } from './report-chart-fields.js';
 import { controlScope, validateInteraction, filterRows, controlledOptions } from './report-interactions.js';
 import { readWorkspaceBytes } from './report-prepare.js';
 import { normalizeComponentContent, readComponentResource as readResource, readComponentJson as readJson, isSafeComponentEntry as safeEntry } from './component-input.js';
+import { publishAnswerComponent, renderAnswerComponent } from './component-publication.js';
 
 const manifest = JSON.parse(readFileSync(new URL('./capabilities.json', import.meta.url), 'utf8'));
 const schema = id => manifest.capabilities.find(item => item.id === id).inputSchema;
@@ -142,7 +143,7 @@ function publicationOperation(host, args, execution) {
   return `components-show:${createHash('sha256').update(JSON.stringify(['sesame/reports', sessionId, callId])).digest('hex')}`;
 }
 
-async function validateChartRows(host, args, charts, signal) {
+async function validateChartRows(host, args, charts, signal, materialize = false) {
   const cache = new Map();
   const rowsFor = async (id, path) => {
     const binding = (args.data ?? []).find(item => item.id === id);
@@ -173,6 +174,11 @@ async function validateChartRows(host, args, charts, signal) {
       if (visible.length) chartValue({ rows: visible, ...(nodes ? { nodes } : {}) },
         { kind: block.kind, columns: block.columns, options, data_requirements: 'Supplied results only' });
     } catch (error) { throw new Error(`${path}: ${error.message}`); }
+    if (materialize) {
+      block.rows = rows;
+      if (nodes) block.nodes = nodes;
+      delete block.data_id; delete block.chart_data;
+    }
   }
   return cache.size;
 }
@@ -216,7 +222,7 @@ async function preflightComponents(host, args, signal, mode = 'components_valida
     supplied.title = request.metadata.title; supplied.provenance_kind = request.metadata.provenanceKind;
     request.input = { ...request.input, content: await normalizeComponentContent(host, request.input.content, request.data, signal) };
     const charts = chartsIn(request.input.content);
-    const count = await validateChartRows(host, supplied, charts, signal);
+    const count = await validateChartRows(host, supplied, charts, signal, request.input.target === 'answer');
     coverage.fixedData = count ? 'passed' : 'not_applicable'; stage = 'renderer';
     const readOnlyHost = { ...host, resources: { ...host.resources, read: async (ref, options) => {
       const index = (args.assets ?? []).findIndex(asset => asset.ref?.id === ref.id && asset.ref?.revision === ref.revision && asset.ref?.digest === ref.digest);
@@ -228,7 +234,7 @@ async function preflightComponents(host, args, signal, mode = 'components_valida
     });
     coverage.renderer = 'passed'; coverage.assets = args.assets?.length ? 'passed' : 'not_applicable';
     if (!args.input_ref) supplied.content = request.input.content;
-    return { result: { ...result, valid: true, status: 'valid', renderer: rendered.presentation, chartCount: charts.length, checkedBindings: count }, publication: supplied };
+    return { result: { ...result, valid: true, status: 'valid', renderer: rendered.presentation, chartCount: charts.length, checkedBindings: count }, publication: supplied, request, rendered };
   } catch (error) {
     signal?.throwIfAborted();
     const item = diagnostic(error);
@@ -245,13 +251,14 @@ export async function validateComponents(host, args, signal) {
 }
 
 export async function showComponents(host, args, signal, execution) {
-  const { result: preflight, publication } = await preflightComponents(host, args, signal, 'components_show', execution);
+  const { result: preflight, publication, request, rendered } = await preflightComponents(host, args, signal, 'components_show', execution);
   if (!preflight.valid) {
     const [item] = preflight.diagnostics;
     throw Object.assign(new Error(`${authorPath(item.path, args)}: ${item.message}`), {
       code: preflight.status === 'incomplete' ? 'UNAVAILABLE' : 'INVALID_ARGUMENT', details: { diagnostics: preflight.diagnostics, coverage: preflight.coverage },
     });
   }
+  if (request.input.target === 'answer') return publishAnswerComponent(host, publication, request, rendered, signal);
   const published = await publishReport(host, { ...publication, summary: args.summary ?? '' }, signal);
   check(!Errors(REPORT_ARTIFACT_REF_SCHEMA, published.ref).length && published.ref.kind === 'report', '/', 'Host publication must return a fixed report reference');
   return { ...published, protocol: COMPONENT_PROTOCOL, ...(published.presentation ? { renderer: published.presentation } : {}),
@@ -264,5 +271,16 @@ export function componentCapabilities(host) {
     { name: 'components_describe', execute: async args => { assertShape('components_describe', args); return describeComponents(args.ids); } },
     { name: 'components_validate', execute: (args, signal) => validateComponents(host, args, signal) },
     { name: 'components_show', execute: (args, signal, execution) => showComponents(host, args, signal, execution) },
+    { name: 'components_render', execute: async (args, signal) => {
+      assertShape('components_render', args);
+      return renderAnswerComponent(host, args.ref, signal, async (request, legacy) => {
+        const errors = Errors(rendererSchema, request);
+        check(!errors.length, '/ref', 'Stored component input is invalid');
+        if (legacy) {
+          request.input.content = await normalizeComponentContent(host, request.input.content, request.data, signal);
+          await validateChartRows(host, { ...request, provenance_kind: request.metadata.provenanceKind }, chartsIn(request.input.content), signal, true);
+        } else check(chartsIn(request.input.content).every(({ block }) => !block.data_id && !block.chart_data), '/ref', 'Stored chart inputs must contain fixed rows and nodes');
+      });
+    } },
   ];
 }
