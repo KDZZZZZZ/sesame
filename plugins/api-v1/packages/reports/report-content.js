@@ -63,6 +63,7 @@ export async function renderStructuredReport(host, args, signal) {
   const style = await resolveReportStyle(host, args.style);
   check(object(content) && reportStyles.layouts.includes(content.kind), 'Choose a built-in report layout');
   const charts = [], scopes = [], tables = [];
+  let renderedTables = 0;
   const prose = blocks => blocks.flatMap(row => ['paragraph', 'judgment'].includes(row.type) ? [row.text] : []);
   function block(row, depth = 0, path = '/input/content', context = { titles: [], body: [] }) {
     try { return renderBlock(row, depth, path, context); }
@@ -149,7 +150,7 @@ export async function renderStructuredReport(host, args, signal) {
       if(row.caption!==undefined)text(row.caption);
       check(row.rows.every(values=>Array.isArray(values)&&values.length===row.columns.length&&values.every(value=>value===null||['string','boolean'].includes(typeof value)||typeof value==='number'&&Number.isFinite(value))), 'Table rows must match columns and contain finite scalar values');
       validateInteraction(row, context.controls, row.columns);
-      const id = `report-table-${tables.length + 1}`;
+      const id = `report-table-${++renderedTables}`;
       if (row.page_size || row.filter || row.selection) tables.push({ id, columns: row.columns, rows: row.rows, filter: row.filter, pageSize: row.page_size, selection: row.selection, scope: context.scope });
       const caption = renderText(row.caption,{role:'title',tag:'caption',against:context.titles});
       return `<div id="${id}" class="report-table"><table${row.caption && !caption ? ` aria-label="${e(row.caption)}"` : ''}>${caption}<thead><tr>${row.columns.map(value=>`<th>${e(value)}</th>`).join('')}</tr></thead><tbody>${row.rows.map((values,rowIndex)=>`<tr>${values.map((value,index)=>{ const tone = valueTone(row.column_tones?.[index] ?? undefined, value, `${path}/rows/${rowIndex}/${index}`, `${path}/column_tones/${index}`); return `<td${tone ? ` data-tone="${tone}"` : ''}>${e(value ?? '—')}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>`;

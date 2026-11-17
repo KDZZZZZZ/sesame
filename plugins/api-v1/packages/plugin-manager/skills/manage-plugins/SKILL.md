@@ -11,6 +11,8 @@ description: 按任务发现和读取插件、加载现有能力、安装或更�
 
 比较用途、输入前提、输出和限制，组合来源、知识、分析与工作流。公开知识用 plugin_read(part:"resource",path) 读取；确需审计包结构或开发时才读 part:"manifest"。先用目录中真实资源路径，不猜源码路径或隐藏工具名。
 
+资源返回 `next` 时，将该对象原样传给 plugin_read 继续读取，直到 `complete:true`；插件更新导致续读失效时，从原始路径重读。显式读取 SKILL.md 会让宿主记录该 Skill，供后续上下文装配及压缩恢复；References 仍按声明和任务需要逐份读取，知识读取不授予工具。
+
 ## 2. 按需加载并解决依赖
 
 对允许使用但未进入本会话的插件调用 plugin_load。需要核查状态时用 plugin_inspect；该工具返回安装摘要、状态和错误，plugin_read 不接受 part:"status"。

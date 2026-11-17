@@ -1,6 +1,6 @@
 # 插件管理接口
 
-这里列的是 Agent 调用参数；插件内部的 host.plugins 端口见 [宿主 API](../../develop-plugins/references/host-api.md)。省略的可选项不需要为了凑流程填写。所有 ID、摘要、资源路径和版本都取实际回执。
+这里列的是 Agent 调用参数；插件内部的 host.plugins 端口见 [宿主 API](host-api.md)。省略的可选项不需要为了凑流程填写。所有 ID、摘要、资源路径和版本都取实际回执。
 
 | 工具 | 输入与用途 |
 | --- | --- |
@@ -18,6 +18,14 @@
 
 command_id 用 16–128 位字母、数字、下划线或连字符；operationId 为另一字段，不能混用命名。不同请求使用新 ID；同一请求重试保留 ID 与全部输入。本地安装后按需 plugin_load；目录安装会尝试加载当前会话，禁用或加载失败按返回状态处理。
 
+## 读取与续读公开资源
+
+首次读取使用公开资源声明中的真实路径。resource 返回 `{pluginId,path,content,revision,offset,total_chars,complete,next?}`，宿主按 24k JSON 正文预算分段；`offset` 表示本段起点，`total_chars` 表示完整正文长度，`complete` 表示是否已到正文末尾。
+
+未读完时，将返回的 `next` 对象原样传给 `plugin_read`。它仍是 `{pluginId,part:"resource",path}`；其中 `path` 是宿主生成、绑定资源修订的 opaque continuation，不是文件路径，不解析、拼接或自行构造。无需添加 offset、length 或 revision 输入字段。插件更新后旧续读标记会失效，此时从原始公开路径重新读取，不拼接不同修订的正文。
+
+显式读取已声明的 `SKILL.md` 后，宿主会记录该 Skill，并按会话保留状态在后续上下文装配及压缩恢复时恢复其正文。References 仍按声明逐份读取，不随 Skill 自动全量加载；读取知识也不授予额外工具。
+
 ## 配置入口
 
 配置和密钥由 `sesame/configuration` 提供 Agent 工具，使用前按需发现并加载：
@@ -26,10 +34,10 @@ command_id 用 16–128 位字母、数字、下划线或连字符；operationId
 - `configuration_integration_check({plugin_id,fields})`：检查目标字段是否满足要求。
 - `configuration_integration_apply({plugin_id,command_id,values,expected_version?})`：只写同一 authority 分组；该组提供版本时传其 expected_version。authority 不作为额外输入字段。
 
-对应的 `host.configuration.catalog/check/apply` 是宿主能力 ID，插件代码经 host.capabilities.invoke 调用；它们不是额外的 HostContext 端口。保存不回显秘密，配置存在仍需用业务能力验证连接。开发包的字段绑定见 [声明与实现](../../develop-plugins/references/authoring.md)。
+对应的 `host.configuration.catalog/check/apply` 是宿主能力 ID，插件代码经 host.capabilities.invoke 调用；它们不是额外的 HostContext 端口。保存不回显秘密，配置存在仍需用业务能力验证连接。开发包的字段绑定见 [声明与实现](authoring.md)。
 
 ## 检查的范围
 
 原生包安装会检查清单、schema、声明与实际绑定、JavaScript 语法并执行隔离工厂预检，不运行包内全部业务测试。MCP 会核对实际 tools/list；本地 stdio 包可运行其声明的安装测试，远程 MCP 不执行此类测试。业务结果需另行验收。
 
-目录只接受固定 API 2 发布与完整内容摘要；相同已安装字节可返回 already-installed，禁用状态保持不变。Agent 没有 rollback 工具，不能通过此安装接口降级；失败诊断和幂等恢复见 [恢复约定](../../develop-plugins/references/recovery.md)。
+目录只接受固定 API 2 发布与完整内容摘要；相同已安装字节可返回 already-installed，禁用状态保持不变。Agent 没有 rollback 工具，不能通过此安装接口降级；失败诊断和幂等恢复见 [恢复约定](recovery.md)。

@@ -385,9 +385,9 @@
     },
     {
       "id": "sesame/plugin-manager",
-      "version": "3.1.5",
+      "version": "3.1.6",
       "directory": "plugin-manager",
-      "treeDigest": "sha256:71288344c82bddc178d65347c52bc50a2490651be525df17bfb1c5535e870cbb",
+      "treeDigest": "sha256:e5dbbcb230d7c6ebd29a14f0c4f0fc454861111ae6825f431611bed668701a0f",
       "files": [
         {
           "path": "LICENSE",
@@ -401,8 +401,8 @@
         },
         {
           "path": "capabilities.json",
-          "sha256": "4af1fb8ceb0175d0143f4bd06ec453d06c00288c8bed5169e8f90dd3753ff70d",
-          "bytes": 25704
+          "sha256": "b9be83984c4ac186d09404287732d74c5a72c409ff7f4bdf037eee7f46058410",
+          "bytes": 26393
         },
         {
           "path": "catalog.js",
@@ -421,12 +421,12 @@
         },
         {
           "path": "package.json",
-          "sha256": "bc02d56e45dcad3fdff8cf93b1e0d69e3887c04facf5784bf249cb547115cb34",
+          "sha256": "b7ddafd9792b5386f252b97309d4dd4dc5d419a5e117f70faef0bef45b799769",
           "bytes": 108
         },
         {
           "path": "plugin.json",
-          "sha256": "f3ab988d8d57bc8656e9a3405553d49ed426dbab9e09af3bb4df17e88a5f8d05",
+          "sha256": "96d1dc8ec85a6e545d4debb7c9ba5ba64a07bb533ba5ec7ba6d0d1a04f0f7418",
           "bytes": 940
         },
         {
@@ -446,8 +446,8 @@
         },
         {
           "path": "references/operations.md",
-          "sha256": "d08d1cf304504f77463f8b365126a294e9b207179e67cfa97ffdf0dfa9c13f2d",
-          "bytes": 3620
+          "sha256": "355585e7077823769251e1aca9f2000d9de325decb449847a1dddc246b484c7c",
+          "bytes": 4545
         },
         {
           "path": "references/recovery.md",
@@ -471,8 +471,8 @@
         },
         {
           "path": "skills/manage-plugins/SKILL.md",
-          "sha256": "b354e06f73858d808ca95cec4d269dc138be4bff73ec47ea85b283316440832d",
-          "bytes": 3018
+          "sha256": "fb8df7447370c6165da78f19aa14f50bee888daecaa7663cd2a98679ecb92923",
+          "bytes": 3360
         },
         {
           "path": "tools.js",
@@ -485,7 +485,7 @@
       "id": "sesame/reports",
       "version": "8.0.1",
       "directory": "reports",
-      "treeDigest": "sha256:8ba312a091370c21e4cf1b7d39213d76311122b67795c10a6dbba1eb5d1cc2be",
+      "treeDigest": "sha256:00d45d8b4764f87783905982f646fa111548dd2a8ed6d152c8d73775cb3c8f98",
       "files": [
         {
           "path": "LICENSE",
@@ -749,8 +749,8 @@
         },
         {
           "path": "report-content.js",
-          "sha256": "1b8bd077f43e2bcddb429fb688134fdc1c726416059a743e5a8829b3689bf6da",
-          "bytes": 18844
+          "sha256": "f9e3ee0e5d7510162865c6d04f5cb21b55529a6d4a7ebb00b2b0e21ab48813e5",
+          "bytes": 18869
         },
         {
           "path": "report-interactions.js",
